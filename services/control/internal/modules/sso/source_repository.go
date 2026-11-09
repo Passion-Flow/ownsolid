@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/jackc/pgx/v5"
 )
 
 func sourceSQL(q transaction.Executor, pg, my, dm string, args ...any) transaction.Statement {
@@ -73,10 +73,17 @@ func (s *Service) checkSource(ctx context.Context, q transaction.Executor, locke
 		damengConnectorLock, damengBindingLock = " FOR UPDATE OF C.ID", " FOR UPDATE OF B.ID"
 	}
 	var origin string
+	var sealed sealedSecret
+	projection := "c.origin"
+	targets := []any{&origin}
+	if s.keyringRecovery {
+		projection += ",c.secret_key_id,c.secret_nonce,c.secret_ciphertext"
+		targets = append(targets, sealed.scanTargets()...)
+	}
 	e := q.QueryRow(ctx, sourceSQL(q,
-		`SELECT c.origin FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND c.tenant_id=$1 AND c.id=$2 AND c.enabled AND c.auth_version=$3`+pgConnectorLock,
+		`SELECT `+projection+` FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND c.tenant_id=$1 AND c.id=$2 AND c.enabled AND c.auth_version=$3`+pgConnectorLock,
 		`SELECT c.origin FROM sso_connectors c WHERE c.tenant_id=? AND c.id=? AND c.enabled=1 AND c.auth_version=? AND EXISTS(SELECT 1 FROM installation_state i JOIN tenants t ON t.id=i.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND i.tenant_id=c.tenant_id AND t.status='active')`+myLock, "SELECT C.ORIGIN FROM SSO_CONNECTORS C WHERE C.TENANT_ID=? AND C.ID=? AND C.ENABLED=1 AND C.AUTH_VERSION=? AND EXISTS(SELECT 1 FROM INSTALLATION_STATE I JOIN TENANTS T ON T.ID=I.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND I.TENANT_ID=C.TENANT_ID AND T.STATUS='active')"+damengConnectorLock,
-		source.TenantID, source.ConnectorID, source.AuthVersion)).Scan(&origin)
+		source.TenantID, source.ConnectorID, source.AuthVersion)).Scan(targets...)
 	if errors.Is(e, sql.ErrNoRows) {
 		return fail("AUTH_SESSION_EXPIRED")
 	}
@@ -85,6 +92,14 @@ func (s *Service) checkSource(ctx context.Context, q transaction.Executor, locke
 	}
 	if _, approved := s.approved[origin]; !approved {
 		return fail("AUTH_SESSION_EXPIRED")
+	}
+	if s.keyringRecovery {
+		if e := s.verifyConnectorCredential(source.TenantID, source.ConnectorID, sealed); e != nil {
+			if errors.Is(e, errEncryptedState) {
+				return fail("AUTH_SESSION_EXPIRED")
+			}
+			return e
+		}
 	}
 	var id string
 	e = q.QueryRow(ctx, sourceSQL(q,

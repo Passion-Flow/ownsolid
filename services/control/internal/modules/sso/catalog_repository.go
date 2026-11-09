@@ -97,8 +97,12 @@ func (s *Service) PublicConnectors(ctx context.Context) ([]PublicConnector, erro
 	}
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.policy.OperationSeconds))
 	defer cancel()
+	projection := "c.id::text,c.name,c.provider,c.origin"
+	if s.keyringRecovery {
+		projection += ",c.tenant_id::text,c.secret_key_id,c.secret_nonce,c.secret_ciphertext"
+	}
 	rows, e := store.Query(ctx, sourceBoundedSQL(store,
-		`SELECT c.id::text,c.name,c.provider,c.origin FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND c.enabled ORDER BY c.created_at,c.id LIMIT $1`,
+		`SELECT `+projection+` FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND c.enabled ORDER BY c.created_at,c.id LIMIT $1`,
 		`SELECT c.id,c.name,c.provider,c.origin FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND t.status='active' AND c.enabled=1 ORDER BY c.created_at,c.id LIMIT ?`,
 		"SELECT C.ID,C.NAME,C.PROVIDER,C.ORIGIN FROM SSO_CONNECTORS C JOIN INSTALLATION_STATE I ON I.TENANT_ID=C.TENANT_ID JOIN TENANTS T ON T.ID=C.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND T.STATUS='active' AND C.ENABLED=1 ORDER BY C.CREATED_AT,C.ID LIMIT ",
 		"",
@@ -110,16 +114,30 @@ func (s *Service) PublicConnectors(ctx context.Context) ([]PublicConnector, erro
 	defer rows.Close()
 	for rows.Next() {
 		var value PublicConnector
-		var origin string
-		if e = rows.Scan(&value.ID, &value.Name, &value.Provider, &origin); e != nil {
+		var origin, tenant string
+		var sealed sealedSecret
+		targets := []any{&value.ID, &value.Name, &value.Provider, &origin}
+		if s.keyringRecovery {
+			targets = append(append(targets, &tenant), sealed.scanTargets()...)
+		}
+		if e = rows.Scan(targets...); e != nil {
 			return nil, e
 		}
 		if !canonicalID(value.ID) || value.Provider != ProviderGitea {
 			return nil, fail("STORAGE_UNAVAILABLE")
 		}
-		if _, approved := s.approved[origin]; approved {
-			result = append(result, value)
+		if _, approved := s.approved[origin]; !approved {
+			continue
 		}
+		if s.keyringRecovery {
+			if e := s.verifyConnectorCredential(tenant, value.ID, sealed); e != nil {
+				if errors.Is(e, errEncryptedState) {
+					continue
+				}
+				return nil, e
+			}
+		}
+		result = append(result, value)
 	}
 	if e = rows.Err(); e != nil {
 		return nil, e
@@ -144,7 +162,11 @@ func (s *Service) ListConnectors(ctx context.Context, a identity.Auth, limit int
 		if rawCursor != "" && !hmac.Equal(mac, security.MAC(s.Identity.HMACKey, connectorCursorDomain, tenantID, a.Me.User.ID, a.Me.Audience, payload)) {
 			return fail("VALIDATION_FAILED")
 		}
-		pg := `SELECT ` + connectorColumns + ` FROM sso_connectors WHERE tenant_id=$1`
+		pg := `SELECT ` + connectorColumns
+		if s.keyringRecovery {
+			pg += "," + connectorSecretColumns
+		}
+		pg += ` FROM sso_connectors WHERE tenant_id=$1`
 		my := `SELECT ` + mysqlConnectorColumns + ` FROM sso_connectors WHERE tenant_id=?`
 		dm := "SELECT " + damengConnectorColumns + " FROM SSO_CONNECTORS WHERE TENANT_ID=?"
 		pgArgs, myArgs := []any{tenantID}, []any{tenantID}
@@ -176,9 +198,25 @@ func (s *Service) ListConnectors(ctx context.Context, a identity.Auth, limit int
 		}
 		defer rows.Close()
 		for rows.Next() {
-			value, e := scanConnector(rows)
+			var sealed sealedSecret
+			var targets []any
+			if s.keyringRecovery {
+				targets = sealed.scanTargets()
+			}
+			value, e := scanConnector(rows, targets...)
 			if e != nil {
 				return e
+			}
+			if s.keyringRecovery {
+				if e := s.verifyConnectorCredential(tenantID, value.ID, sealed); e != nil {
+					if !errors.Is(e, errEncryptedState) {
+						return e
+					}
+					if result.UnreadableConnectorIDs == nil {
+						result.UnreadableConnectorIDs = map[string]bool{}
+					}
+					result.UnreadableConnectorIDs[value.ID] = true
+				}
 			}
 			result.Items = append(result.Items, value)
 		}
@@ -186,6 +224,7 @@ func (s *Service) ListConnectors(ctx context.Context, a identity.Auth, limit int
 			return e
 		}
 		if len(result.Items) > limit {
+			delete(result.UnreadableConnectorIDs, result.Items[limit].ID)
 			result.Items = result.Items[:limit]
 			last := result.Items[limit-1]
 			raw, e := json.Marshal(pageCursor{last.CreatedAt.UTC(), last.ID})

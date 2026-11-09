@@ -6,11 +6,11 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 // claimPreviousSession never acquires a user row lock behind connector/flow.
@@ -43,7 +43,7 @@ func (s *Service) claim(ctx context.Context, connector, audience, state, browser
 	if e := s.policy.Validate(); e != nil {
 		return claimedFlow{}, sourceOutcome(e)
 	}
-	if s.keys == nil {
+	if s.keys == nil && !s.keyringRecovery {
 		return claimedFlow{}, fail("SSO_CONFIGURATION_REQUIRED")
 	}
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.policy.OperationSeconds))
@@ -73,6 +73,7 @@ func (s *Service) claim(ctx context.Context, connector, audience, state, browser
 		previousActor = &a
 	}
 	var result claimedFlow
+	var unreadable bool
 	operation := func(ctx context.Context, q transaction.Executor, current string) error {
 		c, e := selectConnectorWithin(ctx, q, f.tenant, connector)
 		if e != nil {
@@ -114,27 +115,40 @@ func (s *Service) claim(ctx context.Context, connector, audience, state, browser
 				return e
 			}
 		}
+		refuseCredential := func(e error) error {
+			if !s.keyringRecovery || !errors.Is(e, errEncryptedState) {
+				return e
+			}
+			changed, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `UPDATE sso_flows
+				SET state='failed',error_code='SSO_FLOW_UNUSABLE',finished_at=clock_timestamp(),
+				verifier_key_id=NULL,verifier_nonce=NULL,verifier_ciphertext=NULL
+				WHERE tenant_id=$1 AND id=$2 AND state='pending'`, f.tenant, f.id))
+			if e != nil {
+				return e
+			}
+			if changed != 1 {
+				return fail("SSO_FLOW_UNUSABLE")
+			}
+			unreadable = true
+			return nil
+		}
 		var encrypted sealedSecret
 		if e := q.QueryRow(ctx, sourceSQL(q, `SELECT verifier_key_id,verifier_nonce,verifier_ciphertext FROM sso_flows WHERE tenant_id=$1 AND id=$2`, `SELECT verifier_key_id,verifier_nonce,verifier_ciphertext FROM sso_flows WHERE tenant_id=? AND id=?`, "SELECT VERIFIER_KEY_ID,VERIFIER_NONCE,VERIFIER_CIPHERTEXT FROM SSO_FLOWS WHERE TENANT_ID=? AND ID=?", f.tenant, f.id)).Scan(&encrypted.keyID, &encrypted.nonce, &encrypted.ciphertext); e != nil {
 			return e
 		}
-		verifier, e := s.keys.open(secretScope{f.tenant, connector, f.id, flowVerifierPurpose}, encrypted)
+		verifier, e := s.openStoredSecret(secretScope{f.tenant, connector, f.id, flowVerifierPurpose}, encrypted)
 		if e != nil {
-			return e
+			return refuseCredential(e)
 		}
-		if !security.ValidToken(string(verifier)) {
-			return fail("SSO_ENCRYPTED_STATE_INVALID")
-		}
+		defer clear(verifier)
 		if e := q.QueryRow(ctx, sourceSQL(q, `SELECT secret_key_id,secret_nonce,secret_ciphertext FROM sso_connectors WHERE tenant_id=$1 AND id=$2`, `SELECT secret_key_id,secret_nonce,secret_ciphertext FROM sso_connectors WHERE tenant_id=? AND id=?`, "SELECT SECRET_KEY_ID,SECRET_NONCE,SECRET_CIPHERTEXT FROM SSO_CONNECTORS WHERE TENANT_ID=? AND ID=?", f.tenant, connector)).Scan(&encrypted.keyID, &encrypted.nonce, &encrypted.ciphertext); e != nil {
 			return e
 		}
-		secret, e := s.keys.open(secretScope{f.tenant, connector, connector, clientSecretPurpose}, encrypted)
+		secret, e := s.openStoredSecret(secretScope{f.tenant, connector, connector, clientSecretPurpose}, encrypted)
 		if e != nil {
-			return e
+			return refuseCredential(e)
 		}
-		if !safeOpaque(string(secret), maximumSecretBytes) {
-			return fail("SSO_ENCRYPTED_STATE_INVALID")
-		}
+		defer clear(secret)
 		claimID := uuid.NewString()
 		changed, e := q.Exec(ctx, sourceSQL(q, `UPDATE sso_flows SET state='claimed',claim_id=$1,verifier_key_id=NULL,verifier_nonce=NULL,verifier_ciphertext=NULL WHERE tenant_id=$2 AND id=$3 AND state='pending'`, `UPDATE sso_flows SET state='claimed',claim_id=?,verifier_key_id=NULL,verifier_nonce=NULL,verifier_ciphertext=NULL WHERE tenant_id=? AND id=? AND state='pending'`, "UPDATE SSO_FLOWS SET STATE='claimed',CLAIM_ID=?,VERIFIER_KEY_ID=NULL,VERIFIER_NONCE=NULL,VERIFIER_CIPHERTEXT=NULL WHERE TENANT_ID=? AND ID=? AND STATE='pending'", claimID, f.tenant, f.id))
 		if e != nil {
@@ -179,6 +193,9 @@ func (s *Service) claim(ctx context.Context, connector, audience, state, browser
 			e = fail("SSO_BROWSER_CHANGED")
 		}
 		return claimedFlow{}, e
+	}
+	if unreadable {
+		return claimedFlow{}, fail("SSO_FLOW_UNUSABLE")
 	}
 	return result, nil
 }
