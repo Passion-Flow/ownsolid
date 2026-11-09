@@ -242,3 +242,52 @@ one audit event under the original scope before its TLS connection
 closed. The second returned the same digest. The native gateway
 removed its pending record, PostgreSQL preserved the original report
 timestamp and outcome, and the upstream saw one generation.
+
+## Recovery after the gateway process exits
+
+The existing Rust process test uses synthetic Control replies.
+Exercise the same spool recovery with the real Control dispatcher and
+PostgreSQL, including the optional receipt projection from GW-107.
+Keep the canonical receipt and retry semantics described in
+[RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2).
+The Rust reporter begins a flush at startup. Reuse the same private
+configuration and spool directory across both child processes. Use
+[Go process wait](https://pkg.go.dev/os/exec#Cmd.Wait) to join the killed
+child and verify the SIGKILL exit before starting its replacement.
+
+Drop the first successful TLS reply after the report and ledger commit.
+Use an extended scheduled retry interval for this test so the original
+process exits before it can send a second report. Confirm the spool
+file's bytes are unchanged after exit. Start the replacement with the
+same configuration and no incoming requests. Require an identical
+acknowledgement, then verify deletion of the spool file, the original
+report timestamp and authorization scope, one generation, one report
+audit event and one ledger event at the original admission time.
+A manually replayed POST would miss the startup reporter and lock
+reacquisition. A graceful stop would allow a final flush to hide them.
+
+The fixture enables metering only with its candidate ledger SQL.
+Production composition continues to use the default-disabled service.
+The prepared upstream remains synthetic. No model, dataset or
+dependency is added. The existing Go, Rust test stack, and PostgreSQL
+license and offline-use boundaries remain as documented above.
+
+The disconnected Linux amd64 run passed
+`TestRealGoRustPostgresRestartAfterLostOutcomeReply`. The original
+process exited on SIGKILL after Control committed its outcome, audit
+and nine-token ledger event. The replacement replayed the receipt
+through real TLS before receiving any caller request. Both processes
+used the same spool and credential. After the exact acknowledgement,
+the pending file was removed and the report timestamp and body were
+unchanged. The scoped ledger and report audit each contained one row,
+and the upstream saw one generation. The same run passed the
+same-process lost reply and shared and dedicated Control outage cases,
+the optional metering rollback and retry, and the alias upgrade.
+
+With the private loopback PostgreSQL 18.6 fixture and pgvector 0.8.7,
+set `PROJECT_ONE_TEST_DSN_FILE` and the canonical absolute path to the
+compiled Rust binary in `PROJECT_ONE_GATEWAY_BINARY`. Run from the root.
+
+```sh
+go -C services/control test -p 1 -tags gateway_integration ./internal/modules/distribution   -run '^Test(RealGoRustPostgres(RestartAfterLostOutcomeReply|LostOutcomeReply)|PostgresGatewayOutcomeMeteringAtomicRetry|AliasDescriptionPostgreSQLUpgradeAndHTTPS)$' -count=1
+```
