@@ -19,6 +19,7 @@ import {
 import { useI18n } from '@ownsolid/i18n';
 import {
   everyPage,
+  GatewayCADownload,
   gatewayBaseUrl,
   gatewayKeys,
   IssueKeyDialog,
@@ -643,10 +644,12 @@ function StopDialog({
 /** One published name: whether it answers, where, and how to call it. */
 function Published({
   alias,
+  workspace,
   onIssue,
   onStop,
 }: {
   alias: ModelAlias;
+  workspace: string;
   onIssue: () => void;
   onStop: () => void;
 }) {
@@ -668,6 +671,7 @@ function Published({
           <CopyText text={gatewayBaseUrl(alias.client_origin)} />
         </Detail>
       </DetailList>
+      <GatewayCADownload workspace={workspace} aliasId={alias.id} />
       {alias.available ? null : (
         <p className="m-0 text-[13px] text-text-2">{t('services.gateway.unavailable.detail')}</p>
       )}
@@ -754,6 +758,7 @@ export function DeploymentGateway({
           <Published
             key={alias.id}
             alias={alias}
+            workspace={workspace}
             onIssue={() => {
               setOpen({ kind: 'issue', alias });
             }}
