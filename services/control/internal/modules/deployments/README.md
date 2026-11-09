@@ -4,7 +4,11 @@ Deployments connects verified model versions to admitted nodes and hardware rese
 
 [service.go](service.go) is the action/list boundary; [placement.go](placement.go) previews where a model can be deployed, judging each observed GPU with the same admission checks creation runs (in [runtime_repository.go](runtime_repository.go) and [derived.go](derived.go)) and reserving nothing; [hardware.go](hardware.go) and hardware_repository.go manage admitted hardware state; [runtime_repository.go](runtime_repository.go), intent_repository.go and observation_repository.go retain the lifecycle. [derived.go](derived.go), [distribution.go](distribution.go) and Registry action/reference files are explicit consumer integrations.
 
-Nodes and models remain the authority for node/profile and artifact identity. Migration 000006 includes deployments and GPU leases. Creating a deployment or accepting desired state does not mean a container is ready; current observations, stale attempts, unknown results and removal/fencing must preserve existing reconciliation.
+Nodes and models remain the authority for node/profile and artifact identity.
+Placement and new launch intents check the verified model catalogue against
+the installation's on-site use. Existing deployments remain readable and
+stoppable and an original idempotency key replays the committed intent. See
+[model license admission](../../../../../docs/research/model-license-admission.md). Migration 000006 includes deployments and GPU leases. Creating a deployment or accepting desired state does not mean a container is ready; current observations, stale attempts, unknown results and removal/fencing must preserve existing reconciliation.
 
 Synchronize [nodes](../nodes/README.md), [models](../models/README.md), [distribution](../distribution/README.md), agent/inference, contracts/agent deployment recipe and HTTP interfaces, deploy/inference and [deployments frontend](../../../../../web/README.md).
 
