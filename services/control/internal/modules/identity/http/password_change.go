@@ -21,6 +21,7 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request, cookies
 	var v struct {
 		CurrentPassword string `json:"current_password"`
 		NewPassword     string `json:"new_password"`
+		TOTPCode        string `json:"totp_code,omitempty"`
 	}
 	if e := decode(r, &v); e != nil {
 		return nil, 0, e
@@ -36,7 +37,7 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request, cookies
 	); e != nil {
 		return nil, 0, e
 	}
-	issued, e := s.ChangePassword(r.Context(), a, v.CurrentPassword, v.NewPassword, requestID)
+	issued, e := s.ChangePasswordWithAdminTOTP(r.Context(), a, v.CurrentPassword, v.NewPassword, v.TOTPCode, requestID)
 	if e != nil {
 		return nil, 0, e
 	}
