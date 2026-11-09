@@ -1616,6 +1616,7 @@
   "tasks.tray.open": "Open",
   "tasks.tray.succeeded": "{name} finished",
   "tasks.tray.title": "Your running tasks",
+  "timeline.state.cancelled": "Cancelled",
   "timeline.state.done": "Done",
   "timeline.state.failed": "Failed",
   "timeline.state.pending": "Not started",
