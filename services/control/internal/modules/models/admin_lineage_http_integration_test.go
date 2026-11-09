@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -51,7 +52,7 @@ func adminModelDetailSchema(t *testing.T) string {
 
 // These are retained version 1 publication inputs for metadata readback. The
 // existing relational fixture creates the scoped graph under normal constraints.
-func seedModelHTTPLineage(t *testing.T, x modelReadFixture) (lifecycle.DerivedCatalog, snapshot.DatasetLineage) {
+func seedModelHTTPLineage(t *testing.T, x modelReadFixture, source *accessDerivedSource) (lifecycle.DerivedCatalog, snapshot.DatasetLineage) {
 	t.Helper()
 	p := retirementTraining(t, x, x.model)
 	holdout := retirementTraining(t, x, x.model)
@@ -109,7 +110,7 @@ func seedModelHTTPLineage(t *testing.T, x modelReadFixture) (lifecycle.DerivedCa
 		t.Fatal(err)
 	}
 	retirementPreparationWithSnapshot(t, x, p, x.model, &inputs)
-	return accessDerivedFromPreparation(t, x, p, false, ""), inputs.Lineage()
+	return accessDerivedFromPreparation(t, x, p, source, ""), inputs.Lineage()
 }
 
 func TestActualAdminModelDetailDatasetLineageHTTPS(t *testing.T) {
@@ -132,9 +133,19 @@ func TestActualAdminModelDetailDatasetLineageHTTPS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
+	var source *accessDerivedSource
+	timeout := 30 * time.Second
+	output := os.Getenv("PROJECT_ONE_ACTUAL_PREPARATION_OUTPUT")
+	if output != "" {
+		if resolved, err := filepath.EvalSymlinks(output); err != nil || !filepath.IsAbs(output) || resolved != output {
+			t.Fatal("retained CPU producer directory must be an exact absolute path", err)
+		}
+		source = readActualDerivedSource(t, filepath.Join(output, "result.json"))
+		timeout = 3 * time.Minute
+	}
+	ctx, cancel := context.WithTimeout(t.Context(), timeout)
 	defer cancel()
-	x := modelReadFixture{ctx: ctx, model: uuid.NewString()}
+	x := modelReadFixture{ctx: ctx, model: uuid.NewString(), s: dispatcher.Models.Service}
 	x.f = repositoryfixture.Fixture{Store: store, PostgreSQL: owner.DB}
 	if err = owner.DB.QueryRow(x.ctx, "SELECT tenant_id::text,default_workspace_id::text,primary_admin_user_id::text FROM installation_state WHERE id=1").
 		Scan(&x.f.Tenant, &x.f.Workspace, &x.f.User); err != nil {
@@ -148,7 +159,12 @@ func TestActualAdminModelDetailDatasetLineageHTTPS(t *testing.T) {
 		"id": x.model, "name": "Synthetic HTTPS base model", "model_key": wire.ApprovedModel().ModelKey,
 		"catalog_digest": wire.ModelCatalogDigest(), "manifest": retirementJSON(manifest), "state": "ready", "created_by": x.f.User,
 	})
-	catalog, want := seedModelHTTPLineage(t, x)
+	catalog, want := seedModelHTTPLineage(t, x, source)
+	if source != nil {
+		accessRoot(t, x)
+		t.Setenv("PROJECT_ONE_REPOSITORY_NATIVE_DERIVED_DIRECTORY", filepath.Join(output, "model"))
+		accessPrepare(t, x, catalog, true)
+	}
 	adminSchema := adminModelDetailSchema(t)
 	adminPath := "/api/v1/admin/models/" + catalog.ModelID
 	portalList := "/api/v1/workspaces/" + x.f.Workspace + "/models"
@@ -165,6 +181,9 @@ func TestActualAdminModelDetailDatasetLineageHTTPS(t *testing.T) {
 		return data
 	}
 	before := read()
+	if source != nil {
+		verifyHTTPDerivedFiles(t, x, catalog, source, before)
+	}
 	x.exec(t, "UPDATE dataset_versions SET retired_at=clock_timestamp(),retire_reason=$1 WHERE id=$2", "",
 		"Retire synthetic source version", want.Training.DatasetVersionID)
 	after := read()

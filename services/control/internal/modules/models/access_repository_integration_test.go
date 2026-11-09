@@ -27,45 +27,60 @@ import (
 	"github.com/google/uuid"
 )
 
-// Only the file bytes in the CPU case come from retained real execution. All
-// new training/report/stop/review rows are explicit synthetic relational fixtures.
+type accessDerivedSource struct {
+	report []byte
+	files  []datawire.Asset
+	events int64
+}
+
+func readActualDerivedSource(t *testing.T, path string) *accessDerivedSource {
+	t.Helper()
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var report lifecycle.PreparedResult
+	if lifecycle.DecodeStrict(raw, &report) != nil || report.Status != "prepared" ||
+		report.Device != "cpu_verification" || len(report.ModelFiles) != len(lifecycle.ApprovedBaseFiles()) {
+		t.Fatal("retained native CPU preparation report required")
+	}
+	return &accessDerivedSource{report: raw, files: report.ModelFiles, events: report.EventCount}
+}
+
+// The native case binds the original report bytes and inventory. The enclosing
+// SQL graph still uses explicit synthetic identities and review metadata.
 func accessDerived(t *testing.T, x modelReadFixture, native bool, corrupt string) lifecycle.DerivedCatalog {
 	t.Helper()
 	p := retirementTraining(t, x, x.model)
 	retirementPreparation(t, x, p, x.model)
-	return accessDerivedFromPreparation(t, x, p, native, corrupt)
+	var source *accessDerivedSource
+	if native {
+		source = readActualDerivedSource(t, os.Getenv("PROJECT_ONE_REPOSITORY_NATIVE_DERIVED_REPORT"))
+	}
+	return accessDerivedFromPreparation(t, x, p, source, corrupt)
 }
 
-func accessDerivedFromPreparation(t *testing.T, x modelReadFixture, p retirementProvenance, native bool, corrupt string) lifecycle.DerivedCatalog {
+func accessDerivedFromPreparation(t *testing.T, x modelReadFixture, p retirementProvenance, source *accessDerivedSource, corrupt string) lifecycle.DerivedCatalog {
 	t.Helper()
 	attempt, task, review, derived := uuid.NewString(), uuid.NewString(), uuid.NewString(), uuid.NewString()
 	report := []byte(`{"status":"prepared","gate_passed":true,"event_count":1}`)
+	reportEvents := int64(1)
+	files := lifecycle.ApprovedBaseFiles()
+	if source != nil {
+		report, files, reportEvents = source.report, source.files, source.events
+	} else {
+		weights := []byte("Explicit synthetic range fixture; not tensor or training evidence.")
+		weightSHA := sha256.Sum256(weights)
+		for i := range files {
+			if files[i].Path == "model.safetensors" {
+				files[i].SizeBytes = int64(len(weights))
+				files[i].SHA256 = hex.EncodeToString(weightSHA[:])
+			}
+		}
+	}
 	sum := sha256.Sum256(report)
 	reportSHA := hex.EncodeToString(sum[:])
-	c := lifecycle.DerivedCatalog{SchemaVersion: 1, Kind: "merged_lora", Scope: lifecycle.Scope{TenantID: x.f.Tenant, WorkspaceID: x.f.Workspace, PreparationID: p.preparation}, ModelID: derived, ArtifactID: derived, BaseModelID: x.model, AttemptID: attempt, ReportSHA256: reportSHA, RecipeSHA256: lifecycle.RecipeDigest(), BaseCatalogSHA256: lifecycle.ApprovedModelCatalogSHA256, BaseRepository: lifecycle.ApprovedBaseRepository, BaseRevision: lifecycle.ApprovedBaseRevision, License: lifecycle.ApprovedBaseLicense, Format: "safetensors", Architecture: lifecycle.ApprovedBaseArchitecture, ModelType: lifecycle.ApprovedBaseModelType, Precision: "BF16", MaximumContextTokens: lifecycle.MaximumContextTokens, Files: lifecycle.ApprovedBaseFiles()}
-	weights := []byte("Explicit synthetic range fixture; not tensor or training evidence.")
-	weightSHA := sha256.Sum256(weights)
-	for i := range c.Files {
-		if c.Files[i].Path == "model.safetensors" {
-			c.Files[i].SizeBytes = int64(len(weights))
-			c.Files[i].SHA256 = hex.EncodeToString(weightSHA[:])
-		}
-	}
-	if native {
-		raw, e := os.ReadFile(os.Getenv("PROJECT_ONE_REPOSITORY_NATIVE_DERIVED_REPORT"))
-		if e != nil {
-			t.Fatal(e)
-		}
-		var r struct {
-			Status string           `json:"status"`
-			Gate   bool             `json:"gate_passed"`
-			Files  []datawire.Asset `json:"model_files"`
-		}
-		if json.Unmarshal(raw, &r) != nil || r.Status != "prepared" || r.Gate || len(r.Files) != 9 {
-			t.Fatal("bound actual CPU inventory required")
-		}
-		c.Files = r.Files
-	}
+	c := lifecycle.DerivedCatalog{SchemaVersion: 1, Kind: "merged_lora", Scope: lifecycle.Scope{TenantID: x.f.Tenant, WorkspaceID: x.f.Workspace, PreparationID: p.preparation}, ModelID: derived, ArtifactID: derived, BaseModelID: x.model, AttemptID: attempt, ReportSHA256: reportSHA, RecipeSHA256: lifecycle.RecipeDigest(), BaseCatalogSHA256: lifecycle.ApprovedModelCatalogSHA256, BaseRepository: lifecycle.ApprovedBaseRepository, BaseRevision: lifecycle.ApprovedBaseRevision, License: lifecycle.ApprovedBaseLicense, Format: "safetensors", Architecture: lifecycle.ApprovedBaseArchitecture, ModelType: lifecycle.ApprovedBaseModelType, Precision: "BF16", MaximumContextTokens: lifecycle.MaximumContextTokens, Files: files}
 	if e := c.Validate(); e != nil {
 		t.Fatal("valid synthetic catalog required", e)
 	}
@@ -87,7 +102,7 @@ func accessDerivedFromPreparation(t *testing.T, x modelReadFixture, p retirement
 	lineage := raw
 	put := func(table string, v map[string]any) { retirementSeed(t, x, x.f.Store, table, v) }
 	put("node_tasks", map[string]any{"id": task, "node_id": p.node, "operation": "collect_facts.v1", "state": "succeeded", "idempotency_key": uuid.NewString(), "requested_by": x.f.User, "deadline_at": time.Now().UTC(), "completed_at": time.Now().UTC()})
-	put("model_preparation_attempts", map[string]any{"id": attempt, "preparation_id": p.preparation, "node_id": p.node, "task_id": task, "attempt_number": 1, "state": "prepared", "requested_by": x.f.User, "requested_audience": "admin", "requested_epoch": 1, "command_sha256": reportSHA, "physical_stop_receipt": retirementJSON(`{}`), "physical_stop_sha256": reportSHA, "physical_stopped_at": time.Now().UTC(), "outcome": retirementJSON(report), "outcome_bytes": report, "outcome_sha256": reportSHA, "last_event_sequence": 1})
+	put("model_preparation_attempts", map[string]any{"id": attempt, "preparation_id": p.preparation, "node_id": p.node, "task_id": task, "attempt_number": 1, "state": "prepared", "requested_by": x.f.User, "requested_audience": "admin", "requested_epoch": 1, "command_sha256": reportSHA, "physical_stop_receipt": retirementJSON(`{}`), "physical_stop_sha256": reportSHA, "physical_stopped_at": time.Now().UTC(), "outcome": retirementJSON(report), "outcome_bytes": report, "outcome_sha256": reportSHA, "last_event_sequence": reportEvents})
 	put("model_preparation_uploads", map[string]any{"id": derived, "preparation_id": p.preparation, "attempt_id": attempt, "manifest_sha256": reportSHA, "manifest": retirementJSON(`{}`), "manifest_bytes": []byte(`{}`), "descriptor": retirementJSON(`{}`)})
 	put("model_preparation_artifacts", map[string]any{"id": derived, "preparation_id": p.preparation, "attempt_id": attempt, "upload_id": derived, "manifest_sha256": reportSHA, "descriptor": retirementJSON(`{}`), "report": retirementJSON(report), "report_bytes": report, "storage_path": "artifacts/" + p.preparation + "/" + attempt + "/" + derived})
 	x.exec(t, "UPDATE model_preparations SET state='awaiting_review',attempt_number=1,current_attempt_id=$1 WHERE id=$2", "UPDATE model_preparations SET state='awaiting_review',attempt_number=1,current_attempt_id=? WHERE id=?", attempt, p.preparation)

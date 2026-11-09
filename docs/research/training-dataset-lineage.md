@@ -104,3 +104,77 @@ retirement, separate holdout references, exact base and Portal responses,
 unchanged lists, and a problem-only refusal for invalid metadata or
 unauthorized requests. This metadata read uses the existing dependencies and
 requires no model files or network beyond loopback.
+
+## Physical derived artifact verification
+
+The inherited storage test requires a retained `cpu_verification` report and
+its nine original model files. The producer also records its training input
+provenance. The base-model bundle cannot substitute for the merged weights.
+The historical producer was retained under the previous project's external
+evidence volume. That volume was absent when this verification began. The
+local retained Qwen3-0.6B download can be checked against the embedded pinned
+catalog. A minimal replacement is one real CPU LoRA training step using
+generated CC0 test rows, followed by the existing approved CPU preparation
+worker and standalone reload. Use the published lock with wheel hashes and
+block network access for both workers. Keep their reports and output outside
+Git. [PEFT's checkpoint guide](https://huggingface.co/docs/peft/main/en/developer_guides/checkpoint)
+describes the separate adapter and merged artifact formats.
+
+The reconstruction uses the existing native training lock. The model is
+Apache-2.0. [PyTorch](https://github.com/pytorch/pytorch/blob/main/LICENSE) is
+BSD-3-Clause and [Transformers](https://github.com/huggingface/transformers/blob/main/LICENSE),
+[PEFT](https://github.com/huggingface/peft/blob/main/LICENSE), and
+[Accelerate](https://github.com/huggingface/accelerate/blob/main/LICENSE)
+are Apache-2.0. These permit commercial and offline use and redistribution
+under their notice terms. No package, asset, or dataset is added to the
+distribution.
+
+Run the full-file storage test against the actual CPU output. Then use the
+Admin HTTPS fixture to check lineage and the same published file inventory
+together. Keep actual CPU production, scoped SQL metadata, and browser
+acceptance distinct. A file mutation must fail storage verification and
+replay. A conflicting report reference must fail the existing Admin detail
+read. The metadata route does not hash large files per request.
+
+### Retained CPU acceptance
+
+The retained base matched all nine files in Qwen3-0.6B revision
+`c1899de289a04d12100db370d81485cdf75e47ca` at 1,519,207,673 bytes.
+On macOS arm64, CPython 3.12.15 and all 37 packages from the existing
+native lock ran the protected one-step training worker and then the CPU
+preparation worker under kernel network denial. The inherited harness used
+the runtime and contracts from `779592a6` in a disposable layout. Its RSS probe used
+the locked psutil package because the macOS network sandbox blocks the
+set-ID `ps` executable.
+
+The one-step training result SHA-256 was
+`d971dfa90d4203a33636b20e54900482f2baa9e6b24cb80831536c8686863485`.
+The preparation produced nine BF16 files totaling 1,208,042,441 bytes.
+The merged weights SHA-256 was
+`4a1168c713717d70f57bbbf0d44ef2cb902a4bdac759a4c0624fbe6ba7fbf974`.
+The untouched preparation report SHA-256 was
+`f8cb63963210b9af5886624e107b05386bc8a01894eb0293fbe7c3cd9f4539d3`.
+Both models scored one of three on the test holdout and the production
+quality threshold failed.
+
+`TestActualCpuDerivedModelOrdinaryCopyCompleteHashesRestartReplayAndTamperRefusal`
+verified full ordinary copies, reopening, exact replay, and refusal to
+verify or adopt an altered copy. The same report and files passed the
+Admin lineage HTTPS fixture on disconnected PostgreSQL 18.6 with pgvector
+0.8.7. It matched the Admin catalog to the original report and inventory,
+reopened and replayed the private copy, and matched all 152 transferred
+ranges and the assembled hashes of all nine files. It exercised the same
+lineage read and refusal cases used by the Web acceptance. PostgreSQL
+publication identities and approval in this fixture are synthetic. The raw
+CPU report and all transferred model files are real. This run establishes
+artifact integrity and retained lineage readback, with GPU qualification
+and product approval outside its scope.
+
+Set `PROJECT_ONE_ACTUAL_PREPARATION_OUTPUT` to the exact absolute directory
+containing the CPU `result.json` and its `model` directory. Run the named
+storage test with `-tags model_lifecycle_derived_storage_integration`. With
+the same output and `PROJECT_ONE_TEST_DSN_FILE` pointing to a disposable
+PostgreSQL fixture, run `TestActualAdminModelDetailDatasetLineageHTTPS`
+with `-tags repository_integration` in
+`services/control/internal/modules/models`. The HTTP fixture without the
+producer directory continues to serve the metadata-only Web acceptance.
