@@ -9,6 +9,8 @@ Placement and new launch intents check the verified model catalogue against
 the installation's on-site use. Existing deployments remain readable and
 stoppable and an original idempotency key replays the committed intent. See
 [model license admission](../../../../../docs/research/model-license-admission.md).
+PostgreSQL hardware observation inserts use the node scope already resolved
+by the machine transaction. See the [heartbeat cost evidence](../../../../../docs/research/deployment-observation-scope.md#offline-verification-and-arc-handoff).
 A new load requires a recent hardware receipt and recent agent and GPU
 observations. Free capacity must meet the existing recipe share rounded up to
 whole MiB and, for derived loads, the existing absolute free-memory floor. Migration 000006 includes deployments and GPU leases. Creating a deployment or accepting desired state does not mean a container is ready; current observations, stale attempts, unknown results and removal/fencing must preserve existing reconciliation.

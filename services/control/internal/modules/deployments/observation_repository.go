@@ -24,6 +24,10 @@ func (s *Service) ObserveInferenceWithin(ctx context.Context, q transaction.Exec
 	if e := o.Validate(); e != nil {
 		return e
 	}
+	scope := wire.Scope{SiteID: n.SiteID, CellID: n.CellID}
+	if q.Dialect() == transaction.PostgreSQL && !scope.Valid() {
+		return fail("STORAGE_UNAVAILABLE")
+	}
 	if d := o.Deployment; d != nil {
 		var model, gpu, kind, catalog string
 		var serving *string
@@ -56,7 +60,9 @@ func (s *Service) ObserveInferenceWithin(ctx context.Context, q transaction.Exec
 	if e != nil {
 		return fail("VALIDATION_FAILED")
 	}
-	statement := transaction.SQL(transaction.PostgreSQL, `INSERT INTO inference_nodes(tenant_id,workspace_id,node_id,observation) VALUES($1,$2,$3,$4) ON CONFLICT(node_id) DO UPDATE SET observation=EXCLUDED.observation,received_at=clock_timestamp() WHERE inference_nodes.tenant_id=EXCLUDED.tenant_id AND inference_nodes.workspace_id=EXCLUDED.workspace_id`, n.TenantID, n.WorkspaceID, n.ID, raw)
+	// Use the scope already resolved by node authority. An update preserves
+	// the stored scope and still checks the tenant and workspace.
+	statement := transaction.SQL(transaction.PostgreSQL, `INSERT INTO inference_nodes(tenant_id,workspace_id,node_id,observation,site_id,cell_id) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(node_id) DO UPDATE SET observation=EXCLUDED.observation,received_at=clock_timestamp() WHERE inference_nodes.tenant_id=EXCLUDED.tenant_id AND inference_nodes.workspace_id=EXCLUDED.workspace_id`, n.TenantID, n.WorkspaceID, n.ID, raw, scope.SiteID, scope.CellID)
 	if q.Dialect() == transaction.MySQL {
 		statement = transaction.SQL(transaction.MySQL, `INSERT INTO inference_nodes(tenant_id,workspace_id,node_id,observation) VALUES(?,?,?,CAST(? AS JSON)) ON DUPLICATE KEY UPDATE observation=CAST(? AS JSON),received_at=UTC_TIMESTAMP(6)`, n.TenantID, n.WorkspaceID, n.ID, raw, raw)
 	}
