@@ -34,12 +34,20 @@ func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T) {
 	if e = os.MkdirAll(directory, 0700); e != nil {
 		t.Fatal(e)
 	}
-	if e = os.WriteFile(filepath.Join(directory, "config.json"), content, 0444); e != nil {
-		t.Fatal(e)
+	installConfig := func(data []byte) {
+		t.Helper()
+		temp := filepath.Join(directory, "config-replacement")
+		if e := os.WriteFile(temp, data, 0600); e != nil {
+			t.Fatal(e)
+		}
+		if e := os.Chmod(temp, 0444); e != nil {
+			t.Fatal(e)
+		}
+		if e := os.Rename(temp, filepath.Join(directory, "config.json")); e != nil {
+			t.Fatal(e)
+		}
 	}
-	if e = os.Chmod(filepath.Join(directory, "config.json"), 0444); e != nil {
-		t.Fatal(e)
-	}
+	installConfig(content)
 	server := httpfixture.NewTLSServer(t, transport.New(c.s.Nodes.Identity))
 	defer server.Close()
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/deployments/openapi.json")
@@ -82,6 +90,22 @@ func TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer(t *testing.T) {
 	sum := sha256.Sum256(body)
 	if status != 200 || !bytes.Equal(body, content) || headers.Get("X-Artifact-SHA256") != hex.EncodeToString(sum[:]) || headers.Get("Content-Type") != "application/octet-stream" {
 		t.Fatal("actual TLS model range", status)
+	}
+	changed := bytes.Clone(content)
+	changed[0] ^= 1
+	installConfig(changed)
+	status, body, headers = post(base+"/model-files", c.node.Credential, input)
+	var problem struct {
+		Code string `json:"code"`
+	}
+	if e = json.Unmarshal(body, &problem); e != nil || status != http.StatusConflict ||
+		problem.Code != "MODEL_FILE_CHANGED" || headers.Get("X-Artifact-SHA256") != "" {
+		t.Fatalf("changed pinned config was not refused: %d %s %v", status, problem.Code, e)
+	}
+	installConfig(content)
+	status, body, headers = post(base+"/model-files", c.node.Credential, input)
+	if status != http.StatusOK || !bytes.Equal(body, content) || headers.Get("X-Artifact-SHA256") != approved.SHA256 {
+		t.Fatalf("the same lease could not retry the restored file: %d", status)
 	}
 	input.File = "../config.json"
 	status, _, _ = post(base+"/model-files", c.node.Credential, input)
