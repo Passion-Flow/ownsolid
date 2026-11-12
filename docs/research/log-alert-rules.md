@@ -101,3 +101,91 @@ retries and no-traffic semantics. The monitoring lane can then use these
 counters to test short/long windows, missing and zero traffic, restarts,
 overlapping alert suppression and recovery. Journal snapshots cannot
 supply that numerator or denominator.
+
+### Initial platform probe SLO
+
+The existing HTTP recorder merges 4xx and 5xx as http_error and has no
+request-level tenant/Workspace eligibility contract. Do not derive a request
+SLO from that snapshot. Keep the request-driven path above pending its owning
+service's authoritative numerator and denominator.
+
+A separate initial path can measure the existing trusted platform readiness
+probes. [Grafana's availability SLI examples](https://grafana.com/docs/plugins/grafana-slo-app/latest/sli-examples/availability/)
+distinguish successful requests from successful synthetic observations and
+calculate a gauge probe SLI from successful binary samples divided by all
+observed samples. This is a behavior reference; no Grafana runtime, cloud
+service, SDK or source is introduced. Use the already selected local Blackbox
+Exporter, vmagent, VictoriaMetrics, vmalert and Alertmanager. The scope is one
+site and one operator-assigned endpoint. It measures that private observer's
+reachability, not customer request success, node availability or model output
+correctness. Never present it as the request-driven SLO.
+
+Prototype the exact MetricsQL outside product code first. The
+[MetricsQL raw-sample rollups](https://docs.victoriametrics.com/metricsql/)
+provide count_eq_over_time and count_over_time. For each window, count samples
+exactly equal to zero as failures and divide by all observed probe samples.
+Require all samples to be exactly zero or one, exactly one historical series
+for the site/endpoint, and nonempty trusted site_id and endpoint labels. Drop
+instance, target addresses and other source labels from the alert projection.
+Reject duplicate series rather than weighting an endpoint by accidental scrape
+replicas. Missing samples are not synthetic successes or an observed zero.
+
+Use an explicitly selected 99.9 percent, 30-day policy for the prototype, with
+the SRE workbook's 14.4-times budget threshold over both one hour and five
+minutes, or six-times over both six hours and thirty minutes. Combine both
+pairs in one alert expression so overlap produces one alert per scoped
+endpoint. The production operator policy must explicitly select its goal,
+period and scrape cadence; these prototype values do not establish a customer
+SLO or add a default contract. A minute-level evaluation and a 30-second
+scrape provide the initial cadence. Require at least 90 percent of nominal
+samples in each window and a sample no older than 90 seconds. Sparse or stale
+observations are unknown and cannot establish healthy service. The separate
+OBS-206 pipeline-health path must expose loss of telemetry; a burn alert's
+absence is not evidence of health.
+
+The current probe example supplies two endpoints, independent of node count.
+For an explicit 10,000-node shape with two to five cells and the same two
+endpoints per cell, there are four to ten monitored endpoints. At 30-second
+cadence this adds 11,520 to 28,800 probe-success samples per day; the existing
+three probe metrics and scraper up contribute 46,080 to 115,200 samples per day
+for those four selected families. Additional collector self-metrics, other jobs
+and customer telemetry are excluded from that calculation.
+These are inventory/cadence calculations, not measured storage or latency.
+No recording series, node-ID dimension or SQL telemetry mirror is required.
+Measure the native rule's on-disk bytes and query latency for that exact shape
+before claiming capacity, recording the requested cache mode and its limits. Keep any measurements under competing
+fleet ingestion separate from quiet-store measurements and from the existing
+17-million-series qualification.
+
+The native prototype must compare exact production-window queries with known
+synthetic histories: fast and slower burn, overlapping pairs, recovery of the
+short window while the long window remains breached, healthy data, observed
+failure zeros, empty observations, partial coverage, stale data, nonbinary values, duplicate
+series and identical endpoint names in different sites. Assert projected labels
+and one result under overlap. Query-engine acceptance is distinct from live
+vmalert/Alertmanager delivery and from product/Console admission. Until those
+checks run, leave the expression outside product code and leave OBS-111 open.
+
+Existing VictoriaMetrics/vmalert and Alertmanager versions and Apache-2.0
+terms above apply. [Blackbox Exporter 0.29.1](https://github.com/prometheus/blackbox_exporter/blob/v0.29.1/LICENSE)
+and vmagent 1.155.0 are Apache-2.0 as well. The external prototype uses only
+the Python standard library under the
+[PSF license](https://docs.python.org/3/license.html), allowing commercial and
+offline use and redistribution under its terms. Synthetic samples use the
+repository's license. No model, external dataset, new dependency or copied
+proprietary implementation is introduced.
+
+The prepared external inputs are
+/root/lane-obs-tools/probe-slo-prototype-v1/probe-slo.metricsql, SHA-256
+5a2776d00642c07cfc378d29693f547b66311519fd3c204c0bad3532475c9c4c,
+and observe-probe-slo.py in the same directory, SHA-256
+7c782387ee8142e02c99844db61d9fa62f5d6e73303fea09c35eea51ab3afe75.
+The observer requires an already admitted loopback-only Linux PID namespace
+with its own proc mount; it is not an admission runner and opens no lock. The existing admitting parent must keep
+actual shared-lock custody until namespace and child exit. The observer binds
+the pinned native binary hash, asserts its actual proc executable and arguments,
+and starts two bounded, sequential disposable stores. It checks explicit
+started/ready/stopped facts and a clean exit, retaining raw logs and data files.
+No native process, namespace, compiler, installer request or extra lock admission
+was started for preparation. Only Python AST syntax inspection has passed; the
+MetricsQL expression and every native expectation remain unqualified.
