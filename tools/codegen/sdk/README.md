@@ -103,14 +103,19 @@ neither replays the earlier operation nor proves that its audit was rolled back.
 Keep the earlier request ID for diagnosis. Use category=audit for audit-family
 events; exact action accepts only the published enumeration.
 
-For this read, construct a fresh Go transport with DisableKeepAlives=true and
-HTTP/1 selected, using the same installation CA, verified origin and cookie jar.
-Close its idle connections after the call. A general shared Go transport can
+The generated Go method requires a standard *http.Client with a standard
+*http.Transport (or its default). It clones that transport for one HTTP/1
+request, disables connection reuse and refuses redirects. Installation CA/client
+certificate configuration, the cookie jar and client timeout are retained;
+the caller's shared client is unchanged. A general shared Go transport can
 transparently replay an eligible GET after a network error on a reused
-connection. Disable application, proxy and load-balancer retries for this path.
-For Python use HTTPTransport(retries=0), or AsyncHTTPTransport(retries=0), with
-verified TLS, trust_env=False and follow_redirects=False. Keep any external
-retry wrapper disabled. Neither generated client's 409 decoder starts a retry.
+connection. Custom request executors and transports are rejected before this
+read because their retry behavior cannot be inspected. Other operations keep
+their configured executor. Disable application, proxy and load-balancer retries
+for this path. Python's default HTTPX transport has zero connection retries;
+retain retries=0, verified TLS, trust_env=False and follow_redirects=False when
+configuring a transport. Keep any external retry wrapper disabled. Neither
+generated client's 409 decoder starts a retry.
 After regeneration, Go callers handle this status with
 GetApplicationproblemJSON409(); it is no longer decoded through the default
 Problem accessor. Python keeps the existing Problem model.
@@ -142,7 +147,12 @@ environment installed, run
 `python tools/codegen/sdk/tests/wire_smoke.py "$SDK_DIR"` for the Go and Python
 loopback checks. They exercise login, cookie reuse, typed node lists and a
 binary dataset request with its declared media type. The same test verifies
-Python streaming response ownership and error bodies.
+Python streaming response ownership and error bodies. Audit-read checks exercise
+Go's shared-connection replay control, lost replies, explicit retry, 409,
+TLS/cookies, timeouts, redirects, custom-executor refusal and concurrency.
+Python checks both sync and async audit reads after 409 or a lost reply with
+standard and assistant representations. These loopback/controlled-transport
+checks do not qualify server authorization, SQL commits or a browser flow.
 
 ## Audit the public operation inventory
 

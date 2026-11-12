@@ -754,9 +754,9 @@ the required Simplified Chinese description and generated Web/Help files;
 prepare their exact inputs without editing that lane's source or locales.
 
 [Go Transport](https://pkg.go.dev/net/http#Transport) can transparently replay
-an eligible GET after a network error on a reused connection. SDK callers must
-use an isolated single-use transport for this audited read and disable any
-application/proxy retry policy. Python callers must also keep transport retries
+an eligible GET after a network error on a reused connection. The generated
+Go dispatch now uses an isolated single-use transport for this audited read;
+callers must disable any application/proxy retry policy. Python callers must also keep transport retries
 disabled. Merely calling GET does not establish one access append. Controlled
 409 codec tests prove one generated call and explicit retry; they do not
 qualify arbitrary caller transports, real commit faults or installed services.
@@ -784,8 +784,8 @@ the already-existing runtime status does not prove every consumer is unchanged.
 Ten lightweight Linux contract regressions passed in a network namespace
 without external networking: five audited-read cases, the existing assistant
 projection case and four existing browser-session cases. Pinned offline
-identity generation preserved all 25 public operations and produced 121 Go and
-Python files. Six controlled Python sync/async wire cases passed, including
+identity generation at metadata-only input 2426699b preserved all 25 public
+operations and produced 121 Go and Python files. Six controlled Python sync/async wire cases passed, including
 explicit 409 decoding, a new deliberate read after 409, unchanged selection,
 transport failure and permission refusal without an automatic extra call.
 
@@ -800,10 +800,10 @@ before this contract candidate can be published.
 
 The source comparison reports no operation-identity or closed-object changes.
 Its single named-response review signal is the added explicit 409 binding.
-All component definitions are unchanged. Four Go wire/transport cases are
-prepared, including a shared-connection lost-reply control and isolated HTTP/1
-transport, but their nonblocking Linux admission exited 75 before compilation.
-Do not report those Go cases as passed. Whole repository gates and actual
+All component definitions are unchanged. The metadata-only input's four private
+Go wire cases were not compiled: their nonblocking Linux admission exited 75.
+The SDK correction below supersedes that fixture with ten canonical protocol
+cases; those have not been compiled or run either. Whole repository gates and actual
 installed qualification remain separate; the CLI b967d7c8 gate is unchanged.
 
 ### Browser consumer retry boundary
@@ -830,3 +830,67 @@ implement this behavior. Accurate public metadata can be reviewed independently;
 the complete manual-retry user flow stays open until its owner fixes and
 qualifies the consumers. Existing global write-oriented commit-unknown copy
 also needs a contextual audit-read recovery review.
+
+### Generated Go transport correction
+
+The standard shared Go transport can retry an eligible GET on a connection
+that was used before. Documentation alone leaves that SDK-owned default unsafe
+for an audited read whose reply was lost. Use the pinned generator's existing
+postprocessing boundary for only Identity listAuditEvents at its existing path.
+Emit a small private method with the generated Identity package. It clones a
+standard http.Transport for one HTTP/1 call, disables connection reuse, refuses
+redirects and retains the configured TLS trust/client certificate, cookie jar
+and timeout. It does not catch a failed call or issue a second request.
+
+[Go 1.27.3 Transport.Clone](https://pkg.go.dev/net/http@go1.27.3#Transport.Clone)
+keeps configuration separate from connection reuse; the
+[Client redirect contract](https://pkg.go.dev/net/http@go1.27.3#Client)
+allows the original redirect response to be returned without following it.
+Require an ordinary http.Client with a standard transport for this operation;
+a custom request executor or transport can hide its own retries, so reject it
+before dispatch with an actionable configuration error. Other operations retain
+their configured request executor. HTTP/1 admission is explicit for this read.
+No TLS verification, actor, scope or audit policy becomes optional.
+
+Reject generated output that no longer has the pinned method/dispatch shape,
+and reject an unnoticed operation rename, route move or domain move. A general retry
+framework, empty-body tricks and mutating a shared transport are not selected.
+Pinned [HTTPX 0.28.1](https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py)
+defaults to zero connection retries; its generated Python
+operation has no failure/retry loop. Keep that behavior and test both sync and
+async calls, including a lost reply and an explicit second read.
+
+Tests must cover the actual generated Go operation with a primed shared-client
+control, lost response, explicit 409, explicit retry, preserved TLS/cookie trust,
+redirect refusal, unsupported request executors and concurrent independent calls.
+Use the existing SDK wire runner; no new service or qualification framework is
+needed. Generator unit/projection checks can run independently of Go compilation.
+Native Go wire qualification remains pending while heavy admission is withheld.
+No dependency, model, dataset or third-party implementation is added; existing
+Go BSD-3-Clause and SDK generator/runtime notice obligations remain unchanged.
+
+With no external network, 58 SDK tooling tests, 13 layout tests, the layout and
+roadmap checks passed. The pinned one-domain generation still has 25 public
+operations and now has 122 files: only the Go dispatch changed and its one
+helper was added; all 118 Python output files are byte-identical to the
+metadata-only generation. Gofmt reports no diff in the helper and ten-case Go
+fixture. Eight controlled Python scenarios pass across sync/async,
+standard/assistant and 409/lost-response cases, each followed by one explicit
+new call. These exercise generated Python dispatch with MockTransport, not a
+real server or PostgreSQL. No new heavy admission or Mac queue attempt was
+made for this correction, and no native Go or repository-wide pass is claimed.
+
+The separate Web relay includes a five-file generated/locale patch and a
+two-consumer retry/refetch patch. Both apply checks pass on the source base;
+neither was applied to product Web here. The latter does not complete the
+recovery UI: the owner must surface continuation errors, preserve the failed
+selection/cursor on explicit retry and qualify bilingual read-oriented copy
+in the existing audit and resource-page browser suites.
+
+SCI 8531226d supplies WriteScopedWithin for a caller-owned PostgreSQL transaction
+and performs no commit or retry itself. Review of main d99dbb25 confirms that
+Identity's existing public installation-wide read still uses WriteWithin, while
+the exact workspace Go view skips that installation append and has not paired
+the scoped writer. Keep that integration with IAM. The exact action whitelist
+still excludes audit.events_read; this SDK correction does not extend it or
+change the thirteen-field response projection.
