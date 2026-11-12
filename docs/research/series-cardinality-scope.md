@@ -287,3 +287,45 @@ five-second deadline, bounded replies and cancellation-aware waits. Keep these
 fixture reads outside the product-read proxy so they cannot satisfy its
 authorization or request-audit assertions. This adds no product behavior or
 new dependency and does not qualify the service until the native profile runs.
+
+## Coordinated HTTP projection requirements
+
+Keep the existing read private until the API owner coordinates the route,
+Problem registry, generated SDKs and recovery text. The HTTP projection should
+follow history's original Admin authentication, Origin, selected-cell and request
+ID ownership. Accept exactly one workspace_id and one YYYY-MM-DD UTC date, with
+optional exact metric and rank limit. Reject repeated or unknown options,
+selectors, tenant/focus-label inputs, encoded alternate paths and GET bodies.
+Use the same complete data envelope budget before committing the success audit.
+
+An omitted metric selects the daily overview; an explicitly empty metric is
+VALIDATION_FAILED. Preserve a nonempty metric literally without trimming or
+normalization. An omitted limit selects the configured maximum. An explicit
+limit must be canonical positive decimal and fit both the hard limit and the
+configured maximum; empty, zero, negative and leading-zero forms are invalid.
+Internal Go empty-metric/zero-limit defaults remain unchanged: the HTTP adapter
+needs to distinguish omission from explicit input. These are proposed publication
+requirements, not an implemented HTTP parser or a published operation.
+
+The service's metric-name bound is 1,024 UTF-8 bytes. JSON Schema
+[maxLength](https://json-schema.org/draft/2020-12/json-schema-validation.html#section-6.3.1)
+counts characters and cannot by itself express that byte bound. Preserve the actual
+limit in a machine-readable extension and recovery text, with multibyte wire
+cases above and below the byte boundary. Date serialization must remain
+YYYY-MM-DD in both generated clients, independently of history's RFC3339
+date-time encoding. Verify the complete generated wire request before publication.
+
+Both metric and node ranks are bounded views; their sums may be smaller than
+totalSeries. The exact-metric rank must equal that total. Missing node_id does
+not justify an invented unknown-node row. Selecting a narrower metric is a
+recovery option, not a guarantee: one high-cardinality metric can still exceed
+the source's scan/time budget. Keep that refusal explicit without automatic
+limit increases or unbounded enumeration. These read semantics do not enforce
+per-tenant or per-agent ingest budgets.
+
+The repository pins oapi-codegen 2.8.2 and openapi-python-client 0.29.1. The latter's
+[date property](https://github.com/openapi-generators/openapi-python-client/blob/v0.29.1/openapi_python_client/parser/properties/date.py)
+uses datetime.date, and its [wire template](https://github.com/openapi-generators/openapi-python-client/blob/v0.29.1/openapi_python_client/templates/property_templates/date_property.py.jinja)
+uses isoformat. Retain explicit generated Go and Python wire checks for the new
+operation; inspecting generator source is not proof of the projected clients.
+This preparation adds no dependency or generated artifact.
