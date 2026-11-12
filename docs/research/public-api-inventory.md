@@ -689,3 +689,22 @@ the dispatcher work remains with its owner. Publishing the operation
 also exposes five existing monitoring failures and six history failures
 in Help. Both English and Simplified Chinese title/detail entries for
 all eleven codes are required before that operation ships.
+
+The private operation candidate uses adminFleetHistory at the scoped
+monitoring path plus /fleet-history. Keep strict request timestamps as
+patterned strings in SDK inputs. Python's
+[datetime.isoformat](https://docs.python.org/3.12/library/datetime.html#datetime.datetime.isoformat)
+uses a numeric UTC offset. A date-time query schema lets generated clients
+send +00:00, which the actual handler refuses. String inputs preserve the
+canonical seconds-and-Z value without changing server admission. Response
+timestamps retain the date-time format.
+
+Both pinned generators produced the candidate Monitoring client in a
+network namespace without an external route. The generated Go request
+builder and Python request builder preserved all three query values.
+Both generated models retained the maximum unsigned 64-bit observation
+and measured zero reachable count. These are client projection checks.
+The monitoring owner's separate normal cookie/TLS dispatcher acceptance
+and the eleven bilingual error entries remain publication prerequisites.
+The existing Help suite reports exactly its two missing-error-description
+failures, with the remaining seventeen tests passing for this candidate.

@@ -52,6 +52,108 @@
     }
    ],
    "errors": {}
+  },
+  {
+   "id": "adminFleetHistory",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/monitoring/fleet-history",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "from",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 20
+     }
+    },
+    {
+     "name": "to",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 20
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "FleetHistoryResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED",
+     "MONITORING_HISTORY_RANGE_INVALID"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ],
+    "422": [
+     "MONITORING_HISTORY_RESPONSE_LIMIT"
+    ],
+    "429": [
+     "MONITORING_BUSY",
+     "RATE_LIMITED"
+    ],
+    "503": [
+     "MONITORING_OWNER_REQUIRED",
+     "MONITORING_CONFIGURATION_REQUIRED",
+     "MONITORING_CONFIGURATION_INVALID",
+     "CONFIG_MONITORING_INVALID",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "LICENSE_STORED_STATE_INVALID",
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "MONITORING_HISTORY_NOT_CONFIGURED",
+     "MONITORING_LONG_TIER_NOT_CONFIGURED",
+     "MONITORING_RAW_TIER_UNAVAILABLE",
+     "MONITORING_LONG_TIER_UNAVAILABLE"
+    ]
+   }
   }
  ],
  "schemas": {
@@ -94,6 +196,114 @@
      "type": "integer",
      "minimum": 0,
      "maximum": 9007199254740991
+    }
+   }
+  },
+  "FleetHistory": {
+   "type": "object",
+   "required": [
+    "tier",
+    "step_seconds",
+    "from",
+    "to",
+    "cells"
+   ],
+   "properties": {
+    "tier": {
+     "type": "string",
+     "enum": [
+      "raw",
+      "rollup"
+     ]
+    },
+    "step_seconds": {
+     "type": "integer",
+     "format": "int64",
+     "minimum": 15
+    },
+    "from": {
+     "type": "string",
+     "format": "date-time",
+     "minLength": 20,
+     "maxLength": 20
+    },
+    "to": {
+     "type": "string",
+     "format": "date-time",
+     "minLength": 20,
+     "maxLength": 20
+    },
+    "cells": {
+     "type": "array",
+     "items": {
+      "$ref": "FleetHistoryCell"
+     }
+    }
+   }
+  },
+  "FleetHistoryCell": {
+   "type": "object",
+   "required": [
+    "site_id",
+    "cell_id",
+    "points"
+   ],
+   "properties": {
+    "site_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "cell_id": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 128
+    },
+    "points": {
+     "type": "array",
+     "maxItems": 1440,
+     "items": {
+      "$ref": "FleetHistoryPoint"
+     }
+    }
+   }
+  },
+  "FleetHistoryPoint": {
+   "type": "object",
+   "required": [
+    "at",
+    "observed",
+    "reachable"
+   ],
+   "properties": {
+    "at": {
+     "type": "string",
+     "format": "date-time",
+     "minLength": 20,
+     "maxLength": 20
+    },
+    "observed": {
+     "type": "integer",
+     "format": "uint64",
+     "minimum": 1,
+     "maximum": 18446744073709552000
+    },
+    "reachable": {
+     "type": "integer",
+     "format": "uint64",
+     "minimum": 0,
+     "maximum": 18446744073709552000
+    }
+   }
+  },
+  "FleetHistoryResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "FleetHistory"
     }
    }
   },
