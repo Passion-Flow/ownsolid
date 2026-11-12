@@ -221,3 +221,55 @@ has not run: archive transport stalled and a separate native admission
 refused the original memory threshold. Preserve that distinction from the
 earlier four-package Mac race result. Resume native qualification before
 promoting this extension or closing ARC-107.
+
+
+## Installed resource observations
+
+The connection-ID map proves which transport owned an authenticated
+session, but it is not a count of every live TCP socket. A preference
+probe or a connection still draining can overlap its replacement.
+Record that overlap and gateway resource usage during the installed
+500-agent drill before accepting the per-connection server owner at
+production scale. Do not infer a 10,000-node capacity result from this
+functional fixture.
+
+[Docker stats](https://docs.docker.com/reference/cli/docker/container/stats/)
+provides scoped JSON for named containers without adding an endpoint to
+the product. Record CPU, memory, process/thread count and network counters
+with timestamps at enrollment, automatic age, the single-gateway phase
+and return to the original assignment. Preserve the raw rows. Docker's
+Linux CLI subtracts inactive file cache from reported memory, unlike the
+raw API total; identify which representation is recorded rather than
+calling either one RSS. A stopped gateway produces no stats row, which
+must be classified as the deliberate stopped phase rather than a zero
+resource measurement.
+
+The existing control image already contains Python. A fixture-only,
+bounded subprocess can read the gateway network namespace's
+[Linux TCP tables](https://docs.kernel.org/networking/proc_net_tcp.html)
+and count states for the configured serving port, including IPv4 and
+IPv6 when present. Keep established and closing states separate from
+LISTEN and TIME_WAIT, so ordinary TCP cleanup is not described as an
+active session leak. This proc interface is deprecated in favor of
+socket diagnostics; keep it limited to the isolated test fixture and
+prefer the kernel's current diagnostics interface for any future
+production collector. Do not add a public debug route, grant a new
+container capability or change the Agent wire format to obtain test
+measurements.
+
+Sample at a declared interval and label the maximum as an observed
+sample maximum, not an exact instantaneous peak. Bound every Docker
+command. Recheck an execution failure against the named container's
+running state so a deliberate kill is distinguishable from a broken
+observer; other observation failures must fail the fixture. Prototype
+the namespace/port observation with known open and closed sockets before
+adding it to the production acceptance test. These observations have
+not run yet and the installed test remains unqualified.
+
+No dependency, model or dataset is added. Docker/Moby uses
+[Apache-2.0](https://github.com/moby/moby/blob/master/LICENSE), and the
+existing Python interpreter and standard library use
+[PSF License Version 2](https://docs.python.org/3.12/license.html).
+Both allow commercial and offline use and redistribution with their
+applicable notices. Reading the kernel's documented interface does not
+copy kernel implementation code into ownsolid.
