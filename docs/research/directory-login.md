@@ -124,15 +124,59 @@ Windows SSPI and Kerberos modules in the graph do not enable those protocols.
 | stretchr/testify | v1.8.1 | [MIT](https://github.com/stretchr/testify/blob/v1.8.1/LICENSE) |
 | golang.org/x/crypto | v0.54.0 | [BSD-3-Clause](https://github.com/golang/crypto/blob/v0.54.0/LICENSE) |
 | golang.org/x/net | v0.57.0 | [BSD-3-Clause](https://github.com/golang/net/blob/v0.57.0/LICENSE) |
+| golang.org/x/sys | v0.47.0 | [BSD-3-Clause](https://github.com/golang/sys/blob/v0.47.0/LICENSE) |
+| golang.org/x/term | v0.45.0 | [BSD-3-Clause](https://github.com/golang/term/blob/v0.45.0/LICENSE) |
+| golang.org/x/text | v0.40.0 | [BSD-3-Clause](https://github.com/golang/text/blob/v0.40.0/LICENSE) |
 | gopkg.in/yaml.v3 | v3.0.1 | [MIT and Apache-2.0 by file](https://github.com/go-yaml/yaml/blob/v3.0.1/LICENSE); retain NOTICE |
 
 These licenses permit commercial and offline use and redistribution with their
 conditions. Preserve copyright, license and applicable notices. MPL-covered
 source and modifications retain their file-level source obligations; do not
-relicense them as ownsolid files. A private OpenLDAP fixture additionally needs
-its exact package/image version, OpenLDAP Public License and all bundled OS
-dependency notices inspected before provisioning. No test directory is selected
-or downloaded by this note.
+relicense them as ownsolid files. The actual LDAP package import closure resolves
+21 modules and 27 license/notice files; a root-only module query omitted the
+three `golang.org/x` rows added above. Source inspection is not a build or product
+dependency admission.
+
+## Private protocol fixture
+
+Use [OpenLDAP LTS 2.6.16](https://www.openldap.org/software/download/) rather than
+an older distribution package or a community image with additional entrypoint
+behavior. The official source archive has SHA-256
+`8d8452bc3f56aa7a392c62dd377733f83d1314eed6c52fe44028439a3bb4df18`.
+Offline `gpgv` verified its detached signature against the separately downloaded
+[official release key](https://www.openldap.org/software/download/OpenLDAP/gpg-pubkey.txt),
+fingerprint `3CE269B5398BC8B785645E987F67D5FD1CE1CBCE`, before source extraction.
+Retain the signed archive and verification output with the external fixture.
+
+OpenLDAP and its bundled LMDB use the
+[OpenLDAP Public License 2.8](https://www.openldap.org/software/release/license.html),
+which permits commercial/offline use and redistribution with preserved copyright,
+notices and the verbatim license. Other embedded source notices remain applicable;
+retain the full signed source, its root COPYRIGHT and component notices. This is
+a private test server, not an admitted product component or distribution image.
+
+The cached arm64 build base is
+`golang@sha256:cfa27959837144bf4649802ba38e59daffd0dd2a7994aa83daaf113285b0f551`
+(Debian 13). Its 203 installed package/common-license and Go license files are
+retained by path and hash outside Git. This includes GCC GPL-3.0 with its runtime
+exception, GNU make GPL-3.0, glibc LGPL-2.1 and Go BSD-3-Clause notices. These
+unmodified private build tools are not ownsolid dependencies. The base has
+OpenSSL `3.5.7-1~deb13u3` runtime libraries but no development headers. Before
+building, obtain only the matching development package through Debian's signed
+package indexes, retain the exact package hash and copyright, and refuse an
+unplanned runtime upgrade. OpenSSL 3 uses
+[Apache-2.0](https://openssl-library.org/source/license/); preserve its bundled
+third-party notices as well.
+
+Follow the upstream [build instructions](https://www.openldap.org/doc/admin26/install.html)
+and [TLS configuration](https://www.openldap.org/doc/admin26/tls.html): use the
+bundled MDB backend and native OpenSSL LDAPS with synthetic entries and a private
+CA. Disable unused backends, overlays and SASL rather than claiming their support.
+Acquire packages before provisioning; build and run without network access,
+host-published ports or access to real directory data. Resource limits belong to
+the external fixture configuration. The workstation's permanent nonblocking build
+lock covers compilation and protocol tests. Record actual runs separately; no
+directory server or protocol test has run at this research checkpoint.
 
 ## Parser and operation boundaries
 
