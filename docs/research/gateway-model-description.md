@@ -385,11 +385,12 @@ the committed predecessor, not the formally numbered production tail.
 
 The unnumbered up SQL SHA-256 is
 399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
-The safe down SQL SHA-256 is
+The original handoff down SQL SHA-256 is
 4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
 Changing only the down refusal does not change the candidate catalogue.
-ARC must retain these exact raw bytes when assigning the actual tail
-and verify the complete release lineage and runtime principal.
+Keep the up bytes unchanged. The isolation successor below tightens
+the down script before formal admission. Verify the complete release
+lineage and runtime principal against the final numbered files.
 
 The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
 concurrent revision refusal, exact replay, scope checks and retry after
@@ -435,8 +436,8 @@ PostgreSQL/HTTPS and concurrent rollback tests passed with this assertion.
 The integration baseline is 1aad4eed, which retains schema 58 and 118
 public tables. The handoff from ba815623 was checked locally against
 its complete SHA-256 manifest, including the eight unchanged production
-source files. Assign only the next contiguous version, 59, to the exact
-up and safe-down bytes. Preserve every earlier SQL asset and release
+source files. Assign only the next contiguous version, 59. Preserve the exact
+up bytes and use the isolation-guarded down successor below. Preserve every earlier SQL asset and release
 lineage entry. This changes no agent protocol or agent version policy.
 No new dependency, model, dataset or network runtime is introduced.
 
@@ -460,3 +461,43 @@ predecessor, installed-schema, retained-state and waiting-writer tests
 against the same formal source commit, then complete the repository gates.
 These are admission requirements, not new run results. UI qualification
 and the GW-120 roadmap tick remain with the Gateway and Web owners.
+
+
+### Downgrade transaction isolation
+
+[PostgreSQL LOCK](https://www.postgresql.org/docs/18/sql-lock.html)
+requires either READ COMMITTED or taking the lock before the first
+snapshot in a REPEATABLE READ or SERIALIZABLE transaction. A table lock
+taken after an earlier snapshot does not make subsequent reads current.
+A transaction that first inspects an alias, then waits for an outside
+writer, can miss the newly committed description when checking whether
+downgrade is pristine. Stopping new serving traffic does not repair an
+already captured operator snapshot.
+
+An isolated prototype on 2026-11-12 used the frozen 62a3792f source,
+PostgreSQL 18.6 and pgvector 0.8.7 in a network-none Linux arm64
+container on the Mac arm64 workstation. The original down script passed
+its destructive DDL after another transaction committed a description;
+the added assertion failed as expected. The prototype rolled back its
+DDL and retained the writer's committed data. Prepending SET TRANSACTION
+ISOLATION LEVEL READ COMMITTED rejected the stale snapshot with SQLSTATE
+25001 before locking or DDL, and the retained-data assertion passed.
+This is a prototype result, not the complete formal migration gate.
+
+Make that SET the first executable statement of both the qualified
+fixture and numbered down script. A fresh operator transaction selects
+READ COMMITTED before acquiring the two ACCESS EXCLUSIVE locks. A
+transaction that already captured another isolation snapshot refuses;
+roll it back and start a fresh operator transaction. Do not merely
+mention the isolation requirement in a comment or rely on a deployment's
+default_transaction_isolation. Neither guarantees a current state check.
+The up checksum and structural catalogues remain unchanged. The current
+down SHA-256 is 61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86.
+
+Add production-script regressions for prior REPEATABLE READ and
+SERIALIZABLE snapshots, checking exact 25001 refusal and retained writer
+data, plus fresh transactions at every supported PostgreSQL isolation
+level, which must still refuse retained description state with 55000.
+Keep the original pristine, cleared revision, intent-only, concurrent
+lock-wait and installed HTTPS cases. Require all of them to run on the
+same formal source before publication.

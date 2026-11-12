@@ -82,7 +82,10 @@ restricted runtime principal before starting control. Predecessor schema
 records the exact migration and verification requirements.
 
 A pristine downgrade can remove the unused feature in one operator
-transaction with serving stopped. Any retained text, changed description
+transaction with serving stopped. The script selects READ COMMITTED
+before locking. A transaction with a prior stronger-isolation snapshot
+refuses before DDL; roll it back and begin a fresh operator transaction.
+Any retained text, changed description
 revision or edit intent refuses downgrade with
 `MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE`. Clearing text retains
 its revision and replay history; restore a verified pre-upgrade backup
