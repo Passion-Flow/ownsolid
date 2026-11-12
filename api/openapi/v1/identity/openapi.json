@@ -1905,6 +1905,9 @@
           "400": [
             "INVALID_CURSOR",
             "VALIDATION_FAILED"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
           ]
         },
         "security": [
@@ -1959,6 +1962,9 @@
           },
           "default": {
             "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
           }
         },
         "parameters": [
@@ -1966,7 +1972,8 @@
             "$ref": "#/components/parameters/Limit"
           },
           {
-            "$ref": "#/components/parameters/Cursor"
+            "$ref": "#/components/parameters/Cursor",
+            "description": "Continue from the previous confirmed page. After a failed or lost response, retry the same filters, cursor and representation only explicitly. A retry records a new audited read; it does not confirm whether the earlier access was recorded. No page is returned unless its access audit transaction is confirmed."
           },
           {
             "name": "action",
@@ -2099,7 +2106,8 @@
               ]
             }
           }
-        ]
+        ],
+        "description": "Read one page under current platform-administrator authority. The server reads the page before recording this access as audit.events_read in the same transaction; a successful page cannot contain its own access event. No page or assistant attribution is released unless that transaction is confirmed. STORAGE_COMMIT_OUTCOME_UNKNOWN (409) means the access audit may or may not have committed. Do not retry automatically after that response or a lost reply. A deliberate retry with the same filters, cursor and representation is a new audited read, not a replay or proof that the earlier audit is absent. Preserve the earlier request ID for diagnosis. Use category=audit to select audit-family events; the exact action filter accepts only its declared enumeration."
       }
     },
     "/api/v1/admin/mail-deliveries": {
