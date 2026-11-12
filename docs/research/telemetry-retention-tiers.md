@@ -409,6 +409,19 @@ outcomes. Their contract/SDK parsing tests belong to DEV's publication
 qualification. Whole public operation acceptance still requires that corrected
 contract, bilingual explanations and the same registered module source.
 
+## Coordinated public contract
+
+Main 096c50b8 publishes the registered operation, OpenAPI, generated clients
+and Help with the fourteen bilingual recovery entries. Its protected module
+source matches the authenticated entry qualified above. The combined
+disconnected check/build, package race tests, SDK/Help/locale checks, normal
+TLS/CSRF/login query and private-store certificate rotation all passed.
+See the [public contract acceptance](public-api-inventory.md#obs-109-fleet-history-publication-boundary).
+A documentation-only upstream advance was checked before the fast-forward
+publication. Installed retention delivery and the Console history view remain
+open. The later retention profile and process-route correction are independent
+increments on this published base.
+
 ## Ninety-day aggregate qualification
 
 The existing native read qualifies tier selection and the large-fleet note
