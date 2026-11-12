@@ -428,3 +428,25 @@ require readable control, blocklist and both frontend indexes. Reuse the unchang
 qualified source, binaries and web artifact. No product security check or lifecycle
 assertion is relaxed. A subsequent low-free-memory preflight returned 75 before
 creating a container; the retry retained both original resource locks and limits.
+
+
+## Production default log format
+
+The installed 500-agent run exposed an observation-fixture defect: raw gateway
+logs use Go's default slog handler, whose event message follows the standard-log
+date, time and level without a `msg=` key. The parser accepted JSON and explicit
+text-handler keys only. All 500 agents enrolled and connected, and raw logs show
+actual automatic retirement, but that parser cannot establish the original
+assignment or qualify the rollout. Preserve the failed installed result.
+
+The pinned Go source in `src/log/slog/handler.go` writes the record level, then
+its message, then attributes through the default log.Logger. The
+[standard logger](https://pkg.go.dev/log#pkg-constants) supplies the default date
+and time, and [slog](https://pkg.go.dev/log/slog#hdr-Handlers) distinguishes the
+default handler from TextHandler/JSONHandler. Parse only the actual default
+prefix and a complete event-name token, plus the two previously accepted formats.
+Do not search arbitrary attribute text for an event name. Reproduce the installed
+lines, including replacement-after-old-close, restart and observed retirement,
+and refuse unrelated messages or attributes containing those same event words.
+This changes the test observer only; transport, protocol, bounds and task/cursor
+assertions remain unchanged. The existing Go BSD-3-Clause license applies.
