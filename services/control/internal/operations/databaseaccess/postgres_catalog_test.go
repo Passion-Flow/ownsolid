@@ -11,7 +11,7 @@ import (
 
 func TestPostgreSQLVariantRuntimeGrantsMatchActualMigrations(t *testing.T) {
 	var actual []string
-	for _, path := range []string{"postgresql/000024_external_imports.up.sql", "postgresql/000025_artifact_objects.up.sql", "postgresql/000026_image_registry.up.sql", "postgresql/000027_task_events.up.sql", "postgresql/000028_middleware.up.sql", "postgresql/000029_private_cluster.up.sql"} {
+	for _, path := range []string{"postgresql/000024_external_imports.up.sql", "postgresql/000025_artifact_objects.up.sql", "postgresql/000026_image_registry.up.sql", "postgresql/000027_task_events.up.sql", "postgresql/000028_middleware.up.sql", "postgresql/000029_private_cluster.up.sql", "postgresql/000060_dataset_draft_import_receipts.up.sql"} {
 		raw, err := migrations.Files.ReadFile(path)
 		if err != nil {
 			t.Fatal(err)
@@ -23,7 +23,7 @@ func TestPostgreSQLVariantRuntimeGrantsMatchActualMigrations(t *testing.T) {
 	sort.Strings(actual)
 	wanted := append([]string(nil), postgreSQLVariantTables[:]...)
 	sort.Strings(wanted)
-	if len(actual) != 22 || !reflect.DeepEqual(actual, wanted) {
+	if len(actual) != 23 || !reflect.DeepEqual(actual, wanted) {
 		t.Fatalf("runtime grants differ from implemented variant tables: %v / %v", actual, wanted)
 	}
 }
