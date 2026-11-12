@@ -6,7 +6,19 @@ import (
 )
 
 func TestMonitoringPublicFailureEnvelopes(t *testing.T) {
-	for code, want := range map[string]int{"CONFIG_MONITORING_INVALID": 503, "MONITORING_CONFIGURATION_INVALID": 503, "MONITORING_CONFIGURATION_REQUIRED": 503, "MONITORING_OWNER_REQUIRED": 503, "MONITORING_BUSY": 429} {
+	for code, want := range map[string]int{
+		"CONFIG_MONITORING_INVALID":           503,
+		"MONITORING_CONFIGURATION_INVALID":    503,
+		"MONITORING_CONFIGURATION_REQUIRED":   503,
+		"MONITORING_OWNER_REQUIRED":           503,
+		"MONITORING_BUSY":                     429,
+		"MONITORING_HISTORY_RANGE_INVALID":    400,
+		"MONITORING_HISTORY_RESPONSE_LIMIT":   422,
+		"MONITORING_HISTORY_NOT_CONFIGURED":   503,
+		"MONITORING_LONG_TIER_NOT_CONFIGURED": 503,
+		"MONITORING_RAW_TIER_UNAVAILABLE":     503,
+		"MONITORING_LONG_TIER_UNAVAILABLE":    503,
+	} {
 		actual, status := publicProblem(errors.New(code))
 		if actual != code || status != want {
 			t.Fatal(code, actual, status)

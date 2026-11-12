@@ -31,7 +31,7 @@ export interface components {
             title: string;
             status: number;
             /** @enum {string} */
-            code: "ACCESS_DENIED" | "ACCOUNT_EXISTS" | "AUTH_CAPACITY_EXCEEDED" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "CONFIG_MONITORING_INVALID" | "CSRF_INVALID" | "IDEMPOTENCY_CONFLICT" | "INTERNAL_ERROR" | "INVALID_CURSOR" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "LICENSE_CONFIGURATION_REQUIRED" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "MISDIRECTED_REQUEST" | "MONITORING_BUSY" | "MONITORING_CONFIGURATION_INVALID" | "MONITORING_CONFIGURATION_REQUIRED" | "MONITORING_OWNER_REQUIRED" | "ORIGIN_REJECTED" | "PASSWORD_BLOCKED" | "PASSWORD_POLICY_VIOLATION" | "PAYLOAD_TOO_LARGE" | "PROTECTED_ACCOUNT" | "RATE_LIMITED" | "RESOURCE_NOT_FOUND" | "SERVICE_NOT_READY" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "STORAGE_UNAVAILABLE" | "TOKEN_UNUSABLE" | "UNSUPPORTED_MEDIA_TYPE" | "VALIDATION_FAILED" | "VERSION_CONFLICT";
+            code: "ACCESS_DENIED" | "ACCOUNT_EXISTS" | "AUTH_CAPACITY_EXCEEDED" | "AUTH_INVALID_CREDENTIALS" | "AUTH_REQUIRED" | "AUTH_SESSION_EXPIRED" | "CONFIG_MONITORING_INVALID" | "CSRF_INVALID" | "IDEMPOTENCY_CONFLICT" | "INTERNAL_ERROR" | "INVALID_CURSOR" | "INVITATION_EXISTS" | "INVITATION_STATE_CONFLICT" | "LICENSE_CONFIGURATION_REQUIRED" | "LICENSE_NEW_BUSINESS_UNAVAILABLE" | "LICENSE_STORED_STATE_INVALID" | "MISDIRECTED_REQUEST" | "MONITORING_BUSY" | "MONITORING_CONFIGURATION_INVALID" | "MONITORING_CONFIGURATION_REQUIRED" | "MONITORING_HISTORY_NOT_CONFIGURED" | "MONITORING_HISTORY_RANGE_INVALID" | "MONITORING_HISTORY_RESPONSE_LIMIT" | "MONITORING_LONG_TIER_NOT_CONFIGURED" | "MONITORING_LONG_TIER_UNAVAILABLE" | "MONITORING_OWNER_REQUIRED" | "MONITORING_RAW_TIER_UNAVAILABLE" | "ORIGIN_REJECTED" | "PASSWORD_BLOCKED" | "PASSWORD_POLICY_VIOLATION" | "PAYLOAD_TOO_LARGE" | "PROTECTED_ACCOUNT" | "RATE_LIMITED" | "RESOURCE_NOT_FOUND" | "SERVICE_NOT_READY" | "STORAGE_COMMIT_OUTCOME_UNKNOWN" | "STORAGE_UNAVAILABLE" | "TOKEN_UNUSABLE" | "UNSUPPORTED_MEDIA_TYPE" | "VALIDATION_FAILED" | "VERSION_CONFLICT";
             /** Format: uuid */
             request_id: string;
             detail?: string;
@@ -180,6 +180,33 @@ export interface components {
         };
         SnapshotResponse: {
             data: components["schemas"]["Snapshot"];
+        };
+        FleetHistoryPoint: {
+            /** Format: date-time */
+            at: string;
+            /** Format: uint64 */
+            observed: number;
+            /** Format: uint64 */
+            reachable: number;
+        };
+        FleetHistoryCell: {
+            site_id: string;
+            cell_id: string;
+            points: components["schemas"]["FleetHistoryPoint"][];
+        };
+        FleetHistory: {
+            /** @enum {string} */
+            tier: "raw" | "rollup";
+            /** Format: int64 */
+            step_seconds: number;
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            cells: components["schemas"]["FleetHistoryCell"][];
+        };
+        FleetHistoryResponse: {
+            data: components["schemas"]["FleetHistory"];
         };
     };
     responses: never;

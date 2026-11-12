@@ -646,3 +646,46 @@ generator tests reproduced the missing-name rows before regeneration,
 then passed for both entrances, including reusable path and pagination
 parameters. Three newly visible parameter descriptions have Simplified
 Chinese translations in the existing Help description catalog.
+
+## OBS-109 fleet history publication boundary
+
+The [bounded history design](telemetry-retention-tiers.md) defines a
+single authorized Admin read using workspace_id, from and to. The
+timestamps are canonical UTC seconds, with from strictly before to.
+The raw query has a 512-byte bound. The service chooses the tier and
+evaluation grid. Successful values contain tier, step_seconds, evaluated
+from/to and sparse cells with site_id, cell_id and ordered at, observed,
+reachable points. Missing points stay absent and measured zero reachable
+counts stay present. Each cell has at most 1440 points. The service uses
+unsigned 64-bit counts. Preserve that type in the generated Go client.
+The [OpenAPI schema and parameter rules](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+and [generator type extensions](https://github.com/oapi-codegen/oapi-codegen/blob/v2.8.2/README.md)
+apply. The [SDK licences](sdk.md#licenses) cover the existing generators
+and clients. No dependency, model or data set is added.
+
+The candidate path is the existing scoped Admin monitoring path plus
+/fleet-history. Reuse the normal data response envelope and Problem media
+type. Budget the complete encoded data envelope and trailing newline
+within 1 MiB before the authority recheck and successful audit.
+Register the exact history range error at 400, projection limit at 422
+and four distinct missing/unavailable tier errors at 503. Unknown native
+error text must retain the safe STORAGE_UNAVAILABLE fallback.
+
+Release requires the monitoring owner's exact Owns and Handle dispatch,
+the shared public Problem registry, and both localized error catalogs.
+Keep installed tier configuration and trust with DEL and shared startup
+composition with ARC. A source-only contract candidate does not make
+the route usable. Verify the actual cookie/cell dispatcher with
+PostgreSQL and the native two stores, including mid-query revocation,
+an over-budget response without success audit, a failed long tier
+without a raw fallback, and certificate replacement. Then regenerate
+Web, Help and both SDKs and confirm Portal excludes the Admin read.
+
+Publish the reusable response components and the six public Problem
+mappings first. Keep the candidate path out of the public Paths Object
+until the monitoring owner mounts it through the normal dispatcher.
+This lets the real TLS fixture validate FleetHistoryResponse while
+the dispatcher work remains with its owner. Publishing the operation
+also exposes five existing monitoring failures and six history failures
+in Help. Both English and Simplified Chinese title/detail entries for
+all eleven codes are required before that operation ships.
