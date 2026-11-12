@@ -264,3 +264,9 @@ run. Its separate new cell-owner group initially failed in a test-only audit
 UUID comparison and passed after correction at `be30d3f4`; the raw logs and
 repository-gate boundary are in the [native owner acceptance](training-job-lifecycle.md#native-acceptance-boundary-for-the-local-cell-candidates).
 No Agent, UI, physical GPU or new worker computation is implied.
+
+The refreshed nine-group PostgreSQL replay and four Go owner packages also
+passed at `145852e7` after rebasing onto the updated main model-import code.
+The exact source, raw log hashes and separate pending CPU-unit profile are
+recorded in the native owner acceptance above. No Python/model/data input or
+production runtime manifest changed with these Go cell predicates.
