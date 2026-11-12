@@ -165,7 +165,7 @@ export interface GatewayScript {
   publishFailures: (ScriptedFailure | 'lost')[];
   /** Every gateway or name write the page sent, with its idempotency key and body. */
   publishWrites: {
-    kind: 'provision' | 'publish' | 'disable' | 'revokeGateway';
+    kind: 'provision' | 'publish' | 'disable' | 'revokeGateway' | 'description';
     key: string;
     body: Record<string, unknown>;
   }[];
@@ -221,6 +221,7 @@ function credentialOf(gateway: GatewayInstance, intent: string): string {
 async function routePublishing(page: Page, state: GatewayScript, data: Reply, problem: Refuse) {
   const base = /\/admin\/distribution\/workspaces\/[0-9a-f-]{36}/;
   const madeBy = new Map<string, string>();
+  const descriptions = new Map<string, { fingerprint: string; revision: number }>();
   const written = (route: Route, kind: GatewayScript['publishWrites'][number]['kind']) => {
     const request = route.request();
     const intent = request.headers()['idempotency-key'] ?? '';
@@ -359,6 +360,42 @@ async function routePublishing(page: Page, state: GatewayScript, data: Reply, pr
     state.aliases[index] = disabled;
     if (failure === 'lost') return route.abort('connectionreset');
     return data(route, disabled);
+  });
+  await page.route(new RegExp(`${base.source}/aliases/[0-9a-f-]{36}/description$`), (route) => {
+    const { intent, body, reason, failure } = written(route, 'description');
+    if (failure && failure !== 'lost') return problem(route, failure);
+    const index = state.aliases.findIndex(
+      (item) => item.id === pathPart(route, 2) && item.workspace_id === pathPart(route, 4),
+    );
+    const found = state.aliases[index];
+    if (!found) return problem(route, { status: 404, code: 'MODEL_ALIAS_NOT_FOUND' });
+    if (found.description_revision === undefined) {
+      return problem(route, { status: 503, code: 'SERVICE_NOT_READY' });
+    }
+    if (!intent || !reason || typeof body.description !== 'string') {
+      return problem(route, { status: 400, code: 'VALIDATION_FAILED' });
+    }
+    const text = body.description.replaceAll('\r\n', '\n').trim();
+    const fingerprint = JSON.stringify({ ...body, description: text });
+    const key = `${found.workspace_id}:${found.id}:${intent}`;
+    const prior = descriptions.get(key);
+    if (prior && prior.fingerprint !== fingerprint) {
+      return problem(route, { status: 409, code: 'IDEMPOTENCY_CONFLICT' });
+    }
+    if (!prior && body.expected_description_revision !== found.description_revision) {
+      return problem(route, { status: 409, code: 'VERSION_CONFLICT' });
+    }
+    const revision = prior?.revision ?? found.description_revision + 1;
+    const current = prior ? found : { ...found, description: text, description_revision: revision };
+    state.aliases[index] = current;
+    descriptions.set(key, { fingerprint, revision });
+    if (failure === 'lost') return route.abort('connectionreset');
+    return data(route, {
+      description: current.description,
+      description_revision: current.description_revision,
+      applied_description_revision: revision,
+      replayed: prior !== undefined,
+    });
   });
 }
 
