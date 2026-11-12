@@ -29,7 +29,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 - [x] MOD-119 Model library page: your models, importing a bundle with resumable upload and verification shown, each model's own page and retiring it (S-201, S-202) (P1) - Evidence: a2cb8f4, 9bc583a, d296b9f; real Chromium imported, interrupted, resumed and retired the real Qwen3-0.6B on lane B's installation on `ownsolid-cpu`, 2026-11-07
 - [x] MOD-120 Remove a finished import's upload and failed stages from the model store once its model is published, crash-safe, so a model takes its own size (P1) - Evidence: e81959df, bbf09930, [disconnected Linux amd64 acceptance](../../research/model-import-cleanup.md#linux-amd64-acceptance)
 
-- [ ] MOD-121 Expire abandoned unfinished uploads under a configurable retention policy, report their expiry to operators and recover their staging space without touching active uploads or published models (P1) - [Disabled worker candidate and PostgreSQL evidence](../../research/model-import-cleanup.md#postgresql-expiry-acceptance)
+- [ ] MOD-121 Expire abandoned unfinished uploads under a configurable retention policy, report their expiry to operators and recover their staging space without touching active uploads or published models (P1) - [Disabled worker candidate and PostgreSQL evidence](../../research/model-import-cleanup.md#postgresql-expiry-acceptance), [typed policy and shutdown recovery](../../research/model-import-cleanup.md#linux-amd64-shutdown-recovery)
 
 ## P2 Fleet operations
 
