@@ -689,3 +689,28 @@ the dispatcher work remains with its owner. Publishing the operation
 also exposes five existing monitoring failures and six history failures
 in Help. Both English and Simplified Chinese title/detail entries for
 all eleven codes are required before that operation ships.
+
+### Existing monitoring transaction refusals
+
+Both monitoring reads preserve the existing transaction classifications.
+The public registry maps STORAGE_TIMEOUT, STORAGE_CANCELLED,
+STORAGE_COMMIT_ROLLED_BACK, STORAGE_DEADLOCK and STORAGE_LOCK_TIMEOUT
+to HTTP 503. All five were absent from the shared Monitoring Problem
+enum and the generated Python model rejected each response with
+ValueError. Keep those native classifications and add them to the
+published schema. Changing the service to collapse them would discard
+commit certainty and alter the existing transaction contract.
+
+The existing SDK licences apply. No dependency is added. Require the
+public SDK projection to retain all five codes, regenerate the clients,
+and parse controlled 503 responses through the already published
+monitoring read. This acceptance covers the generated wire model.
+Real PostgreSQL faults and the history module entry have their separate
+owning tests and acceptance.
+
+The Linux amd64 disconnected check, build and Help/i18n tests passed.
+Pinned generation produced all 28 public domain clients in each language
+and all generated Go packages compiled. The standalone Go/Python wire
+checks passed. The published monitoring client decoded all five native
+503 replies through a controlled HTTPX transport. The SDK projection
+regression protects the shared Problem enum.
