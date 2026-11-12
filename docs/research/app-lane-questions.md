@@ -287,8 +287,14 @@ passed thirteen isolated PostgreSQL cases using two independently opened
 pools. Its candidate schema is not registered in production and current
 command routes do not bind it. Supply a trusted user policy and bounded
 gateway usage adapter together with the production migration and restore
-catalogue. Run-loop limits, operator controls, telemetry and both browser
-flows remain open. Neither this reservation nor a model result replaces
+catalogue. The staged [persistent loop guard](product-assistant-loop-guard.md)
+and `productagenthttp.NewGuarded` passed real disconnected PostgreSQL and
+both-entrance HTTPS checks. Production run controls, operator controls,
+telemetry and both browser flows remain open. Its exact factories, typed
+configuration requirements, unnumbered five-table DDL, cell classification
+boundary, minimum grants and non-destructive rollback are in that handoff.
+Queue persistence explicitly behind the current ARC work; no migration
+number or schema activation is assumed. Neither this reservation nor a model result replaces
 the signed plan and human confirmation required for a write.
 
 ## Shared browser gate boundary

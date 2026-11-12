@@ -116,9 +116,14 @@ candidate schema must fail closed. The candidate DDL is fixture-owned until
 the persistence owner registers a forward migration and restore catalogue.
 
 The public endpoint, production migration, trusted policy source, gateway
-usage binding, run-loop bounds, operator controls and both browser entrances
+usage binding, production run controls and both browser entrances
 are separate integration requirements. AGT-112 remains unchecked until
 those complete the main flow and offline acceptance.
+
+The staged [persistent run guard](product-assistant-loop-guard.md) now binds
+deterministic commands to monotonic step counts and policy/cancellation
+fences. Its guarded HTTPS factory uses this reservation component and does
+not register a production route or schema.
 
 ## Integration surface
 

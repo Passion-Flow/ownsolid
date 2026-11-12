@@ -179,3 +179,33 @@ inputs. The last two require the real dispatcher registration overlay until
 the shared owner mounts the handler. The HTTP candidate preserves the existing
 versioned command body. Public run inspection/cancel, confirmed actions and
 browser controls require separate owner contracts; they are not exposed here.
+
+## Isolated acceptance
+
+The schema-58 candidate passed nineteen real PostgreSQL run scenarios on
+Linux arm64, using two independently opened pools and network mode `none`.
+Separate installation and user ceilings, concurrent claims, duplicate and
+changed replays, immutable initial limits, known failure retry, pre/post
+policy failure, installation kill, cross-instance stop, cancelled context,
+lost claim and completion replies, actual finalization rollback, changed
+intent, cross-workspace/tenant and revoked membership/session all passed.
+Registered sensitive-read and write risk were refused before charging.
+
+In one fresh disconnected PostgreSQL 18.6/pgvector 0.8.7 fixture, all thirteen
+reservation scenarios, those nineteen run scenarios, the existing scoped
+command root, both real HTTPS dispatcher roots, and the real assistant audit
+export with the standalone verifier passed together. The guarded HTTP root
+covered Admin and Portal, typed reads without a model, explicit disable,
+missing/failed policy, zero run and execution capacity, CSRF, unknown fields
+and recovery. Denied initial requests left neither an empty run nor a success
+audit. Cancellation after dispatch suppressed data while preserving the actual
+read's correlated audit.
+
+The candidate passed the complete `make check`, `make build` and `make test`
+gate on macOS. Browser suites ran sequentially with two workers and no
+automatic retries: Console 1,075 passed/28 live-environment skips; Portal
+389 passed/9 live-environment skips. Assistant and audit race tests and vet,
+and the five qualifier unit tests, passed. Linux amd64 binaries have been
+cross-compiled but native execution is not yet recorded; test-server transfer
+is still pending. Neither that compilation nor the separate two-case model
+transport qualifies the three retained assistant safety cases.
