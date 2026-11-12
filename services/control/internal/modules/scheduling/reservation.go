@@ -74,11 +74,14 @@ func requireReservationTransaction(ctx context.Context, q transaction.Executor) 
 	return nil
 }
 
-// lockReservationScope orders locks policy first, then workspace. Advisory hash
-// collisions serialize unrelated scopes and cannot grant extra capacity.
+// lockReservationScope orders ordinary writes policy, shared tenant, workspace.
+// Advisory hash collisions serialize unrelated scopes and cannot grant capacity.
 func lockReservationScope(ctx context.Context, q transaction.Executor, a Attempt) (int64, error) {
 	revision, err := lockReservationPolicy(ctx, q)
 	if err != nil {
+		return 0, err
+	}
+	if err := lockReservationTenant(ctx, q, a.TenantID, false); err != nil {
 		return 0, err
 	}
 	return revision, lockReservationWorkspace(ctx, q, a.TenantID, a.WorkspaceID)
@@ -97,6 +100,19 @@ func lockReservationPolicy(ctx context.Context, q transaction.Executor) (int64, 
 		return 0, err
 	}
 	return revision, nil
+}
+
+// lockReservationTenant bounds current queue exclusion independently of domain
+// size. Queue admission takes exclusive access before any scheduling write;
+// ordinary mutations share access until their owner transaction completes.
+func lockReservationTenant(ctx context.Context, q transaction.Executor, tenant string, exclusive bool) error {
+	const tenantLockNamespace = 713090005
+	query := "SELECT pg_advisory_xact_lock_shared($1,hashtext($2))"
+	if exclusive {
+		query = "SELECT pg_advisory_xact_lock($1,hashtext($2))"
+	}
+	_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, query, tenantLockNamespace, tenant))
+	return err
 }
 
 func lockReservationWorkspace(ctx context.Context, q transaction.Executor, tenant, workspace string) error {
@@ -139,20 +155,8 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
 	}
 
 	args := append(a.scopeArgs(), a.ID, body, requested)
-	var same, released bool
-	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT attempt_id=$6 AND intent=$7::jsonb AND demand=$8::jsonb
-  AND site_id=local_site_id() AND cell_id=local_cell_id(),released_at IS NOT NULL
- FROM scheduling_reservations WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5`,
-		args...)).Scan(&same, &released)
-	switch {
-	case err == nil && !same:
-		return false, ErrReservationConflict
-	case err == nil && released:
-		return false, ErrReservationReleased
-	case err == nil:
-		return false, nil
-	case !errors.Is(err, sql.ErrNoRows):
+	replayed, err := reservationReplayWithin(ctx, q, a, body, requested)
+	if err != nil || replayed {
 		return false, err
 	}
 
@@ -194,6 +198,27 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
 		return false, err
 	}
 	return true, nil
+}
+
+func reservationReplayWithin(ctx context.Context, q transaction.Executor, a Attempt, body, requested []byte) (bool, error) {
+	var same, released bool
+	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+		`SELECT attempt_id=$6 AND intent=$7::jsonb AND demand=$8::jsonb
+  AND site_id=local_site_id() AND cell_id=local_cell_id(),released_at IS NOT NULL
+ FROM scheduling_reservations WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5`,
+		append(a.scopeArgs(), a.ID, body, requested)...)).Scan(&same, &released)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return false, nil
+	case err != nil:
+		return false, err
+	case !same:
+		return false, ErrReservationConflict
+	case released:
+		return false, ErrReservationReleased
+	default:
+		return true, nil
+	}
 }
 
 // ReleaseWithin ends a single-replica attempt in the owner's transaction

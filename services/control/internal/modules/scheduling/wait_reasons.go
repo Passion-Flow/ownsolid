@@ -77,6 +77,10 @@ var errReclaimReleasePending = fmt.Errorf("%w: waiting for selected releases", E
 func WaitReasons(err error) []WaitReason {
 	var quota *reservationQuotaError
 	switch {
+	case errors.Is(err, ErrQuotaUnconfigured):
+		return []WaitReason{{Code: ErrQuotaUnconfigured.Error(), Action: ConfigureQuotaPolicy}}
+	case errors.Is(err, ErrQueueTurnPending):
+		return []WaitReason{{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}}
 	case errors.Is(err, ErrQuotaScopeNotFound):
 		return []WaitReason{{Code: ErrQuotaScopeNotFound.Error(), Action: VerifyWorkspaceAccess}}
 	case errors.As(err, &quota):
