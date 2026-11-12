@@ -342,3 +342,21 @@ resolution and source validation. The Web assertions cover what the
 reader sees after the locale and detail chunks arrive. Use the existing
 Playwright and Help dependencies and their documented licences. No
 dependency, model or dataset is added.
+
+### Read-only alias capability descriptions (GW-104)
+
+The proposed alias list/detail read projection has three new schema
+descriptions. Its optional capability object is omitted when evidence
+does not match the current target. A true text-generation flag records
+generation verification for that target and makes no protocol-adapter
+claim. The context ceiling is an upper bound from the verified model,
+serving recipe and gateway policy. The live tokenizer can impose a
+smaller bound. Preserve those distinctions in the Chinese Help catalog.
+The generated text must keep using the exact English schema descriptions
+as lookup keys. No dependency, model or dataset is added.
+
+The locale handoff remains separate from the pending Portal browser
+candidates. The contract owner regenerates and checks the complete
+projection when the matching read contract and backend are combined.
+These descriptions cannot publish on their own because the Help
+generator rejects source translations absent from the current contract.
