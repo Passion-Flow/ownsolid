@@ -213,7 +213,8 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
 	})
 	fleet.start(t, 2*time.Minute)
 	e.fleetOnline(t, fleet, "initial gateway lifecycle fleet", fleet.started, gatewayMove)
-	tasks := createTasks(t, admin, csrf, fleet.targets())
+	targets := fleet.targets()
+	tasks := createTasks(t, admin, csrf, targets)
 	taskList := "'" + strings.Join(tasks, "','") + "'"
 	waitFor(t, "acknowledged work before gateway age", 15*time.Second, func() bool {
 		return e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND state='running' AND attempt=1 AND acknowledged_attempt=attempt") == strconv.Itoa(len(tasks))
@@ -240,12 +241,12 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
 	}{{first, originalFirst}, {second, originalSecond}}
 	aged := time.Now()
 	observer.checkpoint(t, "automatic_age")
-	waitFor(t, "every original transport retires at age and reconnects", gatewayMove, func() bool {
+	waitFor(t, "every original transport retires at age", gatewayMove, func() bool {
 		for _, pair := range pairs {
 			current := gatewayConnections(t, pair.gateway.name)
-			for node, previousID := range pair.before.active {
+			for _, previousID := range pair.before.active {
 				retirement, ok := current.retired[previousID]
-				if !ok || current.active[node] == "" || current.active[node] == previousID {
+				if !ok {
 					return false
 				}
 				if retirement.reason != "connection_age" || retirement.forced || !retirement.observed ||
@@ -273,29 +274,64 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
 		}
 		t.Logf("gateway=%s original_transports=%d observed_drain_age_seconds_min=%.6f max=%.6f observed_retirement_age_seconds_min=%.6f max=%.6f drain_delay_seconds_max=%.6f", pair.gateway.name, len(pair.before.active), minimumStart, maximumStart, minimumRetirement, maximumRetirement, maximumDelay)
 	}
-	t.Logf("all %d original connections replaced after %s", gatewayAgents, time.Since(aged).Round(100*time.Millisecond))
+	t.Logf("all %d original connections retired after %s", gatewayAgents, time.Since(aged).Round(100*time.Millisecond))
 	observer.checkpoint(t, "after_automatic_age")
-	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1"); running != strconv.Itoa(len(tasks)) {
+	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1 AND lease_expires_at>clock_timestamp()"); running != strconv.Itoa(len(tasks)) {
 		t.Fatal("the age drill did not retain every acknowledged task in flight")
 	}
-	e.fleetOnline(t, fleet, "after automatic age", aged, gatewayMove)
-	e.waitForTasks(t, "acknowledged tasks retained through age", tasks, gatewayDispatch)
+	e.waitForTasks(t, "acknowledged tasks retained through age", tasks, min(gatewayDispatch, remainingGatewayMove(t, aged)))
+	waitFor(t, "every original transport reconnects after execution", remainingGatewayMove(t, aged), func() bool {
+		for _, pair := range pairs {
+			current := gatewayConnections(t, pair.gateway.name)
+			for node, previousID := range pair.before.active {
+				if current.active[node] == "" || current.active[node] == previousID {
+					return false
+				}
+			}
+		}
+		return true
+	})
+	t.Logf("all %d original transports replaced after %s", gatewayAgents, time.Since(aged).Round(100*time.Millisecond))
+	e.fleetOnline(t, fleet, "after automatic age", aged, remainingGatewayMove(t, aged))
 	if attempts := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND attempt=1 AND acknowledged_attempt=1"); attempts != strconv.Itoa(len(tasks)) {
 		t.Fatal("connection age replaced an acknowledged task attempt")
 	}
-	rolledTasks := createTasks(t, admin, csrf, fleet.targets())
+	rolledTasks := createTasks(t, admin, csrf, targets)
 	rolledList := "'" + strings.Join(rolledTasks, "','") + "'"
 	waitFor(t, "acknowledged work before gateway roll", 15*time.Second, func() bool {
 		return e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND state='running' AND attempt=1 AND acknowledged_attempt=attempt") == strconv.Itoa(len(rolledTasks))
 	})
+	busy := make(map[string]bool, len(targets))
+	for _, node := range targets {
+		busy[node] = true
+	}
+	killed := time.Now()
 	observer.checkpoint(t, "gateway_a_stopped")
 	if output, err := run(t, "docker", "kill", first.name); err != nil {
 		t.Fatalf("kill gateway: %v %s", err, output)
 	}
-	waitFor(t, "all agents on surviving gateway", gatewayMove, func() bool {
+	waitFor(t, "every idle agent on surviving gateway", remainingGatewayMove(t, killed), func() bool {
+		current := gatewayConnections(t, second.name)
+		for _, pair := range pairs {
+			for node := range pair.before.active {
+				if !busy[node] && current.active[node] == "" {
+					return false
+				}
+			}
+		}
+		return true
+	})
+	t.Logf("all %d idle agents on surviving gateway after %s", gatewayAgents-len(busy), time.Since(killed).Round(100*time.Millisecond))
+	observer.checkpoint(t, "gateway_a_stopped")
+	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1 AND lease_expires_at>clock_timestamp()"); running != strconv.Itoa(len(rolledTasks)) {
+		t.Fatal("the gateway kill did not retain every acknowledged task and current lease in flight")
+	}
+	e.waitForTasks(t, "acknowledged tasks retained through gateway kill", rolledTasks, min(gatewayDispatch, remainingGatewayMove(t, killed)))
+	waitFor(t, "all agents on surviving gateway after execution", remainingGatewayMove(t, killed), func() bool {
 		return len(gatewayConnections(t, second.name).active) == gatewayAgents
 	})
-	observer.checkpoint(t, "gateway_a_stopped")
+	t.Logf("all %d agents on surviving gateway after %s", gatewayAgents, time.Since(killed).Round(100*time.Millisecond))
+	observer.checkpoint(t, "all_agents_on_survivor")
 	if output, err := run(t, "docker", "start", first.name); err != nil {
 		t.Fatalf("return gateway: %v %s", err, output)
 	}
@@ -318,11 +354,10 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
 	})
 	t.Logf("original %d/%d distribution restored after %s", len(originalFirst.active), len(originalSecond.active), time.Since(returned).Round(100*time.Millisecond))
 	observer.checkpoint(t, "original_assignments_restored")
-	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1"); running != strconv.Itoa(len(rolledTasks)) {
-		t.Fatal("the gateway roll did not retain every acknowledged task in flight")
+	if completed := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND state='succeeded' AND attempt=1 AND acknowledged_attempt=1"); completed != strconv.Itoa(len(rolledTasks)) {
+		t.Fatal("the gateway return changed a completed acknowledged task")
 	}
 	e.fleetOnline(t, fleet, "after preferred gateways return", returned, gatewayMove)
-	e.waitForTasks(t, "acknowledged tasks retained through gateway roll", rolledTasks, gatewayDispatch)
 	if attempts := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND attempt=1 AND acknowledged_attempt=1"); attempts != strconv.Itoa(len(rolledTasks)) {
 		t.Fatal("gateway roll replaced an acknowledged task attempt")
 	}
@@ -333,6 +368,16 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
 		t.Fatalf("lifecycle fleet did not retain streams, renewals and preference checks: %+v", report)
 	}
 	e.requireFleetCursors(t, fleet)
+}
+
+// Separate retirement from a busy agent's next cycle without extending the move budget.
+func remainingGatewayMove(t *testing.T, since time.Time) time.Duration {
+	t.Helper()
+	remaining := gatewayMove - time.Since(since)
+	if remaining <= 0 {
+		t.Fatalf("gateway lifecycle exceeded its %s move budget", gatewayMove)
+	}
+	return remaining
 }
 
 func TestGatewayObservedRetirementTiming(t *testing.T) {
