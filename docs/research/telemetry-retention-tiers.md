@@ -333,3 +333,54 @@ input. DEL owns installing raw/long stores, evaluator, CA trust,
 retention and network permissions. ARC owns the selected serving
 wrapper and installation lease if that composition changes. A normal
 module HTTP fixture does not establish an installed delivery.
+
+### Verified authenticated module entry
+
+On 2026-11-12, source 93f9ed8b, based on the reusable schema and public
+Problem registry at 9a56176e, passed
+TestFleetHistoryAuthenticatedHTTPOffline with the race detector on Linux
+amd64. The namespace had only loopback and no external route. The fixture
+used PostgreSQL 18.6 with pgvector 0.8.7, the original identity dispatcher,
+real CSRF and password login, issued session cookies and verified DNS/SNI
+TLS. It composed the module from the dispatcher's actual owners and a
+protected monitoring file. It did not construct an actor at the history
+adapter or bypass an initialization failure.
+
+Two native VictoriaMetrics 1.155.0 stores held the raw and recorded data;
+native vmalert replay supplied the long-tier aggregates. Five synthetic
+node-health series at two timestamps included a down node and foreign
+tenant/Workspace controls. Both returned tiers matched the formal
+FleetHistoryResponse schema, preserved measured zero and sparse points,
+and returned an empty array for missing data. This small profile does not
+repeat or replace the [10,000-node and 17-million-series qualification](telemetry-scale.md#linux-amd64-qualification).
+
+The normal shared writer preserved the six public history problems,
+including the complete-response cap, failed or unconfigured tiers and an
+invalid range. Portal, Portal-token reuse at the Admin origin, no session,
+wrong cell, unscoped path, foreign Workspace, Origin and extra query inputs
+were refused. A Workspace disabled during native I/O and a session ended
+through the actual Logout owner before publication released no data or
+successful read audit. A stale cookie did not reach the raw store. Restored
+Workspace authority, fresh login and repaired store access allowed retry.
+Each successful response had exactly one committed audit for its server
+request ID. Long-tier faults and missing configuration made no raw request.
+The oversized native-protocol reply and outages were explicit fault doubles;
+successful data came from the native stores.
+
+Seven successful small reads, including TLS, schema validation and the
+fixture's SQL audit readback, measured 12.12 to 27.08 ms with the race
+detector. After graceful stop, the five-series fixture used 258,048 raw
+and 294,912 long allocated bytes. These are one short fixture's observations,
+not production p95, representative retention sizes or a large-fleet query
+claim. The existing scale note remains the source for measured fleet storage
+and query costs.
+
+The same source also passed the separate history-tls selector with the race
+detector: an untrusted replacement leaf at the same long origin was refused,
+raw remained readable without a long fallback, and a pretrusted replacement
+restored rollup reads. Both selectors stopped their two native stores and
+removed their disposable PostgreSQL containers. Owned module race tests
+passed before the test-only import and revocation-fixture fixes. The complete
+public operation, SDK/Help publication, installed delivery and Console
+acceptance remain separate; this run establishes the registered module
+entry and shared response writer.
