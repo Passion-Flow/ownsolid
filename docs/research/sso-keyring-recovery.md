@@ -48,6 +48,14 @@ run `go -C services/control test ./internal/modules/identity/http -run '^TestSSO
 
 ## Production handoff
 
+Keep readable providers usable while recovering only unavailable credentials.
+Disabling SSO globally remains an operator fallback, but removes healthy sign-in
+paths too. Automatically generating a ring or deleting unreadable records would
+discard custody or recoverable state. Suppressing every startup error would
+hide unsafe files, invalid provider trust and storage failures. Reject those
+alternatives; retain encrypted records and administrator intent, and distinguish
+authenticated decryption failure from configuration and storage refusal.
+
 The candidate entry is `sso.NewWithKeyringRecovery(startup, accounts)`.
 It is explicit and PostgreSQL-only. It accepts a missing file under a
 verified private parent or authenticated decryption failure on a scoped
@@ -174,3 +182,9 @@ idempotency key to succeed after storage recovery. With no keyring, a local
 Admin disables a connector, replays the exact result, retains its ciphertext,
 revokes its sourced session and remains signed in. These assertions passed
 three disconnected repetitions together with the strict boundary probe.
+
+All 54 default SSO package tests also passed with the isolated PostgreSQL
+fixture and networking disabled. This covers the existing strict source,
+issuance, revocation, maintenance and tenant checks alongside the recoverable
+constructor probes. The native SSO unit run passed with a canonical temporary
+path as required by the private-file boundary.
