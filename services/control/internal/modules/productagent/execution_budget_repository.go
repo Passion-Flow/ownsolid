@@ -82,6 +82,10 @@ func settleBudgetWithin(ctx context.Context, tx transaction.Executor, subject Bu
 	if err != nil {
 		return BudgetReservation{}, err
 	}
+	return settleStoredBudgetWithin(ctx, tx, subject, stored, settlement)
+}
+
+func settleStoredBudgetWithin(ctx context.Context, tx transaction.Executor, subject BudgetSubject, stored storedBudgetReservation, settlement BudgetSettlement) (BudgetReservation, error) {
 	if settlement.ActualTokens > stored.execution.MaximumTokens {
 		return BudgetReservation{}, errors.New("VALIDATION_FAILED")
 	}

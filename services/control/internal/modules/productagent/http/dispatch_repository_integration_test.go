@@ -113,26 +113,9 @@ SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_
 		t.Fatal(err)
 	}
 	client := func(t *testing.T, transport *http.Client, audience, origin, token string) assistantClient {
-		t.Helper()
-		c := assistantClient{http: transport, origin: origin, session: &http.Cookie{
-			Name: policyCookies.Name(audience, httpserver.SessionCookie), Value: token,
-		}}
-		response := c.call(t, http.MethodGet, "/api/v1/auth/csrf", "", nil)
-		var data struct{ Token string }
-		if response.status != http.StatusOK || json.Unmarshal(response.data, &data) != nil || data.Token == "" {
-			t.Fatalf("could not obtain %s CSRF token: %d %s", audience, response.status, response.code)
-		}
-		c.csrf = data.Token
-		for _, cookie := range response.cookies {
-			if cookie.Name == policyCookies.Name(audience, httpserver.CSRFContextCookie) {
-				c.csrfContext = cookie
-			}
-		}
-		if c.csrfContext == nil {
-			t.Fatal("dispatcher did not issue a CSRF context cookie")
-		}
-		return c
+		return newAssistantClient(t, transport, audience, origin, token, policyCookies)
 	}
+
 	admin := client(t, server.Client(), "admin", httpfixture.AdminOrigin, adminToken)
 	portal := client(t, server.Client(), "portal", httpfixture.PortalOrigin, portalToken)
 
@@ -463,4 +446,26 @@ func (r assistantResponse) problem(t *testing.T, status int, code string) {
 	if r.status != status || r.code != code || r.data != nil {
 		t.Fatalf("expected HTTP %d %s with no data, got HTTP %d %s, data %t", status, code, r.status, r.code, r.data != nil)
 	}
+}
+
+func newAssistantClient(t *testing.T, transport *http.Client, audience, origin, token string, policyCookies httpserver.CookiePolicy) assistantClient {
+	t.Helper()
+	c := assistantClient{http: transport, origin: origin, session: &http.Cookie{
+		Name: policyCookies.Name(audience, httpserver.SessionCookie), Value: token,
+	}}
+	response := c.call(t, http.MethodGet, "/api/v1/auth/csrf", "", nil)
+	var data struct{ Token string }
+	if response.status != http.StatusOK || json.Unmarshal(response.data, &data) != nil || data.Token == "" {
+		t.Fatalf("could not obtain %s CSRF token: %d %s", audience, response.status, response.code)
+	}
+	c.csrf = data.Token
+	for _, cookie := range response.cookies {
+		if cookie.Name == policyCookies.Name(audience, httpserver.CSRFContextCookie) {
+			c.csrfContext = cookie
+		}
+	}
+	if c.csrfContext == nil {
+		t.Fatal("dispatcher did not issue a CSRF context cookie")
+	}
+	return c
 }

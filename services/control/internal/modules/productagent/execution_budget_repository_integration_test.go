@@ -117,7 +117,7 @@ func (g *budgetRepositoryFixture) exec(query string, args ...any) {
 func (g *budgetRepositoryFixture) reset(t *testing.T) {
 	g.t = t
 	g.t.Helper()
-	g.exec(`TRUNCATE product_agent_budget_reservations,product_agent_budget_users,product_agent_budget_installations`)
+	g.exec(`TRUNCATE product_agent_steps,product_agent_runs,product_agent_budget_reservations,product_agent_budget_users,product_agent_budget_installations`)
 	start := time.Now().UTC().Truncate(time.Hour).Add(-time.Hour)
 	g.policy.Store(&ExecutionBudgetPolicy{
 		UserAccess: BudgetAccessEnabled, WindowStart: start, WindowEnd: start.Add(3 * time.Hour),

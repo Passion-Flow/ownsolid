@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
@@ -22,7 +23,29 @@ type commandRequest struct {
 }
 
 // Handler runs assistant commands using the authenticated identity dispatcher.
-type Handler struct{ Service *productagent.Service }
+type Handler struct {
+	Service *productagent.Service
+	runs    *productagent.ExecutionRuns
+}
+
+// NewGuarded binds the staged command adapter to trusted installation and user
+// policy. Missing policy never enables execution. The dispatcher still owns
+// session authentication, CSRF, license admission and route registration.
+func NewGuarded(apps *applications.Service, installation productagent.ExecutionPolicy, policy productagent.ExecutionBudgetPolicySource) (*Handler, error) {
+	commands, err := productagent.New(apps, installation)
+	if err != nil {
+		return nil, err
+	}
+	budgets, err := productagent.NewExecutionBudgets(commands, policy)
+	if err != nil {
+		return nil, err
+	}
+	runs, err := productagent.NewExecutionRuns(budgets)
+	if err != nil {
+		return nil, err
+	}
+	return &Handler{Service: commands, runs: runs}, nil
+}
 
 // Owns reports whether the normalized API path belongs to the assistant adapter.
 func Owns(path string) bool { return path == commandPath }
@@ -46,7 +69,13 @@ func (h *Handler) Handle(r *http.Request, actor identity.Auth, requestID string)
 	if err := httpserver.DecodePatchObject(r, &command, maxCommandBody); err != nil {
 		return nil, 0, err
 	}
-	result, err := h.Service.RunForRequest(r.Context(), actor, command.Command, command.Cursor, requestID)
+	var result productagent.Result
+	var err error
+	if h.runs != nil {
+		result, err = h.runs.RunCommandForRequest(r.Context(), actor, command.Command, command.Cursor, requestID)
+	} else {
+		result, err = h.Service.RunForRequest(r.Context(), actor, command.Command, command.Cursor, requestID)
+	}
 	if err != nil {
 		switch {
 		case errors.Is(err, productagent.ErrInvalidCommand), errors.Is(err, productagent.ErrUnknownCommand):

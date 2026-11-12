@@ -41,3 +41,26 @@ CREATE TABLE product_agent_budget_reservations (
             AND receipt_sha256 ~ '^[a-f0-9]{64}$')
     )
 );
+
+CREATE TABLE product_agent_runs (
+    id uuid PRIMARY KEY,
+    tenant_id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    workspace_id uuid NOT NULL,
+    audience text NOT NULL CHECK (audience IN ('admin', 'portal')),
+    intent_sha256 text NOT NULL CHECK (intent_sha256 ~ '^[a-f0-9]{64}$'),
+    maximum_steps bigint NOT NULL CHECK (maximum_steps > 0),
+    admitted_steps bigint NOT NULL DEFAULT 0 CHECK (admitted_steps >= 0 AND admitted_steps <= maximum_steps),
+    state text NOT NULL DEFAULT 'active' CHECK (state IN ('active', 'stopped')),
+    active_execution_id uuid
+);
+
+CREATE TABLE product_agent_steps (
+    id uuid PRIMARY KEY REFERENCES product_agent_budget_reservations(id),
+    run_id uuid NOT NULL REFERENCES product_agent_runs(id),
+    ordinal bigint NOT NULL CHECK (ordinal > 0),
+    command_id text NOT NULL CHECK (command_id ~ '^[a-z][a-z0-9_]{0,119}$'),
+    execution_sha256 text NOT NULL CHECK (execution_sha256 ~ '^[a-f0-9]{64}$'),
+    state text NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'completed', 'failed', 'suppressed')),
+    UNIQUE(run_id, ordinal)
+);

@@ -56,6 +56,8 @@ func TestExecutionBudgetPolicyRequiresCompleteExplicitWindow(t *testing.T) {
 		func(p *ExecutionBudgetPolicy) { p.Installation.Tokens = -1 },
 		func(p *ExecutionBudgetPolicy) { p.User.Executions = -1 },
 		func(p *ExecutionBudgetPolicy) { p.User.Tokens = -1 },
+		func(p *ExecutionBudgetPolicy) { p.RunSteps.Installation = -1 },
+		func(p *ExecutionBudgetPolicy) { p.RunSteps.User = -1 },
 	} {
 		p := valid
 		mutate(&p)

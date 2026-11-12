@@ -73,9 +73,27 @@ The [candidate DDL](testdata/execution-budget.sql) is installed only by the
 isolated repository test. It is not a production migration. Current command
 routes do not bind this budget candidate. A production migration and restore
 catalogue, authoritative typed policy source, bounded gateway adapter,
-run-loop guard, telemetry and both browser flows must be integrated before
+production run controls, telemetry and both browser flows must be integrated before
 AGT-112 can ship. Do not accept a browser's or model's maximum token estimate.
 See the [contract and acceptance](../../../../../docs/research/product-assistant-execution-budgets.md).
+
+`NewExecutionRuns` adds persistent step limits to that boundary. `Start`
+binds a server-issued UUID to its intent and current authority. `RunCommand`
+admits one fixed navigation or typed read at a time. The initial step ceiling
+never increases, and a new budget window does not reset the count. Completed,
+pending and uncertain steps cannot dispatch again. `Inspect` and `Cancel`
+recheck the current owner even when execution policy is unavailable. Stop is
+permanent; a read already in progress may finish, but its result is withheld.
+No prompt, cursor or result body is persisted in the run checkpoint.
+
+`http.NewGuarded(apps, installationPolicy, budgetPolicySource)` binds the staged
+HTTP handler to these controls. The trusted dispatcher supplies the request
+UUID; the JSON contract still accepts only `command` and `cursor`. Both policy
+sources must be explicitly bound by startup. The user policy supplies finite
+`RunSteps.Installation` and `RunSteps.User`; zero permits no run. A missing or
+failed source never permits execution. Deterministic commands consume an
+execution unit and zero model tokens. Their local completion digest is not a
+model usage receipt. See the [loop guard and owner handoff](../../../../../docs/research/product-assistant-loop-guard.md).
 
 Select `PROJECT_ONE_REPOSITORY_ENGINE=postgresql`, set
 `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE` to the protected fixture DSN file,
@@ -89,6 +107,10 @@ GOPROXY=off GOSUMDB=off go -C services/control test -p=1 \
   -tags repository_integration -run '^TestDurableExecutionBudgets$' \
   ./internal/modules/productagent -count=1
 ```
+
+Select `^TestDurableExecutionRuns$` with the same fixture inputs for the
+persistent guard. Select `^TestAuthenticatedGuardedAssistantHTTP$` in the
+HTTP overlay command below for real TLS, CSRF and policy admission tests.
 
 ## Tests
 
