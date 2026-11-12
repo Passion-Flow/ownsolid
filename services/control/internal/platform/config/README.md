@@ -187,3 +187,6 @@ references, and a source without a writable Registry, are refused. The module
 constructor owns source JSON, private CIDRs, trust, credentials and source
 separation. An explicit invalid source aborts startup. The shared runtime
 retains the existing Registry cleanup registration.
+Omitting Registry configuration also checks retained SQL state at startup.
+If pins exist, startup fails with `REGISTRY_OWNER_REQUIRED`; restore the
+owning Registry configuration before restarting.

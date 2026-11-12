@@ -253,6 +253,27 @@ leaves exactly that pin unchanged. Its server race and PostgreSQL log SHA-256
 values are bbbf597f50103e8733eb1c3fe8fe53372f3f5a012355f37325492b7a44e56876
 and 76572262940e149bb4681a86cc77676574fd3157fa77a1b3179bcbd00b324fc7.
 
-The shared-root candidate has not passed the full repository gate or installed
-source-to-pin acceptance. That installed flow remains with OBS and DEL, and
-NET-102 remains open.
+After rebasing onto the formal schema-59 source 4f76102c, input
+96eeef81b104932f60505375ff63a746bb04dabd passed the real startup test
+without skips on the same network-none Linux arm64 PostgreSQL fixture. It
+disposed exactly 119 owned tables. The PostgreSQL log SHA-256 is
+9b46a6dea643d8f8869834d3176f75815189afc3b3b271bebfbd01298cd3fc6c.
+
+The same input passed make check, make build and make test on Darwin arm64.
+Console passed 1,075 browser cases and Portal 389, with their existing 28 and
+nine live cases skipped and no added skip or retry. Go, Rust and Web unit
+tests passed. The first gate attempt failed four code-generation assertions
+because this new worktree had no offline Web dependencies. Installing the
+locked dependencies from the existing cache, with zero downloads, corrected
+the setup order; neither product code nor assertions changed. The passing
+PostgreSQL result was reused rather than repeated. The successful check,
+build and test log SHA-256 values are
+167f7bd61b5796562288ae13f1779f20f297294a569cd1b0b6388a06468ba027,
+536e832e0a186fe4cbd8d9fc368d19932177bdbe23e3b016e5251b45c07e788b
+and a1a6fd01f973439403f7df3f85ffc4cbddffc8637abbc94b8a3b0e1c88bbf3ab.
+This source includes both APP dispatch integration test files; their explicit
+repository_integration and assistant_http_dispatch constraints keep them out
+of the default gate. These results do not claim that tagged profile ran.
+
+Installed source-to-pin acceptance remains with OBS and DEL, and NET-102
+remains open.
