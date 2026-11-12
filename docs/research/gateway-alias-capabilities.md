@@ -303,9 +303,11 @@ requires its own acceptance.
 
 Enable PublishAliasCapabilities only in the verified full-platform
 PostgreSQL composition after DEV publishes the four read contracts
-and generated clients. Earlier cumulative profiles may not have the
-target-history table; keep the switch off there. Non-PostgreSQL
-projections remain absent. The switch does not change authorization,
+and generated clients. Earlier cumulative database catalogues may not
+have the target-history table; keep the switch off there. This is a
+trusted server composition decision, not a deployment configuration
+selector. The removed application_profile setting remains invalid.
+Non-PostgreSQL projections remain absent. The switch does not change authorization,
 and customer input never selects it. A missing evidence relation on
 an enabled composition is a storage failure, not a supported legacy
 snapshot. A legacy row in an existing evidence schema may omit the
@@ -320,4 +322,42 @@ receipt, historical request and CA regressions. The exact source and
 logs are retained in
 /root/lane-gw-acceptance/schema58-gateway-regression.zxq09kh2. This
 remains an explicitly enabled candidate read test. Production publication
-and earlier cumulative profiles retain the disabled switch.
+and earlier cumulative database catalogues retain the disabled switch.
+
+### Retained source and read-contract alignment
+
+The retained registered-read source originated at 5fb92e1d. DEV's
+candidate 7705c5a341458cb1be8ead80844198378d98c4e3 binds only
+adminListModelAlias, adminGetModelAlias, portalListModelAlias and
+portalGetModelAlias to the new read representation. A static review
+against gateway candidate 9fceebc9817e767a3cc31991eb004f4c59b81d1e
+confirmed that its five source and four test files retain the exact
+minimal handoff bytes, apart from the independent metering composition
+flag in model.go. The contract bytes have SHA-256
+66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d.
+
+ModelAliasRead retains every existing ModelAlias field and adds an
+optional, non-null, closed capabilities object. If present, it requires
+both text_generation_verified=true and context_token_ceiling, an integer
+from 1 through 9007199254740991. Lists and details use this same read
+component. Mutation components and operations, machine contracts and the
+compatible model list are unchanged. Recursive inspection of successful
+response schemas confirmed that only the four human read operations
+reach the new read component.
+
+DEV's retained qualification exercised the actual registered handlers
+with its candidate schema, disconnected PostgreSQL and synthetic
+deployment evidence, and checked the generated Go and Python response
+decoders. The older SDK decoders retain their known fields, but the
+older closed JSON schema rejects the new field. Publish the matching
+schema, generated clients and Help before enabling the server
+composition. That candidate execution does not establish production
+activation or an installed UI flow.
+
+The static review and source identities are retained in
+/root/lane-gw-acceptance/gw104-retained-pair.ht2cqeo_/alignment.json.
+No test or build was executed for this byte comparison. Do not rerun
+unchanged predecessor receipt or CA fixtures to claim combined
+acceptance. Qualify the exact published composition and contract after
+the delivery and formal-migration publication order permits it; until
+then PublishAliasCapabilities stays false and GW-104 remains open.
