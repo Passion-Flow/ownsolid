@@ -421,3 +421,10 @@ TableCount and restricted runtime verification; GW owns this backend
 read/write regression; WEB and DEL own the installed S-304 consumer
 qualification. Neither the candidate run nor a skipped installed test
 is a completed production description flow.
+
+
+The pristine predecessor rollback assertion compares the exact captured
+schema-58 catalogue before and after the candidate, rather than calling
+the check for the installed current tail. This keeps the predecessor
+regression valid when ARC adds the production migration. The focused
+PostgreSQL/HTTPS and concurrent rollback tests passed with this assertion.

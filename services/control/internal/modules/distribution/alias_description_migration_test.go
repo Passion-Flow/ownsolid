@@ -63,6 +63,10 @@ func TestAliasDescriptionRollbackPreservesRetainedState(t *testing.T) {
 			c := setupAccount(t, fixture.NewAtVersion(t, 58))
 			ctx := t.Context()
 			alias := c.published(t)
+			var predecessorCatalog string
+			if err := c.s.DB.QueryRow(ctx, database.CatalogSQL).Scan(&predecessorCatalog); err != nil {
+				t.Fatal(err)
+			}
 			if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
 				t.Fatal(err)
 			}
@@ -93,8 +97,9 @@ func TestAliasDescriptionRollbackPreservesRetainedState(t *testing.T) {
 			if err := applyAliasDescriptionRollback(t, c); err != nil {
 				t.Fatal(err)
 			}
-			if err := database.Check(ctx, c.s.DB); err != nil {
-				t.Fatal("pristine downgrade did not restore the exact schema-58 catalog", err)
+			var restoredCatalog string
+			if err := c.s.DB.QueryRow(ctx, database.CatalogSQL).Scan(&restoredCatalog); err != nil || restoredCatalog != predecessorCatalog {
+				t.Fatal("pristine downgrade did not restore the exact predecessor catalog", err)
 			}
 			got, err := c.s.Alias(ctx, c.a, alias.WorkspaceID, alias.ID)
 			if err != nil || got.ID != alias.ID || got.Revision != alias.Revision || got.DeploymentID != alias.DeploymentID ||
