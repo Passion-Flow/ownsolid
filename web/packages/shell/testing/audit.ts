@@ -89,12 +89,12 @@ export async function routeAudit(
   problem: Refuse,
 ): Promise<void> {
   await page.route('**/api/v1/admin/audit-events?*', (route) => {
+    const query = new URL(route.request().url()).searchParams;
+    state.auditQueries.push(query);
     if (state.audience !== 'admin') {
       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
     }
     if (state.auditProblem) return problem(route, state.auditProblem);
-    const query = new URL(route.request().url()).searchParams;
-    state.auditQueries.push(query);
     const category = query.get('category');
     const outcome = query.get('outcome');
     const actor = query.get('actor_user_id');

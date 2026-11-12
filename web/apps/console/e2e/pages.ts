@@ -1099,9 +1099,36 @@ export const consolePages: readonly PageState[] = [
     open: async (page, control) => {
       control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
       await openAudit(page, control);
-      await page.getByRole('button', { name: 'Try again' }).waitFor();
+      await page.getByRole('button', { name: 'Read again' }).waitFor();
     },
   },
+  ...(['trail', 'activity'] as const).flatMap((surface): PageState[] =>
+    (['uncertain', 'partial'] as const).map((state) => ({
+      name: `audit ${surface} with ${state} read recovery`,
+      path: surface === 'trail' ? '/audit' : '/users/$userId',
+      open: async (page, control) => {
+        control.signedIn = true;
+        control.users = [memberUser];
+        control.auditEvents = Array.from({ length: 25 }, (_, index) => ({
+          ...licenseEvent,
+          id: `6f1c7a1e-0000-4000-8000-${String(index).padStart(12, '0')}`,
+          action: 'account.updated',
+          target_type: 'user',
+          target_id: memberUser.id,
+          reason: null,
+        }));
+        if (state === 'uncertain')
+          control.auditProblem = { status: 409, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN' };
+        await page.goto(surface === 'trail' ? '/audit' : `/users/${memberUser.id}?tab=activity`);
+        if (state === 'partial') {
+          await page.getByRole('table').waitFor();
+          control.auditProblem = { status: 409, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN' };
+          await page.getByRole('button', { name: 'Load more', exact: true }).click();
+        }
+        await page.getByRole('button', { name: 'Read again', exact: true }).waitFor();
+      },
+    })),
+  ),
   {
     name: 'license in force',
     path: '/license',
