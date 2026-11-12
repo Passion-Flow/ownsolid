@@ -107,6 +107,7 @@ func (r *Recorder) Configure(c *pgxpool.Config) {
 	params["session_preload_libraries"] = "auto_explain"
 	params["enable_seqscan"] = "off"
 	params["auto_explain.log_min_duration"] = "0"
+	params["auto_explain.log_parameter_max_length"] = "0"
 	params["auto_explain.log_analyze"] = "on"
 	params["auto_explain.log_buffers"] = "on"
 	params["auto_explain.log_timing"] = "off"

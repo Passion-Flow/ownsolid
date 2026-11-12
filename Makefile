@@ -56,6 +56,8 @@ test-web-browser: web-install ## Run the browser tests of the console and portal
 test-agent-cost: ## Measure every agent call against its declared cost (PROJECT_ONE_TEST_DSN, PROJECT_ONE_DATA_PYTHON)
 	@test -n "$$PROJECT_ONE_TEST_DSN" && test -n "$$PROJECT_ONE_DATA_PYTHON" || { echo "PROJECT_ONE_TEST_DSN and PROJECT_ONE_DATA_PYTHON are required"; exit 1; }
 	@export TMPDIR="$$(cd "$${TMPDIR:-/tmp}" && pwd -P)/"; umask 077; \
+	cd services/control && go test -p 1 ./internal/modules/nodes -run '^(TestComponentHeartbeatCostAtFleetSizes|TestInferenceHeartbeatStatementCost)$$' -count=1 -v
+	@export TMPDIR="$$(cd "$${TMPDIR:-/tmp}" && pwd -P)/"; umask 077; \
 	cd services/control && go test ./internal/modules/training -run '^TestAgentCallCostDoesNotGrowWithTheFleet$$' -count=1 -v
 
 # The build context is a tar of tracked files, so local build output and secrets cannot
