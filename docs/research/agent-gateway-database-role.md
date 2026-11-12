@@ -151,3 +151,48 @@ execution grants, original lock lifetime, foreign-scope refusal, writer blocking
 and transaction rollback. Do not activate a schema function or new grant catalog
 until the complete session/worker closure and its current migration admission are
 proven. This discovery does not change current runtime rights or claim ARC-111 done.
+
+## Native row-lock prototype
+
+A separate synthetic PostgreSQL 18.6 Linux amd64 fixture passed 14 checks with no
+external network or published host port. The owned container was limited to two
+CPUs and 512 MiB, used the retained pgvector image
+sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47,
+and was removed with its anonymous volume and protected password file afterward.
+Admission retained both regular-file resource locks and the unchanged thresholds;
+MemFree was 4471828 KiB, MemAvailable 19971884 KiB and full I/O PSI avg10 was 0.
+The prototype source SHA-256 is
+0d5e474757acd9ab5332bb8ccc66b8815b0a6d803bf8cfd12b22a1920a5c952f.
+
+The real SQL results establish the following narrower mechanism:
+
+- A role with SELECT alone receives 42501 on the existing two-table FOR SHARE shape.
+- UPDATE(id) permits that lock but also permits changing an otherwise unreferenced
+  tenant identity. Refusing status updates does not make the identity grant harmless.
+- After revoking that column grant, a SQL security-definer function with a parsed
+  atomic body and trusted search path obtains the original shared locks. Direct
+  table locking still receives 42501 and neither authority table has any remaining
+  direct UPDATE right for the caller.
+- Function execution is revoked from PUBLIC and granted only to the fixture gateway
+  role. A second role receives 42501. An unmatched tenant returns false; temporary
+  tables named tenants and installation_state do not shadow the bound references.
+- In a separate session, writes to both protected rows time out with 55P03 at a
+  150ms lock timeout while the caller's transaction remains open. Rolling back the
+  caller releases those locks. A subsequent tenant disable succeeds and the next
+  function call refuses that inactive installation.
+
+The SELECT-only refusal log SHA-256 is
+71ba07118a5d784aa881a0d002d8299ae73d6a99a181d2c56453861e08188f9f.
+The tenant and installation writer-fence logs are
+a70e3519c9f1acde240a31b764704d01ccdf26e16f0f1210bb523e54bec6c5ab
+and 4ba0e7b5f2fc683d06458806de9eeb171fb16c1d7ef932639803f96b113367d7.
+The temporary-shadow and no-direct-UPDATE logs are
+2444da6458750a371aa6325b06c65c9ecf5311e5594627791b7124604ecb7fbb
+and 016b329ada15887b9ad95aa2da3167ba0988a6b8fc8e11d40204b499f7d06bec.
+
+This is an actual PostgreSQL permission/concurrency prototype using SET ROLE
+inside a disposable local administrator session. It does not establish separate
+SCRAM/TLS login, the product catalog, the complete profile permission closure,
+control/gateway startup or installed delivery. No function or role was activated
+in ownsolid and no production migration number was taken. Preserve the current
+runtime path until all of those acceptance gates pass. ARC-111 remains open.
