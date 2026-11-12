@@ -418,3 +418,34 @@ UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1
 	}
 	f.assertState(t, f.first, "cancelled", 4, 0)
 }
+
+func TestPostgresQueueWaitReasonTracksQuotaConfiguration(t *testing.T) {
+	f := newQueuedFixture(t)
+	if _, err := f.pool.Exec(t.Context(), "DELETE FROM scheduling_quota_policy"); err != nil {
+		t.Fatal(err)
+	}
+	noRead := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
+		t.Fatal("unconfigured admission read the owner queue")
+		return nil, nil
+	}
+	changed, err := f.admit(t.Context(), f.first, noRead, nil)
+	want := []WaitReason{{Code: ErrQuotaUnconfigured.Error(), Action: ConfigureQuotaPolicy}}
+	if changed || !errors.Is(err, ErrQuotaUnconfigured) || !slices.Equal(WaitReasons(err), want) {
+		t.Fatalf("missing policy: changed=%v reasons=%+v error=%v", changed, WaitReasons(err), err)
+	}
+	f.assertState(t, f.first, "queued", 1, 0)
+	if err := pgx.BeginFunc(t.Context(), f.pool, func(tx pgx.Tx) error {
+		_, changed, err := ReplaceQuotaWithin(t.Context(), tx, 0, f.policy)
+		if err == nil && !changed {
+			return errors.New("policy installation did not change state")
+		}
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	changed, err = f.admit(t.Context(), f.first, f.read, nil)
+	if err != nil || !changed || len(WaitReasons(err)) != 0 {
+		t.Fatalf("configured retry: changed=%v reasons=%+v error=%v", changed, WaitReasons(err), err)
+	}
+	f.assertState(t, f.first, "preparing", 2, 1)
+}

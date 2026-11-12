@@ -128,3 +128,23 @@ authorized workload waiting for reservation and pods, refusal of an
 inaccessible namespace and replacement UID, and clean cancellation
 through the existing owner path. The current lane can qualify TLS and
 condition projection independently while these inputs are pending.
+
+## Missing installed quota policy
+
+The real reservation path returns the typed `ErrQuotaUnconfigured` when
+its policy row is absent. Project that current decision to the fixed
+`configure_quota_policy` action for the platform operator. It contains
+no requested, available, ancestor or cell quantity. Retain the original
+error identity and transaction rollback; guidance grants no admission.
+
+A persisted wait-code string is historical state. Do not reconstruct an
+error from that string and present it as current evidence. The producer
+must project its fresh typed decision. Verify wrapped typed errors and
+refuse equal-text errors without that identity. On real PostgreSQL,
+exercise an absent policy without invoking the queue reader or creating
+a hold, install the actual policy, then retry the same queued attempt.
+Successful admission must have no lingering configuration reason.
+
+This uses the same upstream decision/projection boundary and the
+existing licensed Go/PostgreSQL stack above. No dependency, capacity
+sample, model, dataset or production owner hook is added.
