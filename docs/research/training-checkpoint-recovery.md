@@ -345,3 +345,24 @@ argument resumes the remaining checks without replacing a successful run.
 All heavy stages require both existing shared Linux locks and the unchanged
 3 GiB free/12 GiB available memory, 15 GiB disk and at-most-5-percent full
 I/O avg10/avg60 thresholds. Every created work container was removed.
+
+### Repository gate admission boundary
+
+The CPU prototype above is complete under its stated inputs. Its candidate
+was rebased onto `1aad4eed`, which includes the joint audit schema 58 change.
+Fresh repository gates and the retained-input PostgreSQL experiment replay
+were then requested with both existing Linux locks. Admission refused them
+before execution because free memory remained below the unchanged 3 GiB
+threshold. Twelve gate preflights observed between
+707,489,792 and 914,714,624 free bytes;
+no `make check`, `make build` or module test started in that series.
+The complete admission log has SHA-256 `b474335818547187d1f6d739d5aa72f18464fcd2ab0c4b5dae9b7074b9dede9c`.
+Earlier repository results do not qualify this rebased candidate.
+
+The candidate remains local and its roadmap items remain unticked. Resume
+repository verification only after the original resource thresholds pass:
+run `run-cpu-admission-gates.sh` with the private proof root and `all`, then
+`run-experiment-handoff.sh` under the same two locks. Preserve original logs
+and run only unfinished phases after an admission refusal. The actual CPU
+worker sources and their five-case computation evidence remain unchanged;
+there is no reason to replace them while completing repository validation.
