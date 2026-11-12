@@ -598,8 +598,8 @@ and the [native flag wiring](https://github.com/VictoriaMetrics/VictoriaMetrics/
 Pure helper tests will cover month/year/leap-day and midnight selection and
 invalid actual argv profiles. Cross-compilation only proves the Linux native
 fixture builds. Neither compilation nor helper units prove native persistence,
-daily counts or installed-product admission. Native execution remains pending
-the shared Linux resource window. No dependency, model or dataset is added;
+daily counts or installed-product admission. The source-specific Linux qualification below follows this preparation.
+Installed-product source admission remains open. No dependency, model or dataset is added;
 the existing upstream and Go licenses above remain applicable.
 
 The shared native process helper now checks /proc child argv against exec's
@@ -670,7 +670,8 @@ The caller bound is 300 seconds with a ten-second forced-stop grace.
 The wrapper passed bash syntax checking but has not been invoked. Preparing it
 made no Linux lock attempt and started no native store, PostgreSQL, Alertmanager,
 browser or installation service. Cross-compilation does not qualify native
-counts, persistence, procfs observation or cleanup. Native execution, current-main
+counts, persistence, procfs observation or cleanup. The separately authorized
+Linux run below qualifies its exact native fixture source; current-main
 integration, make check/build and installed-product admission remain open.
 The candidate retains schema 59/119; it is not a schema-60/120 qualification.
 The original 3cebfcef worktree and its actual Linux four-package race-unit proof
@@ -769,8 +770,113 @@ fd-before-close.json SHA-256
 1dcc016b349f3e3bf5e1367915a82a7d96067005f893618554b29754bbaeceb3,
 and fd-after-close.json SHA-256
 ffd3cf3c72c4ea218a9ef30fb8cb55ea7fc1da3aefb1167e1c30eae404fb321f.
-The source remains clean at commit 5f83cfbf and tree 170ad1a59. No second
-native opportunity was attempted. Native daily/index-mode/restart and procfs
-qualification, installed source admission and current-main checks remain open.
+The source remained clean at commit 5f83cfbf and tree 170ad1a59. That
+authorization ended without another attempt. The separate authorization and
+successful native run below followed a new observed release; it does not
+rewrite this refusal. Installed source admission and current-main checks remain open.
 No roadmap checkbox or support claim changes from this refusal. No dependency,
 model or dataset is added; existing license terms above remain applicable.
+
+## Linux native daily-index qualification
+
+The unchanged candidate 5f83cfbf9c1c24b8efae927f76a69912d52c7c68, tree
+170ad1a59b80cd361ec65cbf74364ad400d8a426, passed the original four native
+entries on Linux x86_64 with Go 1.27.3. The selected cf228b0c entry, test set,
+two Go workers, race instrumentation, offline dependencies, private PID/proc
+and loopback-only network, no host port publication and no-pull policy were
+unchanged. The earlier six lightweight checks were reused, not rerun. Neither
+the broader module graph nor another benchmark was executed.
+
+Both actual flock calls returned zero with empty stderr. FD 8 and 9 retained
+the original dev 29/inode 82 and dev 64512/inode 7508772 carriers for the
+critical section. The locked resource recheck observed 17,132 MiB MemFree,
+739 GiB available disk and full I/O avg10 0.02. The unchanged caller completed
+in 170.913 seconds with raw exit zero, inside its 300-second/ten-second bound.
+
+| Entry | Outer root selectors | RUN / PASS records | Result |
+| --- | --- | --- | --- |
+| cardinality | TestScopedSeriesCardinalityOffline | 2 / 2, including daily-index-profile | Exit 0 |
+| history-http | TestFleetHistoryAuthenticatedHTTPOffline | 1 / 1 | Exit 0 |
+| history-tls | TestFleetHistoryPrivateTLS | 2 / 2, including its existing isolated trust subprocess | Exit 0 |
+| history-retention | TestFleetHistoryNinetyDayAggregates | 1 / 1 | Exit 0 |
+
+There are four outer roots, one additional TLS subprocess root and one daily
+subtest: six executions with five distinct names, zero FAIL or SKIP records.
+The raw entry-summary parser counts only column-zero RUN lines, so it records
+five RUN lines and six PASS lines. The sixth RUN is nested in the TLS parent's
+logged subprocess output; the existing source explicitly launches that process
+to initialize independent system trust. These are plain test-log records, not
+invented JSON test events or six distinct test functions.
+
+The cardinality profile verified the original scoped 10,000-series metric,
+scan refusal and narrowed retry, current authority, audit and commit outcomes.
+The daily profile used completed UTC days 2026-11-10 and 2026-11-11 in the same
+month, with an empty 2026-11-09 control. It verified distinct nodes, metric and
+node ranks, scoped distractors and missing-node handling. Exact CPU counts were
+two and one; overview counts were two and three. It repeated the reads after
+a graceful restart in the same data directory with actual
+-disablePerDayIndex=false. A separate directory and actual true setting were
+rejected at fixture admission before product binding, then independently read
+as broader global-index counts. Native assertions checked the real /proc child
+argv against exec arguments and fingerprinted its running executable as
+aca3c49816db88c0e48012772fcf2a94eb66aaccd925b35d397b8b6f7f40fb43.
+This is a native fixture result, not installed-product source admission or a
+live midnight/churn qualification.
+
+A bounded independent read of this run's owned cardinality container, after its
+first measured read, returned 119 non-partition-child logical tables and 59
+migration rows, with versions one through 59. It returned PostgreSQL
+18.6 (Debian 18.6-1.pgdg12+2) and vector 0.8.7. The image remained the cached
+Linux amd64 c29f3068 artifact. This verifies the actual 59/119 source fixture;
+current main's separate 60/120 lineage is not borrowed as a run result.
+
+The 10,000-series narrowed service read, including SQL and audit, took
+18.69549 ms and returned 401 JSON bytes. Its stopped one-day store occupied
+5,890,048 allocated bytes. This is one measured read and one synthetic UTC day,
+not a percentile, production retention estimate or 17-million-series result.
+The five-selected-series daily stores occupied 253,952 allocated bytes after
+ingestion, 204,800 after restart and 245,760 in the separate global control;
+those sizes describe correctness fixtures, not fleet sizing.
+
+The existing history HTTP regression passed real TLS/CSRF/session, scope,
+revocation, response and audit controls. The independent TLS child refused
+an untrusted same-origin replacement without raw fallback and recovered on
+the trusted replacement. The unchanged 90-day aggregate fixture persisted
+1,296,000 samples in ten series, returned 1,424 points per cell and measured
+483,328 allocated bytes. Its first read after native restart took 835.50061 ms;
+thirty subsequent authenticated schema/count/audit-verified reads measured
+median 809.3509 ms, p95 918.521037 ms and maximum 925.585413 ms. This is the
+existing synthetic regression at this source, not a new benchmark or customer
+latency claim.
+
+Logs record ten VictoriaMetrics starts and ten graceful stops across the four
+entries. All four acknowledged PostgreSQL containers were stopped and removed,
+then independently confirmed absent. The owned process group was empty. Entry
+parent 3030346, timeout 3030345 and observer 3030332 exited. Both real FLOCK
+lines were present in the final pre-close FD snapshot; after explicit close,
+both FDs were absent. Both original regular carrier identities and zero lengths
+remained. Source and input manifests verified unchanged after execution, and
+the worktree remained clean. No browser or installed service was started.
+
+Raw evidence is
+/root/lane-obs-tools/obs110-native-opportunity-v3.pbo1l1z5/result.json, SHA-256
+87f30f963481f61fa531ad6c15a8355f5c62ad32fd4ef555d012fae7f49a391e,
+and outer.log SHA-256
+b0e1ccc8d87dc02a4b590c70ebb6f0143f8a136a41d05268389ea28647097d21.
+The entry receipt /root/lane-obs-tools/obs110-daily-native.YWPw99 contains:
+
+- cardinality.log: f4b29900c4c25f099e16ce596d6f09264acef8dae9e414e384bbc73841ded6f8.
+- history-http.log: bfd2510e5f511aa58d438cfd69fa98f959d1a5fb59a126f8309b5f24cdacf914.
+- history-tls.log: 1ebcd7dd09703a243c4089e62a6a8c3617ebee6630e56478b2eaeaaef42ee644.
+- history-retention.log: 1212c01305325de65a0bc0ac5bab031334976d91a341e090294179d5958fa844.
+- source-inputs.sha256: 267f0d2eadb60c967c7a0d5c33ec3d0b0057e9989ffcd5a1ef7b84590421395d.
+- fd-before-close.json: edcc8a601f7caf7f79806151cc0c3c1b8b2f7eaa8082587737149a1f36e0c524.
+- fd-after-close.json: 75074edd1cdba2b41a447c6b5bb683502a4100f378f3557450a73d705a1ba177.
+
+The earlier raw 75 refusal remains unchanged. This run qualifies only the
+native service/fixture boundary and existing history regressions at 5f83cfbf.
+It does not qualify the separate d8 HTTP candidate on Linux, current-main
+integration, shared cardinality contracts/dispatch, product source admission,
+installed acceptance, Console or hard ingest budgets. No whole-repository gate
+ran and no roadmap checkbox changes. No dependency, model or dataset is added;
+the existing license terms above still apply.

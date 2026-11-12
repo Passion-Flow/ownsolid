@@ -612,7 +612,12 @@ go -C services/control test -race -p 2 -count=1 \
 ```
 
 Those helper units and Linux/amd64 integration-tagged cross-compilation passed
-at 5f83cfbf; the new native controls have not run. Compilation does not qualify
-native daily semantics, restart persistence, procfs checks or cleanup. Retain the
-actual Linux resource window and the four history/cardinality regressions before
-publication. See the [preparation evidence](../../../../../docs/research/series-cardinality-scope.md#fixture-preparation-qualification).
+at 5f83cfbf. The unchanged source subsequently passed all four Linux amd64 native
+entries: cardinality, history-http, history-tls and history-retention. The daily
+controls verified the two distinct days, same-profile restart, actual procfs
+identity and separate disabled-index control. All owned stores and four
+PostgreSQL containers stopped and were removed; the original lock carriers
+remained. This qualifies the exact 59-migration/119-table native fixture, not
+current-main, installed-product source admission, public cardinality dispatch
+or Console. Keep those publication requirements open. See the
+[native qualification](../../../../../docs/research/series-cardinality-scope.md#linux-native-daily-index-qualification).
