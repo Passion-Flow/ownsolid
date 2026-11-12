@@ -385,12 +385,12 @@ the committed predecessor, not the formally numbered production tail.
 
 The unnumbered up SQL SHA-256 is
 399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
-The original handoff down SQL SHA-256 is
+The original schema-58 down SHA-256 was
 4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
-Changing only the down refusal does not change the candidate catalogue.
-Keep the up bytes unchanged. The isolation successor below tightens
-the down script before formal admission. Verify the complete release
-lineage and runtime principal against the final numbered files.
+That version was qualified in READ COMMITTED and is superseded by the
+explicit isolation fence below. Its retained-state lock alone does not
+protect an earlier REPEATABLE READ or SERIALIZABLE snapshot. The up bytes
+and structural catalogue remain unchanged.
 
 The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
 concurrent revision refusal, exact replay, scope checks and retry after
