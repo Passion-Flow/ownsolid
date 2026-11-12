@@ -227,6 +227,12 @@ transaction. An initial FIFO selector plus final non-head refusal would
 cycle through old jobs before reaching the fair head; the refusal gate
 alone does not implement the owner's fair candidate selection.
 
+Keep the owner's queued-authority reconciliation for jobs excluded by a
+revoked requester or inactive Workspace. Eligible-only selection must not
+silently strand such rows. Any failure or cancellation transition still
+runs through current owner scope and locks; foreign site/cell rows remain
+untouched. Add that regression beside the real fair-selection test.
+
 Both owner readers must use the installation tenant, local site/cell,
 active Workspace and current persisted requester authority. The workspace
 reader supplies the complete dispatch domain. The entry reader runs
