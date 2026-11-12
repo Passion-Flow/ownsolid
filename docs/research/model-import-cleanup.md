@@ -245,6 +245,33 @@ active-writer and interrupted-disposal controls. These checks use synthetic
 chunks and add no dependencies, models or datasets. Existing Go BSD-3-Clause,
 pgx MIT and PostgreSQL License terms above continue to apply.
 
+### Linux amd64 shutdown recovery
+
+On 2026-11-12, source `6e82e87f`, based on `4f76102c`, passed all four
+`TestActualAbandonedImportExpiry*` roots on Linux amd64 against PostgreSQL
+18.6 and pgvector 0.8.7 with `--network none` and the schema 59 lineage.
+The new shutdown root passed both `after_intent` and `after_terminal`
+in 3.59 seconds. It cancelled the ordinary worker immediately after each
+acknowledged commit, joined it, checked intact accepted bytes before discard,
+and reconciled through a fresh worker with exactly one intent and one
+terminal audit. The existing upload race, lost-acknowledgement recovery and
+scope/state controls also passed, without skips.
+
+The public validator and the same module sources passed `make check`,
+`make build` and `make test` at `e7198781` on baseline `1280ea79`.
+The rebase preserved the model, preparation, deployment and lifecycle runtime
+directories byte for byte. Layout and roadmap checks passed again after
+rebasing, and the Linux fixture exercised the newly added schema 59 migration.
+The fixture used synthetic chunks, reused a checksum-verified retained source
+archive and a complete source delta, and built with the existing Go 1.27.3
+toolchain and offline dependency cache. Its private inputs, temporary store
+and PostgreSQL container were removed after success; source, binaries and raw
+logs remain preserved as verification evidence.
+
+This verifies the module's typed policy and shutdown boundary. ARC still owns
+startup configuration, authorized workspace resolution and joining the root
+lifecycle, and Web owns the operator-facing expiry state. MOD-121 remains open.
+
 ### Operator projection and owner handoff
 
 The current Models OpenAPI schema accepts a nullable string in
