@@ -58,3 +58,16 @@ expose the Docker socket. The [primary-source review and concrete failure
 coverage](training-interactive-environments.md) identify Agent, identity,
 quota, storage/backup, serving and UI ownership. No image is installed or
 process started by this research; TRN-109 stays open.
+
+
+## Training Agent cost node-owner contract
+
+The frozen 17e46bdd cost paths retain their measured overruns. Source review
+finds three PreparationHistoryWithin calls per successful active authority
+pass: delegated target, scoped credential and leased task. Training can
+coalesce its own event progress writes while preserving per-event audits.
+The proposed [borrowed node-fence callback and exact call sites](training-agent-cost.md#node-owner-shared-fence-prerequisite)
+belong to ARC. The training owner will not replace node SQL or carry cached
+authority across file I/O. Release requires the typed owner API, negative
+lifetime/scope tests and the original 50/3,000 HTTPS profile under unchanged
+budgets. This handoff claims no new measured statement count.
