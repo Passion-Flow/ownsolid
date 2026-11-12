@@ -417,3 +417,16 @@ Both permit commercial use, redistribution and offline execution with
 their licence notices. No dependency, model or dataset is added. The
 frozen installed acceptance source remains independent of this follow-up
 until the new implementation has its own validation.
+
+In the first Chromium run, the intended page-route abort did not refuse
+the native download: failure() returned null. That run is not evidence
+of a failed download. Inject the failure in the same preview server's
+HTTP response using Vite's
+[configurePreviewServer middleware hook](https://vite.dev/guide/api-plugin#configurepreviewserver).
+A cookie belonging to the isolated test browser names the one JSON
+asset to refuse. Return 503 with no-store while that cookie is present;
+clear it before retrying. Check the real 503 response, the native
+download failure and the recovered file's audience. Parallel contexts
+have separate cookies and never rename or replace shared build assets.
+The hook applies only to the local preview server; the installed Control
+asset server is unaffected.

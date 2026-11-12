@@ -7,6 +7,7 @@ import type { Plugin } from 'vite';
 import { defineConfig, type TestUserConfig, type ViteUserConfig } from 'vitest/config';
 import { bundleBudgetPlugin, type BundleBudget } from './bundle-budget.ts';
 import { precompressPlugin } from './precompress.ts';
+import { previewDownloadFailurePlugin } from './preview-download-failure.ts';
 
 const setupFile = fileURLToPath(new URL('./vitest-setup.ts', import.meta.url));
 
@@ -104,6 +105,7 @@ export function appConfig({ port }: AppOptions): ViteUserConfig {
       react(),
       tailwindcss(),
       noticesPlugin(),
+      previewDownloadFailurePlugin(),
       bundleBudgetPlugin(bundleBudget),
       precompressPlugin(),
     ],
