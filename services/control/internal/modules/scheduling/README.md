@@ -73,3 +73,29 @@ If an active record in that set has foreign site/cell coordinates, it returns
 `SCHEDULING_QUOTA_POLICY_UNAVAILABLE` so the owner can reconcile the records.
 Pass a read-only REPEATABLE READ transaction
 and the owner's durable queue entries. See [live workspace shares](../../../../../docs/research/scheduling-queue-policy.md#live-workspace-shares).
+
+`ReserveQueuedWithin` performs queue-turn selection and reservation in the
+owner's existing READ COMMITTED write transaction. Pass the authorized
+workspace domain and a `QueueReader` that reads complete current eligible
+owner rows through the supplied executor. The operation locks the domain
+in canonical workspace order, then rereads the queue and current shares.
+A non-head returns `SCHEDULING_QUEUE_TURN_PENDING`. The owner commits
+dequeue, physical holds, task and audit with the scheduling reservation,
+and rolls all of them back on failure. An exact held replay returns false
+without reading the already-dequeued entry or enqueuing another task.
+
+The [training patch contract](../../../../../docs/research/scheduling-queue-policy.md#training-owner-patch-contract)
+names the missing production readers, scope checks, call sites and
+acceptance tests. The module's PostgreSQL queue tests use persistent
+owner fixture rows to qualify transaction behavior.
+
+With the protected disposable loopback DSN file configured as above, the
+queue admission and real lost-acknowledgement cases run with:
+
+```sh
+go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling -run '^TestPostgresQueuedReservation' -count=1 -v
+```
+
+The wire fault test requires an isolated plaintext loopback endpoint and
+skips a Unix-only or TLS endpoint. Check its explicit PASS when qualifying
+unknown-commit replay.
