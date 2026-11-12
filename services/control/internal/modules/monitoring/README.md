@@ -33,7 +33,7 @@ and [native monitoring profiles](testdata/) current. Changes to a metric's sourc
 or null semantics require consumer and capacity-report updates; a dashboard must
 not invent an observed value.
 
-Focused native check: `go -C services/control test ./internal/modules/monitoring`. Native SQL, real full-server observations and capacity workloads are separate acceptance profiles. Capacity reports describe their actual process, request and dataset sizes; they do not establish unmeasured production scale.
+Focused unit check: `go -C services/control test ./internal/modules/monitoring`. Native SQL, real full-server observations and capacity workloads are separate acceptance profiles. Capacity reports describe their actual process, request and dataset sizes; they do not establish unmeasured production scale.
 
 ## In-site rack reachability policy
 
@@ -592,5 +592,49 @@ bash services/control/internal/modules/monitoring/testdata/check-fleet-history.s
 Supply the same locally verified image and metrics binary inputs as the history
 profiles above. This profile requires Linux and the shared resource/lock guard
 before invocation. Its successful paths use the native index, not a source double.
-The service, profile and tests remain a candidate until their actual run is recorded
-in the [cardinality research](../../../../../docs/research/series-cardinality-scope.md).
+The private service has Mac pure-unit evidence; its Linux native profile remains
+unrun. Keep those scopes distinct in the
+[cardinality research](../../../../../docs/research/series-cardinality-scope.md).
+
+### Private HTTP adapter
+
+[HandleSeriesCardinality](http/series_cardinality.go) is a private adapter for the
+candidate path /api/v1/admin/monitoring/series-cardinality. It remains outside
+Owns and the default dispatcher. Publication needs the original Admin/Origin
+chain, selected-cell mounting, shared Problem/schema registration, generated
+clients and Console acceptance.
+
+The adapter accepts exactly one workspace_id and one date in YYYY-MM-DD UTC
+form, with optional metric and limit. Omit metric for an overview; an explicitly
+empty metric is invalid. Nonempty names retain whitespace and escaping literally
+and must fit 1,024 UTF-8 bytes. Omit limit for the configured maximum; a supplied
+limit must be canonical positive decimal, at most 100 and within the service's
+configured maximum. Zero, empty, signs, leading zeroes, repeated or unknown
+options, raw selectors and caller tenant/focus-label inputs are invalid. The
+raw query is capped at 4 KiB before decoding. Date-times, alternate encoded paths
+and GET bodies are refused.
+
+Intrinsic input failures retain VALIDATION_FAILED and its existing HTTP 400
+mapping. The four service-specific cardinality errors above await public
+registration. A source scan/time refusal requires an explicit narrower metric
+retry; even one metric can exceed the native budget. Empty ranks are measured
+arrays, and bounded rank sums need not exhaust the total. An exact metric's
+rank must equal its total.
+
+Mac Go 1.27.3 race units qualify the private HTTP/query parser at d8ad7e79, with
+seven top-level tests and 49 passing events including subtests. The original
+failed typed-nil fixture and corrected passing proof are retained. The Linux
+native service/PostgreSQL-store profile remains unrun. Reproduce the affected
+pure units, under the shared resource guard, with:
+
+```sh
+go -C services/control test -race -p 2 -count=1 ./internal/modules/monitoring/http
+go -C services/control test -race -p 2 -count=1 \
+  -run '^TestSeriesCardinalityQueryValidation$' ./internal/modules/monitoring
+```
+
+The earlier native daily-index fixture measured 5,105,423 apparent bytes after
+shutdown and p95 6.24 ms across twenty warm reads at its synthetic 10,000-node
+shape. Those measurements do not qualify a seventeen-million-series overview
+or production retention. See the [scan-budget evidence](../../../../../docs/research/series-cardinality-scope.md#verified-node-identity-and-scan-budget-boundary)
+and [scoped HTTP units](../../../../../docs/research/series-cardinality-scope.md#private-http-unit-qualification).
