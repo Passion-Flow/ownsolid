@@ -480,6 +480,11 @@ An isolated PostgreSQL transaction verified this ordering with an existing versi
 the complete candidate DDL, a new default registration and forced constraint checks.
 It observed two distinct families and rolled the entire prototype back successfully.
 
+Retained detail checks the selected exact version and resolved family together
+before decoding its catalogue or graph. A different family's damaged metadata must
+still return `RESOURCE_NOT_FOUND` under the requested anchor. Add that negative
+case alongside same-family ready/retired detail and unknown-version reads.
+
 History resolves an exact anchor, uses the existing retained catalogue and lineage
 checks, and orders by PostgreSQL [row comparison](https://www.postgresql.org/docs/18/functions-comparisons.html#ROW-WISE-COMPARISON)
 on `(created_at,id)` descending. Fetch at most `limit+1` entries and validate the
