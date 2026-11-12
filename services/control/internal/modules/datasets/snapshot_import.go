@@ -2,14 +2,14 @@ package datasets
 
 import (
 	"context"
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/google/uuid"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"reflect"
 	"strings"
 	"time"
@@ -25,7 +25,7 @@ func (s *Service) readSnapshot(ctx context.Context, source string) (FileSnapshot
 		return snapshot, failure("DATASET_SNAPSHOT_INVALID")
 	}
 	raw, e := os.ReadFile(manifestPath)
-	if e != nil || wire.DecodeStrict(raw, &snapshot) != nil || snapshot.SchemaVersion != storeSchema || snapshot.Namespace.SchemaVersion != storeSchema || !wire.ValidID(snapshot.Namespace.StoreID) || snapshot.Namespace.TenantID != snapshot.References.TenantID {
+	if e != nil || wire.DecodeStrict(raw, &snapshot) != nil || snapshot.SchemaVersion != snapshotSchemaVersion(snapshot.References) || snapshot.Namespace.SchemaVersion != storeSchema || !wire.ValidID(snapshot.Namespace.StoreID) || snapshot.Namespace.TenantID != snapshot.References.TenantID {
 		return snapshot, failure("DATASET_SNAPSHOT_INVALID")
 	}
 	expected, e := referenceFiles(snapshot.References)

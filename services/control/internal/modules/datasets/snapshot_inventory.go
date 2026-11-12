@@ -9,11 +9,16 @@ import (
 	"sort"
 )
 
+// SnapshotSource binds one normalized file or a receipt-bound CSV/Parquet original.
+// An empty OriginalFormat retains the legacy normalized-JSONL role.
 type SnapshotSource struct {
-	ObjectID  string `json:"object_id"`
-	SHA256    string `json:"sha256"`
-	SizeBytes int64  `json:"size_bytes"`
+	ObjectID       string       `json:"object_id"`
+	SHA256         string       `json:"sha256"`
+	SizeBytes      int64        `json:"size_bytes"`
+	OriginalFormat SourceFormat `json:"original_format,omitempty"`
 }
+
+// SnapshotVersion binds a published version to its immutable publication files.
 type SnapshotVersion struct {
 	ID              string        `json:"id"`
 	DraftID         string        `json:"draft_id"`
@@ -28,11 +33,16 @@ type snapshotReferences struct {
 	Sources  []SnapshotSource  `json:"sources"`
 	Versions []SnapshotVersion `json:"versions"`
 }
+
+// SnapshotFile pins one private relative path, exact byte count and SHA-256.
 type SnapshotFile struct {
 	Path      string `json:"path"`
 	SHA256    string `json:"sha256"`
 	SizeBytes int64  `json:"size_bytes"`
 }
+
+// FileSnapshot is the operator transfer manifest. Its version is independent
+// of the store namespace format and includes every authoritative file role.
 type FileSnapshot struct {
 	SchemaVersion int                `json:"schema_version"`
 	Namespace     storeNamespace     `json:"namespace"`
@@ -72,6 +82,23 @@ func (s *Service) snapshotReferences(ctx context.Context) (snapshotReferences, e
 	if rows.Err() != nil {
 		return committed(out, rows.Err())
 	}
+	if e = walkOriginalSourceReferences(ctx, repo, out.TenantID, func(source SnapshotSource) error {
+		out.Sources = append(out.Sources, source)
+		if len(out.Sources) > s.policy().SnapshotMaximumFiles {
+			return failure("DATASET_SNAPSHOT_LIMIT_REACHED")
+		}
+		return nil
+	}); e != nil {
+		return committed(out, e)
+	}
+	if snapshotSchemaVersion(out) == originalSourceSnapshotSchema {
+		sort.Slice(out.Sources, func(i, j int) bool {
+			if out.Sources[i].ObjectID != out.Sources[j].ObjectID {
+				return out.Sources[i].ObjectID < out.Sources[j].ObjectID
+			}
+			return out.Sources[i].OriginalFormat < out.Sources[j].OriginalFormat
+		})
+	}
 	rows, e = repo.Query(ctx, datasetSQL(repo, "SELECT "+versionFields+" FROM dataset_versions WHERE tenant_id=$1 ORDER BY id", `SELECT id,dataset_id,workspace_id,draft_id,job_id,attempt_id,ordinal,parent_version_id,published_by,published_at,raw_source_sha256,effective_source_sha256,manifest_sha256,manifest,row_mapping_sha256,retired_at,retire_reason FROM dataset_versions WHERE tenant_id=? ORDER BY id`, []any{out.TenantID}, []any{out.TenantID}, transaction.SQL(transaction.Dameng, dmSnapshotVersions, out.TenantID)))
 	if e != nil {
 		return committed(out, e)
@@ -96,15 +123,29 @@ func referenceFiles(references snapshotReferences) (map[string]SnapshotFile, err
 		return nil, failure("DATASET_SNAPSHOT_INVALID")
 	}
 	out := map[string]SnapshotFile{}
+	normalized, originals := map[string]bool{}, map[string]bool{}
 	for _, source := range references.Sources {
-		if !wire.ValidID(source.ObjectID) || !wire.ValidDigest(source.SHA256) || source.SizeBytes < 1 || source.SizeBytes > wire.MaximumBytesCeiling {
-			return nil, failure("DATASET_SNAPSHOT_INVALID")
+		name, e := snapshotSourcePath(source)
+		if e != nil {
+			return nil, e
 		}
-		name := objectPath(source.ObjectID)
 		if _, exists := out[name]; exists {
 			return nil, failure("DATASET_SNAPSHOT_INVALID")
 		}
+		if source.OriginalFormat == "" {
+			normalized[source.ObjectID] = true
+		} else {
+			if originals[source.ObjectID] {
+				return nil, failure("DATASET_SNAPSHOT_INVALID")
+			}
+			originals[source.ObjectID] = true
+		}
 		out[name] = SnapshotFile{name, source.SHA256, source.SizeBytes}
+	}
+	for object := range originals {
+		if !normalized[object] {
+			return nil, failure("DATASET_SNAPSHOT_INVALID")
+		}
 	}
 	versions := map[string]bool{}
 	for _, v := range references.Versions {
