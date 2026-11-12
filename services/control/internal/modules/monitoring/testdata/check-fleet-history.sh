@@ -38,6 +38,8 @@ cleanup() {
     rmdir -- "$work"
 }
 trap cleanup EXIT
+trap 'exit 143' TERM
+trap 'exit 130' INT
 export GOMAXPROCS=2
 go -C services/control test -p 2 -tags repository_integration,monitoring_integration -c \
     -o "$work/monitoring.test" ./internal/modules/monitoring
