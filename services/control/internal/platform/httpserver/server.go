@@ -87,7 +87,10 @@ func ServeListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Co
 }
 
 func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, age ConnectionAge) error {
-	server := &http.Server{BaseContext: func(net.Listener) context.Context { return ctx }, Handler: handler, ReadHeaderTimeout: config.Seconds(policy.ReadHeaderSeconds), ReadTimeout: config.Seconds(policy.RequestSeconds), WriteTimeout: config.Seconds(policy.RequestSeconds), IdleTimeout: config.Seconds(policy.IdleSeconds), MaxHeaderBytes: MaxJSONBytes, TLSConfig: tlsConfig}
+	if age.Maximum > 0 {
+		return serveAgedListener(ctx, listener, tlsConfig, handler, policy, age)
+	}
+	server := newHTTPServer(ctx, tlsConfig, handler, policy)
 	servingDone := make(chan struct{})
 	shutdownDone := make(chan error, 1)
 	go func() {
@@ -104,11 +107,6 @@ func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Co
 		shutdownDone <- err
 	}()
 	var accepted net.Listener = &bounded{listener, make(chan struct{}, policy.MaxConnections)}
-	if age.Maximum > 0 {
-		accepted = &agingListener{Listener: accepted, age: age}
-		server.ConnContext = withConnectionDrainAt
-		server.Handler = retireAgedConnections(handler)
-	}
 	if tlsConfig != nil {
 		accepted = tls.NewListener(accepted, tlsConfig)
 	}
@@ -121,6 +119,19 @@ func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Co
 		return nil
 	}
 	return e
+}
+
+func newHTTPServer(ctx context.Context, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) *http.Server {
+	return &http.Server{
+		BaseContext:       func(net.Listener) context.Context { return ctx },
+		Handler:           handler,
+		ReadHeaderTimeout: config.Seconds(policy.ReadHeaderSeconds),
+		ReadTimeout:       config.Seconds(policy.RequestSeconds),
+		WriteTimeout:      config.Seconds(policy.RequestSeconds),
+		IdleTimeout:       config.Seconds(policy.IdleSeconds),
+		MaxHeaderBytes:    MaxJSONBytes,
+		TLSConfig:         tlsConfig,
+	}
 }
 
 type listenerEndpoint struct {
