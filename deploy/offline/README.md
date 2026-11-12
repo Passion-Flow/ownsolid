@@ -11,6 +11,32 @@ go -C deploy/offline build -o ownsolid-install ./cmd/install
 go -C deploy/offline test -count=1 ./...
 ```
 
+## Configure license import capacity
+
+Set the Control policy in the authoritative install.yaml:
+
+```yaml
+control_settings:
+  runtime:
+    licensing:
+      maximum_imports: 128
+```
+
+Apply that same configuration through the normal installer path:
+
+```sh
+ownsolid-install apply --config /path/to/install.yaml
+```
+
+Control validates a value from 1 to 1024; the shared default is 64. The installer
+preserves this runtime setting in both serving and operator configuration on
+repeated apply. Edit install.yaml to change it. Generated control.yaml follows
+that input on the next apply.
+
+The license trust file remains the separate license.trust_file reference.
+This setting does not change the signed license format. Issuer-signed lifecycle,
+renewal history and deployment migration remain part of DEL-109.
+
 ## Deploy private fleet-history stores
 
 `fleet-history` installs an independent raw store, long store and

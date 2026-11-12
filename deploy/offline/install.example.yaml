@@ -132,6 +132,9 @@ backup_seconds: 3600
 #   runtime:
 #     workspaces:
 #       maximum_count: 100
+#     # The Control-owned license import ceiling, 1 to 1024; shared default is 64.
+#     licensing:
+#       maximum_imports: 128
 
 # Optional. Set the host requirements for this site. With this block present,
 # both `preflight` and `apply` check the Linux amd64 host before preparing files.
