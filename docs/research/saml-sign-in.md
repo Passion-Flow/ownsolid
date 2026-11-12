@@ -106,9 +106,25 @@ model or dataset is added by this research.
 | russellhaering/goxmldsig | v1.6.1 | [Apache-2.0](https://github.com/russellhaering/goxmldsig/blob/v1.6.1/LICENSE) |
 | golang.org/x/crypto | v0.55.0 | [BSD-3-Clause](https://github.com/golang/crypto/blob/v0.55.0/LICENSE) |
 | gotest.tools/v3 | v3.5.2 | [Apache-2.0](https://github.com/gotestyourself/gotest.tools/blob/v3.5.2/LICENSE) |
+| davecgh/go-spew | v1.1.1 | [ISC](https://github.com/davecgh/go-spew/blob/v1.1.1/LICENSE) |
+| kr/pretty | v0.3.1 | [MIT](https://github.com/kr/pretty/blob/v0.3.1/License) |
+| pmezard/go-difflib | v1.0.0 | [BSD-3-Clause](https://github.com/pmezard/go-difflib/blob/v1.0.0/LICENSE) |
+| stretchr/testify | v1.11.1 | [MIT](https://github.com/stretchr/testify/blob/v1.11.1/LICENSE) |
+| golang.org/x/net | v0.57.0 | [BSD-3-Clause](https://github.com/golang/net/blob/v0.57.0/LICENSE) |
+| golang.org/x/sys | v0.47.0 | [BSD-3-Clause](https://github.com/golang/sys/blob/v0.47.0/LICENSE) |
+| golang.org/x/term | v0.45.0 | [BSD-3-Clause](https://github.com/golang/term/blob/v0.45.0/LICENSE) |
+| golang.org/x/text | v0.41.0 | [BSD-3-Clause](https://github.com/golang/text/blob/v0.41.0/LICENSE) |
+| gopkg.in/check.v1 | 10cb98267c6c | [BSD-2-Clause](https://github.com/go-check/check/blob/10cb98267c6c/LICENSE) |
+| gopkg.in/yaml.v3 | v3.0.1 | [MIT and Apache-2.0 by file](https://github.com/go-yaml/yaml/blob/v3.0.1/LICENSE); retain NOTICE |
 
 These licenses permit commercial use, redistribution and offline use while
-retaining their required copyright, license and applicable notices. The
+retaining their required copyright, license and applicable notices. The actual
+SAML package import closure resolves 18 modules and 25 legal files, including
+the ten transitive/test rows above. Preserve the additional BSD-3-Clause
+`gotest.tools/v3/internal/difflib/LICENSE` and Go subrepository PATENTS files.
+The pinned versions remain the latest tagged SAML and goxmldsig versions at
+the 2026-11-13 check. Resolving imports is source inspection, not compilation
+or a protocol run. The
 private Keycloak fixture's complete application and image dependency notices
 also apply; see the [selected provider inventory](oidc-sign-in.md#dependencies-and-acceptance).
 Do not copy it into ownsolid or describe the whole provider image as BSD or
@@ -133,13 +149,39 @@ subject. Exercise the library's round-trip and signed-subtree behavior using
 malicious but correctly signed fixtures; a modified invalid signature alone
 does not prove resistance to wrapping.
 
-The candidate has package-global time and artifact limits. Do not mutate them
-per connector or concurrently. Select a stricter per-adapter policy whose
-accepted window is within the library's hard acceptance, then check the verified
-assertion against it. No artifact/SOAP network exchange belongs to the first
-POST response path. A nil/default HTTP client is not an approved destination
-policy. Any later network binding must use the existing verified private TLS,
-no-redirect, byte/deadline/concurrency and endpoint restrictions.
+The pinned source has a per-ServiceProvider `Clock`; use that owner rather than
+the deprecated global clock. Its issue/skew and artifact limits still include
+package globals. Do not mutate them per connector or concurrently. Select a
+stricter per-adapter policy whose accepted window is within the library's hard
+acceptance, then check the verified assertion against it.
+
+Several compatibility defaults require explicit constructor policy:
+`RejectSHA1Signatures`, `RejectUnknownConditions` and
+`RejectExpiredIDPMetadata` must be true, and `IgnoreCertificateExpiry` and
+`AllowIDPInitiated` false. They are implementation invariants, not customer
+switches. Advertise only `HTTPPostBinding`. Keep encryption unavailable in this
+first path; any later encrypted profile also sets `RequireSignedResponseForCBC`
+and qualifies its chosen authenticated encryption separately.
+
+The default signature verifier returns the canonical element actually covered
+by the signature. Keep it; a custom `SignatureVerifier` without
+`SignedElementVerifier` retains the original unverified element instead. The
+library can accept a signed Response with several assertions and return the
+first, and can accept a missing Destination on an unsigned Response. The strict
+outer profile must require one assertion, its own signature and an exact
+nonempty Destination before invoking it. Exercise both differences with signed
+fixtures. Its `InvalidResponseError.Response` retains the complete XML even
+though `Error()` is fixed text; project it immediately to a fixed ownsolid
+error and never serialize/log the library error object.
+
+The optional `ReplayCache` is not ownsolid's durable flow/session transaction.
+Do not substitute an in-memory cache or an independent pre-completion write
+for the one-use flow claim and final transactional assertion/session/audit
+authority. That composition and replay retention still need formal admission.
+No artifact/SOAP network exchange belongs to the first POST response path. A
+nil/default HTTP client is not an approved destination policy. Any later network
+binding must use the existing verified private TLS, no-redirect,
+byte/deadline/concurrency and endpoint restrictions.
 
 ## Alternatives, prototype and finished-item acceptance
 
