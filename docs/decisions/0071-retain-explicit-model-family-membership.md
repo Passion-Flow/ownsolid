@@ -42,3 +42,5 @@ execution references retain their shapes. Candidate DDL stays unnumbered and out
 the installed migration chain until ARC admits numbering, roles, catalog, backup and
 restore. DEV owns public contract generation and Web owns S-202. See the
 [domain contract](../research/training-dataset-lineage.md#durable-family-domain-contract).
+Candidate downgrade is allowed only while no family rows exist. Once identities
+have been adopted, the migration owner must retain them or refuse downgrade.
