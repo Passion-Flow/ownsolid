@@ -634,3 +634,11 @@ No dependency, model or dataset is added. Existing React, TanStack Query
 and Radix UI are MIT; Playwright is Apache-2.0. Their licence terms allow
 commercial, redistribution and offline use with the retained notices.
 The existing Go, pgx, PostgreSQL and pgvector terms above still apply.
+
+The existing catalogue polling retains successful query data on a later
+error. Distinguish a transient refresh failure from an authorization
+refusal: the former keeps the known names with a retry notice; a 403 or
+404 must close the description drawer and show the refusal instead of
+continuing to present the cached catalogue as current. Test the transition
+after a successful read, not only an initial failed request. This is a UI
+truthfulness boundary; the backend still owns membership and tenant checks.

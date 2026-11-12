@@ -41,6 +41,52 @@ for (const [locale, text] of [
 ] as const) {
   test.describe(`workspace description ${locale}`, () => {
     test.use({ locale });
+    for (const [status, code] of [
+      [403, 'ACCESS_DENIED'],
+      [404, 'MODEL_ALIAS_NOT_FOUND'],
+    ] as const) {
+      test(`withdraws a cached description when a later read returns ${status}`, async ({
+        page,
+      }, info) => {
+        if (locale === 'zh-CN') await page.setViewportSize({ width: 390, height: 844 });
+        const description = 'Only while workspace access remains valid.';
+        control.aliases = [{ ...deploymentAlias, description, description_revision: 2 }];
+        let refuse = false;
+        await page.route('**/distribution/aliases?*', (route) => {
+          if (!refuse) return route.fallback();
+          return route.fulfill({
+            status,
+            contentType: 'application/problem+json',
+            body: JSON.stringify({
+              type: 'about:blank',
+              title: code,
+              status,
+              code,
+              request_id: '6f1c7a1e-0000-4000-8000-0000000000ff',
+            }),
+          });
+        });
+        await page.goto('/models');
+        await page
+          .getByRole('row', { name: new RegExp(deploymentAlias.name) })
+          .getByRole('button')
+          .first()
+          .click();
+        await expect(page.getByText(description, { exact: true })).toBeVisible();
+        refuse = true;
+        await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 15_000 });
+        await expect(page.getByText(text[`problem.${code}.title`], { exact: true })).toBeVisible();
+        await expect(page.getByText(description, { exact: true })).toHaveCount(0);
+        await expect(page.getByRole('row', { name: new RegExp(deploymentAlias.name) })).toHaveCount(
+          0,
+        );
+        if (status === 403)
+          await info.attach(`portal-description-denied-${locale}`, {
+            body: await page.screenshot({ animations: 'disabled' }),
+            contentType: 'image/png',
+          });
+      });
+    }
     test('reads only the selected workspace description as text and exposes no editor', async ({
       page,
     }, info) => {
@@ -286,6 +332,43 @@ test('says what to do without a workspace', async ({ page }) => {
   const issue = page.getByRole('button', { name: 'Issue a key' });
   await expect(issue).toHaveAttribute('aria-disabled', 'true');
   await expect(issue).toHaveAccessibleDescription(/administrator adds you to a workspace/);
+});
+
+test('retains known model descriptions on a transient refresh failure and recovers', async ({
+  page,
+}) => {
+  control.aliases = [
+    { ...deploymentAlias, description: 'Known catalogue text', description_revision: 2 },
+  ];
+  let refuse = false;
+  await page.route('**/distribution/aliases?*', (route) => {
+    if (!refuse) return route.fallback();
+    return route.fulfill({
+      status: 503,
+      contentType: 'application/problem+json',
+      body: JSON.stringify({
+        type: 'about:blank',
+        title: 'STORAGE_UNAVAILABLE',
+        status: 503,
+        code: 'STORAGE_UNAVAILABLE',
+        request_id: '6f1c7a1e-0000-4000-8000-0000000000ff',
+      }),
+    });
+  });
+  await open(page);
+  const row = page.getByRole('row', { name: new RegExp(deploymentAlias.name) });
+  await expect(row).toBeVisible();
+  refuse = true;
+  await expect(page.getByText('The model list could not refresh', { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+  await row.getByRole('button').first().click();
+  await expect(page.getByText('Known catalogue text', { exact: true })).toBeVisible();
+  await page.keyboard.press('Escape');
+  refuse = false;
+  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(page.getByText('The model list could not refresh', { exact: true })).toHaveCount(0);
+  await expect(row).toBeVisible();
 });
 
 test.describe('with a browser that prefers Chinese', () => {
