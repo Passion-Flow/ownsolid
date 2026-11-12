@@ -49,6 +49,7 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
 	second := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 2}
 	third := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 3}
 	createQueueExecutorOwnerEntries(t, f, []QueueEntry{first, second})
+	competing := newBorrowingAttempt(f.first, f.first.WorkspaceID)
 	rank := func(ctx context.Context, q transaction.Executor, want []QueueEntry) error {
 		t.Helper()
 		entries, err := readQueueExecutorOwnerEntries(ctx, q, f.first.TenantID)
@@ -68,7 +69,7 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
 		if err := rank(ctx, q, []QueueEntry{first, second}); err != nil {
 			return err
 		}
-		reserveBorrowing(t, f.store, f.first, 2)
+		reserveBorrowing(t, f.store, competing, 2)
 		if _, err := f.pool.Exec(ctx, `INSERT INTO queue_executor_owner
  (job_id,tenant_id,workspace_id,priority,sequence,state)
  VALUES($1,$2,$3,0,3,'queued')`, third.JobID, f.first.TenantID, third.QueueID); err != nil {
@@ -95,9 +96,11 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
 		}
 	}
 	var held int
-	if err := f.pool.QueryRow(ctx, "SELECT count(*) FROM scheduling_reservations WHERE released_at IS NULL").
-		Scan(&held); err != nil || held != 1 {
-		t.Fatalf("ranking changed the committed hold: %d, %v", held, err)
+	var heldID string
+	if err := f.pool.QueryRow(ctx, `SELECT count(*),COALESCE(min(attempt_id::text),'')
+ FROM scheduling_reservations WHERE released_at IS NULL`).
+		Scan(&held, &heldID); err != nil || held != 1 || heldID != competing.ID {
+		t.Fatalf("ranking changed the competing hold: %d, %q, %v", held, heldID, err)
 	}
 }
 
