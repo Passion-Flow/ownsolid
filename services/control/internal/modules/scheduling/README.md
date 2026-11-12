@@ -101,3 +101,47 @@ go -C services/control test -p 1 -race -tags repository_integration ./internal/m
 The wire fault test requires an isolated plaintext loopback endpoint and
 skips a Unix-only or TLS endpoint. Check its explicit PASS when qualifying
 unknown-commit replay.
+
+## Authorized workspace quota status
+
+`ReadWorkspaceQuotaStatus` uses the selected repository and
+`workspaces.Service.ReadScopeWithin` in one bounded transaction. It rechecks the
+current session, source and membership, then locks policy and workspace usage
+in the existing reservation order. Current members may read their workspace;
+Admin uses its installed tenant scope. Cached actor workspace fields do not
+select the tenant. A failed or uncertain transaction returns an empty result.
+
+The status distinguishes `unconfigured`, `unallocated` and `configured`.
+Only an actual allocation has resource rows. Each row contains the workspace's
+guarantee, hard limit, held reservations and `unreserved_quota`, encoded as
+decimal strings. CPU uses millicores, memory bytes and GPUs whole devices.
+Unreserved quota is accounting; queue turn, borrowing, placement and physical
+capacity can still prevent a job from starting. No job or sibling identity,
+ancestor amount, cell capacity or historical wait code is returned.
+
+The `http.Handler` component accepts:
+
+- `GET /api/v1/workspaces/{workspace}/scheduling/quota` for Portal.
+- `GET /api/v1/admin/scheduling/quota?workspace_id={workspace}` for Admin.
+
+Both reject request bodies, ambiguous or unknown selectors and the wrong
+audience, and set `Cache-Control: no-store`. They call the same authenticated
+reader and return no success payload on failure.
+
+These routes are **not installed** in the production dispatcher. IAM must
+import the scheduling HTTP package, construct its `Handler{Workspaces: w}`
+from the already installed Workspace authority, and dispatch
+`schedulinghttp.Owns(path)` **before** the general Workspace routes. Forward
+the same response writer, request, authenticated actor and request ID to
+`Handle`; retain the owner's session/CSRF/error-envelope processing. Web must
+publish the matching OpenAPI contract, generated client, translations and UI
+in the same composed feature. No alternate authentication or pool is needed.
+
+The PostgreSQL tests use the installed Workspace authority with candidate
+quota tables in their own disposable schema. They do not prove production
+router composition, native database role grants or an installed cell flow.
+With the protected loopback `PROJECT_ONE_TEST_DSN_FILE` configured:
+
+```sh
+go -C services/control test -p 1 -race ./internal/modules/scheduling/... -run '^(TestWorkspaceQuotaStatus|TestQuotaReadRejects|TestPostgresWorkspaceQuotaStatus|TestPostgresHTTPWorkspaceQuotaStatus)' -count=1 -v
+```

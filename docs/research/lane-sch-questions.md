@@ -59,6 +59,15 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   validation requires signed offline
   controller assets and a ready isolated cell. See the
   [installed workload handoff](scheduling-wait-reasons.md#installed-workload-handoff).
+  The owned quota-status reader and HTTP component now use the selected
+  Workspace authority and policy/usage locks in the same transaction.
+  The [quota status contract](scheduling-wait-reasons.md#authorized-workspace-quota-status)
+  contains no job-readiness or physical-capacity claim. IAM owns the installed
+  authenticated dispatcher; Web owns its contract generation and UI.
+  Their composition remains open. A job-specific explanation also needs a
+  workload-owner read on the caller's executor and its persisted cell/UID
+  binding. The current training Get opens a separate transaction and its
+  saved wait-code text cannot establish a fresh scheduling decision.
 - SCH-105 requires a durable preemption attempt, explicit checkpoint support
   from the workload owner, a bounded retry policy and cell confirmation before
   resource release. Kueue [preemption](https://kueue.sigs.k8s.io/docs/concepts/preemption/)
