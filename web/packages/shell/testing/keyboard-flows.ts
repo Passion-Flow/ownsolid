@@ -27,6 +27,24 @@ async function walkTabOrder(page: Page): Promise<TabStop[]> {
   for (let index = 1; index <= maximumStops; index += 1) {
     await page.keyboard.press('Tab');
     await settled(page);
+    // Native focus reveal and content layout can finish after Web Animations.
+    await page.waitForFunction(
+      () => {
+        const element = document.activeElement;
+        if (!(element instanceof HTMLElement) || element === document.body) return true;
+        const rect = element.getBoundingClientRect();
+        return (
+          rect.width > 0 &&
+          rect.height > 0 &&
+          rect.bottom > 0 &&
+          rect.right > 0 &&
+          rect.top < window.innerHeight &&
+          rect.left < window.innerWidth
+        );
+      },
+      undefined,
+      { polling: 'raf' },
+    );
     const done = await page.evaluate((visit) => {
       const element = document.activeElement;
       // Focus is on the browser's own controls between two passes through the page.
@@ -113,6 +131,58 @@ export function keyboardFlows({ audience, pages }: KeyboardFlowOptions): void {
     test.beforeEach(async ({ page }) => {
       control = await mockControlPlane(page, audience);
       await page.emulateMedia({ reducedMotion: 'reduce' });
+    });
+
+    test('waits for the focused control to enter the viewport before sampling', async ({
+      page,
+    }) => {
+      let reportFocus: () => void = () => undefined;
+      const focused = new Promise<void>((resolve) => {
+        reportFocus = resolve;
+      });
+      await page.exposeFunction('reportFocusedControl', reportFocus);
+      await page.setContent('<button type="button">Keyboard target</button>');
+      await page.evaluate(() => {
+        const button = document.querySelector('button');
+        if (!button) throw new Error('The keyboard fixture button is missing');
+        button.style.position = 'fixed';
+        button.style.top = '-1000px';
+        button.addEventListener(
+          'focus',
+          () => {
+            void (
+              window as unknown as { reportFocusedControl: () => Promise<void> }
+            ).reportFocusedControl();
+          },
+          { once: true },
+        );
+      });
+      const walking = expectFocusVisible(page);
+      await focused;
+      const target = page.getByRole('button', { name: 'Keyboard target' });
+      await expect(target).toBeFocused();
+      await expect(target).not.toBeInViewport();
+      await page.evaluate(() => {
+        const button = document.querySelector('button');
+        if (button) button.style.top = '20px';
+      });
+      await walking;
+    });
+
+    test('still refuses a focused control that stays outside the viewport', async ({ page }) => {
+      page.setDefaultTimeout(200);
+      await page.setContent('<button type="button">Offscreen keyboard target</button>');
+      await page.evaluate(() => {
+        const button = document.querySelector('button');
+        if (!button) throw new Error('The keyboard fixture button is missing');
+        button.style.position = 'fixed';
+        button.style.top = '-1000px';
+      });
+      await expect(expectFocusVisible(page)).rejects.toThrow(/Timeout 200ms exceeded/);
+      await expect(page.getByRole('button', { name: 'Offscreen keyboard target' })).toBeFocused();
+      await expect(
+        page.getByRole('button', { name: 'Offscreen keyboard target' }),
+      ).not.toBeInViewport();
     });
 
     for (const state of pages.filter((each) => (each.audience ?? audience) === audience)) {
