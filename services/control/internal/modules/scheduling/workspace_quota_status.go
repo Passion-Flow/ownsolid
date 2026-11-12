@@ -166,8 +166,7 @@ func quotaStatusError(err error) error {
 		return &transaction.Error{Kind: transaction.Timeout}
 	}
 	switch err.Error() {
-	case "RESOURCE_NOT_FOUND", "ACCESS_DENIED", "AUTH_SESSION_EXPIRED",
-		"AUTH_ACCOUNT_DISABLED", "AUTH_SOURCE_DISABLED", "AUTH_REAUTHENTICATION_REQUIRED":
+	case "RESOURCE_NOT_FOUND", "ACCESS_DENIED", "AUTH_SESSION_EXPIRED":
 		return errors.New(err.Error())
 	default:
 		return ErrQuotaPolicyUnavailable
