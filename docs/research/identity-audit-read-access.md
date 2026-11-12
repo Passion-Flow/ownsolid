@@ -108,3 +108,15 @@ the existing notices. OWASP and Troubleshoot are references, not embedded code.
 The complete item additionally requires scoped workspace accounting, the
 public/UI owner changes and actual collector acceptance; keep its roadmap
 box unticked until those paths meet their acceptance criteria.
+
+## Qualification
+
+The identity consumer passed repository checks, builds and all test stages with standard toolchain `umask 022`. Browser regressions reuse byte-identical Web, OpenAPI, generator, capability and Makefile inputs already qualified with 1,075 Console and 389 Portal Chromium cases; 37 installation-dependent cases were skipped. The test continuation used `make -o test-web-browser test`; no assertion was removed.
+
+Seven actual PostgreSQL HTTPS roots cover the standard and assistant views, empty results, safe correlation and projection, append refusal and repair, real member/Portal/revoked-session refusals, rejected tenant/workspace inputs, concurrent reads, cancellation, existing assistant attribution and four actual wire COMMIT uncertainty subcases. COMMIT-not-forwarded and suppressed server ACK both release no page and perform no automatic second append; an explicit retry records a new read.
+
+The existing workspace projection root also passed with a restricted principal that can read/append audit rows and resolve only the required local-cell columns, while remaining unable to read the private chain head. This confirms compatibility and authority, not workspace access accounting. The first seed-deadline, cookie-clearing and missing cell-column fixture failures are retained separately from their corrected passing runs.
+
+Fixtures used PostgreSQL 18.6 and pgvector 0.8.7 in owned network-none Linux arm64 containers on the workstation. No native Linux amd64 installation or new rendered UI acceptance is claimed. The qualified runtime/test input is `fcbb839af30f6df6b7b6dd60bbf60c61442bf973`; the durable local evidence set is `aud108-identity-20261112.vi6mouqa`, including exact input, raw native logs, wire observations and full-gate exit codes. Fixtures and the owned scratch volume were cleaned up. Only this verification text changed after the gate.
+
+AUD-108 remains open for SCI scoped-workspace accounting, Web action/family names, DEV public contract metadata and Delivery collector admission/reconciliation.
