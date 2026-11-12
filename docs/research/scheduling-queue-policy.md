@@ -238,3 +238,36 @@ The existing Go/UUID BSD-3-Clause, pgx MIT and PostgreSQL licenses permit commer
 redistribution with notices and offline operation. Kueue remains an Apache-2.0
 reference, including its separate nominal, borrowing and lending limits. This
 change adds no dependency, model, data set, production table or runtime download.
+
+
+### Component qualification
+
+Source 5ee946b6 passed 45 real PostgreSQL cases and 66 top-level tests across
+scheduling, its HTTP component and cell adapter, with Go race instrumentation,
+PostgreSQL 18.6 and pgvector 0.8.7 on Linux amd64. The network namespace had no
+default IPv4 or IPv6 route; the database had no container network or host port.
+
+The current queue tests verified owner dequeue/hold commit and rollback, current
+shares after ordinary and queued writer waits, concurrent replay, cancellation,
+reader/scope failure, exact positive release, borrowing attribution and reclaim,
+and a suppressed real COMMIT acknowledgement. The configured 10,000-workspace
+domain held exactly two advisory lock tags: tenant and selected workspace.
+This is a lock-allocation result, not SCH-111 node/job admission latency evidence.
+
+The same source passed the complete Control module suite, make check and make
+build on macOS arm64, and the complete Control module suite and make check on
+Linux amd64. Both used Go 1.27.3 and offline dependencies. Linux build admission
+was deferred by shared-host I/O pressure; it is not recorded as a completed run.
+
+With both protected fixture DSN variables in the module README configured:
+
+```sh
+go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -skip '^TestPostgresReservationCatalogRoundTrip$' -count=1 -timeout 8m -v
+```
+
+The separate fresh/dump/restore catalog harness was explicitly excluded; this
+change has no production DDL. The fixtures use a privileged test principal, not
+the native serving role. Production grants/readiness, complete eligible-batch
+authority, persisted priority configuration, current authenticated dispatch,
+all-writer protocol cutover and the installed UI flow remain open. SCH-103 stays
+unticked.
