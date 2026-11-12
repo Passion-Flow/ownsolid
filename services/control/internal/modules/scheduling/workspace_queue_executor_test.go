@@ -48,11 +48,11 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
 	first := QueueEntry{JobID: f.first.SourceID, QueueID: f.first.WorkspaceID, Sequence: 1}
 	second := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 2}
 	third := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 3}
-	createQueueExecutorOwnerEntries(t, f, []QueueEntry{first, second})
+	createOwnerQueueEntries(t, f, []QueueEntry{first, second})
 	competing := newBorrowingAttempt(f.first, f.first.WorkspaceID)
 	rank := func(ctx context.Context, q transaction.Executor, want []QueueEntry) error {
 		t.Helper()
-		entries, err := readQueueExecutorOwnerEntries(ctx, q, f.first.TenantID)
+		entries, err := readOwnerQueueEntries(ctx, q, f.first.TenantID)
 		if err != nil {
 			return err
 		}
@@ -70,7 +70,7 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
 			return err
 		}
 		reserveBorrowing(t, f.store, competing, 2)
-		if _, err := f.pool.Exec(ctx, `INSERT INTO queue_executor_owner
+		if _, err := f.pool.Exec(ctx, `INSERT INTO owner_fixture_queue
  (job_id,tenant_id,workspace_id,priority,sequence,state)
  VALUES($1,$2,$3,0,3,'queued')`, third.JobID, f.first.TenantID, third.QueueID); err != nil {
 			return err
@@ -90,7 +90,7 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
 	for _, entry := range []QueueEntry{first, second, third} {
 		var state string
 		var revision int64
-		if err := f.pool.QueryRow(ctx, "SELECT state,revision FROM queue_executor_owner WHERE job_id=$1", entry.JobID).
+		if err := f.pool.QueryRow(ctx, "SELECT state,revision FROM owner_fixture_queue WHERE job_id=$1", entry.JobID).
 			Scan(&state, &revision); err != nil || state != "queued" || revision != 1 {
 			t.Fatalf("ranking changed persisted owner state: %q, %d, %v", state, revision, err)
 		}
@@ -153,48 +153,4 @@ func TestPostgresQueueExecutorRejectsWrongModeAndScope(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-}
-
-// Persistent owner rows and committed reservations must use the same snapshot;
-// this fixture deliberately has no dependency on the pending admission API.
-func createQueueExecutorOwnerEntries(t *testing.T, f reservationFixture, entries []QueueEntry) {
-	t.Helper()
-	if _, err := f.pool.Exec(t.Context(), `CREATE TABLE queue_executor_owner (
- job_id uuid PRIMARY KEY,
- tenant_id uuid NOT NULL,
- workspace_id uuid NOT NULL,
- priority integer NOT NULL,
- sequence bigint NOT NULL UNIQUE CHECK(sequence > 0),
- state text NOT NULL DEFAULT 'queued',
- revision bigint NOT NULL DEFAULT 1,
- FOREIGN KEY(tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id)
-)`); err != nil {
-		t.Fatal(err)
-	}
-	for _, entry := range entries {
-		if _, err := f.pool.Exec(t.Context(), `INSERT INTO queue_executor_owner
- (job_id,tenant_id,workspace_id,priority,sequence) VALUES($1,$2,$3,$4,$5)`,
-			entry.JobID, f.first.TenantID, entry.QueueID, entry.Priority, entry.Sequence); err != nil {
-			t.Fatal(err)
-		}
-	}
-}
-
-func readQueueExecutorOwnerEntries(ctx context.Context, q transaction.Executor, tenant string) ([]QueueEntry, error) {
-	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT job_id::text,workspace_id::text,priority,sequence FROM queue_executor_owner
- WHERE tenant_id=$1 AND state='queued' ORDER BY sequence`, tenant))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var entries []QueueEntry
-	for rows.Next() {
-		var entry QueueEntry
-		if err := rows.Scan(&entry.JobID, &entry.QueueID, &entry.Priority, &entry.Sequence); err != nil {
-			return nil, err
-		}
-		entries = append(entries, entry)
-	}
-	return entries, rows.Err()
 }
