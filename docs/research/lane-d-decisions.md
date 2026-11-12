@@ -151,7 +151,7 @@ run with the archive delivery in FLT-109.
 | GPU-206 | Capacity degradation and spare planning need retained fleet observations and capacity history. |
 | GPU-207 | Real Ascend qualification requires the named driver, hardware model and count. Keep it separate from collector parser tests. |
 | GPU-209 | Intra-node topology and failure attribution require GPU-101 telemetry and real PCIe and NVLink/NVSwitch configurations to establish attribution. |
-| DEV-204 | The versioning guide and local comparison cover published operation identities. A release baseline, schema and behavioral compatibility checks, and runtime deprecation signaling need their owning release and API paths. |
+| DEV-204 | The versioning guide and local comparison cover published operation identities and named response model references. A release baseline, full directional schema and behavioral compatibility checks, and runtime deprecation signaling need their owning release and API paths. |
 
 ## Training intent CLI (DEV-102, TRN-101)
 
