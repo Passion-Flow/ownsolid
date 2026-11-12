@@ -488,3 +488,53 @@ The shared HTTP/application and allocated-byte helpers were extracted
 without changing product code. Both history-http and history-tls passed
 again on fb699628 after that extraction and the new runner selector.
 All native processes and disposable PostgreSQL containers stopped.
+
+## Fresh native request-counter evidence
+
+A raw-tier request counter is useful for proving both that a raw read reaches
+the intended store and that a rollup or refusal makes no raw range request.
+The selected VictoriaMetrics 1.155.0
+[metrics writer](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/appmetrics/appmetrics.go#L27-L60)
+caches the complete exposition for one second, including the request counter,
+process start timestamp and integer uptime. Two immediate successful metrics
+GETs can therefore return the same old snapshot. An unchanged counter alone
+can produce either a false positive-control failure or a false no-fallback
+pass. The native range-request counter uses the full
+[path label](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmselect/main.go)
+/api/v1/query_range. Changing that label or removing the positive assertion
+does not resolve the snapshot problem.
+
+For each before/after observation, first read the counter, process epoch and
+uptime through the store's verified private TLS identity. Poll within one
+operation deadline until the cached uptime strictly advances. Reject a
+changed epoch, a decreasing counter or uptime, invalid/missing metadata,
+transport failure and timeout. Compare only usable fresh snapshots from the
+same epoch; a positive control must increase and a no-fallback check must
+remain equal. Retain counts, epochs, uptimes and observation timestamps in
+the client proof. Waiting a fixed duration without observing a changed
+snapshot is insufficient. Keep an exclusive execution window: other range
+readers can invalidate attribution even when both snapshots are fresh.
+
+The pure-client regression fixture models the actual one-second TLS metrics
+cache. It checks both a visible positive increment and detection of an extra
+raw request that a stale negative check would miss. Separate cases reject an
+epoch change and a permanently frozen snapshot at the deadline. The cache-
+aware source SHA-256 is
+48ed1588c41cd4ffca484849166ef558be632acafb142b40486fb56f479a856b;
+its test source SHA-256 is
+f77a6d8e1ae1983be5415a3d1937290b953ca664db18097f26f1305a1c933a2d.
+All seven pure-client tests passed with the race detector on macOS arm64
+using Go 1.27.3, and vet and a CGO-disabled Linux amd64 cross-build passed.
+This qualifies client logic on that host; it is not Linux-native testing or
+an installed-product read. The resulting Linux ELF SHA-256 is
+91fc9bc6962a5829613fb0cb8d0913995cef856ff0832bce95f6cc587199b708.
+
+Two earlier installed reads at product source 4463bbe6 returned valid raw
+data and committed read audits but failed the old immediate counter check.
+Their counter proofs are indeterminate, not a product pass or a demonstrated
+product failure. The replacement client's complete artifact was not received
+and verified before that installation window expired, so no replacement read
+or subsequent fault phase ran. Preserve those original logs and requalify in
+a new single-instance window with a complete verified client, current raw
+window and exact product provenance. No metrics or logs enter PostgreSQL;
+the selected database still stores only authority and diagnostic audits.
