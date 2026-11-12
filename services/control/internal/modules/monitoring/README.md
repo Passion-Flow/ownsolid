@@ -594,3 +594,25 @@ profiles above. This profile requires Linux and the shared resource/lock guard
 before invocation. Its successful paths use the native index, not a source double.
 The service, profile and tests remain a candidate until their actual run is recorded
 in the [cardinality research](../../../../../docs/research/series-cardinality-scope.md).
+
+The candidate cardinality entry additionally checks two completed UTC days in one
+monthly partition, distinct daily metric/node ranks, scope distractors, an empty
+day and a same-profile restart. It inspects the actual child argv and executable
+identity. Its positive source explicitly uses -disablePerDayIndex=false; a separate
+-disablePerDayIndex=true process is rejected by the test fixture before product
+binding and queried directly as a global-index negative control. This fixture
+admission does not implement installed-product source admission.
+
+The affected helper tests can run without native services:
+
+```sh
+go -C services/control test -race -p 2 -count=1 \
+  -run '^(TestDailyCardinalityFixtureAdmission|TestCardinalityFixtureUTCPartitionDays)$' \
+  ./internal/modules/monitoring
+```
+
+Those helper units and Linux/amd64 integration-tagged cross-compilation passed
+at 5f83cfbf; the new native controls have not run. Compilation does not qualify
+native daily semantics, restart persistence, procfs checks or cleanup. Retain the
+actual Linux resource window and the four history/cardinality regressions before
+publication. See the [preparation evidence](../../../../../docs/research/series-cardinality-scope.md#fixture-preparation-qualification).

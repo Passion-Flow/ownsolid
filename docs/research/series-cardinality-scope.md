@@ -613,3 +613,62 @@ native stages run sequentially with the original 192 MB store limit, 7-day
 retention, 10,000-series scan cap, 5-second native request limit and three ranks.
 They preserve the existing 110-second cardinality entry and 90-second story
 context; a missed deadline is a failure, not permission to extend the window.
+
+## Fixture preparation qualification
+
+The private candidate 5f83cfbf9c1c24b8efae927f76a69912d52c7c68 (tree
+170ad1a59b80cd361ec65cbf74364ad400d8a426) adds the executable two-day controls
+above without changing the four native entry names. Actual child argv is checked
+against exec arguments and the running executable is fingerprinted. The positive
+profile explicitly retains per-day indexing; the separate disabled control is
+refused by the fixture before product binding. This does not implement the
+installed-product source admission.
+
+On Go 1.27.3 darwin/arm64, the affected helper command passed with race detection,
+two workers, offline dependencies and no integration environment:
+
+```sh
+go -C services/control test -json -race -p 2 -count=1 -timeout=120s \
+  -run '^(TestDailyCardinalityFixtureAdmission|TestCardinalityFixtureUTCPartitionDays)$' \
+  ./internal/modules/monitoring
+```
+
+The two top-level tests emitted 24 passing test events and no failures or skips.
+A separate CGO_ENABLED=0, GOOS=linux, GOARCH=amd64 command compiled the monitoring
+test binary with repository_integration,monitoring_integration tags. Its ELF
+header and all four native test entry symbols were checked. It was never executed
+and was removed afterward. Both commands completed in 15.38 seconds total.
+The persistent workstation flock covered the child groups, which exited before
+release; its carrier remained unchanged.
+
+Evidence is retained at /private/tmp/obs110-native-qualified-f8v4l9j9:
+native-preparation-proof.json SHA-256
+c32c02f71af6b4830682d28dd76a9e140e0dd4e4487bc36bb6e9d012da330cae,
+and fixture-unit-tests.jsonl SHA-256
+303842b937acdbcf0285809f3bc891f9118036b3921f8fe166f252c17a8530d7.
+The first attempt failed at Go workspace setup because its /var temporary path
+and macOS's physical /private/var path differed; no test body or compilation ran.
+That unchanged failure proof is retained under
+/private/var/folders/v5/7tyk9y_93t74ggr8xqy01xm80000gn/T/obs110-native-prep-zcfnoaso,
+SHA-256 eca61f595e9b95cc003f9a0ef9ea6ffc04085f664cfaa3dbb4b243ffb3621b1f.
+
+The directly runnable, source-bound Linux preparation is
+/root/lane-obs-tools/run-obs110-daily-native.sh, SHA-256
+e3941f89f2f12b130fdf84430b0c4c7d9f93417b80baf7698d30336dfdbaccfe.
+Its input/command/resource/cleanup manifest is
+/root/lane-obs-tools/obs110-daily-native-package.json, SHA-256
+b946664abde20beb6e595004049f47746c55d278125e9b6c18de67351691a3a2.
+It preserves the existing two-lock order, nonblocking acquisition and descriptor
+lifetime, 2,048 MiB free-memory floor, 15 GiB disk floor, I/O some/full avg10
+maximum of five, two Go workers, race build and offline caches. The four fixed
+entries remain cardinality, history-http, history-tls and history-retention.
+The caller bound is 300 seconds with a ten-second forced-stop grace.
+
+The wrapper passed bash syntax checking but has not been invoked. Preparing it
+made no Linux lock attempt and started no native store, PostgreSQL, Alertmanager,
+browser or installation service. Cross-compilation does not qualify native
+counts, persistence, procfs observation or cleanup. Native execution, current-main
+integration, make check/build and installed-product admission remain open.
+The candidate retains schema 59/119; it is not a schema-60/120 qualification.
+The original 3cebfcef worktree and its actual Linux four-package race-unit proof
+remain unchanged. No roadmap checkbox is changed by this preparation.
