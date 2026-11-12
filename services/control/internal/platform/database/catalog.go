@@ -33,12 +33,12 @@ SELECT jsonb_build_object('table_count',(SELECT count(*) FROM owned WHERE relkin
   (SELECT jsonb_agg(jsonb_build_array(t.tgname,t.tgtype,t.tgenabled,p.proname,encode(t.tgargs,'hex'),pg_get_expr(t.tgqual,t.tgrelid),p.prosrc,p.provolatile,p.prosecdef,p.proconfig) ORDER BY t.tgname)
    FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE t.tgrelid=o.oid AND NOT t.tgisinternal)) ORDER BY o.relname) FROM owned o))::text`
 
-// Exact schema 58 catalogs from pinned PostgreSQL 18.6. A restore at 55
-// reparses earlier expressions while migrations 56 through 58 run from source.
+// Exact schema 59 catalogs from pinned PostgreSQL 18.6. A restore at 55
+// reparses earlier expressions while migrations 56 through 59 run from source.
 const (
-	catalogFreshSHA256        = "56795c36a7a0115478e17ee9af9ea98f27c1922c201cfec0b874d8d72b713d1d"
-	catalogRestoredSHA256     = "ded94bd6eeb9c84949fd7647bd1b200e612b03fd4aedf8462280f5dacd87ce5d"
-	catalogRestoredAt55SHA256 = "9e464ca9f6708f89731980adc8def9096e05b7f11f842ee09faa7836a12d0e42"
+	catalogFreshSHA256        = "72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782"
+	catalogRestoredSHA256     = "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc"
+	catalogRestoredAt55SHA256 = "8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069"
 )
 
 func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
