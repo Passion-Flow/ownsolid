@@ -21,6 +21,9 @@ type Service struct {
 	// Certificates signs the serving certificates of gateways agents run (ADR 0052). Only
 	// the agent path, which activates them, holds it.
 	Certificates *agentidentity.Authority
+	// PublishAliasCapabilities exposes the draft human read projection only after
+	// its public schema and generated clients are published. Set it at composition time.
+	PublishAliasCapabilities bool
 }
 
 type RecoveryChallenge struct {

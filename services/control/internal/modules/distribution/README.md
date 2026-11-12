@@ -91,9 +91,27 @@ revision or edit intent refuses downgrade with
 its revision and replay history; restore a verified pre-upgrade backup
 through the normal recovery procedure to recover the predecessor instead.
 
+## Verified alias read metadata
+
+Human list and detail use AliasReadView, with Alias embedded and an
+optional two-field capabilities object. The selector uses the current
+authorized alias route revision, immutable target snapshot and verified
+deployment/model/recipe identity. It reports verified text generation
+and a context ceiling; adapter support is separate.
+
+PublishAliasCapabilities defaults to false. Trusted startup may enable
+it only for the complete PostgreSQL producer/read composition and the
+matching published read contract and clients. No customer configuration
+or authorization policy selects it. Missing or stale evidence omits
+the object; a failed enabled query returns the existing storage problem.
+Mutation results, machine bindings and the compatible models list keep
+their established representations. Description edits preserve the
+route identity and its capability evidence. See the
+[producer and startup boundary](../../../../../docs/research/gateway-alias-capabilities.md#producer-and-typed-startup-integration).
+
 ## Development checks
 
-Synchronize [Rust gateway](../../../../gateway/README.md), contracts/gateway and HTTP/public gateway generators, nodes/deployments/modelpreparations, [distribution frontend](../../../../../web/README.md), [M07](../../../../../docs/milestones/m07-gateway) and gateway deployment/config.
+Synchronize [Rust gateway](../../../../gateway/README.md), api/gateway, the distribution and model-gateway OpenAPI contracts, generated clients, and the node/deployment/model-preparation owners. Public contract and frontend changes remain with their owning lanes.
 
 Focused native check: go -C services/control test ./internal/modules/distribution. Actual admission, SQL concurrency/cutover and Rust/backend streaming faults are separate profiles; neither a synthetic gateway nor an alias row establishes real model serving.
 

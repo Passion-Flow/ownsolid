@@ -101,7 +101,7 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 			v, e := h.Service.GatewayPage(r.Context(), a, workspace, r.URL.Query())
 			return v, 200, e
 		case "aliases":
-			v, e := h.Service.AliasPage(r.Context(), a, workspace, r.URL.Query())
+			v, e := h.Service.ReadAliasPage(r.Context(), a, workspace, r.URL.Query())
 			return v, 200, e
 		case "keys":
 			v, e := h.Service.KeyPage(r.Context(), a, workspace, r.URL.Query())
@@ -233,7 +233,7 @@ func (h *Handler) Human(r *http.Request, a identity.Auth, request string) (any, 
 			v, e := h.Service.Gateway(r.Context(), a, workspace, id)
 			return v, 200, e
 		case "aliases":
-			v, e := h.Service.Alias(r.Context(), a, workspace, id)
+			v, e := h.Service.ReadAlias(r.Context(), a, workspace, id)
 			return v, 200, e
 		case "keys":
 			v, e := h.Service.Key(r.Context(), a, workspace, id)
