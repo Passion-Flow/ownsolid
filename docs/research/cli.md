@@ -653,3 +653,49 @@ through a newly qualified original DEL installation and dedicated disposable
 accounts. Preserve the frozen clients and their Control-source admission; do
 not point an old-source acceptance driver at a new schema window. DEV-102
 remains open.
+
+## Workspace write outcome lookup (DEV-102)
+
+Reviewed 2026-11-13. The published workspace operation resource confirms only
+the current actor's retained atomic write audit. The CLI needs a read path for
+an operator who lost a write reply. [RFC 9110 safe methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.1)
+distinguish retrieval from a state-changing action; its
+[retry rules](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2) require
+known idempotent semantics before automatically repeating a non-idempotent write.
+The existing [workspace contract](../../api/openapi/v1/workspaces/openapi.json),
+reconciliation.go and HTTP handler already supply the proven local approach.
+The service rechecks session, actor, audience and installed tenant and reads a
+retained successful audit; it does not reconstruct current workspace state.
+
+Choose workspace operation get <request-id> over the existing global Admin GET.
+Require the exact canonical lowercase nonzero UUID. Preserve committed and
+unconfirmed plus the complete nullable event in JSON/YAML. The table shows
+request ID, state, committed action and workspace. Missing audits can mean
+retention, rollback or an in-flight commit, so unconfirmed must remain unknown.
+It is a successful read of an uncertain result, not permission to repeat a write.
+A committed receipt is historical; read the resource again under current
+authority before making a new change. Keep the original account and entrance.
+
+Reject local receipt caches, actor/tenant/workspace selectors, implicit context
+reads, automatic polling, automatic mutation replay and invented rollback
+claims. Validate matching request identity, both allowed states, required null
+for an unconfirmed event, and consistent committed action/target/UUIDs before
+printing any output. Preserve raw structured fields without converting numbers
+through floating-point maps. No new dependency, model or dataset is added.
+Pinned Go and pflag are BSD-3-Clause, Cobra is Apache-2.0, and the YAML package
+is MIT/Apache-2.0; commercial use, redistribution and offline use retain their
+existing notices.
+
+Tests must exercise exact uncached global GETs, configured-context independence,
+all output forms and explicit nulls, missing/malformed/mismatched receipts,
+invalid request IDs before I/O, permission/session/storage failures, and manual
+read retry without any mutation or automatic retry. The real Admin dispatcher
+and PostgreSQL must separately prove same-actor retained commit and absent
+confirmation, including revoked authority. TLS client fixtures do not close
+that installation boundary or DEV-102; keep the roadmap open.
+
+The complete Linux amd64 CLI race suite passed in 3.416 seconds with only
+loopback enabled in a separate network namespace and external routes absent;
+CLI vet, layout, roadmap and diff checks also passed. These client TLS fixtures
+retain the separate Admin/PostgreSQL and new-candidate whole-repository gate
+boundaries above.
