@@ -112,7 +112,6 @@ credentials and the same authenticated import entry point. Check wrong
 origin and trust, missing source bytes despite a usable archive, successful
 source readback and a post-read SQL rollback followed by explicit retry.
 No new runtime dependency, model or dataset is added.
-EOF'
 ### Verified consumer boundary
 
 The loopback runner passed with real PostgreSQL and writable and read-only
@@ -134,3 +133,34 @@ and asset names that could escape the release namespace. The small signed
 current-profile fixture uses synthetic OCI content. An incorrect expected
 release digest was refused before reservation. The installed DEL-108 release
 group and control startup still require integrated acceptance.
+
+## Selected startup handoff
+
+The module entry is
+NewWithSiteReleaseSource(identity, workspaces, nodes, deployments, license,
+destinationConfig, sourceFile) in
+[repository.go](../../services/control/internal/modules/imageregistry/repository.go).
+Its first six arguments match New. The final nonempty file reference selects
+the independently configured, read-only source. The source JSON contains
+endpoint, allowed_cidrs, ca_file and credential_file; the constructor reads
+it as protected configuration. New keeps the existing signed-archive path.
+
+At main 785cc4eb,
+[openImageRegistry](../../services/control/cmd/server/imageregistry.go)
+still calls New. The composition owner must introduce and validate an
+explicit typed startup file reference before selecting the site constructor.
+Neither an HTTP request, an environment fallback in the business module nor
+a writable registry response can choose that reference. Preserve the
+selected-store schema admission, installed tenant, initialization checks,
+owner identity and service Close lifetime. Missing or invalid source
+configuration must refuse configured startup rather than silently select
+the archive path. Leaving the site source unconfigured retains the
+existing archive-backed mode.
+
+The module's native profile already covers the two distinct TLS registry
+identities, current signed release profile, exact digest reads, missing
+source refusal without archive fallback and SQL rollback/reconciliation.
+The root owner still needs startup tests for both explicit modes and
+invalid references, then the installed release-to-pin flow on the same
+source commit. This handoff does not change that acceptance status or
+qualify a new deployment.
