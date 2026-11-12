@@ -59,6 +59,33 @@ fingerprints with the current production lineage before handing off migration
 integration. The production owner still needs to wire the hook and run the
 real authenticated training flow, including denial and positive stop proof.
 
+## Local attempt replay and release
+
+[ADR 0006](../decisions/0006-cell-and-site-scope.md) binds scheduling
+reservations to one database cell. Verify the stored site and cell when
+recognizing an exact held replay. Matching only the tenant, workspace,
+source, ordinal and attempt could acknowledge a retained foreign-cell hold
+as local. Such a row must return `SCHEDULING_RESERVATION_CONFLICT`.
+The release lookup and update both require the local coordinates, so a
+foreign record returns `SCHEDULING_RESERVATION_NOT_FOUND`. Keep the exact
+stored row and its usage intact. The aggregate read already refuses
+foreign records in a selected workspace.
+
+Resolve coordinates through the existing local database functions in the
+same owner transaction. Client-supplied scope or a fallback to the current
+cell would authorize a different record. The same existing row identity,
+locks, replay keys and synchronous commit setting continue to fence
+concurrent operations. No candidate DDL or production fingerprint changes
+are required.
+
+On disconnected PostgreSQL, exercise both single-replica and gang holds.
+Change only the owned fixture row to a foreign site or cell. Replay and
+release must fail without changing the held record. Restoring the fixture's
+local coordinates must allow the original exact replay, one release and
+its idempotent retry. This uses the existing licensed stack and synthetic
+scope changes in a disposable schema. Physical stop proof and production
+owner integration remain separate acceptance conditions.
+
 ## Training owner handoff
 
 Use [the existing dispatch transaction](../../services/control/internal/modules/training/dispatch.go).

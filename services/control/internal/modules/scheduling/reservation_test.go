@@ -337,3 +337,57 @@ func TestPostgresQuotaReplacementWaitsForConcurrentReservation(t *testing.T) {
 		t.Fatal(ctx.Err())
 	}
 }
+
+func TestPostgresReservationReplayAndReleaseRequireLocalCoordinates(t *testing.T) {
+	for _, shape := range []struct {
+		name   string
+		intent func(Attempt, int64) JobIntent
+	}{
+		{"single", borrowingIntent},
+		{"gang", reservationIntent},
+	} {
+		t.Run(shape.name, func(t *testing.T) {
+			f := newReservationFixture(t)
+			a := f.first
+			intent := shape.intent(a, 2)
+			if changed, err := reserveInTransaction(t.Context(), f.store, a, intent); err != nil || !changed {
+				t.Fatalf("create hold: %v, %v", changed, err)
+			}
+			if _, err := f.pool.Exec(t.Context(), "INSERT INTO sites VALUES ('other-site'); INSERT INTO cells VALUES ('other-cell')"); err != nil {
+				t.Fatal(err)
+			}
+			proof := fixtureReplicaReleases(a, intent)
+			for _, coordinates := range [][2]string{{"other-site", "default"}, {"default", "other-cell"}} {
+				if _, err := f.pool.Exec(t.Context(), "UPDATE scheduling_reservations SET site_id=$1,cell_id=$2 WHERE attempt_id=$3",
+					coordinates[0], coordinates[1], a.ID); err != nil {
+					t.Fatal(err)
+				}
+				if changed, err := reserveInTransaction(t.Context(), f.store, a, intent); changed || !errors.Is(err, ErrReservationConflict) {
+					t.Fatalf("foreign hold replay: %v, %v", changed, err)
+				}
+				if changed, err := releaseInTransaction(t.Context(), f.store, a); changed || !errors.Is(err, ErrReservationNotFound) {
+					t.Fatalf("foreign hold single release: %v, %v", changed, err)
+				}
+				if changed, err := releaseInTransaction(t.Context(), f.store, a, proof...); changed || !errors.Is(err, ErrReservationNotFound) {
+					t.Fatalf("foreign hold release: %v, %v", changed, err)
+				}
+				var count, held int
+				if err := f.pool.QueryRow(t.Context(), "SELECT count(*),count(*) FILTER(WHERE released_at IS NULL) FROM scheduling_reservations").
+					Scan(&count, &held); err != nil || count != 1 || held != 1 {
+					t.Fatalf("foreign hold changed: count=%d held=%d err=%v", count, held, err)
+				}
+			}
+			if _, err := f.pool.Exec(t.Context(), "UPDATE scheduling_reservations SET site_id=local_site_id(),cell_id=local_cell_id() WHERE attempt_id=$1", a.ID); err != nil {
+				t.Fatal(err)
+			}
+			if changed, err := reserveInTransaction(t.Context(), f.store, a, intent); changed || err != nil {
+				t.Fatalf("restored local replay: %v, %v", changed, err)
+			}
+			for _, want := range []bool{true, false} {
+				if changed, err := releaseInTransaction(t.Context(), f.store, a, proof...); err != nil || changed != want {
+					t.Fatalf("local release or replay: %v, %v", changed, err)
+				}
+			}
+		})
+	}
+}
