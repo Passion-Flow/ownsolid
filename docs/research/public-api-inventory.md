@@ -708,3 +708,19 @@ The monitoring owner's separate normal cookie/TLS dispatcher acceptance
 and the eleven bilingual error entries remain publication prerequisites.
 The existing Help suite reports exactly its two missing-error-description
 failures, with the remaining seventeen tests passing for this candidate.
+
+### History transaction refusals
+
+The monitoring service preserves committed-outcome, cancellation and
+native transaction classifications before the public Problem writer.
+The existing registry exposes STORAGE_TIMEOUT, STORAGE_CANCELLED,
+STORAGE_COMMIT_ROLLED_BACK, STORAGE_DEADLOCK and STORAGE_LOCK_TIMEOUT
+at HTTP 503. The candidate Problem enum omitted all five, and the
+generated Python model rejected each actual code with ValueError.
+Declare these existing refusals in the operation and Problem schema.
+Collapsing them at the handler would discard the existing transaction
+contract. Extend the generated-client wire smoke to parse all five
+503 responses through the real generated Python operation with a
+controlled HTTPX transport. Keep the real PostgreSQL and TLS acceptance
+separate. Three of the five codes also need existing-catalog translations.
+The existing SDK licences apply and no dependency is added.
