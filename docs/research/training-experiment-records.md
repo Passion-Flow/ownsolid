@@ -277,3 +277,10 @@ All nine native training groups also passed together on schema 60 at
 [native owner acceptance](training-job-lifecycle.md#schema-60-acceptance-and-the-sso-fixture-failure)
 preserves the separate earlier fixture migration failure and successful
 focused replay, the check result and the pending later-main gate scope.
+
+
+The current ten-root PostgreSQL/HTTPS acceptance at f61bea6b retains these
+accepted-source fault and repair assertions. The [current native scope and
+raw records](training-job-lifecycle.md#current-native-owner-and-https-acceptance)
+distinguish actual retained CPU files from synthetic HTTP node/event/stop
+envelopes and the still-pending whole-repository gates.
