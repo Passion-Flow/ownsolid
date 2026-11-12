@@ -8,7 +8,12 @@ Migration 000023 owns object, part, grant and ingestion records. Expected length
 
 The repository selects explicit PostgreSQL, MySQL or Dameng statements. Native Dameng uses the existing transaction owner, quoted identifiers, text JSON bindings and UTC microsecond timestamps; it does not rewrite another dialect. [dameng.go](dameng.go) owns positional bindings and [dameng_restore.go](dameng_restore.go) fences restored operations. The [native integration contract](dameng-integration.md) lists the exact schema and shared activation prerequisites. This source path is not yet an activated or verified Dameng deployment.
 
-Adjust deployment settings through control ObjectStorage configuration and [object-storage examples](../../../../../config/examples/object-storage). Synchronize [object-storage contracts](../../../../../contracts/object-storage), datasets/models, [frontend](../../../../../web/README.md), [quality harnesses](../../../../../tools/quality/object-storage) and [M22](../../../../../docs/milestones/m22-object-storage). Storage paths must remain disjoint from other artifact owners.
+Adjust deployment settings through control ObjectStorage configuration and
+[object-storage examples](../../../config/examples/object-storage). Synchronize
+the [public object-storage contract](../../../../../api/openapi/v1/artifactstores/openapi.json),
+datasets/models and [frontend](../../../../../web/README.md). Keep the
+[module profiles](testdata/) and [network/storage roadmap](../../../../../docs/product/roadmap/network-and-storage.md)
+current. Storage paths must remain disjoint from other artifact owners.
 
 Focused unit check: `go -C services/control test ./internal/modules/artifactstores`. Actual multipart, isolation, license, ingestion and recovery checks require the declared selected database and S3 fixture; unit transport doubles do not qualify a production provider.
 

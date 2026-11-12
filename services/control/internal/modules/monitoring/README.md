@@ -25,7 +25,13 @@ read using the same current authorized Admin session.
 
 [config.go](config.go) owns snapshot concurrency, deadlines, limits and the matching recorder policy. The control root loads MonitoringConfigFile. This module uses existing persistent authorities rather than adding a migration. Cursor format, bounded admission and sanitized error codes must stay consistent with the HTTP contract.
 
-Synchronize [monitoring configuration](../../../../../config/examples/monitoring/README.md), [M30](../../../../../docs/milestones/m30-reliability), platform/monitoringmetrics, component/distribution observation sources, HTTP/frontend contracts and [reliability harnesses](../../../../../tools/quality/reliability). Changes to a metric's source or null semantics require consumer and capacity-report updates; a dashboard must not invent an observed value.
+Synchronize [monitoring configuration](../../../config/examples/monitoring/README.md),
+the [public API contract](../../../../../api/openapi/v1/monitoring/openapi.json),
+platform/monitoringmetrics, component/distribution observation sources and
+frontend contracts. Keep the [observability roadmap](../../../../../docs/product/roadmap/observability-and-alerting.md)
+and [native monitoring profiles](testdata/) current. Changes to a metric's source
+or null semantics require consumer and capacity-report updates; a dashboard must
+not invent an observed value.
 
 Focused native check: `go -C services/control test ./internal/modules/monitoring`. Native SQL, real full-server observations and capacity workloads are separate acceptance profiles. Capacity reports describe their actual process, request and dataset sizes; they do not establish unmeasured production scale.
 
