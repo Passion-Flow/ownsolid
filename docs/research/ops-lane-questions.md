@@ -51,3 +51,32 @@ owner can reserve and release resources against the exact installation.
 Catalog reads need a server-owned tenant visibility decision before
 opening signed release metadata. A successful quota estimate is not a
 reservation, and a valid publisher signature is not a tenant grant.
+
+## CAT-105 installation lifecycle
+
+The [version selector](app-version-transitions.md) verifies exact install,
+upgrade and rollback pins. The installation owner must persist the authorized
+app and workspace, current pin, known-good predecessor, configuration recovery
+reference and uninstall retention choice. It must serialize retries against
+that record and reconcile the engine outcome before advancing the current
+pin. The existing Compose adapter returns its command outcome. The next
+integration requires this durable owner and its registered lifecycle routes.
+[Helm release history](https://helm.sh/docs/helm/helm_history/),
+[Compose startup](https://docs.docker.com/reference/cli/docker/compose/up/).
+
+## Workstation acceptance storage
+
+Use a short, canonical APFS scratch path for the full workstation gate when
+the system volume falls below the object store's free-space threshold.
+The full gate and supplemental catalog build, race tests and vet passed
+with that setup at candidate `2a8c0261` over main `203109c7`.
+The Chromium suites passed 1,075 Console and 389 Portal cases, with 28 and
+9 conditional skips respectively.
+
+The initial HFS+ scratch run failed both restored-content change-time
+checks in `TestPreparedSnapshotRejectsPostreadChanges`. The long APFS
+mount path then prevented the Compose fixture's Unix sockets from binding.
+APFS storage at a short path passed both complete packages. Preserve these
+failure logs when reproducing the gate. The native Linux results in the
+topic notes remain historical acceptance. Their external raw logs were
+lost from temporary storage after the workstation restart.
