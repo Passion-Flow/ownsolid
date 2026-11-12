@@ -37,7 +37,7 @@ A failed import says why. **Verify again** retries it a limited number of times.
 what was uploaded. A workspace takes one import at a time, so a failed import must be finished or
 discarded before the next can start.
 
-## If an upload expires
+## Expired uploads
 
 If an unfinished upload expires, its status explains what happened. **Expired** means its temporary files have been removed and it cannot resume. Choose **Upload a new bundle**, select the bundle again and start a new import. While cleanup is running, wait for it to finish. Import history keeps the original byte count.
 
