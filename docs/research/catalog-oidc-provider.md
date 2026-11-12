@@ -330,6 +330,30 @@ owner still must bind code expiry, client, redirect, PKCE and current authority
 and atomically consume the digest with token creation/signing/audit. Do not
 weaken the first bearer's shape validation merely to make SDK callbacks pass.
 
+The purpose composition subsequently passed eleven native race roots and the
+same eleven roots in a disconnected Linux arm64 container: 72 named tests or
+68 independent leaves in each. The actual SDK `BuildAuthRequestCode` encrypted
+the server request ID using the code ring, while `CreateBearerToken` used the
+separate bearer ring. Code ciphertext was refused by incoming provider
+decryption and the UserInfo boundary. Invalid request-ID shapes, shared key
+IDs/material, caller mutation of supplied key arrays and private-ring rotation/
+retirement controls passed without relaxing the original bearer tests.
+
+This evidence is `iam106-purpose-20261113.99n43dmw`, run
+`qualification-xk8yyrkh`, source-hash-manifest SHA-256
+`936ee2aeafbaf3f31e2b9715a5ddcb715db5e5015f92a19c68a6ef253049727c`.
+Source/module hashes match both runs and the owned container was removed.
+The first run, `qualification-n6p7s0th`, retained a failed assertion whose
+constant-time comparison result was interpreted backwards in the caller-key
+copy test; correcting that test did not change key ownership or encryption.
+No serving authorization request, client, code row or token was created.
+
+Code ciphertext is matched by digest during future redemption, so removing a
+code-encryption key alone does not revoke an already stored code. Its database
+expiry, consumed state and current client/installation authority must do that.
+The native private-ring retirement control is not proof of code revocation.
+The complete PostgreSQL and RP/OP HTTPS prototype remains open.
+
 The external prototype must use separate real RP and OP HTTPS servers, verified
 private CA trust and actual PostgreSQL persistence. Prove discovery through code
 exchange, signed ID-token verification and matching UserInfo subject; then
