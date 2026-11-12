@@ -85,7 +85,7 @@ export function helpFlows(audience: ControlPlane['audience']): void {
       ['en', english],
       ['zh-CN', chinese],
     ] as const) {
-      test(`the published operation explains its error in ${locale}`, async ({ page }) => {
+      test(`the published operation explains its error in ${locale}`, async ({ page }, info) => {
         control.preferences.locale = locale;
         await page.goto('/help/api');
         await page.getByLabel(messages['help.api.search']).fill('password');
@@ -96,6 +96,12 @@ export function helpFlows(audience: ControlPlane['audience']): void {
         await page.reload();
         await expect(operation).toHaveAttribute('aria-expanded', 'true');
         const detail = page.locator('[id="identity.changePassword-detail"]');
+        await expect(
+          detail.getByText(messages['help.api.parameters.none'], { exact: true }),
+        ).toBeVisible();
+        await expect(
+          detail.getByRole('table', { name: messages['help.api.parameters'], exact: true }),
+        ).toHaveCount(0);
         const error = detail.getByRole('listitem').filter({
           has: page.getByText('PASSWORD_CURRENT_INVALID', { exact: true }),
         });
@@ -106,7 +112,79 @@ export function helpFlows(audience: ControlPlane['audience']): void {
           name: messages['help.api.save.label'].replace('{domain}', 'identity'),
         });
         await expect(save).toHaveAttribute('download', 'identity.openapi.json');
+        await detail
+          .getByText(messages['help.api.parameters.none'], { exact: true })
+          .scrollIntoViewIfNeeded();
+        await info.attach(`password-parameters-${locale}`, {
+          body: await page.screenshot({ animations: 'disabled' }),
+          contentType: 'image/png',
+        });
       });
+
+      test(`the published workspace parameter keeps its meaning in ${locale}`, async ({
+        page,
+      }, info) => {
+        control.preferences.locale = locale;
+        if (locale === 'zh-CN') await page.setViewportSize({ width: 390, height: 844 });
+        const operation = audience === 'admin' ? 'getAdminWorkspace' : 'getPortalWorkspace';
+        await page.goto(`/help/api?q=${operation}#workspaces.${operation}`);
+        await expect(page.getByRole('button', { name: new RegExp(operation) })).toHaveAttribute(
+          'aria-expanded',
+          'true',
+        );
+        const detail = page.locator(`[id="workspaces.${operation}-detail"]`);
+        const parameters = detail.getByRole('table', {
+          name: messages['help.api.parameters'],
+          exact: true,
+        });
+        const workspace = parameters.getByRole('row').filter({
+          has: page.getByText('workspace_id', { exact: false }),
+        });
+        await expect(workspace).toHaveCount(1);
+        await expect(
+          workspace.getByRole('cell', { name: messages['help.api.in.path'], exact: true }),
+        ).toBeVisible();
+        await expect(workspace).toContainText(messages['help.api.required']);
+        await expect(workspace).toContainText('uuid');
+        await info.attach(`workspace-parameter-${locale}`, {
+          body: await page.screenshot({ animations: 'disabled' }),
+          contentType: 'image/png',
+        });
+      });
+
+      if (audience === 'admin') {
+        test(`the published apply-cutover errors explain recovery in ${locale}`, async ({
+          page,
+        }, info) => {
+          control.preferences.locale = locale;
+          if (locale === 'zh-CN') await page.setViewportSize({ width: 390, height: 844 });
+          await page.goto('/help/api?q=adminCutoverAlias#distribution.adminCutoverAlias');
+          await expect(page.getByRole('button', { name: /adminCutoverAlias/ })).toHaveAttribute(
+            'aria-expanded',
+            'true',
+          );
+          const detail = page.locator('[id="distribution.adminCutoverAlias-detail"]');
+          for (const code of [
+            'ALIAS_PAUSE_REQUIRED',
+            'ALIAS_ALREADY_PAUSED',
+            'ALIAS_NOT_PAUSED',
+            'ALIAS_REQUESTS_UNDRAINED',
+            'ALIAS_ROLLBACK_TARGET_INVALID',
+          ] as const) {
+            const error = detail.getByRole('listitem').filter({
+              has: page.getByText(code, { exact: true }),
+            });
+            await expect(error.getByText('409', { exact: true })).toBeVisible();
+            await expect(error).toContainText(messages[`problem.${code}.title`]);
+            await expect(error).toContainText(messages[`problem.${code}.detail`]);
+          }
+          await detail.getByText('ALIAS_PAUSE_REQUIRED', { exact: true }).scrollIntoViewIfNeeded();
+          await info.attach(`apply-cutover-errors-${locale}`, {
+            body: await page.screenshot({ animations: 'disabled' }),
+            contentType: 'image/png',
+          });
+        });
+      }
     }
 
     test('the API reference lists only what this entrance serves', async ({ page }) => {
