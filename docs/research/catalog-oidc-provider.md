@@ -103,6 +103,19 @@ inventory here before selecting that graph; a top-level Apache license does
 not establish the licenses or network behavior of its dependencies. No model
 or dataset is involved.
 
+Source inspection exposes a required transaction prototype: the legacy
+[token response](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/token.go)
+creates access state, signs the ID token and only then deletes the authorization
+request. These storage calls do not themselves establish one database commit.
+Its opaque bearer is an encrypted token ID and subject, not the random token
+value returned directly by storage. Qualify an explicit owned transaction and
+bounded response release before accepting that composition, and specify which
+random credential identifier is hashed in the store. The newer
+[Server interface](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/server.go)
+is explicitly experimental; a fresh interface must not be mistaken for a
+proven transactional implementation. A signing or deletion failure, two
+redeemers and a lost commit acknowledgement are required rejection controls.
+
 [Ory Fosite](https://github.com/ory/fosite) is an alternative OAuth/OIDC SDK
 with owned storage interfaces. Compare its code-consumption and transaction
 composition against the same real PostgreSQL tests if the candidate cannot
