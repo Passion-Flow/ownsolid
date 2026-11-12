@@ -148,7 +148,7 @@ run with the archive delivery in FLT-109.
 | GPU-201 to GPU-203 | Remediation and active tests need authoritative fencing, scheduling and control tasks. Straggler detection needs job-attributed telemetry. Active burn testing also needs a qualified real GPU. |
 | GPU-204 | Ascend health needs an admitted non-NVIDIA device observation before a collector can report through the agent. The current wire type and runtime probe are NVIDIA-specific. The architecture owner must provide that contract; an approved local driver remains required. See the accelerator report boundary below. |
 | GPU-205 and GPU-208 | Ascend allocation, partitioning and heterogeneous pools need the cell scheduler and device admission owner. |
-| GPU-206 | Capacity degradation and spare planning need retained, workload-attributed fleet observations. |
+| GPU-206 | Capacity degradation and spare planning need retained fleet observations and capacity history. |
 | GPU-207 | Real Ascend qualification requires the named driver, hardware model and count. Keep it separate from collector parser tests. |
 | GPU-209 | Intra-node topology and failure attribution require GPU-101 telemetry and real PCIe and NVLink/NVSwitch configurations to establish attribution. |
 | DEV-204 | The versioning guide and local comparison cover published operation identities. A release baseline, schema and behavioral compatibility checks, and runtime deprecation signaling need their owning release and API paths. |
