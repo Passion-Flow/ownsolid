@@ -46,3 +46,22 @@ owner, while only the exact declared routes get the health family. Assert
 counts, outcomes, a closed family set and drained inflight state. Run the
 existing recorder tests for transport transparency and redaction. This
 qualifies process instrumentation, not installed readiness or a dashboard.
+
+## Verified route classification
+
+On Linux amd64, 4f94a898 passed the complete monitoringmetrics package with
+the race detector in a loopback-only namespace. The run held both shared
+locks after an I/O pressure preflight. Real private TLS HTTP/1.1 and HTTP/2
+each exercised the actual health owner: liveness returned 200, readiness
+without a repository returned 503, and legacy and near-match paths returned
+404. The recorder produced only the expected health/other families and
+transport outcomes, with no leaked inflight request.
+
+The machine refusal controls covered the exact gRPC method, canonical and
+cell-scoped node/gateway roots, legacy roots, and near-match versions or
+method names. Snapshots preserved refusals and contained no generated
+node/instance ID, site/cell identity or query value. Existing transport,
+SSE, optional-interface, redaction and overflow tests passed in the same
+package run. This does not qualify agent or gateway authentication, RPC
+semantic outcomes, installed readiness or the complete OBS-106 dashboard.
+The in-process TLS listeners closed and no external service was started.
