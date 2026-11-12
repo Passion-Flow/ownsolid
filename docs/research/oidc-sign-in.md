@@ -348,3 +348,13 @@ IAM-102 stays open for the real-flow/storage handoff above and shared owners'
 contract, configuration and UI admission. The publication changes research
 only; its layout, roadmap and whitespace checks do not replace that future
 feature's full repository and installed-flow gates.
+
+## Current storage and patched-protocol qualification
+
+The current complete PostgreSQL repository fixture passed all three `TestPostgresOIDCProfile` roots on input `dc7feaf186ae0e8654b7218d572940c32e08bd28`. Real Gitea secret inventory, exact intent replay, catalog/binding reads, pending starts and sourced revocation survived candidate upgrade/down/up. Opaque subject, tenant/profile, immutable issuer/nonce and safe downgrade checks passed. An independent PostgreSQL connection observed the actual competing nonce INSERT wait, followed by one committed flow and one unique-constraint refusal.
+
+The first full-schema attempt preserved the Gitea flow but used an incorrect raw-vendor error assertion. The corrected tests require the same SQLSTATE through the repository owner's safe `transaction.Error`; no constraint expectation was relaxed. The first failure is retained in `full-schema-07nwckdy`, separately from passing `full-schema-h8c7ggg3`. The candidate remains unnumbered testdata and adds no serving schema or provider. A type-changing migration requires fresh pools before serving; this does not qualify a mixed-version rolling upgrade.
+
+The external protocol prototype was rebuilt with coreos/go-oidc v3.21.0 and JOSE v4.1.9, including its compact-only parser. All eight race-enabled native roots and both actual private Keycloak protocol roots passed again, including JSON-JWS and null-header refusal. Evidence run `qualification-o3qennmh` retains exact sources, module sums and raw outcomes. The provider image and JDK identity are unchanged, so their previously retained legal material still applies; the original v4.1.6 source and results remain separate.
+
+Repository checks, builds and all test stages passed with standard `umask 022`. Chromium passed 1134 Console and 410 Portal cases, with 38 installation-dependent cases skipped. These browser results are retained from byte-identical recorded inputs; the continuation used `make -o test-web-browser test`. The durable evidence set is `iam102-20261113.1jjfl_s4`, current stage `current-stage-yfzgkb7_`. Owned PostgreSQL/Keycloak containers and the scratch volume were removed. These are disconnected Linux arm64 protocol/storage fixtures and workstation repository checks, not an installed Linux amd64 or rendered generic-SSO acceptance. IAM-102 remains open for formal migration, typed provider/dependency admission, real callback/binding/session composition and the public/UI path.
