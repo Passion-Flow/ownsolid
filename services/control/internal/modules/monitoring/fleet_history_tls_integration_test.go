@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
-	monitoringhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/smtpsink"
 )
