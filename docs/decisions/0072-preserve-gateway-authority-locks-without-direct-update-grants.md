@@ -27,7 +27,8 @@ including foreign scope, execution denial, temporary-name shadowing and competin
 writers. A second external overlay proves the actual read-only Node heartbeat,
 claim and acknowledgement through a separate TCP/SCRAM login on schema 60, with
 seven permission refusals. Neither prototype activates a product function or
-replaces full permission-closure review. The production catalog, protected operator preparation, normal and
+replaces full permission-closure review. The production catalog, protected
+operator preparation, normal and
 post-restart readiness, every delegated profile and installed delivery still need
 independent acceptance. Existing control principal grants and old gateway/agent
 behavior remain unchanged during their rolling upgrade.

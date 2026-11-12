@@ -292,3 +292,29 @@ delegated profiles, background workers, normal catalog/readiness admission or an
 installed gateway. The candidate function intentionally changes the disposable
 catalog; no migration number, runtime grant, startup behavior or delivery default
 was activated. ARC-111 remains unticked while those acceptance gates remain open.
+
+## Observation and worker prototype acceptance
+
+Extend the same external fixture through the production NewAgentGateway
+composition. Use its actual component and deployment observers, restricted pool
+and read-only outbox reader, without changing those owners. Review the additional
+managed_components and inference_nodes SELECT/INSERT/UPDATE operations from their
+actual PostgreSQL upserts and batched sighting updates; control_outbox needs SELECT
+for RunWakes, not INSERT or DELETE. Shed refresh only reads agent_pacing in this
+process because no host operator socket is installed here.
+
+For each observation family, require the missing table privilege to abort the
+whole heartbeat, preserving the node timestamp and observation absence. After an
+explicit reviewed fixture grant, verify first/update reports, exact persisted
+scope and timestamp, foreign-credential refusal and unchanged state after denial.
+Enable liveness, repeat reports and flush through the same restricted pool; verify
+the node and owner batch timestamps. Run and join the real outbox worker, and
+verify a task committed by the control-side fixture wakes a held restricted claim.
+These are permission/transaction checks, not a load claim or hardware execution.
+
+Independently occupy both connections permitted to the LOGIN role, require a third
+real connection to fail with SQLSTATE 53300, and require the control-side fixture
+pool to remain usable. Release every acquired connection before closing either
+pool. Keep the role's configured connection limit at two; do not change the limit
+in response to a failure. Deployment-bearing observations and delegated task
+profiles remain separate acceptance cases even if hardware-only reports pass.
