@@ -24,22 +24,24 @@ func (s *Service) RecordEvent(ctx context.Context, node, credential, task, token
 	return values[0], nil
 }
 
-// RecordEvents accepts one atomic finite batch under current authority. Checkpoint metadata never publishes files.
+// RecordEvents accepts one atomic finite batch under current authority.
+// New members share one transaction-local progress write; checkpoint metadata never publishes files.
 func (s *Service) RecordEvents(ctx context.Context, node, credential, task, token string, raw [][]byte) ([]EventAcceptance, error) {
 	out := []EventAcceptance{}
 	if len(raw) < 1 || len(raw) > wire.MaximumEventBatch {
 		return out, fail("TRAINING_EVENT_INVALID")
 	}
 	e := s.withMachineLeaseActor(ctx, node, credential, task, token, func(ctx context.Context, tx transaction.Executor, actor identity.Auth, w workspaces.Workspace, j Job, command wire.Command) error {
+		var progress eventBatchProgress
 		for _, item := range raw {
-			accepted, e := s.recordEvent(ctx, tx, actor, w, j, command, item)
+			accepted, e := s.recordEvent(ctx, tx, actor, w, j, command, item, &progress)
 			if e != nil {
 				return e
 			}
 			out = append(out, accepted)
 			j.State = accepted.JobState
 		}
-		return nil
+		return progress.persist(ctx, tx, w, j.ID, command.AttemptID)
 	})
 	if e != nil {
 		return []EventAcceptance{}, e
@@ -47,7 +49,7 @@ func (s *Service) RecordEvents(ctx context.Context, node, credential, task, toke
 	return out, nil
 }
 
-func (s *Service) recordEvent(ctx context.Context, tx transaction.Executor, actor identity.Auth, w workspaces.Workspace, j Job, command wire.Command, raw []byte) (EventAcceptance, error) {
+func (s *Service) recordEvent(ctx context.Context, tx transaction.Executor, actor identity.Auth, w workspaces.Workspace, j Job, command wire.Command, raw []byte, progress *eventBatchProgress) (EventAcceptance, error) {
 	var out EventAcceptance
 	event, e := wire.DecodeEvent(raw, j.ID, command.AttemptID, j.Configuration.MaximumSteps)
 	if e != nil {
@@ -56,10 +58,10 @@ func (s *Service) recordEvent(ctx context.Context, tx transaction.Executor, acto
 	canonical, _ := json.Marshal(event)
 	sum := sha256.Sum256(canonical)
 	digest := hex.EncodeToString(sum[:])
-	var lastSequence, lastStep int64
-	if e = tx.QueryRow(ctx, transferStatement(tx, "SELECT last_event_sequence,last_global_step FROM training_attempts WHERE tenant_id=$1 AND workspace_id=$2 AND job_id=$3 AND id=$4 FOR UPDATE", "SELECT last_event_sequence,last_global_step FROM training_attempts WHERE tenant_id=? AND workspace_id=? AND job_id=? AND id=? FOR UPDATE", []any{w.TenantID, w.ID, j.ID, command.AttemptID}, []any{w.TenantID, w.ID, j.ID, command.AttemptID})).Scan(&lastSequence, &lastStep); e != nil {
+	if e = progress.load(ctx, tx, w, j.ID, command.AttemptID); e != nil {
 		return out, e
 	}
+	lastSequence, lastStep := progress.sequence, progress.step
 	out = EventAcceptance{JobID: j.ID, AttemptID: command.AttemptID, Sequence: event.Sequence, JobState: j.State}
 	if event.Sequence <= lastSequence {
 		var previous string
@@ -99,17 +101,13 @@ func (s *Service) recordEvent(ctx context.Context, tx transaction.Executor, acto
 	if _, e = tx.Exec(ctx, transferStatement(tx, `INSERT INTO training_events(tenant_id,workspace_id,job_id,attempt_id,sequence,kind,global_step,payload,canonical_sha256,attempt_created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,(SELECT created_at FROM training_attempts WHERE id=$4))`, `INSERT INTO training_events(tenant_id,workspace_id,job_id,attempt_id,sequence,kind,global_step,payload,canonical_sha256) VALUES(?,?,?,?,?,?,?,CAST(? AS JSON),?)`, []any{w.TenantID, w.ID, j.ID, command.AttemptID, event.Sequence, event.Kind, event.GlobalStep, canonical, digest}, []any{w.TenantID, w.ID, j.ID, command.AttemptID, event.Sequence, event.Kind, event.GlobalStep, canonical, digest})); e != nil {
 		return out, e
 	}
-	if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_attempts SET last_event_sequence=$2,last_global_step=$3,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_attempts SET last_event_sequence=?,last_global_step=?,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{command.AttemptID, event.Sequence, event.GlobalStep}, []any{event.Sequence, event.GlobalStep, command.AttemptID})); e != nil {
-		return out, e
-	}
 	if event.Kind == "phase" && event.Phase != nil && (*event.Phase == "training" || *event.Phase == "finalizing_checkpoint") && j.State == "preparing" {
 		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_jobs SET state='running',revision=revision+1,updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_jobs SET state='running',revision=revision+1,updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{j.ID}, []any{j.ID})); e != nil {
 			return out, e
 		}
-		if _, e = tx.Exec(ctx, transferStatement(tx, "UPDATE training_attempts SET state='running',updated_at=clock_timestamp() WHERE id=$1", "UPDATE training_attempts SET state='running',updated_at=UTC_TIMESTAMP(6) WHERE id=?", []any{command.AttemptID}, []any{command.AttemptID})); e != nil {
-			return out, e
-		}
+		progress.started = true
 		out.JobState = "running"
 	}
+	progress.sequence, progress.step, progress.dirty = event.Sequence, event.GlobalStep, true
 	return out, transferAuditWithin(ctx, tx, actor, w, "training.event_recorded", j.ID, "Accepted current-authority ordered training metadata", uuid.NewString())
 }
