@@ -27,3 +27,18 @@ Rules a change must keep:
   have no authentication of their own, so nothing else joins `state`.
 - A new variable is added to `.env.example` and to `ComposeVariables` in
   `deploy/offline/internal/install`. A test compares all three.
+
+## Fleet history deployment prerequisites
+
+The shipped topology has one metrics store on the private HTTP state
+network. Fleet history's remote reader requires HTTPS. A long retention
+deployment needs distinct raw and aggregate stores, private TLS trust,
+the recording-rule evaluator and separate persistent data. Preserve the
+existing metrics push and readiness checks when adding native TLS to
+the raw store. The installer currently configures only metrics and log
+retention.
+
+The older monitoring module examples refer to an overlay absent from
+this topology. Use the [current installation boundary](../../docs/research/telemetry-retention-tiers.md#current-installation-boundary)
+for the precise Control reference, required installation inputs and
+remaining deployment acceptance.
