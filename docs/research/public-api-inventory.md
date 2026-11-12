@@ -733,3 +733,7 @@ and all generated Go packages compiled. The standalone Go/Python wire
 checks passed. The published monitoring client decoded all five native
 503 replies through a controlled HTTPX transport. The SDK projection
 regression protects the shared Problem enum.
+
+The history operation declares the same five 503 codes. The controlled
+HTTPX wire smoke also exercises its generated request and Problem parser.
+Three of the five codes need additional existing-catalog translations.
