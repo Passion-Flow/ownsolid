@@ -97,7 +97,62 @@ keyring and restart before the service can seal new credentials.
 
 The public connector contract and Admin screen own the explicit state,
 instructions and recovery action. Closing IAM-119 requires those owners and a
-real provider sign-in after recovery.
+real provider sign-in after recovery through the installed startup path.
+
+### Real provider acceptance boundary
+
+Use Gitea's documented [OAuth provider](https://docs.gitea.com/development/oauth2-provider/)
+and [CLI](https://docs.gitea.com/administration/command-line/), with its pinned
+28.1.0 image, for an isolated synthetic identity. The existing provider unit
+double cannot establish that repaired credentials complete a real exchange.
+The upstream [sign-in form](https://github.com/go-gitea/gitea/blob/v28.1.0/templates/user/auth/signin_inner.tmpl)
+and [consent form](https://github.com/go-gitea/gitea/blob/v28.1.0/templates/user/auth/grant.tmpl)
+define the protocol fixture's interactive steps. Keep consent, PKCE, exact
+callbacks and certificate verification enabled. Refuse an unexpected provider
+version or form rather than manufacture a code or binding. Gitea's
+[MIT license](https://github.com/go-gitea/gitea/blob/v28.1.0/LICENSE) allows
+commercial, offline and redistribution use with notices. The probe uses the
+existing Go standard library; no model or dataset is involved.
+
+An opt-in real-provider probe must begin with a password-authenticated link,
+obtain an actual sourced session, restart under a keyring that cannot open the
+connector, and repair it through local Admin HTTPS. Require another real
+provider sign-in afterward. Retain secrets only in protected fixture files or
+process memory. A protocol client proves the HTTP/session path, not rendered
+browser or installed production startup acceptance. Prototype the provider
+fixture outside product source before adding the probe.
+
+The isolated prototype completed verified TLS login, explicit consent,
+confidential S256 code exchange and authenticated introspection with exactly
+`read:user` and the configured issuer. The provider used its real SQLite store,
+a synthetic user and a disposable confidential application, with container
+networking disabled. Native form submissions retain the provider's Origin and
+Referer checks. No provider security option was disabled.
+
+`TestSSOActualGiteaRecoveryAndDeviceRevocationHTTPS` passed against that real
+provider and PostgreSQL 18.6 with pgvector 0.8.7. PostgreSQL joined the provider's
+network namespace; the provider had `--network none`, so both had only loopback.
+The probe created its account binding through the actual password-confirmed
+HTTPS link and verified that each issued session referenced a succeeded flow
+and its persisted binding. With an active-only keyring, the old sourced session
+was refused. A local Admin replaced the credential pair with a new actual
+confidential application and two subsequent provider sign-ins succeeded.
+Targeted device revocation expired only its target; the managing session stayed
+usable, and replay of the target's original callback created no session. The
+target had exactly one durable revocation audit. This was Linux arm64 protocol
+and explicit HTTP composition acceptance, without rendered UI or installed
+production startup acceptance.
+
+The optional build tag is `sso_provider_integration`. Supply
+`OWNSOLID_IAM_GITEA_FIXTURE_FILE` as an absolute path to a mode-0600 JSON file
+with `origin`, `ca_file`, `username` and `password_file`. Use an isolated
+loopback HTTPS origin, the pinned Gitea release and a disposable synthetic user;
+the test creates confidential applications. The CA and password files must
+also be mode 0600, and the CA's canonical parent must be mode 0700. With an
+isolated `PROJECT_ONE_TEST_DSN`, run
+`go -C services/control test -tags sso_provider_integration ./internal/modules/identity/http -run '^TestSSOActualGiteaRecoveryAndDeviceRevocationHTTPS$' -count=1`.
+Missing prerequisites fail this selected test. Keep provider sign-in rate limits
+in mind when reusing a fixture; independent acceptance runs need fresh fixtures.
 
 ### Candidate verification
 
