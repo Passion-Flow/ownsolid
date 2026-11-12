@@ -117,3 +117,147 @@ that correcting the fixture record restores the original rank. The normal
 module regression also checks preflight, contention, replay and release.
 This qualifies persisted scheduling reads. Production queue membership,
 priority resolution and the actual dispatcher integration remain open.
+
+## Queue turn and reservation in the owner transaction
+
+The installed owner's write transaction is PostgreSQL READ COMMITTED.
+The existing read-only ranking operation cannot be used inside it.
+Add `ReserveQueuedWithin` to the scheduling package. It takes the
+already-authorized exact attempt and intent, the complete workspace
+domain, and a `QueueReader` callback which reads current eligible owner
+rows through the supplied executor. It returns the normal reservation
+changed/replay result. It returns `SCHEDULING_QUEUE_TURN_PENDING` for a
+present candidate deferred by the current rank, without another job's
+identity or usage. A missing selected entry is an invalid queue snapshot.
+
+Use the existing policy shared lock, then acquire the existing workspace
+advisory locks in canonical ID order for the whole supplied domain.
+Validate every workspace under the installed tenant policy before calling
+the reader. Invoke the reader after acquiring those locks, so a waiter
+observes the preceding dispatch's committed queue state. Read current
+quota shares and holds and reserve the selected head through the existing
+`ReserveWithin` in the same transaction. Preserve exact held replays even
+after the owner's queued row has transitioned. No new persistent queue or
+admission counter is needed.
+
+[PostgreSQL transaction advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)
+are reentrant within one transaction and end with it.
+[READ COMMITTED](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED)
+provides a new statement snapshot after a lock wait. Sharing the existing
+workspace locks also excludes ordinary reservation/release writes for
+those workspaces while ranking and admission run. Policy replacement waits
+for the existing shared policy lock. A separate ranking transaction would
+leave a race before admission. A global exclusive policy lock would
+serialize unrelated tenants. Lock only the authorized domain and retain
+the original quota, borrowing and positive-release checks.
+
+Call this operation before other scheduling writes in the transaction.
+The owner first retains its normal selected actor, node, job and physical
+GPU fences. The queue reader must only read, must not acquire other jobs'
+row locks, and must not open a second transaction, commit or use network
+I/O. It returns the complete currently eligible set or fails explicitly.
+The reader derives scope and priority from persisted server authority.
+Its unique sequence represents the order of its durable enqueue keys
+within this batch. It cannot use HTTP array order or a browser timestamp.
+
+Exercise real PostgreSQL records for owner queue state and scheduling
+holds in one borrowed transaction. Verify a fair head, a non-head with no
+write, same-attempt replay after dequeue, owner failure rollback,
+concurrent consumers, a reader invoked only after preceding dequeue
+commits, a real committed dequeue with its wire acknowledgement suppressed,
+cancellation before admission and positive release after
+admission. Foreign tenant/workspace or reservation scope must leave
+queue state, owner revisions, policy revision and holds unchanged.
+These fixtures establish transaction behavior. The actual training
+reader and dispatcher call sites remain owner integrations.
+
+The implementation uses the existing Go, pgx, UUID and PostgreSQL stack
+and the licenses recorded above. Kueue remains an Apache-2.0 design
+reference. No dependency, model, dataset or runtime download is added.
+
+## Training owner patch contract
+
+The following methods are integration requirements for the training owner.
+They are absent from the installed training service. The scheduling lane
+implements only the admission operation and its borrowed-transaction tests.
+
+```go
+// Exported by package scheduling.
+type QueueReader func(context.Context, transaction.Executor) ([]QueueEntry, error)
+
+func ReserveQueuedWithin(
+    ctx context.Context, q transaction.Executor,
+    attempt Attempt, intent JobIntent,
+    workspaces []string, read QueueReader,
+) (bool, error)
+```
+
+The training owner must implement these service methods.
+
+```go
+func (s *Service) schedulingWorkspacesWithin(
+    ctx context.Context, q transaction.Executor, tenant string,
+) ([]string, error)
+
+func (s *Service) schedulingEntriesWithin(
+    ctx context.Context, q transaction.Executor, tenant string,
+) ([]scheduling.QueueEntry, error)
+```
+
+In `training/authority.go`, retain the existing due-job selection and
+`DispatchNext` file verification until the owner supplies an initial
+fair selection read. The final admission still rechecks current rank.
+Both new owner readers must use the installation tenant, local site/cell,
+active Workspace and current persisted requester authority. The workspace
+reader supplies the complete dispatch domain. The entry reader runs
+through the executor passed by scheduling and selects only due queued
+rows. It must preserve the existing durable
+`next_dispatch_at,created_at,id` order in its unique positive sequences.
+A complete ordered batch can assign ordinals from those keys. A truncated
+page cannot. Preserve current default priority zero until the owner
+provides a persisted, authorized priority-class mapping. Bound the
+complete scan with the owning policy's job limits and fail on overflow
+instead of silently omitting competing work.
+
+The owner must also put local scope predicates on its selected persisted
+job read before any wait, failure or revision update. `nextCandidate`
+currently lacks that predicate. `loadDelegatedWithin` uses the selected
+job lookup before `dispatchSnapshotWithin`; that lookup must refuse
+foreign site/cell rows. The scheduling operation cannot authorize a
+previous owner mutation after the fact.
+
+In `training/dispatch.go:reserveDispatchWithin`, keep the existing
+`training_dispatch_reservation` savepoint and physical GPU acquisition.
+Before `Nodes.QueueTrainingWithin`, derive `Attempt` and `JobIntent`
+from `w`, `j` and `snapshot.command` as in the existing
+[reservation handoff](scheduling-training-reservations.md#training-owner-handoff).
+Read the workspace domain, then invoke `ReserveQueuedWithin` with the
+reader closure bound to `w.TenantID`. A local queue-turn or quota wait
+rolls back the savepoint before recording the existing queued wait state.
+Foreign scope, malformed data, storage failure and stale identity return
+an error and roll back the owner transaction. They may not update a
+revision, task, attempt, physical hold or scheduling hold. An exact held
+replay returns false and must trigger an owner state reread, never a
+second task insertion. A confirmed admission stores the task, attempt,
+job transition and audit with the scheduling hold in that one commit.
+Unknown commits publish no success; retry through current owner state.
+
+Keep `Cancel`'s queued-to-cancelled transition free of a hold. A
+preparing/running cancellation remains cancelling until positive physical
+stop evidence. In `RecordStop`, add the existing `ReleaseWithin`
+beside the exact physical release after validating the frozen command,
+attempt, node and stop receipt. Add the same call only to
+`ReconcileNext`'s proven never-delivered branch. A missing post-cutover
+reservation is an integrity error. Existing holds require a deliberate
+cutover reconciliation before activating the production hooks.
+
+The owner replay must extend `TestActualPairedTrainingDispatch` in
+`dispatch_repository_integration_test.go` and the existing stop/cancel
+regressions. It must use the admitted production catalog and current
+runtime grants. Verify fair selection from actual queued training rows;
+duplicate and concurrent dispatch; cancellation before and during
+admission; task or audit failure after reservation; unknown commit replay;
+exact physical stop and never-delivered release. Verify that a foreign
+selected job or held record changes no owner revision or dispatch state.
+The scheduling fixtures persist owner queue state for rollback and
+concurrency tests. They do not replace this real training acceptance run.

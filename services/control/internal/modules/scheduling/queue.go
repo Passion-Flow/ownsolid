@@ -18,7 +18,7 @@ type QueueShare struct {
 }
 
 // QueueEntry is a pending job after authority has resolved its queue and
-// priority. Sequence is a unique durable enqueue order within the policy domain.
+// priority. Sequence is the unique order of durable enqueue keys in this batch.
 type QueueEntry struct {
 	JobID    string
 	QueueID  string
@@ -110,5 +110,5 @@ func QueueTurnReason(ranked []QueueEntry, deferred QueueEntry) (WaitReason, bool
 	if slices.Index(ranked, deferred) <= 0 {
 		return WaitReason{}, false
 	}
-	return WaitReason{Code: "SCHEDULING_QUEUE_TURN_PENDING", Action: WaitForQueueTurn}, true
+	return WaitReason{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}, true
 }
