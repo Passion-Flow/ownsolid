@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"math/rand/v2"
 	"net"
-	"net/http"
 	"time"
 )
 
@@ -16,25 +15,13 @@ type ConnectionAge struct {
 	Grace   time.Duration
 }
 
-type agingListener struct {
-	net.Listener
-	age ConnectionAge
-}
-
-func (l *agingListener) Accept() (net.Conn, error) {
-	for {
-		conn, err := l.Listener.Accept()
-		if err != nil {
-			return nil, err
-		}
-		drainAt := time.Now().Add(l.age.Maximum - rand.N(l.age.Maximum/10+1))
-		closeAt := drainAt.Add(l.age.Grace)
-		if err := conn.SetDeadline(closeAt); err != nil {
-			_ = conn.Close()
-			continue
-		}
-		return &agingConn{Conn: conn, drainAt: drainAt, closeAt: closeAt}, nil
+func ageConnection(conn net.Conn, age ConnectionAge) (*agingConn, error) {
+	drainAt := time.Now().Add(age.Maximum - rand.N(age.Maximum/10+1))
+	closeAt := drainAt.Add(age.Grace)
+	if err := conn.SetDeadline(closeAt); err != nil {
+		return nil, err
 	}
+	return &agingConn{Conn: conn, drainAt: drainAt, closeAt: closeAt}, nil
 }
 
 type agingConn struct {
@@ -70,14 +57,4 @@ func withConnectionDrainAt(ctx context.Context, conn net.Conn) context.Context {
 func ConnectionDrainAt(ctx context.Context) time.Time {
 	at, _ := ctx.Value(connectionDrainKey{}).(time.Time)
 	return at
-}
-
-func retireAgedConnections(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if at := ConnectionDrainAt(r.Context()); !at.IsZero() && !time.Now().Before(at) {
-			// The pinned Go HTTP/2 transport converts this before writing headers.
-			w.Header().Set("Connection", "close")
-		}
-		next.ServeHTTP(w, r)
-	})
 }
