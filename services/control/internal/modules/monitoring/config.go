@@ -20,6 +20,7 @@ type Config struct {
 	NodePageSize        int                      `json:"node_page_size"`
 	ConcurrentSnapshots int                      `json:"concurrent_snapshots"`
 	HTTP                monitoringmetrics.Policy `json:"http"`
+	SeriesCardinality   SeriesCardinalityPolicy  `json:"series_cardinality,omitzero"`
 	FleetHistory        FleetHistoryPolicy       `json:"fleet_history,omitzero"`
 }
 
@@ -27,7 +28,7 @@ func Defaults() Config {
 	return Config{FormatVersion: 1, OperationSeconds: 10, LookbackSeconds: 3600, MaximumGatewayRows: 1000, NodePageSize: 25, ConcurrentSnapshots: 2, HTTP: monitoringmetrics.Defaults()}
 }
 func (c Config) Validate() error {
-	if c.FormatVersion != 1 || c.OperationSeconds < 1 || c.OperationSeconds > 120 || c.LookbackSeconds < 1 || c.LookbackSeconds > 86400 || c.MaximumGatewayRows < 1 || c.MaximumGatewayRows > 10000 || c.NodePageSize < 1 || c.NodePageSize > 100 || c.ConcurrentSnapshots < 1 || c.ConcurrentSnapshots > 32 || c.HTTP.Validate() != nil || !c.FleetHistory.valid() {
+	if c.FormatVersion != 1 || c.OperationSeconds < 1 || c.OperationSeconds > 120 || c.LookbackSeconds < 1 || c.LookbackSeconds > 86400 || c.MaximumGatewayRows < 1 || c.MaximumGatewayRows > 10000 || c.NodePageSize < 1 || c.NodePageSize > 100 || c.ConcurrentSnapshots < 1 || c.ConcurrentSnapshots > 32 || c.HTTP.Validate() != nil || !c.FleetHistory.valid() || !c.SeriesCardinality.valid() {
 		return errors.New("MONITORING_CONFIGURATION_INVALID")
 	}
 	return nil
@@ -60,7 +61,7 @@ func validPolicyValues(raw []byte) bool {
 		if bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
 			return false
 		}
-		if key == "http" || key == "fleet_history" {
+		if key == "http" || key == "fleet_history" || key == "series_cardinality" {
 			var nested map[string]json.RawMessage
 			if json.Unmarshal(value, &nested) != nil || nested == nil {
 				return false

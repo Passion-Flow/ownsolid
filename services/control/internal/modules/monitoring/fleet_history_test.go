@@ -77,7 +77,7 @@ func TestFleetHistoryValidatesNativeSeries(t *testing.T) {
 				fmt.Fprintf(w, `{"status":"success","isPartial":%t,"data":{"resultType":"matrix","result":[%s]}}`, tc.partial, tc.rows)
 			}))
 			t.Cleanup(store.Close)
-			r := newFleetHistoryReader(FleetHistoryPolicy{RawOrigin: store.URL, RawHorizonSeconds: 3600, MaxRangeSeconds: 7200, SettlingSeconds: 30})
+			r := newFleetHistoryReader(FleetHistoryPolicy{RawOrigin: store.URL, RawHorizonSeconds: 3600, MaxRangeSeconds: 7200, SettlingSeconds: 30}, 10*time.Second, 2)
 			out, e := r.read(t.Context(), workspace, now, start, end)
 			if tc.ok {
 				if e != nil || out.StepSeconds != 15 || out.Cells == nil {
@@ -110,7 +110,7 @@ func TestFleetHistoryDoesNotFollowStoreRedirects(t *testing.T) {
 		http.Redirect(w, r, redirect.URL, http.StatusFound)
 	}))
 	defer store.Close()
-	r := newFleetHistoryReader(FleetHistoryPolicy{RawOrigin: store.URL, RawHorizonSeconds: 3600, MaxRangeSeconds: 7200, SettlingSeconds: 30})
+	r := newFleetHistoryReader(FleetHistoryPolicy{RawOrigin: store.URL, RawHorizonSeconds: 3600, MaxRangeSeconds: 7200, SettlingSeconds: 30}, 10*time.Second, 2)
 	now := time.Unix(12_000, 0)
 	_, e := r.read(context.Background(), workspaces.Workspace{}, now, now.Add(-90*time.Second), now.Add(-60*time.Second))
 	if e == nil || e.Error() != "MONITORING_RAW_TIER_UNAVAILABLE" {
@@ -126,7 +126,7 @@ func TestFleetHistoryJSONIncludesServingEnvelopeInBudget(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out.Cells[0].SiteID += strings.Repeat("x", maximumHistoryJSONBytes-historyJSONEnvelopeBytes-len(base))
+	out.Cells[0].SiteID += strings.Repeat("x", maximumHistoryJSONBytes-metricsJSONEnvelopeBytes-len(base))
 	body, err := encodeFleetHistoryJSON(out)
 	if err != nil {
 		t.Fatal(err)

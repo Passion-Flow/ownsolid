@@ -530,3 +530,61 @@ The fixture stops each store before starting the restored instance. It
 reads back a metric and two UTC log partitions, with a separate LogsQL
 query for each of two native accounts. Installation scheduling and
 cross-store recovery coordination remain separate from this check.
+
+
+## Scoped series cardinality service
+
+The owning service also has a bounded daily cardinality read. It is not yet a
+published public operation or Console workflow. Its optional protected policy is:
+
+```json
+{
+  "series_cardinality": {
+    "raw_origin": "https://metrics.example.invalid",
+    "lookback_days": 7,
+    "maximum_ranks": 20
+  }
+}
+```
+
+Omit this policy to disable the read. All three values must be explicit when it
+is enabled. Lookback includes the current UTC day and must fit the raw store's
+configured retention. Set native search.maxTSDBStatusSeries and
+search.maxStatusRequestDuration in the installed store as well; topN is only a
+returned-rank cap. Use direct private HTTPS with the process's configured CA trust.
+The operation budget also bounds connection establishment and response headers.
+
+GetSeriesCardinality and GetSeriesCardinalityJSON accept a UTC midnight date,
+an optional exact metric name and a rank limit. Zero selects the configured
+maximum. A requested limit above it is rejected. Tenant and Workspace selectors
+come from current server authority, and the focus label is always node_id. The
+result counts series present on that UTC day, not enrolled nodes, current agents
+or enforced ingestion budgets. Metrics without node_id retain their total and metric count but have no node
+rank. Only canonical node UUIDs are accepted; an empty identifier is invalid
+source data. Never infer an unattributed count from a truncated rank remainder. Query-usage statistics and all other raw source metadata are omitted.
+
+Both reads share the existing Platform Admin and active Workspace fences,
+observation slots, operation deadline and final license/audit transaction with
+history. Store I/O holds no SQL locks. An authority change or lost commit outcome
+releases no result. JSON is bounded before the success audit commits, including
+its serving envelope; the upstream reply has a separate four-MiB cap.
+
+A missing policy returns MONITORING_CARDINALITY_NOT_CONFIGURED. A day outside the
+configured horizon returns MONITORING_CARDINALITY_RANGE_INVALID. Source failure,
+scan refusal, incomplete/malformed data or transport failure returns
+MONITORING_CARDINALITY_UNAVAILABLE. Narrow to an exact metric after a scan refusal;
+do not increase limits automatically. An excessive encoded response returns
+MONITORING_CARDINALITY_RESPONSE_LIMIT. These are owning-service errors pending
+formal public API and bilingual recovery publication.
+
+The targeted native profile reuses the isolated PostgreSQL/metrics fixture:
+
+```sh
+bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh cardinality
+```
+
+Supply the same locally verified image and metrics binary inputs as the history
+profiles above. This profile requires Linux and the shared resource/lock guard
+before invocation. Its successful paths use the native index, not a source double.
+The service, profile and tests remain a candidate until their actual run is recorded
+in the [cardinality research](../../../../../docs/research/series-cardinality-scope.md).
