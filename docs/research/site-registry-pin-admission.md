@@ -210,6 +210,8 @@ startup and existing lifecycle checks with:
 go -C services/control test -p 1 ./internal/platform/config ./cmd/server   -run 'TestImageRegistrySiteSource|TestRegistrySiteSource|TestRuntimeNormalCancellationAndReverseOwnerJoin' -count=1
 ```
 
-Source and layout review passed. Execution of these new Go regressions,
-the real PostgreSQL fixture and the full repository gate awaits the shared
-test window. Installed source-to-pin acceptance remains with OBS and DEL.
+The two new configuration regressions passed through native Go with one
+compiler job and one runtime thread. Source, layout and roadmap review
+passed. The startup and lifecycle Go regressions, real PostgreSQL fixture
+and full repository gate await the shared test window. Installed
+source-to-pin acceptance remains with OBS and DEL.
