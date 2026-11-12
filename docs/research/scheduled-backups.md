@@ -125,3 +125,24 @@ verification, and its ARC gate refused an unrelated commit. Its source archive S
 `a9f83539a38f5823b9b5d29e4c3fdcbf1cb98cfb3d0364a5e67d6ea717c278f8`.
 The combined run remains queued behind ARC acceptance and the shared host
 preflight. The earlier failure drill remains separate.
+
+### Recovered timer continuation
+
+The timer, materialization, logical restore and retention failure/retry
+sources were recovered from their original command records. The recovered
+wrapper holds `/run/lock/ownsolid-heavy.lock`, followed by
+`/root/lane-sci-tools/heavy-test.lock`, throughout the Linux run. It
+rechecks resources after acquiring both. The scheduled delivery window
+follows the accepted Audit and Gateway qualifications. Use a clean
+checkout containing the accepted ARC migration and its exact SQL bytes.
+The fixture observes that checkout's live schema and table count and
+requires every independently restored archive to match them.
+
+Shell parsing and source checksum verification passed. The source
+ancestry guard refused the pending Audit candidate before building or
+connecting to the host. The recovered source archive SHA-256 is
+`a4a64ea37be3fe72bea5489637e6e83ab629e9c40b79f094695b43944450d434`.
+The guard transcript SHA-256 is
+`1a2931ac119004277e166bd8ae4d78f93d67d0a1dc697fa07355622b16fa5515`.
+The combined timer success, restored dump and retention failure/retry
+matrix above still requires its complete Linux acceptance transcript.
