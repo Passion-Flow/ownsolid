@@ -158,7 +158,7 @@ and retained CPU acceptance replay. The original preflight observed
 344,899,584 free bytes, below 3 GiB, with I/O full avg10 0.0 and avg60 0.45.
 It refused before the replay wrapper, Go compilation or PostgreSQL startup.
 The preserved `continued-cell-pg-attempt1.log` hashes to `86470fef7c4fd1dea0a0e0995b82764bafd87535814a9ca104bf7f430366dae0`.
-No new owner regression or post-rebase repository pass is claimed.
+That admission executed neither an owner regression nor a repository gate.
 
 The prepared private `run-training-cell-regression.sh` runs the nine selected
 training test groups in one disposable disconnected PostgreSQL fixture. Its
@@ -174,5 +174,21 @@ training groups but stopped before later repository gates because the new
 cell-owner test snapshot compared `audit_events.target_id` (UUID) with text.
 The snapshot now compares the original UUID parameter directly. This is a
 test-only SQL correction; no production fence or error mapping is relaxed.
-The failed raw run is retained, and the changed cell-owner group must pass
-on real PostgreSQL before this candidate is accepted.
+The failed raw run is retained. The corrected group passed all eight site/cell
+subcases at `be30d3f4` on disconnected Linux amd64 PostgreSQL 18.6. The eight
+neighboring groups passed at `8495818a`; no production Go input changed
+between those sources. This includes the actual retained CPU adapter read,
+paired dispatch and operator flows. No new training computation ran.
+
+The retained logs in `/root/lane-trn-cpu-admission.RaaYxrR7` are
+`schema59-trn-native-8495818a.log` (SHA-256
+`f0a50d7789e70be7b945725348200b4bf70d0b6920b3d8f993abfb92eb66a336`)
+and `schema59-trn-native-be30d3f4.log` (SHA-256
+`ca07474c280c2c60ac1252dc22b8a6c64c44f10bb68dd46b2cb7230fc75362e2`).
+The second source also passed `make check` with loopback-only networking.
+Before `make build` started, I/O full avg60 was 6.4 percent and the original
+5-percent gate refused execution. Build, module tests and the exact retained
+CPU runtime unit suite remain pending. A later bounded lock request started
+none of those phases. Keep the unchanged passes and run only pending phases
+when the original double-lock and resource admission permit them. The
+maintained replay now includes all nine groups; its Bash syntax is checked.
