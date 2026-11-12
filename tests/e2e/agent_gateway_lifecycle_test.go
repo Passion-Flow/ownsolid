@@ -2,6 +2,8 @@ package e2e
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -28,12 +30,16 @@ func gatewayConnections(t *testing.T, name string) gatewayConnectionState {
 	if err != nil {
 		t.Fatalf("logs %s: %v %s", name, err, output)
 	}
+	state, err := parseGatewayConnections(output)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return state
+}
+
+func parseGatewayConnections(output string) (gatewayConnectionState, error) {
 	state := gatewayConnectionState{active: map[string]string{}, retired: map[string]gatewayRetirement{}}
 	for _, line := range strings.Split(output, "\n") {
-		if strings.Contains(line, "agent_gateway_started") {
-			state = gatewayConnectionState{active: map[string]string{}, retired: map[string]gatewayRetirement{}}
-			continue
-		}
 		var entry struct {
 			Message      string   `json:"msg"`
 			Node         string   `json:"node_id"`
@@ -43,7 +49,7 @@ func gatewayConnections(t *testing.T, name string) gatewayConnectionState {
 			Forced       *bool    `json:"forced"`
 		}
 		if json.Unmarshal([]byte(line), &entry) != nil {
-			for _, message := range []string{"agent_session_opened", "agent_session_closed", "http_connection_retired"} {
+			for _, message := range []string{"agent_gateway_started", "agent_session_opened", "agent_session_closed", "http_connection_retired"} {
 				if strings.Contains(line, message) {
 					entry.Message = message
 					break
@@ -62,19 +68,21 @@ func gatewayConnections(t *testing.T, name string) gatewayConnectionState {
 				case "age_seconds":
 					number, err := strconv.ParseFloat(value, 64)
 					if err != nil {
-						t.Fatalf("invalid gateway age observation: %v", err)
+						return state, fmt.Errorf("invalid gateway age observation: %w", err)
 					}
 					entry.AgeSeconds = &number
 				case "forced":
 					forced, err := strconv.ParseBool(value)
 					if err != nil {
-						t.Fatalf("invalid gateway closure observation: %v", err)
+						return state, fmt.Errorf("invalid gateway closure observation: %w", err)
 					}
 					entry.Forced = &forced
 				}
 			}
 		}
 		switch entry.Message {
+		case "agent_gateway_started":
+			state = gatewayConnectionState{active: map[string]string{}, retired: map[string]gatewayRetirement{}}
 		case "agent_session_opened":
 			if entry.Node != "" {
 				state.active[entry.Node] = entry.ConnectionID
@@ -84,13 +92,57 @@ func gatewayConnections(t *testing.T, name string) gatewayConnectionState {
 				delete(state.active, entry.Node)
 			}
 		case "http_connection_retired":
-			if entry.ConnectionID == "" || entry.AgeSeconds == nil || entry.Forced == nil {
-				t.Fatal("gateway retirement omitted its transport identity or outcome")
+			if entry.ConnectionID == "" || entry.AgeSeconds == nil || entry.Forced == nil ||
+				math.IsNaN(*entry.AgeSeconds) || math.IsInf(*entry.AgeSeconds, 0) || *entry.AgeSeconds < 0 {
+				return state, fmt.Errorf("gateway retirement omitted its transport identity or outcome")
 			}
 			state.retired[entry.ConnectionID] = gatewayRetirement{entry.Reason, *entry.AgeSeconds, *entry.Forced}
 		}
 	}
-	return state
+	return state, nil
+}
+
+func TestGatewayConnectionLogOrdering(t *testing.T) {
+	const opened = `{"msg":"agent_session_opened","node_id":"node-a","connection_id":"old"}`
+	const retired = `{"msg":"http_connection_retired","connection_id":"old","reason":"connection_age","age_seconds":58.5,"forced":false}`
+	for _, tc := range []struct {
+		name, logs, activeID string
+		active, retired      bool
+	}{
+		{"delayed_old_close", opened + "\n" + `{"msg":"agent_session_opened","node_id":"node-a","connection_id":"new"}` + "\n" + `{"msg":"agent_session_closed","node_id":"node-a","connection_id":"old"}` + "\n" + retired, "new", true, true},
+		{"current_close", opened + "\n" + `{"msg":"agent_session_closed","node_id":"node-a","connection_id":"old"}`, "", false, false},
+		{"restart", opened + "\n" + retired + "\ntime=fixture msg=agent_gateway_started\n" + `time=fixture msg=agent_session_opened node_id=node-a connection_id=new`, "new", true, false},
+		{"legacy", "msg=agent_session_opened node_id=node-a\nmsg=agent_session_closed node_id=node-a", "", false, false},
+		{"text_retirement", "msg=agent_session_opened node_id=node-a connection_id=old\nmsg=http_connection_retired connection_id=old reason=connection_age age_seconds=58.5 forced=false", "old", true, true},
+		{"unrelated_message", opened + "\n" + `{"msg":"fixture_diagnostic","detail":"agent_gateway_started"}` + "\n" + retired, "old", true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			state, err := parseGatewayConnections(tc.logs)
+			if err != nil {
+				t.Fatal(err)
+			}
+			id, active := state.active["node-a"]
+			retirement, retired := state.retired["old"]
+			if active != tc.active || id != tc.activeID || retired != tc.retired {
+				t.Fatalf("unexpected connection lifecycle: %+v", state)
+			}
+			if retired && (retirement.reason != "connection_age" || retirement.forced || retirement.ageSeconds != 58.5) {
+				t.Fatalf("lost retirement outcome: %+v", retirement)
+			}
+		})
+	}
+	for _, logs := range []string{
+		`{"msg":"http_connection_retired","connection_id":"old","age_seconds":58.5}`,
+		`msg=http_connection_retired connection_id=old age_seconds=invalid forced=false`,
+		`msg=http_connection_retired connection_id=old age_seconds=58.5 forced=invalid`,
+		`msg=http_connection_retired connection_id=old age_seconds=NaN forced=false`,
+		`msg=http_connection_retired connection_id=old age_seconds=+Inf forced=false`,
+		`{"msg":"http_connection_retired","connection_id":"old","age_seconds":-1,"forced":false}`,
+	} {
+		if _, err := parseGatewayConnections(logs); err == nil {
+			t.Fatal("incomplete retirement observation accepted", logs)
+		}
+	}
 }
 
 func TestAgentGatewayConnectionLifecycle(t *testing.T) {
