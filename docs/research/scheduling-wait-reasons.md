@@ -199,3 +199,29 @@ The Go, pgx and PostgreSQL licences above cover this addition. The existing
 google/uuid dependency uses the [BSD-3-Clause licence](https://github.com/google/uuid/blob/master/LICENSE),
 permitting commercial use, redistribution with notices and offline use.
 No new dependency, controller asset, model or dataset is introduced.
+
+## Public quota-status failure contract
+
+The current [identity recheck](../../services/control/internal/modules/identity/session_repository.go)
+reports expired, revoked, disabled-user, removed-admin and invalid-source
+sessions through `AUTH_SESSION_EXPIRED`. The
+[Workspace authority](../../services/control/internal/modules/workspaces/scope.go)
+hides absent and inaccessible scope behind `RESOURCE_NOT_FOUND`. Preserve
+these real owner codes and the established `ACCESS_DENIED` boundary.
+Do not invent additional account/source/reauthentication codes or publish
+unregistered error names. Unknown owner or policy failures become
+`STORAGE_UNAVAILABLE` at the HTTP boundary, with no payload.
+
+The owned HTTP component produces `VALIDATION_FAILED` (400),
+`AUTH_SESSION_EXPIRED` (401), `ACCESS_DENIED` (403),
+`RESOURCE_NOT_FOUND` (404), `STORAGE_COMMIT_OUTCOME_UNKNOWN` (409),
+and these retryable 503 codes: `STORAGE_UNAVAILABLE`,
+`STORAGE_CANCELLED`, `STORAGE_TIMEOUT`, `STORAGE_LOCK_TIMEOUT`,
+`STORAGE_DEADLOCK` and `STORAGE_COMMIT_ROLLED_BACK`. This is the complete
+owned failure set; IAM retains entrance authentication, origin, capacity
+and readiness failures. Configuration guidance remains a successful
+status with its fixed reason, not an HTTP error.
+
+Test the real owner codes, storage and uncertain-outcome projection, and
+refuse an unregistered equal-text identity label. This contract uses only
+the existing source interfaces and licensed stack described above.

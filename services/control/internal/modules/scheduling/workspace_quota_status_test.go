@@ -50,10 +50,13 @@ func TestWorkspaceQuotaStatusFailurePreservesCommitUncertainty(t *testing.T) {
 		{&transaction.Error{Kind: transaction.CheckConflict, SQLState: "23514"}, string(transaction.Unavailable)},
 		{&transaction.Error{Kind: transaction.Cancelled}, string(transaction.Cancelled)},
 		{&transaction.Error{Kind: transaction.Timeout}, string(transaction.Timeout)},
+		{&transaction.Error{Kind: transaction.LockTimeout}, string(transaction.LockTimeout)},
+		{&transaction.Error{Kind: transaction.Deadlock}, string(transaction.Deadlock)},
 		{context.Canceled, string(transaction.Cancelled)},
 		{context.DeadlineExceeded, string(transaction.Timeout)},
 		{errors.New("RESOURCE_NOT_FOUND"), "RESOURCE_NOT_FOUND"},
 		{errors.New("AUTH_SESSION_EXPIRED"), "AUTH_SESSION_EXPIRED"},
+		{errors.New("AUTH_SOURCE_DISABLED"), ErrQuotaPolicyUnavailable.Error()},
 		{errors.New("private database message"), ErrQuotaPolicyUnavailable.Error()},
 	} {
 		if got := quotaStatusError(test.err); got.Error() != test.code {
