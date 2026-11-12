@@ -243,6 +243,11 @@ includes status 0/429/502/503/504, not 409. The actual regression is automatic
 retry after network/timeout (status 0), plus implicit refetches. Mark these cached
 pages as manually refreshed, disable retry-on-mount/focus/reconnect/polling, and
 execute each chosen request immediately rather than queuing it offline.
+The pinned Query `isStatic` check returns false until data exists. Therefore an
+initial failed query must additionally become ineligible for automatic execution;
+otherwise invalidation refetches it despite static stale time. Imperative manual
+recovery remains available. Retain the failing invalidation control and verify
+the fix without changing the global scheduler or removing that assertion.
 
 An initial error replaces loading with an inline Problem. An uncertain result
 explains that the read may already have been recorded and that Read again starts
@@ -257,6 +262,9 @@ from the rendered consumer; it offers no retry against the same denied authority
 Discard inactive cached audit filters/resource views on that refusal, retaining
 the active failure so remounting cannot retry it. A different filter must not
 resurface events cached before access was refused. Other query families remain.
+Bind snapshots to the authenticated session's reader, audience, tenant and
+Workspace in the cache key; none is sent as a new API input. A later sign-in or
+Workspace change cannot reuse a previous reader's successful cached page.
 Session-expiry handling remains with the existing session owner. When page reload,
 deliberate filter change or route navigation needs another read, it is user
 initiated. Merely focusing a tab, reconnecting, remounting a failed cached query or
@@ -296,3 +304,46 @@ Finished consumer behavior requires targeted checks plus a new exact-source full
 repository gate. The older 1,134/410 browser result is not evidence for this
 change. Actual installed access accounting and independent SQL remain separate;
 AUD-108 and installed acceptance stay open until their owners' requirements hold.
+
+### Consumer states and focused checks
+
+| State | Audit list and resource Activity |
+| --- | --- |
+| Loading | Retain the list-shaped initial skeleton; recovery keeps its notice/old rows and names the in-flight read. |
+| First-time empty | A successful empty trail says nothing was recorded in the window; Activity says no activity yet. |
+| Filtered empty | The trail says no events match and offers Clear filters, distinct from its first empty. An Activity detail has no collection filter. |
+| Partial | Keep every page already read, identify the result as incomplete and offer one failed-cursor recovery. |
+| Error | An unknown response is not an empty list or a rollback. Explain the possible recorded read, retain correlation and require a new explicit request. |
+| Denied | Hide current rows/preview, discard inactive audited views and offer no same-authority recovery. Cache keys separate current readers and scopes. |
+| Not ready | Busy recovery remains visible as Reading; Retry-After keeps its countdown and disabled action. No implicit deferred read follows reconnection. |
+
+The list retains title/filter/table and its existing preview drawer. Resource
+Activity retains its detail header/tabs/table; neither gains a new surface.
+The immediate recovery action is Read again, or Read from the start for an
+invalid cursor. The existing Help article remains reference detail: a built-in
+first empty is inapplicable, and a filtered index has No article matches.
+Its immediate task is finding the recovery answer.
+
+Focused Mac arm64 checks passed make check, the Console production build,
+54 Console unit tests, 54 UI tests, 49 locale tests and 19 Help tests.
+Chromium passed 70 consumer flows, 12 new accessibility/keyboard checks and
+four new localization checks. The two Help flows also passed a second check
+through the settled search and native section link. No case skipped, retried
+or became flaky. Eighteen desktop/narrow screenshots were opened, including
+the full recovery section after scrolling; long IDs stay within the notice
+and partial tables retain their contained horizontal scroll.
+
+The old c864fbb1 production assets remained unchanged during the controlled
+response-loss comparison. A single opening plus focus/reconnect, with no
+manual retry, produced six requests in each consumer. Both controls failed
+the expected one-request assertion. This establishes dispatch behavior, not
+six durable database appends. Raw reports and the exact old asset manifest
+remain separate from the new passing browser result.
+
+The first check rejected untyped test mocks/assertion callbacks; the next unit
+run caught the real no-data invalidation hole plus four assertions observing
+React before its query notification arrived. Typed mocks, settled state checks
+and the explicit failed-query eligibility guard fixed them without weakening
+an assertion or the shared scheduler. Both failed runs remain retained.
+The complete exact-source repository gate and actual installed/SQL acceptance
+are separate from these focused results; AUD-108 remains open.
