@@ -282,10 +282,12 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		if !bootstrapped {
 			return errors.New("BOOTSTRAP_REQUIRED_FOR_CONFIGURED_FEATURES")
 		}
-		h.ImageRegistry, e = openImageRegistry(startup, c, selected.store, h)
-		if e != nil {
-			return e
-		}
+	}
+	h.ImageRegistry, e = openImageRegistry(startup, c, selected.store, h)
+	if e != nil {
+		return e
+	}
+	if h.ImageRegistry != nil {
 		registry := h.ImageRegistry
 		g.closers = append(g.closers, func() error { registry.Close(); return nil })
 	}

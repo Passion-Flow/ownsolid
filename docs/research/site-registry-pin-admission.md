@@ -201,6 +201,15 @@ root does. The disabled-owner check enters a repository transaction and must
 retain its deadline requirement; an unbounded test context is not a valid
 startup fixture.
 
+Startup review found that the root skipped `openImageRegistry` entirely when
+the optional configuration was omitted. That bypassed the existing module-owned
+`RequireEmptyWhenDisabled` admission. Invoke the selected-store constructor
+for both enabled and omitted configurations, while keeping the bootstrap fence
+for configured operation and registering Close only for a constructed service.
+Verify an empty omitted owner can start, but one retained pin refuses omission
+without changing that row. Keep this check in the startup path rather than
+duplicating Registry policy in readiness or inventing a new schema.
+
 The shared-root regression sources are
 `TestImageRegistrySiteSourceSelection`,
 `TestImageRegistrySiteSourceRefusesMalformedSelection`,

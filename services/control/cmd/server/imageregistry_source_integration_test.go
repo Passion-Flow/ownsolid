@@ -172,4 +172,19 @@ func TestRegistrySiteSourceStartupAdmission(t *testing.T) {
 	if s, err := openImageRegistry(startup, disabled, store, h); s != nil || err == nil || err.Error() != "CONFIG_IMAGE_REGISTRY_INVALID" {
 		t.Fatal("source enabled while registry was disabled", err)
 	}
+	disabled.ImageRegistrySiteSourceFile = ""
+	retained, err := owner.DB.Exec(startup, `INSERT INTO image_registry_pins
+ (id,tenant_id,workspace_id,asset_id,source_archive_sha256,source_manifest_sha256,backend_identity,state,created_by,actor_epoch)
+ SELECT gen_random_uuid(),tenant_id,default_workspace_id,'startup-retained-fixture',$1,$1,$2,'importing',primary_admin_user_id,1
+ FROM installation_state WHERE id=1 AND bootstrap_complete`, strings.Repeat("a", 64), "sha256:"+strings.Repeat("b", 64))
+	if err != nil || retained.RowsAffected() != 1 {
+		t.Fatal("retained Registry fixture was not created", err)
+	}
+	if s, err := openImageRegistry(startup, disabled, store, h); s != nil || err == nil || err.Error() != "REGISTRY_OWNER_REQUIRED" {
+		t.Fatal("omitted Registry dropped retained authority", err)
+	}
+	var pins int
+	if err := owner.DB.QueryRow(startup, `SELECT count(*) FROM image_registry_pins`).Scan(&pins); err != nil || pins != 1 {
+		t.Fatal("omission refusal changed retained state", err)
+	}
 }
