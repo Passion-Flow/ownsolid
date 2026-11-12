@@ -149,6 +149,9 @@ func (r cardinalityReply) project(scope workspaces.Workspace, selection SeriesCa
 		seen[*row.Name] = true
 		out.Metrics = append(out.Metrics, MetricCardinality{*row.Name, *row.Value})
 	}
+	if selection.Metric != "" && sum != total {
+		return SeriesCardinality{}, invalid
+	}
 	seen = make(map[string]bool, len(r.Data.Nodes))
 	sum = 0
 	for _, row := range r.Data.Nodes {

@@ -251,3 +251,21 @@ SHA-256 was 460dcad730628d3d58f8753b1de363d3b078441cf2a1785db3490f2eb8276342;
 this five-sample shape qualification is not a scale, installed-product or
 retention benchmark. The owning Go native service profile must retain these
 cases so the product projection can be qualified without the external prototype.
+
+## Exact metric count integrity
+
+The pinned [status handler](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmselect/prometheus/prometheus.go#L567-L618)
+uses one filtered search for the total and ranked metric counts. Its
+[index implementation](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/storage/index_db.go#L1360-L1485)
+counts matching metric-name rows into that total and the metric ranks. An exact
+metric selector therefore has at most one metric rank, whose count must equal
+totalSeries. The configured native topN cap cannot truncate that one rank
+because the handler enforces a minimum of one.
+
+Reject an exact-metric reply whose rank undercounts its positive total, rather
+than projecting contradictory successful counts. Add a malformed-source case
+for that refusal and retain the existing measured-zero case. Do not apply the
+same equality rule to node ranks: missing node_id is valid and bounded node
+ranks can omit the remaining nodes. General overviews also retain bounded
+metric ranks. This is source projection validation, not an ingest budget or
+new scale measurement.

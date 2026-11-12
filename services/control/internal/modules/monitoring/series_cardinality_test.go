@@ -132,6 +132,7 @@ func TestSeriesCardinalityRejectsMalformedAndIncompleteSource(t *testing.T) {
 		{"unsafe integer", strings.Replace(valid, `"totalSeries":2`, `"totalSeries":9007199254740992`, 1), 200},
 		{"rank exceeds total", strings.Replace(valid, `"name":"cpu","value":2`, `"name":"cpu","value":3`, 1), 200},
 		{"zero rank", strings.Replace(valid, `"name":"cpu","value":2`, `"name":"cpu","value":0`, 1), 200},
+		{"exact metric undercounts total", strings.Replace(valid, `"name":"cpu","value":2`, `"name":"cpu","value":1`, 1), 200},
 		{"absent metric rank", strings.Replace(valid, `[{"name":"cpu","value":2}]`, `[]`, 1), 200},
 		{"null name", strings.Replace(valid, `"name":"cpu"`, `"name":null`, 1), 200},
 		{"missing value", strings.Replace(valid, `"name":"cpu","value":2`, `"name":"cpu"`, 1), 200},
