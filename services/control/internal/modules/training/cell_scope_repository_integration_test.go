@@ -37,7 +37,7 @@ func trainingCellSnapshot(t *testing.T, g trainingOperatorStory) []byte {
  'attempts',(SELECT coalesce(jsonb_agg(to_jsonb(a) ORDER BY a.id),'[]'::jsonb) FROM training_attempts a WHERE a.job_id=$1),
  'leases',(SELECT coalesce(jsonb_agg(to_jsonb(l) ORDER BY l.id),'[]'::jsonb) FROM gpu_leases l WHERE l.training_job_id=$1),
  'tasks',(SELECT coalesce(jsonb_agg(to_jsonb(n) ORDER BY n.id),'[]'::jsonb) FROM node_tasks n WHERE n.id IN (SELECT task_id FROM training_attempts WHERE job_id=$1)),
- 'audits',(SELECT coalesce(jsonb_agg(to_jsonb(e) ORDER BY e.id),'[]'::jsonb) FROM audit_events e WHERE e.target_id=$1::text)
+ 'audits',(SELECT coalesce(jsonb_agg(to_jsonb(e) ORDER BY e.id),'[]'::jsonb) FROM audit_events e WHERE e.target_id=$1)
 )`, g.job.ID)).Scan(&raw)
 	if err != nil {
 		t.Fatal(err)
