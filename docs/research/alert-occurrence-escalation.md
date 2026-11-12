@@ -207,3 +207,38 @@ aea19520431f474d5c3cfd273eed78be8c0842a2bc1a343e0e2921226a93dc06
 has passed syntax inspection only. Its initial scope is expiry and resumption of
 one fixed-route synthetic group; grouped acknowledgement, SQL durability, source
 lookup ambiguity and idempotent delivery still require the broader profile above.
+
+## Bounded external lifecycle runner
+
+The unexecuted observer now has a separate Linux admission runner at
+/root/lane-obs-tools/run-alertmanager-expiry.py, SHA-256
+f192668b28b94c1811693b580c7ea4065a7d6d1283af8d77305172533ad2f4ac.
+Its observer input remains SHA-256
+aea19520431f474d5c3cfd273eed78be8c0842a2bc1a343e0e2921226a93dc06;
+the Alertmanager binary remains the independently verified 0.34.2 artifact
+recorded above. Both Python sources passed AST parsing only. Neither runner,
+namespace nor native observer has executed.
+
+The runner accepts explicit observer/binary paths and SHA-256 values, an output
+parent, and the two shared lock paths. It requires existing regular lock files,
+acquires its own nonblocking flocks and checks free memory, disk and I/O before
+spawning a namespace. The prepared guard uses the shared 2 GiB MemFree, 15 GiB
+disk and at-most-five I/O avg10 policy, records df/free/ss, sets GOMAXPROCS=2,
+and bounds the default observation to 180 seconds (configurable 30..300).
+
+Its child has isolated network and PID namespaces with kill-child behavior.
+The observer checks live netlink interfaces and default routes, rather than
+the host-mounted sysfs inventory. Only synthetic Alertmanager and an HTTP
+receiver can start. The parent passes its actual lock descriptors into that
+owned child and waits for the process group. If cleanup cannot establish an
+empty group, it records failure and closes without explicitly unlocking the
+shared open description; inherited descriptors retain custody until child exit.
+An interrupted observation with no native result is unknown, never proof that
+no binary started.
+
+A new private receipt records admission refusal separately from native execution
+and retains the observer output and digest. These are source-reviewed teardown
+intentions, not qualified teardown or group-lifecycle results. Run only in the
+allocated Linux resource window. The real expiry/resumption observation, grouped
+acknowledgement, SQL durability, production migration and Console work remain
+open; the earlier forty-member inhibition result is unchanged.
