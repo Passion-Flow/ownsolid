@@ -576,3 +576,55 @@ storage error. The complete installed qualification needs real HTTPS/PostgreSQL
 through an admitted owner window; a TLS fixture alone does not qualify
 tenant authorization or finish DEV-102. Keep the roadmap open while either
 installed verification or repository gates remain pending.
+
+## Account discovery (DEV-102)
+
+Reviewed 2026-11-12. The CLI has workspace/member discovery but no account
+directory command. An operator diagnosing a membership needs the account UUID,
+active/disabled state and platform-administrator flag. The public
+[identity contract](../../api/openapi/v1/identity/openapi.json) already exposes
+listUsers and getUser; these reads do not need a new identity provider or API.
+
+Primary sources:
+
+- [GitLab Users API](https://docs.gitlab.com/api/users/) offers bounded account
+  lists, administrator-only fields, status/search filters and exact-ID details.
+  Its administrator visibility remains a server decision.
+- [GitHub CLI API pagination](https://cli.github.com/manual/gh_api) makes
+  additional page requests explicit. Preserve ownsolid's existing one-page
+  envelope and continuation rather than materializing an unlimited directory.
+- Identity lists.go defines a literal printable-ASCII email prefix, a Unicode
+  substring query and active/disabled status. The list cursor includes the
+  filters. The Admin HTTP dispatcher enforces platform-administrator access;
+  ListForActor rechecks current actor state. GetUser is a trusted lookup behind
+  that dispatcher. Users are the installation's account directory, not a
+  workspace membership list; do not invent a tenant or workspace selector.
+
+Choose user list with --email-prefix, --query, --status, --limit and --cursor,
+and user get <user-id> with an exact canonical lowercase nonzero UUID. Keep
+filter text untrimmed, leave LIKE escaping/case comparison to the server and
+URL-encode query values through the existing HTTP client. Reads use only the
+configured Admin origin/session, with no cell/workspace context lookup. JSON
+and YAML preserve the public User fields, including nullable verification time,
+false administrator state and safe integer version. Tables show ID, email,
+display name, status and the administrator flag.
+
+Reject email/name-based detail resolution, client role caches, automatic
+unbounded pagination, synthetic user IDs, password/status writes and external
+directory calls. Do not infer account permissions from the displayed admin
+flag; each later API operation still authorizes the current session.
+
+No dependency, model or dataset is added. This slice uses the pinned standard
+library, Cobra, pflag and YAML libraries in the dependency review above. Their
+BSD-3-Clause, Apache-2.0 and MIT notices permit commercial redistribution and
+offline use and remain required with the CLI distribution.
+
+Test exact global GET routes, all three output forms, unchanged filters/cursor,
+maximum-safe integer version, false/null fields, disabled records, server page
+defaults and manual continuation. Reject malformed rows and wrong detail IDs
+without partial stdout. Argument failures must happen before I/O; stable
+401/403/404/400/503 errors must remain failures and storage retry must be
+explicit. The complete installed qualification still requires the real Admin
+dispatcher and PostgreSQL in an admitted original owner window. TLS fixtures
+prove client behavior, not account isolation, installed acceptance or DEV-102
+completion. Keep those gates and the roadmap open until actually run.
