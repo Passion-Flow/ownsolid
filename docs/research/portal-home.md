@@ -139,3 +139,49 @@ requests were refused, and no request left the installation. PostgreSQL
 confirmed the member's read timestamp and the presence of the other
 account's seven-turn conversation. The ten Portal home browser tests
 also passed, including the existing missing-workspace explanation.
+
+## Foreign scope on a normal page request (POR-114)
+
+The existing live home and catalogue flows check foreign-workspace URLs
+with direct browser fetches. The remaining boundary is the page's own
+request and its recovery after navigation, reload and a different login.
+[OWASP authorization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)
+requires permission checks on every request, including a guessed resource
+identifier. The [Applications contract](../../api/openapi/v1/applications/openapi.json)
+uses a query workspace, while the [Distribution contract](../../api/openapi/v1/distribution/openapi.json)
+uses a path workspace. Both services call the shared workspace scope
+check. Keep the actual dispatcher and PostgreSQL response as the
+authority for this case.
+
+Use two ordinary fixture accounts. The first can select workspaces A and
+B. The second belongs only to B. Seed distinguishable published
+applications in A and B and a canary application in a third workspace
+of a different tenant. On the ordinary Home request, use
+[Playwright Route.continue](https://playwright.dev/docs/api/class-route#route-continue)
+to replace only the applications request's workspace parameter with
+the foreign ID. Retain the real cookies, method, origin and response.
+Repeat on the ordinary Models alias-list request by replacing only
+its workspace path segment. The UI must show the scope recovery guidance,
+keep its independent sections, and never render the canary. A 200 with
+an empty list fails this test.
+
+Release the routing change and reload. Check normal Home and Models
+navigation, the selected workspace after browser Back and reload, and
+sign out then sign in as the second account in the same browser.
+A workspace parameter in the page address must not change the chosen
+session scope. Observe response bodies as well as rendered text so a
+client-side filter cannot conceal leaked content. Verify the recorded
+refusal request IDs against PostgreSQL for zero successful foreign-scope
+audit records and confirm the foreign canary still exists. The fixture
+seeds published projections and does not qualify workflow execution.
+Use the existing pinned Playwright, PostgreSQL and Go dependencies and
+their [documented licences](sdk.md#licenses). No dependency, model or dataset is added.
+
+Run the opt-in flow in `web/apps/portal/e2e/live-workspace-scope.spec.ts`
+with `OWNSOLID_LIVE_PORTAL_SCOPE_FILE` pointing to private fixture JSON
+and the normal live HTTPS browser options. The file contains `people`
+with email, password and a default `workspace`, a `second` workspace,
+and `foreign` with workspace and marker. Each workspace has id, name
+and application. The browser writes `scope-proof.json` next to the
+fixture for its independent database verifier. Keep both files outside
+the repository and remove the generated credentials after the run.
