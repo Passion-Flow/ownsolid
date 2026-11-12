@@ -17,7 +17,7 @@ Reviewed 2026-11-09 against [Kubeflow TrainJob lifecycle](https://trainer.kubefl
 - [ ] TRN-106 Live training metrics and comparison between runs (P1) - Catalog: F120
 - [ ] TRN-107 Train, then deploy the result in one flow, with before and after comparison (P1)
 - [ ] TRN-108 Isolated runtime images per framework, built offline with pinned locks (P1) - Catalog: F121
-- [ ] TRN-109 Notebook and remote development environments separated from production jobs (P1) - Catalog: F593
+- [ ] TRN-109 Notebook and remote development environments separated from production jobs (P1) - Catalog: F593 - [Isolation and prototype prerequisites](../../research/training-interactive-environments.md)
 - [ ] TRN-110 Verified on real NVIDIA hardware: offline LoRA run, adapter served (RTX 3090 run on 2026-11-04 used the inherited code; repeat on ownsolid) (P1)
 - [ ] TRN-111 Training compute record, part of the experiment record and built after TRN-105: tokens processed, operations by 6NT with a hardware ceiling, lineage and spent totals, declared base compute and configured reference values ([research](../../research/training-compute-record.md)) (P1)
 
