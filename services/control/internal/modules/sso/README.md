@@ -20,8 +20,10 @@ Identity and SSO now share the validated transport-derived cookie issue/read/cle
 owner. Current enabled provider/callback configuration still requires HTTPS;
 explicit HTTP can use local accounts but cannot enable this SSO profile. A trusted
 proxy does not bypass state, PKCE, Origin/CSRF or durable flow/session-source checks.
-Existing historical IP-URL/DNS-Host fixtures need proper DNS/SNI/SAN/CA migration
-before new current-source SQL qualification; see the [transport increment](../../../../../docs/execution/mvp/deployment-transport-boundaries.md).
+Provider fixtures must use matching DNS/SNI/SAN and an approved CA; an IP URL
+with an unrelated Host header does not establish that transport. See the
+[entrance/session acceptance](../../../../../docs/research/browser-entrance-sessions.md)
+and [real-provider recovery proof](../../../../../docs/research/sso-keyring-recovery.md).
 
 ## Administration surface
 
@@ -73,9 +75,11 @@ opt-in native fixture for connector intents/catalog, local-password linking,
 one-time claim/completion, source sessions, unlink/reactivation, credential
 rotation, cleanup and restore recovery. It uses synthetic subjects directly at
 the repository boundary and makes no provider request. Its post-commit wrapper
-fault is not native wire-loss evidence. Unit and native tests were authored but
-not run in this lane; see the [wave6 handoff](../../../../../docs/execution/mvp/parallel-wave6-account.md)
-for exact admission, commands, evidence and outstanding qualification.
+fault is not native wire-loss evidence. The selected engine and its serving
+admission remain with the [database owner](../../platform/database/database.go).
+Record actual runs and remaining limitations in the
+[product status](../../../../../docs/product/status.md); repository source
+availability does not establish provider or installed-engine acceptance.
 
 ## Review repair: shared current-actor ordering
 
@@ -98,15 +102,13 @@ physical native connections. The fixture remains opt-in and unexecuted until the
 coordinator admits the actual target. No production hook or new setting is added.
 
 
-## Current cumulative M11 source integration — 2026-10-26
+## Database lineage and browser completion
 
-The explicit `sso` profile extends the accepted M10 lifecycle graph with only
-Gitea account linking/sign-in. `LifecycleRuntime` retains preparation, holdout and
-four-store behavior in both profiles. The exact forward catalog is67 tables/17
-entries; use `upgrade-sso` with the existing runtime principal. The immutable
-sixteen-entry prefix remains unchanged. Current execution and limitations are in
-[the integration contract](../../../../../docs/execution/mvp/m11-cumulative-integration-20261026.md);
-source integration alone is not current provider/build/installation acceptance.
+Migration 17 introduced the retained Gitea state in the immutable PostgreSQL
+prefix. Installations apply the complete current lineage; its version and table
+inventory are owned by [the migration catalog](../../platform/database/database.go).
+An old SSO-only profile or historical catalog count is not the installed schema.
+Candidate SQL under this module's testdata does not enter that lineage.
 
 The durable browser proof includes the exact configured callback origin, port,
 audience and path. A changed deployment must begin a new flow. After a known
@@ -156,3 +158,21 @@ isolated qualification. Global numbering, catalog fingerprints, grants,
 backup/restore and the published HTTP/UI composition require their owners'
 admission. See [the research and acceptance](../../../../../docs/research/sso-interactive-connector-tests.md)
 and [ADR 0070](../../../../../docs/decisions/0070-isolate-connector-sign-in-tests-from-session-authority.md).
+
+## OIDC storage qualification candidate
+
+`testdata/oidc_profile.up.sql` and `.down.sql` are unnumbered PostgreSQL test
+inputs. They retain the existing SSO tables and legacy Gitea representations
+while proposing immutable issuer/profile authority, opaque client IDs and
+subjects, and a scoped one-use nonce digest. They add no serving provider or
+public operation. ARC admits the formal migration, catalogs and startup;
+the qualified protocol dependencies, configuration/API and Web need their owners.
+
+The `repository_integration` roots beginning `TestPostgresOIDCProfile` use the
+current complete PostgreSQL fixture. They check legacy secret inventory,
+idempotency replay, catalog/binding reads, starts and sourced revocation;
+opaque identity/profile constraints; safe downgrade refusal; and actual
+concurrent nonce insert/commit behavior. A type-changing migration runs before
+serving and requires fresh pools, as a restarted Control does. Run them with
+the repository fixture's explicit PostgreSQL engine, protected DSN/setup files
+and unique disposable schema; see the [research and admission criteria](../../../../../docs/research/oidc-sign-in.md#postgresql-storage-prototype-boundary).
