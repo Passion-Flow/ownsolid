@@ -446,3 +446,81 @@ Agent admission and real NVIDIA recovery remain separate. Keep TRN-108 and
 TRN-104 unticked until their full product acceptance is satisfied. While the
 CPU profile is unavailable, continue accepted experiment and model-handoff
 verification with the retained CPU artifacts under their stated scope.
+
+### Reproducible CPU verification prototype
+
+The CPU prototype is outside the product tree and uses the existing pinned
+`python:3.12.15-slim-bookworm` image by digest
+`sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70`.
+This is the same base selected by the Control image. It can provide the
+exact interpreter without changing deploy ownership or downloading at runtime.
+Stage one exact binary wheel for each of the 37 distributions above and the
+separately pinned pip 26.2.1 installer. Preserve the existing Linux-lock pin
+for every non-Torch wheel; select only the audited official CPU Torch digest.
+Bind every complete archive and its original metadata, compatibility tags and
+notice files by SHA-256. Check notice bytes and sizes against wheel RECORD.
+Keep Tokenizers' exact upstream wheel and the existing separate notice
+candidates; do not repack it to satisfy the embedded-notice release checker.
+
+Create the prototype environment disconnected from that wheelhouse using
+`--no-index --only-binary=:all: --require-hashes`, then run `pip check` and
+actual Torch, Transformers, PEFT, Accelerate and Tokenizers imports. A
+prototype-only runtime manifest must require exact Python 3.12.15 and Torch
+2.14.1+cpu. Record its complete bytes and hash separately from the production
+manifest. Use unmodified worker Python sources and explicit CPU verification;
+retain exact source, lock, manifest, image and installed-package identities in
+the experiment inputs. Production CUDA and macOS manifests and validators
+remain unchanged. No temporary signing key or release signature is involved.
+
+The full wheel notices, Python's PSF and Debian base-image package notices
+remain applicable to commercial and offline distribution. Preserve the base
+image's original copyright files and package inventory separately; do not
+infer that the Torch SPDX expression covers the operating system. No new
+model or dataset is required: use the existing approved Qwen snapshot and
+synthetic published data under their recorded Apache-2.0 and CC0 terms.
+
+After the installation and identity checks pass, run the real worker in a
+bounded, network-none container. Publish and verify checkpoint one under a
+two-step horizon before killing only the owned worker. A new worker must
+verify the original seal and advance to step two. Compare full algorithmic
+state with the uninterrupted two-step baseline, including tensor values,
+optimizer, scheduler, RNG and trainer state. Compare raw hashes first and
+explain any serialization or presentation differences explicitly. A changed
+optimizer and a changed sealed horizon must fail before model loading. Keep
+all outcomes scoped to this CPU prototype, with product recovery, Agent
+admission, signed-media verification and physical NVIDIA acceptance separate.
+
+#### Complete staged binary inputs
+
+The private CPU set now contains all 37 exact wheel archives, totalling
+250,474,968 bytes. Every complete archive matches its selected digest.
+All original `METADATA` and `WHEEL` files match their RECORD entries;
+171 original notice files, including additional packaged notices beyond
+Torch's 86 declared files, match both RECORD hashes and sizes. The six
+non-Torch additions (Accelerate, mpmath, NetworkX, PEFT, psutil and SymPy)
+have their complete original notice payloads retained. Tokenizers remains
+the exact upstream archive with no embedded notice, accompanied by the
+previously verified dependency and Rust notice candidates. The pinned pip
+installer additionally retains its own original notices.
+
+| Private CPU input | SHA-256 |
+| --- | --- |
+| Complete 37-package prototype lock | `378a1b342f065f2256bcc225c25b08ea803ea6e2efc6a8b7fbbbf3615bca01c5` |
+| Full wheel and original-notice inventory | `57cc07d9ab616399b3ff5f7e09437292ac5ee0e811282c686d6b658594a110dc` |
+| Exact Python base-image package and notice inventory | `0886a5d8fa99b3a12595ae1cb07cd0cb246191713c9c71545bca518eee38d8cc` |
+
+The cached base image reported Python 3.12.15, matching the existing
+Dockerfile pin. A network-none, read-only inspection retained its Python
+executable and shared-library digests, all 105 installed Debian package
+identities and 123 original copyright or common-license files. Debian's
+GPL and LGPL components retain their applicable source and redistribution
+conditions; the Python and wheel declarations do not replace them. DEL
+can reuse the exact image input and review its original package notices.
+
+A disconnected rerun reproduced the binary/notice inventory and complete
+lock digests without fetching any input. These are actual complete binary
+inputs, separate from the earlier dependency-metadata graph. Installation,
+real imports and checkpoint computation remain pending until their runs
+produce evidence. The staged directory is
+`cpu-prototype-inputs/` in the retained private CPU audit root. No production
+manifest, image recipe or validator changed.
