@@ -6,7 +6,8 @@
     "./eslint": "./eslint.config.js",
     "./prettier": "./prettier.config.js",
     "./vite": "./src/vite.ts",
-    "./playwright": "./src/playwright.ts"
+    "./playwright": "./src/playwright.ts",
+    "./preview-download-failure": "./src/preview-download-failure.ts"
   },
   "dependencies": {
     "@playwright/test": "catalog:",
