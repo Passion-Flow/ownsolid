@@ -979,3 +979,106 @@ Input hashes and the Linux transcript stay in the selected evidence
 directory. Disposable units, database container and private scratch files
 are removed. This fixture does not establish Console configuration or
 backup-history UI acceptance.
+
+## Prepare a joint installed acceptance window
+
+The [installed acceptance fixture](internal/install/testdata/installed-acceptance/host_runner.py)
+owns one Linux amd64 Docker-in-Docker namespace. Its source and packet records
+are test evidence; they are not a production release inventory or a server audit.
+Prepare every selected owner's scripts, compiled clients, source mapping and
+toolchain before reserving a running installation window.
+
+Compile the three Go fixture overlays from the clean, final candidate checkout
+into a new directory outside Git:
+
+```sh
+bash deploy/offline/internal/install/testdata/installed-acceptance/build_fixtures.sh \
+  "$CANDIDATE_SOURCE" "$EMPTY_FIXTURE_STAGE"
+```
+
+The helper compiles Linux amd64 test binaries and changes no candidate files.
+The Control and installer binaries, bundled Web assets and immutable images must
+also come from the admitted candidate. Keep their build and image-source proof.
+Copy `inside.sh` and `tls_relay.py` from this fixture into the final input stage,
+using `tls-relay.py` as the relay's staged filename.
+
+Create protected `inputs.json` with exactly `format_version: 1`, `candidate`
+(the full Git revision), `inputs` (basename to SHA-256), `phases` and
+`owner_inputs` (selected phase to report filename). The admission guard lists
+the required input names. Each selected owner report contains `status: ready`,
+the same `candidate`, its `phase`, and a nonempty `files` map matching the
+admitted hashes. The supported order is `web`, `sql`, `cli`, `obs`; select only
+ready phases and pair Web with independent SQL verification. History-only and
+CLI-only windows are valid. Excluded history never blocks an independent flow.
+
+For history, stage the complete Linux amd64 `installed-history` ELF plus its
+exact `client-source.go`, `client-tests.go` and protected `client-proof.json`.
+The proof must bind all seven self-tests, vet, target and admitted file hashes.
+Keep Mac self-tests labelled as Mac; cross-compilation does not establish a
+successful Linux request. A partial upload cannot pass admission.
+
+The protected `runtime.json` selects a fresh absolute `output_directory`, a
+canonical `run_id` UUID, an unused `lane-del-` container name, a local Unix
+`docker_socket` and the two ordered `heavy_locks`. Set positive integer
+`hard_timeout_seconds`, `cleanup_seconds`, `startup_seconds`, `suite_seconds`,
+`operation_seconds`, `cpus`, `memory_bytes`, `docker_tmpfs_bytes`, `pids_limit` and `relay_port`.
+Reserve startup and cleanup time outside the suite budget. Set the shared-host
+`minimum_free_memory_bytes`, `minimum_available_memory_bytes`,
+`minimum_disk_bytes` and `maximum_io_avg10` to the agreed window gate. The
+`images` map requires immutable local IDs for `dind`, `control`, `postgres`,
+`metrics`, `logs`, and `evaluator` when history is selected.
+
+Run admission before requesting the explicit installation slot, then invoke
+the parent only in that slot:
+
+```sh
+python3 deploy/offline/internal/install/testdata/installed-acceptance/acceptance_guard.py \
+  preflight --root "$FIXTURE_STAGE"
+python3 deploy/offline/internal/install/testdata/installed-acceptance/host_runner.py \
+  --root "$FIXTURE_STAGE"
+```
+
+The parent owns both actual locks, records their descriptors and inodes in
+`parent.json`, starts one labelled namespace and publishes `control.json`.
+Use the guard's `handoff` command with `--root`, `--role`, `--action` and the
+current `--generation`; `status` is read-only. Web, independent SQL and CLI
+finish before OBS claims the sole driver. OBS requests each ordered hook;
+DEL acknowledges only that pending hook. Bind the fresh scope, CA files,
+raw window and a new session filename before the claim. Stop other history
+probes, UI polling and scope changes for the counter/fault segment. Failed,
+stale, duplicate and wrong-role transitions are refused. This channel runs
+no arbitrary shell command and does not impersonate product authentication.
+
+Packets append directly to protected host `egress-live.jsonl`. The inner
+runner stops its workloads before the recorder and publishes the actual
+closed length, digest and shutdown status. Normal and deadline cleanup both
+retain the host file. Missing or inconsistent closure gives
+`capture-incomplete`; a complete capture with an added packet fails. The
+parent returns success only after both the suite and final capture pass.
+
+The native capture self-test uses existing recorder/probe binaries, two
+short-lived Linux network/PID/mount namespaces and no product services:
+
+```sh
+python3 deploy/offline/internal/install/testdata/installed-acceptance/native_capture_selftest.py \
+  --recorder "$EGRESS_RECORDER" --probe "$NEGATIVE_PROBE" --output "$NEW_EVIDENCE"
+```
+
+It verifies normal retention and forced-exit `capture-incomplete` using real
+TUN records. Its two host-probe batches do not qualify Docker workloads,
+application flows or a complete offline installation.
+
+The Docker variant uses a cached immutable image, no inner daemon and no product
+services. It exercises the actual parent's close method and the Docker host bind:
+
+```sh
+python3 deploy/offline/internal/install/testdata/installed-acceptance/docker_capture_selftest.py \
+  --recorder "$EGRESS_RECORDER" --probe "$NEGATIVE_PROBE" --output "$NEW_EVIDENCE" \
+  --image "$LOCAL_IMAGE_ID" --docker-socket "$DOCKER_SOCKET" \
+  --cpus "$PROBE_CPUS" --memory-bytes "$PROBE_MEMORY_BYTES"
+```
+
+Both probe containers use `network=none`, a private TUN, explicit resource limits
+and owned run labels. Both are removed after checking the retained host records.
+This verifies capture and parent cleanup only; it does not qualify a product
+installation or a history-client request.
