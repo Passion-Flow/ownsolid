@@ -99,6 +99,12 @@ continues to create a queued training job without taking capacity.
 In `reserveDispatchWithin`, call `scheduling.ReserveWithin` after
 `reserveTrainingGPUWithin` succeeds and before `QueueTrainingWithin`.
 Both calls sit within the existing `training_dispatch_reservation` savepoint.
+For SCH-103, use `ReserveQueuedWithin` at this same point instead of the
+standalone reservation shown below. Supply the authorized workspace domain
+and complete eligible owner reader described in the
+[training queue patch contract](scheduling-queue-policy.md#training-owner-patch-contract).
+The basic snippet describes reservation identity and demand; by itself it
+does not enforce queue order.
 Keep the physical GPU lock before the scheduling locks on both acquisition and
 release. The hook derives the identity and intent from the locked owner values.
 
