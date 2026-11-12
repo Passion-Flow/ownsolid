@@ -448,7 +448,7 @@ design only. No public operation or roadmap item is completed by this note.
 ## Durable family domain contract
 
 Reviewed 2026-11-13 for the model-owner implementation. Follow
-[ADR 0073](../decisions/0073-retain-explicit-model-family-membership.md).
+[ADR 0074](../decisions/0074-retain-explicit-model-family-membership.md).
 The MLflow distinction between registry identities and immutable versions above
 is useful; its name-based registration is deliberately not ownsolid's grouping
 rule. Each legacy version gets its own random persisted family UUID, without
@@ -618,7 +618,11 @@ It expected `/help/api` but received `/help/api?q=changePassword`; the runner
 cancelled the sibling Console suite. Web and OpenAPI files were byte-identical
 to that upstream baseline. The trace and failed invocation are retained. Because
 browser tests are prerequisites, this invocation did not reach the Go, Rust or
-Web unit-test recipes. No complete native test or dispatcher acceptance is claimed.
+Web unit-test recipes. A focused replay of that unchanged Portal case passed in 2.4 seconds. A separate
+continuation then passed all previously unreached Go modules, locked offline Rust
+tests and Web unit tests on the same runtime sources (`ba90c3a4`, documentation
+only since `684f07ef`). The original whole `make test` failure is retained; a
+complete browser-suite pass and public dispatcher acceptance are still unclaimed.
 
 To replay, configure the private PostgreSQL DSN and fresh owned schema as described
 by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
