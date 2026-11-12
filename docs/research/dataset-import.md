@@ -560,3 +560,45 @@ legacy JSONL byte for byte. It exercised an existing idempotency key on
 a foreign draft while its dataset was still local, then tried a new key
 against the foreign dataset. Both returned `DATASET_NOT_FOUND` before
 reading the upload body.
+
+## Production lineage integration
+
+The immutable owner handoff is fa82645ca49811521872df90450dad858816b71f.
+Its up script adds one receipt table and a six-column unique parent key,
+without inventing receipts for existing drafts. Preserve those up bytes and
+the existing draft keys. Select the next migration from the actual published
+tail; schema 59 at 4f76102c is the current predecessor. Add the receipt to
+the PostgreSQL application grants without changing the MySQL table list or
+any preceding migration or release-lineage entry.
+
+The fixture down script drops retained receipts. The formal down must first
+select READ COMMITTED, then lock dataset_drafts and the receipt table in
+ACCESS EXCLUSIVE mode. Refuse a nonempty receipt table with a stable restore
+requirement before either DROP. A prior RR or SERIALIZABLE snapshot must fail
+before destructive DDL. PostgreSQL's
+[transaction isolation](https://www.postgresql.org/docs/18/transaction-iso.html)
+and [SET TRANSACTION rule](https://www.postgresql.org/docs/18/sql-set-transaction.html)
+require this ordering: an exclusive table lock does not refresh an old
+snapshot. The already reproduced GW-120 rollback failure and qualified guard
+provide the technical basis. Verify pristine rollback, retained receipts,
+waiting committed writers, and both prior-snapshot isolation levels against
+the actual numbered scripts. Preserve the original draft and receipt after
+every refused downgrade.
+
+Measure fresh, native predecessor upgrade and restored histories through the
+new production migration twice, recording their actual catalog fingerprints.
+Retain original dumps and audit checkpoints byte for byte. Verify same-role
+grant resume, current scoped receipt DML and foreign-key refusal, and denial
+of schema, private-ledger and audit-head writes. Runtime and schema acceptance
+must use the same immutable source input. The PostgreSQL, Go and pgx licenses
+above still apply; no dependency, model or dataset is added.
+
+Schema registration alone does not enable the upload route. The source owner
+still must admit both original and normalized roles into the production dataset
+snapshot and integrity inventory. The existing snapshot omits the original
+and the isolated restore supplies it separately. Keep production constructor
+registration and the public contract/UI flow open until coordinated backup
+and restore verify both files with their scoped receipt. The formal integration
+must also adapt isolated test setup so the actual registered table is exercised
+without applying the fixture DDL a second time; no scope or custody assertion
+may be removed.
