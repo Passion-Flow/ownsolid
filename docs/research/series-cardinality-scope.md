@@ -303,9 +303,10 @@ VALIDATION_FAILED. Preserve a nonempty metric literally without trimming or
 normalization. An omitted limit selects the configured maximum. An explicit
 limit must be canonical positive decimal and fit both the hard limit and the
 configured maximum; empty, zero, negative and leading-zero forms are invalid.
-Internal Go empty-metric/zero-limit defaults remain unchanged: the HTTP adapter
-needs to distinguish omission from explicit input. These are proposed publication
-requirements, not an implemented HTTP parser or a published operation.
+Internal Go empty-metric/zero-limit defaults remain unchanged: the private HTTP
+adapter distinguishes omission from explicit input. The frozen candidate's Mac
+unit qualification is recorded below; public registration and generated wire
+contracts remain open.
 
 The service's metric-name bound is 1,024 UTF-8 bytes. JSON Schema
 [maxLength](https://json-schema.org/draft/2020-12/json-schema-validation.html#section-6.3.1)
@@ -362,3 +363,56 @@ This qualifies that source's Mac pure units only. It does not qualify a later
 HTTP adapter, Linux modules, the native store/PostgreSQL profile, generated
 clients, public dispatch, installed acceptance or the Console flow. OBS-110
 remains unticked.
+
+## Private HTTP unit qualification
+
+The private adapter at d8ad7e790e2d08a267df819ce8547225983fc08d (tree
+7ec015f2f87d362f1c943dcb811699f69f45856a) implements the query-presence,
+canonical-day, UTF-8 byte and rank bounds above. It remains outside Owns and the
+default dispatcher. Shared schema, Problem registry and generated clients were
+not changed.
+
+The initial 2dfbb85e HTTP unit run returned the expected ACCESS_DENIED, status
+zero and nil RawMessage, but its test reused an any variable from the public
+dispatcher. Boxing that typed nil made the test incorrectly report a response.
+The corrected test binds the private method's concrete return type and retains
+the same error, status and nil-response assertions. The first run's exit-one
+proof and raw events remain unchanged at
+/private/tmp/obs110-http-unit-70d_wjmn: http-unit-proof.json SHA-256
+06e36f5b24805ec54cef3d1f0fbf1430d0e03e9d66fd48bdae3a93c0e83154e8 and
+http-unit-tests.jsonl SHA-256
+265cc4333c07a1d7392f7daae2a4913e50f7bb25152598d90469f17bcc44cf16.
+
+On Go 1.27.3 darwin/arm64, the corrected frozen source passed two offline race
+commands, each with -p 2, -count=1, -json and -timeout=120s:
+
+```sh
+go -C services/control test -race -p 2 -count=1 -json -timeout=120s \
+  ./internal/modules/monitoring/http
+go -C services/control test -race -p 2 -count=1 -json -timeout=120s \
+  -run '^TestSeriesCardinalityQueryValidation$' ./internal/modules/monitoring
+```
+
+Both commands exited zero in 9.062 seconds total: seven top-level tests and
+49 passing events including subtests, with no failed or skipped tests. The HTTP
+package included the existing snapshot/history boundary regressions. The other
+command checked the intrinsic service query validation affected by the exported
+Validate method. No unchanged full suite was rerun.
+
+The isolated checkout was clean at the exact commit and tree before and after
+execution. The persistent regular-file workstation flock covered both commands
+and their process groups, which exited before release. The same lock file was
+retained. No VictoriaMetrics, PostgreSQL, browser or installation was started.
+Evidence at /private/tmp/obs110-http-unit-_wbpygdx:
+
+- http-unit-proof.json SHA-256
+  b8511e24c4b2ace105e34d07f004654c8b9e956f310951d362a9e691fd582b3b.
+- http-unit-tests.jsonl SHA-256
+  fc6712d61c151be59d4fa52202c6c10cf421dcc4afc81067692dbdcd088f14f2.
+
+Earlier lock-busy admissions started no compiler or tests and are recorded
+separately from the completed runs. The explicit pinned Linux gofmt check passed
+all three candidate files; the noninteractive SSH default PATH did not expose
+gofmt. These are Mac pure-unit and formatting results only. Linux service/native
+PostgreSQL-store qualification, public registration, complete generated wire
+contracts, installed acceptance, Console and hard ingest enforcement remain open.
