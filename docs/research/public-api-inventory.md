@@ -649,91 +649,72 @@ Chinese translations in the existing Help description catalog.
 
 ## OBS-109 fleet history publication boundary
 
-The [bounded history design](telemetry-retention-tiers.md) defines a
-single authorized Admin read using workspace_id, from and to. The
-timestamps are canonical UTC seconds, with from strictly before to.
-The raw query has a 512-byte bound. The service chooses the tier and
-evaluation grid. Successful values contain tier, step_seconds, evaluated
-from/to and sparse cells with site_id, cell_id and ordered at, observed,
-reachable points. Missing points stay absent and measured zero reachable
-counts stay present. Each cell has at most 1440 points. The service uses
-unsigned 64-bit counts. Preserve that type in the generated Go client.
-The [OpenAPI schema and parameter rules](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+The [bounded history design](telemetry-retention-tiers.md) defines the
+Admin operation adminFleetHistory at
+`/api/v1/sites/{site_id}/cells/{cell_id}/admin/monitoring/fleet-history`.
+It accepts workspace_id, from and to. Workspace identifiers are canonical
+nonzero UUIDs. Timestamps are UTC seconds ending in Z, with from strictly
+before to. The encoded query has a 512-byte bound. Session, tenant,
+workspace and cell authority come from the original dispatcher and the
+service's current authorization checks.
+
+The service selects the raw or rollup store and evaluation grid. The
+response contains tier, step_seconds, evaluated from/to and sparse cells
+with site_id, cell_id and ordered at, observed and reachable points.
+Missing observations stay absent and measured zero reachable counts stay
+present. Empty cells are a successful result. A range with no valid
+evaluation point returns a range error and can require adjusting its
+duration. Each cell has at most 1440 points. The response uses unsigned
+64-bit counts and preserves that type in the Go client. The complete
+data envelope and trailing newline fit within 1 MiB before the authority
+recheck and successful audit.
+
+The [OpenAPI schema rules](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
 and [generator type extensions](https://github.com/oapi-codegen/oapi-codegen/blob/v2.8.2/README.md)
-apply. The [SDK licences](sdk.md#licenses) cover the existing generators
-and clients. No dependency, model or data set is added.
+define the existing projection approach. The
+[SDK licences](sdk.md#licenses) cover the pinned generators and clients.
+No dependency, model or data set is added. A separate discovery endpoint
+would duplicate authorization and lookup. The existing monitoring
+operation family owns this read.
 
-The candidate path is the existing scoped Admin monitoring path plus
-/fleet-history. Reuse the normal data response envelope and Problem media
-type. Budget the complete encoded data envelope and trailing newline
-within 1 MiB before the authority recheck and successful audit.
-Register the exact history range error at 400, projection limit at 422
-and four distinct missing/unavailable tier errors at 503. Unknown native
-error text must retain the safe STORAGE_UNAVAILABLE fallback.
+Keep strict request timestamps as patterned strings in SDK inputs.
+Python's [datetime.isoformat](https://docs.python.org/3.12/library/datetime.html#datetime.datetime.isoformat)
+uses a numeric UTC offset, so a date-time query type can produce +00:00,
+which the handler refuses. String inputs preserve the canonical value.
+Response timestamps retain the date-time format. Both generated request
+builders preserved the three query values and both models retained the
+maximum unsigned count and measured zero in the offline projection check.
 
-Release requires the monitoring owner's exact Owns and Handle dispatch,
-the shared public Problem registry, and both localized error catalogs.
-Keep installed tier configuration and trust with DEL and shared startup
-composition with ARC. A source-only contract candidate does not make
-the route usable. Verify the actual cookie/cell dispatcher with
-PostgreSQL and the native two stores, including mid-query revocation,
-an over-budget response without success audit, a failed long tier
-without a raw fallback, and certificate replacement. Then regenerate
-Web, Help and both SDKs and confirm Portal excludes the Admin read.
+The public Problem registry maps range refusal to 400, response size
+refusal to 422 and the four missing or unavailable history/store states
+to 503. The reader chooses its tier before I/O and preserves a failed
+long-tier read's refusal. Unknown native text is sanitized by the existing
+Problem writer. The [reviewed recovery copy](in-product-help.md#monitoring-and-native-transaction-recovery-copy-obs-109)
+explains all 28 declared codes in both languages.
 
-Publish the reusable response components and the six public Problem
-mappings first. Keep the candidate path out of the public Paths Object
-until the monitoring owner mounts it through the normal dispatcher.
-This lets the real TLS fixture validate FleetHistoryResponse while
-the dispatcher work remains with its owner. Publishing the operation
-also exposes five existing monitoring failures and six history failures
-in Help. Both English and Simplified Chinese title/detail entries for
-all eleven codes are required before that operation ships.
+### Native transaction refusals
 
-The private operation candidate uses adminFleetHistory at the scoped
-monitoring path plus /fleet-history. Keep strict request timestamps as
-patterned strings in SDK inputs. Python's
-[datetime.isoformat](https://docs.python.org/3.12/library/datetime.html#datetime.datetime.isoformat)
-uses a numeric UTC offset. A date-time query schema lets generated clients
-send +00:00, which the actual handler refuses. String inputs preserve the
-canonical seconds-and-Z value without changing server admission. Response
-timestamps retain the date-time format.
+Both monitoring reads preserve STORAGE_TIMEOUT, STORAGE_CANCELLED,
+STORAGE_COMMIT_ROLLED_BACK, STORAGE_DEADLOCK and STORAGE_LOCK_TIMEOUT.
+The public registry maps these existing classifications to HTTP 503.
+The earlier Monitoring Problem enum omitted all five and the generated
+Python model rejected their responses with ValueError. Preserve the
+service's transaction contract and declare the five codes in the shared
+schema and history operation. The public SDK projection regression
+protects their presence.
 
-Both pinned generators produced the candidate Monitoring client in a
-network namespace without an external route. The generated Go request
-builder and Python request builder preserved all three query values.
-Both generated models retained the maximum unsigned 64-bit observation
-and measured zero reachable count. These are client projection checks.
-The monitoring owner's separate normal cookie/TLS dispatcher acceptance
-and the eleven bilingual error entries remain publication prerequisites.
-The existing Help suite reports exactly its two missing-error-description
-failures, with the remaining seventeen tests passing for this candidate.
+Pinned offline generation produced all 28 public domain clients in each
+language and all generated Go packages compiled. The standalone Go/Python
+wire checks passed. Controlled HTTPX responses exercised all five codes
+through the published monitoring read and the generated history read.
+These client checks have their own scope. The PostgreSQL and native-store
+acceptance exercises the normal cookie, CSRF, TLS and cell dispatcher,
+current authorization during I/O, request-bound success audits, the
+complete response limit, retry and private-store certificate replacement.
 
-### Existing monitoring transaction refusals
-
-Both monitoring reads preserve the existing transaction classifications.
-The public registry maps STORAGE_TIMEOUT, STORAGE_CANCELLED,
-STORAGE_COMMIT_ROLLED_BACK, STORAGE_DEADLOCK and STORAGE_LOCK_TIMEOUT
-to HTTP 503. All five were absent from the shared Monitoring Problem
-enum and the generated Python model rejected each response with
-ValueError. Keep those native classifications and add them to the
-published schema. Changing the service to collapse them would discard
-commit certainty and alter the existing transaction contract.
-
-The existing SDK licences apply. No dependency is added. Require the
-public SDK projection to retain all five codes, regenerate the clients,
-and parse controlled 503 responses through the already published
-monitoring read. This acceptance covers the generated wire model.
-Real PostgreSQL faults and the history module entry have their separate
-owning tests and acceptance.
-
-The Linux amd64 disconnected check, build and Help/i18n tests passed.
-Pinned generation produced all 28 public domain clients in each language
-and all generated Go packages compiled. The standalone Go/Python wire
-checks passed. The published monitoring client decoded all five native
-503 replies through a controlled HTTPX transport. The SDK projection
-regression protects the shared Problem enum.
-
-The history operation declares the same five 503 codes. The controlled
-HTTPX wire smoke also exercises its generated request and Problem parser.
-Three of the five codes need additional existing-catalog translations.
+The reusable response components and six history Problem mappings were
+staged before the operation. Publication combines the monitoring owner's
+exact Owns/Handle dispatch with the operation and reviewed locale files.
+The existing protected monitoring policy supplies store origins and
+retention settings. Installed retention delivery, trust distribution and
+the Console history view remain with their owning modules.
