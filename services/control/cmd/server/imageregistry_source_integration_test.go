@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/pem"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	deploymenthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments/http"
@@ -94,7 +96,9 @@ func TestRegistrySiteSourceStartupAdmission(t *testing.T) {
 		return config.Config{ImageRegistry: &registry, ImageRegistrySiteSourceFile: write(name+".json", raw)}
 	}
 	c := selectSource("site", sourceSettings())
-	if s, err := openImageRegistry(t.Context(), c, store, h); s != nil || err == nil || err.Error() != "INSTALLATION_REQUIRED" {
+	startup, cancelStartup := context.WithTimeout(t.Context(), time.Duration(c.Policy().HTTP.StartupSeconds)*time.Second)
+	defer cancelStartup()
+	if s, err := openImageRegistry(startup, c, store, h); s != nil || err == nil || err.Error() != "INSTALLATION_REQUIRED" {
 		t.Fatal("site constructor bypassed installation admission", err)
 	}
 	fixture.Bootstrap(t, owner)
@@ -138,7 +142,7 @@ func TestRegistrySiteSourceStartupAdmission(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			selected := c
 			selected.ImageRegistrySiteSourceFile = tc.file
-			s, err := openImageRegistry(t.Context(), selected, store, h)
+			s, err := openImageRegistry(startup, selected, store, h)
 			if s != nil || err == nil || err.Error() != tc.code || d.RegistryActions != nil {
 				t.Fatalf("source refusal bound an owner or selected fallback: %v", err)
 			}
@@ -148,7 +152,7 @@ func TestRegistrySiteSourceStartupAdmission(t *testing.T) {
 		t.Run("construct_"+filepath.Base(sourceFile), func(t *testing.T) {
 			selected := c
 			selected.ImageRegistrySiteSourceFile = sourceFile
-			s, err := openImageRegistry(t.Context(), selected, store, h)
+			s, err := openImageRegistry(startup, selected, store, h)
 			if err != nil || s == nil || d.RegistryActions != s {
 				t.Fatal("registry startup did not bind the selected owner", err)
 			}
@@ -161,11 +165,11 @@ func TestRegistrySiteSourceStartupAdmission(t *testing.T) {
 		t.Fatal("startup performed a registry request")
 	}
 	disabled := config.Config{}
-	if s, err := openImageRegistry(t.Context(), disabled, store, h); s != nil || err != nil {
+	if s, err := openImageRegistry(startup, disabled, store, h); s != nil || err != nil {
 		t.Fatal("omitted registry did not retain empty-state admission", err)
 	}
 	disabled.ImageRegistrySiteSourceFile = c.ImageRegistrySiteSourceFile
-	if s, err := openImageRegistry(t.Context(), disabled, store, h); s != nil || err == nil || err.Error() != "CONFIG_IMAGE_REGISTRY_INVALID" {
+	if s, err := openImageRegistry(startup, disabled, store, h); s != nil || err == nil || err.Error() != "CONFIG_IMAGE_REGISTRY_INVALID" {
 		t.Fatal("source enabled while registry was disabled", err)
 	}
 }

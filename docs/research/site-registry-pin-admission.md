@@ -196,6 +196,10 @@ unknown scope fields and identical source/destination authority. Refusals must
 leave deployment Registry hooks unbound. Successful construction must use the
 existing Close chain. Cross-tenant pin reads, byte-source egress and signed
 import acceptance remain covered through the Registry owner's real protocols.
+Use the configured startup deadline for constructor calls, as the real startup
+root does. The disabled-owner check enters a repository transaction and must
+retain its deadline requirement; an unbounded test context is not a valid
+startup fixture.
 
 The shared-root regression sources are
 `TestImageRegistrySiteSourceSelection`,
