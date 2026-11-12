@@ -114,6 +114,13 @@ client. For downloads, read `iter_bytes()` after checking the status and
 media type. In Go, use the generated method without the `WithResponse`
 suffix to read or close the HTTP response body directly.
 
+The Help projection tests also need the locked Web parser dependencies. In a
+new worktree, prepare them from the local pnpm store first:
+
+```sh
+(cd web && pnpm install --offline --frozen-lockfile --ignore-scripts)
+```
+
 Run the projection checks with
 `python3 -m unittest discover -s tools/codegen/sdk/tests`. With the SDK runtime
 environment installed, run
