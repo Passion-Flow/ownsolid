@@ -15,6 +15,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
@@ -31,7 +32,20 @@ var aliasDescriptionCandidateUp string
 var aliasDescriptionCandidateDown string
 
 func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+	c := setupAccount(t, fixture.NewAtVersion(t, 58))
+	exerciseAliasDescriptionHTTPS(t, c, false)
+}
+
+func TestAliasDescriptionInstalledSchemaAndHTTPS(t *testing.T) {
+	if database.SchemaVersion == 58 {
+		t.Skip("requires the production description migration after schema 58")
+	}
 	c := setup(t)
+	exerciseAliasDescriptionHTTPS(t, c, true)
+}
+
+func exerciseAliasDescriptionHTTPS(t *testing.T, c scenario, installed bool) {
+	t.Helper()
 	ctx := t.Context()
 	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
@@ -61,11 +75,15 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	legacyID := legacy["id"].(string)
 	portal.Call("GET", portalPath+"/"+legacyID, nil, 200, "ModelAliasResponse")
 	portal.Call("GET", portalPath, nil, 200, "ModelAliasPageResponse")
-	if _, exists := legacy["description"]; exists {
-		t.Fatal("predecessor response gained a field")
-	}
-	if _, exists := legacy["description_revision"]; exists {
-		t.Fatal("predecessor response gained a description revision")
+	if !installed {
+		if _, exists := legacy["description"]; exists {
+			t.Fatal("predecessor response gained a field")
+		}
+		if _, exists := legacy["description_revision"]; exists {
+			t.Fatal("predecessor response gained a description revision")
+		}
+	} else if legacy["description"] != "" || legacy["description_revision"] != float64(1) {
+		t.Fatal("normal migrated publication did not include description defaults")
 	}
 	problem := func(client *httpfixture.Client, path string, body any, status int, code string) {
 		t.Helper()
@@ -77,34 +95,37 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 	edit := distribution.AliasDescriptionEdit{Description: "Initial edit", ExpectedDescriptionRevision: 1, Reason: "Synthetic catalogue edit"}
 	admin.Headers["Idempotency-Key"] = uuid.NewString()
 	predecessorEditPath := adminPath + "/" + legacyID + "/description"
-	problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
-	anonymous := httpfixture.New(t, server, "admin", schemas)
-	if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
-		t.Fatal("unauthenticated edit did not return the standard problem")
-	}
-	problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
-	predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
-	predecessorResponse, err := server.Client().Do(predecessorRequest)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var predecessorProblem map[string]any
-	decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
-	predecessorResponse.Body.Close()
-	if decodeError != nil || predecessorResponse.StatusCode != 503 ||
-		predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
-		predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
-		predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
-		predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
-		t.Fatal("invalid predecessor response or retry metadata", decodeError)
-	}
-	publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
-	admin.Headers["Idempotency-Key"] = describedKey
-	problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
+	if !installed {
+		problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
+		anonymous := httpfixture.New(t, server, "admin", schemas)
+		if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
+			t.Fatal("unauthenticated edit did not return the standard problem")
+		}
+		problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
+		predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
+		predecessorResponse, err := server.Client().Do(predecessorRequest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var predecessorProblem map[string]any
+		decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
+		predecessorResponse.Body.Close()
+		if decodeError != nil || predecessorResponse.StatusCode != 503 ||
+			predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
+			predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
+			predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
+			predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
+			t.Fatal("invalid predecessor response or retry metadata", decodeError)
+		}
+		publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
+		admin.Headers["Idempotency-Key"] = describedKey
+		problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
 
-	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
-		t.Fatal(err)
+		if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
+			t.Fatal(err)
+		}
 	}
+
 	assertDescription := func(value map[string]any, description string, revision int) {
 		t.Helper()
 		if value["description"] != description || value["description_revision"] != float64(revision) {
@@ -352,10 +373,13 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
 		t.Fatal("edit intents and audit events disagree", intents, audits, err)
 	}
 
-	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateDown); err != nil {
-		t.Fatal(err)
+	assertAliasDescriptionRollbackRefused(t, c)
+	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse"), "", 4)
+	admin.Headers["Idempotency-Key"] = rollbackKey
+	if replay := admin.Write("POST", editPath, clear, 200, "AliasDescriptionResultResponse"); replay["replayed"] != true || replay["applied_description_revision"] != float64(4) {
+		t.Fatal("refused downgrade lost the retained edit replay")
 	}
-	member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse")
+	assertRoute(3, 3)
 }
 
 func verifyAliasDescriptionScope(t *testing.T, c scenario, aliasID string) {
