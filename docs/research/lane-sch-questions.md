@@ -24,10 +24,13 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   [training and database handoff](scheduling-training-reservations.md) names the
   existing owner transactions and records fresh and restored catalog evidence.
 - SCH-103 ranks eligible workspace queues for one tenant using the existing
-  policy and active reservations. The dispatch owner still supplies authorized
-  membership, priority and durable enqueue order, opens a fresh snapshot after
-  dispatch and rechecks admission in the write transaction. Training
-  currently selects one due job by `next_dispatch_at,created_at,id`; its
+  policy and active reservations. `ReserveQueuedWithin` reads the owner's
+  durable eligible queue after taking the domain locks and reserves its
+  current head in the same owner write transaction. The dispatch owner
+  still supplies authorized membership, priority and durable enqueue order,
+  the initial fair candidate selector and the actual dispatch call. See
+  the [exact training patch contract](scheduling-queue-policy.md#training-owner-patch-contract).
+  Training currently selects one due job by `next_dispatch_at,created_at,id`; its
   display list supplies neither the eligible batch nor resolved priority
   classes. The existing persisted reservation read now refuses foreign
   cell coordinates within the selected workspaces. See the

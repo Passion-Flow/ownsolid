@@ -365,3 +365,56 @@ func TestPostgresQueuedReservationRefusesReaderFailureAndOutOfDomainEntries(t *t
 	}
 	f.assertState(t, f.first, "preparing", 2, 1)
 }
+
+func TestPostgresQueuedReservationReleaseSharesOwnerCancellationCommit(t *testing.T) {
+	f := newQueuedFixture(t)
+	if changed, err := f.admit(t.Context(), f.first, f.read, nil); err != nil || !changed {
+		t.Fatalf("initial admission: %v, %v", changed, err)
+	}
+	if _, err := f.pool.Exec(t.Context(), "UPDATE owner_fixture_queue SET state='cancelling',revision=revision+1 WHERE job_id=$1", f.first.SourceID); err != nil {
+		t.Fatal(err)
+	}
+	f.assertState(t, f.first, "cancelling", 3, 1)
+
+	// The real owner must validate positive stop evidence before this point.
+	// This fixture qualifies only the atomic owner transition and release.
+	stop := func(after error) (bool, error) {
+		var released bool
+		err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
+			var err error
+			released, err = ReleaseWithin(ctx, q, f.first)
+			if err != nil || !released {
+				return err
+			}
+			count, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `
+UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1
+ WHERE tenant_id=$1 AND workspace_id=$2 AND job_id=$3 AND state='cancelling'
+ AND site_id=local_site_id() AND cell_id=local_cell_id()`, f.first.TenantID, f.first.WorkspaceID, f.first.SourceID))
+			if err != nil {
+				return err
+			}
+			if count != 1 {
+				return ErrInvalidQueue
+			}
+			return after
+		})
+		return released && err == nil, err
+	}
+	failedAudit := errors.New("owner stop audit failed")
+	if changed, err := stop(failedAudit); changed || !errors.Is(err, failedAudit) {
+		t.Fatalf("failed owner stop: %v, %v", changed, err)
+	}
+	f.assertState(t, f.first, "cancelling", 3, 1)
+	if changed, err := stop(nil); err != nil || !changed {
+		t.Fatalf("confirmed owner stop: %v, %v", changed, err)
+	}
+	f.assertState(t, f.first, "cancelled", 4, 0)
+	if changed, err := stop(nil); err != nil || changed {
+		t.Fatalf("owner stop replay: %v, %v", changed, err)
+	}
+	f.assertState(t, f.first, "cancelled", 4, 0)
+	if changed, err := f.admit(t.Context(), f.first, f.read, nil); changed || !errors.Is(err, ErrReservationReleased) {
+		t.Fatalf("cancelled attempt readmitted: %v, %v", changed, err)
+	}
+	f.assertState(t, f.first, "cancelled", 4, 0)
+}

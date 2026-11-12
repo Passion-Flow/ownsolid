@@ -165,8 +165,10 @@ holds in one borrowed transaction. Verify a fair head, a non-head with no
 write, same-attempt replay after dequeue, owner failure rollback,
 concurrent consumers, a reader invoked only after preceding dequeue
 commits, a real committed dequeue with its wire acknowledgement suppressed,
-cancellation before admission and positive release after
-admission. Foreign tenant/workspace or reservation scope must leave
+cancellation before admission, retained holds while cancelling and positive
+release with the owner transition in one commit. A late owner failure must
+roll back both that release and the terminal state. Foreign tenant/workspace
+or reservation scope must leave
 queue state, owner revisions, policy revision and holds unchanged.
 These fixtures establish transaction behavior. The actual training
 reader and dispatcher call sites remain owner integrations.
@@ -202,16 +204,37 @@ func (s *Service) schedulingWorkspacesWithin(
 func (s *Service) schedulingEntriesWithin(
     ctx context.Context, q transaction.Executor, tenant string,
 ) ([]scheduling.QueueEntry, error)
+
+func (s *Service) nextFairCandidateWithin(
+    ctx context.Context, tx pgx.Tx, tenant string,
+) (candidate, error)
 ```
 
-In `training/authority.go`, retain the existing due-job selection and
-`DispatchNext` file verification until the owner supplies an initial
-fair selection read. The final admission still rechecks current rank.
-Both new owner readers must use the installation tenant, local site/cell,
+In `training/authority.go`, replace the initial `nextCandidate` FIFO
+selection with `nextFairCandidateWithin` before claiming fair dispatch.
+Open a fresh read-only REPEATABLE READ transaction on the selected
+PostgreSQL owner pool. Read the complete eligible batch with
+`schedulingEntriesWithin` through its borrowed executor, call
+`RankWorkspaceQueueWithin` with that same transaction, then resolve the
+first ranked job to the existing `candidate` fields through the same
+snapshot. No ranked entry means the existing no-candidate outcome. Do
+not use a different legacy pool or silently bypass scheduling on another
+engine.
+
+Keep `DispatchNext`'s metadata freeze and file verification. Its final
+admission still rechecks current rank in a fresh READ COMMITTED write
+transaction. An initial FIFO selector plus final non-head refusal would
+cycle through old jobs before reaching the fair head; the refusal gate
+alone does not implement the owner's fair candidate selection.
+
+Both owner readers must use the installation tenant, local site/cell,
 active Workspace and current persisted requester authority. The workspace
 reader supplies the complete dispatch domain. The entry reader runs
 through the executor passed by scheduling and selects only due queued
-rows. It must preserve the existing durable
+rows across the complete tenant dispatch domain. Do not filter this reader
+by the previously supplied workspace list: if an eligible workspace appeared
+since that list was read, returning it lets scheduling reject the stale
+domain and the owner retry. It must preserve the existing durable
 `next_dispatch_at,created_at,id` order in its unique positive sequences.
 A complete ordered batch can assign ordinals from those keys. A truncated
 page cannot. Preserve current default priority zero until the owner
@@ -241,6 +264,26 @@ replay returns false and must trigger an owner state reread, never a
 second task insertion. A confirmed admission stores the task, attempt,
 job transition and audit with the scheduling hold in that one commit.
 Unknown commits publish no success; retry through current owner state.
+
+The scheduling call uses this closure shape inside the existing
+savepoint, with `attempt` and `intent` derived from the locked values:
+
+```go
+domain, err := s.schedulingWorkspacesWithin(ctx, q, w.TenantID)
+if err != nil {
+    return false, err
+}
+changed, err := scheduling.ReserveQueuedWithin(
+    ctx, q, attempt, intent, domain,
+    func(ctx context.Context, owner transaction.Executor) ([]scheduling.QueueEntry, error) {
+        return s.schedulingEntriesWithin(ctx, owner, w.TenantID)
+    },
+)
+```
+
+This snippet shows the call boundary only. The owner must handle the
+changed/error result and perform the state, task, attempt and audit
+writes described above.
 
 Keep `Cancel`'s queued-to-cancelled transition free of a hold. A
 preparing/running cancellation remains cancelling until positive physical
