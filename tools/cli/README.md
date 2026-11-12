@@ -140,6 +140,32 @@ disabled accounts. JSON and YAML preserve all membership fields and the nullable
 continuation. This command reads membership state without changing roles or
 selecting a different workspace.
 
+## Discover accounts
+
+```sh
+ownsolid user list --query research --status active --limit 20 --output json
+ownsolid user list --query research --status active --cursor "$NEXT_CURSOR" --output json
+ownsolid user list --email-prefix team+ --output yaml
+ownsolid user get "$USER_ID" --output yaml
+```
+
+These commands read the installation account directory through the Admin
+entrance. The server requires current platform-administrator permission; this is
+a different resource from a workspace's membership list. Site, cell and workspace
+configuration do not add scope or a context lookup to these requests.
+
+Each list call reads one page. Keep the same email prefix, query and status
+when using its continuation. Omit `--limit` for the server policy, or choose 1
+to 100. Email prefixes use 1 to 254 printable ASCII characters; `--query`
+uses 1 to 254 UTF-8 characters with no controls. Both are case-insensitive
+literal text on the server. Spaces, percent and underscore remain literal.
+
+Detail selects an exact UUID. Tables show the account identity, name, state and
+administrator flag. JSON and YAML retain the public account fields, including
+nullable verification time and numeric version. A failed read exits nonzero;
+retry a temporary storage failure explicitly and restart an invalid cursor
+without `--cursor`.
+
 ## Inspect gateway request history
 
 ```sh
