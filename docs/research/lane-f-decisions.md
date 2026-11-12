@@ -123,7 +123,7 @@ points and verification commands are in the
 **Decision.** With schema 60 registered, extend the ordinary dataset file
 inventory to include the retained CSV/Parquet original beside normalized JSONL.
 Use manifest version 2 for those pairs and preserve legacy version-1 exports
-and the existing store namespace. See [ADR 0071](../decisions/0071-version-dataset-snapshots-with-original-sources.md).
+and the existing store namespace. See [ADR 0073](../decisions/0073-version-dataset-snapshots-with-original-sources.md).
 
 **Why.** A separate supplemental original cannot satisfy ordinary backup or
 startup integrity. Paths, counts and hashes must come from the same receipt
