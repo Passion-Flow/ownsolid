@@ -186,11 +186,16 @@ Refused preflights started no test or build. Passed phases were retained;
 only pending phases were requested after actual holder/resource changes.
 The maintained replay includes all nine groups and passes Bash syntax.
 
-An additional run of the existing 20 training Python unit tests in the
-retained complete 37-package CPU environment remains pending. The final
-Go-module phase passed, then the original I/O preflight (full avg10 33.49,
-avg60 30.37 percent) refused before any unit container was created. This is
-not a Python pass or a failure of the unchanged Python implementation.
+The existing 20 training Python unit tests passed with no skips at `e24d9abd`
+in the retained complete 37-package CPU environment: Python 3.12.15, exact
+Torch 2.14.1+cpu and the original approved Qwen tokenizer assets. The
+network-none, read-only-root container exited 0 with OOMKilled=false and was
+removed. The raw `post-sso-trn-e24d9abd.log` SHA-256 is `e1ddec2fffbe925ce74fd0d1c4849daf9ebec4c6600bc845c813f47c56d71e64`.
+Python, data-worker and training-contract bytes remain unchanged from the
+original `096c50b8` computation source. Main's new SSO implementation changed
+Go inputs; the following PostgreSQL preflight refused before startup at
+I/O full avg10 15.89 and avg60 15.82 percent. Fresh Go acceptance after that
+rebase remains separate from the completed `145852e7` Go qualification.
 The actual installation, five worker invocations and step-one recovery
 retain their independent source/input scope. Installed Agent/control/UI,
 signed media and NVIDIA qualification, and the fair-queue prerequisites
