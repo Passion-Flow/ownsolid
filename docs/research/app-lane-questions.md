@@ -297,6 +297,15 @@ Queue persistence explicitly behind the current ARC work; no migration
 number or schema activation is assumed. Neither this reservation nor a model result replaces
 the signed plan and human confirmation required for a write.
 
+Native Linux amd64 acceptance now covers the thirteen budget, nineteen run
+and six scoped-command subcases, both HTTPS roots together twice, and real
+audit export with the standalone verifier. The fixtures use schema 58 and
+network mode `none`. The [acceptance note](product-assistant-loop-guard.md#isolated-acceptance)
+preserves the initial schema-construction refusal and Docker cleanup event
+separately. Neither native qualification of these components nor the complete
+repository gate activates the candidate schema or route. The three retained
+assistant model safety cases remain unqualified.
+
 ## Shared browser gate boundary
 
 Use Python 3.12, an owned APFS test volume with a short canonical temporary

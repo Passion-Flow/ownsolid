@@ -74,3 +74,12 @@ APP-109 open for those integrations.
 TLS in a network-isolated Linux container with PostgreSQL 18.6 and pgvector
 0.8.7. It verified a signed search continuation against the existing legacy
 cursor and checked that search responses contain only conversation metadata.
+
+The same registered TLS flow passed natively on Linux amd64 with the full
+schema-58 PostgreSQL 18.6/pgvector 0.8.7 catalog and network mode `none`.
+Its binary was built offline with preloaded Go 1.27.3 and existing pinned
+dependencies; no model was needed. The owned protocol container was confirmed
+removed. An initial harness invocation could not start because its package
+working directory was missing. Creating that owned directory corrected the
+harness; no application code changed. The failed invocation and accepted run
+are retained separately. Portal integration, rename and export remain open.

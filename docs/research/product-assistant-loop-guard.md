@@ -205,10 +205,21 @@ The candidate passed the complete `make check`, `make build` and `make test`
 gate on macOS. Browser suites ran sequentially with two workers and no
 automatic retries: Console 1,075 passed/28 live-environment skips; Portal
 389 passed/9 live-environment skips. Assistant and audit race tests and vet,
-and the five qualifier unit tests, passed. Linux amd64 binaries have been
-cross-compiled but native execution is not yet recorded; test-server transfer
-is still pending. Neither that compilation nor the separate two-case model
-transport qualifies the three retained assistant safety cases.
+and the five qualifier unit tests, passed. The fixture-only follow-up passed
+the complete repository gate again after rebasing onto the SDK audit changes.
+Both browser suites retained the same counts without retries. The separate
+two-case model transport does not qualify the three retained assistant safety
+cases; their qualification status remains unchanged.
+
+Native Linux amd64 PostgreSQL 18.6/pgvector 0.8.7 passed all thirteen budget,
+nineteen run and six scoped-command subcases with network mode `none`.
+The two HTTPS roots subsequently passed together twice in separate fresh
+disconnected fixtures. Both entrances verified the returned five-second
+business statement deadline. The real audit export and its standalone
+verifier also passed natively. Core tests used the original runtime candidate;
+HTTPS and audit used the fixture-only follow-up. Runtime code is identical.
+Compilation used pinned, preloaded Go 1.27.3 with no network and a read-only
+dependency cache. Every recorded protocol container was confirmed removed.
 
 The first native amd64 sequential HTTPS run passed the original root and
 failed during the guarded root's full-schema construction with
@@ -224,3 +235,8 @@ pool's five-second statement deadline. Both HTTP roots assert that actual
 returned deadline. No production policy, database pool or command timeout
 is increased. Retain PostgreSQL server output in native acceptance so a
 future construction failure can be diagnosed.
+
+The native audit fixture's stop command returned a Docker lost-exit-event
+error after the test passed. A later exact inspection found no such container.
+Retain that cleanup failure separately from the successful test and confirmed
+removal; no shared daemon or another lane's workload was restarted.
