@@ -21,6 +21,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
@@ -114,6 +115,18 @@ func familyDenied(t *testing.T, x modelReadFixture, a identity.Auth, workspace, 
 }
 
 func TestActualModelFamilyCandidateBackfillAndLifecycle(t *testing.T) {
+	t.Run("empty_candidate_rollback", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
+		defer cancel()
+		x := modelReadFixture{f: repositoryfixture.New(t), ctx: ctx}
+		familyInstall(t, x)
+		if err := x.f.Store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
+			_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateDown))
+			return err
+		}); err != nil {
+			t.Fatal("empty candidate downgrade", err)
+		}
+	})
 	x := modelReadSetup(t)
 	old := uuid.NewString()
 	if err := familyInsert(x.ctx, x.f.Store, x, old, "deleted", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
@@ -153,20 +166,20 @@ func TestActualModelFamilyCandidateBackfillAndLifecycle(t *testing.T) {
 	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
 		_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateDown))
 		return err
-	}); err != nil {
-		t.Fatal("candidate rollback DDL", err)
+	}); err == nil {
+		t.Fatal("adopted family identities were removable")
 	}
 	var retained string
 	if err := x.f.Store.QueryRow(x.ctx, transaction.SQL(transaction.PostgreSQL, `SELECT model_id::text FROM deployments WHERE id=$1`, dep)).Scan(&retained); err != nil || retained != x.model {
 		t.Fatal("deployment reference changed", err)
 	}
 	if value, err := x.s.Get(x.ctx, x.admin, x.f.Workspace, newID); err != nil || value.ID != newID {
-		t.Fatal("legacy read after DDL removal", err)
+		t.Fatal("legacy read alongside retained family identities", err)
 	}
 }
 
 func TestActualModelFamilyHistoryPagesAndAuthority(t *testing.T) {
-	for _, name := range []string{"pages_filters_and_exact_ids", "invalid_inputs", "revoked_session", "disabled_user", "demoted_admin", "disabled_workspace", "foreign_scope", "unknown_outcome", "damaged_page"} {
+	for _, name := range []string{"pages_filters_and_exact_ids", "invalid_inputs", "revoked_session", "disabled_user", "demoted_admin", "changed_epoch", "disabled_workspace", "foreign_scope", "unknown_outcome", "damaged_page"} {
 		t.Run(name, func(t *testing.T) {
 			x := familySetup(t)
 			ids := []string{uuid.NewString(), uuid.NewString(), uuid.NewString()}
@@ -264,6 +277,9 @@ func TestActualModelFamilyHistoryPagesAndAuthority(t *testing.T) {
 			case "demoted_admin":
 				x.exec(t, `UPDATE users SET is_platform_admin=false WHERE id=$1`, "", x.f.User)
 				familyDenied(t, x, x.admin, x.f.Workspace, x.model, query, "AUTH_SESSION_EXPIRED")
+			case "changed_epoch":
+				x.exec(t, `UPDATE users SET auth_epoch=auth_epoch+1 WHERE id=$1`, "", x.f.User)
+				familyDenied(t, x, x.admin, x.f.Workspace, x.model, query, "AUTH_SESSION_EXPIRED")
 			case "disabled_workspace":
 				x.exec(t, `UPDATE workspaces SET status='disabled' WHERE id=$1`, "", x.f.Workspace)
 				familyDenied(t, x, x.admin, x.f.Workspace, x.model, query, "ACCESS_DENIED")
@@ -298,7 +314,7 @@ func TestActualModelFamilyHistoryPagesAndAuthority(t *testing.T) {
 }
 
 func TestActualModelFamilySelectionTransactions(t *testing.T) {
-	for _, name := range []string{"rollback", "orphan", "audit_rollback", "immutable", "matching_concurrency", "conflicting_concurrency"} {
+	for _, name := range []string{"rollback", "default_rollback", "orphan", "audit_rollback", "immutable", "matching_concurrency", "conflicting_concurrency"} {
 		t.Run(name, func(t *testing.T) {
 			x := familySetup(t)
 			id := uuid.NewString()
@@ -309,6 +325,17 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
 				family, err := familyPublish(x, id, x.model, fault)
 				if !errors.Is(err, fault) || family != "" || familyCount(t, x, "model_family_members") != 1 || x.audits(t) != before {
 					t.Fatal("publication rollback", err)
+				}
+			case "default_rollback":
+				fault := errors.New("synthetic default publication rollback")
+				err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+					if err := familyInsert(ctx, q, x, id, "deleted", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
+						return err
+					}
+					return fault
+				})
+				if !errors.Is(err, fault) || familyCount(t, x, "model_families") != 1 || familyCount(t, x, "model_family_members") != 1 {
+					t.Fatal("default publication rollback", err)
 				}
 			case "orphan":
 				err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {

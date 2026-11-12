@@ -1,4 +1,9 @@
--- Remove only unregistered family metadata; immutable versions and references stay intact.
+-- Only an empty candidate can be removed without losing established identities.
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM model_families) THEN
+  RAISE EXCEPTION 'MODEL_FAMILY_DOWNGRADE_REQUIRES_RETENTION' USING ERRCODE='0A000';
+ END IF;
+END $$;
 DROP TRIGGER model_family_version_insert ON model_versions;
 DROP FUNCTION model_family_before_version();
 DROP INDEX model_version_history_order_idx;

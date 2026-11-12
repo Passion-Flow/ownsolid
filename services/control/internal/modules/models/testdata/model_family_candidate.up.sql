@@ -7,7 +7,7 @@ CREATE TABLE model_families (
  CHECK (id<>initial_version_id),
  UNIQUE (tenant_id,workspace_id,id),
  FOREIGN KEY (tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id),
- FOREIGN KEY (tenant_id,workspace_id,initial_version_id)
+ CONSTRAINT model_family_initial_version_fk FOREIGN KEY (tenant_id,workspace_id,initial_version_id)
   REFERENCES model_versions(tenant_id,workspace_id,id) DEFERRABLE INITIALLY DEFERRED
 );
 CREATE TABLE model_family_members (
@@ -18,23 +18,30 @@ CREATE TABLE model_family_members (
  anchor_version_id uuid,
  CHECK (anchor_version_id IS NULL OR anchor_version_id<>version_id),
  UNIQUE (tenant_id,workspace_id,family_id,version_id),
- FOREIGN KEY (tenant_id,workspace_id,version_id)
+ CONSTRAINT model_family_member_version_fk FOREIGN KEY (tenant_id,workspace_id,version_id)
   REFERENCES model_versions(tenant_id,workspace_id,id) DEFERRABLE INITIALLY DEFERRED,
  FOREIGN KEY (tenant_id,workspace_id,family_id) REFERENCES model_families(tenant_id,workspace_id,id),
- FOREIGN KEY (tenant_id,workspace_id,family_id,anchor_version_id)
+ CONSTRAINT model_family_member_anchor_fk FOREIGN KEY (tenant_id,workspace_id,family_id,anchor_version_id)
   REFERENCES model_family_members(tenant_id,workspace_id,family_id,version_id) DEFERRABLE INITIALLY DEFERRED
 );
+
+ALTER TABLE model_families ADD CONSTRAINT model_family_initial_member_fk
+ FOREIGN KEY (tenant_id,workspace_id,id,initial_version_id)
+ REFERENCES model_family_members(tenant_id,workspace_id,family_id,version_id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE model_versions ADD CONSTRAINT model_version_family_member_fk
+ FOREIGN KEY (id) REFERENCES model_family_members(version_id) DEFERRABLE INITIALLY DEFERRED NOT VALID;
 
 -- No established grouping exists in the predecessor. Persist one mapping per ID.
 INSERT INTO model_families(id,tenant_id,workspace_id,initial_version_id)
  SELECT gen_random_uuid(),tenant_id,workspace_id,id FROM model_versions;
 INSERT INTO model_family_members(version_id,tenant_id,workspace_id,family_id)
  SELECT initial_version_id,tenant_id,workspace_id,id FROM model_families;
-ALTER TABLE model_families ADD CONSTRAINT model_family_initial_member_fk
- FOREIGN KEY (tenant_id,workspace_id,id,initial_version_id)
- REFERENCES model_family_members(tenant_id,workspace_id,family_id,version_id) DEFERRABLE INITIALLY DEFERRED;
-ALTER TABLE model_versions ADD CONSTRAINT model_version_family_member_fk
- FOREIGN KEY (id) REFERENCES model_family_members(version_id) DEFERRABLE INITIALLY DEFERRED;
+-- Finish only this domain's pending checks before further catalog alterations.
+SET CONSTRAINTS model_family_initial_version_fk,model_family_member_version_fk,
+ model_family_member_anchor_fk,model_family_initial_member_fk,model_version_family_member_fk IMMEDIATE;
+ALTER TABLE model_versions VALIDATE CONSTRAINT model_version_family_member_fk;
+SET CONSTRAINTS model_family_initial_version_fk,model_family_member_version_fk,
+ model_family_member_anchor_fk,model_family_initial_member_fk,model_version_family_member_fk DEFERRED;
 
 CREATE INDEX model_family_scope_idx ON model_family_members(tenant_id,workspace_id,family_id,version_id);
 CREATE INDEX model_version_history_order_idx ON model_versions(tenant_id,workspace_id,created_at DESC,id DESC);
