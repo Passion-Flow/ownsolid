@@ -1,6 +1,7 @@
 package install
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -25,6 +26,41 @@ func TestCoordinatedBackupTracksShippedCompose(t *testing.T) {
 	}
 	if fmt.Sprintf("%x", sha256.Sum256(compose)) != coordinatedComposeSHA256 {
 		t.Fatal("review the coordinated backup writer inventory before admitting the updated Compose profile")
+	}
+}
+
+func TestCoordinatedBackupKeepsThePreviousShippedProfileUsable(t *testing.T) {
+	current, err := os.ReadFile("../../../compose/compose.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy := bytes.Replace(current, []byte("    environment:\n      SSL_CERT_FILE: ${OWNSOLID_CONTROL_CA_FILE:?}\n"), nil, 1)
+	if fmt.Sprintf("%x", sha256.Sum256(legacy)) != legacyCoordinatedComposeSHA256 {
+		t.Fatal("the previous shipped profile's reviewed writer inventory changed")
+	}
+	for _, originalEnv := range []bool{false, true} {
+		c := validConfig(t)
+		if err := os.WriteFile(c.ComposeFile, legacy, 0600); err != nil {
+			t.Fatal(err)
+		}
+		if err := Materialize(c); err != nil {
+			t.Fatal(err)
+		}
+		if originalEnv {
+			env := strings.Replace(c.renderComposeEnv(), "OWNSOLID_CONTROL_CA_FILE="+c.controlCAPath()+"\n", "", 1)
+			if err := os.WriteFile(c.Layout().ComposeEnv, []byte(env), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := checkCoordinatedProfile(c); err != nil {
+			t.Fatal("previous shipped configuration was refused", err)
+		}
+		if err := os.WriteFile(c.Layout().ComposeFile, append(legacy, []byte("# changed profile\n")...), 0600); err != nil {
+			t.Fatal(err)
+		}
+		if err := checkCoordinatedProfile(c); !errors.Is(err, errBackupScope) {
+			t.Fatal("unreviewed profile was admitted", err)
+		}
 	}
 }
 
