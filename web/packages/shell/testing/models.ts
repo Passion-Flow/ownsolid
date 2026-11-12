@@ -95,6 +95,19 @@ export const stalledImport: ModelImport = {
   updated_at: stamp,
 };
 
+/** An expired partial upload whose original byte count remains in history. */
+export const expiredImport: ModelImport = {
+  ...stalledImport,
+  state: 'cancelled',
+  error_code: 'MODEL_IMPORT_EXPIRED',
+};
+
+/** Expiry has committed its intent but has not finished removing staging. */
+export const expiringImport: ModelImport = {
+  ...stalledImport,
+  error_code: 'MODEL_IMPORT_EXPIRY_PENDING',
+};
+
 /** An import whose model has been published. The import response has no cleanup state. */
 export const publishedImport: ModelImport = {
   ...stalledImport,
@@ -129,6 +142,10 @@ export interface ModelScript {
   modelChunks: Record<string, Record<number, string>>;
   modelsProblem: ScriptedFailure | null;
   nextModelImport: ScriptedFailure | null;
+  /** A creation retry may return its now-terminal import. */
+  modelImportReplay: ModelImport | null;
+  /** Failure of import status reads, including a refresh after an earlier success. */
+  modelImportProblem: ScriptedFailure | null;
   /** Failures of the next chunks, in order; `lost` stores the chunk and drops its answer. */
   chunkFailures: (ScriptedFailure | 'lost' | 'dropped')[];
   /** Holds every chunk this long, so a flow can act during an upload. */
@@ -148,6 +165,8 @@ export function emptyModelScript(): ModelScript {
     modelChunks: {},
     modelsProblem: null,
     nextModelImport: null,
+    modelImportReplay: null,
+    modelImportProblem: null,
     chunkFailures: [],
     chunkDelayMilliseconds: 0,
     verificationOutcome: 'ready',
@@ -230,6 +249,11 @@ export async function routeModels(
       state.nextModelImport = null;
       return problem(route, scripted);
     }
+    if (state.modelImportReplay) {
+      const replay = state.modelImportReplay;
+      state.modelImportReplay = null;
+      return data(route, replay);
+    }
     const body = route.request().postDataJSON() as {
       workspace_id: string;
       name: string;
@@ -254,6 +278,7 @@ export async function routeModels(
     return data(route, created, 201);
   });
   await page.route(/\/admin\/model-imports\/[0-9a-f-]{36}$/, (route) => {
+    if (state.modelImportProblem) return problem(route, state.modelImportProblem);
     const found = state.modelImports.find((item) => item.id === idOf(route));
     return found ? data(route, found) : problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
   });

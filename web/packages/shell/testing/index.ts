@@ -40,6 +40,8 @@ export {
   modelCatalog,
   publishedImport,
   readyModel,
+  expiredImport,
+  expiringImport,
   stalledImport,
   type ModelScript,
 } from './models.ts';
