@@ -414,7 +414,8 @@ and exact version together.
 The owner must also provide current-authority retained ready/retired metadata
 reads, complete cursor/response policy and actual error outcomes. DEV can then
 finalize public OpenAPI, generated Go/Python and Help; the model owner retains
-storage/authenticated routes and Web retains S-202. The isolated prototype is
+storage and domain authorization, the original route owner registers authenticated
+dispatch, and Web retains S-202. The isolated prototype is
 unregistered and changes no product API, SDK, model store or execution admission.
 
 ### Verification and licenses
@@ -564,6 +565,34 @@ a different immutable membership choice. `MODEL_FAMILY_INVALID` and
 Existing `MODEL_FILE_INVALID` and `MODEL_DERIVED_CATALOG_INVALID` identify invalid
 catalogue or retained lineage. Storage and typed transaction failures retain the
 existing normalization and suppress projections, including unknown commit outcomes.
+
+The independent DEV draft `6a2dd96fb392444de755db1cf5bfb771867064b0`
+was checked against producer `2b4aaae5` and the unchanged domain sources.
+Its `domain-draft/handoff.json` names exactly these five unmapped codes; none
+requires a new domain error or DTO. Their existing stable meanings are:
+
+| Domain code | Existing cause and continuation |
+| --- | --- |
+| `MODEL_HISTORY_UNAVAILABLE` | The backend or candidate schema is unavailable, or installed history pagination/signing prerequisites are invalid. Repair installation prerequisites before restarting history; never substitute an empty page or inferred family. |
+| `MODEL_HISTORY_INVALID` | Retained metadata, the encoded envelope or an internally encoded cursor violates the domain's invariants. Repair the verified retained source or implementation; never release a partial projection. A malformed client cursor instead returns `INVALID_CURSOR`. |
+| `MODEL_FAMILY_INVALID` | An exact retained version lacks a valid established family/root membership, or that binding is inconsistent. Restore the verified membership; never assign a new family during a read. |
+| `MODEL_IDENTITY_REQUIRED` | The service lacks its Identity/Workspaces owners, or those owners do not share the same Identity instance. This is an installation composition failure, not an expired or unauthenticated caller. |
+| `MODEL_STORAGE_MISMATCH` | The configured owners use inconsistent stores, or explicit publication receives a pool/wrong-dialect executor instead of the matching borrowed transaction. Repair composition; never retry against a guessed store. |
+
+The three history/family codes survive `modelReadError`; the two setup failures
+return from repository validation before `readActor` starts its transaction.
+Explicit family selection also refuses an invalid borrowed executor directly.
+All failed historical reads return the zero DTO, and failed selection returns no
+family ID. The publication caller must also suppress a staged ID if its later
+commit fails or has an unknown outcome. Existing current-authority checks and typed
+transaction normalization remain separate. IAM must admit or normalize the five codes without confusing
+composition failure with caller authentication or returning success metadata.
+
+The draft's eight metadata fields, exact anchor/member selectors, flat retained
+detail, omitted options and required nullable continuation match the domain.
+This source/shape review adds no runtime result or public route. The draft's
+unregistered OpenAPI and generated codec inputs remain DEV-owned and untouched;
+the earlier PostgreSQL and native results retain their original source/platform.
 
 These are module results, not newly registered HTTP Problems. DEV must admit the
 public request/response and Problem schemas and generated clients. The original
