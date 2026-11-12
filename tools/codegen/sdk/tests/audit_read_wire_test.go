@@ -178,6 +178,34 @@ func TestStandardSharedGETCanReplayALostReply(t *testing.T) {
 }
 
 func TestAuditReadDoesNotReplayALostReplyOnASharedClient(t *testing.T) {
+	t.Run("reply_lost_once", auditReadLostReplyOnce)
+	t.Run("consecutive_replies_lost", func(t *testing.T) {
+		var calls atomic.Int32
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			calls.Add(1)
+			conn, _, err := w.(http.Hijacker).Hijack()
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			conn.Close()
+		}))
+		defer server.Close()
+		client, transport := auditReadHTTPClient(t)
+		sdk := auditReadClient(t, server.URL, client)
+		for attempt := range 3 {
+			result, err := sdk.ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
+			if err == nil || result != nil || calls.Load() != int32(attempt+1) {
+				t.Fatal("a consecutive lost reply replayed or became success")
+			}
+		}
+		if transport.DisableKeepAlives {
+			t.Fatal("consecutive failures changed the shared transport")
+		}
+	})
+}
+
+func auditReadLostReplyOnce(t *testing.T) {
 	server, calls := auditLostReplyFixture(t)
 	client, transport := auditReadHTTPClient(t)
 	primeAuditConnection(t, client, server.URL)
@@ -201,7 +229,7 @@ func TestAuditReadDoesNotReplayALostReplyOnASharedClient(t *testing.T) {
 
 func TestAuditReadPreservesTLSAndCookies(t *testing.T) {
 	var calls atomic.Int32
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls.Add(1)
 		cookie, err := r.Cookie("synthetic_admin")
 		if err != nil || cookie.Value != "fixture" || r.ProtoMajor != 1 {
@@ -209,8 +237,9 @@ func TestAuditReadPreservesTLSAndCookies(t *testing.T) {
 		}
 		writeAuditReadProblem(w)
 	}))
-	defer server.Close()
 	server.Config.ErrorLog = log.New(io.Discard, "", 0)
+	server.StartTLS()
+	defer server.Close()
 	pool := x509.NewCertPool()
 	pool.AddCert(server.Certificate())
 	jar, err := cookiejar.New(nil)
@@ -237,6 +266,65 @@ func TestAuditReadPreservesTLSAndCookies(t *testing.T) {
 }
 
 func TestAuditReadPreservesClientTimeout(t *testing.T) {
+	t.Run("client_timeout", auditReadClientTimeout)
+	t.Run("caller_cancellation", func(t *testing.T) {
+		var calls atomic.Int32
+		started, cancelled := make(chan struct{}), make(chan struct{})
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if calls.Add(1) > 1 {
+				writeAuditReadProblem(w)
+				return
+			}
+			close(started)
+			<-r.Context().Done()
+			close(cancelled)
+		}))
+		defer server.Close()
+		client, _ := auditReadHTTPClient(t)
+		sdk := auditReadClient(t, server.URL, client)
+		ctx, cancel := context.WithCancel(t.Context())
+		defer cancel()
+		type outcome struct {
+			result *identity.ListAuditEventsHTTPResponse
+			err    error
+		}
+		done := make(chan outcome, 1)
+		go func() {
+			result, err := sdk.ListAuditEventsWithResponse(ctx, auditReadParams(false))
+			done <- outcome{result, err}
+		}()
+		select {
+		case <-started:
+			cancel()
+		case <-time.After(5 * time.Second):
+			t.Fatal("the cancellation fixture did not receive a request")
+		}
+		select {
+		case received := <-done:
+			if !errors.Is(received.err, context.Canceled) || received.result != nil || calls.Load() != 1 {
+				t.Fatalf("caller cancellation was lost or replayed: %v", received.err)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("the generated request did not stop after caller cancellation")
+		}
+		select {
+		case <-cancelled:
+		case <-time.After(5 * time.Second):
+			t.Fatal("the server did not observe the cancelled connection")
+		}
+		result, err := sdk.ListAuditEventsWithResponse(ctx, auditReadParams(false))
+		if !errors.Is(err, context.Canceled) || result != nil || calls.Load() != 1 {
+			t.Fatal("an already cancelled context dispatched a new read")
+		}
+		result, err = sdk.ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
+		requireAuditReadProblem(t, result, err)
+		if calls.Load() != 2 {
+			t.Fatal("an explicit uncancelled read was not a separate request")
+		}
+	})
+}
+
+func auditReadClientTimeout(t *testing.T) {
 	var calls atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls.Add(1)
@@ -248,7 +336,7 @@ func TestAuditReadPreservesClientTimeout(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
 	result, err := auditReadClient(t, server.URL, client).ListAuditEventsWithResponse(ctx, auditReadParams(false))
-	if err == nil || result != nil || !strings.Contains(err.Error(), "Client.Timeout") || calls.Load() != 1 {
+	if !errors.Is(err, context.DeadlineExceeded) || result != nil || !strings.Contains(err.Error(), "Client.Timeout") || calls.Load() != 1 {
 		t.Fatalf("the caller's timeout was lost or retried: %v", err)
 	}
 }
