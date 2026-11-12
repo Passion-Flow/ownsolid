@@ -88,11 +88,16 @@ real authorization. A separate gateway database was rejected for this item;
 per-cell metadata topology belongs to ARC-201.
 
 No agent wire change is required. Old v1 agents retain their current stream,
-fallback, lease, cursor and retry behavior. Existing gateway binaries/configs
-continue to use their existing control principal during a rolling upgrade. The
-new principal must coexist; never revoke the old principal while those processes
-or control still depend on it. Installer provisioning and final switch-over need
-separate qualified delivery changes, without weakening either role's admission.
+fallback, lease, cursor and retry behavior. Existing gateway configurations
+retain the control principal when the new role is omitted. The new principal must
+coexist; never revoke the control principal while any gateway or control still
+depends on it. A new authority-lock function requires a formally admitted catalog
+upgrade: current exact-schema fences do not permit old gateway binaries to ignore
+that migration. Upgrade serving binaries/catalog through the existing controlled
+procedure before rolling the compatible gateways onto the new principal. Old v1
+agents can still coexist; agent wire compatibility is not a promise of arbitrary
+serving-binary/database version skew. Installer provisioning and final switch-over
+need separate qualified delivery changes, without weakening either role's admission.
 
 ## Licenses and offline behavior
 
