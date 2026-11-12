@@ -168,3 +168,11 @@ resource preflight admit execution, then complete repository check/build and
 module tests against the actual rebased source. Preserve any failing log;
 do not loop the fixture while resources or an earlier lane's window block it.
 The local implementation and its runtime qualification remain separate.
+
+The first schema-59 native replay at `8495818a` passed the eight neighboring
+training groups but stopped before later repository gates because the new
+cell-owner test snapshot compared `audit_events.target_id` (UUID) with text.
+The snapshot now compares the original UUID parameter directly. This is a
+test-only SQL correction; no production fence or error mapping is relaxed.
+The failed raw run is retained, and the changed cell-owner group must pass
+on real PostgreSQL before this candidate is accepted.
