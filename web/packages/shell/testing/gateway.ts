@@ -420,6 +420,16 @@ export async function routeGateway(
   await page.route(new RegExp(`${base.source}/aliases\\?`), (route) =>
     data(route, { items: state.aliases, next_cursor: null }),
   );
+  await page.route(new RegExp(`${base.source}/aliases/[0-9a-f-]{36}$`), (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const workspace = /\/workspaces\/([0-9a-f-]{36})\//.exec(path)?.[1];
+    const alias = state.aliases.find(
+      (item) => item.id === pathPart(route, 1) && item.workspace_id === workspace,
+    );
+    return alias
+      ? data(route, alias)
+      : problem(route, { status: 404, code: 'MODEL_ALIAS_NOT_FOUND' });
+  });
   await page.route(new RegExp(`${base.source}/keys\\?`), (route) => {
     if (state.keysProblem) return problem(route, state.keysProblem);
     return data(route, { items: state.gatewayKeys, next_cursor: null });

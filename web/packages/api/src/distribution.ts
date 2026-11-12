@@ -48,6 +48,8 @@ const client = createClient<distributionContract.paths>();
  */
 const keyPaths = {
   admin: {
+    alias:
+      '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}',
     aliases:
       '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases',
     keys: '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys',
@@ -63,6 +65,8 @@ const keyPaths = {
       '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/ca',
   },
   portal: {
+    alias:
+      '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}',
     aliases:
       '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases',
     keys: '/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys',
@@ -90,6 +94,19 @@ export function listModelAliases(
     ...options,
     path: { ...localCell, workspace_id: workspaceId },
     query: { limit: query.limit, ...(query.cursor ? { cursor: query.cursor } : {}) },
+  });
+}
+
+/** Reads one alias through the entrance's workspace authorization, without scanning its list. */
+export function getModelAlias(
+  audience: Audience,
+  workspaceId: string,
+  aliasId: string,
+  options?: RequestOptions,
+): Promise<ModelAlias> {
+  return client.get(keyPaths[audience].alias, {
+    ...options,
+    path: { ...localCell, workspace_id: workspaceId, resource_id: aliasId },
   });
 }
 

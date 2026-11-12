@@ -131,8 +131,9 @@ for (const [locale, text] of [
         'true',
       );
       let refuse = true;
-      await page.route('**/admin/distribution/workspaces/*/aliases?*', (route) =>
-        refuse ? route.abort('connectionreset') : route.fallback(),
+      await page.route(
+        `**/admin/distribution/workspaces/*/aliases/${deploymentAlias.id}`,
+        (route) => (refuse ? route.abort('connectionreset') : route.fallback()),
       );
       await dialog.getByRole('button', { name: key('review') }).click();
       await expect(dialog.getByRole('button', { name: text['action.retry'] })).toBeVisible();
@@ -163,6 +164,12 @@ for (const [locale, text] of [
       page,
     }) => {
       const dialog = await open(page);
+      await dialog.getByLabel(key('label'), { exact: true }).fill('Keep this unsaved draft');
+      await page.mouse.click(4, 4);
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByLabel(key('label'), { exact: true })).toHaveValue(
+        'Keep this unsaved draft',
+      );
       await page.keyboard.press('Escape');
       await expect(dialog).toHaveCount(0);
       await expect(
@@ -235,6 +242,13 @@ test('accepts 500 supplementary characters and permits an edit while the model i
     { ...currentAlias(), available: false, unavailable_code: 'MODEL_ALIAS_UNAVAILABLE' },
   ];
   await page.goto(`/services/${runningDeployment.id}`);
+  const issue = page
+    .getByRole('region', { name: 'On the gateway', exact: true })
+    .getByRole('button', { name: 'Issue a key', exact: true });
+  await expect(issue).toHaveAttribute('aria-disabled', 'true');
+  await expect(issue).toHaveAccessibleDescription(english['services.gateway.unavailable.detail']);
+  await issue.press('Enter');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'Edit description', exact: true }).click();
   const field = page.getByLabel('Description', { exact: true });
   await field.fill('\u{1f680}'.repeat(501));
@@ -280,10 +294,13 @@ test('Undo refuses a later writer and keeps that writer visible', async ({ page 
     { ...currentAlias(), description: 'Keep the newer text', description_revision: 3 },
   ];
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
-  await expect(page.getByText(english['action.undoFailed'], { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(english['services.gateway.description.undoConflict'], { exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole('region', { name: 'On the gateway', exact: true })).toContainText(
     'Keep the newer text',
   );
+  await expect(page.getByRole('button', { name: 'Try again', exact: true })).toHaveCount(0);
   expect(control.aliases[0]?.description_revision).toBe(3);
 });
 
@@ -323,4 +340,43 @@ test('an answer after closing the editor cannot close the next dialog', async ({
   await response;
   await expect(page.getByRole('dialog', { name: 'Issue a key', exact: true })).toBeVisible();
   await expect(page.getByText('Description saved.', { exact: true })).toHaveCount(0);
+});
+
+test('a lost Undo answer followed by a newer edit reports the current description', async ({
+  page,
+}) => {
+  await page.goto(`/services/${runningDeployment.id}`);
+  await page.getByRole('button', { name: 'Edit description', exact: true }).click();
+  await page.getByLabel('Description', { exact: true }).fill('');
+  await page.getByLabel('Reason', { exact: true }).fill('Clear obsolete guidance');
+  await page.getByRole('button', { name: 'Save description' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  control.publishFailures = ['lost'];
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(page.getByText(english['action.undoFailed'], { exact: true })).toBeVisible();
+  expect(control.aliases[0]?.description).toBe(initial);
+  control.aliases = [
+    { ...currentAlias(), description: 'A later administrator edit', description_revision: 4 },
+  ];
+  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(
+    page.getByText(english['services.gateway.description.newer'], { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('region', { name: 'On the gateway', exact: true })).toContainText(
+    'A later administrator edit',
+  );
+  expect(control.publishWrites[1]?.key).toBe(control.publishWrites[2]?.key);
+  expect(control.aliases[0]?.description_revision).toBe(4);
+});
+
+test('the description form remains readable in the dark theme', async ({ page }, info) => {
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  await page.goto(`/services/${runningDeployment.id}`);
+  await page.getByRole('button', { name: 'Edit description', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expectAccessible(page);
+  await info.attach('console-description-dark', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
 });
