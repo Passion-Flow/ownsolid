@@ -12,3 +12,14 @@ from where and with what outcome.
 - Each event has its own link that keeps working.
 - The list names each action in your language. Its details keep the action's identifier for scripts
   and support, and a reason as it was recorded.
+
+## Audit read not confirmed
+
+Successful reads of this trail and a resource's Activity also record access. If an answer is lost,
+the read may already be recorded. Keep the request ID when one is shown. Read again starts a new
+request. The page does not retry by itself when you return to the tab or the connection comes back.
+
+When another page cannot load, the events already read stay visible with a warning that the result
+is incomplete. Read again retries that page. If its cursor is no longer valid, Read from the start
+opens a new first page; the old pages stay until that read succeeds. A permission refusal removes
+the earlier events from view. Ask an administrator to check access before trying a new read.

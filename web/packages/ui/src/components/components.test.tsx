@@ -217,6 +217,48 @@ describe('ProblemNotice', () => {
     expect(screen.getByRole('button', { name: 'Reload the page' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
   });
+
+  it('uses explicit operation recovery for an uncertain outcome and preserves its request ID', async () => {
+    const onClick = vi.fn();
+    inEnglish(
+      <ProblemNotice
+        problem={{ ...base, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN', retryable: false }}
+        recovery={{ label: 'Read again', onClick }}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'Reload the page' })).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('req-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Read again' }));
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('honors Retry-After and an in-flight operation for custom recovery', () => {
+    vi.useFakeTimers();
+    try {
+      const onClick = vi.fn();
+      const problem = { ...base, code: 'RATE_LIMITED', retryAfterSeconds: 2 };
+      const { rerender } = inEnglish(
+        <ProblemNotice problem={problem} recovery={{ label: 'Read again', onClick }} />,
+      );
+      expect(screen.getByRole('button', { name: 'Read again' })).toBeDisabled();
+      act(() => {
+        vi.advanceTimersByTime(2_100);
+      });
+      expect(screen.getByRole('button', { name: 'Read again' })).toBeEnabled();
+      rerender(
+        <I18nProvider locale="en">
+          <ProblemNotice
+            problem={problem}
+            recovery={{ label: 'Read again', onClick, disabled: true }}
+          />
+        </I18nProvider>,
+      );
+      expect(screen.getByRole('button', { name: 'Read again' })).toBeDisabled();
+      expect(onClick).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('Dialog', () => {
