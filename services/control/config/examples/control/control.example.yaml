@@ -397,6 +397,12 @@ object_storage: {enabled: false}
 # environment is ignored. JSON owns endpoint/CA/credential/policies/CAS/prepared
 # paths, with the existing registry/control.schema.json. Restart required.
 # image_registry_config_file: /run/projectone/registry-control.json
+# Optional read-only site source; requires image_registry_config_file. This
+# protected JSON names endpoint, allowed_cidrs, ca_file and credential_file.
+# Explicit serve --env-file PROJECT_ONE_REGISTRY_SITE_SOURCE_FILE overrides valid
+# YAML. Invalid source settings abort startup. The source and writable tenant
+# Registry require distinct origins and credential pairs.
+# image_registry_site_source_file: /run/projectone/registry-site-source.json
 
 # M26 owner: optional canonical absolute protected JSON reference (string).
 # Omission disables maintenance. Must exist0600 under owned0700 parent; no inline

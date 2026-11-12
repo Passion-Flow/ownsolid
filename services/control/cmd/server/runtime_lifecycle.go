@@ -278,7 +278,7 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 		}
 		g.stops = append(g.stops, h.ArtifactStores.Close)
 	}
-	if c.ImageRegistry != nil {
+	if c.ImageRegistry != nil || c.ImageRegistrySiteSourceFile != "" {
 		if !bootstrapped {
 			return errors.New("BOOTSTRAP_REQUIRED_FOR_CONFIGURED_FEATURES")
 		}

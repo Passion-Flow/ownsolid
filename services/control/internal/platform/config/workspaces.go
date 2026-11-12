@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/taskbus"
+	"go.yaml.in/yaml/v3"
 )
 
 const MaximumPolicyEnvironmentBytes int64 = 16 << 10
@@ -125,7 +125,7 @@ func (c *Config) resolveWorkspaceEnvironment(path string) error {
 		}
 		key, value, ok := strings.Cut(line, "=")
 		key, value = strings.TrimSpace(key), strings.TrimSpace(value)
-		if !ok || seen[key] || (key != releaseViewConfigurationEnvironment && key != privateClusterConfigurationEnvironment && key != monitoringConfigurationEnvironment && !middlewareEnvironment(key) && key != registryConfigEnvironment && key != mongoDBConfigEnvironment && key != workspaceCountEnvironment && key != workspaceNotesEnvironment && key != databaseLockEnvironment && c.Runtime.httpEnvironmentField(key) == nil && !serverTransportEnvironment(key) && key != "PROJECT_ONE_MODELS_ARTIFACT_ROOT" && key != "PROJECT_ONE_COMPONENT_NODE_EXPORTER_ARCHIVE_FILE" && key != "PROJECT_ONE_COMPONENT_NODE_EXPORTER_CATALOG_DIRECTORY" && !machineServerEnvironment(key) && !databaseSelectionEnvironment(key) && !ssoMaintenanceEnvironment(key) && !ssoConfigurationEnvironment(key) && !pluginConfigurationEnvironment(key) && !c.Runtime.Plugins.environmentField(key).IsValid() && key != "PROJECT_ONE_WORKFLOWS_ENABLED" && !c.Runtime.Workflows.environmentField(key).IsValid() && !c.Runtime.Portal.environmentField(key).IsValid() && !knowledgeConfigurationEnvironment(key) && !c.Runtime.Knowledge.environmentField(key).IsValid() && c.Runtime.nodeEnvironmentField(key) == nil && c.Runtime.Models.environmentField(key) == nil && c.Runtime.Distribution.environmentField(key) == nil && !awsEnvironment(key) && !modelCacheEnvironment(key) && !objectStorageEnvironment(key) && !taskEventEnvironment(key) && !datasetPathEnvironment(key) && !c.Runtime.Datasets.environmentKey(key) && !trainingArtifactEnvironment(key) && !c.Runtime.Training.environmentKey(key) && !preparationArtifactEnvironment(key) && !c.Runtime.ModelLifecycle.environmentKey(key)) {
+		if !ok || seen[key] || (key != releaseViewConfigurationEnvironment && key != privateClusterConfigurationEnvironment && key != monitoringConfigurationEnvironment && !middlewareEnvironment(key) && key != registryConfigEnvironment && key != registrySiteSourceEnvironment && key != mongoDBConfigEnvironment && key != workspaceCountEnvironment && key != workspaceNotesEnvironment && key != databaseLockEnvironment && c.Runtime.httpEnvironmentField(key) == nil && !serverTransportEnvironment(key) && key != "PROJECT_ONE_MODELS_ARTIFACT_ROOT" && key != "PROJECT_ONE_COMPONENT_NODE_EXPORTER_ARCHIVE_FILE" && key != "PROJECT_ONE_COMPONENT_NODE_EXPORTER_CATALOG_DIRECTORY" && !machineServerEnvironment(key) && !databaseSelectionEnvironment(key) && !ssoMaintenanceEnvironment(key) && !ssoConfigurationEnvironment(key) && !pluginConfigurationEnvironment(key) && !c.Runtime.Plugins.environmentField(key).IsValid() && key != "PROJECT_ONE_WORKFLOWS_ENABLED" && !c.Runtime.Workflows.environmentField(key).IsValid() && !c.Runtime.Portal.environmentField(key).IsValid() && !knowledgeConfigurationEnvironment(key) && !c.Runtime.Knowledge.environmentField(key).IsValid() && c.Runtime.nodeEnvironmentField(key) == nil && c.Runtime.Models.environmentField(key) == nil && c.Runtime.Distribution.environmentField(key) == nil && !awsEnvironment(key) && !modelCacheEnvironment(key) && !objectStorageEnvironment(key) && !taskEventEnvironment(key) && !datasetPathEnvironment(key) && !c.Runtime.Datasets.environmentKey(key) && !trainingArtifactEnvironment(key) && !c.Runtime.Training.environmentKey(key) && !preparationArtifactEnvironment(key) && !c.Runtime.ModelLifecycle.environmentKey(key)) {
 			return bad
 		}
 		seen[key] = true
@@ -330,6 +330,13 @@ func (c *Config) resolveWorkspaceEnvironment(path string) error {
 				return bad
 			}
 			c.ImageRegistryConfigFile = value
+			continue
+		}
+		if key == registrySiteSourceEnvironment {
+			if !registryConfigurationPath(value) {
+				return bad
+			}
+			c.ImageRegistrySiteSourceFile = value
 			continue
 		}
 		if key == mongoDBConfigEnvironment {
