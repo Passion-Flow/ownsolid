@@ -25,6 +25,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/objectstore"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/Passion-Flow/ownsolid/services/control/migrations"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -41,7 +42,7 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(t.Context(), 90*time.Second)
 	defer cancel()
-	account := fixture.New(t)
+	account := fixture.NewAtVersion(t, 59)
 	owned := ownedDraftRestoreFixture(t, ctx, account.DB)
 	password := fixture.Bootstrap(t, account)
 	admin := fixture.Login(t, account, "admin@example.invalid", password, "admin")
@@ -98,8 +99,14 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 		}
 		predecessorSQL = readDraftMigration(t, file)
 	}
-	up := readDraftMigration(t, "testdata/draft_import_candidate.up.sql")
-	down := readDraftMigration(t, "testdata/draft_import_candidate.down.sql")
+	up, err := migrations.Files.ReadFile("postgresql/000060_dataset_draft_import_receipts.up.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	down, err := migrations.Files.ReadFile("postgresql/000060_dataset_draft_import_receipts.down.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
 	predecessor := owned.RestoreFresh(t, ctx, service.DB, owned.DumpSchema(t, ctx))
 	for _, sql := range [][]byte{predecessorSQL, up, down} {
 		applyDraftMigration(t, ctx, predecessor, sql)

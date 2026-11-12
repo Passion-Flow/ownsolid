@@ -4,8 +4,8 @@ import "encoding/json"
 
 const PostgreSQLLegacyApplicationProfile = "releases"
 const MVPPostgreSQLCPUApplicationProfile = "mvp-postgresql-cpu-v1"
-const MVPPostgreSQLCPUV1SchemaVersion = 59
-const MVPPostgreSQLCPUV1TableCount = 119
+const MVPPostgreSQLCPUV1SchemaVersion = 60
+const MVPPostgreSQLCPUV1TableCount = 120
 
 func effectivePostgreSQLApplicationProfile(profile string) string {
 	switch profile {

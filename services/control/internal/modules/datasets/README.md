@@ -3,13 +3,12 @@
 Snapshot copying uses [snapshotio](../../platform/snapshotio/README.md) for bounded
 writeback. Dataset path/context/size/hash admission, exclusive output, final
 durability, audit and partial-failure retention remain here. See the
-[M17 contract](../../../../../docs/milestones/m17-offline-compose/snapshot-writeback.md).
+[backup and restore runbook](../../../../../docs/operations/backup-and-restore.md).
 
-The fixed [native MongoDB import gate](../../../../../tools/quality/mongodb/README.md)
-adds one actual local TLS/SCRAM source-to-immutable-version path with PostgreSQL
-and CPython. It reuses the original Mongo import assertions while retaining the
-external-source test. Its fixture and retained-source inputs are test-owned;
-runtime dataset/upload authority and migration numbering remain unchanged.
+The [native MongoDB import test](mongodb_native_integration_test.go) exercises
+one local TLS/SCRAM source-to-version path with PostgreSQL and CPython. It
+retains external-source assertions and needs its protected fixture inputs.
+The test source alone does not establish a passing target qualification.
 
 MongoDB receipt reservation binds each retained object identifier as PostgreSQL
 UUID before converting it to JSON text. Both the first insert and recovery update
@@ -41,9 +40,8 @@ composition remain coordinator dependencies. The separate owned
 `database/dameng/migrate/contribution_datasets.go` supplies the seven real tables,
 cyclic FK ALTERs, indexes and immutable guards for central registration. Mongo receipt persistence/advisory
 slots still explicitly require PostgreSQL, so native Mongo import is unavailable;
-this increment uses the upload entrance. See the [native contract and schema
-requirements](../../../../../docs/milestones/m08-datasets/dameng-native.md) and
-[wave5 handoff](../../../../../docs/execution/mvp/parallel-wave5-data.md).
+this increment uses the upload entrance. See the [native repository](dameng_repository.go) and
+[central schema contribution](../../platform/database/dameng/migrate/contribution_datasets.go).
 
 [service.go](service.go), upload.go, drafts.go and rows.go form the business input surface. [worker.go](worker.go), worker_authority.go and runtime_repository.go separate claims/state from the [processor](processor.go). Publications and publication_storage.go bind prepared artifacts before making a version usable. Snapshot/initialization/integrity/retirement files handle durable namespace and recovery.
 
@@ -61,7 +59,7 @@ the descriptor race, delayed receipt delivery, live errors, cancellation and
 the receipt deadline. See the
 [Linux exit research](../../../../../docs/research/dataset-worker-exit.md).
 
-Migration 000008 retains datasets/drafts/rows/jobs/attempts/versions; MongoDB import receipts are separate. Every mutation rechecks current identity/Workspace and uses explicit scoped SQL. Python prepares files without business credentials; Go independently accepts current source/attempt and output hashes. Published training input must not silently change when a draft changes.
+Platform migration [000013](../../../migrations/postgresql/000013_datasets.up.sql) retains datasets/drafts/rows/jobs/attempts/versions; MongoDB import receipts are separate. Every mutation rechecks current identity/Workspace and uses explicit scoped SQL. Python prepares files without business credentials; Go independently accepts current source/attempt and output hashes. Published training input must not silently change when a draft changes.
 
 Source upload captures its current membership authority when it claims the upload
 lease, before copying immutable bytes outside SQL. Final import admission requires
@@ -73,7 +71,12 @@ upload may reconcile them after the old lease expires; cancellation stays final.
 
 The module is large because import/draft/publication/storage have different state boundaries. If separated later, preserve one version authority and shared transaction/source binding; do not unify all stages into a generic job-success flag.
 
-Synchronize [contracts/datasets](../../../../../contracts/datasets), [data runtime](../../../../../runtimes/data-processing/README.md), training/modelpreparations consumers, [dataset frontend](../../../../../web/README.md), config/examples/control dataset policy, control images and [M08](../../../../../docs/milestones/m08-datasets).
+Synchronize the [dataset wire contracts](../../../../../api/datasets/v1),
+[HTTP contract](../../../../../api/openapi/v1/datasets/openapi.json),
+[data runtime](../../../../../runtimes/data-processing/README.md), training and
+model-preparation consumers, [frontend](../../../../../web/README.md),
+[typed configuration](../../platform/config/datasets.go), control images and
+[import requirements](../../../../../docs/research/dataset-import.md).
 
 Focused package check: go -C services/control test ./internal/modules/datasets. The processor harness and real selected-SQL publication/retirement/worker tests are separate; a successful JSONL parse is not a published usable dataset.
 
@@ -81,11 +84,11 @@ Focused package check: go -C services/control test ./internal/modules/datasets. 
 source-copy interleavings under `repository_integration`: current Portal/Admin,
 membership replacement, cancellation and cleared/expired/replaced leases, with
 independent file/SQL/audit readback and explicit reconciliation. Its source does
-not itself establish a passing execution. The fixed [native PostgreSQL entrypoint](../../../../../tools/quality/datasets/upload_fence_native.py)
-binds the [seven exact cases](../../../../../docs/milestones/m08-datasets/upload-fence-cases.json),
-current build sources and the protected installed data-runtime pointer. See the
-[data lane handoff](../../../../../docs/execution/mvp/parallel-20261024-data.md)
-for build/readback commands and the separately pending MySQL execution.
+not itself establish a passing execution. The
+[actual source-copy cases](upload_fence_repository_integration_test.go) use the
+selected-SQL fixture described in the [development environment](../../../../../docs/development/environment.md).
+Keep PostgreSQL, MySQL and installed execution evidence separate in the
+[product status](../../../../../docs/product/status.md).
 
 
 The cumulative `datasets` profile enables only the text upload lifecycle. Its integrity/snapshot inventory excludes absent later connector tables. The exact dataset HTTP routes reject Mongo/training paths; original platform connector variants remain separate. Workers join before the exclusive store closes.
@@ -109,7 +112,7 @@ with the same exclusive nonblocking flock and namespace/private-root/link/mode/
 limit checks. It creates or adopts no state. Ordinary `OpenStore` retains O_RDWR.
 This fixed verification operation adds no deployment switch and is not a general
 mutation sandbox; callers use readonly mounts. Native PostgreSQL `VerifyRestore`
-selects it through the [readonly owner contract](../../../../../docs/milestones/m18-kubernetes/postgres-readonly-owners.md).
+selects it through the [PostgreSQL restore contract](../../../../../api/release/v1/postgres_restore.go).
 Unsupported readonly-exclusive locking fails closed and still needs filesystem/
 CSI qualification. The original readonly failure remains in its dated checkpoint;
 new image/fresh-target execution has separate evidence.
@@ -222,3 +225,19 @@ while writing prompt/completion rows for existing publishing and training
 consumers. Replays and retries keep the original source format. A clone
 starts from the canonical effective rows. See the
 [format and public integration contract](../../../../../docs/research/dataset-training-formats.md#published-single-turn-messages).
+
+
+## Registered draft import receipts
+
+Migration 000060 registers the PostgreSQL receipt and a six-column draft
+scope key. Existing JSONL drafts receive no invented receipt. The immutable
+owner up SQL remains unchanged; the formal down refuses retained receipts
+with `DATASET_DRAFT_IMPORT_DOWNGRADE_REQUIRES_RESTORE` and rejects stale
+rollback snapshots before DDL. Restore a predecessor backup to downgrade
+an installation containing import receipts.
+
+The adapter and HTTP fixtures still require explicit construction. Production
+startup does not register the CSV or Parquet routes. The dataset inventory and
+integrity checks must admit both original and normalized files before that
+registration, followed by public contract and S-503 acceptance. See the
+[formal integration boundary](../../../../../docs/research/dataset-import.md#production-lineage-integration).

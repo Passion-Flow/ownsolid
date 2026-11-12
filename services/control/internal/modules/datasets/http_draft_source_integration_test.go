@@ -21,8 +21,10 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	datasethttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/Passion-Flow/ownsolid/services/control/migrations"
 	"github.com/google/uuid"
 )
 
@@ -30,14 +32,17 @@ func verifyDraftSourceHTTPS(t *testing.T, handler *datasethttp.Handler, portal, 
 	t.Helper()
 	ctx := t.Context()
 	service := handler.Service
-	// The candidate table is outside the published catalog fingerprint.
-	// Install it only after the released readiness checks have run.
+	// Exercise the registered receipt table after normal catalog admission.
 	schema, err := os.ReadFile("testdata/draft_import_candidate.up.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = service.DB.Exec(ctx, string(schema)); err != nil {
-		t.Fatal(err)
+	registered, err := migrations.Files.ReadFile("postgresql/000060_dataset_draft_import_receipts.up.sql")
+	if err != nil || !bytes.Equal(schema, registered) {
+		t.Fatal("registered receipt DDL differs from the immutable owner fixture", err)
+	}
+	if err := database.Check(ctx, service.DB); err != nil {
+		t.Fatal("registered receipt catalog admission", err)
 	}
 	csv := draftSourceFixture{
 		format: datasets.SourceCSV, media: "text/csv; charset=UTF-8",
