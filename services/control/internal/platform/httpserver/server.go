@@ -5,9 +5,12 @@ import (
 	"crypto/tls"
 	"errors"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
+	"github.com/google/uuid"
 	"net"
 	"net/http"
 	"sync"
+	"sync/atomic"
 )
 
 type bounded struct {
@@ -51,6 +54,14 @@ func ServeConfigured(ctx context.Context, server config.ServerConfiguration, tls
 	}
 	if (server.EffectiveTransportMode() == config.TransportDirectHTTPS) != (tlsConfig != nil) {
 		return errors.New("CONFIG_TRANSPORT_INVALID")
+	}
+	if server.PortalListenAddress != "" {
+		group, err := ListenConfigured(server, tlsConfig, handler, nil, nil, nil, policy)
+		if err != nil {
+			return err
+		}
+		defer group.Close()
+		return group.Serve(ctx)
 	}
 	return serve(ctx, server.ListenAddress, tlsConfig, handler, policy)
 }
@@ -140,17 +151,60 @@ type listenerEndpoint struct {
 	tls      *tls.Config
 }
 
+// BSD may allow overlapping wildcard binds. Inspect the owned actual addresses
+// before serving rather than relying on kernel refusal or resolving DNS twice.
+func listenersOverlap(left, right net.Addr) bool {
+	a, okA := left.(*net.TCPAddr)
+	b, okB := right.(*net.TCPAddr)
+	return okA && okB && a.Port == b.Port && (a.IP.IsUnspecified() || b.IP.IsUnspecified() || a.IP.Equal(b.IP))
+}
+
+// A split socket must not expose the sibling origin even with valid Host/SNI.
+// The unchanged dispatcher still owns sessions, CSRF and business authorization.
+func browserEntrance(server config.ServerConfiguration, audience string, next http.Handler, policy config.HTTPPolicy, rejected *atomic.Uint64) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		connection, err := ResolveBrowserRequest(r, server)
+		if err == nil && connection.Audience != audience {
+			err = errors.New("MISDIRECTED_REQUEST")
+		}
+		if err == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		requestID := uuid.NewString()
+		rejected.Add(1)
+		w.Header().Set("X-Request-ID", requestID)
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		AuditTransport(r.Context(), requestID, connection, false)
+		ProblemWithPolicy(w, requestID, err, policy)
+	})
+}
+
 // ListenerGroup owns every prebound socket. Its handlers share one connection
 // budget; business request admission and authorization remain handler-owned.
 type ListenerGroup struct {
-	mu        sync.Mutex
-	endpoints []listenerEndpoint
-	policy    config.HTTPPolicy
-	started   bool
-	closed    bool
-	cancel    context.CancelFunc
-	done      chan struct{}
-	result    error
+	mu           sync.Mutex
+	endpoints    []listenerEndpoint
+	policy       config.HTTPPolicy
+	started      bool
+	closed       bool
+	cancel       context.CancelFunc
+	done         chan struct{}
+	result       error
+	splitBrowser bool
+	rejected     [2]atomic.Uint64
+}
+
+// Samples exposes fixed per-browser rejection counters for the serving metrics owner.
+func (g *ListenerGroup) Samples() []telemetrystore.Sample {
+	if g == nil || !g.splitBrowser {
+		return nil
+	}
+	return []telemetrystore.Sample{
+		{Name: "ownsolid_http_entrance_rejections_total", Value: float64(g.rejected[0].Load()), Labels: []telemetrystore.Label{{Name: "audience", Value: "admin"}}},
+		{Name: "ownsolid_http_entrance_rejections_total", Value: float64(g.rejected[1].Load()), Labels: []telemetrystore.Label{{Name: "audience", Value: "portal"}}},
+	}
 }
 
 // ListenConfigured binds all selected sockets before any request is accepted.
@@ -166,15 +220,21 @@ func ListenConfigured(server config.ServerConfiguration, browserTLS *tls.Config,
 		if machineTLS != nil || machineHandler != nil {
 			return nil, bad
 		}
-	} else if machine.Validate() != nil || machineTLS == nil || machineHandler == nil || machine.ListenAddress == server.ListenAddress || machine.Origin == server.PortalOrigin || machine.Origin == server.AdminOrigin {
+	} else if machine.Validate() != nil || machineTLS == nil || machineHandler == nil || machine.ListenAddress == server.ListenAddress || machine.ListenAddress == server.PortalListenAddress || machine.Origin == server.PortalOrigin || machine.Origin == server.AdminOrigin {
 		return nil, bad
 	}
-	group := &ListenerGroup{policy: policy, done: make(chan struct{})}
+	group := &ListenerGroup{policy: policy, done: make(chan struct{}), splitBrowser: server.PortalListenAddress != ""}
 	slots := make(chan struct{}, policy.MaxConnections)
 	bind := func(address string, tlsConfiguration *tls.Config, handler http.Handler) error {
 		listener, e := net.Listen("tcp", address)
 		if e != nil {
 			return e
+		}
+		for _, endpoint := range group.endpoints {
+			if listenersOverlap(listener.Addr(), endpoint.listener.Addr()) {
+				_ = listener.Close()
+				return errors.New("HTTP_LISTENER_BIND_FAILED")
+			}
 		}
 		var accepted net.Listener = &bounded{listener, slots}
 		if tlsConfiguration != nil {
@@ -184,8 +244,17 @@ func ListenConfigured(server config.ServerConfiguration, browserTLS *tls.Config,
 		group.endpoints = append(group.endpoints, listenerEndpoint{listener: accepted, handler: handler, tls: tlsConfiguration})
 		return nil
 	}
-	if e := bind(server.ListenAddress, browserTLS, browserHandler); e != nil {
+	adminHandler := browserHandler
+	if server.PortalListenAddress != "" {
+		adminHandler = browserEntrance(server, "admin", browserHandler, policy, &group.rejected[0])
+	}
+	if e := bind(server.ListenAddress, browserTLS, adminHandler); e != nil {
 		return nil, errors.New("HTTP_LISTENER_BIND_FAILED")
+	}
+	if server.PortalListenAddress != "" {
+		if e := bind(server.PortalListenAddress, browserTLS, browserEntrance(server, "portal", browserHandler, policy, &group.rejected[1])); e != nil {
+			return nil, errors.Join(errors.New("HTTP_LISTENER_BIND_FAILED"), group.Close())
+		}
 	}
 	if machine != nil {
 		if e := bind(machine.ListenAddress, machineTLS, machineHandler); e != nil {
@@ -196,7 +265,7 @@ func ListenConfigured(server config.ServerConfiguration, browserTLS *tls.Config,
 }
 
 // Close before Serve releases all prebound sockets. During Serve it cancels the
-// common request context and waits for both bounded shutdowns. It is idempotent.
+// common request context and waits for every bounded shutdown. It is idempotent.
 func (g *ListenerGroup) Close() error {
 	if g == nil {
 		return nil
@@ -227,7 +296,7 @@ func (g *ListenerGroup) Close() error {
 }
 
 // Serve starts acceptance exactly once. A sibling failure or caller cancellation
-// cancels every request, then concurrently drains both servers within one budget.
+// cancels every request, then concurrently drains every server within one budget.
 // A handler that ignores cancellation can exceed that drain budget; forced socket
 // closure is reported as failure, never as confirmation of handler cleanup.
 func (g *ListenerGroup) Serve(ctx context.Context) error {
@@ -235,7 +304,8 @@ func (g *ListenerGroup) Serve(ctx context.Context) error {
 		return errors.New("HTTP_LISTENER_CONTEXT_REQUIRED")
 	}
 	g.mu.Lock()
-	if g.done == nil || len(g.endpoints) < 1 || len(g.endpoints) > 2 {
+	// Two browser entrances and the optional machine entrance share this owner.
+	if g.done == nil || len(g.endpoints) < 1 || len(g.endpoints) > 3 {
 		g.mu.Unlock()
 		return errors.New("HTTP_LISTENER_GROUP_INVALID")
 	}

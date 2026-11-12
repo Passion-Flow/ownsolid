@@ -55,7 +55,7 @@ func (c Config) validateMachineServer() error {
 	if c.MachineServer == nil {
 		return nil
 	}
-	if c.MachineServer.Validate() != nil || c.MachineServer.ListenAddress == c.Server.ListenAddress || c.MachineServer.Origin == c.Server.PortalOrigin || c.MachineServer.Origin == c.Server.AdminOrigin {
+	if c.MachineServer.Validate() != nil || c.MachineServer.ListenAddress == c.Server.ListenAddress || c.MachineServer.ListenAddress == c.Server.PortalListenAddress || c.MachineServer.Origin == c.Server.PortalOrigin || c.MachineServer.Origin == c.Server.AdminOrigin {
 		return errors.New("CONFIG_MACHINE_SERVER_INVALID")
 	}
 	return nil

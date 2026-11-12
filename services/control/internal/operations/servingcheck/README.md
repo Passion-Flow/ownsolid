@@ -20,7 +20,11 @@ typed control configuration before serving starts. [check.go](check.go) exports
 are in the [frozen specification](../../../../../docs/engineering/deployment-transport/serving-check.md).
 
 `ParseExpected` accepts at most 64 KiB of strict version 1 JSON with all eight
-required fields. Unknown, duplicate, null, incorrectly typed, missing and trailing
+required fields and optional nonempty `portal_listen_address`. Omission asserts
+the absence of a dedicated Portal bind. An old eight-field expectation therefore
+refuses a split configuration before any TLS material is opened. A supplied bind
+must match exactly; an empty value cannot stand for omission. Unknown, duplicate,
+null, incorrectly typed, missing and trailing
 values fail with a fixed error. Validation reuses
 `config.ServerConfiguration.ValidateTransport`, requires actual direct HTTPS
 file references and an explicit proxy array, and performs no I/O. Empty arrays
