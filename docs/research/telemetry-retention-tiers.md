@@ -339,3 +339,54 @@ recovery after its independent CA update, no raw fallback on long-tier
 failure, and the existing authorization and audit refusals. The earlier
 `e46f6ba7` TLS fixture remains the process-level certificate evidence.
 Installed deployment and configuration acceptance remain open.
+
+## Installer continuation
+
+Use a separately named, opt-in Compose deployment for the fleet raw store,
+long store and evaluator. The existing Control process-metrics client in
+`telemetrystore.NewClient` accepts HTTP only. Preserve that installed path
+while giving fleet history its own private HTTPS stores and persistent
+directories. Reuse the installer CLI, operation lock, atomic file writer
+and protected input reader. No monitoring or shared Control source change
+is required for deployment manufacture.
+
+The operator supplies digest-pinned local VictoriaMetrics and vmalert
+images, private numeric listen addresses, a private internal subnet,
+runtime UID/GID, resource bounds, raw and long retention, and protected
+CA, certificate, key, rule and monitoring-policy files. Verify both the
+published IP and internal service IP against each leaf. Pin the local
+recording-rule bytes. Use vmalert's documented datasource and remote-write
+CA files and local rules, with no URL-based rule loading. Its loopback
+health endpoint is separate from the two HTTPS store endpoints.
+[vmalert configuration](https://docs.victoriametrics.com/victoriametrics/vmalert/).
+
+Validate all inputs before changing a running deployment. Store each
+configuration generation immutably, stop the three managed services,
+publish their Compose reference and start them from the selected generation.
+Stopping both clients and stores drains connections authenticated under
+old trust. Retry after an interrupted stop or start uses the same data
+directories and generation. Keep old generations for operator recovery.
+Reject another project, subnet or listen assignment under an owned root.
+Publish the checked monitoring policy and combined Control CA file. The
+ordinary install command's optional `telemetry.fleet_history_control_directory`
+selects this protected output directory. It installs the two files, selects
+the existing global `monitoring_config_file` and process CA file, and restarts
+Control through the existing apply lifecycle. The containerized deployment
+requires private host origins reachable from Control; host loopback origins
+are refused at this admission boundary. No shared startup source changes.
+
+The pinned native TLS server and evaluator use the existing Apache-2.0
+VictoriaMetrics components. Their image distribution still requires the
+applicable component and base-image notices. Go and the existing YAML
+and bundle dependencies retain their current licenses. No model,
+dataset or additional dependency is introduced.
+
+Unit checks must cover old installer configuration, protected file and
+pin refusal, invalid and expired CA, wrong SAN and key, issuer overlap,
+wrong policy origins, concurrent ownership and interrupted restart.
+The small Linux deployment run must use real stores and vmalert with
+recorded egress, show a retained sample and aggregate after restart,
+then replace the issuer and remove old trust while retaining the data.
+The normal authenticated history operation is verified with the matching
+OBS and DEV candidate. Formal public-operation publication remains with
+those owners.
