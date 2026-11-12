@@ -642,3 +642,25 @@ No new dependency, model or dataset is introduced. Even a passing small prototyp
 must still be followed by full repository gates and the unchanged native installed
 500-agent simulator drill before ARC-107 can be accepted. No such new run is
 claimed here.
+
+
+The external feasibility probe on source `2e4650c7b68feae6dffa64d5505c2eae6c073431` passed
+`TestPrototypeAuthenticatedStreamBindsNaturalTransportEnd` under the race detector
+on Darwin arm64: three authenticated replacements on actual verified TLS/HTTP2,
+4.38 seconds in the root and 5.910 seconds in its package. Each committed stream's
+actual peer local/remote addresses matched its own TagConn lifecycle record. Every
+retired channel had one transport begin and one end, with no retained transport;
+the old stream's cleanup preserved the replacement session. The three original
+physical connections retired naturally at their unchanged jittered ages with
+`forced=false`. No old ClientConn was closed before its transport end. The final
+active connection was closed explicitly during owned fixture shutdown and is not
+counted as natural-age evidence. The external test and log SHA-256 values are
+`9dcb1da41ab710c39ac97c1c0df54d4a55c9f951533ab759869ffbb045c2cce4` and
+`97666a1db004bf1630546e03131951c7715a7afe62a8e43bece3ebfbd5ffab45`.
+
+This qualifies the transport-binding feasibility only. It used the production
+listener, gateway and codec with a synthetic backend and a raw pinned gRPC client;
+it did not yet change or qualify the real agent's automatic handoff, compatibility,
+lease/cursor behavior, saturation or the installed 500-agent drill. All code and
+logs remain outside the repository. The prototype released its resource lock and
+joined its listener; no service or container remains running.
