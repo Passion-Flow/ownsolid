@@ -39,6 +39,7 @@ func (c *Client) WithCertificate(certificate tls.Certificate) *Client {
 	}
 	transport := base.Clone()
 	transport.TLSClientConfig.Certificates = []tls.Certificate{certificate}
+	c.t.Cleanup(transport.CloseIdleConnections)
 	http := *c.client
 	http.Transport = transport
 	own := *c
