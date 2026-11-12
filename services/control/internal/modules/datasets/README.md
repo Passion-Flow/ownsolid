@@ -236,6 +236,13 @@ with `DATASET_DRAFT_IMPORT_DOWNGRADE_REQUIRES_RESTORE` and rejects stale
 rollback snapshots before DDL. Restore a predecessor backup to downgrade
 an installation containing import receipts.
 
+The actual numbered scripts, existing-principal grant resume and eight
+production migration/restore histories passed on the disconnected Linux
+arm64 fixture. Full repository check, build and test also passed. See the
+[qualified input and limits](../../../../../docs/research/dataset-import.md#formal-schema-60-acceptance).
+The testdata SQL files retain the original owner artifact; current fixtures
+execute the registered migration and its retention guard.
+
 The adapter and HTTP fixtures still require explicit construction. Production
 startup does not register the CSV or Parquet routes. The dataset inventory and
 integrity checks must admit both original and normalized files before that

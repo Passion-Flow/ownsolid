@@ -632,8 +632,73 @@ same up produced the same prospective fingerprint. All five retained dumps
 were unchanged, and the four original audit exports remained byte-identical
 and passed the standalone verifier. The projection log SHA-256 is
 50e6e9a585a6286fbfd0ccf574bad2db0bfb54e55fdf6640b5d8a1667097f660.
-These measured values supply formal schema-60 registration; they do not
-claim that the schema-60 production migrator or application passed yet.
+These measured values supply formal schema-60 registration; the projection
+alone does not establish production-migrator or application acceptance.
 The up and guarded down SHA-256 values are respectively
 d7e8eb61bd8afa4c1a3a1363d092685d13c55ca35d6965257457247336066868
 and 30a30989f237d89b56af6c5bef12115b3242089463ea608db445b1eb9df5d7df.
+
+## Formal schema-60 acceptance
+
+The qualified input is f110757995e081544b836ec240474a700176571e,
+tree d5adf0a8a3a70cd0482ac1039d842b8fa355a6b4. All 59 predecessor
+migration bytes and release-lineage entries remain unchanged. The imported
+owner implementation remains byte-identical; only the two isolated test
+adapters select the registered table and actual numbered scripts.
+
+On PostgreSQL 18.6 and pgvector 0.8.7, a Linux arm64 Docker fixture on the
+Darwin arm64 workstation ran with network none, two CPUs and no published
+ports. Six numbered-script test roots passed: pristine rollback, retained
+CSV/Parquet receipts, prior RR/SERIALIZABLE snapshots, fresh transactions
+at all four isolation levels, a committed writer observed waiting at the
+exclusive lock, and registered foreign/null scope refusals. Nine runtime
+access roots passed, including both description and receipt grant resume.
+They preserved the existing principal, password verifier and predecessor
+ledger, refused premature serving, and retained private-ledger, audit-head,
+DDL and TRUNCATE denial after resumed grants. These database cases had no
+skips. Their log SHA-256 values are respectively
+549f4cd1568a15caeb4fda9b442936d00796d932fcebdbb268fe157530e2be6e
+and a30b606c809498466d830ea16cd6e8c388cd4a1a6ea0860fbdbea5b86c1b792a.
+
+The actual production migrator ran twice and normal catalog admission
+passed on eight histories: fresh, native 59, restored 55, 56, 57, 58, 59
+and current 60. Each reached 120 tables and a 60-entry ledger with the
+three measured fingerprints above. Original schema-55 through schema-59
+dumps remained unchanged. All four original audit exports were byte-identical
+and passed the standalone verifier. Existing lineage and cell-scope
+regressions passed. The restore-matrix and lineage log SHA-256 values are
+b71193e58a4f17b24ef6816f26d8f6be5b75c6aba162a1ee1792c1d9f64cf525
+and 5c88bcc5fd54d2e46baac828f6828635a934cc48b0b083c8d4965e6109c35fed.
+
+Full `make check`, `make build` and `make test` passed on that input,
+using offline dependency resolution and a private APFS temporary volume.
+Console passed 1,075 browser cases and Portal passed 389, with their 37
+existing live-fixture skips and no added retries. The focused affected
+packages also passed race tests. The full-gate log SHA-256 values are:
+
+| Gate | SHA-256 |
+| --- | --- |
+| check | 197c06c775d1a4509d7d8089b0e1b39f6eb4e3801b2c7eaebeb53f852ceeae6f |
+| build | d73107de9eeaf089d8b5892cc7f4f2042f319f865d59646c3d250bdb62f78e1b |
+| test | 43f0bad0f36ed3c60c4ff98767d3268a5d00ed2b7eaf9607e018f49d290cd62c |
+
+The initial static grant-catalog check correctly failed because its explicit
+migration-input list omitted 60. Adding that real migration and changing
+the exact table count from 22 to 23 preserved the full table-name comparison.
+No permission, retention, concurrency or scope assertion was relaxed.
+The later rebase added only three existing training/status documents;
+all executable and test inputs remained identical to the qualified input.
+
+The tagged dataset suite compiled for Linux arm64 and amd64. Its current
+native amd64 CSV/Parquet HTTPS and object-restore replay has not run: SSH
+interrupted the source handoff before complete receiver verification.
+The prior owner replay remains separately scoped above. To replay against
+the formal lineage, leave `OWNSOLID_TEST_DRAFT_RESTORE_PREDECESSOR_SQL` unset
+and run `bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh`
+with the protected interpreters required by that runner. The frozen testdata
+up/down files preserve the original owner artifact; current tests execute
+the numbered migration, including the retained-data downgrade guard.
+
+DAT-101 stays open. Original and normalized artifacts still need the same
+production backup and integrity inventory before route registration,
+public-contract composition, release-image and S-503 UI acceptance.
