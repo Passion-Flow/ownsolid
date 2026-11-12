@@ -83,3 +83,29 @@ No new dependency.
 
 With shortcuts on, each of D, I, N and K runs its action from anywhere, `/` and `?` work, and turning
 them off in the list or on the account page stops all of them for that account in every browser.
+
+## Sampling focused controls after layout (UX-112)
+
+The retained APP trace for the Portal key drawer records a focused,
+indicated Download CSV control with a sampled rectangle outside the
+viewport. Its following screencast frame shows that control inside the
+viewport. Both the sample and call-history requests were still rendering
+their placeholders while the test named the state as having sample calls.
+Waiting for the Use this key heading had only waited for the section
+shell. The tab walker waited for Web Animations, then froze its geometry
+sample immediately.
+
+[HTML focus processing](https://html.spec.whatwg.org/multipage/interaction.html#focus-processing-model)
+and [CSSOM scrolling](https://www.w3.org/TR/cssom-view-1/#scroll-a-target-into-view)
+are separate from waiting for active Web Animations. Wait for the
+observable focused control rectangle to enter the viewport before
+recording its unchanged visibility and focus-indication checks. Use a
+bounded animation-frame condition. Keep a permanently offscreen focused
+control as a failing regression. The walker must not scroll or move the
+control itself, and test retries stay disabled. The ready drawer state
+must also wait for the actual sample tab and the completed call-history
+empty state, so its controls do not change halfway through the walk.
+
+This is a proposed test-wait correction. The focused reproduction and
+both relevant browser flows must pass before recording it as verified.
+Retain the original failure trace. No dependency, model or dataset is added.
