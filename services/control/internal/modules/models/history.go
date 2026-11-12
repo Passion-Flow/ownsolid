@@ -271,16 +271,19 @@ func (s *Service) HistoricalVersion(ctx context.Context, a identity.Auth, worksp
 		}
 		w, family, selected := frame.workspace, frame.family, frame.version
 		if version != anchor {
+			var member bool
+			err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT EXISTS(
+ SELECT 1 FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND family_id=$3 AND version_id=$4)`,
+				w.TenantID, w.ID, family, version)).Scan(&member)
+			if err != nil {
+				return err
+			}
+			if !member {
+				return fail("RESOURCE_NOT_FOUND")
+			}
 			selected, err = s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, version)
 			if err != nil {
 				return err
-			}
-			other, err := versionFamilyWithin(ctx, q, w.TenantID, w.ID, version)
-			if err != nil {
-				return err
-			}
-			if other != family {
-				return fail("RESOURCE_NOT_FOUND")
 			}
 		}
 		metadata, err := historicalMetadata(selected)
