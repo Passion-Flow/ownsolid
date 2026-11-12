@@ -411,3 +411,37 @@ the lifecycle term and await its query URL. Otherwise the unchanged article may
 still be visible before the debounced filter commits, producing a false positive.
 Keep that initial false-positive comparison separate from the corrected old-build
 regression. Neither comparison uses an installed server or real model bytes.
+
+### Complete Web consumer gate
+
+The exact integrated source 6a77bcdbc372a0aa7fac24b3f21a83105c246c86 passed make check,
+make build and make test, including all Go modules, Rust, Web unit targets
+and both full browser suites. Console passed 1,134 cases with 28 existing
+installation-dependent skips; Portal passed 410 with 10 existing skips.
+There were zero unexpected/flaky cases and no retries. The private Make
+overlay only capped workers at four for Console and one for Portal and
+reused the same production assets just built. It selected no subset and
+introduced no skip. No installed expiry worker or GPU run is claimed.
+
+The old 7401ff67 production asset manifest was kept unchanged during the
+controlled discovery check. English expired search failed with the old
+expires heading; Chinese remained a passing positive control. The new
+heading and consumer passed both languages, all 44 model cases with
+three existing skips, eight state checks, and the unit/catalog checks.
+Six final screenshots were read again, including the answer reached
+through the settled search. The first comparison that clicked an article
+before filtering settled is retained as a false-positive test, not as
+regression evidence.
+
+The earlier interactive-preview full run at be1e7339 lost its listener
+about 60 seconds after startup. It was interrupted and remains failed;
+its raw cleanup status alone is not a successful gate. A noninteractive
+rerun with clean shell environment and separate owned ports passed at
+7401ff67 and again at the exact source above. The final runner requires
+both complete stage and zero exit status. No product assertion or limit
+was weakened. Raw reports, asset/image hashes and failed controls remain
+outside Git in the source-qualified Web artifacts.
+
+AUD-108's action/family consumer is included in this same gate. Actual
+same-source installed audit reads, expiry, GW120/Help/Scope and independent
+SQL remain separate. MOD-121 and AUD-108 stay open with their owner work.

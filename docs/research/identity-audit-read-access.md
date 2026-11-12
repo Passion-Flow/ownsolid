@@ -161,5 +161,8 @@ read failure, denied read, and unavailable operations with reasons. Initial
 and filtered empty copy remains distinct. This slice adds no surface or
 primary action; reading an event remains the immediate task, with its
 request/person follow-up in the preview. Installed append/SQL acceptance
-is not claimed by the scripted browser checks. Full gate evidence follows
-only after the exact committed source has passed it.
+is not claimed by the scripted browser checks. The complete integrated gate passed
+at 6a77bcdbc372a0aa7fac24b3f21a83105c246c86;
+see the [shared Web gate](model-import-cleanup.md#complete-web-consumer-gate).
+This retains the exact-action and thirteen-field boundaries; installed AUD-108
+acceptance is still separate.
