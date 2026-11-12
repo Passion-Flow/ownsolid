@@ -203,3 +203,56 @@ Go/Rust shared and dedicated HTTPS gateway regressions also passed.
 The HTTPS endpoint used to check the serving certificate was a Go
 fixture. The [public CA download contract](gateway-trust-download-contract.md)
 is published. Console and Portal links remain open.
+
+
+## Additional inference-capable enrollment profiles (GW-123)
+
+A source/test-policy review of 402d604e shows that the automatic gateway
+delivery path remains limited to docker-inference. Generic distribution
+provisioning accepts DockerInferenceProfile, DockerAIProfile and
+DockerModelLifecycleProfile, as the existing profiles_test.go records.
+That fixture uses ordinary registration and does not prove automatic
+agent delivery for the latter two profiles.
+
+Four existing gates prevent that automatic flow:
+
+| Gate | Current source behavior |
+| --- | --- |
+| api/agent/v1/components.go: Capabilities / OperationAllowed | gateway.start and gateway.stop belong only to DockerInferenceProfile |
+| services/agent/internal/runtime/runtime.go: LoadConfig | A non-nil Gateway configuration rejects every other execution profile with AGENT_CONFIG_INVALID |
+| services/agent/internal/runtime/lease.go: validateExecutionLease | Gateway leases require DockerInferenceProfile and otherwise return AGENT_TASK_UNSUPPORTED |
+| services/agent/internal/runtime/runtime.go: gateway manager construction | NewGatewayManager is constructed only for DockerInferenceProfile |
+
+api/agent/v1/gateway_test.go explicitly tests that gateway tasks belong
+to inference only; services/agent/internal/runtime/gateway_test.go does
+the same for lease execution. These are inspected source assertions,
+not a newly executed live-profile test. The AI/model-lifecycle automatic
+gateway path is not supported by this input.
+
+ARC owns the shared agent contract and profile-version policy; AGT owns
+the agent configuration, lease validation and runtime. Extend the
+existing proven GatewayManager path consistently after those owners
+qualify the contract. Keep enrollment's execution_profile authority
+and all non-inference profile refusals. This agent profile is distinct
+from the removed control application_profile selector.
+
+Acceptance must cover all three inference-capable profiles from a real
+enrollment through a leased start, node-generated credential/CSR,
+lease-bound activation, a gateway listener presenting the issued
+certificate, normal model calls, and revoke/stop with secret removal.
+Preserve mismatched command/lease/action, missing CA, unsafe directory
+overlap, expired lease and read-only/systemd/Kubernetes refusal cases.
+AI and lifecycle profiles must include their existing training and
+preparation configuration and resource ownership, rather than bypassing
+it to make gateway setup pass. Repeat start/stop and interrupted task
+behavior on the same source; the existing inference path must continue
+to work.
+
+Do not add a second gateway manager or fabricate enrolled gateway
+capabilities from control. The present agentDelivers decision reads
+the enrolled capability set; widening generic provisioning cannot
+supply a missing agent capability or make a refused lease execute.
+After ARC/AGT integration, GW can qualify its real Control/agent
+delivery boundary and installed publication flow. No dependency, model
+or dataset is added by this review; existing licence terms above apply.
+GW-123 remains open.
