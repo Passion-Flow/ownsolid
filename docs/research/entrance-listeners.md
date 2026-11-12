@@ -127,3 +127,40 @@ must be the canonical portal_listen_address key, never an alternate spelling.
 Preserve the eight-field omission contract. The added uppercase-key regression
 must fail on the retained pre-fix parser overlay and pass on the corrected parser;
 no valid deployment value, error contract or statement assertion is relaxed.
+
+
+## Current source qualification and canonical fixture routes
+
+Source fe11bdf09c36129ad85c7eac3d075e3d53fe2655 passed make check, make build
+and make test with the pinned offline toolchains. Console passed 1134 browser
+cases and Portal 410; the existing 28 and 10 environment-dependent browser cases
+remained skipped, not installed acceptance. The three transport/configuration/
+serving-intent packages passed 200 test roots with race detection and no skips,
+plus vet and Linux amd64 compilation. The uppercase optional-key regression
+failed on the retained previous parser and passed on the corrected implementation.
+The full check/build/test log SHA-256 values are respectively
+a687cb0cddab2a703a930a622be9b76aba98e4c4dec0fb4e462764a7bf8269d3,
+0e54550afb7756d294a446b76a77ee5a85565989d290cb5a371a92c86a848ad6,
+and 05f1655389c7568e84c47e5729391e81a696bbd560f91b8a0a69989773fd9875.
+
+The native composition admitted both browser logins and wrong-socket refusals,
+but failed the node-join request with RESOURCE_NOT_FOUND before enrollment. Its
+new helper had reused an historical composition helper's cell-relative URL.
+[The actual cell router](../../services/control/internal/platform/cellroute/route.go)
+and [ADR 0006](../decisions/0006-cell-scope-from-the-first-key.md) require a public
+site/cell prefix for node-owned resources. The established
+[HTTP fixture](../../services/control/internal/testing/httpfixture/client.go)
+already uses cellroute.Public before constructing requests. Use the same public
+path construction in the new entrance fixture; do not add an unscoped route,
+change a production dispatcher or weaken the expected status. Keep explicit
+unscoped and foreign-scope refusals so the fix cannot hide routing errors.
+
+The second transport subcase also failed isolated-schema migration with a
+statement timeout after the first case's disposal. Preserve that failure and its
+log; give each subcase its own generated schema namespace while retaining the
+same migration, statement and setup deadlines. Require both complete cases in a
+fresh native run before claiming composition acceptance. The retained failed
+composition log SHA-256 is
+0a0361cfef064ca8312b5038bbb15eb4b6b0f626956865464bb66f0fdfd3be18.
+Its network-none container and protected database/password inputs were removed.
+No complete installed, actual-browser or scale claim follows from this run.
