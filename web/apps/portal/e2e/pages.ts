@@ -165,7 +165,8 @@ export const portalPages: readonly PageState[] = [
       control.gatewayKeys = [deploymentKey];
       await openKeys(page, control);
       await page.getByRole('button', { name: 'Show Support bot' }).click();
-      await page.getByRole('heading', { name: 'Use this key' }).waitFor();
+      await page.getByRole('tab', { name: 'cURL', exact: true }).waitFor();
+      await page.getByText('No call has been made with this key.', { exact: true }).waitFor();
     },
   },
   {
