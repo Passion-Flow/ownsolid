@@ -109,3 +109,15 @@ empty state, so its controls do not change halfway through the walk.
 This is a proposed test-wait correction. The focused reproduction and
 both relevant browser flows must pass before recording it as verified.
 Retain the original failure trace. No dependency, model or dataset is added.
+
+The focused local Chromium run passed the controlled delayed-reveal
+fixture, the permanently offscreen rejection, and the original Portal
+key-drawer state. A separate copy of the original immediate-sampling
+walker failed the same controlled fixture with an indicated Keyboard
+target recorded as visible=false. That baseline used an expected-failure
+test and retained its error context. Its expected failure is evidence
+for the regression, not an additional passing implementation. The fixed
+three-case run used one worker with retries disabled. The ready key
+drawer now includes the sample and completed history content before
+its tab walk. Combined installation and full gate acceptance remain
+with the release owner.
