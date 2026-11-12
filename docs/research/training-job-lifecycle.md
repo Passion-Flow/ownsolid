@@ -78,3 +78,40 @@ The change adds no dependency, model or dataset. The existing Go, pgx and
 PostgreSQL licensing and offline requirements are recorded in the
 [scheduling model research](scheduling-job-model.md#licensing-and-offline-operation).
 The fixture uses synthetic rows, node reports and stop receipts.
+
+## Local-cell owner fence before scheduler admission
+
+The scheduling handoff requires the selected persisted training job to belong
+to this database's site and cell before any wait, failure, cancellation or
+attempt mutation. Migration 30 already supplies server-owned site/cell
+columns and `local_site_id()` / `local_cell_id()`. The current PostgreSQL
+FIFO selector, reconciliation selector and shared locked job loader omit
+those predicates. A retained foreign row with the same tenant/workspace
+must remain untouched, including when its requester has lost authority.
+
+Use the local database functions in both background selectors and the shared
+locked job read. Do not accept coordinates from the request or repair a
+foreign row by assigning it the current cell. Repeat the fence in the final
+owner transaction: PostgreSQL [READ COMMITTED snapshots](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED)
+can change between candidate selection and admission. The existing exact
+job lock and confirmed-commit behavior remain authoritative. This is a
+prerequisite to the scheduler's atomic admission, whose quota reservation
+must remain separate from physical execution; see [Kueue workload lifecycle](https://kueue.sigs.k8s.io/docs/concepts/workload/).
+
+A selector-only filter would miss a scope change after selection. Failing
+only in scheduling would happen after earlier owner wait/failure writes.
+Rewriting retained coordinates would destroy the evidence needed for
+reconciliation. No migration, public API, Agent change, model, dataset or
+new dependency is required. Existing Go/pgx/PostgreSQL redistribution and
+offline terms are recorded above. MySQL's inherited profile is unchanged;
+this acceptance covers the production PostgreSQL cell catalog.
+
+On real disconnected PostgreSQL, move only owned fixture jobs to a foreign
+site or cell. Due queued and active reconciliation selectors must skip them;
+direct cancellation must return the existing not-found error. Change scope
+between initial selection and each delegated transaction and require refusal
+without any task, attempt, GPU lease, audit or owner revision mutation.
+Return the exact fixture coordinates and require normal dispatch/cancel to
+work again. These are synthetic node observations and authenticated control
+transactions, not GPU execution. Keep TRN-101 open until scheduler wiring,
+CLI/UI and installed execution complete.
