@@ -578,8 +578,8 @@ while retaining the host filesystem and interpreter. The upstream
 [nsenter contract](https://man7.org/linux/man-pages/man1/nsenter.1.html) separates
 network namespace entry from mount namespace entry. Validate the owned container
 identity and network=none before entry; never enter a foreign namespace. util-linux
-[nsenter source](https://github.com/util-linux/util-linux/blob/master/sys-utils/nsenter.c)
-is GPL-2.0-or-later; it is an existing external test-host tool, not linked into or
+[nsenter 2.39.3 source](https://github.com/util-linux/util-linux/blob/v2.39.3/sys-utils/nsenter.c)
+is GPL-2.0-only; it is an existing external test-host tool, not linked into or
 redistributed with the product by this diagnostic. Retain all prior dependency
 licence obligations. Use the same pinned PostgreSQL image, generated ECDSA trust,
 verify-full, required SCRAM binding, bounded admission and unconditional cleanup.
