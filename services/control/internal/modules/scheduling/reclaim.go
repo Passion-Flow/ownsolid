@@ -42,7 +42,8 @@ func readReclaimWithin(ctx context.Context, q transaction.Executor, a Attempt, b
 	var plan ReclaimPlan
 	var same bool
 	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT attempt_id=$6 AND ($7::jsonb IS NULL OR intent=$7::jsonb),state,victims::text[]
+		`SELECT attempt_id=$6 AND ($7::jsonb IS NULL OR intent=$7::jsonb)
+  AND site_id=local_site_id() AND cell_id=local_cell_id(),state,victims::text[]
  FROM scheduling_quota_reclaims
  WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5`,
 		append(a.scopeArgs(), a.ID, wanted)...)).Scan(&same, &plan.State, &plan.Victims)
@@ -141,7 +142,7 @@ func CancelReclaimWithin(ctx context.Context, q transaction.Executor, a Attempt)
 	if err := requireDurableReservationCommit(ctx, q); err != nil {
 		return false, err
 	}
-	err = updateBorrowingRow(ctx, q, `UPDATE scheduling_quota_reclaims SET state='cancelled' WHERE attempt_id=$1 AND state='pending'`, a.ID)
+	err = updateBorrowingRow(ctx, q, `UPDATE scheduling_quota_reclaims SET state='cancelled' WHERE attempt_id=$1 AND state='pending' AND site_id=local_site_id() AND cell_id=local_cell_id()`, a.ID)
 	return err == nil, err
 }
 
@@ -210,7 +211,8 @@ func requireReclaimReleases(ctx context.Context, q transaction.Executor, tenant 
 	var released bool
 	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
 		`SELECT count(*)=cardinality($2::uuid[]) FROM scheduling_reservations
- WHERE tenant_id=$1 AND attempt_id=ANY($2::uuid[]) AND released_at IS NOT NULL`, tenant, victims)).Scan(&released)
+ WHERE tenant_id=$1 AND attempt_id=ANY($2::uuid[]) AND released_at IS NOT NULL
+ AND site_id=local_site_id() AND cell_id=local_cell_id()`, tenant, victims)).Scan(&released)
 	if err != nil {
 		return err
 	}

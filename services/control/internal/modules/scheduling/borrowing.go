@@ -61,7 +61,8 @@ func readCohortUsage(ctx context.Context, q transaction.Executor, tenant, depart
 		state.owned[id], state.lent[id] = make(Resources), make(Resources)
 	}
 	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT attempt_id::text,workspace_id::text,demand,loan_allocations
+		`SELECT attempt_id::text,workspace_id::text,demand,loan_allocations,
+ (site_id=local_site_id() AND cell_id=local_cell_id()) IS TRUE
  FROM scheduling_reservations WHERE tenant_id=$1 AND workspace_id=ANY($2::uuid[]) AND released_at IS NULL
  ORDER BY borrowing_order DESC`, tenant, ids))
 	if err != nil {
@@ -71,12 +72,13 @@ func readCohortUsage(ctx context.Context, q transaction.Executor, tenant, depart
 	for rows.Next() {
 		var id, workspace string
 		var demandJSON, loansJSON []byte
-		if err := rows.Scan(&id, &workspace, &demandJSON, &loansJSON); err != nil {
+		var local bool
+		if err := rows.Scan(&id, &workspace, &demandJSON, &loansJSON, &local); err != nil {
 			return cohortUsage{}, err
 		}
 		var demand Resources
 		var loans loanAllocation
-		if json.Unmarshal(demandJSON, &demand) != nil || json.Unmarshal(loansJSON, &loans) != nil ||
+		if !local || json.Unmarshal(demandJSON, &demand) != nil || json.Unmarshal(loansJSON, &loans) != nil ||
 			state.addHold(workspace, demand, loans) != nil {
 			return cohortUsage{}, ErrQuotaPolicyUnavailable
 		}
@@ -87,7 +89,8 @@ func readCohortUsage(ctx context.Context, q transaction.Executor, tenant, depart
 	}
 	rows.Close()
 	rows, err = q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT workspace_id::text FROM scheduling_quota_reclaims
+		`SELECT workspace_id::text,(site_id=local_site_id() AND cell_id=local_cell_id()) IS TRUE
+ FROM scheduling_quota_reclaims
  WHERE tenant_id=$1 AND cohort_id=$2 AND state='pending'`, tenant, department))
 	if err != nil {
 		return cohortUsage{}, err
@@ -95,8 +98,12 @@ func readCohortUsage(ctx context.Context, q transaction.Executor, tenant, depart
 	defer rows.Close()
 	for rows.Next() {
 		var workspace string
-		if err := rows.Scan(&workspace); err != nil {
+		var local bool
+		if err := rows.Scan(&workspace, &local); err != nil {
 			return cohortUsage{}, err
+		}
+		if !local {
+			return cohortUsage{}, ErrQuotaPolicyUnavailable
 		}
 		state.pending[workspace] = true
 	}
@@ -213,12 +220,12 @@ func recordBorrowingWithin(ctx context.Context, q transaction.Executor, a Attemp
 		if err != nil {
 			return err
 		}
-		if err := updateBorrowingRow(ctx, q, `UPDATE scheduling_reservations SET loan_allocations=$2::jsonb WHERE attempt_id=$1`, a.ID, data); err != nil {
+		if err := updateBorrowingRow(ctx, q, `UPDATE scheduling_reservations SET loan_allocations=$2::jsonb WHERE attempt_id=$1 AND site_id=local_site_id() AND cell_id=local_cell_id()`, a.ID, data); err != nil {
 			return err
 		}
 	}
 	if reclaimed {
-		return updateBorrowingRow(ctx, q, `UPDATE scheduling_quota_reclaims SET state='admitted' WHERE attempt_id=$1 AND state='pending'`, a.ID)
+		return updateBorrowingRow(ctx, q, `UPDATE scheduling_quota_reclaims SET state='admitted' WHERE attempt_id=$1 AND state='pending' AND site_id=local_site_id() AND cell_id=local_cell_id()`, a.ID)
 	}
 	return nil
 }
