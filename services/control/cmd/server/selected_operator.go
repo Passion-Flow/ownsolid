@@ -56,7 +56,7 @@ func validInstallationAuthorities(complete bool, workspace, admin sql.NullString
 }
 
 func validateUnbootstrappedFeatures(c config.Config) error {
-	if c.PrivateClusterConfigFile != "" || c.MonitoringConfigFile != "" || c.MiddlewareConfigFile != "" || c.TaskEvents.Enabled || c.ImageRegistry != nil || c.ObjectStorage != nil && c.ObjectStorage.Enabled || c.Models.ArtifactRoot != "" || c.Datasets.ArtifactRoot != "" || c.Training.Enabled() || c.ModelPreparation.Enabled() || c.Knowledge.Enabled || c.Plugins.Enabled || c.Workflows.Enabled {
+	if c.PrivateClusterConfigFile != "" || c.MonitoringConfigFile != "" || c.MiddlewareConfigFile != "" || c.TaskEvents.Enabled || c.ImageRegistry != nil || c.ImageRegistrySiteSourceFile != "" || c.ObjectStorage != nil && c.ObjectStorage.Enabled || c.Models.ArtifactRoot != "" || c.Datasets.ArtifactRoot != "" || c.Training.Enabled() || c.ModelPreparation.Enabled() || c.Knowledge.Enabled || c.Plugins.Enabled || c.Workflows.Enabled {
 		return errors.New("BOOTSTRAP_REQUIRED_FOR_CONFIGURED_FEATURES")
 	}
 	return nil

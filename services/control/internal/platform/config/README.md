@@ -178,3 +178,12 @@ Physical qualification and real manufacturer approval remain separate.
 or `multi-site`, defaulting to `single-node`. Only `single-node` is accepted today; see
 [topology.go](topology.go) and ADR 0003. `Config.ValidateServing` holds the rules that
 must pass before `serve` accepts traffic.
+
+The optional `image_registry_site_source_file` selects the Registry owner's
+protected read-only site configuration alongside `image_registry_config_file`.
+`PROJECT_ONE_REGISTRY_SITE_SOURCE_FILE` in the explicit protected environment
+file overrides a valid YAML reference. Empty, null, relative or noncanonical
+references, and a source without a writable Registry, are refused. The module
+constructor owns source JSON, private CIDRs, trust, credentials and source
+separation. An explicit invalid source aborts startup. The shared runtime
+retains the existing Registry cleanup registration.
