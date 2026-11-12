@@ -18,9 +18,11 @@ const descriptionFiles = import.meta.glob<Readonly<Record<string, string>>>(
   './gen/locales/*/api-descriptions.json',
   { import: 'default' },
 );
-const contractFiles = import.meta.glob<string>('./gen/contracts/*/*.json', {
+// Finding a download needs its address, without another request for a loader module.
+const contractUrls = import.meta.glob<string>('./gen/contracts/*/*.json', {
   query: '?url',
   import: 'default',
+  eager: true,
 });
 
 /** Loads an article's body; null when it does not exist. */
@@ -50,8 +52,7 @@ export async function loadApiDescriptions(
   return load ? load() : {};
 }
 
-/** The address of a contract as the entrance serves it, as a file to save. */
-export async function contractUrl(entrance: Entrance, domain: string): Promise<string | null> {
-  const load = contractFiles[`./gen/contracts/${entrance}/${domain}.json`];
-  return load ? load() : null;
+/** The bundled address of a contract to save; null when this entrance has no such contract. */
+export function contractUrl(entrance: Entrance, domain: string): string | null {
+  return contractUrls[`./gen/contracts/${entrance}/${domain}.json`] ?? null;
 }
