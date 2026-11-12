@@ -19,6 +19,9 @@ Measuring models and applications before release, and gating releases on the res
   - [Persisted report integrity](../../research/evaluation-reproducibility.md#persisted-report-integrity-on-a-real-cpu-capture)
     reproduced a report from real CPU responses and refused changed outcomes.
     Repeatability evidence covers the fixed CPU safety profile.
+  - [Authorized report service handoff](../../research/evaluation-reproducibility.md#authorized-report-service-handoff)
+    identifies existing scoped readers and the missing authenticated report
+    operation, immutable persistence and current-authority publication.
 - [ ] EVL-102 Model-against-model comparison on the customer's own set (P1) - Catalog: F067
   - [Offline paired comparison](../../../runtimes/model-lifecycle/README.md#compare-two-captured-evaluations)
     replays two retained reports on one frozen validation version and records

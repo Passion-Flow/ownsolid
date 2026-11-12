@@ -140,6 +140,116 @@ The real inference repeatability applies to the fixed CPU safety
 profile and frozen cases. The product authorization and report interface,
 and other execution profiles, remain open.
 
+## Authorized report service handoff
+
+The existing replay commands are executable offline tools, not registered
+control-plane report operations. The current
+[identity dispatcher](../../services/control/internal/modules/identity/http/handler.go)
+composes dataset, model and preparation handlers but no evaluation handler.
+There is no evaluation OpenAPI document or independent evaluation-report
+persistence in the published PostgreSQL migrations. This is the remaining
+EVL-101/102 product entry boundary; a dataset version reader already exists.
+
+[MLflow's dataset workflow](https://mlflow.org/docs/latest/genai/datasets/)
+connects reusable examples to a server experiment. Its
+[comparison guide](https://www.mlflow.org/docs/latest/genai/eval-monitor/comparing-evaluation-runs/)
+pairs baseline and candidate on the same inputs and scorers. Reuse those
+resource and case identities in ownsolid's authorized report path. Keep the
+existing exact integer scorer; this handoff introduces no statistical or
+model-judge claim and no new dependency, model or dataset. The dependency
+licenses and distribution boundaries above continue to apply.
+
+### Existing producer boundaries
+
+| Producer | Available behavior | Consumer obligation |
+| --- | --- | --- |
+| `datasets.Service.GetVersion` and `VersionFile` in [versions.go](../../services/control/internal/modules/datasets/versions.go) | Recheck the actor and workspace, scope SQL by tenant/workspace/dataset/version, and verify the selected file's size and SHA-256 | Read the exact validation asset through the service. Preserve the selected version, manifest and file digests; a current draft is a different resource. |
+| `TrainingInputSnapshotWithin` in [training_input_repository.go](../../services/control/internal/modules/datasets/training_input_repository.go) | Borrow a caller-owned transaction for frozen metadata; storage verification is a separate bounded operation | Supply the current actor/workspace fences before calling it. Its tenant/workspace arguments are not authentication. Preserve the owner's new-selection and retained-read policy. |
+| `models.Service.Get` in [queries.go](../../services/control/internal/modules/models/queries.go) and the [borrowed model access methods](../../services/control/internal/modules/models/access_repository.go) | Resolve an authorized model version; borrowed methods bind an exact ready base model or verified derived catalog | Bind the workspace model version ID as well as its catalog digest. Identical weights in another workspace confer no access. Borrowed methods require server-resolved scope. |
+| `modelpreparations.Service.Report` in [read_preparations.go](../../services/control/internal/modules/modelpreparations/read_preparations.go) | Recheck the current actor/workspace, read the current attempt, and verify raw outcome bytes, digest, scope and the prepared artifact reference | Retain the exact preparation, attempt, artifact, report digest and raw bytes. A pending or failed preparation is not a prepared capture. The mutable current-attempt pointer cannot identify a saved report. |
+| [Replay](../../runtimes/model-lifecycle/projectone_model_lifecycle/evaluation_report.py) and [comparison](../../runtimes/model-lifecycle/projectone_model_lifecycle/evaluation_comparison.py) | Check pinned inputs, recompute scores and produce canonical bytes | Run without business credentials on server-selected files. A successful local replay does not authorize storing or reading the result. |
+
+The preparation reader is a usable source for the existing base-model replay,
+not a missing generic capture registry. Its current-attempt selection is
+important: after a preparation retry, a later `Report` call can identify a
+different attempt. The first server report path must copy the original bytes
+and pin their attempt and digest at admission. Publication must detect a
+changed source selection or use an owner-provided retained-attempt read.
+Historical report reads must retain the original binding. Do not reconstruct
+them by following the preparation's latest pointer.
+
+### Required first product path
+
+Use a synchronous replay of an existing prepared base-model capture and one
+published validation version. This can complete without a new inference job.
+The authenticated request selects resource IDs and one installed scorer
+revision. Identity, audience, tenant and workspace authority come from the
+existing dispatcher and current service transactions. File paths, caller
+claims of authorization and uploaded executable scorers are not trust inputs.
+
+The service must obtain the original capture and model catalog through their
+owners, stage the exact validation bytes, and pin the recipe and scorer
+implementation before invoking replay. Preserve the selected Version snapshot
+as bytes: fields such as retirement metadata in a later Version DTO can change
+without changing the original validation asset. A saved report must retain its
+original snapshot digest rather than silently adopting the later DTO.
+
+Perform bounded file work outside long business locks, then recheck the current
+actor, workspace membership lifetime and selected source identities before
+publishing. Identity/workspace and source owners must expose the required
+same-transaction checks; separate earlier successful reads are not a final
+write authorization. Keep tenant and workspace scope on every stored report,
+source reference, idempotency key and query. Commit the canonical report,
+trusted source references and audit event together. An audit or persistence
+failure must not produce a success response.
+
+Persist one immutable report under a server-generated ID. Record its canonical
+bytes and digest, dataset/version/validation bindings, exact model version and
+catalog, source preparation/attempt/artifact and raw-capture digest, installed
+scorer/recipe identity and execution profile. List and detail reads require
+current authorization and use bounded, scope-bound pagination. Store outputs
+under the existing data handling policy; report responses retain output hashes
+without exposing the captured response text.
+
+Bind a write's idempotency key to actor, audience, server-resolved scope and all
+selected immutable inputs. An identical retry returns the same persisted
+report. Changed inputs under that key are a conflict. Interrupted scoring or
+storage writes publish no report. An unknown commit outcome returns no success
+and requires reconciliation of that same key before any new execution. Policy
+limits and deadlines are typed control configuration, not request overrides.
+Actionable errors must distinguish unavailable source/storage, invalid or
+changed evidence, denied authority, idempotency conflict and commit uncertainty.
+No shared error code or HTTP operation is published by this research note.
+
+EVL-102 then selects two persisted reports through the same current authorization
+path and invokes the existing pairing check. Recheck both scopes independently,
+even when their model or validation digests match. Persist the comparison and
+its source report IDs/digests atomically with its audit event. The current
+classification replay uses `model_role=base`; presenting its candidate column
+as a separately authorized derived-model report requires the model owner's
+exact derived identity and a separately specified capture binding.
+
+### Acceptance and ownership
+
+The first integration must exercise actual Admin and Portal HTTPS sessions and
+PostgreSQL, without an external route. Cover creation, list/detail, a lost reply
+and same-key retry, restart readback and two-report comparison. Add session
+revocation, cross-tenant/workspace IDs with identical content hashes, membership
+removal/regrant during staging, changed preparation attempts, retired source
+policy, tampered files/reports, scorer drift, audit rollback, concurrent same-key
+writes and unknown commit reconciliation. Repeated scoring of the retained
+bytes must match exactly. Fresh inference repeatability remains a separate,
+profile-specific qualification.
+
+The implementation belongs in a control evaluation module, its trusted identity
+composition and a versioned public contract, followed by the planned UI. The
+current SCI lane excludes non-audit `modules/` directories and `web/`; there is
+no existing owned server hook for registering this path. Unblocking requires
+allocation of that evaluation module, owner integration of the authenticated
+route and same-transaction source checks, and the report migration/contract.
+DAT/MOD/SCH ownership and license decisions remain with those producers. Keep
+EVL-101 and EVL-102 unticked until this complete path is implemented and accepted.
+
 ## EVL-102 paired offline comparison
 
 [MLflow compares runs](https://www.mlflow.org/docs/latest/genai/eval-monitor/comparing-evaluation-runs/)

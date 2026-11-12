@@ -20,17 +20,25 @@ makes the pre-migration gap and independent checkpoint custody explicit.
 
 ## Evaluation P1
 
-EVL-101 needs immutable dataset and model versions from DAT-106 and MOD-103 and
-an execution profile from serving. EVL-102 compares those identities. EVL-103
-has [native CPU refusal and pass evidence](evaluation-reproducibility.md#evl-103-retained-preparation-quality-decision).
+EVL-101/102 already have scoped dataset, model and preparation readers.
+The [authorized report service handoff](evaluation-reproducibility.md#authorized-report-service-handoff)
+identifies the missing report operation, immutable persistence, current-authority
+publication and authenticated route. A preparation report currently follows its
+latest attempt; the evaluation must retain the selected attempt and raw capture.
+An identical content digest grants no cross-workspace access. The control
+evaluation module, identity composition, versioned contract and UI remain outside
+the currently allocated SCI paths. No alternate report registry is selected.
+
+EVL-103 has [native CPU refusal and pass evidence](evaluation-reproducibility.md#evl-103-retained-preparation-quality-decision).
 Production acceptance still needs a NVIDIA attempt, authenticated physical
 stop and authorized audited promotion. EVL-104 needs a scoped OBS-103 trace
 export with content redaction and explicit regression case approval. EVL-105
-needs a real offline serving workload with a pinned deployment, accelerator
-identity, request timings and metered usage or cost inputs. The CPU preparation
-capture establishes quality on its own holdout. EVL-106 has deterministic
-replay and still needs real engine and authorized interface evidence. No evaluation-only registry or substitute promotion path will
-provide those guarantees.
+has [two authorized real CPU pairs](evaluation-performance-benchmark.md#authorized-cpu-gateway-pair)
+with scoped acknowledged receipts. UI, detached signing, GPU performance and
+cost acceptance remain open. EVL-106 retains three real CPU adversarial
+responses as unverified and a separately identified refusal control. Its
+authorized capture/report interface and semantic safety acceptance remain open.
+The fixed EVL-105 greedy samples provide no additional safety qualification.
 
 A scorer probe on Linux amd64 ran inside an isolated network namespace. Three
 Python processes replayed fixed classification predictions with different
