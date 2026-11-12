@@ -161,8 +161,10 @@ Only incident, acknowledgement, membership identity and delivery state belong in
 SQL. Metric samples, log entries, webhook payloads and label/annotation bodies
 remain in their existing external sources.
 
-For a declared layout of 10,000 nodes in 250 racks of 40, full-rack grouping
-contains 250 incidents and 10,000 member identities before delivery attempts.
+For a declared layout of 10,000 nodes in 250 racks of 40, a synthetic
+40-member-group fixture contains 250 incidents and 10,000 member identities
+before delivery attempts. This is a fixture shape, not the existing inhibited
+rack policy's actual delivered membership.
 This is row-count arithmetic, not measured storage or latency. The prototype
 must report PostgreSQL relation and index bytes and request latency for that
 metadata shape with concurrent acknowledgement and claims. It must use indexed
@@ -185,3 +187,23 @@ Reuse the Go, pgx, PostgreSQL, pgvector and Alertmanager versions and licenses
 recorded above; their commercial, offline and redistribution terms still apply.
 No dependency, model or external dataset is added, and no proprietary vendor
 implementation or documentation text is copied.
+
+### Lifecycle observer inputs
+
+The host-only lifecycle observer uses the existing Python standard library under
+[PSF License Version 2](https://docs.python.org/3/license.html), permitting
+commercial/offline use and redistribution under its notice and license terms.
+It adds no Python package or shipped product dependency. Host namespace tools
+remain development prerequisites.
+
+The pinned Linux amd64 Alertmanager 0.34.2 archive matches the official
+[release checksum](https://github.com/prometheus/alertmanager/releases/download/v0.34.2/sha256sums.txt):
+17ee14acd0f6ba6e25a436ff223d9c17ddd5cf484f543ad12f0932eaa89ba186.
+Its regular executable member has 50,164,934 bytes and SHA-256
+65b77b431acf07fe0df45158a0a6f3060e53e0b592f641d971fb3a745c34f432,
+matching the existing qualified native binary. This establishes artifact identity,
+not a lifecycle run. The external observer source
+aea19520431f474d5c3cfd273eed78be8c0842a2bc1a343e0e2921226a93dc06
+has passed syntax inspection only. Its initial scope is expiry and resumption of
+one fixed-route synthetic group; grouped acknowledgement, SQL durability, source
+lookup ambiguity and idempotent delivery still require the broader profile above.
