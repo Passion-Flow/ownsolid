@@ -84,3 +84,36 @@ plan and full upgrade reached the media check and the patch reached the
 signed-binding check. Only the recorder's IPv4, IPv6 and DNS probes
 appeared. The authenticated upload and Console preflight remain separate
 acceptance.
+
+## Application rollback admission
+
+The rollback entry checks pending data recovery under the existing exclusive
+operation lock. Before this change it verified and staged the supplied archive,
+and checked the host, before reaching that refusal. Thus an absent candidate can
+hide the recover-restore or recover-backup action on precisely the command an
+operator is likely to try after a failed upgrade. Apply the same early
+site-level refusal as the plan, full upgrade and patch, keeping the exclusive
+lock's later recheck as the mutation authority. The public entry retains its
+Linux amd64/root boundary; a typed internal workflow uses the same validated
+site snapshot throughout bundle preparation.
+
+The kubeadm and GitLab procedures linked above still separate recovery readiness
+from applying an application version. This change reuses the same installer,
+Go standard library and existing verification policy, with no new dependency,
+model or dataset. Do not weaken signed media, exact prior-release binding or
+the equal-schema requirement; database recovery remains explicit.
+
+Extend the existing admission regression to the typed rollback workflow. A
+protected pending restore or backup record and absent media must return the
+existing actionable recovery code with no Docker invocation, staged files,
+installation lock or success output. Removing the record must restore normal
+media refusal. Retain the existing equal-schema and signed failed-start
+rollback tests. The focused test is not new installed rollback qualification.
+
+The portable regression calls that same typed workflow, retaining the public
+CLI's Linux amd64/root gate. Before the fix it returned the media refusal for
+both pending records. After the fix, the full installer package passed on
+macOS arm64, including normal media refusal after record removal, unchanged
+records, empty output, no staging, no Docker calls and no installation lock.
+The existing equal-schema regression also passed. No new disconnected native
+CLI or installed signed rollback was run for this change.
