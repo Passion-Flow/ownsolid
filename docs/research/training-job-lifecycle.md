@@ -115,3 +115,35 @@ Return the exact fixture coordinates and require normal dispatch/cancel to
 work again. These are synthetic node observations and authenticated control
 transactions, not GPU execution. Keep TRN-101 open until scheduler wiring,
 CLI/UI and installed execution complete.
+
+## Queue handoff prerequisites on the selected repository
+
+The verified SCH handoff retains original commits `43670ebf`, `c90df6cd`,
+`748ea2b8`, `9709ee19` and `4708ffc3`, in order. Its `ReserveQueuedWithin`
+accepts the actual borrowed `transaction.Executor` and a complete owner queue
+reader. Its initial `RankWorkspaceQueueWithin` still accepts a raw `pgx.Tx`.
+The selected training `transaction.Store` exposes borrowed executors and
+starts read-only transactions at READ COMMITTED. A configured selected Store
+can have no legacy PostgreSQL pool. The package contains no training wiring
+or production migration. Its historical schema-57 fingerprints do not admit
+the current catalog or an intervening GW-120/DAT-101 migration.
+
+Continue with the owner-side local-cell fences above independently. Full
+fair dispatch needs the original SCH implementation plus ARC's admitted
+quota/reservation DDL, grants and fresh/restore lineage. It also needs an
+additive scheduler ranking entry point on the borrowed executor. The selected
+owner can begin its read-only transaction, set REPEATABLE READ before its
+first data query, read the complete eligible queue and pass that same executor
+to ranking. Scheduling must verify the actual read-only/isolation settings
+before reading policy or usage. The existing raw-pgx entry point can retain
+its contract and delegate to that checked executor path.
+
+Do not open a different legacy pool, emulate a `pgx.Tx`, copy scheduling's
+policy/usage queries into training or fall back to FIFO. A generic transaction
+rewrite is unnecessary. The queue reader must remain complete and bounded by
+the owning job policy, repeat current authority after scheduling locks and
+preserve the existing exact physical-stop release rules. The installed
+training acceptance still needs fair selection, concurrent and unknown-commit
+replay, quota/queue waits, cancellation and final stop/non-delivery release.
+This is an explicit shared-API and production-DDL prerequisite, not evidence
+that any of those dispatch paths has run.
