@@ -147,3 +147,24 @@ training acceptance still needs fair selection, concurrent and unknown-commit
 replay, quota/queue waits, cancellation and final stop/non-delivery release.
 This is an explicit shared-API and production-DDL prerequisite, not evidence
 that any of those dispatch paths has run.
+
+## Native acceptance boundary for the local-cell candidates
+
+The local-cell code and regressions at `0b4ea8ff` passed formatting, diff
+review, layout and roadmap checks; all 18 current owner README link targets
+exist. The original CPU worker inputs are unchanged. One bounded acquisition
+of both original Linux locks requested the combined scope/dispatch/operator
+and retained CPU acceptance replay. The original preflight observed
+344,899,584 free bytes, below 3 GiB, with I/O full avg10 0.0 and avg60 0.45.
+It refused before the replay wrapper, Go compilation or PostgreSQL startup.
+The preserved `continued-cell-pg-attempt1.log` hashes to `86470fef7c4fd1dea0a0e0995b82764bafd87535814a9ca104bf7f430366dae0`.
+No new owner regression or post-rebase repository pass is claimed.
+
+The prepared private `run-training-cell-regression.sh` runs the nine selected
+training test groups in one disposable disconnected PostgreSQL fixture. Its
+inputs are the retained CPU output, publication and approved model already
+used by the existing replay. Run it only after both locks and the unchanged
+resource preflight admit execution, then complete repository check/build and
+module tests against the actual rebased source. Preserve any failing log;
+do not loop the fixture while resources or an earlier lane's window block it.
+The local implementation and its runtime qualification remain separate.
