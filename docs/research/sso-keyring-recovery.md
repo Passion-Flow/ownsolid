@@ -71,6 +71,22 @@ Replacing those credentials requires a current local Admin session as well
 as the existing revision, tenant and idempotency fences. A configured,
 readable provider can retain its ordinary management path.
 
+Scope recovery checks to the completed installation tenant, including when
+another tenant has a connector with ciphertext unavailable to the selected
+keyring. The authenticated catalog and public discovery must exclude that
+foreign connector. Attempts to start it, replace its credentials or select its
+tenant must fail before a write or provider call.
+
+Force an audit append refusal during authorized replacement and compare the
+encrypted row and unreadable-state projection with their preimages. The same
+idempotency key must remain available for a successful retry. This exercises
+the existing shared commit owner through the new credential recovery path.
+
+With the entire keyring absent, exercise the existing disable mutation through
+local Admin HTTPS. Its idempotent replay must preserve the ciphertext, append
+one audit event and revoke sessions from that connector. Local sign-in remains
+usable without loading or creating key material.
+
 The configuration owner selects the candidate constructor at the existing
 `serveSelected` injection. On success, assign the returned service to
 `identity.Service.Sources` and use it for the existing maintenance and close
@@ -95,3 +111,11 @@ provider trust refused startup. Restored keys allowed an original connector
 start. A no-key write, sourced Admin, missing CSRF and stale revision were
 refused. A complete local replacement and idempotent replay committed one
 audit event. The original strict-constructor boundary test also passed.
+
+The current probe also refuses foreign tenant IDs and connector IDs without
+changing their ciphertext or adding a mutation event. An induced audit append
+failure leaves the original credential unreadable and permits the same
+idempotency key to succeed after storage recovery. With no keyring, a local
+Admin disables a connector, replays the exact result, retains its ciphertext,
+revokes its sourced session and remains signed in. These assertions passed
+three disconnected repetitions together with the strict boundary probe.
