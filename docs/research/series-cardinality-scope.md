@@ -149,3 +149,46 @@ before adoption at
 [the existing native probe](../../services/control/internal/platform/monitoringmetrics/testdata/check_cardinality_scope.py).
 Product query projection, its authorized API/Console path and ingest-budget
 enforcement remain open.
+
+## Scoped service projection
+
+Build the next read beside the existing fleet-history service. Use the same
+Platform Admin/active Workspace authority, two short SQL transactions,
+shared observation slots and operation deadline. Keep SQL unlocked during
+store I/O. Recheck the original scope and current license and commit the
+diagnostic audit before releasing either structured data or encoded JSON.
+Cancellation and unknown COMMIT must still discard the successful body.
+This changes no published history operation.
+
+Add an optional typed series_cardinality policy with a private raw-store
+origin, maximum UTC-day lookback and maximum ranks. All three values are
+explicit when enabled. Reuse the reviewed direct HTTPS/system-CA transport
+and redirect refusal. Derive the upstream timeout from the operation
+deadline; keep native scan and status-duration budgets in the installed
+store configuration. A missing policy must be distinguishable from a
+failed or over-budget source.
+
+Accept an explicit UTC date, an optional exact metric name and a bounded
+rank limit. Never accept tenant IDs, arbitrary selectors or focus labels.
+MetricsQL supports
+[Unicode names and escaped literals](https://docs.victoriametrics.com/victoriametrics/metricsql/).
+Build an exact __name__ matcher with a quoted string, never interpolate a
+name as an expression. Verify Unicode/escaped-name selection with native
+data before relying on that path. Also qualify metrics without node_id
+before deciding whether an unattributed node rank can be emitted.
+
+Project only the selected date, server-resolved Workspace ID, total series,
+applied rank limit, metric-name counts and node-ID counts. Preserve an
+explicit measured zero and empty arrays. Reject absent counters, invalid
+numbers, duplicate ranks, impossible sums, excessive rows, partial replies,
+warnings and oversized bodies. Omit query-usage metadata and all other raw
+status fields. Bound both upstream bytes and the complete encoded response,
+including its serving envelope, before the success audit commits.
+
+Keep the transport adapter outside Owns until the public API owner has the
+concrete result and Problem contract for publication. Native service tests
+must cover real PostgreSQL, the selected metrics binary, scope isolation,
+revocation during I/O, failed audit commit, retry and request-bound audit.
+The existing HTTP and private-TLS history profiles must pass after shared
+transport or authority code is factored. API/Console publication and ingest
+budgets remain separate open parts of OBS-110.
