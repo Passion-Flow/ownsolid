@@ -20,8 +20,9 @@ that a node's Activity show who did what.
 - **The chosen tab lives in the address**, so a view can be sent to a colleague. Moving between tabs replaces the
   entry, so Back leaves the page rather than walking through tabs, as filters on a list do.
 - **Activity reads the audit trail through a new `target_id` filter**, so the page shows what the audit page would
-  and needs no permission of its own. It asks from when the node joined rather than the trail's default window, so
-  a node's whole life is there. Each row links to the event in the audit trail.
+  and needs no permission of its own. The current creation-to-now window is rejected once the resource is older
+  than the configured audit maximum; the correction below is planned to preserve access to older events.
+  Each row links to the event in the audit trail.
 - **An index for it, on the parent table.** Without one, a node with few events walks the whole trail in date order,
   the same shape the task search had ([research](global-search.md)). It is partial, since events with no target
   are never asked for this way, and an index on the parent reaches every partition, now and to come.
@@ -63,3 +64,107 @@ No new dependency.
 ## What the finished item must do
 
 From the Nodes, Users and Single sign-on lists, reach a page of its own with tabs for what it is and who did what.
+
+## Bounded history review
+
+Reviewed 2026-11-13 for the existing UX-127 activity flow. This section defines the
+correction; the product implementation and its installed acceptance are still open.
+
+### Existing contract and observed boundary
+
+`ResourceActivity` sends creation minus one minute as `from`, without `to`.
+The [server parser](../../services/control/internal/modules/identity/lists.go)
+uses server now for the missing end and rejects windows beyond `AuditMaxDays`.
+The [typed policy](../../services/control/internal/platform/config/policy.go)
+defaults to 31 days, accepts maxima from 1 through 366 days, and requires its
+default window not to exceed its maximum. A resource exactly 31 days old already
+exceeds the default maximum by one minute. A creation-to-now read therefore cannot
+provide reliable lifetime history. No public policy-bounds projection is present
+in the current Web/OpenAPI inputs.
+
+A cursor pins the window's start and end. If those bounds are omitted on the next
+page, the parser restores the cursor's window; explicitly supplied bounds must
+match it exactly. The client must forward the opaque cursor without inspecting it.
+The audit schema, category filter, 13 event fields, server-derived authority and
+existing audit-read permission remain unchanged.
+
+### Primary references
+
+- [Grafana time controls](https://grafana.com/docs/grafana/latest/visualizations/dashboards/use-dashboards/)
+  distinguish relative and absolute windows, display the active range, and apply
+  explicit start/end fields. Its URL parameters carry the selected window.
+- [Kibana filtering](https://www.elastic.co/docs/explore-analyze/query-filter/filtering)
+  gives a recent default, explicit custom bounds and Apply, with a separate manual
+  refresh. These are interaction references; no vendor implementation is copied.
+- [TanStack infinite queries](https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries)
+  describe sequential refetch of cached pages. A whole-cache refetch would violate
+  the one-request explicit audit recovery requirement.
+- [TanStack defaults](https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults)
+  describe mount/focus/reconnect refetch and static queries. The pinned version's
+  failed-initial-query behavior is separately covered by
+  [the audit-read research](identity-audit-read-access.md).
+
+### Chosen approach
+
+Keep the resource detail archetype and its current tabs. Start with the last
+24 hours, a product default that fits the smallest valid maximum; it is not a
+hardcoded deployment policy. Let the person select absolute dates to inspect any
+older period. Keep the fields on the tab, apply them with one explicit action,
+and put applied bounds in the address. Draft edits do not read audit data.
+
+Store the actual first-page bounds as typed client-only cache metadata beside the
+returned audit page. The recent range is snapped when its explicit initial read
+starts, and the visible dates describe that cached read. Remounting the tab must
+not silently move the window or create a new cache key. Next-page reads send the
+cursor and stable resource/person filters, omitting time bounds so the server
+restores its pinned window. A successful one-page restart replaces both the old
+pages and their window metadata; a failed read preserves them together.
+
+Reuse `useAuditRead` rather than a second retry framework. Keep retries, focus,
+reconnect, invalidation replay and offline queuing disabled. A deliberate refresh
+or recovery sends one request. Preserve server refusal, correlation ID, partial
+pages, reader/workspace cache partition and permission-revocation behavior.
+The server validates its configured maximum; the UI never guesses it. A refused
+valid custom range keeps its fields and offers an actionable shorter-range remedy.
+
+An isolated Node prototype used pinned `@tanstack/react-query` 5.105.3 before
+product changes. Eight assertions passed: initial 24-hour bounds; next-page
+cursor with omitted client bounds; first-page metadata retained through paging;
+remount without a read; unknown response retaining two old pages and their bounds;
+invalidation without a read; exactly one explicit recovery request; and successful
+recovery replacing one page and its bounds. There were four explicit fixture reads.
+This proves the cache mechanism only, not a product, server, browser or SQL run.
+
+Rejected: a fixed 31-day policy limit, an unlabelled recent slice, an automatic
+multi-window history scan, weakening server validation, parsing the cursor in the
+client, pre-clearing cached pages before a restart, and automatic failed-filter
+retries. Each loses history, deployment flexibility or explicit-read semantics.
+
+### Licences and offline use
+
+No dependency, model or dataset is added. The existing React and TanStack packages
+are MIT, Lucide is ISC, and Playwright is Apache-2.0. Their licences permit
+commercial use, redistribution and offline use with their required notices; the
+existing notices continue to ship. Native date/time fields and the installation's
+API need no remote service, calendar library, font or download.
+
+### States and acceptance
+
+The tab remains part of a detail page; its main action is explicitly reading the
+chosen period. Loading retains the period controls and uses a table-shaped
+skeleton. A recent window with no events explains that window and offers older
+dates. A selected range with no matches names the dates and offers to clear them;
+it must use different text. Partial pages retain rows and name the missing page.
+Errors retain the chosen fields and give recovery; denied access hides stale
+rows and identifies the permission owner. No unready option is introduced; any
+existing unavailable tab remains visible with its reason and `aria-disabled`.
+
+Tests must cover an older-than-policy resource with a current event against a
+policy-faithful fixture as the old-build negative control; minimum one-day and
+default 31-day policy limits; historical absolute dates; reversed/invalid bounds;
+out-of-policy refusal and correction; URL reload and tab return; cursor paging
+and invalid-cursor restart; lost responses, timeout and explicit retry counts;
+filter-cache revisits; revoked permissions and cross-workspace refusal; and
+network disconnection. Run EN/ZH, keyboard, screen-reader checks, desktop and
+390px, then actually inspect the screenshots. Each explicit action must yield its
+single expected read. Real installed consumer acceptance remains required.
