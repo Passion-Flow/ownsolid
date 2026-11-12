@@ -23,9 +23,20 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 		t.Fatal(err)
 	}
 	draining := make(chan time.Time, 1)
+	finish := make(chan struct{})
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/initial" {
 			draining <- ConnectionDrainAt(r.Context())
+			w.WriteHeader(http.StatusOK)
+			if err := http.NewResponseController(w).Flush(); err != nil {
+				return
+			}
+			select {
+			case <-finish:
+				_, _ = io.WriteString(w, "complete")
+			case <-r.Context().Done():
+			}
+			return
 		}
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -88,10 +99,9 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	read := func(framer *http2.Framer, stream uint32, requireGoAway bool) {
+	read := func(framer *http2.Framer, stream uint32, status string, ended bool) {
 		t.Helper()
-		var replied, retiring bool
-		for !replied || requireGoAway && !retiring {
+		for {
 			frame, err := framer.ReadFrame()
 			if err != nil {
 				t.Fatal(err)
@@ -104,8 +114,8 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 					}
 				}
 			case *http2.MetaHeadersFrame:
-				if frame.StreamID == stream && frame.StreamEnded() {
-					if frame.PseudoValue("status") != "204" {
+				if frame.StreamID == stream {
+					if frame.PseudoValue("status") != status || frame.StreamEnded() != ended {
 						t.Fatalf("unexpected status: %v", frame.Fields)
 					}
 					for _, field := range frame.RegularFields() {
@@ -113,20 +123,17 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 							t.Fatal("connection header escaped onto the HTTP/2 wire")
 						}
 					}
-					replied = true
+					return
 				}
 			case *http2.GoAwayFrame:
-				if !requireGoAway || frame.ErrCode != http2.ErrCodeNo || frame.LastStreamID < stream {
-					t.Fatalf("unexpected GOAWAY: %+v", frame)
-				}
-				retiring = true
+				t.Fatalf("GOAWAY preceded the admitted response headers: %+v", frame)
 			}
 		}
 	}
 
 	_, framer := connect()
 	request(framer, 1, "/initial")
-	read(framer, 1, false)
+	read(framer, 1, "200", false)
 	var drain time.Time
 	select {
 	case drain = <-draining:
@@ -139,8 +146,39 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 	timer := time.NewTimer(time.Until(drain))
 	defer timer.Stop()
 	<-timer.C
-	request(framer, 3, "/after-age")
-	read(framer, 3, true)
+	// Send no further request. Age must notify a stream whose headers are
+	// already on the wire, while keeping that stream's response intact.
+	for {
+		frame, err := framer.ReadFrame()
+		if err != nil {
+			t.Fatalf("held response received no automatic GOAWAY: %v", err)
+		}
+		if retirement, ok := frame.(*http2.GoAwayFrame); ok {
+			if retirement.ErrCode != http2.ErrCodeNo || retirement.LastStreamID != 1 {
+				t.Fatalf("GOAWAY did not retain the admitted stream: %+v", retirement)
+			}
+			break
+		}
+	}
+	close(finish)
+	var body bytes.Buffer
+	completed := false
+	for !completed {
+		frame, err := framer.ReadFrame()
+		if err != nil {
+			t.Fatalf("admitted response was interrupted after GOAWAY: %v", err)
+		}
+		if data, ok := frame.(*http2.DataFrame); ok && data.StreamID == 1 {
+			body.Write(data.Data())
+			completed = data.StreamEnded()
+		}
+	}
+	if body.String() != "complete" {
+		t.Fatalf("admitted response body changed: %q", body.String())
+	}
+	_, young := connect()
+	request(young, 1, "/healthy")
+	read(young, 1, "204", true)
 
 	idle, _ := connect()
 	// No request asks this connection to drain. The socket limit must end
