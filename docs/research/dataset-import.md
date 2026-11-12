@@ -690,9 +690,11 @@ The later rebase added only three existing training/status documents;
 all executable and test inputs remained identical to the qualified input.
 
 The tagged dataset suite compiled for Linux arm64 and amd64. Its current
-native amd64 CSV/Parquet HTTPS and object-restore replay has not run: SSH
-interrupted the source handoff before complete receiver verification.
-The prior owner replay remains separately scoped above. To replay against
+native amd64 CSV/Parquet HTTPS and object-restore replay has not run.
+The native handoff of f1107579 is receiver-verified at 108,333 bytes with
+SHA-256 b3aa444d51f8fb8d030ea9b5abc8685414cdb945e627bb60ceb9aeabea15290d.
+A source handoff is not runtime acceptance; the prior owner replay remains
+separately scoped above. To replay against
 the formal lineage, leave `OWNSOLID_TEST_DRAFT_RESTORE_PREDECESSOR_SQL` unset
 and run `bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh`
 with the protected interpreters required by that runner. The frozen testdata
