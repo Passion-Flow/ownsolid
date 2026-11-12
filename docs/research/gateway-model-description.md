@@ -642,3 +642,51 @@ refusal: the former keeps the known names with a retry notice; a 403 or
 continuing to present the cached catalogue as current. Test the transition
 after a successful read, not only an initial failed request. This is a UI
 truthfulness boundary; the backend still owns membership and tenant checks.
+
+### Web consumer qualification
+
+The Web tree committed as bc3fa720c788db651fa00347bb25edd181261463
+passed 28 local Console Chromium cases and 23 Portal cases, with one
+worker, no skips, retries or unexpected results. Both production Web
+builds passed their bundle budgets. The focused checks passed both app
+type checks, lint, the two normalization cases and all 49 locale tests.
+The full repository gate is recorded separately after it finishes.
+
+The cases cover save/reload, clear/Undo, a competing description revision,
+a failed latest read with retained draft and reason, explicit review and
+save, an unavailable predecessor, 403/404 refusal, lost-answer replay with
+a later writer, an unknown commit outcome, 500 supplementary characters,
+an edit while paused, a conflicting Undo and an answer after closing the
+editor. Existing gateway publication and key flows remain exercised.
+Portal checks both languages, switches between two permitted workspaces,
+renders markup as text without requesting its image, exposes no editor,
+withdraws cached descriptions on a later 403/404 and retains known data
+with recovery on a transient refresh failure. These are preview tests;
+the real backend's authorization and transaction tests remain independent.
+
+Eight new screenshots were read: Console editing and current-text review,
+and Portal reading and permission refusal, each in English and Simplified
+Chinese. The English views use the desktop viewport; Chinese uses 390 by
+844 pixels. Raw reports and images are retained outside Git in the
+GW-120 Web qualification artifacts.
+
+S-205 remains a detail page with its existing tabs and gateway card. Its
+page primary action remains Scale; Edit description is secondary. The
+short-form dialog has one primary action, Save description. It contains
+no nested surface, preserves a clear label and reason, and shows the
+reviewed current text above the retained draft. The seven states are
+defined in the table above. The empty-description message is not the
+catalogue's filtered-empty message. Escape restores the opener, Tab shows
+focus, and the form and reviewed text fit the narrow viewport.
+
+S-304 remains a list with filter tiles, search and rows, opening a preview
+drawer for a selected model. Its specified primary action is Try a model;
+that option remains visible and aria-disabled with the playground reason.
+Issue a key offers the available path. Loading, initial empty, filtered
+empty with Clear filters, partial facts/refresh failure, failed read,
+permission refusal and Not ready all retain distinct behavior. On refusal,
+the drawer closes and the real problem replaces the cached rows. Status
+has text as well as color. The narrow description and request ID wrap
+inside their containers. Neither screen claims a price or a working
+playground. Actual same-source installed Console edit/clear/retry and
+Portal read, including database evidence, remain open.
