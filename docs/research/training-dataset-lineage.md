@@ -618,11 +618,23 @@ It expected `/help/api` but received `/help/api?q=changePassword`; the runner
 cancelled the sibling Console suite. Web and OpenAPI files were byte-identical
 to that upstream baseline. The trace and failed invocation are retained. Because
 browser tests are prerequisites, this invocation did not reach the Go, Rust or
-Web unit-test recipes. A focused replay of that unchanged Portal case passed in 2.4 seconds. A separate
-continuation then passed all previously unreached Go modules, locked offline Rust
-tests and Web unit tests on the same runtime sources (`ba90c3a4`, documentation
+Web unit-test recipes. A focused replay of that unchanged Portal case passed in
+2.4 seconds. A separate continuation then passed all previously unreached Go
+modules, locked offline Rust tests and Web unit tests on the same runtime sources
+(`ba90c3a4`, documentation
 only since `684f07ef`). The original whole `make test` failure is retained; a
 complete browser-suite pass and public dispatcher acceptance are still unclaimed.
+
+After integrating the dataset-snapshot and training cell-fence changes from
+`d0ab719a`, source `b4e222a7` again passed `make check` and `make build`.
+The complete browser prerequisite reproduced the same Help URL assertion in
+Simplified Chinese while the English case passed. Portal again reported 409
+passed, 10 skipped and one failed, and Console was cancelled. The new baseline's
+Web files were unchanged. A separate Control-wide `go test ./... -count=1` then
+passed, including Models, model preparation, dataset and training tests. Reuse
+the unchanged modules' earlier unit results and the scoped PostgreSQL evidence;
+neither failed whole `make test` invocation is a pass. Keep this candidate
+unpublished until the required whole-repository gate can pass.
 
 To replay, configure the private PostgreSQL DSN and fresh owned schema as described
 by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
