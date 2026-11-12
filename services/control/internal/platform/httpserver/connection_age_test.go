@@ -25,6 +25,7 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 	draining := make(chan time.Time, 1)
 	finish := make(chan struct{})
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Test-Connection-ID", ConnectionID(r.Context()))
 		if r.URL.Path == "/initial" {
 			draining <- ConnectionDrainAt(r.Context())
 			w.WriteHeader(http.StatusOK)
@@ -90,6 +91,7 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 		for _, field := range []hpack.HeaderField{
 			{Name: ":method", Value: http.MethodGet}, {Name: ":scheme", Value: "https"},
 			{Name: ":authority", Value: "localhost"}, {Name: ":path", Value: route},
+			{Name: "ownsolid-connection-id", Value: "forged-by-client"},
 		} {
 			if err := encoder.WriteField(field); err != nil {
 				t.Fatal(err)
@@ -99,7 +101,7 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	read := func(framer *http2.Framer, stream uint32, status string, ended bool) {
+	read := func(framer *http2.Framer, stream uint32, status string, ended bool) string {
 		t.Helper()
 		for {
 			frame, err := framer.ReadFrame()
@@ -118,12 +120,19 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 					if frame.PseudoValue("status") != status || frame.StreamEnded() != ended {
 						t.Fatalf("unexpected status: %v", frame.Fields)
 					}
+					connectionID := ""
 					for _, field := range frame.RegularFields() {
 						if field.Name == "connection" {
 							t.Fatal("connection header escaped onto the HTTP/2 wire")
 						}
+						if field.Name == "x-test-connection-id" {
+							connectionID = field.Value
+						}
 					}
-					return
+					if connectionID == "" || connectionID == "forged-by-client" {
+						t.Fatal("transport identity was absent or came from request input")
+					}
+					return connectionID
 				}
 			case *http2.GoAwayFrame:
 				t.Fatalf("GOAWAY preceded the admitted response headers: %+v", frame)
@@ -133,7 +142,7 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 
 	_, framer := connect()
 	request(framer, 1, "/initial")
-	read(framer, 1, "200", false)
+	initialID := read(framer, 1, "200", false)
 	var drain time.Time
 	select {
 	case drain = <-draining:
@@ -142,6 +151,10 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 	}
 	if drain.IsZero() {
 		t.Fatal("listener did not attach its connection age")
+	}
+	request(framer, 3, "/healthy")
+	if reusedID := read(framer, 3, "204", true); reusedID != initialID {
+		t.Fatal("one transport acquired multiple identities")
 	}
 	timer := time.NewTimer(time.Until(drain))
 	defer timer.Stop()
@@ -154,7 +167,7 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 			t.Fatalf("held response received no automatic GOAWAY: %v", err)
 		}
 		if retirement, ok := frame.(*http2.GoAwayFrame); ok {
-			if retirement.ErrCode != http2.ErrCodeNo || retirement.LastStreamID != 1 {
+			if retirement.ErrCode != http2.ErrCodeNo || retirement.LastStreamID != 3 {
 				t.Fatalf("GOAWAY did not retain the admitted stream: %+v", retirement)
 			}
 			break
@@ -178,7 +191,9 @@ func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
 	}
 	_, young := connect()
 	request(young, 1, "/healthy")
-	read(young, 1, "204", true)
+	if replacementID := read(young, 1, "204", true); replacementID == initialID {
+		t.Fatal("a new transport reused the retired identity")
+	}
 
 	idle, _ := connect()
 	// No request asks this connection to drain. The socket limit must end
