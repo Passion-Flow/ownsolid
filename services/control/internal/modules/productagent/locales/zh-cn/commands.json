@@ -9,5 +9,6 @@
   "open_keys": ["打开密钥", "打开接口密钥"],
   "open_support": ["打开支持范围"],
   "list_applications": ["查看应用", "列出应用"],
-  "list_conversations": ["查看会话", "列出会话"]
+  "list_conversations": ["查看会话", "列出会话"],
+  "find_application": ["查找应用 \"应用名称\""]
 }
