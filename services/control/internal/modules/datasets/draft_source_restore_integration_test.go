@@ -9,13 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -23,7 +20,6 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/objectstore"
 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
 	"github.com/Passion-Flow/ownsolid/services/control/migrations"
 	"github.com/google/uuid"
@@ -122,6 +118,14 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	applyDraftMigration(t, ctx, service.DB, predecessorSQL)
 	applyDraftMigration(t, ctx, service.DB, up)
 	verifyLegacyDraftMigration(t, ctx, service.DB, legacy)
+	legacyBackup := filepath.Join(privateSnapshotDirectory(t), "legacy-files")
+	if err = service.ExportFiles(ctx, legacyBackup); err != nil {
+		t.Fatal("export legacy JSONL snapshot", err)
+	}
+	legacySnapshot, err := service.readSnapshot(ctx, legacyBackup)
+	if err != nil || legacySnapshot.SchemaVersion != normalizedSourceSnapshotSchema || len(legacySnapshot.Files) != 2 {
+		t.Fatal("legacy snapshot compatibility", err)
+	}
 	candidate, err := NewDraftSourceCandidate(service, parquet)
 	if err != nil {
 		t.Fatal(err)
@@ -162,26 +166,59 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	if err != nil || !bytes.Equal(backedUp, parquetBytes) {
 		t.Fatal("retained source differed before backup", err)
 	}
+	normalizedBefore, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(objectPath(object))))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// These additional rows/files are synthetic operator fixture records. They
+	// exercise the real metadata page boundary; only the original import above
+	// establishes an authenticated Parquet import and inspected draft flow.
+	for i := 0; i < sourceInventoryPageSize; i++ {
+		id, extraObject, key := uuid.NewString(), uuid.NewString(), uuid.NewString()
+		if _, err = service.DB.Exec(ctx, `INSERT INTO dataset_drafts
+			SELECT (jsonb_populate_record(NULL::dataset_drafts, to_jsonb(d) ||
+			jsonb_build_object('id',$1::uuid,'source_object_id',$2::uuid,'creation_key',$3::uuid,
+			                  'current_job_id',NULL,'published_version_id',NULL))).*
+			FROM dataset_drafts d WHERE d.id=$4`, id, extraObject, key, before.Draft.ID); err != nil {
+			t.Fatal("seed owned receipt page draft", err)
+		}
+		if _, err = service.DB.Exec(ctx, `INSERT INTO dataset_draft_import_candidates
+			(tenant_id,workspace_id,dataset_id,draft_id,site_id,cell_id,source_format,report)
+			SELECT c.tenant_id,c.workspace_id,c.dataset_id,$1,c.site_id,c.cell_id,c.source_format,c.report
+			FROM dataset_draft_import_candidates c WHERE c.draft_id=$2`, id, before.Draft.ID); err != nil {
+			t.Fatal("seed owned receipt page", err)
+		}
+		directory := filepath.Join(root, "objects", extraObject)
+		if err = os.Mkdir(directory, 0700); err != nil {
+			t.Fatal(err)
+		}
+		for name, raw := range map[string][]byte{"source.jsonl": normalizedBefore, "source.parquet": backedUp} {
+			if err = writeNew(filepath.Join(directory, name), raw); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
 	backup := filepath.Join(privateSnapshotDirectory(t), "files")
 	if err = service.ExportFiles(ctx, backup); err != nil {
-		t.Fatal("export existing normalized file inventory", err)
+		t.Fatal("export complete source file inventory", err)
 	}
 	var snapshot FileSnapshot
 	manifest, err := os.ReadFile(filepath.Join(backup, snapshotName))
 	if err != nil || json.Unmarshal(manifest, &snapshot) != nil || snapshot.References.TenantID != tenant {
 		t.Fatal("private snapshot inventory", err)
 	}
-	found := false
+	foundNormalized, foundOriginal := false, false
 	for _, file := range snapshot.Files {
 		if file.Path == objectPath(object) {
-			found = file.SHA256 == before.Report.OutputSHA256 && file.SizeBytes == before.Report.OutputBytes
+			foundNormalized = file.SHA256 == before.Report.OutputSHA256 && file.SizeBytes == before.Report.OutputBytes
 		}
-		if strings.HasSuffix(file.Path, "/source.parquet") {
-			t.Fatal("legacy snapshot silently admitted an original outside its inventory")
+		if file.Path == "objects/"+object+"/source.parquet" {
+			foundOriginal = file.SHA256 == before.Report.SourceSHA256 && file.SizeBytes == before.Report.SourceBytes
 		}
 	}
-	if !found {
-		t.Fatal("private normalized inventory lost its accepted digest")
+	if !foundNormalized || !foundOriginal || snapshot.SchemaVersion != originalSourceSnapshotSchema ||
+		len(snapshot.References.Sources) != 2*(sourceInventoryPageSize+1)+1 || len(snapshot.Files) != 2*(sourceInventoryPageSize+1)+2 {
+		t.Fatal("complete paged source inventory lost a receipt or digest")
 	}
 	archive := owned.DumpSchema(t, ctx)
 	restored := owned.RestoreFresh(t, ctx, service.DB, archive)
@@ -208,7 +245,7 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 		t.Fatal("invalidate sessions in the restored account database", err)
 	}
 	if err = fresh.ImportFiles(ctx, backup, restoredRoot); err != nil {
-		t.Fatal("restore normalized snapshot into the new store", err)
+		t.Fatal("restore original and normalized snapshot into the new store", err)
 	}
 	if err = fresh.OpenConfiguredStore(ctx); err != nil {
 		t.Fatal("open restored dataset store", err)
@@ -248,40 +285,9 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 		t.Fatal("restored legacy source changed", err)
 	}
 	expectFailure(reauth, other.ID, "DATASET_NOT_FOUND")
-	expectFailure(reauth, workspace, "DATASET_FILE_INVALID")
-
-	// The legacy snapshot restores only the normalized role. Replay the
-	// supplemental original from the existing signed S3 test transport.
-	const bucket, etag = "draft-restore-fixture", `"retained-parquet"`
-	ref := objectstore.Ref{Tenant: tenant, Workspace: workspace, Object: object}
-	key, err := ref.Key()
-	if err != nil {
-		t.Fatal(err)
-	}
-	client := newSourceFixtureS3(t, bucket, func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet || r.URL.Path != "/"+bucket+"/"+key ||
-			r.Header.Get("If-Match") != etag || !strings.HasPrefix(r.Header.Get("Authorization"), "AWS4-HMAC-SHA256 ") {
-			t.Error("restore did not request the exact signed retained object")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		w.Header().Set("Content-Length", strconv.Itoa(len(backedUp)))
-		w.Header().Set("ETag", etag)
-		_, _ = w.Write(backedUp)
-	})
-	body, err := openSourceObject(ctx, client, SourceObject{Ref: ref, ETag: etag, Bytes: before.Report.SourceBytes, SHA256: digest})
-	if err != nil {
-		t.Fatal("read the retained object through S3", err)
-	}
-	retained, err := io.ReadAll(io.LimitReader(body, before.Report.SourceBytes+1))
-	closeErr := body.Close()
-	if err != nil || closeErr != nil || int64(len(retained)) != before.Report.SourceBytes ||
-		fmt.Sprintf("%x", sha256.Sum256(retained)) != before.Report.SourceSHA256 {
-		t.Fatal("retained object does not match its durable receipt", err)
-	}
 	original = filepath.Join(restoredRoot, "objects", object, "source.parquet")
-	if err = writeNew(original, retained); err != nil {
-		t.Fatal(err)
+	if raw, err := os.ReadFile(original); err != nil || !bytes.Equal(raw, backedUp) {
+		t.Fatal("ordinary snapshot did not restore the exact original", err)
 	}
 	got, err := reader.Read(ctx, reauth, workspace, data.ID, before.Draft.ID)
 	if err != nil || !reflect.DeepEqual(got, before) {
@@ -294,6 +300,19 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 	if err != nil || normalizedSHA != got.Report.OutputSHA256 || normalizedSize != got.Report.OutputBytes {
 		t.Fatal("restored normalized file is inconsistent with the report", err)
 	}
+	refuseImportWithoutMutation := func(expected string) {
+		t.Helper()
+		destination := privateSnapshotDirectory(t)
+		unopened := &Service{DB: restored, Identity: restoredAccount, Workspaces: fresh.Workspaces}
+		err := unopened.ImportFiles(ctx, backup, destination)
+		if err == nil || expected != "" && err.Error() != expected {
+			t.Fatal("unverified restore accepted", err)
+		}
+		entries, err := os.ReadDir(destination)
+		if err != nil || len(entries) != 0 {
+			t.Fatal("failed restore changed its destination", err)
+		}
+	}
 	for _, file := range []string{original, normalized} {
 		raw, err := os.ReadFile(file)
 		if err != nil {
@@ -305,13 +324,71 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 			t.Fatal(err)
 		}
 		expectFailure(reauth, workspace, "DATASET_FILE_INVALID")
+		if err = fresh.VerifyStored(ctx); err == nil || err.Error() != "DATASET_FILE_INVALID" {
+			t.Fatal("changed source passed readiness", err)
+		}
+		export := filepath.Join(privateSnapshotDirectory(t), "refused")
+		if err = fresh.ExportFiles(ctx, export); err == nil {
+			t.Fatal("changed source exported")
+		}
+		if _, err = os.Lstat(export); !os.IsNotExist(err) {
+			t.Fatal("unverified export created a destination", err)
+		}
 		if err = os.Remove(file); err != nil {
 			t.Fatal(err)
 		}
 		expectFailure(reauth, workspace, "DATASET_FILE_INVALID")
+		if err = fresh.VerifyStored(ctx); err == nil || err.Error() != "DATASET_FILE_INVALID" {
+			t.Fatal("missing source passed readiness", err)
+		}
 		if err = writeNew(file, raw); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if err = fresh.VerifyStored(ctx); err != nil {
+		t.Fatal("exact source repair did not recover readiness", err)
+	}
+	for _, name := range []string{objectPath(object), "objects/" + object + "/source.parquet"} {
+		file := filepath.Join(backup, filepath.FromSlash(name))
+		raw, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		changed := bytes.Clone(raw)
+		changed[0] ^= 1
+		if err = os.WriteFile(file, changed, 0600); err != nil {
+			t.Fatal(err)
+		}
+		refuseImportWithoutMutation("DATASET_SNAPSHOT_INVALID")
+		if err = os.Remove(file); err != nil {
+			t.Fatal(err)
+		}
+		refuseImportWithoutMutation("DATASET_SNAPSHOT_INVALID")
+		if err = writeNew(file, raw); err != nil {
+			t.Fatal(err)
+		}
+	}
+	reportRaw, err := json.Marshal(before.Report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = restored.Exec(ctx, `UPDATE dataset_draft_import_candidates
+		SET report=jsonb_set(report,'{source_sha256}',to_jsonb(repeat('e',64))) WHERE draft_id=$1`, before.Draft.ID); err != nil {
+		t.Fatal(err)
+	}
+	refuseImportWithoutMutation("DATASET_SNAPSHOT_REFERENCE_CHANGED")
+	if _, err = restored.Exec(ctx, "DELETE FROM dataset_draft_import_candidates WHERE draft_id=$1", before.Draft.ID); err != nil {
+		t.Fatal(err)
+	}
+	refuseImportWithoutMutation("DATASET_SNAPSHOT_REFERENCE_CHANGED")
+	if _, err = restored.Exec(ctx, `INSERT INTO dataset_draft_import_candidates
+		(tenant_id,workspace_id,dataset_id,draft_id,site_id,cell_id,source_format,report)
+		SELECT d.tenant_id,d.workspace_id,d.dataset_id,d.id,d.site_id,d.cell_id,'parquet',$1::jsonb
+		FROM dataset_drafts d WHERE d.id=$2`, string(reportRaw), before.Draft.ID); err != nil {
+		t.Fatal(err)
+	}
+	if out, err := reader.Read(ctx, reauth, workspace, data.ID, before.Draft.ID); err != nil || !reflect.DeepEqual(out, before) {
+		t.Fatal("exact receipt repair did not recover the original report", err)
 	}
 	// The database admits a matching foreign parent/receipt pair. The local
 	// service must still refuse it even when the Workspace and dataset match.
@@ -356,7 +433,7 @@ func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
 		t.Fatal(err)
 	}
 	refuseBeforeRead(uuid.NewString())
-	t.Log("predecessor upgrade, rollback, restored scope, private normalized inventory, retained S3 original and digest refusals verified")
+	t.Log("predecessor upgrade, rollback, legacy snapshot, paged original/normalized inventory, logical/file restore, scoped report and corruption/refusal recovery verified")
 }
 
 func readDraftMigration(t *testing.T, name string) []byte {
