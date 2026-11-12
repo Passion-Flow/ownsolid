@@ -2,6 +2,16 @@
 
 Models owns import intent/chunks, approved model versions, durable bytes, integrity/readback, derived-model registration and retirement. Deployments and tools consume this owner's verified references; they must not turn an arbitrary filesystem path into a model.
 
+The startup owner can validate an enabled upload-retention policy with
+`ImportExpiryPolicy.Validate` before registering the existing model worker.
+It must also authorize the workspace against the selected PostgreSQL installation.
+Keep the policy immutable after startup. A nil policy disables expiry.
+`Service.Run` is a blocking worker loop. Cancel its context and join it before
+closing its repository or store. Active uploads retain their own file lock and
+request context. An acknowledged expiry intent survives cancellation before
+discard and is resumed by the next worker. See the
+[startup and shutdown contract](../../../../../docs/research/model-import-cleanup.md#typed-startup-and-shutdown-contract).
+
 [service.go](service.go) exposes import/list operations. [importer.go](importer.go), [import_lock.go](import_lock.go), [storage.go](storage.go) and [verification.go](verification.go) separate bounded import execution and stored-byte verification. Derived registration/storage/snapshot files bind accepted preparation output. [directory_cache.go](directory_cache.go) uses the configured cache without replacing business ownership.
 
 Model/version/import state originates in migration 000006. Bytes and SQL must agree on catalog/source/scope and digest. Queued/uploaded does not mean verified; cancellation, interrupted import, inconsistent directory identity and retirement need existing worker/recovery paths.
