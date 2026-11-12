@@ -34,8 +34,10 @@ describes the optional candidate schema and its isolated test.
 
 [Wait reasons](../../../../../docs/research/scheduling-wait-reasons.md) describes
 how to project an authorized decision without leaking other workloads' details.
-Use `WaitReasons` on the current reservation or reclaim error,
-`PreflightResult.WaitReasons` on the estimate and `QueueTurnReason` when rank
+Use `WaitReasons` on the current reservation or reclaim error. An absent
+quota policy asks the platform operator to configure it. Project the fresh
+typed error rather than reconstructing one from a persisted wait-code string.
+Use `PreflightResult.WaitReasons` on the estimate and `QueueTurnReason` when rank
 actually deferred the current entry. Use `ObserveCellWaitReasons` with the
 client for the authorized attempt's bound cell and its persisted workload
 reference. The adapter verifies the UID before projecting any blocker. Current
