@@ -107,12 +107,15 @@ test('Activity says when there is none, and a failure can be retried', async ({ 
   control.auditEvents = [];
   await page.goto(`${path}?tab=activity`);
   await expect(page.getByText('No activity yet')).toBeVisible();
+  const before = control.auditQueries.length;
   control.auditProblem = { status: 503, code: 'INTERNAL_ERROR' };
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Read again' })).toBeVisible();
+  expect(control.auditQueries).toHaveLength(before + 1);
   control.auditProblem = null;
-  await page.getByRole('button', { name: 'Try again' }).click();
+  await page.getByRole('button', { name: 'Read again' }).click();
   await expect(page.getByText('No activity yet')).toBeVisible();
+  expect(control.auditQueries).toHaveLength(before + 2);
 });
 
 test('renaming stays on the page and can be undone', async ({ page }) => {
