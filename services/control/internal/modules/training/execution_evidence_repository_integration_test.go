@@ -193,6 +193,67 @@ func TestActualTrainingExecutionEvidenceAdmission(t *testing.T) {
 		experiment.Execution.DependencyLockSHA256 != nil || experiment.Execution.HardwareObservation != nil {
 		t.Fatal("accepted experiment did not distinguish bound and unavailable evidence", e)
 	}
+	t.Run("accepted_experiment_survives_private_store_handoff", func(t *testing.T) {
+		source, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
+		if e != nil {
+			t.Fatal(e)
+		}
+		backup := filepath.Join(snapshotTestDirectory(t), "snapshot")
+		if e = g.s.ExportFiles(g.ctx, backup); e != nil {
+			t.Fatal("export the accepted experiment files", e)
+		}
+		recovered := *g.s
+		recovered.Store = nil
+		directory := snapshotTestDirectory(t)
+		if e = recovered.ImportFiles(g.ctx, backup, directory); e != nil {
+			t.Fatal("import the accepted experiment files", e)
+		}
+		store, e := training.OpenStore(directory, g.f.Tenant, 4096, wire.MaximumCheckpointBytes, wire.MaximumCheckpointFiles)
+		if e != nil {
+			t.Fatal(e)
+		}
+		t.Cleanup(func() { _ = store.Close() })
+		recovered.Store = store
+		if e = recovered.VerifyStored(g.ctx); e != nil {
+			t.Fatal("recovered accepted files are not ready", e)
+		}
+		read := func(workspace string) (training.AcceptedExperiment, error) {
+			return recovered.ReadAcceptedExperiment(g.ctx, g.a, workspace, g.job.ID, uuid.NewString())
+		}
+		if got, e := read(g.f.Workspace); e != nil || !reflect.DeepEqual(got, experiment) {
+			t.Fatal("recovered experiment changed its immutable record", e)
+		}
+		restored, e := recovered.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
+		if e != nil || restored.IdentitySHA256() != source.IdentitySHA256() {
+			t.Fatal("recovered source changed its preparation identity", e)
+		}
+		if got, e := read(uuid.NewString()); e == nil || !reflect.DeepEqual(got, training.AcceptedExperiment{}) {
+			t.Fatal("recovered store exposed a foreign experiment", e)
+		}
+
+		var key string
+		if e = g.f.Store.QueryRow(g.ctx, g.statement(
+			"SELECT storage_key FROM training_artifacts WHERE id=$1", "", experiment.ArtifactID,
+		)).Scan(&key); e != nil {
+			t.Fatal(e)
+		}
+		path := filepath.Join(directory, key, "adapter_model.safetensors")
+		original := files["adapter_model.safetensors"]
+		changed := bytes.Clone(original)
+		changed[0] ^= 1
+		if e = os.WriteFile(path, changed, 0600); e != nil {
+			t.Fatal(e)
+		}
+		if got, e := read(g.f.Workspace); e == nil || e.Error() != "TRAINING_STORAGE_DATA_INVALID" || !reflect.DeepEqual(got, training.AcceptedExperiment{}) {
+			t.Fatal("recovered experiment exposed changed tensor bytes", e)
+		}
+		if e = os.WriteFile(path, original, 0600); e != nil {
+			t.Fatal(e)
+		}
+		if got, e := read(g.f.Workspace); e != nil || !reflect.DeepEqual(got, experiment) {
+			t.Fatal("repaired recovered experiment could not be retried", e)
+		}
+	})
 	t.Run("accepted_adapter_requires_a_registered_model_for_deployment", func(t *testing.T) {
 		source, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
 		if e != nil || source.Descriptor.UploadID != experiment.ArtifactID ||

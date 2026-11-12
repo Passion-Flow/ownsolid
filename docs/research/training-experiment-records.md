@@ -160,3 +160,27 @@ than the exact accepted result budget. The test fixed the original byte
 budget to the size of the valid report and confirmed that PostgreSQL's
 normalized projection exceeded that limit. The accepted record remained
 readable because the original bytes and the typed outcomes still matched.
+
+## Accepted experiment after a private store handoff
+
+The existing file snapshot owns accepted immutable bytes and the store
+namespace. Reuse that snapshot for a stopped accepted CPU fixture and
+keep its authenticated database references. Import into a fresh private
+directory, open the recovered store and read the experiment through
+`ReadAcceptedExperiment`. The command, result, stop, file inventory
+and accepted adapter identity must match the original source.
+
+Verify readiness against the imported files before the read. A
+same-length change to the recovered tensor file must fail with
+`TRAINING_STORAGE_DATA_INVALID` and return an empty experiment.
+Restoring the exact original bytes must make the read retryable.
+A foreign workspace must still receive no experiment. This checks the
+training file-owner handoff under the same scoped database. Database
+exchange and account-authority invalidation belong to the coordinated
+restore acceptance.
+
+The fixture reuses the actual retained CPU adapter and the existing
+PostgreSQL upload, stop and read path. Node facts and the production
+result/stop envelope retain their declared synthetic scope. The test
+adds no dependency, model or data. The existing Qwen Apache-2.0,
+generated CC0 fixture and pinned runtime license conditions apply.
