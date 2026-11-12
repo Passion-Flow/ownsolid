@@ -418,11 +418,11 @@
    "children": [
     {
      "type": "text",
-     "value": "If an upload expires"
+     "value": "Expired uploads"
     }
    ],
    "data": {
-    "id": "if-an-upload-expires"
+    "id": "expired-uploads"
    }
   },
   {
