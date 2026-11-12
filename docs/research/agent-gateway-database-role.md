@@ -196,3 +196,29 @@ SCRAM/TLS login, the product catalog, the complete profile permission closure,
 control/gateway startup or installed delivery. No function or role was activated
 in ownsolid and no production migration number was taken. Preserve the current
 runtime path until all of those acceptance gates pass. ARC-111 remains open.
+
+## Product-schema prototype boundary
+
+Next exercise the actual read-only Node heartbeat and claim against a disposable
+current product catalog. Keep the candidate SQL function and Go source overlay
+outside product files. Reuse the exact unmodified node credential, Workspace,
+lease, cursor and audit logic; substitute only the protected installation/tenant
+shared-lock query proved above. Connect a new LOGIN principal through real local
+TCP/SCRAM, with a protected generated password and a separate bounded pool.
+Require the selected store and identity service to use that same restricted pool.
+
+Begin with explicit per-table read/write grants reviewed from the existing
+read-only path. A missing permission fails the prototype with its SQLSTATE and
+object name; do not automatically grant an entire schema or retry as an operator.
+Exercise current heartbeat persistence, idle/issued claims, foreign credentials,
+acknowledged cursor and audit behavior. Independently deny direct authority
+mutation, human identity/membership access, audit-head reads and migration-ledger
+writes. Revoke function execution and require the current authority path to fail.
+Do not expose the candidate function before closing PUBLIC execution.
+
+This slice cannot qualify component/inference observations, delegated training or
+preparation, gateway background workers, normal server readiness or installer
+provisioning. An extra candidate function deliberately changes the fixture catalog;
+it must not be mistaken for an activated, normally admitted product catalog.
+No production SQL, grant, protocol, migration number or default is changed by the
+prototype. Finish the complete permission closure before implementing ARC-111.
