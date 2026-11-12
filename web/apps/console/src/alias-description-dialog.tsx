@@ -4,7 +4,7 @@ import { useI18n } from '@ownsolid/i18n';
 import { everyPage, gatewayKeys, pageSize, ReasonField, useIntentKeys } from '@ownsolid/shell';
 import { Button, CopyText, Dialog, Notice, ProblemNotice, useToast } from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { descriptionInput, hasAliasDescription, type DescribedAlias } from './alias-description.ts';
 
 /** A focused edit on S-205; Portal receives the result through its existing read-only catalogue. */
@@ -20,6 +20,13 @@ export function AliasDescriptionDialog({
   const client = useQueryClient();
   const intents = useIntentKeys();
   const id = useId();
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const [draft, setDraft] = useState(alias.description);
   const [reason, setReason] = useState('');
   const [basis, setBasis] = useState(alias);
@@ -54,6 +61,9 @@ export function AliasDescriptionDialog({
     }) => editAliasDescription(alias.workspace_id, alias.id, body, intents.take(body)),
     onSuccess: (answer, body) => {
       intents.done(body);
+      void refresh();
+      // A delayed answer must not close or announce success in a subsequently opened surface.
+      if (!mounted.current) return;
       const current = answer.description_revision === answer.applied_description_revision;
       // Only undo a change that is still current. The retained key makes an unanswered Undo safe.
       const undoKey = crypto.randomUUID();
@@ -75,7 +85,6 @@ export function AliasDescriptionDialog({
             : undefined,
       });
       onClose();
-      void refresh();
     },
     onError: (error, body) => {
       if (isProblem(error, 'VERSION_CONFLICT') || isProblem(error, 'IDEMPOTENCY_CONFLICT')) {

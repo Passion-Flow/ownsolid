@@ -60,7 +60,12 @@ function Overview({ deployment, name }: { deployment: Deployment; name: Deployme
           <p className="m-0 text-[13px] text-text-2">{t('services.verification.none')}</p>
         )}
       </Card>
-      <DeploymentGateway deployment={deployment} model={name.model} node={name.node} />
+      <DeploymentGateway
+        key={`${deployment.workspace_id}:${deployment.id}`}
+        deployment={deployment}
+        model={name.model}
+        node={name.node}
+      />
     </div>
   );
 }

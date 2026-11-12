@@ -313,9 +313,16 @@ function Catalogue({ workspace }: { workspace: string }) {
     queryKey: ['portal-models', 'models', workspace],
     queryFn: ({ signal }) => listWorkspaceModels(workspace, { signal }),
   });
+  const aliasProblem = isProblem(aliases.error) ? aliases.error : null;
+  const denied = aliasProblem?.status === 403 || aliasProblem?.status === 404;
   const all = useMemo(
-    () => catalogueEntries(aliases.data?.items ?? [], deployments.data ?? [], models.data ?? []),
-    [aliases.data, deployments.data, models.data],
+    () =>
+      catalogueEntries(
+        denied ? [] : (aliases.data?.items ?? []),
+        deployments.data ?? [],
+        models.data ?? [],
+      ),
+    [aliases.data, deployments.data, models.data, denied],
   );
   const items = all.filter(
     (entry) => inCatalogueTile(entry, tile) && matchesCatalogueTerm(entry, term),
@@ -326,7 +333,7 @@ function Catalogue({ workspace }: { workspace: string }) {
   let body;
   if (aliases.isPending) {
     body = <Waiting />;
-  } else if (!aliases.data) {
+  } else if (denied || !aliases.data) {
     body = isProblem(aliases.error) ? (
       <ProblemNotice
         problem={aliases.error}
@@ -363,9 +370,10 @@ function Catalogue({ workspace }: { workspace: string }) {
         tiles={catalogueTiles.map((value) => ({
           value,
           label: t(`portalModels.tile.${value}`),
-          count: aliases.data
-            ? all.filter((entry) => inCatalogueTile(entry, value)).length
-            : undefined,
+          count:
+            aliases.data && !denied
+              ? all.filter((entry) => inCatalogueTile(entry, value)).length
+              : undefined,
         }))}
         onChange={(value) => {
           // A second press on the chosen tile goes back to everything.
@@ -387,10 +395,20 @@ function Catalogue({ workspace }: { workspace: string }) {
           <CopyLinkButton />
         </div>
       </div>
-      {aliases.data && !aliases.data.complete ? (
+      {aliases.data && !denied && !aliases.data.complete ? (
         <Notice className="mb-3.5" title={t('portalModels.partial', { count: all.length })} />
       ) : null}
-      {factsProblem && aliases.data ? (
+      {aliasProblem && aliases.data && !denied ? (
+        <ProblemNotice
+          className="mb-3.5"
+          problem={aliasProblem}
+          title={t('portalModels.refreshUnavailable')}
+          onRetry={() => {
+            void aliases.refetch();
+          }}
+        />
+      ) : null}
+      {factsProblem && aliases.data && !denied ? (
         <div className="mb-3.5">
           <ProblemNotice
             problem={factsProblem}

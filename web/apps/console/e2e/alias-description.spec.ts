@@ -173,7 +173,7 @@ for (const [locale, text] of [
       const edit = card(page).getByRole('button', { name: key('edit'), exact: true });
       await expect(edit).toHaveAttribute('aria-disabled', 'true');
       await expect(edit).toHaveAccessibleDescription(key('notReady'));
-      await edit.click();
+      await edit.press('Enter');
       await expect(page.getByRole('dialog')).toHaveCount(0);
     });
 
@@ -195,7 +195,7 @@ for (const [locale, text] of [
           'Keep this draft',
         );
         await expect(save).toHaveAttribute('aria-disabled', 'true');
-        await save.click();
+        await save.press('Enter');
         expect(control.publishWrites).toHaveLength(1);
         expect(control.aliases[0]?.description).toBe(initial);
       });
@@ -239,7 +239,7 @@ test('accepts 500 supplementary characters and permits an edit while the model i
   const field = page.getByLabel('Description', { exact: true });
   await field.fill('\u{1f680}'.repeat(501));
   await page.getByLabel('Reason', { exact: true }).fill('Describe supported use');
-  await page.getByRole('button', { name: 'Save description' }).click();
+  await page.getByRole('button', { name: 'Save description' }).press('Enter');
   expect(control.publishWrites).toHaveLength(0);
   await expect(field).toHaveAttribute('aria-invalid', 'true');
   await field.fill(`  ${'\u{1f680}'.repeat(500)}\n`);
@@ -285,4 +285,42 @@ test('Undo refuses a later writer and keeps that writer visible', async ({ page 
     'Keep the newer text',
   );
   expect(control.aliases[0]?.description_revision).toBe(3);
+});
+
+test('an answer after closing the editor cannot close the next dialog', async ({ page }) => {
+  let release: () => void = () => {
+    throw new Error('The response gate is not initialized');
+  };
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let received: () => void = () => {
+    throw new Error('The request gate is not initialized');
+  };
+  const requestReceived = new Promise<void>((resolve) => {
+    received = resolve;
+  });
+  await page.route('**/aliases/*/description', async (route) => {
+    received();
+    await released;
+    await route.fallback();
+  });
+  await page.goto(`/services/${runningDeployment.id}`);
+  await page.getByRole('button', { name: 'Edit description', exact: true }).click();
+  await page.getByLabel('Description', { exact: true }).fill('An edit finishing later');
+  await page.getByLabel('Reason', { exact: true }).fill('Clarify the use');
+  await page.getByRole('button', { name: 'Save description' }).click();
+  await requestReceived;
+  await page.keyboard.press('Escape');
+  await page
+    .getByRole('region', { name: 'On the gateway', exact: true })
+    .getByRole('button', { name: 'Issue a key', exact: true })
+    .click();
+  const response = page.waitForResponse(
+    (reply) => reply.url().endsWith('/description') && reply.ok(),
+  );
+  release();
+  await response;
+  await expect(page.getByRole('dialog', { name: 'Issue a key', exact: true })).toBeVisible();
+  await expect(page.getByText('Description saved.', { exact: true })).toHaveCount(0);
 });
