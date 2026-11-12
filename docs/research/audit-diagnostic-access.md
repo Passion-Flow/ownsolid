@@ -17,7 +17,7 @@ new runtime acceptance result.
 | Path and owner | Present controls | Remaining AUD-108 work |
 | --- | --- | --- |
 | [License Diagnostics](../../services/control/internal/modules/licensing/diagnostics.go), `licensing.Service.Diagnostics` | Current Admin authorization, bounded typed state JSON, `license.diagnostics_exported` through `audit.WriteWithin` in the same transaction, and an empty download on any transaction error | Preserve this implemented path. Its read consumer is outside the SCI-owned audit directory. |
-| [Admin audit HTTP projection](../../services/control/internal/modules/identity/http/audit_list.go), `Handler.listAuditEvents`, and [listForActor](../../services/control/internal/modules/identity/lists.go) | Session/Admin recheck, bounded list plan and optional verified assistant projection. Workspace reads use `ListWorkspaceAuditForActor` and its installation-tenant workspace check | Add access accounting at the identity read transaction before releasing the page. The inspected transaction currently rechecks and reads without appending an access event. Preserve the current public representation and filters. |
+| [Admin audit HTTP projection](../../services/control/internal/modules/identity/http/audit_list.go), `Handler.listAuditEvents`, and [listForActor](../../services/control/internal/modules/identity/lists.go) | Session/Admin recheck, bounded list plan and optional verified assistant projection. Workspace reads use `ListWorkspaceAuditForActor` and its installation-tenant workspace check | Installation-wide reads now append in the identity transaction. Exact workspace reads still need the scoped writer and IAM consumer pairing. Preserve the current public representation and filters. |
 | [Local support bundle](../../deploy/offline/internal/install/support.go), `SupportBundle` and `publishSupportBundle` | Typed configuration/state projection, a private archive, fixed collection issues and collection while Control is down | Admit and durably record the diagnostic access through the installer's existing operator mechanism before protected collection. The current path collects and publishes without such an access record. |
 | [Managed support bundle](../../deploy/offline/internal/install/support_cluster.go), `ClusterSupportBundle` and `collectManagementSupport` | Protected independent credentials, bounded named HTTPS reads, response scope checks, fixed issues and typed projection | The installer must account for this collection; Control and Kubernetes owners retain authorization and source access accounting. A collector credential file does not identify a browser actor. |
 | [Audit package](../../services/control/internal/modules/audit/repository.go), `WriteWithin` and `WriteAnonymousWithin` | Same-transaction append and exactly-one-row confirmation for the owning SQL dialect | This package owns no diagnostic reader, HTTP handler or collector lifecycle. An additional unused writer or local access ledger would not account for any of the reads above. |
@@ -39,8 +39,9 @@ for their recorded scope and do not prove diagnostic access accounting.
 
 ## Required owner integration
 
-Identity must place its read-access event in `listForActor`'s current
-transaction after authorization and before the result can leave the service.
+Identity now places its installation-wide read-access event in `listForActor`'s
+current transaction after authorization and before the result leaves the service.
+The exact workspace consumer must add its scoped event at the same call point.
 Use a fixed action and only the necessary server-derived scope, actor,
 request ID and bounded read-selection metadata. Do not copy result rows,
 reason text, credentials, raw query strings or driver errors into that event.
@@ -74,6 +75,66 @@ size/time limits, cancellation and partial-source collection issues. An explicit
 retry is a new read attempt with its own correlation, not evidence that an
 uncertain prior access never occurred.
 
+## Scoped append contract
+
+The [identity consumer](identity-audit-read-access.md#chosen-approach) now
+accounts for the installation-wide Admin read. Its explicit workspace reader
+already holds current Admin/session and installation-workspace authority in
+one transaction and needs an append bound to that exact workspace.
+
+Add `audit.WriteScopedWithin(ctx, tx, ScopedEvent)` for PostgreSQL human Admin
+operations. The server supplies actor, installation tenant, authorized workspace,
+local site/cell, request ID, fixed action/outcome, optional target and bounded
+server-generated reason. This is a trusted internal operation, not an HTTP input
+or authentication provider. The caller retains current session/epoch and
+operation authorization locks through commit and propagates every append error.
+The first consumer remains `identity.ListWorkspaceAuditForActor`; IAM owns its
+registration and its permitted result representation.
+
+Use one guarded `INSERT ... SELECT`, following
+[PostgreSQL INSERT](https://www.postgresql.org/docs/18/sql-insert.html).
+Match the bootstrapped installation's tenant, actual workspace ownership,
+active platform Admin, and the single local cell's site and ID. Insert the
+matched database identities explicitly. The snapshot behavior described by
+[PostgreSQL transaction isolation](https://www.postgresql.org/docs/18/transaction-iso.html)
+does not replace the consumer's current authority locks. Keep disabled workspace
+history readable under the existing Admin policy; readiness for new jobs is
+not the policy for this historical read.
+
+Return the same `AUDIT_SCOPE_DENIED` for a well-formed missing or foreign scope
+or actor. Malformed fields return `AUDIT_SCOPED_EVENT_INVALID` before SQL.
+Require canonical nonzero UUIDs, the existing scope-name syntax, bounded ASCII
+action/target codes, a valid outcome and at most 500 UTF-8 reason bytes without
+control characters. Refuse a pool in place of a borrowed transaction and refuse
+unsupported dialects. No independent connection, commit, retry, new table,
+migration, metadata, credential or captured content is introduced.
+
+The serving role needs only append and the named authority-column reads, not
+private chain-head access or source mutation privileges. Existing database
+triggers assign positions, hashes and V2 commitments and enforce local head
+scope. Exactly one inserted row confirms append; no match denies, and an
+unexpected affected-row count remains unconfirmed. Cancellation and database
+errors propagate to the transaction owner. An append success is not a commit
+acknowledgment; a wire-level uncertain commit must remain uncertain and must
+not automatically replay.
+
+Verify the real PostgreSQL path with a non-default workspace under the current
+production default/default schema gate. A separate operator-seeded empty-genesis
+SQL fixture tests non-default site/cell attribution without claiming that
+non-default installations are supported. Independently check stored scope,
+minimal payload and chain continuity. Cover foreign/missing actor, tenant,
+workspace, site and cell with identical denial, an inactive Admin, a non-Admin,
+restricted column grants without private-head access, cancellation, insert
+refusal and repair, explicit rollback, concurrent appends and real dropped
+COMMIT/ACK outcomes. Keep the caller's session/forged-context tests and the
+actual scoped read pairing with IAM. No standalone append test completes
+AUD-108, and no unchanged audit58 or model qualification is repeated.
+
+No new dependency, model or dataset is added. Existing Go BSD-3-Clause, pgx MIT,
+Google UUID BSD-3-Clause and PostgreSQL License terms permit commercial use,
+redistribution and offline operation with their existing notices. PostgreSQL
+and OWASP are design references. No upstream implementation is copied.
+
 ## Acceptance and unblock conditions
 
 Exercise the real diagnostic download or collector, not a direct append probe.
@@ -89,6 +150,64 @@ No dependency, model or dataset is introduced. Existing Go standard-library
 BSD-3-Clause terms, offline use and redistribution notices remain unchanged;
 OWASP and Troubleshoot are references, not embedded code. The audit module has
 no missing owned read consumer to implement within the current SCI allocation.
-Identity owns the Admin audit read integration; delivery owns both support
+Identity owns the exact workspace read integration; delivery owns both support
 collection entry points and the offline receipt/reconciliation. Those owner
 changes and their actual acceptance unblock AUD-108. Keep it unticked.
+
+### Fixture boundary
+
+The first scoped PostgreSQL attempt stopped at migration initialization with
+`SCHEMA_CELL_IDENTITY_INVALID`, before calling the new writer. The production
+schema gate intentionally fixes the local identity to default/default until
+ARC-202. Its source and assertion remain unchanged. Main-flow tests therefore
+use the production migration path. A separate disposable SQL fixture may seed
+a non-default local cell and matching head only after independently confirming
+that the chain is empty at zero-hash genesis. This checks that the append reads
+actual database attribution; it does not qualify an installation, change
+retained history or rerun audit58 acceptance. The original failed run remains
+retained with its exact source and logs.
+
+A later negative fixture initially changed only `bootstrap_complete`, leaving
+the required bootstrap fields populated. PostgreSQL correctly refused that
+inconsistent tuple with a CHECK conflict before append. The corrected fixture
+uses the schema's valid unbootstrapped tuple and rolls it back after asserting
+`AUDIT_SCOPE_DENIED`. The CHECK and writer are unchanged; the failed fixture
+run is retained separately from its correction.
+
+## Scoped PostgreSQL qualification
+
+Three new contract unit roots and tagged `go vet` passed on Linux amd64. The
+new `TestScopedAuditPostgreSQL` root passed in 3.28 seconds against PostgreSQL
+18.6 and pgvector 0.8.7. It verified the exact non-default workspace, thirteen
+uniform missing/foreign attribution denials, absent installation/local identity,
+minimal payload, the original installation writer's default workspace, a role
+with only the named column reads and INSERT, private-head read denial, append
+refusal and repair, rollback, cancellation before commit and during a genuinely
+blocked insert, twelve concurrent committed appends and contiguous hashes.
+Real PostgreSQL wire faults verified zero events when COMMIT was withheld and
+one when the server ACK was suppressed, one callback and COMMIT attempt each,
+and a separate explicitly retried read. No automatic retry was observed.
+
+The main path used the production default/default migration gate. The separate
+operator-seeded empty-genesis SQL case verified non-default site/cell attribution
+and refusal of nonlocal defaults. It supplies no non-default installation claim.
+The original installation and assistant append implementations stayed byte-identical.
+IAM's actual scoped read and complete current-session authorization remain a
+separate same-source consumer pairing.
+
+The unit, build and PostgreSQL jobs each used the pinned cached PostgreSQL image
+as a Linux execution environment, one CPU, a 1.5 GiB cgroup and network mode
+`none`. The final PostgreSQL run had only loopback and no routes or published
+ports. Its preflight recorded 6,034 MiB free and 19,463 MiB available memory,
+746 GiB available disk and full I/O PSI 0.01/0.94 over ten/sixty seconds.
+All three successful job containers exited zero without an OOM event and were
+removed; temporary credential directories were removed. The two initial fixture
+failures described above retain their source and raw logs.
+
+The complete retained manifest SHA-256 is
+`1ca8259b60df5cd22c78e1647d807e46c0b7147925be312ad67d6356b425563d`.
+The unit inputs remained byte-identical while only the negative PostgreSQL
+fixture was corrected, so the passed unit roots were retained rather than
+replayed. The corrected test binary and tagged vet were rebuilt before the
+final PostgreSQL root. AUD-108 remains open for IAM consumer pairing, DEV/Web
+publication and Delivery's offline collection admission and reconciliation.
