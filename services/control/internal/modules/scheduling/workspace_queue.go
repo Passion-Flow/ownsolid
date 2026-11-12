@@ -44,6 +44,10 @@ func RankWorkspaceQueueExecutorWithin(ctx context.Context, q transaction.Executo
 		return nil, ErrQuotaUnconfigured
 	}
 
+	return rankWorkspaceQueueWithin(ctx, q, tenant, tree, entries)
+}
+
+func rankWorkspaceQueueWithin(ctx context.Context, q transaction.Executor, tenant string, tree *QuotaTree, entries []QueueEntry) ([]QueueEntry, error) {
 	queues := make(map[string]QueueShare)
 	var workspaces []string
 	for _, entry := range entries {
