@@ -243,6 +243,16 @@ files were removed. The successful server race and PostgreSQL logs have SHA-256
 4ce26a15b1a3a2760126d6d9ca5e576c21106a34fe271c8d0564485a2b49722e and
 4330a5fdaabf9f4b85fd23e52b3eb9d5f981ab3720b562c59dcb724564276cde.
 
+Input 387db4e95ca9a317a6799c71aa62310020ae8261 also runs the existing
+disabled-owner admission from the real startup root. Its complete server race
+suite passed on Darwin arm64 in 16.359 seconds, retaining the unchanged
+configuration proof above. The same network-none Linux arm64 PostgreSQL fixture
+passed the extended startup test in 0.49 seconds without skips: an empty omitted
+owner is admitted, a retained importing pin refuses omission, and the refusal
+leaves exactly that pin unchanged. Its server race and PostgreSQL log SHA-256
+values are bbbf597f50103e8733eb1c3fe8fe53372f3f5a012355f37325492b7a44e56876
+and 76572262940e149bb4681a86cc77676574fd3157fa77a1b3179bcbd00b324fc7.
+
 The shared-root candidate has not passed the full repository gate or installed
 source-to-pin acceptance. That installed flow remains with OBS and DEL, and
 NET-102 remains open.
