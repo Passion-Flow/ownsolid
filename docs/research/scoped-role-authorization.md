@@ -125,7 +125,64 @@ built-in role matrix, general role management or their public/UI contracts.
 The eventual migration must seed explicit equivalent built-in grants for all
 existing memberships before replacing any legacy permission check. A partial
 overlay cannot qualify platform-wide resource permissions or change current
-production behavior. No experimental evaluator or SQL has run at this checkpoint.
+production behavior. The qualification below records the external experiment;
+no production role evaluator or SQL is admitted.
+
+## Selected-family qualification
+
+The actual `ChangeNote` source overlay and candidate schema passed four real
+PostgreSQL test roots, containing thirteen leaf cases, in both environments:
+Go 1.27.3 native race tests against a loopback-only published database and a
+Linux arm64 binary with its database under `--network none` and no published
+ports. The native client's egress was not isolated; the disconnected run is
+the separate network-isolation result. Both used PostgreSQL 18.6 and pgvector
+0.8.7 from the pinned fixture image already used by IAM-102/IAM-103. No root
+or subcase failed or skipped in the successful runs.
+
+The overlay keeps the existing actor, tenant, Workspace, note, version, actual
+UPDATE and audit paths. It replaces only note update/delete permission
+selection and calls the same candidate evaluator from own-decision explain.
+An explicit note grant let a current viewer update that note; the sibling note
+and an ungranted delete remained refused. Workspace inheritance, current scope
+despite a missing cached Workspace, foreign installation/note/grant refusal,
+database parent checks, unknown actions and bounded delegation passed. Removing
+and re-adding the same member produced a new authority ID and removed the old
+grant; its permissions did not revive. A role named `platform admin` granted no
+management or platform authority.
+
+An independent PostgreSQL connection observed the actual lock edge in both
+directions. A grant edit holding the Workspace fence made the waiting writer
+observe revocation and return no note/audit mutation. A writer already holding
+it committed one note/audit before the waiting edit; later writes were refused.
+Audit append refusal rolled back note and grant changes, and explicit retries
+succeeded. Actual blocked cancellation returned no note, and grant/provenance
+caps exposed no partial allow result.
+
+For note writes, grant edits and explain, the existing real PostgreSQL wire
+fault owner separately withheld COMMIT and suppressed the server's successful
+COMMIT acknowledgement. Each attempt sent one COMMIT, returned only commit-
+unknown with no DTO/decision, and performed no automatic retry. Independent
+readback found zero or one atomic mutation/audit as appropriate; a new explicit
+revision/intent or fresh explain succeeded after readback. These are actual
+wire observations, not a wrapper that returns an error after a normal commit.
+
+Evidence set `iam107-note-scope-20261113.ivhwid3w`, run `qualification-o9pz0r_8`,
+retains exact sources, the private overlay, SQL, both raw test logs, independent
+wait observations and cleanup. Input is
+`d1d66a69d3753174962a3907b24624bedf6ba407`; the source-hash manifest SHA-256 is
+`0603532b92dfa60bd9f03cf44e1d353ad6b3bcebbb0dacd5eb3cc53b0f8c609a`.
+The first unusable native port-mapping fixture remains separate. The successful
+native fixture published only to `127.0.0.1`; the second fixture had no network
+or host ports. Both owned containers and the owned native network were removed.
+
+This proves the selected transaction/identity approach described in
+[ADR 0075](../decisions/0075-bind-scoped-role-grants-to-membership-lifetimes.md).
+The product source, schema 60/table count 120, published role enums, routes and
+UI remain unchanged. New tables' serving-role grants, formal migration and
+legacy built-in backfill are unqualified. Read/list/create paths, all named
+roles, general role management, step-up and every remaining resource owner
+still require composition and installed acceptance. IAM-107 and IAM-108 stay
+open. Research publication checks do not replace those feature gates.
 
 Verify real PostgreSQL role/grant persistence, current membership and exact
 resource ownership. Cover foreign tenant, Workspace, role, subject, binding
