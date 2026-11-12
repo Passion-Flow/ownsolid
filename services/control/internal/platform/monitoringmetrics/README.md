@@ -8,7 +8,7 @@ This package records bounded in-process HTTP facts for the [monitoring domain](.
 
 `Middleware` wraps an existing handler using the reviewed `httpsnoop` hooks, preserving its actual optional response interfaces. It observes header commitment, Write/WriteString/ReadFrom, flush, hijack, cancellation, write failure and panic outcomes. It counts bytes actually reported written; it does not buffer bodies or turn partial streams into successful responses.
 
-Methods and route classes are closed labels, never raw URLs, query strings, bodies, identities or arbitrary user labels. The current route classification is defined by `route` in [recorder.go](recorder.go); add route categories intentionally rather than assuming every health or new module path has a special category. Logs are rate-bounded and count skips. Only a canonical server response request ID is eligible for inclusion.
+Methods and route classes are closed labels, never raw URLs, query strings, bodies, identities or arbitrary user labels. The current route classification is defined by `route` in [recorder.go](recorder.go); add route categories intentionally rather than assuming every health or new module path has a special category. The agent family includes the current /agent/v1/ paths and exact agent gRPC SessionPath, and gateway includes /gateway/v1/ after cell-relative normalization. Legacy API-prefixed classes are retained. The health family includes the exact /health/live and /health/ready paths and the legacy /healthz and /readyz classifications; unknown suffixes remain other. Logs are rate-bounded and count skips. Only a canonical server response request ID is eligible for inclusion.
 
 ## Snapshots and restart semantics
 
