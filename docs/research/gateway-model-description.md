@@ -343,8 +343,10 @@ platform admission predicate.
 ### Safe rollback
 
 Run the down script in one operator transaction while serving is
-stopped. Acquire ACCESS EXCLUSIVE locks on aliases and description
-intents before checking retained state. Refuse with SQLSTATE 55000 and
+stopped. Its first executable statement selects READ COMMITTED; an
+earlier stronger-isolation snapshot refuses before DDL. Then acquire
+ACCESS EXCLUSIVE locks on aliases and description intents before
+checking retained state. Refuse with SQLSTATE 55000 and
 MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE if any description
 is nonempty, any independent revision differs from 1, or any edit
 intent exists. Clearing the visible text does not make its revision
@@ -385,183 +387,9 @@ the committed predecessor, not the formally numbered production tail.
 
 The unnumbered up SQL SHA-256 is
 399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
-The original handoff down SQL SHA-256 is
+The original schema-58 down SHA-256 was
 4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
-Changing only the down refusal does not change the candidate catalogue.
-Keep the up bytes unchanged. The isolation successor below tightens
-the down script before formal admission. Verify the complete release
-lineage and runtime principal against the final numbered files.
-
-The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
-concurrent revision refusal, exact replay, scope checks and retry after
-audit rollback. TestAliasDescriptionRollbackPreservesRetainedState
-passed pristine rollback and independent text, revision and intent
-refusals. TestAliasDescriptionRollbackWaitsForCommittedWriter observed
-the table-lock wait, committed the writer, and then received the
-retained-state refusal without losing the write. Clearing through the
-HTTP route still prevented downgrade and retained a successful replay.
-The installed-schema test was explicitly skipped on schema 58.
-
-The Linux handoff and logs are retained in
-/root/lane-gw-acceptance/gw120-schema58._65ygj2r. run-tests.sh runs the
-focused PostgreSQL/HTTPS checks; catalog.sh reproduces fresh, current
-restore and old restore in one disposable container. Both acquire the
-shared Linux heavy-test and SCI replay locks and enforce the resource
-preflight. The schema fixture uses only its own namespace and no host
-listener. No model or GPU ran. For an already prepared private fixture,
-run the native tests from the repository root:
-
-```sh
-go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription(PostgreSQLUpgradeAndHTTPS|InstalledSchemaAndHTTPS|RollbackPreservesRetainedState|RollbackWaitsForCommittedWriter)$' -count=1
-```
-
-After formal migration, require InstalledSchemaAndHTTPS to pass using
-the normal production migrator and catalog checks, without applying the
-candidate SQL. ARC owns the exact numbered files, catalogue constants,
-TableCount and restricted runtime verification; GW owns this backend
-read/write regression; WEB and DEL own the installed S-304 consumer
-qualification. Neither the candidate run nor a skipped installed test
-is a completed production description flow.
-
-
-The pristine predecessor rollback assertion compares the exact captured
-schema-58 catalogue before and after the candidate, rather than calling
-the check for the installed current tail. This keeps the predecessor
-regression valid when ARC adds the production migration. The focused
-PostgreSQL/HTTPS and concurrent rollback tests passed with this assertion.
-
-
-## Formal migration admission plan
-
-The integration baseline is 1aad4eed, which retains schema 58 and 118
-public tables. The handoff from ba815623 was checked locally against
-its complete SHA-256 manifest, including the eight unchanged production
-source files. Assign only the next contiguous version, 59. Preserve the exact
-up bytes and use the isolation-guarded down successor below. Preserve every earlier SQL asset and release
-lineage entry. This changes no agent protocol or agent version policy.
-No new dependency, model, dataset or network runtime is introduced.
-
-The PostgreSQL 18 locking and exception references above were reviewed
-again on 2026-11-12. ACCESS EXCLUSIVE conflicts with both reads and
-writes and remains held through the transaction; a raised exception
-aborts the transaction. Use the operator's existing bounded transaction
-and stopped-serving installation procedure. Reject destructive rollback
-rather than silently discarding retained content. Reject dropping only
-the intent table or checking state before taking locks, because either
-would bypass the retained-state or concurrent-writer guarantee.
-
-Acceptance requires independently reproducing the three catalogue
-forms on PostgreSQL 18.6 with pgvector 0.8.7, using production migrations
-and the historical 55 through 58 restore inputs plus a current dump.
-Require repeated normal migration/readiness, unchanged predecessor
-checksums and retained audit checkpoints. Exercise missing-grant refusal,
-existing-role grant resume without OID or password changes, runtime
-intent mutation refusal and journal/private-head denial. Run the handed-off
-predecessor, installed-schema, retained-state and waiting-writer tests
-against the same formal source commit, then complete the repository gates.
-These are admission requirements, not new run results. UI qualification
-and the GW-120 roadmap tick remain with the Gateway and Web owners.
-
-
-### Downgrade transaction isolation
-
-[PostgreSQL LOCK](https://www.postgresql.org/docs/18/sql-lock.html)
-requires either READ COMMITTED or taking the lock before the first
-snapshot in a REPEATABLE READ or SERIALIZABLE transaction. A table lock
-taken after an earlier snapshot does not make subsequent reads current.
-A transaction that first inspects an alias, then waits for an outside
-writer, can miss the newly committed description when checking whether
-downgrade is pristine. Stopping new serving traffic does not repair an
-already captured operator snapshot.
-
-An isolated prototype on 2026-11-12 used the frozen 62a3792f source,
-PostgreSQL 18.6 and pgvector 0.8.7 in a network-none Linux arm64
-container on the Mac arm64 workstation. The original down script passed
-its destructive DDL after another transaction committed a description;
-the added assertion failed as expected. The prototype rolled back its
-DDL and retained the writer's committed data. Prepending SET TRANSACTION
-ISOLATION LEVEL READ COMMITTED rejected the stale snapshot with SQLSTATE
-25001 before locking or DDL, and the retained-data assertion passed.
-This is a prototype result, not the complete formal migration gate.
-
-Make that SET the first executable statement of both the qualified
-fixture and numbered down script. A fresh operator transaction selects
-READ COMMITTED before acquiring the two ACCESS EXCLUSIVE locks. A
-transaction that already captured another isolation snapshot refuses;
-roll it back and start a fresh operator transaction. Do not merely
-mention the isolation requirement in a comment or rely on a deployment's
-default_transaction_isolation. Neither guarantees a current state check.
-The up checksum and structural catalogues remain unchanged. The current
-down SHA-256 is 61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86.
-
-Add production-script regressions for prior REPEATABLE READ and
-SERIALIZABLE snapshots, checking exact 25001 refusal and retained writer
-data, plus fresh transactions at every supported PostgreSQL isolation
-level, which must still refuse retained description state with 55000.
-Keep the original pristine, cleared revision, intent-only, concurrent
-lock-wait and installed HTTPS cases. Require all of them to run on the
-same formal source before publication.
-
-
-## Formal schema 59 acceptance
-
-The exact source a446ec580cf6dffc63df5d8269518f1ef8175d40 passed the
-formal admission on 2026-11-12. PostgreSQL 18.6 and pgvector 0.8.7 ran
-in network-none Linux arm64 containers on the Darwin arm64 workstation.
-The accepted schema-58 predecessor was built separately from 106ca52d.
-All 58 preceding up/down assets and all 58 release entries remained
-byte-identical. Migration 000059 uses the owner up bytes and the
-isolation-guarded down successor qualified above. The normal production
-migrator, schema checker and runtime grant catalog now bind 59 entries
-and 119 public tables, including the migration ledger.
-
-| Actual migration history | Catalogue SHA-256 |
-| --- | --- |
-| Fresh installation or native 58-to-59 upgrade | 72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782 |
-| Restore at 55, then upgrade to 59 | 8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069 |
-| Restore at 56, 57, 58 or 59, then admit 59 | 18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc |
-
-All seven histories ran the production migrator twice and the normal
-schema check, asserting exactly 59 ledger entries and 119 tables.
-The original 55 through 58 custom-format archives were checksum-checked
-before use. Audit exports from all four historical restores matched
-the retained original JSONL bytes, and the independent offline verifier
-accepted the original checkpoint each time. These runs qualify the
-measured catalogue histories and retained audit data; they are not a
-full installed browser or model-serving qualification.
-
-Six distribution test roots passed without skips: predecessor HTTPS,
-normal installed-schema HTTPS, four retained-state rollback cases,
-the committed-writer lock wait, two prior-snapshot refusals and four
-fresh-isolation cases. Eight runtime-access roots also passed without
-skips, including the new 58-to-59 grant resume. Missing new-table access
-refused serving with DATABASE_RUNTIME_PRIVILEGES_INCOMPATIBLE and SQL
-42501. Grant-only resume and repeat retained the role OID, password
-verifier and every predecessor ledger row. The actual runtime principal
-reached the new foreign key but could not read audit_chain_head, mutate
-the ledger, truncate the intent table or disable its triggers.
-
-The same source passed an uninterrupted make check, make build and
-make test on the workstation. Chromium passed 1,075 Console and 389
-Portal cases; the unchanged live-environment skips were 28 and 9.
-Both suites ran without retries, at four and one workers respectively.
-Go, Rust and Web checks and tests passed. The private APFS temporary
-volume and all owned PostgreSQL containers, volumes and credential files
-were removed after the runs. The raw catalogue/restore log SHA-256 is
-069f70673f0764e6c16adb027488c53ed2d47aa32733d51ce0b01ed1c4e46a1d.
-The retained admission manifest SHA-256 is
-4a3e92dbd921d0d971ebcd1395329da32ed8e0dcf9b8b901f592123d667a76b4.
-
-The separate native Linux amd64 queue exited at resource admission and
-ran no new compiler or database. Do not report this arm64 result as an
-amd64 rerun. No model, GPU or production browser installation ran in
-this qualification. GW-120 and S-304 remain open until Console editing
-and the actual Portal consumer complete their installed acceptance.
-
-With an explicitly owned private PostgreSQL fixture configured through
-PROJECT_ONE_TEST_DSN_FILE, reproduce the current backend regressions:
-
-```sh
-go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription' -count=1 -v
-go -C services/control test -p 1 ./internal/operations/databaseaccess -run '^(TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal|TestUpgrade.*|TestActualRuntimeAccessPreparationAccountWorkspaceDMLAndNoDDL)$' -count=1 -v
-```
+That version was qualified in READ COMMITTED and is superseded by the
+explicit isolation fence below. Its retained-state lock alone does not
+protect an earlier REPEATABLE READ or SERIALIZABLE snapshot. The up bytes
+and structural catalogue remain unchanged.
