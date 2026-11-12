@@ -1,5 +1,13 @@
 # Agent gateway rebalancing
 
+Current acceptance: **ARC-107 remains open**. The integrated repository gate
+passed at 353b46af, but the selected native 500-agent lifecycle run failed its
+unchanged terminal 500/500 assertion with 497 connected/on-stream. It completed the
+observed retirement, both 25-task batches and preferred assignment recovery; final
+persisted-cursor readback was not reached. See the
+[actual installed result](#installed-lifecycle-run-with-busy-task-boundaries).
+Earlier results below apply only to their stated input and fixture scope.
+
 Research for ARC-107. An agent keeps the session that survived an outage, so rolling a
 gateway can move its whole share to a surviving gateway indefinitely. The original
 rendezvous order in [ADR 0048](../decisions/0048-agent-gateways-beside-control.md) already
