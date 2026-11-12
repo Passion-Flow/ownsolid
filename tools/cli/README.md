@@ -122,6 +122,24 @@ to use the server's page size, or choose 1 to 100. JSON and YAML preserve
 `items` and nullable `next_cursor`; tables display the continuation
 after the rows.
 
+## Inspect workspace members
+
+```sh
+ownsolid workspace member list "$WORKSPACE_ID" --limit 20 --output json
+ownsolid workspace member list "$WORKSPACE_ID" --cursor "$NEXT_CURSOR" --output yaml
+```
+
+Use the exact workspace UUID. The Admin API checks the current platform
+administrator and installed tenant. Each call reads one page, independent of
+configured site, cell and selected workspace. Continue with the same workspace,
+account and entrance; an invalid cursor requires restarting without `--cursor`.
+Omit `--limit` to use the server's page size, or choose 1 to 100.
+
+Tables show member name, email, user UUID, role and account status, including
+disabled accounts. JSON and YAML preserve all membership fields and the nullable
+continuation. This command reads membership state without changing roles or
+selecting a different workspace.
+
 ## Inspect gateway request history
 
 ```sh

@@ -120,7 +120,7 @@ func TestCommandHelp(t *testing.T) {
 	for _, args := range [][]string{
 		{}, {"login"}, {"logout"}, {"node"}, {"node", "list"}, {"node", "get"},
 		{"model"}, {"model", "list"}, {"deployment"}, {"deployment", "list"},
-		{"workspace"}, {"workspace", "list"}, {"workspace", "get"}, {"session"}, {"session", "list"}, {"session", "revoke"}, {"deployment", "get"}, {"version"}, {"help"},
+		{"workspace"}, {"workspace", "list"}, {"workspace", "get"}, {"workspace", "member"}, {"workspace", "member", "list"}, {"session"}, {"session", "list"}, {"session", "revoke"}, {"deployment", "get"}, {"version"}, {"help"},
 		{"node", "disable"}, {"node", "enable"}, {"node", "rename"}, {"node", "remove"},
 		{"node", "collect-facts"}, {"node", "tasks"}, {"node", "task"}, {"node", "task-log"}, {"node", "inference"}, {"node", "probe-inference"},
 		{"node", "join-token"}, {"node", "join-token", "list"}, {"node", "join-token", "create"}, {"node", "join-token", "revoke"},
