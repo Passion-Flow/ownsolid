@@ -216,6 +216,45 @@ and network behavior still need the prototype's disconnected qualification.
 
 ## Failure coverage and concrete completion
 
+### First strict transport and crypto slice
+
+The pinned SDK's [provider constructor](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/op.go)
+creates AES-GCM encryption with a legacy AES-CFB decryption fallback. Its
+[crypto implementation](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/crypto.go)
+explicitly documents that CFB ciphertext is unauthenticated. Ownsolid has no
+legacy OP ciphertext to migrate. Supply `WithCrypto` with an owned, bounded,
+compact-JWE-only adapter around the SDK's AES-256-GCM implementation; never
+admit that compatibility fallback. Pin `A256GCMKW`/`A256GCM`, exact protected
+key IDs and the active/retiring key set. Refuse duplicate/unknown protected
+headers, noncanonical encodings, compression/critical/remote-key options,
+oversized input and invalid token-ID/subject shape before decryption. Keys
+come from the eventual private key-file owner; they are unrelated to licenses.
+
+For the confidential-client code profile, implement an outer request parser
+before starting storage transactions. Require a bounded POST form with exactly
+the admitted code-flow fields and one Basic Authorization header; refuse all
+query inputs, duplicate/unknown/body credential fields and mixed authentication.
+[RFC 6749 section 2.3.1](https://www.rfc-editor.org/rfc/rfc6749.html#section-2.3.1)
+requires form encoding the client ID and password before constructing Basic
+credentials; prove that special characters reach the SDK identically. Enforce
+the [RFC 7636 verifier syntax](https://www.rfc-editor.org/rfc/rfc7636.html#section-4.1)
+and S256 profile, then authenticate the exact registered client before any
+authorization-code row lookup. UserInfo accepts only a bounded Authorization
+bearer and the strict local JWE profile, so the SDK's query/form/JWT fallback
+cannot select another verification path.
+
+Native tests must include positive SDK interoperability controls as well as
+legacy CFB/default-fallback refusal, key rotation/retirement, protected-header
+tampering, malformed/oversized compact input and concurrency. Request tests
+cover malformed percent/form/Basic encodings, encoded duplicate names, unknown
+grants, body/header conflicts, verifier bounds and early authentication refusal.
+No native parser/crypto test qualifies PostgreSQL consumption, Portal consent
+or actual RP/OP HTTPS behavior. Those remain the subsequent complete prototype.
+Reuse the exact 40-module/52-notice graph above, with no new model, dataset,
+dependency or product import. Reject SDK-default compatibility merely for
+convenience, handwritten encryption and admitting unsupported protocol paths
+through an otherwise permissive SDK router.
+
 The external prototype must use separate real RP and OP HTTPS servers, verified
 private CA trust and actual PostgreSQL persistence. Prove discovery through code
 exchange, signed ID-token verification and matching UserInfo subject; then
