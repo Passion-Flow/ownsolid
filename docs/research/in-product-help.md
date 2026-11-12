@@ -305,3 +305,40 @@ resolution and source validation. The Web assertions cover what the
 reader sees after the locale and detail chunks arrive. Use the existing
 Playwright and Help dependencies and their documented licences. No
 dependency, model or dataset is added.
+
+### Monitoring and native transaction recovery copy (OBS-109)
+
+The full fleet-history contract publishes eleven monitoring-specific
+problems and three native transaction problems that still lack locale
+entries. Add their titles and recovery details to the existing two
+catalogs. The shared Problem component and generated Help both consume
+these keys. The [RFC 9457 detail guidance](https://www.rfc-editor.org/rfc/rfc9457.html#section-3.1.4)
+calls for actionable recovery information. Preserve the codes and HTTP
+statuses supplied by the server.
+
+Review the messages against the protected-policy loader, the bounded
+history reader and the native transaction error adapter. A range can be
+too short after alignment to the evaluation grid. Its recovery must allow
+adjusting its duration. Missing source samples can yield a successful empty
+history and must not be described as this range error. Cancellation,
+deadlock and lock timeout ask the reader to refresh current state before
+retrying. The [PostgreSQL error codes](https://www.postgresql.org/docs/18/errcodes-appendix.html)
+and [deadlock handling](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-DEADLOCKS)
+describe the underlying distinctions. Keep the existing timeout and
+rolled-back transaction entries.
+
+Check all fourteen codes for both title/detail entries, equal keys and
+placeholders across languages, and the Help consumer's locale coverage.
+The publication owner combines these two locale files with the complete
+operation and verifies the final generated index. This adds no
+dependency, model or dataset. The existing locale and Help dependencies
+and their licences apply.
+
+The two final catalogs passed the 49 locale tests, 19 Help tests and
+locale type checking. A separate read of the full Admin fleet-history
+contract found all 28 declared codes explained in each language. The
+catalog diff adds exactly 28 keys per language and preserves every
+existing value. The two-file handoff is independent of the pending
+Portal scope and parameter-reference browser candidates. Final
+publication and live history verification belong to the combined
+backend, contract and locale revision.
