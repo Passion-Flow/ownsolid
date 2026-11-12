@@ -240,6 +240,12 @@ func (e *apiError) Error() string {
 		detail = "use the original target and arguments to retry, or use a fresh key for a new operation"
 	case e.code == "STORAGE_COMMIT_OUTCOME_UNKNOWN":
 		detail = "the server could not determine whether the write committed"
+	case e.code == "MONITORING_HISTORY_RANGE_INVALID":
+		detail = "adjust --from and --to to fit the installation retention, settling and evaluation interval, then retry"
+	case e.code == "MONITORING_HISTORY_RESPONSE_LIMIT":
+		detail = "request a shorter history interval and retry"
+	case e.code == "MONITORING_HISTORY_NOT_CONFIGURED", e.code == "MONITORING_LONG_TIER_NOT_CONFIGURED":
+		detail = "configure the installation's required history tier before retrying"
 	case e.code == "NODE_BUSY":
 		detail = "inspect ownsolid node tasks and wait for the active task to finish before retrying"
 	case e.code == "INFERENCE_PREFLIGHT_REQUIRED":

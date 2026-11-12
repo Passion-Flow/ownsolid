@@ -419,3 +419,25 @@ Use the same request key and arguments after a lost response. Read
 state is `running`, use `deployment alias publish` with the gateway ID
 and the deployment's current revision. The agent keeps the gateway's
 credential and supplies its configured serving origin.
+
+## Read sparse fleet history
+
+```sh
+ownsolid monitoring history --workspace "$WORKSPACE_ID" \
+  --from 2026-11-01T00:00:00Z --to 2026-11-01T01:00:00Z --output json
+```
+
+Supply both endpoints as UTC seconds ending in `Z`. The installation
+selects the raw or rollup tier and its evaluation grid. Structured output
+retains that interval, step and sparse cells. Default table output shows
+one row per observed point, including measured zero reachable nodes.
+An absent interval has no row; an empty result succeeds. The serving site
+and cell come from configuration. Returned cells cover the authorized
+workspace. Use the same interval when retrying a temporary failure.
+
+For the focused Linux test, prepare loopback-only PostgreSQL 18.6 with
+pgvector 0.8.7 and an owner-only mode 0600 DSN file. Set
+`PROJECT_ONE_TEST_DSN_FILE`, `OWNSOLID_TEST_VICTORIA_METRICS` and
+`OWNSOLID_TEST_VMALERT` to the private DSN file and verified native
+executables, then run `tools/cli/testdata/run-history-tls.sh` inside
+that isolated network namespace.

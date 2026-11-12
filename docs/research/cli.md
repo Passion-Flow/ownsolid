@@ -390,3 +390,53 @@ cross-job, cross-collection and cross-workspace cursors. Role removal
 and session revocation refused a saved cursor without history data.
 A fresh authorized session could use that cursor again. The separate
 Admin and Portal HTTPS training fixture also passed.
+
+## Fleet history reads (DEV-102, OBS-109)
+
+[Kubectl get](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_get/)
+uses a readable table by default and structured JSON or YAML for scripts.
+[VictoriaMetrics range queries](https://docs.victoriametrics.com/victoriametrics/url-examples/#apiv1query_range)
+evaluate a selected interval with a step. Ownsolid's public
+[Admin history operation](../../api/openapi/v1/monitoring/openapi.json)
+already owns authorization, tier selection, the evaluation grid and audit.
+Expose that operation as `ownsolid monitoring history` with explicit
+`--from` and `--to` canonical UTC seconds. Reuse the CLI's workspace
+selection, local CA and origin-bound session. Do not accept a store address,
+selector, step or tier override: those choices belong to the server.
+
+Keep the returned evaluation interval, tier and step in structured output.
+Flatten only the table presentation into site, cell, timestamp, observed
+and reachable columns. Cells can span the authorized workspace; the URL's
+cell selects the serving control plane and is not a client-side data filter.
+Preserve all uint64 counts without floating-point conversion. Sparse
+intervals stay absent, measured zero remains zero, and an empty collection
+stays a successful result. Reject malformed time arguments before I/O.
+Do not invent default relative windows: the server's settling and retention
+policy can refuse them and a retry should keep its original interval.
+
+The existing [CLI dependency review](#dependency-review) and
+[SDK licences](sdk.md#licenses) apply. Cobra is Apache-2.0; Go and x/sys
+are BSD-3-Clause. No dependency, model or dataset is added. These licences
+permit commercial use and offline redistribution with their notices.
+
+Tests must verify canonical arguments, exact selected workspace and
+origin-bound cookie, JSON/YAML/table output, maximum unsigned counts,
+sparse zero and empty results. Server Problems must produce nonzero exit
+with no successful output and remain retryable. Run the compiled CLI
+against the real Admin TLS/CSRF/login/cookie dispatcher, PostgreSQL and
+native raw and rollup stores without an external route. Verify foreign
+workspace and revoked session refusal, request-bound audits, long-tier
+failure without raw fallback and retry. These checks qualify the CLI read
+path; installed retention delivery and the Console history view remain
+with their owners.
+
+The Linux amd64 run passed with the compiled CLI under the race detector,
+loopback-only networking, PostgreSQL 18.6 and native raw and rollup stores.
+It preserved sparse zero, the selected tier and evaluation grid, an empty
+YAML collection, and table and JSON reads. A foreign tenant's workspace
+and a restored revoked session were refused without a successful audit.
+A failed long-tier read made no raw-store request; retry and a fresh
+login recovered. Each successful history request had exactly one
+request-bound audit. The CLI unit suite additionally preserved maximum
+uint64 counts in JSON, YAML and table output and rejected malformed
+intervals before I/O. All fixture stores and PostgreSQL were stopped.
