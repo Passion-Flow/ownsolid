@@ -150,6 +150,55 @@ class Runner(unittest.TestCase):
         self.assertFalse(result['passed'])
         self.assertEqual(result['cleanup_errors'], ['Refused'])
 
+    def test_inspection_failure_requires_confirmed_absence(self):
+        for listing, confirmed in [('unavailable', False), ('remaining', False), ('absent', True)]:
+            with self.subTest(listing=listing):
+                window = host_runner.Window(self.root, self.config, self.admission)
+                window.created = True
+                window.result = 0
+                calls = []
+                def docker(*args, **kwargs):
+                    calls.append(args)
+                    if args[:2] == ('container', 'inspect'):
+                        return subprocess.CompletedProcess([], 1, '', 'inspection failed')
+                    if args[:2] == ('container', 'ls'):
+                        if listing == 'unavailable':
+                            raise subprocess.CalledProcessError(1, 'docker container ls')
+                        return subprocess.CompletedProcess([], 0, 'abc\n' if listing == 'remaining' else '', '')
+                    self.fail('Unconfirmed inspection cannot mutate a container')
+                with mock.patch.object(window, 'docker', side_effect=docker), \
+                        mock.patch.object(guard, 'capture_result', return_value={'status': 'capture-passed'}):
+                    window.close()
+                result = guard.read_json(self.root / 'window-result.json')
+                self.assertEqual(result['passed'], confirmed)
+                self.assertEqual(bool(result['cleanup_errors']), not confirmed)
+                self.assertEqual(calls, [
+                    ('container', 'inspect', self.config['container_name']),
+                    ('container', 'ls', '--all', '--filter', 'name=' + self.config['container_name'],
+                     '--format', '{{.ID}}')])
+
+    def test_missing_ownership_label_preserves_container_and_result(self):
+        window = host_runner.Window(self.root, self.config, self.admission)
+        window.created = True
+        window.result = 0
+        payload = [{'Config': {'Labels': None}}]
+        with mock.patch.object(window, 'docker', return_value=subprocess.CompletedProcess([], 0, json.dumps(payload), '')) as docker, \
+                mock.patch.object(guard, 'capture_result', return_value={'status': 'capture-passed'}):
+            window.close()
+        docker.assert_called_once()
+        result = guard.read_json(self.root / 'window-result.json')
+        self.assertFalse(result['passed'])
+        self.assertEqual(result['cleanup_errors'], ['Refused'])
+
+    def test_launch_requires_a_successful_empty_name_query(self):
+        window = host_runner.Window(self.root, self.config, self.admission)
+        with mock.patch.object(window, 'docker', side_effect=subprocess.CalledProcessError(1, 'docker container ls')) as docker:
+            with self.assertRaises(subprocess.CalledProcessError):
+                window.launch()
+        self.assertFalse(window.created)
+        docker.assert_called_once_with('container', 'ls', '--all', '--filter',
+                                       'name=' + self.config['container_name'], '--format', '{{.ID}}')
+
     def test_complete_handoff_stops_relay_and_releases_suite_once(self):
         window = host_runner.Window(self.root, self.config, self.admission)
         window.hard_deadline = time.time() + 60

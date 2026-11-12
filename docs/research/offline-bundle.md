@@ -471,3 +471,37 @@ admission cases. The pre-fix regression reproduced both the partial-stall false
 refusal and missing/invalid full-observation admission. The tests substitute
 resource documents and filesystem counts. They did not take heavy-job leases,
 start Docker or services, or qualify a real host resource snapshot.
+
+### Confirming owned namespace cleanup
+
+The installed-window runner previously interpreted every failed container
+inspection as absence. A disconnected Docker socket or an inspection error can
+therefore be mistaken for successful removal after the suite and capture have
+completed. The [Docker container listing contract](https://docs.docker.com/reference/cli/docker/container/ls/)
+provides a separate all-container query and a name filter. Include stopped
+containers. Require a successful query with no matching name before declaring
+absence; a failed query or a remaining match leaves cleanup unconfirmed. Keep
+the existing exact run label before stopping or removing a returned container.
+The name filter can match substrings, so an unexpected neighboring name causes
+a conservative refusal. Do not infer absence from diagnostic text, a client
+exit code or an unavailable daemon, and do not remove a matching foreign name.
+
+Reuse the same bounded Docker invocation and existing private result file.
+No workload, dependency, model or dataset is added. The Python standard library
+uses the [PSF license](https://docs.python.org/3/license.html); the existing
+[Docker CLI](https://github.com/docker/cli/blob/v29.1.3/LICENSE) uses Apache-2.0.
+Both permit commercial use, offline operation and redistribution with required
+notices. This does not change the image inventory or its licence boundary.
+
+First reproduce a suite exit of zero and closed passing capture with inspect
+and list unavailable, and with inspect failing while a matching name remains.
+Neither may produce a passing window or a stop/remove command. Cover confirmed
+absence, initial occupied or unavailable name queries, and missing/foreign
+ownership labels. Deterministic command-response tests start no Docker workload;
+the installed Linux window retains its independent native qualification.
+
+The pre-fix Linux test reproduced a passing result despite unavailable inspection
+and a remaining name, plus a missing-label exception that prevented writing the
+result. After the correction, all 36 lightweight fixture tests passed on Linux
+amd64. These tests substitute Docker responses and closed capture results; no
+container, namespace, service or port was started by this regression suite.

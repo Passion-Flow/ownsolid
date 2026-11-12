@@ -1031,6 +1031,10 @@ backup-history UI acceptance.
 The [installed acceptance fixture](internal/install/testdata/installed-acceptance/host_runner.py)
 owns one Linux amd64 Docker-in-Docker namespace. Its source and packet records
 are test evidence; they are not a production release inventory or a server audit.
+Before launch and after failed inspection, a successful all-container name query
+must confirm absence. An unavailable Docker daemon leaves cleanup unconfirmed;
+it cannot produce a passing window. Returned containers still require the
+exact run label before stop or removal.
 Prepare every selected owner's scripts, compiled clients, source mapping and
 toolchain before reserving a running installation window.
 

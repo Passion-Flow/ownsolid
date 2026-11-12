@@ -107,11 +107,23 @@ class Window:
     def inspect(self):
         result = self.docker('container', 'inspect', self.name, check=False)
         if result.returncode:
+            guard.require(self.namespace_absent(), 'Owned namespace absence is unconfirmed after inspection failed')
             return None
-        value = json.loads(result.stdout)[0]
-        guard.require(value['Config']['Labels'].get('io.ownsolid.acceptance.run_id') == self.config['run_id'],
+        values = json.loads(result.stdout)
+        guard.require(isinstance(values, list) and len(values) == 1 and isinstance(values[0], dict),
+                      'Require one inspected container')
+        value = values[0]
+        metadata = value.get('Config')
+        guard.require(isinstance(metadata, dict), 'Require inspected container configuration')
+        labels = metadata.get('Labels') or {}
+        guard.require(isinstance(labels, dict) and labels.get('io.ownsolid.acceptance.run_id') == self.config['run_id'],
                       'Refuse to operate on a foreign container')
         return value
+
+    def namespace_absent(self):
+        """Confirm absence through a successful query including stopped containers."""
+        return not self.docker('container', 'ls', '--all', '--filter', 'name=' + self.name,
+                               '--format', '{{.ID}}').stdout.strip()
 
     def stop_relay(self):
         if self.relay is not None:
@@ -135,7 +147,7 @@ class Window:
             self.preparer = None
 
     def launch(self):
-        guard.require(self.docker('container', 'inspect', self.name, check=False).returncode != 0,
+        guard.require(self.namespace_absent(),
                       'Container name is occupied; nothing was started')
         images = self.config['images']
         image = json.loads(self.docker('image', 'inspect', images['dind']).stdout)[0]
