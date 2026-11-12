@@ -209,3 +209,18 @@ and the five qualifier unit tests, passed. Linux amd64 binaries have been
 cross-compiled but native execution is not yet recorded; test-server transfer
 is still pending. Neither that compilation nor the separate two-case model
 transport qualifies the three retained assistant safety cases.
+
+The first native amd64 sequential HTTPS run passed the original root and
+failed during the guarded root's full-schema construction with
+`SCHEMA_UNAVAILABLE`, before assistant commands ran. The original PostgreSQL
+server log was not retained, so the cause is unestablished. An unchanged
+guarded-only diagnostic passed in a fresh container. Preserve both outcomes;
+the repeat does not explain the original refusal.
+
+The HTTP fixtures now use the existing identity owner's explicit construction
+budget (180 seconds total, 30 seconds per setup statement). It uses a separate
+setup pool, closes it before returning, and keeps the original business
+pool's five-second statement deadline. Both HTTP roots assert that actual
+returned deadline. No production policy, database pool or command timeout
+is increased. Retain PostgreSQL server output in native acceptance so a
+future construction failure can be diagnosed.
