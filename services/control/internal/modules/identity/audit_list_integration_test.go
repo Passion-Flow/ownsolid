@@ -215,11 +215,11 @@ func TestWorkspaceAuditAssistantProjection(t *testing.T) {
 	})
 
 	t.Run("pagination and legacy contract", func(t *testing.T) {
-		first := list(workspace, url.Values{"limit": {"1"}, "category": {"product_assistant"}})
+		first := list(workspace, url.Values{"limit": {"1"}, "audience": {"portal"}})
 		if first.NextCursor == nil || len(first.Items) != 1 || len(first.AssistantActors) != 1 {
 			t.Fatal("unexpected first page or attribution from the lookahead row")
 		}
-		query := url.Values{"limit": {"1"}, "category": {"product_assistant"}, "cursor": {*first.NextCursor}}
+		query := url.Values{"limit": {"1"}, "audience": {"portal"}, "cursor": {*first.NextCursor}}
 		next := list(workspace, query)
 		if len(next.Items) != 1 || len(next.AssistantActors) != 1 {
 			t.Fatal("scoped cursor did not resume within the same workspace")
