@@ -204,3 +204,95 @@ The actual identity workspace reader is paired with SCI's `8531226d` writer on q
 Two actual scoped COMMIT wire-loss subcases exposed no page, cursor or assistant map. Withheld COMMIT left zero events; a suppressed server acknowledgement left one. Each attempt issued one COMMIT, and an explicit retry appended one new event. The installation-wide HTTPS regressions, including their four wire-loss subcases, passed on the same source. No private chain-head read privilege was added.
 
 Repository checks, builds and all test stages passed in current stage `current-stage-yfzgkb7_`; Chromium passed 1134 Console and 410 Portal cases, with 38 installation-dependent cases skipped. These browser results are retained from byte-identical recorded inputs; the continuation used `make -o test-web-browser test`. Fixtures used pinned PostgreSQL 18.6/pgvector 0.8.7 on owned network-none Linux arm64 containers with protected SCRAM input files and no host ports. They were removed. This qualifies the existing Go consumer and preserves the published installation-wide route; it creates no workspace HTTP route or new rendered UI/amd64 claim. The complete AUD-108 item remains open for DEV public-contract metadata, installed-flow qualification and Delivery collector admission/reconciliation.
+
+## Explicit Web read recovery
+
+Reviewed 2026-11-13 against the implemented identity reader and TanStack Query
+5.105.3. Both the installation list and resource activity call the existing
+`GET /api/v1/admin/audit-events`. A successful read also appends an access event.
+Loss of the response cannot establish whether that append committed. The current
+server's uncertain transaction outcome is HTTP 409 with
+`STORAGE_COMMIT_OUTCOME_UNKNOWN`, no page and no Retry-After. The standard thirteen
+event fields and `category` filter remain unchanged. DEV owns the public contract
+annotation; this consumer must not import an unqualified candidate projection.
+
+### Sources and selected approach
+
+- [TanStack query options](https://tanstack.com/query/latest/docs/framework/react/reference/functions/useQuery)
+  document retry, retry-on-mount, window focus, reconnect and network-mode controls.
+  The installed source confirms that `networkMode: always` does not queue a read
+  until connectivity returns. Disable retries and every background refetch trigger
+  for this audited endpoint only; retain the application's normal policy elsewhere.
+- [TanStack infinite queries](https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries)
+  refetch every cached page sequentially. A recovery action must instead retry the
+  failed next cursor once, or read only the first page when restarting an invalid
+  cursor. The pinned QueryClient `infiniteQuery` implementation accepts `pages: 1`;
+  failed fetches retain previous data until a successful replacement arrives.
+- [HTTP semantics, section 9.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2)
+  permit incidental logging for safe methods. GET alone is not evidence that the
+  access record was absent after response loss. This product deliberately requires
+  a person to start another audit read, including after an uncertain GET result.
+- The primary product implementation is `identity/audit_read.go`, its HTTP
+  dispatcher and the real SQL/wire integration tests. Each explicit successful
+  read has a new server request ID and access event. Browser fixtures can establish
+  consumer dispatch counts, not durable commit outcomes or actual SQL authority.
+
+Use one shared Console query policy and recovery notice for the two consumers.
+Do not treat the existing 409 as automatically retried: `ApiProblem.retryable`
+includes status 0/429/502/503/504, not 409. The actual regression is automatic
+retry after network/timeout (status 0), plus implicit refetches. Mark these cached
+pages as manually refreshed, disable retry-on-mount/focus/reconnect/polling, and
+execute each chosen request immediately rather than queuing it offline.
+
+An initial error replaces loading with an inline Problem. An uncertain result
+explains that the read may already have been recorded and that Read again starts
+a new request. Never call it a rollback, an absent access or an empty list. Keep
+the server Problem and request ID available. A partial pagination failure keeps
+previous pages, says they are the pages already read and offers one explicit
+recovery action. Busy recovery cannot start a second overlapping request.
+Retry-After remains enforced by the shared Problem notice.
+
+A current 403/404 refusal removes all cached event rows and any open event preview
+from the rendered consumer; it offers no retry against the same denied authority.
+Discard inactive cached audit filters/resource views on that refusal, retaining
+the active failure so remounting cannot retry it. A different filter must not
+resurface events cached before access was refused. Other query families remain.
+Session-expiry handling remains with the existing session owner. When page reload,
+deliberate filter change or route navigation needs another read, it is user
+initiated. Merely focusing a tab, reconnecting, remounting a failed cached query or
+invalidating cached data must not issue another read. No background status poll
+or new server operation is introduced.
+
+Rejected: changing the global retry policy (unrelated consumers need it), assuming
+409 already retries, relabeling network loss as a definitely failed append,
+generic whole-page reload recovery that discards reader context, an ordinary
+infinite-query refetch that re-reads every cached page, silently
+discarding older pages before a replacement succeeds, and fabricating a new
+Problem or exact-action enum. Keep ordinary initial/filtered empty text distinct.
+
+### Dependencies, failure checks and acceptance
+
+No dependency, model or dataset is added. Existing React and TanStack Query are
+MIT, Lucide is ISC and Playwright is Apache-2.0. Commercial use, redistribution
+and offline execution remain allowed with their existing notices. All production
+assets and messages remain local to the installation.
+
+Cover both actual UI consumers in English and Simplified Chinese: a response lost
+after a fixture has observed the request, 409 commit-unknown, network refusal,
+configured transport timeout, transient 503, and malformed response. Count all
+attempts including failed ones. Wait beyond the old retry delay, exercise actual
+focus/visibility and offline/reconnect events, and remount a cached failed query;
+none may silently issue another read. Explicit recovery increments the count by
+exactly one. Recover a failed next cursor without re-reading previous pages;
+recover an invalid cursor by one first-page request and replace history only on
+success. Cover permission revocation after a loaded page and an open preview,
+the Portal refusal, fresh page reload and keyboard activation. Retain request IDs,
+verify no `action` parameter and read desktop/narrow screenshots. Add the new
+uncertain and partial states to the existing accessibility/localization inventory.
+Update the existing built-in audit article in both languages and verify its new
+recovery section can be found through a settled filtered Help search.
+
+Finished consumer behavior requires targeted checks plus a new exact-source full
+repository gate. The older 1,134/410 browser result is not evidence for this
+change. Actual installed access accounting and independent SQL remain separate;
+AUD-108 and installed acceptance stay open until their owners' requirements hold.
