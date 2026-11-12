@@ -41,6 +41,11 @@ type agentGateway struct {
 // agent_gateway section added, on control's networks, published on hostPort.
 func (e environment) startGateway(t *testing.T, name string, hostPort int) agentGateway {
 	t.Helper()
+	return e.startGatewayWithAge(t, name, hostPort, 0)
+}
+
+func (e environment) startGatewayWithAge(t *testing.T, name string, hostPort, maximumAgeSeconds int) agentGateway {
+	t.Helper()
 	inspect, err := run(t, "docker", "inspect", "--format", "{{json .NetworkSettings.Networks}}|{{.Config.User}}", "ownsolid-control-1")
 	if err != nil {
 		t.Fatalf("inspect control: %v %s", err, inspect)
@@ -67,6 +72,9 @@ func (e environment) startGateway(t *testing.T, name string, hostPort int) agent
 		t.Fatal(err)
 	}
 	gateway := string(control) + fmt.Sprintf("agent_gateway:\n  listen_address: 0.0.0.0:%d\n  tls_certificate_file: /run/projectone/certificate.pem\n  tls_private_key_file: /run/projectone/private-key.pem\n", gatewayPort)
+	if maximumAgeSeconds > 0 {
+		gateway += fmt.Sprintf("  connection_max_age_seconds: %d\n", maximumAgeSeconds)
+	}
 	if err = os.WriteFile(filepath.Join(directory, "gateway.yaml"), []byte(gateway), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -134,34 +142,9 @@ func (e environment) gatewayReady(t *testing.T, g agentGateway) int {
 // earlier runs of the container, so counting starts again where the gateway last started.
 func gatewayNodes(t *testing.T, name string) map[string]bool {
 	t.Helper()
-	output, err := run(t, "docker", "logs", name)
-	if err != nil {
-		t.Fatalf("logs %s: %v", name, err)
-	}
 	open := map[string]bool{}
-	for _, line := range strings.Split(output, "\n") {
-		if strings.Contains(line, "agent_gateway_started") {
-			open = map[string]bool{}
-			continue
-		}
-		var entry struct {
-			Message string `json:"msg"`
-			Node    string `json:"node_id"`
-		}
-		if json.Unmarshal([]byte(line), &entry) != nil || entry.Node == "" {
-			if i := strings.Index(line, "node_id="); i >= 0 {
-				entry.Node = strings.Fields(line[i+len("node_id="):])[0]
-				entry.Message = line
-			} else {
-				continue
-			}
-		}
-		switch {
-		case strings.Contains(entry.Message, "agent_session_opened"):
-			open[entry.Node] = true
-		case strings.Contains(entry.Message, "agent_session_closed"):
-			delete(open, entry.Node)
-		}
+	for node := range gatewayConnections(t, name).active {
+		open[node] = true
 	}
 	return open
 }
