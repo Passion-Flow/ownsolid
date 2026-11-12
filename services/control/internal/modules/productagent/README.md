@@ -11,11 +11,19 @@ records the built-in assistant actor, real user subject, authorized workspace,
 request ID and registered command ID before returning the result.
 
 The English and Simplified Chinese aliases are compiled into the binary.
-`Commands` returns exact phrases from those same tables for `en` and `zh-CN`
+`Commands` returns phrases and quoted-name examples from those same tables for `en` and `zh-CN`
 after checking the current session. It filters by entrance and is empty when
 the authenticated context has no workspace. Command execution needs a
 workspace until the shared audit owner supports global scope. A command
-matches one complete alias after case and space normalization. The service
+matches one complete alias after case and space normalization. `find application
+"Application name"` and its Chinese template accept one complete JSON string.
+Only the prefix is case/space normalized; the name uses exact NFC equality in
+the current Portal workspace. `application_resolution` returns `resolved`,
+`not_found` or `ambiguous`, at most two authorized candidates, and an
+`application_id` only for a unique published match. Names are never commands
+or authorization. The lookup reuses the reviewed application-list permission
+and rejects pagination cursors. See [name resolution](../../../../../docs/research/product-assistant-name-resolution.md).
+The service
 works offline with fixed routes and typed reads. See the
 [entry-point and audit handoff](../../../../../docs/research/app-lane-questions.md)
 for the remaining browser, HTTP and confirmed mutation work.
@@ -39,7 +47,7 @@ reads and reversible writes are denied by this dispatcher. See the
 [risk tiers](../../../../../docs/research/product-assistant-risk-tiers.md)
 and [write confirmation](../../../../../docs/research/product-assistant-write-confirmation.md).
 
-The two assistant reads remove Unicode directional controls and mask known
+Assistant projections remove Unicode directional controls and mask known
 model keys and gateway credentials in display names. The stored names and ordinary Portal projections
 retain their existing values. See [result redaction](../../../../../docs/research/product-assistant-result-redaction.md).
 
@@ -109,7 +117,9 @@ GOPROXY=off GOSUMDB=off go -C services/control test -p=1 \
 ```
 
 Select `^TestDurableExecutionRuns$` with the same fixture inputs for the
-persistent guard. Select `^TestAuthenticatedGuardedAssistantHTTP$` in the
+persistent guard. Select `^TestApplicationNameResolution` for exact-name reads,
+changed-name retries, audit refusal, revoked access and final result fences.
+Select `^TestAuthenticatedGuardedAssistantHTTP$` in the
 HTTP overlay command below for real TLS, CSRF and policy admission tests.
 
 ## Tests

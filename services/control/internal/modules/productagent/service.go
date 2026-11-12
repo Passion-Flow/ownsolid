@@ -40,10 +40,11 @@ type CommandHelp struct {
 
 // Result holds exactly one navigation or read result. Paths belong to the current entrance.
 type Result struct {
-	Command       string                                        `json:"command"`
-	Path          string                                        `json:"path,omitempty"`
-	Applications  *applications.Page[applications.Application]  `json:"applications,omitempty"`
-	Conversations *applications.Page[applications.Conversation] `json:"conversations,omitempty"`
+	Command               string                                        `json:"command"`
+	Path                  string                                        `json:"path,omitempty"`
+	Applications          *applications.Page[applications.Application]  `json:"applications,omitempty"`
+	Conversations         *applications.Page[applications.Conversation] `json:"conversations,omitempty"`
+	ApplicationResolution *applications.ApplicationResolution           `json:"application_resolution,omitempty"`
 }
 
 // Service dispatches only fixed destinations and scoped, typed reads.
@@ -115,13 +116,9 @@ func (s *Service) RunForRequest(ctx context.Context, actor identity.Auth, input,
 	if !wire.ValidID(requestID) {
 		return Result{}, ErrInvalidRequestID
 	}
-	normalized := normalize(input)
-	if normalized == "" {
-		return Result{}, ErrInvalidCommand
-	}
-	cmd, ok := s.catalog.aliases[normalized]
-	if !ok {
-		return Result{}, ErrUnknownCommand
+	cmd, err := s.resolveCommand(input)
+	if err != nil {
+		return Result{}, err
 	}
 
 	path, err := s.admit(cmd, actor, cursor)
@@ -133,7 +130,7 @@ func (s *Service) RunForRequest(ctx context.Context, actor identity.Auth, input,
 	}
 	switch cmd.risk {
 	case riskRead:
-		return s.readApplications(ctx, actor, cmd.id, cursor, requestID)
+		return s.readApplications(ctx, actor, cmd, cursor, requestID)
 	case riskNavigate:
 		if err := s.auditNavigation(ctx, actor, cmd.id, requestID); err != nil {
 			return Result{}, err
@@ -177,12 +174,22 @@ func (s *Service) auditNavigation(ctx context.Context, actor identity.Auth, id, 
 	})
 }
 
-func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id, cursor, requestID string) (Result, error) {
+func (s *Service) readApplications(ctx context.Context, actor identity.Auth, cmd command, cursor, requestID string) (Result, error) {
+	id := cmd.id
 	query := url.Values{}
 	if cursor != "" {
 		query.Set("cursor", cursor)
 	}
 	switch id {
+	case findApplication:
+		resolution, err := s.applications.ResolveNameForAssistant(ctx, actor, cmd.applicationName, requestID)
+		if err != nil {
+			return Result{}, err
+		}
+		for i := range resolution.Candidates {
+			resolution.Candidates[i].Name = safeDisplayName(resolution.Candidates[i].Name)
+		}
+		return Result{Command: id, ApplicationResolution: &resolution}, nil
 	case listApplications:
 		page, err := s.applications.ListForAssistant(ctx, actor, query, requestID)
 		if err != nil {
