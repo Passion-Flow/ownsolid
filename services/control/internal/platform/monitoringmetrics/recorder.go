@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
 	"github.com/felixge/httpsnoop"
 	"github.com/google/uuid"
@@ -88,15 +89,15 @@ func route(v string) string {
 		return "monitoring"
 	case strings.HasPrefix(v, "/api/v1/admin/"):
 		return "admin"
-	case strings.HasPrefix(v, "/api/v1/agent/"):
+	case v == wire.SessionPath || strings.HasPrefix(v, "/agent/v1/") || strings.HasPrefix(v, "/api/v1/agent/"):
 		return "agent"
-	case strings.HasPrefix(v, "/api/v1/gateway/"):
+	case strings.HasPrefix(v, "/gateway/v1/") || strings.HasPrefix(v, "/api/v1/gateway/"):
 		return "gateway"
 	case strings.HasPrefix(v, "/api/v1/workspaces/"):
 		return "workspace"
 	case strings.HasPrefix(v, "/api/v1/"):
 		return "api"
-	case v == "/healthz" || v == "/readyz":
+	case v == "/health/live" || v == "/health/ready" || v == "/healthz" || v == "/readyz":
 		return "health"
 	}
 	return "other"
