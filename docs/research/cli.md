@@ -525,3 +525,54 @@ must separately verify owned-session revocation, foreign-account/entrance
 refusal and the audit through the actual Admin HTTPS dispatcher and PostgreSQL.
 Keep this terminal slice and the broader DEV-102 item open until that run and
 the relevant repository gates pass.
+
+## Workspace membership discovery (DEV-102)
+
+Reviewed 2026-11-12. Operators need the member UUID, current workspace role and
+account state when diagnosing access from a terminal. The published
+[workspace contract](../../api/openapi/v1/workspaces/openapi.json) already has
+listAdminMembers; no new server operation or authority is needed.
+
+Primary references:
+
+- [Kubernetes kubectl get](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_get/)
+  supports bounded list chunks and table, JSON and YAML presentation.
+- [GitHub CLI API](https://cli.github.com/manual/gh_api) keeps extra page requests
+  explicit through its paginate option rather than conflating one response with
+  the whole collection.
+- [Go URL query encoding](https://pkg.go.dev/net/url#Values.Encode) encodes cursor
+  bytes as a query value; the CLI must not interpolate a cursor into a URL.
+- The local workspace Members implementation in lists.go resolves current actor,
+  installed tenant and exact workspace before reading memberships. Its cursor
+  binds list kind, tenant, workspace, audience and actor. The Admin dispatcher
+  remains the platform-administrator boundary. The response uses user_id for a
+  membership identity, rather than the workspace resource's id field.
+
+Choose workspace member list <workspace-id>, with an exact canonical nonzero
+lowercase UUID, one bounded page, the existing limit/cursor flags and existing
+Admin cookie/TLS transport. An explicit workspace argument keeps this global
+Admin route independent of configured site, cell or selected workspace. Retain
+the complete membership wire fields in JSON/YAML; tables show display name,
+email, user ID, role and user status. A disabled account must remain visible.
+Reject invalid returned user IDs before printing any row.
+
+Reject implicit context selection, client-side tenant authority, unbounded page
+aggregation, local role caches and invented member detail endpoints. Membership
+writes remain a separate flow with their existing version/audit requirements;
+this read must not issue CSRF, mutation or login requests.
+
+No dependency, model or dataset is added. Existing Cobra v1.10.2 and pflag
+v1.0.9 use Apache-2.0 and BSD-3-Clause respectively; Go uses BSD-3-Clause and
+go.yaml.in/yaml/v3 v3.0.5 uses MIT/Apache-2.0. They permit commercial use,
+redistribution and offline use with their notices. See the pinned CLI go.mod
+and the existing dependency review above.
+
+Verification must cover exact GET path and untouched opaque cursor, configured
+scope independence, all output forms, maximum safe version precision, disabled
+and viewer records, empty final pages and continuation, bad arguments before
+I/O, invalid IDs in later rows without partial stdout, malformed pages,
+permission/session/cross-tenant/cursor failures and manual retry after a safe
+storage error. The complete installed qualification needs real HTTPS/PostgreSQL
+through an admitted owner window; a TLS fixture alone does not qualify
+tenant authorization or finish DEV-102. Keep the roadmap open while either
+installed verification or repository gates remain pending.
