@@ -253,6 +253,14 @@ func TestActualModelFamilyHistoryPagesAndAuthority(t *testing.T) {
 				if err != nil || empty.Items == nil || len(empty.Items) != 0 || empty.NextCursor != nil {
 					t.Fatal("empty filtered page", err)
 				}
+				x.exec(t, `UPDATE model_versions SET manifest='{}'::jsonb WHERE id=$1`, "", other)
+				for _, version := range []string{other, uuid.NewString()} {
+					detail, err := x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, x.model, version)
+					modelReadError(t, err, "RESOURCE_NOT_FOUND")
+					if detail.ID != "" || detail.DatasetLineage != nil {
+						t.Fatal("foreign or unknown version leaked detail")
+					}
+				}
 				familyDenied(t, x, x.portal, x.f.Workspace, x.model, query, "ACCESS_DENIED")
 			case "invalid_inputs":
 				for _, limit := range []int{0, -1, 101} {
