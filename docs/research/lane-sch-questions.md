@@ -76,7 +76,9 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   exact missing producer contract and hard/preferred acceptance conditions.
 - SCH-107 has observation readers. The signed offline install assets and
   RKE2 deployment, workload creation, RBAC provisioning and runtime reconciliation
-  remain part of the item.
+  remain part of the item. The [offline installation boundary](scheduling-cell-adapters.md#offline-controller-installation-and-upgrade-boundary)
+  records release-artifact rendering, node image delivery, scoped webhooks and
+  non-destructive upgrade acceptance; source-chart defaults are not offline payloads.
 - SCH-109 has candidate PostgreSQL loan attribution and ordered reclaim
   within enabled departments. [Borrowing and reclaim](scheduling-quota-borrowing.md)
   records the owner transaction, follow-on schema and positive release

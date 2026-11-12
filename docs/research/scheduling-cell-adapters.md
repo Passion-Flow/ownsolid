@@ -73,3 +73,63 @@ file, so direct kubelet projected symlinks need a separately verified
 installation path. client-go is an Apache-2.0 design reference. The
 implementation uses the existing standard library and bundle reader,
 with no new dependency or license obligations.
+
+## Offline controller installation and upgrade boundary
+
+The [Kueue 0.20 installation guide](https://kueue.sigs.k8s.io/v0.20/docs/getting-started/installation/)
+currently names release 0.20.5 and recommends Kubernetes 1.34 or newer. It uses
+server-side apply and waits for controller availability. Its internal webhook
+certificate management avoids requiring an additional certificate controller.
+The guide warns that unscoped management of Jobs can intercept distribution
+maintenance Jobs. Select only ownsolid workload namespaces and supported
+frameworks; leave RKE2 and other system workloads outside both scheduler owners.
+
+[Volcano installation](https://volcano.sh/docs/gettingstarted/installation/)
+includes YAML and Helm paths, but its generic Kubernetes minimum does not prove
+compatibility with the selected RKE2 release. The immutable
+[1.16.0 chart](https://github.com/volcano-sh/volcano/blob/v1.16.0/installer/helm/chart/volcano/Chart.yaml)
+contains a local jobflow subchart. Its
+[values](https://github.com/volcano-sh/volcano/blob/v1.16.0/installer/helm/chart/volcano/values.yaml)
+select a public registry and Always pull policy. The source-tag
+[Kueue chart values](https://github.com/kubernetes-sigs/kueue/blob/v0.20.5/charts/kueue/values.yaml)
+also contain development image defaults. Neither unrendered source chart is an
+approved offline payload. These are candidate references, not installed or
+qualified ownsolid controller versions.
+
+Prepare exact release artifacts outside the installation, render them against
+the selected Kubernetes version and inventory every image, init container, hook,
+CRD and chart dependency. Pin image digests and verify all bytes through the
+existing signed offline delivery mechanism. Resolve images only from preloaded
+node content or an explicitly configured intranet registry. Installation must
+not fetch manifests, charts, dependencies, public registry layers or certificates.
+[RKE2 air-gap guidance](https://docs.rke2.io/install/airgap) distinguishes image
+preloading from private registry delivery; scheduler images must reach the cell's
+containerd, not merely the development host's Docker cache.
+
+Kueue [0.20.5](https://github.com/kubernetes-sigs/kueue/blob/v0.20.5/LICENSE) and
+Volcano [1.16.0](https://github.com/volcano-sh/volcano/blob/v1.16.0/LICENSE) use
+Apache-2.0, allowing commercial modification and offline redistribution with its
+license, notice and modification obligations. That does not establish every
+image layer or subchart's license. The exact delivered inventory needs its own
+license/notices review. This research adds no dependency, model or dataset and
+copies no upstream code.
+
+Reuse the registered cell cluster and its authenticated lifecycle owner. Keep
+installation authority separate from namespaced observation credentials. Persist
+an idempotent desired installation revision and each applied object's identity;
+retain unknown outcomes for reconciliation. CRD acceptance, webhook readiness,
+controller rollout and effective RBAC are separate checks. A Deployment becoming
+available does not prove workload admission or an offline image restart. Do not
+uninstall CRDs or delete existing workloads as automatic rollback. Upgrades need
+release-note review, served/stored API compatibility and a recovery path before
+changing persisted controller objects.
+
+Acceptance must use the selected RKE2 version with both controllers installed:
+admit and cancel one real workload through each owner; refuse unauthorized and
+foreign namespace access; reconcile a replaced UID; restart controllers with no
+external route and an empty Pod image cache; retry a partial installation and
+an uncertain apply; verify webhooks do not intercept maintenance workloads.
+Exercise incompatible CRDs, missing images, certificate rotation and failed
+upgrades without dropping active workloads or releasing logical holds.
+Production installation tasks, registered-cluster credentials and these offline
+runs remain open. The observation reader and this research do not close SCH-107.
