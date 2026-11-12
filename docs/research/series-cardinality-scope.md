@@ -329,3 +329,36 @@ uses datetime.date, and its [wire template](https://github.com/openapi-generator
 uses isoformat. Retain explicit generated Go and Python wire checks for the new
 operation; inspecting generator source is not proof of the projected clients.
 This preparation adds no dependency or generated artifact.
+
+## Scoped service unit evidence
+
+The private service candidate at
+3cebfcef9f321364862a11d8b773c714facb6f68 (tree
+0f5c800140e1036a157de62ba4c339b4e2780468) passed the following pure unit command
+on Go 1.27.3 darwin/arm64, with race detection and existing offline dependencies:
+
+```sh
+go -C services/control test -json -race -p 2 -count=1 -timeout=240s \
+  ./internal/modules/monitoring/... ./internal/platform/monitoringmetrics
+```
+
+The run completed in 8.771 seconds with exit zero: four tested packages,
+46 top-level tests and 139 passing test events including subtests. All seven
+series-cardinality service tests passed. Four relay command packages contained
+no tests; no test was skipped. Integration-test environment variables were
+removed before the run. The isolated checkout was clean at the same commit and
+tree before and after execution.
+
+Evidence lives outside the repository at
+/private/tmp/obs110-mac-unit-qkhcpg9a: unit-proof.json SHA-256
+9a4d682bb796ecb9092f4b396b84828489d08cf2b7241ee2a53eb38c3a65c3bc and
+unit-tests.jsonl SHA-256
+fcd057faad562d94984f05a85e393764e39838ecfc17a8ae7eb10f74e18b9342.
+The persistent regular-file workstation flock covered the test and its process
+group; the group exited before release and the lock file was retained. No
+VictoriaMetrics, PostgreSQL, browser or installation service was started.
+
+This qualifies that source's Mac pure units only. It does not qualify a later
+HTTP adapter, Linux modules, the native store/PostgreSQL profile, generated
+clients, public dispatch, installed acceptance or the Console flow. OBS-110
+remains unticked.
