@@ -33,7 +33,10 @@ single host and Helm on Kubernetes cells, from the same artifacts and configurat
 - [ ] DEL-108 In-site OCI registry bootstrapped from the bundle; images pinned by digest (P1) - Catalog: F494
   - The signed-release Registry path passed the disconnected Linux amd64 drill. It refused missing and truncated inputs, retained its container across repeats, and served all four signed image digests to a cold private Docker node over authenticated TLS. See [status evidence](../status.md) and [ADR 0061](../../decisions/0061-seed-a-site-registry-from-the-signed-release.md). Leave open for the production release inventory and the managed RKE2 worker pull path in ADR 0051 and ARC-116. The [prepared proof handoff](../../research/signed-registry-bootstrap.md#linux-amd64-proof-acceptance-and-net-102-handoff) verified the signed site group and current-profile consumption boundary. The [joint preflight](../../research/offline-control-helm.md#joint-fixture-acceptance) used the same archive for the Registry, strict RKE2 and Chart inputs.
 - [ ] DEL-109 Offline license activation, renewal and migration with the ownsolid-entitlement file format (P1) - Catalog: F443, F501, F646
-  - Includes an installer setting for `runtime.licensing.maximum_imports`: today raising it means editing `control.yaml`, which `apply` rewrites.
+  - The existing [installer runtime policy input](../../../deploy/offline/README.md#configure-license-import-capacity)
+    selects control_settings.runtime.licensing.maximum_imports. File materialization
+    preserves it across retries and explicit changes. Installed quota and complete
+    issuer-signed lifecycle acceptance remain open.
   - Before starting this item: freeze the license format in `pkg/license`, then tell the
     owner it is time to start `ownsolid-entitlement` in a separate chat. That repository
     first gets its own roadmap (customers, issue, renew, revoke, export, audit, console),

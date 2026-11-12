@@ -11,6 +11,32 @@ go -C deploy/offline build -o ownsolid-install ./cmd/install
 go -C deploy/offline test -count=1 ./...
 ```
 
+## Configure license import capacity
+
+Set the Control policy in the authoritative install.yaml:
+
+```yaml
+control_settings:
+  runtime:
+    licensing:
+      maximum_imports: 128
+```
+
+Apply that same configuration through the normal installer path:
+
+```sh
+ownsolid-install apply --config /path/to/install.yaml
+```
+
+Control validates a value from 1 to 1024; the shared default is 64. The installer
+preserves this runtime setting in both serving and operator configuration on
+repeated apply. Edit install.yaml to change it. Generated control.yaml follows
+that input on the next apply.
+
+The license trust file remains the separate license.trust_file reference.
+This setting does not change the signed license format. Issuer-signed lifecycle,
+renewal history and deployment migration remain part of DEL-109.
+
 ## Deploy private fleet-history stores
 
 `fleet-history` installs an independent raw store, long store and
@@ -1038,6 +1064,7 @@ canonical `run_id` UUID, an unused `lane-del-` container name, a local Unix
 `docker_socket` and the two ordered `heavy_locks`. Set positive integer
 `hard_timeout_seconds`, `cleanup_seconds`, `startup_seconds`, `suite_seconds`,
 `operation_seconds`, `cpus`, `memory_bytes`, `docker_tmpfs_bytes`, `pids_limit` and `relay_port`.
+Set `relay_port` to 8443 to match this fixture's installed HTTPS endpoint.
 Reserve startup and cleanup time outside the suite budget. Set the shared-host
 `minimum_free_memory_bytes`, `minimum_available_memory_bytes`,
 `minimum_disk_bytes` and `maximum_io_avg10` to the agreed window gate. The

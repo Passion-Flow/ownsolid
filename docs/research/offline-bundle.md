@@ -68,6 +68,23 @@ correctly returned capture-incomplete without a closure marker. Both owned
 containers were removed. This verifies capture lifetime through Docker cleanup;
 it does not establish a successful installed product or history request.
 
+### Installed relay admission
+
+The current [single-node end-to-end origins](../../tests/e2e/single_node_install_test.go)
+and installed overlay use HTTPS port 8443. The opaque relay must target that same
+listener. Accepting an unrelated positive port cannot produce a working private
+TLS connection, even though no socket error is visible until an owner connects.
+Validate the current fixture's fixed endpoint before any Docker command or lease.
+
+Keep this one proven installed path. Partially parameterizing the relay alone
+was rejected because it does not change the application's origins, certificates,
+helpers or client dial inputs. A future transport variant must change those
+inputs together. This is a test fixture boundary, not a restriction on the
+product's configured entrance matrix. No dependency, model or dataset is added;
+the existing Python PSF and Go BSD-3-Clause terms above remain unchanged.
+Test a mismatched port against an otherwise admitted configuration and prove
+that the launcher never invokes Docker.
+
 ## DEL-101 release bundle
 
 K3s prepares architecture-specific archives on a connected system and preloads them

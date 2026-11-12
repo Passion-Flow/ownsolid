@@ -60,6 +60,17 @@ class Runner(unittest.TestCase):
                 with self.assertRaises(guard.Refused):
                     host_runner.configuration(self.root)
 
+    def test_mismatched_relay_never_launches_an_admitted_window(self):
+        config = self.runtime_configuration()
+        config['images'].pop('evaluator')
+        config['relay_port'] = 8444
+        guard.write_json(self.root / 'runtime.json', config)
+        with mock.patch.object(guard, 'check_inputs', return_value=self.admission):
+            with mock.patch.object(host_runner.Window, 'docker') as docker:
+                with self.assertRaisesRegex(guard.Refused, 'installed Control fixture'):
+                    host_runner.run(self.root)
+                docker.assert_not_called()
+
     def test_runtime_rejects_unpinned_images_before_launch(self):
         config = self.runtime_configuration()
         config['images']['control'] = 'example:latest'
