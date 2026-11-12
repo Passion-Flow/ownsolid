@@ -122,6 +122,21 @@ to use the server's page size, or choose 1 to 100. JSON and YAML preserve
 `items` and nullable `next_cursor`; tables display the continuation
 after the rows.
 
+## Inspect a workspace write outcome
+
+```sh
+ownsolid workspace operation get "$REQUEST_ID" --output json
+```
+
+Use the original request UUID, account and Admin entrance after a lost write
+reply. The server checks current authority and its retained audit. A committed
+receipt confirms the recorded write; read the resource again before deciding
+on a new change. An unconfirmed receipt means the result is still unknown,
+including when the audit is no longer retained. It does not establish rollback.
+The command never repeats the write or polls automatically. JSON and YAML
+preserve the complete event or explicit null; each invocation makes a fresh
+read. Retry a temporary read failure explicitly.
+
 ## Inspect workspace members
 
 ```sh
