@@ -148,3 +148,54 @@ Successful admission must have no lingering configuration reason.
 This uses the same upstream decision/projection boundary and the
 existing licensed Go/PostgreSQL stack above. No dependency, capacity
 sample, model, dataset or production owner hook is added.
+
+## Authorized workspace quota status
+
+[Kueue ClusterQueue status](https://kueue.sigs.k8s.io/docs/concepts/cluster_queue/)
+distinguishes reserved quota from admitted and executing workloads. Expose the
+ownsolid workspace's configured guarantee, hard ceiling and aggregate held
+reservations as quota accounting. Hard ceiling minus held reservations is
+`unreserved_quota`; it is not physical availability, lendable capacity or a
+promise that a particular job can start. Borrowing, queue turn, topology and
+execution remain separate decisions.
+
+Use the selected repository and the existing Workspace owner's
+`ReadScopeWithin` in the same READ COMMITTED transaction as the quota read.
+The owner rechecks the live session and membership. Ignore cached actor
+workspace and role fields. Ordinary current workspace members may read this
+resource allocation; they gain no policy mutation or metering authority.
+Acquire the shared policy fence and existing workspace reservation lock before
+reading policy and held usage. PostgreSQL's
+[row and transaction advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html)
+keep replacement, reserve and release ordered through the confirmed read
+transaction outcome. A separate authority transaction followed by a pool read
+would allow revoked authority or a mixed policy/usage result.
+
+An absent policy returns `unconfigured` with fixed operator configuration
+guidance and no quantities. An authorized workspace without an allocation
+returns `unallocated` with workspace allocation guidance; inaccessible and
+missing workspaces remain indistinguishable and reveal neither state nor
+revision. A configured allocation returns only its own resource rows, sorted
+by resource. Encode integral resource quantities as decimal strings so byte
+counts and aggregate reservations retain int64 precision through browser JSON.
+Fail closed on malformed, overflowing, foreign-cell or over-ceiling active
+usage. Validate each contributing demand as an integral, nonnegative JSON number
+before trusting SUM; a positive row must not conceal a negative, fractional or
+string-valued row. Return no payload on any transaction failure, including an uncertain
+commit. Never include reservation identities, other workspaces, ancestor
+amounts, raw database/controller messages or stored job wait text.
+
+Verify real authenticated PostgreSQL reads for Admin and Portal, current
+membership and session revocation, forged cached scope, foreign installation
+scope, absent policy and allocation, committed reserve/release and a rolled
+back reserve. Exercise a blocked reservation lock to show that a reader sees
+the committed usage after it waits, and verify data corruption produces no
+payload. Check uncertain transaction outcomes independently of payload
+projection. HTTP composition, the public OpenAPI contract, translations and
+the UI remain integrations owned by IAM and Web; an uninstalled module handler
+is not an end-to-end public entrance or completion of SCH-108.
+
+The Go, pgx and PostgreSQL licences above cover this addition. The existing
+google/uuid dependency uses the [BSD-3-Clause licence](https://github.com/google/uuid/blob/master/LICENSE),
+permitting commercial use, redistribution with notices and offline use.
+No new dependency, controller asset, model or dataset is introduced.
