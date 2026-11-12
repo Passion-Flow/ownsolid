@@ -822,3 +822,30 @@ a 50 GB product import or an installed generic-registration/UI acceptance.
 DAT-101 remains open for route/report composition, the offline release image
 and S-503 UI. Fresh repository gates for the rebased branch are recorded
 separately; this native component result alone does not complete them.
+
+
+## Current source and repository-gate boundary
+
+At source f61bea6b995a3b9980b65be93f74047b736ea45c, based on main
+dfaf5e8868de489ed12a78c8289069576789fa8a, all five maintained dataset
+groups passed together again in 20.914 seconds on disconnected Linux amd64
+PostgreSQL 18.6. This includes the updated shared HTTP-fixture lifecycle.
+The original/normalized restore, 64+1 receipt pages, exact repair and
+dual-entrance source-custody assertions remain unchanged.
+
+The preserved native log is
+/root/lane-trn-dat-dfaf.505n49t1/native.log with SHA-256
+af665f19f3a8fcdec0b91de2b9ec8d528b581af037a26195c6405c39cb2e3b48.
+Its privately captured postgres.log SHA-256 is
+fed4ebf113ae8087fb4d09561dc0cc94c8bc9984682a2e8d38eca85eeed4f1ad.
+The disposable container and test-owned metadata/files were cleaned up.
+No external route or GPU was used.
+
+The same Go inputs passed all ten training PostgreSQL/HTTPS roots; see the
+[current training acceptance](training-job-lifecycle.md#current-native-owner-and-https-acceptance).
+The expanded maintained training selector and subsequent research/evidence
+documents change no Go, Python, SQL or API input. Fresh ordinary owner-package,
+build and check gates remain pending: the following resource admission refused
+high I/O before starting modules, and later bounded lock requests expired
+before executing the gate helper. These are not test/build results and do
+not qualify a full repository gate or installed product path.

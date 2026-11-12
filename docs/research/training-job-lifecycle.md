@@ -234,10 +234,49 @@ The raw records remain under `/root/lane-trn-cpu-admission.RaaYxrR7`:
 | `post-sso-borrowed-scope-98e2e1f6.log` (focused unchanged-default replay) | `bb08173a4c03141febbbdd8d68ae6a100498b8ac98b3188b2103357153c0ea25` |
 
 Main subsequently added identity audit-read and scheduler implementations.
-The branch now contains those changes, and its five native dataset groups
-passed at `0d8d09b6`; fresh training PostgreSQL and repository gates for those
-new Go inputs remain pending because the next admission refused low free
-memory. The earlier completed source qualifications above remain exact.
+The branch contains those changes. The later native result is recorded in
+the current acceptance below; the earlier completed source qualifications
+above remain exact.
 The retained 20-test Python result and actual CPU computation inputs are
 unchanged. Installed Agent/control/UI, NVIDIA and fair-queue admission
 remain separate open prerequisites; no complete roadmap item is asserted.
+
+
+## Current native owner and HTTPS acceptance
+
+Source f61bea6b995a3b9980b65be93f74047b736ea45c, based on main
+dfaf5e8868de489ed12a78c8289069576789fa8a, passed all ten PostgreSQL 18.6
+training roots together at schema 60 in 81.195 seconds. They comprise the
+nine retained-input/owner roots above and the existing actual dual-entrance
+TLS lifecycle root. Both repository and identity fixtures used the same
+owned disposable cluster through protected DSN files. The test process had
+only loopback networking and offline dependency resolution.
+
+The HTTPS scenario publishes a real synthetic dataset through the Python
+processor, then exercises login, idempotent job creation, metric pagination,
+failed-attempt state, explicit recovery, current-role refusal, CSRF and
+cancellation/audit rollback. Node observations, model metadata, metric events
+and stop envelopes are synthetic. It proves the control/API flow, without
+claiming an installed Agent, physical stop, live GPU metrics or browser UI.
+The other nine roots retain the actual CPU adapter evidence and all owner
+and accepted-source scope/refusal/repair assertions.
+
+Raw records remain under /root/lane-trn-cpu-admission.RaaYxrR7:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| schema60-dfaf-trn-http-f61bea6b.log | dce8bcd0c8185fce177a03a8665312d58b8d9e97d4785fd869e0cd876204bed3 |
+| schema60-dfaf-trn-sql-f61bea6b.log | 9178015edbf9548b834f4fdbde7d3576bdd732302c9adf22b7099a7b7941731d |
+
+The maintained replay now selects all ten roots, requires the protected
+data interpreter and binds its two fixture families to its own DSN file.
+Bash syntax and local documentation checks pass. Its test selection matches
+the successful private run; Go/Python/SQL/API bytes are unchanged.
+
+The next modules phase refused I/O full avg10 12.45 and avg60 11.75 percent
+before running. Subsequent bounded requests reached the original outer-lock
+timeout before the gate helper started. Fresh ordinary owner packages,
+make build and make check for this rebased source remain pending under the
+unchanged two Linux locks and original admission thresholds. Earlier exact
+source results remain preserved above. The 20-test retained CPU unit result,
+installed-product/NVIDIA boundaries and fair-queue prerequisites are unchanged.
