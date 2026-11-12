@@ -9,15 +9,15 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/google/uuid"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 // Two final passes are an algorithm bound: detect a newly committed registry,
@@ -135,7 +135,7 @@ func lockedJobWithin(ctx context.Context, q transaction.Executor, w workspaces.W
 	if !datawire.ValidID(id) {
 		return Job{}, fail("TRAINING_NOT_FOUND")
 	}
-	return scanJob(q.QueryRow(ctx, acceptedAdapterSQL(q, "SELECT "+jobFields+" FROM training_jobs WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE", "SELECT "+mysqlAcceptedJobFields+" FROM training_jobs WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE", w.TenantID, w.ID, id)))
+	return scanJob(q.QueryRow(ctx, acceptedAdapterSQL(q, "SELECT "+jobFields+" FROM training_jobs WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND site_id=local_site_id() AND cell_id=local_cell_id() FOR UPDATE", "SELECT "+mysqlAcceptedJobFields+" FROM training_jobs WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE", w.TenantID, w.ID, id)))
 }
 func (s *Service) replayTrainingWithin(ctx context.Context, q transaction.Executor, a identity.Auth, w workspaces.Workspace, key string, wanted []byte) (Job, bool, error) {
 	var id string
