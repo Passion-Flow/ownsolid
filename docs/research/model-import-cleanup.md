@@ -398,3 +398,16 @@ reasons. The Help remains a reference article with sections and no extra
 surface. Known bytes and state labels wrap inside the narrow layout.
 These are scripted browser results. ARC startup binding, real installed
 expiry and the complete MOD-121 item remain open.
+
+The Help index searches titles, summaries and section headings, without stemming.
+Use Expired uploads as the English heading so the visible Expired lifecycle term
+finds this answer. The bilingual consumer must find the article from Help search
+before reading its new-key guidance. Preserve a controlled old production build:
+the old expires heading does not match expired, while the Chinese heading already
+matches the equivalent query. This changes article wording only, not search scope.
+
+A discovery assertion must first establish the filtered-empty state, then enter
+the lifecycle term and await its query URL. Otherwise the unchanged article may
+still be visible before the debounced filter commits, producing a false positive.
+Keep that initial false-positive comparison separate from the corrected old-build
+regression. Neither comparison uses an installed server or real model bytes.

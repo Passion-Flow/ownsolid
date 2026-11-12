@@ -677,7 +677,20 @@ for (const [locale, messages] of [
       .filter({ has: page.getByRole('link', { name: expiredImport.name, exact: true }) })
       .filter({ hasText: messages['models.import.state.expired'] });
     await expect(old).toBeVisible();
-    await page.goto('/help/model-library');
+    await page.goto('/help');
+    const search = page.getByLabel(messages['help.search'], { exact: true });
+    await search.fill('no-expiry-answer-matches-this');
+    await expect(
+      page.getByRole('heading', { name: messages['help.empty.title'], exact: true }),
+    ).toBeVisible();
+    const term = locale === 'en' ? 'expired' : '\u8fc7\u671f';
+    await search.fill(term);
+    await expect(page).toHaveURL(new RegExp(`[?&]q=${encodeURIComponent(term)}(?:&|$)`));
+    const answer = page
+      .getByRole('main')
+      .getByRole('link', { name: new RegExp(`^${messages['models.title']}`) });
+    await expect(answer).toBeVisible();
+    await answer.click();
     await page.getByText('Idempotency-Key', { exact: true }).scrollIntoViewIfNeeded();
     await info.attach(`model-import-expiry-help-${locale}`, {
       body: await page.screenshot({ animations: 'disabled' }),
