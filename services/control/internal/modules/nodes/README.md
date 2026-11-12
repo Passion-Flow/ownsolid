@@ -111,6 +111,8 @@ support. Other component/inference exchanges, preparation and registry
 coverage remain required for ARC-108. See the
 [approach and acceptance scope](../../../../../docs/research/agent-operation-cost.md).
 
-This shared-fixture and inference HTTP extension is a prepared candidate.
-Its actual PostgreSQL and full repository acceptance are still pending;
-the source alone does not establish a passed measurement.
+The shared-fixture and inference HTTP extension passed both actual cost roots
+on disconnected Linux arm64 PostgreSQL, affected race/vet and the full
+repository gate at a91a817b. See the
+[exact counts, source and remaining coverage](../../../../../docs/research/agent-operation-cost.md#qualified-observation-coverage).
+This does not qualify other operation families or concurrent fleet capacity.

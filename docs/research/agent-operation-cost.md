@@ -97,3 +97,67 @@ external networking, record statements/rows/blocks and exact source, then run
 affected race tests and the required repository gates. The entire item remains
 open until every named operation has an actual exchange and all declared costs
 pass. Installed lifecycle and simulator load results stay separate.
+
+## Qualified observation coverage
+
+The complete source a91a817b23157fd610f714533b04cf6e7d8ec012,
+with tree 5ddb7c0683319219ff5f482630ca6ee3fd938b1c, passed the two
+observation roots on PostgreSQL 18.6/pgvector 0.8.7. The Linux arm64
+Docker fixture ran on Darwin arm64 with network none, two CPUs, one GiB
+of memory and no published port. Each history had exactly 50 or 3,000
+peer nodes, their owner observations, four tasks and four audit records
+per peer, plus the one enrolled node under measurement. No database case
+was skipped. These are seeded database histories, not connected simulators.
+
+| Exchange | SQL, 50 / 3,000 peers | Scanned rows | Shared buffers, 50 / 3,000 peers |
+| --- | --- | --- | --- |
+| First component report | 11 / 11 | 18 / 18 | 231 / 241 |
+| Component update | 9 / 9 | 15 / 15 | 46 / 59 |
+| Refused component credential | 2 / 2 | 1 / 1 | 3 / 5 |
+| First inference report | 9 / 9 | 14 / 14 | 132 / 140 |
+| Inference update | 7 / 7 | 11 / 11 | 31 / 37 |
+| Refused inference credential | 2 / 2 | 1 / 1 | 3 / 5 |
+
+Every exchange retained the existing 11-statement heartbeat ceiling,
+statement equality, scanned-row growth and missing-index checks. The
+independent shared-row holder was verified to hold each intended row.
+Readback matched the committed timestamp and full inference observation;
+credential refusal preserved both node and workload state. The component
+credential-replacement and disabled passive-reporting cases also passed.
+The actual PostgreSQL parameter setting was zero before enrollment.
+
+The affected nodes, agentcost and httpfixture packages passed complete
+Darwin race tests and vet. Full `make check`, `make build` and `make test`
+passed on a private APFS temporary volume with offline resolution. Console
+passed 1,075 cases and Portal 389, with 37 existing live-fixture skips and
+no added retry. The retained log SHA-256 values are:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| Actual observation costs | 63c787f580bc77ca5c52bedb009f892ce1cc7422bcf08d498a4cb1a5e3580f20 |
+| Affected race | 17d8c03ed2e69578508c172b14d233e978ade3a134cf2a969236a92268ce7370 |
+| Full check | 0eafcf7ce9ed43e6aff67c661a3ebe86f21b9088ca67b3ddf37d0ce2dde5f5c0 |
+| Full build | 97052419668903eeceb8a886450bf30874b89757b280ff193ff716b868366d60 |
+| Full test | ab35aa38354b5a6fb3adb3767a14ddd7c2f9acd51d02c1ef382a8c401d043996 |
+
+The first combined wrapper correctly failed its protected-input guard:
+its new directory was 0755 instead of 0700. The corrected wrapper uses
+private directories and retains the original guard. The failed log remains
+separate; the passed race/vet and identical compiled binary were reused,
+then the actual database replay passed on the corrected fixture. No product
+source or cost assertion changed to repair that harness error.
+
+The later rebase changes only Web inputs and documents. Non-Web executable
+and test inputs remain byte-identical to a91a817b. The complete Web tree is
+byte-identical to the owner's full-gate input
+60b85e037aa24fc0d30ae0195e6dffe8f59a6946. Its complete check/build/test
+passed, including 1,112 Console and 410 Portal cases, 38 existing fixture
+skips and zero retries; see the
+[owner's complete Web acceptance](gateway-model-description.md#complete-web-gate-and-final-screen-review).
+Reuse those qualified component inputs and check the final integrated tree;
+do not present the older browser count as a run of the newer Web tree.
+
+ARC-108 remains open: other component/inference exchanges, preparation and
+registry operations still need measured coverage. Training's recorded
+budget overruns remain unchanged. Native amd64, installed operation and
+concurrent simulator capacity acceptance are separate from these results.
