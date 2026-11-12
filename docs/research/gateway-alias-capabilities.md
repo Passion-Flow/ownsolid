@@ -1,6 +1,6 @@
 # Gateway alias identity and capabilities (GW-104)
 
-Reviewed 2026-11-09.
+Reviewed 2026-11-13.
 
 [LiteLLM deployment and model group documentation](https://docs.litellm.ai/docs/router/learn/deployments_and_model_groups)
 separates the name callers request, deployment identity and metadata. A
@@ -543,7 +543,8 @@ and failure record are retained in
 The entry removed its own container, internal network and credential
 files before the parent closed its shared lock descriptor. Post-run queries
 confirmed that the owned container and network were absent; no host
-port was assigned. No second queue or test retry was started. Earlier
+port was assigned. That failed entry was not retried. The separately
+authorized stdio attempt below retains its own inputs and scope. Earlier
 native Linux evidence retains its original source and platform scope.
 
 #### Replacement transport and qualification
@@ -586,5 +587,50 @@ uses MIT; [PostgreSQL](https://www.postgresql.org/about/licence/) and
 [pgvector 0.8.7](https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE)
 use the PostgreSQL License. These allow commercial redistribution with
 the required notices and offline use. No product dependency, model or
-dataset is added. This replacement is a prepared fixture prototype;
-source review and successful compilation do not establish its execution.
+dataset is added. This is a fixture prototype; its first execution
+boundary is below, and the four business roots remain unqualified.
+
+#### Native stdio preflight boundary
+
+The single follow-up admission used parent 89817 and child group 91251.
+It waited 209.066 seconds on the permanent carrier's FD 3, device
+16777234 / inode 50313339. The lock-covered execution took 3.856 seconds
+and exited 1. Exact 219af27e sources, DEV 7705c5a3's 0.12.0 overlay,
+resources, local Docker Desktop, cached linux/arm64 image and active
+non-loopback outbound refusal passed. The recorded darwin/arm64 product
+test binary was reused; both small transport/preflight helpers compiled
+from cached dependencies. PostgreSQL used network none, explicit SCRAM
+host authentication and native loopback proxy port 54800.
+
+The SSLRequest probe passed. The native pgx checker reached its SQL
+check after its wrong-password 28P01 and successful-connection guards,
+then returned PG_WIRE_QUERY_REFUSED. It emitted no observed SQL values,
+so this output does not distinguish SQL/scan failure from result
+mismatch. The four selected Go roots were invoked zero times, and none
+of their migrations or 120-table catalogues ran. This is a temporary
+fixture refusal, not evidence of a production protocol failure.
+
+Source review found a definite fixture assertion defect:
+inet_server_addr()::text includes its netmask, while the check required
+a bare IP. PostgreSQL's [network address functions](https://www.postgresql.org/docs/18/functions-net.html)
+specify that host(inet) returns the address alone and an explicit text
+cast retains the mask. The prepared correction selects both forms,
+compares host(inet_server_addr()), and records safe observed values or
+SQLSTATE/error type before refusing. The old runtime output is
+insufficient to prove this was its only failing condition. A new actual
+wire run must establish that; no second queue or runtime retry was made.
+
+The entry removed its owned proxy, PostgreSQL container and credential
+files before the parent closed FD 3. The owned child group had exited,
+the carrier identity was unchanged, and a post-exit probe of port 54800
+returned connection refused. Gate proof SHA-256 is
+ae9721c781a79a23614c189efb0de5496b007bbf118b78d4b1770115fce2d234.
+The input manifest remains
+d76d9afff7b0f531ad2aa36f6ae27f70f4753c498c5ed471cedd038bacf523f1.
+The failed attempt stays at
+/private/tmp/ownsolid-gw104-native-stdio.3i3mw2er; the source-only
+correction is prepared separately at
+/private/tmp/ownsolid-gw104-native-wire-fix.uxm7uway.
+Production publication remains disabled, and complete repository gates,
+matching contract/client publication and installed UI acceptance remain
+separate unmet requirements.
