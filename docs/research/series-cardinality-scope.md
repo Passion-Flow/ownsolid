@@ -423,3 +423,45 @@ all three candidate files; the noninteractive SSH default PATH did not expose
 gofmt. These are Mac pure-unit and formatting results only. Linux service/native
 PostgreSQL-store qualification, public registration, complete generated wire
 contracts, installed acceptance, Console and hard ingest enforcement remain open.
+
+## Generated date and recovery contract
+
+The locked Go runtime is oapi-codegen/runtime 1.8.0. The generator's
+[2.8.2 default type mapping](https://github.com/oapi-codegen/oapi-codegen/blob/v2.8.2/pkg/codegen/typemapping.go)
+maps string/date to openapi_types.Date and string/date-time to time.Time.
+Its [client template](https://github.com/oapi-codegen/oapi-codegen/blob/v2.8.2/pkg/codegen/templates/client.tmpl)
+uses StyleParamWithOptions for styled query parameters. The runtime's
+[known-type handling](https://github.com/oapi-codegen/runtime/blob/v1.8.0/styleparam.go)
+formats types.Date with DateFormat, while time.Time uses RFC3339Nano.
+[DateFormat](https://github.com/oapi-codegen/runtime/blob/v1.8.0/types/date.go)
+is YYYY-MM-DD. Therefore the default string/date schema has a proven source
+path for a date-only query. A type override or an accidental date-time schema
+would change that path. This source review did not generate or execute the new
+operation; retain full Go and Python request-wire tests against the handler.
+
+Construct the Go value with the selected UTC calendar day. Date formatting
+does not reinterpret an arbitrary local time as a UTC date. Keep both optional
+parameters absent unless supplied. Do not put a fixed limit default into the
+schema: the default comes from the installation's rank policy. Test that nil/
+Unset omits each option, but a pointer/value containing zero or an empty metric
+is actually sent and refused. Use multibyte metric values and escaped literal
+characters to check the complete percent-encoded request, not only model JSON.
+
+Coordinate these public mappings with the existing history conventions before
+registration; the current private handler still returns owning-service errors:
+
+| Code | Planned HTTP status | Recovery |
+| --- | --- | --- |
+| VALIDATION_FAILED | 400 | Correct canonical date/rank, required scope, literal metric bytes or query presence. |
+| MONITORING_CARDINALITY_RANGE_INVALID | 400 | Select a UTC day inside the configured raw horizon. |
+| MONITORING_CARDINALITY_NOT_CONFIGURED | 503 | Configure the protected raw-index policy, then retry explicitly. |
+| MONITORING_CARDINALITY_UNAVAILABLE | 503 | Restore the trusted source or select a narrower metric after scan refusal. |
+| MONITORING_CARDINALITY_RESPONSE_LIMIT | 422 | Select a narrower metric or fewer ranks; do not raise the fixed response cap. |
+
+The range mapping follows the published MONITORING_HISTORY_RANGE_INVALID 400
+contract. Authority, cancellation, busy and commit errors retain the shared
+history mappings and release no successful body. This table is publication
+input, not a change to the shared Problem registry. The existing
+[SDK dependency review](sdk.md#licenses) covers the pinned Apache-2.0 generator
+and runtime, commercial/offline use and redistribution notices. No dependency,
+model or dataset is added by this review.
