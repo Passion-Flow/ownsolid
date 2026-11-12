@@ -596,12 +596,29 @@ candidate DDL sources were unchanged. The already-passed cases were retained.
 The original cursor codec passed Linux's race detector, including all nine scope
 dimensions, tampering, invalid payloads and key rotation; its sources remain unchanged.
 
+Source `6abb7f16` then moved exact member selection ahead of retained metadata
+decoding in detail reads. The affected history/detail subcase passed again in
+1.53 seconds on a fresh disconnected PostgreSQL fixture. A damaged version in
+another family and an unknown exact version both returned `RESOURCE_NOT_FOUND`
+under the requested anchor; same-family retired detail and bounded navigation
+still passed. This fourth fixture and its private inputs were also removed.
+
 The initial DDL failure and its isolated corrected prototype remain preserved
 separately from these passed cases. Each disposable PostgreSQL fixture, temporary
 store and private credential file was removed; original logs, source and binaries
 remain preserved. These are domain/SQL and file-registration results using synthetic
 review metadata and small synthetic weights, not model quality, production approval,
 public dispatcher, installed migration or S-202 acceptance. MOD-103 remains open.
+
+The same model and preparation sources, rebased as `684f07ef` onto `db7ee24a`,
+passed native `make check` and `make build`. `make test` stopped in its browser
+prerequisite: Portal passed 409 cases, skipped 10 and failed the English offline
+Help contract-download case at `web/packages/shell/testing/help-flows.ts:165`.
+It expected `/help/api` but received `/help/api?q=changePassword`; the runner
+cancelled the sibling Console suite. Web and OpenAPI files were byte-identical
+to that upstream baseline. The trace and failed invocation are retained. Because
+browser tests are prerequisites, this invocation did not reach the Go, Rust or
+Web unit-test recipes. No complete native test or dispatcher acceptance is claimed.
 
 To replay, configure the private PostgreSQL DSN and fresh owned schema as described
 by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
