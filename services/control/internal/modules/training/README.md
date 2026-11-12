@@ -83,7 +83,9 @@ go -C services/control test -tags repository_integration -p 1 -count=1 \
 ```
 
 [testdata/replay_accepted_experiment.sh](testdata/replay_accepted_experiment.sh)
-starts its own disconnected PostgreSQL fixture and requires the retained CPU
+runs the nine accepted-result and owner groups in its own disconnected
+PostgreSQL fixture. It includes the local-cell refusal and repair cases and
+requires the retained CPU
 output, publication and approved model directories through its three documented
 environment variables. Synthetic node/production/stop envelopes, actual CPU
 computation, installed Agent/control acceptance and physical NVIDIA execution
