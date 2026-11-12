@@ -177,6 +177,12 @@ func TestActualTrainingMixedEventBatchPersistsFinalCursorAndExactReplay(t *testi
 	}
 	mixed := [][]byte{batch[2], batch[3], eventFixture(*l.Training, 5, 3, "metric", map[string]any{"values": map[string]any{"loss": 0.75}})}
 	for replay := 0; replay < 2; replay++ {
+		var beforeUpdatedAt string
+		if replay == 1 {
+			if err = f.s.DB.QueryRow(ctx, "SELECT updated_at::text FROM training_attempts WHERE id=$1", l.Training.AttemptID).Scan(&beforeUpdatedAt); err != nil {
+				t.Fatal(err)
+			}
+		}
 		out, err = f.s.RecordEvents(ctx, f.input.NodeID, f.credential, l.TaskID, l.LeaseToken, mixed)
 		if err != nil || len(out) != 3 {
 			t.Fatal("mixed batch could not be replayed", err)
@@ -186,6 +192,15 @@ func TestActualTrainingMixedEventBatchPersistsFinalCursorAndExactReplay(t *testi
 			if item.Duplicate != wantDuplicate || item.JobID != j.ID || item.AttemptID != l.Training.AttemptID ||
 				item.Sequence != int64(index+3) || item.JobState != "running" {
 				t.Fatal("mixed replay changed event identity or duplicate outcome")
+			}
+		}
+		if replay == 1 {
+			var afterUpdatedAt string
+			if err = f.s.DB.QueryRow(ctx, "SELECT updated_at::text FROM training_attempts WHERE id=$1", l.Training.AttemptID).Scan(&afterUpdatedAt); err != nil {
+				t.Fatal(err)
+			}
+			if afterUpdatedAt != beforeUpdatedAt {
+				t.Fatal("duplicate-only replay rewrote persisted progress")
 			}
 		}
 	}
