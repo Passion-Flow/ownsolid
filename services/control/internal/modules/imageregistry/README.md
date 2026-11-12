@@ -51,7 +51,10 @@ the site is unavailable. An incomplete cache uses the existing abandon and
 discard flow before a new import.
 
 The signed profile selects the OCI reader for import and reconciliation.
-Shared control startup still needs to pass the protected source file.
+Shared control startup selects this constructor with the protected
+image_registry_site_source_file reference; it requires the writable Registry
+configuration and refuses an invalid selected source. Installed real-release
+acceptance remains open.
 To exercise the module boundary on Linux, use
 [the loopback runner](testdata/run-site-admission.sh) with the verified
 Distribution binary, its SHA-256 and a local PostgreSQL image ID.

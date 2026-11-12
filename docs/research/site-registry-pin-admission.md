@@ -22,7 +22,7 @@ separates publishing from serving.
   has one endpoint, used for writes, verification and consumer references.
   The module now accepts a separate typed private source, with its own
   endpoint, allowed CIDRs, CA and protected credential. The control
-  configuration owner still needs to pass its file at startup. Read-only source permissions and a separate
+  configuration owner passes its protected file through the explicit startup selection below. Read-only source permissions and a separate
   writable tenant endpoint are mandatory. User requests continue to select a
   signed asset ID. The server derives the exact digest and repository.
 - Once those prerequisites are available, the import must verify source
@@ -103,8 +103,8 @@ key replay retains its original pin. A complete staged inventory supports
 explicit reconciliation after a SQL rollback without reading the site
 again. An incomplete stage retains the existing abandon and discard flow.
 
-The module constructor is additive and the control composition owner still
-needs to pass the protected configuration file. The consumer uses the verified
+The module constructor is additive; the control composition now passes the
+protected configuration file when the site source is explicitly selected. The consumer uses the verified
 profile for initial archive reads and retry after SQL rollback. Legacy bundle
 admission, tenant permissions and destination routing are unchanged. Verify against
 the small loopback Distribution/PostgreSQL fixture with distinct source
@@ -145,25 +145,18 @@ the independently configured, read-only source. The source JSON contains
 endpoint, allowed_cidrs, ca_file and credential_file; the constructor reads
 it as protected configuration. New keeps the existing signed-archive path.
 
-At main 785cc4eb,
-[openImageRegistry](../../services/control/cmd/server/imageregistry.go)
-still calls New. The composition owner must introduce and validate an
-explicit typed startup file reference before selecting the site constructor.
-Neither an HTTP request, an environment fallback in the business module nor
-a writable registry response can choose that reference. Preserve the
-selected-store schema admission, installed tenant, initialization checks,
-owner identity and service Close lifetime. Missing or invalid source
-configuration must refuse configured startup rather than silently select
-the archive path. Leaving the site source unconfigured retains the
-existing archive-backed mode.
+The shared startup selection below now passes that typed reference. Neither an
+HTTP request, an ambient business-module environment fallback nor a writable
+registry response chooses it. Preserve the selected-store schema, installed
+tenant, initialization and owner checks and the existing Close lifetime.
+Configured source failures abort startup. Omission retains archive-backed mode
+only after the module's existing disabled-owner admission has run.
 
-The module's native profile already covers the two distinct TLS registry
-identities, current signed release profile, exact digest reads, missing
-source refusal without archive fallback and SQL rollback/reconciliation.
-The root owner still needs startup tests for both explicit modes and
-invalid references, then the installed release-to-pin flow on the same
-source commit. This handoff does not change that acceptance status or
-qualify a new deployment.
+The module native profile covers distinct TLS identities, current signed release
+selection, exact digest reads, missing-source refusal and SQL rollback/recovery.
+The shared-root qualification below covers both constructor modes and invalid
+references. Those source-scoped results do not replace an installed real release
+import and its tenant pin readback. NET-102 remains open.
 
 ### Shared control startup selection
 
@@ -277,3 +270,83 @@ of the default gate. These results do not claim that tagged profile ran.
 
 Installed source-to-pin acceptance remains with OBS and DEL, and NET-102
 remains open.
+
+## Installed release-to-pin acceptance preparation
+
+Use the actual public Admin Registry handler, normal login/CSRF, and a new
+independent session_file for this optional acceptance input. The existing site
+module fixture already qualifies native digest transport and rollback; do not
+repeat it with a synthetic signed archive and call that installed acceptance.
+At reviewed main 38aad60337d3e696cd3536bab932b100c9013a45, the public handler
+provides release-images, pins, exact-pin reads, reference inspection and the
+remove/reconcile-removal actions. Registry HTTP schemas are not present as an
+OpenAPI document in the existing policy/problem contract directory; retain that
+contract/publication boundary rather than inventing additional response fields.
+
+Prepare an external stdlib client against those existing routes. Require an
+actually approved signed release asset, independent trust/license evidence and
+exact manifest/config/archive digests and size from the release owner. Match the
+normal release catalog before importing, require an empty disposable Workspace
+pin list, preserve the same mutation key for replay, and verify the committed
+pin through a normal scoped GET. The public Pin does not expose its private site
+source receipt: verify that through the existing owner protocol or independent
+installer readback, not a made-up HTTP field or a client assertion. These materials
+and an installed fresh instance are mandatory; leave the item open if absent.
+
+Record the returned owned pin before subsequent operations. Cleanup can only
+address that exact pin through the existing authenticated remove/reconcile path
+and must not delete shared CAS files, unknown rows or earlier pins. Keep a failed
+or uncertain operation explicit and retain the fresh session for safe retry.
+Use a separate new session file and never open the old 4463 session. Configuration,
+pin writes and cleanup belong before the history driver's exclusive quiet-count
+phase; never overlap that phase or introduce a second history actor. This input
+must not delay the already prepared GW120/Help/Scope/CLI acceptance path.
+
+Before running the external client, test normal TLS/Origin/CSRF wiring, no
+redirects, response and deadline bounds, missing approval, wrong digest/scope,
+replay identity, source-independent committed readback, and cleanup ownership
+using controlled HTTP replies. Those cases test the client, not server identity,
+permissions, PostgreSQL durability or installed release qualification. A real
+run still needs a newly selected coordinator window and its source/binary and
+instance bindings. No install request or Linux admission is authorized by this
+preparation. Existing Go BSD-3-Clause, Registry Apache-2.0 and PostgreSQL license
+requirements above remain unchanged; no dependency, model or dataset is added.
+
+### Selected external client source
+
+The selected external source is
+/root/lane-obs-tools/installed-registry-driver-v3. Its source-inputs.json
+SHA-256 is 765a71956c52b3626e55fbdbc18174ef363683c043a4e327744f19bdf708dee4.
+The retained 81,920-byte source archive has SHA-256
+b44883f503f5c7252612dbfe78883879a5321dfb3c32529038908fe692b8f1f9.
+The optional input descriptor is
+/root/lane-obs-tools/installed-registry-optional-input.json; it explicitly marks
+installed_input_ready=false and binds this source, the required real materials
+and the pre-history schedule. Earlier source drafts remain unrun and unselected.
+
+The client has separate init, verify, cleanup and logout phases using normal
+Admin login/CSRF and an independent protected session. It records an import
+intent before sending its fixed key, so a lost response can be resolved by that
+same key without guessing a pin. That intent is not a delivery receipt. The
+baseline requires an explicit null continuation and an empty Workspace list;
+a missing next_cursor does not establish absence. Cleanup uses only an
+acknowledged pin identity and current reference checks. A deleted tombstone does
+not establish local cleanup: without its prior acknowledgement, the client
+uses the existing explicit reconcile-removal path before releasing its session.
+No direct CAS or database cleanup is introduced.
+
+Sixteen focused tests are prepared with controlled TLS/HTTP peers, temporary
+credentials and metadata. They cover the client flow, source/digest/scope and
+input boundaries, replay and lost acknowledgement, cancellation, TLS/redirect
+refusal, cleanup uncertainty and session isolation. gofmt passed on both host
+copies and the Linux source manifest verified. The workstation nonblocking
+flock refusal started no compiler or tests. No binary has been qualified or
+executed, no installed request or Linux lock attempt was made, and no old
+session or real credential file was opened. Syntax formatting and controlled
+client tests cannot substitute for native or installed qualification.
+
+The actual instance, approved signed asset/trust/license material, independent
+fresh session, source/binary binding, independently checked source receipt and
+verified owned cleanup are still required. This is an optional preparation
+input only. It must not delay the already ready main acceptance flow or overlap
+history's quiet-count stage. NET-102 remains unticked.
