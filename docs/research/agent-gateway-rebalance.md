@@ -279,6 +279,23 @@ the namespace/port observation with known open and closed sockets before
 adding it to the production acceptance test. These observations have
 not run yet and the installed test remains unqualified.
 
+The bounded socket prototype subsequently passed on native Linux x86_64 in
+an isolated network namespace: initially one listener and no established
+connections, exactly three established connections with three accepted clients,
+then no established connections after closing both ends. Preflight measured
+6504960 KiB MemFree, 19437340 KiB MemAvailable and full I/O PSI avg10 0.01.
+The namespace subprocess had a 96 MiB address-space limit, two CPU seconds and
+a ten-second wall limit. It started no compiler, container or database.
+
+Embed this same observer as e2e test data. Sample only the two named gateway
+containers every five seconds, with bounded Docker commands, and retain raw
+JSON resource rows and TCP-state counts with UTC timestamps and drill phase.
+Record phase checkpoints as well as periodic samples. A stopped gateway is
+expected only during the explicit first-gateway outage; missing observations
+in every other phase fail the test. Join the sampler before fixture cleanup.
+Report maxima as sampled observations, including draining sockets separately
+from authenticated sessions. This adds no runtime product endpoint or wire field.
+
 No dependency, model or dataset is added. Docker/Moby uses
 [Apache-2.0](https://github.com/moby/moby/blob/master/LICENSE), and the
 existing Python interpreter and standard library use
