@@ -721,3 +721,51 @@ conflict recovery bounded to one alias even in a large workspace and
 avoids treating a truncated list as a missing alias. Keep the read-failure
 regression on that exact detail request; background catalogue reads stay
 independent of the editor's draft.
+
+
+### Complete Web gate and final screen review
+
+The exact integrated source 60b85e037aa24fc0d30ae0195e6dffe8f59a6946 passed make check and make build.
+The make test target passed with every Go module, Rust and Web unit target,
+and both complete browser suites. A private Make overlay only capped
+browser workers at four for Console and one for Portal, reused the same
+production assets just built, and retained JSON reports. It selected no
+subset and introduced no skip. Console passed 1112 cases with
+28 existing environment-dependent skips; Portal passed
+410 with 10 existing skips. There were no unexpected
+results, flaky cases or retries. These are workstation results, not a
+new installed-server or GPU qualification.
+
+The final focused checks passed all 52 shared UI unit tests and 29
+Chromium cases: eight description flows, twelve Console state checks and
+nine matching Portal checks. They include real backdrop clicks with an
+unsaved draft in both languages, independent latest-alias reads, Undo
+replay after a later writer, and a revision-refused Undo that directs the
+person to review instead of offering a futile retry. The pinned old
+Console build from d56269c3 failed the new historical-Undo assertion as
+expected; its file manifest and failed report remain separate.
+
+Nine final screenshots were read: English and Simplified Chinese editing,
+reviewed current text, read-only catalogue detail and permission refusal,
+plus the dark form. The three screen-review answers above still apply:
+S-205 is a detail page with a short-form dialog whose primary action is
+Save description; S-304 is a list with a preview drawer and the explicitly
+unavailable Try a model action. Seven states remain defined, with distinct
+initial and filtered empties. The narrow layouts fit, statuses use text,
+and backdrop clicks preserve input while Escape restores the opener.
+Screenshots and reports are retained in the source-keyed qualification
+artifacts outside Git.
+
+The first broad run at d56269c3 stopped in the installer tests after both
+browser suites passed. Its temporary mount path was too long for the
+Unix-socket fixtures. With umask 077, the published-model fixture was also
+created as 0400 and faithfully backed up/restored that mode, while its
+assertion expected 0444. A short physical temporary path and the fixture's
+normal umask 022 passed the focused installer cases without source edits.
+The final full run used that environment on an owned sparse APFS volume,
+then detached and removed the volume and only its own build artifact.
+The earlier failure is retained and is not reported as a successful gate.
+
+Actual same-source installed Console-to-Portal description acceptance and
+the Portal scope SQL proof remain open. POR-104 still also requires TEN-107
+prices; this Web gate does not tick that item.
