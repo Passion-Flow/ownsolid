@@ -2,7 +2,8 @@
 
 This module validates the adapter-neutral job intent, quota policy, queue order
 and whole-job preflight. The reservation repository borrows the workload owner's
-PostgreSQL transaction to hold or release the exact attempt. The quota snapshot
+PostgreSQL transaction to hold or release the exact local attempt. A retained
+foreign-cell record cannot acknowledge a local replay or release. The quota snapshot
 repository also uses an expected policy revision. Enabled departments can
 attribute loans to sibling workspaces and keep a reclaim pending until every
 selected victim has a committed owner release. The cell adapter reads

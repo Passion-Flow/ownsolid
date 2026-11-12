@@ -129,7 +129,8 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
 	args := append(a.scopeArgs(), a.ID, body, requested)
 	var same, released bool
 	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT attempt_id=$6 AND intent=$7::jsonb AND demand=$8::jsonb,released_at IS NOT NULL
+		`SELECT attempt_id=$6 AND intent=$7::jsonb AND demand=$8::jsonb
+  AND site_id=local_site_id() AND cell_id=local_cell_id(),released_at IS NOT NULL
  FROM scheduling_reservations WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5`,
 		args...)).Scan(&same, &released)
 	switch {
@@ -202,7 +203,7 @@ func releaseWithin(ctx context.Context, q transaction.Executor, a Attempt, evide
 		return false, err
 	}
 	args := append(a.scopeArgs(), a.ID)
-	const exactAttempt = " WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5 AND attempt_id=$6"
+	const exactAttempt = " WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5 AND attempt_id=$6 AND site_id=local_site_id() AND cell_id=local_cell_id()"
 	var body []byte
 	var released bool
 	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
