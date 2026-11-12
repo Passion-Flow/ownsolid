@@ -9,7 +9,7 @@
 | AUD-104 | OBS-102 and the delivery configuration must apply the six-month minimum to network log stores. The audit table's retention is a separate policy. |
 | AUD-106 | IAM-107 must supply the auditor role, with an explicit permission for read-only search enforced by the audit route and exposed by the console. |
 | AUD-107 | The authenticated export and approval flow needs the authorization and console boundaries. The database operator's integrity export covers the separate AUD-102 use case. |
-| AUD-108 | Diagnostic entry points must record access before serving the redacted data, including the support collector used while control is down. |
+| AUD-108 | License diagnostics and the installation-wide identity read already append access events. The [scoped append contract](audit-diagnostic-access.md#scoped-append-contract) binds the exact workspace and local site/cell for IAM to pair with its workspace reader. Delivery retains both support entry points and Control-down admission/reconciliation. The audit module owns no diagnostic read handler. |
 | AUD-109 | The database, object-store, backup, deployment and TLS owners must agree on key custody, rotation, recovery and the first KMS fixture. |
 | AUD-111 | The [operator forwarder](audit-siem-delivery.md) has tenant-scoped TLS and a durable cursor. Continuous delivery still needs trusted startup registration, installation and tenant grants, a least-privilege export source or indexed database reader, a persistent operator volume, and an approved site SIEM. |
 

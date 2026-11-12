@@ -16,7 +16,18 @@ var ErrQueueSnapshotRequired = errors.New("SCHEDULING_QUEUE_SNAPSHOT_REQUIRED")
 // supplies the queue capacity. The owner assigns priority and durable sequence,
 // and opens a fresh read-only REPEATABLE READ snapshot after each dispatch.
 func RankWorkspaceQueueWithin(ctx context.Context, tx pgx.Tx, tenant string, entries []QueueEntry) ([]QueueEntry, error) {
-	if err := requireSchedulingSnapshot(ctx, tx, ErrQueueSnapshotRequired); err != nil {
+	if tx == nil {
+		return nil, ErrQueueSnapshotRequired
+	}
+	return RankWorkspaceQueueExecutorWithin(ctx, transaction.PostgreSQLTransaction(tx), tenant, entries)
+}
+
+// RankWorkspaceQueueExecutorWithin ranks the owner's authorized eligible batch
+// through its selected borrowed PostgreSQL read-only REPEATABLE READ executor.
+// Read the entries in that same snapshot; the caller retains transaction
+// completion and must recheck current admission in a fresh write transaction.
+func RankWorkspaceQueueExecutorWithin(ctx context.Context, q transaction.Executor, tenant string, entries []QueueEntry) ([]QueueEntry, error) {
+	if err := requireSchedulingExecutorSnapshot(ctx, q, ErrQueueSnapshotRequired); err != nil {
 		return nil, err
 	}
 	if !canonicalReservationID(tenant) {
@@ -25,7 +36,6 @@ func RankWorkspaceQueueWithin(ctx context.Context, tx pgx.Tx, tenant string, ent
 	if len(entries) == 0 {
 		return RankQueue(entries, nil)
 	}
-	q := transaction.PostgreSQLTransaction(tx)
 	_, tree, err := readQuotaPolicyWithin(ctx, q)
 	if err != nil {
 		return nil, err

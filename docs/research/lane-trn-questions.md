@@ -45,3 +45,16 @@ needs the train-to-deploy comparison. DAT-201 to DAT-205 need the registered
 version and its authority before policies, reviews, gates, external-source
 exports or data cards can bind to it. The current lane keeps those
 dependencies visible rather than creating parallel resource authorities.
+
+
+## TRN-109 interactive environment boundary
+
+The training attempt/Agent contract has no interactive lifecycle or private
+browser/home authority. Safest option: keep notebook/editor/terminal processes
+and files separate from production training and prototype one offline CPU
+JupyterLab path before admitting shared contracts. Do not launch an editor
+from train.py, bypass current membership with a retained server cookie or
+expose the Docker socket. The [primary-source review and concrete failure
+coverage](training-interactive-environments.md) identify Agent, identity,
+quota, storage/backup, serving and UI ownership. No image is installed or
+process started by this research; TRN-109 stays open.

@@ -117,3 +117,64 @@ that correcting the fixture record restores the original rank. The normal
 module regression also checks preflight, contention, replay and release.
 This qualifies persisted scheduling reads. Production queue membership,
 priority resolution and the actual dispatcher integration remain open.
+
+## Selected-repository snapshot ranking
+
+The initial training selector owns a selected transaction.Executor, not a raw
+pgx transaction. Add RankWorkspaceQueueExecutorWithin without changing the
+existing RankWorkspaceQueueWithin signature. Both use the same scope,
+allocation, aggregate-read and rank implementation. The selected executor
+must be a borrowed PostgreSQL read-only REPEATABLE READ transaction; reject
+a pool, nil context/executor, another engine or another transaction mode.
+
+The selected Store's read-only Within starts READ COMMITTED. The owner can
+issue SET TRANSACTION ISOLATION LEVEL REPEATABLE READ as its first SQL
+statement in that callback, before reading eligible entries or authority.
+PostgreSQL documents both the
+[first-query restriction](https://www.postgresql.org/docs/18/sql-set-transaction.html)
+and [stable snapshot semantics](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-REPEATABLE-READ).
+Read the complete authorized eligible batch, policy and shares through that
+same executor. The ranking helper validates the mode; it does not alter it,
+open another connection or commit. Retain the repository's sanitized errors.
+
+A legacy DB-pool fallback would break selected-repository ownership. A
+READ COMMITTED hint can mix the eligible set, policy and current shares.
+Changing isolation inside the ranker can occur after the owner has already
+read data. None is needed. Ranking grants no admission: after metadata/file
+verification, the owner still rechecks current authority and queue turn in
+a fresh READ COMMITTED owner admission transaction. Keep the
+queued-authority reconciliation for entries excluded from the eligible set.
+
+Use real selected Store.Within callbacks with first-statement isolation
+setup. Read persistent owner queue rows, commit a competing hold and a new
+eligible row concurrently, and verify that the existing snapshot remains
+stable while a fresh snapshot observes both changes. Reject read-only
+READ COMMITTED, writable REPEATABLE READ and read-only SERIALIZABLE. Preserve
+foreign/missing scope refusal, one aggregate usage query, and the legacy
+pgx and preflight snapshot contracts. Unit checks reject pooled and other-
+engine executors before SQL. Existing Go, pgx and PostgreSQL licences above
+cover this additive interface; no dependency, model or dataset is added.
+
+
+### Independent interface qualification
+
+The selected-store implementation begins a read-only READ COMMITTED transaction
+and calls the operation without issuing a query first. Its caller can therefore
+set isolation before the eligible-batch read. The PostgreSQL 18 transaction
+documentation above confirms that this must precede the first query, not merely
+the ranker's first query.
+
+This interface does not depend on the separately retained queued-admission
+implementation. Reuse the mainline quota/reservation fixture and persist a small
+owner queue in its disposable schema. Read that queue through the selected
+executor, commit a competing reservation and enqueue through another connection,
+then compare the retained and fresh snapshots. Assert that ranking changes no
+owner state, revision or reservation. Keep the original broader candidate intact;
+do not copy its pending admission helpers into this path just to obtain a fixture.
+
+The current mainline pgx ranking and submission-preflight tests qualify the
+shared snapshot guard after extraction. Run the two selected-store PostgreSQL
+flows alongside those five existing regressions. The interface is accepted only
+when all seven real flows and the required repository/module gates pass.
+Production eligible-batch authority, durable priority configuration, current
+write admission and the authenticated UI flow remain owner integrations.

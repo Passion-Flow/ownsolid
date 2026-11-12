@@ -74,6 +74,25 @@ If an active record in that set has foreign site/cell coordinates, it returns
 Pass a read-only REPEATABLE READ transaction
 and the owner's durable queue entries. See [live workspace shares](../../../../../docs/research/scheduling-queue-policy.md#live-workspace-shares).
 
+## Selected-repository queue ranking
+
+`RankWorkspaceQueueExecutorWithin(ctx, q, tenant, entries)` borrows the owner's
+selected PostgreSQL executor. The existing pgx entry point remains compatible
+and uses the same validation and ranking implementation.
+
+The owner opens its selected Store.Within with read-only access and executes
+`SET TRANSACTION ISOLATION LEVEL REPEATABLE READ` as the callback's first SQL
+statement. It then reads the complete authorized eligible batch, ranks it and
+resolves its candidate through that same executor. The helper rejects pooled,
+other-engine and wrong-mode inputs; it never opens a connection or commits.
+Priority and durable enqueue sequence come from persisted server authority.
+
+Ranking does not admit work. The workload owner rechecks current authority
+and admission in a fresh write transaction. Production batch selection,
+priority configuration and actual dispatch remain owner integrations.
+The separately retained queued-admission candidate is not required by this
+interface. See [selected-repository ranking](../../../../../docs/research/scheduling-queue-policy.md#selected-repository-snapshot-ranking).
+
 ## Authorized workspace quota status
 
 `ReadWorkspaceQuotaStatus` uses the selected repository and

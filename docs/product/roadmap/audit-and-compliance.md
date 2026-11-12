@@ -32,6 +32,15 @@ under the auditor's separate control. See the
 - [ ] AUD-106 Read-only auditor role and audit search (P1) - Catalog: F442
 - [ ] AUD-107 Controlled data export with approval and record (P1) - Catalog: F488
 - [ ] AUD-108 Diagnostic read access audited and redacted (P1)
+  - [Diagnostic consumer inventory](../../research/audit-diagnostic-access.md)
+    preserves the implemented license export and identifies the identity and
+    offline support collection access-accounting call sites still required.
+  - [Exact workspace append contract](../../research/audit-diagnostic-access.md#scoped-append-contract)
+    binds the installed tenant, authorized workspace and current local site/cell.
+    IAM consumer pairing and the remaining diagnostic entry points stay open.
+  - [Scoped PostgreSQL qualification](../../research/audit-diagnostic-access.md#scoped-postgresql-qualification)
+    verifies the append under real scope, permission, transaction and concurrency
+    failures. The actual workspace read pairing remains open.
 - [ ] AUD-109 Encryption at rest for the platform database, object storage and backups with keys from an external KMS (KMIP, Vault-compatible transit, cloud KMS), envelope encryption, key rotation, and a TLS 1.3-only policy option (P1)
 - [x] AUD-110 Audit trail page: events with filters by action, outcome, time and request, event details, shareable links (P1) - Evidence: 2c51002; real Chromium on an offline install on `ownsolid-cpu` read a real sign-in event with the person's address, filtered by family, followed it to its request and opened it from its own link, three runs in a row, 2026-11-07
 - [ ] AUD-111 Stream audit events to an external SIEM over syslog or a webhook, with counters for events sent and dropped (P1)

@@ -122,12 +122,23 @@ func checkCellCapacitySample(ctx context.Context, tx pgx.Tx, sample CellCapacity
 }
 
 func requireSchedulingSnapshot(ctx context.Context, tx pgx.Tx, unsupported error) error {
-	if ctx == nil || tx == nil {
+	if tx == nil {
+		return unsupported
+	}
+	return requireSchedulingExecutorSnapshot(ctx, transaction.PostgreSQLTransaction(tx), unsupported)
+}
+
+func requireSchedulingExecutorSnapshot(ctx context.Context, q transaction.Executor, unsupported error) error {
+	if ctx == nil || q == nil || q.Dialect() != transaction.PostgreSQL {
+		return unsupported
+	}
+	if _, pool := q.(transaction.Store); pool {
 		return unsupported
 	}
 	var snapshot bool
-	if err := tx.QueryRow(ctx, `SELECT current_setting('transaction_read_only')='on'
- AND current_setting('transaction_isolation')='repeatable read'`).Scan(&snapshot); err != nil {
+	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+		`SELECT current_setting('transaction_read_only')='on'
+ AND current_setting('transaction_isolation')='repeatable read'`)).Scan(&snapshot); err != nil {
 		return err
 	}
 	if !snapshot {
