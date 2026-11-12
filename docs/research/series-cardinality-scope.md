@@ -652,15 +652,18 @@ That unchanged failure proof is retained under
 /private/var/folders/v5/7tyk9y_93t74ggr8xqy01xm80000gn/T/obs110-native-prep-zcfnoaso,
 SHA-256 eca61f595e9b95cc003f9a0ef9ea6ffc04085f664cfaa3dbb4b243ffb3621b1f.
 
-The directly runnable, source-bound Linux preparation is
+The preserved original, source-bound Linux preparation is
 /root/lane-obs-tools/run-obs110-daily-native.sh, SHA-256
 e3941f89f2f12b130fdf84430b0c4c7d9f93417b80baf7698d30336dfdbaccfe.
 Its input/command/resource/cleanup manifest is
 /root/lane-obs-tools/obs110-daily-native-package.json, SHA-256
 b946664abde20beb6e595004049f47746c55d278125e9b6c18de67351691a3a2.
-It preserves the existing two-lock order, nonblocking acquisition and descriptor
-lifetime, 2,048 MiB free-memory floor, 15 GiB disk floor, I/O some/full avg10
-maximum of five, two Go workers, race build and offline caches. The four fixed
+The original manifest described both locks as nonblocking and I/O some/full
+avg10 as a shared threshold. The corrected entry below uses the established
+full-IO-only threshold and a single bounded first-lock wait. The original
+artifact remains unchanged and must not be selected for execution.
+The 2,048 MiB free-memory and 15 GiB disk floors, two Go workers, race build
+and offline caches remain unchanged. The four fixed
 entries remain cardinality, history-http, history-tls and history-retention.
 The caller bound is 300 seconds with a ten-second forced-stop grace.
 
@@ -672,3 +675,102 @@ integration, make check/build and installed-product admission remain open.
 The candidate retains schema 59/119; it is not a schema-60/120 qualification.
 The original 3cebfcef worktree and its actual Linux four-package race-unit proof
 remain unchanged. No roadmap checkbox is changed by this preparation.
+
+## Corrected native entry and bounded admission result
+
+The selected private copy is
+/root/lane-obs-tools/run-obs110-daily-native-v2.sh, SHA-256
+cf228b0c48865bec1775841181d7a256c4d8d06deb233ad605a7653970b068a3.
+The exact diff from the unchanged e394 original is
+/root/lane-obs-tools/obs110-daily-native-v2.diff, SHA-256
+470a3496e1b451c74f98ee7cb4598a410b42a7016e1c8927fbe03dea4e174bcd.
+It changes only the external entry, not source 5f83cfbf or its four fixture
+entry points. No generic queue or retry loop is added.
+
+The full PSI parser now requires exactly one full row and one avg10 field,
+a decimal finite value within zero to one hundred, and a value at most five.
+Missing, duplicate or malformed full data refuses admission. The some row
+remains observable but is not this full-IO threshold. The old parser iterated
+every row and accepted an empty document; that behavior was not a proven
+resource policy. The other original resource checks remain unchanged.
+
+The copy opens existing regular, single-link carriers through O_RDWR and
+O_NOFOLLOW, with no O_CREAT or O_TRUNC, and checks their exact device/inode
+before and after acquisition. It retains actual FD 8/9 and prevents its tee
+logger from inheriting them. The first real flock uses -w 60 -E 75; the
+second retains -n -E 75. A second-lock refusal closes the global FD before
+its diagnostic collection. Only the configured conflict code is classified
+as contention or wait timeout; other raw nonzero exits remain flock errors.
+The caller remains timeout --signal=TERM --kill-after=10s 300s, including
+the first wait. No lock file is unlinked, replaced or truncated.
+
+Six standard-library tests extracted the actual parser and opener functions
+from this copy and passed on Linux, with zero failures, errors or skips.
+They cover full-only semantics, the boundary, missing/duplicate/malformed and
+nonfinite values, content-preserving opens, wrong identities, symlinks,
+hardlinks, directories and already occupied target FDs. Only owned temporary
+files were used; these tests never opened or locked a real shared carrier.
+Bash syntax checking also passed. The validation source
+/root/lane-obs-tools/validate_obs110_native_entry_v2.py has SHA-256
+58f61612e0b2d48430d92da3b38d35e7496a8808e25503a0ec8569605b4c67ec;
+obs110-native-entry-v2-validation.json has SHA-256
+88f7917933bff977d4876ee8311f3b77835904b63beab0aaf570ffdfe673f80d.
+The focused integration-tagged monitoring
+package dependency metadata check exited zero with no errors, offline and
+without compilation. Its record retains the earlier, overbroad workspace
+module-graph diagnostic that exited one on uncached module information;
+that graph query is neither focused-package compilation nor a native run.
+Its record /root/lane-obs-tools/obs110-native-v2-cache-check.json has SHA-256
+ca750b6c531fec04519ec8f39607de4fcd8c2c823a906c7e5f4990e412bb5d9e.
+
+The single Linux x86_64 opportunity ran the selected copy through the original
+300-second/ten-second caller. Real /usr/bin/flock -w 60 -E 75 8 returned 75
+with empty stderr. The outer command exited 75 after 60.311 seconds. The
+first exclusive lock was not acquired; the second descriptor was open but
+its flock was never attempted. No compiler or native fixture entry started.
+A pre-admission resource snapshot observed 19,468 MiB free memory, 740 GiB
+available disk and full I/O avg10 0.06. Those earlier observations do not
+establish resource admission after both locks; execution never reached that
+recheck.
+
+| Planned entry | Actual result for source 5f83cfbf |
+| --- | --- |
+| cardinality | Not entered; no native root or test event. |
+| history-http | Not entered; no native root or test event. |
+| history-tls | Not entered; no native root or test event. |
+| history-retention | Not entered; no native root or test event. |
+
+The failure-time snapshot contains a matching kernel FLOCK record and a
+non-ancestor Bash descriptor with the same lock line. The entry's own FD has
+no lock line. This supports the recorded conflict snapshot, not attribution
+to a lane or a claim that any process was stale. No other process was stopped.
+This diagnostic does not retroactively establish causes for the two earlier
+c60 refusals with missing raw evidence.
+
+The entry explicitly closed both FDs. The owning entry, timeout and observer
+parents exited; the owned process group was empty, and both original carrier
+identities and zero lengths remained. No PostgreSQL container, VictoriaMetrics,
+vmalert, Alertmanager, browser or installed service was created. The raw
+summary's all_owned_containers_confirmed_removed=false means the expected
+four containers were never created, not that cleanup left a component behind.
+Its source_schema field names the planned source's 59/119 constants only:
+there was no compilation, migration or database readback in this opportunity.
+There is no schema-60/120 or current-main qualification.
+
+Raw evidence remains at
+/root/lane-obs-tools/obs110-native-opportunity-v2.yipeud6u/result.json, SHA-256
+dfee1351beb065c7739fa219f329234a716a395192bd666a9aaf8c5b45988542;
+outer.log SHA-256
+08033619d9d247c3f74ef397ab6c77c07ac9580e79758da6f9e2178133f2a244.
+The entry receipt is /root/lane-obs-tools/obs110-daily-native.iC9zP9:
+global-flock.json SHA-256
+5c6fe43d3459fdb7b20e475a187d67efdf023d1255824f04a631d43e57f3f738,
+fd-before-close.json SHA-256
+1dcc016b349f3e3bf5e1367915a82a7d96067005f893618554b29754bbaeceb3,
+and fd-after-close.json SHA-256
+ffd3cf3c72c4ea218a9ef30fb8cb55ea7fc1da3aefb1167e1c30eae404fb321f.
+The source remains clean at commit 5f83cfbf and tree 170ad1a59. No second
+native opportunity was attempted. Native daily/index-mode/restart and procfs
+qualification, installed source admission and current-main checks remain open.
+No roadmap checkbox or support claim changes from this refusal. No dependency,
+model or dataset is added; existing license terms above remain applicable.
