@@ -110,3 +110,10 @@ explains that it cannot resume and opens a new bundle upload. Pending expiry
 cleanup blocks continuation until it finishes. A new import uses a new request
 key; replaying an old key only reads the original import. The UI does not enable
 the optional expiry worker, whose startup binding belongs to Control.
+
+The audit list and resource activity record each access on the server. They do not
+retry or refresh on focus, reconnect or cache invalidation. A lost answer may
+already have produced an access record; Read again is a new explicit read. Failed
+pagination retains earlier pages and retries only its cursor. An invalid cursor
+offers one first-page restart, retaining history until that read succeeds. A
+current permission refusal removes cached event rows and any preview from view.
