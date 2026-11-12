@@ -702,3 +702,60 @@ the numbered migration, including the retained-data downgrade guard.
 DAT-101 stays open. Original and normalized artifacts still need the same
 production backup and integrity inventory before route registration,
 public-contract composition, release-image and S-503 UI acceptance.
+
+## Original source files in the dataset snapshot
+
+Schema 60 now registers the receipt. Its next owner-side requirement is to
+include both the retained CSV/Parquet original and normalized JSONL in the
+same production file inventory. PostgreSQL's [logical dump](https://www.postgresql.org/docs/18/backup-dump.html)
+reconstructs database state, so application files must remain paired with its
+references under the existing stopped-runtime/installation-lock contract.
+[DVC metadata](https://doc.dvc.org/user-guide/project-structure/dvc-files)
+records artifact paths, sizes and digests separately from large cached bytes;
+this supports the existing metadata-bound copy pattern, not a DVC dependency.
+Go's [bounded reader](https://pkg.go.dev/io#LimitReader) and the existing
+snapshotio copier keep hashing/copying independent of source size.
+
+Use the existing SnapshotSource inventory with an optional original-format
+role restricted to CSV or Parquet. Derive that role from the registered
+receipt joined to its exact six-field draft scope, never from a filename or
+client path. Validate the report's normalized size/hash against the draft
+before adding its original size/hash. Require one normalized and at most one
+original role per object. Both roles count toward existing file/byte limits.
+The operator inventory remains installation/tenant scoped, as its stopped
+store and logical backup already are; user report reads retain current
+workspace and local-cell authorization. No second file authority is added.
+
+A snapshot containing an original uses file-manifest version 2. Legacy
+JSONL-only exports retain version 1, and the new reader accepts them unchanged.
+The store namespace marker stays version 1. The strict older reader will
+refuse the new manifest instead of restoring only half the receipt. Reject
+version-1 manifests with originals, unknown roles, duplicate/orphan roles and
+any original whose paired normalized source is missing. Import must compare
+the entire reference inventory with the restored database before writing to
+the destination. Startup integrity must independently verify both file roles.
+
+This reuses the current Go BSD-3-Clause, pgx MIT, PostgreSQL License and
+Apache-2.0 PyArrow components and the generated CC0 fixtures already reviewed
+above. No dependency, model, dataset, service, migration or runtime download
+is added. Commercial, redistribution and offline obligations remain unchanged.
+DVC is a primary-source comparison only and is not installed or redistributed.
+
+Reject copying originals as an unreferenced supplemental archive: it would
+leave ordinary backup/readiness incomplete. Do not infer receipt identity
+from file extensions, adopt unknown orphan files, fabricate reports for old
+drafts, or change the store namespace to version the transfer manifest.
+See [ADR 0071](../decisions/0071-version-dataset-snapshots-with-original-sources.md).
+
+Acceptance must cover actual CSV and locked-PyArrow Parquet import, ordinary
+snapshot export, logical database restore, original and normalized file
+restore, re-login and identical authorized report read. Preserve legacy JSONL
+and its version-1 codec. Missing or same-size altered originals/normalized
+files must refuse readiness/export/import and leave an unverified restore
+destination untouched. Changed/missing receipt metadata must refuse import
+of the old bound snapshot. Pure controls cover role/version validation,
+counts/limits, symlinks, and metadata-to-file hash binding. All hashing and
+copying remain streamed; no source body is materialized by the product.
+The existing small synthetic fixture may read its own bytes for assertions.
+Production routes, release image and S-503 UI stay open until their owners
+complete the installed path; this increment must not tick DAT-101 alone.
