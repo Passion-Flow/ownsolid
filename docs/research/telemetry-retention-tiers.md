@@ -538,3 +538,22 @@ or subsequent fault phase ran. Preserve those original logs and requalify in
 a new single-instance window with a complete verified client, current raw
 window and exact product provenance. No metrics or logs enter PostgreSQL;
 the selected database still stores only authority and diagnostic audits.
+
+The complete target ELF has also been received on Linux and independently
+matched to the declared 10,505,478 bytes and SHA-256 above. Static inspection
+confirmed x86-64, no ELF interpreter, Go 1.27.3, CGO disabled and trimpath. The
+reception record SHA-256 is
+0c986141f98c7276f962a23a1d6d05450a2511c55e26a437e70cca586079f1c8;
+it binds both source files and Mac proof
+8f7c695ec66af39dce486aa49a96f17a0c6ece9dccbd48358851b99e413b7bd7.
+A partial transfer is not an executable candidate.
+
+A separate Linux-native client attempt acquired the actual two shared locks,
+but exited at the unchanged 2,048-MiB MemFree guard with 1,837 MiB before any
+compiler or test started. No Linux seven-test pass is claimed. Artifact reception,
+client self-testing and installed API qualification are separate boundaries;
+recompiling an identical client cannot establish the installed product's
+provenance or behavior. A new installed qualification still needs the exact
+Control source/image/SQL identity, current scoped raw inputs and a fresh issued
+session in its own file, with one exclusive driver. Retain the expired instance's
+inputs, issued-cookie file and indeterminate counter proofs separately.
