@@ -2634,5 +2634,6 @@
   "services.gateway.description.goneDetail": "模型可能已被移除，或服务版本已变更。草稿已保留；请关闭表单并检查模型。",
   "services.gateway.description.denied": "当前无法保存。你仍可复制草稿；请检查权限和模型状态后再试。",
   "services.gateway.description.notReady": "当前服务版本尚不支持编辑模型说明，请先升级控制平面。",
-  "portalModels.refreshUnavailable": "模型列表未能刷新"
+  "portalModels.refreshUnavailable": "模型列表未能刷新",
+  "services.gateway.description.undoConflict": "说明已再次修改，请打开“编辑说明”查看。"
 }

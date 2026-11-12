@@ -2634,5 +2634,6 @@
   "services.gateway.description.goneDetail": "This model may have been removed or the service version changed. Your draft is kept; close this form and check the model.",
   "services.gateway.description.denied": "Saving is unavailable. Your draft remains here to copy; check your access and the model before trying again.",
   "services.gateway.description.notReady": "Description editing requires a service version that includes model descriptions. Upgrade the control plane first.",
-  "portalModels.refreshUnavailable": "The model list could not refresh"
+  "portalModels.refreshUnavailable": "The model list could not refresh",
+  "services.gateway.description.undoConflict": "Description changed again. Review it in Edit description."
 }

@@ -584,6 +584,10 @@ so failed writes and revision conflicts never replace the draft. Reuse
 native HTML Dialog for focus containment, Escape and trigger restoration,
 as specified by [WAI-ARIA's modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/).
 Do not nest dialogs. The dialog's one primary action is Save description.
+Disable backdrop dismissal for this form, as required by the design
+surface table for unsaved input. Keep Escape and Cancel as explicit exits.
+Check a real outside click with a changed draft before testing Escape and
+focus restoration; a modal that merely looks correct can still lose input.
 
 Send the dedicated typed Admin request with the alias/workspace from the
 surrounding server resource, the description revision and a UUID intent.
@@ -690,3 +694,30 @@ has text as well as color. The narrow description and request ID wrap
 inside their containers. Neither screen claims a price or a working
 playground. Actual same-source installed Console edit/clear/retry and
 Portal read, including database evidence, remain open.
+
+The Undo intent also separates applied and current revisions. If the
+restore committed, its answer was lost, and a later administrator edited
+the text, replay must describe the newer current text instead of the
+generic Change undone confirmation. Let an Undo handler return a localized
+completion message when its server result needs this distinction; keep the
+existing confirmation for handlers returning no message. A transient failed Undo
+still retains its retry and intent. Avoid showing a second Toast inside
+the handler: the provider's later completion would overwrite that message.
+Verify this sequence through the browser against a pinned old build as
+well as the corrected build. Register the editor, conflicting/reviewed
+form and Portal description/refusal in the shared page-state inventory,
+so theme, keyboard and catalog checks keep covering them after this change.
+
+A revision-refused Undo cannot succeed by resending its stale revision.
+Keep the newer text and direct the person to Edit description to review
+it, rather than offering a futile retry. Transient failures retain the
+same Undo intent and retry. Never rebase an Undo automatically onto a
+later writer's revision.
+
+Review latest uses the existing scoped alias detail GET, not a scan of
+the paginated catalogue. The detail contract returns the same paired
+fields and the real permission/missing-resource problems. This keeps
+conflict recovery bounded to one alias even in a large workspace and
+avoids treating a truncated list as a missing alias. Keep the read-failure
+regression on that exact detail request; background catalogue reads stay
+independent of the editor's draft.

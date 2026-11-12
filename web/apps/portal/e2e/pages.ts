@@ -120,6 +120,44 @@ export const portalPages: readonly PageState[] = [
     },
   },
   {
+    name: 'a model description in its drawer',
+    path: '/models',
+    open: async (page, control) => {
+      publishModels(control);
+      control.aliases = [
+        {
+          ...deploymentAlias,
+          description: 'Review answers with a person.',
+          description_revision: 2,
+        },
+      ];
+      await openModels(page, control);
+      await page.getByRole('button', { name: 'Show support-chat' }).click();
+      await page.getByRole('dialog').getByText('Review answers with a person.').waitFor();
+    },
+  },
+  {
+    name: 'model catalogue permission refused',
+    path: '/models',
+    open: async (page, control) => {
+      await page.route('**/distribution/aliases?*', (route) =>
+        route.fulfill({
+          status: 403,
+          contentType: 'application/problem+json',
+          body: JSON.stringify({
+            type: 'about:blank',
+            title: 'ACCESS_DENIED',
+            status: 403,
+            code: 'ACCESS_DENIED',
+            request_id: '6f1c7a1e-0000-4000-8000-0000000000ff',
+          }),
+        }),
+      );
+      await openModels(page, control);
+      await page.getByText('You do not have access', { exact: true }).waitFor();
+    },
+  },
+  {
     name: 'models whose facts could not be read',
     path: '/models',
     open: async (page, control) => {

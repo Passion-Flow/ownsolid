@@ -1,7 +1,7 @@
 // Catalogue text has its own revision. A stale save never discards the administrator's draft.
-import { editAliasDescription, isProblem, listModelAliases } from '@ownsolid/api';
+import { editAliasDescription, getModelAlias, isProblem } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
-import { everyPage, gatewayKeys, pageSize, ReasonField, useIntentKeys } from '@ownsolid/shell';
+import { gatewayKeys, ReasonField, useIntentKeys } from '@ownsolid/shell';
 import { Button, CopyText, Dialog, Notice, ProblemNotice, useToast } from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -37,13 +37,9 @@ export function AliasDescriptionDialog({
   const refresh = () =>
     client.invalidateQueries({ queryKey: gatewayKeys.aliases(alias.workspace_id) });
   const readLatest = useMutation({
-    mutationFn: () =>
-      everyPage((cursor) =>
-        listModelAliases('admin', alias.workspace_id, { limit: pageSize, cursor }),
-      ),
-    onSuccess: (page) => {
-      const current = page.items.find((item) => item.id === alias.id);
-      if (!current || !hasAliasDescription(current)) {
+    mutationFn: () => getModelAlias('admin', alias.workspace_id, alias.id),
+    onSuccess: (current) => {
+      if (!hasAliasDescription(current)) {
         setGone(true);
         return;
       }
@@ -79,9 +75,21 @@ export function AliasDescriptionDialog({
         undo:
           current && answer.description === '' && basis.description !== ''
             ? () =>
-                editAliasDescription(alias.workspace_id, alias.id, undoBody, undoKey).finally(
-                  refresh,
-                )
+                editAliasDescription(alias.workspace_id, alias.id, undoBody, undoKey)
+                  .then((restored) =>
+                    t(
+                      restored.description_revision === restored.applied_description_revision
+                        ? 'action.undone'
+                        : 'services.gateway.description.newer',
+                    ),
+                  )
+                  .catch((error: unknown) => {
+                    if (isProblem(error, 'VERSION_CONFLICT')) {
+                      return t('services.gateway.description.undoConflict');
+                    }
+                    throw error;
+                  })
+                  .finally(refresh)
             : undefined,
       });
       onClose();
@@ -124,6 +132,7 @@ export function AliasDescriptionDialog({
   return (
     <Dialog
       open
+      dismissOnBackdrop={false}
       onClose={onClose}
       title={t('services.gateway.description.edit')}
       description={t('services.gateway.description.context', { name: alias.name })}
