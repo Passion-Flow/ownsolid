@@ -232,6 +232,8 @@ export interface ControlPlane
   notificationPolls: boolean[];
   /** Fails `/runtime-config.json` with a dropped connection while true. */
   unreachable: boolean;
+  /** The validated runtime timeout used by transport-failure browser flows. */
+  requestTimeoutMilliseconds: number;
   /** Answers the next sign-in with this failure instead of checking credentials. */
   nextSignIn: ScriptedProblem | null;
   /** Fails sign-out with this problem while set. */
@@ -330,6 +332,7 @@ export async function mockControlPlane(
     audience,
     sessionWorkspace: workspace,
     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
+    requestTimeoutMilliseconds: runtimeConfig.request_timeout_milliseconds,
     signedIn: false,
     user: { ...user },
     password: account.password,
@@ -392,6 +395,7 @@ export async function mockControlPlane(
       ? route.abort('connectionrefused')
       : data(route, {
           ...runtimeConfig,
+          request_timeout_milliseconds: state.requestTimeoutMilliseconds,
           default_locale: state.tenantSettings.default_locale,
           ui: { ...runtimeConfig.ui, poll_milliseconds: state.pollMilliseconds },
         }),

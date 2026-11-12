@@ -1,6 +1,6 @@
 // The audit trail: what happened, who did it and how it ended, from a shareable link. Action names
 // stay the codes an auditor quotes (docs/research/audit-trail-page.md).
-import { isProblem, listAuditEvents, type AuditEvent, type AuditOutcome } from '@ownsolid/api';
+import { listAuditEvents, type AuditEvent, type AuditOutcome } from '@ownsolid/api';
 import { useI18n, type TranslationKey } from '@ownsolid/i18n';
 import {
   ColumnChooser,
@@ -22,7 +22,6 @@ import {
   EmptyState,
   FilterSelect,
   Notice,
-  ProblemNotice,
   SearchField,
   Skeleton,
   StatusPill,
@@ -34,11 +33,12 @@ import {
   Tr,
   type StatusTone,
 } from '@ownsolid/ui';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { ScrollText, X } from 'lucide-react';
 import { useMemo } from 'react';
 import { auditEventSearch, customRange } from './audit-link.ts';
 import { ActionName, TargetName, useAuditNames } from './audit-names.tsx';
+import { AuditReadFailure, useAuditRead } from './audit-read.tsx';
 
 const categories = [
   'account',
@@ -317,16 +317,16 @@ export function AuditPage() {
   const badActor = actor !== undefined && !identifier.test(actor);
   const badWindow = custom ? windowProblem(from ?? '', to ?? '') : null;
 
-  const events = useInfiniteQuery({
+  const events = useAuditRead({
     queryKey: ['audit', category, outcome, actor, request, range, from, to],
-    queryFn: ({ pageParam, signal }) => {
+    read: (cursor, signal) => {
       // The clock is read here, once per first page; the cursor carries the window after that.
       const end = new Date();
       const hours = ranges[range] ?? 0;
       return listAuditEvents(
         {
           limit,
-          cursor: pageParam ?? undefined,
+          cursor: cursor ?? undefined,
           category,
           outcome: outcome as AuditOutcome | undefined,
           actorUserId: actor,
@@ -337,8 +337,6 @@ export function AuditPage() {
         { signal },
       );
     },
-    initialPageParam: null as string | null,
-    getNextPageParam: (last) => last.next_cursor,
     enabled: !badRequest && !badActor && badWindow === null,
   });
   const items = useMemo(
@@ -369,14 +367,9 @@ export function AuditPage() {
       </div>
     );
   } else if (events.error && items.length === 0) {
-    body = isProblem(events.error) ? (
-      <ProblemNotice
-        problem={events.error}
-        onRetry={() => {
-          void events.refetch();
-        }}
-      />
-    ) : null;
+    body = (
+      <AuditReadFailure error={events.error} busy={events.isFetching} onRetry={events.readAgain} />
+    );
   } else if (items.length === 0) {
     body = (
       <Card>
@@ -394,13 +387,21 @@ export function AuditPage() {
   } else {
     body = (
       <>
+        {events.error ? (
+          <AuditReadFailure
+            error={events.error}
+            partial
+            busy={events.isFetching}
+            onRetry={events.readAgain}
+          />
+        ) : null}
         <Rows items={items} list={list} />
-        {events.hasNextPage ? (
+        {events.hasNextPage && !events.error ? (
           <Button
             className="mt-4"
-            disabled={events.isFetchingNextPage}
+            disabled={events.isFetching}
             onClick={() => {
-              void events.fetchNextPage();
+              void events.fetchNextPage({ cancelRefetch: false });
             }}
           >
             {t('audit.loadMore')}

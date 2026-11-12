@@ -23,6 +23,14 @@ export interface ProblemNoticeProps {
   title?: string | undefined;
   /** A next step that depends on where the failure happened. */
   detail?: string | undefined;
+  /** Operation-specific recovery, honoring Retry-After instead of the generic reload/retry. */
+  recovery?:
+    | {
+        label: string;
+        onClick: () => void;
+        disabled?: boolean;
+      }
+    | undefined;
   className?: string | undefined;
 }
 
@@ -71,7 +79,15 @@ export function ProblemNotice(props: ProblemNoticeProps) {
   return <Explained key={`${code}:${requestId}:${String(retryAfterSeconds)}`} {...props} />;
 }
 
-function Explained({ problem, onRetry, titleAs, title, detail, className }: ProblemNoticeProps) {
+function Explained({
+  problem,
+  onRetry,
+  titleAs,
+  title,
+  detail,
+  recovery,
+  className,
+}: ProblemNoticeProps) {
   const { t, format, knows } = useI18n();
   const wait = useWait(problem.retryAfterSeconds);
   const base = `problem.${problem.code}`;
@@ -80,7 +96,13 @@ function Explained({ problem, onRetry, titleAs, title, detail, className }: Prob
   const known = knows(titleKey) && knows(detailKey);
   const reload = fixedByReload.has(problem.code);
   let action = null;
-  if (reload) {
+  if (recovery) {
+    action = (
+      <Button size="sm" disabled={wait > 0 || recovery.disabled} onClick={recovery.onClick}>
+        {recovery.label}
+      </Button>
+    );
+  } else if (reload) {
     action = (
       <Button
         size="sm"

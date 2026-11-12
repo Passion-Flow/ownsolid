@@ -103,6 +103,37 @@
      ]
     }
    ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Audit read not confirmed"
+    }
+   ],
+   "data": {
+    "id": "audit-read-not-confirmed"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Successful reads of this trail and a resource's Activity also record access. If an answer is lost,\nthe read may already be recorded. Keep the request ID when one is shown. Read again starts a new\nrequest. The page does not retry by itself when you return to the tab or the connection comes back."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "When another page cannot load, the events already read stay visible with a warning that the result\nis incomplete. Read again retries that page. If its cursor is no longer valid, Read from the start\nopens a new first page; the old pages stay until that read succeeds. A permission refusal removes\nthe earlier events from view. Ask an administrator to check access before trying a new read."
+    }
+   ]
   }
  ]
 }
