@@ -59,6 +59,35 @@ or installing packages/extensions from the internet at runtime. None proves
 Workspace isolation, revocation or positive process termination. An SSH
 port-forward is useful for an operator prototype, but is not the Portal flow.
 
+## Offline defaults must be manufactured explicitly
+
+The [JupyterLab announcement controls](https://jupyterlab.readthedocs.io/en/stable/user/announcements.html)
+provide separate server and browser settings. The candidate offline profile
+must disable the announcements frontend plugin and select the documented
+jupyterlab.NeverCheckForUpdate server class. News are opt-in upstream;
+the product profile must still remove external news/update paths rather
+than depending on an individual browser's remembered choice.
+
+The [extension manager](https://jupyterlab.readthedocs.io/en/stable/user/extensions.html)
+defaults to the PyPI implementation. Select the offline listing behavior
+and preserve only packaged, reviewed extensions. Upstream's
+[ListModel contract](https://jupyterlab.readthedocs.io/en/latest/api/classes/extensionmanager.ListModel-1.html)
+also permits external metadata such as author avatars after consent,
+including with a read-only manager. Selecting readonly alone is therefore
+insufficient evidence of zero external browser requests. Freeze the relevant
+plugins/settings and verify a browser network trace, including reconnect,
+help, math rendering and opening extension controls, with egress denied.
+The server installation and configuration remain read-only to user kernels.
+
+The [server configuration reference](https://jupyter-server.readthedocs.io/en/stable/other/full-config.html)
+states that custom_display_url can append an enabled token automatically.
+It is not a redaction control. Before the prototype runs, prove that generated
+credentials enter through private files and appear in no command, URL,
+server banner or retained log. Authentication and CSRF remain enforced.
+Record browser traffic, effective settings, original notices and the
+closed artifact inventory alongside the prototype outcome. These settings
+have been researched; no Jupyter process or dependency is installed here.
+
 ## Candidate licences and release closure
 
 | Candidate or comparison | Original licence | Commercial, redistribution and offline implications |
