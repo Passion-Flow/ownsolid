@@ -5,6 +5,7 @@ package monitoring_test
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -277,12 +279,18 @@ func startHistoryVM(t *testing.T, ctx context.Context, retention string, flags .
 func startHistoryVMAt(t *testing.T, ctx context.Context, retention, scheme string, flags ...string) (string, func() int64, func()) {
 	t.Helper()
 	dir := filepath.Join(t.TempDir(), "data")
+	process, disk := startHistoryVMIn(t, ctx, dir, retention, scheme, flags...)
+	return process.origin, disk, process.stop
+}
+
+func startHistoryVMIn(t *testing.T, ctx context.Context, dir, retention, scheme string, flags ...string) (monitoringFixtureProcess, func() int64) {
+	t.Helper()
 	flags = append(flags, "-storageDataPath="+dir, "-retentionPeriod="+retention, "-memory.allowedBytes=192MB", "-search.disableCache")
-	origin, stop := startMonitoringFixtureProcessAt(t, ctx, scheme, "VictoriaMetrics "+retention, "OWNSOLID_TEST_VICTORIA_METRICS", flags...)
-	return origin, func() int64 {
-		stop()
+	process := launchMonitoringFixtureProcessAt(t, ctx, scheme, "VictoriaMetrics "+retention, "OWNSOLID_TEST_VICTORIA_METRICS", flags...)
+	return process, func() int64 {
+		process.stop()
 		return historyAllocatedBytes(t, dir)
-	}, stop
+	}
 }
 
 func historyAllocatedBytes(t *testing.T, dir string) int64 {
@@ -305,6 +313,18 @@ func startMonitoringFixtureProcess(t *testing.T, ctx context.Context, name, envi
 }
 
 func startMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme, name, environment string, flags ...string) (string, func()) {
+	t.Helper()
+	process := launchMonitoringFixtureProcessAt(t, ctx, scheme, name, environment, flags...)
+	return process.origin, process.stop
+}
+
+type monitoringFixtureProcess struct {
+	origin, binarySHA256 string
+	argv                 []string
+	stop                 func()
+}
+
+func launchMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme, name, environment string, flags ...string) monitoringFixtureProcess {
 	t.Helper()
 	binary := os.Getenv(environment)
 	if !filepath.IsAbs(binary) {
@@ -346,6 +366,26 @@ func startMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme, 
 		t.Logf("stopped %s on %s", name, address)
 	})
 	t.Cleanup(stop)
+	// Bind fixture qualification to the executed child, rather than a caller's
+	// assertion about its intended flags or a flag's upstream default.
+	commandLine, e := os.ReadFile(fmt.Sprintf("/proc/%d/cmdline", cmd.Process.Pid))
+	if e != nil || len(commandLine) == 0 || commandLine[len(commandLine)-1] != 0 {
+		t.Fatalf("%s actual command line unavailable: %v", name, e)
+	}
+	argv := strings.Split(string(commandLine[:len(commandLine)-1]), "\x00")
+	if !slices.Equal(argv, cmd.Args) {
+		t.Fatalf("%s actual command line differs from the executed arguments", name)
+	}
+	executable, e := os.Open(fmt.Sprintf("/proc/%d/exe", cmd.Process.Pid))
+	if e != nil {
+		t.Fatal(e)
+	}
+	digest := sha256.New()
+	_, readErr := io.Copy(digest, executable)
+	closeErr := executable.Close()
+	if readErr != nil || closeErr != nil {
+		t.Fatalf("%s executable identity: %v / %v", name, readErr, closeErr)
+	}
 	origin := scheme + "://" + address
 	deadline, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
@@ -356,14 +396,14 @@ func startMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme, 
 			resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
 				t.Logf("started %s on %s", name, address)
-				return origin, stop
+				return monitoringFixtureProcess{origin: origin, binarySHA256: fmt.Sprintf("%x", digest.Sum(nil)), argv: argv, stop: stop}
 			}
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 	logText, _ := os.ReadFile(log)
 	t.Fatalf("%s startup:\n%s", name, logText)
-	return "", nil
+	return monitoringFixtureProcess{}
 }
 
 func fixtureRequest(t *testing.T, ctx context.Context, method, path string, body io.Reader) {

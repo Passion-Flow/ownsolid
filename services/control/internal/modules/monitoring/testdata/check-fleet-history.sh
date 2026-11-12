@@ -55,7 +55,7 @@ export PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE="$work/dsn"
 export PROJECT_ONE_TEST_DSN_FILE="$work/dsn"
 export PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA="m20_repository_$(tr -d '-' </proc/sys/kernel/random/uuid)"
 cd services/control/internal/modules/monitoring
-nsenter --target "$pid" --net unshare --pid --fork --kill-child bash -ec '
+nsenter --target "$pid" --net unshare --pid --fork --kill-child --mount-proc bash -ec '
     ip link set lo up
     test "$(ip -o link show | wc -l)" -eq 1
     ip -brief address

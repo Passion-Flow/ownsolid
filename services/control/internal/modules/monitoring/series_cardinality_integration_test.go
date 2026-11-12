@@ -14,6 +14,8 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"path/filepath"
+	"reflect"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -30,7 +32,7 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
 		t.Fatal("cardinality qualification requires real isolated PostgreSQL")
 	}
 	g := setup(t, false)
-	source, diskBytes, stop := startHistoryVM(t, g.ctx, "7d", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3")
+	source, diskBytes, stop := startHistoryVM(t, g.ctx, "7d", "-disablePerDayIndex=false", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3")
 	target, _ := url.Parse(source)
 	proxy := httputil.NewSingleHostReverseProxy(target)
 	var reads atomic.Int32
@@ -80,17 +82,7 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
 
 	var samples bytes.Buffer
 	emit := func(metric, tenant, workspace, node string) {
-		labels := map[string]string{"__name__": metric, "workspace_id": workspace}
-		if tenant != "" {
-			labels["tenant_id"] = tenant
-		}
-		if node != "" {
-			labels["node_id"] = node
-		}
-		value := map[string]any{"metric": labels, "values": []int{1}, "timestamps": []int64{stamp.UnixMilli()}}
-		if err := json.NewEncoder(&samples).Encode(value); err != nil {
-			t.Fatal(err)
-		}
+		writeCardinalityFixtureSample(t, &samples, stamp, metric, tenant, workspace, node)
 	}
 	for index := range 10000 {
 		emit(exact.Metric, g.f.Tenant, g.f.Workspace, uuid.NewSHA1(uuid.NameSpaceOID, []byte(fmt.Sprintf("ownsolid-cardinality-%d", index))).String())
@@ -208,6 +200,126 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
 	}
 	stop()
 	t.Logf("native index allocated bytes after graceful shutdown: %d; fixture is one UTC day, not the seventeen-million-series load", diskBytes())
+	t.Run("daily-index-profile", func(t *testing.T) {
+		qualifyDailyCardinalityFixture(t, g, other, foreignTenant, foreign)
+	})
+}
+
+func writeCardinalityFixtureSample(t *testing.T, samples *bytes.Buffer, stamp time.Time, metric, tenant, workspace, node string) {
+	t.Helper()
+	labels := map[string]string{"__name__": metric, "workspace_id": workspace}
+	if tenant != "" {
+		labels["tenant_id"] = tenant
+	}
+	if node != "" {
+		labels["node_id"] = node
+	}
+	value := map[string]any{"metric": labels, "values": []int{1}, "timestamps": []int64{stamp.UnixMilli()}}
+	if err := json.NewEncoder(samples).Encode(value); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func qualifyDailyCardinalityFixture(t *testing.T, g *story, other, foreignTenant, foreign string) {
+	t.Helper()
+	first, second, empty := cardinalityFixtureDays(time.Now())
+	cpu, app := "ownsolid_daily_cpu", "ownsolid_daily_app"
+	nodeA, shared, nodeB := uuid.NewString(), uuid.NewString(), uuid.NewString()
+	var samples bytes.Buffer
+	emit := func(day time.Time, metric, tenant, workspace, node string) {
+		writeCardinalityFixtureSample(t, &samples, day.Add(12*time.Hour), metric, tenant, workspace, node)
+	}
+	emit(first, cpu, g.f.Tenant, g.f.Workspace, nodeA)
+	emit(first, cpu, g.f.Tenant, g.f.Workspace, shared)
+	emit(second, cpu, g.f.Tenant, g.f.Workspace, nodeB)
+	emit(second, app, g.f.Tenant, g.f.Workspace, shared)
+	emit(second, app, g.f.Tenant, g.f.Workspace, "")
+	for _, day := range []time.Time{first, second} {
+		emit(day, cpu, g.f.Tenant, other, uuid.NewString())
+		emit(day, cpu, foreignTenant, foreign, uuid.NewString())
+		emit(day, cpu, foreignTenant, g.f.Workspace, uuid.NewString())
+		emit(day, cpu, "", g.f.Workspace, uuid.NewString())
+	}
+	emit(second, cpu, g.f.Tenant, other, uuid.NewString())
+	flags := []string{"-disablePerDayIndex=false", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3"}
+	dir := filepath.Join(t.TempDir(), "daily")
+	original := g.config.SeriesCardinality
+	defer func() { g.config.SeriesCardinality = original; g.rebuild() }()
+	for _, stage := range []string{"ingested", "restarted"} {
+		process, disk := startHistoryVMIn(t, g.ctx, dir, "7d", "http", flags...)
+		if err := admitDailyCardinalityFixture(process.argv); err != nil {
+			t.Fatal("actual daily source profile refused before product binding", err)
+		}
+		t.Logf("%s daily fixture admitted from actual child argv: binary SHA-256 %s; disablePerDayIndex=false; UTC days %s / %s; empty %s", stage, process.binarySHA256, first.Format("2006-01-02"), second.Format("2006-01-02"), empty.Format("2006-01-02"))
+		if stage == "ingested" {
+			fixtureRequest(t, g.ctx, http.MethodPost, process.origin+"/api/v1/import", bytes.NewReader(samples.Bytes()))
+			fixtureRequest(t, g.ctx, http.MethodGet, process.origin+"/internal/force_flush", nil)
+		}
+		for _, day := range []time.Time{first, second} {
+			count, otherCount, appCount := uint64(2), uint64(1), uint64(0)
+			if day.Equal(second) {
+				count, otherCount, appCount = 1, 2, 2
+			}
+			waitForCardinalityFixture(t, g.ctx, process.origin, day, []cardinalityFixtureScope{
+				{cpu, g.f.Tenant, g.f.Workspace, count}, {app, g.f.Tenant, g.f.Workspace, appCount}, {cpu, g.f.Tenant, other, otherCount},
+				{cpu, foreignTenant, foreign, 1}, {cpu, foreignTenant, g.f.Workspace, 1}, {cpu, "", g.f.Workspace, 1},
+			})
+		}
+		g.config.SeriesCardinality.RawOrigin = process.origin
+		g.rebuild()
+		checks := []struct {
+			day               time.Time
+			workspace, metric string
+			total             uint64
+			metrics, nodes    map[string]uint64
+		}{
+			{first, g.f.Workspace, "", 2, map[string]uint64{cpu: 2}, map[string]uint64{nodeA: 1, shared: 1}},
+			{second, g.f.Workspace, "", 3, map[string]uint64{cpu: 1, app: 2}, map[string]uint64{nodeB: 1, shared: 1}},
+			{first, g.f.Workspace, cpu, 2, map[string]uint64{cpu: 2}, map[string]uint64{nodeA: 1, shared: 1}},
+			{second, g.f.Workspace, cpu, 1, map[string]uint64{cpu: 1}, map[string]uint64{nodeB: 1}},
+			{first, g.f.Workspace, app, 0, map[string]uint64{}, map[string]uint64{}},
+			{second, g.f.Workspace, app, 2, map[string]uint64{app: 2}, map[string]uint64{shared: 1}},
+			{empty, g.f.Workspace, "", 0, map[string]uint64{}, map[string]uint64{}},
+		}
+		for _, check := range checks {
+			requestID := uuid.NewString()
+			out, err := g.s.GetSeriesCardinality(g.ctx, g.admin, check.workspace, monitoring.SeriesCardinalityQuery{Date: check.day, Metric: check.metric}, requestID)
+			metrics, nodes := map[string]uint64{}, map[string]uint64{}
+			for _, rank := range out.Metrics {
+				metrics[rank.MetricName] = rank.SeriesCount
+			}
+			for _, rank := range out.Nodes {
+				nodes[rank.NodeID] = rank.SeriesCount
+			}
+			if err != nil || out.TotalSeries != check.total || out.Date != check.day.Format("2006-01-02") || out.WorkspaceID != check.workspace || out.RankLimit != 3 || out.Metrics == nil || out.Nodes == nil || len(metrics) != len(out.Metrics) || len(nodes) != len(out.Nodes) || !reflect.DeepEqual(metrics, check.metrics) || !reflect.DeepEqual(nodes, check.nodes) {
+				t.Fatalf("%s daily product projection for %s/%q: %+v %v", stage, check.day.Format("2006-01-02"), check.metric, out, err)
+			}
+			if g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot' AND request_id=$1 AND target_id=$2", requestID, check.workspace) != 1 {
+				t.Fatal("daily product projection lacks its committed scope audit")
+			}
+		}
+		process.stop()
+		t.Logf("%s two-day fixture allocated bytes after graceful stop: %d; five selected series, not fleet sizing", stage, disk())
+	}
+	// Deliberately start the unsupported native mode in a separate data directory.
+	// The fixture admission must refuse its observed argv before product binding.
+	flags[0] = "-disablePerDayIndex=true"
+	control, disk := startHistoryVMIn(t, g.ctx, filepath.Join(t.TempDir(), "global"), "7d", "http", flags...)
+	if err := admitDailyCardinalityFixture(control.argv); err == nil {
+		t.Fatal("disabled actual source profile was admitted")
+	}
+	t.Logf("disabled-index control refused by fixture admission: actual binary SHA-256 %s; disablePerDayIndex=true; not an installed-product admission result", control.binarySHA256)
+	fixtureRequest(t, g.ctx, http.MethodPost, control.origin+"/api/v1/import", bytes.NewReader(samples.Bytes()))
+	fixtureRequest(t, g.ctx, http.MethodGet, control.origin+"/internal/force_flush", nil)
+	for _, day := range []time.Time{first, second, empty} {
+		waitForCardinalityFixture(t, g.ctx, control.origin, day, []cardinalityFixtureScope{
+			{cpu, g.f.Tenant, g.f.Workspace, 3}, {app, g.f.Tenant, g.f.Workspace, 2},
+			{cpu, g.f.Tenant, other, 3}, {cpu, foreignTenant, foreign, 2},
+			{cpu, foreignTenant, g.f.Workspace, 2}, {cpu, "", g.f.Workspace, 2},
+		})
+	}
+	control.stop()
+	t.Logf("disabled-index control allocated bytes after graceful stop: %d; native global counts are not daily counts", disk())
 }
 
 // The wrapper observes a real final audit insert. It provokes a real constraint

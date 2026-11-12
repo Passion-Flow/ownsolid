@@ -571,3 +571,45 @@ These are source-based preconditions and planned native controls, not a recorded
 failure of an installed product or a new runtime qualification. The existing
 VictoriaMetrics Apache-2.0 and Go BSD-3-Clause dependencies remain unchanged;
 no model, dataset or package is added.
+
+## Executable daily-index fixture preparation
+
+The owned native fixture will keep its existing four entry points and reuse
+its PostgreSQL setup, native startup, import and bounded visibility helpers.
+For daily-cardinality qualification, bind admission to the actual child command
+line read from /proc and compare it with the executed argv. Require an explicit
+single -disablePerDayIndex=false plus the qualified scan, rank and duration
+limits; reject disabled, missing, duplicate or ambiguous settings. This is a
+test-fixture boundary, not the missing installed-product source admission.
+The product still needs a verified installation/source identity binding before
+publication; a caller-supplied boolean is insufficient.
+
+Use two completed UTC days in the same month, selecting the previous month's
+last days at month start. Keep the samples inside seven-day retention, use
+distinct daily series and check exact totals, metric/node ranks, scope
+interference, an empty day and persistence after a graceful same-profile
+restart. Start a separate disabled-per-day-index control with the same data;
+reject it at fixture admission before any product binding, then observe its
+broader native counts directly. Do not assert that the native API itself
+rejects its documented global-index mode. The primary upstream source is the
+[per-day/global index switch](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/storage/index_db.go)
+and the [native flag wiring](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmstorage/main.go).
+
+Pure helper tests will cover month/year/leap-day and midnight selection and
+invalid actual argv profiles. Cross-compilation only proves the Linux native
+fixture builds. Neither compilation nor helper units prove native persistence,
+daily counts or installed-product admission. Native execution remains pending
+the shared Linux resource window. No dependency, model or dataset is added;
+the existing upstream and Go licenses above remain applicable.
+
+The shared native process helper now checks /proc child argv against exec's
+arguments and fingerprints the running executable. The existing isolated PID
+namespace therefore mounts its own procfs with unshare --mount-proc; leaving a
+host procfs mounted would resolve namespace-local child PIDs incorrectly.
+The [partition definition](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/storage/partition.go#L88-L91)
+uses a monthly YYYY_MM name. Calendar helper tests protect same-partition
+selection at UTC midnight, month/year changes and leap February. The extra
+native stages run sequentially with the original 192 MB store limit, 7-day
+retention, 10,000-series scan cap, 5-second native request limit and three ranks.
+They preserve the existing 110-second cardinality entry and 90-second story
+context; a missed deadline is a failure, not permission to extend the window.
