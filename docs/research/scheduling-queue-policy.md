@@ -242,7 +242,7 @@ change adds no dependency, model, data set, production table or runtime download
 
 ### Component qualification
 
-Source 5ee946b6 passed 45 real PostgreSQL cases and 66 top-level tests across
+Source 62c9dd09 on base 726f2149 passed 45 real PostgreSQL cases and 66 top-level tests across
 scheduling, its HTTP component and cell adapter, with Go race instrumentation,
 PostgreSQL 18.6 and pgvector 0.8.7 on Linux amd64. The network namespace had no
 default IPv4 or IPv6 route; the database had no container network or host port.
@@ -255,9 +255,11 @@ domain held exactly two advisory lock tags: tenant and selected workspace.
 This is a lock-allocation result, not SCH-111 node/job admission latency evidence.
 
 The same source passed the complete Control module suite, make check and make
-build on macOS arm64, and the complete Control module suite and make check on
-Linux amd64. Both used Go 1.27.3 and offline dependencies. Linux build admission
-was deferred by shared-host I/O pressure; it is not recorded as a completed run.
+build on Linux amd64 with Go 1.27.3 and offline dependencies. The module source
+is byte-identical to the earlier 5ee946b6 qualification except its README.
+The new base changes gateway connection handling and its configuration; no
+scheduling, transaction, database, Identity or Workspace source changed.
+All component cases and required gates were repeated on the accepted base.
 
 With both protected fixture DSN variables in the module README configured:
 
