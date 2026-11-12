@@ -173,9 +173,9 @@ rank limit. Never accept tenant IDs, arbitrary selectors or focus labels.
 MetricsQL supports
 [Unicode names and escaped literals](https://docs.victoriametrics.com/victoriametrics/metricsql/).
 Build an exact __name__ matcher with a quoted string, never interpolate a
-name as an expression. Verify Unicode/escaped-name selection with native
-data before relying on that path. Also qualify metrics without node_id
-before deciding whether an unattributed node rank can be emitted.
+name as an expression. The native shape qualification below verifies Unicode/escaped-name
+selection and metrics without node_id. Preserve missing-node omission; do
+not invent an unattributed row or accept an empty node identifier.
 
 Project only the selected date, server-resolved Workspace ID, total series,
 applied rank limit, metric-name counts and node-ID counts. Preserve an
@@ -224,3 +224,30 @@ The next native service profile must measure the narrowed 10,000-series read,
 including real PostgreSQL authority and committed audit, and verify native scan
 refusal followed by that explicit narrowed retry. Installed source budgets and
 the Console's recovery guidance remain prerequisites for publishing this path.
+
+## Verified native projection shape
+
+A separate loopback-only Linux amd64 prototype used the pinned VictoriaMetrics
+1.155.0 binary (SHA-256 aca3c49816db88c0e48012772fcf2a94eb66aaccd925b35d397b8b6f7f40fb43).
+Five imported samples selected four scoped series: two CPU node series, one app
+series without node_id, and one Unicode metric name containing a quote and a
+backslash. Another tenant had the same Unicode name as a scope distractor.
+
+The unfiltered scope returned totalSeries=4 and two node ranks summing to three.
+Selecting the app metric returned totalSeries=1 and an empty focus-label rank.
+Therefore missing node identity is omitted by the native index. Product node
+ranks contain canonical node UUIDs only; preserve an empty array for an app-only
+view and never infer an unattributed count from the truncated rank remainder.
+An explicitly empty or malformed node identifier is invalid source data.
+
+Exact __name__ matchers using either escaped Unicode or raw UTF-8 literals
+returned only the one scoped Unicode metric, with its exact original name.
+A missing metric returned measured zero and empty ranks. The source's auxiliary
+label and query-usage fields remain outside the product projection.
+
+The prototype held both shared locks after memory, disk and I/O checks, and the
+native process stopped before the isolated network namespace exited. Its source
+SHA-256 was 460dcad730628d3d58f8753b1de363d3b078441cf2a1785db3490f2eb8276342;
+this five-sample shape qualification is not a scale, installed-product or
+retention benchmark. The owning Go native service profile must retain these
+cases so the product projection can be qualified without the external prototype.
