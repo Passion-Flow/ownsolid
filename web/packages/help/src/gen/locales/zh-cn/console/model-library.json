@@ -327,6 +327,45 @@
    "children": [
     {
      "type": "text",
+     "value": "上传过期时"
+    }
+   ],
+   "data": {
+    "id": "上传过期时"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "未完成的上传过期时，状态页会说明原因。“已过期”表示临时文件已删除，无法继续上传。选择“重新上传模型包”，再次选择模型包，开始一次新导入。清理仍在进行时，请先等待完成。导入历史保留原有字节数。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "使用脚本时，新导入需使用新的 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "Idempotency-Key"
+    },
+    {
+     "type": "text",
+     "value": "。重用旧键只会返回原来已过期的导入，不会创建新上传。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
      "value": "退役模型"
     }
    ],

@@ -138,4 +138,38 @@ describe('sendBundle', () => {
     ).rejects.toBeInstanceOf(ApiProblem);
     expect(calls.wait).not.toHaveBeenCalled();
   });
+  it.each([
+    { state: 'cancelled' as const, error_code: 'MODEL_IMPORT_EXPIRED' },
+    { state: 'uploading' as const, error_code: 'MODEL_IMPORT_EXPIRY_PENDING' },
+    { state: 'uploading' as const, error_code: 'MODEL_CANCELLATION_PENDING' },
+  ])('does not send or verify a closed upload: $error_code', async (closed) => {
+    const { calls } = server(4, 8);
+    await expect(
+      sendBundle(
+        new Blob([new Uint8Array(8)]),
+        { ...target(4, 8), ...closed },
+        chunk,
+        'reason',
+        new AbortController().signal,
+        vi.fn(),
+        calls,
+      ),
+    ).rejects.toMatchObject({ code: 'MODEL_IMPORT_STATE_CONFLICT' });
+    expect(calls.upload).not.toHaveBeenCalled();
+    expect(calls.verify).not.toHaveBeenCalled();
+    expect(calls.wait).not.toHaveBeenCalled();
+  });
+
+  it('does not resume an expired offset after a lost chunk response', async () => {
+    const { calls, sent } = server(0, 12, ['lost']);
+    vi.mocked(calls.read).mockResolvedValue({
+      ...target(4, 12),
+      state: 'cancelled',
+      error_code: 'MODEL_IMPORT_EXPIRED',
+    });
+    await expect(send(12, 0, calls)).rejects.toMatchObject({ code: 'MODEL_IMPORT_STATE_CONFLICT' });
+    expect(sent).toEqual([0]);
+    expect(calls.read).toHaveBeenCalledOnce();
+    expect(calls.verify).not.toHaveBeenCalled();
+  });
 });

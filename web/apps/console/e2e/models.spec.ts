@@ -7,6 +7,8 @@ import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import {
   derivedModel,
   expectAccessible,
+  expiredImport,
+  expiringImport,
   failedImport,
   mockControlPlane,
   modelCatalog,
@@ -609,3 +611,177 @@ test('explains import storage and background cleanup in Simplified Chinese', asy
   ).toContainText(chinese['models.import.published.detail']);
   await expect(page.getByRole('link', { name: chinese['models.import.openModel'] })).toBeVisible();
 });
+
+for (const [locale, messages] of [
+  ['en', english],
+  ['zh-CN', chinese],
+] as const) {
+  test(`expired import replay opens its history and a new upload uses a fresh key in ${locale}`, async ({
+    page,
+  }, info) => {
+    control.preferences.locale = locale;
+    control.modelImports = [{ ...expiredImport }];
+    control.modelImportReplay = { ...expiredImport };
+    const keys: string[] = [];
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      const path = new URL(request.url()).pathname;
+      if (request.method() === 'POST' && path.endsWith('/admin/model-imports'))
+        keys.push(request.headers()['idempotency-key'] ?? '');
+      if (/(?:chunks|complete|cancel)$/.test(path)) writes.push(path);
+    });
+    await page.setViewportSize(
+      locale === 'en' ? { width: 1440, height: 900 } : { width: 390, height: 844 },
+    );
+    async function chooseNewBundle() {
+      await page.getByTestId('model-bundle').setInputFiles(bundle());
+      await page
+        .getByLabel(messages['models.reason'], { exact: true })
+        .fill('Qualify a fresh import after expiry');
+      await page.getByRole('checkbox').check();
+      await page
+        .getByRole('button', { name: messages['models.import.submit'], exact: true })
+        .click();
+    }
+    await page.goto('/library/import');
+    await chooseNewBundle();
+    await expect(page).toHaveURL(new RegExp(`/library/imports/${expiredImport.id}$`));
+    await expect(
+      page.getByText(messages['models.import.expired.title'], { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: messages['models.import.resume.unavailable'], exact: true }),
+    ).toHaveAttribute('aria-disabled', 'true');
+    expect(writes).toEqual([]);
+    await page.reload();
+    await expect(
+      page.getByText(messages['models.import.state.expired'], { exact: true }),
+    ).toBeVisible();
+    await info.attach(`model-import-expired-${locale}`, {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    await page
+      .getByRole('link', { name: messages['models.import.expired.restart'], exact: true })
+      .click();
+    await chooseNewBundle();
+    await expect(
+      page.getByRole('link', { name: messages['models.import.openModel'], exact: true }),
+    ).toBeVisible();
+    expect(keys).toHaveLength(2);
+    expect(keys[0]).toMatch(/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/);
+    expect(keys[1]).not.toBe(keys[0]);
+    await page.goto('/library?tab=imports');
+    const old = page
+      .getByRole('row')
+      .filter({ has: page.getByRole('link', { name: expiredImport.name, exact: true }) })
+      .filter({ hasText: messages['models.import.state.expired'] });
+    await expect(old).toBeVisible();
+    await page.goto('/help/model-library');
+    await page.getByText('Idempotency-Key', { exact: true }).scrollIntoViewIfNeeded();
+    await info.attach(`model-import-expiry-help-${locale}`, {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+  });
+
+  test(`pending expiry is not resumable and a failed refresh recovers in ${locale}`, async ({
+    page,
+  }, info) => {
+    control.preferences.locale = locale;
+    control.pollMilliseconds = 1_000;
+    control.modelImports = [{ ...expiringImport }];
+    await page.setViewportSize(
+      locale === 'en' ? { width: 1440, height: 900 } : { width: 390, height: 844 },
+    );
+    await page.goto(`/library/imports/${expiringImport.id}`);
+    await expect(
+      page.getByText(messages['models.import.expiring.title'], { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: messages['models.import.resume.unavailable'], exact: true }),
+    ).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.getByTestId('model-bundle-resume')).toHaveCount(0);
+    await expect(
+      page.getByRole('link', { name: messages['models.import.expired.restart'], exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page
+        .getByRole('list', { name: messages['models.import.steps'] })
+        .getByRole('listitem')
+        .first(),
+    ).toContainText(messages['timeline.state.cancelled']);
+    await info.attach(`model-import-expiring-${locale}`, {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    control.modelImportProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+    await expect(
+      page.getByRole('button', { name: messages['action.retry'], exact: true }),
+    ).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.getByText(messages['models.import.expiring.title'], { exact: true }),
+    ).toBeVisible();
+    control.modelImportProblem = null;
+    control.modelImports = [{ ...expiredImport }];
+    await page.getByRole('button', { name: messages['action.retry'], exact: true }).click();
+    await expect(
+      page.getByRole('link', { name: messages['models.import.expired.restart'], exact: true }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByText(messages['models.import.state.expired'], { exact: true }),
+    ).toBeVisible();
+  });
+
+  test(`a 409 resume refusal refreshes the expired history in ${locale}`, async ({ page }) => {
+    control.preferences.locale = locale;
+    control.modelImports = [{ ...stalledImport }];
+    control.chunkFailures = [{ status: 409, code: 'MODEL_IMPORT_STATE_CONFLICT' }];
+    const writes: string[] = [];
+    await page.route(/\/admin\/model-imports\/[0-9a-f-]{36}\/chunks$/, async (route) => {
+      writes.push(route.request().url());
+      control.modelImports = [{ ...expiredImport }];
+      await route.fallback();
+    });
+    await page.goto(`/library/imports/${stalledImport.id}`);
+    await expect(
+      page.getByRole('button', { name: messages['models.import.resume.choose'], exact: true }),
+    ).toBeEnabled();
+    const refused = page.waitForResponse(
+      (response) => response.url().endsWith('/chunks') && response.status() === 409,
+    );
+    await page.getByTestId('model-bundle-resume').setInputFiles(bundle());
+    expect(((await (await refused).json()) as { code: string }).code).toBe(
+      'MODEL_IMPORT_STATE_CONFLICT',
+    );
+    await expect(
+      page.getByText(messages['models.import.expired.title'], { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByTestId('model-bundle-resume')).toHaveCount(0);
+    expect(writes).toHaveLength(1);
+  });
+
+  test(`an import refresh refusal removes cached controls in ${locale}`, async ({ page }) => {
+    control.preferences.locale = locale;
+    control.pollMilliseconds = 1_000;
+    control.modelImports = [{ ...expiringImport }];
+    await page.goto(`/library/imports/${expiringImport.id}`);
+    await expect(
+      page.getByText(messages['models.import.expiring.title'], { exact: true }),
+    ).toBeVisible();
+    control.modelImportProblem = { status: 403, code: 'ACCESS_DENIED' };
+    await expect(
+      page.getByText(messages['problem.ACCESS_DENIED.title'], { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(messages['models.import.expiring.title'], { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: messages['models.import.resume.unavailable'], exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('link', { name: messages['models.import.expired.restart'], exact: true }),
+    ).toHaveCount(0);
+  });
+}
