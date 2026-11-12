@@ -39,7 +39,7 @@ func upgradeFixture(t *testing.T, version int) actualFixture {
 		t.Fatal(e)
 	}
 	statements := []string{"GRANT USAGE ON SCHEMA " + pgx.Identifier{schema}.Sanitize() + " TO " + role, "GRANT SELECT ON TABLE " + pgx.Identifier{schema, "schema_migrations"}.Sanitize() + " TO " + role}
-	rows, e := f.lease.Query(ctx, "SELECT tablename FROM pg_tables WHERE schemaname=current_schema() AND tablename<>'schema_migrations' ORDER BY 1")
+	rows, e := f.lease.Query(ctx, "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relkind IN ('r','p') AND NOT c.relispartition AND c.relname NOT IN ('schema_migrations','audit_chain_head') ORDER BY 1")
 	if e != nil {
 		t.Fatal(e)
 	}

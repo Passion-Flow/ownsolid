@@ -115,7 +115,7 @@ with the local defaults and references the exact alias tenant, workspace,
 site and cell through a composite foreign key. Its up checksum is
 `399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab`.
 The down checksum is
-`dff9447544bdb8b3fdb78f82356fbab997518250ca3c88049b454ebd33e63a32`.
+`4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2`.
 The Gateway fixture measured three successor catalogs after applying
 the Audit scope overlay. Keep these as comparison values. Assign the
 next contiguous migration only after the Audit migration lands on main.

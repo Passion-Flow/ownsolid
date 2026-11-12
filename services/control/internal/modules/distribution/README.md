@@ -74,9 +74,19 @@ conflict requires reading the alias again before editing. Portal sees
 the description on its authorized alias list and detail. Description
 edits preserve the published target, route revision and existing keys.
 
-The current PostgreSQL lineage still returns predecessor alias responses.
-The candidate DDL, offline fixture and shared integration order are
-recorded in the [description qualification](../../../../../docs/research/gateway-model-description.md).
+PostgreSQL migration 000059 installs these fields and the immutable edit
+intent table. Apply the normal schema upgrade and extend the existing
+restricted runtime principal before starting control. Predecessor schema
+58 keeps its original alias response and refuses description writes with
+`SERVICE_NOT_READY`. The [description qualification](../../../../../docs/research/gateway-model-description.md)
+records the exact migration and verification requirements.
+
+A pristine downgrade can remove the unused feature in one operator
+transaction with serving stopped. Any retained text, changed description
+revision or edit intent refuses downgrade with
+`MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE`. Clearing text retains
+its revision and replay history; restore a verified pre-upgrade backup
+through the normal recovery procedure to recover the predecessor instead.
 
 ## Development checks
 
