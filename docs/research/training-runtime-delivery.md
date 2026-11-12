@@ -351,3 +351,98 @@ the signed offline media. The embedded-notice checker remains in
 force. A preview image built from the accepted inputs still needs
 installed runtime injection and offline Qwen readback. The full
 training image and lock mapping remain separate.
+
+## Exact Linux CPU training admission
+
+The [official CPU index](https://download.pytorch.org/whl/cpu/torch/)
+publishes a distinct `2.14.1+cpu` distribution for CPython 3.12 and
+manylinux 2.28 amd64. The existing Linux lock selects the ordinary
+[PyPI 2.14.1 release](https://pypi.org/pypi/torch/2.14.1/json).
+Python packaging treats `+cpu` as a
+[local version identifier](https://packaging.python.org/en/latest/specifications/version-specifiers/#local-version-identifiers).
+A dependency specifier can admit a local build while the worker's exact
+installed-version check still rejects it. The current worker requires
+Torch `2.14.1`, Transformers `5.19.0`, PEFT `0.21.2`, Accelerate `1.15.0`
+and Python `3.12.15`. The server interpreter is `3.12.3`. Installing the
+CPU wheel or relaxing a requirement specifier cannot establish that runtime
+identity. Keep the current production checks unchanged.
+
+The dependency audit evaluated the four project roots and their complete
+`Requires-Dist` markers for Linux amd64 CPython 3.12.15, with no optional
+training extras. For every pin it selected a compatible binary wheel whose
+advertised SHA-256 is allowed by the existing lock, and checked its
+[core metadata digest](https://packaging.python.org/en/latest/specifications/simple-repository-api/#serve-distribution-metadata-in-the-simple-repository-api)
+against the package index. The ordinary Linux graph reaches all 56 locked
+distributions. Substituting the official CPU metadata reaches 37, with the
+same 36 non-Torch versions. The CPU graph omits 19 CUDA-specific packages,
+including Triton and the NVIDIA libraries. This is a metadata compatibility
+result, not a new admitted lock or installed-environment result.
+
+```text
+accelerate annotated-doc anyio click filelock fsspec h11 hf-xet httpcore2
+httpx2 huggingface-hub idna jinja2 markdown-it-py markupsafe mdurl mpmath
+networkx numpy packaging peft psutil pygments pyyaml regex rich safetensors
+setuptools shellingham sympy tokenizers torch tqdm transformers truststore
+typer typing-extensions
+```
+
+| Selected Torch input | SHA-256 | Verification scope |
+| --- | --- | --- |
+| Ordinary PyPI `2.14.1` wheel | `23011fe29a99b591eabb3a31a25080c62e2c2f0690a3c798744e5489dae50451` | Advertised 554,618,695-byte archive pin in the current lock; archive not fetched in this audit |
+| Ordinary PyPI core metadata | `f1e9245037c999a2ff46ba37e329cff31dcb3678d400f656bdc61fa906e6e3e6` | Downloaded bytes match the index metadata digest |
+| Official CPU `2.14.1+cpu` wheel | `5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f` | Complete 196,253,677-byte archive matches the official CPU index pin |
+| Official CPU core metadata | `a3fd232f82dcc389c6dab2665dfc17649c03ffb72cb641e96a76a0690177b918` | Downloaded metadata matches the full wheel's original `METADATA` |
+| Dependency metadata report | `bf6f13282733976703893fd18ecde60e1b2a181fe00eb233d7efd521b36be631` | Both graphs and each selected file's URL, size, metadata and archive digests |
+| CPU wheel notice inventory | `6112088ab9b31bbdca839f912c70a7b2349fc3ad17f9177cd2de541fd49392b2` | Original `METADATA`, `WHEEL` and all 86 declared license files, with archive `RECORD` hashes and sizes checked |
+
+Both wheel filenames end in `cp312-cp312-manylinux_2_28_x86_64.whl`;
+their version fields differ as shown. The CPU index's alternate official
+origin supplied the full archive after its linked mirror timed out.
+The CPU archive audit ran with the network disconnected and retained the
+original bytes. The metadata graph replay also ran disconnected and
+reproduced the same report digest. Altering the staged CPU metadata caused
+digest rejection before dependency traversal.
+
+The CPU wheel declares `Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND
+BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND MIT`. It carries all 86 declared
+original license files, totalling 307,343 bytes; preserve them with the
+binary, including upstream's bundled-component collection. These declared
+terms permit commercial use, offline use and redistribution under their
+notice, attribution, disclaimer and applicable Apache conditions. A complete
+binary and base-image notice review is still a release input. The 30-package
+preview inventory above covers their existing declarations. The six other
+non-Torch distributions declare Apache (Accelerate and PEFT), BSD
+(mpmath and SymPy), or BSD-3-Clause (NetworkX and psutil). This audit checked
+their core metadata, not their complete binary notice payloads. It adds no
+model or dataset and installs no dependency.
+
+### Remaining admission and recovery gates
+
+No CPU runtime profile is created from the metadata graph. Before a Linux
+CPU worker can run under its own admitted identity, release inputs must
+supply all of the following:
+
+- A reviewed CPU runtime manifest and complete 37-distribution wheel lock,
+  binding the local Torch version and exact binary digests independently of
+  the existing CUDA and macOS profiles. The CPU Torch hash is absent from
+  both current locks. Preserve full original notices for every selected
+  binary, including the Tokenizers notice candidates above.
+- The exact CPython 3.12.15 Linux interpreter and selected base image,
+  with their identity, redistribution notices and approved offline media.
+- A fresh disconnected installation from only those inputs using the exact
+  pinned pip, `--no-index --require-hashes`, then `pip check`, actual imports
+  and the worker's strict runtime-identity checks. Bind that result to the
+  installed runtime and delivery identity.
+- A real interrupted two-step CPU run: retain the step-one checkpoint and
+  its complete seal, start a new worker with the same sealed training
+  horizon, verify `resume_from_step == 1`, and compare its final model,
+  optimizer, scheduler, RNG and trainer state with an uninterrupted baseline.
+  Reject changed optimizer bytes and a changed sealed horizon before training.
+
+The exact CPU archive is now available for that review. A metadata closure,
+complete archive or retained uninterrupted CPU baseline does not establish
+those installation and resumed-computation gates. CUDA image reconstruction,
+Agent admission and real NVIDIA recovery remain separate. Keep TRN-108 and
+TRN-104 unticked until their full product acceptance is satisfied. While the
+CPU profile is unavailable, continue accepted experiment and model-handoff
+verification with the retained CPU artifacts under their stated scope.
