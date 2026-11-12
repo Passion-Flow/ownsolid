@@ -254,12 +254,15 @@ and a suppressed real COMMIT acknowledgement. The configured 10,000-workspace
 domain held exactly two advisory lock tags: tenant and selected workspace.
 This is a lock-allocation result, not SCH-111 node/job admission latency evidence.
 
-The same source passed the complete Control module suite, make check and make
-build on Linux amd64 with Go 1.27.3 and offline dependencies. The module source
-is byte-identical to the earlier 5ee946b6 qualification except its README.
-The new base changes gateway connection handling and its configuration; no
-scheduling, transaction, database, Identity or Workspace source changed.
-All component cases and required gates were repeated on the accepted base.
+The same source passed all three required gates on Linux amd64 with Go 1.27.3
+and offline dependencies. Rebased source fd64e112 on base 6508ce3c passed the full
+Control module suite, make check and make build on macOS arm64 with Go 1.27.3,
+Python 3.12 and offline dependencies. The scheduling module, Workspace, session
+authority, transaction, database and configuration paths are unchanged. The
+runtime IAM delta only accounts for Admin audit-events list reads, outside the
+scheduling call path. The exact-source Linux database qualification above is
+retained with this input-equivalence review; it is not relabeled as a new run.
+Production owner, serving-role and installed user-flow acceptance remain open.
 
 With both protected fixture DSN variables in the module README configured:
 
