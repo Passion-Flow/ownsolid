@@ -524,3 +524,56 @@ real imports and checkpoint computation remain pending until their runs
 produce evidence. The staged directory is
 `cpu-prototype-inputs/` in the retained private CPU audit root. No production
 manifest, image recipe or validator changed.
+
+#### Disconnected reconstruction and real worker baseline
+
+The portable input reader reproduced all 37 training-wheel pins, the fixed
+pip input, 215 original wheel notice files including the installer, and both
+external Tokenizers notice archives with the network disconnected. Four
+small tests refused a changed inventory, a missing wheel, changed complete
+archive bytes and a changed original notice; the changed notice was not
+silently replaced. Input validation raised shared-host I/O pressure, so the
+subsequent installer preflight refused to start. The lock was released and
+the installer ran separately after the original thresholds recovered.
+
+The exact cached Python base was exported as an offline input. Its archive
+has SHA-256
+`fcea6604f98e4fa22fef3a26197b5f1980260979e0e730051dce1794a5fa9ee9`.
+A new environment, created with `venv --without-pip` in a read-only,
+network-none container, bootstrapped only the pinned pip wheel and installed
+only the 37 hash-required binary wheels. `pip check` reported no broken
+requirements. The installed distribution set was exactly those 37 plus pip.
+Real Torch, Transformers, PEFT, Accelerate, Tokenizers, Safetensors and NumPy
+imports passed on Linux amd64 glibc 2.36 and Python 3.12.15. Torch reported
+`2.14.1+cpu`, no CUDA build and no CUDA device. Only loopback was present.
+All 215 installed original notice/metadata payload checks passed. Actual pip
+refused a damaged wheel and a missing wheel in fresh targets, installing no
+files in either negative case. The installation report and verified runtime
+observation are retained; the latter hashes to
+`937748cafe566fabc099e4c1ae66730a9799b4878cf1a77ca149c4702fd86b03`.
+
+The private CPU runtime manifest hashes to
+`47e701c882efac48aa5380d379ebfbfc3b364165370f7635f166721314684e34`.
+It declares Linux CPU verification, exact Python 3.12.15 and Torch 2.14.1+cpu.
+Worker Python bytes remain those of `096c50b8`; their worker/data-processor
+fingerprint is
+`a518edc41f8e9621c84a43e97df079b5dcc00c7f5f7ca061341a5d919e6f20d7`.
+The experiment separately binds the full manifest, binary inventory,
+installed environment and base image, since the existing worker-source
+fingerprint covers Python files rather than runtime JSON or locks. This is
+an experimental input binding, not a production release mapping.
+
+An initial worker launch correctly refused `TRAINING_EXECUTION_IDENTITY_REQUIRED`:
+`git archive` had materialized its metadata with mode 0664. The original
+file modes and failed observation were retained. Tightening only the private
+copy to files 0600 and directories 0700 admitted the same bytes; production
+validators were unchanged. The real worker then loaded the approved Qwen
+snapshot and published both sealed checkpoints and a trained adapter under
+the two-step horizon. It reported step 2 and `resume_from_step=0`, with
+67.89 seconds observed wall time and 4,993,789,952 bytes peak process RSS,
+within the original 6 GiB bound. Its protected result has SHA-256
+`24e26bbfca3eaef3a93690f591ae6689b6ebba64c15699581b6afa966201eb71`.
+The next phase's I/O preflight refused a start and released both locks;
+no memory or I/O threshold was relaxed. The baseline is retained for the
+interrupted-worker comparison. This baseline is actual new computation,
+independently of the earlier retained 24-step native artifacts.
