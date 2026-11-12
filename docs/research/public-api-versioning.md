@@ -121,5 +121,10 @@ shape or named-model findings for its existing same-identity reads. The current
 430-operation inventory had no declaration conflicts, and self-comparison was
 empty. These results do not qualify the prototypes' new routes or missing
 non-prototype operations. Layout, roadmap and diff checks also passed. The
-full SDK test admission was busy before a test process started; whole repository
+complete offline make test-tools target also passed on Linux: 13 layout tests
+and all 57 SDK/tooling cases. It reused prepared pinned Node parser dependencies
+through a read-only cache path in an isolated network namespace. No assertion,
+case or expected result changed. A fresh worktree needs those Web dependencies
+before its Help projection cases; the first full-check attempt stopped at that
+missing prerequisite and its failed log is retained. Whole repository
 checks/build/test remain a separate publication boundary for this candidate.
