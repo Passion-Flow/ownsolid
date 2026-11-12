@@ -251,10 +251,8 @@ func draftOriginalFile(format SourceFormat) string {
 
 func (s *Store) verifyDraftSource(draft Draft, object string, format SourceFormat, raw []byte) (DraftSourceResult, error) {
 	original := draftOriginalFile(format)
-	var report SourceImportReport
-	if original == "" || json.Unmarshal(raw, &report) != nil || draft.SourceReceivedAt == nil ||
-		report.SourceBytes < 1 || report.SourceBytes > wire.MaximumBytesCeiling || !wire.ValidDigest(report.SourceSHA256) ||
-		report.OutputBytes != draft.ExpectedBytes || report.OutputSHA256 != draft.SourceSHA256 {
+	report, err := decodeDraftSourceReport(format, raw, draft.SourceSHA256, draft.ExpectedBytes)
+	if err != nil || draft.SourceReceivedAt == nil {
 		return DraftSourceResult{}, failure("DATASET_DATA_INVALID")
 	}
 	if _, err := s.Source(object, report.OutputSHA256, report.OutputBytes); err != nil {
