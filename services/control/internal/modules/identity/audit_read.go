@@ -7,6 +7,7 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 // ListAuditEventsForRequest reads the current installation-wide Admin view and
@@ -23,12 +24,29 @@ func (s *Service) ListAuditEventsForRequest(ctx context.Context, a Auth, q url.V
 	return AuditEventList{List: list}, err
 }
 
-func recordAuditReadWithin(ctx context.Context, tx transaction.Executor, a Auth, limit, returned int, assistant bool, requestID string) error {
+func recordAuditReadWithin(ctx context.Context, tx transaction.Executor, a Auth, workspaceID string, limit, returned int, assistant bool, requestID string) error {
 	if limit < 1 || limit > maximumListLimit || returned < 0 || returned > limit {
 		return failure("STORAGE_UNAVAILABLE")
 	}
-	// The writer resolves installation scope. This path accounts for the global
-	// Admin view; a workspace-specific view needs its own scoped writer.
+	if workspaceID != "" {
+		var tenantID, siteID, cellID string
+		const scope = `SELECT i.tenant_id::text,c.site_id,c.id
+FROM installation_state i CROSS JOIN cells c
+WHERE i.id=1 AND i.bootstrap_complete AND c.is_local`
+		if err := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, scope)).Scan(&tenantID, &siteID, &cellID); err != nil {
+			return err
+		}
+		if requestID == "" {
+			requestID = uuid.NewString()
+		}
+		return audit.WriteScopedWithin(ctx, tx, audit.ScopedEvent{
+			ActorUserID: a.Me.User.ID, TenantID: tenantID, WorkspaceID: workspaceID,
+			SiteID: siteID, CellID: cellID, Audience: "admin", Action: "audit.events_read", Outcome: "success",
+			TargetType: "workspace", TargetID: workspaceID, RequestID: requestID,
+			Reason: fmt.Sprintf("workspace_audit_read;limit=%d;returned=%d;assistant=%t", limit, returned, assistant),
+		})
+	}
+	// The installation writer resolves its own default workspace attribution.
 	reason := fmt.Sprintf("installation_audit_read;limit=%d;returned=%d;assistant=%t", limit, returned, assistant)
 	return audit.WriteWithin(ctx, tx, a.Me.User.ID, "", "admin", "audit.events_read", "success", "installation", "", reason, requestID)
 }
