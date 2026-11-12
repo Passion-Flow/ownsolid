@@ -222,3 +222,35 @@ adapter snapshot and empty borrowed preparation source, all with
 exact coordinates and require the original experiment to read again. Keep
 node, production command and physical-stop envelopes explicitly synthetic;
 this does not establish an installed Agent, UI, NVIDIA or cross-cell restore.
+
+## Accepted-result children remain in the owner's cell
+
+A local job is insufficient when a retained artifact, upload, attempt or
+node task carries foreign site/cell coordinates. Their existing read joins
+bind tenant, Workspace and exact identities, but do not yet reconcile the
+cell columns introduced by migration 30. Enforce the installed local cell
+on the artifact and require all four joined owners to have that same tuple
+in the existing PostgreSQL metadata read. Keep the caller's locked local job,
+current authority and final export recheck. No client coordinate, new ledger,
+migration or production trigger change is needed.
+
+A job-only check would leave foreign children readable. Reassigning their
+coordinates would alter retained evidence. A second preflight query would
+add another snapshot instead of making the protected record read coherent.
+Use predicates in the same joined SELECT and retain its row locks. Existing
+PostgreSQL snapshot/locking semantics and Go/pgx/PostgreSQL licenses apply;
+no new dependency, model or dataset is introduced.
+
+Using the actual retained CPU adapter, change only each owned fixture child's
+site or cell while leaving the job local. The authenticated experiment read
+must expose no record and report its existing invalid-data error; borrowed
+and authenticated preparation snapshots must expose no source under their
+existing unavailable-result contract. No refused export may append audit.
+Restore the exact coordinates and require the original experiment to read
+again. Also change the artifact cell between initial metadata/file
+verification and the final authority read; the call must return no already
+computed experiment and append no export audit. If immutable-row triggers prevent injecting the fault, disable only
+the owned artifact table's immutable-row trigger around the fixture update
+and re-enable it in the same transaction. Production triggers remain unchanged. These
+are component acceptance rules, separate from installed Agent/UI/NVIDIA
+qualification and the original CPU computation evidence.
