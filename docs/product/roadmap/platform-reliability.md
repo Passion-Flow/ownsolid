@@ -19,6 +19,7 @@ recovery and support tooling.
 - [ ] REL-101 High availability: multiple control-plane replicas, PostgreSQL primary and standby, gateway replicas (P1) - Catalog: F224, F529
   - The installer also deploys the NATS JetStream cluster that gateways share liveness through and writes the `liveness_replica` section ([ADR 0022](../../decisions/0022-liveness-outside-the-database.md)).
 - [ ] REL-102 Published reliability targets for the reference topology (availability, RPO, RTO) (P1) - Catalog: F528
+  - The [reference measurement contract](../../research/reference-reliability-targets.md) separates user-action availability, retained recoverable points and full restore time. Numerical targets and their Linux offline measurements remain open.
 - [ ] REL-103 Coordinated backup of database, objects, models and keys with a consistency point (P1) - Catalog: F355, F507
   - The shipped local Compose profile passed the disconnected database, model and key drill. External object fencing and restore remain open. See the [acceptance and provider handoff](../../research/coordinated-local-backup.md#acceptance-and-provider-handoff).
 - [ ] REL-104 Restore into an empty air-gapped environment, tested every release (P1) - Catalog: F507
