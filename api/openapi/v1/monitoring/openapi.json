@@ -103,7 +103,11 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "not": {
+                "const": "00000000-0000-0000-0000-000000000000"
+              }
             }
           },
           {
@@ -216,7 +220,12 @@
             "MONITORING_HISTORY_NOT_CONFIGURED",
             "MONITORING_LONG_TIER_NOT_CONFIGURED",
             "MONITORING_RAW_TIER_UNAVAILABLE",
-            "MONITORING_LONG_TIER_UNAVAILABLE"
+            "MONITORING_LONG_TIER_UNAVAILABLE",
+            "STORAGE_TIMEOUT",
+            "STORAGE_CANCELLED",
+            "STORAGE_COMMIT_ROLLED_BACK",
+            "STORAGE_DEADLOCK",
+            "STORAGE_LOCK_TIMEOUT"
           ],
           "409": [
             "STORAGE_COMMIT_OUTCOME_UNKNOWN"
