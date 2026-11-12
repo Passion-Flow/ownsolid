@@ -130,3 +130,24 @@ login, serving and recovery must work without a network route off the site.
 ARC-111 stays unticked until the complete permission closure, operator preparation,
 serving/readiness, delivery path and installed flow have all passed. No reduced
 role or successful installed result is claimed by this research note.
+
+## Row-lock privilege boundary
+
+The existing PostgreSQL node credential path takes FOR SHARE on both
+installation_state and tenants before locking its node. A proposed SELECT-only
+grant on these authority tables therefore cannot run that path. PostgreSQL's
+[SELECT privilege rules](https://www.postgresql.org/docs/18/sql-select.html)
+require UPDATE on at least one column of each relation explicitly row-locked,
+including FOR SHARE and FOR KEY SHARE. This is separate from ordinary reads.
+
+Granting UPDATE on an arbitrary authority column solely to obtain the lock can
+also grant real mutation authority. Do not select an apparently harmless column
+without proving the invariant, and do not remove the existing lock to fit a role.
+The [row-security documentation](https://www.postgresql.org/docs/18/ddl-rowsecurity.html)
+describes a security-definer function as one way to acquire protected row locks
+without granting callers direct UPDATE rights. Prototype that narrow alternative
+outside product code first: fixed trusted table references/search path, closed
+execution grants, original lock lifetime, foreign-scope refusal, writer blocking
+and transaction rollback. Do not activate a schema function or new grant catalog
+until the complete session/worker closure and its current migration admission are
+proven. This discovery does not change current runtime rights or claim ARC-111 done.
