@@ -93,6 +93,28 @@ with httpx.Client(
     print(response.status_code)
 ```
 
+## Read the audit log deliberately
+
+listAuditEvents records access before releasing its page. A 409
+STORAGE_COMMIT_OUTCOME_UNKNOWN or a lost response leaves that access audit
+uncertain. Do not automatically retry the read. An explicit retry with the same
+filters, cursor and X-Ownsolid-Audit-Actor preference records a new access; it
+neither replays the earlier operation nor proves that its audit was rolled back.
+Keep the earlier request ID for diagnosis. Use category=audit for audit-family
+events; exact action accepts only the published enumeration.
+
+For this read, construct a fresh Go transport with DisableKeepAlives=true and
+HTTP/1 selected, using the same installation CA, verified origin and cookie jar.
+Close its idle connections after the call. A general shared Go transport can
+transparently replay an eligible GET after a network error on a reused
+connection. Disable application, proxy and load-balancer retries for this path.
+For Python use HTTPTransport(retries=0), or AsyncHTTPTransport(retries=0), with
+verified TLS, trust_env=False and follow_redirects=False. Keep any external
+retry wrapper disabled. Neither generated client's 409 decoder starts a retry.
+After regeneration, Go callers handle this status with
+GetApplicationproblemJSON409(); it is no longer decoded through the default
+Problem accessor. Python keeps the existing Problem model.
+
 ## Stream and download responses
 
 For model gateway chat with `stream=True`, use the raw response adapter. It
