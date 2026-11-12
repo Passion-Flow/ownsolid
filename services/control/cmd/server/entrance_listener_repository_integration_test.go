@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"net"
 	"net/http"
@@ -15,7 +16,10 @@ import (
 	"testing"
 	"time"
 
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/agentca"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -53,6 +57,52 @@ func entranceCompositionClient(t *testing.T, x *serverCompositionStory, forceAdd
 	return &http.Client{Transport: transport, Timeout: 3 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("ENTRANCE_COMPOSITION_REDIRECT_REFUSED") }}
 }
 
+func entranceCompositionNode(t *testing.T, x *serverCompositionStory, client *http.Client, adminCookies []*http.Cookie) (wire.Enrolled, wire.Handshake, *http.Client) {
+	t.Helper()
+	csrf := miCompositionCall(t, x, client, x.c.Server.AdminOrigin, http.MethodGet, "/api/v1/auth/csrf", nil, nil, adminCookies)
+	miCompositionStatus(t, csrf, http.StatusOK, "")
+	token, ok := miCompositionData(t, csrf)["token"].(string)
+	if !ok || token == "" {
+		t.Fatal("actual Admin CSRF token missing")
+	}
+	join := miCompositionCall(t, x, client, x.c.Server.AdminOrigin, http.MethodPost, "/api/v1/admin/node-join-tokens", map[string]string{"workspace_id": x.f.Workspace, "node_name": "Synthetic split-entrance node", "execution_profile": wire.ReadOnlyProfile}, map[string]string{"Origin": x.c.Server.AdminOrigin, "X-CSRF-Token": token}, miCompositionCookies(adminCookies, csrf.cookies))
+	miCompositionStatus(t, join, http.StatusCreated, "")
+	joinToken, ok := miCompositionData(t, join)["token"].(string)
+	if !ok || joinToken == "" {
+		t.Fatal("actual scoped join token missing")
+	}
+	key, err := wire.NewCertificateKey()
+	if err != nil {
+		t.Fatal("synthetic node certificate key", err)
+	}
+	csr, err := wire.NewCertificateRequest(key)
+	if err != nil {
+		t.Fatal("synthetic node certificate request", err)
+	}
+	handshake := wire.Handshake{ProtocolVersion: wire.Version, ExecutionProfile: wire.ReadOnlyProfile, Capabilities: wire.Capabilities(wire.ReadOnlyProfile), Facts: wire.Facts{OSID: "ubuntu", OSVersion: "24.04", Architecture: "amd64", Hostname: "synthetic-split-node", LogicalCPUs: 1, MemoryTotalBytes: 1 << 30, DiskPath: "/", DiskTotalBytes: 4 << 30, DiskAvailableBytes: 2 << 30, ObservedAt: time.Now().UTC(), AgentVersion: wire.AgentVersion}}
+	enrollment := miCompositionCall(t, x, client, x.c.MachineServer.Origin, http.MethodPost, "/agent/v1/enroll", wire.Enrollment{JoinToken: joinToken, CertificateRequest: csr, Handshake: handshake}, nil, nil)
+	miCompositionStatus(t, enrollment, http.StatusCreated, "")
+	raw, err := json.Marshal(miCompositionData(t, enrollment))
+	var node wire.Enrolled
+	if err != nil || json.Unmarshal(raw, &node) != nil || node.Certificate == "" {
+		t.Fatal("actual enrolled certificate missing")
+	}
+	if _, err := uuid.Parse(node.NodeID); err != nil {
+		t.Fatal("actual node identity missing")
+	}
+	certificate, err := tls.X509KeyPair([]byte(node.Certificate), []byte(key))
+	if err != nil {
+		t.Fatal("actual enrolled certificate does not match the node key")
+	}
+	transport := client.Transport.(*http.Transport).Clone()
+	transport.TLSClientConfig = transport.TLSClientConfig.Clone()
+	transport.TLSClientConfig.Certificates = []tls.Certificate{certificate}
+	t.Cleanup(transport.CloseIdleConnections)
+	secured := *client
+	secured.Transport = transport
+	return node, handshake, &secured
+}
+
 func TestActualSplitBrowserThreeIngressServerComposition(t *testing.T) {
 	for _, mode := range []config.TransportMode{config.TransportDirectHTTPS, config.TransportHTTP} {
 		t.Run(string(mode), func(t *testing.T) {
@@ -82,6 +132,8 @@ func TestActualSplitBrowserThreeIngressServerComposition(t *testing.T) {
 				t.Fatal("fixture reused an address")
 			}
 			x.c.MachineServer = &config.MachineServerConfiguration{ListenAddress: machineAddress, Origin: "https://" + machineAddress, TLSCertificateFile: certificate, TLSPrivateKeyFile: key}
+			ca, issuer := agentca.Material(t)
+			x.c.AgentIdentity = &config.AgentIdentityConfiguration{CACertificateFile: x.private(t, "agent-ca.pem", ca), CAPrivateKeyFile: x.private(t, "agent-ca-key.pem", issuer)}
 			x.c.Server.TransportMode = mode
 			scheme := "https"
 			if mode == config.TransportHTTP {
@@ -119,8 +171,9 @@ func TestActualSplitBrowserThreeIngressServerComposition(t *testing.T) {
 					miCompositionStatus(t, miCompositionCall(t, x, wrong, entry.origin, http.MethodGet, path, nil, nil, nil), http.StatusMisdirectedRequest, "MISDIRECTED_REQUEST")
 				}
 			}
-			node, handshake := miCompositionNode(t, x, client, x.c.MachineServer.Origin, cookies["admin"])
-			miCompositionHeartbeat(t, x, client, x.c.MachineServer.Origin, node, handshake)
+			node, handshake, machineClient := entranceCompositionNode(t, x, client, cookies["admin"])
+			miCompositionHeartbeat(t, x, machineClient, x.c.MachineServer.Origin, node, handshake)
+			miCompositionStatus(t, miCompositionCall(t, x, client, x.c.MachineServer.Origin, http.MethodPost, "/agent/v1/nodes/"+node.NodeID+"/heartbeat", handshake, map[string]string{"Authorization": "Bearer " + node.Credential}, nil), http.StatusUnauthorized, "AGENT_CERTIFICATE_REQUIRED")
 			for _, origin := range []string{x.c.Server.AdminOrigin, x.c.Server.PortalOrigin} {
 				miCompositionStatus(t, miCompositionCall(t, x, client, origin, http.MethodPost, "/agent/v1/nodes/"+node.NodeID+"/heartbeat", handshake, map[string]string{"Authorization": "Bearer " + node.Credential}, nil), http.StatusNotFound, "RESOURCE_NOT_FOUND")
 			}
@@ -131,7 +184,7 @@ func TestActualSplitBrowserThreeIngressServerComposition(t *testing.T) {
 			for _, entry := range []struct{ audience, origin string }{{"admin", x.c.Server.AdminOrigin}, {"portal", x.c.Server.PortalOrigin}} {
 				miCompositionStatus(t, miCompositionCall(t, x, client, entry.origin, http.MethodGet, "/api/v1/me", nil, nil, cookies[entry.audience]), http.StatusOK, "")
 			}
-			miCompositionHeartbeat(t, x, client, x.c.MachineServer.Origin, node, handshake)
+			miCompositionHeartbeat(t, x, machineClient, x.c.MachineServer.Origin, node, handshake)
 			miCompositionStop(t, x, run)
 			miCompositionReleased(t, x.c.Server.PortalListenAddress)
 			miCompositionReopen(t, x)
