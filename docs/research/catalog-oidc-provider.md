@@ -302,6 +302,34 @@ catalog integration. HTTP read deadlines and socket cancellation still need
 real-server qualification. IAM-106 remains open, and its next experiment must
 qualify the complete durable code/JWT/UserInfo path described below.
 
+### Authorization-code crypto composition
+
+Inspecting the actual [authorization-code builder](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/auth_request.go)
+adds an important constraint before serving composition: `BuildAuthRequestCode`
+encrypts the authorization request ID through the same `Crypto` interface used
+for access bearers. The qualified first adapter deliberately accepts only the
+token-ID/subject bearer shape. It cannot be wired unchanged as the complete
+provider's crypto; the earlier constructor test qualifies its explicit override,
+not authorization-code generation.
+
+Prototype a purpose-selecting composition with separate, disjoint code and
+bearer GCM key rings. Server-created request IDs use an `ar_` prefix and 32
+random bytes in canonical base64url. The code encrypter accepts only that
+shape; the bearer encrypter retains its two opaque identifiers. Reject shared
+key IDs or key material across the rings. Incoming `Crypto.Decrypt` admits
+only the bearer ring; code redemption locates the complete ciphertext's digest
+in the owned database, rather than decrypting a client-supplied request ID.
+Neither purpose admits CFB or broad arbitrary-string encryption. This uses the
+same SDK GCM implementation and unchanged licensed module graph.
+
+The next controls must call the actual SDK code builder, prove generated codes
+and access bearers use their selected rings, and refuse code-as-UserInfo,
+bearer-as-code-shape, wrong-purpose/unknown/retired keys and shared material.
+Native shape/key separation is not one-use code redemption: the real PostgreSQL
+owner still must bind code expiry, client, redirect, PKCE and current authority
+and atomically consume the digest with token creation/signing/audit. Do not
+weaken the first bearer's shape validation merely to make SDK callbacks pass.
+
 The external prototype must use separate real RP and OP HTTPS servers, verified
 private CA trust and actual PostgreSQL persistence. Prove discovery through code
 exchange, signed ID-token verification and matching UserInfo subject; then
