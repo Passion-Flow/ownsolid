@@ -193,6 +193,44 @@ func TestActualTrainingExecutionEvidenceAdmission(t *testing.T) {
 		experiment.Execution.DependencyLockSHA256 != nil || experiment.Execution.HardwareObservation != nil {
 		t.Fatal("accepted experiment did not distinguish bound and unavailable evidence", e)
 	}
+	t.Run("foreign_job_scope_refuses_experiment_and_preparation", func(t *testing.T) {
+		var site, cell string
+		if e := g.f.Store.QueryRow(g.ctx, transaction.SQL(transaction.PostgreSQL,
+			"SELECT site_id,cell_id FROM training_jobs WHERE id=$1", g.job.ID)).Scan(&site, &cell); e != nil {
+			t.Fatal(e)
+		}
+		coordinates := [][2]string{{"retained-foreign-site", cell}, {site, "retained-foreign-cell"}}
+		for _, foreign := range coordinates {
+			g.exec(t, "UPDATE training_jobs SET site_id=$1,cell_id=$2 WHERE id=$3", "", foreign[0], foreign[1], g.job.ID)
+			before := g.count(t, "SELECT count(*) FROM audit_events WHERE target_id=$1", "", g.job.ID)
+			got, e := readExperiment()
+			if e == nil || e.Error() != "TRAINING_NOT_FOUND" || !reflect.DeepEqual(got, training.AcceptedExperiment{}) {
+				t.Fatal("foreign experiment exposed a result", e)
+			}
+			snapshot, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
+			acceptedAdapterWant(t, snapshot, e, "TRAINING_NOT_FOUND")
+			var borrowed training.AcceptedAdapter
+			e = g.f.Store.Within(g.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+				if e := g.owner.RecheckOrderedWithin(ctx, q, g.a); e != nil {
+					return e
+				}
+				if _, e := g.s.Workspaces.RecheckScopeWithin(ctx, q, g.a, g.f.Workspace); e != nil {
+					return e
+				}
+				var e error
+				borrowed, e = g.s.AcceptedAdapterWithin(ctx, q, g.f.Tenant, g.f.Workspace, g.job.ID)
+				return e
+			})
+			acceptedAdapterWant(t, borrowed, e, "TRAINING_NOT_FOUND")
+			if after := g.count(t, "SELECT count(*) FROM audit_events WHERE target_id=$1", "", g.job.ID); after != before {
+				t.Fatal("refused foreign export appended audit")
+			}
+			g.exec(t, "UPDATE training_jobs SET site_id=$1,cell_id=$2 WHERE id=$3", "", site, cell, g.job.ID)
+			if got, e = readExperiment(); e != nil || !reflect.DeepEqual(got, experiment) {
+				t.Fatal("repaired local experiment differs", e)
+			}
+		}
+	})
 	t.Run("accepted_experiment_survives_private_store_handoff", func(t *testing.T) {
 		source, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
 		if e != nil {
