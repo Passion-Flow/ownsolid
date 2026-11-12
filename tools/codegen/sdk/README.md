@@ -129,5 +129,9 @@ report lists public operations and flags missing operation IDs, duplicate
 IDs within a document, and duplicate method and path declarations in the
 same audience. Exit 1 reports findings and exit 2 indicates unreadable or
 invalid input. The audit runs from local files and uses the same audience
-rules as SDK generation. It measures the published contracts. Verification
+rules as SDK generation. With `--baseline`, it also reports named response
+model reference changes for source review. These findings can describe a
+wire-compatible change that still changes generated return types. The
+comparison does not establish general schema or behavior compatibility.
+It measures the published contracts. Verification
 against running handlers remains the responsibility of each API owner.
