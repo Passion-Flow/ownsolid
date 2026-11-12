@@ -39,7 +39,7 @@ the raw store. Use `ownsolid-install fleet-history apply` to deploy the addition
 TLS stores and evaluator. Select its protected Control output directory with
 `telemetry.fleet_history_control_directory` before the normal installer Apply;
 this installs the history policy and CA trust without changing process metrics.
-See the [installer guide](../offline/README.md#private-tls-fleet-history-deployment).
+See the [installer guide](../offline/README.md#deploy-private-fleet-history-stores).
 
 The older monitoring module examples refer to an overlay absent from
 this topology. Use the [current installation boundary](../../docs/research/telemetry-retention-tiers.md#current-installation-boundary)
