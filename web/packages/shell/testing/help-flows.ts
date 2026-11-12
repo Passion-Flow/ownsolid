@@ -128,10 +128,9 @@ export function helpFlows(audience: ControlPlane['audience']): void {
         if (locale === 'zh-CN') await page.setViewportSize({ width: 390, height: 844 });
         const operation = audience === 'admin' ? 'getAdminWorkspace' : 'getPortalWorkspace';
         await page.goto(`/help/api?q=${operation}#workspaces.${operation}`);
-        await expect(page.getByRole('button', { name: new RegExp(operation) })).toHaveAttribute(
-          'aria-expanded',
-          'true',
-        );
+        await expect(
+          page.getByRole('button', { name: new RegExp(` ${operation}$`) }),
+        ).toHaveAttribute('aria-expanded', 'true');
         const detail = page.locator(`[id="workspaces.${operation}-detail"]`);
         const parameters = detail.getByRole('table', {
           name: messages['help.api.parameters'],
