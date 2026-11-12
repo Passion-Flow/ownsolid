@@ -29,6 +29,7 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
 	monitoringhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 )
 
 func TestScopedFleetHistoryOffline(t *testing.T) {
@@ -211,37 +212,8 @@ func readFleetHistoryCandidate(t *testing.T, g *story, a identity.Auth, workspac
 
 func checkHistoryResponseLimit(t *testing.T, g *story, get func(identity.Auth, string, time.Time, time.Time) (monitoring.FleetHistory, error), end time.Time) {
 	t.Helper()
-	const cells = 24
 	oversized := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
-		start, errStart := strconv.ParseInt(q.Get("start"), 10, 64)
-		end, errEnd := strconv.ParseInt(q.Get("end"), 10, 64)
-		step, errStep := strconv.ParseInt(q.Get("step"), 10, 64)
-		if errStart != nil || errEnd != nil || errStep != nil || step <= 0 || end < start || (end-start)/step > 1440 {
-			t.Error("fixture received an invalid evaluation grid")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		var values strings.Builder
-		for at := start; at <= end; at += step {
-			if at > start {
-				values.WriteByte(',')
-			}
-			fmt.Fprintf(&values, "[%d,\"1\"]", at)
-		}
-		var response strings.Builder
-		response.WriteString(`{"status":"success","data":{"resultType":"matrix","result":[`)
-		for cell := range cells {
-			for _, measure := range []string{"observed", "reachable"} {
-				if cell > 0 || measure == "reachable" {
-					response.WriteByte(',')
-				}
-				fmt.Fprintf(&response, `{"metric":{"tenant_id":%q,"workspace_id":%q,"site_id":"site-1","cell_id":"large-%d","measure":%q},"values":[%s]}`,
-					g.f.Tenant, g.f.Workspace, cell, measure, values.String())
-			}
-		}
-		response.WriteString(`]}}`)
-		_, _ = io.WriteString(w, response.String())
+		oversizedHistoryReply(t, w, r, g.f.Tenant, g.f.Workspace)
 	}))
 	t.Cleanup(oversized.Close)
 	before := g.config.FleetHistory.LongOrigin
@@ -253,12 +225,48 @@ func checkHistoryResponseLimit(t *testing.T, g *story, get func(identity.Auth, s
 	}()
 	audits := g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'")
 	out, err := get(g.admin, g.f.Workspace, end.Add(-5*24*time.Hour), end)
-	code, status := monitoringhttp.FleetHistoryProblem(err)
+	code, status := httpserver.PublicProblem(err)
 	if out.Tier != "" || out.Cells != nil || code != "MONITORING_HISTORY_RESPONSE_LIMIT" || status != http.StatusUnprocessableEntity ||
 		g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'") != audits {
 		t.Fatalf("oversized projection or audit escaped the bound: %s %d %+v", code, status, out)
 	}
 	t.Log("candidate refused an over-budget history body before successful audit")
+}
+
+// oversizedHistoryReply is an explicit protocol double for the response budget.
+// Native VictoriaMetrics supplies every successful data read in the HTTP profile.
+func oversizedHistoryReply(t *testing.T, w http.ResponseWriter, r *http.Request, tenant, workspace string) {
+	t.Helper()
+	const cells = 24
+	q := r.URL.Query()
+	start, errStart := strconv.ParseInt(q.Get("start"), 10, 64)
+	end, errEnd := strconv.ParseInt(q.Get("end"), 10, 64)
+	step, errStep := strconv.ParseInt(q.Get("step"), 10, 64)
+	if errStart != nil || errEnd != nil || errStep != nil || step <= 0 || end < start || (end-start)/step > 1440 {
+		t.Error("fixture received an invalid evaluation grid")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var values strings.Builder
+	for at := start; at <= end; at += step {
+		if at > start {
+			values.WriteByte(',')
+		}
+		fmt.Fprintf(&values, "[%d,\"1\"]", at)
+	}
+	var response strings.Builder
+	response.WriteString(`{"status":"success","data":{"resultType":"matrix","result":[`)
+	for cell := range cells {
+		for _, measure := range []string{"observed", "reachable"} {
+			if cell > 0 || measure == "reachable" {
+				response.WriteByte(',')
+			}
+			fmt.Fprintf(&response, `{"metric":{"tenant_id":%q,"workspace_id":%q,"site_id":"site-1","cell_id":"large-%d","measure":%q},"values":[%s]}`,
+				tenant, workspace, cell, measure, values.String())
+		}
+	}
+	response.WriteString(`]}}`)
+	_, _ = io.WriteString(w, response.String())
 }
 
 func startHistoryVM(t *testing.T, ctx context.Context, retention string, flags ...string) (string, func() int64, func()) {
