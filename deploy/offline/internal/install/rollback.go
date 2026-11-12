@@ -15,7 +15,18 @@ import (
 // RollbackBundle restarts the previously recorded signed application release
 // when it can run on the live schema. Database restore is a separate operation.
 func RollbackBundle(ctx context.Context, configPath, archive string, policy bundle.Verification, runner StreamRunner, out io.Writer) error {
-	p, cleanup, err := prepareBundle(ctx, configPath, archive, policy)
+	c, err := loadBundleSite(configPath)
+	if err != nil {
+		return err
+	}
+	return rollbackBundle(ctx, c, archive, policy, runner, out)
+}
+
+func rollbackBundle(ctx context.Context, siteConfig Config, archive string, policy bundle.Verification, runner StreamRunner, out io.Writer) error {
+	if err := pendingDataRecovery(siteConfig); err != nil {
+		return err
+	}
+	p, cleanup, err := prepareBundleForSite(ctx, siteConfig, archive, policy)
 	if err != nil {
 		return err
 	}

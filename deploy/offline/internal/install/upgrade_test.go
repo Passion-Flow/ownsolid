@@ -59,7 +59,7 @@ func TestUpgradeEntrancesCheckPendingRecoveryBeforeCandidateMedia(t *testing.T) 
 					}
 				})
 			}
-			for _, command := range []string{"plan", "bundle", "patch"} {
+			for _, command := range []string{"plan", "bundle", "patch", "rollback"} {
 				t.Run(command, func(t *testing.T) {
 					runner := &fakeDatabase{}
 					var out bytes.Buffer
@@ -70,6 +70,8 @@ func TestUpgradeEntrancesCheckPendingRecoveryBeforeCandidateMedia(t *testing.T) 
 						err = PlanUpgrade(t.Context(), config, candidate, policy, runner, &out)
 					case "bundle":
 						err = upgradeBundle(t.Context(), c, candidate, dir, "", policy, runner, &out)
+					case "rollback":
+						err = rollbackBundle(t.Context(), c, candidate, policy, runner, &out)
 					case "patch":
 						err = UpgradePatch(t.Context(), config, candidate, candidate, dir, policy, runner, &out)
 						if test.file == "" {
@@ -78,6 +80,12 @@ func TestUpgradeEntrancesCheckPendingRecoveryBeforeCandidateMedia(t *testing.T) 
 					}
 					if err == nil || !strings.HasPrefix(err.Error(), want) || out.Len() != 0 || len(runner.commands) != 0 {
 						t.Fatalf("wanted %s without output or Docker calls, got %v %q %v", want, err, out.String(), runner.commands)
+					}
+					if test.file != "" {
+						target, err := os.Readlink(filepath.Join(root, test.file))
+						if err != nil || target != "absent-recovery-record" {
+							t.Fatalf("pending recovery record changed: %q %v", target, err)
+						}
 					}
 					if files, err := os.ReadDir(policy.MountRoot); err != nil || len(files) != 0 {
 						t.Fatalf("unexpected staging files: %v %v", files, err)

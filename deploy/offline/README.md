@@ -869,6 +869,10 @@ ownsolid-install rollback-bundle --bundle /mnt/release/previous.tar.gz \
   --verification /private/release-verification.json --config /private/site.yaml
 ```
 
+Before reading rollback media, a pending restore or coordinated backup returns
+its recovery instruction. Run `recover-restore` or `recover-backup` with the
+original site configuration, then retry. Keep the pending record intact.
+
 The rollback accepts the exact previous signed release and checks that the live
 database is at the schema that release expects. It changes the application
 configuration and image, leaving the database and telemetry stores running.
