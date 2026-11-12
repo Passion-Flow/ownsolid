@@ -153,7 +153,12 @@ data-processing Python and component assets are not installed there. The ARC-004
 was checked against that baseline and adds no failure. ARC-005 was checked the same way
 on the packages it touches (nodes, identity HTTP, machine composition, agent tests).
 
-On disconnected Linux PostgreSQL 18.6, the existing TestEveryCellOwnedTableCarriesScope check fails because audit_chain_head has zero of the two required cell scope columns. The [database catalogue review](../research/postgresql-catalog-upgrade-gate.md) records the baseline and the required Audit-owned forward migration.
+At schema 57, TestEveryCellOwnedTableCarriesScope fails because audit_chain_head lacks
+both required scope columns. The 58 candidate passed the six SQL catalog paths,
+production Go migrator and Audit module on disconnected Linux amd64 PostgreSQL 18.6.
+The standalone verifier retained the earlier checkpoints. Repository admission of
+58 still requires the full gate on the integration tree. See the
+[audit scope replay gate](../research/audit-chain-head-cell-scope.md#shared-linux-replay-gate).
 
 `deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
 removal by the owner: no image build copies it.
