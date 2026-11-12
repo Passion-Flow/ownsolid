@@ -104,3 +104,16 @@ are comparisons, not new shipped inputs. No runtime network operation is added.
   real ARC gateway graph must run separately when resources and owner integration
   exist. Preserve current-role revocation and final transaction after I/O. No
   standalone gateway, restricted-role or P1 completion is claimed by unit checks.
+
+## External native mechanism result
+
+The generated-only Linux amd64 descriptor prototype passed all ten checks in
+0.0343 seconds, with 17,408 KiB maximum parent RSS and a 128 MiB address-space
+ceiling. It ran no PostgreSQL, processor, Docker or GPU process. Evidence is
+retained at /root/lane-trn-reader-prototype.af7ts6yw; prototype SHA-256 is
+f8f74d6b50b66a61c6d28faae61a201b3d2e848b3da3c04ecf7d108513ae80ae.
+Independent process reads and descriptor closure preserved writer exclusion.
+Same-length file changes, missing/symlink files, namespace changes and root
+replacement were refused; exact repair restored reads. The fixture was removed.
+This proves the kernel descriptor/ownership mechanism only, before Go product
+implementation. It does not qualify a mount, database role or gateway graph.
