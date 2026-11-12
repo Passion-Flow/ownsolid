@@ -200,3 +200,24 @@ httpserver, agentgateway, config and cmd/server package suites also passed
 with the race detector on macOS arm64, using a short-path private APFS
 temporary volume. Target Linux and installed rollout qualification of this
 new transport owner, including simulator resource measurements, remain open.
+
+The installed extension reuses the existing network-none single-node and
+two-gateway harness with 500 individually enrolled simulated agents. Select
+the minimum supported 60-second connection age and a five-second minimum
+preference check. Run 100-second simulated tasks on every twentieth node,
+confirm their acknowledged attempts before age, and retain those tasks
+through automatic connection replacement. Correlate server-generated
+connection IDs in session and retirement logs; client headers cannot choose
+that ID. Require each original transport to retire naturally within the
+configured jitter envelope and each agent to reconnect on its original
+preferred gateway. Then kill and return one gateway, verify convergence
+to the original assignments, task completion and persisted cursors. Record
+physical connection overlap and gateway resources as well as steady counts.
+Keep daemon startup failure diagnostics before the fixture is removed.
+
+The connection-identity trace and installed extension are prepared source,
+with formatting, layout and shell syntax checked. Their updated test input
+has not run: archive transport stalled and a separate native admission
+refused the original memory threshold. Preserve that distinction from the
+earlier four-package Mac race result. Resume native qualification before
+promoting this extension or closing ARC-107.
