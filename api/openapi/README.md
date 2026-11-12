@@ -17,6 +17,8 @@ python3 tools/codegen/sdk/audit.py --baseline "$RELEASE_SOURCE/api/openapi/v1"
 ```
 
 The report separates current declaration findings from compatibility findings.
+Named response model changes are review findings: regenerated clients can
+change return types even when old clients still decode the wire reply.
 Review request and response schemas, status and error codes, security
 requirements, pagination, idempotency, defaults and semantics separately.
 Exercise old SDKs against the new server and confirm upgrade and rollback
