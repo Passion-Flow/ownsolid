@@ -8,6 +8,7 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
@@ -131,6 +132,34 @@ func (s *Service) retainedVersionWithin(ctx context.Context, q transaction.Execu
 	return out, nil
 }
 
+type historyAnchor struct {
+	workspace workspaces.Workspace
+	version   Version
+	family    string
+}
+
+func (s *Service) historyAnchorWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace, anchor string) (historyAnchor, error) {
+	w, err := s.modelScope(ctx, q, a, workspace)
+	if err != nil {
+		return historyAnchor{}, err
+	}
+	if w.Status != "active" {
+		return historyAnchor{}, fail("ACCESS_DENIED")
+	}
+	if err = historyAvailable(ctx, q); err != nil {
+		return historyAnchor{}, err
+	}
+	selected, err := s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, anchor)
+	if err != nil {
+		return historyAnchor{}, err
+	}
+	family, err := versionFamilyWithin(ctx, q, w.TenantID, w.ID, anchor)
+	if err != nil {
+		return historyAnchor{}, err
+	}
+	return historyAnchor{workspace: w, version: selected, family: family}, nil
+}
+
 // History resolves the family from an exact anchor under current Admin authority.
 // It returns a keyset page without scanning physical files or granting execution.
 func (s *Service) History(ctx context.Context, a identity.Auth, workspace, anchor string, input HistoryQuery) (VersionHistory, error) {
@@ -142,23 +171,11 @@ func (s *Service) History(ctx context.Context, a identity.Auth, workspace, ancho
 		return out, fail("RESOURCE_NOT_FOUND")
 	}
 	err := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
-		w, err := s.modelScope(ctx, q, a, workspace)
+		frame, err := s.historyAnchorWithin(ctx, q, a, workspace, anchor)
 		if err != nil {
 			return err
 		}
-		if w.Status != "active" {
-			return fail("ACCESS_DENIED")
-		}
-		if err = historyAvailable(ctx, q); err != nil {
-			return err
-		}
-		if _, err = s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, anchor); err != nil {
-			return err
-		}
-		family, err := versionFamilyWithin(ctx, q, w.TenantID, w.ID, anchor)
-		if err != nil {
-			return err
-		}
+		w, family := frame.workspace, frame.family
 		policy := s.VersionHistoryPolicy()
 		limit, state := policy.DefaultLimit, ""
 		if limit < 1 || limit > policy.MaximumLimit || !historyKeyValid(s.Identity.HMACKey) {
@@ -248,24 +265,11 @@ func (s *Service) HistoricalVersion(ctx context.Context, a identity.Auth, worksp
 		return out, fail("RESOURCE_NOT_FOUND")
 	}
 	err := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
-		w, err := s.modelScope(ctx, q, a, workspace)
+		frame, err := s.historyAnchorWithin(ctx, q, a, workspace, anchor)
 		if err != nil {
 			return err
 		}
-		if w.Status != "active" {
-			return fail("ACCESS_DENIED")
-		}
-		if err = historyAvailable(ctx, q); err != nil {
-			return err
-		}
-		selected, err := s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, anchor)
-		if err != nil {
-			return err
-		}
-		family, err := versionFamilyWithin(ctx, q, w.TenantID, w.ID, anchor)
-		if err != nil {
-			return err
-		}
+		w, family, selected := frame.workspace, frame.family, frame.version
 		if version != anchor {
 			selected, err = s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, version)
 			if err != nil {
