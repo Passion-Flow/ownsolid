@@ -21,6 +21,17 @@ export const licenseEvent: AuditEvent = {
   request_id: '6f1c7a1e-0000-4000-8000-0000000000f1',
 };
 
+/** The real identity consumer records a bounded installation audit read. */
+export const auditReadEvent: AuditEvent = {
+  ...licenseEvent,
+  id: '6f1c7a1e-0000-4000-8000-0000000000e4',
+  action: 'audit.events_read',
+  target_type: 'installation',
+  target_id: null,
+  reason: 'installation_audit_read;limit=20;returned=3;assistant=false',
+  request_id: '6f1c7a1e-0000-4000-8000-0000000000f4',
+};
+
 /** An action on someone's account, by another person, that failed. */
 export const failedSignIn: AuditEvent = {
   ...licenseEvent,
