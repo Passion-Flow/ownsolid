@@ -225,3 +225,123 @@ The export comparison SHA-256 is
 `fe88b399091ff6e1706931f4e2b79e424b28dcaf85db3e0605343ed3f8dcbe39`.
 Use the two-step rehearsal above to establish continuity within one
 job and one publication when the admitted runtime is available.
+
+## Real interrupted Linux CPU worker resume
+
+The [complete CPU prototype inputs](training-runtime-delivery.md#reproducible-cpu-verification-prototype)
+now provide an exact Linux amd64 Python 3.12.15 environment with all 37
+hash-pinned wheels, original notices and actual imports checked offline.
+The independent prototype uses Torch 2.14.1+cpu and an explicitly separate
+private runtime manifest. Production CUDA/macOS manifests, worker Python
+sources, controller contracts and Agent code remain unchanged. No release
+signature or hardware observation is fabricated.
+
+The real worker ran the approved Qwen3-0.6B snapshot and the retained CC0
+publication with seed 42, rank 8, alpha 16, dropout 0, 96 tokens, batch 1,
+learning rate 0.0005, two optimizer steps and a checkpoint every step.
+All attempts retain the same logical tenant/workspace/job, exact data,
+configuration, package, runtime and worker identities. A fresh private
+attempt directory and a fresh network-none container isolate each worker.
+The original 6 GiB memory bound, two CPU threads and shared-host admission
+thresholds remain enforced.
+
+| Actual attempt | Observed outcome | Wall seconds | Peak process RSS bytes |
+| --- | --- | ---: | ---: |
+| Uninterrupted baseline | Trained at step 2; `resume_from_step=0` | 67.89 | 4,993,789,952 |
+| Interrupted worker | Published and sealed step 1, then deliberately killed; exit 137 and no OOM | 30.23 | 4,993,232,896 |
+| Fresh resumed worker | Trained at step 2; `resume_from_step=1` | 16.97 | 4,993,544,192 |
+
+The parent observed the step-one checkpoint publication event and matched its
+original receipt digest before killing only the owned container. That
+worker produced no final result. Its receipt SHA-256 is
+`49c8ff1ab797aa70681cb8fe0f34c97d906f0c275c554b54ecefa44bc2a4ac1c`.
+The new worker received a complete private copy, verified the same seal and
+two-step horizon, restored optimizer/scheduler/RNG/trainer state and executed
+the remaining step. The original receipt, bindings and two-step horizon
+remained unchanged.
+
+An independent reader rebuilt the expected bindings from each actual
+request, the approved catalogue and installed runtime, verified the complete
+seals before deserialization and compared every tensor/state field. The
+interrupted step-one algorithmic state also matches baseline step one.
+The final five algorithmic files match baseline step two byte for byte:
+
+| Final checkpoint file | SHA-256 in both baseline and resumed attempt |
+| --- | --- |
+| `adapter_model.safetensors` | `6e480ed88d3b33ee96bcb25c9813dcffff694f9f5e8b1f08d7db45af97d80937` |
+| `optimizer.pt` | `8b679b2cbc5b7bab8dbd344526ae9d65185b9a03a3cd2cd4611dfed0d9ee31e4` |
+| `scheduler.pt` | `e2799a306b5c89411f3f874599f534052e29f852c3305f26e4a28a712f0d15c1` |
+| `rng_state.pth` | `c1971a7f5a4b2dbf37c7eaedcc9ddd90b7f2853c5557f35719c1a2082903b821` |
+| `trainer_state.json` | `7b8783498b1804460f3d82f93d6ffa873920c4bb4b0d4d9332a427e88a6255d6` |
+
+The separately exported adapter tensors also match. The structured and raw
+comparison report hashes to
+`3ef77a0c7a579bca6dda3fdcc33501da1180d38de4f197313d669ed04d78f05f`.
+The original reports, requests, events, checkpoints and observations remain
+in the private prototype workspace, alongside the failed launch and all
+resource refusals. No raw result or state file was normalized or replaced.
+
+### Explicit differences and refusal checks
+
+The complete checkpoints are not byte-identical. `training_args.bin`
+contains each attempt's distinct output directory. A small disconnected
+reader checked the original receipt and file digests, then inspected pickle
+opcodes without importing Torch or executing pickle. The sole differing
+argument string is `output_dir`; every other opcode is identical. The ZIP
+serialization identifier changes with that payload. The checkpoint receipt
+has exactly one changed inventory entry, the `training_args.bin` digest.
+The two files are both 5,265 bytes. Their original hashes are
+`dd442afcb1e68ab5d168760bbb417bb0991ecafd3137fbc937a61f48b8d7d64d`
+and `3c71338c0c8f180ca3e52ddf870f743d40fbdf45c0b393ccc2c620eda86bdad3`.
+The difference report hashes to
+`0af71974d76ec408229adba26029de5d9b0300d71645474d636dd86e74afc490`.
+
+The protected `training_loss` values also have distinct coverage. Baseline
+step losses are 0.9951430559158325 and 5.267714500427246, with a two-step mean
+of 3.1314287781715393. The resumed worker reports only its new step's loss,
+5.267714500427246. That step exactly matches baseline step two. The pinned
+Transformers 5.19.0 `Trainer` records `_initial_global_step` and divides its
+current invocation's accumulated loss by
+`global_step - _initial_global_step`. Keep the per-invocation summary distinct
+from full-run step history when comparing resumed runs; a seed alone is not
+an equivalence claim.
+
+Two additional real worker invocations copied the original sealed step-one
+checkpoint. An equal-length optimizer-byte change returned
+`TRAINING_CHECKPOINT_CHANGED`; changing only the otherwise valid horizon
+from two to four steps returned `TRAINING_CHECKPOINT_INCOMPATIBLE`. Neither
+invocation emitted the model-loading phase or performed a training step.
+The original checkpoint remained intact and was not resealed for either case.
+
+This verifies actual local CPU computation and restart under the exact
+prototype inputs. It does not establish installed Agent/control acceptance,
+the user-facing recovery flow, signed-media admission, another filesystem
+or survival of node loss before checkpoint transfer. Production NVIDIA
+execution remains a separate hardware gate. Keep TRN-104 open for its full
+product path and retain this narrower actual-run evidence.
+
+### Reproduction inputs and preserved evidence
+
+The private `cpu-prototype-source-evidence-v2.tar.gz` archive in the retained
+CPU audit root has SHA-256
+`b83aa744cc40e0121f70ac197f5ab586e652da91479007166c6aced9906e908e`.
+A disconnected reader verified every one of its 579 payloads against the
+inner size/hash inventory without extracting it. It contains the exact
+worker and harness sources, separate runtime manifest, full hash locks,
+original notices, package/base identities, CC0 sample publication and
+unmodified request/result/receipt/observation metadata. Original algorithmic
+binaries remain in the preserved workspace. The 37-wheel/pip directory,
+exact base-image archive and nine-file approved model are separate required
+binary inputs; none is replaced by this small metadata archive.
+
+Extract into a fresh private root with `umask 077`, preserving source files
+0600 and directories 0700. `reproduce.md` records the complete offline
+materialization and run commands. `portable_cpu_inputs.py` verifies the
+inventory digest, complete wheel/notice payloads and both locks without a
+live index. `install_cpu_prototype.sh` creates a fresh environment from only
+those inputs. `execute_cpu_prototype.sh` runs the paired workers and both
+negative cases; after a resource-admission refusal its explicit starting-case
+argument resumes the remaining checks without replacing a successful run.
+All heavy stages require both existing shared Linux locks and the unchanged
+3 GiB free/12 GiB available memory, 15 GiB disk and at-most-5-percent full
+I/O avg10/avg60 thresholds. Every created work container was removed.
