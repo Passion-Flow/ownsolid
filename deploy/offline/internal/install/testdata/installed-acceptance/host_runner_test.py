@@ -78,6 +78,36 @@ class Runner(unittest.TestCase):
         with self.assertRaises(guard.Refused):
             host_runner.configuration(self.root)
 
+    def observed_resources(self, pressure):
+        config = dict(self.config, minimum_free_memory_bytes=1,
+                      minimum_available_memory_bytes=1, minimum_disk_bytes=1,
+                      maximum_io_avg10=5)
+        with mock.patch.object(Path, 'read_text', side_effect=[
+                'MemFree: 4 kB\nMemAvailable: 8 kB\n', pressure]), \
+                mock.patch.object(host_runner.os, 'statvfs', return_value=mock.Mock(f_bavail=1024, f_frsize=1024)):
+            return host_runner.resources(config)
+
+    def test_resource_gate_uses_full_pressure(self):
+        pressure = ('some avg10=20.00 avg60=4.00 avg300=1.00 total=100\n'
+                    'full avg10=2.50 avg60=1.00 avg300=0.50 total=20\n')
+        facts = self.observed_resources(pressure)
+        self.assertEqual(facts['io_full_avg10'], 2.5)
+        self.assertEqual(facts['disk_free_bytes'], 1048576)
+        self.assertEqual(facts['io'], pressure)
+
+    def test_resource_gate_refuses_excessive_full_pressure(self):
+        with self.assertRaisesRegex(guard.Refused, 'pressure gate failed'):
+            self.observed_resources('some avg10=20.00\nfull avg10=5.01\n')
+
+    def test_resource_gate_refuses_unavailable_or_invalid_full_pressure(self):
+        for pressure in ['', 'some avg10=0.00\n', 'full avg10=1\nfull avg10=2\n',
+                         'full avg60=0.00\n', 'full avg10=1 avg10=2\n',
+                         'full avg10=invalid\n', 'full avg10=NaN\n', 'full avg10=inf\n',
+                         'full avg10=-1\n', 'full avg10=101\n']:
+            with self.subTest(pressure=pressure):
+                with self.assertRaises(guard.Refused):
+                    self.observed_resources(pressure)
+
     def test_occupied_name_is_never_stopped(self):
         window = host_runner.Window(self.root, self.config, self.admission)
         with mock.patch.object(window, 'docker', return_value=subprocess.CompletedProcess([], 0, '[]', '')) as docker:

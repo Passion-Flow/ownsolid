@@ -66,11 +66,22 @@ def resources(config):
     guard.require(memory['MemFree'] >= config['minimum_free_memory_bytes']
                   and memory['MemAvailable'] >= config['minimum_available_memory_bytes'], 'Host memory gate failed')
     disk = os.statvfs(config['output_directory'])
-    guard.require(disk.f_bavail * disk.f_frsize >= config['minimum_disk_bytes'], 'Host disk gate failed')
+    disk_free = disk.f_bavail * disk.f_frsize
+    guard.require(disk_free >= config['minimum_disk_bytes'], 'Host disk gate failed')
     pressure = Path('/proc/pressure/io').read_text()
-    guard.require(all(float(line.split('avg10=')[1].split()[0]) <= config['maximum_io_avg10']
-                      for line in pressure.splitlines()), 'Host I/O pressure gate failed')
-    return {'memfree_bytes': memory['MemFree'], 'memavailable_bytes': memory['MemAvailable'], 'io': pressure}
+    rows = [line.split() for line in pressure.splitlines()]
+    full = [row for row in rows if row and row[0] == 'full']
+    guard.require(len(full) == 1, 'Require one full I/O pressure observation')
+    values = [field.removeprefix('avg10=') for field in full[0][1:] if field.startswith('avg10=')]
+    guard.require(len(values) == 1, 'Require one full I/O avg10 value')
+    try:
+        average = float(values[0])
+    except ValueError:
+        raise guard.Refused('Host full I/O pressure observation is invalid') from None
+    guard.require(0 <= average <= 100, 'Host full I/O pressure observation is invalid')
+    guard.require(average <= config['maximum_io_avg10'], 'Host full I/O pressure gate failed')
+    return {'memfree_bytes': memory['MemFree'], 'memavailable_bytes': memory['MemAvailable'],
+            'disk_free_bytes': disk_free, 'io_full_avg10': average, 'io': pressure}
 
 
 class Window:

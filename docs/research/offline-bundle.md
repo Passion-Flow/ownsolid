@@ -439,3 +439,35 @@ case. Replacing the pinned root with a fresh pathname walk would introduce
 a separate path substitution risk. No dependency or license changes are
 needed. Run the existing added-entry, changed-directory, unchanged inventory,
 cancellation, and special-file tests repeatedly on Linux as a non-root user.
+
+
+### Shared-host full I/O pressure admission
+
+The [Linux PSI interface](https://docs.kernel.org/accounting/psi.html)
+reports separate some and full pressure rows, each with avg10 in percent.
+The agreed host gate uses full avg10. The former installed-window runner
+compared every row to one threshold, conflating partial stalls with simultaneous
+stalls of all non-idle tasks. It also accepted an empty pressure document because
+all over an empty sequence is true.
+
+Select exactly one full row and one finite avg10 percentage between 0 and 100.
+Apply the explicit runtime threshold to that observation, and retain the raw
+PSI document and selected value in the existing parent facts. Refuse missing,
+duplicate, malformed or out-of-range full observations. Do not change memory,
+disk, lock or other host gates, and do not bake a machine's thresholds into the
+fixture. A more restrictive operator threshold remains an explicit runtime
+input. No dependency, model, dataset or copied kernel code is added; the
+existing Python standard library retains the [PSF license](https://docs.python.org/3/license.html) and permits commercial,
+offline use and redistribution with its notices.
+
+Verify resource admission with upstream-format PSI examples where some is above
+the threshold and full is below it, full is above it, or full is unavailable.
+Also cover duplicate rows/avg10 values, malformed numbers, NaN, infinity and
+out-of-range percentages. These deterministic parser tests start no workload
+and do not prove a real host passed a resource gate.
+
+The 33 lightweight fixture tests passed on Linux amd64, including all new PSI
+admission cases. The pre-fix regression reproduced both the partial-stall false
+refusal and missing/invalid full-observation admission. The tests substitute
+resource documents and filesystem counts. They did not take heavy-job leases,
+start Docker or services, or qualify a real host resource snapshot.

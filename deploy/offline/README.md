@@ -1071,7 +1071,10 @@ canonical `run_id` UUID, an unused `lane-del-` container name, a local Unix
 Set `relay_port` to 8443 to match this fixture's installed HTTPS endpoint.
 Reserve startup and cleanup time outside the suite budget. Set the shared-host
 `minimum_free_memory_bytes`, `minimum_available_memory_bytes`,
-`minimum_disk_bytes` and `maximum_io_avg10` to the agreed window gate. The
+`minimum_disk_bytes` and `maximum_io_avg10` to the agreed window gate.
+`maximum_io_avg10` limits the full I/O stall percentage over ten seconds;
+missing or invalid full readings refuse admission. The existing parent facts
+retain the selected value, raw PSI text and observed free disk bytes. The
 `images` map requires immutable local IDs for `dind`, `control`, `postgres`,
 `metrics`, `logs`, and `evaluator` when history is selected.
 
