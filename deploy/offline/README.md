@@ -80,6 +80,7 @@ ownsolid-install fleet-history apply --config /private/history/site.yaml
 
 Apply runs as root on Linux amd64. It verifies local images, validates the
 local rules with vmalert and starts the services with pulling disabled.
+The selected Docker endpoint must be a local Unix socket.
 The network is internal and the evaluator's health port is loopback-only.
 Each store retains its own data directory. JSON success identifies the
 checked monitoring file and Control CA file under an immutable input

@@ -40,6 +40,7 @@ func TestFleetHistoryPrivateDeploymentDocker(t *testing.T) {
 		*target = listener.Addr().String()
 		listener.Close()
 	}
+	t.Logf("Private listeners: raw=%s long=%s evaluator=%s", c.Raw.Listen, c.Long.Listen, c.EvaluatorListen)
 	c.RequestSeconds = 120
 	rules, err := os.ReadFile(rulesPath)
 	if err != nil {
@@ -76,7 +77,12 @@ func TestFleetHistoryPrivateDeploymentDocker(t *testing.T) {
 		cmd := exec.CommandContext(t.Context(), installer, "fleet-history", "apply", "--config", path)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			t.Fatalf("installed CLI failed: %v\n%s", err, output)
+			compose := active
+			if !exists(compose) {
+				compose = filepath.Join(c.Root, "compose-candidate.yaml")
+			}
+			logs, _ := (ExecRunner{}).Run(t.Context(), "docker", "compose", "-f", compose, "logs", "--no-color", "--tail", "30")
+			t.Fatalf("installed CLI failed: %v\n%s\n%s", err, output, logs)
 		}
 		if !bytes.Contains(output, []byte(`"status":"FLEET_HISTORY_READY"`)) {
 			t.Fatalf("missing ready output: %s", output)
