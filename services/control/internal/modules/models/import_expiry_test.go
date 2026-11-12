@@ -215,41 +215,43 @@ func TestActualAbandonedImportExpiryRacesWithUpload(t *testing.T) {
 	x.requireAudit(t, 1, 1)
 }
 
-type expiryUnknownStore struct {
+type expiryCommitStore struct {
 	transaction.Store
-	phase int
+	phase       int
+	afterCommit func() error
 }
 
-type expiryUnknownSession struct {
+type expiryCommitSession struct {
 	transaction.Store
 	phase, calls int
+	afterCommit  func() error
 }
 
-func (s expiryUnknownStore) WithSession(ctx context.Context, fn func(context.Context, transaction.Store) error) error {
+func (s expiryCommitStore) WithSession(ctx context.Context, fn func(context.Context, transaction.Store) error) error {
 	return s.Store.(transaction.SessionStore).WithSession(ctx, func(ctx context.Context, session transaction.Store) error {
-		return fn(ctx, &expiryUnknownSession{Store: session, phase: s.phase})
+		return fn(ctx, &expiryCommitSession{Store: session, phase: s.phase, afterCommit: s.afterCommit})
 	})
 }
 
-func (s *expiryUnknownSession) Within(ctx context.Context, readOnly bool, fn func(context.Context, transaction.Executor) error) error {
+func (s *expiryCommitSession) Within(ctx context.Context, readOnly bool, fn func(context.Context, transaction.Executor) error) error {
 	if e := s.Store.Within(ctx, readOnly, fn); e != nil {
 		return e
 	}
 	s.calls++
 	if s.calls == s.phase {
-		return &transaction.Error{Kind: transaction.CommitUnknown}
+		return s.afterCommit()
 	}
 	return nil
 }
 
-func (x expiryFixture) withUnknownCommit(t *testing.T, phase int) Service {
+func (x expiryFixture) afterExpiryCommit(t *testing.T, phase int, afterCommit func() error) Service {
 	t.Helper()
 	store, e := x.s.repository()
 	if e != nil {
 		t.Fatal(e)
 	}
 	id := *x.s.Identity
-	id.DB, id.Storage = nil, expiryUnknownStore{Store: store, phase: phase}
+	id.DB, id.Storage = nil, expiryCommitStore{Store: store, phase: phase, afterCommit: afterCommit}
 	worker := *x.s
 	worker.DB, worker.Identity, worker.Workspaces = nil, &id, &workspaces.Service{Identity: &id}
 	return worker
@@ -278,7 +280,8 @@ func TestActualAbandonedImportExpiryRecoversCommittedIntent(t *testing.T) {
 	x.requireImport(t, "uploading", "", 1)
 	x.requireAudit(t, 0, 0)
 
-	unknown := x.withUnknownCommit(t, 1)
+	loseReply := func() error { return &transaction.Error{Kind: transaction.CommitUnknown} }
+	unknown := x.afterExpiryCommit(t, 1, loseReply)
 	through, e := unknown.expireNextImport(x.ctx, "")
 	var outcome *transaction.Error
 	if through != x.id || !errors.As(e, &outcome) || outcome.Kind != transaction.CommitUnknown {
@@ -323,7 +326,7 @@ func TestActualAbandonedImportExpiryRecoversCommittedIntent(t *testing.T) {
 		t.Fatalf("resumed cleanup did not discard remaining staging: %v", e)
 	}
 
-	unknown = x.withUnknownCommit(t, 2)
+	unknown = x.afterExpiryCommit(t, 2, loseReply)
 	through, e = unknown.expireNextImport(x.ctx, "")
 	if through != x.id || !errors.As(e, &outcome) || outcome.Kind != transaction.CommitUnknown {
 		t.Fatalf("lost terminal commit reply: %q %v", through, e)
@@ -343,6 +346,54 @@ func TestActualAbandonedImportExpiryRecoversCommittedIntent(t *testing.T) {
 		t.Fatalf("expiry did not release the workspace slot: %+v %v", newImport, e)
 	}
 	x.requireAudit(t, 1, 1)
+}
+
+func TestActualAbandonedImportExpiryShutdownRecoversCommittedIntent(t *testing.T) {
+	for _, phase := range []int{1, 2} {
+		name := "after_intent"
+		if phase == 2 {
+			name = "after_terminal"
+		}
+		t.Run(name, func(t *testing.T) {
+			x := newExpiryFixture(t)
+			x.age(t)
+			ctx, cancel := context.WithCancel(x.ctx)
+			worker := x.afterExpiryCommit(t, phase, func() error {
+				cancel()
+				return nil
+			})
+			stopped := make(chan struct{})
+			go func() {
+				defer close(stopped)
+				worker.Run(ctx)
+			}()
+			t.Cleanup(func() { cancel(); <-stopped })
+			select {
+			case <-stopped:
+			case <-x.ctx.Done():
+				t.Fatal("model worker did not join after shutdown", x.ctx.Err())
+			}
+			if phase == 1 {
+				x.requireImport(t, "uploading", modelImportExpiryPending, 1)
+				x.requireAudit(t, 1, 0)
+				path := filepath.Join(x.s.RootDirectory, chunkPath(x.id, 0))
+				data, err := os.ReadFile(path)
+				if err != nil || !bytes.Equal(data, x.chunk) {
+					t.Fatalf("shutdown before discard changed accepted upload bytes: %v", err)
+				}
+			}
+			restarted := *x.s
+			through, err := restarted.expireNextImport(x.ctx, "")
+			if err != nil || phase == 1 && through != x.id || phase == 2 && through != "" {
+				t.Fatalf("fresh worker did not reconcile the shutdown boundary: %q %v", through, err)
+			}
+			x.requireImport(t, "cancelled", modelImportExpired, 0)
+			x.requireAudit(t, 1, 1)
+			if _, err = os.Stat(x.uploadDirectory(x.id)); !os.IsNotExist(err) {
+				t.Fatalf("reconciled expiry retained staging: %v", err)
+			}
+		})
+	}
 }
 
 func TestActualAbandonedImportExpiryKeepsOtherScopesAndStates(t *testing.T) {
