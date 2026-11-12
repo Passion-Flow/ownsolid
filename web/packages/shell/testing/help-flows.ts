@@ -3,6 +3,7 @@
 // pages, the API reference of this entrance only, and both languages, with nothing fetched from
 // outside the installation.
 import { article } from '@ownsolid/help/catalog';
+import { previewDownloadFailureCookie } from '@ownsolid/config/preview-download-failure';
 import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { expect, test } from '@playwright/test';
@@ -125,19 +126,26 @@ export function helpFlows(audience: ControlPlane['audience']): void {
         const href = await save.getAttribute('href');
         expect(href).toBeTruthy();
         const address = new URL(href ?? '', page.url()).href;
-        let refused = 0;
-        await page.route(
-          (url) => url.href === address,
-          async (route) => {
-            refused += 1;
-            await route.abort('connectionreset');
+        expect(new URL(address).origin).toBe(new URL(page.url()).origin);
+        await context.addCookies([
+          {
+            name: previewDownloadFailureCookie,
+            value: encodeURIComponent(new URL(address).pathname),
+            url: `${new URL(page.url()).origin}/`,
+            httpOnly: true,
+            sameSite: 'Strict',
           },
-          { times: 1 },
-        );
-        const failure = page.waitForEvent('download');
-        await save.click();
-        expect(await (await failure).failure()).not.toBeNull();
-        expect(refused).toBe(1);
+        ]);
+        try {
+          const refused = await context.request.get(address);
+          expect(refused.status()).toBe(503);
+          expect(refused.headers()['cache-control']).toBe('no-store');
+          const failure = page.waitForEvent('download');
+          await save.click();
+          expect(await (await failure).failure()).not.toBeNull();
+        } finally {
+          await context.clearCookies({ name: previewDownloadFailureCookie });
+        }
         await expect(save).toBeVisible();
         const retry = page.waitForEvent('download');
         await save.click();
