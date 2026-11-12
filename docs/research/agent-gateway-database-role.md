@@ -404,3 +404,42 @@ credentials, weaker SSL mode or broader grants is permitted. Remove the generate
 private key, password and protected database input with the owned container.
 This is database transport/role evidence only; delegated profiles and product
 startup/delivery remain separate open gates.
+
+
+## TLS certificate algorithm and external runner boundaries
+
+The first actual TLS prototype reached PostgreSQL 18.6 with its generated
+Ed25519 certificate and failed before fixture bootstrap with SQLSTATE 28000,
+SCRAM channel binding negotiation error. Its material-generation test passed;
+the product SQL/role assertions did not run. The retained failed input is
+9307 bytes, SHA-256
+d59611dca09c6240092bcbcb43aa01ce40e7b7edc5471c9beb89c332de43f95f.
+The generated private key, password, database input and container were removed.
+This failure is not qualification of the TLS path or an Ed25519 support claim.
+
+The pinned [pgx v5.11.0 SCRAM implementation](https://github.com/jackc/pgx/blob/v5.11.0/pgconn/auth_scram.go)
+uses the certificate signature hash required by
+[RFC 5929 section 4.1](https://www.rfc-editor.org/rfc/rfc5929.html#section-4.1).
+Its hash switch implements ECDSA/SHA-256, SHA-384 and SHA-512 and the listed RSA
+variants, but not Ed25519. In the default prefer mode the missing binding data
+falls back to a SCRAM client header that
+[PostgreSQL rejects when TLS channel binding is available](https://doxygen.postgresql.org/auth-scram_8c_source.html).
+Choose a newly generated ECDSA P-256/SHA-256 certificate for the next external
+fixture and require channel_binding=require as well as verify-full. Verify the
+actual certificate signature and parsed connection policy in the test. Do not
+disable channel binding, TLS verification or server plaintext refusal. Preserve
+all four independent TLS/authentication refusals, eleven query permission
+refusals and the role connection overflow. Ed25519 database-certificate
+compatibility remains a known open boundary rather than being relabeled.
+
+The external Python admission driver also exposed a test-harness namespace
+failure: a sibling queue.py could shadow the standard-library queue import and
+recursively start the runner. All identified owned runner processes were stopped
+by exact path, PID start time and command digest; foreign processes were left
+untouched. The later cleanup readback contained zero matching owned processes.
+Retain the failed logs. Use a responsibility-specific driver filename and
+[Python isolated mode](https://docs.python.org/3.12/using/cmdline.html#cmdoption-I),
+which excludes the script directory from module lookup, for admission and job
+processes. This change is outside product code and grants no product acceptance.
+Neither the resource thresholds nor the shared lock identities may change to
+admit a retry. No new dependency, model or dataset is introduced.
