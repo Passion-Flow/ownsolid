@@ -35,8 +35,11 @@ network. Fleet history's remote reader requires HTTPS. A long retention
 deployment needs distinct raw and aggregate stores, private TLS trust,
 the recording-rule evaluator and separate persistent data. Preserve the
 existing metrics push and readiness checks when adding native TLS to
-the raw store. The installer currently configures only metrics and log
-retention.
+the raw store. Use `ownsolid-install fleet-history apply` to deploy the additional native
+TLS stores and evaluator. Select its protected Control output directory with
+`telemetry.fleet_history_control_directory` before the normal installer Apply;
+this installs the history policy and CA trust without changing process metrics.
+See the [installer guide](../offline/README.md#private-tls-fleet-history-deployment).
 
 The older monitoring module examples refer to an overlay absent from
 this topology. Use the [current installation boundary](../../docs/research/telemetry-retention-tiers.md#current-installation-boundary)
