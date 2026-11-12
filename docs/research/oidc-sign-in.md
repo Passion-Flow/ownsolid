@@ -243,3 +243,46 @@ currently support Gitea only. A complete implementation needs the SSO owner
 and additive configuration, contract and UI changes. Adding an unreferenced
 OIDC verifier to the identity module would leave the installed login path
 unchanged. See [IAM lane boundaries](iam-questions.md).
+## Protocol prototype qualification
+
+The standalone private-provider prototype passed eight native Go test roots
+with race detection, including signed nonce/authorized-party/issuer/audience
+and time refusals, duplicate/case-alias fields, exact opaque subjects,
+canonical discovery, TLS trust refusals, bounded JWK structure and parsing,
+new-key and same-key-ID replacement, unknown/known-key floods, concurrency and
+actual request cancellation. Three live-only roots were skipped by that native
+unit invocation and exercised separately where applicable below.
+
+Two actual Keycloak 26.8.2 protocol roots then passed in a disposable Linux
+arm64 container with `--network none` and no published host ports. The probe
+performed the real password form and one S256 authorization-code exchange,
+verified the signed realm issuer/nonce/audience and exact nonnumeric subject,
+and matched UserInfo to that subject. The client ID and secret contained
+characters requiring form encoding before HTTP Basic encoding. Wrong PKCE,
+redirect and secret, token issuer/audience/nonce/signature substitution and
+consumed-code replay were refused, with no automatic second token exchange.
+The separate startup probe also passed.
+
+The fixed image manifest above ran Red Hat OpenJDK 21.0.13. Its complete
+application third-party notice, 35 image-package license files and 38 JDK legal
+files were retained and read, including the GPL, classpath/assembly and GCC
+runtime exceptions and component notices. These materials are for the private
+unmodified fixture; they do not admit a provider image for product distribution.
+The first LibreSSL implicit-serial pathname failure is retained separately;
+explicit serial generation and certificate-chain verification corrected that
+fixture setup before the successful provider run.
+
+The durable local evidence set is `iam102-20261113.1jjfl_s4`, successful run
+`qualification-j4mivx8l`. It retains exact prototype source hashes, selected module
+sums, binary and image identities, native and real-provider logs, independent
+request counts, component licenses and cleanup results. The provider and its
+owned anonymous storage were removed; the pinned image remains a dependency
+cache. No test server remains running.
+
+This establishes the external protocol approach. It adds no product dependency,
+connector type, binding, local session, route, database schema or browser UI.
+It is neither a rendered-browser nor Linux amd64 installation acceptance.
+IAM-102 stays open for the real-flow/storage handoff above and shared owners'
+contract, configuration and UI admission. The publication changes research
+only; its layout, roadmap and whitespace checks do not replace that future
+feature's full repository and installed-flow gates.
