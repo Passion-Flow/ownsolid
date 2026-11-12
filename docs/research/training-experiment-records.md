@@ -267,6 +267,13 @@ No Agent, UI, physical GPU or new worker computation is implied.
 
 The refreshed nine-group PostgreSQL replay and four Go owner packages also
 passed at `145852e7` after rebasing onto the updated main model-import code.
-The exact source, raw log hashes and separate pending CPU-unit profile are
-recorded in the native owner acceptance above. No Python/model/data input or
+The exact source and raw log hashes are recorded in the native owner
+acceptance above; the complete 20-test CPU-unit result has its own inputs. No Python/model/data input or
 production runtime manifest changed with these Go cell predicates.
+
+
+All nine native training groups also passed together on schema 60 at
+`9e524484`, including these exact refusal and repair assertions. The
+[native owner acceptance](training-job-lifecycle.md#schema-60-acceptance-and-the-sso-fixture-failure)
+preserves the separate earlier fixture migration failure and successful
+focused replay, the check result and the pending later-main gate scope.
