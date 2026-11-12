@@ -160,8 +160,8 @@ revision and returned the current description. A forced audit failure
 rolled back the update and its intent, and the same idempotency key
 could then be used for a different request. Clearing text while paused
 left the routing revision, deployment binding and target history
-intact, and the existing API key remained valid after resume. The
-candidate down SQL restored the predecessor HTTP response shape.
+intact, and the existing API key remained valid after resume. The current down SQL refuses retained content, revisions and replay
+intents; a pristine downgrade preserves the predecessor response shape.
 
 The unnumbered, test-only up and down scripts live in
 `services/control/internal/modules/distribution/testdata/`. The fixture
@@ -303,3 +303,121 @@ the fresh and restored-at-55 paths after running the down SQL.
 These are overlay measurements. Recompute the signatures, release
 lineage and expected table count from the actual committed tail when
 the migration is ordered. The candidate adds one table.
+
+
+## Schema-58 migration handoff
+
+The committed baseline 106ca52d includes the GW-120 production source
+from 8d359f49 and its scoped correction c9654657, plus the published
+OpenAPI contract. No additional production Go patch is needed to
+activate descriptions. ARC must append the exact unnumbered up SQL
+from distribution testdata at the actual shared tail, preserve all
+previous migration bytes, and recalculate the complete catalogue and
+runtime access checks. This gateway lane does not assign the number.
+The candidate adds one public table and raises the baseline count from
+118 to 119 before any subsequent migration.
+
+The new table is model_alias_description_intents: tenant, workspace,
+site, cell, actor, UUID intent key, alias, applied description revision,
+32-byte request fingerprint and creation time. Its composite primary
+key retains actor-scoped idempotency; its composite alias foreign key
+fences tenant, workspace, site and cell together. Both cell columns
+are non-null and default from the local registry. The existing
+protect_alias_cutover_record trigger rejects updates and deletes.
+model_aliases receives the plain text and independent revision, plus
+the composite unique key needed by the new foreign key. No role,
+sequence, extension, model, dataset or dependency is introduced.
+
+Apply migration DDL with the existing operator and installation lock,
+then extend the installed restricted runtime principal through the
+existing runtime-access step before starting control. The current
+grant policy requires SELECT, INSERT, UPDATE and DELETE on business
+tables, with no ownership, DDL, TRUNCATE, REFERENCES, TRIGGER or grant
+option; the immutable trigger still refuses intent updates/deletes.
+The new table is not an exception to that existing policy. Do not
+grant the runtime role access to audit_chain_head or writes to the
+migration ledger. ARC must verify effective runtime privileges against
+the actual new TableCount; the gateway candidate does not weaken the
+platform admission predicate.
+
+### Safe rollback
+
+Run the down script in one operator transaction while serving is
+stopped. Acquire ACCESS EXCLUSIVE locks on aliases and description
+intents before checking retained state. Refuse with SQLSTATE 55000 and
+MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE if any description
+is nonempty, any independent revision differs from 1, or any edit
+intent exists. Clearing the visible text does not make its revision
+and replay history disposable. A verified pre-upgrade backup and the
+normal restore procedure are required once the feature has been used;
+the down script never clears content or deletes intents to force a
+rollback. A pristine, unused upgrade can remove the new columns,
+reference constraint and table and retain the original alias routing
+state. The [PostgreSQL lock modes](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-TABLES)
+and [exception semantics](https://www.postgresql.org/docs/18/plpgsql-errors-and-messages.html)
+provide the same-transaction check and refusal. Existing licence
+terms above apply.
+
+Keep the predecessor HTTPS upgrade fixture pinned to schema 58 so it
+continues to prove omitted fields, SERVICE_NOT_READY and legacy
+publication replay after the production migration lands. A separate
+installed-schema fixture must use normal database migration/checking
+and run the same Admin/Portal flow without applying candidate DDL.
+Until ARC installs the shared migration, that fixture remains pending.
+Test pristine rollback, every retained-state predicate, rollback after
+clearing, and a writer committed while downgrade waits for its lock.
+Neither the feature nor S-304 is complete until the installed schema,
+restricted runtime and actual Portal consumer are qualified.
+
+
+### Committed schema-58 qualification
+
+The exact production schema-58 files from 106ca52d reproduced the three
+baseline catalogue signatures before applying the candidate. Fresh
+schema, a schema-58 logical restore followed by candidate application,
+a current candidate dump/reparse, and restore at 55 followed by upgrade
+through 58 all passed on PostgreSQL 18.6 and pgvector 0.8.7 with no
+external network. The latter two current restore paths agreed on the
+same digest. Pristine down returned the exact fresh and restored-at-55
+baseline catalogues. The three resulting signatures remain the values
+in the scoped table above. These are candidate measurements against
+the committed predecessor, not the formally numbered production tail.
+
+The unnumbered up SQL SHA-256 is
+399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
+The safe down SQL SHA-256 is
+4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
+Changing only the down refusal does not change the candidate catalogue.
+ARC must retain these exact raw bytes when assigning the actual tail
+and verify the complete release lineage and runtime principal.
+
+The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
+concurrent revision refusal, exact replay, scope checks and retry after
+audit rollback. TestAliasDescriptionRollbackPreservesRetainedState
+passed pristine rollback and independent text, revision and intent
+refusals. TestAliasDescriptionRollbackWaitsForCommittedWriter observed
+the table-lock wait, committed the writer, and then received the
+retained-state refusal without losing the write. Clearing through the
+HTTP route still prevented downgrade and retained a successful replay.
+The installed-schema test was explicitly skipped on schema 58.
+
+The Linux handoff and logs are retained in
+/root/lane-gw-acceptance/gw120-schema58._65ygj2r. run-tests.sh runs the
+focused PostgreSQL/HTTPS checks; catalog.sh reproduces fresh, current
+restore and old restore in one disposable container. Both acquire the
+shared Linux heavy-test and SCI replay locks and enforce the resource
+preflight. The schema fixture uses only its own namespace and no host
+listener. No model or GPU ran. For an already prepared private fixture,
+run the native tests from the repository root:
+
+```sh
+go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription(PostgreSQLUpgradeAndHTTPS|InstalledSchemaAndHTTPS|RollbackPreservesRetainedState|RollbackWaitsForCommittedWriter)$' -count=1
+```
+
+After formal migration, require InstalledSchemaAndHTTPS to pass using
+the normal production migrator and catalog checks, without applying the
+candidate SQL. ARC owns the exact numbered files, catalogue constants,
+TableCount and restricted runtime verification; GW owns this backend
+read/write regression; WEB and DEL own the installed S-304 consumer
+qualification. Neither the candidate run nor a skipped installed test
+is a completed production description flow.
