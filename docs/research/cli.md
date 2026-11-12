@@ -484,3 +484,44 @@ dispatcher with PostgreSQL and no external route. Verify continuation and
 retry, foreign-tenant refusal, search-bound cursors, current administrator
 permission and revoked sessions. This read slice leaves broader common
 operations and installed exporter qualification in DEV-102 open.
+
+
+## Browser session maintenance (DEV-102)
+
+[GitHub session management](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/viewing-and-managing-your-sessions)
+lets an account inspect and end its own sessions. Ownsolid's published
+identity contract already provides listBrowserSessions and revokeBrowserSession
+on the current account and entrance. The registered browser-sessions handler
+requires an empty DELETE body, no query, current authentication and CSRF, and
+clears identity cookies when the caller ends its current session.
+
+Expose session list and session revoke with an exact canonical nonzero UUID.
+Read one bounded page, preserving the current flag, authentication method and
+timestamps. Use the existing Admin-origin session and local CA. There is no
+actor, tenant, workspace or Portal selector. Global session management is
+independent of the configured cell and workspace.
+
+Hold the existing origin-specific credential lock across revocation. Check that
+the credential read before acquiring that lock is still current. This prevents
+a concurrent login from being discarded when a response clears the caller's
+cookie. Remove the saved credential only after an acknowledged successful
+revocation that cleared this client's session. A failed or uncertain response
+keeps the credential available. Report uncertainty with the exact target ID
+so the operator can inspect sessions and retry under the published contract.
+Do not send a synthetic JSON null or an idempotency header to an operation
+whose public handler accepts neither body nor query.
+
+The Go [cookie jar](https://pkg.go.dev/net/http/cookiejar) processes the server's
+cookie expiry. The existing CLI dependency and licence review applies:
+Cobra Apache-2.0, Go and x/sys BSD-3-Clause, and the reviewed YAML and terminal
+dependencies. These permit commercial and offline use and redistribution under
+their notice terms. No new dependency, model or dataset is added.
+
+Test global read scope and pagination; exact DELETE, CSRF and cookie behavior;
+retention after authorization/storage refusal; current-session local cleanup;
+and rejection of a credential changed between read and lock acquisition.
+Invalid IDs and missing confirmation fail before I/O. A real installed run
+must separately verify owned-session revocation, foreign-account/entrance
+refusal and the audit through the actual Admin HTTPS dispatcher and PostgreSQL.
+Keep this terminal slice and the broader DEV-102 item open until that run and
+the relevant repository gates pass.

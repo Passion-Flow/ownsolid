@@ -70,7 +70,7 @@ func (s sessionStore) lock() (*os.File, error) {
 	if err := unix.Flock(int(f.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
 		f.Close()
 		if errors.Is(err, unix.EWOULDBLOCK) {
-			return nil, errors.New("another login or logout is running for this server; wait for it to finish and retry")
+			return nil, errors.New("another session change is running for this server; wait for it to finish and retry")
 		}
 		return nil, fmt.Errorf("lock the session: %w", err)
 	}
