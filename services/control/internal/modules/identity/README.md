@@ -29,7 +29,10 @@ ADR 0024). A new poll in a page must send the header, or it defeats the idle tim
 
 ## Related surfaces and checks
 
-Synchronize [account contract/runbooks](../../../../../docs/milestones/m01-account), [HTTP contracts](../../../../../contracts/http/v1), [identity frontend](../../../../../web/README.md), [typed config](../../platform/config), mail/localization and schema changes. SSO session-source changes also require the [sso owner](../sso/README.md).
+Synchronize the [identity HTTP contract](../../../../../api/openapi/v1/identity/openapi.json),
+[account research and acceptance](../../../../../docs/research/local-accounts.md),
+[identity frontend](../../../../../web/README.md), [typed config](../../platform/config),
+mail/localization and schema changes. SSO session-source changes also require the [sso owner](../sso/README.md).
 
 Focused native checks: go -C services/control test ./internal/modules/identity ./internal/modules/identity/http. Current SQL, cookie/origin, mail, SSO, audience isolation and commit-loss tests require their explicit fixtures/build tags. Native tests alone do not establish those paths.
 
@@ -241,3 +244,26 @@ suppression and the original HTTPS/provider restrictions. No provider keys or
 private configuration are projected. The full readiness owner still verifies the
 configured ReleaseView's actual stored projection; a missing or invalid owner
 cannot become ready. See the [central activation contract](../../../../../docs/engineering/deployment-transport/mvp-postgresql-cpu-v1-activation.md).
+
+## Installation audit-read access
+
+The existing Admin audit route calls `ListAuditEventsForRequest` with its
+server-generated correlation ID. Its standard and verified-assistant views
+reach the same current-actor transaction in `listForActor`. The bounded page is
+read before `audit.events_read` is appended; only a confirmed transaction can
+release it. Append failure, cancellation and commit uncertainty return no page
+or assistant attribution. An explicit retry is another accounted read.
+
+The access event contains the current human actor, installation scope, page
+limit, returned count and selected representation. It contains no original
+rows, free-form reasons, raw query, cursor, email filter or protected metadata.
+The public page retains its existing allowlist. Use the existing `category=audit`
+filter to inspect the new family; the exact-action enumeration remains with
+the HTTP contract owner. Authenticated Go callers of the global audit list
+also reach this append, using a fresh operational UUID when no HTTP ID exists.
+
+The explicit workspace Go view still needs SCI's scoped access writer; the
+installation/default-workspace append cannot supply that attribution. Action
+localization, contract metadata and installer collection remain with their
+owners. See [the identity consumer research](../../../../../docs/research/identity-audit-read-access.md)
+for acceptance and these remaining AUD-108 boundaries.

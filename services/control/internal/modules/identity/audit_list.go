@@ -44,18 +44,18 @@ const (
 // ListWorkspaceAuditForActor reads audit events in one workspace of the installed
 // tenant. Only a current platform Admin session can select a workspace.
 func (s *Service) ListWorkspaceAuditForActor(ctx context.Context, a Auth, workspaceID string, q url.Values) (WorkspaceAuditList, error) {
-	return s.listAuditEventsForActor(ctx, a, q, &workspaceID)
+	return s.listAuditEventsForActor(ctx, a, q, &workspaceID, "")
 }
 
 // ListAuditEventsForActor uses the platform Admin audit view and verifies
 // assistant attribution for events in workspaces of the installed tenant.
 func (s *Service) ListAuditEventsForActor(ctx context.Context, a Auth, q url.Values) (AuditEventList, error) {
-	return s.listAuditEventsForActor(ctx, a, q, nil)
+	return s.listAuditEventsForActor(ctx, a, q, nil, "")
 }
 
-func (s *Service) listAuditEventsForActor(ctx context.Context, a Auth, q url.Values, workspaceID *string) (AuditEventList, error) {
+func (s *Service) listAuditEventsForActor(ctx context.Context, a Auth, q url.Values, workspaceID *string, requestID string) (AuditEventList, error) {
 	projection := auditListProjection{workspaceID: workspaceID, actors: make(map[AuditEventKey]AuditAssistantActor)}
-	list, err := s.listForActor(ctx, a, "audit-events", q, &projection)
+	list, err := s.listForActor(ctx, a, "audit-events", q, &projection, requestID)
 	if err != nil {
 		return AuditEventList{List: list}, err
 	}

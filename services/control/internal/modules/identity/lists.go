@@ -431,10 +431,10 @@ func (s *Service) List(ctx context.Context, kind string, q url.Values) (List, er
 
 // ListForActor reads an existing Admin list using the current authenticated session.
 func (s *Service) ListForActor(ctx context.Context, a Auth, kind string, q url.Values) (List, error) {
-	return s.listForActor(ctx, a, kind, q, nil)
+	return s.listForActor(ctx, a, kind, q, nil, "")
 }
 
-func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.Values, audit *auditListProjection) (List, error) {
+func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.Values, audit *auditListProjection, requestID string) (List, error) {
 	empty := List{Items: []map[string]any{}}
 	if !sessionActor(a) {
 		return empty, failure("AUTH_SESSION_EXPIRED")
@@ -492,7 +492,13 @@ func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.V
 		}
 		var e error
 		out, e = readList(ctx, tx, p, audit)
-		return e
+		if e != nil {
+			return e
+		}
+		if kind == "audit-events" && auditWorkspaceID == "" {
+			return recordAuditReadWithin(ctx, tx, a, p.limit, len(out.Items), audit != nil, requestID)
+		}
+		return nil
 	})
 	if e != nil {
 		return empty, sessionError(e)
