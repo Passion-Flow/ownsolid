@@ -22,3 +22,9 @@ If one part cannot be read, it says so and offers **Try again**; the rest of the
 ## Notifications
 
 The bell at the top counts your unread notices. Open it to read them and mark them as read.
+
+## Working with the API
+
+The [API reference](/help/api) lists the operations of this entrance. Search by name or path,
+then choose **Save the contract** to download the contract for this installed version.
+If a download fails, check the connection to this installation and choose **Save the contract** again.

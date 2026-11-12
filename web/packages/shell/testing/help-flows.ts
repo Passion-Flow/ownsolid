@@ -6,7 +6,9 @@ import { article } from '@ownsolid/help/catalog';
 import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { expect, test } from '@playwright/test';
+import { expectContractAudience } from './contract-download.ts';
 import { mockControlPlane, type ControlPlane } from './control-plane.ts';
+import { expectFocusVisible } from './keyboard-flows.ts';
 
 /** Registers the help flows for one entrance. */
 export function helpFlows(audience: ControlPlane['audience']): void {
@@ -85,6 +87,76 @@ export function helpFlows(audience: ControlPlane['audience']): void {
       ['en', english],
       ['zh-CN', chinese],
     ] as const) {
+      test(`keeps a contract discoverable offline and retries its download in ${locale}`, async ({
+        page,
+        context,
+      }, info) => {
+        control.preferences.locale = locale;
+        await page.setViewportSize(
+          locale === 'zh-CN' ? { width: 390, height: 844 } : { width: 1440, height: 900 },
+        );
+        const operation = audience === 'admin' ? 'getAdminWorkspace' : 'getPortalWorkspace';
+        await page.goto(`/help/api?q=${operation}`);
+        await expect(
+          page.getByRole('link', {
+            name: messages['help.api.save.label'].replace('{domain}', 'workspaces'),
+          }),
+        ).toBeVisible();
+        await context.setOffline(true);
+        try {
+          await page.getByLabel(messages['help.api.search']).fill('changePassword');
+          await expect(page.getByRole('button', { name: / changePassword$/ })).toBeVisible();
+          await info.attach(`contract-discovery-offline-${locale}`, {
+            body: await page.screenshot({ animations: 'disabled' }),
+            contentType: 'image/png',
+          });
+          await expect(
+            page.getByRole('link', {
+              name: messages['help.api.save.label'].replace('{domain}', 'identity'),
+            }),
+          ).toBeVisible();
+        } finally {
+          await context.setOffline(false);
+        }
+        const save = page.getByRole('link', {
+          name: messages['help.api.save.label'].replace('{domain}', 'identity'),
+        });
+        await expect(save).toHaveAttribute('download', 'identity.openapi.json');
+        const href = await save.getAttribute('href');
+        expect(href).toBeTruthy();
+        const address = new URL(href ?? '', page.url()).href;
+        let refused = 0;
+        await page.route(
+          (url) => url.href === address,
+          async (route) => {
+            refused += 1;
+            await route.abort('connectionreset');
+          },
+          { times: 1 },
+        );
+        const failure = page.waitForEvent('download');
+        await save.click();
+        expect(await (await failure).failure()).not.toBeNull();
+        expect(refused).toBe(1);
+        await expect(save).toBeVisible();
+        const retry = page.waitForEvent('download');
+        await save.click();
+        await expectContractAudience(await retry, audience);
+        await page.goto('/help/getting-started');
+        const reference = page
+          .getByRole('main')
+          .getByRole('link', { name: messages['help.api.title'], exact: true });
+        await reference.scrollIntoViewIfNeeded();
+        await info.attach(`contract-help-${locale}`, {
+          body: await page.screenshot({ animations: 'disabled' }),
+          contentType: 'image/png',
+        });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await expectFocusVisible(page);
+        await reference.click();
+        await expect(page).toHaveURL(/\/help\/api$/);
+      });
+
       test(`the published operation explains its error in ${locale}`, async ({ page }, info) => {
         control.preferences.locale = locale;
         await page.goto('/help/api');

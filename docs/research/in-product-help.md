@@ -385,8 +385,16 @@ has no address and disappears. The address itself is static build data.
 [Vite glob imports](https://vite.dev/guide/features#glob-import) support
 eager default imports with a `?url` query. Include those URL strings in
 the reference module while keeping the JSON files as separate same-origin
-assets. The existing zero-inline asset policy still applies. Preserve
-the asynchronous contractUrl API used by current callers.
+assets. The existing zero-inline asset policy still applies. Read this
+constant address synchronously in the reference header. The private Web
+helper retains its name, entrance projection and null result for an
+unknown contract; its only runtime consumer no longer needs a query.
+
+[TanStack Query's network modes](https://tanstack.com/query/latest/docs/framework/react/guides/network-mode)
+explain a second failure: its default online query pauses while offline,
+even if its result needs no network. Changing only the import would leave
+the header paused. An always-running query could avoid that pause but
+still adds asynchronous state and a cache for a constant build value.
 
 Reject fetching every full contract in advance: finding a download
 address does not require reading its content. A second manually maintained
