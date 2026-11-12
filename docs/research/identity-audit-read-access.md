@@ -347,3 +347,31 @@ and the explicit failed-query eligibility guard fixed them without weakening
 an assertion or the shared scheduler. Both failed runs remain retained.
 The complete exact-source repository gate and actual installed/SQL acceptance
 are separate from these focused results; AUD-108 remains open.
+
+### Complete Web recovery gate
+
+The exact integrated source c70e9f5950f421e7bef194ae5f5ced0efaf1ca7f passed make check,
+make build and make test on Mac arm64, including every Go module, Rust,
+Web unit targets and both complete Chromium suites. Console passed
+1,191 cases with 28 existing conditional skips;
+Portal passed 410 with 10 existing skips.
+There were no unexpected/flaky cases or retries. All 41 explicit-recovery
+cases passed. The private Make overlay capped Console at four workers
+and Portal at one, reused the production assets just built, selected no
+subset and introduced no skip.
+
+The eighteen screenshots read during focused verification share exactly
+the same product Web, OpenAPI, fixture, generator, capability and Makefile
+inputs as this complete gate. The reviewed test-only differences are Help-action formatting and
+strengthened node-activity retry assertions; neither changes a product or
+screenshot actuator. A separate reviewed installation expectation schema adds
+only the optional portal_listen_address string; no Web, generator or Makefile
+consumer references it. The complete gate covers that newer schema as well. Old six-request controls, the initial lint rejection
+the no-data invalidation failure and the first full check's Help-test format
+rejection plus the old node-activity retry-label failure remain separate
+raw artifacts.
+This is a scripted Web consumer qualification, not an installed commit-loss,
+collector, workspace-scope SQL or GPU result. The frozen be62 acceptance
+inputs remain unchanged. AUD-108 and actual installation acceptance remain
+open for their other owners. Source, native logs, full browser reports,
+patches and image hashes remain in the source-qualified Web evidence.
