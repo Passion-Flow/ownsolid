@@ -211,3 +211,33 @@ fixture was corrected, so the passed unit roots were retained rather than
 replayed. The corrected test binary and tagged vet were rebuilt before the
 final PostgreSQL root. AUD-108 remains open for IAM consumer pairing, DEV/Web
 publication and Delivery's offline collection admission and reconciliation.
+
+## Current-main integration qualification
+
+Implementation `8531226d8f16cf27de2d577b5ed99bfa34cdeb25` was privately
+rebased onto `8b17a295` before a fast-forward publication. Its three scoped
+Go files still match the native qualification manifest above. The audit
+writer, fixture, database/migration, API, dependency and COMMIT-fault inputs
+were unchanged from that qualification. Unrelated agent-cost and HTTP-client
+test helper changes were inspected and are outside this root's execution path.
+
+The current Control production tree passed `go -C services/control build ./...`
+in an offline container with one CPU and a 1.5 GiB memory limit. It covered the
+new scoped writer and the intervening scheduling source changes. The build
+exited zero without OOM and its container was removed. Preflight recorded
+4,956 MiB free, 19,428 MiB available, 745 GiB available disk and full I/O PSI
+0.05/0.69 over ten/sixty seconds. It used network mode `none` and exposed no host port.
+
+Current layout, roadmap and diff checks passed. The check command was
+`unshare --net make -o test-tools -o check-web check`. Tool and Web checks and
+non-Control builds were explicitly retained from the qualified shared baseline
+recorded by `c2d1d4c4`; their source inputs match. The complete test gates linked
+by that baseline remain prior evidence for their covered source versions.
+This was not a fresh complete `make check`, `make build` or `make test` run.
+The scoped unit and PostgreSQL roots were not repeated after matching their
+unchanged inputs. The retained integration-manifest SHA-256 is
+`a0dae386454dd47f1763bc4076b5510f6283f79879aeda32f1a597adab33cd2e`.
+
+This integration check does not qualify IAM's actual workspace read, its
+current-authority locks, DEV/Web publication or Delivery's support entry points.
+AUD-108 remains unticked.
