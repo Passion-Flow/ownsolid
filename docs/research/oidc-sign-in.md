@@ -162,6 +162,66 @@ fixtures. An unsuccessful case retains its original log and is not a completed
 prototype. Only after both classes pass should connector storage and the real
 SSO callback consume the adapter.
 
+## Storage and real-flow admission
+
+The current typed provider inventory already has separate `origin` and `issuer`
+fields. It permits one inventory entry per origin; the serving owner still
+constructs only a Gitea client. A generic provider selector must preserve that
+legacy interpretation and represent distinct approved issuers that share one
+network origin. An issuer path is an identity, not an endpoint path prefix.
+Discovery strips a terminal slash only when locating its metadata document;
+the configured issuer and ID token comparison retain the original exact value.
+Root and trailing-slash issuers and sibling endpoint paths need positive tests.
+All endpoint origins still require explicit approved transport policy. The
+first private-provider path uses one origin, canonical endpoints without
+queries, and RS256; additional transport and algorithm profiles need explicit
+admission, not automatic fallback.
+
+The current PostgreSQL connector permits only Gitea and stores a UUID client
+ID. Its binding subject is a canonical decimal number of at most 19 characters.
+Preserve those existing identities and immutable intent fingerprints. The new
+profile needs an immutable exact issuer, a bounded opaque client ID and a
+case-sensitive subject of at most 255 ASCII characters. Do not cast an OIDC
+subject into the old numeric column. Expanding the shared column without
+retaining provider-specific validation would also weaken Gitea's contract.
+Include upgrade/restore with active Gitea bindings and pending flows, not only
+a fresh schema. ARC owns formal migration admission and engine-specific catalogs.
+
+Use a fresh random OIDC nonce per flow. Store its one-way digest with that
+flow's immutable request scope and compare the signed returned nonce against
+it in constant time. The nonce does not require a second credential key or
+plaintext token store. The existing encrypted PKCE verifier stays in its
+existing purpose and representation, and the exclusive claim still erases it
+before provider I/O. A new OIDC flow must have its nonce digest; a legacy Gitea
+flow must retain its existing semantics. Prototype and test that storage/claim
+boundary against real PostgreSQL before composing the callback.
+
+The existing start transaction constructs a Gitea transport without contacting
+the provider. Do not turn that constructor into a discovery request while
+holding user, source, session or connector locks. Resolve the approved connector
+and obtain bounded metadata outside the authority transaction, then recheck its
+exact current revision and actor before persisting a start. Bind the selected
+profile/issuer to that intent. Claim once in the database, exchange/verify
+outside the transaction, then recheck current source and connector authority
+in completion before binding or issuing a session. Metadata/JWKS failure cannot
+prevent local-password startup or authorize an unapproved destination.
+
+The published connector and configuration contracts need the provider kind,
+issuer and opaque client-ID distinction; Web needs the actual provider fields
+and returned identity/result behavior. Use one explicit confidential-client
+authentication style, including the required form encoding before HTTP Basic
+encoding for generic client IDs and secrets. A colon or other allowed character
+must not change which credential was sent. Honor the configured exact callback
+and validate the authorization-response issuer when supported, as well as
+state, browser proof and nonce; none can be replaced by an email match.
+Shared owners admit those contracts before any route presents generic support.
+
+The actual route tests must substitute foreign tenant connectors, bindings and
+flows and independently observe that no provider exchange or session issuance
+occurred. Preserve the existing source-session, connector-disable, keyring-loss,
+audit-failure and real COMMIT-uncertainty cases. A protocol prototype does not
+replace those database and browser acceptance paths.
+
 ## Lane boundary
 
 The IAM lane now owns the client, callback and binding code in
