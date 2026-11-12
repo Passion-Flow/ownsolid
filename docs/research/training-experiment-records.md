@@ -254,3 +254,13 @@ the owned artifact table's immutable-row trigger around the fixture update
 and re-enable it in the same transaction. Production triggers remain unchanged. These
 are component acceptance rules, separate from installed Agent/UI/NVIDIA
 qualification and the original CPU computation evidence.
+
+The disconnected PostgreSQL 18.6 replay at `8495818a` passed the actual retained
+CPU evidence group with both job coordinates, all eight child-coordinate
+faults and the artifact change before the final read. Refused reads returned
+empty records/sources and appended no export audit; exact coordinate repair
+restored the original experiment. The eight neighboring groups passed in that
+run. Its separate new cell-owner group initially failed in a test-only audit
+UUID comparison and passed after correction at `be30d3f4`; the raw logs and
+repository-gate boundary are in the [native owner acceptance](training-job-lifecycle.md#native-acceptance-boundary-for-the-local-cell-candidates).
+No Agent, UI, physical GPU or new worker computation is implied.
