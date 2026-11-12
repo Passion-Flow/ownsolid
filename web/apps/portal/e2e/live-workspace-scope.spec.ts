@@ -174,6 +174,10 @@ test('refuses the Home request for another tenant and keeps scope across navigat
   await page.unroute(aliasesRoute);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'No models yet', exact: true })).toBeVisible();
+  await info.attach('models-selected-workspace', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
   await page.goBack();
   await expect(published.getByText(data.second.application, { exact: true })).toBeVisible();
   navigation.push({ stage: 'back-home-second-workspace', url: page.url() });
@@ -203,6 +207,12 @@ test('refuses the Home request for another tenant and keeps scope across navigat
   expect(scopes.slice(switchedAt).every((read) => read.workspace === next.workspace.id)).toBe(true);
   navigation.push({ stage: 'different-person-reloaded', url: page.url() });
   await info.attach('home-second-person', {
+    body: await page.screenshot({ animations: 'disabled' }),
+    contentType: 'image/png',
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(published.getByText(next.workspace.application, { exact: true })).toBeVisible();
+  await info.attach('home-second-person-phone', {
     body: await page.screenshot({ animations: 'disabled' }),
     contentType: 'image/png',
   });
