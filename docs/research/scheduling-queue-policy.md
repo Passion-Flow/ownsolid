@@ -80,3 +80,40 @@ reservation query calls for multiple eligible workspaces and assert that an
 invalid scope issues no reservation read. Durable queue membership, priority
 management and the authenticated dispatch flow remain owner integrations
 for SCH-103.
+
+## Durable queue and persisted reservation boundary
+
+The training owner's [nextCandidate](../../services/control/internal/modules/training/authority.go)
+selects one due queued job using `next_dispatch_at, created_at, id`.
+[DispatchNext](../../services/control/internal/modules/training/dispatch.go)
+then rechecks the persisted requester, membership authority, node and job
+before dispatch. Its retry time can change, so a page index or job creation
+timestamp alone cannot supply `QueueEntry.Sequence`. The public training
+list is a paginated, newest-first display read. The current owner contract
+provides neither an eligible batch in the ranking snapshot nor a resolved
+priority class. Those inputs and the final current-authority dispatch remain
+with the workload owner. Reusing its due-job query as a new public queue
+would duplicate its ownership and retry rules.
+
+The scheduler can independently qualify its existing durable reservation
+read. [ADR 0006](../decisions/0006-cell-and-site-scope.md) places resource
+records in one cell database. A retained reservation in a different site or
+cell must not silently alter this cell's workspace share. When any active
+record in the authorized workspace set carries foreign coordinates, fail the
+read with `SCHEDULING_QUOTA_POLICY_UNAVAILABLE` and return no rank or estimate.
+Keep the records intact for the owner to reconcile. Dropping those records
+from the sum could understate held resources in a mis-scoped installation.
+
+Use PostgreSQL's [bool_and aggregate](https://www.postgresql.org/docs/18/functions-aggregate.html)
+in the existing grouped numeric read, alongside the tenant, authorized
+workspace set and active-row predicate. This preserves one reservation
+query and the same REPEATABLE READ snapshot. Reuse the existing Go, pgx and
+PostgreSQL dependencies and their licenses recorded above.
+
+On isolated PostgreSQL, seed holds through the scheduler, change only the
+owned fixture record's site or cell, and require one failed aggregate read
+with no partial ordering. Verify an unrelated workspace still ranks and
+that correcting the fixture record restores the original rank. The normal
+module regression also checks preflight, contention, replay and release.
+This qualifies persisted scheduling reads. Production queue membership,
+priority resolution and the actual dispatcher integration remain open.

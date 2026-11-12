@@ -26,8 +26,12 @@ database owner to land or authorize the exact fresh and restored fingerprints.
 - SCH-103 ranks eligible workspace queues for one tenant using the existing
   policy and active reservations. The dispatch owner still supplies authorized
   membership, priority and durable enqueue order, opens a fresh snapshot after
-  dispatch and rechecks admission in the write transaction. See
-  [live workspace shares](scheduling-queue-policy.md#live-workspace-shares).
+  dispatch and rechecks admission in the write transaction. Training
+  currently selects one due job by `next_dispatch_at,created_at,id`; its
+  display list supplies neither the eligible batch nor resolved priority
+  classes. The existing persisted reservation read now refuses foreign
+  cell coordinates within the selected workspaces. See the
+  [durable queue boundary](scheduling-queue-policy.md#durable-queue-and-persisted-reservation-boundary).
 - SCH-104 reserves whole demand in PostgreSQL and requires a verified
   stop or non-delivery for every exact replica slot before release.
   The [gang handoff](scheduling-admission.md#atomic-gang-reservation-and-release)

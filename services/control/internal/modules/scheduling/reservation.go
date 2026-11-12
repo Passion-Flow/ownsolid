@@ -258,7 +258,8 @@ func readWorkspaceUsageWithin(ctx context.Context, q transaction.Executor, tenan
 
 func readUsageByWorkspaceWithin(ctx context.Context, q transaction.Executor, tenant string, workspaces []string) (map[string]Resources, error) {
 	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT s.workspace_id::text,r.key,sum(r.value::numeric)::text
+		`SELECT s.workspace_id::text,r.key,sum(r.value::numeric)::text,
+ bool_and((s.site_id=local_site_id() AND s.cell_id=local_cell_id()) IS TRUE)
  FROM scheduling_reservations s CROSS JOIN LATERAL jsonb_each_text(s.demand) r
  WHERE s.tenant_id=$1 AND s.workspace_id=ANY($2::uuid[]) AND s.released_at IS NULL
  GROUP BY s.workspace_id,r.key`, tenant, workspaces))
@@ -270,8 +271,12 @@ func readUsageByWorkspaceWithin(ctx context.Context, q transaction.Executor, ten
 	for rows.Next() {
 		var workspace, raw string
 		var resource Resource
-		if err := rows.Scan(&workspace, &resource, &raw); err != nil {
+		var local bool
+		if err := rows.Scan(&workspace, &resource, &raw, &local); err != nil {
 			return nil, err
+		}
+		if !local {
+			return nil, ErrQuotaPolicyUnavailable
 		}
 		quantity, err := parseReservationUsage(resource, raw)
 		if err != nil {
