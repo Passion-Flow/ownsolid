@@ -385,3 +385,33 @@ The later rebase preserves all transport, gateway, Agent protocol/client,
 simulator and e2e source paths byte for byte. Full integrated repository
 and installed 500-agent lifecycle qualification remain separate. No new
 fleet-capacity result or completed ARC-107 claim follows from these unit runs.
+
+
+## Complete repository gate and installed input
+
+The integrated source 129573ae8977cce83c1e81d9d386e45c1a176c3b, tree
+0ff7eff5700397de8be28342adb797fd4f9506e5, passed `make check`, `make build`
+and `make test` on Darwin arm64 from 2026-11-12 17:59:17 to 18:17:25 UTC.
+Console passed 1,112 browser cases and Portal 410; 28 and 10 existing live-fixture
+cases remained skipped, with zero retries. The Go, Rust and web unit suites
+also passed. The complete check, build and test log SHA-256 values are
+2de133be71bc1be09d156b43eb16a28d1655b3c21875d24259bcea8552d02b1f,
+292814dcb86f4c34031711636f7994f21df23a432e5a9ee1dcbb77492d9186ca
+and fd3472bf61412d4103b0724eccf94cda26371823b2d35bd1ff5b4fca7e69d37b.
+The regular-file workstation lock, two-CPU compiler limits, offline dependency
+cache, private APFS temporary volume and original assertion bounds were retained.
+The temporary volume was detached and its mount directory removed.
+
+A separate native Linux amd64 build verifies every byte and executable mode of
+all 5,014 source paths for that same snapshot before compiling the installer,
+agent, simulator, egress recorder, both existing e2e binaries and control. Control
+SHA-256 is 4440b3b63ec5316d380aff58c509f7186f008e24bf2df701041dc6b462a3a655;
+simulator SHA-256 is c4479bb013e20235415ccd412452d059b39861ef52afdb4acaf67d324f6a23ca.
+The fixture image combines these exact native control bytes, the complete
+qualified Mac web build and the pinned Python runtime base. This exercises the
+installed runtime, not the standard release-image build factory. The fixture
+uses no host port, a network-none outer Docker daemon, two CPUs and a 6 GiB
+memory ceiling. Preserve named container logs and routes before owned cleanup,
+and send the existing TEST-NET recorder probe before accepting zero egress.
+The 500-agent installed run is separate and remains unqualified until its actual
+result, task/cursor checks and sampled resource observations are recorded.
