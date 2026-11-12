@@ -975,7 +975,7 @@ export interface components {
             next_cursor: string | null;
         };
         ModelAliasPage: {
-            items: components["schemas"]["ModelAlias"][];
+            items: components["schemas"]["ModelAliasRead"][];
             next_cursor: string | null;
         };
         DistributionKeyPage: {
@@ -1121,6 +1121,49 @@ export interface components {
         };
         AliasDescriptionResultResponse: {
             data: components["schemas"]["AliasDescriptionResult"];
+        };
+        ModelAliasReadCapabilities: {
+            /**
+             * @description True only after the exact current deployment has passed generation verification; it does not advertise enabled gateway adapters.
+             * @constant
+             */
+            text_generation_verified: true;
+            /** @description Upper bound on context tokens from the verified model, serving recipe and gateway policy. The live tokenizer may enforce a smaller limit. */
+            context_token_ceiling: number;
+        };
+        ModelAliasRead: {
+            held_requests: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workspace_id: string;
+            /** Format: uuid */
+            gateway_id: string;
+            /** Format: uuid */
+            node_id: string;
+            name: string;
+            /**
+             * Format: uri
+             * @description Canonical HTTPS origin only; advertised metadata, never an outbound control destination.
+             */
+            client_origin: string;
+            /** Format: uuid */
+            deployment_id: string;
+            deployment_revision: number;
+            revision: number;
+            disabled_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            available: boolean;
+            unavailable_code: "MODEL_ALIAS_UNAVAILABLE" | null;
+            description?: string;
+            /** Format: int64 */
+            description_revision?: number;
+            /** @description Verified capabilities of the alias's current target. Omitted when exact evidence is unavailable. */
+            capabilities?: components["schemas"]["ModelAliasReadCapabilities"];
+        };
+        ModelAliasReadResponse: {
+            data: components["schemas"]["ModelAliasRead"];
         };
     };
     responses: {
@@ -1403,7 +1446,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ModelAliasResponse"];
+                    "application/json": components["schemas"]["ModelAliasReadResponse"];
                 };
             };
             /** @description Stable safe error. */
@@ -2251,7 +2294,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ModelAliasResponse"];
+                    "application/json": components["schemas"]["ModelAliasReadResponse"];
                 };
             };
             /** @description Stable safe error. */

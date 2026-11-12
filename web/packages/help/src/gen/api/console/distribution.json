@@ -430,7 +430,7 @@
     {
      "status": "200",
      "schema": {
-      "$ref": "ModelAliasResponse"
+      "$ref": "ModelAliasReadResponse"
      }
     }
    ],
@@ -3247,7 +3247,7 @@
      "type": "array",
      "maxItems": 100,
      "items": {
-      "$ref": "ModelAlias"
+      "$ref": "ModelAliasRead"
      }
     },
     "next_cursor": {
@@ -3272,6 +3272,146 @@
    "properties": {
     "data": {
      "$ref": "ModelAliasPage"
+    }
+   }
+  },
+  "ModelAliasRead": {
+   "type": "object",
+   "required": [
+    "held_requests",
+    "id",
+    "workspace_id",
+    "gateway_id",
+    "node_id",
+    "name",
+    "client_origin",
+    "deployment_id",
+    "deployment_revision",
+    "revision",
+    "disabled_at",
+    "created_at",
+    "available",
+    "unavailable_code"
+   ],
+   "properties": {
+    "held_requests": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 9007199254740991
+    },
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "gateway_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string"
+    },
+    "client_origin": {
+     "type": "string",
+     "format": "uri",
+     "description": "Canonical HTTPS origin only; advertised metadata, never an outbound control destination.",
+     "minLength": 9,
+     "maxLength": 2048
+    },
+    "deployment_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "deployment_revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "revision": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "disabled_at": {
+     "anyOf": [
+      {
+       "type": "string",
+       "format": "date-time"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "available": {
+     "type": "boolean"
+    },
+    "unavailable_code": {
+     "anyOf": [
+      {
+       "type": "string",
+       "const": "MODEL_ALIAS_UNAVAILABLE"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "description": {
+     "type": "string",
+     "maxLength": 500
+    },
+    "description_revision": {
+     "type": "integer",
+     "format": "int64",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    },
+    "capabilities": {
+     "$ref": "ModelAliasReadCapabilities",
+     "description": "Verified capabilities of the alias's current target. Omitted when exact evidence is unavailable."
+    }
+   }
+  },
+  "ModelAliasReadCapabilities": {
+   "type": "object",
+   "required": [
+    "text_generation_verified",
+    "context_token_ceiling"
+   ],
+   "properties": {
+    "text_generation_verified": {
+     "type": "boolean",
+     "description": "True only after the exact current deployment has passed generation verification; it does not advertise enabled gateway adapters.",
+     "const": true
+    },
+    "context_token_ceiling": {
+     "type": "integer",
+     "description": "Upper bound on context tokens from the verified model, serving recipe and gateway policy. The live tokenizer may enforce a smaller limit.",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "ModelAliasReadResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ModelAliasRead"
     }
    }
   },

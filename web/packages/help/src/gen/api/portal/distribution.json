@@ -127,7 +127,7 @@
     {
      "status": "200",
      "schema": {
-      "$ref": "ModelAliasResponse"
+      "$ref": "ModelAliasReadResponse"
      }
     }
    ],
@@ -1344,7 +1344,46 @@
     }
    }
   },
-  "ModelAlias": {
+  "ModelAliasPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "ModelAliasRead"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "ModelAliasPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ModelAliasPage"
+    }
+   }
+  },
+  "ModelAliasRead": {
    "type": "object",
    "required": [
     "held_requests",
@@ -1446,56 +1485,41 @@
      "format": "int64",
      "minimum": 1,
      "maximum": 9007199254740991
-    }
-   }
-  },
-  "ModelAliasPage": {
-   "type": "object",
-   "required": [
-    "items",
-    "next_cursor"
-   ],
-   "properties": {
-    "items": {
-     "type": "array",
-     "maxItems": 100,
-     "items": {
-      "$ref": "ModelAlias"
-     }
     },
-    "next_cursor": {
-     "anyOf": [
-      {
-       "type": "string",
-       "minLength": 1,
-       "maxLength": 512
-      },
-      {
-       "type": "null"
-      }
-     ]
+    "capabilities": {
+     "$ref": "ModelAliasReadCapabilities",
+     "description": "Verified capabilities of the alias's current target. Omitted when exact evidence is unavailable."
     }
    }
   },
-  "ModelAliasPageResponse": {
+  "ModelAliasReadCapabilities": {
+   "type": "object",
+   "required": [
+    "text_generation_verified",
+    "context_token_ceiling"
+   ],
+   "properties": {
+    "text_generation_verified": {
+     "type": "boolean",
+     "description": "True only after the exact current deployment has passed generation verification; it does not advertise enabled gateway adapters.",
+     "const": true
+    },
+    "context_token_ceiling": {
+     "type": "integer",
+     "description": "Upper bound on context tokens from the verified model, serving recipe and gateway policy. The live tokenizer may enforce a smaller limit.",
+     "minimum": 1,
+     "maximum": 9007199254740991
+    }
+   }
+  },
+  "ModelAliasReadResponse": {
    "type": "object",
    "required": [
     "data"
    ],
    "properties": {
     "data": {
-     "$ref": "ModelAliasPage"
-    }
-   }
-  },
-  "ModelAliasResponse": {
-   "type": "object",
-   "required": [
-    "data"
-   ],
-   "properties": {
-    "data": {
-     "$ref": "ModelAlias"
+     "$ref": "ModelAliasRead"
     }
    }
   },

@@ -514,9 +514,10 @@ changed operation identities.
 
 ## GW-104 alias capability contract preparation
 
-The gateway owner's local candidate 65ed7c87 provides a scoped internal
-projection. Its follow-up 42efece0 verifies that the four public reads
-still use the released shape. The [LiteLLM model management API](https://docs.litellm.ai/docs/proxy/ui_store_model_db_setting)
+The gateway owner's schema-58 source handoff provides the independent
+AliasReadView used by four registered human reads. Publication remains a
+joint source and contract change, with production activation owned by the
+gateway and composition lanes. The [LiteLLM model management API](https://docs.litellm.ai/docs/proxy/ui_store_model_db_setting)
 distinguishes informational model metadata from enabled endpoints. The
 [OpenAI model object](https://developers.openai.com/api/reference/resources/models)
 has its own compatible shape. Keep ownsolid capability evidence on
@@ -539,9 +540,8 @@ composition for both audiences. Require each alias and its optional
 projection to share the same authorized transaction and exact alias
 and deployment revisions. Keep the compatible model list, machine
 bindings and mutation responses on their existing shapes. The current
-ModelAlias component is shared by reads and writes, so verify the four
-operations' actual response boundaries before choosing the published
-component binding. A new endpoint would duplicate alias discovery and
+ModelAlias component is shared by reads and writes. The prepared read
+bindings below separate the read extension from the closed mutation type. A new endpoint would duplicate alias discovery and
 require separate authorization. Deriving flags from the model family
 would bypass verified target evidence. Keep tools, pooling, rerank and
 multimodal claims outside this projection.
@@ -554,6 +554,93 @@ scope. Verify the generated Web, Help, Go and Python projections for
 both presence and omission, and check that machine and mutation
 responses retain their fields. The [SDK licences](sdk.md#licenses)
 apply. This preparation adds no dependency, model or data set.
+
+
+### Read schemas and generated client compatibility
+
+The registered read owner at 5fb92e1d uses AliasReadView for the four
+existing GET operations. Production composition leaves its publication
+switch disabled. Prepare this contract locally against that exact source;
+release requires the owner's rebased backend and its activation decision.
+
+Keep ModelAlias and ModelAliasResponse unchanged for mutation responses.
+ModelAliasPage is used only by the two list reads, so retain its public
+name and page envelope while changing its item reference to ModelAliasRead.
+The two detail reads use ModelAliasReadResponse. ModelAliasRead copies the
+released alias fields, required list, description pairing and closed-object
+rules and adds one optional capabilities property. A regression compares
+the base projections so later alias fields cannot silently diverge.
+
+The capability object is closed and requires both fields. The generation
+assertion is boolean true; the context ceiling is a positive integer
+bounded by the API's exact JSON integer representation. Omission represents
+missing or unusable evidence. Null, an empty object and a verified false
+value are not the wire representation of unknown. The operation identities,
+pagination, queries, audience rules and all write and machine schemas stay
+on their released contracts. No query can request a different scope or
+supply capability evidence.
+
+The [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+defines these constraints. An allOf extension of the closed ModelAlias
+would reject the added field. A permissive union could let a generated
+decoder select the older branch and lose the new metadata. A separate
+flattened read schema avoids both outcomes. The pinned
+[oapi-codegen documentation](https://github.com/oapi-codegen/oapi-codegen/blob/v2.8.2/README.md)
+and the installed openapi-python-client 0.29.1 model template define the
+current generated clients. Prototype the exact projection with both
+prepared tools before changing the published source.
+
+Previously generated Go and Python clients must still decode unchanged
+alias fields from responses with and without the optional object.
+This is wire compatibility, not identical generated type names: updated
+detail clients return ModelAliasReadResponse, and page items use
+ModelAliasRead. Callers with explicit annotations for the old read models
+need to select the new read types when regenerating. Write result types
+remain unchanged. The previously published closed detail schema rejects the
+new property, as it also must for mutation responses. Consumers that validate
+against a pinned old response schema need the updated read contract before
+activation; successful old SDK decoding does not qualify those validators.
+Test both old and new generated operation decoders and preserve omission
+when serializing an unknown capability.
+
+Validate presence and omission through the actual four authorized TLS
+handlers with PostgreSQL, including mixed pages, legacy, paused, stale
+and replaced targets, scope refusals and storage failure. The schema
+suite must reject null, partial or false capability claims and keep
+capabilities out of mutation and machine responses. Regenerate Web and
+Help from this contract; new Help descriptions require the owning Web
+lane's Simplified Chinese catalogue entries. The existing
+[SDK licences](sdk.md#licenses) cover the pinned generators, Go, Python,
+HTTPX and attrs and their commercial/offline redistribution terms.
+No new dependency, model or dataset is added.
+
+
+The exact schema-58 handoff at gateway tree b7059e5b, based on 106ca52d,
+has now been composed privately with this contract. The nine owner files
+were checksum-verified, with no metering or key-purpose DDL included.
+A private test copy added direct ModelAliasRead and page-schema assertions;
+production source bytes remained exactly those in the owner's manifest.
+Five focused tests passed under the race detector with disconnected
+PostgreSQL 18.6 and the real Admin and Portal HTTPS dispatcher. They
+covered exact evidence, mixed pages, missing and stale snapshots, pause,
+retarget, scope refusal and failed storage. The closed mutation and default
+read regressions passed. Deployment observations were synthetic; no model
+or GPU ran. The disposable PostgreSQL fixture was stopped and removed.
+
+Both pinned generators produced the baseline and candidate distribution
+clients offline, and both Go packages compiled. Old and updated Go/Python
+operation decoders passed all four reads with and without the capability
+object through controlled transports. The old clients retained their known
+fields; updated clients retained the object or serialized its omission.
+The schema cases rejected null, partial, false, zero, fractional and
+undeclared capability claims. These decoder tests are separate from the
+real-handler PostgreSQL qualification.
+
+Production activation remains with the gateway and composition owners.
+Enable only a qualified full PostgreSQL catalog with target-history tables;
+earlier cumulative profiles retain omission and must not start the new
+lookup. The prepared schema, generated clients and local verification are
+not a production activation or a GW-104 completion tick.
 
 GW-111 and DAT-107 retain their exact released error codes. The Help
 error index can add the remaining entries after the Web owner lands

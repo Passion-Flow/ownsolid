@@ -131,3 +131,36 @@ same audience. Exit 1 reports findings and exit 2 indicates unreadable or
 invalid input. The audit runs from local files and uses the same audience
 rules as SDK generation. It measures the published contracts. Verification
 against running handlers remains the responsibility of each API owner.
+
+## Verify alias capability read contracts
+
+Generate a baseline SDK from the released contract and a candidate SDK
+with the same pinned tools. The focused smoke checks use the real generated
+Admin and Portal operations with controlled local transports. They check
+both presence and omission, unchanged alias identities and cursor values,
+and the unchanged mutation model.
+
+```sh
+python tools/codegen/sdk/tests/alias_capability_smoke.py "$BASELINE_SDK" "$CANDIDATE_SDK"
+```
+
+For the actual handler qualification, obtain the gateway owner's exact
+source handoff and compare its base with the checkout. The overlay builder
+verifies the handoff's checksums and source boundary. It adds candidate
+schema assertions to a private copy of the owner's route fixture and
+includes the schema refusal cases. It does not edit the owner's files or
+enable production publication.
+
+```sh
+python3 tools/codegen/sdk/tests/alias_capability_overlay.py \
+  --repo "$REPOSITORY" --handoff "$GW_HANDOFF" --out "$OVERLAY_DIRECTORY"
+go -C services/control test -race -tags gateway_integration \
+  -overlay "$OVERLAY_DIRECTORY/overlay.json" ./internal/modules/distribution \
+  -run '^Test(AliasCapabilityReadSchemas|PostgresAliasReadCapabilitiesAtRegisteredEntrances|PostgresAliasCapabilityPublicContractBoundary|PostgresAliasCapabilitiesFollowVerifiedScopedTarget|AliasContextCeilingRequiresRecognizedSource)$' \
+  -count=1
+```
+
+Run inside a network namespace with loopback-only PostgreSQL 18.6 and
+pgvector 0.8.7. Supply its owner-only mode 0600 DSN file through
+`PROJECT_ONE_TEST_DSN_FILE`. The deployment observations are synthetic;
+this qualifies the metadata and authorization path, not model execution.
