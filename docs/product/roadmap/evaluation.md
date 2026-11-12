@@ -49,6 +49,9 @@ Measuring models and applications before release, and gating releases on the res
   - [Gateway request and receipt compatibility](../../research/evaluation-performance-benchmark.md#gateway-request-and-receipt-compatibility)
     verifies two retained inputs against the gateway parser and records the
     conditions for joining real serving results to an authorized receipt.
+  - [Authorized CPU gateway pair](../../research/evaluation-performance-benchmark.md#authorized-cpu-gateway-pair)
+    matched two real model outputs, token counts and scoped acknowledged
+    receipts. UI, GPU, detached signing and cost acceptance remain open.
 - [ ] EVL-106 Safety and regression sets: injection, leakage, unsupported answers (P1) - Catalog: F149
   - [Deterministic safety replay](../../../runtimes/model-lifecycle/README.md#replay-controlled-safety-cases)
     scores controlled outputs on a frozen synthetic fixture for injection,
