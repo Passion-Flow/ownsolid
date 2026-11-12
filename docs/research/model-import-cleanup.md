@@ -328,3 +328,73 @@ cases and the prior HTTPS import tests passed in the same fixture.
 go -C services/control test ./internal/modules/models/http \
   -run '^TestModelImportHTTPSExpiryIsScopedAndDistinctFromCancellation$' -count=1 -v
 ```
+
+### Web expiry consumer
+
+The existing import flow and status page consume the successful DTO's lifecycle
+reason. The [tus expiration extension](https://tus.io/protocols/resumable-upload#expiration)
+requires clients to recognize an expired upload instead of attempting to continue
+its old resource. Keep ownsolid's current protocol: the read DTO distinguishes
+`cancelled` plus `MODEL_IMPORT_EXPIRED`; mutation refusal remains the existing
+409 `MODEL_IMPORT_STATE_CONFLICT`. Do not construct a new expiry Problem.
+
+Show Expired in import history and status, with the historic byte count and steps.
+Explain that it cannot resume and offer Upload a new bundle, leading through the
+existing import form. That form creates a new idempotency key per intent; retry
+within the same intent retains its key. A creation replay of a terminal or pending
+expiry must navigate to its status without starting a transfer. Keep ordinary
+cancellation separate. Pending expiry cleanup is not Upload incomplete: disable
+resume/cancel writes, keep polling its real status and explain that the new import
+must wait for cleanup. A stale transfer that observes a closed upload stops and
+refreshes; a transport retry must not reopen a terminal resource.
+
+Reuse the existing React and TanStack code (MIT), Lucide (ISC) and Playwright
+(Apache-2.0), with their existing commercial redistribution/offline notices.
+No dependency, model, dataset, API operation, Problem name or runtime request is
+added. Browser tests use synthetic bundle bytes; they do not qualify the expiry
+worker's installation/startup behavior or real-model expiration.
+
+Verify both languages, ordinary cancellation as a positive control, pending cleanup,
+refresh and failed-read retry, an upload whose reply becomes a real 409 state
+conflict followed by the expired DTO, and a fresh form that sends a distinct key.
+Verify permission denial never exposes cached import controls or allows writes.
+Unit transfer checks must stop on a terminal/pending DTO without uploading or
+requesting verification, including a read after a lost chunk response. Register
+the expired and pending states for keyboard/accessibility/catalog checks and read
+desktop/narrow screenshots. ARC startup binding and actual installed expiry E2E
+remain open; no roadmap completion follows from preview checks.
+
+The existing three-step import flow ends on its status detail; this change adds
+no dialog or drawer. For an expired record, the one primary action is Upload a
+new bundle. Cleanup in progress offers no write and explains why continuation
+is unavailable. The seven state decisions are explicit:
+
+| State | Consumer behavior |
+| --- | --- |
+| Loading | Keep the existing resource-shaped loading state until the first read. |
+| First-time empty | The Imports tab explains when import history appears. A status route requires a real import; a missing record uses the existing not-found recovery. |
+| Filtered empty | A single import has no collection filter. The library's filtered-empty message and Clear filters remain distinct from initial import history. |
+| Partial | A transient status refresh keeps the known lifecycle and bytes with a retryable Problem notice. |
+| Error | Existing Problems explain read/write failures; state-conflict recovery reads the current DTO rather than inventing an expiry Problem. |
+| Denied | A 403/404 refresh removes cached status controls, stops transfer and polling, and shows the existing server recovery message. |
+| Not ready | Resume remains visible and aria-disabled for pending/expired uploads, with its adjacent reason; pending cleanup also leaves Discard visibly unavailable. |
+
+The focused Web checks passed make check, the Console production build,
+44 Console unit tests, 49 locale tests and 19 Help tests. Chromium passed
+44 model cases with three unchanged installation-dependent skips and all
+eight new expiry page-state checks. There were no retries or flaky cases.
+The first run's four failures were fixture configuration rejection: 100 ms
+polling is outside the existing 1,000--60,000 ms runtime contract. The
+corrected tests use 1,000 ms; no product limit was weakened. Both raw runs
+are retained separately.
+
+Six screenshots were opened and read: expired status, pending cleanup and
+its Help section in English desktop and 390-pixel Simplified Chinese.
+The status header names the model and lifecycle, the same three-step
+history remains, and the pending upload step reads Cancelled instead of
+suggesting it can continue. Expired status has one primary action, Upload
+a new bundle. Resume and pending Discard are visibly unavailable with
+reasons. The Help remains a reference article with sections and no extra
+surface. Known bytes and state labels wrap inside the narrow layout.
+These are scripted browser results. ARC startup binding, real installed
+expiry and the complete MOD-121 item remain open.

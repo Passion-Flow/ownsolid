@@ -418,6 +418,71 @@
    "children": [
     {
      "type": "text",
+     "value": "If an upload expires"
+    }
+   ],
+   "data": {
+    "id": "if-an-upload-expires"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "If an unfinished upload expires, its status explains what happened. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Expired"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " means its temporary files have been removed and it cannot resume. Choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Upload a new bundle"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ", select the bundle again and start a new import. While cleanup is running, wait for it to finish. Import history keeps the original byte count."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "For scripts, use a new "
+    },
+    {
+     "type": "inlineCode",
+     "value": "Idempotency-Key"
+    },
+    {
+     "type": "text",
+     "value": " for the fresh import. Reusing the old key returns the original expired import; it does not create another upload."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
      "value": "Retiring a model"
     }
    ],

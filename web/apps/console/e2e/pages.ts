@@ -8,6 +8,8 @@ import {
   deploymentAlias,
   deploymentKey,
   expiringKey,
+  expiredImport,
+  expiringImport,
   failedDeployment,
   failedImport,
   failedMail,
@@ -434,6 +436,26 @@ export const consolePages: readonly PageState[] = [
       control.modelImports = [{ ...stalledImport }];
       await page.goto(`/library/imports/${stalledImport.id}`);
       await page.getByText('This tab is not uploading').waitFor();
+    },
+  },
+  {
+    name: 'an expired import',
+    path: '/library/imports/$importId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.modelImports = [expiredImport];
+      await page.goto(`/library/imports/${expiredImport.id}`);
+      await page.getByRole('link', { name: 'Upload a new bundle', exact: true }).waitFor();
+    },
+  },
+  {
+    name: 'an import awaiting expiry cleanup',
+    path: '/library/imports/$importId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.modelImports = [expiringImport];
+      await page.goto(`/library/imports/${expiringImport.id}`);
+      await page.getByText('Removing an expired upload', { exact: true }).waitFor();
     },
   },
   {

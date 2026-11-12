@@ -44,7 +44,7 @@ import { Link } from '@tanstack/react-router';
 import { ArrowRight, Boxes, PackageOpen, Upload } from 'lucide-react';
 import { useMemo } from 'react';
 import { ModelFacts, modelSummary, totalBytes } from './model-details.tsx';
-import { importStates, modelKinds, modelKeys } from './model-state.ts';
+import { importState, modelKinds, modelKeys } from './model-state.ts';
 import { useChosenTab } from './resource-page.tsx';
 
 const tabs = ['models', 'imports', 'catalogue'] as const;
@@ -277,7 +277,7 @@ function ImportRows({ items }: { items: readonly ModelImport[] }) {
         </thead>
         <tbody>
           {items.map((item) => {
-            const state = importStates[item.state];
+            const state = importState(item);
             return (
               <Tr key={item.id}>
                 <Td className="font-semibold">

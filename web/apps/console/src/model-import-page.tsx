@@ -36,9 +36,9 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
 import { ArrowRight, FileArchive, Upload } from 'lucide-react';
-import { useRef, useState, type SubmitEvent } from 'react';
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import { ModelFacts, totalBytes } from './model-details.tsx';
-import { importStates, modelKeys, modelsKey } from './model-state.ts';
+import { canUploadImport, importState, modelKeys, modelsKey } from './model-state.ts';
 import { startTransfer, stopTransfer, useTransfer, type Transfer } from './model-upload.ts';
 import { ResourceHeader, ResourceUnavailable } from './resource-page.tsx';
 
@@ -162,9 +162,11 @@ function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
       ),
     onSuccess: (created, bundle) => {
       const refresh = () => queryClient.invalidateQueries({ queryKey: modelsKey });
-      startTransfer(bundle, created, catalog.chunk_bytes, reason.trim(), () => {
-        void refresh();
-      });
+      if (canUploadImport(created)) {
+        startTransfer(bundle, created, catalog.chunk_bytes, reason.trim(), () => {
+          void refresh();
+        });
+      }
       void refresh();
       void navigate({ to: '/library/imports/$importId', params: { importId: created.id } });
     },
@@ -196,7 +198,11 @@ function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
       )}
       {blocking ? (
         <Notice title={t('models.import.blocked.title', { name: blocking.name })}>
-          {t('models.import.blocked.detail')}{' '}
+          {t(
+            blocking.error_code === 'MODEL_IMPORT_EXPIRY_PENDING'
+              ? 'models.import.expiring.detail'
+              : 'models.import.blocked.detail',
+          )}{' '}
           <Link
             to="/library/imports/$importId"
             params={{ importId: blocking.id }}
@@ -357,6 +363,7 @@ export function ModelImportPage() {
 }
 
 function stepStates(item: ModelImport, sending: boolean): [StepState, StepState, StepState] {
+  if (item.error_code === 'MODEL_IMPORT_EXPIRY_PENDING') return ['cancelled', 'pending', 'pending'];
   switch (item.state) {
     case 'uploading':
       return [sending ? 'running' : 'pending', 'pending', 'pending'];
@@ -467,7 +474,7 @@ function CancelDialog({ item, onClose }: { item: ModelImport; onClose: () => voi
 }
 
 function Loaded({ item }: { item: ModelImport }) {
-  const { t } = useI18n();
+  const { t, format } = useI18n();
   const queryClient = useQueryClient();
   const transfer = useTransfer(item.id);
   const [cancelling, setCancelling] = useState(false);
@@ -478,11 +485,17 @@ function Loaded({ item }: { item: ModelImport }) {
     onSettled: refresh,
   });
   const stopping = item.error_code === cancellationPending;
+  const expiring = item.error_code === 'MODEL_IMPORT_EXPIRY_PENDING';
+  const expired = item.state === 'cancelled' && item.error_code === 'MODEL_IMPORT_EXPIRED';
+  const uploadOpen = canUploadImport(item);
+  useEffect(() => {
+    if (!uploadOpen) stopTransfer(item.id);
+  }, [item.id, uploadOpen]);
   const sending = transfer?.state === 'sending';
   // A refusal that will not pass needs another file; one that may pass offers Try again instead.
   const stuck =
     transfer?.state === 'failed' && !(isProblem(transfer.problem) && transfer.problem.retryable);
-  const canResume = item.state === 'uploading' && !stopping && (transfer === undefined || stuck);
+  const canResume = uploadOpen && (transfer === undefined || stuck);
   const needsCatalog = canResume || item.state === 'failed';
   const catalog = useQuery({
     queryKey: modelKeys.catalog,
@@ -490,9 +503,9 @@ function Loaded({ item }: { item: ModelImport }) {
     enabled: needsCatalog,
   });
   const rules = catalog.data;
-  const state = importStates[item.state];
+  const state = importState(item);
   const [upload, verification, publication] = stepStates(item, sending);
-  const uploadIncomplete = item.state === 'uploading' && !sending;
+  const uploadIncomplete = uploadOpen && !sending;
   const publishedModelId = item.state === 'ready' ? item.model_id : null;
   const failure = item.state === 'failed' && item.error_code ? item.error_code : null;
   const resume = (file: File) => {
@@ -525,6 +538,15 @@ function Loaded({ item }: { item: ModelImport }) {
               {t('models.import.openModel')}
               <ArrowRight aria-hidden />
             </Link>
+          ) : expired ? (
+            <Link to="/library/import" className={buttonVariants({ variant: 'primary' })}>
+              {t('models.import.expired.restart')}
+              <Upload aria-hidden />
+            </Link>
+          ) : expiring ? (
+            <Button variant="danger" aria-disabled aria-describedby="import-upload-closed">
+              {t('models.import.cancel.open')}
+            </Button>
           ) : finished.includes(item.state) ? null : (
             <Button
               variant="danger"
@@ -539,6 +561,26 @@ function Loaded({ item }: { item: ModelImport }) {
       />
       <div className="flex max-w-[720px] flex-col gap-4">
         {stopping ? <Notice title={t('models.import.stopping')} /> : null}
+        {expiring || expired ? (
+          <Notice
+            title={t(expired ? 'models.import.expired.title' : 'models.import.expiring.title')}
+            actions={
+              <Button aria-disabled aria-describedby="import-upload-closed">
+                {t('models.import.resume.unavailable')}
+              </Button>
+            }
+          >
+            <p id="import-upload-closed" className="m-0">
+              {t(expired ? 'models.import.expired.detail' : 'models.import.expiring.detail')}
+            </p>
+            <p className="m-0 mt-2 tabular-nums">
+              {t('models.import.progress', {
+                sent: format.bytes(item.uploaded_bytes),
+                total: format.bytes(item.expected_bytes),
+              })}
+            </p>
+          </Notice>
+        ) : null}
         {needsCatalog && !rules ? (
           catalog.isPending ? (
             <p role="status" className="m-0 text-text-2">
@@ -554,7 +596,7 @@ function Loaded({ item }: { item: ModelImport }) {
             />
           ) : null
         ) : null}
-        {item.state === 'uploading' && !stopping ? (
+        {uploadOpen ? (
           <Card className="flex flex-col gap-3 p-[18px]">
             <Sending item={item} transfer={transfer} />
             {transfer?.state === 'failed' && isProblem(transfer.problem) ? (
@@ -618,7 +660,7 @@ function Loaded({ item }: { item: ModelImport }) {
           />
         </Card>
       </div>
-      {cancelling ? (
+      {cancelling && !expiring && !finished.includes(item.state) ? (
         <CancelDialog
           item={item}
           onClose={() => {
@@ -639,10 +681,31 @@ export function ModelImportStatusPage() {
     queryKey: modelKeys.import(importId),
     queryFn: ({ signal }) => getModelImport(importId, { signal, background: true }),
     refetchInterval: (query) =>
-      query.state.data && finished.includes(query.state.data.state) ? false : poll,
+      (query.state.data && finished.includes(query.state.data.state)) ||
+      (isProblem(query.state.error) && [403, 404].includes(query.state.error.status))
+        ? false
+        : poll,
     retry: (failures, error) => failures < 2 && isProblem(error) && error.retryable,
   });
-  if (item.data) return <Loaded item={item.data} />;
+  const denied = isProblem(item.error) && [403, 404].includes(item.error.status);
+  useEffect(() => {
+    if (denied) stopTransfer(importId);
+  }, [denied, importId]);
+  if (item.data && !denied) {
+    return (
+      <>
+        {isProblem(item.error) ? (
+          <ProblemNotice
+            problem={item.error}
+            onRetry={() => {
+              void item.refetch();
+            }}
+          />
+        ) : null}
+        <Loaded key={item.data.id} item={item.data} />
+      </>
+    );
+  }
   return (
     <ResourceUnavailable
       pending={item.isPending}
