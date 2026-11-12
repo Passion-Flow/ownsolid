@@ -24,4 +24,3 @@ export LANE_D_CLI_BINARY="$scratch/ownsolid"
 go -C "$repo/services/control" test -overlay "$scratch/overlay.json" \
   -tags repository_integration,monitoring_integration ./internal/modules/monitoring \
   -run '^TestLaneDHistoryTLS$' -count=1 -v -timeout=3m
-
