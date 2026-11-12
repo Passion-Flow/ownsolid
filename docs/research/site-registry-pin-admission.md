@@ -214,8 +214,26 @@ startup and existing lifecycle checks with:
 go -C services/control test -p 1 ./internal/platform/config ./cmd/server   -run 'TestImageRegistrySiteSource|TestRegistrySiteSource|TestRuntimeNormalCancellationAndReverseOwnerJoin' -count=1
 ```
 
-The two new configuration regressions passed through native Go with one
-compiler job and one runtime thread. Source, layout and roadmap review
-passed. The startup and lifecycle Go regressions, real PostgreSQL fixture
-and full repository gate await the shared test window. Installed
-source-to-pin acceptance remains with OBS and DEL.
+Input 8025163372b36b18e2e9352a3c241e0e917a0622 passed the complete
+configuration and server package suites with the race detector on Darwin arm64
+in 54.171 and 16.269 seconds. The first real PostgreSQL run passed all twelve
+source refusals and both configured constructors, then refused the unbounded
+disabled-owner test context with REPOSITORY_TRANSACTION_DEADLINE_REQUIRED.
+The repository guard and every assertion remain unchanged.
+
+Input 2d1513b0d549110f20b18579bdbc3c2ef982405c corrects that fixture to
+use the configured startup deadline. Its complete server race suite passed in
+16.872 seconds; the unchanged configuration suite retains the earlier result.
+The real TestRegistrySiteSourceStartupAdmission passed without skips in
+0.52 seconds on Linux arm64, PostgreSQL 18.6 and pgvector 0.8.7, in a Docker
+network-none fixture on the Darwin arm64 workstation. It exercised installation
+admission, all twelve source refusals, both explicit startup modes, idempotent
+Close and disabled-owner admission. No Registry request occurred during
+construction. The owned fixture's 118 tables, container, volume and credential
+files were removed. The successful server race and PostgreSQL logs have SHA-256
+4ce26a15b1a3a2760126d6d9ca5e576c21106a34fe271c8d0564485a2b49722e and
+4330a5fdaabf9f4b85fd23e52b3eb9d5f981ab3720b562c59dcb724564276cde.
+
+The shared-root candidate has not passed the full repository gate or installed
+source-to-pin acceptance. That installed flow remains with OBS and DEL, and
+NET-102 remains open.
