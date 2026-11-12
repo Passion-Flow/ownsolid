@@ -1,7 +1,9 @@
 package monitoring
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -113,5 +115,32 @@ func TestFleetHistoryDoesNotFollowStoreRedirects(t *testing.T) {
 	_, e := r.read(context.Background(), workspaces.Workspace{}, now, now.Add(-90*time.Second), now.Add(-60*time.Second))
 	if e == nil || e.Error() != "MONITORING_RAW_TIER_UNAVAILABLE" {
 		t.Fatal("unexpected redirect result", e)
+	}
+}
+
+func TestFleetHistoryJSONIncludesServingEnvelopeInBudget(t *testing.T) {
+	// Isolate serialization size from the reader's separate label validation.
+	// This makes a one-byte wire-format change observable at the exact cap.
+	out := FleetHistory{Cells: []FleetHistoryCell{{SiteID: "site", CellID: "cell"}}}
+	base, err := json.Marshal(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out.Cells[0].SiteID += strings.Repeat("x", maximumHistoryJSONBytes-historyJSONEnvelopeBytes-len(base))
+	body, err := encodeFleetHistoryJSON(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var served bytes.Buffer
+	if err := json.NewEncoder(&served).Encode(map[string]any{"data": body}); err != nil {
+		t.Fatal(err)
+	}
+	if served.Len() != maximumHistoryJSONBytes || !bytes.HasSuffix(served.Bytes(), []byte("}\n")) {
+		t.Fatalf("served body has %d bytes, want %d", served.Len(), maximumHistoryJSONBytes)
+	}
+	out.Cells[0].SiteID += "x"
+	body, err = encodeFleetHistoryJSON(out)
+	if body != nil || err == nil || err.Error() != "MONITORING_HISTORY_RESPONSE_LIMIT" {
+		t.Fatalf("oversized served body was accepted: %d bytes, %v", len(body), err)
 	}
 }

@@ -9,15 +9,21 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 )
 
-func TestFleetHistoryCandidateRejectsAmbiguousInput(t *testing.T) {
+func TestFleetHistoryRejectsAmbiguousInput(t *testing.T) {
 	h := &Handler{Service: &monitoring.Service{}}
 	admin := identity.Auth{}
 	admin.Me.Audience, admin.Me.User.IsPlatformAdmin = "admin", true
 	const values = "?workspace_id=58b3eedb-387e-48f8-853f-aa835bbf1892&from=2026-11-09T01:00:00Z&to=2026-11-09T02:00:00Z"
-	if Owns(FleetHistoryPath) {
-		t.Fatal("candidate became a registered route")
+	if !Owns(FleetHistoryPath) || !Owns(Path) {
+		t.Fatal("monitoring routes are not registered")
+	}
+	for _, path := range []string{FleetHistoryPath + "/", FleetHistoryPath + "/query", Path + "-history"} {
+		if Owns(path) {
+			t.Fatalf("route alias %q is registered", path)
+		}
 	}
 	for _, item := range []struct{ method, target, code string }{
 		{http.MethodGet, Path + values, "RESOURCE_NOT_FOUND"},
@@ -38,6 +44,12 @@ func TestFleetHistoryCandidateRejectsAmbiguousInput(t *testing.T) {
 		if body != nil || status != 0 || err == nil || err.Error() != item.code {
 			t.Fatalf("candidate request got %s, %d, %v, want %s", body, status, err, item.code)
 		}
+		if r.URL.Path == FleetHistoryPath {
+			dispatched, status, err := h.Handle(r, admin, "fixture")
+			if dispatched != nil || status != 0 || err == nil || err.Error() != item.code {
+				t.Fatalf("dispatch returned a body or changed refusal: %v, %d, %v", dispatched, status, err)
+			}
+		}
 	}
 	r := httptest.NewRequest(http.MethodGet, FleetHistoryPath+values, strings.NewReader("unexpected"))
 	if body, _, err := h.HandleFleetHistory(r, admin, "fixture"); body != nil || err == nil || err.Error() != "VALIDATION_FAILED" {
@@ -45,7 +57,7 @@ func TestFleetHistoryCandidateRejectsAmbiguousInput(t *testing.T) {
 	}
 }
 
-func TestFleetHistoryCandidateProblemCodes(t *testing.T) {
+func TestFleetHistoryPublicProblemCodes(t *testing.T) {
 	for _, tc := range []struct {
 		input, code string
 		status      int
@@ -62,7 +74,7 @@ func TestFleetHistoryCandidateProblemCodes(t *testing.T) {
 		{"MONITORING_LONG_TIER_UNAVAILABLE", "MONITORING_LONG_TIER_UNAVAILABLE", 503},
 		{"untrusted native transport text", "STORAGE_UNAVAILABLE", 503},
 	} {
-		code, status := FleetHistoryProblem(errors.New(tc.input))
+		code, status := httpserver.PublicProblem(errors.New(tc.input))
 		if code != tc.code || status != tc.status {
 			t.Errorf("%s got %s %d, want %s %d", tc.input, code, status, tc.code, tc.status)
 		}

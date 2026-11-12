@@ -8,11 +8,10 @@ import (
 	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 )
 
-// FleetHistoryPath is the cell-relative candidate path for DEV's dispatcher.
-// Owns continues to identify only the currently registered snapshot route.
+// FleetHistoryPath is the cell-relative Admin history route.
+// The original dispatcher supplies authentication, Origin checks and cell scope.
 const FleetHistoryPath = Path + "/fleet-history"
 
 const maximumHistoryQueryBytes = 512
@@ -48,23 +47,4 @@ func historyTime(raw string) (time.Time, bool) {
 	const format = "2006-01-02T15:04:05Z"
 	at, err := time.Parse(format, raw)
 	return at, err == nil && at.Unix() >= 0 && at.Format(format) == raw
-}
-
-// FleetHistoryProblem preserves candidate-specific statuses while reusing
-// the canonical registry for all existing problems. The public route owner
-// must add these codes to its registry before mounting the candidate.
-func FleetHistoryProblem(err error) (string, int) {
-	if err != nil {
-		code := err.Error()
-		switch code {
-		case "MONITORING_HISTORY_RANGE_INVALID":
-			return code, http.StatusBadRequest
-		case "MONITORING_HISTORY_RESPONSE_LIMIT":
-			return code, http.StatusUnprocessableEntity
-		case "MONITORING_HISTORY_NOT_CONFIGURED", "MONITORING_LONG_TIER_NOT_CONFIGURED",
-			"MONITORING_RAW_TIER_UNAVAILABLE", "MONITORING_LONG_TIER_UNAVAILABLE":
-			return code, http.StatusServiceUnavailable
-		}
-	}
-	return httpserver.PublicProblem(err)
 }
