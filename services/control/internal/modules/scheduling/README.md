@@ -136,3 +136,28 @@ With the protected loopback `PROJECT_ONE_TEST_DSN_FILE` configured:
 ```sh
 go -C services/control test -p 1 -race ./internal/modules/scheduling/... -run '^(TestWorkspaceQuotaStatus|TestQuotaReadRejects|TestPostgresWorkspaceQuotaStatus|TestPostgresHTTPWorkspaceQuotaStatus)' -count=1 -v
 ```
+
+## Current queue admission
+
+ReserveQueuedWithin borrows the workload owner's PostgreSQL READ COMMITTED
+transaction. Call it before other scheduling writes, after retaining the owner's
+current actor, Workspace, node, job and physical-resource fences. It holds the
+policy shared lock, validates the complete domain and takes the exclusive tenant
+transaction fence, then reads the owner's complete eligible batch through its
+QueueReader. A current head is reserved through ReserveWithin, including enabled
+loans and pending reclaim. A held replay returns false without another queue read.
+
+Ordinary reservation, release and reclaim writes take the tenant shared fence.
+The order is policy, tenant, requesting workspace, cohort. This uses a bounded
+number of advisory locks rather than one per configured workspace. The owner
+supplies its typed-policy-bounded domain and eligible scan; incomplete, malformed
+or foreign scope fails the transaction. The callback takes no other job row locks,
+writes no state and performs no network I/O.
+
+The owner commits dequeue, tasks, attempts, physical holds and audit with the
+logical hold. Roll back on any error and publish no success before confirmed
+commit. ErrQueueTurnPending has fixed wait_for_queue_turn guidance. Exact positive
+release remains the owner's responsibility. This library does not install a
+training selector, runtime controller, production schema or UI. Upgrade every
+Control writer to the tenant-fence protocol before activating queue admission.
+See [ADR 0071](../../../../../docs/decisions/0071-bound-tenant-admission-locking.md).
