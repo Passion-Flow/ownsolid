@@ -385,12 +385,12 @@ the committed predecessor, not the formally numbered production tail.
 
 The unnumbered up SQL SHA-256 is
 399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
-The original handoff down SQL SHA-256 is
+The original schema-58 down SHA-256 was
 4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
-Changing only the down refusal does not change the candidate catalogue.
-Keep the up bytes unchanged. The isolation successor below tightens
-the down script before formal admission. Verify the complete release
-lineage and runtime principal against the final numbered files.
+That version was qualified in READ COMMITTED and is superseded by the
+explicit isolation fence below. Its retained-state lock alone does not
+protect an earlier REPEATABLE READ or SERIALIZABLE snapshot. The up bytes
+and structural catalogue remain unchanged.
 
 The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
 concurrent revision refusal, exact replay, scope checks and retry after
@@ -769,3 +769,179 @@ The earlier failure is retained and is not reported as a successful gate.
 Actual same-source installed Console-to-Portal description acceptance and
 the Portal scope SQL proof remain open. POR-104 still also requires TEN-107
 prices; this Web gate does not tick that item.
+
+
+### Native Linux amd64 acceptance of published schema 59
+
+The published source 4f76102ca99328e0b9063eb05b0352e62501e154 passed
+the focused native Linux amd64 acceptance on 2026-11-12. The fixture
+compiled and executed that exact published source against the normal
+migration and registered Admin/Portal HTTPS paths.
+
+All six description roots passed without a skipped or failed subtest:
+the schema-58 predecessor HTTPS upgrade, normal installed-schema HTTPS,
+pristine and retained-state downgrade, committed-writer lock wait, prior
+REPEATABLE READ and SERIALIZABLE snapshots, and fresh transactions at
+all four PostgreSQL isolation levels. Prior stronger-isolation snapshots
+refused before DDL with 25001; fresh transactions with retained state
+refused with 55000. The tests retained the committed writer's data and
+the exact pristine predecessor catalogue.
+
+TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal also passed
+without skips on the same source. It verified missing-grant refusal,
+repeatable grant resume without changing the existing role OID or
+password verifier, preserved predecessor migration records, normal
+runtime admission and refusal of private audit access, ledger mutation,
+intent truncation and trigger disabling.
+
+The host was x86_64 and the pinned PostgreSQL 18.6/pgvector 0.8.7 image
+was linux/amd64. PostgreSQL ran in Docker network none with loopback
+only; no host ports were mapped. Both shared heavy locks and the
+disk, free-memory, available-memory and I/O-pressure preflight admitted
+the run. The owned fixture container and temporary credentials were
+removed, the retained branch was restored and both locks were released.
+
+Raw logs, source identities and the seven-root result are retained in
+/root/lane-gw-acceptance/gw120-after-activation.6tb2_bbv/run.AZo0rxVT.
+The distribution log SHA-256 is
+4ca06c0663ba4d40fdc31309744db144968303e6906ba7ddcd8ba6848b5a4d8b;
+the runtime-access log SHA-256 is
+435798f52aa368f17a69d9722fdfa036652595772b02fa04d7dd3ed846b7a06f.
+
+This native run did not repeat the seven historical restore paths,
+the other runtime-access roots or the complete repository gates.
+It did not run the unchanged spool or CA fixtures. No browser, model
+or GPU ran in this native backend qualification. The Web implementation
+and complete browser gate are separate evidence. Same-source installed
+Console editing and Portal S-304 acceptance remain open, so GW-120
+remains unticked.
+
+## Console and Portal integration contract
+
+The released distribution OpenAPI 0.11.0 already contains this flow.
+Use ModelAliasResponse for detail/publication and ModelAliasPageResponse
+for lists. Both wrap their result in data; lists expose data.items.
+The current registered handlers use Service.Alias and Service.AliasPage.
+GW-104's separate read composition and optional capabilities object are
+not prerequisites for descriptions.
+
+### Routes, scope and payload
+
+Use the existing authenticated site/cell routing context. The versioned
+paths are:
+
+| Operation | Method and path |
+| --- | --- |
+| adminPublishAlias / adminListModelAlias | POST / GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases |
+| adminGetModelAlias | GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id} |
+| adminEditAliasDescription | POST /api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/description |
+| portalListModelAlias | GET /api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases |
+| portalGetModelAlias | GET /api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id} |
+
+The server derives tenant and membership authority from the authenticated
+session. Do not add tenant, actor or scope fields to the JSON body.
+Writes require the existing Admin session, Origin, X-CSRF-Token and a
+nonzero UUID Idempotency-Key. There is no Portal write endpoint.
+
+Publication accepts optional description beside the existing gateway,
+deployment, deployment revision, name and reason fields. Schema 59
+returns description and description_revision together, initially an
+empty string and 1 when no text was supplied. A predecessor response
+omits both fields. Empty text is a supported state; absence of both
+fields means the predecessor representation.
+
+An edit or clear sends exactly this closed request shape:
+
+```json
+{
+  "description": "Use for internal comparisons.",
+  "expected_description_revision": 1,
+  "reason": "Update model description"
+}
+```
+
+Clear with description set to the empty string. The server normalizes
+CRLF to LF and trims surrounding whitespace. It permits line feeds and
+tabs, rejects other control characters and invalid UTF-8, and limits
+normalized text to 500 Unicode code points. A reason is required and
+limited to 500 code points. expected_description_revision ranges from
+1 through 9007199254740990.
+
+A successful edit returns HTTP 200 with this envelope:
+
+```json
+{
+  "data": {
+    "description": "Use for internal comparisons.",
+    "description_revision": 2,
+    "applied_description_revision": 2,
+    "replayed": false
+  }
+}
+```
+
+description_revision is independent of the alias's routing revision.
+Editing or clearing increments only the description revision and leaves
+the deployment binding, routing history and existing keys intact.
+Admin can edit a paused alias. Portal hides a paused alias from its
+list and detail; after resume it exposes the current description.
+
+### Retry and error behavior
+
+Retain the same UUID and unchanged logical input when retrying one
+intent after a lost response. Normalized description, reason, expected
+description revision, actor, workspace and alias identify that intent.
+A replay returns current description/current description_revision,
+the historical applied_description_revision, and replayed=true.
+After another editor has changed the text, the applied revision can
+therefore be older than the current revision. Render the current fields.
+A new user edit uses a new key and the latest description revision.
+
+| Response | UI behavior |
+| --- | --- |
+| 409 VERSION_CONFLICT | Reload current text and description revision; let the administrator review the new edit before submitting a new intent |
+| 409 IDEMPOTENCY_CONFLICT | The key belongs to another logical edit; retain the original intent when retrying, and use a fresh key for a new edit |
+| 400 VALIDATION_FAILED | Correct missing/extra/duplicate/null fields, invalid text, reason, revision or idempotency key |
+| 401 AUTH_REQUIRED / 403 ACCESS_DENIED | Use the established login and permission states |
+| 403 CSRF_INVALID or ORIGIN_REJECTED | Restore the established browser request context |
+| 404 RESOURCE_NOT_FOUND / MODEL_ALIAS_NOT_FOUND | The cell, workspace or alias is outside current visibility; do not expose another scope |
+| 413 PAYLOAD_TOO_LARGE / 415 UNSUPPORTED_MEDIA_TYPE | Correct the body size or send supported JSON |
+| 503 SERVICE_NOT_READY | The installed schema cannot serve this write; preserve the input for retry after a normal upgrade |
+| 503 STORAGE_UNAVAILABLE | The write was not acknowledged; preserve the intent and retry according to the normal service guidance |
+
+Errors use application/problem+json with the stable Problem schema and
+request ID. A failed audit write rolls back text and the replay intent.
+A Portal attempt to use the Admin edit suffix returns the existing
+404 RESOURCE_NOT_FOUND. No capability, enabled-adapter or model-quality
+claim follows from a description.
+
+### HTTPS fixture and UI acceptance boundary
+
+The normal-schema entry is
+TestAliasDescriptionInstalledSchemaAndHTTPS in
+services/control/internal/modules/distribution/alias_description_test.go.
+It calls setup(t), applies the production schema normally and registers
+the real identityhttp.New(c.s.Identity) dispatcher with Admin and Portal
+TLS clients. exerciseAliasDescriptionHTTPS covers publication, normalized
+replay, independent revisions, a concurrent editor, clear while paused,
+resume, a regular Portal member, foreign scope, CSRF and audit failure.
+Its ready-deployment observations are synthetic; it runs no model or GPU.
+The schema-58 sibling separately proves predecessor omission/refusal
+and upgrade behavior.
+
+With a private disposable PostgreSQL fixture supplied through
+PROJECT_ONE_TEST_DSN_FILE, run serially from the exact source:
+
+```sh
+go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescriptionInstalledSchemaAndHTTPS$' -count=1 -v
+```
+
+The native seven-root logs and manifest remain at the path recorded
+above; original failed/resource-admission and arm64 evidence remain
+separate. No Gateway-owned installed UI server is left running.
+WEB must use an available installation at an explicit matching source,
+verify publication with text and without text, edit, stale revision,
+retry, clear, refresh persistence and the regular member's Portal view
+in English and Simplified Chinese. Follow the existing design/build
+plan for Console editing and Portal S-304. Linux does not run browser
+tests. These UI checks are open and do not wait for GW-104 activation.
