@@ -281,17 +281,22 @@ func startHistoryVMAt(t *testing.T, ctx context.Context, retention, scheme strin
 	origin, stop := startMonitoringFixtureProcessAt(t, ctx, scheme, "VictoriaMetrics "+retention, "OWNSOLID_TEST_VICTORIA_METRICS", flags...)
 	return origin, func() int64 {
 		stop()
-		var size int64
-		if e := filepath.Walk(dir, func(_ string, info os.FileInfo, e error) error {
-			if e == nil {
-				size += info.Sys().(*syscall.Stat_t).Blocks * 512
-			}
-			return e
-		}); e != nil {
-			t.Fatal(e)
-		}
-		return size
+		return historyAllocatedBytes(t, dir)
 	}, stop
+}
+
+func historyAllocatedBytes(t *testing.T, dir string) int64 {
+	t.Helper()
+	var size int64
+	if e := filepath.Walk(dir, func(_ string, info os.FileInfo, e error) error {
+		if e == nil {
+			size += info.Sys().(*syscall.Stat_t).Blocks * 512
+		}
+		return e
+	}); e != nil {
+		t.Fatal(e)
+	}
+	return size
 }
 
 func startMonitoringFixtureProcess(t *testing.T, ctx context.Context, name, environment string, flags ...string) (string, func()) {

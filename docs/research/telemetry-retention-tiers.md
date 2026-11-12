@@ -385,6 +385,13 @@ public operation, SDK/Help publication, installed delivery and Console
 acceptance remain separate; this run establishes the registered module
 entry and shared response writer.
 
+The registered module source was subsequently qualified on 767b78b0,
+rebased onto main 4f6a1c8c. Disconnected make check and make build, every
+owned module race test, the authenticated history profile and the private
+store TLS profile all passed. The exact-source driver exited zero after
+checking its clean worktree and stopped fixtures. Public operation and
+bilingual publication prerequisites remained open.
+
 ### Transaction problems in the public contract
 
 The [shared Problem registry](../../services/control/internal/platform/httpserver/problem.go)
@@ -401,6 +408,40 @@ The normal native history profile above does not inject these five database
 outcomes. Their contract/SDK parsing tests belong to DEV's publication
 qualification. Whole public operation acceptance still requires that corrected
 contract, bilingual explanations and the same registered module source.
+
+## Ninety-day aggregate qualification
+
+The existing native read qualifies tier selection and the large-fleet note
+qualifies raw-series storage. A long-range API also needs measured costs for
+the retained aggregate shape. Generate ten synthetic recording-output series
+for five cells with 2,000 observed nodes each, one observed and reachable pair
+per minute. Ninety days contain 1,296,000 samples. Vary reachable counts and
+include periodic measured zero rather than measure only perfectly constant
+values. These are synthetic aggregates; they do not reproduce 10,000 agents
+or ninety days of raw node traffic.
+
+Use the selected VictoriaMetrics
+[streaming Prometheus import](https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/#how-to-import-data-in-prometheus-exposition-format)
+and MetricsQL
+[count_over_time](https://docs.victoriametrics.com/victoriametrics/metricsql/#count_over_time)
+to verify the full stored sample count before and after a graceful process
+restart. Keep a 100-day store horizon so the entire settled 90-day window
+fits without testing retention expiry. Do not drop the host page cache.
+Measure the first authenticated read after restarting the native store and
+thirty subsequent reads through the same CSRF/login/TLS module entrance.
+Report those exact client measurements, including schema validation and
+audit checks, separately from production latency percentiles. Check the
+widened step, complete response cap, all returned counts and timestamps,
+current audit identity and zero raw-tier requests. Record allocated data
+bytes after graceful shutdown.
+
+Stream generation with bounded buffers instead of keeping the import in
+memory. Join the producer on every request result. Reject partial imports
+and require the native persisted count to match the exact intended rows.
+The existing private PostgreSQL/metrics binaries and licenses apply; no
+dependency, model or external data set is added. A passing profile establishes
+this aggregate storage/query shape, not elapsed retention, provider failure
+recovery, real hardware or an installed Console.
 
 ## Current installation boundary
 

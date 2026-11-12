@@ -411,6 +411,16 @@ the large-fleet workload:
 
     bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http
 
+The retained-aggregate cost profile streams 1,296,000 synthetic samples over
+90 days into ten recording-output series, verifies the persisted count across
+a graceful native restart, and measures the normal authenticated query. It
+uses a 100-day store horizon and reports the first read after restart and
+thirty subsequent reads, including schema and audit verification. This is
+aggregate storage/query qualification; it does not reproduce node traffic,
+elapsed retention or production latency percentiles.
+
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-retention
+
 To qualify the protected configuration and native TLS with separately
 trusted raw and long origins, run the same fixture with the TLS selector.
 
