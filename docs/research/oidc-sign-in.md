@@ -32,20 +32,27 @@ hosted identity provider dependency for the disconnected acceptance path.
 The current candidate is [coreos/go-oidc v3.21.0](https://github.com/coreos/go-oidc/releases/tag/v3.21.0),
 replacing the earlier research candidate v3.17.0. Its
 [module file](https://github.com/coreos/go-oidc/blob/v3.21.0/go.mod)
-requires Go 1.25 and pins the dependencies below. This design adds no product
-dependency, model or dataset. Resolve and inspect the complete selected module
+requires Go 1.25. Select the patched dependency versions below explicitly; the
+OIDC module's minimum requirements alone are not the admission policy. This
+design adds no product dependency, model or dataset. Resolve and inspect the complete selected module
 graph before implementation; do not infer runtime network behavior from its
 license or from a successful signature check.
 
 | Dependency | Selected version | License and offline distribution |
 | --- | --- | --- |
 | `github.com/coreos/go-oidc/v3` | v3.21.0 | [Apache-2.0](https://github.com/coreos/go-oidc/blob/v3.21.0/LICENSE); retain license, attribution and any applicable notices. |
-| `github.com/go-jose/go-jose/v4` | v4.1.4 | [Apache-2.0](https://github.com/go-jose/go-jose/blob/v4.1.4/LICENSE); its selected module declares no further requirements. |
+| `github.com/go-jose/go-jose/v4` | v4.1.6, overriding the OIDC module's v4.1.4 minimum | [Apache-2.0](https://github.com/go-jose/go-jose/blob/v4.1.6/LICENSE); its selected module declares no further requirements. |
 | `golang.org/x/oauth2` | v0.36.0 | [BSD-3-Clause](https://github.com/golang/oauth2/blob/v0.36.0/LICENSE); retain copyright and license. |
 | `cloud.google.com/go/compute/metadata` | v0.3.0, required by the OAuth module | [Apache-2.0](https://github.com/googleapis/google-cloud-go/blob/compute/metadata/v0.3.0/LICENSE); module-graph dependency only, with no cloud or ambient credential composition in ownsolid. |
 
 These licenses permit commercial use, redistribution and offline use with
-their required notices. The private provider prototype uses
+their required notices. [go-jose v4.1.5](https://github.com/go-jose/go-jose/releases/tag/v4.1.5)
+fixes parser-depth, numeric-date and malformed-key handling;
+[v4.1.6](https://github.com/go-jose/go-jose/releases/tag/v4.1.6)
+additionally fixes GHSA-mgcc-cww5-fp2q by limiting parsed RSA moduli to 4,096
+bits. Do not admit the earlier v4.1.4 minimum or raise the new global modulus
+limit. Keep independent document, key-count and algorithm bounds as well.
+The private provider prototype uses
 [Keycloak 26.8.2](https://github.com/keycloak/keycloak/releases/tag/26.8.2),
 selected from its current official release rather than an unversioned image.
 The Quay OCI index is
