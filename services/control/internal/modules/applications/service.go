@@ -105,11 +105,10 @@ func (s *Service) list(ctx context.Context, a identity.Auth, workspace string, v
 		}
 		defer rows.Close()
 		for rows.Next() {
-			var app Application
-			if e = rows.Scan(&app.WorkflowID, &app.WorkspaceID, &app.Name, &app.VersionID, &app.VersionNumber, &app.GraphSHA256, &app.PublishedAt); e != nil {
+			app, e := scanApplication(rows)
+			if e != nil {
 				return e
 			}
-			app.PublishedAt = app.PublishedAt.UTC()
 			app.CanExecute = configuration.Enabled && configuration.CanExecute
 			app.QuestionBytes = configuration.Limits.QuestionBytes
 			out.Items = append(out.Items, app)

@@ -41,6 +41,13 @@ commit. The authenticated workspace supplies the selector and the owner
 transaction resolves the scope. The ordinary portal routes call `List` and
 `Conversations`.
 
+`ResolveNameForAssistant` uses the same owning transaction for a bounded exact
+NFC display-name lookup on PostgreSQL. It returns at most two published
+candidates in the authenticated workspace, without a caller-supplied scope.
+A canonical application ID is returned only for a unique match. An ambiguous,
+unpublished or disabled resource cannot authorize an action. See the
+[AGT-111 contract](../../../../../docs/research/product-assistant-name-resolution.md).
+
 ## Tests
 
 - `go -C services/control test ./internal/modules/applications/...` runs the unit tests.

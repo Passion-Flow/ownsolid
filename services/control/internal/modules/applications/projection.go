@@ -9,6 +9,8 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
 )
 
+const publishedApplicationsPostgreSQL = `SELECT f.id::text,f.workspace_id::text,f.name,v.id::text,v.version_number,v.graph_sha256,v.published_at FROM workflows f JOIN workflow_versions v ON v.tenant_id=f.tenant_id AND v.workspace_id=f.workspace_id AND v.workflow_id=f.id AND v.id=f.current_version_id WHERE f.tenant_id=$1 AND f.workspace_id=$2 AND f.enabled`
+
 // projectionQuery keeps each vendor's SQL explicit. Source authority is still
 // rechecked by transaction and ConfigurationWithin before this query executes.
 func projectionQuery(dialect transaction.Dialect, conversations bool, tenant, workspace, user, search string, cursor pagination.Cursor, limit int) (transaction.Statement, error) {
@@ -34,7 +36,7 @@ func projectionQuery(dialect transaction.Dialect, conversations bool, tenant, wo
 		stamp, id = "v.published_at", "f.id"
 		switch dialect {
 		case transaction.PostgreSQL:
-			query = `SELECT f.id::text,f.workspace_id::text,f.name,v.id::text,v.version_number,v.graph_sha256,v.published_at FROM workflows f JOIN workflow_versions v ON v.tenant_id=f.tenant_id AND v.workspace_id=f.workspace_id AND v.workflow_id=f.id AND v.id=f.current_version_id WHERE f.tenant_id=$1 AND f.workspace_id=$2 AND f.enabled`
+			query = publishedApplicationsPostgreSQL
 		case transaction.MySQL:
 			query = `SELECT f.id,f.workspace_id,f.name,v.id,v.version_number,v.graph_sha256,v.published_at FROM workflows f JOIN workflow_versions v ON v.tenant_id=f.tenant_id AND v.workspace_id=f.workspace_id AND v.workflow_id=f.id AND v.id=f.current_version_id WHERE f.tenant_id=? AND f.workspace_id=? AND f.enabled`
 		case transaction.Dameng:
