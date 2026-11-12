@@ -41,7 +41,7 @@ license or from a successful signature check.
 | Dependency | Selected version | License and offline distribution |
 | --- | --- | --- |
 | `github.com/coreos/go-oidc/v3` | v3.21.0 | [Apache-2.0](https://github.com/coreos/go-oidc/blob/v3.21.0/LICENSE); retain license, attribution and any applicable notices. |
-| `github.com/go-jose/go-jose/v4` | v4.1.9, overriding the OIDC module's v4.1.4 minimum | [Apache-2.0](https://github.com/go-jose/go-jose/blob/v4.1.9/LICENSE); its selected module declares no further requirements. |
+| `github.com/go-jose/go-jose/v4` | v4.1.9, overriding the OIDC module's v4.1.4 minimum | [Apache-2.0](https://github.com/go-jose/go-jose/blob/v4.1.9/LICENSE) and the JSON fork's [BSD-3-Clause](https://github.com/go-jose/go-jose/blob/v4.1.9/json/LICENSE); its selected module declares no further requirements. |
 | `golang.org/x/oauth2` | v0.36.0 | [BSD-3-Clause](https://github.com/golang/oauth2/blob/v0.36.0/LICENSE); retain copyright and license. |
 | `cloud.google.com/go/compute/metadata` | v0.3.0, required by the OAuth module | [Apache-2.0](https://github.com/googleapis/google-cloud-go/blob/compute/metadata/v0.3.0/LICENSE); module-graph dependency only, with no cloud or ambient credential composition in ownsolid. |
 
