@@ -565,3 +565,52 @@ PROJECT_ONE_TEST_DSN_FILE, reproduce the current backend regressions:
 go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription' -count=1 -v
 go -C services/control test -p 1 ./internal/operations/databaseaccess -run '^(TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal|TestUpgrade.*|TestActualRuntimeAccessPreparationAccountWorkspaceDMLAndNoDDL)$' -count=1 -v
 ```
+
+
+### Native Linux amd64 acceptance of published schema 59
+
+The published source 4f76102ca99328e0b9063eb05b0352e62501e154 passed
+the focused native Linux amd64 acceptance on 2026-11-12. The workstation
+confirmed the remote main SHA, then transferred a checksum-verified Git
+bundle because the Linux checkout could not authenticate its HTTPS
+fetch. The local origin/main reference advanced only after an ancestry
+check. The fixture compiled and executed that exact published source,
+then restored the retained Gateway branch.
+
+All six description roots passed without a skipped or failed subtest:
+the schema-58 predecessor HTTPS upgrade, normal installed-schema HTTPS,
+pristine and retained-state downgrade, committed-writer lock wait, prior
+REPEATABLE READ and SERIALIZABLE snapshots, and fresh transactions at
+all four PostgreSQL isolation levels. Prior stronger-isolation snapshots
+refused before DDL with 25001; fresh transactions with retained state
+refused with 55000. The tests retained the committed writer's data and
+the exact pristine predecessor catalogue.
+
+TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal also passed
+without skips on the same source. It verified missing-grant refusal,
+repeatable grant resume without changing the existing role OID or
+password verifier, preserved predecessor migration records, normal
+runtime admission and refusal of private audit access, ledger mutation,
+intent truncation and trigger disabling.
+
+The host was x86_64 and the pinned PostgreSQL 18.6/pgvector 0.8.7 image
+was linux/amd64. PostgreSQL ran in Docker network none with loopback
+only; no host ports were mapped. Both shared heavy locks and the
+disk, free-memory, available-memory and I/O-pressure preflight admitted
+the run. The owned fixture container and temporary credentials were
+removed, the retained branch was restored and both locks were released.
+
+Raw logs, source identities and the seven-root result are retained in
+/root/lane-gw-acceptance/gw120-after-activation.6tb2_bbv/run.AZo0rxVT.
+The distribution log SHA-256 is
+4ca06c0663ba4d40fdc31309744db144968303e6906ba7ddcd8ba6848b5a4d8b;
+the runtime-access log SHA-256 is
+435798f52aa368f17a69d9722fdfa036652595772b02fa04d7dd3ed846b7a06f.
+
+This native run did not repeat the seven historical restore paths,
+the other runtime-access roots or the complete repository gates.
+It did not run the unchanged spool or CA fixtures. No browser, model
+or GPU ran. Console editing and the actual installed Portal S-304 flow
+remain open, so GW-120 remains unticked. The retained combined Gateway
+candidate still needs its own complete check/build gate before
+publication.
