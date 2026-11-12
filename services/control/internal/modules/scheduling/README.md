@@ -67,5 +67,7 @@ and release](../../../../../docs/research/scheduling-admission.md#atomic-gang-re
 
 `RankWorkspaceQueueWithin` uses current quota and reads aggregate reservations
 for all authorized workspace queues in one tenant with one query.
+If an active record in that set has foreign site/cell coordinates, it returns
+`SCHEDULING_QUOTA_POLICY_UNAVAILABLE` so the owner can reconcile the records.
 Pass a read-only REPEATABLE READ transaction
 and the owner's durable queue entries. See [live workspace shares](../../../../../docs/research/scheduling-queue-policy.md#live-workspace-shares).
