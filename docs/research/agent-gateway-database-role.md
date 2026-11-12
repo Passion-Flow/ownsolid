@@ -457,3 +457,51 @@ extension preparation. Use a mode-0600
 password in a command or environment, and remove it in unconditional cleanup.
 Bound only this startup availability polling; do not retry a failed product test
 or weaken its SQL, authentication or certificate assertions.
+
+
+## Qualified verified TLS composition
+
+TestRestrictedTLSComposedGatewayAuthorityPrototype passed on native Linux amd64
+in 2.11 seconds, without skips. The production sources and narrow external Node
+CTE overlay remained those of the earlier verified 149a9501 composed prototype.
+Only fixture database transport and its generated certificate material changed;
+no Node, observer, Workspace, identity or worker implementation was substituted.
+
+The independent restricted LOGIN negotiated TLSv1.3. Its parsed policy retained
+verify-full, a real trust pool, required SCRAM channel binding, no fallback and no
+InsecureSkipVerify. The same connection's pg_stat_ssl row confirmed encryption.
+The actual generated certificate was ECDSA P-256/SHA-256. Independent connections
+with an untrusted CA and wrong reference name failed normal x509 chain/name
+verification; wrong-password and plaintext attempts failed with 28P01 and 28000.
+
+The same root retained and passed all eleven expected SQLSTATE 42501 query
+refusals, actual two-connection occupation and third-login 53300 refusal while
+control remained usable. It then passed real first/update component and hardware
+inference reports, missing-grant rollback, foreign-credential refusal, two
+liveness batches, zero-connection held claim, read-only outbox wake and exact
+acknowledgement/cursor persistence. No assertion or declared resource bound was
+relaxed. This remains a limited actual product path with synthetic facts, not
+hardware, deployment-bearing observation or complete delegated-profile proof.
+
+The owned PostgreSQL 18.6/vector 0.8.7 container used the same pinned image,
+network=none, no published port, two CPUs and 1 GiB. The admitted run held both
+resource locks; MemFree was 21389960 KiB, MemAvailable 22403392 KiB and full I/O
+PSI avg10 was 3.02. Actual target-database readiness used a verified TCP SQL query
+and protected password file before extension preparation. The container, volume,
+private key, password, DSN and readiness password file were confirmed removed.
+
+The 9328-byte overlay input SHA-256 is
+156bb548141e631558f4ab6bb7342c87c1a9c31f3fa241aaadd448c7a39b7fa5;
+the test source SHA-256 is
+d59722f9cfa0f5526ac806b5c6e4549ea8117d29fb13d2fc085bd2c0699f8d45.
+The corrected external runner SHA-256 is
+9f3337c9b9a6eeed3a108f2a9ab49fa8010e3b7f6fd9b9db7e501a8aa9037a7d;
+the actual SQL test-log SHA-256 is
+02a495e21982421c0bcb77d9d0766429f33a3f42812c3f29cff038ad97644125.
+
+This qualifies the ECDSA verified-TLS/SCRAM transport of the existing composed
+prototype. It does not cure the retained Ed25519 compatibility failure or activate
+production grants, a role, catalog functions, startup admission or installer
+provisioning. ARC-111 remains unticked; the next acceptance slice is delegated
+training/preparation authority with closed column privileges, before product-role
+catalog and operator preparation work.
