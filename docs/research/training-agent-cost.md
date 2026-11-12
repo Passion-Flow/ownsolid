@@ -120,3 +120,96 @@ acknowledgement, explicit replay, failed audit rollback and revocation
 after file verification. The competing finish is refused while the exact
 ticket is held. An unacknowledged commit exposes no reference, and
 reconciliation returns the same reference without another audit.
+
+
+## Current source review and next local change
+
+The frozen 17e46bdd candidate has no further change to events.go, transfer.go,
+delegated_repository.go, upload_chunks.go, upload_finish.go, uploads.go or
+stop.go relative to the already measured implementation. Its local-cell job
+predicate adds a scope check, not a measured budget repair. The counts above
+remain the last measured results; neither compilation nor an unbound test
+skip establishes new 50/3,000-fleet costs.
+
+[MLflow's log-batch contract](https://mlflow.org/docs/latest/api_reference/rest-api.html#log-batch)
+provides a bounded batching comparison, but permits partial persistence on an
+error. ownsolid retains its existing atomic batch contract: every new event,
+its audit, job phase and attempt cursor commit together, or none does.
+[PostgreSQL row locks](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-ROWS)
+serialize the current job/attempt, and a transaction can see its earlier
+writes under [Read Committed](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED).
+These support one transaction-local event cursor without sharing authority
+or progress between requests.
+
+The next local change is to read the exact attempt's event cursor once,
+validate each event in the original request order, preserve each immutable
+event and individual audit, and persist the final cursor once. Preserve the
+preparing-to-running job transition and each returned intermediate JobState.
+The current loop rereads the cursor per event and writes the attempt again
+for the phase transition. The numbered attempt immutability guard protects
+inputs/outcome/stop identity, not a requirement to write progress per event.
+Before implementation, also inspect partition and scope guards in the full
+registered lineage. This is a plan, not a measured improvement.
+
+Required checks include mixed duplicate/new batches, changed replay bytes,
+sequence gaps, step regression, resumed final-checkpoint phases, concurrent
+identical replay, a late cursor-write failure, audit failure, and a lost
+COMMIT acknowledgement followed by explicit replay. Read the actual event
+rows, final cursor, job revision and exact audit attribution independently.
+A failed/unknown write returns no accepted items. Replays append no audit.
+Keep current human epoch/membership, node credential, task/lease, input and
+GPU fences before the callback. No file I/O or cross-transaction authority
+cache enters this event-only optimization.
+
+For chunk accounting, any query consolidation must preserve an authoritative
+post-lock byte sum. Do not derive it from a correlated aggregate whose
+Read Committed statement snapshot may precede a lock wait. Candidate follow-up
+changes can project ticket state with the locked upload and return the fresh
+sum from the final ticket-clear statement. Existing failure/unknown-commit
+cleanup remains necessary; acceptance is acknowledged only after commit.
+
+No dependency, model or dataset is added. Existing Go/pgx/PostgreSQL licensing
+and offline terms above remain applicable. MLflow is a documentation
+comparison only; its code is neither installed nor redistributed.
+
+## Node-owner shared fence prerequisite
+
+One successful withMachineLeaseActor pass currently follows these calls:
+
+1. loadDelegatedWithin -> Nodes.TrainingTargetWithin ->
+   PreparationHistoryWithin;
+2. Nodes.CredentialWithin -> PreparationHistoryWithin, then the scoped
+   credential-hash read;
+3. Nodes.LeasedTrainingWithin -> trainingTaskWithin ->
+   TrainingHistoryWithin -> PreparationHistoryWithin, then exact task,
+   payload and lease checks.
+
+Each PostgreSQL history read repeats the installation/tenant/node fence.
+RecordStop similarly uses a fresh delegated transaction on each side of
+artifact I/O and repeats scoped credential and stop-task reads. These
+source-level counts are call sites, not a new SQL-cost measurement.
+
+The minimum proposed owner contract is a borrowed callback that authenticates
+and locks the scoped node once, then supplies a transaction-bound task reader:
+
+    WithTrainingNodeWithin(ctx, q, tenant, workspace, node, credential,
+        func(current Node, tasks TrainingTaskReader) error) error
+
+The reader would expose active leased-task and restricted stop-task operations.
+Only nodes may construct it. It must reject pools, unsupported/mismatched
+executors, use after the callback/transaction and a foreign node/task scope.
+Authenticate the credential before exposing profile/status details. Retain
+installation/tenant/node lock ordering, exact command decoding, catalog,
+deadline, task attempt and lease-token checks. The training callback still
+locks its job and performs exact attempt/GPU/stop-token and current human
+checks; restricted stop must retain the ability to free an authenticated
+stopped owner after human revocation. Each transaction around file I/O obtains
+a new fence.
+
+This is a proposed signature for ARC, not an existing shared API. Training
+will not copy nodes SQL, forge an opaque fence or cache a Node DTO as
+authorization. The prerequisite is released only by the node owner's typed
+implementation and negative/borrowed-executor tests, followed by affected
+training revocation/stream/rollback/replay tests and the original real
+50/3,000 HTTPS cost profile against unchanged declarations. Target current
+node primitives first if the owner can supply an equivalent smaller API.
