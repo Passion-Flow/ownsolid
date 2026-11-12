@@ -36,7 +36,9 @@ The inference heartbeat test currently uses a direct service call and one node.
 Training's separate measurements retain known budget overruns in
 [training Agent cost](training-agent-cost.md). Preparation, registry and other
 component/inference operations remain required coverage; completing heartbeat
-coverage alone cannot tick ARC-108.
+coverage alone cannot tick ARC-108. The cost target must run the node
+observation roots as well as the unchanged training root, serially against
+its real database. An isolated manual measurement is not continuous coverage.
 
 ## Approach and alternatives
 
@@ -69,8 +71,15 @@ versions and cached binaries. Existing [Go](https://go.dev/LICENSE) is BSD-3-Cla
 [pgx](https://github.com/jackc/pgx/blob/master/LICENSE) is MIT and
 [PostgreSQL](https://www.postgresql.org/about/licence/) uses its permissive
 PostgreSQL license. These permit commercial use, redistribution with their
-required notices and offline use. Existing TLS, certificate and HTTP helpers
-use the same repository dependencies and notices; no Kubernetes code is copied.
+required notices and offline use. Existing synthetic UUIDs use
+[google/uuid](https://github.com/google/uuid/blob/v1.6.0/LICENSE), BSD-3-Clause;
+HTTP schema checks reuse
+[jsonschema](https://github.com/santhosh-tekuri/jsonschema/blob/v6.0.3/LICENSE),
+Apache-2.0. The existing machine handler uses
+[gRPC-Go](https://github.com/grpc/grpc-go/blob/v1.85.0/LICENSE), Apache-2.0.
+Those terms also permit commercial redistribution with notices and offline use.
+The pinned pgx v5.11.0 and schema-library license texts were checked in the
+admitted module cache. No Kubernetes code is copied.
 All identities, reports and peer rows are synthetic fixture data. Runtime
 instrumentation must not fetch an extension, dependency or dataset.
 
