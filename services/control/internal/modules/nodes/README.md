@@ -43,7 +43,7 @@ reusing the name must not reuse the removed node's identity or credential. The
 paired recovery tests attach native domain observers, but do not establish a
 physical workload stop or systemd qualification.
 
-Synchronize [contracts/agent](../../../../../contracts/agent), [agent](../../../../agent/README.md), [M03](../../../../../docs/milestones/m03-nodes), node policy/examples and deployment service profiles, [nodes frontend](../../../../../web/README.md), SQL schemas and workload result validators.
+Synchronize [agent contracts](../../../../../api/agent), [agent](../../../../agent/README.md), [fleet scope](../../../../../docs/product/roadmap/fleet-and-infrastructure.md), node policy/examples and deployment service profiles, [nodes frontend](../../../../../web/README.md), SQL schemas and workload result validators.
 
 Focused native check: go -C services/control test ./internal/modules/nodes. Enrollment races, current lease/result authority and selected vendor persistence need real SQL tests; daemon/profile and hardware execution are distinct gates.
 
@@ -56,7 +56,7 @@ persisted quota buckets. Source selection alone does not establish that outcome.
 
 The optional native Dameng repository path, five-table schema contribution,
 transaction/type boundaries and executable target profile are documented in
-[NATIVE_DAMENG.md](NATIVE_DAMENG.md). Its source is prepared; native
+[native Dameng notes](native-dameng.md). Its source is prepared; native
 SQL execution and whole-platform selection remain separate integration gates.
 The component native upsert owner aborts on a SQL error without reusing the
 poisoned transaction. No native support is inferred from the PostgreSQL/MySQL
@@ -84,9 +84,33 @@ through entry11 and `upgrade-models`, retaining the installed prefix/principal.
 Only approved immutable import, deployment/GPU ownership, exact leased file
 transfer and bounded model worker are added. Later owners remain structurally
 inactive. Minimal restore invalidates imports and preserves uncertain GPU leases;
-see [current integration](../../../../../docs/execution/mvp/m06-cumulative-integration-20261026.md).
+see [model integration](../models/README.md).
 
 
 The cumulative M10 `lifecycle` graph admits explicit docker_model_lifecycle/protocol1.5 enrollment and only its exact preparation transfer/event/output/stop leaves. Existing docker_ai1.4 nodes retain their original capability set. Earlier minimal profiles do not acquire preparation or derived inference authority.
 
 [certificates.go](certificates.go) checks a connection's client certificate against the keys pinned to the node and issues, rotates and recovers node certificates ([ADR 0050](../../../../../docs/decisions/0050-agent-certificates.md)).
+
+## Observation cost measurements
+
+`TestComponentHeartbeatCostAtFleetSizes` and
+`TestInferenceHeartbeatStatementCost` use scoped HTTPS and enrolled client
+certificates. Both compare 50 and 3,000 seeded peer nodes, with their actual
+observation, task and audit history counts checked before recording. Every
+exchange runs while an independent transaction holds the shared authority
+rows. The current v1 statement ceiling, equal statement counts, scanned-row
+growth and missing-index checks remain enforced. Independent readback checks
+stored reports, committed heartbeat times and unchanged state after denial.
+
+`make test-agent-cost` runs these node roots before the existing training
+cost root. Follow the test inputs in the
+[development environment](../../../../../docs/development/environment.md).
+An ordinary package run without PostgreSQL skips database cases. Seeded rows
+measure query cost, and do not establish simulated-node load or hardware
+support. Other component/inference exchanges, preparation and registry
+coverage remain required for ARC-108. See the
+[approach and acceptance scope](../../../../../docs/research/agent-operation-cost.md).
+
+This shared-fixture and inference HTTP extension is a prepared candidate.
+Its actual PostgreSQL and full repository acceptance are still pending;
+the source alone does not establish a passed measurement.
