@@ -164,3 +164,55 @@ composition log SHA-256 is
 0a0361cfef064ca8312b5038bbb15eb4b6b0f626956865464bb66f0fdfd3be18.
 Its network-none container and protected database/password inputs were removed.
 No complete installed, actual-browser or scale claim follows from this run.
+
+
+## Qualified production server composition
+
+Source 274d771c8d3a97e3163d3dcb3b21630fccfac57f passed
+TestActualSplitBrowserThreeIngressServerComposition on native Linux amd64 in
+8.61 seconds without skips: direct_https 3.08 seconds and explicit browser http
+5.53 seconds. Each subcase owned a separate generated schema on actual PostgreSQL
+18.6/vector 0.8.7. Normal serving startup used its own non-superuser runtime LOGIN,
+with private audit-head rights explicitly removed from the historical fixture.
+The unchanged production catalog and readiness predicates remained enforced.
+
+Both cases actually signed in through the Admin and Portal sockets, rejected
+cross-audience cookies, refused the sibling Host/SNI on assets/runtime/health/API
+paths, created the scoped join token, enrolled a CSR and used its returned client
+certificate for the machine heartbeat. Correct credentials without a certificate
+were refused. Unscoped and foreign-cell machine paths were refused, as were
+machine paths on either browser socket. The heartbeat's complete stored facts and
+last-seen time matched its returned committed state.
+
+After actual server shutdown/reopen, both issued browser sessions and the same
+certified node remained usable. Each subcase joined both server lifetimes' workers,
+released all three sockets and reacquired the installation lease. There were two
+completion markers and four worker-join markers; no failed test was automatically
+retried. The native source receiver checked all 5040 tracked paths' bytes/types
+and executable modes before compiling with the pinned Go 1.27.3 toolchain.
+
+The admitted run held both Linux resource locks with MemFree 20582440 KiB,
+MemAvailable 22379924 KiB and full I/O PSI avg10 0.62. The pinned container used
+network=none, no published port, two CPUs and 1 GiB. Its database used disposable
+loopback trust for the historical runtime-role fixture; this is not PostgreSQL
+SCRAM/TLS qualification. Browser HTTPS and machine mTLS used actual generated
+local trust and normal chain/name verification. HTML, node facts and License
+claims were explicitly synthetic; no GPU, physical Agent, installed release or
+React browser flow is claimed by this composition test.
+
+The 392282-byte verified source delta SHA-256 is
+9e9c633f32d08a0013ca802e7865294dc9322e17bebe73dd91d5cbcc7a0fd1c0.
+The native binary SHA-256 is
+f13b65a72e1ea5c951502c3d92d9312a9f89c73ab4f1c9275b4aeaa72a88fe6f;
+the actual composition log SHA-256 is
+5bb7ba346ca195b00c6e073f9448ebb5c47dde6d9922f6532a4a052931cc56d6.
+Container/volume removal returned zero, and the container, protected DSN and
+password were confirmed absent. Prior failed inputs and logs remain retained.
+
+Between the full fe11bdf0 check/build/test gate and this native input, the only
+changes were this research note and the tagged composition test; product runtime,
+contracts, dependencies and ordinary test inputs were identical. The corrected
+input additionally passed make check and tagged server vet. The transport and
+serving-intent race evidence therefore still applies to exactly the same runtime.
+ARC-110 stays unticked pending its complete four-entrance installed/operator and
+actual-browser acceptance. This increment establishes no fleet capacity result.
