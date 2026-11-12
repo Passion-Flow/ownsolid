@@ -64,6 +64,7 @@ agents is not.
 - [ ] ARC-109 Cut the declared cost of claims, event batches and upload chunks, which repeat the same authority checks: one check per call, one per batch (P1)
   - Node-owned PostgreSQL claims share one authority check when preflight is read-only. [Statement counts and delegated paths](../../research/agent-claim-authority.md).
 - [ ] ARC-110 A listener per entrance: the admin console, the portal, the model gateway and the agent endpoint can each bind their own address and port, so a site can firewall and scale them apart; four hostnames on one TLS port stays the default ([ADR 0027](../../decisions/0027-entrance-addresses.md)) (P1)
+  - [Qualified split-browser runtime and real PostgreSQL composition](../../research/entrance-listeners.md#qualified-production-server-composition). The complete four-entrance installed and actual-browser path remains open.
 - [ ] ARC-111 Agent gateways connect with a database role of their own, with its own connection limit and only the grants the agent path needs, instead of sharing control's serving role ([ADR 0048](../../decisions/0048-agent-gateways-beside-control.md)) (P1)
 - [ ] ARC-112 Throttle enrollment by the inventory's rack once FLT-101 names racks, instead of by source network ([ADR 0050](../../decisions/0050-agent-certificates.md)) (P1)
 - [ ] ARC-113 Replace the agent CA from the installer: add the new CA to the bundle, sign with it, retire the old one, without a node losing its session (P1)
