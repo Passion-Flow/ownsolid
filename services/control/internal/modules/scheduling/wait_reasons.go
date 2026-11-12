@@ -12,6 +12,10 @@ import (
 type WaitAction string
 
 const (
+	// ConfigureQuotaPolicy asks the operator to install the admission quota policy.
+	ConfigureQuotaPolicy WaitAction = "configure_quota_policy"
+	// ConfigureWorkspaceQuota asks the operator to allocate quota to this workspace.
+	ConfigureWorkspaceQuota WaitAction = "configure_workspace_quota"
 	// ChangeRequestOrQuota applies when the request exceeds its quota ceiling.
 	ChangeRequestOrQuota WaitAction = "change_request_or_quota"
 	// ChangeRequestOrCell applies when the cell cannot meet the whole request.

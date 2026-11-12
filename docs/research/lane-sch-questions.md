@@ -124,3 +124,13 @@ for the exact inputs and replay and concurrency acceptance conditions.
 and [OpenMeter entitlement grants](https://openmeter.io/docs/billing/entitlements/grant)
 provide the reporting and balance references. Offline top-up is a tenant
 accounting action. The whole-platform license verifier has separate authority.
+
+## Public workspace quota status
+
+The owned reader and HTTP component reuse the current Workspace authority
+and the selected repository in one transaction. They return actual logical
+allocation and held usage without a job-readiness, physical-capacity or
+topology claim. IAM owns route composition, DEV the final OpenAPI/SDK/Help,
+and Web the UI. The [scope contract](scheduling-wait-reasons.md#authorized-workspace-quota-status)
+defines the payload, failure set and remaining production DDL/role boundary.
+This component does not depend on fair-queue or selected-executor candidates.
