@@ -12,24 +12,25 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/unicode/norm"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 )
 
 type Service struct {
-	DB         *pgxpool.Pool
-	Identity   *identity.Service
-	Workspaces *workspaces.Service
-	Store      *Store
-	Processor  *Processor
+	DB              *pgxpool.Pool
+	Identity        *identity.Service
+	Workspaces      *workspaces.Service
+	PublishedReader *PublishedReader
+	Store           *Store
+	Processor       *Processor
 }
 
 func (s *Service) policy() config.DatasetPolicy { return s.Identity.Config.Policy().Datasets }

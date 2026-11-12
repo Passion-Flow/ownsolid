@@ -2,9 +2,9 @@ package datasets
 
 import (
 	"context"
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 )
 
 // TrainingInputSnapshotWithin resolves metadata only under the caller's current
@@ -51,11 +51,15 @@ func trainingInputsFromVersion(v Version) (TrainingInputs, error) {
 // VerifyTrainingInputSnapshot performs no SQL or writes. Legacy transaction
 // callers keep their checks; new owners call this after releasing business locks.
 func (s *Service) VerifyTrainingInputSnapshot(ctx context.Context, input TrainingInputs) error {
-	if s == nil || ctx == nil || s.Store == nil {
+	if s == nil || ctx == nil {
 		return failure("DATASET_STORAGE_UNAVAILABLE")
 	}
 	if s.Identity == nil {
 		return failure("DATASET_IDENTITY_REQUIRED")
+	}
+	files, e := s.publishedFileAccess("")
+	if e != nil {
+		return e
 	}
 	expected, e := trainingInputsFromVersion(input.Version)
 	if e != nil {
@@ -67,7 +71,7 @@ func (s *Service) VerifyTrainingInputSnapshot(ctx context.Context, input Trainin
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(s.policy().SnapshotSeconds))
 	defer cancel()
 	for _, asset := range []wire.Asset{input.Train, input.Validation} {
-		f, e := s.Store.OpenVersionAssetContext(ctx, input.Version.ID, input.Version.AttemptID, asset.Path, asset.SizeBytes, asset.SHA256)
+		f, e := files.OpenVersionAssetContext(ctx, input.Version.ID, input.Version.AttemptID, asset.Path, asset.SizeBytes, asset.SHA256)
 		if e != nil {
 			if ctx.Err() != nil {
 				return publishedSourceError(ctx.Err())

@@ -10,11 +10,11 @@ import (
 
 	"database/sql"
 	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 )
 
 type acceptedCheckpoint struct {
@@ -69,8 +69,9 @@ func (c acceptedCheckpoint) resume() wire.ResumeInput {
 func (s *Service) checkpointInputFile(ctx context.Context, node, credential, task string, input wire.InputFileRequest) (httpserver.Download, error) {
 	var out httpserver.Download
 	var checkpoint acceptedCheckpoint
-	if s.Store == nil {
-		return out, fail("TRAINING_STORAGE_UNAVAILABLE")
+	files, e := s.publishedFiles("")
+	if e != nil {
+		return out, e
 	}
 	admit := func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, j Job, command wire.Command) error {
 		if command.Resume == nil {
@@ -94,7 +95,7 @@ func (s *Service) checkpointInputFile(ctx context.Context, node, credential, tas
 	if e := s.withMachineLease(ctx, node, credential, task, input.LeaseToken, admit); e != nil {
 		return out, e
 	}
-	file, asset, e := s.Store.OpenPublishedAsset(ctx, checkpoint.Descriptor, input.Asset)
+	file, asset, e := files.OpenPublishedAsset(ctx, checkpoint.Descriptor, input.Asset)
 	if e != nil {
 		return out, e
 	}

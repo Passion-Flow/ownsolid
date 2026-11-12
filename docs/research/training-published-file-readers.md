@@ -70,8 +70,8 @@ whole owner graph is closed. Model ownership remains outside this lane.
 ## Protected SQL locks remain a separate contract
 
 PublishedSourceWithin locks dataset and immutable version rows FOR UPDATE;
-training locks the current scoped job before its attempt/GPU checks. PostgreSQL
-requires UPDATE privileges for those row locks. Keep their order and lifetime.
+training locks the current scoped job before its attempt/GPU checks. PostgreSQL [SELECT privileges](https://www.postgresql.org/docs/18/sql-select.html)
+require UPDATE privileges for those row locks. Keep their order and lifetime.
 ARC/database owners must admit narrow trusted-schema security-definer functions
 through the formal migration/catalog/role workflow, not arbitrary id UPDATE
 grants. This slice introduces no function, privilege, query rewrite, protocol or
@@ -79,8 +79,10 @@ runtime switch. Its reader qualification does not qualify the restricted role.
 
 ## Licences and offline behavior
 
-No new dependency, model or dataset is added. Existing Go/os and x/sys licensing
-is BSD-3-Clause; pgx is MIT; PostgreSQL uses the PostgreSQL License. Commercial,
+No new dependency, model or dataset is added. Existing [Go/os](https://go.dev/LICENSE) and
+[x/sys](https://github.com/golang/sys/blob/master/LICENSE) licensing is BSD-3-Clause;
+[pgx](https://github.com/jackc/pgx/blob/master/LICENSE) is MIT; PostgreSQL uses
+the [PostgreSQL License](https://www.postgresql.org/about/licence/). Commercial,
 redistribution and offline use are allowed with their original terms/notices.
 The external prototype uses only Python's standard library under the PSF licence
 and generated fixture bytes; it adds no product Python dependency. Docker/MLflow
@@ -117,3 +119,64 @@ Same-length file changes, missing/symlink files, namespace changes and root
 replacement were refused; exact repair restored reads. The fixture was removed.
 This proves the kernel descriptor/ownership mechanism only, before Go product
 implementation. It does not qualify a mount, database role or gateway graph.
+
+
+## Concrete owner integration surface
+
+Both owning packages now prepare the same narrow constructor shape:
+
+- datasets.OpenPublishedReader(path, tenant string) (*datasets.PublishedReader, error).
+  Set datasets.Service.PublishedReader and leave Store nil. PublishedSourceWithin,
+  TrainingInputSnapshotWithin, VerifyTrainingInputSnapshot and OpenTrainingAssetContext
+  use the concrete reader, with the original current-scope SQL and retirement checks.
+- training.OpenPublishedReader(path, tenant string) (*training.PublishedReader, error).
+  Set training.Service.PublishedReader and leave Store nil. AcceptedAdapterWithin,
+  VerifyAcceptedAdapter, OpenAcceptedAdapterAsset and checkpoint input reads retain
+  the accepted receipt, current-attempt and seal checks. Complete publication
+  validation includes every declared file, not just the requested adapter file.
+
+Neither field accepts an arbitrary interface/callback. The constructors initialize
+no state and acquire no writer ownership. Their concrete types expose no mutation.
+A zero or closed reader refuses use. Setting both a writer and reader on one
+consumer fails with STORAGE_MISMATCH instead of silently selecting a file owner.
+A scoped SQL miss retains NOT_FOUND; namespace binding is checked after that
+scoped metadata read, so a foreign tenant does not become a configuration oracle.
+
+ARC owns injecting both consumers into the actual newAgentPath/NewAgentGateway
+graph and runAgentGateway startup. Resolve the installed tenant using the existing
+trusted startup path, use its configured dataset/training artifact roots, and
+close each successfully opened reader if the next step fails. Stop admission,
+drain/join active claims, then close readers before the remaining process resources.
+The reader pins existing immutable files; no training/processing/GPU worker starts.
+The exact same namespace must be demonstrably present, with a read-only mount for
+OS write enforcement. This slice does not manufacture a mount or claim a gateway
+on another host has the files. Models.ReadyWithin is metadata-only but takes
+FOR SHARE on model_versions; its restricted lock privilege belongs to its owner.
+Model/preparation output stores and their lifecycle are also outside this slice.
+
+## Exact SQL permission handoff
+
+The remaining protected-lock contracts are fixed scoped row-returning functions,
+not permission to mutate an arbitrary id column:
+
+| Proposed closed function inputs | Exact owner row/lock shape | Existing caller behavior to retain |
+| --- | --- | --- |
+| dataset parent: tenant UUID, workspace UUID, dataset UUID | datasets exact scope, FOR UPDATE | Dataset NOT_FOUND and parent retirement |
+| dataset version: tenant UUID, workspace UUID, dataset UUID, version UUID | dataset_versions exact parent scope, FOR UPDATE | Version NOT_FOUND; new selection refuses retirement, retained recovery keeps its exact version |
+| training job: tenant UUID, workspace UUID, job UUID | training_jobs exact scope plus local_site_id/local_cell_id, FOR UPDATE | Current job/attempt, creator epoch/membership, cancel and GPU fences |
+
+Use explicit RETURNS TABLE columns matching datasetFields, versionFields or
+jobFields and their SQL types. This preserves the existing projection/scanner
+without another lock query or changed error codes. Keep that return contract
+closed when a later schema adds columns.
+The [security-definer function](https://www.postgresql.org/docs/18/sql-createfunction.html#SQL-CREATEFUNCTION-SECURITY)
+must bind the installed schema/relations in a parsed SQL body, fixed trusted
+search path and non-login definer with only required lock rights. Revoke PUBLIC
+execution, grant only the dedicated role, preserve transaction lock lifetime,
+refuse foreign/local-cell mismatch and keep direct table UPDATE denied. The
+formal migration/catalog/role owner must prove writer blocking, rollback release,
+shadowing denial, current-role changes and real pool/borrowed-executor lifetimes.
+These are explicit proposed signatures/requirements, not implemented functions or
+an activated grant catalog. This lane changes neither SQL locks nor privileges.
+The separate opaque Node reader API remains ARC-owned and is still required for
+the repeated node authority reads and unchanged fleet SQL budgets.
