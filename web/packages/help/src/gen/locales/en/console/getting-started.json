@@ -367,6 +367,68 @@
      ]
     }
    ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Working with the API"
+    }
+   ],
+   "data": {
+    "id": "working-with-the-api"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The "
+    },
+    {
+     "type": "link",
+     "url": "/help/api",
+     "children": [
+      {
+       "type": "text",
+       "value": "API reference"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " lists the operations of this entrance. Search by name or path,\nthen choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Save the contract"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " to download the contract for this installed version.\nIf a download fails, check the connection to this installation and choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Save the contract"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " again."
+    }
+   ]
   }
  ]
 }

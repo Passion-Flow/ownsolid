@@ -29,3 +29,9 @@ A new installation needs three things before people can work on it. The overview
   workspaces, and runs actions such as switching the theme.
 - Pin a page you use daily with the pin next to its name in the navigation.
 - The help link at the top of every page opens the article about that page.
+
+## Working with the API
+
+The [API reference](/help/api) lists the operations of this entrance. Search by name or path,
+then choose **Save the contract** to download the contract for this installed version.
+If a download fails, check the connection to this installation and choose **Save the contract** again.

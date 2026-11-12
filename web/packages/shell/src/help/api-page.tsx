@@ -386,15 +386,11 @@ function Operation({
 function SaveContract({ domain }: { domain: string }) {
   const { t } = useI18n();
   const { entrance } = useHelp();
-  const url = useQuery({
-    queryKey: ['help', 'contract', entrance, domain],
-    queryFn: () => contractUrl(entrance, domain),
-    staleTime: 'static',
-  });
-  if (!url.data) return null;
+  const url = contractUrl(entrance, domain);
+  if (!url) return null;
   return (
     <a
-      href={url.data}
+      href={url}
       download={`${domain}.openapi.json`}
       aria-label={t('help.api.save.label', { domain })}
       className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent-ink hover:underline"

@@ -4,6 +4,7 @@
 // docs/development/environment.md has the recipe.
 import { expect, test } from '@playwright/test';
 import { expectAccessible } from './accessibility-flows.ts';
+import { expectContractAudience } from './contract-download.ts';
 import { adminPassword, email, origin } from './live.ts';
 
 /**
@@ -46,19 +47,7 @@ export function liveHelpFlows(audience: 'admin' | 'portal'): void {
 
       const download = page.waitForEvent('download');
       await page.getByRole('link', { name: 'Save the contract: identity' }).click();
-      const saved = await (await download).createReadStream();
-      const chunks: Buffer[] = [];
-      for await (const chunk of saved) chunks.push(chunk as Buffer);
-      const contract = JSON.parse(Buffer.concat(chunks).toString('utf8')) as {
-        paths: Record<string, Record<string, { 'x-audiences'?: string[] }>>;
-      };
-      const operations = Object.values(contract.paths).flatMap((item) =>
-        Object.entries(item).filter(([key]) => key !== 'parameters'),
-      );
-      expect(operations.length).toBeGreaterThan(0);
-      for (const [, operation] of operations) {
-        expect(operation['x-audiences']).toContain(audience);
-      }
+      await expectContractAudience(await download, audience);
 
       expect(refused).toEqual([]);
       expect(elsewhere).toEqual([]);

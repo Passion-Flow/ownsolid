@@ -53,6 +53,10 @@ An article is a Markdown file in `packages/help/locales/en/<entrance>/` and the 
 as `/nodes` or to another article as `help:<slug>`. The generator refuses anything else, and the
 tests fail when a language is missing or a link has no page.
 
+Contract download addresses are bundled as URL strings. The JSON files remain separate
+same-origin assets and are read only when someone saves one. Finding a contract in the
+reference must not depend on another request for its address.
+
 ## Calling the API
 
 `packages/api/src/gen` holds types generated from `api/openapi`; change a contract, then run

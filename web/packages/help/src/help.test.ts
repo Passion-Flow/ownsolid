@@ -130,7 +130,7 @@ describe.each(entrances)('%s API reference', (entrance) => {
       for (const { method, path, errors } of detail?.operations ?? []) {
         published.set(`${domain.domain} ${method} ${path}`, errors);
       }
-      expect(await contractUrl(entrance, domain.domain)).toBeTruthy();
+      expect(contractUrl(entrance, domain.domain)).toBeTruthy();
     }
     expect(published).toEqual(expected);
   });
