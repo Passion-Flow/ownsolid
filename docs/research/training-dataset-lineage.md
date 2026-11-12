@@ -567,3 +567,44 @@ scope, preserve the body ceilings and current request deadline, and run real
 dispatcher acceptance. ARC must admit the unnumbered DDL, scoped role grants,
 catalog checks, backup/restore and data-preserving downgrade policy. Web then
 composes S-202 without changing legacy ready-only list/detail consumers.
+
+### PostgreSQL family domain acceptance
+
+On 2026-11-13, Linux amd64 source `95dc2891`, based on `8b17a295`, ran
+against the schema 60 lineage, PostgreSQL 18.6 and pgvector 0.8.7 with
+`--network none`. Backfill/lifecycle, bounded history/authority, retained derived
+graph and verified derived registration roots passed. The selection transaction
+root also passed explicit and default publication rollback, orphan commit refusal,
+audit rollback and immutable membership controls. They exercised distinct IDs with
+the same name and digest, unchanged deployment references, retired metadata with
+exact-version execution refusal, tied timestamps, nullable continuation, invalid
+options, current session/account/Admin-role/epoch/workspace refusal, cross-scope
+refusal, damaged metadata/lineage and unknown-outcome projection suppression.
+
+The two concurrent selections reached real advisory-lock contention and the correct
+business outcomes. Their initial final assertion incorrectly included the second
+publisher's separately audited login. Source `052a7b18` corrected that test-only
+baseline, asserted the exact version's selection audit and passed both cases in
+3.03 seconds: matching selection converged and conflicting selection returned
+`MODEL_FAMILY_CONFLICT`, with one membership and one selection audit. Runtime and
+candidate DDL sources were unchanged. The already-passed cases were retained.
+The original cursor codec passed Linux's race detector, including all nine scope
+dimensions, tampering, invalid payloads and key rotation; its sources remain unchanged.
+
+The initial DDL failure and its isolated corrected prototype remain preserved
+separately from these passed cases. Each disposable PostgreSQL fixture, temporary
+store and private credential file was removed; original logs, source and binaries
+remain preserved. These are domain/SQL and file-registration results using synthetic
+review metadata and small synthetic weights, not model quality, production approval,
+public dispatcher, installed migration or S-202 acceptance. MOD-103 remains open.
+
+To replay, configure the private PostgreSQL DSN and fresh owned schema as described
+by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
+Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
+non-weight files for the derived-registration fixture. The tests embed and apply
+the unnumbered DDL only inside their disposable schemas.
+
+```sh
+go -C services/control test -p=1 -tags repository_integration ./internal/modules/models \
+  -run '^TestActualModelFamily' -count=1 -v
+```
