@@ -430,3 +430,22 @@ download failure and the recovered file's audience. Parallel contexts
 have separate cookies and never rename or replace shared build assets.
 The hook applies only to the local preview server; the installed Control
 asset server is unaffected.
+
+### Installed entrance boundary
+
+The frozen [Identity dispatcher](../../services/control/internal/modules/identity/http/handler.go)
+refuses Admin paths on Portal before dispatch. The
+[Workspace handler](../../services/control/internal/modules/workspaces/http/handler.go)
+also refuses Portal workspace paths on Admin. Verify both directions with a real signed-in account, its
+server-supplied default workspace and a successful read through the
+correct entrance. The same known workspace through the other entrance's
+path must return the real 404 Problem, no-store and a matching request
+ID. An invented workspace ID could return 404 even without the entrance
+check, so it is not a sufficient positive control.
+
+In each language, search the installed reference for the other entrance's
+workspace operation. Show the filtered empty state and its Clear search
+action, then recover to the allowed operation. Keep these real-authentication
+checks separate from the preview suite and retain the frozen product
+revision when extending the private acceptance client. No dependency,
+model or dataset is added.
