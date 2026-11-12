@@ -292,3 +292,50 @@ This exercises trusted issuer overlap at process startup. DEL owns the
 installed trust rotation, including vmalert's remote-write trust update
 and draining already established connections when old trust is removed.
 Run the `history-tls` selector with the pinned binaries to repeat it.
+
+## Current installation boundary
+
+The current Control startup in `cmd/server/monitoring.go` already reads
+the global `monitoring_config_file` reference. It passes that protected
+path through `monitoring.LoadEnvironment` under
+`PROJECT_ONE_MONITORING_CONFIG_FILE`. The explicit protected serving
+environment file can select the reference. An ambient environment
+variable does not configure this path. The policy's `fleet_history`
+object owns `raw_origin`, `long_origin`, `raw_horizon_seconds`,
+`max_range_seconds` and `settling_seconds`.
+
+Current single-node Compose provisions one metrics store using HTTP on
+its private state bridge. The history reader accepts remote HTTPS and
+permits plain HTTP only for a loopback IP literal. Its policy cannot
+use that existing bridge HTTP address. The installer `TelemetryConfig`
+only selects metrics and log retention, and its layout owns one metrics
+directory. It provides neither the separate long store and evaluator nor
+their TLS, trust, retention and volume inputs. A raw store TLS transition
+also has to preserve the existing Control metrics push and readiness
+checks.
+
+The module example README references an older
+`deploy/compose/monitoring/compose.yaml` overlay and the Helm fields
+`configuration.policyEnvironmentFile` and `privateMountPath`. The overlay
+is absent from the current repository. The shipped chart's values use
+`control.runtimeSecret` and have neither of those fields. Use the current
+Compose and chart contracts when implementing the deployment continuation.
+Those historical example commands do not establish an installed path.
+
+DEL needs the approved pinned evaluator payload and notices, separate
+raw and long storage, protected native TLS certificate and key files,
+and the assigned private origins. Provision Control's applicable system
+CA trust separately from vmalert's datasource and remote-write CA files.
+Keep raw write, evaluator read/write and Control query access scoped to
+their intended routes. Set the routing horizon within the actual raw
+retention and include scrape, evaluation and delivery lag in the settling
+delay. These inputs must survive installer reapply and upgrade.
+
+The deployment run must exercise the normal registered Admin route after
+DEV and OBS publish and dispatch it. Reuse the same two stores for
+trusted and unauthorized certificate replacement. Prove connection
+draining and client restart when removing old issuer trust, evaluator
+recovery after its independent CA update, no raw fallback on long-tier
+failure, and the existing authorization and audit refusals. The earlier
+`e46f6ba7` TLS fixture remains the process-level certificate evidence.
+Installed deployment and configuration acceptance remain open.
