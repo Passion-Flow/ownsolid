@@ -29,7 +29,7 @@ import (
 const commandPath = "/api/v1/product-assistant/commands"
 
 func TestAuthenticatedAssistantHTTP(t *testing.T) {
-	owner := identityfixture.New(t)
+	owner := newAssistantFixture(t)
 	password := identityfixture.Bootstrap(t, owner)
 	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	defer cancel()
@@ -468,4 +468,18 @@ func newAssistantClient(t *testing.T, transport *http.Client, audience, origin, 
 		t.Fatal("dispatcher did not issue a CSRF context cookie")
 	}
 	return c
+}
+
+func newAssistantFixture(t *testing.T) *identity.Service {
+	t.Helper()
+	// Full-catalog construction is separate from command execution. The
+	// returned business pool must retain its original statement deadline.
+	owner := identityfixture.NewWithSetup(t, identityfixture.SetupOptions{
+		TimeoutSeconds: 180, StatementTimeoutSeconds: 30,
+	})
+	var statement string
+	if err := owner.DB.QueryRow(t.Context(), `SHOW statement_timeout`).Scan(&statement); err != nil || statement != "5s" {
+		t.Fatalf("assistant business statement deadline: %s, %v", statement, err)
+	}
+	return owner
 }

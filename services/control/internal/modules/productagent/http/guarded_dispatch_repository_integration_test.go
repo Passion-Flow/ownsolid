@@ -23,7 +23,7 @@ import (
 )
 
 func TestAuthenticatedGuardedAssistantHTTP(t *testing.T) {
-	owner := identityfixture.New(t)
+	owner := newAssistantFixture(t)
 	password := identityfixture.Bootstrap(t, owner)
 	owner.Config.Workflows.Enabled = true
 	ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
