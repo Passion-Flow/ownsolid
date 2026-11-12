@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/jackc/pgx/v5"
+	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/jackc/pgx/v5"
 )
 
 // AcceptedAdapter is an internal immutable source snapshot, never an external authorization token.
@@ -51,13 +51,14 @@ func (s *Service) AcceptedAdapterSnapshot(ctx context.Context, a identity.Auth, 
 
 // VerifyAcceptedAdapter hashes retained published receipt/files outside all business transactions.
 func (s *Service) VerifyAcceptedAdapter(ctx context.Context, source AcceptedAdapter) error {
-	if s.Store == nil {
-		return fail("TRAINING_STORAGE_UNAVAILABLE")
+	files, e := s.publishedFiles(source.Descriptor.Scope.TenantID)
+	if e != nil {
+		return e
 	}
 	if source.Descriptor.Kind != "artifact" || len(source.Descriptor.Files) != 3 {
 		return fail("TRAINING_DATA_INVALID")
 	}
-	return s.Store.VerifyPublished(ctx, source.Descriptor)
+	return files.VerifyPublished(ctx, source.Descriptor)
 }
 
 // OpenAcceptedAdapterAsset follows a currently authorized source snapshot and permits only safe adapter files.
@@ -65,11 +66,12 @@ func (s *Service) OpenAcceptedAdapterAsset(ctx context.Context, source AcceptedA
 	if !wire.AdapterAssetAllowed(asset) {
 		return nil, datawire.Asset{}, fail("TRAINING_NOT_FOUND")
 	}
-	if s.Store == nil {
-		return nil, datawire.Asset{}, fail("TRAINING_STORAGE_UNAVAILABLE")
+	files, e := s.publishedFiles(source.Descriptor.Scope.TenantID)
+	if e != nil {
+		return nil, datawire.Asset{}, e
 	}
 	if source.Descriptor.Kind != "artifact" || len(source.Descriptor.Files) != 3 {
 		return nil, datawire.Asset{}, fail("TRAINING_DATA_INVALID")
 	}
-	return s.Store.OpenPublishedAsset(ctx, source.Descriptor, asset)
+	return files.OpenPublishedAsset(ctx, source.Descriptor, asset)
 }

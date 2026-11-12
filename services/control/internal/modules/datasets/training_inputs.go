@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/jackc/pgx/v5"
 )
 
 // TrainingInputs is a retained immutable publication; no draft contents are exposed.
@@ -45,8 +45,12 @@ func (s *Service) OpenTrainingAssetContext(ctx context.Context, input TrainingIn
 	default:
 		return nil, wire.Asset{}, failure("DATASET_FILE_INVALID")
 	}
-	if s == nil || ctx == nil || s.Store == nil || !wire.ValidID(input.Version.ID) || !wire.ValidID(input.Version.AttemptID) || selected.Path != asset {
+	if s == nil || ctx == nil || !wire.ValidID(input.Version.ID) || !wire.ValidID(input.Version.AttemptID) || selected.Path != asset {
 		return nil, wire.Asset{}, failure("DATASET_STORAGE_UNAVAILABLE")
+	}
+	files, e := s.publishedFileAccess("")
+	if e != nil {
+		return nil, wire.Asset{}, e
 	}
 	expected, e := trainingInputsFromVersion(input.Version)
 	if e != nil {
@@ -55,7 +59,7 @@ func (s *Service) OpenTrainingAssetContext(ctx context.Context, input TrainingIn
 	if input.Train != expected.Train || input.Validation != expected.Validation {
 		return nil, wire.Asset{}, failure("DATASET_DATA_INVALID")
 	}
-	f, e := s.Store.OpenVersionAssetContext(ctx, input.Version.ID, input.Version.AttemptID, asset, selected.SizeBytes, selected.SHA256)
+	f, e := files.OpenVersionAssetContext(ctx, input.Version.ID, input.Version.AttemptID, asset, selected.SizeBytes, selected.SHA256)
 	if e != nil {
 		return nil, wire.Asset{}, e
 	}

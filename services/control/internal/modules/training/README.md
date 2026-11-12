@@ -95,3 +95,27 @@ Synthetic node/production/stop envelopes, actual CPU computation, installed
 Agent/control acceptance and physical NVIDIA execution are separate
 qualifications. Current outcomes and open boundaries are recorded
 in [product status](../../../../../docs/product/status.md).
+
+
+## Concurrent accepted-file readers
+
+`OpenPublishedReader(artifactRoot, tenantID)` opens only existing immutable
+checkpoint/artifact publications. Set `Service.PublishedReader` and leave
+`Service.Store` nil; configuring both is refused. Its concrete read-only API
+reuses the original namespace, complete publication receipt, file inventory and
+hash checks. It grants no upload, mutation, worker or independent caller authority.
+
+`AcceptedAdapterWithin` still resolves the exact accepted, physically stopped
+current attempt under its scoped job lock. `VerifyAcceptedAdapter` and
+`OpenAcceptedAdapterAsset` may then use the reader outside business locks.
+Checkpoint transfer retains the original decoded seal, exact resume binding and
+both current-authority passes. New uploads/acceptance still require the writer
+Store and remain on control.
+
+The composition owner supplies the exact existing namespace at its configured
+root and owns the reader's startup-error/shutdown closure. It must join/drain
+current users before closure; already returned files remain caller-owned.
+The independent read descriptor never takes or releases writer ownership.
+The separate gateway constructor, real mount, model owner, protected SQL role,
+Node fence and installed acceptance remain their owners' work. See
+[the complete file-owner handoff](../../../../../docs/research/training-published-file-readers.md).
