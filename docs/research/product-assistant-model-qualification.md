@@ -118,3 +118,12 @@ control with the same native archive returned
 `ASSISTANT_NATIVE_OBSERVATIONS_MISMATCH` and emitted no qualification
 decision. Focused tests also rejected the wrong archive digest, reordered
 cases and changed response bytes.
+
+On 2026-11-12 the rebased qualifier replayed the retained native and control
+inputs under a macOS sandbox denying all network operations. A loopback
+connection was explicitly refused by that sandbox. Native replay matched
+the frozen report and all three unverified outcomes; the model remained
+unqualified. The separate synthetic control met only the safety prerequisite.
+Binding it to the native archive failed with no decision output. The five
+qualification unit tests and the native repository gate also passed. This
+replay started no inference process and does not qualify a gateway profile.

@@ -161,3 +161,11 @@ rebased source. The paired audit export and standalone verifier, current
 session commands and both-entrance HTTPS policy cases also passed against
 disconnected PostgreSQL. These are component and staged-dispatcher results;
 they do not establish a production migration, policy source or browser flow.
+
+The same component passed the native full repository gate, including both
+complete browser suites at one worker, followed by focused race tests and
+vet. The [shared browser gate boundary](app-lane-questions.md#shared-browser-gate-boundary)
+retains the earlier failure separately. A subsequent upstream integration
+changed only Markdown documentation. All non-Markdown repository files
+were byte-identical to the measured source before the final documentation
+checks.
