@@ -145,3 +145,25 @@ With the protected loopback `PROJECT_ONE_TEST_DSN_FILE` configured:
 ```sh
 go -C services/control test -p 1 -race ./internal/modules/scheduling/... -run '^(TestWorkspaceQuotaStatus|TestQuotaReadRejects|TestPostgresWorkspaceQuotaStatus|TestPostgresHTTPWorkspaceQuotaStatus)' -count=1 -v
 ```
+
+## Ranking through the selected repository
+
+`RankWorkspaceQueueExecutorWithin(ctx, q, tenant, entries)` accepts the
+workload owner's selected borrowed executor. It requires PostgreSQL read-only
+REPEATABLE READ and rejects a pool or another mode before policy/usage reads.
+The existing `RankWorkspaceQueueWithin` pgx entry remains compatible and
+delegates to the same implementation.
+
+The owner opens `Store.Within(ctx, true, ...)` with its bounded context and
+issues `SET TRANSACTION ISOLATION LEVEL REPEATABLE READ` as the callback's
+first SQL statement. It then reads the complete authorized eligible batch,
+ranks it and resolves the candidate through that same executor. Return data
+only after the owner's transaction outcome is confirmed. The ranker changes
+no transaction mode and opens no pool. Its result is an initial hint; final
+`ReserveQueuedWithin` still rechecks current authority, complete membership,
+rank and quota inside the owner's fresh READ COMMITTED write transaction.
+
+The selected-store PostgreSQL tests retain one snapshot across a committed
+hold and a new eligible row, then observe both in a fresh snapshot. They also
+reject wrong modes and inaccessible scope. The standalone owner fixture
+qualifies the scheduler API, not actual training dispatch or production DDL.

@@ -206,16 +206,16 @@ func (s *Service) schedulingEntriesWithin(
 ) ([]scheduling.QueueEntry, error)
 
 func (s *Service) nextFairCandidateWithin(
-    ctx context.Context, tx pgx.Tx, tenant string,
+    ctx context.Context, q transaction.Executor, tenant string,
 ) (candidate, error)
 ```
 
 In `training/authority.go`, replace the initial `nextCandidate` FIFO
 selection with `nextFairCandidateWithin` before claiming fair dispatch.
-Open a fresh read-only REPEATABLE READ transaction on the selected
-PostgreSQL owner pool. Read the complete eligible batch with
-`schedulingEntriesWithin` through its borrowed executor, call
-`RankWorkspaceQueueWithin` with that same transaction, then resolve the
+Open a read-only transaction through the selected PostgreSQL Store.Within.
+Set REPEATABLE READ as its first SQL statement. Read the complete eligible
+batch with `schedulingEntriesWithin` through that borrowed executor, call
+`RankWorkspaceQueueExecutorWithin` with the same executor, then resolve the
 first ranked job to the existing `candidate` fields through the same
 snapshot. No ranked entry means the existing no-candidate outcome. Do
 not use a different legacy pool or silently bypass scheduling on another
@@ -310,3 +310,40 @@ exact physical stop and never-delivered release. Verify that a foreign
 selected job or held record changes no owner revision or dispatch state.
 The scheduling fixtures persist owner queue state for rollback and
 concurrency tests. They do not replace this real training acceptance run.
+
+## Selected-repository snapshot ranking
+
+The initial training selector owns a selected transaction.Executor, not a raw
+pgx transaction. Add RankWorkspaceQueueExecutorWithin without changing the
+existing RankWorkspaceQueueWithin signature. Both use the same scope,
+allocation, aggregate-read and rank implementation. The selected executor
+must be a borrowed PostgreSQL read-only REPEATABLE READ transaction; reject
+a pool, nil context/executor, another engine or another transaction mode.
+
+The selected Store's read-only Within starts READ COMMITTED. The owner can
+issue SET TRANSACTION ISOLATION LEVEL REPEATABLE READ as its first SQL
+statement in that callback, before reading eligible entries or authority.
+PostgreSQL documents both the
+[first-query restriction](https://www.postgresql.org/docs/18/sql-set-transaction.html)
+and [stable snapshot semantics](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-REPEATABLE-READ).
+Read the complete authorized eligible batch, policy and shares through that
+same executor. The ranking helper validates the mode; it does not alter it,
+open another connection or commit. Retain the repository's sanitized errors.
+
+A legacy DB-pool fallback would break selected-repository ownership. A
+READ COMMITTED hint can mix the eligible set, policy and current shares.
+Changing isolation inside the ranker can occur after the owner has already
+read data. None is needed. Ranking grants no admission: after metadata/file
+verification, the owner still rechecks current authority and queue turn in
+the existing READ COMMITTED ReserveQueuedWithin transaction. Keep the
+queued-authority reconciliation for entries excluded from the eligible set.
+
+Use real selected Store.Within callbacks with first-statement isolation
+setup. Read persistent owner queue rows, commit a competing hold and a new
+eligible row concurrently, and verify that the existing snapshot remains
+stable while a fresh snapshot observes both changes. Reject read-only
+READ COMMITTED, writable REPEATABLE READ and read-only SERIALIZABLE. Preserve
+foreign/missing scope refusal, one aggregate usage query, and the legacy
+pgx and preflight snapshot contracts. Unit checks reject pooled and other-
+engine executors before SQL. Existing Go, pgx and PostgreSQL licences above
+cover this additive interface; no dependency, model or dataset is added.
