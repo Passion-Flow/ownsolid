@@ -276,3 +276,50 @@ the Docker daemon nor a network.
 The targeted regression passed on the workstation with networking denied
 for the test process. It exercised the replacement, matching pin, no-pin
 and wrong-publisher cases without a Docker socket.
+
+## Application chart consumer
+
+`VerifyInitialRelease` and `VerifyInstallBundle` authenticate the chart bytes
+and complete Linux amd64 OCI inventory. The Helm engine owns chart loading,
+dependencies, values schemas and target Kubernetes compatibility. Helm 4.3.1
+checks declared dependencies against the packaged charts and processes values
+against the target capabilities before rendering. Its chart documentation also
+describes remote schema references. Require the delivered chart to carry its
+dependency closure and schemas resolvable inside that closure, with validation active
+in a network-isolated renderer.
+[Helm 4.3.1 source](https://github.com/helm/helm/blob/v4.3.1/pkg/action/install.go),
+[chart dependencies and schemas](https://helm.sh/docs/topics/charts/).
+
+The DEL-owned
+[`TestSignedHelmBundlePreflight`](../../deploy/offline/internal/install/helm_bundle_preflight_test.go)
+requires Helm 4.3.1 and consumes the signed platform release inventory, its
+`control-image` and the site Registry group.
+[`WriteHelmImageValues`](../../deploy/offline/internal/install/helm_images.go)
+produces the matching platform overlay. The application consumer needs to take
+the catalog's independently trusted publisher key and exact `ReleasePin`,
+signed `chart.tgz` digest, `Archive.Digest`, `Archive.Bytes` and every
+`OCIImage` manifest/config pair from the verified app bundle.
+
+DEL must bind those inputs to its authorized installation, trusted Helm
+executable digest and version, namespace, release name, target capabilities and
+approved values. It must map the verified images to the site's admitted image
+delivery path and check every rendered workload against that mapping before
+execution. The current catalog Docker importer confirms images in its configured
+Docker store. The Kubernetes consumer must verify the selected worker's own image
+availability or its private Registry path.
+
+Production acceptance needs the publisher-approved app ID and version, exact
+bundle bytes, independently supplied public trust and component license notices.
+The next native run must render that same signed chart with packaged dependencies
+and schemas, refuse a missing dependency, remote schema, incompatible target,
+changed chart or unapproved image before workload creation, and retain the exact
+release pin through launch and retry. Successful synthetic package tests remain
+evidence for their recorded fixture scope. The native recorder must observe zero
+renderer egress attempts.
+
+The format and importer continue to use the existing Go standard library and
+factory. Helm 4.3.1 is Apache-2.0, allowing commercial and offline use and
+redistribution with its required notices. The package producer must supply the
+rights and notices for each delivered chart and image. This review introduces
+documentation only.
+[Helm 4.3.1 license](https://github.com/helm/helm/blob/v4.3.1/LICENSE).

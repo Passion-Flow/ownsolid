@@ -64,6 +64,17 @@ integration requires this durable owner and its registered lifecycle routes.
 [Helm release history](https://helm.sh/docs/helm/helm_history/),
 [Compose startup](https://docs.docker.com/reference/cli/docker/compose/up/).
 
+## CAT-101 and CAT-107 package and engine prerequisites
+
+The signed metadata, compatibility range, exact OCI inventory and Compose
+image plan remain implemented in `catalog/apps`. Completing the user path needs
+the authorized catalog route and the durable installation owner above.
+The [application chart consumer handoff](app-bundle-verification.md#application-chart-consumer)
+records the exact app inventory fields, Helm 4.3.1 boundary, offline dependency
+and schema closure, image delivery mapping and publisher-approved package needed
+by DEL. The existing platform Helm fixture consumes the platform release group.
+The app acceptance must consume the app's own signed release and trusted publisher.
+
 ## Workstation acceptance storage
 
 Use a short, canonical APFS scratch path for the full workstation gate when

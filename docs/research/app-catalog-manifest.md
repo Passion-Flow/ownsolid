@@ -84,8 +84,25 @@ duplicate keys, malformed UTF-8, missing translations, unsafe identifiers,
 wrong types, version ranges with no compatible release and mutable image
 references. Package validation performs local reads only. Artifact signature
 verification and cross-checking the rendered image inventory, disabled pull
-policies and workload privileges are required before any execution (CAT-107,
-CAT-109).
+policies and workload privileges are required before execution through the
+installer's admission path (CAT-105 and CAT-107).
+
+## Engine compatibility handoff
+
+The ownsolid platform range admits a selected signed app release. The engine adapter
+also needs the target Kubernetes capabilities and the chart's declared
+`kubeVersion` before rendering and admission. Helm 4.3.1 passes its capabilities
+and values through dependency processing and schema validation. Use that pinned
+engine boundary for chart semantics. Keep the catalog's stable ownsolid version
+range and typed form as the package contract.
+[Helm 4.3.1 installation source](https://github.com/helm/helm/blob/v4.3.1/pkg/action/install.go).
+
+The current catalog package supplies the signed app ID, release pin, platform
+range, typed form and both locales. The remaining consumer needs a server-authorized catalog
+route, the actual running platform version and an installer operation that
+retains the same pin through engine admission. The production package and
+engine acceptance prerequisites are recorded in the
+[bundle handoff](app-bundle-verification.md#application-chart-consumer).
 
 The reader uses the existing Go toolchain and
 [BSD-3-Clause standard library](https://go.dev/LICENSE), including its
