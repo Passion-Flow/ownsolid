@@ -269,6 +269,25 @@ qualified OIDC/JOSE dependency versions before a product adapter imports them.
 No default serving constructor or public connector selection changes as part
 of the isolated storage proof.
 
+The isolated storage prototype passed 54 real PostgreSQL checks against the
+exact migration-17 SSO definitions and minimal prerequisite tables. It kept
+the seven fixture tables unchanged in count, preserved legacy row snapshots
+through upgrade/downgrade, admitted distinct opaque subjects and enforced
+profile/tenant foreign keys, bounded fields, nonce uniqueness/immutability,
+claim and single-session issuance, and data-preserving downgrade refusal.
+The first missing prerequisite `sessions.revoked_at` was a fixture setup error;
+its original failure was retained before the corrected run. Evidence is
+`iam102-20261113.1jjfl_s4/storage-prototype/run-id2d6xyc`.
+
+That seven-table structural fixture is not the installed schema. The next
+admission test must apply identical candidate DDL to the current complete
+repository fixture and exercise real Gitea secret verification, retained
+idempotency replay, catalog/binding reads, pending starts and sourced-session
+revocation, with independent committed snapshots. Test the OIDC constraints
+and a real nonce-uniqueness race there as well. Candidate DDL under SSO testdata
+and opt-in repository tests remain qualification inputs, not serving schema
+or generic provider support.
+
 ## Lane boundary
 
 The IAM lane now owns the client, callback and binding code in
