@@ -92,6 +92,20 @@ case subsequently passed with unchanged Web sources; the previously unreached
 Go/Rust/Web unit recipes all passed separately on `ba90c3a4`. The original full
 invocation remains failed. The Help implementation and assertion belong to the Web owner.
 
+The rebased candidate `b4e222a7` on `d0ab719a` again passed `make check`
+and `make build`, then reproduced that assertion in the Chinese case while the
+English case passed. Control-wide unit tests passed separately after the rebase.
+Do not repeat unchanged full suites hoping for a different scheduling outcome.
+`ApiReferencePage` uses the `help-api` list definition; `useListView` restores
+its saved `q` filter on mount when a link supplies no list parameter. The failed
+trace shows article navigation returning to `/help/api?q=changePassword`, matching
+that restoration. The bare-URL assertion can observe the preceding navigation
+before restoration, which explains the focused pass; this timing explanation is
+an inference from the source and the two traces. The Web owner must reconcile
+the assertion with the intended filter-restoration behavior and verify both
+locales. Preserve the complete traces and keep M's candidate unpublished while
+the mandatory whole gate remains failed.
+
 Follow the current resource handoff order. The carrier at
 `/private/tmp/ownsolid-workstation-full-gate.lock` is a persistent regular
 file owned by the current user. Reject symlinks and an occupied directory;
