@@ -242,3 +242,66 @@ intentions, not qualified teardown or group-lifecycle results. Run only in the
 allocated Linux resource window. The real expiry/resumption observation, grouped
 acknowledgement, SQL durability, production migration and Console work remain
 open; the earlier forty-member inhibition result is unchanged.
+
+## Lifecycle startup fact boundary
+
+The unrun f192 runner infers native_started from the presence of version output.
+That only proves the short version command succeeded; the later service Popen can
+still fail. Keep the original observer/runner immutable and prepare a new pair
+that records process creation, readiness and termination separately. Python's
+[Popen pid, poll and wait](https://docs.python.org/3/library/subprocess.html)
+provide process facts; the native
+[/-/ready endpoint](https://prometheus.io/docs/alerting/latest/management_api/)
+provides readiness. Neither fact substitutes for the other.
+
+Set started only after the service Popen returns with a positive child PID,
+ready only after its readiness response, and stopped only after its exit has
+been observed. A missing observation leaves startup unknown, while a recorded
+pre-start failure is false. Require explicit boolean facts and reject impossible
+or contradictory completed results. Version output alone must never turn a
+pre-start failure into a started service.
+
+Keep the field decoder importable without command execution so pure tests can
+cover version-only failure, process-created/readiness-failed, stopped processes,
+complete success, missing/wrongly typed fields, invalid PIDs and contradictory
+completion. Preserve the native fixture's hashes, two locks, resource floors,
+network isolation, deadlines and cleanup custody. This changes only external
+prototype reporting, not product grouping or escalation. The existing Python
+standard library uses the [PSF license](https://docs.python.org/3/license.html),
+allowing commercial/offline use and redistribution with its terms. Alertmanager
+remains Apache-2.0; no dependency, model or dataset is added. Native execution
+is still required to qualify the lifecycle behavior.
+
+The external runner also needs an explicit optimization-mode refusal: an assert
+checking __debug__ is itself removed by python -O. Keep the existing assertion
+checks active by exiting explicitly before argument processing under optimization.
+A pure CLI regression with -O --help can verify refusal without opening locks or
+starting a native service.
+
+The revised external pair is prepared at
+/root/lane-obs-tools/observe-alertmanager-expiry-v2.py (SHA-256
+b2240790e1c5ca172af7c4f033ca8ae2a4e65041daec3bd719d27f1c5b98d152)
+and /root/lane-obs-tools/run-alertmanager-expiry-v2.py (SHA-256
+0c8b843cde6b8c39bfd447d9569f011f0462633c84c4c4d9bba67b14fca0fb8c).
+The observer now records explicit service creation and PID, HTTP-200 readiness
+and observed termination; it also records termination if a created process has
+already exited. The runner strictly decodes those facts, requires readiness for
+completion, and refuses optimization explicitly before argument processing.
+The original aea195/f192 pair remains byte-for-byte unchanged.
+
+The directly runnable input package is
+/root/lane-obs-tools/obs104-expiry-v2-package.json, SHA-256
+975f70fa1a378ba934be7e0b0124a970cacd8c7f923adc3f842b0c244020423c.
+It binds the cached Alertmanager 0.34.2 binary and new source hashes, both existing
+lock paths, the original resource floors and child deadline, and a 240-second
+caller bound with a ten-second forced-stop grace. It has not been invoked.
+
+Nine pure decoder/optimization CLI tests are prepared at
+/root/lane-obs-tools/test-alertmanager-expiry-facts.py, SHA-256
+89526232c065f0e6df07b8e7ceda89aaa9aaadafdcca6a53fcdba34e27dc6ee4.
+Syntax inspection passed. Two Mac nonblocking workstation-flock admissions
+returned 75 before starting any test process; these are neither failing tests
+nor unit qualification. No Linux lock attempt, Alertmanager version invocation,
+native service, receiver or database was started. The pure tests and the native
+expiry/resumption run remain pending. Product grouping/escalation and OBS-104
+remain open.
