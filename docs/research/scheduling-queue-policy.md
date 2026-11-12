@@ -242,37 +242,32 @@ change adds no dependency, model, data set, production table or runtime download
 
 ### Component qualification
 
-Source 62c9dd09 on base 726f2149 passed 45 real PostgreSQL cases and 66 top-level tests across
-scheduling, its HTTP component and cell adapter, with Go race instrumentation,
-PostgreSQL 18.6 and pgvector 0.8.7 on Linux amd64. The network namespace had no
-default IPv4 or IPv6 route; the database had no container network or host port.
+Source d61d6879 on base a27fe64b passed 45 real PostgreSQL cases and 66
+top-level component tests with Go race instrumentation, PostgreSQL 18.6 and
+pgvector 0.8.7 on Linux amd64. That exact source also passed full Control
+modules, make check, make build and the platform configuration and HTTP server
+tests with Go 1.27.3 and offline dependencies. No browser tests ran.
+The component network namespace had no default route; the private database
+had no container network or host port.
 
-The current queue tests verified owner dequeue/hold commit and rollback, current
-shares after ordinary and queued writer waits, concurrent replay, cancellation,
-reader/scope failure, exact positive release, borrowing attribution and reclaim,
-and a suppressed real COMMIT acknowledgement. The configured 10,000-workspace
-domain held exactly two advisory lock tags: tenant and selected workspace.
-This is a lock-allocation result, not SCH-111 node/job admission latency evidence.
+Tests verified current usage after ordinary and queued waits, shared-writer
+concurrency, tenant isolation, owner rollback and commit, replay, cancellation,
+positive release, borrowing/reclaim and a suppressed real COMMIT acknowledgement.
+The configured 10,000-workspace domain held exactly two advisory lock tags.
+This is not SCH-111 fleet admission latency evidence.
 
-The same source passed all three required gates on Linux amd64 with Go 1.27.3
-and offline dependencies. Rebased source fd64e112 on base 6508ce3c passed the full
-Control module suite, make check and make build on macOS arm64 with Go 1.27.3,
-Python 3.12 and offline dependencies. The scheduling module, Workspace, session
-authority, transaction, database and configuration paths are unchanged. The
-runtime IAM delta only accounts for Admin audit-events list reads, outside the
-scheduling call path. The exact-source Linux database qualification above is
-retained with this input-equivalence review; it is not relabeled as a new run.
-Production owner, serving-role and installed user-flow acceptance remain open.
+Integration source 0dfb5596 on base e2fde0f5 retains that exact-source native
+qualification. Its delta from the tested source was checked to contain only
+documentation; layout and roadmap checks were rerun. Earlier macOS and Linux
+runs retain their actual source identities and are not relabeled.
 
-With both protected fixture DSN variables in the module README configured:
+With both protected fixture DSN variables configured, the native component
+command is:
 
-```sh
-go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -skip '^TestPostgresReservationCatalogRoundTrip$' -count=1 -timeout 8m -v
-```
+    go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -skip '^TestPostgresReservationCatalogRoundTrip$' -count=1 -timeout 8m -v
 
 The separate fresh/dump/restore catalog harness was explicitly excluded; this
-change has no production DDL. The fixtures use a privileged test principal, not
-the native serving role. Production grants/readiness, complete eligible-batch
-authority, persisted priority configuration, current authenticated dispatch,
-all-writer protocol cutover and the installed UI flow remain open. SCH-103 stays
-unticked.
+admission change has no production DDL. Privileged fixtures do not qualify native
+serving-role grants. Production eligible-batch and priority authority, all-writer
+protocol cutover, authenticated dispatch and the installed offline UI flow remain
+open. SCH-103 stays unticked.
