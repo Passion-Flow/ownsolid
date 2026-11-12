@@ -128,6 +128,14 @@ receipts were produced. The direct CPU measurements and the synthetic gateway
 transport qualification retain their recorded scopes. See the
 [paired startup boundary](../research/evaluation-performance-benchmark.md#authorized-pair-startup-boundary).
 
+A later corrected EVL-105 fixture at `e17921ff` completed two serial direct
+and two authorized native gateway calls against the same real CPU model.
+Both pairs matched the archived text and 21 input plus 24 output tokens.
+The real HTTPS acknowledgments matched scoped PostgreSQL outcomes and
+independently recalculated canonical digests. Deployment and GPU admission
+facts were synthetic. See the [completed CPU pair](../research/evaluation-performance-benchmark.md#authorized-cpu-gateway-pair).
+The evaluation UI, detached receipt signing, GPU and cost acceptance remain open.
+
 `make test` passes on macOS and includes the web workspace: Vitest for every package and
 Playwright for the console and portal against a scripted control plane. The factory tests need a non-root user and a real mounted
 filesystem, so they skip there; `make test-offline HOST=ownsolid-cpu` runs them on Linux.

@@ -205,3 +205,73 @@ actual tokenizer counts, completion digests and scoped acknowledged receipt
 before claiming generation equivalence. A bounded startup observation must
 reach the gateway's real listener first. The resumed fixture retains the
 shared Linux lock, the lane lock and resource preflight.
+
+## Authorized CPU gateway pair
+
+The completed run at `e17921ff` used the same approved Qwen3-0.6B revision,
+nine verified files, pinned CPU image and generation settings as the retained
+direct sample. PostgreSQL 18.6 and vLLM shared one network namespace with
+only loopback, an empty route table and no published ports. The run held
+both Linux locks. Before engine startup, full I/O PSI was 0.92% over ten
+seconds and 4.60% over sixty seconds, with 5,841 MiB free memory.
+
+The extended startup observation first exposed `GATEWAY_LIMITS_INVALID`.
+The test had reduced active requests to one while retaining two idle
+backend connections. The real `Limits::validate()` refused that combination
+and accepted an idle pool of one. The corrected fixture used those matching
+limits. The failed extended observation retained zero pairs and its log
+SHA-256 is `a6fc7c4764beda80c40d95fd1fb14f337dc341c4f3b90edc66071e5a22c3815c`.
+The original three-second failure remains recorded above. In the completed
+run, the real gateway was ready after 14.643098 ms.
+
+The original direct JSON still includes request seed 42 and the explicit
+disabled-thinking flag. The accepted gateway JSON omits those unsupported
+fields. Its captured backend body includes disabled thinking, temperature
+zero and the original messages and output bound. Both paths use one engine
+started with seed 42. The [pinned sampler](https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/v1/worker/gpu/sample/gumbel.py)
+uses argmax without random noise at zero temperature. The two API names
+resolve to the same model path, with the gateway's admitted name first as
+specified by [vLLM's served-model-name contract](https://docs.vllm.ai/en/v0.29.0/configuration/engine_args/#--served-model-name).
+Raw client, tokenizer and forwarded generation bodies and the exact engine
+arguments and environment are retained. This qualification applies to the
+tested greedy profile and two cases.
+
+Two serial direct calls and two serial authorized gateway calls completed.
+The actual tokenizer returned 21 prompt tokens for each case. Each response
+contained 24 completion tokens and matched the original archived text
+digest and finish reason. The loopback bridge forwarded the real model's
+response bytes. The public gateway response retained the backend completion
+ID and projected the authorized alias.
+
+| Case | Gateway request ID | Prompt / completion / total | Canonical receipt SHA-256 |
+| --- | --- | --- | --- |
+| photosynthesis | `9e2bc389-99cb-487d-b8c8-8c3d997338a7` | 21 / 24 / 45 | `33a4607cde7e6ccf7d3f1be16552d23fef4149cab15ee832d420ede223d6229d` |
+| tides | `f2c83a05-6891-49aa-b018-946bc9bc8dda` | 21 / 24 / 45 | `045ddd745a9597d8a9dad0ce3adaa9a31c12f355ece7dbf7a77fc96a6541db45` |
+
+For each gateway request, the real HTTPS control handler authenticated the
+gateway and persisted one successful outcome. The fixture checked tenant,
+workspace, node, gateway, API key, alias, deployment and revision, released
+capacity and one report audit event. It captured the actual HTTPS
+acknowledgment. An independent disconnected Python readback matched the
+raw responses, original archive, tokenizer counts and scopes, and rebuilt
+both canonical receipt digests. The direct loopback model calls have no
+control-plane admission scope. The gateway admission and receipt supply
+the scoped side of the pair. These acknowledgments use authenticated HTTPS
+and canonical digests. Detached digital signatures remain open.
+
+| Raw response | SHA-256 |
+| --- | --- |
+| photosynthesis direct JSON | `aeb5d62904e0f5435f3c4437992b5b390f884010ab20758c5eee0121b63303ed` |
+| photosynthesis gateway JSON | `a478b4f502ece6d02413de1cc2e588108d09f3ab87c9977a7233a42655e0275a` |
+| tides direct JSON | `e7d8505b6cbc8202c690cfcbbd22f0e06cb1f8559b9c714c71e67a19ae1c2beb` |
+| tides gateway JSON | `38a08c521278b41e286773ede81d07fbe1aaf3a992edfc59dca3f52bc121debf` |
+
+The complete evidence manifest SHA-256 is
+`75757f8dae51506ebaa2ec3b29e227d68d66e83acbf53fb2c3f8efc7213a6f2b`.
+The test's node enrollment, GPU observations and deployment readiness are
+synthetic admission fixtures. Model generation, Go HTTPS authorization,
+PostgreSQL persistence and native Rust forwarding are real. The model container
+exited with status zero and no out-of-memory event. Both owned containers
+were removed along with the private credential directory.
+The product evaluation UI, GPU performance, detached signing and cost
+acceptance remain open.
