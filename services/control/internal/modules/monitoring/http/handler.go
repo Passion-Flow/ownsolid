@@ -3,17 +3,23 @@ package http
 
 import (
 	"errors"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
 	"net/http"
 	"net/url"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
 )
 
+// Path is the cell-relative Admin snapshot route.
 const Path = "/api/v1/admin/monitoring"
 
+// Handler serves bounded reads behind the original Admin authentication and Origin policy.
 type Handler struct{ Service *monitoring.Service }
 
+// Owns matches only the exact cell-relative monitoring routes.
 func Owns(path string) bool { return path == Path || path == FleetHistoryPath }
+
+// Handle releases data only after the owning service confirms authority and audit commit.
 func (h *Handler) Handle(r *http.Request, a identity.Auth, requestID string) (any, int, error) {
 	if r != nil && r.URL != nil && r.URL.Path == FleetHistoryPath {
 		body, status, err := h.HandleFleetHistory(r, a, requestID)
