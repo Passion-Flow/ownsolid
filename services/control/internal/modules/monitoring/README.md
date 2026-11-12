@@ -367,19 +367,36 @@ Control's system CA store. Plain HTTP is restricted to loopback IP literals.
 The same origin cannot represent both tiers. Omitting the long origin allows
 raw-only reads within the raw horizon. Omitting the policy disables history.
 
-The unregistered HandleFleetHistory method accepts the cell-relative
-history path, exactly one `workspace_id` and the whole-second UTC
-`from` and `to` query parameters. The existing Admin dispatcher must
-authenticate the request, check its Origin, resolve its cell and
-supply the Control request ID. On success the method supplies a
-complete JSON body up to 1 MiB after the second authority check and
-the audit commit. Publish the prepared bytes directly to retain the
-body cap. Missing points are unobserved. Reachable zero with
-a positive observed count is an observation. Use the
-[HTTP candidate handoff](../../../../../docs/research/telemetry-retention-tiers.md#verified-bounded-http-candidate)
-to register the distinct candidate statuses and error codes through
-the shared problem writer before publishing the route. The regular
-snapshot stays on its existing path.
+The Admin history read uses
+GET /api/v1/sites/{site_id}/cells/{cell_id}/admin/monitoring/fleet-history.
+Use the installed site and cell IDs and exactly one workspace_id, from and to
+query parameter. Times must be whole-second UTC values in
+YYYY-MM-DDTHH:MM:SSZ form, with from before to. The installed database clock
+determines the tier and rejects future or overlong ranges. The caller cannot
+choose a tenant, native query or tier.
+
+The original dispatcher resolves the cell, validates the Admin session and
+Origin, and supplies the request ID and deadline. The service checks current
+Workspace authority before store I/O and again before committing the read
+audit. Success uses the shared data envelope; the complete response, including
+its trailing newline, is at most 1 MiB. The snapshot keeps its existing path.
+The raw cadence is 15 seconds and the rollup cadence one minute. Longer
+requests widen the evaluation step to at most 1,440 points per cell. Missing
+points are unobserved. Reachable zero with a positive observed count is a
+measured observation.
+
+A 400 MONITORING_HISTORY_RANGE_INVALID requires correcting the time window.
+A 422 MONITORING_HISTORY_RESPONSE_LIMIT requires a smaller query. A 503
+MONITORING_HISTORY_NOT_CONFIGURED or MONITORING_LONG_TIER_NOT_CONFIGURED
+requires the operator to provision the corresponding protected settings.
+MONITORING_RAW_TIER_UNAVAILABLE and MONITORING_LONG_TIER_UNAVAILABLE return
+503 for failed store reads; restore private connectivity, certificate trust
+or store health and retry the same request. A failed long tier never falls
+back to raw. Authorization failures return no data, and failed reads do not
+commit a successful history audit.
+
+The [retention research](../../../../../docs/research/telemetry-retention-tiers.md#admin-route-integration)
+separates module entry qualification from installer and Console acceptance.
 
 For the Linux amd64 acceptance run, export OWNSOLID_TEST_POSTGRES_IMAGE to
 the preloaded, verified PostgreSQL 18.6 and pgvector 0.8.7 image ID. Set
@@ -387,6 +404,12 @@ OWNSOLID_TEST_VICTORIA_METRICS and OWNSOLID_TEST_VMALERT to the verified
 v1.155.0 binary paths. Run from the repository root with namespace access:
 
     bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh
+
+For the small registered-route profile, use the normal CSRF/login/session,
+verified TLS, formal response schemas and actual stores without repeating
+the large-fleet workload:
+
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http
 
 To qualify the protected configuration and native TLS with separately
 trusted raw and long origins, run the same fixture with the TLS selector.
