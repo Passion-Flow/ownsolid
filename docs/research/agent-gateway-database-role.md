@@ -545,3 +545,41 @@ need their own persisted authority and exact-attempt checks rather than inheriti
 training's acceptance. Keep existing control workers, source artifact ownership,
 scope fences and read-only/observation role cases unchanged. These are acceptance
 requirements; no delegated-profile role run is claimed yet.
+
+
+## Delegated claim artifact-store precondition
+
+Before measuring grants, isolate a current constructor precondition with the
+normal control-side principal. The current NewAgentGateway graph constructs a
+dataset Service without a Store, and runAgentGateway does not open it afterward.
+Training ClaimTraining calls VerifyTrainingInputSnapshot between its two
+transactions; that method explicitly refuses a nil Store. This is a static gap,
+not yet a recorded runtime reproduction. Broader SQL privileges cannot supply a
+missing filesystem owner. Do not patch the identity/dataset owners from this lane
+or insert a synthetic successful file verifier into the role prototype.
+
+The next external diagnostic must prepare a real synthetic JSONL dataset through
+the existing CPython processor, dispatch a real control-side training attempt,
+then call the unchanged NewAgentGateway/Node claim graph against that same actual
+database. Observe the exact error and complete task/attempt/physical-lease state
+before and after. Independently require control's normal file-owning path to claim
+and acknowledge that same attempt successfully, retaining the exact task sequence
+and physical ownership. A diagnostic that confirms an undesired failure is not
+acceptance of delegated gateway support. Keep this composition question separate
+from the restricted role's still-open permission closure.
+
+The available Linux CPython 3.12.3 satisfies the data processor's >=3.12,<3.13
+contract; the JSONL path has no third-party Python dependencies and uses generated
+synthetic records. Python's [PSF-2.0 terms](https://docs.python.org/3.12/license.html)
+permit commercial/offline use and redistribution with notices. No model weights
+or external dataset are needed. To keep real processing available while denying
+network egress, run the test in the owned PostgreSQL container's network namespace
+while retaining the host filesystem and interpreter. The upstream
+[nsenter contract](https://man7.org/linux/man-pages/man1/nsenter.1.html) separates
+network namespace entry from mount namespace entry. Validate the owned container
+identity and network=none before entry; never enter a foreign namespace. util-linux
+[nsenter source](https://github.com/util-linux/util-linux/blob/master/sys-utils/nsenter.c)
+is GPL-2.0-or-later; it is an existing external test-host tool, not linked into or
+redistributed with the product by this diagnostic. Retain all prior dependency
+licence obligations. Use the same pinned PostgreSQL image, generated ECDSA trust,
+verify-full, required SCRAM binding, bounded admission and unconditional cleanup.
