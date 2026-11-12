@@ -75,3 +75,38 @@ budget exhaustion, changed-name replay, cancellation and metadata-only audit.
 Reuse existing unchanged core budget evidence. Production route/configuration,
 schema registration, the command UI and other resource kinds remain owner
 integration requirements; AGT-111 stays unchecked.
+
+## Acceptance and handoff
+
+Source `21b86219` passed the complete `make check`, `make build` and `make
+test` gate. Console passed 1,075 browser cases and Portal passed 389, with
+their existing 28 and 9 live-environment skips and no automatic retries.
+Affected application and assistant race tests and vet passed.
+
+An isolated Linux arm64 PostgreSQL 18.6/pgvector 0.8.7 container in network
+mode `none` passed all five selected repository roots, including both new
+name-resolution roots, and both real HTTPS roots. The name tests exercised
+exact bilingual/NFC lookup, maximum names, literal wildcards and quotes,
+command-like names as data, absent/unpublished/disabled/ambiguous resources,
+changed-name replay, foreign scope, membership/session revocation, budget
+exhaustion, audit refusal, cancellation and final-policy suppression. The
+guarded Portal HTTPS flow resolved both language prefixes to the published
+UUID and refused disabled execution and a supplied cursor.
+
+The retained repository log SHA-256 is
+`ad6f5e8f81f49194dd92c4c60a356556f9ec361dc43230350d5fb6d7ba6dce0d`;
+the HTTPS log is
+`d5286a03b801356035a9689001cc06582cfd53e8e194bd72aab3782cd9c64a7e`.
+The harness initially reported a cleanup failure because its absent-object
+check expected capitalized Docker output. A separate exact-container
+inspection confirmed removal; the lowercase diagnostic was retained and
+the harness check corrected. No product test was rerun to conceal that
+harness result. The owned temporary APFS volume was detached and removed.
+
+The native amd64 runner twice refused a busy shared CPU lock before source
+construction or containers started. This new lookup therefore has arm64
+execution evidence only; earlier native budget/loop evidence does not
+qualify it. Reuse the selected test roots above on the native target when
+the shared window is available. No persistent test service or queue was
+left running. The existing three model safety observations remain
+unqualified; this deterministic lookup invokes no model.
