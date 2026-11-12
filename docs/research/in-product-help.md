@@ -376,3 +376,36 @@ The state boundaries of that reference are:
 | Error | A failed operation detail states that it did not load and offers a retry. |
 | Denied | The signed-in frame gates access and the build projects the entrance's audience. Reading documentation does not grant permission to execute an operation. |
 | Not ready | This is a reference without an API executor. A missing error declaration retains its explicit explanation rather than inventing codes. |
+
+### Contract download discovery during a connection failure
+
+The contract loader currently imports a separate JavaScript module just
+to obtain each file's URL. If that module cannot load, Save the contract
+has no address and disappears. The address itself is static build data.
+[Vite glob imports](https://vite.dev/guide/features#glob-import) support
+eager default imports with a `?url` query. Include those URL strings in
+the reference module while keeping the JSON files as separate same-origin
+assets. The existing zero-inline asset policy still applies. Preserve
+the asynchronous contractUrl API used by current callers.
+
+Reject fetching every full contract in advance: finding a download
+address does not require reading its content. A second manually maintained
+URL map could drift from the generated entrance projection. Reloading
+the entire page to repair a tiny address lookup would discard the reader's
+place without removing this unnecessary request.
+
+Use [Playwright's offline context](https://playwright.dev/docs/api/class-browsercontext#browser-context-set-offline)
+to open the already loaded reference, interrupt its connection, then
+filter to a contract not previously displayed. Its download link must
+remain available. Restore the connection and save the actual file;
+verify the contract's audience, rather than replacing its response.
+Also refuse one file download, retain the link, and retry it successfully.
+The initial and changed bundle sizes must stay within the current budget.
+Retain screenshots and a controlled run against the old loader so a
+passing download after recovery cannot hide a missing-link regression.
+
+This uses the existing pinned Vite (MIT) and Playwright (Apache-2.0).
+Both permit commercial use, redistribution and offline execution with
+their licence notices. No dependency, model or dataset is added. The
+frozen installed acceptance source remains independent of this follow-up
+until the new implementation has its own validation.
