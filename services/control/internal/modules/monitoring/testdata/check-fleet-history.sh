@@ -3,9 +3,10 @@ set -euo pipefail
 
 case ${1:-history} in
     history) fixture='^TestScopedFleetHistoryOffline$'; auxiliary=${OWNSOLID_TEST_VMALERT:-} ;;
+    history-http) fixture='^TestFleetHistoryAuthenticatedHTTPOffline$'; auxiliary=${OWNSOLID_TEST_VMALERT:-} ;;
     history-tls) fixture='^TestFleetHistoryPrivateTLS$'; auxiliary=${OWNSOLID_TEST_VMALERT:-} ;;
     scrape-inventory) fixture='^TestNodeScrapeInventoryThroughVmagent$'; auxiliary=${OWNSOLID_TEST_VMAGENT:-} ;;
-    *) echo "Choose history, history-tls or scrape-inventory." >&2; exit 2 ;;
+    *) echo "Choose history, history-http, history-tls or scrape-inventory." >&2; exit 2 ;;
 esac
 image=${OWNSOLID_TEST_POSTGRES_IMAGE:-}
 metrics=${OWNSOLID_TEST_VICTORIA_METRICS:-}
@@ -48,6 +49,7 @@ pid=$(docker inspect --format '{{.State.Pid}}' "$container")
 printf 'postgresql://fixture@127.0.0.1:5432/ownsolid_history_test?sslmode=disable\n' >"$work/dsn"
 export PROJECT_ONE_REPOSITORY_ENGINE=postgresql
 export PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE="$work/dsn"
+export PROJECT_ONE_TEST_DSN_FILE="$work/dsn"
 export PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA="m20_repository_$(tr -d '-' </proc/sys/kernel/random/uuid)"
 cd services/control/internal/modules/monitoring
 nsenter --target "$pid" --net unshare --pid --fork --kill-child bash -ec '
