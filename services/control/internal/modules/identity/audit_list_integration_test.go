@@ -326,7 +326,11 @@ func auditListReader(t *testing.T, ctx context.Context, s *identity.Service) *id
 		}
 	})
 	exec("GRANT USAGE ON SCHEMA " + pgx.Identifier{schema}.Sanitize() + " TO " + role)
-	exec("GRANT SELECT ON audit_events, installation_state, workspaces TO " + role)
+	exec("GRANT SELECT ON installation_state, workspaces TO " + role)
+	// Serving can append access events without reading or mutating the private chain head.
+	exec("GRANT SELECT, INSERT ON audit_events TO " + role)
+	// Audit insert defaults resolve their local cell using the caller's privileges.
+	exec("GRANT SELECT(id,site_id,is_local) ON cells TO " + role)
 	exec("GRANT SELECT, UPDATE ON users, sessions TO " + role)
 	config := s.DB.Config()
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
