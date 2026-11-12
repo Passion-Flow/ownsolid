@@ -112,6 +112,16 @@ func TestSSORecoverableServiceHTTPS(t *testing.T) {
 	state, _ = start(rotated, readable)
 	readToken := issueSSORecoverySource(t, rotatedAccounts, readable, state)
 	readCipher := cipher(readable)
+	foreignTenant, foreignConnector := uuid.NewString(), uuid.NewString()
+	if _, err := s.DB.Exec(ctx, "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign recovery fixture','active')", foreignTenant); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.DB.Exec(ctx, `INSERT INTO sso_connectors(id,tenant_id,name,provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by)
+		SELECT $1,$2,'Foreign recovery fixture',provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by
+		FROM sso_connectors WHERE id=$3`, foreignConnector, foreignTenant, unreadable); err != nil {
+		t.Fatal(err)
+	}
+	foreignCipher := cipher(foreignConnector)
 
 	if err := os.Chmod(active, 0644); err != nil {
 		t.Fatal(err)
@@ -145,6 +155,8 @@ func TestSSORecoverableServiceHTTPS(t *testing.T) {
 	if len(discovered) != 1 || discovered[0].(map[string]any)["id"] != readable {
 		t.Fatal("public discovery included an unreadable connector")
 	}
+	problemCode(t, admin.request(http.MethodGet, catalog+"?tenant_id="+foreignTenant, nil, 400, "sso:Problem", nil), "VALIDATION_FAILED")
+	problemCode(t, admin.mutate(http.MethodPost, startPath(foreignConnector), login, 404, "sso:Problem"), "SSO_CONNECTOR_NOT_FOUND")
 	problemCode(t, admin.mutate(http.MethodPost, startPath(unreadable), login, 503, "sso:Problem"), "SSO_ENCRYPTED_STATE_INVALID")
 	for _, flow := range [][2]string{{oldState, oldProof}, {newState, newProof}} {
 		if _, _, err := recovery.Complete(ctx, unreadable, "admin", flow[0], flow[1], "", security.Token(), false, uuid.NewString()); err == nil || err.Error() != "SSO_FLOW_UNUSABLE" {
@@ -177,6 +189,7 @@ func TestSSORecoverableServiceHTTPS(t *testing.T) {
 	clientID, clientSecret := uuid.NewString(), security.Token()
 	update := sso.UpdateConnector{Revision: 1, Name: "Old key", Enabled: true, ClientID: &clientID, ClientSecret: &clientSecret, Reason: "Replace unreadable fixture credential"}
 	target := catalog + "/" + unreadable
+	problemCode(t, admin.mutate(http.MethodPatch, catalog+"/"+foreignConnector, update, 404, "sso:Problem"), "SSO_CONNECTOR_NOT_FOUND")
 	problemCode(t, noKeyAdmin.mutate(http.MethodPatch, target, update, 503, "sso:Problem"), "SSO_KEYRING_INVALID")
 	problemCode(t, readAdmin.mutate(http.MethodPatch, target, update, 403, "sso:Problem"), "ACCESS_DENIED")
 	admin.refresh()
@@ -188,6 +201,17 @@ func TestSSORecoverableServiceHTTPS(t *testing.T) {
 		t.Fatal("refused replacement changed the old ciphertext")
 	}
 	headers := map[string]string{"Idempotency-Key": uuid.NewString()}
+	if _, err := s.DB.Exec(ctx, "ALTER TABLE audit_events ADD CONSTRAINT fixture_refuses_sso_repair CHECK(action<>'sso.connector_updated') NOT VALID"); err != nil {
+		t.Fatal(err)
+	}
+	problemCode(t, admin.request(http.MethodPatch, target, update, 503, "sso:Problem", headers), "STORAGE_UNAVAILABLE")
+	if cipher(unreadable) != oldCipher {
+		t.Fatal("failed audit changed unreadable connector ciphertext")
+	}
+	requirePage(accounts, recovery, admin, map[string]bool{unreadable: true})
+	if _, err := s.DB.Exec(ctx, "ALTER TABLE audit_events DROP CONSTRAINT fixture_refuses_sso_repair"); err != nil {
+		t.Fatal(err)
+	}
 	for range 2 {
 		result := admin.request(http.MethodPatch, target, update, 200, "sso:SSOConnectorResponse", headers)
 		if result["revision"] != float64(2) || result["auth_version"] != float64(2) || result["client_id"] != clientID {
@@ -200,8 +224,32 @@ func TestSSORecoverableServiceHTTPS(t *testing.T) {
 	var leaked bool
 	if err := s.DB.QueryRow(ctx, `SELECT count(*),coalesce(bool_or(strpos(to_jsonb(a)::text,$2)>0),false)
 		FROM audit_events a WHERE target_type='sso_connector' AND target_id=$1 AND action='sso.connector_updated'`, unreadable, clientSecret).
-		Scan(&events, &leaked); err != nil || events != 1 || leaked || cipher(readable) != readCipher {
+		Scan(&events, &leaked); err != nil || events != 1 || leaked || cipher(readable) != readCipher || cipher(foreignConnector) != foreignCipher {
 		t.Fatal("replacement audit or connector isolation failed", err)
+	}
+	if err := s.DB.QueryRow(ctx, "SELECT count(*) FROM audit_events WHERE target_id=$1", foreignConnector).Scan(&events); err != nil || events != 0 {
+		t.Fatal("refused foreign connector operation created an audit mutation", err)
+	}
+
+	disable := sso.UpdateConnector{Revision: 1, Name: "Active key", Enabled: false, Reason: "Disable without protected key material"}
+	headers = map[string]string{"Idempotency-Key": uuid.NewString()}
+	for range 2 {
+		result := noKeyAdmin.request(http.MethodPatch, catalog+"/"+readable, disable, 200, "sso:SSOConnectorResponse", headers)
+		if result["revision"] != float64(2) || result["auth_version"] != float64(2) || result["enabled"] != false {
+			t.Fatal("missing-key disable did not retain its committed result")
+		}
+	}
+	var revoked bool
+	if err := s.DB.QueryRow(ctx, "SELECT revoked_at IS NOT NULL AND revoke_reason='sso_connector_changed' FROM sessions WHERE token_hash=$1", security.Digest(readToken)).Scan(&revoked); err != nil || !revoked {
+		t.Fatal("missing-key disable did not revoke the sourced session", err)
+	}
+	problemCode(t, readAdmin.request(http.MethodGet, "/api/v1/me", nil, 401, "Problem", nil), "AUTH_SESSION_EXPIRED")
+	noKeyAdmin.request(http.MethodGet, "/api/v1/me", nil, 200, "MeResponse", nil)
+	if err := s.DB.QueryRow(ctx, "SELECT count(*) FROM audit_events WHERE target_id=$1 AND action='sso.connector_updated'", readable).Scan(&events); err != nil || events != 1 || cipher(readable) != readCipher || cipher(foreignConnector) != foreignCipher {
+		t.Fatal("missing-key disable changed ciphertext or duplicated its audit", err)
+	}
+	if providerCalls.Load() != 0 {
+		t.Fatal("credential recovery contacted the synthetic provider")
 	}
 }
 
