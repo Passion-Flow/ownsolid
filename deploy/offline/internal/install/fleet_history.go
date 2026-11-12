@@ -163,7 +163,6 @@ func (s historySite) compose(generation string) ([]byte, error) {
 			"image": image, "pull_policy": "never", "user": fmt.Sprintf("%d:%d", c.UID, c.GID),
 			"read_only": true, "cap_drop": []string{"ALL"}, "security_opt": []string{"no-new-privileges:true"},
 			"restart": "unless-stopped", "mem_limit": limits.Memory, "cpus": limits.CPUs, "pids_limit": limits.PIDs,
-			"dns":    []string{"127.0.0.1"},
 			"labels": map[string]string{historyRootLabel: wire.Digest([]byte(c.Root))},
 		}
 	}
@@ -182,7 +181,7 @@ func (s historySite) compose(generation string) ([]byte, error) {
 			"-httpListenAddr=:8428", "-tls", "-tlsCertFile=/run/history/certificate.pem", "-tlsKeyFile=/run/history/private-key.pem"}
 		value["volumes"] = []any{historyMount(filepath.Join(generation, store.name), "/run/history", true),
 			historyMount(filepath.Join(c.Root, "data", store.name), "/data", false)}
-		value["networks"] = map[string]any{"history": map[string]string{"ipv4_address": store.address.String()}}
+		value["networks"] = map[string]any{"history": map[string]string{"ipv4_address": store.address.String()}, "publish": map[string]any{}}
 		services[store.name] = value
 	}
 	evaluator := service(c.EvaluatorImage, c.EvaluatorResources)
@@ -194,13 +193,13 @@ func (s historySite) compose(generation string) ([]byte, error) {
 		"-remoteWrite.url=https://" + netip.AddrPortFrom(addresses.Metrics, 8428).String(), "-remoteWrite.tlsCAFile=/run/history/long-ca.pem",
 	}
 	evaluator["volumes"] = []any{historyMount(filepath.Join(generation, "evaluator"), "/run/history", true)}
-	evaluator["networks"] = []string{"history"}
+	evaluator["networks"] = []string{"history", "publish"}
 	services["evaluator"] = evaluator
 	return yaml.Marshal(map[string]any{
 		"name": c.Project, "services": services,
 		"networks": map[string]any{"history": map[string]any{
 			"internal": true, "labels": map[string]string{historyRootLabel: wire.Digest([]byte(c.Root))}, "ipam": map[string]any{"config": []any{map[string]string{"subnet": c.Subnet, "ip_range": addresses.Dynamic.String()}}},
-		}},
+		}, "publish": map[string]any{"enable_ipv6": false, "labels": map[string]string{historyRootLabel: wire.Digest([]byte(c.Root))}}},
 	})
 }
 
@@ -220,6 +219,7 @@ func verifyHistoryProject(ctx context.Context, site historySite, runner Runner) 
 	}{
 		{"container", "{{json .Config.Labels}}", []string{"container", "ls", "--all", "--quiet", "--filter", "label=com.docker.compose.project=" + site.config.Project}},
 		{"network", "{{json .Labels}}", []string{"network", "ls", "--quiet", "--filter", "name=^" + site.config.Project + "_history$"}},
+		{"network", "{{json .Labels}}", []string{"network", "ls", "--quiet", "--filter", "name=^" + site.config.Project + "_publish$"}},
 	} {
 		output, err := runner.Run(ctx, "docker", resource.args...)
 		if err != nil {

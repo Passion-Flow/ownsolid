@@ -459,6 +459,16 @@ Stopping both clients and stores drains connections authenticated under
 old trust. Retry after an interrupted stop or start uses the same data
 directories and generation. Keep old generations for operator recovery.
 Reject another project, subnet or listen assignment under an owned root.
+The first real Compose run started all three native services but failed host
+health checks: Docker does not publish ports from internal-only containers.
+Keep the internal service network and add a separate publication bridge,
+matching Control's established state/edge split. Do not replace the private
+TLS store contract or suppress health failures. The disconnected fixture must
+prove its publication-bridge workload probes reach the recorder and fail on
+every other observed destination, including DNS. Preserve Docker's resolver
+configuration so the test does not hide upstream runtime DNS attempts.
+[Docker's upstream issue](https://github.com/moby/moby/discussions/53256),
+[port publication](https://docs.docker.com/engine/network/port-publishing/).
 Publish the checked monitoring policy and combined Control CA file. The
 ordinary install command's optional `telemetry.fleet_history_control_directory`
 selects this protected output directory. It installs the two files, selects
