@@ -90,6 +90,43 @@ model, dataset or deployment artifact is copied or introduced by this note.
 Any future policy dependency needs its own exact-version graph and license
 review before implementation.
 
+## First selected-family experiment
+
+Prototype note update/delete before adding production role interfaces. Keep
+the repository unchanged: a private Go source overlay can replace only this
+owner's note permission selection and insert the candidate evaluator into the
+actual `ChangeNote` transaction. Reuse its current actor/source, installed
+tenant, exact Workspace and note locks, optimistic version, update and audit.
+Do not inspect private SQL statement fields or add a production testing hook.
+The overlay and candidate SQL remain outside the product until the approach
+and shared contracts are admitted.
+
+Use allow-only action sets and scope-bound assignments; union the admitted
+actions of current grants. Unknown actions and missing grants deny. A note
+grant names the note under its persisted tenant/Workspace; a Workspace grant
+inherits only to its actual notes. Role labels convey no authority. Bind each
+assignment to the current immutable membership lifetime so removing/re-adding
+the same user cannot revive it. Role/assignment edits use the existing exact
+Workspace fence and current owner authority, with bounded delegation. An
+explicit grant may authorize a current viewer to update the selected note;
+membership still cannot be skipped. Platform administration remains its
+existing distinct server property and audience.
+
+Use the same evaluator for the candidate's own-decision explain and the actual
+overlaid write. Observe both competing transactions with an independent
+PostgreSQL connection: a grant edit that owns the Workspace fence first must
+make the waiting writer observe the new decision; a writer that already owns
+it may commit before the waiting edit. Record exact note/grant versions and
+audit postimages, not elapsed sleeps. Test rollback, cancellation and real
+commit uncertainty before exposing a mutation or explain response.
+
+This experiment does not implement note creation, read/list filtering, the full
+built-in role matrix, general role management or their public/UI contracts.
+The eventual migration must seed explicit equivalent built-in grants for all
+existing memberships before replacing any legacy permission check. A partial
+overlay cannot qualify platform-wide resource permissions or change current
+production behavior. No experimental evaluator or SQL has run at this checkpoint.
+
 Verify real PostgreSQL role/grant persistence, current membership and exact
 resource ownership. Cover foreign tenant, Workspace, role, subject, binding
 and note substitutions at each actual operation. Exercise role and grant
