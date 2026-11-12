@@ -23,6 +23,7 @@ import (
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
 	monitoringhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/smtpsink"
 )
 
@@ -126,7 +127,7 @@ func TestFleetHistoryPrivateTLS(t *testing.T) {
 	audits := g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'")
 	replaceHistoryCertificate(t, g.ctx, long, longTLS, deniedTLS)
 	out, err := read(old)
-	code, status := monitoringhttp.FleetHistoryProblem(err)
+	code, status := httpserver.PublicProblem(err)
 	if code != "MONITORING_LONG_TIER_UNAVAILABLE" || status != http.StatusServiceUnavailable ||
 		out.Tier != "" || out.Cells != nil || historyRangeRequests(t, g.ctx, raw) != rawQueries ||
 		g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot'") != audits {
