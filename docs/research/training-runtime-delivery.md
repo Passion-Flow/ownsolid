@@ -351,3 +351,28 @@ the signed offline media. The embedded-notice checker remains in
 force. A preview image built from the accepted inputs still needs
 installed runtime injection and offline Qwen readback. The full
 training image and lock mapping remain separate.
+
+### Signed preview input fixture
+
+Reuse the existing release factory's explicit test profile and a
+temporary Ed25519 signer. Keep the full and projected locks, runtime
+manifest, actual wheels, tokenizer assets and candidate notices in the
+same signed manifest. Use pip's [binary-only hash checking](https://pip.pypa.io/en/stable/topics/secure-installs/)
+again after independently pinned archive preparation. Bind the base image
+reference to the locally observed Linux amd64 identity. Preserve the
+Debian [package copyright files](https://www.debian.org/doc/debian-policy/ch-docs.html#copyright-information)
+and the CPython license from the cached base as candidate evidence. The
+base notice bytes from a local image and the wheel notice archives have
+separate redistribution review. No new dependency, model, dataset,
+image pin or release trust is introduced by the fixture.
+
+Test different failure boundaries. A different public trust file must
+reject the original signature. A valid fixture signature cannot substitute
+for a required base notice or a matching wheel notice. Refuse such a
+fixture before staging an interpreter. Verify the existing release
+manifest and asset hashes before creating a private hash-installed
+runtime. Test the optional preview adapter with the resulting installed
+interpreter, the protected runtime code and its private scratch root.
+Test missing runtime configuration separately. Keep this test outside the
+production install path. The Control composition owner still needs typed,
+operator-provisioned injection under the published route.
