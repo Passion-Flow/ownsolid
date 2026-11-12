@@ -92,6 +92,13 @@ func (s *Service) StageVersionFamilyWithin(ctx context.Context, q transaction.Ex
 	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
 		`SELECT family_id::text,anchor_version_id::text FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND version_id=$3`, w.TenantID, w.ID, version)).Scan(&previous, &previousAnchor)
 	if err == nil {
+		established, checkError := versionFamilyWithin(ctx, q, w.TenantID, w.ID, version)
+		if checkError != nil {
+			return "", checkError
+		}
+		if previous != established {
+			return "", fail("MODEL_FAMILY_INVALID")
+		}
 		matches := anchor == "" && previousAnchor == nil || previousAnchor != nil && *previousAnchor == anchor && previous == family
 		if !matches {
 			return "", fail("MODEL_FAMILY_CONFLICT")
@@ -112,14 +119,14 @@ func (s *Service) StageVersionFamilyWithin(ctx context.Context, q transaction.Ex
 		`INSERT INTO model_family_members(version_id,tenant_id,workspace_id,family_id,anchor_version_id) VALUES($1,$2,$3,$4,NULLIF($5,'')::uuid)`, version, w.TenantID, w.ID, family, anchor)); err != nil {
 		return "", modelReadError(err)
 	}
-	err = workerFamilyAudit(ctx, q, a, w.TenantID, w.ID, version, reason, request)
+	err = auditFamilySelection(ctx, q, a, w.TenantID, w.ID, version, reason, request)
 	if err != nil {
 		return "", modelReadError(err)
 	}
 	return family, nil
 }
 
-func workerFamilyAudit(ctx context.Context, q transaction.Executor, a identity.Auth, tenant, workspace, version, reason, request string) error {
+func auditFamilySelection(ctx context.Context, q transaction.Executor, a identity.Auth, tenant, workspace, version, reason, request string) error {
 	_, err := modelExecOne(ctx, q, transaction.SQL(transaction.PostgreSQL, `
 INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id)
 VALUES($1,clock_timestamp(),$2,$3,$4,'admin','model.version_family_selected','success','model_version',$5,$6,$7)`,
