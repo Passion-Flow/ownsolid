@@ -200,8 +200,40 @@ def exercise_streaming():
     print("Python SDK verified incremental SSE, early close, and error responses")
 
 
+def exercise_monitoring_problems():
+    import httpx
+    from ownsolid_sdk.monitoring import AuthenticatedClient
+    from ownsolid_sdk.monitoring.api.default import admin_fleet_history
+
+    origin = "https://admin.example.invalid"
+    workspace = uuid4()
+    start, end = "2026-11-01T00:00:00Z", "2026-11-01T00:01:00Z"
+    for code in (
+        "STORAGE_TIMEOUT", "STORAGE_CANCELLED", "STORAGE_COMMIT_ROLLED_BACK",
+        "STORAGE_DEADLOCK", "STORAGE_LOCK_TIMEOUT",
+    ):
+        def respond(request):
+            assert request.method == "GET"
+            assert request.url.path == "/api/v1/sites/default/cells/default/admin/monitoring/fleet-history"
+            assert dict(request.url.params) == {"workspace_id": str(workspace), "from": start, "to": end}
+            return httpx.Response(503, headers={"Content-Type": "application/problem+json"}, json={
+                "type": "about:blank", "title": "Synthetic transaction refusal",
+                "status": 503, "code": code, "request_id": str(uuid4()),
+            })
+
+        with httpx.Client(base_url=origin, transport=httpx.MockTransport(respond),
+                          trust_env=False, follow_redirects=False) as transport:
+            client = AuthenticatedClient(base_url=origin, token="").set_httpx_client(transport)
+            result = admin_fleet_history.sync_detailed(
+                "default", "default", client=client, workspace_id=workspace, from_=start, to=end,
+            )
+            assert result.status_code == 503 and result.parsed.code == code
+    print("Python SDK verified history transaction refusals and canonical timestamps")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("sdk", type=Path)
     exercise(parser.parse_args().sdk.resolve())
     exercise_streaming()
+    exercise_monitoring_problems()
