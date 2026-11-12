@@ -57,6 +57,35 @@ qualified together. The existing published HTTP view is installation-wide and
 intentionally includes other managed tenants; a foreign workspace selection
 through the workspace view still fails its server-resolved tenant check.
 
+### Exact workspace consumer admission
+
+SCI's `8531226d` adds the [scoped append contract](audit-diagnostic-access.md#scoped-append-contract)
+and real PostgreSQL qualification without changing the installation or
+assistant writers. Pair it with `ListWorkspaceAuditForActor` inside the existing
+current-actor read transaction. Resolve the installed tenant and actual local
+site/cell from the database; never use `Auth.Me.Workspace`, request parameters
+or default scope constants as attribution. Retain the independent installed-
+workspace authorization and disabled-workspace history policy.
+
+After reading the page, append `audit.events_read` with the current human Admin,
+exact authorized workspace and only the validated limit, returned count and
+assistant projection choice. Use a new canonical server UUID for a Go call
+without HTTP correlation. Propagate every scoped append, cancellation and
+commit error, clearing the page, cursor and assistant map. Reading before
+appending excludes the operation's own event. The existing unscoped HTTP route
+continues to use installation attribution; this composition adds no workspace
+route or client-selectable tenant.
+
+The paired tests must call that actual identity method with a non-default
+workspace and independently read the committed event. Preserve restricted-role
+and assistant projection checks, foreign/missing workspace equivalence, forged
+context and revoked/current session refusal, bounded selection and protected
+field exclusion. An assistant-only pagination check must filter that family so
+new real human access events do not silently become its subject. Test append
+refusal/repair, cancellation while the actual INSERT is blocked, concurrent
+reads and both real COMMIT wire-loss modes. A scoped writer test alone does
+not qualify this consumer, and this note claims no such execution yet.
+
 Preserve the existing thirteen-field allowlist and verified assistant pair.
 Protected audit metadata and identifier digests are not response fields.
 Operator reasons and actor/subject addresses remain intentionally visible under
