@@ -8,7 +8,9 @@ Give fleet history an opt-in installer command and a separately owned Compose
 project with a raw store, a long store and vmalert. Reuse the existing protected
 file reader, operation lock, atomic writer and operator audit format. Keep image
 references immutable and load them before applying. Use a private internal
-network and numeric addresses. Expose only the configured private HTTPS store
+network and numeric addresses for inter-service traffic. Attach a separate
+publication bridge because Docker does not publish ports from internal-only
+containers. Expose only the configured private HTTPS store
 ports and a loopback evaluator health port.
 
 Validate certificates, applicable CA bundles, leaf names, rules and policy
