@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentgateway"
@@ -269,7 +270,12 @@ func runAgentGateway(args []string) (result error) {
 	defer context.AfterFunc(g.ctx, gateway.Sessions.Drain)()
 	fmt.Println("AGENT_GATEWAY_STARTED")
 	slog.Info("agent_gateway_started", "listen_address", c.AgentGateway.ListenAddress, "origin", origin)
-	e = httpserver.ServeListener(g.ctx, listener, tlsConfig, agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}, policy.HTTP)
+	age := httpserver.ConnectionAge{
+		Maximum: c.AgentGateway.MaxConnectionAge(),
+		// Allow a peer check, one admitted exchange and a bounded reply.
+		Grace: config.Seconds(3*policy.HTTP.RequestSeconds + wire.MaxClaimWaitSeconds),
+	}
+	e = httpserver.ServeListener(g.ctx, listener, tlsConfig, agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}, policy.HTTP, age)
 	if e != nil {
 		result = errors.New("SERVER_FAILED")
 	}

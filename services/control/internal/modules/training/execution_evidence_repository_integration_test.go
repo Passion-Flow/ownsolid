@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -186,6 +187,21 @@ func TestActualTrainingExecutionEvidenceAdmission(t *testing.T) {
 	readExperiment := func() (training.AcceptedExperiment, error) {
 		return g.s.ReadAcceptedExperiment(g.ctx, g.a, g.f.Workspace, g.job.ID, uuid.NewString())
 	}
+	readBorrowed := func() (training.AcceptedAdapter, error) {
+		var out training.AcceptedAdapter
+		e := g.f.Store.Within(g.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+			if e := g.owner.RecheckOrderedWithin(ctx, q, g.a); e != nil {
+				return e
+			}
+			if _, e := g.s.Workspaces.RecheckScopeWithin(ctx, q, g.a, g.f.Workspace); e != nil {
+				return e
+			}
+			var e error
+			out, e = g.s.AcceptedAdapterWithin(ctx, q, g.f.Tenant, g.f.Workspace, g.job.ID)
+			return e
+		})
+		return out, e
+	}
 	experiment, e := readExperiment()
 	if e != nil || experiment.Execution.ImageID != receipt.ImageID ||
 		experiment.Execution.ImageReference != command.Recipe.ImageReference ||
@@ -193,6 +209,114 @@ func TestActualTrainingExecutionEvidenceAdmission(t *testing.T) {
 		experiment.Execution.DependencyLockSHA256 != nil || experiment.Execution.HardwareObservation != nil {
 		t.Fatal("accepted experiment did not distinguish bound and unavailable evidence", e)
 	}
+	t.Run("foreign_job_scope_refuses_experiment_and_preparation", func(t *testing.T) {
+		var site, cell string
+		if e := g.f.Store.QueryRow(g.ctx, transaction.SQL(transaction.PostgreSQL,
+			"SELECT site_id,cell_id FROM training_jobs WHERE id=$1", g.job.ID)).Scan(&site, &cell); e != nil {
+			t.Fatal(e)
+		}
+		coordinates := [][2]string{{"retained-foreign-site", cell}, {site, "retained-foreign-cell"}}
+		for _, foreign := range coordinates {
+			g.exec(t, "UPDATE training_jobs SET site_id=$1,cell_id=$2 WHERE id=$3", "", foreign[0], foreign[1], g.job.ID)
+			before := g.count(t, "SELECT count(*) FROM audit_events WHERE target_id=$1", "", g.job.ID)
+			got, e := readExperiment()
+			if e == nil || e.Error() != "TRAINING_NOT_FOUND" || !reflect.DeepEqual(got, training.AcceptedExperiment{}) {
+				t.Fatal("foreign experiment exposed a result", e)
+			}
+			snapshot, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
+			acceptedAdapterWant(t, snapshot, e, "TRAINING_NOT_FOUND")
+			borrowed, e := readBorrowed()
+			acceptedAdapterWant(t, borrowed, e, "TRAINING_NOT_FOUND")
+			if after := g.count(t, "SELECT count(*) FROM audit_events WHERE target_id=$1", "", g.job.ID); after != before {
+				t.Fatal("refused foreign export appended audit")
+			}
+			g.exec(t, "UPDATE training_jobs SET site_id=$1,cell_id=$2 WHERE id=$3", "", site, cell, g.job.ID)
+			if got, e = readExperiment(); e != nil || !reflect.DeepEqual(got, experiment) {
+				t.Fatal("repaired local experiment differs", e)
+			}
+		}
+	})
+	t.Run("foreign_child_scope_refuses_experiment_and_preparation", func(t *testing.T) {
+		children := []struct{ table, id, trigger string }{
+			{"training_artifacts", experiment.ArtifactID, "training_artifact_immutable"},
+			{"training_uploads", experiment.ArtifactID, ""},
+			{"training_attempts", experiment.Command.AttemptID, ""},
+			{"node_tasks", g.lease.TaskID, ""},
+		}
+		for _, child := range children {
+			var site, cell string
+			if e := g.f.Store.QueryRow(g.ctx, transaction.SQL(transaction.PostgreSQL,
+				"SELECT site_id,cell_id FROM "+child.table+" WHERE id=$1", child.id)).Scan(&site, &cell); e != nil {
+				t.Fatal(e)
+			}
+			set := func(site, cell string) {
+				t.Helper()
+				e := g.f.Store.Within(g.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+					// Only the disposable fixture can inject retained row damage.
+					// The immutable artifact trigger is restored in this transaction.
+					if child.trigger != "" {
+						if _, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
+							"ALTER TABLE "+child.table+" DISABLE TRIGGER "+child.trigger)); e != nil {
+							return e
+						}
+					}
+					n, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
+						"UPDATE "+child.table+" SET site_id=$1,cell_id=$2 WHERE id=$3", site, cell, child.id))
+					if e != nil {
+						return e
+					}
+					if n != 1 {
+						return fmt.Errorf("expected one owned child scope update, got %d", n)
+					}
+					if child.trigger != "" {
+						_, e = q.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
+							"ALTER TABLE "+child.table+" ENABLE TRIGGER "+child.trigger))
+					}
+					return e
+				})
+				if e != nil {
+					t.Fatal("owned child scope fixture", child.table, e)
+				}
+			}
+			for _, foreign := range [][2]string{{"retained-foreign-site", cell}, {site, "retained-foreign-cell"}} {
+				set(foreign[0], foreign[1])
+				before := g.count(t, "SELECT count(*) FROM audit_events WHERE target_id=$1", "", g.job.ID)
+				got, e := readExperiment()
+				if e == nil || e.Error() != "TRAINING_DATA_INVALID" || !reflect.DeepEqual(got, training.AcceptedExperiment{}) {
+					t.Fatal("foreign child exposed an experiment", child.table, e)
+				}
+				snapshot, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
+				acceptedAdapterWant(t, snapshot, e, "TRAINING_RESULT_UNAVAILABLE")
+				borrowed, e := readBorrowed()
+				acceptedAdapterWant(t, borrowed, e, "TRAINING_RESULT_UNAVAILABLE")
+				if after := g.count(t, "SELECT count(*) FROM audit_events WHERE target_id=$1", "", g.job.ID); after != before {
+					t.Fatal("refused child scope appended export audit", child.table)
+				}
+				set(site, cell)
+				if got, e = readExperiment(); e != nil || !reflect.DeepEqual(got, experiment) {
+					t.Fatal("repaired child scope changed the experiment", child.table, e)
+				}
+			}
+			if child.table == "training_artifacts" {
+				before := g.count(t, "SELECT count(*) FROM audit_events WHERE target_id=$1", "", g.job.ID)
+				fault := &trainingCreatorStore{Store: g.f.Store, at: 2, before: func() {
+					set(site, "retained-foreign-cell")
+				}}
+				x := g.wrapped(fault)
+				got, e := x.s.ReadAcceptedExperiment(x.ctx, x.a, x.f.Workspace, x.job.ID, uuid.NewString())
+				if fault.calls != 2 || e == nil || e.Error() != "TRAINING_DATA_INVALID" || !reflect.DeepEqual(got, training.AcceptedExperiment{}) {
+					t.Fatal("late artifact scope change exposed a verified experiment", fault.calls, e)
+				}
+				if after := g.count(t, "SELECT count(*) FROM audit_events WHERE target_id=$1", "", g.job.ID); after != before {
+					t.Fatal("late scope refusal appended export audit")
+				}
+				set(site, cell)
+				if got, e = readExperiment(); e != nil || !reflect.DeepEqual(got, experiment) {
+					t.Fatal("repaired late scope change altered the experiment", e)
+				}
+			}
+		}
+	})
 	t.Run("accepted_experiment_survives_private_store_handoff", func(t *testing.T) {
 		source, e := g.s.AcceptedAdapterSnapshot(g.ctx, g.a, g.f.Workspace, g.job.ID)
 		if e != nil {

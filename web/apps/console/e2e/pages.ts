@@ -2,11 +2,14 @@ import {
   activeConnector,
   activeLicense,
   activeSummary,
+  auditReadEvent,
   adminUser,
   checksStoppingAt,
   deploymentAlias,
   deploymentKey,
   expiringKey,
+  expiredImport,
+  expiringImport,
   failedDeployment,
   failedImport,
   failedMail,
@@ -433,6 +436,26 @@ export const consolePages: readonly PageState[] = [
       control.modelImports = [{ ...stalledImport }];
       await page.goto(`/library/imports/${stalledImport.id}`);
       await page.getByText('This tab is not uploading').waitFor();
+    },
+  },
+  {
+    name: 'an expired import',
+    path: '/library/imports/$importId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.modelImports = [expiredImport];
+      await page.goto(`/library/imports/${expiredImport.id}`);
+      await page.getByRole('link', { name: 'Upload a new bundle', exact: true }).waitFor();
+    },
+  },
+  {
+    name: 'an import awaiting expiry cleanup',
+    path: '/library/imports/$importId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.modelImports = [expiringImport];
+      await page.goto(`/library/imports/${expiringImport.id}`);
+      await page.getByText('Removing an expired upload', { exact: true }).waitFor();
     },
   },
   {
@@ -1050,6 +1073,16 @@ export const consolePages: readonly PageState[] = [
       await openAudit(page, control);
       await page.getByRole('button', { name: /^Show details of License imported/ }).click();
       await page.getByRole('dialog', { name: 'License imported' }).waitFor();
+    },
+  },
+  {
+    name: 'audit read event details',
+    path: '/audit',
+    open: async (page, control) => {
+      control.auditEvents = [auditReadEvent];
+      await openAudit(page, control);
+      await page.getByRole('button', { name: /^Show details of Audit trail read/ }).click();
+      await page.getByRole('dialog', { name: 'Audit trail read', exact: true }).waitFor();
     },
   },
   {

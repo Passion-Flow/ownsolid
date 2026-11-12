@@ -91,9 +91,11 @@ Keep PostgreSQL, MySQL and installed execution evidence separate in the
 [product status](../../../../../docs/product/status.md).
 
 
-The cumulative `datasets` profile enables only the text upload lifecycle. Its integrity/snapshot inventory excludes absent later connector tables. The exact dataset HTTP routes reject Mongo/training paths; original platform connector variants remain separate. Workers join before the exclusive store closes.
-
-The cumulative training profile uses the same dataset-only source inventory as M08: no M21 MongoDB import table or connector owner is present. Readiness, snapshots and source queries select this through DatasetRuntime; source presence elsewhere does not enable an owner.
+Storage is selected through `Identity.Repository`. Normalized-source and version
+inventory use the owning PostgreSQL/MySQL/Dameng statements. Receipt-bound
+CSV/Parquet originals use the registered PostgreSQL schema-60 table. Other
+backends retain their normalized-source inventory. Workers join before the
+exclusive store closes.
 
 MongoDB attachment carries an internal context value from the durable export into
 the existing CreateDraft and both Upload transactions. After the ordered identity
@@ -248,3 +250,19 @@ startup does not register the CSV or Parquet routes. The dataset inventory and
 integrity checks must admit both original and normalized files before that
 registration, followed by public contract and S-503 acceptance. See the
 [formal integration boundary](../../../../../docs/research/dataset-import.md#production-lineage-integration).
+
+## Complete source snapshots
+
+Ordinary backup and startup integrity include both the receipt-bound CSV/Parquet
+original and its normalized JSONL. Paths, sizes and hashes come from the exact
+draft/receipt scope. Copies and hashes stream under the existing file/byte and
+wall-time policies. A complete local file snapshot restores without fetching a supplemental
+original from object storage.
+
+JSONL-only snapshots retain manifest version 1. A snapshot containing a retained
+original uses version 2; its store namespace marker stays at the existing version.
+The reader accepts version 1 and requires both roles for version 2. Import checks
+the complete reference inventory against the restored database before writing
+the destination. Missing/changed files, unpaired/unknown roles, mismatched
+metadata and unknown files fail closed. Operator export still requires the
+installation lock and stopped runtime paired with its logical database dump.

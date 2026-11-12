@@ -104,3 +104,9 @@ independent of serving revisions; an exact replay can return a newer current des
 - **Errors:** show failures with `ProblemNotice`, which gives the cause, the next step and
   the request ID. New server error codes get `problem.<CODE>.title` and `.detail` keys.
 - **File names** are kebab-case, as for all TypeScript in this repository.
+
+An expired model upload remains in import history with its byte count. Its status
+explains that it cannot resume and opens a new bundle upload. Pending expiry
+cleanup blocks continuation until it finishes. A new import uses a new request
+key; replaying an old key only reads the original import. The UI does not enable
+the optional expiry worker, whose startup binding belongs to Control.

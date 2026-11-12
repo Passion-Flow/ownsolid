@@ -12,6 +12,7 @@ const server = join(root, 'services', 'control', 'internal');
 
 const named = [
   'account',
+  'audit',
   'auth',
   'gateway',
   'installation',

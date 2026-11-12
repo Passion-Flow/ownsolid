@@ -42,6 +42,7 @@ import { ActionName, TargetName, useAuditNames } from './audit-names.tsx';
 
 const categories = [
   'account',
+  'audit',
   'auth',
   'dataset',
   'deployment',

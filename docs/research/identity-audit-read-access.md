@@ -57,6 +57,36 @@ qualified together. The existing published HTTP view is installation-wide and
 intentionally includes other managed tenants; a foreign workspace selection
 through the workspace view still fails its server-resolved tenant check.
 
+### Exact workspace consumer admission
+
+SCI's `8531226d` adds the [scoped append contract](audit-diagnostic-access.md#scoped-append-contract)
+and real PostgreSQL qualification without changing the installation or
+assistant writers. Pair it with `ListWorkspaceAuditForActor` inside the existing
+current-actor read transaction. Resolve the installed tenant and actual local
+site/cell from the database; never use `Auth.Me.Workspace`, request parameters
+or default scope constants as attribution. Retain the independent installed-
+workspace authorization and disabled-workspace history policy.
+
+After reading the page, append `audit.events_read` with the current human Admin,
+exact authorized workspace and only the validated limit, returned count and
+assistant projection choice. Use a new canonical server UUID for a Go call
+without HTTP correlation. Propagate every scoped append, cancellation and
+commit error, clearing the page, cursor and assistant map. Reading before
+appending excludes the operation's own event. The existing unscoped HTTP route
+continues to use installation attribution; this composition adds no workspace
+route or client-selectable tenant.
+
+The paired tests must call that actual identity method with a non-default
+workspace and independently read the committed event. Preserve restricted-role
+and assistant projection checks, foreign/missing workspace equivalence, forged
+context and revoked/current session refusal, bounded selection and protected
+field exclusion. The assistant pagination check fixes its existing `to` filter to the database
+clock before any read-access append, preserving its original source window
+without adding a public category or audience filter. Test append
+refusal/repair, cancellation while the actual INSERT is blocked, concurrent
+reads and both real COMMIT wire-loss modes. A scoped writer test alone does
+not qualify this consumer, and this note claims no such execution yet.
+
 Preserve the existing thirteen-field allowlist and verified assistant pair.
 Protected audit metadata and identifier digests are not response fields.
 Operator reasons and actor/subject addresses remain intentionally visible under
@@ -120,3 +150,57 @@ The existing workspace projection root also passed with a restricted principal t
 Fixtures used PostgreSQL 18.6 and pgvector 0.8.7 in owned network-none Linux arm64 containers on the workstation. No native Linux amd64 installation or new rendered UI acceptance is claimed. The qualified runtime/test input is `fcbb839af30f6df6b7b6dd60bbf60c61442bf973`; the durable local evidence set is `aud108-identity-20261112.vi6mouqa`, including exact input, raw native logs, wire observations and full-gate exit codes. Fixtures and the owned scratch volume were cleaned up. Only this verification text changed after the gate.
 
 AUD-108 remains open for SCI scoped-workspace accounting, Web action/family names, DEV public contract metadata and Delivery collector admission/reconciliation.
+
+## Web action and family display
+
+The existing S-407 audit list and preview drawer remain the consumer. Display
+`audit.events_read` as "Audit trail read" and add the audit family to the existing
+Kind of action selector. Keep the machine action in the drawer and keep using
+`category=audit`; do not invent an exact-action query value or change the thirteen
+public fields. The existing action-name fallback still handles future unnamed
+actions without treating a module identifier as prose.
+
+The [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
+keeps event identity and access control with the producing application. The
+[WCAG language guidance](https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html)
+allows technical identifiers while requiring readable interface language. Localized
+names plus an explicit raw identifier in details preserve both needs. This uses
+only the existing React (MIT), TanStack (MIT), Lucide (ISC) and ownsolid localization
+code. Commercial distribution and offline use remain allowed with their notices;
+no dependency, model, dataset, network resource or licence term is added.
+
+Consumer checks must cover English and Simplified Chinese action names, the audit
+family filter sent as `category` (without an `action` query), sharing/reloading that
+filter, the retained machine identifier in the drawer, a filtered empty and a
+failed read with explicit retry. Existing initial empty, partial pagination,
+permission and Portal-refusal behavior remains unchanged. Register a representative
+audit-read page state for the existing keyboard, accessibility and localization
+checks. Read desktop and narrow screenshots before recording the Web slice.
+This does not qualify the actual installed append, scoped workspace accounting,
+collector admission or DEV's exact-action enum. AUD-108 stays open.
+
+The focused Web consumer checks passed `make check`, both app type checks,
+49 locale tests, the Console production build, 20 audit Chromium cases
+with one unchanged conditional skip, and four new page-state checks.
+English desktop and 390-pixel Simplified Chinese screenshots were opened:
+the list keeps its title/filter/table structure and the preview drawer keeps
+the original event and request identifiers. The seven state boundaries stay
+in the existing audit page: layout-shaped loading, initial no-records,
+filtered no-match with Clear filters, retained partial pages, retryable
+read failure, denied read, and unavailable operations with reasons. Initial
+and filtered empty copy remains distinct. This slice adds no surface or
+primary action; reading an event remains the immediate task, with its
+request/person follow-up in the preview. Installed append/SQL acceptance
+is not claimed by the scripted browser checks. The complete integrated gate passed
+at 6a77bcdbc372a0aa7fac24b3f21a83105c246c86;
+see the [shared Web gate](model-import-cleanup.md#complete-web-consumer-gate).
+This retains the exact-action and thirteen-field boundaries; installed AUD-108
+acceptance is still separate.
+
+### Exact workspace consumer qualification
+
+The actual identity workspace reader is paired with SCI's `8531226d` writer on qualified input `dc7feaf186ae0e8654b7218d572940c32e08bd28`. Five actual PostgreSQL domain roots and seven existing installation-wide HTTPS roots passed in `identity-consumer-26_bwdb4`. The domain tests cover the restricted principal, non-default and disabled workspace history, exact database tenant/site/cell attribution, bounded safe payload, foreign/missing scope and forged context, assistant pagination, four concurrent reads, append refusal and explicit repair, and cancellation while the real INSERT is blocked after its page read. Existing current-session/audience refusals remain covered. Initial direct-insert timestamp and unsupported category/audience fixture failures are retained. The corrected projection fixes the existing `to` bound to the database clock before access appends and leaves the public filter allowlist unchanged.
+
+Two actual scoped COMMIT wire-loss subcases exposed no page, cursor or assistant map. Withheld COMMIT left zero events; a suppressed server acknowledgement left one. Each attempt issued one COMMIT, and an explicit retry appended one new event. The installation-wide HTTPS regressions, including their four wire-loss subcases, passed on the same source. No private chain-head read privilege was added.
+
+Repository checks, builds and all test stages passed in current stage `current-stage-yfzgkb7_`; Chromium passed 1134 Console and 410 Portal cases, with 38 installation-dependent cases skipped. These browser results are retained from byte-identical recorded inputs; the continuation used `make -o test-web-browser test`. Fixtures used pinned PostgreSQL 18.6/pgvector 0.8.7 on owned network-none Linux arm64 containers with protected SCRAM input files and no host ports. They were removed. This qualifies the existing Go consumer and preserves the published installation-wide route; it creates no workspace HTTP route or new rendered UI/amd64 claim. The complete AUD-108 item remains open for DEV public-contract metadata, installed-flow qualification and Delivery collector admission/reconciliation.

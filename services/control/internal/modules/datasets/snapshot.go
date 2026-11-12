@@ -5,12 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"io"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	"strings"
 	"syscall"
 	"time"
@@ -183,7 +183,7 @@ func (s *Service) ExportFiles(ctx context.Context, destination string) error {
 			return failure("DATASET_SNAPSHOT_LIMIT_REACHED")
 		}
 	}
-	snapshot := FileSnapshot{storeSchema, s.Store.namespace, references, sortedFiles(expected)}
+	snapshot := FileSnapshot{snapshotSchemaVersion(references), s.Store.namespace, references, sortedFiles(expected)}
 	raw, e := json.Marshal(snapshot)
 	if e != nil || int64(len(raw)+1) > s.policy().SnapshotManifestBytes {
 		return failure("DATASET_SNAPSHOT_LIMIT_REACHED")

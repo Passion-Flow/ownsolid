@@ -9,6 +9,7 @@ import (
 
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/jackc/pgx/v5"
 )
@@ -76,9 +77,7 @@ func (s *Service) AcceptedAdapterWithin(ctx context.Context, q transaction.Execu
 	if e := s.acceptedAdapterExecutor(ctx, q, tenant, workspace, job); e != nil {
 		return out, acceptedAdapterError(e)
 	}
-	j, e := scanJob(q.QueryRow(ctx, acceptedAdapterSQL(q,
-		"SELECT "+jobFields+" FROM training_jobs WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE",
-		"SELECT "+mysqlAcceptedJobFields+" FROM training_jobs WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE", tenant, workspace, job)))
+	j, e := lockedJobWithin(ctx, q, workspaces.Workspace{TenantID: tenant, ID: workspace}, job)
 	if e != nil {
 		return out, acceptedAdapterError(e)
 	}
@@ -114,7 +113,12 @@ func readAcceptedAdapterWithin(ctx context.Context, q transaction.Executor, tena
  JOIN training_attempts a ON a.id=r.attempt_id AND a.job_id=r.job_id AND a.tenant_id=r.tenant_id AND a.workspace_id=r.workspace_id
  JOIN node_tasks t ON t.id=a.task_id AND t.tenant_id=a.tenant_id AND t.workspace_id=a.workspace_id AND t.node_id=a.node_id AND t.operation='training.run.v1'
  WHERE r.tenant_id=$1 AND r.workspace_id=$2 AND r.job_id=$3 AND r.id=$4 AND r.attempt_id=$5
- AND a.physical_stopped_at IS NOT NULL FOR SHARE OF r,u,a,t`, `SELECT r.file_inventory,u.manifest_bytes,r.manifest_sha256,r.storage_key,r.created_at,t.payload,a.physical_stop_receipt,a.physical_stop_sha256,a.physical_stopped_at,a.state,a.task_id,a.node_id,a.outcome_sha256,a.input_inventory,a.outcome
+ AND a.physical_stopped_at IS NOT NULL
+ AND r.site_id=local_site_id() AND r.cell_id=local_cell_id()
+ AND (u.site_id,u.cell_id)=(r.site_id,r.cell_id)
+ AND (a.site_id,a.cell_id)=(r.site_id,r.cell_id)
+ AND (t.site_id,t.cell_id)=(r.site_id,r.cell_id)
+ FOR SHARE OF r,u,a,t`, `SELECT r.file_inventory,u.manifest_bytes,r.manifest_sha256,r.storage_key,r.created_at,t.payload,a.physical_stop_receipt,a.physical_stop_sha256,a.physical_stopped_at,a.state,a.task_id,a.node_id,a.outcome_sha256,a.input_inventory,a.outcome
  FROM training_artifacts r
  JOIN training_uploads u ON u.id=r.id AND u.tenant_id=r.tenant_id AND u.workspace_id=r.workspace_id AND u.job_id=r.job_id AND u.attempt_id=r.attempt_id AND u.state='accepted' AND u.kind='artifact' AND u.manifest_sha256=r.manifest_sha256
  JOIN training_attempts a ON a.id=r.attempt_id AND a.job_id=r.job_id AND a.tenant_id=r.tenant_id AND a.workspace_id=r.workspace_id

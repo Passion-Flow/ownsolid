@@ -4,11 +4,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"io"
 	"os"
 	"path/filepath"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 )
 
 func (s *Service) OpenConfiguredStore(ctx context.Context) error {
@@ -67,7 +66,7 @@ func (s *Service) VerifyStored(ctx context.Context) error {
 
 	if s.Store == nil {
 		var required bool
-		e := repo.QueryRow(ctx, datasetSQL(repo, "SELECT EXISTS(SELECT 1 FROM dataset_drafts d JOIN installation_state i ON i.tenant_id=d.tenant_id WHERE i.id=1 AND d.source_received_at IS NOT NULL) OR EXISTS(SELECT 1 FROM mongodb_dataset_imports m JOIN installation_state i ON i.tenant_id=m.tenant_id WHERE i.id=1 AND m.source_sha256 IS NOT NULL) OR EXISTS(SELECT 1 FROM dataset_versions v JOIN installation_state i ON i.tenant_id=v.tenant_id WHERE i.id=1)", `SELECT EXISTS(SELECT 1 FROM dataset_drafts d JOIN installation_state i ON i.tenant_id=d.tenant_id WHERE i.id=1 AND d.source_received_at IS NOT NULL) OR EXISTS(SELECT 1 FROM dataset_versions v JOIN installation_state i ON i.tenant_id=v.tenant_id WHERE i.id=1)`, nil, nil, transaction.SQL(transaction.Dameng, dmIntegrityReferencesExist))).Scan(&required)
+		e := repo.QueryRow(ctx, datasetSQL(repo, "SELECT EXISTS(SELECT 1 FROM dataset_drafts d JOIN installation_state i ON i.tenant_id=d.tenant_id WHERE i.id=1 AND d.source_received_at IS NOT NULL) OR EXISTS(SELECT 1 FROM mongodb_dataset_imports m JOIN installation_state i ON i.tenant_id=m.tenant_id WHERE i.id=1 AND m.source_sha256 IS NOT NULL) OR EXISTS(SELECT 1 FROM dataset_versions v JOIN installation_state i ON i.tenant_id=v.tenant_id WHERE i.id=1) OR EXISTS(SELECT 1 FROM dataset_draft_import_candidates c JOIN installation_state i ON i.tenant_id=c.tenant_id WHERE i.id=1)", `SELECT EXISTS(SELECT 1 FROM dataset_drafts d JOIN installation_state i ON i.tenant_id=d.tenant_id WHERE i.id=1 AND d.source_received_at IS NOT NULL) OR EXISTS(SELECT 1 FROM dataset_versions v JOIN installation_state i ON i.tenant_id=v.tenant_id WHERE i.id=1)`, nil, nil, transaction.SQL(transaction.Dameng, dmIntegrityReferencesExist))).Scan(&required)
 		if e != nil {
 			return e
 		}
@@ -87,30 +86,24 @@ func (s *Service) VerifyStored(ctx context.Context) error {
 		return e
 	}
 	for rows.Next() {
-		var object, digest string
-		var size int64
-		if e = rows.Scan(&object, &digest, &size); e != nil {
+		var source SnapshotSource
+		if e = rows.Scan(&source.ObjectID, &source.SHA256, &source.SizeBytes); e != nil {
 			rows.Close()
 			return e
 		}
-		if !wire.ValidID(object) || !wire.ValidDigest(digest) || size < 1 || size > wire.MaximumBytesCeiling {
+		if e = s.verifySourceReference(ctx, source); e != nil {
 			rows.Close()
-			return failure("DATASET_DATA_INVALID")
-		}
-		path := filepath.Join(s.Store.path, objectPath(object))
-		if _, e = privatePath(path, s.Store.path, false, size); e != nil {
-			rows.Close()
-			return failure("DATASET_FILE_INVALID")
-		}
-		actual, n, e := contextFileDigest(ctx, path, size)
-		if e != nil || actual != digest || n != size {
-			rows.Close()
-			return failure("DATASET_FILE_INVALID")
+			return e
 		}
 	}
 	rows.Close()
 	if rows.Err() != nil {
 		return rows.Err()
+	}
+	if e = walkOriginalSourceReferences(ctx, repo, s.Store.namespace.TenantID, func(source SnapshotSource) error {
+		return s.verifySourceReference(ctx, source)
+	}); e != nil {
+		return e
 	}
 	// A scoped subquery keeps the public field selector unambiguous and includes no credentials.
 	rows, e = repo.Query(ctx, datasetSQL(repo, "SELECT "+versionFields+" FROM dataset_versions WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1) ORDER BY id", `SELECT id,dataset_id,workspace_id,draft_id,job_id,attempt_id,ordinal,parent_version_id,published_by,published_at,raw_source_sha256,effective_source_sha256,manifest_sha256,manifest,row_mapping_sha256,retired_at,retire_reason FROM dataset_versions WHERE tenant_id=(SELECT tenant_id FROM installation_state WHERE id=1) ORDER BY id`, nil, nil, transaction.SQL(transaction.Dameng, dmIntegrityVersions)))
@@ -131,4 +124,20 @@ func (s *Service) VerifyStored(ctx context.Context) error {
 		}
 	}
 	return rows.Err()
+}
+
+func (s *Service) verifySourceReference(ctx context.Context, source SnapshotSource) error {
+	relative, err := snapshotSourcePath(source)
+	if err != nil {
+		return failure("DATASET_DATA_INVALID")
+	}
+	file := filepath.Join(s.Store.path, relative)
+	if _, err = privatePath(file, s.Store.path, false, source.SizeBytes); err != nil {
+		return failure("DATASET_FILE_INVALID")
+	}
+	actual, n, err := contextFileDigest(ctx, file, source.SizeBytes)
+	if err != nil || actual != source.SHA256 || n != source.SizeBytes {
+		return failure("DATASET_FILE_INVALID")
+	}
+	return nil
 }

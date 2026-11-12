@@ -337,6 +337,11 @@ func (e environment) simulatedFleet(t *testing.T, admin *browser) {
 		t.Fatalf("tasks %+v for %d tasks on %d nodes", out.Tasks, len(tasks), len(targets))
 	}
 	// After lost cursors and resyncs, every agent's cursor is control's record again.
+	e.requireFleetCursors(t, fleet)
+}
+
+func (e environment) requireFleetCursors(t *testing.T, fleet *simulatedRun) {
+	t.Helper()
 	cursors := map[string]string{}
 	for _, row := range strings.Split(e.sql(t, "SELECT id||'='||task_acknowledged_sequence FROM managed_nodes WHERE id IN ("+fleet.nodeList()+")"), "\n") {
 		id, sequence, _ := strings.Cut(row, "=")

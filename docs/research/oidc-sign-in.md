@@ -41,7 +41,7 @@ license or from a successful signature check.
 | Dependency | Selected version | License and offline distribution |
 | --- | --- | --- |
 | `github.com/coreos/go-oidc/v3` | v3.21.0 | [Apache-2.0](https://github.com/coreos/go-oidc/blob/v3.21.0/LICENSE); retain license, attribution and any applicable notices. |
-| `github.com/go-jose/go-jose/v4` | v4.1.6, overriding the OIDC module's v4.1.4 minimum | [Apache-2.0](https://github.com/go-jose/go-jose/blob/v4.1.6/LICENSE); its selected module declares no further requirements. |
+| `github.com/go-jose/go-jose/v4` | v4.1.9, overriding the OIDC module's v4.1.4 minimum | [Apache-2.0](https://github.com/go-jose/go-jose/blob/v4.1.9/LICENSE) and the JSON fork's [BSD-3-Clause](https://github.com/go-jose/go-jose/blob/v4.1.9/json/LICENSE); its selected module declares no further requirements. |
 | `golang.org/x/oauth2` | v0.36.0 | [BSD-3-Clause](https://github.com/golang/oauth2/blob/v0.36.0/LICENSE); retain copyright and license. |
 | `cloud.google.com/go/compute/metadata` | v0.3.0, required by the OAuth module | [Apache-2.0](https://github.com/googleapis/google-cloud-go/blob/compute/metadata/v0.3.0/LICENSE); module-graph dependency only, with no cloud or ambient credential composition in ownsolid. |
 
@@ -51,7 +51,15 @@ fixes parser-depth, numeric-date and malformed-key handling;
 [v4.1.6](https://github.com/go-jose/go-jose/releases/tag/v4.1.6)
 additionally fixes GHSA-mgcc-cww5-fp2q by limiting parsed RSA moduli to 4,096
 bits. Do not admit the earlier v4.1.4 minimum or raise the new global modulus
-limit. Keep independent document, key-count and algorithm bounds as well.
+limit. The later [v4.1.7 security release](https://github.com/go-jose/go-jose/releases/tag/v4.1.7)
+also fixes RSA thumbprint validation, embedded-field JSON decoding, protected
+header precedence, certificate RSA bounds and JSON JWS/JWE work limits.
+[v4.1.9](https://github.com/go-jose/go-jose/releases/tag/v4.1.9) retains those
+fixes and repairs opaque-signer and unsupported-key error compatibility.
+Select v4.1.9 for admission and repeat the protocol qualification with that
+exact graph. The earlier v4.1.6 run below establishes only its recorded input;
+it is not the current dependency admission. Keep independent document,
+key-count and algorithm bounds as well.
 The private provider prototype uses
 [Keycloak 26.8.2](https://github.com/keycloak/keycloak/releases/tag/26.8.2),
 selected from its current official release rather than an unversioned image.
@@ -234,6 +242,60 @@ occurred. Preserve the existing source-session, connector-disable, keyring-loss,
 audit-failure and real COMMIT-uncertainty cases. A protocol prototype does not
 replace those database and browser acceptance paths.
 
+### PostgreSQL storage prototype boundary
+
+Prototype the upgrade separately before admitting product DDL. Retain the
+three existing connector/binding/flow tables and their actor, audit, source
+session and immutable-intent relationships. Add the connector's immutable
+issuer, widen its client ID and the case-sensitive binding subject, and give
+bindings/flows a provider discriminator whose legacy default is Gitea.
+A composite foreign key containing tenant, connector and provider prevents an
+OIDC record from borrowing a Gitea profile or another tenant's connector.
+Keep Gitea's canonical UUID client and decimal subject checks in its branch;
+only the OIDC branch accepts bounded opaque client IDs and ASCII subjects.
+
+An OIDC flow has a 32-byte nonce digest, unique within its connector scope;
+a Gitea flow has none. Bind that discriminator and digest to the existing
+immutable flow fields through claim, completion and session issuance. Preserve
+the existing pending Gitea verifier ciphertext byte for byte and its one-use
+clear-on-claim transition. There is no new token or credential ledger and no
+change to the number of product tables.
+
+Verify a real PostgreSQL upgrade with existing connectors, numeric bindings,
+pending flows and retained intents; exact opaque/case-sensitive values after
+upgrade; invalid-length/non-ASCII/profile/tenant substitutions; nonce reuse and
+mutation refusal; and preserved claim/single-issuance constraints. Independently
+read committed results. A downgrade with any retained OIDC connector must fail
+clearly and leave data untouched, requiring a consistent pre-upgrade restore;
+it cannot delete or reinterpret OIDC identities as Gitea. A legacy-only
+upgrade/downgrade must preserve its original data and constraints.
+
+ARC owns the formal migration number, catalogs, engine admission and startup.
+The first storage prototype is PostgreSQL, not an assertion that MySQL or
+Dameng already support this profile. The shared Go module must also admit the
+qualified OIDC/JOSE dependency versions before a product adapter imports them.
+No default serving constructor or public connector selection changes as part
+of the isolated storage proof.
+
+The isolated storage prototype passed 54 real PostgreSQL checks against the
+exact migration-17 SSO definitions and minimal prerequisite tables. It kept
+the seven fixture tables unchanged in count, preserved legacy row snapshots
+through upgrade/downgrade, admitted distinct opaque subjects and enforced
+profile/tenant foreign keys, bounded fields, nonce uniqueness/immutability,
+claim and single-session issuance, and data-preserving downgrade refusal.
+The first missing prerequisite `sessions.revoked_at` was a fixture setup error;
+its original failure was retained before the corrected run. Evidence is
+`iam102-20261113.1jjfl_s4/storage-prototype/run-id2d6xyc`.
+
+That seven-table structural fixture is not the installed schema. The next
+admission test must apply identical candidate DDL to the current complete
+repository fixture and exercise real Gitea secret verification, retained
+idempotency replay, catalog/binding reads, pending starts and sourced-session
+revocation, with independent committed snapshots. Test the OIDC constraints
+and a real nonce-uniqueness race there as well. Candidate DDL under SSO testdata
+and opt-in repository tests remain qualification inputs, not serving schema
+or generic provider support.
+
 ## Lane boundary
 
 The IAM lane now owns the client, callback and binding code in
@@ -286,3 +348,13 @@ IAM-102 stays open for the real-flow/storage handoff above and shared owners'
 contract, configuration and UI admission. The publication changes research
 only; its layout, roadmap and whitespace checks do not replace that future
 feature's full repository and installed-flow gates.
+
+## Current storage and patched-protocol qualification
+
+The current complete PostgreSQL repository fixture passed all three `TestPostgresOIDCProfile` roots on input `dc7feaf186ae0e8654b7218d572940c32e08bd28`. Real Gitea secret inventory, exact intent replay, catalog/binding reads, pending starts and sourced revocation survived candidate upgrade/down/up. Opaque subject, tenant/profile, immutable issuer/nonce and safe downgrade checks passed. An independent PostgreSQL connection observed the actual competing nonce INSERT wait, followed by one committed flow and one unique-constraint refusal.
+
+The first full-schema attempt preserved the Gitea flow but used an incorrect raw-vendor error assertion. The corrected tests require the same SQLSTATE through the repository owner's safe `transaction.Error`; no constraint expectation was relaxed. The first failure is retained in `full-schema-07nwckdy`, separately from passing `full-schema-h8c7ggg3`. The candidate remains unnumbered testdata and adds no serving schema or provider. A type-changing migration requires fresh pools before serving; this does not qualify a mixed-version rolling upgrade.
+
+The external protocol prototype was rebuilt with coreos/go-oidc v3.21.0 and JOSE v4.1.9, including its compact-only parser. All eight race-enabled native roots and both actual private Keycloak protocol roots passed again, including JSON-JWS and null-header refusal. Evidence run `qualification-o3qennmh` retains exact sources, module sums and raw outcomes. The provider image and JDK identity are unchanged, so their previously retained legal material still applies; the original v4.1.6 source and results remain separate.
+
+Repository checks, builds and all test stages passed with standard `umask 022`. Chromium passed 1134 Console and 410 Portal cases, with 38 installation-dependent cases skipped. These browser results are retained from byte-identical recorded inputs; the continuation used `make -o test-web-browser test`. The durable evidence set is `iam102-20261113.1jjfl_s4`, current stage `current-stage-yfzgkb7_`. Owned PostgreSQL/Keycloak containers and the scratch volume were removed. These are disconnected Linux arm64 protocol/storage fixtures and workstation repository checks, not an installed Linux amd64 or rendered generic-SSO acceptance. IAM-102 remains open for formal migration, typed provider/dependency admission, real callback/binding/session composition and the public/UI path.

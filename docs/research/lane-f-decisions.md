@@ -117,3 +117,18 @@ statistics. Product registration and authorized preview still require the
 existing runtime and UI owners to adopt the candidate. The exact integration
 points and verification commands are in the
 [registration handoff](dataset-import.md#registration-and-product-handoff).
+
+## DAT-101 receipt-bound snapshot roles
+
+**Decision.** With schema 60 registered, extend the ordinary dataset file
+inventory to include the retained CSV/Parquet original beside normalized JSONL.
+Use manifest version 2 for those pairs and preserve legacy version-1 exports
+and the existing store namespace. See [ADR 0073](../decisions/0073-version-dataset-snapshots-with-original-sources.md).
+
+**Why.** A separate supplemental original cannot satisfy ordinary backup or
+startup integrity. Paths, counts and hashes must come from the same receipt
+and exact draft ownership, with bounded copying and restored-reference checks.
+
+**Boundary.** Keep production route/image/UI admission and DAT-101 completion
+open until their installed acceptance runs. This owner increment changes no
+shared migration or client upload contract and adds no dependency or model.

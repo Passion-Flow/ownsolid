@@ -704,3 +704,152 @@ the numbered migration, including the retained-data downgrade guard.
 DAT-101 stays open. Original and normalized artifacts still need the same
 production backup and integrity inventory before route registration,
 public-contract composition, release-image and S-503 UI acceptance.
+
+## Original source files in the dataset snapshot
+
+Schema 60 now registers the receipt. Its next owner-side requirement is to
+include both the retained CSV/Parquet original and normalized JSONL in the
+same production file inventory. PostgreSQL's [logical dump](https://www.postgresql.org/docs/18/backup-dump.html)
+reconstructs database state, so application files must remain paired with its
+references under the existing stopped-runtime/installation-lock contract.
+[DVC metadata](https://doc.dvc.org/user-guide/project-structure/dvc-files)
+records artifact paths, sizes and digests separately from large cached bytes;
+this supports the existing metadata-bound copy pattern, not a DVC dependency.
+Go's [bounded reader](https://pkg.go.dev/io#LimitReader) and the existing
+snapshotio copier keep hashing/copying independent of source size.
+
+Use the existing SnapshotSource inventory with an optional original-format
+role restricted to CSV or Parquet. Derive that role from the registered
+receipt joined to its exact six-field draft scope, never from a filename or
+client path. Validate the report's normalized size/hash against the draft
+before adding its original size/hash. Require one normalized and at most one
+original role per object. Both roles count toward existing file/byte limits.
+The operator inventory remains installation/tenant scoped, as its stopped
+store and logical backup already are; user report reads retain current
+workspace and local-cell authorization. No second file authority is added.
+
+A snapshot containing an original uses file-manifest version 2. Legacy
+JSONL-only exports retain version 1, and the new reader accepts them unchanged.
+The store namespace marker stays version 1. The strict older reader will
+refuse the new manifest instead of restoring only half the receipt. Reject
+version-1 manifests with originals, unknown roles, duplicate/orphan roles and
+any original whose paired normalized source is missing. Import must compare
+the entire reference inventory with the restored database before writing to
+the destination. Startup integrity must independently verify both file roles.
+
+This reuses the current Go BSD-3-Clause, pgx MIT, PostgreSQL License and
+Apache-2.0 PyArrow components and the generated CC0 fixtures already reviewed
+above. No dependency, model, dataset, service, migration or runtime download
+is added. Commercial, redistribution and offline obligations remain unchanged.
+DVC is a primary-source comparison only and is not installed or redistributed.
+
+Reject copying originals as an unreferenced supplemental archive: it would
+leave ordinary backup/readiness incomplete. Do not infer receipt identity
+from file extensions, adopt unknown orphan files, fabricate reports for old
+drafts, or change the store namespace to version the transfer manifest.
+See [ADR 0073](../decisions/0073-version-dataset-snapshots-with-original-sources.md).
+
+Acceptance must cover actual CSV and locked-PyArrow Parquet import, ordinary
+snapshot export, logical database restore, original and normalized file
+restore, re-login and identical authorized report read. Preserve legacy JSONL
+and its version-1 codec. Missing or same-size altered originals/normalized
+files must refuse readiness/export/import and leave an unverified restore
+destination untouched. Changed/missing receipt metadata must refuse import
+of the old bound snapshot. Pure controls cover role/version validation,
+counts/limits, symlinks, and metadata-to-file hash binding. All hashing and
+copying remain streamed; no source body is materialized by the product.
+The existing small synthetic fixture may read its own bytes for assertions.
+Production routes, release image and S-503 UI stay open until their owners
+complete the installed path; this increment must not tick DAT-101 alone.
+
+
+## Native complete-source snapshot acceptance
+
+The component source `0d8d09b60bcffdcda1a79a72f55e9003bb57ede9`, based on
+main `be62f58e846dcc654dafee65cba6cc7480890570`, passed all five maintained
+native dataset groups together on disconnected Linux amd64 PostgreSQL 18.6
+and pgvector 0.8.7 in 19.733 seconds. The container had network none and no
+published ports; the test process entered its loopback-only namespace. This
+run includes the intervening identity audit and scheduler implementation.
+It supplements the earlier formal migration qualification rather than
+repeating or replacing its eight-history matrix.
+
+The actual CSV import and the locked-PyArrow Parquet import both restore the
+original and normalized bytes through ordinary ExportFiles/ImportFiles.
+Parquet additionally restores the logical database into a fresh database,
+invalidates old sessions, logs in again and reads the identical authorized
+report. A legacy JSONL source still exports a version-1 manifest. One actual
+Parquet receipt plus 64 synthetic operator fixture receipts crosses the
+64-record keyset page boundary: the complete snapshot contains 131 source
+roles and 132 files including its namespace marker. Those clones test
+inventory paging, not 65 independent user import flows.
+
+The tests refuse missing and same-size altered original/normalized files
+at readiness, export and import, with no unverified destination mutation.
+Exact file repair restores the original report and readiness. A changed or
+removed receipt refuses the old snapshot before copying. Existing HTTPS,
+CSRF, workspace-denial, source custody and file-snapshot controls also pass.
+The maintained `testdata/replay_draft_import.sh` default selects all five
+groups, including the new CSV and complete-file restore cases.
+
+A first CSV fixture replay at `1d292db9` failed when OpenConfiguredStore
+correctly refused an incomplete processor configuration. The fixture now
+copies the source processor configuration before selecting the restored
+artifact root; product validation is unchanged. The focused corrected CSV
+case passed at `9e524484`, followed by the complete five-group run above.
+The original failed run and the focused repair remain preserved.
+
+| Retained raw evidence | SHA-256 |
+| --- | --- |
+| `/root/lane-trn-dat-schema60-current.pyqqwi5i/native.log` | `959e84a4bf53a34df1b35f6e7908b2a392fe794e829e74ffabef68acb8225b1f` |
+| `/root/lane-trn-dat-schema60-current.pyqqwi5i/postgres.log` | `804502fb3fdec4e2dbb5095a905a06a943aee1f301bd46df3b9eefca18453ab4` |
+| `/root/lane-trn-dat-inventory.67f3fjmt/native.log` (original CSV failure, four other groups passed) | `b26c77dbdadd6bac18c01dac70e81ff023745eaaf6883a58a20b8b5678bc0c5e` |
+| `/root/lane-trn-dat-csv.qwenb8u0/native.log` (focused repaired CSV case) | `740653846de611a6139d2b174ae073ab5f397a82dc8028cd3d3f579d5b065687` |
+
+The isolated data interpreter contains exactly PyArrow 26.0.1 on Python
+3.12.3. The 55,043,763-byte CPython-3.12 manylinux wheel matches the existing
+lock SHA-256 `c718bf97a92a6dea97fd1062c3b9f9e2e83cb9cc926e752289fa4ffff41738f9`.
+A network-none, no-index, hash-required installation, actual import and
+pip check passed, with the original LICENSE and NOTICE retained. This fixture
+does not change the separate retained 37-package training environment or
+admit a production release image.
+
+All new hashing and copying remain bounded streams; receipt metadata is
+paged before file I/O and the manifest retains its configured inventory
+ceilings. The draft source path still enforces its existing 64 MiB and
+10,000-row contract. These tiny synthetic restore fixtures do not constitute
+a 50 GB product import or an installed generic-registration/UI acceptance.
+DAT-101 remains open for route/report composition, the offline release image
+and S-503 UI. Fresh repository gates for the rebased branch are recorded
+separately; this native component result alone does not complete them.
+
+
+## Current source and repository-gate boundary
+
+At source f61bea6b995a3b9980b65be93f74047b736ea45c, based on main
+dfaf5e8868de489ed12a78c8289069576789fa8a, all five maintained dataset
+groups passed together again in 20.914 seconds on disconnected Linux amd64
+PostgreSQL 18.6. This includes the updated shared HTTP-fixture lifecycle.
+The original/normalized restore, 64+1 receipt pages, exact repair and
+dual-entrance source-custody assertions remain unchanged.
+
+The preserved native log is
+/root/lane-trn-dat-dfaf.505n49t1/native.log with SHA-256
+af665f19f3a8fcdec0b91de2b9ec8d528b581af037a26195c6405c39cb2e3b48.
+Its privately captured postgres.log SHA-256 is
+fed4ebf113ae8087fb4d09561dc0cc94c8bc9984682a2e8d38eca85eeed4f1ad.
+The disposable container and test-owned metadata/files were cleaned up.
+No external route or GPU was used.
+
+The same Go inputs passed all ten training PostgreSQL/HTTPS roots; see the
+[current training acceptance](training-job-lifecycle.md#current-native-owner-and-https-acceptance).
+The expanded maintained training selector and subsequent research/evidence
+documents change no Go, Python, SQL or API input. The original Linux high-I/O
+admission refusal and bounded lock timeouts
+remain non-results. The later source 74fc7be8 passed the ordinary owner
+and affected shared packages, complete make check and make build on Darwin
+arm64 with offline dependency resolution. Its dataset owner Go/API/Python/SQL
+inputs are unchanged from the native run above. The [exact source, platform,
+skips, original fixture failures and passing log digests](training-job-lifecycle.md#current-darwin-repository-qualification)
+keep the Linux native and Darwin repository results separate. No complete
+make test, installed route/report/image/UI or generic 50 GB import is claimed.

@@ -78,6 +78,10 @@
     "anchor": "if-an-import-fails"
    },
    {
+    "title": "Expired uploads",
+    "anchor": "expired-uploads"
+   },
+   {
     "title": "Retiring a model",
     "anchor": "retiring-a-model"
    },

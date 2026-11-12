@@ -657,3 +657,19 @@ The next phase's I/O preflight refused a start and released both locks;
 no memory or I/O threshold was relaxed. The baseline is retained alongside the
 [completed interrupted-worker comparison](training-checkpoint-recovery.md#real-interrupted-linux-cpu-worker-resume).
 This baseline is actual new computation, independently of the earlier retained 24-step native artifacts.
+
+## Complete CPU environment unit readback
+
+The retained 37-package installation passed all 20 current training unit tests
+with no skips at `e24d9abd`. This used the original Python 3.12.15 base image,
+exact CPU Torch build and approved Qwen tokenizer assets, with network none,
+read-only runtime/source/model mounts and a private disposable temporary path.
+The actual tokenizer/worker parity and pinned-version/asset refusals ran.
+The owned container exited 0, OOMKilled=false, and was removed. No package,
+image, model or environment was rebuilt. The Python/data/contract source
+bytes are unchanged from `096c50b8`; this adds unit acceptance to the existing
+five real worker invocations without rerunning their computation.
+
+The raw `/root/lane-trn-cpu-admission.RaaYxrR7/post-sso-trn-e24d9abd.log` hashes
+to `e1ddec2fffbe925ce74fd0d1c4849daf9ebec4c6600bc845c813f47c56d71e64`. Its following Go PostgreSQL preflight refused before startup;
+the Python pass does not assert a fresh Go or installed-production acceptance.

@@ -78,3 +78,264 @@ The change adds no dependency, model or dataset. The existing Go, pgx and
 PostgreSQL licensing and offline requirements are recorded in the
 [scheduling model research](scheduling-job-model.md#licensing-and-offline-operation).
 The fixture uses synthetic rows, node reports and stop receipts.
+
+## Local-cell owner fence before scheduler admission
+
+The scheduling handoff requires the selected persisted training job to belong
+to this database's site and cell before any wait, failure, cancellation or
+attempt mutation. Migration 30 already supplies server-owned site/cell
+columns and `local_site_id()` / `local_cell_id()`. The current PostgreSQL
+FIFO selector, reconciliation selector and shared locked job loader omit
+those predicates. A retained foreign row with the same tenant/workspace
+must remain untouched, including when its requester has lost authority.
+
+Use the local database functions in both background selectors and the shared
+locked job read. Do not accept coordinates from the request or repair a
+foreign row by assigning it the current cell. Repeat the fence in the final
+owner transaction: PostgreSQL [READ COMMITTED snapshots](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED)
+can change between candidate selection and admission. The existing exact
+job lock and confirmed-commit behavior remain authoritative. This is a
+prerequisite to the scheduler's atomic admission, whose quota reservation
+must remain separate from physical execution; see [Kueue workload lifecycle](https://kueue.sigs.k8s.io/docs/concepts/workload/).
+
+A selector-only filter would miss a scope change after selection. Failing
+only in scheduling would happen after earlier owner wait/failure writes.
+Rewriting retained coordinates would destroy the evidence needed for
+reconciliation. No migration, public API, Agent change, model, dataset or
+new dependency is required. Existing Go/pgx/PostgreSQL redistribution and
+offline terms are recorded above. MySQL's inherited profile is unchanged;
+this acceptance covers the production PostgreSQL cell catalog.
+
+On real disconnected PostgreSQL, move only owned fixture jobs to a foreign
+site or cell. Due queued and active reconciliation selectors must skip them;
+direct cancellation must return the existing not-found error. Change scope
+between initial selection and each delegated transaction and require refusal
+without any task, attempt, GPU lease, audit or owner revision mutation.
+Return the exact fixture coordinates and require normal dispatch/cancel to
+work again. These are synthetic node observations and authenticated control
+transactions, not GPU execution. Keep TRN-101 open until scheduler wiring,
+CLI/UI and installed execution complete.
+
+## Queue handoff prerequisites on the selected repository
+
+The verified SCH handoff retains original commits `43670ebf`, `c90df6cd`,
+`748ea2b8`, `9709ee19` and `4708ffc3`, in order. Its `ReserveQueuedWithin`
+accepts the actual borrowed `transaction.Executor` and a complete owner queue
+reader. Its initial `RankWorkspaceQueueWithin` still accepts a raw `pgx.Tx`.
+The selected training `transaction.Store` exposes borrowed executors and
+starts read-only transactions at READ COMMITTED. A configured selected Store
+can have no legacy PostgreSQL pool. The package contains no training wiring
+or production migration. Its historical schema-57 fingerprints do not admit
+the current catalog or an intervening GW-120/DAT-101 migration.
+
+Continue with the owner-side local-cell fences above independently. Full
+fair dispatch needs the original SCH implementation plus ARC's admitted
+quota/reservation DDL, grants and fresh/restore lineage. It also needs an
+additive scheduler ranking entry point on the borrowed executor. The selected
+owner can begin its read-only transaction, set REPEATABLE READ before its
+first data query, read the complete eligible queue and pass that same executor
+to ranking. Scheduling must verify the actual read-only/isolation settings
+before reading policy or usage. The existing raw-pgx entry point can retain
+its contract and delegate to that checked executor path.
+
+Do not open a different legacy pool, emulate a `pgx.Tx`, copy scheduling's
+policy/usage queries into training or fall back to FIFO. A generic transaction
+rewrite is unnecessary. The queue reader must remain complete and bounded by
+the owning job policy, repeat current authority after scheduling locks and
+preserve the existing exact physical-stop release rules. The installed
+training acceptance still needs fair selection, concurrent and unknown-commit
+replay, quota/queue waits, cancellation and final stop/non-delivery release.
+This is an explicit shared-API and production-DDL prerequisite, not evidence
+that any of those dispatch paths has run.
+
+## Native acceptance boundary for the local-cell candidates
+
+The source at `145852e7` rebases these owners onto main `95f85dbb` and its
+updated model-import implementation. On disconnected Linux amd64 PostgreSQL
+18.6 at schema 59, all nine retained-input and owner groups passed together,
+including all eight site/cell owner subcases, paired dispatch/operator and
+actual CPU accepted-result readback. `make check`, `make build` and the four
+ordinary Go owner packages (training, datasets, mongodatasets and
+modelpreparations) also passed on that exact source. The Go and repository
+gates used loopback-only network namespaces with offline dependency caches.
+No new worker computation or physical production stop ran.
+
+The immutable raw logs are retained in
+`/root/lane-trn-cpu-admission.RaaYxrR7`:
+
+- `schema59-trn-rebased-145852e7.log`: SHA-256 `4adb47604619805c33467dbf4492884842494419beee48b8fd18a54a3911c603`.
+- `schema59-trn-gates-145852e7.log`: SHA-256 `dab17bd21f96b6d782ec7d2eea0809f80f005e28445591f3ba72010f5eb508bf`.
+- `schema59-trn-build-after-io-145852e7.log`: SHA-256 `1cd830f11f44547aba7cbedc7a94bdf3c5cf4f14f04a19d67c47ec12e164790c`.
+- `schema59-trn-final-modules-145852e7.log`: SHA-256 `9c222c04692015ee9be0b127ad89caa37b5d5f7939034d810f70718aa24f3695`.
+
+The first schema-59 replay at `8495818a` passed the eight neighboring groups
+but the new owner snapshot compared a UUID audit target with text. The
+correction was test-only SQL; the corrected group passed at `be30d3f4`, and
+the refreshed nine-group run above passed without relaxing product fences.
+The earlier raw log SHA-256 is
+`f0a50d7789e70be7b945725348200b4bf70d0b6920b3d8f993abfb92eb66a336`;
+the correction/check log SHA-256 is
+`ca07474c280c2c60ac1252dc22b8a6c64c44f10bb68dd46b2cb7230fc75362e2`.
+The original pre-compilation refusal at 344,899,584 free bytes is preserved
+in `continued-cell-pg-attempt1.log`, SHA-256
+`86470fef7c4fd1dea0a0e0995b82764bafd87535814a9ca104bf7f430366dae0`.
+
+Each admitted phase used both original Linux locks and the unchanged 3 GiB
+free-memory, 12 GiB available-memory, 15 GiB disk and 5-percent I/O guards.
+Refused preflights started no test or build. Passed phases were retained;
+only pending phases were requested after actual holder/resource changes.
+The maintained replay includes all nine groups and passes Bash syntax.
+
+The existing 20 training Python unit tests passed with no skips at `e24d9abd`
+in the retained complete 37-package CPU environment: Python 3.12.15, exact
+Torch 2.14.1+cpu and the original approved Qwen tokenizer assets. The
+network-none, read-only-root container exited 0 with OOMKilled=false and was
+removed. The raw `post-sso-trn-e24d9abd.log` SHA-256 is `e1ddec2fffbe925ce74fd0d1c4849daf9ebec4c6600bc845c813f47c56d71e64`.
+Python, data-worker and training-contract bytes remain unchanged from the
+original `096c50b8` computation source. Main's new SSO implementation changed
+Go inputs; the following PostgreSQL preflight refused before startup at
+I/O full avg10 15.89 and avg60 15.82 percent. Fresh Go acceptance after that
+rebase remains separate from the completed `145852e7` Go qualification.
+The actual installation, five worker invocations and step-one recovery
+retain their independent source/input scope. Installed Agent/control/UI,
+signed media and NVIDIA qualification, and the fair-queue prerequisites
+above remain open; no roadmap box is ticked by this component acceptance.
+
+
+## Schema-60 acceptance and the SSO fixture failure
+
+At `9e524484c45d4204291439b4448a5dfe5b4f38c5`, based on main
+`8123466c5a64b6424047f126815ae63100383bc6`, all nine training PostgreSQL
+18.6 groups passed together at registered schema 60 in 75.042 seconds.
+This includes the eight owner site/cell subcases, accepted-source child
+scope faults, exact repair and the paired dispatch/operator groups. The
+same source passed make check. The subsequent build admission refused
+2,085,052,416 free bytes before starting the build; it is not a build result.
+The two unchanged Linux lock carriers and all original resource thresholds
+were retained.
+
+An earlier post-SSO schema-59 run at `98e2e1f6` passed eight whole groups and
+nine borrowed-adapter subcases, but its exact-scope subcase failed during
+fixture migration with SCHEMA_UNAVAILABLE, before its assertions. The
+container had already been removed without SQL capture, so the cause is
+unobserved. The focused subcase passed with the original PostgreSQL settings
+and fixture timeouts; the later complete schema-60 run above also passed.
+The focused successful SQL log does not establish the earlier failure cause.
+No assertion, durability setting, statement timeout or setup timeout changed.
+Future private native replays capture PostgreSQL logs before cleanup.
+
+The raw records remain under `/root/lane-trn-cpu-admission.RaaYxrR7`:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `schema60-trn-gates-9e524484.log` (nine groups, check, refused build admission) | `51f65d11ed03f493b42e1b18224543b111fb3a8287d5d002912fd2db781a13cb` |
+| `schema60-trn-sql-9e524484.log` | `0063042cc32068e354c5b7e4ecc7be6589c6cd48aec4c6d89de3013deb0539e5` |
+| `post-sso-trn-go-98e2e1f6.log` (original fixture failure) | `3383a17176ec8f210595d640fa9ec3bbf79b8c309bb3353964ca55c87ea6bdc9` |
+| `post-sso-borrowed-scope-98e2e1f6.log` (focused unchanged-default replay) | `bb08173a4c03141febbbdd8d68ae6a100498b8ac98b3188b2103357153c0ea25` |
+
+Main subsequently added identity audit-read and scheduler implementations.
+The branch contains those changes. The later native result is recorded in
+the current acceptance below; the earlier completed source qualifications
+above remain exact.
+The retained 20-test Python result and actual CPU computation inputs are
+unchanged. Installed Agent/control/UI, NVIDIA and fair-queue admission
+remain separate open prerequisites; no complete roadmap item is asserted.
+
+
+## Current native owner and HTTPS acceptance
+
+Source f61bea6b995a3b9980b65be93f74047b736ea45c, based on main
+dfaf5e8868de489ed12a78c8289069576789fa8a, passed all ten PostgreSQL 18.6
+training roots together at schema 60 in 81.195 seconds. They comprise the
+nine retained-input/owner roots above and the existing actual dual-entrance
+TLS lifecycle root. Both repository and identity fixtures used the same
+owned disposable cluster through protected DSN files. The test process had
+only loopback networking and offline dependency resolution.
+
+The HTTPS scenario publishes a real synthetic dataset through the Python
+processor, then exercises login, idempotent job creation, metric pagination,
+failed-attempt state, explicit recovery, current-role refusal, CSRF and
+cancellation/audit rollback. Node observations, model metadata, metric events
+and stop envelopes are synthetic. It proves the control/API flow, without
+claiming an installed Agent, physical stop, live GPU metrics or browser UI.
+The other nine roots retain the actual CPU adapter evidence and all owner
+and accepted-source scope/refusal/repair assertions.
+
+Raw records remain under /root/lane-trn-cpu-admission.RaaYxrR7:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| schema60-dfaf-trn-http-f61bea6b.log | dce8bcd0c8185fce177a03a8665312d58b8d9e97d4785fd869e0cd876204bed3 |
+| schema60-dfaf-trn-sql-f61bea6b.log | 9178015edbf9548b834f4fdbde7d3576bdd732302c9adf22b7099a7b7941731d |
+
+The maintained replay now selects all ten roots, requires the protected
+data interpreter and binds its two fixture families to its own DSN file.
+Bash syntax and local documentation checks pass. Its test selection matches
+the successful private run; Go/Python/SQL/API bytes are unchanged.
+
+The next modules phase refused I/O full avg10 12.45 and avg60 11.75 percent
+before running. Subsequent bounded requests reached the original outer-lock
+timeout before the gate helper started. The Linux lock and resource refusals
+remain preserved. The subsequent
+Darwin repository qualification is recorded below; it does not replace the
+Linux native result or the original two-lock/resource policy. The retained
+20-test CPU result, installed-product/NVIDIA boundaries and fair-queue
+prerequisites are unchanged.
+
+
+## Current Darwin repository qualification
+
+Source 74fc7be8ec37693d8edb9d76f57bbaaf4eb613a9, based on main
+db7ee24ad88561fe6d76b9c7c9ab500a5ef22570, passed the four ordinary
+owner packages (training, datasets, mongodatasets and modelpreparations)
+and six affected shared packages (identity, audit, scheduling, httpserver,
+agentgateway and config). The nine-package phase recorded 636 passed
+test actions and 172 explicitly unbound environment skips; config recorded
+862 passed actions with no skips. Those skips are not native acceptance.
+The ten training and five dataset native groups above retain their exact
+Linux source and scope. Their owner Go/API/Python/SQL inputs are unchanged;
+the rebased shared identity audit-reader changes were checked on Darwin.
+
+The same source passed the complete make check in 31.904 seconds and
+make build in 43.851 seconds on Darwin arm64, using Go 1.27.3,
+CPython 3.12.14, Node.js 26.13.0, pnpm 12.16.1 and Rust 1.99.1.
+Dependency resolution was offline. This run had no network-namespace egress
+isolation and did not run the complete make test or an installed product.
+The permanent workstation lock carrier/inode was retained. Only the owned
+RAM device and generated audit-verifier binary were removed. No persistent
+service or training process was left running.
+
+Three original fixture/bootstrap failures remain recorded. HFS+ RAM scratch
+did not expose a same-tick ctime rewrite after restoring mtime. APFS exposed
+it, but the private scratch inherited group wheel, of which the caller was
+not a member, so chmod silently cleared setgid in two fixture cases.
+Native file probes reproduced both conditions. Setting the owned APFS
+scratch to the caller's existing group preserved setgid and all config
+assertions passed unchanged. Owner/storage tests used the separate RAM
+scratch required by their free-space policy. The first make check also
+stopped before web checks because the fresh worktree lacked its Node
+dependencies; an offline frozen-lockfile install preceded the passing rerun.
+No source assertion, protocol budget or host admission threshold changed.
+
+Raw records remain at
+/private/tmp/ownsolid-trn-qualification.knvee3h8 on the workstation.
+The complete archive is retained on Linux at
+/root/lane-trn-tools/darwin-74fc-evidence/darwin-gates-74fc.tgz,
+SHA-256 2a65147c154397c1f8ce3dbf4155596ac0a855fe8e8136bcf1458552212c10fa.
+Its qualified-evidence.json pins the platform, source, original failures,
+phase outcomes and individual log digests.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| modules.log | ee0d98df8ac24c416a347c04f933c82c574de3c8d04c3b7f1fcba7451d4f7891 |
+| config-apfs.log | 46f9f8ac4fc3e9ce93877a0f653d5c050d7ebb88e4170ad2f9ba29508898a737 |
+| check.log | 68eeca989d9842d4a3f04f9deee84f373d63b2971740d5adf7cf693ed3a763c4 |
+| rebased-modules.log | 188983c4e9eb44405ea6dc85791207b8f374325ddf0b8a938292bbccdfdeb242 |
+| config-apfs-owned-group.log | eb360a24fb8a6c9f90aa96554c139fe5251f82068e4f164516925637175059f6 |
+| check-after-offline-install.log | 032875dab7a6a1922c71511099c443ff608d647430b9abdbfb158d2591835c0c |
+| build.log | 3aebf6da9530301b20afb97341241e663031e538fc44de1985bdf2fe8bb51fe2 |
+
+This closes the rebased ordinary-package/check/build gap for this component
+increment. Installed Agent/control, browser/UI, formal release/runtime and
+NVIDIA qualification remain open. The separately prepared event-cursor
+optimization and its new tests are outside this qualified source.

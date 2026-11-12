@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Replays only retained CPU evidence and an isolated PostgreSQL service read.
+# Replays retained CPU evidence, PostgreSQL owners and both HTTPS entrances.
 set -euo pipefail
 
 repo=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)
@@ -7,6 +7,7 @@ cd "$repo"
 : "${PROJECT_ONE_ACTUAL_TRAINING_OUTPUT:?Set the retained CPU output directory}"
 : "${PROJECT_ONE_ACTUAL_DATASET_DIRECTORY:?Set the authorized publication export directory}"
 : "${PROJECT_ONE_APPROVED_MODEL_DIRECTORY:?Set the verified base configuration directory}"
+: "${PROJECT_ONE_DATA_PYTHON:?Set the protected Python 3.12 data interpreter}"
 
 df -h .
 free -m
@@ -31,7 +32,9 @@ trap cleanup EXIT
 
 database=ownsolid_training_experiment_test
 printf '%s\n' "postgres://postgres@127.0.0.1:5432/$database?sslmode=disable" > "$scratch/dsn"
+unset PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_NATIVE_POSTGRES_INPUT
 export PROJECT_ONE_REPOSITORY_ENGINE=postgresql PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE="$scratch/dsn"
+export PROJECT_ONE_TEST_DSN_FILE="$scratch/dsn"
 export PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA="m20_repository_$(tr -d '-' < /proc/sys/kernel/random/uuid)"
 export GOPROXY=off
 container=$(docker --context "$docker_context" run --rm --detach --pull never --network none --memory 1g --cpus 2 \
@@ -56,4 +59,4 @@ nsenter -t "$pid" -n ip -br address
 nsenter -t "$pid" -n go -C services/control test \
     -tags 'training_artifact_integration,training_experiment_integration,repository_integration' \
     -p 1 -count=1 -timeout 5m -v ./internal/modules/training \
-    -run '^(TestActualAcceptedResultJSONBMayExceedRawBudget|TestActualTrainingExecutionEvidenceAdmission|TestActualCPUExperimentInputs|TestActualApprovedCpuAdapterMetadataShapeAndEveryF32Value|TestActualAcceptedExperimentRead|TestActualBorrowedAcceptedAdapter)$'
+    -run '^(TestActualAcceptedResultJSONBMayExceedRawBudget|TestActualTrainingExecutionEvidenceAdmission|TestActualCPUExperimentInputs|TestActualApprovedCpuAdapterMetadataShapeAndEveryF32Value|TestActualAcceptedExperimentRead|TestActualBorrowedAcceptedAdapter|TestTrainingLocalCellOwnerFence|TestActualPairedTrainingDispatch|TestActualPairedTrainingOperator|TestActualTLSDualEntranceTrainingIntentHistoryMetricsRecoveryAndCurrentRoles)$'

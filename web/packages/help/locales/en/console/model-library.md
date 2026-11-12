@@ -37,6 +37,12 @@ A failed import says why. **Verify again** retries it a limited number of times.
 what was uploaded. A workspace takes one import at a time, so a failed import must be finished or
 discarded before the next can start.
 
+## Expired uploads
+
+If an unfinished upload expires, its status explains what happened. **Expired** means its temporary files have been removed and it cannot resume. Choose **Upload a new bundle**, select the bundle again and start a new import. While cleanup is running, wait for it to finish. Import history keeps the original byte count.
+
+For scripts, use a new `Idempotency-Key` for the fresh import. Reusing the old key returns the original expired import; it does not create another upload.
+
 ## Retiring a model
 
 **Deploy a model** on a model's page opens [Model services](help:model-services) with the model chosen.

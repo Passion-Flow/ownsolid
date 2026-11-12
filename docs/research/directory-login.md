@@ -124,15 +124,59 @@ Windows SSPI and Kerberos modules in the graph do not enable those protocols.
 | stretchr/testify | v1.8.1 | [MIT](https://github.com/stretchr/testify/blob/v1.8.1/LICENSE) |
 | golang.org/x/crypto | v0.54.0 | [BSD-3-Clause](https://github.com/golang/crypto/blob/v0.54.0/LICENSE) |
 | golang.org/x/net | v0.57.0 | [BSD-3-Clause](https://github.com/golang/net/blob/v0.57.0/LICENSE) |
+| golang.org/x/sys | v0.47.0 | [BSD-3-Clause](https://github.com/golang/sys/blob/v0.47.0/LICENSE) |
+| golang.org/x/term | v0.45.0 | [BSD-3-Clause](https://github.com/golang/term/blob/v0.45.0/LICENSE) |
+| golang.org/x/text | v0.40.0 | [BSD-3-Clause](https://github.com/golang/text/blob/v0.40.0/LICENSE) |
 | gopkg.in/yaml.v3 | v3.0.1 | [MIT and Apache-2.0 by file](https://github.com/go-yaml/yaml/blob/v3.0.1/LICENSE); retain NOTICE |
 
 These licenses permit commercial and offline use and redistribution with their
 conditions. Preserve copyright, license and applicable notices. MPL-covered
 source and modifications retain their file-level source obligations; do not
-relicense them as ownsolid files. A private OpenLDAP fixture additionally needs
-its exact package/image version, OpenLDAP Public License and all bundled OS
-dependency notices inspected before provisioning. No test directory is selected
-or downloaded by this note.
+relicense them as ownsolid files. The actual LDAP package import closure resolves
+21 modules and 27 license/notice files; a root-only module query omitted the
+three `golang.org/x` rows added above. Source inspection is not a build or product
+dependency admission.
+
+## Private protocol fixture
+
+Use [OpenLDAP LTS 2.6.16](https://www.openldap.org/software/download/) rather than
+an older distribution package or a community image with additional entrypoint
+behavior. The official source archive has SHA-256
+`8d8452bc3f56aa7a392c62dd377733f83d1314eed6c52fe44028439a3bb4df18`.
+Offline `gpgv` verified its detached signature against the separately downloaded
+[official release key](https://www.openldap.org/software/download/OpenLDAP/gpg-pubkey.txt),
+fingerprint `3CE269B5398BC8B785645E987F67D5FD1CE1CBCE`, before source extraction.
+Retain the signed archive and verification output with the external fixture.
+
+OpenLDAP and its bundled LMDB use the
+[OpenLDAP Public License 2.8](https://www.openldap.org/software/release/license.html),
+which permits commercial/offline use and redistribution with preserved copyright,
+notices and the verbatim license. Other embedded source notices remain applicable;
+retain the full signed source, its root COPYRIGHT and component notices. This is
+a private test server, not an admitted product component or distribution image.
+
+The cached arm64 build base is
+`golang@sha256:cfa27959837144bf4649802ba38e59daffd0dd2a7994aa83daaf113285b0f551`
+(Debian 13). Its 203 installed package/common-license and Go license files are
+retained by path and hash outside Git. This includes GCC GPL-3.0 with its runtime
+exception, GNU make GPL-3.0, glibc LGPL-2.1 and Go BSD-3-Clause notices. These
+unmodified private build tools are not ownsolid dependencies. The base has
+OpenSSL `3.5.7-1~deb13u3` runtime libraries but no development headers. Before
+building, obtain only the matching development package through Debian's signed
+package indexes, retain the exact package hash and copyright, and refuse an
+unplanned runtime upgrade. OpenSSL 3 uses
+[Apache-2.0](https://openssl-library.org/source/license/); preserve its bundled
+third-party notices as well.
+
+Follow the upstream [build instructions](https://www.openldap.org/doc/admin26/install.html)
+and [TLS configuration](https://www.openldap.org/doc/admin26/tls.html): use the
+bundled MDB backend and native OpenSSL LDAPS with synthetic entries and a private
+CA. Disable unused backends, overlays and SASL rather than claiming their support.
+Acquire packages before provisioning; build and run without network access,
+host-published ports or access to real directory data. Resource limits belong to
+the external fixture configuration. The workstation's permanent nonblocking build
+lock covers compilation and protocol tests. The actual protocol qualification
+below is separate from source/signature inspection and product admission.
 
 ## Parser and operation boundaries
 
@@ -151,6 +195,66 @@ that closes that connection and joins its workers. Prove that cancellation
 terminates an actual blocked bind/search without leaking a goroutine. Never
 share a connection between user authentication and synchronization or modify
 the library's package-global default timeout at runtime.
+
+## Protocol prototype qualification
+
+The standalone adapter passed six native Go test roots with race detection.
+The frame guard applies before the SDK BER decoder, including its separately
+decoded paging-control value. It rejects indefinite/nonminimal lengths,
+oversized declarations, excessive depth/nodes, unsupported response operations
+and unrequested control types. A near-2-GiB declaration was refused before a
+payload allocation; that test observed less than 128 KiB additional allocation.
+The fixture policy is 64 KiB per frame, 1 MiB per connection, depth 16 and
+1,024 nodes per frame. This is not a full-bound peak-RSS qualification.
+
+Verified-TLS hostile peers exercised wrong CA/name, malformed packets and a
+changed stable identity between lookup and user bind. The user connection
+re-reads its own entryUUID after a successful bind and requires the original
+identifier. Twelve real blocked bind/search attempts were canceled; each owned
+operation returned, the peer observed the socket close and the SDK workers
+drained within the bounded check. No global SDK timeout/parser limit was changed.
+
+Four actual OpenLDAP 2.6.16 roots then passed in a disposable Linux arm64
+container with `--network none` and no published ports:
+
+- A read-only search bind and a separate user bind authenticated the synthetic
+  account; wrong/empty passwords, an escaped filter-injection value, duplicate
+  login names and missing users produced no identity.
+- The real directory refused the search identity's attempted write with LDAP
+  insufficient-access-rights. Fixture mutations used a separate verified TLS
+  management connection.
+- Renaming an entry preserved entryUUID; deleting/recreating the same name
+  yielded a different identifier. No local binding or session was created.
+- Five groups were read across two-entry pages. Page-count, entry-count and
+  byte-budget failures returned no partial scan result; an explicit fresh scan
+  succeeded. The adapter does not publish group roles or resolve references yet.
+
+The exact development package is `libssl-dev_3.5.7-1~deb13u3_arm64.deb`, SHA-256
+`ee3ce1214925d3905a8ad54ea1250b016438322f73a9719474fcd0ece6243a8e`.
+Debian's signed indexes, package metadata and source hashes were retained before
+the disconnected build. Its installed copyright matches the already retained
+OpenSSL package notice; the development and runtime versions match exactly.
+
+The durable external evidence set is `iam103-protocol-20261113.oogmig8q`, run
+`qualification-5c3lyuq_`. It preserves exact prototype source/module sums,
+signature verification, package/image identities, configuration policy, raw
+race/live logs and cleanup. The source-manifest SHA-256 is
+`ea709f639d725f506d07a613cddbf9c39910b3ecf4915ac819ef8bb852adda17`.
+Four live-only roots skipped in the native invocation ran explicitly in the
+private provider. The initial missing-`soelim` documentation build and the
+management-fixture response-profile failure remain in separate failed runs.
+The corrected build selects the upstream include/library/client/server targets;
+it does not claim an upstream documentation build or upstream test-suite run.
+All owned containers were removed and no directory server remains running.
+
+This qualifies the initial LDAPS protocol approach. Product dependencies,
+configuration, formal SQL, routes, local-account binding, sessions, synchronization
+jobs and UI are unchanged. AD ranged/nested membership, stable-reference
+reconciliation, complete-generation persistence and full-bound memory checks
+remain required before composition. This is not Windows AD, rendered-browser
+or Linux amd64 installation acceptance. IAM-103 remains open. Publication changes
+research only; layout, roadmap and whitespace checks do not replace the future
+feature's full repository and installed-flow gates.
 
 ## Rejected alternatives and acceptance
 

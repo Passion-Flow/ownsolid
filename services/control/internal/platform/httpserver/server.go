@@ -69,25 +69,28 @@ func serve(ctx context.Context, address string, tlsConfig *tls.Config, handler h
 	if e != nil {
 		return e
 	}
-	return serveListener(ctx, listener, tlsConfig, handler, policy)
+	return serveListener(ctx, listener, tlsConfig, handler, policy, ConnectionAge{})
 }
 
-// ServeListener serves direct TLS on a listener the caller bound, as Serve does on an
-// address, and closes it. It returns once the bounded shutdown that ctx starts has ended.
-func ServeListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) error {
+// ServeListener serves and ages connections on a dedicated prebound TLS listener.
+// It closes the listener and returns after the bounded shutdown that ctx starts.
+func ServeListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, age ConnectionAge) error {
 	check := config.DefaultRuntimePolicy()
 	check.HTTP = policy
-	if listener == nil || tlsConfig == nil || check.Validate() != nil {
+	if listener == nil || tlsConfig == nil || check.Validate() != nil || age.Maximum <= 0 || age.Grace <= 0 {
 		if listener != nil {
 			listener.Close()
 		}
 		return errors.New("CONFIG_TRANSPORT_INVALID")
 	}
-	return serveListener(ctx, listener, tlsConfig, handler, policy)
+	return serveListener(ctx, listener, tlsConfig, handler, policy, age)
 }
 
-func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) error {
-	server := &http.Server{BaseContext: func(net.Listener) context.Context { return ctx }, Handler: handler, ReadHeaderTimeout: config.Seconds(policy.ReadHeaderSeconds), ReadTimeout: config.Seconds(policy.RequestSeconds), WriteTimeout: config.Seconds(policy.RequestSeconds), IdleTimeout: config.Seconds(policy.IdleSeconds), MaxHeaderBytes: MaxJSONBytes, TLSConfig: tlsConfig}
+func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, age ConnectionAge) error {
+	if age.Maximum > 0 {
+		return serveAgedListener(ctx, listener, tlsConfig, handler, policy, age)
+	}
+	server := newHTTPServer(ctx, tlsConfig, handler, policy)
 	servingDone := make(chan struct{})
 	shutdownDone := make(chan error, 1)
 	go func() {
@@ -116,6 +119,19 @@ func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Co
 		return nil
 	}
 	return e
+}
+
+func newHTTPServer(ctx context.Context, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) *http.Server {
+	return &http.Server{
+		BaseContext:       func(net.Listener) context.Context { return ctx },
+		Handler:           handler,
+		ReadHeaderTimeout: config.Seconds(policy.ReadHeaderSeconds),
+		ReadTimeout:       config.Seconds(policy.RequestSeconds),
+		WriteTimeout:      config.Seconds(policy.RequestSeconds),
+		IdleTimeout:       config.Seconds(policy.IdleSeconds),
+		MaxHeaderBytes:    MaxJSONBytes,
+		TLSConfig:         tlsConfig,
+	}
 }
 
 type listenerEndpoint struct {

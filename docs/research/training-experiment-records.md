@@ -196,3 +196,91 @@ No new worker computation or physical production stop ran. One earlier
 replay reported `SCHEMA_UNAVAILABLE` while initializing a neighboring
 fixture; the unchanged full repeat passed. That setup failure is retained
 in the private transcript, without attributing an unobserved database cause.
+
+## Local-cell experiment and preparation source
+
+The experiment export already uses the shared locked training job read.
+The borrowed `AcceptedAdapterWithin` path independently repeats its SQL.
+Reuse the common read so both authenticated experiment exports and model
+preparation sources enforce the same server-owned PostgreSQL site/cell
+predicate. The internal caller still owns actor and Workspace authority;
+this method grants no new authorization or commit capability.
+
+A separate adapter-only predicate could diverge from operator/worker reads.
+Copying a foreign job to this cell or accepting its command's tenant/workspace
+would substitute client-visible identity for installed server scope. Preserve
+the original row and return the existing not-found error with no source.
+Exact scope repair in the disposable fixture must restore the same accepted
+experiment and preparation identity. This reuses the [local-cell owner fence](training-job-lifecycle.md#local-cell-owner-fence-before-scheduler-admission)
+and [PostgreSQL transaction semantics](https://www.postgresql.org/docs/18/transaction-iso.html).
+It adds no dependency, model, dataset or license term beyond those above.
+
+Extend the real retained CPU upload/stop/read replay: change only the owned
+job's site, then its cell. Require an empty experiment, empty authenticated
+adapter snapshot and empty borrowed preparation source, all with
+`TRAINING_NOT_FOUND`. Refused reads must append no export audit. Restore the
+exact coordinates and require the original experiment to read again. Keep
+node, production command and physical-stop envelopes explicitly synthetic;
+this does not establish an installed Agent, UI, NVIDIA or cross-cell restore.
+
+## Accepted-result children remain in the owner's cell
+
+A local job is insufficient when a retained artifact, upload, attempt or
+node task carries foreign site/cell coordinates. Their existing read joins
+bind tenant, Workspace and exact identities, but do not yet reconcile the
+cell columns introduced by migration 30. Enforce the installed local cell
+on the artifact and require all four joined owners to have that same tuple
+in the existing PostgreSQL metadata read. Keep the caller's locked local job,
+current authority and final export recheck. No client coordinate, new ledger,
+migration or production trigger change is needed.
+
+A job-only check would leave foreign children readable. Reassigning their
+coordinates would alter retained evidence. A second preflight query would
+add another snapshot instead of making the protected record read coherent.
+Use predicates in the same joined SELECT and retain its row locks. Existing
+PostgreSQL snapshot/locking semantics and Go/pgx/PostgreSQL licenses apply;
+no new dependency, model or dataset is introduced.
+
+Using the actual retained CPU adapter, change only each owned fixture child's
+site or cell while leaving the job local. The authenticated experiment read
+must expose no record and report its existing invalid-data error; borrowed
+and authenticated preparation snapshots must expose no source under their
+existing unavailable-result contract. No refused export may append audit.
+Restore the exact coordinates and require the original experiment to read
+again. Also change the artifact cell between initial metadata/file
+verification and the final authority read; the call must return no already
+computed experiment and append no export audit. If immutable-row triggers prevent injecting the fault, disable only
+the owned artifact table's immutable-row trigger around the fixture update
+and re-enable it in the same transaction. Production triggers remain unchanged. These
+are component acceptance rules, separate from installed Agent/UI/NVIDIA
+qualification and the original CPU computation evidence.
+
+The disconnected PostgreSQL 18.6 replay at `8495818a` passed the actual retained
+CPU evidence group with both job coordinates, all eight child-coordinate
+faults and the artifact change before the final read. Refused reads returned
+empty records/sources and appended no export audit; exact coordinate repair
+restored the original experiment. The eight neighboring groups passed in that
+run. Its separate new cell-owner group initially failed in a test-only audit
+UUID comparison and passed after correction at `be30d3f4`; the raw logs and
+repository-gate boundary are in the [native owner acceptance](training-job-lifecycle.md#native-acceptance-boundary-for-the-local-cell-candidates).
+No Agent, UI, physical GPU or new worker computation is implied.
+
+The refreshed nine-group PostgreSQL replay and four Go owner packages also
+passed at `145852e7` after rebasing onto the updated main model-import code.
+The exact source and raw log hashes are recorded in the native owner
+acceptance above; the complete 20-test CPU-unit result has its own inputs. No Python/model/data input or
+production runtime manifest changed with these Go cell predicates.
+
+
+All nine native training groups also passed together on schema 60 at
+`9e524484`, including these exact refusal and repair assertions. The
+[native owner acceptance](training-job-lifecycle.md#schema-60-acceptance-and-the-sso-fixture-failure)
+preserves the separate earlier fixture migration failure and successful
+focused replay, the check result and the pending later-main gate scope.
+
+
+The current ten-root PostgreSQL/HTTPS acceptance at f61bea6b retains these
+accepted-source fault and repair assertions. The [current native scope and
+raw records](training-job-lifecycle.md#current-native-owner-and-https-acceptance)
+distinguish actual retained CPU files from synthetic HTTP node/event/stop
+envelopes and the still-pending whole-repository gates.
