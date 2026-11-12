@@ -318,3 +318,42 @@ existing Python interpreter and standard library use
 Both allow commercial and offline use and redistribution with their
 applicable notices. Reading the kernel's documented interface does not
 copy kernel implementation code into ownsolid.
+
+## Observed retirement timing
+
+Native HTTP transport tests exposed a measurement error: the retirement event
+used the scheduled jitter duration as `age_seconds`. An early process shutdown
+therefore appeared approximately 55 seconds old even when it ended immediately.
+That value establishes a chosen deadline, not elapsed connection life.
+
+Capture the actual drain start after the select chooses its reason, immediately
+before public `Server.Shutdown`, and capture completion before logging. Keep
+`scheduled_age_seconds` separate from `drain_started_age_seconds` and actual
+`age_seconds`; retain UTC timestamps for correlation. Compute elapsed durations
+before converting timestamps to UTC. Go's
+[monotonic clock semantics](https://pkg.go.dev/time#hdr-Monotonic_Clocks)
+preserve elapsed measurements across wall-clock adjustments when both times
+retain their monotonic readings. The public
+[shutdown contract](https://pkg.go.dev/net/http#Server.Shutdown) separately waits
+for active requests within its context budget. A completed connection can thus
+be older than its scheduled drain while an admitted exchange finishes.
+
+Keep the installed test's original planned jitter range and forced-close
+refusal. Require complete, finite observed ages, a drain at or after the
+scheduled age for automatic retirement, and completion at or after drain start.
+Retain the existing real wait bound, new transport identities, in-flight task,
+cursor, rebalance and resource-observer assertions. Log actual elapsed values;
+do not relabel a planned value as an observation or loosen the rollout bounds.
+Older log records can still be parsed for ordering, but cannot satisfy the new
+installed timing evidence. Test early process stop, delayed automatic drain,
+and missing or inconsistent observed fields. No wire/lease/cursor or old-agent
+behavior changes, dependency, model or external data are added; the existing
+Go BSD-3-Clause license applies.
+
+The native command on the cached qualified transport input passed 38 HTTP
+transport roots in 7.160 seconds under the race detector. Its combined Go
+list/build/test wrapper exhausted its 180-second wall budget with no gateway
+package result or test panic. The gateway suite remains unqualified. Separate
+cached native binary compilation from its unchanged 90-second test limit and
+retain the first timeout and successful HTTP evidence. Installed 500-node
+lifecycle and capacity acceptance remain open.
