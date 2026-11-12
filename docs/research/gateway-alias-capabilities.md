@@ -511,3 +511,37 @@ and error behavior remain identical in the generated operation bindings.
 Do not mix this sequence with the separate already-published GW-120
 description implementation or relabel old spool/CA evidence as a new
 composition run. No new dependency, model or dataset is introduced.
+
+### Native Mac fixture admission
+
+The isolated read candidate at 219af27e3d9f73c78acc1b8ab8324e086a6a2f62
+compiled with native Go 1.27.3 on darwin/arm64. The single admitted
+permanent-file flock run rechecked every archived source file, disk and
+memory admission, the cached linux/arm64 PostgreSQL image, and an active
+sandbox denial of non-loopback outbound connections. The test-only
+overlay selected DEV 7705c5a3's exact distribution 0.12.0 draft; it did
+not change product code or enable the production composition.
+
+The four PostgreSQL roots did not run. PostgreSQL became ready and
+vector 0.8.7 was created, but Docker Desktop 4.94.0 / Engine 29.8.2
+returned an empty port-binding list for the internal network. The
+fixture stopped before launching the test binary. Therefore schema 60
+and its 120-table catalogue describe the source's expected migration,
+not a migrated database from this attempt. Native compilation is not
+producer/read protocol acceptance or a full repository gate.
+
+The harness incorrectly assumed that an internal Docker network could
+publish a host loopback port. Docker's [internal network reference](https://docs.docker.com/reference/cli/docker/network/create/#network-internal-mode---internal)
+describes direct host-to-container access; Docker Desktop places that
+host inside its Linux VM. The [upstream port-publication issue](https://github.com/moby/moby/issues/36174) reports the same failure mode. A replacement transport must first prove real PostgreSQL
+wire access and outbound isolation, then rerun all four roots without
+skips. Do not remove isolation to obtain a passing fixture.
+
+The original entry, source manifest, empty successful compilation log
+and failure record are retained in
+/root/lane-gw-acceptance/gw104-mac-native-failure.okfmTgXv.
+The entry removed its own container, internal network and credential
+files before the parent closed its shared lock descriptor. Post-run queries
+confirmed that the owned container and network were absent; no host
+port was assigned. No second queue or test retry was started. Earlier
+native Linux evidence retains its original source and platform scope.
