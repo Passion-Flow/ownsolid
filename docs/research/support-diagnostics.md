@@ -252,3 +252,41 @@ The create-exclusive/existing-open variant completed 80 attempts without an
 error. This selected the approach; the Go concurrent-consumer regression and
 native Linux entry-point acceptance still provide the product evidence.
 No additional dependency or licence is introduced.
+
+### Disconnected native operator-access qualification
+
+On Ubuntu 24.04 Linux amd64 with Go 1.27.3, source `93366c73` built the real
+installer and install-package test executable with two workers, CGO disabled
+and the module proxy and checksum lookup disabled. The source was clean before
+and after execution. Both `OWNSOLID_SUPPORT_INSTALLER` and
+`OWNSOLID_CLUSTER_SUPPORT_INSTALLER` selected that native installer.
+
+The test process ran as actual UID/GID 65534 in private mount, PID and network
+namespaces with no external uplink. IPv4 and IPv6 defaults and the configured
+resolver led to the existing egress recorder. All 20 selected roots and 65
+test invocations including subtests ran without skips. `TestSupportAccessCLI`
+passed its local and managed-cluster branches: a mode 0400 operator log refused
+before collection or HTTPS and published no archive, and restoring mode 0600
+allowed an explicit retry with a distinct attempt. The killed-CLI root retained
+only the original admission, with no terminal success or published archive.
+The existing scoped HTTPS root also used the native CLI and passed.
+
+The exact installer SHA-256 was
+`66811fe7047387fdfd3c15b892978ee62110018d68f92f2362f32a72851f3189`.
+The closed recorder stream contained only its five IPv4, IPv6 and DNS
+calibration probes, 662 bytes, SHA-256
+`ca0baf6851669607afa9f403e4f13c68a3c751803a6368159bf6a41896a276bb`.
+The parent retained both original host-lock descriptors through its child and
+private-fixture cleanup. Readback confirmed the parent and all three stage
+processes had exited and the original carriers remained without its locks.
+
+The earlier native attempt failed before tests because umask 077 narrowed a
+requested 0755 binary directory to 0700. The external fixture explicitly set
+only that public binary directory to 0755; its temporary data and evidence
+stayed private. That failed result is retained separately and is not counted
+as CLI qualification. No product permission policy was weakened.
+
+This run qualifies the source-933 native CLI and local operator records. It
+started no Control, PostgreSQL or installed cluster. It does not establish
+server audit reconciliation, live RKE2/Helm collection, a production release,
+or qualification of the later combined source. Those boundaries remain open.
