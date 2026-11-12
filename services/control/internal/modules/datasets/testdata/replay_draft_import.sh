@@ -51,6 +51,6 @@ docker --context "$docker_context" exec "$container" psql -h 127.0.0.1 -U postgr
     -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector WITH SCHEMA public'
 pid=$(docker --context "$docker_context" inspect --format '{{.State.Pid}}' "$container")
 nsenter -t "$pid" -n ip -br address
-pattern=${1:-'^(TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness|TestSourceImportParquet|TestActualParquetDraftAfterMetadataAndObjectRestore)$'}
+pattern=${1:-'^(TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness|TestSourceImportParquet|TestActualParquetDraftAfterMetadataAndObjectRestore|TestActualCSVDraftFileSnapshotAndRestore|TestActualDatasetFileSnapshotExactReferencesPrivateRestoreAndCorruption)$'}
 nsenter -t "$pid" -n go -C services/control test -tags dataset_processor_integration \
     -p 1 -count=1 -timeout 5m -v ./internal/modules/datasets/... -run "$pattern"
