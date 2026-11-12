@@ -742,3 +742,39 @@ Validate that dependency offline before adopting it. Preserve the simulator's
 legacy shared-connection mode; certificate-bearing agents already require one
 agent per connection, so a legacy multiplexed channel must not be silently replaced
 by one node's handoff. No product adoption or new simulator run is claimed here.
+
+
+## Shared Agent transport qualification
+
+The public Agent transport candidate was exercised from both real implementations
+in an external materialized snapshot of `56a75ee89422a4f0e3e42a7dc5e66c73fa3f79f8`.
+All nine real-TLS/gRPC prototype roots (15 with metadata subcases) passed under race
+and vet in 31.081 seconds. The simulator completed six authenticated handoffs across
+seven transports with no healthy heartbeat/claim errors, one acknowledgement,
+attempt one and cursor seven. Its legacy two-node shared connection remained one
+physical transport with two usable streams. The shared retirement worker tests
+cover physical end, explicit and concurrent close/join, deadline expiry, missing
+or foreign lifetime, late duplicate end events and concurrent record release.
+The actual Agent client, transport helper and Agent contract packages passed under
+race in 5.483, 1.529 and 2.436 seconds respectively.
+
+The complete simulator module also passed under race, with fleet, link, report and
+configuration packages in 114.087, 2.116, 1.485 and 1.528 seconds. GOPROXY and GOSUMDB
+were off and the pinned local toolchain was used throughout. The prototype and
+simulator log SHA-256 values are
+`f19d0c9c5278d961c7e932527b5f238ffa71a7c9068a865dc757ec65c4b720b5` and
+`22f11a9fb742f42110d0c21338dd9905d71f1a2959aa0b01d1cab8c8101681eb`.
+This is a small controlled flow and package regression run, not a fleet-scale or
+native installed result. Its bridges and synthetic backend remain outside product
+source. Preserve the production simulator's existing connection accounting.
+
+A separate simulator link-package compilation with GOWORK=off, GOPROXY=off,
+GOSUMDB=off and -mod=readonly passed against the same candidate module declaration.
+Its command deliberately selected no tests and is only dependency/build evidence;
+log SHA-256 `a5e745bb7a7d080ba849be742cedf3ab3133631dd133daa0cdb40f15e31297b5`.
+The earlier full module-graph inventory query with GOWORK=off failed because
+nonselected graph metadata was absent from the local offline cache. That query is
+not a successful inventory or a failure of the compiled transport; retain its
+log SHA-256 `81dcfe45e9636b445d171d21e8c224cc196af9042177c936cb51f77429296109`.
+No package version was changed or downloaded to bypass it. Product source still
+requires complete repository gates and the unchanged native installed drill.
