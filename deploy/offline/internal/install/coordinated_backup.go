@@ -34,6 +34,10 @@ const (
 // CA environment adds no writer; external fleet-history state is refused separately.
 const coordinatedComposeSHA256 = "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca"
 
+// The preceding shipped profile has identical writers and mounts, without the
+// optional SSL_CERT_FILE environment. Keep existing backups usable before Apply.
+const legacyCoordinatedComposeSHA256 = "7f7df1dbe10bea9be4beee11db34a35a667a4e66e00001c5689388396fbf4285"
+
 var (
 	errBackupPending = errors.New("INSTALL_BACKUP_RECOVERY_REQUIRED: run recover-backup with the original site configuration")
 	errBackupScope   = errors.New("INSTALL_BACKUP_PROFILE_UNSUPPORTED: coordinated backup requires the shipped local Compose profile without external artifact state")
@@ -169,11 +173,15 @@ func checkCoordinatedProfile(c Config) error {
 	}
 	l := c.Layout()
 	compose, err := bundle.ReadProtectedConfiguration(l.ComposeFile)
-	if err != nil || fmt.Sprintf("%x", sha256.Sum256(compose)) != coordinatedComposeSHA256 {
+	profile := fmt.Sprintf("%x", sha256.Sum256(compose))
+	legacy := profile == legacyCoordinatedComposeSHA256
+	if err != nil || profile != coordinatedComposeSHA256 && !legacy {
 		return errBackupScope
 	}
 	env, err := bundle.ReadProtectedConfiguration(l.ComposeEnv)
-	if err != nil || !bytes.Equal(env, []byte(c.renderComposeEnv())) {
+	expected := c.renderComposeEnv()
+	legacyEnv := strings.Replace(expected, "OWNSOLID_CONTROL_CA_FILE="+c.controlCAPath()+"\n", "", 1)
+	if err != nil || !bytes.Equal(env, []byte(expected)) && !(legacy && bytes.Equal(env, []byte(legacyEnv))) {
 		return errBackupScope
 	}
 	// The runtime user owns this file. Check the exact generated settings
