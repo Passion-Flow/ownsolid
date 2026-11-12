@@ -256,7 +256,7 @@ positive release, borrowing/reclaim and a suppressed real COMMIT acknowledgement
 The configured 10,000-workspace domain held exactly two advisory lock tags.
 This is not SCH-111 fleet admission latency evidence.
 
-Integration source 0dfb5596 on base e2fde0f5 retains that exact-source native
+Integration source bbc18ba8 on base 5a1f787c retains that exact-source native
 qualification. Its delta from the tested source was checked to contain only
 documentation; layout and roadmap checks were rerun. Earlier macOS and Linux
 runs retain their actual source identities and are not relabeled.
