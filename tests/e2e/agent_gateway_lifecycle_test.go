@@ -49,16 +49,12 @@ func parseGatewayConnections(output string) (gatewayConnectionState, error) {
 			Forced       *bool    `json:"forced"`
 		}
 		if json.Unmarshal([]byte(line), &entry) != nil {
-			for _, message := range []string{"agent_gateway_started", "agent_session_opened", "agent_session_closed", "http_connection_retired"} {
-				if strings.Contains(line, message) {
-					entry.Message = message
-					break
-				}
-			}
 			for _, field := range strings.Fields(line) {
 				key, value, _ := strings.Cut(field, "=")
 				value = strings.Trim(value, `"`)
 				switch key {
+				case "msg":
+					entry.Message = value
 				case "node_id":
 					entry.Node = value
 				case "connection_id":
@@ -94,7 +90,7 @@ func parseGatewayConnections(output string) (gatewayConnectionState, error) {
 		case "http_connection_retired":
 			if entry.ConnectionID == "" || entry.AgeSeconds == nil || entry.Forced == nil ||
 				math.IsNaN(*entry.AgeSeconds) || math.IsInf(*entry.AgeSeconds, 0) || *entry.AgeSeconds < 0 {
-				return state, fmt.Errorf("gateway retirement omitted its transport identity or outcome")
+				return state, fmt.Errorf("gateway retirement has an invalid transport identity or outcome")
 			}
 			state.retired[entry.ConnectionID] = gatewayRetirement{entry.Reason, *entry.AgeSeconds, *entry.Forced}
 		}
@@ -115,6 +111,7 @@ func TestGatewayConnectionLogOrdering(t *testing.T) {
 		{"legacy", "msg=agent_session_opened node_id=node-a\nmsg=agent_session_closed node_id=node-a", "", false, false},
 		{"text_retirement", "msg=agent_session_opened node_id=node-a connection_id=old\nmsg=http_connection_retired connection_id=old reason=connection_age age_seconds=58.5 forced=false", "old", true, true},
 		{"unrelated_message", opened + "\n" + `{"msg":"fixture_diagnostic","detail":"agent_gateway_started"}` + "\n" + retired, "old", true, true},
+		{"unrelated_text", opened + "\nmsg=fixture_diagnostic detail=agent_gateway_started\n" + retired, "old", true, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			state, err := parseGatewayConnections(tc.logs)
