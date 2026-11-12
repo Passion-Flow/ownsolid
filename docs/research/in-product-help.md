@@ -348,3 +348,31 @@ returns getAdminWorkspaceOperation. Match the complete operation ID at
 the end of the button's accessible name before checking its expanded
 state. Keep the referenced parameter assertions on the exact detail
 panel; a broader search result must not change which contract is checked.
+
+The corrected consumer passed all 13 Console and 17 Portal Help cases in
+local Chromium with one worker and no retries, at Web revision 5d595469.
+Its complete Web tree matches the frozen combination 1389de28. The ten
+attached screenshots were read: both entrances retain the referenced
+workspace parameter's name, required flag, localized Path and UUID type;
+both password details show No parameters without an empty table; the
+Admin apply operation explains all five qualified 409 conflicts in both
+languages. At 390 pixels the page remains within the viewport, with the
+parameter table's additional notes in its horizontal scroll area. These
+are built-reference checks with mocked authentication and zero requests
+outside each preview origin. Real installed login and bilingual
+acceptance remain separate.
+
+The S-108 archetype is a reference list with inline details: title and
+search, contract groups, then an operation expanded in its surroundings.
+Its primary action is to find an operation. No dialog or drawer applies.
+The state boundaries of that reference are:
+
+| State | Behavior |
+| --- | --- |
+| Loading | The opened operation keeps its summary and shows detail-shaped skeletons. |
+| First-time empty | A fresh installation already includes its versioned reference; no user-created resource is needed to fill it. |
+| Filtered empty | No operation matches names the query and offers Clear search. |
+| Partial | A detail chunk failure leaves the other operation summaries available. |
+| Error | A failed operation detail states that it did not load and offers a retry. |
+| Denied | The signed-in frame gates access and the build projects the entrance's audience. Reading documentation does not grant permission to execute an operation. |
+| Not ready | This is a reference without an API executor. A missing error declaration retains its explicit explanation rather than inventing codes. |
