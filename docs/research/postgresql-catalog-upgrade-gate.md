@@ -51,11 +51,11 @@ in objects written by 56 and retained by 57. The remaining difference at 56,
 `node_tasks_operation_check`, is replaced by 57. The comparison found no
 structural differences between these fixture paths.
 
-Separately, the clean main branch fails `TestEveryCellOwnedTableCarriesScope`
+The schema 57 baseline fails `TestEveryCellOwnedTableCarriesScope`
 because `audit_chain_head` introduced by 53 lacks the two cell-owned columns
 required by [ADR 0006](../decisions/0006-cell-and-site-scope.md). Fresh and restored
-databases both have this shape. Resolving that scope contract requires an
-Audit-owned forward migration and retained-checkpoint verification.
+databases both have this shape. The [Audit scope migration](audit-chain-head-cell-scope.md) qualifies the
+forward fix and verifies retained checkpoints.
 
 Admit the measured mixed version 57 fingerprint in addition to the two existing
 complete fingerprints. Keep the immutable migration files and the original
@@ -99,3 +99,110 @@ redistribution with their notices. The existing [Go standard library](https://go
 and [pgx](https://github.com/jackc/pgx/blob/v5.11.0/LICENSE) use BSD-3-Clause
 and MIT, respectively, and allow those same uses with their required notices.
 No models, datasets or new runtime downloads are required.
+
+## Gateway alias description successor
+
+The original [GW-120 SQL](gateway-model-description.md) matches the
+reviewed Gateway fixture. Its up checksum is
+`158f874037201b0309d2f4dc579dcf988153a8d0d19e438bf92b328b3ca97466`.
+Applying those bytes in a disposable schema after 58 created
+`model_alias_description_intents` with zero of the two non-null cell
+columns with defaults required by [ADR 0006](../decisions/0006-cell-and-site-scope.md).
+The existing cell-owned table check therefore rejects this successor.
+
+The Gateway-owned replacement in c9654657 adds both non-null columns
+with the local defaults and references the exact alias tenant, workspace,
+site and cell through a composite foreign key. Its up checksum is
+`399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab`.
+The down checksum is
+`dff9447544bdb8b3fdb78f82356fbab997518250ca3c88049b454ebd33e63a32`.
+The Gateway fixture measured three successor catalogs after applying
+the Audit scope overlay. Keep these as comparison values. Assign the
+next contiguous migration only after the Audit migration lands on main.
+Recompute the signed lineage checksum, the 119-table expectation and
+the catalogs on the committed predecessor. Test fresh install, native
+upgrade and the logical restore histories starting at 55 through the
+then-current schema, including the exact down SQL and catalog replay.
+
+## Dataset and metering successors
+
+The DAT-101 owner candidate at `fa82645c` adds the six-column scope
+key on `dataset_drafts` and requires the exact draft's site and cell
+on `dataset_draft_import_candidates`. The up SHA-256 is
+`d7e8eb61bd8afa4c1a3a1363d092685d13c55ca35d6965257457247336066868`.
+The down SHA-256 is
+`8ed40d3afaafa83fb4d119e90a01323fa09967f839831e1fa2159b3f8a6c06fb`.
+This is a retained owner revision. The coordinated release restore
+also needs both dataset references in `snapshotReferences` and
+`referenceFiles`, with the REL-103/NET-101 checkpoint binding.
+The isolated owner replay restored the normalized file and supplied
+the original separately. See the [dataset restore boundary](dataset-import.md).
+
+The metering handoff at `73a3382f` and `273929ee` adds both scope
+defaults to `usage_ledger` and includes site and cell in its reporting
+index. It preserves the unique producer and event key across scopes.
+The up SHA-256 is
+`230b2182ba3a953b6231b76b001f28972362e0a30e8869cf4209413fffdd21b3`.
+The down SHA-256 is
+`d8e296ead25bd9ba8ed890bde9b178890a102dadf4c9888a88a3c64e5c9d9eb3`.
+The down SQL requires its transaction and refuses an accrued ledger.
+The owner qualified the candidate from a logical schema-55 restore.
+The production Gateway Report call still needs the accepted schema
+and its verified projection hook. See [metering admission](usage-ledger.md).
+
+## Shared successor catalog and runtime role inputs
+
+The three unnumbered candidates each add one business table and no
+sequence. GW-120 and DAT-101 each add a named composite key to an
+existing parent. Register each new table in the PostgreSQL-only
+`postgreSQLTables` grant list when its migration is accepted. That
+list feeds fresh access preparation, existing-role upgrade and the
+grant inspector. The embedded SQL is checked against this list by
+`TestCatalogMatchesImmutableMigrations`. Keep the shared MySQL list
+at its existing scope. The catalog fingerprint covers table shape,
+constraints, indexes and functions. It omits ACLs, so verify those
+through the separate runtime admission. See the
+[grant catalog](../../services/control/internal/operations/databaseaccess/postgres_catalog.go)
+and [PostgreSQL GRANT](https://www.postgresql.org/docs/18/sql-grant.html).
+
+Use the same restricted runtime role throughout an upgrade. Each new
+table follows the PostgreSQL SELECT, INSERT, UPDATE and DELETE grant
+contract. GW-120's immutability trigger and the metering append-only
+trigger enforce mutation refusal within those grants. Verify them with
+the runtime role as well as catalog readback. Keep `schema_migrations`
+SELECT-only and `audit_chain_head` inaccessible. Verify that missing
+grants prevent readiness, the grant-only resume retains the same
+principal and ledger, and a replay leaves the accepted state intact.
+
+The production logical restore uses `--no-owner` and `--no-privileges`.
+Run the target runtime-access owner after restore and check its
+effective privileges separately from the structure. Reuse the SCI
+pinned PostgreSQL 18.6 and pgvector 0.8.7 fixture and its retained
+55 through 58 archives as predecessors. After each actual numbered
+migration, extend the same catalog matrix with the previous native
+tail and the current logical restore, including the schema-55
+reparse history. Compare the existing accepted data and ledger,
+exercise the applicable down SQL on disposable copies and verify
+the new table count, release checksum and exact fresh and restored
+catalogs. Keep the module-specific Gateway, dataset and metering
+acceptance alongside the shared matrix.
+
+## Remaining migration queue
+
+After the Audit scope migration, integrate GW-120, DAT-101 and the
+metering ledger in that order, assigning each number from the actual
+accepted tail. Each activation carries its release checksum, table
+inventory, runtime grants, fresh and restored catalog fingerprints,
+and native upgrade and logical restore tests. Repeat the module's
+normal scoped HTTP flow on the numbered schema.
+
+Additional owner candidates remain unnumbered. The
+[Admin TOTP handoff](local-multifactor-authentication.md) adds three
+relations and requires the typed startup policy and protected keyring.
+The [GW-105 key-purpose handoff](gateway-key-purpose.md) alters
+`api_keys` and requires admission and rotation replay with existing
+credentials. The [artifact hold handoff](object-backup-fence.md)
+requires durable store bindings, live lease fencing, write permits
+and coordinated restore qualification. Their module owners retain
+their source and normal-flow verification. Assign numbers only when
+each candidate is admitted against the current predecessor.
