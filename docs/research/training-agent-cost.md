@@ -158,10 +158,10 @@ gaps and step regression, changed bytes in a same-batch duplicate, concurrent
 whole batches, final cursor-write failure and exact retry, and suppressed
 COMMIT acknowledgement followed by explicit replay. The original cost
 fixture additionally counts one cursor read/write, no separate attempt-phase
-write, and one audit per new event. These source changes have only passed
-formatting and diff review so far: native execution, compilation and a new
-50/3,000 HTTPS measurement remain unrun until an admitted window. The table
-above remains the last measured result; no protocol budget is changed.
+write, and one audit per new event. The prepared-source verification below records the compilation, functional
+PostgreSQL cases and repository gates. Native Linux execution and a new
+50/3,000 HTTPS measurement still require an admitted window. The table above
+remains the last measured result; no protocol budget is changed.
 
 Required checks include mixed duplicate/new batches, changed replay bytes,
 sequence gaps, step regression, resumed final-checkpoint phases, concurrent
@@ -310,3 +310,14 @@ repository_integration tag passed in 7.185 seconds; it executed zero test
 bodies. The resulting binary SHA-256 is
 9a64311cd8503fd1a58944d389956c0fd746cf69a9ecdbb209465ce69ead1e8a.
 These checks do not replace native execution or a complete make test run.
+
+The prepared evidence archive is also retained on the Linux server at
+/root/lane-trn-tools/event-prepared-evidence.tgz, SHA-256
+da24e758b2cfa7b47be19a7cbd9f6bb2a3c4f0539539641bec9f21cf4a5dd717.
+Its manifest binds 22 original scripts, logs, result records and source
+bundles, all independently read back and hash-checked on the server.
+The f49e23de0398235824a8cd177c4c1249ee3297c9 bundle rebases the candidate
+on the shared entrance-listener changes. Its execution has not started:
+Linux guard acquisition and the independent workstation guard were busy.
+The current documentation-only rebase preserves those Go bytes. The archive
+does not contain a new native, current-shared-source or fleet-cost result.
