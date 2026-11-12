@@ -17,12 +17,13 @@ import {
   cn,
   type StatusTone,
 } from '@ownsolid/ui';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
 import { ArrowLeft, History, SearchX } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { auditEventSearch } from './audit-link.ts';
 import { ActionName } from './audit-names.tsx';
+import { AuditReadFailure, useAuditRead } from './audit-read.tsx';
 
 const outcomeTones: Record<AuditOutcome, StatusTone> = {
   success: 'good',
@@ -173,32 +174,25 @@ export function ResourceActivity({
 }) {
   const { t, format } = useI18n();
   const limit = useQuery(runtimeConfigQuery()).data?.ui.pageSize ?? 20;
-  const events = useInfiniteQuery({
+  const events = useAuditRead({
     queryKey: ['resource-activity', target, actor, since, limit],
-    queryFn: ({ pageParam, signal }) =>
+    read: (cursor, signal) =>
       listAuditEvents(
         // The minute covers the moment it began, whose event may carry a slightly earlier time.
         {
           limit,
-          cursor: pageParam ?? undefined,
+          cursor: cursor ?? undefined,
           targetId: target,
           actorUserId: actor,
           from: new Date(Date.parse(since) - 60_000).toISOString(),
         },
         { signal },
       ),
-    initialPageParam: null as string | null,
-    getNextPageParam: (last) => last.next_cursor,
   });
   if (events.isPending) return <Skeleton className="h-11 w-full" />;
-  if (events.isError && !events.data) {
+  if (!events.data) {
     return (
-      <ResourceFailure
-        error={events.error}
-        onRetry={() => {
-          void events.refetch();
-        }}
-      />
+      <AuditReadFailure error={events.error} busy={events.isFetching} onRetry={events.readAgain} />
     );
   }
   const items = events.data.pages.flatMap((page) => page.items);
@@ -213,6 +207,14 @@ export function ResourceActivity({
   }
   return (
     <>
+      {events.error ? (
+        <AuditReadFailure
+          error={events.error}
+          partial
+          busy={events.isFetching}
+          onRetry={events.readAgain}
+        />
+      ) : null}
       <Card className="overflow-hidden">
         <Table>
           <thead>
@@ -251,12 +253,12 @@ export function ResourceActivity({
           </tbody>
         </Table>
       </Card>
-      {events.hasNextPage ? (
+      {events.hasNextPage && !events.error ? (
         <Button
           className="mt-4"
-          disabled={events.isFetchingNextPage}
+          disabled={events.isFetching}
           onClick={() => {
-            void events.fetchNextPage();
+            void events.fetchNextPage({ cancelRefetch: false });
           }}
         >
           {t('audit.loadMore')}
