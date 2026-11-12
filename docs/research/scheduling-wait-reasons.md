@@ -128,3 +128,98 @@ authorized workload waiting for reservation and pods, refusal of an
 inaccessible namespace and replacement UID, and clean cancellation
 through the existing owner path. The current lane can qualify TLS and
 condition projection independently while these inputs are pending.
+
+## Authorized workspace quota status
+
+[Kueue ClusterQueue status](https://kueue.sigs.k8s.io/docs/concepts/cluster_queue/)
+distinguishes reserved quota from admitted and executing workloads. Expose the
+ownsolid workspace's configured guarantee, hard ceiling and aggregate held
+reservations as quota accounting. Hard ceiling minus held reservations is
+`unreserved_quota`; it is not physical availability, lendable capacity or a
+promise that a particular job can start. Borrowing, queue turn, topology and
+execution remain separate decisions.
+
+Use the selected repository and the existing Workspace owner's
+`ReadScopeWithin` in the same READ COMMITTED transaction as the quota read.
+The owner rechecks the live session and membership. Ignore cached actor
+workspace and role fields. Ordinary current workspace members may read this
+resource allocation; they gain no policy mutation or metering authority.
+Acquire the shared policy fence and existing workspace reservation lock before
+reading policy and held usage. PostgreSQL's
+[row and transaction advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html)
+keep replacement, reserve and release ordered through the confirmed read
+transaction outcome. A separate authority transaction followed by a pool read
+would allow revoked authority or a mixed policy/usage result.
+
+An absent policy returns `unconfigured` with fixed operator configuration
+guidance and no quantities. An authorized workspace without an allocation
+returns `unallocated` with workspace allocation guidance; inaccessible and
+missing workspaces remain indistinguishable and reveal neither state nor
+revision. A configured allocation returns only its own resource rows, sorted
+by resource. Encode integral resource quantities as decimal strings so byte
+counts and aggregate reservations retain int64 precision through browser JSON.
+Fail closed on malformed, overflowing, foreign-cell or over-ceiling active
+usage. Validate each contributing demand as an integral, nonnegative JSON number
+before trusting SUM; a positive row must not conceal a negative, fractional or
+string-valued row. Return no payload on any transaction failure, including an uncertain
+commit. Never include reservation identities, other workspaces, ancestor
+amounts, raw database/controller messages or stored job wait text.
+
+Verify real authenticated PostgreSQL reads for Admin and Portal, current
+membership and session revocation, forged cached scope, foreign installation
+scope, absent policy and allocation, committed reserve/release and a rolled
+back reserve. Exercise a blocked reservation lock to show that a reader sees
+the committed usage after it waits, and verify data corruption produces no
+payload. Check uncertain transaction outcomes independently of payload
+projection. HTTP composition, the public OpenAPI contract, translations and
+the UI remain integrations owned by IAM and Web; an uninstalled module handler
+is not an end-to-end public entrance or completion of SCH-108.
+
+The Go, pgx and PostgreSQL licences above cover this addition. The existing
+google/uuid dependency uses the [BSD-3-Clause licence](https://github.com/google/uuid/blob/master/LICENSE),
+permitting commercial use, redistribution with notices and offline use.
+No new dependency, controller asset, model or dataset is introduced.
+
+## Public quota-status failure contract
+
+The current [identity recheck](../../services/control/internal/modules/identity/session_repository.go)
+reports expired, revoked, disabled-user, removed-admin and invalid-source
+sessions through `AUTH_SESSION_EXPIRED`. The
+[Workspace authority](../../services/control/internal/modules/workspaces/scope.go)
+hides absent and inaccessible scope behind `RESOURCE_NOT_FOUND`. Preserve
+these real owner codes and the established `ACCESS_DENIED` boundary.
+Do not invent additional account/source/reauthentication codes or publish
+unregistered error names. Unknown owner or policy failures become
+`STORAGE_UNAVAILABLE` at the HTTP boundary, with no payload.
+
+The owned HTTP component produces `VALIDATION_FAILED` (400),
+`AUTH_SESSION_EXPIRED` (401), `ACCESS_DENIED` (403),
+`RESOURCE_NOT_FOUND` (404), `STORAGE_COMMIT_OUTCOME_UNKNOWN` (409),
+and these retryable 503 codes: `STORAGE_UNAVAILABLE`,
+`STORAGE_CANCELLED`, `STORAGE_TIMEOUT`, `STORAGE_LOCK_TIMEOUT`,
+`STORAGE_DEADLOCK` and `STORAGE_COMMIT_ROLLED_BACK`. This is the complete
+owned failure set; IAM retains entrance authentication, origin, capacity
+and readiness failures. Configuration guidance remains a successful
+status with its fixed reason, not an HTTP error.
+
+Test the real owner codes, storage and uncertain-outcome projection, and
+refuse an unregistered equal-text identity label. This contract uses only
+the existing source interfaces and licensed stack described above.
+
+## Exact revision metadata
+
+[RFC 8259 section 6](https://www.rfc-editor.org/rfc/rfc8259.html#section-6)
+limits exact interoperable JSON integer numbers to the binary64 safe range.
+The stored quota revision can reach PostgreSQL bigint's positive maximum.
+Represent `policy_revision` as a decimal string as well as resource quantities;
+do not silently round it or reject a valid stored revision for the browser.
+Kubernetes also uses strings for
+[resource-version metadata](https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions).
+The internal admission counter and its concurrency rules remain int64.
+
+The unconfigured status reports `"0"`; configured and unallocated status
+report the actual positive revision string. Extend the real authenticated
+PostgreSQL read to a revision above binary64 precision and to MaxInt64, then
+restore only that test fixture's original revision. Check the JSON field's
+string representation independently of resource totals. This requires no
+new dependency, model or dataset and retains the licences already recorded.

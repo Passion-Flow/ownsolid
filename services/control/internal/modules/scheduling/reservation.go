@@ -77,6 +77,14 @@ func requireReservationTransaction(ctx context.Context, q transaction.Executor) 
 // lockReservationScope orders locks policy first, then workspace. Advisory hash
 // collisions serialize unrelated scopes and cannot grant extra capacity.
 func lockReservationScope(ctx context.Context, q transaction.Executor, a Attempt) (int64, error) {
+	revision, err := lockReservationPolicy(ctx, q)
+	if err != nil {
+		return 0, err
+	}
+	return revision, lockReservationWorkspace(ctx, q, a.TenantID, a.WorkspaceID)
+}
+
+func lockReservationPolicy(ctx context.Context, q transaction.Executor) (int64, error) {
 	if err := requireReservationTransaction(ctx, q); err != nil {
 		return 0, err
 	}
@@ -88,10 +96,14 @@ func lockReservationScope(ctx context.Context, q transaction.Executor, a Attempt
 		}
 		return 0, err
 	}
+	return revision, nil
+}
+
+func lockReservationWorkspace(ctx context.Context, q transaction.Executor, tenant, workspace string) error {
 	const workspaceLockNamespace = 713090003
 	_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
-		"SELECT pg_advisory_xact_lock($1,hashtext($2))", workspaceLockNamespace, a.TenantID+"/"+a.WorkspaceID))
-	return revision, err
+		"SELECT pg_advisory_xact_lock($1,hashtext($2))", workspaceLockNamespace, tenant+"/"+workspace))
+	return err
 }
 
 func reservationPayload(a Attempt, intent JobIntent) ([]byte, Resources, error) {
@@ -260,7 +272,9 @@ func readWorkspaceUsageWithin(ctx context.Context, q transaction.Executor, tenan
 func readUsageByWorkspaceWithin(ctx context.Context, q transaction.Executor, tenant string, workspaces []string) (map[string]Resources, error) {
 	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
 		`SELECT s.workspace_id::text,r.key,sum(r.value::numeric)::text,
- bool_and((s.site_id=local_site_id() AND s.cell_id=local_cell_id()) IS TRUE)
+ bool_and((s.site_id=local_site_id() AND s.cell_id=local_cell_id()
+  AND jsonb_typeof(s.demand -> r.key)='number'
+  AND r.value::numeric >= 0 AND r.value::numeric=trunc(r.value::numeric)) IS TRUE)
  FROM scheduling_reservations s CROSS JOIN LATERAL jsonb_each_text(s.demand) r
  WHERE s.tenant_id=$1 AND s.workspace_id=ANY($2::uuid[]) AND s.released_at IS NULL
  GROUP BY s.workspace_id,r.key`, tenant, workspaces))
@@ -272,11 +286,11 @@ func readUsageByWorkspaceWithin(ctx context.Context, q transaction.Executor, ten
 	for rows.Next() {
 		var workspace, raw string
 		var resource Resource
-		var local bool
-		if err := rows.Scan(&workspace, &resource, &raw, &local); err != nil {
+		var valid bool
+		if err := rows.Scan(&workspace, &resource, &raw, &valid); err != nil {
 			return nil, err
 		}
-		if !local {
+		if !valid {
 			return nil, ErrQuotaPolicyUnavailable
 		}
 		quantity, err := parseReservationUsage(resource, raw)
