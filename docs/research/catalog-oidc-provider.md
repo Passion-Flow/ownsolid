@@ -142,7 +142,8 @@ JWT signing alone omits redirect, grant, request, consent and replay rules.
 Running another complete identity server as a mandatory catalog dependency
 would introduce another user/session authority and deployment lifecycle; the
 first path should instead integrate a protocol library with ownsolid's owners.
-The candidate still needs an external prototype before product implementation.
+The candidate still needs a complete external protocol prototype before product
+implementation.
 
 ### Complete source-inspection graph
 
@@ -150,8 +151,9 @@ Resolving the actual `pkg/op` import closure outside the product selected the
 following 40 modules, including graph-only/test dependencies. All 52 license,
 notice and patent files were retained with module sums and SHA-256 hashes in
 `iam106-20261113.f1ldyrpx`; every primary license link matches the inspected
-module bytes. Only source/import metadata was loaded, with Go 1.27.3; no
-compilation or server was started. This is the isolated candidate graph, not
+module bytes. The inventory stage loaded only source/import metadata with Go
+1.27.3; compilation belongs to the later strict-boundary experiment below.
+This is the isolated candidate graph, not
 the product's final minimal-version selection, which must be checked again
 before admission.
 
@@ -254,6 +256,51 @@ Reuse the exact 40-module/52-notice graph above, with no new model, dataset,
 dependency or product import. Reject SDK-default compatibility merely for
 convenience, handwritten encryption and admitting unsupported protocol paths
 through an otherwise permissive SDK router.
+
+### Strict-boundary qualification
+
+The external adapter passed nine native test roots with race detection and
+the same nine roots in a Linux arm64 container with `--network none` and no
+host ports. Both passed 70 named tests, including parent groups, or 66
+independent leaves. This uses the unchanged inspected module files and actual
+pinned SDK constructor, crypto and token-request parser functions. It does not
+serve an OP endpoint or supply a serving storage implementation.
+
+Positive controls verified that the adapter's GCM output decrypts with the SDK
+and the SDK's GCM output decrypts with the adapter. A default SDK provider
+accepted legacy CFB, including altered ciphertext without an authentication
+failure. The strict adapter and explicit `WithCrypto` constructor refused both.
+Retiring GCM keys remained readable until removed; unknown/retired key IDs,
+altered compact segments, duplicate/escaped-duplicate protected headers,
+algorithm changes, compression, critical/remote-key options, padded/full-JSON
+input, invalid plaintext shape and configured limits returned no plaintext.
+Thirty-two concurrent encrypt/decrypt operations passed under the race detector.
+Static issuer construction ignored hostile Host/Forwarded values.
+
+The strict token parser and real SDK parser agreed on form-encoded Basic
+credentials containing spaces, colon, plus, slash and percent characters.
+Malformed/duplicate/query/body credentials, unknown fields, duplicate encoded
+form names, unsupported grants, invalid verifier/callback syntax and bounded
+body failures returned no parsed credentials. The staged owner callback was
+not reached before successful client authentication; invalid or canceled
+requests did not even invoke that authentication callback. UserInfo accepted
+only a header bearer with the strict compact profile and refused query, form,
+JWT-shaped, legacy, duplicate and missing bearer variants.
+
+Evidence is `iam106-boundary-20261113.sotincc4`, run
+`qualification-wb_q0iv_`, source-hash-manifest SHA-256
+`5d5934271b217a633dc14b3ea715d17776fac6b3c22eefc8460f16963e551012`.
+Exact source/module files, inherited legal hashes, native/disconnected logs,
+container inspection and cleanup were retained outside Git. The owned container
+was removed. Product source, dependencies, keys, schema, routes and UI did not
+change; publication runs layout/roadmap/whitespace checks only.
+
+This qualifies local parser/crypto composition, not registered-client database
+authentication, S256 code redemption, consent, authorization, signing, token
+revocation, transaction response release, actual RP/OP HTTPS or installed
+catalog integration. HTTP read deadlines and socket cancellation still need
+real-server qualification. IAM-106 remains open, and its next experiment must
+qualify the complete durable code/JWT/UserInfo path described below.
 
 The external prototype must use separate real RP and OP HTTPS servers, verified
 private CA trust and actual PostgreSQL persistence. Prove discovery through code
