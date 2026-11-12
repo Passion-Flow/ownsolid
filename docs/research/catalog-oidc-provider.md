@@ -135,7 +135,7 @@ minimal-version selection, which must be checked again before admission.
 | Module | Version | License material |
 | --- | --- | --- |
 | `github.com/bmatcuk/doublestar/v4` | v4.10.4 | [MIT](https://github.com/bmatcuk/doublestar/blob/v4.10.4/LICENSE) |
-| `github.com/cespare/xxhash/v2` | v2.3.0 | [MIT](https://github.com/cespare/xxhash/blob/v2.3.0/LICENSE) |
+| `github.com/cespare/xxhash/v2` | v2.3.0 | [MIT](https://github.com/cespare/xxhash/blob/v2.3.0/LICENSE.txt) |
 | `github.com/go-chi/chi/v5` | v5.5.0 | [MIT](https://github.com/go-chi/chi/blob/v5.5.0/LICENSE) |
 | `github.com/go-jose/go-jose/v4` | v4.1.9 | [Apache-2.0, BSD-3-Clause](https://github.com/go-jose/go-jose/blob/v4.1.9/LICENSE) |
 | `github.com/go-logr/logr` | v1.4.4 | [Apache-2.0](https://github.com/go-logr/logr/blob/v1.4.4/LICENSE) |
