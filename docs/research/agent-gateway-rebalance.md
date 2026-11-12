@@ -357,3 +357,31 @@ package result or test panic. The gateway suite remains unqualified. Separate
 cached native binary compilation from its unchanged 90-second test limit and
 retain the first timeout and successful HTTP evidence. Installed 500-node
 lifecycle and capacity acceptance remain open.
+
+The measured-timing source eea738bfc11d74f8505eee41c3a3ce0d9fa5cf7b
+passed the complete HTTP transport and gateway race suites on Darwin arm64:
+39 and 17 roots, in 7.563 and 5.277 seconds. The three pure lifecycle-log
+and observer roots passed under race in 1.453 seconds, both vet profiles
+passed, and the complete e2e package compiled for Linux amd64. The transport
+and e2e race log SHA-256 values are
+a0e065586d9c9be9877de5da8738ca53c8917814edacb2ae1d424746755be18e
+and ea82e3ebb9ec803fd36bf30181e08e7eff5c257e77a7c0a95abf859942ddea87.
+
+The same full source snapshot then passed native Linux amd64 race tests
+in a network namespace with only loopback: all 39 transport and 17 gateway
+roots, without skips or failures. All 4,995 snapshot paths and 144 changed
+paths were verified against the retained base and current Git bytes/modes.
+The original two resource locks, two-CPU limit, free-memory and I/O gates
+were retained. Compilation took 10.698 and 8.742 seconds respectively;
+test execution kept its 90-second limit. No database or container was
+started. The native log SHA-256 values are
+b9be9875c1fcf285c4932d58b5e041d06d30b3cd82e22e634f1d4f3d047de729
+and d434dbbdfb895f9894d448f4b5cd87ae9e4b83cb3a42d79a13981df277fdb742.
+
+The early-stop native sample reports a scheduled age of 58.815477551 seconds,
+an actual drain start at 0.010777572 seconds and actual completion at
+0.012410197 seconds. This confirms the repaired observation semantics.
+The later rebase preserves all transport, gateway, Agent protocol/client,
+simulator and e2e source paths byte for byte. Full integrated repository
+and installed 500-agent lifecycle qualification remain separate. No new
+fleet-capacity result or completed ARC-107 claim follows from these unit runs.
