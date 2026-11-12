@@ -213,3 +213,106 @@ implementation and negative/borrowed-executor tests, followed by affected
 training revocation/stream/rollback/replay tests and the original real
 50/3,000 HTTPS cost profile against unchanged declarations. Target current
 node primitives first if the owner can supply an equivalent smaller API.
+
+
+## Prepared event-cursor candidate and functional verification
+
+The private Linux candidate at 610d5a35434af4221bda68b1c63fe69bac5ccbfb
+coalesces the event cursor within one authorized transaction callback.
+It retains separate event rows and audits, intermediate job-state responses,
+current human/node/task/attempt/GPU checks and explicit replay after an
+uncertain commit. Duplicate-only replay leaves the progress timestamp intact.
+The source is not merged. The tables above remain the last fleet measurements.
+
+A Darwin arm64 copy at fff5a75af502c8ed9eb9ed595df641d6b6878b8e has
+identical Go/API/Python/SQL inputs to that Linux candidate; their only tree
+difference is the directory-login research. The copy first passed compilation
+with repository_integration enabled and zero test bodies executed. It then
+passed all eight targeted event roots against real PostgreSQL 18.6 on Linux
+arm64 in Docker Desktop: 13 passed test actions, no skips, no failures,
+14.937 seconds. The three-member lost-COMMIT-acknowledgement case observed
+one progress UPDATE, committed all three events, exposed no success on the
+uncertain response, and resolved the same events/audits through explicit replay.
+The other cases cover mixed/new replay, unchanged replay timestamps, concurrent
+whole batches, late sequence/step/byte conflicts, final-write and audit rollback,
+TLS/CSRF and current-authority cancellation.
+
+The database image is the cached Linux arm64 image
+sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47.
+The run used Go on Darwin, CPython 3.12.14 for real dataset publication,
+loopback-only host publishing and offline dependency resolution. It did not
+isolate host/container egress, measure a fleet exchange or qualify native
+Linux amd64. The original 50/3,000 HTTPS profile still needs its original
+Linux environment, two permanent locks and unchanged admission thresholds.
+No declaration, authority check or budget was relaxed.
+
+Records remain at /private/tmp/ownsolid-trn-qualification.knvee3h8:
+
+| Record | SHA-256 |
+| --- | --- |
+| cost-tag-compile.log | 45165e5fba20e36825b48f835a63191aeb0b89259fa6b22fcdb82eb8845ae95b |
+| cost-protocol-go.log | 2404e9ea16b2d5baea2350a8b082d588c6cbaa59dd64989a2ffd82ce8654710a |
+
+The driver result pins exact roots, platforms, image and cleanup outcomes.
+The auxiliary PostgreSQL file from the eight-root run contains stdout only;
+stderr was returned in the tool transcript. Future fixture capture merges
+both streams. These records establish functional correctness for those
+assertions, without a new total SQL count or fleet-cost qualification.
+
+The additional Linux candidate c90744abe25129181d21e8287d9403677090f299
+adds a final-horizon recovery case: accept sealed synthetic checkpoint bytes,
+record an explicitly synthetic positive stop, recover the same checkpoint,
+refuse an ordinary training phase at the completed horizon atomically, then
+accept and replay finalizing-checkpoint metadata without publishing another
+checkpoint or artifact. This additional root passed separately against the
+same PostgreSQL/platform profile in 4.619 seconds with no skips or failures.
+Its Go log SHA-256 is
+bc3121410cab45f97be50217aea8e20465af95bd1c384007a4be1dc58035f129;
+the complete PostgreSQL stdout/stderr log SHA-256 is
+ff2f1f610b9dcb7d211a389ebc7ac28276f4386e9b6941b9af4ee289fa147363.
+The candidate changes only that test relative to the eight-root execution's
+Go inputs. Across the two fixtures, all nine roots and 14 test actions pass.
+The physical-stop report and optimizer/tensor payloads are declared synthetic;
+this is control-plane recovery/event evidence, separate from real worker resume.
+
+Both fixture containers and RAM devices were removed. The first run's
+anonymous PostgreSQL volume was additionally identified from its unique
+creation window and read-only match to the owned test database before exact
+removal. No unrelated volume was removed. Subsequent fixture cleanup uses
+container removal with anonymous-volume cleanup enabled.
+
+The Linux server's later resource snapshots and transient SSH timeouts do
+not constitute test outcomes. Leave the cost fix open until the targeted
+protocol and original fleet profile pass on their stated sources. The typed
+node-owner fence above remains an owner prerequisite for the other repeated
+authorization paths; no nodes SQL or cross-transaction authorization cache
+is introduced by this candidate.
+
+The exact c90744abe25129181d21e8287d9403677090f299 candidate also passed
+complete make check in 32.182 seconds and make build in 22.462 seconds on
+Darwin arm64 with frozen offline dependencies. The respective log SHA-256
+values are af77a105f825e93878d79269422b088dd0c910745f539e7e3cdd4e349d64ddf1
+and 293f76744d6498e0464228d3bf94b6beb3a3e1eb5994dec8da58a51c4b537da3.
+A separate CGO-disabled Linux amd64 test-binary cross-compilation with the
+repository_integration tag passed in 7.185 seconds; it executed zero test
+bodies. The resulting binary SHA-256 is
+9a64311cd8503fd1a58944d389956c0fd746cf69a9ecdbb209465ce69ead1e8a.
+These checks do not replace native execution or a complete make test run.
+
+The same prepared evidence is retained on the Linux server at
+/root/lane-trn-tools/event-prepared-evidence.tgz, SHA-256
+da24e758b2cfa7b47be19a7cbd9f6bb2a3c4f0539539641bec9f21cf4a5dd717.
+The server independently verified all 22 manifest entries: original scripts,
+logs, result records and source bundles. The archive also preserves candidate
+f49e23de0398235824a8cd177c4c1249ee3297c9 after the shared entrance-listener
+changes. That rebased source has not been executed: the Linux and workstation
+heavy guards refused the attempts before fixture startup. The subsequent
+documentation-only Linux candidate is
+c527fb68111d6f2adae72dc6b5d1eb9051e89e06; its training Go inputs are identical.
+The existing locks, resource thresholds and source checks remain enforced.
+To request its original native event suite, run the private prepared driver
+with `python3 -B /root/lane-trn-tools/run-native-event-current.py events` on
+the Linux server. A busy guard exits before any test; the result record must
+show all nine expected roots, no skips and no failures before native
+qualification. The separate cost mode retains the existing declared budgets
+and reports their known failures rather than treating them as accepted.

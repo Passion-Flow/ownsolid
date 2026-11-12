@@ -545,3 +545,115 @@ need their own persisted authority and exact-attempt checks rather than inheriti
 training's acceptance. Keep existing control workers, source artifact ownership,
 scope fences and read-only/observation role cases unchanged. These are acceptance
 requirements; no delegated-profile role run is claimed yet.
+
+
+## Delegated claim artifact-store precondition
+
+Before measuring grants, isolate a current constructor precondition with the
+normal control-side principal. The current NewAgentGateway graph constructs a
+dataset Service without a Store, and runAgentGateway does not open it afterward.
+Training ClaimTraining calls VerifyTrainingInputSnapshot between its two
+transactions; that method explicitly refuses a nil Store. This is a static gap,
+not yet a recorded runtime reproduction. Broader SQL privileges cannot supply a
+missing filesystem owner. Do not patch the identity/dataset owners from this lane
+or insert a synthetic successful file verifier into the role prototype.
+
+The next external diagnostic must prepare a real synthetic JSONL dataset through
+the existing CPython processor, dispatch a real control-side training attempt,
+then call the unchanged NewAgentGateway/Node claim graph against that same actual
+database. Observe the exact error and complete task/attempt/physical-lease state
+before and after. Independently require control's normal file-owning path to claim
+and acknowledge that same attempt successfully, retaining the exact task sequence
+and physical ownership. A diagnostic that confirms an undesired failure is not
+acceptance of delegated gateway support. Keep this composition question separate
+from the restricted role's still-open permission closure.
+
+The available Linux CPython 3.12.3 satisfies the data processor's >=3.12,<3.13
+contract; the JSONL path has no third-party Python dependencies and uses generated
+synthetic records. Python's [PSF-2.0 terms](https://docs.python.org/3.12/license.html)
+permit commercial/offline use and redistribution with notices. No model weights
+or external dataset are needed. To keep real processing available while denying
+network egress, run the test in the owned PostgreSQL container's network namespace
+while retaining the host filesystem and interpreter. The upstream
+[nsenter contract](https://man7.org/linux/man-pages/man1/nsenter.1.html) separates
+network namespace entry from mount namespace entry. Validate the owned container
+identity and network=none before entry; never enter a foreign namespace. util-linux
+[nsenter 2.39.3 source](https://github.com/util-linux/util-linux/blob/v2.39.3/sys-utils/nsenter.c)
+is GPL-2.0-only; it is an existing external test-host tool, not linked into or
+redistributed with the product by this diagnostic. Retain all prior dependency
+licence obligations. Use the same pinned PostgreSQL image, generated ECDSA trust,
+verify-full, required SCRAM binding, bounded admission and unconditional cleanup.
+
+
+The first artifact-owner diagnostic did not reach the claim: the dataset processor
+correctly rejected the retained Git-archive carrier's group-writable process.py
+(0664) and immediate directory (0775). The CPython executable was canonical,
+root-owned and 0755. Keep the trustedProgram guard and failed log; this is not a
+runtime reproduction of the missing-store hypothesis. The retry must copy only
+the verified source into its own disposable tree, preserving every byte and
+executable flag while restricting regular files/directories to ordinary 0644/0755
+checkout modes. Do not chmod the immutable retained baseline, weaken source trust
+or place processing code inside writable dataset storage. The processor retains
+its existing isolated -I/-B execution and all resource/file checks.
+
+
+## Reproduced gateway training claim failure
+
+The protected-source retry confirmed the constructor gap on current verified
+274d771c product sources. TestObserveGatewayTrainingClaimArtifactOwnership
+completed on native Linux in 2.25 seconds without skips. This diagnostic passed
+by observing a known undesired failure; it does not qualify training through the
+gateway or the restricted database role.
+
+The existing real CPython processor inspected/published generated JSONL, and the
+control-side fixture dispatched an actual training attempt and held its physical
+GPU reservation. Unchanged NewAgentGateway constructed its training dataset
+service with Store=nil despite configured artifact roots. The same control-side
+fixture principal then received DATASET_STORAGE_UNAVAILABLE from that gateway's
+Node claim graph, with no lease. Full checked task state/attempt/acknowledgement,
+lease/stop-token presence, physical reservation and node acknowledgement cursor
+were unchanged. Control's actual file-owning path immediately claimed and
+acknowledged the same task/attempt on attempt one, retaining physical ownership
+and the exact delivered sequence. No training image, model weights or GPU process
+was run. Synthetic model metadata does not constitute model execution evidence.
+
+The first nil-store refusal already occurs in PublishedSourceWithin, before its
+metadata read; VerifyTrainingInputSnapshot independently requires the real Store
+as well. runAgentGateway does not open either store after construction. Broader
+SQL grants cannot repair this path. Training claims through a separate gateway
+are not supported until the actual file-owner composition is fixed and verified.
+Control-side training and the previously measured read-only gateway path are
+separate capabilities. Do not add a privileged retry, fabricate file verification
+or deliver the generic training lease without its delegated authority checks.
+
+The diagnostic reverified all 5040 source paths and copied unchanged bytes into
+its own 0644/0755 checkout before compilation. It entered only the owned
+network-none PostgreSQL container's network namespace, checking its identity and
+namespace in the test. CPython 3.12.3 and util-linux nsenter 2.39.3 remained on the
+host filesystem; no host port or external service was exposed. Database access
+retained generated ECDSA trust, verify-full and required SCRAM binding. The run
+held both resource locks with MemFree 19931192 KiB, MemAvailable 22363188 KiB and
+full I/O PSI avg10 1.2. The owned container/volume, private key, DSN, password and
+readiness password were confirmed removed.
+
+The 1791-byte external diagnostic archive SHA-256 is
+07e0a60271977cc2412025d3a557f22b671ea076a226b44cd0ba4bb2275d0b0c;
+the corrected runner SHA-256 is
+554b2a5d7a07f5126464088b9e9d2195ff19e284381945c93c63fe0f1fb5f9c7.
+The actual test-log SHA-256 is
+69638e0915df065f9d8aee946340db86e1ce0456045089bc2be6a655e2b05235.
+
+The responsible identity/dataset composition is outside this lane's allowed
+business modules. Keep this boundary explicit and take the next owned item;
+there is no request for the owner to answer and no product-role activation.
+Any later permission-only experiment that borrows a real existing Store must
+state that fixture dependency and must not claim the unchanged gateway constructor
+passed. It may not replace the Store with a success callback.
+
+The permission review also finds FOR UPDATE on the complete training job and on
+published dataset/version rows. PostgreSQL requires UPDATE rights for those locks
+as it does for the installation lock. Granting arbitrary id updates or dropping
+the locks would repeat the already rejected authority-lock mistake. Their owners
+must preserve retirement/current-attempt fencing through a closed protected
+interface before claiming a fully narrow gateway grant catalog. Column SELECT on
+human authority fields alone is therefore insufficient to close ARC-111.

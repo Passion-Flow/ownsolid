@@ -136,3 +136,83 @@ protocol integration are not proven. Do not add an interface shell or tick
 TRN-109. The next executable work is the isolated CPU prototype after its
 pinned closure and an admitted resource window exist, then the owning shared
 contracts; the current lane can continue other eligible training/data work.
+
+
+## Prepared wheel candidate and remaining closure checks
+
+The [JupyterLab 4.6.6 release](https://pypi.org/project/jupyterlab/4.6.6/)
+is the selected private prototype candidate. Its universal wheel is
+17,334,944 bytes with SHA-256
+4261910ccf1ecad6e0b3ca0debe96d4fde9735bfc9707509c125aab850e06b81.
+PyPI binds it to upstream source
+[c438ffaef710e6594c2e4f55d3c0eb1539142db5](https://github.com/jupyterlab/jupyterlab/tree/c438ffaef710e6594c2e4f55d3c0eb1539142db5).
+The resolved candidate includes Jupyter Server 2.21.1 and ipykernel 7.4.0.
+No package has been installed and no interactive server has been started.
+
+Connected preparation staged 90 wheels, totaling 48,147,832 bytes, for
+CPython 3.12 and Linux x86-64 with a maximum glibc tag of 2.36. Preparation
+used host CPython 3.12.3 and a verified read-only pip 26.2.1 wheel; it did
+not mutate the protected 37-package CPU training environment or the separate
+one-package Arrow environment. A bounded streaming check matched every
+wheel RECORD hash and size and archived 295 metadata, RECORD and notice
+files. The candidate inventory retains every distribution/version, wheel
+hash, original notice path/hash and native-library path.
+
+The retained inputs are under
+/root/lane-trn-jupyter-metadata.90mpy44y on the Linux server.
+The current inventory-v3.json SHA-256 is
+2c4f5fcbc429bf686dafa06f691c78365f4264156174b7a80c1fe89406befe7c.
+That inventory is a private preparation artifact, not an admitted runtime
+lock, complete SBOM, installed readback or production image.
+
+Root wheel metadata must be distinguished from embedded dependency metadata:
+bleach 6.4.0 also contains html5lib 1.1 metadata and its MIT notices.
+JupyterLab carries frontend third-party licence JSON, jupyter-builder carries
+Yarn/semver notices, debugpy carries bundled notices, and PyZMQ carries
+libzmq/libsodium binaries and licences. An installed-distribution count does
+not close those embedded graphs. Native component versions must come from
+verified inputs/readback, not from a shared-library SONAME.
+
+The wheel-bound frontend JSON contains 275 package entries, and the bundled
+Yarn graph has 140. Their exact file hashes are
+1c9066e41144ea261d4dc780f7d92dca55d5f33453f80e0a6009a63dd4673e07
+and 64277dc79d080ff103f37f88cea4958f0f495d29180f427d57dd05d090a34512.
+Bind each file to its distribution and full relative path; the basename alone
+also matches other packages' different licence graphs.
+
+The frontend includes elkjs 0.9.3 under
+[EPL-2.0](https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html),
+which permits commercial/offline use and distribution subject to its source
+availability and notice requirements. Preserve the corresponding source in
+the offline distribution. Font Awesome Free 5.15.4 has distinct icon/font/code
+terms, [CC-BY-4.0, OFL-1.1 and MIT](https://github.com/FortAwesome/Font-Awesome/blob/5.15.4/LICENSE.txt);
+preserve their component-specific attribution. DOMPurify 3.4.16 offers
+MPL-2.0 or Apache-2.0; the embedded file contains the Apache-2.0 text.
+
+Khroma 2.1.0 has an empty generated licence ID and no licence field in its
+package metadata. The [original npm archive](https://registry.npmjs.org/khroma/-/khroma-2.1.0.tgz)
+was independently verified against its published SHA-512 integrity. Its
+original MIT licence exactly matches the embedded text, SHA-256
+66b333b0f66759a0b710459e03f7029abe17f4358114a128d2c972e642961b49.
+An empty metadata field is not evidence that a package has no licence; keep
+that verified original and explicit resolution in the closure inventory.
+
+The project metadata includes MIT, MIT-0, BSD, ISC, Apache-2.0, PSF-2.0
+and MPL-2.0 terms, including explicit combined/alternative expressions.
+Retain the full original terms and notices rather than reducing a compound
+expression to one convenient licence. The
+[Mozilla MPL FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/)
+permits internal company use and explains the source/notice obligations for
+redistributed executables and libraries. This candidate still needs the
+matching embedded/native source and notice analysis, exact base-image
+closure and installed byte readback before release admission. No model or
+dataset is added.
+
+For the eventual protocol probe, use the official
+[Jupyter REST API](https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html),
+[WebSocket negotiation](https://jupyter-server.readthedocs.io/en/stable/developers/websocket-protocols.html)
+and [kernel message specification](https://jupyter-client.readthedocs.io/en/stable/messaging.html).
+Kernel execution, file persistence, terminal I/O, isolated private homes,
+credential-file handling and positive stop must run before a prototype is
+called successful. The independent browser egress/revocation and shared
+ownsolid lifecycle/identity/quota/Agent prerequisites above remain open.

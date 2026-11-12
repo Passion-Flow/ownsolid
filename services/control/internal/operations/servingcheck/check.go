@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	release "github.com/Passion-Flow/ownsolid/api/release/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 )
 
 const (
@@ -24,14 +24,15 @@ const (
 // Expected is versioned public intent, not an alternate runtime policy source.
 // Empty TLS references and an empty proxy array are still required JSON fields.
 type Expected struct {
-	FormatVersion      int                  `json:"format_version"`
-	TransportMode      config.TransportMode `json:"transport_mode"`
-	ListenAddress      string               `json:"listen_address"`
-	PortalOrigin       string               `json:"portal_origin"`
-	AdminOrigin        string               `json:"admin_origin"`
-	TLSCertificateFile string               `json:"tls_certificate_file"`
-	TLSPrivateKeyFile  string               `json:"tls_private_key_file"`
-	TrustedProxyCIDRs  []string             `json:"trusted_proxy_cidrs"`
+	FormatVersion       int                  `json:"format_version"`
+	TransportMode       config.TransportMode `json:"transport_mode"`
+	ListenAddress       string               `json:"listen_address"`
+	PortalListenAddress string               `json:"portal_listen_address,omitempty"`
+	PortalOrigin        string               `json:"portal_origin"`
+	AdminOrigin         string               `json:"admin_origin"`
+	TLSCertificateFile  string               `json:"tls_certificate_file"`
+	TLSPrivateKeyFile   string               `json:"tls_private_key_file"`
+	TrustedProxyCIDRs   []string             `json:"trusted_proxy_cidrs"`
 }
 
 // ParseExpected performs bounded strict parsing and validation without I/O.
@@ -42,10 +43,23 @@ func ParseExpected(raw []byte) (Expected, error) {
 		return Expected{}, bad
 	}
 	var fields map[string]json.RawMessage
-	if json.Unmarshal(raw, &fields) != nil || len(fields) != 8 {
+	if json.Unmarshal(raw, &fields) != nil {
 		return Expected{}, bad
 	}
-	for _, name := range []string{"format_version", "transport_mode", "listen_address", "portal_origin", "admin_origin", "tls_certificate_file", "tls_private_key_file", "trusted_proxy_cidrs"} {
+	required := [...]string{"format_version", "transport_mode", "listen_address", "portal_origin", "admin_origin", "tls_certificate_file", "tls_private_key_file", "trusted_proxy_cidrs"}
+	fieldCount := len(required)
+	if _, present := fields["portal_listen_address"]; present {
+		fieldCount++
+		if expected.PortalListenAddress == "" {
+			return Expected{}, bad
+		}
+	}
+	// encoding/json accepts case-folded struct keys. Optional intent must
+	// still use its exact public spelling, including when all required keys exist.
+	if len(fields) != fieldCount {
+		return Expected{}, bad
+	}
+	for _, name := range required {
 		if _, exists := fields[name]; !exists {
 			return Expected{}, bad
 		}
@@ -92,7 +106,7 @@ func (expected Expected) Validate() error {
 		proxies = nil
 	}
 	server := config.ServerConfiguration{TransportMode: expected.TransportMode,
-		ListenAddress: expected.ListenAddress, PortalOrigin: expected.PortalOrigin,
+		ListenAddress: expected.ListenAddress, PortalListenAddress: expected.PortalListenAddress, PortalOrigin: expected.PortalOrigin,
 		AdminOrigin: expected.AdminOrigin, TLSCertificateFile: expected.TLSCertificateFile,
 		TLSPrivateKeyFile: expected.TLSPrivateKeyFile, TrustedProxyCIDRs: proxies}
 	if server.ValidateTransport() != nil || expected.TransportMode == config.TransportDirectHTTPS && (expected.TLSCertificateFile == "" || expected.TLSPrivateKeyFile == "") {
@@ -137,7 +151,7 @@ func VerifyWithMachine(configuration config.Config, expected Expected, machine *
 		return errors.New(configurationInvalid)
 	}
 	actual := configuration.Server
-	if actual.EffectiveTransportMode() != expected.TransportMode || actual.ListenAddress != expected.ListenAddress || actual.PortalOrigin != expected.PortalOrigin || actual.AdminOrigin != expected.AdminOrigin || actual.TLSCertificateFile != expected.TLSCertificateFile || actual.TLSPrivateKeyFile != expected.TLSPrivateKeyFile || !sameProxySet(actual.TrustedProxyCIDRs, expected.TrustedProxyCIDRs) {
+	if actual.EffectiveTransportMode() != expected.TransportMode || actual.ListenAddress != expected.ListenAddress || actual.PortalListenAddress != expected.PortalListenAddress || actual.PortalOrigin != expected.PortalOrigin || actual.AdminOrigin != expected.AdminOrigin || actual.TLSCertificateFile != expected.TLSCertificateFile || actual.TLSPrivateKeyFile != expected.TLSPrivateKeyFile || !sameProxySet(actual.TrustedProxyCIDRs, expected.TrustedProxyCIDRs) {
 		return errors.New(transportMismatch)
 	}
 	if (configuration.MachineServer == nil) != (machine == nil) || machine != nil && *configuration.MachineServer != *machine {

@@ -113,6 +113,27 @@ is explicitly experimental; a fresh interface must not be mistaken for a
 proven transactional implementation. A signing or deletion failure, two
 redeemers and a lost commit acknowledgement are required rejection controls.
 
+The legacy [code exchange](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/token_code.go)
+loads the authorization request before authenticating the confidential client.
+Qualify a bounded outer client-authentication gate before code-row locks, then
+carry that server-resolved client and transaction through the storage calls.
+Its [form parser](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/token_request.go)
+uses `Request.Form`, which merges URL and body inputs. Enforce one registered
+authentication method, bounded body-only fields, duplicate refusal and no query
+credentials before the SDK. Test header/body conflicts and Basic form encoding;
+client method metadata alone is not evidence that those boundaries are enforced.
+
+The legacy [UserInfo handler](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/userinfo.go)
+can read a bearer from form/query data and can fall back from encrypted tokens
+to JWT verification. The initial opaque-token profile must explicitly close
+those alternate paths and accept the Authorization header only. Generate a
+random token ID, hash that identifier in the store and compare its bound subject,
+client and current installation authority after decryption; the payload's subject
+does not supply tenant scope. Its colon-separated bearer payload also means
+the selected opaque subject encoding must contain no colon. Project storage
+failures to fixed protocol errors before the handler's JSON serialization.
+These are source-derived prototype requirements, not a qualified OP adapter.
+
 [Ory Fosite](https://github.com/ory/fosite) is an alternative OAuth/OIDC SDK
 with owned storage interfaces. Compare its code-consumption and transaction
 composition against the same real PostgreSQL tests if the candidate cannot

@@ -205,7 +205,7 @@ byte/deadline/concurrency and endpoint restrictions.
 
 ## Native protocol prototype qualification
 
-The external adapter passed eight native Go roots and 29 subcases with race
+The external adapter passed ten native Go roots and 41 subcases with race
 detection. The final prototype/test import graph still has 18 modules and
 25 legal files; no new product dependency is admitted. Its streaming guard
 limits the fixture profile to 128 KiB, depth 24, 2,048 elements and 32 attributes
@@ -221,7 +221,11 @@ subjects retain their exact case, punctuation and qualifiers. Trusted old/new
 keys work during an explicit overlap; removing the old key refuses it. Parallel
 verifiers passed without package-global clock/parser changes. The returned proof
 expiry honors the earliest assertion, bearer, authentication-statement and local
-trust deadline.
+trust deadline. The explicit deadline-intersection controls passed for all four
+sources. A 256-character/four-byte-UTF-8 identifier is accepted exactly, while
+257-character values are refused. Explicit and correctly inferred IdP/SP
+qualifiers resolve to the same identity; empty/foreign qualifiers and
+SPProvidedID are refused. Distinct Unicode forms remain distinct opaque values.
 
 Two independent positive controls establish the compatibility differences:
 the upstream parser accepts the correctly signed Response containing multiple
@@ -233,20 +237,54 @@ signature fixture failures are retained; the fixture now uses upstream
 `ConstructSignature` and an indexed tree insertion rather than moving the
 unparented child returned by its signing convenience helper.
 
-Evidence set `iam104-protocol-20261113.cknwa8w9`, run `native-dhejf_yw`, retains
+Evidence set `iam104-protocol-20261113.cknwa8w9`, run `native-00n8jui8`, retains
 the exact source, module sums, legal files and raw race results. The source-hash
 manifest SHA-256 is
-`95efecaac50af45645db39c8dd650c1bce19b03b2db9a7bffffc4d91865cce93`.
-Two live-only roots were explicitly skipped in this native invocation. The
-Keycloak/password/HTTP-POST protocol test has not yet run at this checkpoint;
-neither a browser-cookie claim nor an installed-flow result is established.
-The subsequent 256-character/effective-qualifier corrections and additional
-deadline-intersection fixtures are prepared outside the product and have not
-yet been rerun under the workstation build lock. The eight-root result applies
-only to the exact retained source above, not those follow-up changes.
+`efdcfcdd00b3c8777c7c0d45caad4e6d8ae00ececb08ce7982150e7e2bc9f844`.
+Two live-only roots were explicitly skipped in this native invocation and run
+separately against the private provider below. The earlier eight-root source
+remains retained separately; it is not the input of this final qualification.
 Repeated/concurrent cryptographic verification deliberately creates no durable
 request claim or local authority. Those remain with the existing flow owner.
-IAM-104 stays open for the live prototype and all product composition below.
+IAM-104 stays open for all product composition below.
+
+## Actual private-provider protocol qualification
+
+Keycloak 26.8.2 passed the actual SAML protocol root and its separate readiness
+probe using the exact native-qualified sources above. Two new SP requests each
+completed the real IdP password form, received the HTTP-POST response form and
+verified its signed assertion over the configured private TLS transport. The
+registered callback action and returned RelayState matched exactly. The
+persistent subject was stable across the two independently authenticated flows;
+their request/assertion IDs differed. Substituting the second request ID or
+tampering with the signed subject yielded no proof.
+
+The disposable Linux arm64 provider used `--network none`, no published host
+ports, a private CA, approved DNS/SNI and literal loopback dialing. Its manifest
+is
+`quay.io/keycloak/keycloak@sha256:923a431c08971d49727a857e64870d8d63b5bf294a730e5dde729b5138c26c9e`.
+Red Hat OpenJDK 21.0.13 and the image identity match the previously inspected
+[provider/image/JDK legal inventory](oidc-sign-in.md#protocol-prototype-qualification).
+No image is admitted for product distribution. The fixed provider configuration
+uses native RSA-SHA256 Response/assertion signatures, persistent NameID and a
+60-second assertion lifetime, with encryption disabled for this first profile.
+The attribute names were checked against the pinned
+[Keycloak SAML source](https://github.com/keycloak/keycloak/blob/26.8.2/services/src/main/java/org/keycloak/protocol/saml/SamlConfigAttributes.java).
+
+Run `live-gapeddru` retains image/runtime identities, private fixture inputs,
+source hashes matching `native-00n8jui8`, raw results and cleanup. The workstation
+build lock covered native tests, cross-compilation and the live provider run.
+The owned container and its anonymous storage were removed; only dependency
+caches and private evidence remain. No test server remains running.
+
+This proves the external protocol approach. The probe extracts and validates the
+IdP's POST form; it does not send it to an installed ownsolid ACS or establish
+SameSite cookie delivery, a durable one-use browser claim, a binding or a local
+session. A real rendered browser, PostgreSQL/current-actor composition, formal
+configuration/schema/dependency admission and the public/UI flow remain open.
+These are not Linux amd64 installed-flow results. The publication changes
+research only; its layout, roadmap and whitespace checks do not substitute for
+the future feature's full repository and installed-flow acceptance.
 
 ## Alternatives, prototype and finished-item acceptance
 
