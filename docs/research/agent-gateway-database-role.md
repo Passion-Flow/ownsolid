@@ -199,8 +199,8 @@ runtime path until all of those acceptance gates pass. ARC-111 remains open.
 
 ## Product-schema prototype boundary
 
-Next exercise the actual read-only Node heartbeat and claim against a disposable
-current product catalog. Keep the candidate SQL function and Go source overlay
+The product-schema slice exercises the actual read-only Node heartbeat and claim
+against a disposable current product catalog. Keep the candidate SQL function and Go source overlay
 outside product files. Reuse the exact unmodified node credential, Workspace,
 lease, cursor and audit logic; substitute only the protected installation/tenant
 shared-lock query proved above. Connect a new LOGIN principal through real local
@@ -318,3 +318,57 @@ pool to remain usable. Release every acquired connection before closing either
 pool. Keep the role's configured connection limit at two; do not change the limit
 in response to a failure. Deployment-bearing observations and delegated task
 profiles remain separate acceptance cases even if hardware-only reports pass.
+
+## Qualified composed observations and workers
+
+The extended external prototype used the actual NewAgentGateway composition;
+its component/deployment observers, identity and Workspace services shared the
+restricted LOGIN pool. Its unchanged product sources matched the same verified
+149a95013db6c6d1ca9dbadd09b05fff9b4c98de baseline. The only product-source
+overlay remained the protected installation/tenant lock CTE. No test supplied a
+replacement observer, database implementation or privileged retry.
+
+TestRestrictedComposedGatewayAuthorityPrototype passed on native Linux amd64 in
+1.95 seconds, without skips. The actual results were:
+
+- With two gateway-role connections occupied, a third independent TCP connection
+  failed with 53300. The control-side fixture pool successfully pinged while both
+  gateway connections were still occupied. The same role limit remained two.
+- A systemd_components report without managed_components rights failed with 42501;
+  a docker_inference hardware report without inference_nodes rights did likewise.
+  Both failures rolled back the node timestamp and persisted no owner row.
+- Explicit SELECT/INSERT/UPDATE grants on those two owner tables admitted first and
+  updated reports through their real owners. Readback checked complete report JSON,
+  tenant/Workspace/site/cell equality and the returned committed heartbeat time.
+  Foreign-node credentials were refused and left the stored node time unchanged.
+- EnableLiveness, repeated unchanged heartbeats and FlushLiveness ran on that same
+  pool. Both repeat heartbeats left the synchronous node timestamp untouched before
+  flushing; the subsequent actual node and owner batch timestamps matched each
+  repeat's returned server time.
+- SELECT on control_outbox admitted the actual RunWakes reader. INSERT and DELETE
+  each failed with 42501. A held restricted claim acquired no database connection
+  while waiting, received a task committed by the control-side service and then
+  acknowledged it. The outbox worker reported zero read failures and was joined.
+- The earlier authority mutation, private/human reads, migration-journal and
+  revoked-function cases remained enforced. In total the trace recorded eleven
+  expected query-level 42501 refusals, in addition to the independent 53300 login.
+
+This fixture used schema 60 / 120 logical roots, PostgreSQL 18.6 and vector 0.8.7,
+the retained pinned image, network=none, no published host port, two CPUs and
+1 GiB. Two admission attempts returned 75 before compilation because free memory
+was below the unchanged 2 GiB threshold. The admitted attempt held both resource
+locks with MemFree 3868256 KiB, MemAvailable 20906912 KiB and full I/O PSI avg10
+0.11. The owned container and protected database/password inputs were confirmed
+absent after cleanup; logs and the external overlay remain retained for review.
+The 7805-byte input archive SHA-256 is
+eac225cd29a957cf8afcb525b3255476ead4316d16b190575568a8781f8b2d87;
+the actual test-log SHA-256 is
+9c585726809071f3a459616a966cd0c679e8288678857a97ea573f6d3aa7defc.
+
+Hardware-only inference observation does not exercise a deployment-bearing report.
+Likewise, composition constructs the training/preparation owners but this test
+claims only read-only facts tasks. It does not qualify those delegated paths,
+replicated liveness, TLS, shed refresh, normal startup/catalog admission or
+installer provisioning. The independent connection-limit proof applies to this
+restricted fixture role, not to a deployed control/gateway resource budget. No
+production function, grant, credential or migration number was activated.
