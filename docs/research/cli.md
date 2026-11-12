@@ -628,3 +628,28 @@ explicit. The complete installed qualification still requires the real Admin
 dispatcher and PostgreSQL in an admitted original owner window. TLS fixtures
 prove client behavior, not account isolation, installed acceptance or DEV-102
 completion. Keep those gates and the roadmap open until actually run.
+
+## Combined account and workspace client qualification (DEV-102)
+
+Exact runtime source 410ed356 includes account, workspace-member and own-session
+commands. Its complete CLI race suite and vet passed offline on Linux amd64.
+With dependency resolution disabled, make check and make build passed on
+Darwin arm64. These are separate host scopes; the whole-repository Linux gate
+and the complete make test target have not run for this candidate.
+
+The clean source also compiled on Linux amd64 with Go 1.27.3, CGO_ENABLED=0,
+-buildvcs=true, -trimpath and one build worker in a network namespace without
+external networking. Its 12,101,750-byte static ELF has SHA-256
+e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257,
+identical to the independent Darwin cross-build. BuildInfo retains the exact
+revision and vcs.modified=false. Eleven native startup checks passed with a
+new network namespace, only loopback, no routes and an empty private config:
+version, command help, local argument refusal and refusal without credentials.
+No shared Admin account or session was used by those checks.
+
+This qualifies the client artifact and its local startup. Workspace, member,
+account and session authorization still require real Admin HTTPS/PostgreSQL
+through a newly qualified original DEL installation and dedicated disposable
+accounts. Preserve the frozen clients and their Control-source admission; do
+not point an old-source acceptance driver at a new schema window. DEV-102
+remains open.
