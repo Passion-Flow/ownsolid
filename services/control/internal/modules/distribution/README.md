@@ -80,6 +80,13 @@ conflict requires reading the alias again before editing. Portal sees
 the description on its authorized alias list and detail. Description
 edits preserve the published target, route revision and existing keys.
 
+The unnumbered down candidate selects READ COMMITTED before locking or
+reading retained state. An operator transaction with an earlier stronger
+isolation snapshot refuses before DDL and must be rolled back. Fresh
+transactions still refuse to discard description text, independent
+revisions or replay intents. The ARC-qualified formal source carries the
+same bytes; production activation and Linux amd64 acceptance remain separate.
+
 The current PostgreSQL lineage still returns predecessor alias responses.
 The candidate DDL, offline fixture and shared integration order are
 recorded in the [description qualification](../../../../../docs/research/gateway-model-description.md).

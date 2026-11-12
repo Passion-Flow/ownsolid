@@ -343,8 +343,10 @@ platform admission predicate.
 ### Safe rollback
 
 Run the down script in one operator transaction while serving is
-stopped. Acquire ACCESS EXCLUSIVE locks on aliases and description
-intents before checking retained state. Refuse with SQLSTATE 55000 and
+stopped. Its first executable statement selects READ COMMITTED; an
+earlier stronger-isolation snapshot refuses before DDL. Then acquire
+ACCESS EXCLUSIVE locks on aliases and description intents before
+checking retained state. Refuse with SQLSTATE 55000 and
 MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE if any description
 is nonempty, any independent revision differs from 1, or any edit
 intent exists. Clearing the visible text does not make its revision
@@ -385,11 +387,12 @@ the committed predecessor, not the formally numbered production tail.
 
 The unnumbered up SQL SHA-256 is
 399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
-The safe down SQL SHA-256 is
+The original schema-58 down SHA-256 was
 4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
-Changing only the down refusal does not change the candidate catalogue.
-ARC must retain these exact raw bytes when assigning the actual tail
-and verify the complete release lineage and runtime principal.
+That version was qualified in READ COMMITTED and is superseded by the
+explicit isolation fence below. Its retained-state lock alone does not
+protect an earlier REPEATABLE READ or SERIALIZABLE snapshot. The up bytes
+and structural catalogue remain unchanged.
 
 The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
 concurrent revision refusal, exact replay, scope checks and retry after
@@ -428,3 +431,55 @@ schema-58 catalogue before and after the candidate, rather than calling
 the check for the installed current tail. This keeps the predecessor
 regression valid when ARC adds the production migration. The focused
 PostgreSQL/HTTPS and concurrent rollback tests passed with this assertion.
+
+
+## Retained candidate isolation alignment
+
+[PostgreSQL LOCK](https://www.postgresql.org/docs/18/sql-lock.html)
+explicitly distinguishes preventing concurrent writes from refreshing
+an earlier REPEATABLE READ or SERIALIZABLE snapshot. A lock acquired
+after that snapshot can still leave the retained-state check reading
+an old empty description. The original down script is not qualified
+for that execution context. Stopping new serving traffic does not
+refresh an operator snapshot already captured.
+
+The ARC source in 6c2c3b64 and its qualified successor 12520508 places
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED before locking or
+reading retained state. Adopt the exact same first executable statement
+in the gateway's unnumbered down candidate. The [transaction command](https://www.postgresql.org/docs/18/sql-set-transaction.html)
+can select READ COMMITTED for a fresh transaction; after a stronger
+isolation snapshot exists it rejects changing isolation with SQLSTATE
+25001. Roll back that transaction and begin a fresh operator transaction.
+The script must not continue to DDL after this refusal. Fresh transactions
+still lock aliases and intents and refuse retained text, revisions or
+intents with SQLSTATE 55000. A comment about isolation, an unspecified
+session default or checking retained rows before the lock is insufficient.
+
+The adopted down SHA-256 is
+61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86.
+The up SHA-256 remains
+399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
+This changes no structural catalogue, runtime privilege, dependency,
+model or dataset. Existing PostgreSQL and Go licence terms above apply.
+The old handoff-v2 artefact remains historical evidence and must not
+supply the down bytes for a new formal admission.
+
+ARC's recorded qualification used the actual formal migration source
+at a446ec58 on PostgreSQL 18.6 and pgvector 0.8.7 in network-none Linux
+arm64 containers on the workstation. The description runtime, migration
+and grant inputs are unchanged in 12520508. That evidence includes the
+old-snapshot RR/SERIALIZABLE refusals, fresh transactions at all four
+PostgreSQL isolation settings, retained writer data, pristine and used
+rollback cases, installed HTTPS and runtime grant resume. It is arm64
+execution evidence, not a new amd64 run by this lane.
+
+The current published main remains schema 58 while DEL's frozen
+installation runs first. ARC owns formal numbering, catalogue and
+grant activation. After the formal activation is actually published,
+GW must verify the same committed source on Linux amd64 with normal
+Control/PostgreSQL reads, scope and retry, retained-state downgrade
+and both old-snapshot refusals. Use the existing six description test
+roots and verify the numbered up/down bytes against the embedded
+candidate. Keep the prior spool/CA evidence; do not repeat those
+unchanged fixtures while waiting for this activation. No main update
+or heavy job is part of this source alignment.
