@@ -363,6 +363,7 @@ func serveSelected(ctx, startup context.Context, c config.Config, selected *sele
 	}
 	if h.TelemetryMetrics != nil {
 		h.TelemetryMetrics.Add(runtimeSamples)
+		h.TelemetryMetrics.Add(listeners.Samples)
 		h.TelemetryMetrics.Add(retention.PartitionSamples)
 		if selected.postgres != nil {
 			h.TelemetryMetrics.Add(databasePoolSamples(selected.postgres))

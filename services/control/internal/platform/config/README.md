@@ -139,6 +139,24 @@ HTTPS may use the exact Admin HTTPS origin. Credentials remain separate.
 
 `distribution_environment.go` maps every DistributionPolicy field through the existing protected policy input. Defaults/bounds stay in DistributionPolicy; distribution-policy.env.example documents units, ranges and restart/precedence. No additional environment reader is introduced.
 
+## Separate browser binds (ARC-110)
+
+Optional `server.portal_listen_address` / `PROJECT_ONE_PORTAL_LISTEN_ADDRESS`
+selects a dedicated Portal bind. `server.listen_address` then serves Admin only;
+omission preserves the shared browser listener. The value is a canonical host:port,
+distinct from the other browser, machine and agent-gateway binds. Structural
+validation compares exact identities; prebinding also refuses wildcard/address
+aliases. An explicitly empty, null, mistyped or invalid field fails before an
+environment override can repair it. Ambient values have no authority.
+
+Both browser sockets retain the same selected transport mode, trusted proxy policy
+and protected TLS pair. Origins remain explicit advertised addresses, independently
+configured from local binds. The certificate must still name both origins. A
+protected environment override requires restart and cannot unset the field with
+an empty value. Returning to shared serving requires omission in a valid snapshot.
+See the [operator flow](../../../../../docs/operations/entrance-listeners.md) and
+[compatibility and acceptance](../../../../../docs/research/entrance-listeners.md).
+
 ## Current cumulative M11 source integration — 2026-10-26
 
 All18 SSO policy fields plus enabled/keyring/provider-inventory inputs map through

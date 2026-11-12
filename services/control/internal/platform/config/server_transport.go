@@ -27,26 +27,30 @@ const (
 	browserHTTPPort             uint16 = 80
 	browserHTTPSPort            uint16 = 443
 
-	transportModeEnvironment  = "PROJECT_ONE_TRANSPORT_MODE"
-	listenAddressEnvironment  = "PROJECT_ONE_LISTEN_ADDRESS"
-	portalOriginEnvironment   = "PROJECT_ONE_PORTAL_ORIGIN"
-	adminOriginEnvironment    = "PROJECT_ONE_ADMIN_ORIGIN"
-	tlsCertificateEnvironment = "PROJECT_ONE_TLS_CERTIFICATE_FILE"
-	tlsPrivateKeyEnvironment  = "PROJECT_ONE_TLS_PRIVATE_KEY_FILE"
-	trustedProxyEnvironment   = "PROJECT_ONE_TRUSTED_PROXY_CIDRS"
+	transportModeEnvironment       = "PROJECT_ONE_TRANSPORT_MODE"
+	listenAddressEnvironment       = "PROJECT_ONE_LISTEN_ADDRESS"
+	portalListenAddressEnvironment = "PROJECT_ONE_PORTAL_LISTEN_ADDRESS"
+	portalOriginEnvironment        = "PROJECT_ONE_PORTAL_ORIGIN"
+	adminOriginEnvironment         = "PROJECT_ONE_ADMIN_ORIGIN"
+	tlsCertificateEnvironment      = "PROJECT_ONE_TLS_CERTIFICATE_FILE"
+	tlsPrivateKeyEnvironment       = "PROJECT_ONE_TLS_PRIVATE_KEY_FILE"
+	trustedProxyEnvironment        = "PROJECT_ONE_TRUSTED_PROXY_CIDRS"
 )
 
 // ServerConfiguration is the sole control authority for browser origins and transport.
 type ServerConfiguration struct {
-	ListenAddress      string        `yaml:"listen_address"`
-	PortalOrigin       string        `yaml:"portal_origin"`
-	AdminOrigin        string        `yaml:"admin_origin"`
-	TLSCertificateFile string        `yaml:"tls_certificate_file"`
-	TLSPrivateKeyFile  string        `yaml:"tls_private_key_file"`
-	PortalAssets       string        `yaml:"portal_assets"`
-	AdminAssets        string        `yaml:"admin_assets"`
-	TransportMode      TransportMode `yaml:"transport_mode,omitempty"`
-	TrustedProxyCIDRs  []string      `yaml:"trusted_proxy_cidrs,omitempty"`
+	ListenAddress string `yaml:"listen_address"`
+	// PortalListenAddress separates Portal from the Admin socket when present.
+	// Omission retains the shared browser listener; origins remain explicit.
+	PortalListenAddress string        `yaml:"portal_listen_address,omitempty" json:"portal_listen_address,omitempty"`
+	PortalOrigin        string        `yaml:"portal_origin"`
+	AdminOrigin         string        `yaml:"admin_origin"`
+	TLSCertificateFile  string        `yaml:"tls_certificate_file"`
+	TLSPrivateKeyFile   string        `yaml:"tls_private_key_file"`
+	PortalAssets        string        `yaml:"portal_assets"`
+	AdminAssets         string        `yaml:"admin_assets"`
+	TransportMode       TransportMode `yaml:"transport_mode,omitempty"`
+	TrustedProxyCIDRs   []string      `yaml:"trusted_proxy_cidrs,omitempty"`
 	// OperatorSocket is the Unix socket an operator on the host uses when nothing else reaches
 	// control (ADR 0043). Empty serves no socket.
 	OperatorSocket string `yaml:"operator_socket,omitempty"`
@@ -220,6 +224,11 @@ func (s ServerConfiguration) ValidateTransport() error {
 	if e := validateServerListener(s.ListenAddress); e != nil {
 		return e
 	}
+	if s.PortalListenAddress != "" {
+		if validateServerListener(s.PortalListenAddress) != nil || s.PortalListenAddress == s.ListenAddress {
+			return bad
+		}
+	}
 	if s.OperatorSocket != "" && !serverReference(s.OperatorSocket) {
 		return bad
 	}
@@ -284,6 +293,10 @@ func (s *ServerConfiguration) UnmarshalYAML(node *yaml.Node) error {
 	}
 	for i := 0; i < len(node.Content); i += 2 {
 		switch node.Content[i].Value {
+		case "portal_listen_address":
+			if value.PortalListenAddress == "" {
+				return bad
+			}
 		case "transport_mode":
 			if value.TransportMode == "" {
 				return bad
@@ -323,7 +336,7 @@ func validateServerTransportYAML(raw []byte) error {
 
 func serverTransportEnvironment(key string) bool {
 	switch key {
-	case transportModeEnvironment, listenAddressEnvironment, portalOriginEnvironment, adminOriginEnvironment, tlsCertificateEnvironment, tlsPrivateKeyEnvironment, trustedProxyEnvironment:
+	case transportModeEnvironment, listenAddressEnvironment, portalListenAddressEnvironment, portalOriginEnvironment, adminOriginEnvironment, tlsCertificateEnvironment, tlsPrivateKeyEnvironment, trustedProxyEnvironment:
 		return true
 	}
 	return false
@@ -339,6 +352,8 @@ func (s *ServerConfiguration) applyTransportEnvironment(key, value string) error
 		s.TransportMode = TransportMode(value)
 	case listenAddressEnvironment:
 		s.ListenAddress = value
+	case portalListenAddressEnvironment:
+		s.PortalListenAddress = value
 	case portalOriginEnvironment:
 		s.PortalOrigin = value
 	case adminOriginEnvironment:
