@@ -445,6 +445,21 @@ func TestAgentCallCostDoesNotGrowWithTheFleet(t *testing.T) {
 						t.Errorf("%s on %d peers: %q ran %d times, want %d", exchange.name, sample.fleet, check.prefix, got, check.want)
 					}
 				}
+				if exchange.name == "training events" {
+					for _, check := range []struct {
+						prefix string
+						want   int
+					}{
+						{"SELECT last_event_sequence,last_global_step FROM training_attempts", 1},
+						{"UPDATE training_attempts SET last_event_sequence", 1},
+						{"UPDATE training_attempts SET state='running'", 0},
+						{"INSERT INTO audit_events", agentwire.CostBatchItems},
+					} {
+						if got := countCostStatements(sample.cost, check.prefix); got != check.want {
+							t.Errorf("%s on %d peers: %q ran %d times, want %d", exchange.name, sample.fleet, check.prefix, got, check.want)
+						}
+					}
+				}
 			}
 		}
 	})
