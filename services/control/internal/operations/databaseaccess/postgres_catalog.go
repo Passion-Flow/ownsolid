@@ -7,6 +7,7 @@ import "sort"
 var postgreSQLVariantTables = [...]string{
 	"artifact_object_grants", "artifact_object_ingestions", "artifact_object_parts", "artifact_objects",
 	"aws_discovered_resources", "aws_import_receipts", "mongodb_dataset_imports",
+	"dataset_draft_import_candidates",
 	"image_registry_blobs", "image_registry_deployment_refs", "image_registry_grants", "image_registry_imports",
 	"image_registry_mutations", "image_registry_offline_refs", "image_registry_pins",
 	"task_event_dead_letters", "task_event_outbox", "task_event_receipts",

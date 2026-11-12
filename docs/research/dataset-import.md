@@ -429,7 +429,7 @@ bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh
 
 The script starts a disposable PostgreSQL 18 and pgvector instance with
 loopback only. It creates the production base schema through the identity
-fixture and adds [the draft receipt table](../../services/control/internal/modules/datasets/testdata/draft_import_candidate.sql)
+fixture and adds [the draft receipt table](../../services/control/internal/modules/datasets/testdata/draft_import_candidate.up.sql)
 only after the released readiness assertions. The TLS test generates a real
 two-row Parquet file and verifies the stored originals, the bound inspection
 results, rollback and replay. The script stops the container and removes its
@@ -602,3 +602,38 @@ and restore verify both files with their scoped receipt. The formal integration
 must also adapt isolated test setup so the actual registered table is exercised
 without applying the fixture DDL a second time; no scope or custody assertion
 may be removed.
+
+
+The independent PostgreSQL 18.6 prototype on a Linux arm64 network-none
+fixture reproduced the original down deleting a retained receipt; its outer
+transaction rolled back that reproduction. The guarded script passed ten
+cases covering empty rollback, both retained formats, prior RR/SERIALIZABLE
+snapshots, all four fresh isolation levels and a committed writer waiting at
+the parent-table lock. The original and guarded log SHA-256 values are
+6e06105a12c961462f1b79b71667dc948c39c4e0b361fe28cda1290ad3f478f1
+and 949a473bda021d85c5fa42764e3d256779aa30db036145c48b52f3372407a8cb.
+This prototype used a minimal parent schema, so full predecessor and runtime
+qualification remain separate.
+
+A second disconnected Linux arm64 fixture reused the accepted schema-59
+migrator, original schema-55 through schema-59 dumps and audit verifier. It
+measured the receipt DDL on full predecessor schemas, including restoration
+of a receipt-bearing catalog. The exact prospective catalog fingerprints are:
+
+| History | SHA-256 |
+| --- | --- |
+| Fresh, or native 58 migrated through 59 | 4999ec1b3e7ccad081e2290270860c362d23d56ba088441dee7869f734f608d7 |
+| Restored 55, then migrated through 59 | f0178764888dc1f0ce36b96a98d4105af4a1b7d8c2c99fbec359f20c4ef7b813 |
+| Restored 56, 57, 58 or 59; restored receipt catalog | 93b8967dbcc4b90c1692dcf67076192a8b97ead256335cf2a4fbccb6dcdf87b4 |
+
+Each projection had 120 tables and the still-accepted 59-entry ledger.
+Pristine down restored each exact predecessor catalog, and reapplying the
+same up produced the same prospective fingerprint. All five retained dumps
+were unchanged, and the four original audit exports remained byte-identical
+and passed the standalone verifier. The projection log SHA-256 is
+50e6e9a585a6286fbfd0ccf574bad2db0bfb54e55fdf6640b5d8a1667097f660.
+These measured values supply formal schema-60 registration; they do not
+claim that the schema-60 production migrator or application passed yet.
+The up and guarded down SHA-256 values are respectively
+d7e8eb61bd8afa4c1a3a1363d092685d13c55ca35d6965257457247336066868
+and 30a30989f237d89b56af6c5bef12115b3242089463ea608db445b1eb9df5d7df.
