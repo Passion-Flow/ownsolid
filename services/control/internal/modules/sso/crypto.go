@@ -22,6 +22,7 @@ const (
 	maximumSecretBytes   = 4096
 	clientSecretPurpose  = "connector_client_secret"
 	flowVerifierPurpose  = "flow_pkce_verifier"
+	connectorTestPurpose = "connector_test_secrets"
 )
 
 var keyIDPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`)
@@ -45,7 +46,7 @@ func canonicalID(value string) bool {
 }
 
 func (s secretScope) associatedData() ([]byte, error) {
-	if !canonicalID(s.tenant) || !canonicalID(s.connector) || !canonicalID(s.record) || s.purpose != clientSecretPurpose && s.purpose != flowVerifierPurpose || s.purpose == clientSecretPurpose && s.record != s.connector {
+	if !canonicalID(s.tenant) || !canonicalID(s.connector) || !canonicalID(s.record) || s.purpose != clientSecretPurpose && s.purpose != flowVerifierPurpose && s.purpose != connectorTestPurpose || s.purpose == clientSecretPurpose && s.record != s.connector {
 		return nil, errors.New("SSO_SECRET_SCOPE_INVALID")
 	}
 	// A JSON array gives unambiguous field boundaries and an explicit schema/domain discriminator.
