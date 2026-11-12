@@ -180,3 +180,75 @@ mode 0600 archives contained the fixed unconfirmed state for a valid
 record and the fixed collection issue for an unknown version. The raw
 record remained byte-identical and its source identifiers were absent.
 The recorder saw only the three IPv4, IPv6 and DNS probes.
+
+
+## Durable local operator access before diagnostic collection
+
+[OWASP event data sources and exclusions](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
+place access capture with the consumer that knows the action and actor and exclude
+credentials and payloads. The two real installer consumers are `SupportBundle`
+and `ClusterSupportBundle`. Neither a credential file nor an offline log is a
+browser identity or a server-authorized audit event. Preserve collection while
+Control and Docker are down.
+
+Reuse `operations.log`, with failure-propagating admission before the collector
+can run and a terminal record tied to the exact private archive bytes. Record
+only an opaque attempt ID, kernel real/effective UID, fixed collector kind,
+input digest, UTC time, outcome and archive digest/length. Do not trust SUDO_UID,
+USER, arbitrary reasons, remote identities or raw collector errors. A managed
+collector uses the protected input file's directory as its operator directory;
+a local installation uses its existing operator directory. Both directories
+and the log must belong to the executing effective UID and refuse unsafe modes,
+symlinks and special files. Every explicit retry is a new attempt.
+
+[Go File.Sync](https://pkg.go.dev/os#File.Sync) flushes file contents; synchronize
+the containing directory as well for a newly created log.
+[Linux flock](https://man7.org/linux/man-pages/man2/flock.2.html) attaches the lock
+to the open file description. Keep that descriptor for an attempt, serialize
+bounded append/sync operations, and refuse a replaced carrier. A missing legacy newline is separated without
+changing its bytes; record its incompleteness and snapshot history only up to
+the pre-admission byte boundary. Never adopt an older attempt.
+Do not truncate, rotate or replace the existing operation log. Preserve prior
+backup/restore events and existing diagnostic redaction projections. A failed
+admission must run no collector. Failed archive publication records failure;
+a failed terminal record must release neither a success message nor a newly
+published archive. A killed collector leaves an admitted, incomplete attempt.
+
+The existing operator append is warning-only after mutation and cannot provide
+this admission. A second access ledger, fake SQL append and automatic retry of
+an uncertain remote audit commit were rejected. Server reconciliation requires
+an actual authorized, installation-bound, idempotent consumer for retained local
+attempts. No such support receipt consumer is present in the inspected contracts.
+Keep receipts local and unreconciled until that owner contract exists; do not
+claim AUD-108 complete or claim that a future database import occurred. Recovery
+must preserve attempt IDs, exact input/archive digests and duplicate semantics;
+explicit retry collects a new attempt without overwriting an uncertain one.
+
+No dependency, model or dataset is added. The existing Go standard library's
+BSD-3-Clause terms permit commercial, redistributed and offline use with notices.
+OWASP and man-pages are references and are not embedded product content.
+
+Test both actual collector entry points: durable admission before any protected
+read, actual numeric operator identity, concurrent attempts, retry and restart
+readback, Control/Docker unavailable, sentinel redaction, unsafe/unwritable or
+replaced log, cancellation, failed archive publication and terminal recording.
+Run the native CLI and protocol fixtures on disconnected Linux amd64 with the
+existing egress recorder; a unit pass alone does not qualify an offline flow.
+
+### Concurrent operator-log creation
+
+The [open contract](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/open.2.html)
+defines exclusive creation with O_CREAT and O_EXCL, followed by an existing-file
+open when creation reports EEXIST. [Go's rooted open implementation](https://go.dev/src/os/root_unix.go)
+also guarantees that create-exclusive will not follow a final symlink.
+Use this create-or-open sequence instead of concurrent non-exclusive creation.
+Before opening an existing entry, validate its owned regular-file identity and
+private mode; recheck its identity under the append lock before any write.
+Never recreate a log that disappears during an existing-file open.
+
+A small Mac syscall prototype outside the product reproduced ENOENT with
+concurrent non-exclusive creation using both ordinary and no-follow flags.
+The create-exclusive/existing-open variant completed 80 attempts without an
+error. This selected the approach; the Go concurrent-consumer regression and
+native Linux entry-point acceptance still provide the product evidence.
+No additional dependency or licence is introduced.

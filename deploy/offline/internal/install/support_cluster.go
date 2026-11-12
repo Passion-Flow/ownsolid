@@ -75,10 +75,14 @@ func ClusterSupportBundle(ctx context.Context, input, output string, out io.Writ
 	if h := c.Helm; h != nil && (!h.valid() || !clusterLabel(h.Namespace, 63) || !clusterLabel(h.Release, 53)) {
 		return errors.New("INSTALL_CLUSTER_SUPPORT_HELM_INVALID: set the Kubernetes HTTPS origin, namespace, release and protected files")
 	}
-	return publishSupportBundle(ctx, output, time.Duration(c.TimeoutSeconds)*time.Second, out, func(collection context.Context) (any, int) {
-		report := collectClusterSupport(collection, c)
-		return report, len(report.Issues)
-	})
+	return publishSupportBundle(ctx, output, time.Duration(c.TimeoutSeconds)*time.Second, out,
+		func(admission context.Context) (*supportAccess, error) {
+			return clusterSupportAccess(admission, input, raw)
+		},
+		func(collection context.Context, _ *supportAccess) (any, int) {
+			report := collectClusterSupport(collection, c)
+			return report, len(report.Issues)
+		})
 }
 
 type clusterSupportReport struct {

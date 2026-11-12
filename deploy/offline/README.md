@@ -419,6 +419,20 @@ the current writer and database fence. An unreadable or unknown intent
 produces a fixed collection issue. The installer excludes operation details, container output, raw configuration files, environment values,
 addresses, credentials and database records.
 
+Before collecting, the installer durably records a diagnostic attempt in the
+installation's protected operator/operations.log. It uses the executing
+process's real and effective numeric user IDs. A completed record includes the
+archive's SHA-256 and byte length. A failed or incomplete attempt remains in the
+log; an explicit retry creates a new attempt. Keep this log with the installation
+and do not truncate it to bypass a recording error. It contains local operator
+records and has not been imported into the Control audit trail.
+
+The operator directory must belong to the executing user at mode 0700, and
+operations.log must be an owned regular file at mode 0600. An unsafe or
+unwritable log stops collection. If the terminal record cannot be confirmed,
+the installer withdraws its new archive and returns an error. Preserve the
+operator log and inspect the selected output path if cleanup is unconfirmed.
+
 ### Collect managed cluster information
 
 On a workstation with access to the private management endpoints, use
@@ -447,7 +461,9 @@ one or both sources and a total collection budget of 1 to 60 seconds.
 ```
 
 Run as the owner of the files and keep the JSON and referenced files at
-mode 0600. Use private HTTPS origins with their own trusted CA files. The
+mode 0600. The JSON input's directory also holds this collector's
+operations.log; it must belong to the executing user and must not be writable
+by other users. The same durable admission and archive-result rules apply. Use private HTTPS origins with their own trusted CA files. The
 management credential is the value of an active platform Admin session.
 You can point `credential_file` directly at the protected session file from
 [the operator CLI](../../tools/cli/README.md#configure-and-sign-in).

@@ -5,6 +5,8 @@ import (
 	"compress/gzip"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -83,16 +85,21 @@ type supportService struct {
 
 // SupportBundle saves a redacted snapshot on the installation host, even when control is down.
 func SupportBundle(ctx context.Context, c Config, runner Runner, output string, out io.Writer) error {
-	return publishSupportBundle(ctx, output, time.Duration(c.StepSeconds)*time.Second, out, func(collection context.Context) (any, int) {
-		report := collectSupport(collection, c, runner)
-		if errors.Is(collection.Err(), context.DeadlineExceeded) {
-			report.Issues = append(report.Issues, "COLLECTION_TIMEOUT")
-		}
-		return report, len(report.Issues)
-	})
+	return publishSupportBundle(ctx, output, time.Duration(c.StepSeconds)*time.Second, out,
+		func(admission context.Context) (*supportAccess, error) {
+			return installationSupportAccess(admission, c)
+		},
+		func(collection context.Context, access *supportAccess) (any, int) {
+			report := collectSupport(collection, c, runner, access.priorSize)
+			if errors.Is(collection.Err(), context.DeadlineExceeded) {
+				report.Issues = append(report.Issues, "COLLECTION_TIMEOUT")
+			}
+			return report, len(report.Issues)
+		})
 }
 
-func publishSupportBundle(ctx context.Context, output string, timeout time.Duration, out io.Writer, collect func(context.Context) (any, int)) error {
+func publishSupportBundle(ctx context.Context, output string, timeout time.Duration, out io.Writer,
+	admit func(context.Context) (*supportAccess, error), collect func(context.Context, *supportAccess) (any, int)) (result error) {
 	if !canonicalPath(output) || !strings.HasSuffix(output, ".tar.gz") {
 		return errors.New("INSTALL_SUPPORT_OUTPUT_INVALID: supply an absolute path ending in .tar.gz")
 	}
@@ -111,24 +118,50 @@ func publishSupportBundle(ctx context.Context, output string, timeout time.Durat
 	}
 	collection, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	report, issues := collect(collection)
+	access, err := admit(collection)
+	if err != nil {
+		return err
+	}
+	defer access.close()
+	terminalAttempted := false
+	defer func() {
+		if result == nil || terminalAttempted {
+			return
+		}
+		failure := "INSTALL_SUPPORT_COLLECTION_FAILED"
+		if errors.Is(ctx.Err(), context.Canceled) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			failure = "INSTALL_SUPPORT_CANCELLED"
+		}
+		completion, cancel := context.WithTimeout(context.WithoutCancel(ctx), timeout)
+		defer cancel()
+		result = errors.Join(result, access.append(completion, "failed", supportArchive{}, failure))
+	}()
+	report, issues := collect(collection, access)
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("INSTALL_SUPPORT_CANCELLED: %w", err)
 	}
-	if err := writeSupport(parent, name, report); err != nil {
-		return err
+	archive, err := writeSupport(parent, name, report)
+	if err != nil {
+		return errors.Join(err, removeSupportArchive(parent, name, archive))
+	}
+	// Never retry an uncertain terminal append or release a successful payload.
+	terminalAttempted = true
+	completion, stop := context.WithTimeout(context.WithoutCancel(ctx), timeout)
+	defer stop()
+	if err := access.append(completion, "complete", archive, ""); err != nil {
+		return errors.Join(err, removeSupportArchive(parent, name, archive))
 	}
 	_, err = fmt.Fprintf(out, "INSTALL_SUPPORT_COMPLETE collection_issues=%d\n", issues)
 	return err
 }
 
-func collectSupport(ctx context.Context, c Config, runner Runner) supportReport {
+func collectSupport(ctx context.Context, c Config, runner Runner, operationEnd int64) supportReport {
 	report := supportReport{
 		FormatVersion: 1, CollectedAt: time.Now().UTC(), Topology: c.Topology.Size,
 		Host:          supportHost{OS: runtime.GOOS, Architecture: runtime.GOARCH},
 		Configuration: supportConfig(c), Issues: []string{},
 	}
-	operations, err := collectSupportOperations(c)
+	operations, err := collectSupportOperationsBefore(c, operationEnd)
 	report.Operations = operations
 	if err != nil {
 		report.Issues = append(report.Issues, "OPERATION_LOG_UNAVAILABLE")
@@ -240,37 +273,43 @@ func readSupportServices(raw string, services []supportService) error {
 	return nil
 }
 
-func writeSupport(parent *os.Root, name string, report any) error {
+func writeSupport(parent *os.Root, name string, report any) (published supportArchive, result error) {
 	raw, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot encode the support report")
+		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot encode the support report")
 	}
 	raw = append(raw, '\n')
 	temporary := ".ownsolid-support-" + rand.Text()
 	file, err := parent.OpenFile(temporary, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: check the output directory's permissions and free space")
+		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: check the output directory's permissions and free space")
 	}
 	defer parent.Remove(temporary)
-	compressed := gzip.NewWriter(file)
+	digest := sha256.New()
+	compressed := gzip.NewWriter(io.MultiWriter(file, digest))
 	archive := tar.NewWriter(compressed)
 	if err = archive.WriteHeader(&tar.Header{Name: "support.json", Mode: 0o600, Size: int64(len(raw))}); err == nil {
 		_, err = archive.Write(raw)
 	}
 	if err = errors.Join(err, archive.Close(), compressed.Close(), file.Sync(), file.Close()); err != nil {
-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot finish the archive; check free space and retry")
+		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot finish the archive; check free space and retry")
 	}
 	if err := parent.Link(temporary, name); errors.Is(err, os.ErrExist) {
-		return errors.New("INSTALL_SUPPORT_OUTPUT_EXISTS: use an unused output path")
+		return published, errors.New("INSTALL_SUPPORT_OUTPUT_EXISTS: use an unused output path")
 	} else if err != nil {
-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot publish the archive in this directory")
+		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot publish the archive in this directory")
 	}
+	info, err := parent.Lstat(name)
+	if err != nil {
+		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot identify the published private archive")
+	}
+	published = supportArchive{sha256: hex.EncodeToString(digest.Sum(nil)), bytes: info.Size(), info: info}
 	directory, err := parent.Open(".")
 	if err != nil {
-		return errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
+		return published, errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
 	}
 	if err := errors.Join(directory.Sync(), directory.Close()); err != nil {
-		return errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
+		return published, errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
 	}
-	return nil
+	return published, nil
 }
