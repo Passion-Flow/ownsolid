@@ -144,3 +144,48 @@ in the same disconnected run. For the focused replay use:
 go -C services/control test -p 1 ./internal/platform/agentgateway ./internal/platform/httpserver ./internal/platform/config \
   -run '^(TestAgedGatewayFinishesHeldClaimAndPreservesCursor|TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport|TestAgentGatewayConnectionMaxAgeDefaultsAndBounds|TestDrainEndsSessionsAndRefusesNewOnes)$' -count=1
 ```
+
+## Automatic GOAWAY for an established stream
+
+The existing frame-level test sends a new request after the age instant.
+It proves that the response header starts HTTP/2 drain, but does not prove
+automatic GOAWAY while an earlier stream remains active. The source-level
+reason is that the age middleware runs when a request starts; it cannot
+change headers already sent by a long-running gRPC response. A hard socket
+deadline bounds closure but is not a graceful-drain notification.
+
+[gRPC A9](https://github.com/grpc/proposal/blob/master/A9-server-side-conn-mgt.md)
+requires an age-triggered GOAWAY followed by time for outstanding RPCs.
+The pinned [gRPC-Go handler](https://github.com/grpc/grpc-go/blob/v1.85.0/server.go)
+delegates HTTP/2 ownership to net/http. The pinned
+[Go HTTP/2 setup](https://github.com/golang/go/blob/go1.27.3/src/net/http/http2.go)
+registers its graceful connection shutdown with the public
+[http.Server.Shutdown](https://pkg.go.dev/net/http#Server.Shutdown).
+That API waits for active requests, while the socket owner still needs a
+deadline and forced close when its grace expires.
+
+Use one standard HTTP server owner per accepted dedicated gateway
+connection, retaining the same TLS, connection budget and request policy.
+Its single-connection listener closes acceptance without closing the active
+socket. At that connection's existing jittered age, invoke its public
+Shutdown with the bounded grace. The server owns all HTTP/2 frame writes.
+Join the per-connection owner on peer closure or process shutdown and retain
+the hard transport deadline. This scopes the standard shutdown mechanism
+to one connection without new dependencies or wire changes. See
+[ADR 0070](../decisions/0070-scope-gateway-http-shutdown-to-one-connection.md).
+
+Reject a global server Shutdown because it drains healthy peers too.
+Reject direct frame writes and access to Go internal connection objects.
+Replacing the handler with native gRPC transport would also require a new
+health-listener or protocol multiplexer and changes to deployment routing.
+The selected approach preserves the existing gateway origin and health paths.
+The existing Go BSD-3-Clause and gRPC-Go Apache-2.0 licences still apply;
+there is no new dependency, model, data set or runtime download.
+
+Require a real TLS/HTTP/2 test with one response held open before age.
+Without another client request, observe NO_ERROR GOAWAY covering the
+accepted stream, then release and verify the complete original response.
+Keep the leased-claim/cursor regression, silent-peer deadline, healthy-peer
+acceptance and bounded process shutdown checks. Run the native target,
+installed two-gateway rollout and simulator distribution checks before
+closing ARC-107. Source review alone is not acceptance.
