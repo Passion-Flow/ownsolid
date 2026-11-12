@@ -29,7 +29,8 @@ cancelled. The exact waiting attempt cannot reserve until all planned victims
 have a committed release. Cancelling a plan leaves every victim hold intact.
 
 Borrowing and reclaim use the existing PostgreSQL READ COMMITTED owner
-transaction. The lock order is policy, shared tenant fence, requesting workspace and then cohort.
+transaction. The lock order is policy, shared tenant fence, requesting workspace
+and then cohort.
 A cohort never locks another workspace. A physical release only decreases
 usage, and a subsequent statement must observe its committed row before using
 the capacity. Policy changes affecting an enabled cohort require it to be
