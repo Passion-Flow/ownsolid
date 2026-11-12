@@ -52,6 +52,40 @@ qualification still requires a live authenticated gateway route and
 positive capability evidence. See the
 [replay instructions and acceptance](../../../../../docs/research/product-assistant-model-qualification.md).
 
+## Execution budget reservation candidate
+
+`NewExecutionBudgets` borrows this service's current session, workspace and
+installation policy. Its separate trusted policy source supplies an explicit
+user decision, stable window and finite execution and token ceilings.
+`Reserve` charges installation and global-user counters atomically on
+PostgreSQL. Only a successfully committed `BudgetNew` permits the trusted
+adapter to start work. `BudgetHeld` means work may already have started;
+reconcile it rather than executing again. An error returns no reservation,
+including when the commit outcome is unknown.
+
+`Settle` needs the original authenticated scope and trusted usage receipt.
+It returns unused tokens once, keeps the execution charged and binds retries
+to the same usage and receipt digest. Timeouts and restarts retain holds.
+Neither method performs a product action or substitutes for the action's
+permissions, success audit or human confirmation.
+
+The [candidate DDL](testdata/execution-budget.sql) is installed only by the
+isolated repository test. It is not a production migration. Current command
+routes do not bind this budget candidate. A production migration and restore
+catalogue, authoritative typed policy source, bounded gateway adapter,
+run-loop guard, telemetry and both browser flows must be integrated before
+AGT-112 can ship. Do not accept a browser's or model's maximum token estimate.
+See the [contract and acceptance](../../../../../docs/research/product-assistant-execution-budgets.md).
+
+With the protected PostgreSQL repository fixture inputs selected as described
+below, run:
+
+```sh
+GOPROXY=off GOSUMDB=off go -C services/control test -p=1 \
+  -tags repository_integration -run '^TestDurableExecutionBudgets$' \
+  ./internal/modules/productagent -count=1
+```
+
 ## Tests
 
 ```sh
