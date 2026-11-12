@@ -15,6 +15,10 @@ import uuid
 
 import acceptance_guard as guard
 
+# Match the existing single-node E2E origins and installed Go overlay.
+INSTALLED_HTTPS_PORT = 8443
+
+
 FIELDS = {'output_directory', 'run_id', 'container_name', 'docker_socket', 'heavy_locks',
           'hard_timeout_seconds', 'cleanup_seconds', 'startup_seconds', 'suite_seconds',
           'operation_seconds', 'cpus', 'memory_bytes', 'docker_tmpfs_bytes', 'pids_limit', 'images',
@@ -34,7 +38,8 @@ def configuration(root, phases=None):
     guard.require(value['suite_seconds'] + value['startup_seconds'] + value['cleanup_seconds']
                   < value['hard_timeout_seconds'], 'Reserve cleanup time before the hard deadline')
     guard.require(value['docker_tmpfs_bytes'] < value['memory_bytes'], 'Keep Docker scratch below the memory cap')
-    guard.require(1 <= value['relay_port'] <= 65535 and value['cpus'] <= (os.cpu_count() or 1), 'Invalid port or CPU cap')
+    guard.require(value['relay_port'] == INSTALLED_HTTPS_PORT, 'Match the installed Control fixture port 8443')
+    guard.require(value['cpus'] <= (os.cpu_count() or 1), 'Invalid CPU cap')
     guard.require(type(value['maximum_io_avg10']) in (int, float)
                   and 0 <= value['maximum_io_avg10'] <= 100, 'Invalid I/O threshold')
     expected_images = {'dind', 'control', 'postgres', 'metrics', 'logs'}

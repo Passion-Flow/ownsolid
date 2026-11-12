@@ -1038,6 +1038,7 @@ canonical `run_id` UUID, an unused `lane-del-` container name, a local Unix
 `docker_socket` and the two ordered `heavy_locks`. Set positive integer
 `hard_timeout_seconds`, `cleanup_seconds`, `startup_seconds`, `suite_seconds`,
 `operation_seconds`, `cpus`, `memory_bytes`, `docker_tmpfs_bytes`, `pids_limit` and `relay_port`.
+Set `relay_port` to 8443 to match this fixture's installed HTTPS endpoint.
 Reserve startup and cleanup time outside the suite budget. Set the shared-host
 `minimum_free_memory_bytes`, `minimum_available_memory_bytes`,
 `minimum_disk_bytes` and `maximum_io_avg10` to the agreed window gate. The
