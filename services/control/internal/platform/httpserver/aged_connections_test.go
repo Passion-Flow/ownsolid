@@ -1,9 +1,13 @@
 package httpserver
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
+	"log/slog"
+	"math"
 	"net"
 	"net/http"
 	"sync"
@@ -148,5 +152,48 @@ func TestAgedListenerReleasesConnectionCapacityAfterPeerClose(t *testing.T) {
 			t.Fatalf("peer closure did not release connection capacity: %v", err)
 		}
 		time.Sleep(5 * time.Millisecond)
+	}
+}
+
+func TestRetirementLogUsesObservedElapsedTime(t *testing.T) {
+	accepted := time.Now()
+	conn := &agingConn{id: "observed-connection", acceptedAt: accepted, drainAt: accepted.Add(55 * time.Second)}
+	for _, tc := range []struct {
+		name, reason      string
+		started, finished time.Duration
+		forced            bool
+	}{
+		{"early_process_stop", "process_shutdown", time.Second, 2 * time.Second, false},
+		{"delayed_age_drain", "connection_age", 55*time.Second + 3*time.Millisecond, 56*time.Second + 250*time.Millisecond, false},
+		{"grace_expiry", "connection_age", 55*time.Second + 5*time.Millisecond, 57 * time.Second, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var output bytes.Buffer
+			logger := slog.New(slog.NewJSONHandler(&output, nil))
+			logger.Info("http_connection_retired", retirementLogFields(conn, tc.reason, accepted.Add(tc.started), accepted.Add(tc.finished), tc.forced)...)
+			var event struct {
+				Message   string    `json:"msg"`
+				Reason    string    `json:"reason"`
+				ID        string    `json:"connection_id"`
+				Scheduled float64   `json:"scheduled_age_seconds"`
+				Started   float64   `json:"drain_started_age_seconds"`
+				Age       float64   `json:"age_seconds"`
+				Forced    bool      `json:"forced"`
+				StartedAt time.Time `json:"drain_started_at"`
+				RetiredAt time.Time `json:"retired_at"`
+			}
+			if err := json.Unmarshal(output.Bytes(), &event); err != nil {
+				t.Fatal(err)
+			}
+			if event.Message != "http_connection_retired" || event.Reason != tc.reason || event.ID != conn.id || event.Forced != tc.forced {
+				t.Fatalf("lost retirement identity/outcome: %+v", event)
+			}
+			if event.Scheduled != 55 || math.Abs(event.Started-tc.started.Seconds()) > 1e-9 || math.Abs(event.Age-tc.finished.Seconds()) > 1e-9 {
+				t.Fatalf("planned jitter replaced observed elapsed time: %+v", event)
+			}
+			if !event.StartedAt.Equal(accepted.Add(tc.started)) || !event.RetiredAt.Equal(accepted.Add(tc.finished)) {
+				t.Fatal("lost actual retirement timestamps")
+			}
+		})
 	}
 }
