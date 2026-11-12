@@ -120,3 +120,46 @@ The existing workspace projection root also passed with a restricted principal t
 Fixtures used PostgreSQL 18.6 and pgvector 0.8.7 in owned network-none Linux arm64 containers on the workstation. No native Linux amd64 installation or new rendered UI acceptance is claimed. The qualified runtime/test input is `fcbb839af30f6df6b7b6dd60bbf60c61442bf973`; the durable local evidence set is `aud108-identity-20261112.vi6mouqa`, including exact input, raw native logs, wire observations and full-gate exit codes. Fixtures and the owned scratch volume were cleaned up. Only this verification text changed after the gate.
 
 AUD-108 remains open for SCI scoped-workspace accounting, Web action/family names, DEV public contract metadata and Delivery collector admission/reconciliation.
+
+## Web action and family display
+
+The existing S-407 audit list and preview drawer remain the consumer. Display
+`audit.events_read` as "Audit trail read" and add the audit family to the existing
+Kind of action selector. Keep the machine action in the drawer and keep using
+`category=audit`; do not invent an exact-action query value or change the thirteen
+public fields. The existing action-name fallback still handles future unnamed
+actions without treating a module identifier as prose.
+
+The [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
+keeps event identity and access control with the producing application. The
+[WCAG language guidance](https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html)
+allows technical identifiers while requiring readable interface language. Localized
+names plus an explicit raw identifier in details preserve both needs. This uses
+only the existing React (MIT), TanStack (MIT), Lucide (ISC) and ownsolid localization
+code. Commercial distribution and offline use remain allowed with their notices;
+no dependency, model, dataset, network resource or licence term is added.
+
+Consumer checks must cover English and Simplified Chinese action names, the audit
+family filter sent as `category` (without an `action` query), sharing/reloading that
+filter, the retained machine identifier in the drawer, a filtered empty and a
+failed read with explicit retry. Existing initial empty, partial pagination,
+permission and Portal-refusal behavior remains unchanged. Register a representative
+audit-read page state for the existing keyboard, accessibility and localization
+checks. Read desktop and narrow screenshots before recording the Web slice.
+This does not qualify the actual installed append, scoped workspace accounting,
+collector admission or DEV's exact-action enum. AUD-108 stays open.
+
+The focused Web consumer checks passed `make check`, both app type checks,
+49 locale tests, the Console production build, 20 audit Chromium cases
+with one unchanged conditional skip, and four new page-state checks.
+English desktop and 390-pixel Simplified Chinese screenshots were opened:
+the list keeps its title/filter/table structure and the preview drawer keeps
+the original event and request identifiers. The seven state boundaries stay
+in the existing audit page: layout-shaped loading, initial no-records,
+filtered no-match with Clear filters, retained partial pages, retryable
+read failure, denied read, and unavailable operations with reasons. Initial
+and filtered empty copy remains distinct. This slice adds no surface or
+primary action; reading an event remains the immediate task, with its
+request/person follow-up in the preview. Installed append/SQL acceptance
+is not claimed by the scripted browser checks. Full gate evidence follows
+only after the exact committed source has passed it.

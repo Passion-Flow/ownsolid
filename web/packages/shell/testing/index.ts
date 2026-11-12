@@ -90,7 +90,13 @@ export {
   teamWorkspace,
   type WorkspaceScript,
 } from './workspaces.ts';
-export { failedSignIn, licenseEvent, systemEvent, type AuditScript } from './audit.ts';
+export {
+  auditReadEvent,
+  failedSignIn,
+  licenseEvent,
+  systemEvent,
+  type AuditScript,
+} from './audit.ts';
 export {
   activeLicense,
   activeSummary,
