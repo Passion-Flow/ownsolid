@@ -81,6 +81,8 @@ services:
     pull_policy: never
     user: ${OWNSOLID_RUNTIME_UID:?}:${OWNSOLID_RUNTIME_GID:?}
     command: [serve, --config, /run/projectone/control.yaml]
+    environment:
+      SSL_CERT_FILE: ${OWNSOLID_CONTROL_CA_FILE:?}
     depends_on:
       postgres: {condition: service_healthy}
     ports:
