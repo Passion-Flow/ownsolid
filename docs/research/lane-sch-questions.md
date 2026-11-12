@@ -71,6 +71,9 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   and the [Kubernetes Topology Manager](https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/)
   distinguish local hardware affinity from scheduler labels. Avoid inventing
   topology from node names or assuming every link is healthy.
+  The [topology research](scheduling-topology.md) separates physical graphs,
+  derived scheduler domain trees and current link observations, and records the
+  exact missing producer contract and hard/preferred acceptance conditions.
 - SCH-107 has observation readers. The signed offline install assets and
   RKE2 deployment, workload creation, RBAC provisioning and runtime reconciliation
   remain part of the item.
