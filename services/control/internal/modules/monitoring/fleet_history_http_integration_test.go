@@ -306,11 +306,20 @@ func TestFleetHistoryAuthenticatedHTTPOffline(t *testing.T) {
 	execSQL("UPDATE workspaces SET status='active' WHERE id=$1", workspace)
 	get(admin, recentPath, 200, "")
 
+	var adminToken string
+	for _, cookie := range admin.client.Jar.Cookies(adminOrigin) {
+		if cookie.Name == cookiePolicy.Name("admin", httpserver.SessionCookie) {
+			adminToken = cookie.Value
+		}
+	}
+	if adminToken == "" {
+		t.Fatal("normal Admin login did not issue a session cookie")
+	}
 	var revokeSession sync.Once
 	sessionHook := func() {
 		revokeSession.Do(func() {
-			if _, err := accounts.DB.Exec(ctx, "UPDATE sessions SET revoked_at=clock_timestamp() WHERE audience='admin' AND revoked_at IS NULL"); err != nil {
-				t.Error("synthetic in-flight session revocation", err)
+			if err := accounts.Logout(ctx, adminToken, "admin", uuid.NewString()); err != nil {
+				t.Error("actual in-flight session revocation", err)
 			}
 		})
 	}
