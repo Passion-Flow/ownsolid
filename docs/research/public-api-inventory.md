@@ -863,6 +863,14 @@ async calls, including a lost reply and an explicit second read.
 Tests must cover the actual generated Go operation with a primed shared-client
 control, lost response, explicit 409, explicit retry, preserved TLS/cookie trust,
 redirect refusal, unsupported request executors and concurrent independent calls.
+Within those ten protocol test groups, retain consecutive lost replies across
+separate deliberate calls and caller cancellation before and during dispatch.
+[Go request context](https://pkg.go.dev/net/http@go1.27.3#Request.WithContext)
+controls connection establishment, sending and response reads. Check cancellation
+with the generated operation and an actual waiting HTTP handler, then show that
+only a new uncancelled call can dispatch again. Cancellation or timeout cannot
+establish whether an earlier server access was recorded. Keep these cases
+unqualified until the native protocol tests actually run.
 Use the existing SDK wire runner; no new service or qualification framework is
 needed. Generator unit/projection checks can run independently of Go compilation.
 Native Go wire qualification remains pending while heavy admission is withheld.
