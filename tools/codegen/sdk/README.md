@@ -130,8 +130,12 @@ IDs within a document, and duplicate method and path declarations in the
 same audience. Exit 1 reports findings and exit 2 indicates unreadable or
 invalid input. The audit runs from local files and uses the same audience
 rules as SDK generation. With `--baseline`, it also reports named response
-model reference changes for source review. These findings can describe a
-wire-compatible change that still changes generated return types. The
-comparison does not establish general schema or behavior compatibility.
+model reference changes and closed response object shape changes for review.
+The shape inventory records property names, required names and closure at local
+schema pointers. It catches a new optional field in an existing closed model,
+which named references alone cannot reveal. These findings can also describe a
+wire-compatible change that changes generated source types. Property value
+constraints, requests and effective composition remain outside this check;
+an empty finding list does not establish general schema or behavior compatibility.
 It measures the published contracts. Verification
 against running handlers remains the responsibility of each API owner.
