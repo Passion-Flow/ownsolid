@@ -1,5 +1,73 @@
 # Offline delivery and host preflight
 
+## Installed acceptance window and capture lifetime
+
+Validate the complete, immutable client and fixture inputs before starting a
+bounded installation. Match the client ELF architecture, source and test hashes,
+and the self-test report to the admitted binary. A cross-compiled executable and
+Mac self-tests remain separate from executing the client against Linux services.
+Network transfer is preparation, not part of a running installation window.
+
+The repository TUN recorder writes each captured packet directly to its log and
+closes the device on SIGTERM. Store that log in a protected host bind from its
+first packet. Copying a container-local log in an EXIT trap loses it when the
+parent forcibly removes the container. Docker documents that
+[stop escalates from SIGTERM to SIGKILL](https://docs.docker.com/reference/cli/docker/container/stop/);
+an exit trap alone cannot establish complete capture.
+
+Stop the external relay and all inner workloads before stopping the recorder.
+Record their actual shutdown results and the recorder exit status, then bind the
+closed log's digest and length to the window. The host finalizer checks the
+retained log against the validated probe baseline. Missing shutdown confirmation,
+a truncated line, a different window or a missing final marker means
+`capture-incomplete`, even when an earlier snapshot contained only five probes.
+A complete capture with any added packet fails. Test normal exit, a late packet,
+forced deadline termination, missing capture and damaged final metadata.
+
+Use the existing host Python 3.12 standard library for these test-only guards:
+[fsync and atomic replacement](https://docs.python.org/3.12/library/os.html),
+[file locks](https://docs.python.org/3.12/library/fcntl.html), and
+[bounded child processes](https://docs.python.org/3.12/library/subprocess.html).
+The [PSF v2 licence](https://docs.python.org/3.12/license.html) permits commercial
+use, redistribution with its notices and offline execution. Existing Go and
+Docker licences remain unchanged. No additional runtime dependency, model or
+dataset is introduced.
+
+Keep one predeclared, protected metadata and handoff channel under the actual
+parent lease. OBS alone claims and runs the history client; DEL can acknowledge
+only a specifically pending hook. Enforce generation checks, one driver claim,
+ordered hooks and fail-closed phase transitions. This is test coordination, not
+server authorization or a privileged-action audit. Reject hot injection into a
+live parent, invented inherited lock descriptors, duplicate initialization and
+overlapping counter probes. Test competing claims, stale handoffs, wrong roles
+and recovery after a hook failure without invoking any product service.
+
+Select every participating phase and its exact owner input report before
+launch. Run UI, independent SQL and CLI first, then enter the unique OBS driver
+and quiet-counter segment. A window that excludes history does not require its
+client or stores. Installed readiness uses the candidate's own database check
+and CatalogSQL in one read-only repeatable-read transaction: record its exact
+non-partition names and migration checksums, then classify the actual legal
+monthly children separately. Never compare a raw physical table count with the
+source's non-partition TableCount or relabel an earlier source after a migration.
+
+The native recorder lifecycle fixture exercised real TUN traffic in two private
+Linux amd64 network/PID/mount namespaces, without Docker or product services.
+Each used a three-packet IPv4/IPv6/DNS batch and a second IPv4-only two-packet
+batch. Normal producer exit preserved all five closed records. Killing the
+namespace parent also preserved all five host-file records, but absent graceful
+closure correctly yielded capture-incomplete. This is recorder lifetime evidence;
+the installation, Docker workload and authenticated application flows still need
+their own complete run.
+
+The Docker lifecycle fixture additionally exercised the actual parent close
+method with a real protected host bind, two sequential `network=none` probe
+containers and no inner daemon or product services. Normal exit retained five
+records and passed final capture. Deadline cleanup retained five records but
+correctly returned capture-incomplete without a closure marker. Both owned
+containers were removed. This verifies capture lifetime through Docker cleanup;
+it does not establish a successful installed product or history request.
+
 ## DEL-101 release bundle
 
 K3s prepares architecture-specific archives on a connected system and preloads them

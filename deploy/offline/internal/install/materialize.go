@@ -70,6 +70,10 @@ func (c Config) CredentialPath() string { return filepath.Join(c.Layout().Operat
 // are kept across runs; configuration derived from install.yaml is rewritten.
 func Materialize(c Config) error {
 	l := c.Layout()
+	historyControl, err := readHistoryControl(c)
+	if err != nil {
+		return err
+	}
 	for _, d := range []struct {
 		path    string
 		runtime bool
@@ -120,6 +124,17 @@ func Materialize(c Config) error {
 		}
 		if e = writeFile(filepath.Join(l.Config, item.target), raw, c, true); e != nil {
 			return e
+		}
+	}
+	if historyControl != nil {
+		directory := filepath.Join(l.Config, "fleet-history")
+		if err := privateDirectory(directory, c, true); err != nil {
+			return err
+		}
+		for name, contents := range historyControl {
+			if err := writeFile(filepath.Join(directory, name), contents, c, true); err != nil {
+				return err
+			}
 		}
 	}
 	postgresAddress := c.Network.stateAddresses().Postgres
@@ -210,6 +225,9 @@ func (c Config) renderControl(dsnFile string, serving bool) ([]byte, error) {
 	}
 	if serving {
 		document["models"] = map[string]any{"artifact_root": containerModelStore}
+		if c.Telemetry.FleetHistoryControlDirectory != "" {
+			document["monitoring_config_file"] = containerConfigDir + "/fleet-history/monitoring.json"
+		}
 		// Only the serving container mounts the socket directory.
 		document["server"].(map[string]any)["operator_socket"] = containerSocketDir + "/" + socketName
 		agents := map[string]any{"ca_certificate_file": containerConfigDir + "/" + agentCAFile, "ca_private_key_file": containerConfigDir + "/" + agentCAKeyFile}
@@ -260,7 +278,8 @@ func (c Config) ComposeVariables() map[string]string {
 		"OWNSOLID_METRICS_MEMORY": c.Resources.MetricsMemory, "OWNSOLID_METRICS_CPUS": c.Resources.MetricsCPUs,
 		"OWNSOLID_LOGS_MEMORY": c.Resources.LogsMemory, "OWNSOLID_LOGS_CPUS": c.Resources.LogsCPUs,
 		"OWNSOLID_METRICS_RETENTION": c.Telemetry.MetricsRetention, "OWNSOLID_LOGS_RETENTION": c.Telemetry.LogsRetention,
-		"OWNSOLID_PROJECT": c.Project, "OWNSOLID_CONTROL_IMAGE": c.Images.Control, "OWNSOLID_POSTGRES_IMAGE": c.Images.Postgres,
+		"OWNSOLID_CONTROL_CA_FILE": c.controlCAPath(),
+		"OWNSOLID_PROJECT":         c.Project, "OWNSOLID_CONTROL_IMAGE": c.Images.Control, "OWNSOLID_POSTGRES_IMAGE": c.Images.Postgres,
 		"OWNSOLID_RUNTIME_UID": strconv.Itoa(c.Runtime.UID), "OWNSOLID_RUNTIME_GID": strconv.Itoa(c.Runtime.GID),
 		"OWNSOLID_BIND_ADDRESS": c.Network.BindAddress, "OWNSOLID_HTTPS_PORT": strconv.Itoa(c.Network.HTTPSPort),
 		"OWNSOLID_CONFIG_DIR": l.Config, "OWNSOLID_OPERATOR_DIR": l.Operator, "OWNSOLID_SOCKET_DIR": l.Socket, "OWNSOLID_POSTGRES_DATA": l.Postgres,

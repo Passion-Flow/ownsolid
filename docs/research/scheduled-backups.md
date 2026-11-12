@@ -125,3 +125,89 @@ verification, and its ARC gate refused an unrelated commit. Its source archive S
 `a9f83539a38f5823b9b5d29e4c3fdcbf1cb98cfb3d0364a5e67d6ea717c278f8`.
 The combined run remains queued behind ARC acceptance and the shared host
 preflight. The earlier failure drill remains separate.
+
+### Recovered timer continuation
+
+The timer, materialization, logical restore and retention failure/retry
+sources were recovered from their original command records. The recovered
+wrapper holds `/run/lock/ownsolid-heavy.lock`, followed by
+`/root/lane-sci-tools/heavy-test.lock`, throughout the Linux run. It
+rechecks resources after acquiring both. The scheduled delivery window
+follows the accepted Audit and Gateway qualifications. Use a clean
+checkout containing the accepted ARC migration and its exact SQL bytes.
+The fixture observes that checkout's live schema and table count and
+requires every independently restored archive to match them.
+
+Shell parsing and source checksum verification passed. The source
+ancestry guard refused the pending Audit candidate before building or
+connecting to the host. The recovered source archive SHA-256 is
+`a4a64ea37be3fe72bea5489637e6e83ab629e9c40b79f094695b43944450d434`.
+The guard transcript SHA-256 is
+`1a2931ac119004277e166bd8ae4d78f93d67d0a1dc697fa07355622b16fa5515`.
+The combined timer success, restored dump and retention failure/retry
+matrix above still requires its complete Linux acceptance transcript.
+
+
+### Accepted schema continuation
+
+The accepted Audit migration is now on main through `106ca52d`; the SQL
+commit is `8c04ab6f`. Build from the selected current checkout and verify
+that accepted migration's exact up/down bytes and ancestry. Observe the
+actual migrated schema and table count, and run Control's schema check
+before scheduling. Do not assume later accepted migrations are absent.
+
+Review of the recovered runner found an unconnected recorder launch and a
+wrong history assertion using `complete` instead of `succeeded`. Repair
+the fixture before executing it: start the repository recorder in the
+PostgreSQL namespace before database initialization, make it both default
+routes, prove the three exact host probes, and require the capture to stay
+unchanged through migrations and all four timer attempts. All four
+publications are verified, including the deliberate retention failure;
+only successful expiry has a count. This repair does not establish a run
+result. Keep the existing earlier failure evidence and source recovery
+separate from the resulting timer-to-restore acceptance.
+
+
+### Verified timer publication and retention recovery
+
+On 2026-11-12, source `bc6e4b0274d494109c0b726ec545bf90ac2409c5`
+passed the combined drill on Ubuntu 24.04 Linux amd64 and systemd 255.
+It contains the accepted Audit SQL commit
+`8c04ab6fa6d1d8736e9ddc14376e92c1a70f08a2`, admitted through main
+`106ca52d`. The native Control migration and schema check reported
+schema 58 and 118 tables; those observed values matched every manifest
+and independently restored PostgreSQL database.
+
+The four real systemd timer activations produced `succeeded`, `succeeded`,
+`failed`, `succeeded`. Their expiry counts were 0, 1, omitted, 2. Every
+publication had `backup_verified=true`. The deliberate owner symlink
+caused `INSTALL_BACKUP_RETENTION_FAILED` and service exit status 1 after
+publishing a readable new dump. Removing only that fixture marker let the
+next actual timer invocation succeed and expire both owned predecessors.
+All four history rows remained, including the retention failure.
+
+Each archive had a custom-format `PGDMP` header and exact manifest byte
+count and SHA-256. Each was loaded again with native `pg_restore` into a
+separate scratch database and compared for deployment UUID, schema and
+table count. The original live database OID and ordinary-backup sentinel
+remained unchanged. This was a database-aware export, not a database
+directory copy.
+
+The PostgreSQL service had no network interface beyond loopback and the
+recorder. Both defaults terminated at that recorder before database
+initialization. It observed and blocked the exact IPv4, IPv6 and DNS
+probes, then the complete capture stayed unchanged through migration,
+all four jobs and logical readbacks. The fixture used no published port.
+Its PostgreSQL container, runtime units, recorder and scratch directories
+were removed; the staging tmpfs returned to zero used bytes. Other lane
+containers were untouched.
+
+The retained transcript is `20261112T061113Z-linux.log`, SHA-256
+`ad353eff7b863e62f9fe5811188247a9b9dbefa987acd7ba0bdbff29cd46b9ed`.
+Its evidence package contains the exact binaries, build-source and accepted
+SQL identities, input hashes and runner. The tested timer, host wrapper,
+materialization test and probe are now kept with the
+[component fixture](../../deploy/offline/internal/install/testdata/scheduled-backup-timer).
+The launcher keeps new evidence outside the checkout. Earlier refusal and
+source-recovery records remain separate. Console configuration and history
+acceptance are not established by this drill; REL-108 remains unticked.

@@ -23,6 +23,11 @@ type supportOperation struct {
 }
 
 func collectSupportOperations(c Config) ([]supportOperation, error) {
+	return collectSupportOperationsBefore(c, -1)
+}
+
+// collectSupportOperationsBefore projects history at admission, before this read's new records.
+func collectSupportOperationsBefore(c Config, end int64) ([]supportOperation, error) {
 	events := []supportOperation{}
 	root, err := os.OpenRoot(c.InstallRoot)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -49,8 +54,12 @@ func collectSupportOperations(c Config) ([]supportOperation, error) {
 	if !info.Mode().IsRegular() {
 		return events, errors.New("operation log is not a regular file")
 	}
-	start := max(0, info.Size()-supportOperationLogBytes)
-	raw := make([]byte, info.Size()-start)
+	size := info.Size()
+	if end >= 0 {
+		size = min(size, end)
+	}
+	start := max(0, size-supportOperationLogBytes)
+	raw := make([]byte, size-start)
 	if len(raw) > 0 {
 		if _, err := f.ReadAt(raw, start); err != nil {
 			return events, err

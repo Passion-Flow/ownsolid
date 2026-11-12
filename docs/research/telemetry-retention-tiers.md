@@ -384,3 +384,277 @@ passed before the test-only import and revocation-fixture fixes. The complete
 public operation, SDK/Help publication, installed delivery and Console
 acceptance remain separate; this run establishes the registered module
 entry and shared response writer.
+
+The registered module source was subsequently qualified on 767b78b0,
+rebased onto main 4f6a1c8c. Disconnected make check and make build, every
+owned module race test, the authenticated history profile and the private
+store TLS profile all passed. The exact-source driver exited zero after
+checking its clean worktree and stopped fixtures. Public operation and
+bilingual publication prerequisites remained open.
+
+### Transaction problems in the public contract
+
+The [shared Problem registry](../../services/control/internal/platform/httpserver/problem.go)
+also preserves STORAGE_DEADLOCK, STORAGE_LOCK_TIMEOUT, STORAGE_CANCELLED,
+STORAGE_TIMEOUT and STORAGE_COMMIT_ROLLED_BACK as 503 responses.
+[Service error normalization](../../services/control/internal/modules/monitoring/service.go)
+can produce them from the selected transaction owner. Keep those codes in the
+public Problem enum and operation error declaration as well as the existing
+STORAGE_COMMIT_OUTCOME_UNKNOWN and STORAGE_UNAVAILABLE. A strict generated
+client must parse every preserved refusal before deciding what to retry.
+Unknown vendor failures still collapse to STORAGE_UNAVAILABLE.
+
+The normal native history profile above does not inject these five database
+outcomes. Their contract/SDK parsing tests belong to DEV's publication
+qualification. Whole public operation acceptance still requires that corrected
+contract, bilingual explanations and the same registered module source.
+
+## Coordinated public contract
+
+Main 096c50b8 publishes the registered operation, OpenAPI, generated clients
+and Help with the fourteen bilingual recovery entries. Its protected module
+source matches the authenticated entry qualified above. The combined
+disconnected check/build, package race tests, SDK/Help/locale checks, normal
+TLS/CSRF/login query and private-store certificate rotation all passed.
+See the [public contract acceptance](public-api-inventory.md#obs-109-fleet-history-publication-boundary).
+A documentation-only upstream advance was checked before the fast-forward
+publication. Installed retention delivery and the Console history view remain
+open. The later retention profile and process-route correction are independent
+increments on this published base.
+
+## Ninety-day aggregate qualification
+
+The existing native read qualifies tier selection and the large-fleet note
+qualifies raw-series storage. A long-range API also needs measured costs for
+the retained aggregate shape. Generate ten synthetic recording-output series
+for five cells with 2,000 observed nodes each, one observed and reachable pair
+per minute. Ninety days contain 1,296,000 samples. Vary reachable counts and
+include periodic measured zero rather than measure only perfectly constant
+values. These are synthetic aggregates; they do not reproduce 10,000 agents
+or ninety days of raw node traffic.
+
+Use the selected VictoriaMetrics
+[streaming Prometheus import](https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/#how-to-import-data-in-prometheus-exposition-format)
+and MetricsQL
+[count_over_time](https://docs.victoriametrics.com/victoriametrics/metricsql/#count_over_time)
+to verify the full stored sample count before and after a graceful process
+restart. Keep a 100-day store horizon so the entire settled 90-day window
+fits without testing retention expiry. Do not drop the host page cache.
+Measure the first authenticated read after restarting the native store and
+thirty subsequent reads through the same CSRF/login/TLS module entrance.
+Report those exact client measurements, including schema validation and
+audit checks, separately from production latency percentiles. Check the
+widened step, complete response cap, all returned counts and timestamps,
+current audit identity and zero raw-tier requests. Record allocated data
+bytes after graceful shutdown.
+
+Stream generation with bounded buffers instead of keeping the import in
+memory. Join the producer on every request result. Reject partial imports
+and require the native persisted count to match the exact intended rows.
+The existing private PostgreSQL/metrics binaries and licenses apply; no
+dependency, model or external data set is added. A passing profile establishes
+this aggregate storage/query shape, not elapsed retention, provider failure
+recovery, real hardware or an installed Console.
+
+### Verified ninety-day aggregate shape
+
+Source 876f9c5b passed make check, make build, the complete owned-module
+race suite and all three native history profiles on loopback-only Linux
+amd64. TestFleetHistoryNinetyDayAggregates ran with the race detector.
+Native VictoriaMetrics 1.155.0 counted exactly 1,296,000 samples before and after its graceful
+process restart. The data occupied 491,520 allocated file bytes after the
+final stop. The 100-day store held the full settled 90-day input; this run
+does not test expiration or power-loss durability.
+
+The normal authenticated TLS read returned five cells with 1,424 points
+each. Every timestamp, observed count, varying reachable count and measured
+zero matched the input, every request had its committed audit, and the raw
+guard received no request. The first read after restarting VictoriaMetrics
+took 964.49 ms. Thirty subsequent reads had a nearest-rank median of
+915.57 ms, p95 of 967.37 ms and maximum of 1,003.02 ms. Those client
+measurements include the race detector, response schema and point/count
+validation, and SQL audit readback. They do not isolate native store
+execution or establish production percentiles. The host page cache was
+not dropped and the result cache was disabled.
+
+The ten series represent the recording-output shape of five cells with
+2,000 observed nodes each. They are not 10,000 enrolled nodes or raw
+node/GPU traffic. The [raw-series qualification](telemetry-scale.md#linux-amd64-qualification)
+retains its separate 17-million-series, disk and query measurements.
+Changing reachable counts and periodic zero make the compressed byte
+count specific to this declared synthetic input.
+
+The shared HTTP/application and allocated-byte helpers were extracted
+without changing product code. Both history-http and history-tls passed
+again on fb699628 after that extraction and the new runner selector.
+All native processes and disposable PostgreSQL containers stopped.
+
+## Current installation boundary
+
+The current Control startup in `cmd/server/monitoring.go` already reads
+the global `monitoring_config_file` reference. It passes that protected
+path through `monitoring.LoadEnvironment` under
+`PROJECT_ONE_MONITORING_CONFIG_FILE`. The explicit protected serving
+environment file can select the reference. An ambient environment
+variable does not configure this path. The policy's `fleet_history`
+object owns `raw_origin`, `long_origin`, `raw_horizon_seconds`,
+`max_range_seconds` and `settling_seconds`.
+
+Current single-node Compose provisions one metrics store using HTTP on
+its private state bridge. The history reader accepts remote HTTPS and
+permits plain HTTP only for a loopback IP literal. Its policy cannot
+use that existing bridge HTTP address. The installer `TelemetryConfig`
+only selects metrics and log retention, and its layout owns one metrics
+directory. It provides neither the separate long store and evaluator nor
+their TLS, trust, retention and volume inputs. A raw store TLS transition
+also has to preserve the existing Control metrics push and readiness
+checks.
+
+The module example README references an older
+`deploy/compose/monitoring/compose.yaml` overlay and the Helm fields
+`configuration.policyEnvironmentFile` and `privateMountPath`. The overlay
+is absent from the current repository. The shipped chart's values use
+`control.runtimeSecret` and have neither of those fields. Use the current
+Compose and chart contracts when implementing the deployment continuation.
+Those historical example commands do not establish an installed path.
+
+DEL needs the approved pinned evaluator payload and notices, separate
+raw and long storage, protected native TLS certificate and key files,
+and the assigned private origins. Provision Control's applicable system
+CA trust separately from vmalert's datasource and remote-write CA files.
+Keep raw write, evaluator read/write and Control query access scoped to
+their intended routes. Set the routing horizon within the actual raw
+retention and include scrape, evaluation and delivery lag in the settling
+delay. These inputs must survive installer reapply and upgrade.
+
+The deployment run must exercise the normal registered Admin route after
+DEV and OBS publish and dispatch it. Reuse the same two stores for
+trusted and unauthorized certificate replacement. Prove connection
+draining and client restart when removing old issuer trust, evaluator
+recovery after its independent CA update, no raw fallback on long-tier
+failure, and the existing authorization and audit refusals. The earlier
+`e46f6ba7` TLS fixture remains the process-level certificate evidence.
+Installed deployment and configuration acceptance remain open.
+
+## Installer continuation
+
+Use a separately named, opt-in Compose deployment for the fleet raw store,
+long store and evaluator. The existing Control process-metrics client in
+`telemetrystore.NewClient` accepts HTTP only. Preserve that installed path
+while giving fleet history its own private HTTPS stores and persistent
+directories. Reuse the installer CLI, operation lock, atomic file writer
+and protected input reader. No monitoring or shared Control source change
+is required for deployment manufacture.
+
+The operator supplies digest-pinned local VictoriaMetrics and vmalert
+images, private numeric listen addresses, a private internal subnet,
+runtime UID/GID, resource bounds, raw and long retention, and protected
+CA, certificate, key, rule and monitoring-policy files. Verify both the
+published IP and internal service IP against each leaf. Pin the local
+recording-rule bytes. Use vmalert's documented datasource and remote-write
+CA files and local rules, with no URL-based rule loading. Its loopback
+health endpoint is separate from the two HTTPS store endpoints.
+[vmalert configuration](https://docs.victoriametrics.com/victoriametrics/vmalert/).
+
+Validate all inputs before changing a running deployment. Store each
+configuration generation immutably, stop the three managed services,
+publish their Compose reference and start them from the selected generation.
+Stopping both clients and stores drains connections authenticated under
+old trust. Retry after an interrupted stop or start uses the same data
+directories and generation. Keep old generations for operator recovery.
+Reject another project, subnet or listen assignment under an owned root.
+The first real Compose run started all three native services but failed host
+health checks: Docker does not publish ports from internal-only containers.
+Keep the internal service network and add a separate publication bridge,
+matching Control's established state/edge split. Do not replace the private
+TLS store contract or suppress health failures. The disconnected fixture must
+prove its publication-bridge workload probes reach the recorder and fail on
+every other observed destination, including DNS. Preserve Docker's resolver
+configuration so the test does not hide upstream runtime DNS attempts.
+[Docker's upstream issue](https://github.com/moby/moby/discussions/53256),
+[port publication](https://docs.docker.com/engine/network/port-publishing/).
+Publish the checked monitoring policy and combined Control CA file. The
+ordinary install command's optional `telemetry.fleet_history_control_directory`
+selects this protected output directory. It installs the two files, selects
+the existing global `monitoring_config_file` and process CA file, and restarts
+Control through the existing apply lifecycle. The containerized deployment
+requires private host origins reachable from Control; host loopback origins
+are refused at this admission boundary. No shared startup source changes.
+
+The pinned native TLS server and evaluator use the existing Apache-2.0
+VictoriaMetrics components. Their image distribution still requires the
+applicable component and base-image notices. Go and golang.org/x/sys v0.49.0 use the BSD-3-Clause license.
+The existing go.yaml.in/yaml/v3 v3.0.5 has Apache-2.0 files and
+MIT-licensed libyaml ports. These permit commercial use, redistribution
+with their applicable notices and offline operation. See the
+[Go license](https://go.dev/LICENSE),
+[x/sys license](https://cs.opensource.google/go/x/sys/+/v0.49.0:LICENSE),
+and [YAML license](https://github.com/yaml/go-yaml/blob/v3.0.5/LICENSE).
+The internal bundle reader keeps its existing dependency inventory. No model,
+dataset or additional dependency is introduced.
+
+Unit checks must cover old installer configuration, protected file and
+pin refusal, invalid and expired CA, wrong SAN and key, issuer overlap,
+wrong policy origins, concurrent ownership and interrupted restart.
+The small Linux deployment run must use real stores and vmalert with
+recorded egress, show a retained sample and aggregate after restart,
+then replace the issuer and remove old trust while retaining the data.
+The normal authenticated history operation is verified with the matching
+OBS and DEV candidate. Formal public-operation publication remains with
+those owners.
+
+
+## Verified installer deployment
+
+On 2026-11-12, source `7682f5172412dfdb234eab633ec9e58d7ceaa8b2`
+passed `TestFleetHistoryPrivateDeploymentDocker` on `ownsolid-cpu`,
+Ubuntu 24.04 Linux amd64, in 152.40 seconds. The normal native installer
+command deployed two VictoriaMetrics 1.155.0 stores and vmalert 1.155.0.
+The unchanged production rules persisted the scoped two-node aggregate.
+After a real acknowledged stop was interrupted, the normal CLI retry
+retained the long-tier sample. Pretrusted issuer overlap, leaf replacement,
+connection draining and new-only trust all retained that sample. The
+old issuer-only client refused the replacement peer.
+
+The outer Docker 29.1.3 container had no external interface. The repository
+recorder was its only IPv4 and IPv6 default route, with a resolver present
+before starting Docker or application containers. Exactly five packets
+were captured: host TCP IPv4, TCP IPv6 and DNS, and publishing-bridge
+workload TCP IPv4 and DNS. The workload bridge was IPv4-only. Every probe
+was blocked; any additional packet or different DNS question failed the
+fixture. No other outbound packet was recorded through installation,
+aggregation, interrupted restart and issuer rotation. Input image loading
+and all Compose starts disabled pulling.
+
+The pinned metrics image ID was
+`sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84`.
+The evaluator fixture image used that base and the existing native vmalert
+binary with SHA-256
+`d1d1a8d2b04c2f9f32c37934b498ae1e5f031cb55fdf89ffb94eeaef57742171`.
+The fixture selected its immutable local image ID before deployment.
+The isolated daemon image ID was
+`sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5`.
+This fixture image is not the production release inventory.
+
+The successful transcript is retained as `linux-deployment-success.log`
+with SHA-256
+`0ef2d41ac5ab98ee0d1721570eb19d28dc7e156736108d029dfd0b812e9b834b`.
+The same evidence package retains the source bundle, Linux binaries,
+protected-input hashes, runner, deliberate probe and earlier failed runs.
+The fixture used private inner-host ports 37391, 42297 and 40263. Its stores,
+evaluator, probe, isolated daemon, temporary image tag and private fixture
+directory were removed. No lane-b container was changed.
+
+The new source passed disconnected Linux `make check` and `make build`.
+A root invocation of the installer unit suite failed because its inherited
+fixtures use the current UID, while service UID zero is invalid. Both
+installer packages passed as UID/GID 65534 in read-only, network-none
+Linux containers; `go vet` also passed. The final
+`2351a2ce` backup compatibility change passed the same two-package Linux
+suite and focused race checks. It retains the exact prior Compose writer
+profile and its original environment while refusing unreviewed profile
+changes and separate history state. Installed Control startup and query
+acceptance with the managed policy/trust files, the Console history view,
+retention expiry and the production image/notice inventory remain open.
+The normal authenticated API and SDK acceptance is recorded separately in
+[the public contract evidence](public-api-inventory.md#obs-109-fleet-history-publication-boundary).

@@ -11,6 +11,110 @@ go -C deploy/offline build -o ownsolid-install ./cmd/install
 go -C deploy/offline test -count=1 ./...
 ```
 
+## Deploy private fleet-history stores
+
+`fleet-history` installs an independent raw store, long store and
+recording-rule evaluator. The existing platform process-metrics store
+keeps its current configuration. Load the approved VictoriaMetrics and
+vmalert images and retain their notices before running this command.
+Both image values must be immutable local image IDs or repository digests.
+
+Create a protected, root-owned site YAML file. Replace the image values
+with the exact approved digests. Select unused private ports and a
+nonoverlapping private subnet. The evaluator listener must use a loopback
+IPv4 address. The two store listeners accept loopback or private IPv4.
+
+```yaml
+format_version: 1
+root: /srv/ownsolid-fleet-history
+project: ownsolid-fleet-history
+uid: 10001
+gid: 10001
+subnet: 172.29.248.0/28
+metrics_image: sha256:<approved-local-metrics-image-id>
+evaluator_image: sha256:<approved-local-vmalert-image-id>
+evaluator_listen: 127.0.0.1:18880
+raw:
+  listen: 10.20.30.40:18428
+  retention: 2d
+  tls:
+    ca_file: /private/history/raw-ca.pem
+    certificate_file: /private/history/raw.pem
+    private_key_file: /private/history/raw-key.pem
+long:
+  listen: 10.20.30.40:28428
+  retention: 90d
+  tls:
+    ca_file: /private/history/long-ca.pem
+    certificate_file: /private/history/long.pem
+    private_key_file: /private/history/long-key.pem
+store_resources: {memory: 256m, cpus: "1", pids: 128}
+evaluator_resources: {memory: 128m, cpus: "1", pids: 128}
+rules_file: /private/history/fleet-rollup-rules.yaml
+rules_sha256: <approved-rule-file-sha256>
+monitoring_file: /private/history/monitoring.json
+control_ca_file: /private/history/control-ca.pem
+request_seconds: 120
+```
+
+All referenced inputs must be protected regular files outside the
+deployment root. Use mode 0600 and canonical absolute paths. The raw
+certificate must cover the published IP and the subnet's second host
+address, `172.29.248.2` in this example. The long certificate covers the
+published IP and third host address, `172.29.248.3`. The CA files contain
+current CA certificates only. `control_ca_file` must verify both published
+endpoints. Keep its applicable roots separate from the evaluator's raw
+and long CA files.
+
+Use the approved local
+[fleet recording rules](../../services/control/internal/modules/monitoring/alerting/fleet-rollup-rules.yaml)
+and their SHA-256. The protected monitoring JSON uses the existing module
+policy. Its `fleet_history` object must select exactly the two configured
+HTTPS origins, a raw horizon inside raw retention, a maximum range inside
+long retention, and a settling delay from 30 to 300 seconds.
+
+```sh
+ownsolid-install fleet-history validate --config /private/history/site.yaml
+ownsolid-install fleet-history apply --config /private/history/site.yaml
+```
+
+Apply runs as root on Linux amd64. It verifies local images, validates the
+local rules with vmalert and starts the services with pulling disabled.
+The selected Docker endpoint must be a local Unix socket.
+An internal network carries evaluator-to-store traffic. A separate bridge
+publishes the configured private ports; Docker does not publish ports for
+containers attached exclusively to internal networks. The evaluator's health
+port is loopback-only.
+Each store retains its own data directory. JSON success identifies the
+checked monitoring file and Control CA file under an immutable input
+generation. The operator log records the deployment attempt and outcome.
+Inspect runtime state with `docker compose -f
+/srv/ownsolid-fleet-history/compose.yaml ps`.
+
+To rotate issuers, provision old and next roots first, apply, replace the
+leaf and key, then apply again. After removing old roots, apply the new
+trust. Apply stops the evaluator and both stores before restart, closing
+connections established under old trust. Failed input validation leaves
+the running generation active. After an interrupted stop or start, repeat
+apply using the same root, project and endpoint assignment. The prior
+input generations and store data remain available for recovery.
+
+Set the ordinary install configuration's
+`telemetry.fleet_history_control_directory` to the emitted files' parent
+directory and run the normal `apply` or signed `apply-bundle`. The installer
+copies both protected files, selects the existing `monitoring_config_file`
+and process CA bundle, and restarts Control. Repeat this step after every
+history policy or trust change, including issuer removal. For containerized
+Control, store origins must use private host IPs reachable from its network;
+loopback-only listeners are suitable for host clients, not this integration.
+The existing HTTP process-metrics client has its own store. Public history dispatch
+and installed Admin/Portal acceptance follow the
+[OBS and DEV integration](../../docs/research/telemetry-retention-tiers.md#installer-continuation).
+The local-only coordinated backup profile refuses this optional integration;
+it does not cover the separate history stores. Ordinary database backups
+remain logical PostgreSQL exports. Protect and back up the separate history
+store data using the stores' supported snapshot procedure.
+
 ## Check a host before installation
 
 Set the `preflight` block in [install.example.yaml](install.example.yaml) to the site's
@@ -315,6 +419,20 @@ the current writer and database fence. An unreadable or unknown intent
 produces a fixed collection issue. The installer excludes operation details, container output, raw configuration files, environment values,
 addresses, credentials and database records.
 
+Before collecting, the installer durably records a diagnostic attempt in the
+installation's protected operator/operations.log. It uses the executing
+process's real and effective numeric user IDs. A completed record includes the
+archive's SHA-256 and byte length. A failed or incomplete attempt remains in the
+log; an explicit retry creates a new attempt. Keep this log with the installation
+and do not truncate it to bypass a recording error. It contains local operator
+records and has not been imported into the Control audit trail.
+
+The operator directory must belong to the executing user at mode 0700, and
+operations.log must be an owned regular file at mode 0600. An unsafe or
+unwritable log stops collection. If the terminal record cannot be confirmed,
+the installer withdraws its new archive and returns an error. Preserve the
+operator log and inspect the selected output path if cleanup is unconfirmed.
+
 ### Collect managed cluster information
 
 On a workstation with access to the private management endpoints, use
@@ -343,7 +461,9 @@ one or both sources and a total collection budget of 1 to 60 seconds.
 ```
 
 Run as the owner of the files and keep the JSON and referenced files at
-mode 0600. Use private HTTPS origins with their own trusted CA files. The
+mode 0600. The JSON input's directory also holds this collector's
+operations.log; it must belong to the executing user and must not be writable
+by other users. The same durable admission and archive-result rules apply. Use private HTTPS origins with their own trusted CA files. The
 management credential is the value of an active platform Admin session.
 You can point `credential_file` directly at the protected session file from
 [the operator CLI](../../tools/cli/README.md#configure-and-sign-in).
@@ -846,3 +966,135 @@ ownsolid-install agent-notices --bundle /mnt/release/ownsolid-agent.tar.gz \
 
 The command verifies the entire Agent archive against the site's independent
 trust and prints the signed inventory without changing the host.
+
+
+## Qualify the scheduled timer on Linux
+
+The [timer fixture](internal/install/testdata/scheduled-backup-timer/resume.sh)
+builds Linux amd64 inputs from a clean checkout containing the accepted
+Audit migration. Select an existing private evidence directory outside the
+checkout and pass the exact accepted SQL commit. The default test host is
+`ownsolid-cpu`; set `OWNSOLID_TIMER_HOST` for another prepared Linux host.
+
+```sh
+OWNSOLID_TIMER_EVIDENCE_DIRECTORY=/private/timer-evidence \
+  bash deploy/offline/internal/install/testdata/scheduled-backup-timer/resume.sh \
+  "$PWD" "$accepted_arc_commit"
+```
+
+The host needs systemd, Docker Compose, TUN and the pinned PostgreSQL image
+already present. It must use the documented shared lock paths. The fixture
+checks memory, disk and I/O pressure under both locks, creates its own
+network-isolated PostgreSQL service and starts the shipped timer under
+private runtime unit names. It verifies logical dump/restore, expiry,
+retention refusal and retry. The original database and ordinary backup
+sentinel must remain intact. Only the deliberate recorder probes are
+allowed. No product services or other lane resources are stopped.
+
+Input hashes and the Linux transcript stay in the selected evidence
+directory. Disposable units, database container and private scratch files
+are removed. This fixture does not establish Console configuration or
+backup-history UI acceptance.
+
+## Prepare a joint installed acceptance window
+
+The [installed acceptance fixture](internal/install/testdata/installed-acceptance/host_runner.py)
+owns one Linux amd64 Docker-in-Docker namespace. Its source and packet records
+are test evidence; they are not a production release inventory or a server audit.
+Prepare every selected owner's scripts, compiled clients, source mapping and
+toolchain before reserving a running installation window.
+
+Compile the three Go fixture overlays from the clean, final candidate checkout
+into a new directory outside Git:
+
+```sh
+bash deploy/offline/internal/install/testdata/installed-acceptance/build_fixtures.sh \
+  "$CANDIDATE_SOURCE" "$EMPTY_FIXTURE_STAGE"
+```
+
+The helper compiles Linux amd64 test binaries and changes no candidate files.
+The Control and installer binaries, bundled Web assets and immutable images must
+also come from the admitted candidate. Keep their build and image-source proof.
+Copy `inside.sh` and `tls_relay.py` from this fixture into the final input stage,
+using `tls-relay.py` as the relay's staged filename.
+
+Create protected `inputs.json` with exactly `format_version: 1`, `candidate`
+(the full Git revision), `inputs` (basename to SHA-256), `phases` and
+`owner_inputs` (selected phase to report filename). The admission guard lists
+the required input names. Each selected owner report contains `status: ready`,
+the same `candidate`, its `phase`, and a nonempty `files` map matching the
+admitted hashes. The supported order is `web`, `sql`, `cli`, `obs`; select only
+ready phases and pair Web with independent SQL verification. History-only and
+CLI-only windows are valid. Excluded history never blocks an independent flow.
+
+For history, stage the complete Linux amd64 `installed-history` ELF plus its
+exact `client-source.go`, `client-tests.go` and protected `client-proof.json`.
+The proof must bind all seven self-tests, vet, target and admitted file hashes.
+Keep Mac self-tests labelled as Mac; cross-compilation does not establish a
+successful Linux request. A partial upload cannot pass admission.
+
+The protected `runtime.json` selects a fresh absolute `output_directory`, a
+canonical `run_id` UUID, an unused `lane-del-` container name, a local Unix
+`docker_socket` and the two ordered `heavy_locks`. Set positive integer
+`hard_timeout_seconds`, `cleanup_seconds`, `startup_seconds`, `suite_seconds`,
+`operation_seconds`, `cpus`, `memory_bytes`, `docker_tmpfs_bytes`, `pids_limit` and `relay_port`.
+Reserve startup and cleanup time outside the suite budget. Set the shared-host
+`minimum_free_memory_bytes`, `minimum_available_memory_bytes`,
+`minimum_disk_bytes` and `maximum_io_avg10` to the agreed window gate. The
+`images` map requires immutable local IDs for `dind`, `control`, `postgres`,
+`metrics`, `logs`, and `evaluator` when history is selected.
+
+Run admission before requesting the explicit installation slot, then invoke
+the parent only in that slot:
+
+```sh
+python3 deploy/offline/internal/install/testdata/installed-acceptance/acceptance_guard.py \
+  preflight --root "$FIXTURE_STAGE"
+python3 deploy/offline/internal/install/testdata/installed-acceptance/host_runner.py \
+  --root "$FIXTURE_STAGE"
+```
+
+The parent owns both actual locks, records their descriptors and inodes in
+`parent.json`, starts one labelled namespace and publishes `control.json`.
+Use the guard's `handoff` command with `--root`, `--role`, `--action` and the
+current `--generation`; `status` is read-only. Web, independent SQL and CLI
+finish before OBS claims the sole driver. OBS requests each ordered hook;
+DEL acknowledges only that pending hook. Bind the fresh scope, CA files,
+raw window and a new session filename before the claim. Stop other history
+probes, UI polling and scope changes for the counter/fault segment. Failed,
+stale, duplicate and wrong-role transitions are refused. This channel runs
+no arbitrary shell command and does not impersonate product authentication.
+
+Packets append directly to protected host `egress-live.jsonl`. The inner
+runner stops its workloads before the recorder and publishes the actual
+closed length, digest and shutdown status. Normal and deadline cleanup both
+retain the host file. Missing or inconsistent closure gives
+`capture-incomplete`; a complete capture with an added packet fails. The
+parent returns success only after both the suite and final capture pass.
+
+The native capture self-test uses existing recorder/probe binaries, two
+short-lived Linux network/PID/mount namespaces and no product services:
+
+```sh
+python3 deploy/offline/internal/install/testdata/installed-acceptance/native_capture_selftest.py \
+  --recorder "$EGRESS_RECORDER" --probe "$NEGATIVE_PROBE" --output "$NEW_EVIDENCE"
+```
+
+It verifies normal retention and forced-exit `capture-incomplete` using real
+TUN records. Its two host-probe batches do not qualify Docker workloads,
+application flows or a complete offline installation.
+
+The Docker variant uses a cached immutable image, no inner daemon and no product
+services. It exercises the actual parent's close method and the Docker host bind:
+
+```sh
+python3 deploy/offline/internal/install/testdata/installed-acceptance/docker_capture_selftest.py \
+  --recorder "$EGRESS_RECORDER" --probe "$NEGATIVE_PROBE" --output "$NEW_EVIDENCE" \
+  --image "$LOCAL_IMAGE_ID" --docker-socket "$DOCKER_SOCKET" \
+  --cpus "$PROBE_CPUS" --memory-bytes "$PROBE_MEMORY_BYTES"
+```
+
+Both probe containers use `network=none`, a private TUN, explicit resource limits
+and owned run labels. Both are removed after checking the retained host records.
+This verifies capture and parent cleanup only; it does not qualify a product
+installation or a history-client request.
