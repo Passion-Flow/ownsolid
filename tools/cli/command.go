@@ -56,7 +56,7 @@ func NewCommand() *cobra.Command {
 	root.AddCommand(
 		opts.loginCommand(), opts.logoutCommand(), versionCommand(),
 		opts.resourceCommand(nodes), opts.resourceCommand(models), opts.resourceCommand(deployments),
-		opts.trainingCommand(), opts.gatewayCommand(), opts.auditCommand(),
+		opts.trainingCommand(), opts.gatewayCommand(), opts.auditCommand(), opts.monitoringCommand(),
 	)
 	return root
 }
