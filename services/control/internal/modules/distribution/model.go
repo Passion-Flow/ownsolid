@@ -24,6 +24,9 @@ type Service struct {
 	// ProjectGatewayReceipts enables transactional metering after the PostgreSQL ledger is installed.
 	// Set it only at composition time.
 	ProjectGatewayReceipts bool
+	// PublishAliasCapabilities exposes the draft human read projection only after
+	// its public schema and generated clients are published. Set it at composition time.
+	PublishAliasCapabilities bool
 }
 
 type RecoveryChallenge struct {

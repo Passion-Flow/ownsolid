@@ -98,8 +98,9 @@ A name or family match could describe the wrong model after a retarget.
 Reading the latest history row without matching the alias revision could
 turn an old target into a current promise. Reading the host's agent
 capability would describe its operator profile instead of its deployment.
-Keep these metadata reads off machine authorization and existing HTTP
-paths until DEV publishes the field and clients.
+Keep metadata reads off machine authorization. Human HTTP reads use the
+separate composition below, with capability publication disabled until
+DEV publishes the field and clients.
 
 Test the projection through the real PostgreSQL authorization service
 for an Admin and Portal member, a missing old snapshot, a disabled alias,
@@ -149,7 +150,7 @@ and resume it returned the replacement deployment identity. The
 existing Portal HTTPS detail still conformed to `ModelAliasResponse`.
 Deployment observations were synthetic. Recipe selection was tested
 separately for unknown inputs and the approved derived recipe.
-The candidate has no public discovery route yet.
+Production capability publication remains disabled pending the read contract.
 
 With the protected fixture DSN file in `PROJECT_ONE_TEST_DSN_FILE`,
 run this from the repository root.
@@ -160,9 +161,9 @@ go -C services/control test -p 1 ./internal/modules/distribution   -run '^Test(P
 
 ### Compatibility boundary and DEV inputs
 
-The sole positive capability source is `Service.AliasCapabilities`.
-It authorizes the alias with the same workspace and visibility rules
-as alias detail. In that transaction it requires the current alias
+The shared capability selector backs `Service.AliasCapabilities` and
+the registered human read composition. Both use the same workspace
+and visibility rules as alias detail. In that transaction it requires the current alias
 ID and revision, node, deployment ID and revision, model ID and kind,
 catalogue digest and nullable recipe digest to agree across the
 local-cell alias, immutable target, live deployment and ready model.
@@ -182,8 +183,10 @@ membership and a foreign tenant cannot read it. Admin still sees a
 paused alias in its normal representation. Portal omits it from the
 list and returns the existing not-found problem on detail.
 
-DEV can bind the optional object to these exact operations once the
-schema changes. Use the same authorization, page limit and cursor.
+The registered read composition binds the optional object to these
+exact operations. DEV must publish the schema and generated clients
+before enabling its composition switch. Use the same authorization,
+page limit and cursor.
 For a projected result, require both proposed fields together.
 `text_generation_verified` is true and `context_token_ceiling` is a
 positive integer. Omit the entire object when the projection is nil.
@@ -208,3 +211,79 @@ synthetic deployment observations.
 ```sh
 go -C services/control test -p 1 ./internal/modules/distribution -run '^TestPostgresAliasCapabilityPublicContractBoundary$' -count=1
 ```
+
+## Registered read composition
+
+DEV's [publication boundary](public-api-inventory.md#gw-104-alias-capability-contract-preparation)
+fixes the candidate object and the four operations. The released
+ModelAlias component is shared by reads and writes and remains closed.
+Use an independent AliasReadView for human list and detail, with the
+existing Alias embedded and only the two approved capability fields.
+Keep mutation results, machine bindings and the compatible models list
+on their existing types. A composition-time PublishAliasCapabilities
+switch defaults to false until DEV publishes and regenerates the read
+contract. It is not a customer policy or an authorization bypass. The
+registered handlers use the read type in both modes; the default mode
+must still pass the released schemas without new capability queries.
+
+When explicitly enabled, prepare availability and capability evidence
+inside the same authorized transaction that selects the alias or page.
+Match the current alias and deployment revisions again in the evidence
+query. Do not call the standalone capability method after returning a
+page, because a concurrent cutover could attach new evidence to an old
+alias. Preserve the existing cursor scope and page order. Omit the object
+when readiness or exact evidence is absent, including paused Admin
+aliases, and preserve Portal's existing visibility rules. A database
+failure returns the existing storage problem rather than a successful
+response with silently omitted proof.
+
+Verify the actual four HTTPS routes with a mixed page of a verified
+alias and a callable legacy alias without a snapshot. Compare the
+optional object to the draft closed schema and both revisions to the
+surrounding view. Exercise cursor continuation, scope refusal, unavailable
+or stale evidence, pause, retarget and resume. Check that mutation results
+still pass the released ModelAlias schema while the read projection is
+enabled. The existing default-mode contract test must continue to pass.
+No new dependency, model or data set is added; the licences above apply.
+The current upstream [OpenAPI schema rules](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+and [vLLM serving overview](https://docs.vllm.ai/en/latest/serving/online_serving/)
+continue to support the separation of metadata, enabled endpoints and
+model tasks. The switch stays disabled in production composition until
+publication. Full UI and actual engine qualification remain separate.
+
+
+### Registered-route qualification
+
+TestPostgresAliasReadCapabilitiesAtRegisteredEntrances passed on Linux
+amd64 against PostgreSQL 18.6 with pgvector 0.8.7 in a loopback-only
+namespace. The fixture explicitly enabled the actual registered
+handler's service. Both audiences returned the exact two-field object
+for the verified target and omitted it for a callable legacy alias
+without a snapshot. Mixed one-item pages and detail retained exact alias
+and deployment identities. Foreign workspace and tenant reads were
+refused. A stale deployment revision omitted the evidence; pause hid
+the alias from Portal, and retarget and resume exposed the replacement.
+The actual cutover replies still passed the released closed mutation
+schema while read capabilities were enabled.
+
+With the owned evidence table temporarily unavailable, default-mode
+list and detail still passed the published schemas. Enabling capability
+publication returned STORAGE_UNAVAILABLE over HTTP 503 for both
+audiences instead of treating the failed lookup as absent evidence.
+The fixture restored its table and disposed its owned schema. The
+internal selector, released default read boundary and recipe selector
+regressions also passed. Deployment observations were synthetic; no
+model or GPU ran. This verifies backend composition with a draft object,
+not publication of a new OpenAPI contract or generated clients.
+
+```sh
+go -C services/control test -p 1 ./internal/modules/distribution -run '^Test(PostgresAliasReadCapabilitiesAtRegisteredEntrances|PostgresAliasCapabilityPublicContractBoundary|PostgresAliasCapabilitiesFollowVerifiedScopedTarget|AliasContextCeilingRequiresRecognizedSource)$' -count=1
+```
+
+Production composition still leaves PublishAliasCapabilities false.
+DEV can bind the four read operations to a separate closed read
+component and regenerate Web, Help, Go and Python clients without
+adding the object to mutation responses. Activation and the catalogue
+UI remain open. The shared Linux full check, build and Rust gate waits
+for ARC's first window and the current migration ordering; this focused
+run does not replace that gate.
