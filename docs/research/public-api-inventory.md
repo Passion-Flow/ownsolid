@@ -718,3 +718,90 @@ exact Owns/Handle dispatch with the operation and reviewed locale files.
 The existing protected monitoring policy supplies store origins and
 retention settings. Installed retention delivery, trust distribution and
 the Console history view remain with their owning modules.
+
+## Identity audit-read commit outcome (DEV-101 / AUD-108)
+
+Reviewed 2026-11-13 against identity runtime fcbb839a, its qualification in
+[identity audit-read access](identity-audit-read-access.md#qualification), and
+current main 8b17a295. The actual GET /api/v1/admin/audit-events reads its
+bounded page and appends audit.events_read in the same transaction. The shared
+Problem registry already maps STORAGE_COMMIT_OUTCOME_UNKNOWN to HTTP 409 and
+the Identity Problem enum already includes it. The operation lacks its explicit
+409 response and x-error-codes entry; reuse that existing Problem without a
+new error code, endpoint, receipt store or response field.
+
+[RFC 9110 safe methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.1)
+allows incidental request logging, while its
+[retry rules](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2)
+do not establish whether this particular access audit committed. A 409 or lost
+reply must not produce successful data or an automatic second access append.
+A deliberate later read is a new audited operation, not a replay or a rollback
+claim. Keep the same filters, cursor and representation when retrying. Preserve
+the earlier request ID for diagnosis rather than inventing an idempotency key.
+Read the page before its access event is appended, so the page cannot contain
+that same read's event.
+
+The current server auditActions whitelist does not include audit.events_read.
+Do not add it to the exact-action OpenAPI enum. category=audit already selects
+the family. The IAM owner must first admit and qualify the exact action before
+DEV can publish that enum value. Keep the thirteen standard response fields and
+the existing optional verified assistant pair unchanged.
+
+Add a per-operation cursor description so the current Help parameter projection
+can carry the recovery semantics. Operation descriptions are retained in the
+served OpenAPI but are not shown in today's Help operation summary. Web owns
+the required Simplified Chinese description and generated Web/Help files;
+prepare their exact inputs without editing that lane's source or locales.
+
+[Go Transport](https://pkg.go.dev/net/http#Transport) can transparently replay
+an eligible GET after a network error on a reused connection. SDK callers must
+use an isolated single-use transport for this audited read and disable any
+application/proxy retry policy. Python callers must also keep transport retries
+disabled. Merely calling GET does not establish one access append. Controlled
+409 codec tests prove one generated call and explicit retry; they do not
+qualify arbitrary caller transports, real commit faults or installed services.
+
+No dependency, model or dataset is added. The existing SDK generator/runtime
+licences in [sdk.md](sdk.md#licenses) permit commercial, redistribution and
+offline use with their existing notices; Go is BSD-3-Clause and HTTPX is BSD-3-Clause.
+Standards and upstream documentation are design references, not embedded code.
+
+Verify the explicit 409 mapping in the raw and projected contract, the unchanged
+Problem/standard fields and assistant pair, exact-action parity with the actual
+server whitelist, Help's recovery description and error metadata, and generated
+Go/Python 409 decoding without automatic retry. Explicit re-read must be a new
+call with the original selection. Retain the IAM owner's actual PostgreSQL and
+wire-fault qualification separately; none is rerun or inferred from codec tests.
+Public generation and whole-repository gates remain required before publication.
+
+The explicit 409 response creates a status-specific Go Problem accessor after
+SDK regeneration. Existing wire clients still receive the same Problem shape,
+but regenerated Go consumers must use GetApplicationproblemJSON409 rather than
+assuming every unspecified error uses the default accessor. Python retains its
+existing Problem model. Keep this source-review distinction visible; declaring
+the already-existing runtime status does not prove every consumer is unchanged.
+
+Ten lightweight Linux contract regressions passed in a network namespace
+without external networking: five audited-read cases, the existing assistant
+projection case and four existing browser-session cases. Pinned offline
+identity generation preserved all 25 public operations and produced 121 Go and
+Python files. Six controlled Python sync/async wire cases passed, including
+explicit 409 decoding, a new deliberate read after 409, unchanged selection,
+transport failure and permission refusal without an automatic extra call.
+
+A private filesystem projection, using the actual generators and cached pinned
+Node dependencies, produced all 29 Web contract types and 144 Help files. Both
+generator --check commands passed there. Only five Web paths differ from the
+baseline: Identity types, the Admin Help summary and raw contract, and the source
+and generated Chinese description catalogues. Admin Help retains the 409 and
+recovery description; Portal excludes the Admin operation. Product Web files
+were not edited. The Web owner must apply that relay and run product generation
+before this contract candidate can be published.
+
+The source comparison reports no operation-identity or closed-object changes.
+Its single named-response review signal is the added explicit 409 binding.
+All component definitions are unchanged. Four Go wire/transport cases are
+prepared, including a shared-connection lost-reply control and isolated HTTP/1
+transport, but their nonblocking Linux admission exited 75 before compilation.
+Do not report those Go cases as passed. Whole repository gates and actual
+installed qualification remain separate; the CLI b967d7c8 gate is unchanged.
