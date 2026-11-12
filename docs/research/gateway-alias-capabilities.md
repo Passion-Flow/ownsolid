@@ -558,6 +558,15 @@ Select and pin the local Docker Desktop context before creating any
 resource; reject a remote daemon and remove inherited test-database
 selectors.
 
+The helper changes the database peer to container loopback.
+[initdb authentication options](https://www.postgresql.org/docs/18/app-initdb.html)
+default to local trust, so the fresh fixture explicitly sets
+`POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256`. The
+[image entrypoint](https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh)
+passes those arguments to initdb. Native pgx must receive `28P01` for a
+wrong password before the private credential completes the SQL preflight.
+A passwordless loopback session cannot qualify this replacement.
+
 A [PostgreSQL SSLRequest](https://www.postgresql.org/docs/18/protocol-message-formats.html#PROTOCOL-MESSAGE-FORMATS-SSLREQUEST)
 checks the byte transport first. Native pgx then authenticates through
 the same loopback listener and executes a read-only query, under the
