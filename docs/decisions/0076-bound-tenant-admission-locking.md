@@ -1,4 +1,4 @@
-# 0074: Bound tenant admission locking
+# 0076: Bound tenant admission locking
 
 Status: Accepted
 Date: 2026-11-13
