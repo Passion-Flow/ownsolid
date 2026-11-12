@@ -137,3 +137,11 @@ The native DM first chain adds explicit gateway/alias/key/admission/outcome/reco
 The native schema source for this first path is the single `models_v2` contribution in `platform/database/dameng/migrate/contribution_models.go`. Central registration, shared prerequisites and fresh/upgrade DM execution remain separate gates; approved-base/publication-disable restrictions are deliberate.
 
 The explicit cumulative `gateway` profile composes this owner with M01-M06 and entry12 rather than replaying platform000007. Its route allowlists exclude later cutovers/targets and its catalog constrains snapshots to approved-base publish/disable. Restored authority invalidation participates in the minimal coordinated transaction; unknown capacity remains held.
+
+Human alias list and detail use AliasReadView, keeping optional capability
+metadata out of mutation responses and machine bindings. The composition-time
+PublishAliasCapabilities switch defaults to false while the public read schema
+and generated clients are pending. An enabled read selects the alias and exact
+verified target in one authorized transaction; unavailable evidence is omitted,
+and query failures return the existing storage problem. See the
+[capability contract and activation boundary](../../../../../docs/research/gateway-alias-capabilities.md#registered-read-composition).
