@@ -40,6 +40,13 @@ and preserve its history. Active cancellation holds the physical lease until
 the exact attempt stop is accepted.
 The scheduling creation boundary shares the final job and audit transaction.
 
+PostgreSQL background dispatch and reconciliation select only jobs in the
+installed local site and cell. The shared locked job read repeats that fence
+before cancellation, worker callbacks or final admission. A retained foreign
+job is left intact, including its revisions, physical lease and audit history.
+See the [local-cell owner fence](../../../../../docs/research/training-job-lifecycle.md#local-cell-owner-fence-before-scheduler-admission)
+for the real-database regression and the remaining scheduling integration.
+
 This owner has separate admission, execution, transfer and accepted-artifact areas. Any future extraction must retain current creator/Workspace/license checks and lock ordering, without inventing a second scheduler or artifact acceptance path.
 
 Synchronize [contracts/training](../../../../../contracts/training), contracts/agent, [Python training](../../../../../runtimes/training/README.md), agent/training, modelpreparations, [training frontend](../../../../../web/README.md), [training image](../../../../../deploy/images/training/Dockerfile) and [agent assets](../../../../../deploy/training/agent) and [M09](../../../../../docs/milestones/m09-training).
