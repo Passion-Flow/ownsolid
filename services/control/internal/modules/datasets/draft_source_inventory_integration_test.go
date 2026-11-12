@@ -58,6 +58,7 @@ func TestActualCSVDraftFileSnapshotAndRestore(t *testing.T) {
 	restoredRoot := privateSnapshotDirectory(t)
 	account := &identity.Service{DB: service.DB, Config: service.Identity.Config,
 		Passwords: service.Identity.Passwords, HMACKey: service.Identity.HMACKey}
+	account.Config.Datasets = service.Processor.configuration
 	account.Config.Datasets.ArtifactRoot = restoredRoot
 	account.BusinessAdmission, err = licensing.FromConfig(account)
 	if err != nil {
