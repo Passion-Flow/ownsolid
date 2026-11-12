@@ -179,7 +179,7 @@ type ResourceConfig struct {
 	LogsCPUs                string `yaml:"logs_cpus"`
 }
 
-// TelemetryConfig sets how long the stores keep data, as a number of days like 30d.
+// TelemetryConfig selects store retention and optional private fleet-history inputs.
 type TelemetryConfig struct {
 	MetricsRetention string `yaml:"metrics_retention"`
 	LogsRetention    string `yaml:"logs_retention"`

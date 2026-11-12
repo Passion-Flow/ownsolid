@@ -337,12 +337,13 @@ func applyHistory(ctx context.Context, site historySite, runner Runner, out io.W
 
 func probeHistory(ctx context.Context, site historySite) error {
 	for _, endpoint := range []struct {
+		name   string
 		origin string
 		roots  *tls.Config
 	}{
-		{"https://" + site.config.Raw.Listen, &tls.Config{RootCAs: site.rawRoots, MinVersion: tls.VersionTLS12}},
-		{"https://" + site.config.Long.Listen, &tls.Config{RootCAs: site.longRoots, MinVersion: tls.VersionTLS12}},
-		{"http://" + site.config.EvaluatorListen, nil},
+		{"raw", "https://" + site.config.Raw.Listen, &tls.Config{RootCAs: site.rawRoots, MinVersion: tls.VersionTLS12}},
+		{"long", "https://" + site.config.Long.Listen, &tls.Config{RootCAs: site.longRoots, MinVersion: tls.VersionTLS12}},
+		{"evaluator", "http://" + site.config.EvaluatorListen, nil},
 	} {
 		transport := &http.Transport{TLSClientConfig: endpoint.roots, DisableKeepAlives: true}
 		client := &http.Client{Transport: transport, Timeout: 2 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
@@ -359,9 +360,15 @@ func probeHistory(ctx context.Context, site historySite) error {
 			if err == nil && response.StatusCode == http.StatusOK {
 				break
 			}
+			detail := "no response"
+			if err != nil {
+				detail = lastLines(err.Error())
+			} else if response != nil {
+				detail = response.Status
+			}
 			select {
 			case <-ctx.Done():
-				return historyFailure("HEALTH_FAILED", "a store or evaluator is not ready under the configured trust; repair it and retry apply")
+				return historyFailure("HEALTH_FAILED", endpoint.name+" is not ready under the configured trust ("+detail+"); repair it and retry apply")
 			case <-time.After(250 * time.Millisecond):
 			}
 		}
