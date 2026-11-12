@@ -370,6 +370,54 @@ complete generation intact on scan failure and must not extend its expiry.
 
 ## Rejected alternatives and acceptance
 
+### PostgreSQL publication experiment
+
+Use a second external overlay experiment against the current complete control
+schema. Reuse SSO's actual `actorTransaction` ordering, current Identity
+recheck, installation tenant resolution and target-connector lock; do not put
+LDAP I/O inside that transaction. The current Gitea-only connector supplies
+the fixture's existing authority fence, not an admitted directory profile.
+No production provider enum, migration, SDK or route changes as part of this
+storage qualification.
+
+The candidate has a durable run, groups, transitive stable user memberships
+and one current-generation pointer per tenant/connector. Composite keys and
+[PostgreSQL foreign keys](https://www.postgresql.org/docs/18/ddl-constraints.html)
+keep every membership, group and head in the same tenant, connector and run.
+Bind each run to the initiating user/session/epoch and connector revision/auth
+version. A unique partial index permits one active run per connector. An
+explicit retry starts a new run after a failed/expired one; an exact repeated
+start returns the same run without extending any deadline.
+
+The [transaction](https://www.postgresql.org/docs/18/tutorial-transactions.html)
+that publishes the complete candidate inserts its groups/memberships, finishes
+the run, changes the current pointer and appends its minimized audit event
+together. Failure appends only the fixed failure outcome and finishes the run;
+it does not modify the previous complete generation. Bound scan time and
+source authority validity from the database's run-start time. Neither failed
+attempts nor idempotent replays refresh the old expiry. Reading effective
+membership requires a successful, unexpired head and the current enabled
+connector/revision; a retained historical result is not current authority.
+
+Use the existing current-actor and connector lock order, then the exact run
+row. [Row locks](https://www.postgresql.org/docs/18/explicit-locking.html)
+serialize completion, disable and competing starts. Recheck authority at
+completion, not only start. No result escapes an uncertain COMMIT, no automatic
+second publication occurs, and an authorized status read precedes a new intent.
+The experiment must test actual wire loss before COMMIT and after its database
+acknowledgement, audit refusal, cancellation, concurrent starts/completions,
+foreign connector/run substitutions and stale/revoked/Portal actors.
+
+The prototype uses existing pgx v5.11.0 (MIT), the control transaction/identity/
+audit owners and PostgreSQL 18.6 with pgvector 0.8.7 (PostgreSQL License).
+Their commercial, redistribution and offline use retain the repository's
+already packaged notices; no dependency graph changes. The directory module
+and private server retain the licenses above. Export a synthetic real-directory
+graph from the private fixture for a joined storage input; it is never customer
+data or a browser-submitted authority claim. Public start/status/preview,
+scheduled execution, production grants, LDAP binding/session issuance and
+installed UI acceptance remain separate admission work.
+
 Reject plaintext simple bind, certificate bypass, empty-password authentication,
 automatic endpoint/referral discovery, automatic DN/email rebinding and copying
 raw directory diagnostics into Problems or audit events. Reject unbounded
