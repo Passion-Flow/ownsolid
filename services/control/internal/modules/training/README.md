@@ -36,7 +36,9 @@ and [recovery](../../../../../docs/research/training-checkpoint-recovery.md) res
 
 PostgreSQL dispatch/reconciliation select local-site/cell jobs, and the shared
 locked job read repeats that fence before mutation or accepted-source access.
-Foreign retained jobs remain intact. Fair queue admission still requires the
+Foreign retained jobs remain intact. Accepted artifacts also require their
+upload, attempt and node task to share the installed PostgreSQL site/cell.
+Fair queue admission still requires the
 selected-executor ranking API and production scheduler DDL/grants described
 in the lifecycle handoff; a standalone preflight is not a reservation.
 
