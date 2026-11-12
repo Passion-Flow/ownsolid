@@ -188,3 +188,15 @@ the raw DDL embedded from testdata.
 ```sh
 go -C services/control test -p 1 -overlay "$candidate_overlay" -tags gateway_key_purpose_candidate ./internal/modules/distribution -run '^TestPostgresGatewayKeyPurposeCandidateAtRegisteredEntrances$' -count=1
 ```
+
+
+The independent consumed-key check, ordinary HTTPS rotation and the
+single-pool/concurrent accepted-operation regression also passed on
+committed schema 58 with the retained gateway source at 6f31064f. The
+native Rust/Go/PostgreSQL path passed in the same isolated qualification.
+Evidence is retained in
+/root/lane-gw-acceptance/schema58-gateway-regression.zxq09kh2. This run
+uses the predecessor key schema. The nullable-purpose source overlay
+and its prior upgrade proof remain separate from production activation.
+The intended-first-caller proof and CAT-103 installation authority are
+still required; a spent-key refusal does not establish either.
