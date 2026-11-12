@@ -54,12 +54,24 @@ func parseGatewayConnections(output string) (gatewayConnectionState, error) {
 			Forced              *bool    `json:"forced"`
 		}
 		if json.Unmarshal([]byte(line), &entry) != nil {
-			for _, field := range strings.Fields(line) {
+			fields := strings.Fields(line)
+			defaultLog := false
+			if len(fields) >= 4 {
+				_, dateErr := time.Parse("2006/01/02 15:04:05", fields[0]+" "+fields[1])
+				if dateErr == nil && fields[2] == "INFO" {
+					// slog's default handler puts the message after log.Logger's
+					// timestamp and level; an attribute named msg is not the event.
+					entry.Message, fields, defaultLog = fields[3], fields[4:], true
+				}
+			}
+			for _, field := range fields {
 				key, value, _ := strings.Cut(field, "=")
 				value = strings.Trim(value, `"`)
 				switch key {
 				case "msg":
-					entry.Message = value
+					if !defaultLog {
+						entry.Message = value
+					}
 				case "node_id":
 					entry.Node = value
 				case "connection_id":
@@ -139,6 +151,13 @@ func TestGatewayConnectionLogOrdering(t *testing.T) {
 		{"restart", opened + "\n" + retired + "\ntime=fixture msg=agent_gateway_started\n" + `time=fixture msg=agent_session_opened node_id=node-a connection_id=new`, "new", true, false},
 		{"legacy", "msg=agent_session_opened node_id=node-a\nmsg=agent_session_closed node_id=node-a", "", false, false},
 		{"text_retirement", "msg=agent_session_opened node_id=node-a connection_id=old\nmsg=http_connection_retired connection_id=old reason=connection_age age_seconds=58.5 forced=false", "old", true, true},
+		{"default_logger", "2026/11/12 18:28:02 INFO agent_session_opened node_id=node-a connection_id=old\n2026/11/12 18:28:03 INFO agent_session_opened node_id=node-a connection_id=new\n2026/11/12 18:28:04 INFO agent_session_closed node_id=node-a connection_id=old\n2026/11/12 18:28:05 INFO http_connection_retired connection_id=old reason=connection_age scheduled_age_seconds=58.4 drain_started_age_seconds=58.5 age_seconds=58.5 forced=false", "new", true, true},
+		{"default_restart", opened + "\n" + retired + "\n2026/11/12 18:28:02 INFO agent_gateway_started\n2026/11/12 18:28:03 INFO agent_session_opened node_id=node-a connection_id=new", "new", true, false},
+		{"default_unrelated_message", opened + "\n2026/11/12 18:28:03 INFO fixture_diagnostic detail=agent_gateway_started\n" + retired, "old", true, true},
+		{"default_message_attribute", opened + "\n2026/11/12 18:28:03 INFO fixture_diagnostic msg=agent_gateway_started\n" + retired, "old", true, true},
+		{"default_foreign_open_attribute", "2026/11/12 18:28:03 INFO fixture_diagnostic msg=agent_session_opened node_id=node-a connection_id=foreign", "", false, false},
+		{"default_invalid_prefix", "2026/99/12 18:28:03 INFO agent_session_opened node_id=node-a connection_id=foreign", "", false, false},
+		{"default_quoted_attribute", opened + "\n2026/11/12 18:28:03 INFO fixture_diagnostic detail=\"agent_gateway_started\"\n" + retired, "old", true, true},
 		{"unrelated_message", opened + "\n" + `{"msg":"fixture_diagnostic","detail":"agent_gateway_started"}` + "\n" + retired, "old", true, true},
 		{"unrelated_text", opened + "\nmsg=fixture_diagnostic detail=agent_gateway_started\n" + retired, "old", true, true},
 	} {
@@ -320,6 +339,7 @@ func TestGatewayObservedRetirementTiming(t *testing.T) {
 	for _, line := range []string{
 		`{"msg":"http_connection_retired","connection_id":"observed","reason":"connection_age","scheduled_age_seconds":58.5,"drain_started_age_seconds":58.6,"age_seconds":60.5,"forced":false}`,
 		`msg=http_connection_retired connection_id=observed reason=connection_age scheduled_age_seconds=58.5 drain_started_age_seconds=58.6 age_seconds=60.5 forced=false`,
+		`2026/11/12 18:28:02 INFO http_connection_retired connection_id=observed reason=connection_age scheduled_age_seconds=58.5 drain_started_age_seconds=58.6 age_seconds=60.5 forced=false`,
 	} {
 		state, err := parseGatewayConnections(line)
 		if err != nil {
