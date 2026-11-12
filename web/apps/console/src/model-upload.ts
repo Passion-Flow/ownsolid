@@ -1,6 +1,7 @@
 // Sending a bundle to the server, one chunk at a time. It lives outside any page, so moving around
 // the console does not stop it (docs/research/model-library.md).
 import {
+  ApiProblem,
   getModelImport,
   isProblem,
   uploadModelChunk,
@@ -8,6 +9,7 @@ import {
   type ModelImport,
 } from '@ownsolid/api';
 import { useSyncExternalStore } from 'react';
+import { canUploadImport } from './model-state.ts';
 
 // A short outage passes within these; a longer one is the person's to see and retry.
 const attemptsPerStep = 4;
@@ -69,6 +71,11 @@ export async function sendBundle(
   onProgress: (sent: number) => void,
   calls: TransferCalls = serverCalls,
 ): Promise<void> {
+  const requireOpen = (item: ModelImport) => {
+    if (!canUploadImport(item))
+      throw new ApiProblem('MODEL_IMPORT_STATE_CONFLICT', { status: 409 });
+  };
+  requireOpen(target);
   const retrying = async (step: () => Promise<void>) => {
     for (let attempt = 1; ; attempt += 1) {
       try {
@@ -88,7 +95,9 @@ export async function sendBundle(
     await retrying(async () => {
       // A failure may have stored the chunk with its answer lost, so ask rather than assume.
       if (!answered && proven) {
-        cursor = (await calls.read(target.id, { signal })).uploaded_bytes;
+        const current = await calls.read(target.id, { signal });
+        requireOpen(current);
+        cursor = current.uploaded_bytes;
         if (cursor >= total) return;
       }
       answered = false;
@@ -148,6 +157,10 @@ export function startTransfer(
   onSettled: () => void,
 ): void {
   stopTransfer(target.id);
+  if (!canUploadImport(target)) {
+    onSettled();
+    return;
+  }
   const stop = new AbortController();
   stops.set(target.id, stop);
   window.addEventListener('beforeunload', warnBeforeLeaving);

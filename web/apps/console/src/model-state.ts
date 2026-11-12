@@ -1,5 +1,5 @@
 // How models and imports are named, and the keys their reads share.
-import type { ModelImportState, ModelVersion } from '@ownsolid/api';
+import type { ModelImport, ModelImportState, ModelVersion } from '@ownsolid/api';
 import type { TranslationKey } from '@ownsolid/i18n';
 import type { StatusTone } from '@ownsolid/ui';
 
@@ -30,3 +30,24 @@ export const importStates: Record<ModelImportState, { label: TranslationKey; ton
   failed: { label: 'models.import.state.failed', tone: 'critical' },
   cancelled: { label: 'models.import.state.cancelled', tone: 'neutral' },
 };
+
+/** The existing DTO carries retention reasons without adding a protocol state. */
+export function importState(item: ModelImport): { label: TranslationKey; tone: StatusTone } {
+  if (item.error_code === 'MODEL_IMPORT_EXPIRY_PENDING') {
+    return { label: 'models.import.state.expiring', tone: 'warning' };
+  }
+  if (item.state === 'cancelled' && item.error_code === 'MODEL_IMPORT_EXPIRED') {
+    return { label: 'models.import.state.expired', tone: 'warning' };
+  }
+  return importStates[item.state];
+}
+
+/** A retained byte count is history after cancellation or expiry, never a resumable offset. */
+export function canUploadImport(item: ModelImport): boolean {
+  return (
+    item.state === 'uploading' &&
+    !['MODEL_CANCELLATION_PENDING', 'MODEL_IMPORT_EXPIRY_PENDING', 'MODEL_IMPORT_EXPIRED'].includes(
+      item.error_code ?? '',
+    )
+  );
+}
