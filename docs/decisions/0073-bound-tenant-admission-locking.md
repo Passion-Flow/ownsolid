@@ -1,4 +1,4 @@
-# 0071: Bound tenant admission locking
+# 0073: Bound tenant admission locking
 
 Status: Accepted
 Date: 2026-11-13

@@ -161,7 +161,7 @@ commit. ErrQueueTurnPending has fixed wait_for_queue_turn guidance. Exact positi
 release remains the owner's responsibility. This library does not install a
 training selector, runtime controller, production schema or UI. Upgrade every
 Control writer to the tenant-fence protocol before activating queue admission.
-See [ADR 0071](../../../../../docs/decisions/0071-bound-tenant-admission-locking.md).
+See [ADR 0073](../../../../../docs/decisions/0073-bound-tenant-admission-locking.md).
 
 To qualify the component flows, configure both protected fixture DSN files above
 for one disposable PostgreSQL 18.6 endpoint, then run:
