@@ -43,22 +43,32 @@ func (s *Service) GetFleetHistory(ctx context.Context, a identity.Auth, workspac
 	return s.getFleetHistory(ctx, a, workspace, from, to, requestID, nil)
 }
 
-const maximumHistoryJSONBytes = 1 << 20
+const (
+	maximumHistoryJSONBytes = 1 << 20
+	// The serving owner writes {"data": body} and a newline.
+	historyJSONEnvelopeBytes = len(`{"data":`) + len("}\n")
+)
+
+func encodeFleetHistoryJSON(out FleetHistory) (json.RawMessage, error) {
+	body, err := json.Marshal(out)
+	if err != nil {
+		return nil, errors.New("STORAGE_UNAVAILABLE")
+	}
+	if len(body) > maximumHistoryJSONBytes-historyJSONEnvelopeBytes {
+		return nil, errors.New("MONITORING_HISTORY_RESPONSE_LIMIT")
+	}
+	return body, nil
+}
 
 // GetFleetHistoryJSON uses the same scope, tier and audit as GetFleetHistory.
-// It rejects an oversized HTTP body before committing the success audit.
+// Its body budget includes the serving data envelope and newline, and is
+// enforced before committing the success audit.
 func (s *Service) GetFleetHistoryJSON(ctx context.Context, a identity.Auth, workspace string, from, to time.Time, requestID string) (json.RawMessage, error) {
 	var body json.RawMessage
 	_, err := s.getFleetHistory(ctx, a, workspace, from, to, requestID, func(out FleetHistory) error {
-		encoded, err := json.Marshal(out)
-		if err != nil {
-			return errors.New("STORAGE_UNAVAILABLE")
-		}
-		if len(encoded) > maximumHistoryJSONBytes {
-			return errors.New("MONITORING_HISTORY_RESPONSE_LIMIT")
-		}
-		body = encoded
-		return nil
+		var err error
+		body, err = encodeFleetHistoryJSON(out)
+		return err
 	})
 	if err != nil {
 		return nil, err
