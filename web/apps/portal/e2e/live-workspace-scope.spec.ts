@@ -98,11 +98,16 @@ test('refuses the Home request for another tenant and keeps scope across navigat
     url.searchParams.set('workspace_id', data.foreign.workspace);
     return route.continue({ url: url.href });
   });
-  const refused = page.waitForResponse(
-    (response) => new URL(response.url()).pathname === applications && response.status() === 404,
-  );
+  const refused = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return (
+      url.pathname === applications &&
+      url.searchParams.get('workspace_id') === data.foreign.workspace
+    );
+  });
   await page.reload();
   const response = await refused;
+  expect(response.status()).toBe(404);
   expect(await response.headerValue('content-type')).toBe('application/problem+json');
   expect(await response.headerValue('cache-control')).toBe('no-store');
   const problem = (await response.json()) as { code: string; request_id: string };
@@ -149,10 +154,12 @@ test('refuses the Home request for another tenant and keeps scope across navigat
   });
   const refusedAliases = page.waitForResponse(
     (reply) =>
-      new URL(reply.url()).pathname.endsWith('/distribution/aliases') && reply.status() === 404,
+      new URL(reply.url()).pathname ===
+      `${base}/workspaces/${data.foreign.workspace}/distribution/aliases`,
   );
   await page.reload();
   const aliasResponse = await refusedAliases;
+  expect(aliasResponse.status()).toBe(404);
   expect(await aliasResponse.headerValue('content-type')).toBe('application/problem+json');
   expect(await aliasResponse.headerValue('cache-control')).toBe('no-store');
   const aliasProblem = (await aliasResponse.json()) as { code: string; request_id: string };
