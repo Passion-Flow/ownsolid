@@ -25,6 +25,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring"
 	monitoringhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring/http"
@@ -106,37 +107,7 @@ func TestFleetHistoryAuthenticatedHTTPOffline(t *testing.T) {
 		MaxRangeSeconds: 90 * 86400, SettlingSeconds: 30,
 	}
 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/monitoring/openapi.json")
-	mount := func(policy monitoring.Config) *httptest.Server {
-		t.Helper()
-		file := filepath.Join(t.TempDir(), "monitoring.json")
-		body, err := json.Marshal(policy)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(file, body, 0600); err != nil {
-			t.Fatal(err)
-		}
-		loaded, err := monitoring.LoadEnvironment(map[string]string{monitoring.ConfigEnvironment: file})
-		if err != nil {
-			t.Fatal(err)
-		}
-		app := identityhttp.New(accounts)
-		if err := app.InitializationError(); err != nil {
-			t.Fatal("original application owner initialization", err)
-		}
-		recorder, err := monitoringmetrics.New(loaded.HTTP, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		service, err := monitoring.New(accounts, app.Workspaces.Service, app.Licensing.Service,
-			app.Components.Service, app.Distribution.Service, recorder, loaded)
-		if err != nil {
-			t.Fatal(err)
-		}
-		app.Monitoring = &monitoringhttp.Handler{Service: service}
-		return httpfixture.NewTLSServer(t, recorder.Middleware(app))
-	}
-	server := mount(policy)
+	server := mountHistoryHTTP(t, accounts, policy)
 	admin := newHistoryBrowser(t, server, httpfixture.AdminOrigin, schemas)
 	admin.login(password)
 	target := func(id string, from, to time.Time) string {
@@ -281,14 +252,14 @@ func TestFleetHistoryAuthenticatedHTTPOffline(t *testing.T) {
 
 	withoutLong := policy
 	withoutLong.FleetHistory.LongOrigin = ""
-	missingLong := newHistoryBrowser(t, mount(withoutLong), httpfixture.AdminOrigin, schemas)
+	missingLong := newHistoryBrowser(t, mountHistoryHTTP(t, accounts, withoutLong), httpfixture.AdminOrigin, schemas)
 	missingLong.login(password)
 	reads = rawReads.Load()
 	get(missingLong, oldPath, 503, "MONITORING_LONG_TIER_NOT_CONFIGURED")
 	if rawReads.Load() != reads {
 		t.Fatal("an unconfigured long tier fell back to raw")
 	}
-	unconfigured := newHistoryBrowser(t, mount(monitoring.Defaults()), httpfixture.AdminOrigin, schemas)
+	unconfigured := newHistoryBrowser(t, mountHistoryHTTP(t, accounts, monitoring.Defaults()), httpfixture.AdminOrigin, schemas)
 	unconfigured.login(password)
 	get(unconfigured, recentPath, 503, "MONITORING_HISTORY_NOT_CONFIGURED")
 
@@ -335,6 +306,37 @@ func TestFleetHistoryAuthenticatedHTTPOffline(t *testing.T) {
 	fresh.login(password)
 	get(fresh, recentPath, 200, "")
 	t.Logf("small native HTTP fixture allocated bytes after graceful store stop: raw=%d long=%d", rawDisk(), longDisk())
+}
+
+func mountHistoryHTTP(t *testing.T, accounts *identity.Service, policy monitoring.Config) *httptest.Server {
+	t.Helper()
+	file := filepath.Join(t.TempDir(), "monitoring.json")
+	body, err := json.Marshal(policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(file, body, 0600); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := monitoring.LoadEnvironment(map[string]string{monitoring.ConfigEnvironment: file})
+	if err != nil {
+		t.Fatal(err)
+	}
+	app := identityhttp.New(accounts)
+	if err := app.InitializationError(); err != nil {
+		t.Fatal("original application owner initialization", err)
+	}
+	recorder, err := monitoringmetrics.New(loaded.HTTP, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	service, err := monitoring.New(accounts, app.Workspaces.Service, app.Licensing.Service,
+		app.Components.Service, app.Distribution.Service, recorder, loaded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	app.Monitoring = &monitoringhttp.Handler{Service: service}
+	return httpfixture.NewTLSServer(t, recorder.Middleware(app))
 }
 
 type historyBrowser struct {
