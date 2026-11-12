@@ -266,3 +266,28 @@ the complete reference inventory against the restored database before writing
 the destination. Missing/changed files, unpaired/unknown roles, mismatched
 metadata and unknown files fail closed. Operator export still requires the
 installation lock and stopped runtime paired with its logical database dump.
+
+
+## Concurrent published input readers
+
+`OpenPublishedReader(artifactRoot, tenantID)` opens an existing local namespace
+without writer ownership. Inject it as `Service.PublishedReader`, leaving
+`Service.Store` nil. Use exactly one of these fields. The reader exposes no
+initialization, upload, processing or publication method. Its namespace, private
+path, root/carrier identity, full file hash and descriptor checks remain active.
+Missing or changed storage is refused; it is never initialized by a reader.
+
+`PublishedSourceWithin` and `TrainingInputSnapshotWithin` retain their scoped SQL
+locks and retirement semantics. They require a live file-access component but do
+not read files. `VerifyTrainingInputSnapshot` and `OpenTrainingAssetContext` then
+read actual immutable partitions outside business locks; the caller repeats its
+current authority/frozen-input transaction after I/O before issuing a lease.
+The reader or snapshot alone provides no authorization.
+
+The composition owner opens this reader after resolving the installed tenant and
+explicit storage configuration, closes it on every startup error, drains active
+claims before shutdown and then closes it. Closing a reader preserves the
+writer's exclusive lock; a file already returned remains caller-owned. The
+installation must supply and verify any same-host read-only mount. There is no
+remote mount, artifact RPC or standalone gateway integration in this module.
+See [the mechanism, signatures and remaining acceptance](../../../../../docs/research/training-published-file-readers.md).

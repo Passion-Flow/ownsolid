@@ -599,6 +599,21 @@ func TestActualAcceptedExperimentRead(t *testing.T) {
 		!reflect.DeepEqual(out.Files, g.descriptor.Files) {
 		t.Fatal("accepted experiment did not retain exact bindings", e)
 	}
+	t.Run("independent_published_reader_with_real_accepted_bytes", func(t *testing.T) {
+		reader, err := training.OpenPublishedReader(g.root, g.f.Tenant)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer reader.Close()
+		consumer := *g.s
+		consumer.Store, consumer.PublishedReader = nil, reader
+		retained, err := read(&consumer, g.f.Workspace)
+		if err != nil || !reflect.DeepEqual(retained, out) {
+			t.Fatal("read-only owner changed accepted experiment identity", err)
+		}
+		reader.Close()
+		refuse(read(&consumer, g.f.Workspace))
+	})
 	other, e := g.s.Workspaces.Create(g.ctx, g.a, "Second experiment workspace", g.f.User, uuid.NewString())
 	if e != nil {
 		t.Fatal(e)

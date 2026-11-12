@@ -13,9 +13,9 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/google/uuid"
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 const namespaceFile = "namespace.json"
@@ -139,33 +139,8 @@ func openStore(path, tenant string, minimumFree, maximumBytes, maximumFiles int6
 	if !datawire.ValidID(tenant) || minimumFree < 4096 || maximumBytes < 1 || maximumBytes > wire.MaximumCheckpointBytes || maximumFiles < 1 || maximumFiles > wire.MaximumCheckpointFiles {
 		return nil, fail("TRAINING_STORAGE_PATH_INVALID")
 	}
-	if _, e := ownedPath(path, true, 0); e != nil {
-		return nil, e
-	}
-	entries, e := os.ReadDir(path)
-	if e != nil || len(entries) != 5 {
-		return nil, fail("TRAINING_STORE_NAMESPACE_INVALID")
-	}
-	allowed := map[string]bool{namespaceFile: true, ownerLock: true, "uploads": true, "checkpoints": true, "artifacts": true}
-	for _, entry := range entries {
-		if !allowed[entry.Name()] {
-			return nil, fail("TRAINING_STORE_NAMESPACE_INVALID")
-		}
-	}
-	for _, name := range []string{"uploads", "checkpoints", "artifacts"} {
-		if _, e := ownedPath(filepath.Join(path, name), true, 0); e != nil {
-			return nil, e
-		}
-	}
-	if _, e = ownedPath(filepath.Join(path, namespaceFile), false, maximumNamespaceBytes); e != nil {
-		return nil, e
-	}
-	raw, e := os.ReadFile(filepath.Join(path, namespaceFile))
-	var namespace storeNamespace
-	if e != nil || wire.DecodeStrict(raw, &namespace) != nil || namespace.SchemaVersion != 1 || namespace.Kind != "training" || namespace.TenantID != tenant || !datawire.ValidID(namespace.StoreID) {
-		return nil, fail("TRAINING_STORE_NAMESPACE_INVALID")
-	}
-	if _, e = ownedPath(filepath.Join(path, ownerLock), false, 0); e != nil {
+	namespace, e := readStoreNamespace(path, tenant)
+	if e != nil {
 		return nil, e
 	}
 	lockMode := os.O_RDWR
@@ -229,7 +204,12 @@ func (s *Store) checkBase() error {
 	if _, e = ownedPath(filepath.Join(s.path, namespaceFile), false, maximumNamespaceBytes); e != nil {
 		return e
 	}
-	raw, e := s.root.ReadFile(namespaceFile)
+	markerFile, e := s.root.Open(namespaceFile)
+	if e != nil {
+		return fail("TRAINING_STORE_NAMESPACE_INVALID")
+	}
+	defer markerFile.Close()
+	raw, e := io.ReadAll(io.LimitReader(markerFile, maximumNamespaceBytes+1))
 	var marker storeNamespace
 	if e != nil || wire.DecodeStrict(raw, &marker) != nil || marker != s.namespace {
 		return fail("TRAINING_STORE_NAMESPACE_INVALID")
@@ -387,3 +367,53 @@ func (r contextReader) Read(buffer []byte) (int, error) {
 }
 
 func chunkName(offset int64) string { return fmt.Sprintf("%016x", offset) }
+
+func readStoreNamespace(path, tenant string) (storeNamespace, error) {
+	if !datawire.ValidID(tenant) {
+		return storeNamespace{}, fail("TRAINING_STORAGE_PATH_INVALID")
+	}
+	if _, e := ownedPath(path, true, 0); e != nil {
+		return storeNamespace{}, e
+	}
+	directory, e := os.Open(path)
+	if e != nil {
+		return storeNamespace{}, fail("TRAINING_STORE_NAMESPACE_INVALID")
+	}
+	entries, e := directory.ReadDir(6)
+	closeError := directory.Close()
+	if e != nil && e != io.EOF || closeError != nil || len(entries) != 5 {
+		return storeNamespace{}, fail("TRAINING_STORE_NAMESPACE_INVALID")
+	}
+	allowed := map[string]bool{namespaceFile: true, ownerLock: true, "uploads": true, "checkpoints": true, "artifacts": true}
+	for _, entry := range entries {
+		if !allowed[entry.Name()] {
+			return storeNamespace{}, fail("TRAINING_STORE_NAMESPACE_INVALID")
+		}
+	}
+	for _, name := range []string{"uploads", "checkpoints", "artifacts"} {
+		if _, e := ownedPath(filepath.Join(path, name), true, 0); e != nil {
+			return storeNamespace{}, e
+		}
+	}
+	if _, e = ownedPath(filepath.Join(path, namespaceFile), false, maximumNamespaceBytes); e != nil {
+		return storeNamespace{}, e
+	}
+	raw, e := readNamespace(path)
+	var namespace storeNamespace
+	if e != nil || wire.DecodeStrict(raw, &namespace) != nil || namespace.SchemaVersion != 1 || namespace.Kind != "training" || namespace.TenantID != tenant || !datawire.ValidID(namespace.StoreID) {
+		return storeNamespace{}, fail("TRAINING_STORE_NAMESPACE_INVALID")
+	}
+	if _, e = ownedPath(filepath.Join(path, ownerLock), false, 0); e != nil {
+		return storeNamespace{}, e
+	}
+	return namespace, nil
+}
+
+func readNamespace(path string) ([]byte, error) {
+	file, err := os.Open(filepath.Join(path, namespaceFile))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	return io.ReadAll(io.LimitReader(file, maximumNamespaceBytes+1))
+}
