@@ -50,7 +50,7 @@ func (c Config) validateAgentGateway() error {
 	if e := c.AgentGateway.Validate(); e != nil {
 		return e
 	}
-	if c.AgentGateway.ListenAddress == c.Server.ListenAddress || c.MachineServer != nil && c.AgentGateway.ListenAddress == c.MachineServer.ListenAddress {
+	if c.AgentGateway.ListenAddress == c.Server.ListenAddress || c.AgentGateway.ListenAddress == c.Server.PortalListenAddress || c.MachineServer != nil && c.AgentGateway.ListenAddress == c.MachineServer.ListenAddress {
 		return errors.New("CONFIG_AGENT_GATEWAY_INVALID")
 	}
 	return nil
