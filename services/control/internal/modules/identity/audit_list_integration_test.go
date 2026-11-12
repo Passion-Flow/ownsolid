@@ -131,6 +131,10 @@ func TestWorkspaceAuditAssistantProjection(t *testing.T) {
 	foreign := insert(uuid.NewString(), foreignTenant, foreignWorkspace, "portal", action, exact, nil, subject)
 	exec("UPDATE workspaces SET status='disabled' WHERE id=$1", workspace)
 
+	var projectionCutoff time.Time
+	if err := s.DB.QueryRow(ctx, "SELECT clock_timestamp()").Scan(&projectionCutoff); err != nil {
+		t.Fatal(err)
+	}
 	restricted := auditListReader(t, ctx, s)
 	list := func(workspaceID string, filters url.Values) identity.WorkspaceAuditList {
 		t.Helper()
@@ -215,11 +219,11 @@ func TestWorkspaceAuditAssistantProjection(t *testing.T) {
 	})
 
 	t.Run("pagination and legacy contract", func(t *testing.T) {
-		first := list(workspace, url.Values{"limit": {"1"}, "audience": {"portal"}})
+		first := list(workspace, url.Values{"limit": {"1"}, "to": {projectionCutoff.UTC().Format(time.RFC3339Nano)}})
 		if first.NextCursor == nil || len(first.Items) != 1 || len(first.AssistantActors) != 1 {
 			t.Fatal("unexpected first page or attribution from the lookahead row")
 		}
-		query := url.Values{"limit": {"1"}, "audience": {"portal"}, "cursor": {*first.NextCursor}}
+		query := url.Values{"limit": {"1"}, "to": {projectionCutoff.UTC().Format(time.RFC3339Nano)}, "cursor": {*first.NextCursor}}
 		next := list(workspace, query)
 		if len(next.Items) != 1 || len(next.AssistantActors) != 1 {
 			t.Fatal("scoped cursor did not resume within the same workspace")
