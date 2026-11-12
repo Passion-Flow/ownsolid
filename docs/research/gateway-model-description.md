@@ -581,7 +581,7 @@ secondary action on a detail page, opening the design system's short-form
 dialog with a labelled multiline description and an audit reason. Use a
 controlled textarea, following [React's form guidance](https://react.dev/reference/react-dom/components/textarea),
 so failed writes and revision conflicts never replace the draft. Reuse
-Radix-backed Dialog for focus containment, Escape and trigger restoration,
+native HTML Dialog for focus containment, Escape and trigger restoration,
 as specified by [WAI-ARIA's modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/).
 Do not nest dialogs. The dialog's one primary action is Save description.
 

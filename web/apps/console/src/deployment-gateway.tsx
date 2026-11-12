@@ -49,6 +49,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, Send, Unplug } from 'lucide-react';
 import { useEffect, useId, useState, type SubmitEvent } from 'react';
 import { ReportedFailure } from './deployment-details.tsx';
+import { AliasDescriptionDialog } from './alias-description-dialog.tsx';
+import { hasAliasDescription } from './alias-description.ts';
 import { deploymentKeys } from './deployment-state.ts';
 import { PublishModelHint } from './publish-model-hint.tsx';
 import {
@@ -647,13 +649,17 @@ function Published({
   workspace,
   onIssue,
   onStop,
+  onEdit,
 }: {
   alias: ModelAlias;
   workspace: string;
   onIssue: () => void;
   onStop: () => void;
+  onEdit: () => void;
 }) {
   const { t } = useI18n();
+  const descriptionHint = useId();
+  const described = hasAliasDescription(alias);
   return (
     <div className="flex flex-col gap-3">
       <DetailList>
@@ -670,7 +676,31 @@ function Published({
         <Detail label={t('services.gateway.baseUrl')}>
           <CopyText text={gatewayBaseUrl(alias.client_origin)} />
         </Detail>
+        <Detail label={t('services.gateway.description.label')}>
+          <span className="whitespace-pre-wrap [overflow-wrap:anywhere]">
+            {alias.description?.length
+              ? alias.description
+              : t('services.gateway.description.empty')}
+          </span>
+        </Detail>
       </DetailList>
+      <div className="flex flex-col items-start gap-1">
+        <Button
+          size="sm"
+          aria-disabled={!described}
+          aria-describedby={described ? undefined : descriptionHint}
+          onClick={() => {
+            if (described) onEdit();
+          }}
+        >
+          {t('services.gateway.description.edit')}
+        </Button>
+        {described ? null : (
+          <p id={descriptionHint} className="m-0 text-[12.5px] text-text-3">
+            {t('services.gateway.description.notReady')}
+          </p>
+        )}
+      </div>
       <GatewayCADownload workspace={workspace} aliasId={alias.id} />
       {alias.available ? null : (
         <p className="m-0 text-[13px] text-text-2">{t('services.gateway.unavailable.detail')}</p>
@@ -695,7 +725,8 @@ function Published({
   );
 }
 
-type Open = { kind: 'publish' } | { kind: 'issue' | 'stop'; alias: ModelAlias } | null;
+type Open =
+  { kind: 'publish' } | { kind: 'issue' | 'stop' | 'description'; alias: ModelAlias } | null;
 
 /** The deployment's Overview card for the gateway. */
 export function DeploymentGateway({
@@ -765,6 +796,9 @@ export function DeploymentGateway({
             onStop={() => {
               setOpen({ kind: 'stop', alias });
             }}
+            onEdit={() => {
+              setOpen({ kind: 'description', alias });
+            }}
           />
         ))}
       </div>
@@ -790,6 +824,9 @@ export function DeploymentGateway({
       ) : null}
       {open?.kind === 'stop' ? (
         <StopDialog deployment={deployment} alias={open.alias} onClose={close} />
+      ) : null}
+      {open?.kind === 'description' && hasAliasDescription(open.alias) ? (
+        <AliasDescriptionDialog key={open.alias.id} alias={open.alias} onClose={close} />
       ) : null}
     </Card>
   );

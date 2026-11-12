@@ -10,6 +10,33 @@ type Schemas = distributionContract.components['schemas'];
 /** The name a gateway serves a deployment under. */
 export type ModelAlias = Schemas['ModelAlias'];
 
+/** Current description and the revision applied by an edit intent, which can differ on replay. */
+export type AliasDescriptionResult = Schemas['AliasDescriptionResult'];
+
+/**
+ * Edits catalogue text without changing the serving target or routing revision. Reuse the
+ * idempotency key for an unanswered identical edit; an empty description clears the text.
+ */
+export function editAliasDescription(
+  workspaceId: string,
+  aliasId: string,
+  input: { description: string; expectedDescriptionRevision: number; reason: string },
+  idempotencyKey: string,
+): Promise<AliasDescriptionResult> {
+  return client.post(
+    '/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/description',
+    {
+      path: { ...localCell, workspace_id: workspaceId, resource_id: aliasId },
+      idempotencyKey,
+      body: {
+        description: input.description,
+        expected_description_revision: input.expectedDescriptionRevision,
+        reason: input.reason,
+      },
+    },
+  );
+}
+
 /** A key that calls one alias. */
 export type GatewayKey = Schemas['DistributionKey'];
 
