@@ -296,12 +296,26 @@ It binds the cached Alertmanager 0.34.2 binary and new source hashes, both exist
 lock paths, the original resource floors and child deadline, and a 240-second
 caller bound with a ten-second forced-stop grace. It has not been invoked.
 
-Nine pure decoder/optimization CLI tests are prepared at
+The nine pure decoder/optimization CLI tests at
 /root/lane-obs-tools/test-alertmanager-expiry-facts.py, SHA-256
-89526232c065f0e6df07b8e7ceda89aaa9aaadafdcca6a53fcdba34e27dc6ee4.
-Syntax inspection passed. Two Mac nonblocking workstation-flock admissions
-returned 75 before starting any test process; these are neither failing tests
-nor unit qualification. No Linux lock attempt, Alertmanager version invocation,
-native service, receiver or database was started. The pure tests and the native
-expiry/resumption run remain pending. Product grouping/escalation and OBS-104
-remain open.
+89526232c065f0e6df07b8e7ceda89aaa9aaadafdcca6a53fcdba34e27dc6ee4,
+passed on macOS arm64 with Python 3.9.6: nine run, zero failures, errors or skips.
+The tested runner hash remains 0c8b843cde6b8c39bfd447d9569f011f0462633c84c4c4d9bba67b14fca0fb8c.
+This qualifies explicit lifecycle fact decoding and optimization refusal only.
+Earlier nonblocking workstation admissions returned 75 before a test process
+started; those refusals remain separate from the passing unit result.
+
+The shared short batch retained one parent and its actual lock FD across the
+Python tests, the separate controlled Registry client tests and cross-build.
+Its single bounded kernel wait acquired the original regular carrier after
+569.214 seconds; execution took 3.611 seconds. All owned child groups exited,
+the parent closed its FD and exited zero, and the carrier retained its original
+identity. The private proof is
+/root/lane-obs-tools/obs-short-validation-kk2e5xc6/proof.json, SHA-256
+e7311787dc0bc7307b34c21d146440b43e5ec0f13030442b08af2bca7f2b3564.
+The Python log and machine-readable result have SHA-256
+70f706a53f726aa469db94639670b2ab43e20079c61d8078fd71d96f0450a92e and
+2941bb6f500d3402c5bfdb80618d1fc53aa0b93ab49296165653e06742bac1f6.
+No Linux lock admission, native Alertmanager version or service invocation,
+receiver, database or installed request occurred in this batch. The native
+expiry/resumption run, product grouping/escalation and OBS-104 remain open.
