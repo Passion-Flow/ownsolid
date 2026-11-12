@@ -146,7 +146,10 @@ run with the archive delivery in FLT-109.
 | DEV-205 | ELN and LIMS integrations need supported import and export boundaries and offline target systems selected by the laboratory data owner. |
 | DEV-206 | Delivery history and replay depend on the subscription and delivery records from DEV-104. |
 | GPU-201 to GPU-203 | Remediation and active tests need authoritative fencing, scheduling and control tasks. Straggler detection needs job-attributed telemetry. Active burn testing also needs a qualified real GPU. |
-| GPU-204 to GPU-208 | Ascend requires an approved local driver and qualified hardware. Allocation and heterogeneous pools need the cell scheduler, and capacity planning needs retained fleet observations. |
+| GPU-204 | Ascend health needs an admitted non-NVIDIA device observation before a collector can report through the agent. The current wire type and runtime probe are NVIDIA-specific. The architecture owner must provide that contract; an approved local driver remains required. See the accelerator report boundary below. |
+| GPU-205 and GPU-208 | Ascend allocation, partitioning and heterogeneous pools need the cell scheduler and device admission owner. |
+| GPU-206 | Capacity degradation and spare planning need retained, workload-attributed fleet observations. |
+| GPU-207 | Real Ascend qualification requires the named driver, hardware model and count. Keep it separate from collector parser tests. |
 | GPU-209 | Intra-node topology and failure attribution require GPU-101 telemetry and real PCIe and NVLink/NVSwitch configurations to establish attribution. |
 | DEV-204 | The versioning guide and local comparison cover published operation identities. A release baseline, schema and behavioral compatibility checks, and runtime deprecation signaling need their owning release and API paths. |
 
@@ -232,3 +235,26 @@ The installer handoff is the ownership publication in
 Preserve the backup UID/GID and its restore assertions. The verified
 correction is the test invocation's identity and scratch setup.
 The evidence covers the named restore cases and Make spawn probe.
+
+## Accelerator report boundary (GPU-204 and GPU-209)
+
+The published [host facts](../../api/agent/v1/protocol.go) contain OS,
+CPU, memory and disk observations. The
+[inference accelerator observation](../../api/agent/v1/inference.go)
+contains NVIDIAGPU, CUDA compute capability and MIG mode. The
+[current runtime probe](../../services/agent/internal/inference/gpu.go)
+returns that type. Neither surface admits Ascend health samples.
+Keep the missing report contract with the architecture owner instead
+of encoding an NPU as a CUDA GPU or adding an unconsumed health parser.
+Allocation, device-plugin delivery and the operator flow remain their
+own prerequisites. The CPU-only test server does not qualify hardware.
+
+The [DCGM collector](../../services/agent/internal/discovery/dcgm.go)
+has physical GPU identity, an optional PCI address and per-device
+metrics. A PCI address is not a peer topology, and a device-level NVLink
+counter does not identify a failed peer or switch. GPU-209 needs a
+reported peer/link inventory and qualified fabric observations before
+fault attribution can target a device. Missing link samples remain
+missing; they must not be converted into a fault or an isolation action.
+No agent protocol, runtime admission or quarantine behavior changes
+with this boundary.
