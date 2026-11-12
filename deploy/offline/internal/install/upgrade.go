@@ -157,6 +157,14 @@ func upgradeBundle(ctx context.Context, siteConfig Config, archive, backupRoot, 
 	if err := p.loadImages(ctx, runner, policy); err != nil {
 		return retryWith(err, "upgrade-bundle")
 	}
+	for _, image := range []string{source.ImageIDs[0], p.binding.ImageIDs[0]} {
+		step, cancel := context.WithTimeout(ctx, time.Duration(c.StepSeconds)*time.Second)
+		err := previous.verifyServingImage(step, image)
+		cancel()
+		if err != nil {
+			return retryWith(wrapStep("upgrade-serving-transport", err), "upgrade-bundle")
+		}
+	}
 	if intent == nil {
 		root, err := os.MkdirTemp(backupRoot, "ownsolid-upgrade-")
 		if err != nil {

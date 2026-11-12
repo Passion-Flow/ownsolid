@@ -418,6 +418,9 @@ func (c Config) validate(fromBundle bool) error {
 			return invalid("control_settings."+key, "is set by the installer from the typed fields")
 		}
 	}
+	if _, err := c.machineServingIntent(); err != nil {
+		return err
+	}
 	return nil
 }
 

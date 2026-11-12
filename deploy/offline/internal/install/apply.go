@@ -127,6 +127,7 @@ func (i *installer) apply(ctx context.Context) error {
 		{"preflight", i.preflight},
 		{"configuration", func(context.Context) error { return Materialize(i.config) }},
 		{"images", i.images},
+		{"serving-transport", i.servingTransport},
 		{"stop-control", i.stopControl},
 		{"database", i.database},
 		{"telemetry", i.telemetry},

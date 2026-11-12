@@ -87,6 +87,12 @@ func rollbackBundle(ctx context.Context, siteConfig Config, archive string, poli
 		return retryWith(err, "rollback-bundle")
 	}
 	previous := p.operation(runner, out)
+	step, cancel = context.WithTimeout(ctx, time.Duration(c.StepSeconds)*time.Second)
+	err = current.verifyServingImage(step, p.binding.ImageIDs[0])
+	cancel()
+	if err != nil {
+		return retryWith(wrapStep("rollback-serving-transport", err), "rollback-bundle")
+	}
 	steps := []struct {
 		name string
 		run  func(context.Context) error

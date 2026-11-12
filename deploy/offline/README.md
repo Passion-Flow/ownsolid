@@ -11,6 +11,30 @@ go -C deploy/offline build -o ownsolid-install ./cmd/install
 go -C deploy/offline test -count=1 ./...
 ```
 
+## Admit serving transport before stopping Control
+
+Apply asks the selected local Control image to verify the generated serving
+configuration and its TLS material before stopping Control or starting database
+tasks. The checker must print its exact success marker; a successful process
+exit alone does not admit the configuration. Correct the reported configuration
+or certificate problem and repeat the same installer command.
+
+A signed upgrade checks both the recorded active and candidate images against
+the installed serving configuration before reserving its recovery point or
+stopping the writer. Application rollback checks the selected prior image before
+its stop step. These checks use a private, temporary Compose override that only
+selects the operator image. They preserve the installed environment, serving
+configuration and service container. Images remain local and pulling is disabled.
+An incompatible image is refused while the active version remains available.
+
+Keep the advertised addresses and transport stable during an application version
+change. Address changes require the separate address, session and SSO migration
+path in DEL-115. Optional `control_settings.machine_server` intent must contain
+exactly its four public fields: `listen_address`, `origin`,
+`tls_certificate_file` and `tls_private_key_file`. Supply file references for TLS
+material. The Control checker owns their validation; the installer does not copy
+a second TLS implementation.
+
 ## Configure license import capacity
 
 Set the Control policy in the authoritative install.yaml:

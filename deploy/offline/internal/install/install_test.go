@@ -484,7 +484,8 @@ func successOutput(line string) string {
 		return "f\n"
 	}
 	for word, output := range map[string]string{
-		" migrate ": "MIGRATION_COMPLETE", "prepare-runtime-access": "RUNTIME_ACCESS_VERIFIED", "check-schema": "SCHEMA_CURRENT", "invalidate-restored-auth": "RESTORED_AUTH_INVALIDATED",
+		"verify-serving-transport": "CONTROL_SERVING_TRANSPORT_OK",
+		" migrate ":                "MIGRATION_COMPLETE", "prepare-runtime-access": "RUNTIME_ACCESS_VERIFIED", "check-schema": "SCHEMA_CURRENT", "invalidate-restored-auth": "RESTORED_AUTH_INVALIDATED",
 		"bootstrap-admin-file": "BOOTSTRAP_FILE_VERIFIED", "reconcile-bootstrap-file": "BOOTSTRAP_FILE_VERIFIED", "resume-bootstrap-file": "BOOTSTRAP_FILE_VERIFIED",
 	} {
 		if strings.Contains(line, word) {

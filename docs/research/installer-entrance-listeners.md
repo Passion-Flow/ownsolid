@@ -48,7 +48,7 @@ do not select newer spec hooks or resolve remote image digests.
   hand-edited files, another service or a profile-specific Compose template.
 - Construct explicit public serving intent from the site inputs and invoke the
   existing checker after local image admission and before stopping Control or
-  touching PostgreSQL. Require its exact success marker. Preserve configured
+  changing PostgreSQL. Require its exact success marker. Preserve configured
   machine intent using only its four allowlisted public fields and the existing
   machine contract; never forward arbitrary settings or secrets as arguments.
 - Upgrade and rollback have stop stages outside ordinary Apply. Check their
@@ -88,3 +88,37 @@ unit pass does not establish that flow. Keep HTTP laboratory mode, trusted-proxy
 delivery, shared-hostname opt-in, the complete four-entrance installation and
 address/session/SSO migration in their existing open items. This research does
 not mark DEL-114 or ARC-110 complete.
+
+## Pre-stop admission boundary
+
+The installer now supplies the eight explicit shared-server intent fields to
+the existing Control command. Apply requires its exact success line between
+local image admission and the first stop. Upgrade checks both recorded source
+and candidate immutable images against the currently installed runtime snapshot
+before reserving recovery state or stopping Control. Rollback checks the prior
+image before its stop. Schema observation remains read-only and can precede
+these upgrade checks; the checker itself opens no database.
+
+An ephemeral JSON Compose override selects only `control-operator.image`.
+It inherits the canonical operator's local-only image policy, existing mounts,
+no published ports and no dependencies. Both refusal and success remove that
+override and preserve the installed Compose file, environment and two Control
+snapshots. Machine intent uses its four exact public string fields. Null,
+unknown, missing and mistyped fields are refused without forwarding arbitrary
+settings to a command line. Control remains the sole TLS validator.
+
+The actual installer package passed on macOS arm64. The three new unit/filesystem
+roots also passed on Linux amd64 as UID/GID 65534 in a private mount, PID and
+network namespace with no route and loopback down: 10 RUN records, no skips,
+0.130869 seconds. The retained `serving-filesystem-native.oyzxeur4` receipt binds
+the exact seven source-file hashes and test ELF
+`9a8f06336af1bf3e543b388c29bd9b241e88343acc3bdbe53c64e017d853995d`.
+Tests cover exact public intent, malformed machine intent, rejected/missing/
+embedded success markers, no writer/database step after refusal, unchanged keys
+on explicit retry, and image-override removal on success and failure.
+
+Those tests use controlled command responses. They do not establish native
+Compose merging, historical-image acceptance/refusal, the Control command or an
+installed upgrade/rollback run. The optional Portal configuration/projection is
+not enabled by this preparatory admission change. Keep those qualifications and
+the complete address matrix open.
