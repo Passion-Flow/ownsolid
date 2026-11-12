@@ -542,10 +542,10 @@ evaluator, probe, isolated daemon, temporary image tag and private fixture
 directory were removed. No lane-b container was changed.
 
 The new source passed disconnected Linux `make check` and `make build`.
-The root invocation of the installer unit suite correctly refused its
-inherited current-UID service fixtures; it is not a service-root exception.
-Both installer packages then passed as UID/GID 65534 in read-only,
-network-none Linux containers, followed by `go vet`. The final
+A root invocation of the installer unit suite failed because its inherited
+fixtures use the current UID, while service UID zero is invalid. Both
+installer packages passed as UID/GID 65534 in read-only, network-none
+Linux containers; `go vet` also passed. The final
 `2351a2ce` backup compatibility change passed the same two-package Linux
 suite and focused race checks. It retains the exact prior Compose writer
 profile and its original environment while refusing unreviewed profile
