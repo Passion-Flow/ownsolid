@@ -450,3 +450,40 @@ lines, including replacement-after-old-close, restart and observed retirement,
 and refuse unrelated messages or attributes containing those same event words.
 This changes the test observer only; transport, protocol, bounds and task/cursor
 assertions remain unchanged. The existing Go BSD-3-Clause license applies.
+
+
+## Busy-agent reconnect boundary
+
+The corrected parser's installed run on 59c9c86a enrolled 500 agents in 2 seconds,
+connected every agent in 11 seconds and established 261/239 original sessions with
+25 acknowledged tasks. All 500 original transports retired without force. Gateway
+A's observed drain age was 54.002745–59.996931 seconds and completion 54.003984–68.886238;
+B's was 54.048568–59.963101 and 54.378634–68.933708. Maximum observed scheduling delay
+was 0.003435 and 0.001201 seconds respectively. No external attempt was recorded;
+one harness probe was seen. The run then failed the in-flight assertion after
+waiting 100.7 seconds for every replacement session. Retain this failure; it is
+not a completed lifecycle result. Its test-log SHA-256 is
+1e1f24e0bda0c767290f79794bbc71e714079fb597b5feaf1bd3374e66c8fd2d.
+
+The existing production runtime runs one cycle through acknowledged execution
+before its next session heartbeat/claim. Its long-task owner renews through HTTPS.
+The simulator follows the same serial cycle: work renews through HTTPS and the
+next heartbeat reopens its aged session only after execution and result delivery.
+Requiring every replacement session before checking that every 100-second task is
+still running therefore contradicts the existing execution contract. Increasing
+the task duration cannot make that serial condition hold and is rejected.
+
+Keep the 100-second task, all 500 original retirement and replacement assertions,
+both 25-task exact-attempt checks, the existing three-minute move and two-minute
+dispatch bounds, all 500 survivor/return checks, renewal reporting and cursors.
+Check all acknowledged tasks are still running immediately after retirement,
+with an unexpired lease as an additional renewal assertion. Then wait for their
+successful completion and all replacement sessions within the original absolute
+three-minute age deadline. During a gateway kill, require every idle agent to
+reach the survivor while all 25 busy tasks retain their current leases. After those
+tasks complete, require all 500 agents on the survivor within the original kill
+move deadline, before returning the first gateway. Finally require the original
+500-node preferred assignments and unchanged successful attempts. This preserves
+the real work/transport boundary instead of adding concurrent heartbeats to the
+agent solely to satisfy a fixture. No production protocol or execution behavior
+changes. The existing Go/gRPC licenses apply and no dependency or data is added.
