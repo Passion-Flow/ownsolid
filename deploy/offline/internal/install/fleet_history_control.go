@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"net/netip"
 	"net/url"
+	"os"
 	"path/filepath"
 
 	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
 	"github.com/Passion-Flow/ownsolid/tools/release/offline/pkg/bundle"
+	"go.yaml.in/yaml/v3"
 )
 
 func (c Config) controlCAPath() string {
@@ -26,6 +28,9 @@ func readHistoryControl(c Config) (map[string][]byte, error) {
 	}
 	if !historyPath(source) {
 		return nil, historyFailure("CONTROL_INVALID", "select a canonical protected input directory")
+	}
+	if err := historyControlProfile(c.ComposeFile); err != nil {
+		return nil, err
 	}
 	files := map[string][]byte{}
 	for _, name := range []string{"monitoring.json", "ca.pem"} {
@@ -60,4 +65,31 @@ func readHistoryControl(c Config) (map[string][]byte, error) {
 		return nil, historyFailure("CONTROL_INVALID", "raw and long origins must differ")
 	}
 	return files, nil
+}
+
+// Older signed media must fail explicitly instead of silently omitting process trust.
+func historyControlProfile(path string) error {
+	var profile struct {
+		Services map[string]struct {
+			Environment map[string]string `yaml:"environment"`
+			Volumes     []struct {
+				Type     string `yaml:"type"`
+				Source   string `yaml:"source"`
+				Target   string `yaml:"target"`
+				ReadOnly bool   `yaml:"read_only"`
+			} `yaml:"volumes"`
+		} `yaml:"services"`
+	}
+	raw, err := os.ReadFile(path)
+	if err == nil && yaml.Unmarshal(raw, &profile) == nil {
+		control := profile.Services["control"]
+		if control.Environment["SSL_CERT_FILE"] == "${OWNSOLID_CONTROL_CA_FILE:?}" {
+			for _, mount := range control.Volumes {
+				if mount.Type == "bind" && mount.Source == "${OWNSOLID_CONFIG_DIR:?}" && mount.Target == containerConfigDir && mount.ReadOnly {
+					return nil
+				}
+			}
+		}
+	}
+	return historyFailure("CONTROL_PROFILE_UNSUPPORTED", "use signed media or the shipped Compose profile that mounts protected Control history trust")
 }
