@@ -354,6 +354,75 @@ expiry, consumed state and current client/installation authority must do that.
 The native private-ring retirement control is not proof of code revocation.
 The complete PostgreSQL and RP/OP HTTPS prototype remains open.
 
+### Durable protocol prototype plan and additional licenses
+
+The complete standalone experiment will use two verified private-CA HTTPS
+servers and a disposable PostgreSQL database. Its synthetic account/password
+form tests protocol composition only; it is not a second ownsolid login owner
+or evidence of Portal/MFA consent integration. Client, installation, principal,
+source session and membership rows have explicit scope/revisions and stable
+opaque subjects. All credentials, signing/GCM keys and the database connection
+enter through private fixture files. No examples' plaintext passwords,
+insecure cookies, permissive callback handling or token logging are copied.
+
+Persist the browser-bound authorization request before login. Require its exact
+browser cookie and CSRF/Origin proof to approve it; require only the admitted
+`openid` code/S256 profile before the SDK. The SDK accepts several built-in
+scopes independently of `Client.IsScopeAllowed`, so that getter alone is not
+the registered-claim boundary. Save the generated code's digest once with a
+bounded expiry. Bind its subject, source-session epoch, current membership
+lifetime, exact client/installation revisions, redirect and challenge.
+
+At token exchange, the strict parser and current confidential-client check run
+before code-row locks. An owned request transaction then carries the resolved
+client through all SDK storage calls. Use a nonlocking scoped lookup only to
+resolve the complete authority lock set, acquire current client/installation,
+principal/session/membership fences and the exact code row, then recheck all
+bindings and expiry. Create the hashed opaque token ID, sign the ID token,
+consume the code and append the minimized event in that transaction.
+
+Buffer the SDK response under a configured byte limit. Release a successful
+token response only after the database confirms COMMIT. SDK errors, signing
+failure, cancellation and oversized output roll back the transaction; actual
+wire COMMIT loss releases a fixed error and no token, with no automatic resend.
+Store methods map failures to fixed protocol errors before SDK serialization
+and logging. UserInfo rechecks the token's bound subject/client and current
+installation, source session, membership lifetime and account epoch; the
+ciphertext's subject never supplies tenant scope. Uninstall, disable, rotation
+and removal must fence existing tokens as well as unconsumed codes.
+
+The RP will use the same pinned SDK's actual RP discovery, signature/token-hash
+and nonce verifier with a bounded approved-destination HTTPS client. A complete
+flow must survive OP restart with retained client, issuer, subject and keys.
+Tests must prove wrong/foreign client, secret, redirect, PKCE and browser refusal;
+duplicate redemption; signing failure and retry; revocation/removal propagation;
+wrong CA/name, response/request budgets and actual blocked-I/O cancellation.
+Signing rotation retains old public keys through issued-token expiry. Disabled
+grants and SDK routes remain explicitly closed rather than receiving success
+implementations. Native wire-loss tests reuse the repository's actual
+PostgreSQL forwarding helper outside the product, not simulated SQL responses.
+
+Loading `pkg/op`, `pkg/client/rp` and pgxpool selected 45 modules and 57 legal
+files in `iam106-provider-20261113.q_ov5ppw`. The preceding 40 exact versions
+and notices are unchanged; the five additions are below. Module downloads were
+checksum-verified and each added primary LICENSE matched the downloaded source
+bytes. This is metadata/license preparation only, not a build or protocol run.
+
+| Additional module | Version | Primary license |
+| --- | --- | --- |
+| `github.com/jackc/pgx/v5` | v5.11.0 | [MIT](https://github.com/jackc/pgx/blob/v5.11.0/LICENSE) |
+| `github.com/jackc/pgpassfile` | v1.0.0 | [MIT](https://github.com/jackc/pgpassfile/blob/v1.0.0/LICENSE) |
+| `github.com/jackc/pgservicefile` | v0.0.0-20240606120523-5a60cdf6a761 | [MIT](https://github.com/jackc/pgservicefile/blob/5a60cdf6a761/LICENSE) |
+| `github.com/jackc/puddle/v2` | v2.2.2 | [MIT](https://github.com/jackc/puddle/blob/v2.2.2/LICENSE) |
+| `github.com/stretchr/objx` | v0.1.0 | [MIT](https://github.com/stretchr/objx/blob/v0.1.0/LICENSE) |
+
+All five permit commercial/offline use and redistribution with preserved
+copyright/license text. The objx row is a graph/test dependency, not an enabled
+service. The test database/image and native build-tool notices retain the
+already inspected pinned PostgreSQL/pgvector and Go build-base obligations.
+This experiment adds no product dependency, model or dataset. Product admission
+must still resolve its complete graph and compose actual ownsolid authorities.
+
 The external prototype must use separate real RP and OP HTTPS servers, verified
 private CA trust and actual PostgreSQL persistence. Prove discovery through code
 exchange, signed ID-token verification and matching UserInfo subject; then
