@@ -222,7 +222,7 @@ exact attempts, enabled borrowing, pending reclaim, durable commit and loan
 attribution. Duplicating those decisions in the wrapper could lose funding
 or admit before positive victim release. The old O(workspaces) lock protocol,
 global policy-exclusive locking, separate ranking transactions and owner-side
-usage counters are rejected. See [ADR 0073](../decisions/0073-bound-tenant-admission-locking.md).
+usage counters are rejected. See [ADR 0074](../decisions/0074-bound-tenant-admission-locking.md).
 
 Acceptance uses real isolated PostgreSQL: non-head refusal; head/dequeue in one
 commit; owner/audit rollback; complete-domain refusal; concurrent same-attempt
