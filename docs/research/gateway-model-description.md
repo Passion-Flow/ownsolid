@@ -501,3 +501,67 @@ level, which must still refuse retained description state with 55000.
 Keep the original pristine, cleared revision, intent-only, concurrent
 lock-wait and installed HTTPS cases. Require all of them to run on the
 same formal source before publication.
+
+
+## Formal schema 59 acceptance
+
+The exact source a446ec580cf6dffc63df5d8269518f1ef8175d40 passed the
+formal admission on 2026-11-12. PostgreSQL 18.6 and pgvector 0.8.7 ran
+in network-none Linux arm64 containers on the Darwin arm64 workstation.
+The accepted schema-58 predecessor was built separately from 106ca52d.
+All 58 preceding up/down assets and all 58 release entries remained
+byte-identical. Migration 000059 uses the owner up bytes and the
+isolation-guarded down successor qualified above. The normal production
+migrator, schema checker and runtime grant catalog now bind 59 entries
+and 119 public tables, including the migration ledger.
+
+| Actual migration history | Catalogue SHA-256 |
+| --- | --- |
+| Fresh installation or native 58-to-59 upgrade | 72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782 |
+| Restore at 55, then upgrade to 59 | 8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069 |
+| Restore at 56, 57, 58 or 59, then admit 59 | 18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc |
+
+All seven histories ran the production migrator twice and the normal
+schema check, asserting exactly 59 ledger entries and 119 tables.
+The original 55 through 58 custom-format archives were checksum-checked
+before use. Audit exports from all four historical restores matched
+the retained original JSONL bytes, and the independent offline verifier
+accepted the original checkpoint each time. These runs qualify the
+measured catalogue histories and retained audit data; they are not a
+full installed browser or model-serving qualification.
+
+Six distribution test roots passed without skips: predecessor HTTPS,
+normal installed-schema HTTPS, four retained-state rollback cases,
+the committed-writer lock wait, two prior-snapshot refusals and four
+fresh-isolation cases. Eight runtime-access roots also passed without
+skips, including the new 58-to-59 grant resume. Missing new-table access
+refused serving with DATABASE_RUNTIME_PRIVILEGES_INCOMPATIBLE and SQL
+42501. Grant-only resume and repeat retained the role OID, password
+verifier and every predecessor ledger row. The actual runtime principal
+reached the new foreign key but could not read audit_chain_head, mutate
+the ledger, truncate the intent table or disable its triggers.
+
+The same source passed an uninterrupted make check, make build and
+make test on the workstation. Chromium passed 1,075 Console and 389
+Portal cases; the unchanged live-environment skips were 28 and 9.
+Both suites ran without retries, at four and one workers respectively.
+Go, Rust and Web checks and tests passed. The private APFS temporary
+volume and all owned PostgreSQL containers, volumes and credential files
+were removed after the runs. The raw catalogue/restore log SHA-256 is
+069f70673f0764e6c16adb027488c53ed2d47aa32733d51ce0b01ed1c4e46a1d.
+The retained admission manifest SHA-256 is
+4a3e92dbd921d0d971ebcd1395329da32ed8e0dcf9b8b901f592123d667a76b4.
+
+The separate native Linux amd64 queue exited at resource admission and
+ran no new compiler or database. Do not report this arm64 result as an
+amd64 rerun. No model, GPU or production browser installation ran in
+this qualification. GW-120 and S-304 remain open until Console editing
+and the actual Portal consumer complete their installed acceptance.
+
+With an explicitly owned private PostgreSQL fixture configured through
+PROJECT_ONE_TEST_DSN_FILE, reproduce the current backend regressions:
+
+```sh
+go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription' -count=1 -v
+go -C services/control test -p 1 ./internal/operations/databaseaccess -run '^(TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal|TestUpgrade.*|TestActualRuntimeAccessPreparationAccountWorkspaceDMLAndNoDDL)$' -count=1 -v
+```
