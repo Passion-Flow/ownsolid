@@ -75,6 +75,13 @@ Writes carry the CSRF token and retry once when it is stale. Where the contract 
 `Idempotency-Key`, `idempotencyKey` is required: create it when the user starts the action
 and reuse it for retries.
 
+Administrators edit a published model's description on its deployment detail, under
+On the gateway. The short form keeps the draft on failure, reads the current description
+before retrying a revision conflict, and offers Undo after clearing. Portal users read
+that description in Models for their selected workspace. An older service without the
+paired description fields shows why editing is unavailable. Description revisions are
+independent of serving revisions; an exact replay can return a newer current description.
+
 ## Rules
 
 - **Text:** every user-visible string is a key in `packages/i18n/locales/en.json` and

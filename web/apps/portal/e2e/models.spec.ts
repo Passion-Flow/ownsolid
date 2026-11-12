@@ -1,6 +1,7 @@
 // The models a person may call (S-304): which can be called now, what is behind each name, and what
 // the page says when part of that cannot be read (docs/research/portal-model-catalogue.md).
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
+import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import {
   expectAccessible,
   deploymentAlias,
@@ -10,6 +11,9 @@ import {
   runningDeployment,
   unavailableAlias,
   type ControlPlane,
+  defaultWorkspace,
+  teamWorkspace,
+  expectFocusVisible,
 } from '@ownsolid/shell/testing';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -30,6 +34,81 @@ test.beforeEach(async ({ page }) => {
     if (pathname.startsWith('/api/')) called.push(pathname);
   });
 });
+
+for (const [locale, text] of [
+  ['en', english],
+  ['zh-CN', chinese],
+] as const) {
+  test.describe(`workspace description ${locale}`, () => {
+    test.use({ locale });
+    test('reads only the selected workspace description as text and exposes no editor', async ({
+      page,
+    }, info) => {
+      if (locale === 'zh-CN') await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      const first = 'Support requests.\n<img src="https://outside.example.invalid/a">';
+      const second = 'Research only; verify every answer.';
+      const foreign = {
+        ...deploymentAlias,
+        workspace_id: teamWorkspace.id,
+        description: second,
+        description_revision: 4,
+      };
+      control.aliases = [{ ...deploymentAlias, description: first, description_revision: 2 }];
+      await page.route('**/distribution/aliases?*', (route) => {
+        const workspace = new URL(route.request().url()).pathname.split('/').at(-3);
+        return route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: {
+              items: workspace === defaultWorkspace.id ? control.aliases : [foreign],
+              next_cursor: null,
+            },
+          }),
+        });
+      });
+      const outside: string[] = [];
+      page.on('request', (request) => {
+        if (request.url().startsWith('https://outside.example.invalid/'))
+          outside.push(request.url());
+      });
+      await page.goto('/models');
+      const row = page.getByRole('row', { name: new RegExp(deploymentAlias.name) });
+      await row.getByRole('button').first().click();
+      const drawer = page.getByRole('dialog', { name: deploymentAlias.name, exact: true });
+      await expect(drawer.getByText(first, { exact: true })).toBeVisible();
+      await expect(drawer.locator('img, textarea')).toHaveCount(0);
+      await expect(
+        drawer.getByRole('button', { name: text['services.gateway.description.edit'] }),
+      ).toHaveCount(0);
+      await expectAccessible(page);
+      await expectFocusVisible(page);
+      await info.attach(`portal-description-read-${locale}`, {
+        body: await page.screenshot({ animations: 'disabled' }),
+        contentType: 'image/png',
+      });
+      await page.keyboard.press('Escape');
+      const switchName = text['workspace.switch'].replace('{name}', defaultWorkspace.name);
+      await page.getByRole('button', { name: switchName, exact: true }).click();
+      await page.getByRole('menuitem', { name: teamWorkspace.name, exact: true }).click();
+      await row.getByRole('button').first().click();
+      await expect(drawer.getByText(second, { exact: true })).toBeVisible();
+      await expect(drawer.getByText(first, { exact: true })).toHaveCount(0);
+      await page.keyboard.press('Escape');
+      await page
+        .getByRole('button', {
+          name: text['workspace.switch'].replace('{name}', teamWorkspace.name),
+          exact: true,
+        })
+        .click();
+      await page.getByRole('menuitem', { name: defaultWorkspace.name, exact: true }).click();
+      await row.getByRole('button').first().click();
+      await expect(drawer.getByText(first, { exact: true })).toBeVisible();
+      expect(outside).toEqual([]);
+      expect(control.publishWrites).toEqual([]);
+    });
+  });
+}
 
 async function open(page: Page, path = '/models') {
   await page.goto(path);
