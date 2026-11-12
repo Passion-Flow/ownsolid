@@ -167,6 +167,26 @@ func (f *connectorSignInFixture) authority(t *testing.T) string {
 	return snapshot
 }
 
+// A known foreign row makes the isolation check independent of an unknown-ID
+// refusal. Its copied ciphertext is never opened by a correctly scoped request.
+func (f *connectorSignInFixture) foreignTest(t *testing.T, source string) (connector, test, state string) {
+	t.Helper()
+	tenant := uuid.NewString()
+	connector, test, state = uuid.NewString(), uuid.NewString(), security.Token()
+	if _, err := f.accounts.DB.Exec(t.Context(), "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign diagnostic tenant','active')", tenant); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connectors(id,tenant_id,name,provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by)
+ SELECT $1,$2,'Foreign diagnostic connector',provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by FROM sso_connectors WHERE id=$3`, connector, tenant, f.connector); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connector_sign_in_tests(id,tenant_id,connector_id,connector_revision,auth_version,actor_user_id,actor_session_id,actor_epoch,idempotency_key,fingerprint,reason,state_hash,browser_hash,secret_key_id,secret_nonce,secret_ciphertext,created_at,expires_at)
+ SELECT $1,$2,$3,connector_revision,auth_version,actor_user_id,actor_session_id,actor_epoch,$4,fingerprint,reason,$5,browser_hash,secret_key_id,secret_nonce,secret_ciphertext,created_at,expires_at FROM sso_connector_sign_in_tests WHERE id=$6`, test, tenant, connector, uuid.NewString(), security.Digest(state), source); err != nil {
+		t.Fatal(err)
+	}
+	return connector, test, state
+}
+
 func TestConnectorSignInTestHTTPS(t *testing.T) {
 	f := connectorSignInFixtureNew(t)
 	key := uuid.NewString()
@@ -244,18 +264,15 @@ func TestConnectorSignInTestBoundaryHTTPS(t *testing.T) {
 	f.admin.refresh()
 	problemCode(t, f.admin.request(http.MethodPost, f.base, sso.ConnectorSignInTestInput{Revision: 1, Reason: "CSRF boundary"}, 403, "", map[string]string{"X-CSRF-Token": "", "Idempotency-Key": uuid.NewString()}), "CSRF_INVALID")
 	problemCode(t, f.admin.request(http.MethodPost, f.base, map[string]any{"revision": 1, "reason": "Scope injection", "tenant_id": uuid.NewString()}, 400, "", map[string]string{"Idempotency-Key": uuid.NewString()}), "VALIDATION_FAILED")
-	foreignTenant, foreignConnector := uuid.NewString(), uuid.NewString()
-	if _, err = f.accounts.DB.Exec(t.Context(), "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign diagnostic tenant','active')", foreignTenant); err != nil {
-		t.Fatal(err)
-	}
-	if _, err = f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connectors(id,tenant_id,name,provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by)
- SELECT $1,$2,'Foreign diagnostic connector',provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by FROM sso_connectors WHERE id=$3`, foreignConnector, foreignTenant, f.connector); err != nil {
-		t.Fatal(err)
-	}
+	foreignConnector, foreignTest, foreignState := f.foreignTest(t, id)
 	foreignBase := "/api/v1/admin/sso/connectors/" + foreignConnector + "/sign-in-tests"
 	problemCode(t, f.admin.mutate(http.MethodPost, foreignBase, sso.ConnectorSignInTestInput{Revision: 1, Reason: "Cross-tenant refusal"}, 404, ""), "SSO_CONNECTOR_NOT_FOUND")
-	problemCode(t, f.admin.request(http.MethodGet, foreignBase+"/"+id, nil, 400, "", nil), "SSO_FLOW_INVALID")
-	recoveryCallback(t, f.admin, strings.Replace(f.callbackPath(out), f.base, foreignBase, 1), "/sso?test_error=SSO_FLOW_UNUSABLE", false)
+	problemCode(t, f.admin.request(http.MethodGet, foreignBase+"/"+foreignTest, nil, 400, "", nil), "SSO_FLOW_INVALID")
+	recoveryCallback(t, f.admin, foreignBase+"/callback?"+url.Values{"state": {foreignState}, "code": {f.code}}.Encode(), "/sso?test_error=SSO_FLOW_UNUSABLE", false)
+	var intact int
+	if err = f.accounts.DB.QueryRow(t.Context(), "SELECT count(*) FROM sso_connector_sign_in_tests WHERE id IN ($1,$2) AND state='pending' AND claim_id IS NULL AND secret_ciphertext IS NOT NULL AND subject IS NULL", id, foreignTest).Scan(&intact); err != nil || intact != 2 {
+		t.Fatal("scope refusal changed an owned or foreign intent", err)
+	}
 	if f.exchanges.Load() != 0 {
 		t.Fatal("scope refusals contacted provider")
 	}
@@ -423,18 +440,7 @@ func TestConnectorSignInTestExpiryAndCleanupHTTPS(t *testing.T) {
 		t.Fatal("expired callback did not terminate")
 	}
 	next := f.start(t, uuid.NewString())
-	foreignTenant, foreignConnector, foreignTest := uuid.NewString(), uuid.NewString(), uuid.NewString()
-	if _, err := f.accounts.DB.Exec(t.Context(), "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign cleanup tenant','active')", foreignTenant); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connectors(id,tenant_id,name,provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by)
- SELECT $1,$2,'Foreign cleanup connector',provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by FROM sso_connectors WHERE id=$3`, foreignConnector, foreignTenant, f.connector); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connector_sign_in_tests(id,tenant_id,connector_id,connector_revision,auth_version,actor_user_id,actor_session_id,actor_epoch,idempotency_key,fingerprint,reason,state_hash,browser_hash,secret_key_id,secret_nonce,secret_ciphertext,created_at,expires_at)
- SELECT $1,$2,$3,connector_revision,auth_version,actor_user_id,actor_session_id,actor_epoch,$4,fingerprint,reason,$5,browser_hash,secret_key_id,secret_nonce,secret_ciphertext,created_at,expires_at FROM sso_connector_sign_in_tests WHERE id=$6`, foreignTest, foreignTenant, foreignConnector, uuid.NewString(), security.Digest(security.Token()), next["id"]); err != nil {
-		t.Fatal(err)
-	}
+	_, foreignTest, _ := f.foreignTest(t, next["id"].(string))
 	expireConnectorTestFixture(t, f, next["id"].(string))
 	expireConnectorTestFixture(t, f, foreignTest)
 	if err := f.owner.Cleanup(t.Context()); err != nil {
