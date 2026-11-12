@@ -142,10 +142,10 @@ func serveAgedConnection(ctx context.Context, conn *agingConn, tlsConfig *tls.Co
 			budget = config.Seconds(policy.ShutdownSeconds)
 		case <-retire.C:
 		}
-		slog.Debug("http_connection_draining", "reason", reason)
 		shutdown, cancel := context.WithTimeout(context.Background(), budget)
 		defer cancel()
 		err := server.Shutdown(shutdown)
+		forced := err != nil
 		if err != nil {
 			_ = server.Close()
 			if reason == "connection_age" {
@@ -154,6 +154,11 @@ func serveAgedConnection(ctx context.Context, conn *agingConn, tlsConfig *tls.Co
 				err = nil
 			}
 		}
+		// Notify the transport before logging; a slow sink must not postpone GOAWAY.
+		slog.Info("http_connection_retired", "reason", reason,
+			"connection_id", conn.id,
+			"accepted_at", conn.acceptedAt.UTC(), "drain_at", conn.drainAt.UTC(),
+			"age_seconds", conn.drainAt.Sub(conn.acceptedAt).Seconds(), "forced", forced)
 		shutdownDone <- err
 	}()
 	err := server.Serve(listener)
