@@ -146,3 +146,23 @@ The guard transcript SHA-256 is
 `1a2931ac119004277e166bd8ae4d78f93d67d0a1dc697fa07355622b16fa5515`.
 The combined timer success, restored dump and retention failure/retry
 matrix above still requires its complete Linux acceptance transcript.
+
+
+### Accepted schema continuation
+
+The accepted Audit migration is now on main through `106ca52d`; the SQL
+commit is `8c04ab6f`. Build from the selected current checkout and verify
+that accepted migration's exact up/down bytes and ancestry. Observe the
+actual migrated schema and table count, and run Control's schema check
+before scheduling. Do not assume later accepted migrations are absent.
+
+Review of the recovered runner found an unconnected recorder launch and a
+wrong history assertion using `complete` instead of `succeeded`. Repair
+the fixture before executing it: start the repository recorder in the
+PostgreSQL namespace before database initialization, make it both default
+routes, prove the three exact host probes, and require the capture to stay
+unchanged through migrations and all four timer attempts. All four
+publications are verified, including the deliberate retention failure;
+only successful expiry has a count. This repair does not establish a run
+result. Keep the existing earlier failure evidence and source recovery
+separate from the resulting timer-to-restore acceptance.
