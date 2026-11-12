@@ -5,11 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/registryconfig"
+	"go.yaml.in/yaml/v3"
 )
 
 const registryConfigEnvironment = "PROJECT_ONE_REGISTRY_CONFIG_FILE"
+const registrySiteSourceEnvironment = "PROJECT_ONE_REGISTRY_SITE_SOURCE_FILE"
 
 func registryConfigurationPath(path string) bool {
 	return filepath.IsAbs(path) && filepath.Clean(path) == path && !strings.ContainsAny(path, "\x00\r\n")
@@ -25,7 +26,7 @@ func validateImageRegistryYAML(raw []byte) error {
 	}
 	root := document.Content[0]
 	for index := 0; index < len(root.Content); index += 2 {
-		if root.Content[index].Value == "image_registry_config_file" {
+		if key := root.Content[index].Value; key == "image_registry_config_file" || key == "image_registry_site_source_file" {
 			value := root.Content[index+1]
 			if value.Kind != yaml.ScalarNode || value.Tag != "!!str" || !registryConfigurationPath(value.Value) {
 				return errors.New("CONFIG_IMAGE_REGISTRY_INVALID")
@@ -38,7 +39,7 @@ func validateImageRegistryYAML(raw []byte) error {
 func (c *Config) resolveImageRegistryConfiguration() error {
 	c.ImageRegistry = nil
 	if c.ImageRegistryConfigFile == "" {
-		return nil
+		return c.validateImageRegistryConfiguration()
 	}
 	if !registryConfigurationPath(c.ImageRegistryConfigFile) {
 		return errors.New("CONFIG_IMAGE_REGISTRY_INVALID")
@@ -58,10 +59,13 @@ func (c *Config) resolveImageRegistryConfiguration() error {
 }
 
 func (c Config) validateImageRegistryConfiguration() error {
-	if c.ImageRegistryConfigFile == "" && c.ImageRegistry == nil {
+	if c.ImageRegistryConfigFile == "" && c.ImageRegistry == nil && c.ImageRegistrySiteSourceFile == "" {
 		return nil
 	}
 	if !registryConfigurationPath(c.ImageRegistryConfigFile) || c.ImageRegistry == nil || c.ImageRegistry.Validate() != nil {
+		return errors.New("CONFIG_IMAGE_REGISTRY_INVALID")
+	}
+	if c.ImageRegistrySiteSourceFile != "" && !registryConfigurationPath(c.ImageRegistrySiteSourceFile) {
 		return errors.New("CONFIG_IMAGE_REGISTRY_INVALID")
 	}
 	for _, root := range []string{c.Models.ArtifactRoot, c.Datasets.ArtifactRoot, c.Training.ArtifactRoot, c.ModelPreparation.ArtifactRoot} {

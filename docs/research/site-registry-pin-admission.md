@@ -164,3 +164,52 @@ The root owner still needs startup tests for both explicit modes and
 invalid references, then the installed release-to-pin flow on the same
 source commit. This handoff does not change that acceptance status or
 qualify a new deployment.
+
+### Shared control startup selection
+
+The shared startup root selects the existing module constructor with an optional
+`image_registry_site_source_file`. The canonical protected JSON reference
+requires the writable `image_registry_config_file`. The explicit protected
+environment file may override a valid YAML reference through
+`PROJECT_ONE_REGISTRY_SITE_SOURCE_FILE`. Invalid original YAML, empty overrides,
+unknown or duplicate settings fail. Ambient process variables grant no selection.
+
+Keep source JSON decoding, TLS and credential admission, private CIDR policy,
+source/destination separation and transport cleanup in
+`NewWithSiteReleaseSource`. The shared root first retains selected SQL,
+initialization and installed-tenant checks, then passes the source file. An
+explicit source constructor failure aborts startup. The existing lifecycle
+closes the returned Registry service during shutdown and later startup failures.
+
+The [OCI digest pull contract](https://github.com/opencontainers/distribution-spec/blob/v1.1.1/spec.md#pulling-manifests)
+and [Go HTTP client redirect control](https://pkg.go.dev/net/http#Client.CheckRedirect)
+remain the transport basis. A second source parser in the shared root would
+duplicate the module's policy and could drift. An automatic archive fallback
+would accept bytes through a source the operator did not select. The existing
+Go, PostgreSQL and Distribution licenses above apply, with no new dependency,
+model or dataset.
+
+Verify strict optional selection and overrides, a source without a writable
+Registry, and missing, linked or public source files. Through the actual startup
+constructor, test invalid trust and credential references, public CIDR policy,
+unknown scope fields and identical source/destination authority. Refusals must
+leave deployment Registry hooks unbound. Successful construction must use the
+existing Close chain. Cross-tenant pin reads, byte-source egress and signed
+import acceptance remain covered through the Registry owner's real protocols.
+
+The shared-root regression sources are
+`TestImageRegistrySiteSourceSelection`,
+`TestImageRegistrySiteSourceRefusesMalformedSelection`,
+`TestRegistrySiteSourceRequiresWritableOwner` and
+`TestRegistrySiteSourceStartupAdmission`. The last test needs an owned
+PostgreSQL fixture selected through `PROJECT_ONE_TEST_DSN_FILE` and proves
+constructor and installation admission. Run the focused configuration,
+startup and existing lifecycle checks with:
+
+```sh
+go -C services/control test -p 1 ./internal/platform/config ./cmd/server   -run 'TestImageRegistrySiteSource|TestRegistrySiteSource|TestRuntimeNormalCancellationAndReverseOwnerJoin' -count=1
+```
+
+Source and layout review passed. Execution of these new Go regressions,
+the real PostgreSQL fixture and the full repository gate awaits the shared
+test window. Installed source-to-pin acceptance remains with OBS and DEL.

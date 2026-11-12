@@ -26,42 +26,43 @@ const MaximumDatabaseConnections int32 = 32
 const MaximumRoleConnections int32 = 1000
 
 type Config struct {
-	Telemetry                 *TelemetryConfiguration            `yaml:"telemetry,omitempty"`
-	LivenessReplica           *LivenessReplicaConfiguration      `yaml:"liveness_replica,omitempty"`
-	AgentGateway              *AgentGatewayConfiguration         `yaml:"agent_gateway,omitempty" json:"-"`
-	AgentIdentity             *AgentIdentityConfiguration        `yaml:"agent_identity,omitempty" json:"-"`
-	ModelGatewayIdentity      *ModelGatewayIdentityConfiguration `yaml:"model_gateway_identity,omitempty" json:"-"`
-	Topology                  TopologyConfiguration              `yaml:"topology,omitempty" json:"topology"`
-	ReleaseViewConfigFile     string                             `yaml:"release_view_config_file,omitempty" json:"-"`
-	MachineServer             *MachineServerConfiguration        `yaml:"machine_server,omitempty" json:"machine_server,omitempty"`
-	PrivateClusterConfigFile  string                             `yaml:"private_cluster_config_file,omitempty" json:"-"`
-	MonitoringConfigFile      string                             `yaml:"monitoring_config_file,omitempty" json:"-"`
-	MiddlewareConfigFile      string                             `yaml:"middleware_config_file,omitempty" json:"-"`
-	MiddlewareEnvironmentFile string                             `yaml:"middleware_environment_file,omitempty" json:"-"`
-	TaskEvents                taskbus.Configuration              `yaml:"task_events,omitempty" json:"-"`
-	ImageRegistryConfigFile   string                             `yaml:"image_registry_config_file,omitempty"`
-	ImageRegistry             *registryconfig.Config             `yaml:"-" json:"-"`
-	ObjectStorage             *ObjectStorageConfiguration        `yaml:"object_storage,omitempty" json:"ObjectStorage,omitempty"`
-	ModelCache                ModelCacheConfiguration            `yaml:"model_cache,omitempty"`
-	AWS                       AWSConfiguration                   `yaml:"aws,omitempty"`
-	MongoDBConfigFile         string                             `yaml:"mongodb_config_file,omitempty"`
-	MongoDB                   MongoDBConfiguration               `yaml:"-"`
-	Licensing                 *LicensingConfiguration            `yaml:"licensing,omitempty" json:"Licensing,omitempty"`
-	Localization              LocalizationConfiguration          `yaml:"localization"`
-	Plugins                   PluginConfiguration                `yaml:"plugins"`
-	Workflows                 WorkflowConfiguration              `yaml:"workflows"`
-	Knowledge                 KnowledgeConfiguration             `yaml:"knowledge"`
-	SSO                       SSOConfiguration                   `yaml:"sso"`
-	ModelPreparation          ModelPreparationConfiguration      `yaml:"model_preparation"`
-	Training                  TrainingConfiguration              `yaml:"training"`
-	Datasets                  DatasetConfiguration               `yaml:"datasets"`
-	Runtime                   *RuntimePolicy                     `yaml:"runtime"`
-	Models                    struct {
+	Telemetry                   *TelemetryConfiguration            `yaml:"telemetry,omitempty"`
+	LivenessReplica             *LivenessReplicaConfiguration      `yaml:"liveness_replica,omitempty"`
+	AgentGateway                *AgentGatewayConfiguration         `yaml:"agent_gateway,omitempty" json:"-"`
+	AgentIdentity               *AgentIdentityConfiguration        `yaml:"agent_identity,omitempty" json:"-"`
+	ModelGatewayIdentity        *ModelGatewayIdentityConfiguration `yaml:"model_gateway_identity,omitempty" json:"-"`
+	Topology                    TopologyConfiguration              `yaml:"topology,omitempty" json:"topology"`
+	ReleaseViewConfigFile       string                             `yaml:"release_view_config_file,omitempty" json:"-"`
+	MachineServer               *MachineServerConfiguration        `yaml:"machine_server,omitempty" json:"machine_server,omitempty"`
+	PrivateClusterConfigFile    string                             `yaml:"private_cluster_config_file,omitempty" json:"-"`
+	MonitoringConfigFile        string                             `yaml:"monitoring_config_file,omitempty" json:"-"`
+	MiddlewareConfigFile        string                             `yaml:"middleware_config_file,omitempty" json:"-"`
+	MiddlewareEnvironmentFile   string                             `yaml:"middleware_environment_file,omitempty" json:"-"`
+	TaskEvents                  taskbus.Configuration              `yaml:"task_events,omitempty" json:"-"`
+	ImageRegistryConfigFile     string                             `yaml:"image_registry_config_file,omitempty"`
+	ImageRegistrySiteSourceFile string                             `yaml:"image_registry_site_source_file,omitempty" json:"-"`
+	ImageRegistry               *registryconfig.Config             `yaml:"-" json:"-"`
+	ObjectStorage               *ObjectStorageConfiguration        `yaml:"object_storage,omitempty" json:"ObjectStorage,omitempty"`
+	ModelCache                  ModelCacheConfiguration            `yaml:"model_cache,omitempty"`
+	AWS                         AWSConfiguration                   `yaml:"aws,omitempty"`
+	MongoDBConfigFile           string                             `yaml:"mongodb_config_file,omitempty"`
+	MongoDB                     MongoDBConfiguration               `yaml:"-"`
+	Licensing                   *LicensingConfiguration            `yaml:"licensing,omitempty" json:"Licensing,omitempty"`
+	Localization                LocalizationConfiguration          `yaml:"localization"`
+	Plugins                     PluginConfiguration                `yaml:"plugins"`
+	Workflows                   WorkflowConfiguration              `yaml:"workflows"`
+	Knowledge                   KnowledgeConfiguration             `yaml:"knowledge"`
+	SSO                         SSOConfiguration                   `yaml:"sso"`
+	ModelPreparation            ModelPreparationConfiguration      `yaml:"model_preparation"`
+	Training                    TrainingConfiguration              `yaml:"training"`
+	Datasets                    DatasetConfiguration               `yaml:"datasets"`
+	Runtime                     *RuntimePolicy                     `yaml:"runtime"`
+	Models                      struct {
 		ArtifactRoot string `yaml:"artifact_root"`
 	} `yaml:"models"`
 	// KubernetesCells, when present, lets control install a cluster per cell (ADR 0051).
 	KubernetesCells *KubernetesCellsConfiguration `yaml:"kubernetes_cells,omitempty"`
-	Components struct {
+	Components      struct {
 		NodeExporterArchiveFile      string `yaml:"node_exporter_archive_file"`
 		NodeExporterCatalogDirectory string `yaml:"node_exporter_catalog_directory"`
 	} `yaml:"components"`
