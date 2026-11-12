@@ -92,3 +92,36 @@ proxy, use an isolated plaintext loopback endpoint and add
 `-tags repository_integration`.
 
 The SHA-256 of the follow-on candidate SQL is `ea20adf6825b04990f8f8679e1eb86035450fdc2ea4f4a8b484c07beb20be24c`.
+
+## Cell scope of loans and release evidence
+
+The cohort uses the local reservation database defined by
+[ADR 0006](../decisions/0006-cell-and-site-scope.md). Every active hold and
+pending reclaim read into that cohort must have the current database's site
+and cell. A foreign record returns `SCHEDULING_QUOTA_POLICY_UNAVAILABLE`
+without a loan plan. Exact claim replay also checks both coordinates before
+returning victims. A foreign claim conflicts with the local attempt.
+
+A committed `released_at` on a different cell's victim cannot authorize
+this cell's reclaim. The positive release read must count only the selected,
+tenant-scoped, local victim records. Otherwise a record from another cell
+could prematurely satisfy the release barrier. Keep the wait state until
+all exact local records prove release. Loan attribution and claim state
+updates also require local coordinates.
+
+Policy replacement reads every held reservation before allowing a changed
+workspace ceiling. Reject foreign records there as well, preserving the
+current revision and allocation. Silently excluding them could discard
+held usage during a mis-scoped restore. Cell reconciliation remains the
+resource owner's operation. The existing locks, SQL predicates, PostgreSQL
+boolean aggregate and synchronous commit behavior suffice, with no schema
+or dependency changes.
+
+Test each coordinate independently in disposable PostgreSQL records.
+Refuse foreign cohort holds, pending claim replay and cancellation,
+and a released foreign victim. Restore fixture coordinates and verify
+normal admission and exact replay. Keep the existing concurrent borrower,
+rollback and acknowledgement-loss tests. A separate policy test must
+retain its original revision on a foreign hold and succeed after fixture
+correction. These tests qualify the transaction boundary. The physical
+stop source, runtime owner and production migration remain required.

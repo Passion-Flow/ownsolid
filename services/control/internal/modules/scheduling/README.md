@@ -6,7 +6,8 @@ PostgreSQL transaction to hold or release the exact local attempt. A retained
 foreign-cell record cannot acknowledge a local replay or release. The quota snapshot
 repository also uses an expected policy revision. Enabled departments can
 attribute loans to sibling workspaces and keep a reclaim pending until every
-selected victim has a committed owner release. The cell adapter reads
+selected victim has a committed local owner release. Cohort reads refuse foreign
+holds and claims, and policy replacement refuses foreign active holds. The cell adapter reads
 the exact Kueue or Volcano object over verified TLS. Provision the cell's
 bearer credential as a protected regular file. Rotate it by atomically
 replacing the file at the same path. Each observation reads the current file
