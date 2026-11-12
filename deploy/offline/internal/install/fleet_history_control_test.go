@@ -32,6 +32,11 @@ func historyControlFixture(t *testing.T) (Config, string) {
 		historyWrite(t, filepath.Join(source, name), raw)
 	}
 	c := validConfig(t)
+	compose, err := os.ReadFile("../../../compose/compose.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	historyWrite(t, c.ComposeFile, compose)
 	c.Telemetry.FleetHistoryControlDirectory = source
 	return c, source
 }
@@ -99,7 +104,7 @@ func TestFleetHistoryControlMaterializesProtectedPolicyAndTrust(t *testing.T) {
 }
 
 func TestFleetHistoryControlRefusesInvalidSourcesBeforeWriting(t *testing.T) {
-	for _, fault := range []string{"missing", "writable", "symlink", "invalid-policy", "loopback", "invalid-ca", "duplicate-owner"} {
+	for _, fault := range []string{"missing", "writable", "symlink", "invalid-policy", "loopback", "invalid-ca", "old-profile", "duplicate-owner"} {
 		t.Run(fault, func(t *testing.T) {
 			c, source := historyControlFixture(t)
 			policy := filepath.Join(source, "monitoring.json")
@@ -129,6 +134,8 @@ func TestFleetHistoryControlRefusesInvalidSourcesBeforeWriting(t *testing.T) {
 				historyWrite(t, policy, []byte(strings.ReplaceAll(string(raw), "10.20.30.40", "127.0.0.1")))
 			case "invalid-ca":
 				historyWrite(t, filepath.Join(source, "ca.pem"), []byte("invalid"))
+			case "old-profile":
+				historyWrite(t, c.ComposeFile, []byte("name: legacy\n"))
 			case "duplicate-owner":
 				c.ControlSettings = map[string]any{"monitoring_config_file": "/another/monitoring.json"}
 				if err := c.Validate(); err == nil {
