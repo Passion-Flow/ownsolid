@@ -18,6 +18,7 @@ import (
 
 func historyFixture(t *testing.T) (string, fleetHistoryConfig) {
 	t.Helper()
+	t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
 	input := shortTempDir(t)
 	c := fleetHistoryConfig{
 		FormatVersion: 1, Root: filepath.Join(input, "deployment"), Project: "history-test", UID: os.Getuid(), GID: os.Getgid(),
@@ -260,5 +261,22 @@ func TestFleetHistoryRefusesForeignDockerProject(t *testing.T) {
 	}
 	if strings.Contains(strings.Join(runner.commands, "\n"), " stop ") {
 		t.Fatal("foreign project was stopped")
+	}
+}
+
+func TestFleetHistoryRefusesRemoteDockerBeforeCreatingDeployment(t *testing.T) {
+	path, c := historyFixture(t)
+	site, err := loadHistorySite(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("DOCKER_HOST", "tcp://192.0.2.10:2376")
+	runner := &fakeRunner{}
+	err = applyHistory(t.Context(), site, runner, &bytes.Buffer{}, probeHistory)
+	if err == nil || !strings.Contains(err.Error(), "INSTALL_PREFLIGHT_DOCKER_ENDPOINT") || len(runner.commands) != 0 {
+		t.Fatal("remote daemon admitted", err)
+	}
+	if _, err := os.Stat(c.Root); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("remote endpoint refusal created deployment files", err)
 	}
 }
