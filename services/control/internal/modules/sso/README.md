@@ -112,3 +112,19 @@ the fixed login/account error page and clear the temporary cookie. It cannot
 claim, retry an exchange or create a session. Unknown commit outcomes retain the
 existing no-probe fixed recovery path. This prevents revoked callbacks from
 leaving provider code/state on the browser result URL.
+
+## PostgreSQL keyring recovery candidate
+
+`NewWithKeyringRecovery` composes a recoverable service explicitly. The existing
+`New` constructor retains strict startup. Only a missing keyring under a verified
+private parent or unreadable scoped ciphertext enters recovery; invalid files,
+provider trust, configuration and storage scans still fail. The loaded keys remain
+fixed until restart. `ConnectorPage.UnreadableConnectorIDs` reports affected rows
+to authenticated Go callers; the published HTTP response has no such field yet.
+
+Local Admin sessions can disable affected connectors. Replacing their complete
+credential pair requires a protected active key and the existing tenant, session,
+revision, idempotency and audit transaction. Unreadable credentials cannot start
+sign-in or authorize sourced sessions. Callback refusal consumes the pending
+flow without contacting the provider. See the [research and production handoff](../../../../../docs/research/sso-keyring-recovery.md)
+for acceptance and the remaining startup, API and UI owners.
