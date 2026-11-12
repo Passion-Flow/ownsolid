@@ -45,7 +45,10 @@ for measured size, throughput and query times.
 ## Scoped series cardinality fixture
 
 The fixture checks the native TSDB status rankings and totals for one
-workspace with 10,000 synthetic agents. It also reproduces cross-scope
+workspace with 10,000 synthetic node UUIDs under the actual node_id label.
+It checks a native scan-limit refusal despite topN=1, the exact boundary,
+rank capping and a narrowed retry after restarting the store. Both
+processes are joined on exit. It also reproduces cross-scope
 metric-name usage metadata in the raw response. A customer-facing
 projection must expose the qualified counts and omit usage metadata.
 See the [scope and admission boundary](../../../../../docs/research/series-cardinality-scope.md).
