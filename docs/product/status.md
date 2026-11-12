@@ -153,12 +153,14 @@ data-processing Python and component assets are not installed there. The ARC-004
 was checked against that baseline and adds no failure. ARC-005 was checked the same way
 on the packages it touches (nodes, identity HTTP, machine composition, agent tests).
 
-At schema 57, TestEveryCellOwnedTableCarriesScope fails because audit_chain_head lacks
-both required scope columns. The 58 candidate passed the six SQL catalog paths,
-production Go migrator and Audit module on disconnected Linux amd64 PostgreSQL 18.6.
-The standalone verifier retained the earlier checkpoints. Repository admission of
-58 still requires the full gate on the integration tree. See the
-[audit scope replay gate](../research/audit-chain-head-cell-scope.md#shared-linux-replay-gate).
+Schema 57 lacks the two required scope columns on audit_chain_head. Migration 58
+fixes that admission failure without rewriting retained audit positions or hashes.
+The six SQL catalog histories passed on disconnected Linux amd64 PostgreSQL 18.6.
+The joint IAM and Audit input also passed fresh install, logical restore from 55
+and 58, repeated production migration, scope refusal and the complete Audit module,
+with 118 tables and the original independently verified checkpoints. The full
+repository check, build and test passed, including both complete browser suites.
+See the [exact integration admission](../research/audit-chain-head-cell-scope.md#exact-integration-admission).
 
 `deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
 removal by the owner: no image build copies it.

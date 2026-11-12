@@ -224,7 +224,7 @@ The SQL replay accepted eight concurrent appends each after logical
 restore from 55 and 58. The Audit module also passed scope refusal,
 concurrent appends and mutation detection.
 
-The clean archive remains the replay input after rebasing on
+The clean archive was reused for the integration rebased on
 `273929ee`. The Linux amd64 package list for the production database
 and Audit tests and the standalone verifier selected 758 Go and
 embed inputs across 48 repository package directories. None changed
@@ -244,16 +244,54 @@ promoting 58.
 
 ## Exact integration admission
 
-The preserved replay archive and the 758-input comparison remain unchanged.
-A comparison against the integration based on `203109c7` selected the same
-966 repository Go, test, embed and assembly paths as the archive. All 986
-selected source, module, migration and release-lineage inputs matched
-byte for byte. The 57 published up migrations remain identical to main,
-and all 58 source checksums match the release descriptor.
+The joint IAM and Audit gate froze source commit
+`0f02cf937479aeae9dcbdea8da4ee8ef27f551a5` on the accepted APP baseline
+`279382f2`. Its equivalent code revision is `8c04ab6f`, rebased over the
+subsequent three-file APP documentation update. Every non-Markdown file is
+identical between those two inputs. The 57 published up migrations and
+their release entries remain byte-identical, and all 58 source checksums
+match the release descriptor. No NET-102 source-selection work is included.
 
-The earlier full repository gate passed check, build and test on
-`7170ef90`. Subsequent Web and runtime changes require the new integrated
-candidate to pass the same gate before promotion. Workstation runs use
-the shared `ownsolid-workstation-full-gate.lock` and a private temporary
-volume with sufficient free space. The unchanged Linux replay inputs
-reuse the completed amd64 migrator, scope, checkpoint and Audit tests.
+The expanded Linux package comparison selected 971 repository Go, test,
+embed and assembly inputs across 53 directories, compared with the
+original archive's 966. Eighteen files changed in the model, assistant and
+HTTP dependencies and test variants. Module manifests, migration SQL,
+catalog admission and release lineage did not change. Rebuild the affected
+Linux tests instead of attributing the earlier archive's run to this input.
+The joint tracked-source archive SHA-256 is
+`88b4a8b698e50bb95c9c56cc3e42f208baa2183fde693342eb7bd024f8cf3780`.
+
+The supplemental Linux amd64 run held both original locks with full I/O
+PSI avg10 of 1.78%, 8,245,684 KiB free memory and 763 GiB available disk.
+Compilation used the pinned Go toolchain with networking disabled. The
+PostgreSQL 18.6 and pgvector 0.8.7 fixture used `network=none`. Fresh install
+and logical restores from 55 and 58 passed the production migrator, its
+idempotent replay and admission. All three catalogs matched the accepted
+schema-58 fingerprints with 118 tables. Both restored exports preserved
+the original checkpoint byte-for-byte and passed the standalone verifier.
+The complete Audit module passed, including mixed V1/V2 retention,
+32 concurrent appends, foreign-scope and serving-role refusal, mutation
+detection, retention and assistant disclosure. All 16 top-level checks
+passed with no skips. The combined log SHA-256 is
+`57af522c61ced035193816506be6c137ab45d230e223bf83af2df6a5b334cbe8`.
+The owned PostgreSQL container, volume and credential files were removed.
+The earlier six-history SQL qualification remains the original evidence
+for the unchanged migration bytes.
+
+IAM independently qualified the same frozen source: 12 HTTPS cases each
+ran three times, all 54 SSO cases passed, real Gitea recovery and callback
+replay passed, and three TOTP unit cases each ran three times. All four
+stage exit codes were zero with no skips; the source archive, binaries and
+raw log digests were checked independently. Those probes ran on Linux
+arm64 and macOS arm64. Production startup still calls `sso.New`, so
+IAM-119 remains open for its production wiring and UI acceptance.
+
+The frozen joint input passed `make check`, `make build` and `make test`.
+Both browser suites ran in sequence without automatic retries: Console
+passed 1,075 cases with 28 existing live-test skips, and Portal passed 389
+with nine existing live-test skips. Go, Rust and Web tests all passed.
+The workstation gate used the shared lock, bounded concurrency and a
+short-path private APFS temporary volume. Sleep prevention lasted only
+for the gate process, and the owned volume was detached afterwards.
+Documentation-only integration updates require the source-input
+equivalence check and `make check` before fast-forward publication.
