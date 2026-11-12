@@ -280,3 +280,28 @@ func TestFleetHistoryRefusesRemoteDockerBeforeCreatingDeployment(t *testing.T) {
 		t.Fatal("remote endpoint refusal created deployment files", err)
 	}
 }
+
+func TestFleetHistoryRefusesForeignNetworksBeforeStoppingServices(t *testing.T) {
+	for _, network := range []string{"history", "publish"} {
+		t.Run(network, func(t *testing.T) {
+			path, _ := historyFixture(t)
+			site, err := loadHistorySite(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			runner := &fakeRunner{answer: func(line string) (string, error) {
+				if strings.Contains(line, "network ls") && strings.Contains(line, "_"+network+"$") {
+					return "foreign-network", nil
+				}
+				if strings.Contains(line, "inspect --type network") {
+					return "{}", nil
+				}
+				return "", nil
+			}}
+			err = applyHistory(t.Context(), site, runner, &bytes.Buffer{}, probeHistory)
+			if err == nil || !strings.Contains(err.Error(), "INSTALL_HISTORY_OWNER_MISMATCH") || strings.Contains(strings.Join(runner.commands, "\n"), " stop ") {
+				t.Fatal("foreign network was admitted or a service was stopped", err)
+			}
+		})
+	}
+}
