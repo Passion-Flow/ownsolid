@@ -89,6 +89,35 @@ review and complete-file transfer checks present.
 
 ## Consumer handoff
 
+### Invocation contract for TRN and SCH
+
+The execution owner resolves the exact model kind and catalogue digest from
+its authorized tenant/workspace transaction, then passes them to
+`models.CheckOnSiteUse`. Scope authorization, current model admission,
+dataset rights and lease ownership remain with that owner. Compose an
+explicit `OnSiteCommercial`, `OnSiteNonCommercial` or `OnSiteUndeclared`
+from the root-owned installation policy. Use `OnSiteUndeclared` while that
+declaration is unavailable. The producer retains its existing empty-value
+compatibility for legacy callers.
+
+TRN's `DispatchNext` and `ClaimTraining` verify dataset bytes outside their
+delegated transaction and then re-enter it. Recheck licence eligibility in
+that final transaction before creating a reservation, attempt or executable
+claim. A previous successful check is metadata from the previous decision.
+SCH and SCI apply the same rule at their existing final admission and launch
+boundaries. Retained CPU output, an approved base's terms and a training
+result each retain their own provenance. A derived or restricted catalogue
+still needs its own reviewed terms and any required current customer grant.
+
+Keep the producer's unknown, undeclared and denied reasons intact inside
+the owner. Until DEV publishes the dedicated problems, keep the existing
+HTTP projection. Consumer acceptance must show zero new attempt, GPU lease
+or node task on refusal, a repeated eligibility check after physical IO,
+cross-workspace refusal, and readable existing idempotent results with the
+usual permission checks. Stop and release continue through their existing
+authorization path. The installed consumer remains open until its owner
+wires and runs that path.
+
 - Shared configuration owns a startup-validated installation field for
   on-site model use. Apply `models.OnSiteUse.Validate` semantics before the
   composition in `identity/http/agent_path.go` sets
