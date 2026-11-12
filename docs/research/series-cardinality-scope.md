@@ -411,7 +411,14 @@ Evidence at /private/tmp/obs110-http-unit-_wbpygdx:
   fc6712d61c151be59d4fa52202c6c10cf421dcc4afc81067692dbdcd088f14f2.
 
 Earlier lock-busy admissions started no compiler or tests and are recorded
-separately from the completed runs. The explicit pinned Linux gofmt check passed
+separately from the completed runs. The frozen Linux 3cebfcef unit entry also
+refused admission at its global-heavy flock with exit 75, before resource
+preflight, compilation or tests. The original log at
+/root/lane-obs-tools/obs110-service.hJ8NtB/check.log has SHA-256
+953b27ae5dcf9bbfc1fca7cbf802ab55713921af7e8e053158160dc7cff3af1c;
+admission.json in that directory has SHA-256
+d0a308292d67a1d2e580bd8253ed049639145baa84f06a416a01453d0423d7ae.
+That refusal supplies no Linux unit or native qualification. The explicit pinned Linux gofmt check passed
 all three candidate files; the noninteractive SSH default PATH did not expose
 gofmt. These are Mac pure-unit and formatting results only. Linux service/native
 PostgreSQL-store qualification, public registration, complete generated wire
