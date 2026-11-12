@@ -105,6 +105,35 @@ unchanged lists, and a problem-only refusal for invalid metadata or
 unauthorized requests. This metadata read uses the existing dependencies and
 requires no model files or network beyond loopback.
 
+## Remaining model version history boundary
+
+The [MLflow registry model](https://mlflow.org/docs/latest/ml/model-registry/)
+separates a registered model identity from its immutable versions and their
+source runs. ownsolid already persists version manifests, derivations,
+preparation snapshots, approved reviews and training/holdout references.
+`RetainedDerivedVersionWithin` supplies a retained same-scope catalogue to
+trusted consumers, and the Admin detail projects verified dataset lineage.
+Those existing reads and the publication graph remain the source of truth.
+
+The current Admin and Portal detail reads select `state='ready'`. Their
+contracts accept the existing model identifier and have no historical-version
+selector. The ready catalogue index is unique within tenant and workspace.
+`model_versions.name` is a display value, while the approved `model_key`
+also appears on distinct derived models. Neither is a declared registered
+model identity for grouping arbitrary versions. A history implementation must
+preserve existing deployment references to exact immutable version IDs.
+
+The next public flow needs a shared family/version identity and bounded
+history contract from DEV, followed by the S-202 consumer owned by Web.
+Define authorized access to retired metadata separately from admission to
+serve or train with a version. Reuse the retained graph when that contract is
+available. Verify multiple versions, retired metadata, immutable parent and
+artifact bindings, stable paging, exact-version deployment references and
+cross-workspace refusal through the declared route. This is still within
+MOD-103. The dependency does not authorize a second lineage ledger or a
+production approval synthesized from native CPU qualification. This review
+adds no runtime dependency, model or dataset.
+
 ## Physical derived artifact verification
 
 The inherited storage test requires a retained `cpu_verification` report and
