@@ -805,3 +805,28 @@ prepared, including a shared-connection lost-reply control and isolated HTTP/1
 transport, but their nonblocking Linux admission exited 75 before compilation.
 Do not report those Go cases as passed. Whole repository gates and actual
 installed qualification remain separate; the CLI b967d7c8 gate is unchanged.
+
+### Browser consumer retry boundary
+
+Static review of current main 726f2149 found a separate Web consumer gap.
+The shared [query client](../../web/packages/shell/src/session.ts) retries
+ApiProblems while failures is below two and retryable is true. The
+[problem classifier](../../web/packages/api/src/problem.ts) makes status-zero
+network and timeout failures retryable, and the
+[transport](../../web/packages/api/src/transport.ts) produces those failures
+when a reply is lost. Both the [audit page](../../web/apps/console/src/audit-page.tsx)
+and [resource activity](../../web/apps/console/src/resource-page.tsx) use
+listAuditEvents without a local retry override. This path can issue additional
+audited reads automatically after an uncertain reply. A 409 itself is outside
+the current retryable status set. No browser or SQL reproduction is claimed
+for this static review.
+
+The Web owner must scope explicit retry behavior to both audit consumers and
+verify first-page and continuation failures, network loss, timeout, 409 and a
+manual retry. Review focus/reconnect/remount behavior after an uncertain result
+as well as the immediate retry policy. Keep other query defaults intact and
+preserve the existing event projection. The generated five-file relay does not
+implement this behavior. Accurate public metadata can be reviewed independently;
+the complete manual-retry user flow stays open until its owner fixes and
+qualifies the consumers. Existing global write-oriented commit-unknown copy
+also needs a contextual audit-read recovery review.
