@@ -200,3 +200,44 @@ The actual installation, five worker invocations and step-one recovery
 retain their independent source/input scope. Installed Agent/control/UI,
 signed media and NVIDIA qualification, and the fair-queue prerequisites
 above remain open; no roadmap box is ticked by this component acceptance.
+
+
+## Schema-60 acceptance and the SSO fixture failure
+
+At `9e524484c45d4204291439b4448a5dfe5b4f38c5`, based on main
+`8123466c5a64b6424047f126815ae63100383bc6`, all nine training PostgreSQL
+18.6 groups passed together at registered schema 60 in 75.042 seconds.
+This includes the eight owner site/cell subcases, accepted-source child
+scope faults, exact repair and the paired dispatch/operator groups. The
+same source passed make check. The subsequent build admission refused
+2,085,052,416 free bytes before starting the build; it is not a build result.
+The two unchanged Linux lock carriers and all original resource thresholds
+were retained.
+
+An earlier post-SSO schema-59 run at `98e2e1f6` passed eight whole groups and
+nine borrowed-adapter subcases, but its exact-scope subcase failed during
+fixture migration with SCHEMA_UNAVAILABLE, before its assertions. The
+container had already been removed without SQL capture, so the cause is
+unobserved. The focused subcase passed with the original PostgreSQL settings
+and fixture timeouts; the later complete schema-60 run above also passed.
+The focused successful SQL log does not establish the earlier failure cause.
+No assertion, durability setting, statement timeout or setup timeout changed.
+Future private native replays capture PostgreSQL logs before cleanup.
+
+The raw records remain under `/root/lane-trn-cpu-admission.RaaYxrR7`:
+
+| Evidence | SHA-256 |
+| --- | --- |
+| `schema60-trn-gates-9e524484.log` (nine groups, check, refused build admission) | `51f65d11ed03f493b42e1b18224543b111fb3a8287d5d002912fd2db781a13cb` |
+| `schema60-trn-sql-9e524484.log` | `0063042cc32068e354c5b7e4ecc7be6589c6cd48aec4c6d89de3013deb0539e5` |
+| `post-sso-trn-go-98e2e1f6.log` (original fixture failure) | `3383a17176ec8f210595d640fa9ec3bbf79b8c309bb3353964ca55c87ea6bdc9` |
+| `post-sso-borrowed-scope-98e2e1f6.log` (focused unchanged-default replay) | `bb08173a4c03141febbbdd8d68ae6a100498b8ac98b3188b2103357153c0ea25` |
+
+Main subsequently added identity audit-read and scheduler implementations.
+The branch now contains those changes, and its five native dataset groups
+passed at `0d8d09b6`; fresh training PostgreSQL and repository gates for those
+new Go inputs remain pending because the next admission refused low free
+memory. The earlier completed source qualifications above remain exact.
+The retained 20-test Python result and actual CPU computation inputs are
+unchanged. Installed Agent/control/UI, NVIDIA and fair-queue admission
+remain separate open prerequisites; no complete roadmap item is asserted.
