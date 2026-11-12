@@ -420,11 +420,11 @@ result, task/cursor checks and sampled resource observations are recorded.
 The first installed attempt reached schema migration, runtime-principal preparation
 and schema validation, then refused administrator bootstrap with BLOCKLIST_MISSING.
 No simulator agent was enrolled. The fixture assembler's private umask had left
-its copied password blocklist at mode0600; the non-root image user could not read
+its copied password blocklist at mode 0600; the non-root image user could not read
 it. Preserve that failed run and its one captured recorder probe. Correct only
-the fixture's public resource modes: blocklist0644, frontend directories0755 and
-assets0644. Before retrying, run the exact image as UID10001 on network none and
+the fixture's public resource modes: blocklist 0644, frontend directories 0755 and
+assets 0644. Before retrying, run the exact image as UID 10001 on network none and
 require readable control, blocklist and both frontend indexes. Reuse the unchanged
 qualified source, binaries and web artifact. No product security check or lifecycle
-assertion is relaxed. A subsequent low-free-memory preflight returned75 before
+assertion is relaxed. A subsequent low-free-memory preflight returned 75 before
 creating a container; the retry retained both original resource locks and limits.
