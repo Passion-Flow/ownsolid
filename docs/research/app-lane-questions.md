@@ -324,3 +324,24 @@ Ten focused serial diagnostic runs and later complete one- and two-worker
 suites passed. Those results do not establish a fix for the earlier failure.
 The unchanged Web source remains outside APP ownership. Its owner needs
 the exact case and original trace for diagnosis. No assertion was changed.
+
+## Scoped application names for AGT-111
+
+The deterministic Portal command now accepts `find application "Application
+name"` and the Chinese example returned by `Commands(actor, "zh-CN")`.
+The quoted argument is one JSON string, not a target UUID or workspace
+selector. `Result.ApplicationResolution` carries the typed state, up to two
+authorized application projections, and `application_id` only for a unique
+current publication. The projection includes the immutable version and graph
+digest. Read and display those results as data; resolving a name authorizes
+no execution or mutation. Show no-match and ambiguity explicitly and require
+a fresh lookup after scope or publication changes.
+
+`http.NewGuarded` applies the same installation/user policy, durable step
+claims and final result fence. The command reuses the reviewed
+`ListApplications` read policy and records `find_application` as its audit
+action. No new OpenAPI operation or model tool is enabled. The entry owner
+still needs the real route and both browser flows; the configuration and
+database owners still need their existing AGT-112 bindings. Other resource
+types keep their respective owners and remain open. See the
+[name contract and acceptance](product-assistant-name-resolution.md).
