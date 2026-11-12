@@ -178,7 +178,7 @@ func (o *gatewayObserver) sample() {
 		return cmd.CombinedOutput()
 	}
 	for index, gateway := range o.gateways {
-		row, err := observeGateway(o.ctx, run, gateway.name, phase, phase == "gateway_a_stopped" && index == 0)
+		row, err := observeGateway(o.ctx, run, gateway.name, phase, (phase == "gateway_a_stopped" || phase == "all_agents_on_survivor") && index == 0)
 		o.mu.Lock()
 		if err != nil {
 			if o.ctx.Err() == nil {
