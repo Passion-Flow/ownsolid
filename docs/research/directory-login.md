@@ -95,6 +95,68 @@ role. Manual and scheduled synchronization share one bounded job owner,
 single active run per connector, durable result and cancellation semantics.
 No new receipt ledger is needed.
 
+## Stable references and nested-group prototype
+
+The [Keycloak 26.8.2 LDAP mapper documentation](https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/server_admin/topics/user-federation/ldap.adoc)
+separates group inheritance, membership attributes and recursive membership
+retrieval. Its configured reader needs access to both user and group membership
+attributes; a directory can hide attributes without returning an access error.
+The owning operator must qualify that read policy. A successful search cannot
+prove that an administrator has granted complete visibility.
+
+[RFC 2696 section 3](https://www.rfc-editor.org/rfc/rfc2696.html#section-3)
+does not promise a snapshot when entries change during paging: entries can be
+omitted or repeated. Describe the result as a bounded, complete observation
+under the approved reader's visibility, not a global point-in-time directory
+snapshot. The next external experiment will collect all group pages, resolve
+every member by a base-object read on the same verified reader connection,
+and require a stable ID and an unambiguous approved user/group class. Refuse
+aliases, referrals, out-of-base references, unresolved objects and groups absent
+from the collected set. DNs locate entries; only stable IDs identify graph nodes.
+
+For the OpenLDAP profile, require the entry's `entryCSN` in addition to entryUUID.
+The [OpenLDAP replication documentation](https://www.openldap.org/doc/admin26/replication.html)
+distinguishes entry revisions from the provider's committed replication state.
+An individual entryCSN is not a database transaction or global snapshot token.
+Re-read resolved objects and repeat the complete group scan before returning a
+candidate; changed identities, revisions or group manifests refuse the whole
+attempt. This catches observed churn without claiming to exclude all changes
+between reads. Record the observation interval; a failed attempt never refreshes
+the previous generation's authority expiry.
+
+Build direct stable-ID edges and a bounded transitive user closure. Reject
+cycles, ambiguous identities and exceeded limits for objects, direct edges,
+derived memberships, depth and directory operations. Memoized subtrees must
+retain their height so reuse through a deeper parent cannot bypass the depth
+limit. All refusals return no candidate. Keep this graph separate from local
+roles; IAM-110 still owns reviewed mapping and current-authority reconciliation.
+
+The [Microsoft range-retrieval contract](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ldap/searching-using-range-retrieval)
+allows an empty requested attribute alongside the actual returned numbered
+range. A decoder must distinguish that placeholder from the terminal range,
+require contiguous inclusive indexes and matching value counts, and stop only
+on the actual `*` range. Prototype that decoder with synthetic LDAP entries;
+never infer a fixed server range size. Repeated/overlapping ranges, missing
+continuations, duplicate attributes, mixed nonempty ordinary/ranged values,
+oversized indexes and aggregate budgets must fail without partial membership.
+Those fixtures qualify parsing only, not an AD server or its consistency model.
+
+This extension reuses the exact already inspected LDAP module graph, signed
+OpenLDAP source and private build image; it adds no dependency, model or dataset.
+The existing commercial/offline/redistribution and notice obligations below
+apply unchanged. No product dependency or formal schema is admitted by this
+experiment. Reject recursive DN-string identity, unbounded nested traversal,
+partial graph publication, a local role grant derived from a display label and
+an assertion that two scans establish a transactional directory snapshot.
+
+Acceptance requires native race tests for the graph and range failure matrix,
+then actual disconnected OpenLDAP tests for nested membership, group cycles,
+unresolved/out-of-base references, rename/recreation, observed in-flight churn,
+bounded failure and explicit successful retry. A completed empty group scan
+must remain distinguishable from an interrupted scan. Atomic PostgreSQL
+publication, single-run ownership, current tenant/connector revision, audit and
+commit-uncertainty qualification remain a subsequent persistence slice.
+
 ## Candidate dependencies and licensing
 
 The candidate is [go-ldap v3.4.15](https://github.com/go-ldap/ldap/releases/tag/v3.4.15),
