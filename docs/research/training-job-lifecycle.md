@@ -275,8 +275,67 @@ the successful private run; Go/Python/SQL/API bytes are unchanged.
 
 The next modules phase refused I/O full avg10 12.45 and avg60 11.75 percent
 before running. Subsequent bounded requests reached the original outer-lock
-timeout before the gate helper started. Fresh ordinary owner packages,
-make build and make check for this rebased source remain pending under the
-unchanged two Linux locks and original admission thresholds. Earlier exact
-source results remain preserved above. The 20-test retained CPU unit result,
-installed-product/NVIDIA boundaries and fair-queue prerequisites are unchanged.
+timeout before the gate helper started. The Linux lock and resource refusals
+remain preserved. The subsequent
+Darwin repository qualification is recorded below; it does not replace the
+Linux native result or the original two-lock/resource policy. The retained
+20-test CPU result, installed-product/NVIDIA boundaries and fair-queue
+prerequisites are unchanged.
+
+
+## Current Darwin repository qualification
+
+Source 74fc7be8ec37693d8edb9d76f57bbaaf4eb613a9, based on main
+db7ee24ad88561fe6d76b9c7c9ab500a5ef22570, passed the four ordinary
+owner packages (training, datasets, mongodatasets and modelpreparations)
+and six affected shared packages (identity, audit, scheduling, httpserver,
+agentgateway and config). The nine-package phase recorded 636 passed
+test actions and 172 explicitly unbound environment skips; config recorded
+862 passed actions with no skips. Those skips are not native acceptance.
+The ten training and five dataset native groups above retain their exact
+Linux source and scope. Their owner Go/API/Python/SQL inputs are unchanged;
+the rebased shared identity audit-reader changes were checked on Darwin.
+
+The same source passed the complete make check in 31.904 seconds and
+make build in 43.851 seconds on Darwin arm64, using Go 1.27.3,
+CPython 3.12.14, Node.js 26.13.0, pnpm 12.16.1 and Rust 1.99.1.
+Dependency resolution was offline. This run had no network-namespace egress
+isolation and did not run the complete make test or an installed product.
+The permanent workstation lock carrier/inode was retained. Only the owned
+RAM device and generated audit-verifier binary were removed. No persistent
+service or training process was left running.
+
+Three original fixture/bootstrap failures remain recorded. HFS+ RAM scratch
+did not expose a same-tick ctime rewrite after restoring mtime. APFS exposed
+it, but the private scratch inherited group wheel, of which the caller was
+not a member, so chmod silently cleared setgid in two fixture cases.
+Native file probes reproduced both conditions. Setting the owned APFS
+scratch to the caller's existing group preserved setgid and all config
+assertions passed unchanged. Owner/storage tests used the separate RAM
+scratch required by their free-space policy. The first make check also
+stopped before web checks because the fresh worktree lacked its Node
+dependencies; an offline frozen-lockfile install preceded the passing rerun.
+No source assertion, protocol budget or host admission threshold changed.
+
+Raw records remain at
+/private/tmp/ownsolid-trn-qualification.knvee3h8 on the workstation.
+The complete archive is retained on Linux at
+/root/lane-trn-tools/darwin-74fc-evidence/darwin-gates-74fc.tgz,
+SHA-256 2a65147c154397c1f8ce3dbf4155596ac0a855fe8e8136bcf1458552212c10fa.
+Its qualified-evidence.json pins the platform, source, original failures,
+phase outcomes and individual log digests.
+
+| Evidence | SHA-256 |
+| --- | --- |
+| modules.log | ee0d98df8ac24c416a347c04f933c82c574de3c8d04c3b7f1fcba7451d4f7891 |
+| config-apfs.log | 46f9f8ac4fc3e9ce93877a0f653d5c050d7ebb88e4170ad2f9ba29508898a737 |
+| check.log | 68eeca989d9842d4a3f04f9deee84f373d63b2971740d5adf7cf693ed3a763c4 |
+| rebased-modules.log | 188983c4e9eb44405ea6dc85791207b8f374325ddf0b8a938292bbccdfdeb242 |
+| config-apfs-owned-group.log | eb360a24fb8a6c9f90aa96554c139fe5251f82068e4f164516925637175059f6 |
+| check-after-offline-install.log | 032875dab7a6a1922c71511099c443ff608d647430b9abdbfb158d2591835c0c |
+| build.log | 3aebf6da9530301b20afb97341241e663031e538fc44de1985bdf2fe8bb51fe2 |
+
+This closes the rebased ordinary-package/check/build gap for this component
+increment. Installed Agent/control, browser/UI, formal release/runtime and
+NVIDIA qualification remain open. The separately prepared event-cursor
+optimization and its new tests are outside this qualified source.

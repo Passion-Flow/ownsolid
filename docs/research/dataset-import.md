@@ -844,8 +844,12 @@ No external route or GPU was used.
 The same Go inputs passed all ten training PostgreSQL/HTTPS roots; see the
 [current training acceptance](training-job-lifecycle.md#current-native-owner-and-https-acceptance).
 The expanded maintained training selector and subsequent research/evidence
-documents change no Go, Python, SQL or API input. Fresh ordinary owner-package,
-build and check gates remain pending: the following resource admission refused
-high I/O before starting modules, and later bounded lock requests expired
-before executing the gate helper. These are not test/build results and do
-not qualify a full repository gate or installed product path.
+documents change no Go, Python, SQL or API input. The original Linux high-I/O
+admission refusal and bounded lock timeouts
+remain non-results. The later source 74fc7be8 passed the ordinary owner
+and affected shared packages, complete make check and make build on Darwin
+arm64 with offline dependency resolution. Its dataset owner Go/API/Python/SQL
+inputs are unchanged from the native run above. The [exact source, platform,
+skips, original fixture failures and passing log digests](training-job-lifecycle.md#current-darwin-repository-qualification)
+keep the Linux native and Darwin repository results separate. No complete
+make test, installed route/report/image/UI or generic 50 GB import is claimed.
