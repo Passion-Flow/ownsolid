@@ -128,7 +128,9 @@ The explicit cumulative `gateway` profile composes this owner with M01-M06 and e
 Human alias list and detail use AliasReadView, keeping optional capability
 metadata out of mutation responses and machine bindings. The composition-time
 PublishAliasCapabilities switch defaults to false while the public read schema
-and generated clients are pending. An enabled read selects the alias and exact
+and generated clients are pending. Enable it only for the verified full-platform
+PostgreSQL composition; earlier cumulative profiles keep it off. An enabled
+read selects the alias and exact
 verified target in one authorized transaction; unavailable evidence is omitted,
 and query failures return the existing storage problem. See the
 [capability contract and activation boundary](../../../../../docs/research/gateway-alias-capabilities.md#registered-read-composition).

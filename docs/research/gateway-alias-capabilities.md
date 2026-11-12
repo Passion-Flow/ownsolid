@@ -287,3 +287,28 @@ adding the object to mutation responses. Activation and the catalogue
 UI remain open. The shared Linux full check, build and Rust gate waits
 for ARC's first window and the current migration ordering; this focused
 run does not replace that gate.
+
+
+### Exact schema-58 source handoff
+
+The minimal gateway-only source and test patch against 106ca52d is
+retained in /root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb,
+with contract.json and a SHA-256 manifest. It contains the two read
+methods, exact evidence selector, shared alias visibility helper,
+composition switch, registered handler calls and focused tests. It
+excludes metering, key-purpose DDL, shared migration files and all
+public schema/generator changes. The patch applies independently to
+the baseline; the prior actual handler and PostgreSQL execution used
+the retained gateway stack, so the final assembled publication still
+requires its own acceptance.
+
+Enable PublishAliasCapabilities only in the verified full-platform
+PostgreSQL composition after DEV publishes the four read contracts
+and generated clients. Earlier cumulative profiles may not have the
+target-history table; keep the switch off there. Non-PostgreSQL
+projections remain absent. The switch does not change authorization,
+and customer input never selects it. A missing evidence relation on
+an enabled composition is a storage failure, not a supported legacy
+snapshot. A legacy row in an existing evidence schema may omit the
+object when it lacks an exact snapshot. Preserve that distinction
+when wiring startup and qualifying the installed consumer.
