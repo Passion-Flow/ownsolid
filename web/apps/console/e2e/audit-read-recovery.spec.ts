@@ -98,7 +98,9 @@ for (const [locale, messages] of [
       body: await page.screenshot({ animations: 'disabled', fullPage: true }),
       contentType: 'image/png',
     });
-    await page.getByRole('link', { name: messages['audit.read.unknown.title'], exact: true }).click();
+    await page
+      .getByRole('link', { name: messages['audit.read.unknown.title'], exact: true })
+      .click();
     await expect(page.getByRole('main').locator('p').last()).toBeInViewport({ ratio: 1 });
     await info.attach(`audit-read-help-section-${locale}`, {
       body: await page.screenshot({ animations: 'disabled' }),
