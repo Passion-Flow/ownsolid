@@ -283,3 +283,25 @@ with zero requests outside the local preview origin. The 390-pixel
 screenshots retained the code and recovery text, including the four
 503 recovery instructions. The Help and locale suites passed against
 the same generated index.
+
+### Consumer checks after the parameter-reference repair
+
+The published generator repair resolves local Parameter Object references
+before it omits browser-managed headers and cookies. The generated
+change-password operation now has an empty parameter array. Its Web
+consumer should show the localized No parameters message and no parameter
+table. The [OpenAPI Parameter Object](https://spec.openapis.org/oas/v3.1.1.html#parameter-object)
+also permits referenced path and query parameters. Check a workspace
+detail's referenced workspace_id in both entrances for its real name,
+localized Path location, required flag and UUID schema. This prevents an
+empty-state workaround from hiding every referenced parameter.
+
+The released Admin apply-cutover operation now declares the five
+qualified 409 conflicts. Open that exact operation through its shareable
+anchor and check each status, title and recovery detail in English and
+Simplified Chinese. These checks load the actual generated details.
+The existing generator regression tests retain ownership of reference
+resolution and source validation. The Web assertions cover what the
+reader sees after the locale and detail chunks arrive. Use the existing
+Playwright and Help dependencies and their documented licences. No
+dependency, model or dataset is added.
