@@ -89,6 +89,18 @@ func TestFleetHistoryPrivateDeploymentDocker(t *testing.T) {
 		}
 	}
 	apply()
+	// Prove that workload traffic on the publishing bridge reaches the recorder.
+	// The bridge is IPv4-only, so its IPv6 probe is refused before transmission.
+	probe := os.Getenv("OWNSOLID_HISTORY_PROBE")
+	if probe == "" {
+		t.Fatal("the isolated workload probe binary is required")
+	}
+	if output, err := (ExecRunner{}).Run(t.Context(), "docker", "run", "--rm", "--pull", "never", "--network", c.Project+"_publish",
+		"--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
+		"--user", "10001:10001", "--memory", "64m", "--cpus", "1", "--pids-limit", "32",
+		"--mount", "type=bind,source="+probe+",target=/probe,readonly", "--entrypoint", "/probe", c.MetricsImage); err != nil {
+		t.Fatalf("workload recorder probe failed: %v %s", err, output)
+	}
 	client := func(roots *tls.Config) *http.Client {
 		transport := &http.Transport{TLSClientConfig: roots}
 		t.Cleanup(transport.CloseIdleConnections)
