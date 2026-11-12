@@ -77,8 +77,12 @@ run-loop guard, telemetry and both browser flows must be integrated before
 AGT-112 can ship. Do not accept a browser's or model's maximum token estimate.
 See the [contract and acceptance](../../../../../docs/research/product-assistant-execution-budgets.md).
 
-With the protected PostgreSQL repository fixture inputs selected as described
-below, run:
+Select `PROJECT_ONE_REPOSITORY_ENGINE=postgresql`, set
+`PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE` to the protected fixture DSN file,
+and select an unused `PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA` of the form
+`m20_repository_<32 lowercase hexadecimal characters>` in a disposable
+database whose name ends in `_test`. The fixture creates and cleans up that
+schema. See the repository fixture prerequisites below, then run:
 
 ```sh
 GOPROXY=off GOSUMDB=off go -C services/control test -p=1 \

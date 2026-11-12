@@ -270,9 +270,38 @@ evidence.
 
 ## AGT-112 paired release gate
 
-The paired constructor and audit fixture candidate has passed the
-disconnected PostgreSQL checks and SCI input review. The Mac repository
-gate follows the scheduled OPS and model runs. Keep the paired candidate
-available for the next eligible exclusive window. The offline model
-qualification evidence work is independent of that gate and does not
-activate installation settings or user allowances.
+The paired constructor and audit fixture passed disconnected PostgreSQL
+checks and SCI input review. On 2026-11-12 the rebased assistant and audit
+source passed the native `make check`, `make build` and `make test` gate,
+with both complete browser suites run sequentially at one worker and no
+automatic retries. The assistant and audit race tests and vet, five
+qualification unit tests, real audit export with its independent verifier,
+current-session commands and both-entrance HTTPS policy checks also passed.
+
+The [durable budget component](product-assistant-execution-budgets.md)
+passed thirteen isolated PostgreSQL cases using two independently opened
+pools. Its candidate schema is not registered in production and current
+command routes do not bind it. Supply a trusted user policy and bounded
+gateway usage adapter together with the production migration and restore
+catalogue. Run-loop limits, operator controls, telemetry and both browser
+flows remain open. Neither this reservation nor a model result replaces
+the signed plan and human confirmation required for a write.
+
+## Shared browser gate boundary
+
+Use Python 3.12, an owned APFS test volume with a short canonical temporary
+path, and a process-scoped sleep assertion for a workstation gate. Idle
+sleep interrupted the first browser run; power logs and trace durations
+matched its two long pauses. A temporary `caffeinate` assertion restored
+that test condition without changing system preferences.
+
+A later complete two-worker browser run passed Console but recorded one
+Portal keyboard visibility failure at
+`web/packages/shell/testing/keyboard-flows.ts:93`: focus reached the key
+drawer's `Download CSV` button with its focus indication, while the sampled
+rectangle was outside the viewport. The exact case is
+`a key's drawer with its sample calls: every control is reachable and shows focus`.
+Ten focused serial diagnostic runs and the final complete serial suite
+passed. Those results do not establish a fix for the earlier failure.
+The unchanged Web source remains outside APP ownership. Its owner needs
+the exact case and original trace for diagnosis. No assertion was changed.

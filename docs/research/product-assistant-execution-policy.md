@@ -98,3 +98,12 @@ with pgvector 0.8.7 ran `TestProductAssistantAuditWithin`,
 The tracked audit fixture exercised the real export and independent verifier.
 The HTTPS test passed explicit enable, disable, absence, read failure and
 recovery, including the audit and response checks on both entrances.
+
+The paired source was rechecked on 2026-11-12 after rebasing the APP
+candidates onto the current model and OPS integrations. Fresh Linux arm64
+fixtures passed all three roots above against PostgreSQL 18.6 with pgvector
+0.8.7 in network mode `none`. The native repository gate, package race tests
+and vet passed. Both complete browser suites ran serially without retries.
+The [shared gate boundary](app-lane-questions.md#shared-browser-gate-boundary)
+preserves the earlier environment and keyboard failure records separately.
+Production configuration and route binding remain open.
