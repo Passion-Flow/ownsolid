@@ -9,6 +9,7 @@ import (
 
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/jackc/pgx/v5"
 )
@@ -76,9 +77,7 @@ func (s *Service) AcceptedAdapterWithin(ctx context.Context, q transaction.Execu
 	if e := s.acceptedAdapterExecutor(ctx, q, tenant, workspace, job); e != nil {
 		return out, acceptedAdapterError(e)
 	}
-	j, e := scanJob(q.QueryRow(ctx, acceptedAdapterSQL(q,
-		"SELECT "+jobFields+" FROM training_jobs WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE",
-		"SELECT "+mysqlAcceptedJobFields+" FROM training_jobs WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE", tenant, workspace, job)))
+	j, e := lockedJobWithin(ctx, q, workspaces.Workspace{TenantID: tenant, ID: workspace}, job)
 	if e != nil {
 		return out, acceptedAdapterError(e)
 	}
