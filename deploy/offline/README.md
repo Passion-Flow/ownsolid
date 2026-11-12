@@ -293,10 +293,13 @@ See the [operator procedure](../../docs/operations/backup-and-restore.md#encrypt
 ## Take a coordinated local backup
 
 Use the shipped single-node Linux Compose configuration and a root-owned
-private output directory outside `install_root`. This maintenance command
-keeps control offline until it has copied and verified the backup. It closes
-PostgreSQL to ordinary database connections and checks that the copied published model files and
-installation keys belong to the same interval as the verified SQL dump.
+private output directory outside `install_root`. The shared directory check
+also rejects an output that resolves inside the installation through an ancestor
+or installation-root symlink. A different path spelling does not make it external.
+This maintenance command keeps control offline until it has copied and verified
+the backup. It closes PostgreSQL to ordinary database connections and checks
+that the copied published model files and installation keys belong to the same
+interval as the verified SQL dump.
 
 ```sh
 ownsolid-install backup-coordinated --config /private/site.yaml --output /srv/ownsolid-backups

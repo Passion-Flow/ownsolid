@@ -252,8 +252,8 @@ func (o *operation) schemaVersion(ctx context.Context, database string) (int, er
 	return version, nil
 }
 
-// admitBackupOutput returns the directory to create, and refuses a location inside the
-// installation: losing the installation must not lose its backups.
+// admitBackupOutput refuses a location inside the installation, including resolved
+// symlink aliases: losing the installation must not lose its backups.
 func admitBackupOutput(c Config, output string) error {
 	if !filepath.IsAbs(output) || filepath.Clean(output) != output {
 		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: %s must be a clean absolute path", output)
@@ -264,6 +264,21 @@ func admitBackupOutput(c Config, output string) error {
 	}
 	if output == c.InstallRoot || strings.HasPrefix(output, c.InstallRoot+string(filepath.Separator)) {
 		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: %s is inside install_root", output)
+	}
+	resolvedOutput, e := filepath.EvalSymlinks(output)
+	if e != nil {
+		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: cannot resolve output directory; verify its path and retry: %w", e)
+	}
+	root, e := filepath.EvalSymlinks(c.InstallRoot)
+	if errors.Is(e, os.ErrNotExist) {
+		// An existing output cannot be inside a root that does not exist.
+		return nil
+	}
+	if e != nil {
+		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: cannot resolve install_root; verify its path and retry: %w", e)
+	}
+	if resolvedOutput == root || strings.HasPrefix(resolvedOutput, root+string(filepath.Separator)) {
+		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: %s resolves inside install_root; choose an external backup directory", output)
 	}
 	return nil
 }

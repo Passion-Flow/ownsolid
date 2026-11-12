@@ -369,6 +369,60 @@ func TestBackupOutputMustBeOutsideTheInstallation(t *testing.T) {
 	}
 }
 
+func TestBackupOutputRejectsResolvedInstallationAliases(t *testing.T) {
+	site := t.TempDir()
+	inside := filepath.Join(site, "models", "backups")
+	if err := os.MkdirAll(inside, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	resolved, err := filepath.EvalSymlinks(site)
+	if err != nil {
+		t.Fatal(err)
+	}
+	aliasRoot := t.TempDir()
+	rootAlias, modelAlias := filepath.Join(aliasRoot, "site"), filepath.Join(aliasRoot, "models")
+	for name, target := range map[string]string{rootAlias: site, modelAlias: filepath.Join(site, "models")} {
+		if err := os.Symlink(target, name); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, test := range []struct{ name, root, output string }{
+		{"output ancestor", site, filepath.Join(rootAlias, "models", "backups")},
+		{"nested output ancestor", site, filepath.Join(modelAlias, "backups")},
+		{"installation ancestor", rootAlias, filepath.Join(resolved, "models", "backups")},
+		{"same directory", rootAlias, resolved},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			err := admitBackupOutput(Config{InstallRoot: test.root}, test.output)
+			if err == nil || !strings.Contains(err.Error(), "INSTALL_BACKUP_OUTPUT_INVALID") {
+				t.Fatalf("resolved internal output was admitted: %v", err)
+			}
+		})
+	}
+	outside := t.TempDir()
+	if err := os.Mkdir(filepath.Join(outside, "backups"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	outsideAlias := filepath.Join(aliasRoot, "external")
+	if err := os.Symlink(outside, outsideAlias); err != nil {
+		t.Fatal(err)
+	}
+	if err := admitBackupOutput(Config{InstallRoot: rootAlias}, filepath.Join(outsideAlias, "backups")); err != nil {
+		t.Fatalf("resolved external output was refused: %v", err)
+	}
+}
+
+func TestBackupOutputRefusesAnUnresolvableInstallationRoot(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "loop")
+	if err := os.Symlink(root, root); err != nil {
+		t.Fatal(err)
+	}
+	if err := admitBackupOutput(Config{InstallRoot: root}, t.TempDir()); err == nil ||
+		!strings.Contains(err.Error(), "INSTALL_BACKUP_OUTPUT_INVALID") {
+		t.Fatalf("unresolvable installation root was admitted: %v", err)
+	}
+}
+
 func TestOnlyOneOperationAtATime(t *testing.T) {
 	c := validConfig(t)
 	unlock, e := lockOperation(c)
