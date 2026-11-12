@@ -207,6 +207,44 @@ separate `e2f424bd` candidate supplies startup configuration and wiring.
 The Console expiry state and that startup integration remain open.
 The worker and HTTP code also passed the native serial repository gate.
 
+### Typed startup and shutdown contract
+
+Go's [context cancellation contract](https://pkg.go.dev/context#CancelFunc)
+signals cancellation without waiting for consumers. The owning process must
+join its workers before closing shared stores, using its existing
+[WaitGroup lifecycle](https://pkg.go.dev/sync#WaitGroup). PostgreSQL
+[session advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)
+and the model store's file lock retain their existing owners during a pass.
+Keep one model worker registered in the root lifecycle. A second expiry
+goroutine or independent shutdown controller would duplicate its ownership.
+
+Expose the existing policy bounds through `ImportExpiryPolicy.Validate` and
+use that same method in the expiry pass. A nil policy disables expiry. An
+enabled policy needs one canonical nonzero workspace UUID and a whole-second
+duration from one hour through 365 days. Validation checks those values.
+ARC's startup resolver still checks the selected PostgreSQL backend and the
+active workspace in the bootstrapped installation before assigning the policy.
+Set it before `Service.Run` starts and keep it immutable during execution.
+
+`Service.Run` blocks until its context is cancelled and the current bounded
+pass has returned. ARC retains its existing `MODEL_IMPORT` lifecycle entry
+and joins it before store teardown. An active upload owns the same file lock,
+so expiry yields without cancelling that request. Shutdown after the intent
+commit preserves the pending marker and accepted chunks when cancellation is
+observed before discard. A fresh worker resumes that intent. Shutdown after
+the terminal commit preserves the completed expiry. Cancellation during file
+disposal can leave a partial stage under the durable pending marker and is
+reconciled on the next pass.
+
+Cover public policy boundaries without a database, an already-cancelled
+worker, and cancellation immediately after each real PostgreSQL commit.
+The latter must join the ordinary worker entry point, preserve bytes before
+discard, retain audit cardinality, and release both locks for fresh-worker
+recovery. The existing upload race and partial-cleanup cases remain the
+active-writer and interrupted-disposal controls. These checks use synthetic
+chunks and add no dependencies, models or datasets. Existing Go BSD-3-Clause,
+pgx MIT and PostgreSQL License terms above continue to apply.
+
 ### Operator projection and owner handoff
 
 The current Models OpenAPI schema accepts a nullable string in
