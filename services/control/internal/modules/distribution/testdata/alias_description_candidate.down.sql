@@ -1,4 +1,5 @@
 -- Run in one operator transaction with serving stopped.
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 LOCK TABLE model_aliases, model_alias_description_intents IN ACCESS EXCLUSIVE MODE;
 DO $$
 BEGIN
