@@ -90,6 +90,7 @@ func (s *Service) readStoredConnector(ctx context.Context, q transaction.Executo
 	if e != nil {
 		return storedConnector{}, e
 	}
+	defer clear(secret)
 	if !safeOpaque(string(secret), maximumSecretBytes) {
 		return storedConnector{}, fail("SSO_ENCRYPTED_STATE_INVALID")
 	}

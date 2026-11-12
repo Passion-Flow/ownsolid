@@ -26,7 +26,7 @@ const maximumProviderFields = 128
 const maximumAuthorizationCodeBytes = 4096
 const maximumProviderCertificateBytes = 1048576
 
-type providerIdentity struct{ subject string }
+type providerIdentity struct{ subject, login, name string }
 
 // The provider receives only operator-approved network policy and exact server-generated callback URIs.
 type giteaProvider struct {
@@ -276,5 +276,13 @@ func (p *giteaProvider) exchange(ctx context.Context, clientID, secret, callback
 	}
 	// Email, name, avatar, groups and provider administrator status confer no local identity/authority.
 	out.subject = subject
+	// Display fields never confer identity or authority. A malformed optional
+	// profile cannot change ordinary sign-in admission.
+	for key, target := range map[string]*string{"login": &out.login, "full_name": &out.name} {
+		var value string
+		if json.Unmarshal(user[key], &value) == nil && len(value) <= 256 && utf8.ValidString(value) && !strings.ContainsFunc(value, unicode.IsControl) {
+			*target = value
+		}
+	}
 	return out, nil
 }
