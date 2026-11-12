@@ -90,3 +90,27 @@ Set `OWNSOLID_TEST_MODEL_FILE_SAFETY_ARCHIVE` to the pinned local USTAR file.
 go -C services/control test -tags model_integration ./internal/modules/models \
   -run '^TestActualModelImportFileSafety$' -count=1 -v
 ```
+
+### Linux amd64 replay
+
+On 2026-11-12, fresh Linux amd64 binaries from `a3b3747d`, based on
+`67293e12`, passed against PostgreSQL 18.6 and pgvector 0.8.7 in a
+container with `--network none`. The original nine Qwen files remained
+on the test server. Each file passed its pinned size and SHA-256 check
+while a fresh USTAR archive was prepared there. That archive was
+1,519,216,640 bytes with SHA-256
+`a3c43cd415968956b078c4463b4e112866344c0c20235a2a9049db15f0d0d0e9`.
+
+`TestActualModelImportFileSafety` passed in 53.55 seconds. Its two
+unsafe variants each failed verification twice without staging a
+payload or publishing a version. Partial queuing was refused and the
+unchanged approved files published once. The publication-audit rollback
+and fresh-worker recovery root passed separately in 41.09 seconds,
+including cleanup rollback and recovery. Its snapshot-and-retirement
+subtest remained outside the selected run.
+
+The same code passed the serial native `make check`, `make build` and
+`make test` gate. The [shared test prerequisites](lane-m-questions.md#shared-full-test-order)
+describe the selected Python, temporary filesystem and preserved
+harness warning. Generic catalogue admission and the operator review
+contract remain the MOD-101 and shared-owner boundaries above.

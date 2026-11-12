@@ -188,6 +188,25 @@ Run with an isolated PostgreSQL test database prepared by the
 go -C services/control test ./internal/modules/models -run '^TestActualAbandonedImportExpiry' -count=1 -v
 ```
 
+### Linux amd64 expiry replay
+
+On 2026-11-12, fresh Linux amd64 binaries from `a3b3747d`, based on
+`67293e12`, passed all three worker roots and all four selected HTTPS
+import roots against PostgreSQL 18.6 and pgvector 0.8.7 with
+`--network none`. The expiry-specific HTTPS root passed in 2.46 seconds.
+The worker reclaimed the partial upload, retained the accepted byte
+count, reported the terminal reason through authorized reads and
+replays, refused cross-scope reads, and allowed a fresh key. Ordinary
+cancellation retained its null reason and each expected audit appeared
+once. The two expired writes retained their released 409
+`MODEL_IMPORT_STATE_CONFLICT` response, consistent with the
+[public contract boundary](public-api-inventory.md#mod-121-abandoned-import-api-contract-preparation).
+
+The fixture explicitly configured the trusted worker policy. ARC's
+separate `e2f424bd` candidate supplies startup configuration and wiring.
+The Console expiry state and that startup integration remain open.
+The worker and HTTP code also passed the native serial repository gate.
+
 ### Operator projection and owner handoff
 
 The current Models OpenAPI schema accepts a nullable string in

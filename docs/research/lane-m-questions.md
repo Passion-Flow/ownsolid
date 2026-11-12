@@ -81,8 +81,38 @@ admission and node code. They reached main at `e97a4fb4` and `33bbf870`.
 
 ## Shared full-test order
 
-Run the models candidate gate after ARC's migration gate and the OPS
-catalogue gate finish, with no other shared heavy test active. Keep
-the disconnected MOD-108 approved-bundle evidence when the rebased
-model implementation is byte-identical. Re-run the scoped archive
-and transfer cases against affected inputs before the full gate.
+The workstation order is OPS, models, apps, identity and architecture.
+Acquire `/private/tmp/ownsolid-workstation-full-gate.lock`, inspect the
+legacy `/private/tmp/ownsolid-macos-full-gate.lock` and actual processes,
+and admit one heavy workstation gate. Product-target tests separately
+acquire `/run/lock/ownsolid-heavy.lock` on the Linux test server after
+resource checks. Release the workstation window once its own heavy
+work is complete when Linux is occupied.
+
+Use the preinstalled Python 3.12 from the
+[development environment](../development/environment.md#workstation).
+The system Python 3.9 cannot parse the SDK generator's `match` syntax.
+On a workstation below the object store's 30 percent free-space
+threshold, use an owned APFS test volume and a short canonical temporary
+path. HFS+ timestamp precision and long Unix socket paths are unsuitable
+for the existing full suite. Retain each failed environment attempt
+separately from the completed gate.
+
+The rebased model and deployment directories matched the preserved
+candidates byte for byte. `a3b3747d` on baseline `67293e12` passed
+`make check`, `make build` and `make test` with Python 3.12 and a short
+APFS temporary path. Chromium passed 1,075 Console and 389 Portal cases,
+with the installation-dependent skips retained. Fresh disconnected
+Linux amd64 binaries then passed the scoped archive, transfer and
+expiry roots described in their research notes. The previous temporary
+logs and assets were unavailable at resume, so these are fresh runs.
+
+The publication root explicitly excludes its snapshot-and-retirement
+subtest. Go returned success after exercising publication rollback,
+fresh-worker recovery and cleanup recovery, while also emitting a
+no-subtests warning for that exclusion. The initial harness treated
+that warning as a failure. Its exit and raw log remain preserved. The
+corrected predicate admits this explicit exclusion only after checking
+the passed root. Independent validation confirmed all six selected Go
+commands, then confirmed consumer exit and disposed of the owned
+PostgreSQL container, temporary archive, model store and private inputs.

@@ -94,3 +94,21 @@ lease returned the exact short range again. The base and derived
 repository checks also passed. Use
 `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` for the pinned tokenizer
 when running the TLS test. This check does not import the weights.
+
+### Linux amd64 replay
+
+On 2026-11-12, Linux amd64 binaries from `a3b3747d`, based on
+`67293e12`, replayed both actual PostgreSQL paths in a container with
+`--network none`. PostgreSQL was 18.6 with pgvector 0.8.7.
+`TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer` passed in
+6.09 seconds with the original 11,422,654-byte tokenizer. The two
+ranges, assembled catalogue digest, terminal replay, changed config,
+out-of-range request, symlink, writable-file refusal and restored-file
+retry all passed under the real lease and TLS dispatcher.
+
+The three selected `TestActualBorrowedModelAccess` subtests passed in
+8.80 seconds. They covered the base descriptor, derived file metadata,
+mode and link refusals, missing files, digest substitution and cancelled
+IO. The source and binaries matched the measured native gate, which
+passed `make check`, `make build` and `make test`. Site Registry and
+Agent pre-warming retain their existing owner dependencies.
