@@ -761,3 +761,64 @@ copying remain streamed; no source body is materialized by the product.
 The existing small synthetic fixture may read its own bytes for assertions.
 Production routes, release image and S-503 UI stay open until their owners
 complete the installed path; this increment must not tick DAT-101 alone.
+
+
+## Native complete-source snapshot acceptance
+
+The component source `0d8d09b60bcffdcda1a79a72f55e9003bb57ede9`, based on
+main `be62f58e846dcc654dafee65cba6cc7480890570`, passed all five maintained
+native dataset groups together on disconnected Linux amd64 PostgreSQL 18.6
+and pgvector 0.8.7 in 19.733 seconds. The container had network none and no
+published ports; the test process entered its loopback-only namespace. This
+run includes the intervening identity audit and scheduler implementation.
+It supplements the earlier formal migration qualification rather than
+repeating or replacing its eight-history matrix.
+
+The actual CSV import and the locked-PyArrow Parquet import both restore the
+original and normalized bytes through ordinary ExportFiles/ImportFiles.
+Parquet additionally restores the logical database into a fresh database,
+invalidates old sessions, logs in again and reads the identical authorized
+report. A legacy JSONL source still exports a version-1 manifest. One actual
+Parquet receipt plus 64 synthetic operator fixture receipts crosses the
+64-record keyset page boundary: the complete snapshot contains 131 source
+roles and 132 files including its namespace marker. Those clones test
+inventory paging, not 65 independent user import flows.
+
+The tests refuse missing and same-size altered original/normalized files
+at readiness, export and import, with no unverified destination mutation.
+Exact file repair restores the original report and readiness. A changed or
+removed receipt refuses the old snapshot before copying. Existing HTTPS,
+CSRF, workspace-denial, source custody and file-snapshot controls also pass.
+The maintained `testdata/replay_draft_import.sh` default selects all five
+groups, including the new CSV and complete-file restore cases.
+
+A first CSV fixture replay at `1d292db9` failed when OpenConfiguredStore
+correctly refused an incomplete processor configuration. The fixture now
+copies the source processor configuration before selecting the restored
+artifact root; product validation is unchanged. The focused corrected CSV
+case passed at `9e524484`, followed by the complete five-group run above.
+The original failed run and the focused repair remain preserved.
+
+| Retained raw evidence | SHA-256 |
+| --- | --- |
+| `/root/lane-trn-dat-schema60-current.pyqqwi5i/native.log` | `959e84a4bf53a34df1b35f6e7908b2a392fe794e829e74ffabef68acb8225b1f` |
+| `/root/lane-trn-dat-schema60-current.pyqqwi5i/postgres.log` | `804502fb3fdec4e2dbb5095a905a06a943aee1f301bd46df3b9eefca18453ab4` |
+| `/root/lane-trn-dat-inventory.67f3fjmt/native.log` (original CSV failure, four other groups passed) | `b26c77dbdadd6bac18c01dac70e81ff023745eaaf6883a58a20b8b5678bc0c5e` |
+| `/root/lane-trn-dat-csv.qwenb8u0/native.log` (focused repaired CSV case) | `740653846de611a6139d2b174ae073ab5f397a82dc8028cd3d3f579d5b065687` |
+
+The isolated data interpreter contains exactly PyArrow 26.0.1 on Python
+3.12.3. The 55,043,763-byte CPython-3.12 manylinux wheel matches the existing
+lock SHA-256 `c718bf97a92a6dea97fd1062c3b9f9e2e83cb9cc926e752289fa4ffff41738f9`.
+A network-none, no-index, hash-required installation, actual import and
+pip check passed, with the original LICENSE and NOTICE retained. This fixture
+does not change the separate retained 37-package training environment or
+admit a production release image.
+
+All new hashing and copying remain bounded streams; receipt metadata is
+paged before file I/O and the manifest retains its configured inventory
+ceilings. The draft source path still enforces its existing 64 MiB and
+10,000-row contract. These tiny synthetic restore fixtures do not constitute
+a 50 GB product import or an installed generic-registration/UI acceptance.
+DAT-101 remains open for route/report composition, the offline release image
+and S-503 UI. Fresh repository gates for the rebased branch are recorded
+separately; this native component result alone does not complete them.
