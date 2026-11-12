@@ -342,3 +342,9 @@ resolution and source validation. The Web assertions cover what the
 reader sees after the locale and detail chunks arrive. Use the existing
 Playwright and Help dependencies and their documented licences. No
 dependency, model or dataset is added.
+
+The initial consumer run found that searching for getAdminWorkspace also
+returns getAdminWorkspaceOperation. Match the complete operation ID at
+the end of the button's accessible name before checking its expanded
+state. Keep the referenced parameter assertions on the exact detail
+panel; a broader search result must not change which contract is checked.
