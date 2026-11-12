@@ -42,6 +42,12 @@ Its DDL remains an isolated fixture input until the persistence owner adds
 a forward migration and restore catalogue. The gateway adapter must prove
 its maximum charge before admission. Human confirmation, effect permissions
 and success auditing remain the action owner's responsibilities. Loop
-limits, production binding, telemetry, controls and browser flows remain
+limits use persistent per-run claims, an immutable initial ceiling and a
+monotonic admitted-step count. A pending or completed replay cannot dispatch
+again. Stop and policy loss suppress an in-flight result; no database
+transaction spans the command execution. Zero-token deterministic completion
+uses a local status digest, which provides no model-usage evidence.
+
+Production binding, telemetry, controls and browser flows remain
 open in AGT-112. See the
 [research and verification contract](../research/product-assistant-execution-budgets.md).

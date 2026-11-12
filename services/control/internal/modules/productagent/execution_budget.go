@@ -27,6 +27,12 @@ type BudgetCeiling struct {
 	Tokens     int64
 }
 
+// ExecutionRunLimits bounds admitted steps of one run. Zero permits no run.
+type ExecutionRunLimits struct {
+	Installation int64
+	User         int64
+}
+
 // ExecutionBudgetPolicy comes from the installation's trusted policy owner.
 // Window boundaries must remain stable across replicas and policy revisions.
 type ExecutionBudgetPolicy struct {
@@ -35,6 +41,7 @@ type ExecutionBudgetPolicy struct {
 	WindowEnd    time.Time
 	Installation BudgetCeiling
 	User         BudgetCeiling
+	RunSteps     ExecutionRunLimits
 }
 
 // BudgetSubject is resolved from current server authority before policy is read.
@@ -74,6 +81,8 @@ type BudgetReservation struct {
 
 // BudgetSettlement carries usage from an authenticated, trusted gateway receipt.
 // It must not be populated directly from browser input or model-generated text.
+// The deterministic run guard closes only zero-token holds with a local status
+// digest; that digest is not evidence of model usage.
 type BudgetSettlement struct {
 	ID            string
 	ActualTokens  int64
@@ -112,21 +121,9 @@ func (b *ExecutionBudgets) Reserve(ctx context.Context, actor identity.Auth, exe
 	}
 	var result BudgetReservation
 	err := b.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
-		if err := b.commands.admitExecution(ctx); err != nil {
-			return err
-		}
-		if b.policy == nil {
-			return errExecutionPolicyUnavailable
-		}
-		policy, err := b.policy(ctx, tx, subject)
+		policy, err := b.readPolicy(ctx, tx, subject)
 		if err != nil {
-			return errExecutionPolicyUnavailable
-		}
-		if policy.UserAccess == BudgetAccessDisabled {
-			return ErrCommandDenied
-		}
-		if !validBudgetPolicy(policy) {
-			return errExecutionPolicyUnavailable
+			return err
 		}
 		result, err = reserveBudgetWithin(ctx, tx, subject, execution, policy)
 		return err
@@ -135,6 +132,26 @@ func (b *ExecutionBudgets) Reserve(ctx context.Context, actor identity.Auth, exe
 		return BudgetReservation{}, err
 	}
 	return result, nil
+}
+
+func (b *ExecutionBudgets) readPolicy(ctx context.Context, tx transaction.Executor, subject BudgetSubject) (ExecutionBudgetPolicy, error) {
+	if err := b.commands.admitExecution(ctx); err != nil {
+		return ExecutionBudgetPolicy{}, err
+	}
+	if b.policy == nil {
+		return ExecutionBudgetPolicy{}, errExecutionPolicyUnavailable
+	}
+	policy, err := b.policy(ctx, tx, subject)
+	if err != nil {
+		return ExecutionBudgetPolicy{}, errExecutionPolicyUnavailable
+	}
+	if policy.UserAccess == BudgetAccessDisabled {
+		return ExecutionBudgetPolicy{}, ErrCommandDenied
+	}
+	if !validBudgetPolicy(policy) {
+		return ExecutionBudgetPolicy{}, errExecutionPolicyUnavailable
+	}
+	return policy, nil
 }
 
 // Settle returns unused held tokens exactly once while keeping the execution
@@ -176,7 +193,8 @@ func (b *ExecutionBudgets) withSubject(ctx context.Context, actor identity.Auth,
 func validBudgetPolicy(p ExecutionBudgetPolicy) bool {
 	return p.UserAccess == BudgetAccessEnabled && !p.WindowStart.IsZero() && p.WindowStart.Before(p.WindowEnd) &&
 		p.WindowStart.Equal(p.WindowStart.Truncate(time.Microsecond)) && p.WindowEnd.Equal(p.WindowEnd.Truncate(time.Microsecond)) &&
-		p.Installation.Executions >= 0 && p.Installation.Tokens >= 0 && p.User.Executions >= 0 && p.User.Tokens >= 0
+		p.Installation.Executions >= 0 && p.Installation.Tokens >= 0 && p.User.Executions >= 0 && p.User.Tokens >= 0 &&
+		p.RunSteps.Installation >= 0 && p.RunSteps.User >= 0
 }
 
 func budgetDigest(s string) bool {
