@@ -41,7 +41,7 @@ license or from a successful signature check.
 | Dependency | Selected version | License and offline distribution |
 | --- | --- | --- |
 | `github.com/coreos/go-oidc/v3` | v3.21.0 | [Apache-2.0](https://github.com/coreos/go-oidc/blob/v3.21.0/LICENSE); retain license, attribution and any applicable notices. |
-| `github.com/go-jose/go-jose/v4` | v4.1.6, overriding the OIDC module's v4.1.4 minimum | [Apache-2.0](https://github.com/go-jose/go-jose/blob/v4.1.6/LICENSE); its selected module declares no further requirements. |
+| `github.com/go-jose/go-jose/v4` | v4.1.9, overriding the OIDC module's v4.1.4 minimum | [Apache-2.0](https://github.com/go-jose/go-jose/blob/v4.1.9/LICENSE); its selected module declares no further requirements. |
 | `golang.org/x/oauth2` | v0.36.0 | [BSD-3-Clause](https://github.com/golang/oauth2/blob/v0.36.0/LICENSE); retain copyright and license. |
 | `cloud.google.com/go/compute/metadata` | v0.3.0, required by the OAuth module | [Apache-2.0](https://github.com/googleapis/google-cloud-go/blob/compute/metadata/v0.3.0/LICENSE); module-graph dependency only, with no cloud or ambient credential composition in ownsolid. |
 
@@ -51,7 +51,15 @@ fixes parser-depth, numeric-date and malformed-key handling;
 [v4.1.6](https://github.com/go-jose/go-jose/releases/tag/v4.1.6)
 additionally fixes GHSA-mgcc-cww5-fp2q by limiting parsed RSA moduli to 4,096
 bits. Do not admit the earlier v4.1.4 minimum or raise the new global modulus
-limit. Keep independent document, key-count and algorithm bounds as well.
+limit. The later [v4.1.7 security release](https://github.com/go-jose/go-jose/releases/tag/v4.1.7)
+also fixes RSA thumbprint validation, embedded-field JSON decoding, protected
+header precedence, certificate RSA bounds and JSON JWS/JWE work limits.
+[v4.1.9](https://github.com/go-jose/go-jose/releases/tag/v4.1.9) retains those
+fixes and repairs opaque-signer and unsupported-key error compatibility.
+Select v4.1.9 for admission and repeat the protocol qualification with that
+exact graph. The earlier v4.1.6 run below establishes only its recorded input;
+it is not the current dependency admission. Keep independent document,
+key-count and algorithm bounds as well.
 The private provider prototype uses
 [Keycloak 26.8.2](https://github.com/keycloak/keycloak/releases/tag/26.8.2),
 selected from its current official release rather than an unversioned image.
