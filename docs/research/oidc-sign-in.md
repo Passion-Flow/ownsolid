@@ -234,6 +234,41 @@ occurred. Preserve the existing source-session, connector-disable, keyring-loss,
 audit-failure and real COMMIT-uncertainty cases. A protocol prototype does not
 replace those database and browser acceptance paths.
 
+### PostgreSQL storage prototype boundary
+
+Prototype the upgrade separately before admitting product DDL. Retain the
+three existing connector/binding/flow tables and their actor, audit, source
+session and immutable-intent relationships. Add the connector's immutable
+issuer, widen its client ID and the case-sensitive binding subject, and give
+bindings/flows a provider discriminator whose legacy default is Gitea.
+A composite foreign key containing tenant, connector and provider prevents an
+OIDC record from borrowing a Gitea profile or another tenant's connector.
+Keep Gitea's canonical UUID client and decimal subject checks in its branch;
+only the OIDC branch accepts bounded opaque client IDs and ASCII subjects.
+
+An OIDC flow has a 32-byte nonce digest, unique within its connector scope;
+a Gitea flow has none. Bind that discriminator and digest to the existing
+immutable flow fields through claim, completion and session issuance. Preserve
+the existing pending Gitea verifier ciphertext byte for byte and its one-use
+clear-on-claim transition. There is no new token or credential ledger and no
+change to the number of product tables.
+
+Verify a real PostgreSQL upgrade with existing connectors, numeric bindings,
+pending flows and retained intents; exact opaque/case-sensitive values after
+upgrade; invalid-length/non-ASCII/profile/tenant substitutions; nonce reuse and
+mutation refusal; and preserved claim/single-issuance constraints. Independently
+read committed results. A downgrade with any retained OIDC connector must fail
+clearly and leave data untouched, requiring a consistent pre-upgrade restore;
+it cannot delete or reinterpret OIDC identities as Gitea. A legacy-only
+upgrade/downgrade must preserve its original data and constraints.
+
+ARC owns the formal migration number, catalogs, engine admission and startup.
+The first storage prototype is PostgreSQL, not an assertion that MySQL or
+Dameng already support this profile. The shared Go module must also admit the
+qualified OIDC/JOSE dependency versions before a product adapter imports them.
+No default serving constructor or public connector selection changes as part
+of the isolated storage proof.
+
 ## Lane boundary
 
 The IAM lane now owns the client, callback and binding code in
