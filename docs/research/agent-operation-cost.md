@@ -161,3 +161,11 @@ ARC-108 remains open: other component/inference exchanges, preparation and
 registry operations still need measured coverage. Training's recorded
 budget overruns remain unchanged. Native amd64, installed operation and
 concurrent simulator capacity acceptance are separate from these results.
+
+The final integrated tree 0df420bf0a654a9cb92d9439097319970da98dda
+passed `make check` and `make build` after that source comparison. Its
+complete test evidence is the two matched inputs above; no new execution
+of `make test` on the newer Web tree is asserted. Final check/build log
+SHA-256 values are respectively
+c27586b5b20596d712641bb24d5608d085612f641f4f136652a9a4738730b93c
+and 3595d621654b9622c347b324cad66c757a8fc16076946248c6f523bf3f9c159d.
