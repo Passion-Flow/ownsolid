@@ -19,6 +19,7 @@ fully offline.
   - [Scoped node scrape profile](../../research/node-scrape-budgets.md#verified-scoped-scrape-path) qualifies TLS discovery labels, per-target series and sample limits, and recovery. [Scoped inventory publication](../../research/node-scrape-budgets.md#verified-enrolled-inventory) uses current PostgreSQL enrollment. The [collector lease](../../research/node-scrape-budgets.md#verified-collector-invalidation) verifies shutdown after expiry or lost authority. Installed supervision, TLS endpoint provisioning and GPU, service and app publishers remain open.
 - [ ] OBS-102 Log collection with agent-side rate limits and retention (P1)
 - [ ] OBS-103 OpenTelemetry tracing across gateway, workflows and jobs (P1) - Catalog: F235
+  - [Offline tracing boundary](../../research/offline-distributed-tracing.md) distinguishes trusted context, bounded OTLP transport and scoped trace storage from existing request correlation. Native SDK/collector qualification, trace backend selection and the product flows remain open.
 - [ ] OBS-104 Alert rules with severity, grouping, silencing and escalation (P1)
   - [Scoped acknowledgement candidate](../../research/alert-occurrence-escalation.md#verified-loopback-path) qualifies durable confirmation and retry through real Alertmanager and PostgreSQL. Product migration, authorized Admin write, Console workflow and grouped escalation remain open.
 - [ ] OBS-105 Offline notification channels: email, webhook, WeCom, DingTalk and Feishu over internal relays (P1) - Catalog: F002, F567
