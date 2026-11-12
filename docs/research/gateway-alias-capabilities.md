@@ -284,9 +284,8 @@ Production composition still leaves PublishAliasCapabilities false.
 DEV can bind the four read operations to a separate closed read
 component and regenerate Web, Help, Go and Python clients without
 adding the object to mutation responses. Activation and the catalogue
-UI remain open. The shared Linux full check, build and Rust gate waits
-for ARC's first window and the current migration ordering; this focused
-run does not replace that gate.
+UI remain open. The complete repository check and build remain a separate publication
+gate on the assembled migration and read-contract source.
 
 
 ### Exact schema-58 source handoff
@@ -312,3 +311,13 @@ an enabled composition is a storage failure, not a supported legacy
 snapshot. A legacy row in an existing evidence schema may omit the
 object when it lacks an exact snapshot. Preserve that distinction
 when wiring startup and qualifying the installed consumer.
+
+
+The retained gateway source at 6f31064f was requalified against committed
+schema 58 from 106ca52d. All four focused capability tests passed over
+the real PostgreSQL and Admin/Portal TLS owner, alongside the native
+receipt, historical request and CA regressions. The exact source and
+logs are retained in
+/root/lane-gw-acceptance/schema58-gateway-regression.zxq09kh2. This
+remains an explicitly enabled candidate read test. Production publication
+and earlier cumulative profiles retain the disabled switch.

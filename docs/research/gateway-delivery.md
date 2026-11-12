@@ -235,3 +235,13 @@ node observations were fixture data.
 ```sh
 go -C services/control test -p 1 ./internal/modules/distribution -run '^TestModelGatewayCAForPublishedAliasOverTLS$' -count=1
 ```
+
+
+The existing caller-trust overlap test also passed against committed
+schema 58 from 106ca52d with gateway source 6f31064f. Both Admin and
+Portal downloaded the exact current-and-previous issuer bundle and a
+client verified the still-serving old-issuer leaf with its declared
+hostname. The source and disconnected PostgreSQL/TLS log are retained
+in /root/lane-gw-acceptance/schema58-gateway-regression.zxq09kh2. The
+installed Console and Portal browser consumer remains WEB's separate
+qualification; this fixture does not replace that acceptance.
