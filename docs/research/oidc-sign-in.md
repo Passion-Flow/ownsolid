@@ -153,9 +153,21 @@ bound. The [claim verifier](https://github.com/coreos/go-oidc/blob/v3.21.0/oidc/
 also unmarshals JSON using last-value behavior, does not require the flow nonce
 or authorized party, and allows a five-minute `nbf` skew. Test those boundaries
 explicitly with independently signed fixture claims. Reject duplicate claim
-and JOSE header names, missing/empty subjects, future `iat` and disallowed
+and JOSE header names and differently cased aliases of standard fields. Go's
+JSON struct decoding can otherwise treat an uppercase unknown claim as a
+lowercase standard claim. Keep the existing SSO case-alias guard when composing
+the new adapter. Reject noncanonical compact-token characters, missing/empty
+subjects, future `iat` and disallowed
 algorithm choices before issuing any local authority. Keep that policy in the
 owned adapter; do not change library skip-check switches to accept a fixture.
+
+Qualify both a new `kid` and replacement key material under the same `kid`.
+A failed signature with a cached key may trigger one refresh only when the
+shared refresh budget admits it; it must not make every invalid token a new
+network request. Preserve valid cached-key verification during a failed
+refresh, bound cache age, and stop recognizing a removed key after accepting
+the replacement set. A throttled refresh needs a new explicit sign-in attempt,
+not an automatic second authorization-code exchange.
 
 Record real-provider results separately from hostile signed-token and transport
 fixtures. An unsuccessful case retains its original log and is not a completed
