@@ -262,8 +262,11 @@ filter to inspect the new family; the exact-action enumeration remains with
 the HTTP contract owner. Authenticated Go callers of the global audit list
 also reach this append, using a fresh operational UUID when no HTTP ID exists.
 
-The explicit workspace Go view still needs SCI's scoped access writer; the
-installation/default-workspace append cannot supply that attribution. Action
+The explicit workspace Go view uses `audit.WriteScopedWithin` in the same
+transaction. It retains current Admin and installed-workspace checks, resolves
+the installed tenant and actual local site/cell from the database, and records
+that exact workspace with a fresh operational UUID. Disabled workspace history
+retains its existing policy. This adds no workspace HTTP route. Action
 localization, contract metadata and installer collection remain with their
 owners. See [the identity consumer research](../../../../../docs/research/identity-audit-read-access.md)
-for acceptance and these remaining AUD-108 boundaries.
+for the separately recorded actual qualification and remaining AUD-108 boundaries.
