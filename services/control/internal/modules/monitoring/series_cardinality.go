@@ -43,6 +43,16 @@ type SeriesCardinalityQuery struct {
 	Limit  int
 }
 
+// Validate checks intrinsic UTC-day and fixed byte/rank bounds. Empty Metric
+// and zero Limit retain their service defaults; current scope and configured
+// range/rank policy are checked by the owning service.
+func (q SeriesCardinalityQuery) Validate() error {
+	if !q.valid() {
+		return errors.New("VALIDATION_FAILED")
+	}
+	return nil
+}
+
 func (q SeriesCardinalityQuery) valid() bool {
 	return q.Date.Location() == time.UTC && q.Date.Unix() >= 0 &&
 		q.Date.Equal(q.Date.Truncate(24*time.Hour)) && len(q.Date.Format(cardinalityDateFormat)) == 10 &&
@@ -98,12 +108,7 @@ func (s *Service) GetSeriesCardinalityJSON(ctx context.Context, a identity.Auth,
 func (s *Service) getSeriesCardinality(ctx context.Context, a identity.Auth, workspace string, query SeriesCardinalityQuery, requestID string, prepare func(SeriesCardinality) error) (SeriesCardinality, error) {
 	var out SeriesCardinality
 	err := s.observeMetrics(ctx, a, workspace, requestID, metricsObservation{
-		validate: func() error {
-			if !query.valid() {
-				return errors.New("VALIDATION_FAILED")
-			}
-			return nil
-		},
+		validate: query.Validate,
 		read: func(ctx context.Context, scope workspaces.Workspace, now time.Time) error {
 			if s.cardinality == nil {
 				return errors.New("MONITORING_CARDINALITY_NOT_CONFIGURED")
