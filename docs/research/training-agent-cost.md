@@ -141,15 +141,27 @@ writes under [Read Committed](https://www.postgresql.org/docs/18/transaction-iso
 These support one transaction-local event cursor without sharing authority
 or progress between requests.
 
-The next local change is to read the exact attempt's event cursor once,
-validate each event in the original request order, preserve each immutable
-event and individual audit, and persist the final cursor once. Preserve the
-preparing-to-running job transition and each returned intermediate JobState.
-The current loop rereads the cursor per event and writes the attempt again
-for the phase transition. The numbered attempt immutability guard protects
-inputs/outcome/stop identity, not a requirement to write progress per event.
-Before implementation, also inspect partition and scope guards in the full
-registered lineage. This is a plan, not a measured improvement.
+The local event implementation now reads the exact attempt's event cursor
+once, validates each event in the original request order, preserves each
+immutable event and individual audit, and persists the final cursor once.
+It retains the preparing-to-running job transition and each returned
+intermediate JobState. The cursor belongs only to one authorized transaction
+callback. Duplicate-only requests write neither progress nor its timestamp.
+Review of the registered training guards through schema 60 found scalar
+bounds and immutable event/attempt inputs, with the original exact scope
+foreign key and attempt-created partition key retained by migrations 30
+and 42. No guard requires an intermediate progress update per event.
+The cursor is not an authorization or cross-request cache.
+
+New native regressions cover mixed duplicate/new batches, in-batch sequence
+gaps and step regression, changed bytes in a same-batch duplicate, concurrent
+whole batches, final cursor-write failure and exact retry, and suppressed
+COMMIT acknowledgement followed by explicit replay. The original cost
+fixture additionally counts one cursor read/write, no separate attempt-phase
+write, and one audit per new event. These source changes have only passed
+formatting and diff review so far: native execution, compilation and a new
+50/3,000 HTTPS measurement remain unrun until an admitted window. The table
+above remains the last measured result; no protocol budget is changed.
 
 Required checks include mixed duplicate/new batches, changed replay bytes,
 sequence gaps, step regression, resumed final-checkpoint phases, concurrent
