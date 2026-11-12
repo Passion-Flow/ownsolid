@@ -196,3 +196,29 @@ No new worker computation or physical production stop ran. One earlier
 replay reported `SCHEMA_UNAVAILABLE` while initializing a neighboring
 fixture; the unchanged full repeat passed. That setup failure is retained
 in the private transcript, without attributing an unobserved database cause.
+
+## Local-cell experiment and preparation source
+
+The experiment export already uses the shared locked training job read.
+The borrowed `AcceptedAdapterWithin` path independently repeats its SQL.
+Reuse the common read so both authenticated experiment exports and model
+preparation sources enforce the same server-owned PostgreSQL site/cell
+predicate. The internal caller still owns actor and Workspace authority;
+this method grants no new authorization or commit capability.
+
+A separate adapter-only predicate could diverge from operator/worker reads.
+Copying a foreign job to this cell or accepting its command's tenant/workspace
+would substitute client-visible identity for installed server scope. Preserve
+the original row and return the existing not-found error with no source.
+Exact scope repair in the disposable fixture must restore the same accepted
+experiment and preparation identity. This reuses the [local-cell owner fence](training-job-lifecycle.md#local-cell-owner-fence-before-scheduler-admission)
+and [PostgreSQL transaction semantics](https://www.postgresql.org/docs/18/transaction-iso.html).
+It adds no dependency, model, dataset or license term beyond those above.
+
+Extend the real retained CPU upload/stop/read replay: change only the owned
+job's site, then its cell. Require an empty experiment, empty authenticated
+adapter snapshot and empty borrowed preparation source, all with
+`TRAINING_NOT_FOUND`. Refused reads must append no export audit. Restore the
+exact coordinates and require the original experiment to read again. Keep
+node, production command and physical-stop envelopes explicitly synthetic;
+this does not establish an installed Agent, UI, NVIDIA or cross-cell restore.
