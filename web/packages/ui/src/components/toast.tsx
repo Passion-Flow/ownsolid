@@ -22,6 +22,7 @@ export interface ToastOptions {
   /**
    * Reverses the action; the toast stays longer and offers an undo button. An undo that
    * reaches the server returns its promise, so a refusal is reported and can be retried.
+   * Return a localized string when the result needs a more specific completion message.
    */
   undo?: (() => unknown) | undefined;
   /** Repeats what failed; the toast stays longer and offers a retry button. */
@@ -53,8 +54,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const undo = (action: ToastOptions['undo']) => {
     Promise.resolve(action?.()).then(
-      () => {
-        show({ message: t('action.undone') });
+      (result) => {
+        show({ message: typeof result === 'string' ? result : t('action.undone') });
       },
       () => {
         show({

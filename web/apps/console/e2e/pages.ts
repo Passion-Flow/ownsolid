@@ -111,10 +111,37 @@ async function openSettings(page: Page, control: ControlPlane): Promise<void> {
   await page.getByRole('heading', { name: 'Settings', level: 1 }).waitFor();
 }
 
-/**
- * Every page state of the console, checked by accessibility.spec.ts. A page this
- * application adds gets its states here; src/router.test.ts fails until it does.
- */
+/** Opens the current server's description form without inventing a predecessor revision. */
+async function openDescriptionEditor(page: Page, control: ControlPlane): Promise<void> {
+  control.signedIn = true;
+  control.nodes = [node];
+  control.models = [readyModel];
+  control.deployments = [runningDeployment];
+  control.aliases = [
+    {
+      ...deploymentAlias,
+      description: 'Support requests; verify answers.',
+      description_revision: 1,
+    },
+  ];
+  await page.goto(`/services/${runningDeployment.id}`);
+  await page.getByRole('button', { name: 'Edit description', exact: true }).click();
+  await page.getByRole('dialog').getByLabel('Description', { exact: true }).waitFor();
+}
+
+async function openDescriptionConflict(page: Page, control: ControlPlane): Promise<void> {
+  await openDescriptionEditor(page, control);
+  control.aliases = [
+    { ...deploymentAlias, description: 'Current published guidance.', description_revision: 2 },
+  ];
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Description', { exact: true }).fill(readyModel.name);
+  await dialog.getByLabel('Reason', { exact: true }).fill('Keep the catalogue current');
+  await dialog.getByRole('button', { name: 'Save description' }).click();
+  await dialog.getByRole('button', { name: 'Review latest description' }).waitFor();
+}
+
+/** Every Console page state checked for themes, keyboard access and catalog coverage. */
 export const consolePages: readonly PageState[] = [
   ...shellPages,
   {
@@ -168,6 +195,26 @@ export const consolePages: readonly PageState[] = [
         .getByRole('region', { name: 'On the gateway' })
         .getByText('Answering calls')
         .waitFor();
+    },
+  },
+  {
+    name: 'a gateway description editor',
+    path: '/services/$deploymentId',
+    open: openDescriptionEditor,
+  },
+  {
+    name: 'a gateway description conflict',
+    path: '/services/$deploymentId',
+    open: openDescriptionConflict,
+  },
+  {
+    name: 'a gateway description reviewed before retrying',
+    path: '/services/$deploymentId',
+    open: async (page, control) => {
+      await openDescriptionConflict(page, control);
+      const dialog = page.getByRole('dialog');
+      await dialog.getByRole('button', { name: 'Review latest description' }).click();
+      await dialog.getByText('Current published guidance.', { exact: true }).waitFor();
     },
   },
   {

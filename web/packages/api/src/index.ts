@@ -132,6 +132,7 @@ export {
   downloadGatewayAliasCA,
   downloadGatewayKeyCalls,
   editAliasDescription,
+  getModelAlias,
   issueGatewayKey,
   listGatewayInstances,
   listGatewayKeyCalls,

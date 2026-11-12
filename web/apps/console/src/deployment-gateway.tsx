@@ -661,7 +661,7 @@ function Published({
   const descriptionHint = useId();
   const described = hasAliasDescription(alias);
   return (
-    <div className="flex flex-col gap-3">
+    <div role="group" aria-label={alias.name} className="flex flex-col gap-3">
       <DetailList>
         <Detail label={t('services.gateway.name')}>
           <CopyText text={alias.name} />
@@ -703,19 +703,25 @@ function Published({
       </div>
       <GatewayCADownload workspace={workspace} aliasId={alias.id} />
       {alias.available ? null : (
-        <p className="m-0 text-[13px] text-text-2">{t('services.gateway.unavailable.detail')}</p>
+        <p id={`${descriptionHint}-availability`} className="m-0 text-[13px] text-text-2">
+          {t('services.gateway.unavailable.detail')}
+        </p>
       )}
       <CodeBlock
         label={t('services.gateway.sample')}
         code={sampleCall('curl', alias.client_origin, alias.name)}
       />
       <div className="flex flex-wrap gap-2">
-        {alias.available ? (
-          <Button variant="primary" onClick={onIssue}>
-            <KeyRound aria-hidden />
-            {t('services.gateway.issue')}
-          </Button>
-        ) : null}
+        <Button
+          aria-disabled={!alias.available}
+          aria-describedby={alias.available ? undefined : `${descriptionHint}-availability`}
+          onClick={() => {
+            if (alias.available) onIssue();
+          }}
+        >
+          <KeyRound aria-hidden />
+          {t('services.gateway.issue')}
+        </Button>
         <Button onClick={onStop}>
           <Unplug aria-hidden />
           {t('services.gateway.stop.open')}

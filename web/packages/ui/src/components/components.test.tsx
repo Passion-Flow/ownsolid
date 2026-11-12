@@ -267,7 +267,7 @@ describe('Dialog', () => {
 });
 
 describe('Toast', () => {
-  function Trigger({ undo, retry }: { undo?: () => void; retry?: () => void }) {
+  function Trigger({ undo, retry }: { undo?: () => unknown; retry?: () => void }) {
     const toast = useToast();
     return (
       <Button
@@ -296,6 +296,18 @@ describe('Toast', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect(undo).toHaveBeenCalledOnce();
     expect(screen.getByRole('status')).toHaveTextContent('Change undone');
+  });
+
+  it('uses a handler confirmation when replay returns a newer current state', async () => {
+    inEnglish(
+      <ToastProvider>
+        <Trigger undo={() => Promise.resolve('A newer change is now shown.')} />
+      </ToastProvider>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Go' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(await screen.findByText('A newer change is now shown.')).toBeVisible();
+    expect(screen.getByRole('status')).not.toHaveTextContent('Change undone');
   });
 
   it('offers a retry, then steps aside', async () => {

@@ -14,6 +14,7 @@ interface ModalSurfaceProps {
   /** Accessible name; defaults to the labelled title inside. */
   label?: string | undefined;
   labelledBy?: string | undefined;
+  dismissOnBackdrop?: boolean | undefined;
   children: ReactNode;
 }
 
@@ -24,6 +25,7 @@ export function ModalSurface({
   className,
   label,
   labelledBy,
+  dismissOnBackdrop = true,
   children,
 }: ModalSurfaceProps) {
   const element = useRef<HTMLDialogElement>(null);
@@ -53,7 +55,7 @@ export function ModalSurface({
     };
     // A click on the element itself is a click on the backdrop.
     const click = (event: MouseEvent) => {
-      if (event.target === dialog) onClose();
+      if (dismissOnBackdrop && event.target === dialog) onClose();
     };
     dialog.addEventListener('cancel', cancel);
     dialog.addEventListener('click', click);
@@ -61,7 +63,7 @@ export function ModalSurface({
       dialog.removeEventListener('cancel', cancel);
       dialog.removeEventListener('click', click);
     };
-  }, [onClose]);
+  }, [onClose, dismissOnBackdrop]);
 
   return (
     <dialog
@@ -88,6 +90,8 @@ export interface DialogProps {
   description?: ReactNode | undefined;
   /** Buttons at the bottom. */
   footer?: ReactNode | undefined;
+  /** Disable for forms whose input must not be discarded by an accidental backdrop click. */
+  dismissOnBackdrop?: boolean | undefined;
   children: ReactNode;
 }
 
@@ -108,13 +112,22 @@ function CloseButton({ onClose }: { onClose: () => void }) {
 }
 
 /** A centered dialog for a focused task or an irreversible confirmation. */
-export function Dialog({ open, onClose, title, description, footer, children }: DialogProps) {
+export function Dialog({
+  open,
+  onClose,
+  title,
+  description,
+  footer,
+  children,
+  dismissOnBackdrop,
+}: DialogProps) {
   const titleId = useId();
   return (
     <ModalSurface
       open={open}
       onClose={onClose}
       labelledBy={titleId}
+      dismissOnBackdrop={dismissOnBackdrop}
       className="m-auto max-h-[88vh] w-[640px] max-w-[94vw] flex-col rounded-dialog open:flex"
     >
       <div className="flex items-center gap-3.5 px-6 pt-5 pb-1.5">
@@ -137,13 +150,22 @@ export function Dialog({ open, onClose, title, description, footer, children }: 
 }
 
 /** A panel at the right edge for details of a list row. */
-export function Drawer({ open, onClose, title, description, footer, children }: DialogProps) {
+export function Drawer({
+  open,
+  onClose,
+  title,
+  description,
+  footer,
+  children,
+  dismissOnBackdrop,
+}: DialogProps) {
   const titleId = useId();
   return (
     <ModalSurface
       open={open}
       onClose={onClose}
       labelledBy={titleId}
+      dismissOnBackdrop={dismissOnBackdrop}
       className="my-0 mr-0 ml-auto h-dvh max-h-none w-[560px] max-w-[94vw] flex-col border-y-0 border-r-0 open:flex"
     >
       <div className="flex items-start gap-3.5 border-b border-border px-6 pt-5 pb-3.5">
