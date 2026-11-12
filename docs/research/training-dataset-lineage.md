@@ -444,3 +444,64 @@ No dependency, model, dataset or third-party code is added. Existing pinned SDK
 tool licenses and commercial, redistribution and offline notice requirements
 remain those in [sdk.md](sdk.md#licenses). The primary references are read for
 design only. No public operation or roadmap item is completed by this note.
+
+## Durable family domain contract
+
+Reviewed 2026-11-13 for the model-owner implementation. Follow
+[ADR 0071](../decisions/0071-retain-explicit-model-family-membership.md).
+The MLflow distinction between registry identities and immutable versions above
+is useful; its name-based registration is deliberately not ownsolid's grouping
+rule. Each legacy version gets its own random persisted family UUID, without
+rewriting its version ID or deployment references. Default new imports, reimports
+and derived publications also get separate families. Joining requires a current
+Admin's explicit exact anchor in the same version-publication transaction.
+
+Use PostgreSQL's [deferred scoped foreign keys](https://www.postgresql.org/docs/18/ddl-constraints.html)
+for membership, its [BEFORE INSERT trigger](https://www.postgresql.org/docs/18/trigger-definition.html)
+for default registration and a [transaction advisory lock](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)
+over the exact target version for both default and explicit selection. The trigger
+is part of the unnumbered candidate DDL. It activates only when the migration owner
+admits that DDL; existing Go publication paths do not probe for optional tables or
+silently skip membership. Explicit selection borrows the existing publication
+transaction, rechecks Admin/session/workspace authority, records an existing audit
+event and never commits on its own. Different concurrent choices fail rather than
+reassigning membership. Deferred constraints refuse an orphan staged selection.
+
+History resolves an exact anchor, uses the existing retained catalogue and lineage
+checks, and orders by PostgreSQL [row comparison](https://www.postgresql.org/docs/18/functions-comparisons.html#ROW-WISE-COMPARISON)
+on `(created_at,id)` descending. Fetch at most `limit+1` entries and validate the
+whole selected page before publishing it. The configured `runtime.ui.page_size`
+is the omitted limit; explicit limits are 1..100. Empty cursors and filters are
+invalid. Ready/retired filtering changes navigation only. Each page takes current
+actor/session and shared workspace fences; this is not a frozen history snapshot.
+
+The v1 cursor is at most 512 ASCII bytes: canonical unpadded base64url JSON plus
+an HMAC-SHA-256 signature with a model-history-specific domain separator. Reuse the
+installed Identity HMAC key and [constant-time comparison](https://pkg.go.dev/crypto/hmac).
+Bind its scope digest to account, session, auth epoch, audience, tenant, workspace,
+family, exact anchor and state filter. Persist no cursor secrets or page results.
+Key rotation invalidates old cursors and requires restarting navigation. Cursor
+positions retain UTC microseconds and canonical nonzero UUIDs.
+
+Wire ceilings are fixed protocol bounds: 4 KiB per metadata item, 512 KiB for a
+complete 100-item page including continuation, and 128 KiB for retained detail.
+The schema already bounds names to 100 characters, manifests to 16 KiB and retained
+input snapshots to 64 KiB. Metadata pages omit manifests and lineage; detail uses
+the existing manifest and dataset references. Check the complete encoded envelope
+before returning it. These ceilings are not host resource or deployment defaults.
+
+Acceptance requires real PostgreSQL legacy backfill, fresh/explicit registration,
+retired reimport, derived publication, transaction/audit rollback, conflicting and
+matching concurrent selections, exact tied-time pages and tampered/scope-swapped
+cursors. Revoke the actor/session and disable or change workspace membership between
+pages. Same-name/model-key families and same-digest distinct versions remain
+separate. Retired metadata must coexist with exact-version execution refusal.
+Missing or damaged retained graph data returns no partial page or detail. Unknown
+commit outcomes suppress projections. No public API, root wiring or S-202 result
+is claimed by these domain tests.
+
+No dependency, model or dataset is added. Existing Go standard library and Google
+UUID are BSD-3-Clause, pgx is MIT and PostgreSQL uses the PostgreSQL License, as
+recorded in [the cleanup research](model-import-cleanup.md#mod-121-abandoned-upload-retention).
+They permit commercial/offline use and redistribution with notices. The official
+registry and SQL documentation are design references only.
