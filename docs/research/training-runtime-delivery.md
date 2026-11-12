@@ -519,9 +519,10 @@ can reuse the exact image input and review its original package notices.
 
 A disconnected rerun reproduced the binary/notice inventory and complete
 lock digests without fetching any input. These are actual complete binary
-inputs, separate from the earlier dependency-metadata graph. Installation,
-real imports and checkpoint computation remain pending until their runs
-produce evidence. The staged directory is
+inputs, separate from the earlier dependency-metadata graph. Disconnected
+installation and real imports passed, followed by the actual interrupted CPU
+comparison described below and in the checkpoint research.
+The staged directory is
 `cpu-prototype-inputs/` in the retained private CPU audit root. No production
 manifest, image recipe or validator changed.
 
@@ -546,8 +547,8 @@ requirements. The installed distribution set was exactly those 37 plus pip.
 Real Torch, Transformers, PEFT, Accelerate, Tokenizers, Safetensors and NumPy
 imports passed on Linux amd64 glibc 2.36 and Python 3.12.15. Torch reported
 `2.14.1+cpu`, no CUDA build and no CUDA device. Only loopback was present.
-All 215 installed original notice/metadata payload checks passed. Actual pip
-refused a damaged wheel and a missing wheel in fresh targets, installing no
+All 215 installed original notices and the original metadata payloads
+matched. Actual pip refused a damaged wheel and a missing wheel in fresh targets, installing no
 files in either negative case. The installation report and verified runtime
 observation are retained; the latter hashes to
 `937748cafe566fabc099e4c1ae66730a9799b4878cf1a77ca149c4702fd86b03`.
@@ -574,6 +575,6 @@ the two-step horizon. It reported step 2 and `resume_from_step=0`, with
 within the original 6 GiB bound. Its protected result has SHA-256
 `24e26bbfca3eaef3a93690f591ae6689b6ebba64c15699581b6afa966201eb71`.
 The next phase's I/O preflight refused a start and released both locks;
-no memory or I/O threshold was relaxed. The baseline is retained for the
-interrupted-worker comparison. This baseline is actual new computation,
-independently of the earlier retained 24-step native artifacts.
+no memory or I/O threshold was relaxed. The baseline is retained alongside the
+[completed interrupted-worker comparison](training-checkpoint-recovery.md#real-interrupted-linux-cpu-worker-resume).
+This baseline is actual new computation, independently of the earlier retained 24-step native artifacts.
