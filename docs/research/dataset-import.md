@@ -747,7 +747,7 @@ Reject copying originals as an unreferenced supplemental archive: it would
 leave ordinary backup/readiness incomplete. Do not infer receipt identity
 from file extensions, adopt unknown orphan files, fabricate reports for old
 drafts, or change the store namespace to version the transfer manifest.
-See [ADR 0071](../decisions/0071-version-dataset-snapshots-with-original-sources.md).
+See [ADR 0073](../decisions/0073-version-dataset-snapshots-with-original-sources.md).
 
 Acceptance must cover actual CSV and locked-PyArrow Parquet import, ordinary
 snapshot export, logical database restore, original and normalized file
