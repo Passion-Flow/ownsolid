@@ -26,8 +26,9 @@ func TestWorkspaceQuotaStatusPreservesQuantitiesAndRejectsInvalidUsage(t *testin
 	if err != nil || !reflect.DeepEqual(rows, want) {
 		t.Fatalf("exact, sorted quota accounting: %+v, %v", rows, err)
 	}
-	body, err := json.Marshal(rows)
-	if err != nil || !strings.Contains(string(body), `"reserved":"9007199254740993"`) {
+	body, err := json.Marshal(WorkspaceQuotaStatus{PolicyRevision: "9223372036854775807", Resources: rows})
+	if err != nil || !strings.Contains(string(body), `"reserved":"9007199254740993"`) ||
+		!strings.Contains(string(body), `"policy_revision":"9223372036854775807"`) {
 		t.Fatalf("JSON lost integer precision: %s, %v", body, err)
 	}
 	for _, used := range []Resources{

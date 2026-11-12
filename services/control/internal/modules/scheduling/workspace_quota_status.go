@@ -46,7 +46,7 @@ type WorkspaceQuotaResource struct {
 // and held usage. Missing configuration has no resource rows.
 type WorkspaceQuotaStatus struct {
 	WorkspaceID    string                   `json:"workspace_id"`
-	PolicyRevision int64                    `json:"policy_revision"`
+	PolicyRevision string                   `json:"policy_revision"`
 	State          WorkspaceQuotaState      `json:"state"`
 	Resources      []WorkspaceQuotaResource `json:"resources,omitempty"`
 	Reason         *WorkspaceQuotaReason    `json:"reason,omitempty"`
@@ -85,7 +85,7 @@ func ReadWorkspaceQuotaStatus(ctx context.Context, authority *workspaces.Service
 }
 
 func readWorkspaceQuotaStatusWithin(ctx context.Context, q transaction.Executor, tenant, workspace string) (WorkspaceQuotaStatus, error) {
-	out := WorkspaceQuotaStatus{WorkspaceID: workspace}
+	out := WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: "0"}
 	revision, err := lockReservationPolicy(ctx, q)
 	if errors.Is(err, ErrQuotaUnconfigured) {
 		out.State = WorkspaceQuotaUnconfigured
@@ -106,7 +106,7 @@ func readWorkspaceQuotaStatusWithin(ctx context.Context, q transaction.Executor,
 	if err != nil {
 		return WorkspaceQuotaStatus{}, err
 	}
-	out.PolicyRevision = revision
+	out.PolicyRevision = strconv.FormatInt(revision, 10)
 	node, err := tree.workspace(tenant, workspace)
 	if errors.Is(err, ErrQuotaScopeNotFound) && len(used) == 0 {
 		out.State = WorkspaceQuotaUnallocated

@@ -114,7 +114,7 @@ select the tenant. A failed or uncertain transaction returns an empty result.
 The status distinguishes `unconfigured`, `unallocated` and `configured`.
 Only an actual allocation has resource rows. Each row contains the workspace's
 guarantee, hard limit, held reservations and `unreserved_quota`, encoded as
-decimal strings. CPU uses millicores, memory bytes and GPUs whole devices.
+decimal strings. The top-level policy revision is also a decimal string. CPU uses millicores, memory bytes and GPUs whole devices.
 Unreserved quota is accounting; queue turn, borrowing, placement and physical
 capacity can still prevent a job from starting. No job or sibling identity,
 ancestor amount, cell capacity or historical wait code is returned.

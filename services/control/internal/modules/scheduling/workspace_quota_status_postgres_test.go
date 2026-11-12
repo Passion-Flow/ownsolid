@@ -84,7 +84,7 @@ func (f authenticatedQuotaFixture) read(t *testing.T, actor identity.Auth) Works
 func TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting(t *testing.T) {
 	f := newAuthenticatedQuotaFixture(t)
 	workspace := f.attempt.WorkspaceID
-	want := WorkspaceQuotaStatus{WorkspaceID: workspace, State: WorkspaceQuotaUnconfigured,
+	want := WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: "0", State: WorkspaceQuotaUnconfigured,
 		Reason: &WorkspaceQuotaReason{Code: "SCHEDULING_QUOTA_UNCONFIGURED", Action: ConfigureQuotaPolicy}}
 	for _, actor := range []identity.Auth{f.admin, f.portal} {
 		if got := f.read(t, actor); !reflect.DeepEqual(got, want) {
@@ -93,13 +93,13 @@ func TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting(t *testing.T) {
 	}
 
 	f.replace(t, 0, f.policy[:3])
-	want.PolicyRevision, want.State = 1, WorkspaceQuotaUnallocated
+	want.PolicyRevision, want.State = "1", WorkspaceQuotaUnallocated
 	want.Reason = &WorkspaceQuotaReason{Code: "SCHEDULING_QUOTA_UNALLOCATED", Action: ConfigureWorkspaceQuota}
 	if got := f.read(t, f.portal); !reflect.DeepEqual(got, want) {
 		t.Fatalf("missing allocation: %+v", got)
 	}
 	f.replace(t, 1, f.policy)
-	want = WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: 2, State: WorkspaceQuotaConfigured,
+	want = WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: "2", State: WorkspaceQuotaConfigured,
 		Resources: []WorkspaceQuotaResource{
 			{Resource: CPU, Guaranteed: "4000", HardLimit: "4000", Reserved: "0", UnreservedQuota: "4000"},
 			{Resource: NVIDIAGPU, Guaranteed: "2", HardLimit: "2", Reserved: "0", UnreservedQuota: "2"},
@@ -109,6 +109,13 @@ func TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting(t *testing.T) {
 			t.Fatalf("configured accounting: %+v", got)
 		}
 	}
+	for _, revision := range []string{"9007199254740993", "9223372036854775807"} {
+		f.exec(t, "UPDATE scheduling_quota_policy SET revision=$1::bigint", revision)
+		if got := f.read(t, f.portal); got.PolicyRevision != revision {
+			t.Fatalf("policy revision lost precision: %q, want %q", got.PolicyRevision, revision)
+		}
+	}
+	f.exec(t, "UPDATE scheduling_quota_policy SET revision=2")
 	// Roles come from current membership. Resource allocation is readable by
 	// ordinary members without granting them policy mutation authority.
 	f.exec(t, "UPDATE workspace_memberships SET role='viewer' WHERE tenant_id=$1 AND workspace_id=$2 AND user_id=$3",

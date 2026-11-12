@@ -225,3 +225,21 @@ status with its fixed reason, not an HTTP error.
 Test the real owner codes, storage and uncertain-outcome projection, and
 refuse an unregistered equal-text identity label. This contract uses only
 the existing source interfaces and licensed stack described above.
+
+## Exact revision metadata
+
+[RFC 8259 section 6](https://www.rfc-editor.org/rfc/rfc8259.html#section-6)
+limits exact interoperable JSON integer numbers to the binary64 safe range.
+The stored quota revision can reach PostgreSQL bigint's positive maximum.
+Represent `policy_revision` as a decimal string as well as resource quantities;
+do not silently round it or reject a valid stored revision for the browser.
+Kubernetes also uses strings for
+[resource-version metadata](https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions).
+The internal admission counter and its concurrency rules remain int64.
+
+The unconfigured status reports `"0"`; configured and unallocated status
+report the actual positive revision string. Extend the real authenticated
+PostgreSQL read to a revision above binary64 precision and to MaxInt64, then
+restore only that test fixture's original revision. Check the JSON field's
+string representation independently of resource totals. This requires no
+new dependency, model or dataset and retains the licences already recorded.

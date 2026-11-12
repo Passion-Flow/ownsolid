@@ -70,7 +70,7 @@ func TestPostgresHTTPWorkspaceQuotaStatus(t *testing.T) {
 	for i, actor := range actors {
 		out := read(actor, paths[i])
 		body, err := json.Marshal(out)
-		if err != nil || out.State != scheduling.WorkspaceQuotaConfigured || out.PolicyRevision != 1 ||
+		if err != nil || out.State != scheduling.WorkspaceQuotaConfigured || out.PolicyRevision != "1" ||
 			len(out.Resources) != 2 || !strings.Contains(string(body), `"hard_limit":"2000"`) ||
 			strings.Contains(string(body), "tenant_id") || strings.Contains(string(body), "department") ||
 			strings.Contains(string(body), "available") || strings.Contains(string(body), "admitted") {
