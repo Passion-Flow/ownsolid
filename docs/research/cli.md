@@ -440,3 +440,47 @@ login recovered. Each successful history request had exactly one
 request-bound audit. The CLI unit suite additionally preserved maximum
 uint64 counts in JSON, YAML and table output and rejected malformed
 intervals before I/O. All fixture stores and PostgreSQL were stopped.
+
+
+## Workspace discovery (DEV-102)
+
+[Kubectl's context inspection](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/kubectl_config_get-contexts/)
+makes the available operating scopes visible before an operator selects one.
+Ownsolid's [published workspace contract](../../api/openapi/v1/workspaces/openapi.json)
+and [registered handler](../../services/control/internal/modules/workspaces/http/handler.go)
+already provide platform-admin list and detail reads. The CLI currently asks
+for a workspace UUID for deployment and training operations without a command
+to discover it. Expose these existing reads as workspace list and
+workspace get with an exact workspace UUID.
+
+Use the authenticated Admin origin and its saved session. These global
+workspace URLs do not use the configured site, cell or current workspace.
+The server resolves the installed tenant and current platform-admin authority.
+Accept no tenant selector and do not change the session or local configuration.
+A local cached scope list would outlive permission changes; a new endpoint or
+a name-based implicit selection would duplicate server behavior and risk
+selecting an ambiguous workspace. Require an exact canonical nonzero UUID
+for detail and check that the returned identity matches it.
+
+Read one bounded page using the existing cursor helper. Expose --query as
+the server's case-insensitive literal name substring, preserving spaces and
+wildcard characters. Validate its one-to-100 Unicode character bound and
+control-character refusal before I/O. Preserve items and nullable
+next_cursor in JSON/YAML; show the continuation after a table. The server
+binds cursors to the authenticated actor, tenant and search text. Keep the
+same search text when continuing. A disabled workspace remains visible to
+an authorized platform administrator.
+
+The [CLI dependency review](#dependency-review) applies, including pinned
+[Cobra 1.10.2's Apache-2.0 licence](https://github.com/spf13/cobra/blob/v1.10.2/LICENSE.txt).
+No dependency, model or dataset is added. Existing licences permit commercial
+use and offline redistribution with their notice obligations.
+
+Test explicit and omitted pagination, literal Unicode and wildcard searches,
+table/JSON/YAML output, empty/final pages, malformed/repeated cursors and wrong
+detail identity. Invalid arguments fail without a network request or output.
+Run the compiled Linux CLI through the real Admin TLS, login, CSRF and cookie
+dispatcher with PostgreSQL and no external route. Verify continuation and
+retry, foreign-tenant refusal, search-bound cursors, current administrator
+permission and revoked sessions. This read slice leaves broader common
+operations and installed exporter qualification in DEV-102 open.
