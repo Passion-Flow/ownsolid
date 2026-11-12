@@ -252,3 +252,15 @@ func TestObserveCellWaitReasonsRequiresCurrentBoundUID(t *testing.T) {
 		})
 	}
 }
+
+func TestWaitReasonsMissingQuotaConfigurationRequiresTypedDecision(t *testing.T) {
+	want := []WaitReason{{Code: "SCHEDULING_QUOTA_UNCONFIGURED", Action: "configure_quota_policy"}}
+	for _, err := range []error{ErrQuotaUnconfigured, fmt.Errorf("owner admission: %w", ErrQuotaUnconfigured)} {
+		if got := WaitReasons(err); !reflect.DeepEqual(got, want) {
+			t.Fatalf("configuration guidance: %+v, want %+v", got, want)
+		}
+	}
+	if got := WaitReasons(errors.New(ErrQuotaUnconfigured.Error())); len(got) != 0 {
+		t.Fatalf("historical text became a fresh decision: %+v", got)
+	}
+}

@@ -12,6 +12,8 @@ import (
 type WaitAction string
 
 const (
+	// ConfigureQuotaPolicy asks the platform operator to install the admission quota policy.
+	ConfigureQuotaPolicy WaitAction = "configure_quota_policy"
 	// ChangeRequestOrQuota applies when the request exceeds its quota ceiling.
 	ChangeRequestOrQuota WaitAction = "change_request_or_quota"
 	// ChangeRequestOrCell applies when the cell cannot meet the whole request.
@@ -73,6 +75,8 @@ var errReclaimReleasePending = fmt.Errorf("%w: waiting for selected releases", E
 func WaitReasons(err error) []WaitReason {
 	var quota *reservationQuotaError
 	switch {
+	case errors.Is(err, ErrQuotaUnconfigured):
+		return []WaitReason{{Code: ErrQuotaUnconfigured.Error(), Action: ConfigureQuotaPolicy}}
 	case errors.Is(err, ErrQueueTurnPending):
 		return []WaitReason{{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}}
 	case errors.Is(err, ErrQuotaScopeNotFound):
