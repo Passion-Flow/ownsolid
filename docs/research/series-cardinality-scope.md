@@ -107,3 +107,45 @@ Two post-ingest runs used 950,473 input bytes each and produced
 local, warm queries per run gave p95 values of 4.31 ms and 3.36 ms
 for the selected workspace. These samples measure one day on a
 single-node index without a concurrent write workload.
+
+## Verified node identity and scan-budget boundary
+
+The extended native fixture uses node_id and 10,000 deterministic UUIDv5
+identifiers rather than short sequential agent labels. They are synthetic
+identifiers, not enrolled nodes. VictoriaMetrics 1.155.0 returned 10,001
+selected series out of 10,005 rows. Metric and node ranks, conflicting
+tenant/Workspace/missing-tenant filters and a topN of one retained the
+expected scope. A foreign-tenant query still changed the selected metric's
+query-usage metadata; that metadata must remain outside the projection.
+
+After a graceful restart over the same data with
+search.maxTSDBStatusSeries=10000, an overview covering 10,001 series
+returned HTTP 422 with an error and no data, even with topN=1.
+Selecting the single 10,000-series CPU metric succeeded at the boundary.
+A request for 99 ranks was clamped to the configured two ranks. A later
+one-series queue query succeeded, demonstrating explicit narrowing and
+retry without returning an incomplete overview.
+
+The first prototype rejected the correct refusal because it expected
+the precise flag name in the diagnostic. The pinned store instead uses
+a generic max-search hint that mentions maxUniqueTimeseries. The revised
+assertion verifies the count-limit refusal and absent success data.
+A product error must give its own accurate recovery guidance rather
+than relay that raw hint.
+
+The refined fixture shared store start/readiness/shutdown helpers, closed
+HTTP error bodies and refused Python optimization that would disable its
+assertions. The loopback-only Linux amd64 run held both shared locks after
+resource and I/O preflight. It imported 1,190,489 bytes, occupied 5,105,423
+apparent file bytes after both graceful stops, and measured twenty local
+warm queries with nearest-rank p50 3.13 ms, p95 6.24 ms and maximum 6.88 ms.
+These figures describe a one-day, 10,005-series synthetic index without
+concurrent ingestion, not the seventeen-million-series workload or an
+authenticated product endpoint. Both native processes stopped.
+
+The externally qualified fixture had SHA-256
+2b8a4037631adbaf7bab54275871e7cd4aad7424256932a5ce2a40de1d1f5bcb
+before adoption at
+[the existing native probe](../../services/control/internal/platform/monitoringmetrics/testdata/check_cardinality_scope.py).
+Product query projection, its authorized API/Console path and ingest-budget
+enforcement remain open.
