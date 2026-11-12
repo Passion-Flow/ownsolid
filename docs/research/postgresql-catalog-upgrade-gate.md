@@ -209,3 +209,24 @@ requires durable store bindings, live lease fencing, write permits
 and coordinated restore qualification. Their module owners retain
 their source and normal-flow verification. Assign numbers only when
 each candidate is admitted against the current predecessor.
+
+
+## Accepted description tail
+
+Schema 59 installs the scoped GW-120 owner up SQL without changing
+any of the 58 predecessor entries. The [formal schema-59 acceptance](gateway-model-description.md#formal-schema-59-acceptance)
+independently reproduced fresh, native 58-to-59, restored 55 through 58
+and restored current catalogues on the pinned PostgreSQL stack. All
+seven production migration/replay/check paths passed at 119 tables;
+the four historical audit checkpoints were retained byte-for-byte.
+The PostgreSQL-only runtime table list includes the new intent table.
+Existing-role grant resume and exact serving refusal before grants
+passed. MySQL's shared catalog and audit head access remain unchanged.
+The complete workstation check, build and test passed on a446ec58.
+These are Linux arm64 SQL results, distinct from the earlier native
+Linux amd64 Audit admission.
+
+GW-120 is therefore the accepted tail for subsequent ordering. DAT-101
+and metering remain separate unnumbered candidates until their owners
+supply ready inputs against this exact predecessor. Do not assign a
+number to an incomplete handoff or reuse a prior overlay fingerprint.
