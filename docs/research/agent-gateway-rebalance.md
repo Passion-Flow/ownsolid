@@ -215,12 +215,25 @@ to the original assignments, task completion and persisted cursors. Record
 physical connection overlap and gateway resources as well as steady counts.
 Keep daemon startup failure diagnostics before the fixture is removed.
 
-The connection-identity trace and installed extension are prepared source,
-with formatting, layout and shell syntax checked. Their updated test input
-has not run: archive transport stalled and a separate native admission
-refused the original memory threshold. Preserve that distinction from the
-earlier four-package Mac race result. Resume native qualification before
-promoting this extension or closing ARC-107.
+The resumed input 10fc41864033fd64e48fdc98ef601622360a7e17 passed the
+complete httpserver, agentgateway, config and cmd/server suites with the
+Go race detector on Darwin arm64: 7.719, 5.409, 49.164 and 16.959 seconds,
+respectively. This includes the updated server-generated identity and
+forged-header frame regression, held reply/cursor behavior, bounded
+shutdown and connection-slot release. The Linux amd64 e2e fixture also
+compiled. No production wire message, lease or cursor field changed.
+The raw four-package race log SHA-256 is
+920ad6bb5c725452991ca72b6c75f2323faa43e0842427379ba44fbd038ffc70.
+
+The installed 500-agent extension has not run, and this updated transport
+has not run on native Linux amd64. Keep that scope distinct from the old
+40-agent client result. ARC-107 remains open pending installed rollover,
+physical overlap/resource observations and native qualification.
+The socket observer prototype's Linux preflight saw 607604 KiB MemFree
+and 0.39 percent full I/O PSI avg10 and returned 75 before starting a
+namespace or socket. It did not lower the 2 GiB free-memory threshold or
+start a compiler, container or database. Its actual socket behavior is
+still unqualified.
 
 
 ## Installed resource observations
