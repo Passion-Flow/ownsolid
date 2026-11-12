@@ -384,3 +384,20 @@ passed before the test-only import and revocation-fixture fixes. The complete
 public operation, SDK/Help publication, installed delivery and Console
 acceptance remain separate; this run establishes the registered module
 entry and shared response writer.
+
+### Transaction problems in the public contract
+
+The [shared Problem registry](../../services/control/internal/platform/httpserver/problem.go)
+also preserves STORAGE_DEADLOCK, STORAGE_LOCK_TIMEOUT, STORAGE_CANCELLED,
+STORAGE_TIMEOUT and STORAGE_COMMIT_ROLLED_BACK as 503 responses.
+[Service error normalization](../../services/control/internal/modules/monitoring/service.go)
+can produce them from the selected transaction owner. Keep those codes in the
+public Problem enum and operation error declaration as well as the existing
+STORAGE_COMMIT_OUTCOME_UNKNOWN and STORAGE_UNAVAILABLE. A strict generated
+client must parse every preserved refusal before deciding what to retry.
+Unknown vendor failures still collapse to STORAGE_UNAVAILABLE.
+
+The normal native history profile above does not inject these five database
+outcomes. Their contract/SDK parsing tests belong to DEV's publication
+qualification. Whole public operation acceptance still requires that corrected
+contract, bilingual explanations and the same registered module source.
