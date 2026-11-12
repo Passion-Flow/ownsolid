@@ -192,3 +192,35 @@ revocation during I/O, failed audit commit, retry and request-bound audit.
 The existing HTTP and private-TLS history profiles must pass after shared
 transport or authority code is factored. API/Console publication and ingest
 budgets remain separate open parts of OBS-110.
+
+## Fleet-scale operating boundary
+
+The existing [fleet qualification](telemetry-scale.md#linux-amd64-qualification)
+contains 10,000 synthetic nodes with 1,700 series each: 17 million distinct
+series and 153 million samples over nine rounds. Its 4,483,944,448 allocated
+bytes include index and cache, and its first raw cell query took 16.888 seconds.
+Those measurements justify avoiding unbounded raw enumeration for an interactive
+explorer. They are not a daily TSDB-status benchmark or a production retention
+size estimate.
+
+The cardinality fixture is deliberately smaller: 10,005 series on one UTC day,
+5,105,423 apparent file bytes and a twenty-query warm p95 of 6.24 ms before
+Control authorization and auditing. Do not multiply those bytes into a fleet
+retention estimate or present that latency as a seventeen-million-series result.
+The daily index and retained sample bytes depend on label churn and compression;
+representative long-running ingestion is still required for that sizing.
+
+A bounded exact-metric drilldown can select the 10,000 node series for one metric
+without scanning every metric in the fleet. Enforce the installed native scan
+and status-duration budgets even when topN is one. If an overview exceeds them,
+return an unavailable result with recovery by selecting an exact metric; do not
+return a partial count, increase the scan cap automatically or fall back to raw
+series enumeration. The service's operation deadline, shared observation slots,
+four-MiB upstream cap and one-MiB complete JSON cap bound Control work and transfer;
+they do not prove the source's full-fleet scan latency. A full-fleet daily overview
+remains unqualified at the seventeen-million-series shape until measured there.
+
+The next native service profile must measure the narrowed 10,000-series read,
+including real PostgreSQL authority and committed audit, and verify native scan
+refusal followed by that explicit narrowed retry. Installed source budgets and
+the Console's recovery guidance remain prerequisites for publishing this path.
