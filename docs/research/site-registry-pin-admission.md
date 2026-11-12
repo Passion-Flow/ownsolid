@@ -335,20 +335,45 @@ not establish local cleanup: without its prior acknowledgement, the client
 uses the existing explicit reconcile-removal path before releasing its session.
 No direct CAS or database cleanup is introduced.
 
-Sixteen focused tests are prepared with controlled TLS/HTTP peers, temporary
-credentials and metadata. Their normal flow uses distinct source and tagless receipt values. They cover
-the client flow, source/digest/scope and
-input boundaries, replay and lost acknowledgement, cancellation, TLS/redirect
-refusal, cleanup uncertainty and session isolation. gofmt passed on both host
-copies and the Linux source manifest verified. The workstation nonblocking
-flock refusal started no compiler or tests. No binary has been qualified or
-executed, no installed request or Linux lock attempt was made, and no old
-session or real credential file was opened. Syntax formatting and controlled
-client tests cannot substitute for native or installed qualification.
+The sixteen focused tests passed with controlled TLS/HTTP peers, temporary
+credentials and metadata on macOS arm64 with Go 1.27.3 and the race detector,
+GOMAXPROCS=2 and -p=2. All sixteen top-level tests and eighteen test pass events
+passed, with zero failures or skips. Their normal flow uses distinct source and
+tagless receipt values. Coverage includes the client flow, source/digest/scope
+and input boundaries, replay and lost acknowledgement, cancellation,
+TLS/redirect refusal, cleanup uncertainty and session isolation. The original
+v5 source manifest verified before execution and remained unchanged. Earlier
+workstation nonblocking flock refusal started no compiler or tests and remains
+a separate admission result.
+
+The same admitted parent cross-built the exact v5 input for Linux amd64 with
+CGO disabled, offline module resolution, -p=2 and -trimpath. The 10,438,146-byte
+ELF artifact has SHA-256
+6727bd1e310c74f32eb3325a5f395f6e1aa6754a376d1170701de0b02ed8b124
+and is retained, mode 0500, at
+/root/lane-obs-tools/obs-short-validation-kk2e5xc6/installed-registry-linux-amd64.
+It has not executed on Linux or against an installation. The qualified optional
+descriptor is /root/lane-obs-tools/installed-registry-optional-input-v5-qualified.json;
+it retains installed_input_ready=false. The original prepared descriptor remains
+unchanged.
+
+The private proof is
+/root/lane-obs-tools/obs-short-validation-kk2e5xc6/proof.json, SHA-256
+e7311787dc0bc7307b34c21d146440b43e5ec0f13030442b08af2bca7f2b3564.
+Its controlled-client JSONL has SHA-256
+10768587915dd13c778a43b5d935badb2036ec9eb8afd0b1c2543ab7515ef072.
+One parent and actual FD retained the original regular workstation lock carrier
+through Python units, these client units and cross-build. It acquired once after
+a 569.214-second kernel wait, executed for 3.611 seconds, reaped every owned
+child group and closed the FD before exiting zero. The carrier was preserved.
+No native component, installed request, real credential or old session was used;
+no Linux lock admission occurred. Controlled replies do not prove server
+identity, authorization, durability or installed release acceptance, and this
+batch does not establish current-main make check/build results.
 
 The actual instance, approved signed asset/trust/license material, independent
-fresh session, source/binary binding, independently checked source receipt and
-verified owned cleanup are still required. This is an optional preparation
+fresh session, control source/binary/instance binding, independently checked
+source receipt and verified owned cleanup are still required. This is an optional preparation
 input only. It must not delay the already ready main acceptance flow or overlap
 history's quiet-count stage. NET-102 remains unticked.
 
