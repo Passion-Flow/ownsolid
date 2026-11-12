@@ -39,7 +39,11 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   authority and snapshot have been exercised together using fixture samples.
   The workload owner must compose the authenticated endpoint and the cell
   owner must supply verified total and occupied capacity from the same
-  observation. See the [capacity handoff](scheduling-admission.md#authorized-scope-and-cell-capacity-handoff).
+  observation. The managed-cell TLS adapter supplies only exact-object
+  state, version and blocker. ARC must bind the registered cluster identity,
+  and the cell inventory/controller owner must supply measurement time,
+  expiry and complete total/occupied resource vectors from one observation.
+  See the [production source boundary](scheduling-admission.md#production-capacity-source-boundary).
 - SCH-108 projects actionable reasons from queue, preflight, reservation and
   reclaim decisions. The cell consumer reads the current Workload over TLS
   and checks its exact UID before projecting a Kueue blocker. The workload
