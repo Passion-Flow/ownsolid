@@ -30,8 +30,9 @@ const (
 )
 
 // This profile's exact Compose definition identifies the service, mount and
-// PostgreSQL health-check writers admitted by this backup.
-const coordinatedComposeSHA256 = "7f7df1dbe10bea9be4beee11db34a35a667a4e66e00001c5689388396fbf4285"
+// PostgreSQL health-check writers admitted by this backup. The optional Control
+// CA environment adds no writer; external fleet-history state is refused separately.
+const coordinatedComposeSHA256 = "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca"
 
 var (
 	errBackupPending = errors.New("INSTALL_BACKUP_RECOVERY_REQUIRED: run recover-backup with the original site configuration")
@@ -163,7 +164,7 @@ func coordinatedBackupHost(ctx context.Context, runner Runner) error {
 }
 
 func checkCoordinatedProfile(c Config) error {
-	if c.PITR != nil || len(c.ControlSettings) != 0 {
+	if c.PITR != nil || len(c.ControlSettings) != 0 || c.Telemetry.FleetHistoryControlDirectory != "" {
 		return errBackupScope
 	}
 	l := c.Layout()
