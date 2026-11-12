@@ -298,3 +298,21 @@ repository_integration tag passed in 7.185 seconds; it executed zero test
 bodies. The resulting binary SHA-256 is
 9a64311cd8503fd1a58944d389956c0fd746cf69a9ecdbb209465ce69ead1e8a.
 These checks do not replace native execution or a complete make test run.
+
+The same prepared evidence is retained on the Linux server at
+/root/lane-trn-tools/event-prepared-evidence.tgz, SHA-256
+da24e758b2cfa7b47be19a7cbd9f6bb2a3c4f0539539641bec9f21cf4a5dd717.
+The server independently verified all 22 manifest entries: original scripts,
+logs, result records and source bundles. The archive also preserves candidate
+f49e23de0398235824a8cd177c4c1249ee3297c9 after the shared entrance-listener
+changes. That rebased source has not been executed: the Linux and workstation
+heavy guards refused the attempts before fixture startup. The subsequent
+documentation-only Linux candidate is
+c527fb68111d6f2adae72dc6b5d1eb9051e89e06; its training Go inputs are identical.
+The existing locks, resource thresholds and source checks remain enforced.
+To request its original native event suite, run the private prepared driver
+with `python3 -B /root/lane-trn-tools/run-native-event-current.py events` on
+the Linux server. A busy guard exits before any test; the result record must
+show all nine expected roots, no skips and no failures before native
+qualification. The separate cost mode retains the existing declared budgets
+and reports their known failures rather than treating them as accepted.
