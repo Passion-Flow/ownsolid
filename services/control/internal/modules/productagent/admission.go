@@ -40,7 +40,14 @@ const (
 // operation still verifies the session and workspace in its own transaction.
 func (s *Service) admit(cmd command, actor identity.Auth, cursor string) (string, error) {
 	var path string
-	policy, hasTool := s.tools[cmd.id]
+	toolID := cmd.id
+	if cmd.readTool != "" {
+		toolID = cmd.readTool
+	}
+	policy, hasTool := s.tools[toolID]
+	if cmd.nameArgument && cursor != "" {
+		return "", ErrInvalidCommand
+	}
 	switch cmd.risk {
 	case riskNavigate:
 		path = cmd.destination(actor.Me.Audience)

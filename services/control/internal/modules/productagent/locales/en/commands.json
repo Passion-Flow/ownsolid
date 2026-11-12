@@ -9,5 +9,6 @@
   "open_keys": ["open keys", "open api keys"],
   "open_support": ["open support"],
   "list_applications": ["show applications", "list applications"],
-  "list_conversations": ["show conversations", "list conversations"]
+  "list_conversations": ["show conversations", "list conversations"],
+  "find_application": ["find application \"Application name\""]
 }

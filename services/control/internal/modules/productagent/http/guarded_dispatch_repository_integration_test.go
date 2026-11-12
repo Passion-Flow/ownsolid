@@ -4,6 +4,7 @@ package http_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"os"
@@ -15,6 +16,7 @@ import (
 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent"
 	productagenthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
@@ -136,6 +138,42 @@ func TestAuthenticatedGuardedAssistantHTTP(t *testing.T) {
 				if result := client.call(t, http.MethodPost, commandPath, `{"command":"show applications"}`, nil).result(t); result.Applications == nil {
 					t.Fatal("guarded typed read did not run without a model")
 				}
+				actor, err := owner.Authenticate(ctx, token, audience)
+				if err != nil || actor.Me.Workspace == nil {
+					t.Fatalf("lookup authentication: %v", err)
+				}
+				const name = "HTTP Caf\u00e9 \u5e94\u7528  %_\"quoted\""
+				app, err := dispatcher.Workflows.Service.Create(ctx, actor, workflows.CreateRequest{
+					WorkspaceID: actor.Me.Workspace.ID, Name: name, Reason: "Seed guarded name lookup",
+				}, uuid.NewString(), uuid.NewString())
+				if err != nil {
+					t.Fatal(err)
+				}
+				version := uuid.NewString()
+				if _, err := owner.DB.Exec(ctx, `INSERT INTO workflow_versions(id,tenant_id,workspace_id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by)
+SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_by FROM workflows WHERE id=$2`, version, app.ID); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := owner.DB.Exec(ctx, `UPDATE workflows SET current_version_id=$1 WHERE id=$2`, version, app.ID); err != nil {
+					t.Fatal(err)
+				}
+				for _, prefix := range []string{"find application", "\u67e5\u627e\u5e94\u7528"} {
+					argument, _ := json.Marshal(name)
+					body, _ := json.Marshal(map[string]string{"command": prefix + " " + string(argument)})
+					reply := client.call(t, http.MethodPost, commandPath, string(body), nil)
+					result := reply.result(t)
+					if result.ApplicationResolution == nil || result.ApplicationResolution.State != "resolved" || result.ApplicationResolution.ApplicationID != app.ID || result.Path != "" {
+						t.Fatalf("guarded name lookup: %+v", result)
+					}
+					if err := owner.DB.QueryRow(ctx, `SELECT count(*) FROM product_agent_steps s JOIN audit_events a ON a.request_id=s.id
+WHERE s.id=$1 AND s.state='completed' AND a.action='product_assistant.find_application'`, reply.id).Scan(&count); err != nil || count != 1 {
+						t.Fatalf("guarded lookup checkpoint and audit: %d, %v", count, err)
+					}
+					enabled.Store(false)
+					assertDenied(string(body), 403, "ACCESS_DENIED", nil)
+					enabled.Store(true)
+				}
+				assertDenied(`{"command":"find application \"missing\"","cursor":"caller continuation"}`, 400, "VALIDATION_FAILED", nil)
 			}
 		})
 	}

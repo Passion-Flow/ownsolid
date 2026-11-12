@@ -93,9 +93,11 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
 		return help
 	}
 	assertCommands(admin, "en", "open_audit", "open_gateway", "open_home", "open_model_library", "open_model_services", "open_nodes", "open_support")
-	portalCommands := []string{listApplications, listConversations, "open_home", "open_keys", "open_models", "open_support"}
+	portalCommands := []string{findApplication, listApplications, listConversations, "open_home", "open_keys", "open_models", "open_support"}
 	help := assertCommands(portal, "zh-CN", portalCommands...)
-	if !slices.Contains(help[3].Aliases, "\u6253\u5f00\u5bc6\u94a5") {
+	if !slices.ContainsFunc(help, func(item CommandHelp) bool {
+		return item.ID == "open_keys" && slices.Contains(item.Aliases, "\u6253\u5f00\u5bc6\u94a5")
+	}) {
 		t.Fatal("localized directory omitted the portal keys phrase")
 	}
 	help[0].Aliases[0] = "client edit"

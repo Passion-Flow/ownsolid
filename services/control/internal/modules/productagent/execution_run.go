@@ -124,7 +124,7 @@ func (r *ExecutionRuns) RunCommand(ctx context.Context, actor identity.Auth, run
 	if err != nil {
 		return Result{}, err
 	}
-	execution := BudgetExecution{ID: executionID, ExecutionSHA256: commandFingerprint(cmd.id, cursor)}
+	execution := BudgetExecution{ID: executionID, ExecutionSHA256: cmd.fingerprint(cursor)}
 	if err := r.claim(ctx, actor, runID, execution, cmd.id); err != nil {
 		return Result{}, err
 	}
@@ -170,7 +170,7 @@ func (r *ExecutionRuns) RunCommandForRequest(ctx context.Context, actor identity
 	}
 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(commands.identity.Config.Policy().HTTP.RequestSeconds))
 	defer cancel()
-	fingerprint := commandFingerprint(cmd.id, cursor)
+	fingerprint := cmd.fingerprint(cursor)
 	err = r.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
 		policy, err := r.budgets.readPolicy(ctx, tx, subject)
 		if err != nil {
@@ -205,9 +205,9 @@ func executionDigest(fields ...string) string {
 }
 
 func (s *Service) admitRunCommand(actor identity.Auth, input, cursor string) (command, error) {
-	cmd, ok := s.catalog.aliases[normalize(input)]
-	if !ok {
-		return command{}, ErrUnknownCommand
+	cmd, err := s.resolveCommand(input)
+	if err != nil {
+		return command{}, err
 	}
 	if _, err := s.admit(cmd, actor, cursor); err != nil {
 		return command{}, err
