@@ -105,8 +105,8 @@ func TestSeriesCardinalityRemainsOutsidePublicDispatch(t *testing.T) {
 	}
 	var portal identity.Auth
 	portal.Me.Audience = "portal"
-	body, status, err = handler.HandleSeriesCardinality(request, portal, "unselected")
-	if err == nil || err.Error() != "ACCESS_DENIED" || status != 0 || body != nil {
-		t.Fatalf("private candidate bypassed the Admin boundary: %d %v", status, err)
+	privateBody, privateStatus, privateErr := handler.HandleSeriesCardinality(request, portal, "unselected")
+	if privateErr == nil || privateErr.Error() != "ACCESS_DENIED" || privateStatus != 0 || privateBody != nil {
+		t.Fatalf("private candidate bypassed the Admin boundary: %d %v", privateStatus, privateErr)
 	}
 }
