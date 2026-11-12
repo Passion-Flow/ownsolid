@@ -43,6 +43,49 @@ Per-tenant and per-agent limits still need an authoritative series identity
 and an admission owner from OBS-101. Explorer integration needs the
 authorized Control query contract and Console workflow.
 
+## Product identity and work limits
+
+The current [scoped inventory](../../services/control/internal/modules/monitoring/scrape_inventory.go)
+publishes node_id from enrolled PostgreSQL inventory. The
+[scrape profile](../../services/control/internal/modules/monitoring/alerting/node-scrape.example.yaml)
+retains that trusted node_id and removes arbitrary source labels. The native
+probe below uses synthetic agent_id labels; it proves scoped index behavior,
+not a deployed agent identity contract. An initial product drilldown must
+use the existing node_id and describe its rows as nodes. Do not invent an
+agent_id label or claim that this query enforces a per-agent budget.
+Agent attribution and ingest admission remain explicit OBS-101/OBS-110 work.
+
+The pinned [TSDB status handler](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmselect/prometheus/prometheus.go)
+builds a UTC-day search with the server's maxTSDBStatusSeries budget.
+topN limits only returned ranks. The
+[status request context](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmselect/searchutil/searchutil.go)
+accepts timeout and bounds it by search.maxStatusRequestDuration, while
+retaining request cancellation. A product adapter must set a bounded
+timeout as well as its own operation deadline. Installed store scan/time
+limits must be explicit; a small topN cannot stand in for them. A native
+qualification must prove that exceeding the scan budget fails rather
+than returning a successful incomplete count, including with topN=1.
+
+Reuse the existing Platform Admin diagnostics authority and active Workspace
+fences before and after store I/O. Derive tenant and Workspace selectors
+only from those owners, and commit the request audit before releasing data.
+Expose explicit daily metric and node ranks, never arbitrary matchers,
+focus labels, query-usage metadata or the raw status response. Validate a
+canonical UTC date within the configured raw horizon, reject future days
+and reject the special upstream date=0/all-index query. The public contract
+and Console workflow still need their owning lanes before publication.
+
+Before a product implementation, repeat the native projection with the
+actual node_id label, scope distractors and a scan-limit refusal/retry.
+Then cover malformed or oversized store replies, unknown query options,
+bounded concurrency, deadline cancellation, current permission/Workspace
+revocation, a failed audit commit, missing configuration and store failure.
+No successful response may disclose data after a lost authority or commit.
+The existing Go standard library is
+[BSD-3-Clause](https://go.dev/LICENSE), permitting commercial use,
+redistribution with notices and offline execution. No new dependency,
+model or external dataset is required.
+
 ## Verified query boundary
 
 On loopback-only Linux amd64, VictoriaMetrics 1.155.0 ingested 10,005
