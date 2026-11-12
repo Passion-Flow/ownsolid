@@ -303,3 +303,71 @@ the fresh and restored-at-55 paths after running the down SQL.
 These are overlay measurements. Recompute the signatures, release
 lineage and expected table count from the actual committed tail when
 the migration is ordered. The candidate adds one table.
+
+## Console description editing and Portal reading
+
+Reviewed 2026-11-12 against the published adminEditAliasDescription contract,
+the existing S-205 gateway card and S-304 catalogue drawer. The Portal
+already reads the authorized alias's optional description as plain text,
+preserves line breaks and uses workspace-keyed queries. Retain that reader
+and its predecessor fallback. Do not manufacture a price or mark POR-104
+complete while TEN-107 is absent.
+
+Place Edit description beside the published name on S-205. It is a
+secondary action on a detail page, opening the design system's short-form
+dialog with a labelled multiline description and an audit reason. Use a
+controlled textarea, following [React's form guidance](https://react.dev/reference/react-dom/components/textarea),
+so failed writes and revision conflicts never replace the draft. Reuse
+Radix-backed Dialog for focus containment, Escape and trigger restoration,
+as specified by [WAI-ARIA's modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/).
+Do not nest dialogs. The dialog's one primary action is Save description.
+
+Send the dedicated typed Admin request with the alias/workspace from the
+surrounding server resource, the description revision and a UUID intent.
+Reuse the same intent for an identical unanswered request, including an
+unknown commit outcome. Changing the payload or reviewed revision starts
+a new intent. Do not automatically retry a mutation or optimistically
+claim success; [TanStack's mutation guidance](https://tanstack.com/query/latest/docs/framework/react/guides/mutations)
+describes explicit mutation state and retry control. On VERSION_CONFLICT,
+keep description and reason, offer Review latest, show the current text,
+and require a deliberate save against that reviewed revision. A read
+failure retains the draft and offers retry. A missing alias or permission
+refusal explains the boundary and does not offer another write. Never
+reload the whole page to handle a stale description.
+
+Count normalized Unicode code points for the 500-character guidance;
+HTML maxlength counts UTF-16 units and would reject valid supplementary
+characters. Keep server validation authoritative for UTF-8, controls and
+normalization. Empty text clears. Clearing is reversible: offer a Toast
+Undo that restores the previous text with the returned description
+revision and a separate retained intent, so a later writer is never
+silently overwritten. A historical replay may return a newer current
+value; show that value, distinguish it from this intent's applied revision,
+and do not offer an Undo based on text that this request no longer owns.
+Description edits must leave the routing revision, target and existing
+key authority alone.
+
+| State | Console description behavior |
+| --- | --- |
+| Loading | The gateway card retains its existing skeleton; review of current text marks its own request busy. |
+| First-time empty | The published name says No description yet and offers Edit description. |
+| Filtered empty | S-205 has no description filter; S-304 retains its distinct filtered catalogue empty state and Clear filters. |
+| Partial | A description write or latest-text read fails without discarding the deployment, endpoint or draft. |
+| Error | Explain the server problem and retry an identical transient or unknown-outcome request with the same intent. |
+| Denied | Keep the draft readable, show the real 403/404 problem, and disable saving in that dialog. Portal has no editor. |
+| Not ready | An alias without the paired description fields keeps Edit description visible with an upgrade explanation and aria-disabled. |
+
+Verify save and reload, clear and Undo, competing revisions and review,
+a failed latest read, lost-answer replay including a later writer,
+403/404 refusal, a predecessor response and 500 supplementary characters.
+Check English and Simplified Chinese with keyboard operation and actual
+screenshots, including 390-pixel width. The Portal must reflect description
+changes only in the current authorized workspace and remain read-only.
+Local preview assertions complement the existing real PostgreSQL/HTTPS
+backend tests; actual same-source installed Console/Portal acceptance
+remains required and must be recorded separately.
+
+No dependency, model or dataset is added. Existing React, TanStack Query
+and Radix UI are MIT; Playwright is Apache-2.0. Their licence terms allow
+commercial, redistribution and offline use with the retained notices.
+The existing Go, pgx, PostgreSQL and pgvector terms above still apply.
