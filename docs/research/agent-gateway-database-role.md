@@ -443,3 +443,17 @@ which excludes the script directory from module lookup, for admission and job
 processes. This change is outside product code and grants no product acceptance.
 Neither the resource thresholds nor the shared lock identities may change to
 admit a retry. No new dependency, model or dataset is introduced.
+
+
+The ECDSA retry compiled and generated the expected certificate, but its external
+readiness probe reached the image's temporary Unix-socket bootstrap server before
+the target database was created. Extension setup failed before product tests ran.
+[pg_isready](https://www.postgresql.org/docs/18/app-pg-isready.html) reports server
+availability without proving authentication or database existence; it is not the
+acceptance predicate. Require an actual TCP SELECT current_database() returning
+the exact owned database, with verify-full and required channel binding, before
+extension preparation. Use a mode-0600
+[password file](https://www.postgresql.org/docs/18/libpq-pgpass.html), never a
+password in a command or environment, and remove it in unconditional cleanup.
+Bound only this startup availability polling; do not retry a failed product test
+or weaken its SQL, authentication or certificate assertions.
