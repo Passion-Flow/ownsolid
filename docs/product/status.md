@@ -118,6 +118,13 @@ are listed above once they are usable from the new interface.
 
 ## Tests
 
+The retained EVL-105 authorized CPU pair at `e46f6ba7` reached vLLM
+readiness on an isolated Linux loopback network, then the real gateway missed
+the fixture's three-second startup deadline. Zero paired model responses or
+receipts were produced. The direct CPU measurements and the synthetic gateway
+transport qualification retain their recorded scopes. See the
+[paired startup boundary](../research/evaluation-performance-benchmark.md#authorized-pair-startup-boundary).
+
 `make test` passes on macOS and includes the web workspace: Vitest for every package and
 Playwright for the console and portal against a scripted control plane. The factory tests need a non-root user and a real mounted
 filesystem, so they skip there; `make test-offline HOST=ownsolid-cpu` runs them on Linux.

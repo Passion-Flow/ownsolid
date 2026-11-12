@@ -175,3 +175,33 @@ receipt and its authorized tenant, workspace, gateway and deployment.
 A detached signature requires a verifiable signing contract. Keep the
 retained CPU observations and gateway transport results separate until a
 paired run supplies those links. GPU and cost acceptance remain open.
+
+## Authorized pair startup boundary
+
+The retained attempt at `e46f6ba7` verified the nine approved model files
+and started PostgreSQL 18.6 and the pinned vLLM CPU image in a namespace
+with only loopback and no network route. The model became ready on both
+names for the same weights. The real Rust gateway did not listen within
+the inherited fixture's three-second startup deadline. The test terminated
+that process and failed before either paired case. Its gateway log is
+empty and it retained zero paired response or receipt summaries. The model
+exited cleanly, with no out-of-memory event. Both owned containers were
+removed and no private fixture directory remained.
+
+| Retained input or output | SHA-256 |
+| --- | --- |
+| Failed paired test log | `f6c74df02e68de9e4fb206abfdc7a179664c4e8cab5f649ba1c710f7727345ee` |
+| Tested gateway binary | `326e83a557a1eb694dcbf6692a8c8f839c1ee8ba7bffed7d45b8640ee98904e1` |
+| Test overlay | `122d1683d1f7a5f47d55aabdee11efb3bea35295000f2e43f88d7fc201db5b88` |
+
+The fixed-configuration approach still needs its paired execution result.
+The pinned [sampling parameters](https://github.com/vllm-project/vllm/blob/v0.29.0/vllm/sampling_params.py)
+select greedy sampling before examining the request seed. The cached CPU
+runner's zero-temperature kernel selects argmax without generating random
+noise. The gateway supplies the same disabled-thinking template setting.
+Preserve the original explicit-seed request, the accepted gateway request,
+the exact forwarded backend body and the server arguments. Verify their
+actual tokenizer counts, completion digests and scoped acknowledged receipt
+before claiming generation equivalence. A bounded startup observation must
+reach the gateway's real listener first. The resumed fixture retains the
+shared Linux lock, the lane lock and resource preflight.
