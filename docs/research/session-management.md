@@ -187,3 +187,14 @@ connector-wide disable cannot establish this behavior. Reuse the existing
 test and product dependencies. Gitea is a fixture dependency under its
 [MIT license](https://github.com/go-gitea/gitea/blob/v28.1.0/LICENSE),
 which permits commercial use, offline use and redistribution with notices.
+
+The selective keyring recovery candidate adds
+`TestSSOActualGiteaRecoveryAndDeviceRevocationHTTPS`. It passed with actual
+Gitea 28.1.0 over verified TLS, password-confirmed linking, real S256 exchanges
+and two sourced sign-ins after credential replacement. Device deletion ended
+the target session while its managing peer remained usable. Replaying the
+target's original callback issued no replacement, and its exact target had one
+revocation audit. The [fixture inputs and command](sso-keyring-recovery.md#real-provider-acceptance-boundary)
+use disconnected PostgreSQL and the real provider on loopback. This proves the
+explicit identity HTTP composition; rendered browser device management and an
+installed current Control remain separate acceptance requirements.
