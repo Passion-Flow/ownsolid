@@ -367,6 +367,64 @@
      ]
     }
    ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "使用 API"
+    }
+   ],
+   "data": {
+    "id": "使用-api"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/help/api",
+     "children": [
+      {
+       "type": "text",
+       "value": "API 参考"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " 列出本入口的操作。按名称或路径搜索，选择 "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "保存契约"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "，下载当前安装版本的契约。\n如果下载失败，请检查与本安装的连接，再次选择 "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "保存契约"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "。"
+    }
+   ]
   }
  ]
 }
