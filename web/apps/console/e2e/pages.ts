@@ -2,6 +2,7 @@ import {
   activeConnector,
   activeLicense,
   activeSummary,
+  auditReadEvent,
   adminUser,
   checksStoppingAt,
   deploymentAlias,
@@ -1050,6 +1051,16 @@ export const consolePages: readonly PageState[] = [
       await openAudit(page, control);
       await page.getByRole('button', { name: /^Show details of License imported/ }).click();
       await page.getByRole('dialog', { name: 'License imported' }).waitFor();
+    },
+  },
+  {
+    name: 'audit read event details',
+    path: '/audit',
+    open: async (page, control) => {
+      control.auditEvents = [auditReadEvent];
+      await openAudit(page, control);
+      await page.getByRole('button', { name: /^Show details of Audit trail read/ }).click();
+      await page.getByRole('dialog', { name: 'Audit trail read', exact: true }).waitFor();
     },
   },
   {

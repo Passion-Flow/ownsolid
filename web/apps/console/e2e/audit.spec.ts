@@ -1,7 +1,9 @@
 // The audit trail: an administrator reads who did what and how it ended, narrows it from a link, and
 // follows an event to its person or its request.
+import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import {
+  auditReadEvent,
   failedSignIn,
   licenseEvent,
   mockControlPlane,
@@ -242,3 +244,66 @@ test("keeps an action's identifier in its details, and shows an unnamed action's
     page.getByRole('dialog', { name: 'License imported' }).getByText('license.imported'),
   ).toBeVisible();
 });
+
+for (const [locale, messages] of [
+  ['en', english],
+  ['zh-CN', chinese],
+] as const) {
+  test(`names audit access and recovers the family filter in ${locale}`, async ({ page }, info) => {
+    control.preferences.locale = locale;
+    control.auditEvents = [auditReadEvent, licenseEvent];
+    await page.setViewportSize(
+      locale === 'en' ? { width: 1440, height: 900 } : { width: 390, height: 844 },
+    );
+    await page.goto('/audit');
+    const family = page.getByLabel(messages['audit.filter.category'], { exact: true });
+    await family.selectOption('audit');
+    await expect(page).toHaveURL(/category=audit/);
+    const row = rows(page).filter({ hasText: messages['audit.action.audit.events_read'] });
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(messages['audit.target.installation']);
+    await expect(
+      rows(page).filter({ hasText: messages['audit.action.license.imported'] }),
+    ).toHaveCount(0);
+    await page.reload();
+    await expect(family).toHaveValue('audit');
+    await expect(row).toBeVisible();
+    expect(control.auditQueries.at(-1)?.get('category')).toBe('audit');
+    expect(control.auditQueries.every((query) => !query.has('action'))).toBe(true);
+    await row
+      .getByText(messages['audit.action.audit.events_read'], { exact: true })
+      .scrollIntoViewIfNeeded();
+    await info.attach(`audit-read-list-${locale}`, {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    await row.getByRole('button').click();
+    const drawer = page.getByRole('dialog', {
+      name: messages['audit.action.audit.events_read'],
+      exact: true,
+    });
+    await expect(drawer.getByText('audit.events_read', { exact: true })).toBeVisible();
+    await expect(drawer.getByText(auditReadEvent.request_id, { exact: true })).toBeVisible();
+    await info.attach(`audit-read-details-${locale}`, {
+      body: await page.screenshot({ animations: 'disabled' }),
+      contentType: 'image/png',
+    });
+    await page.keyboard.press('Escape');
+    control.auditEvents = [licenseEvent];
+    await page.reload();
+    await expect(
+      page.getByRole('heading', { name: messages['audit.emptyFilter.title'], exact: true }),
+    ).toBeVisible();
+    control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+    await page.reload();
+    await expect(
+      page.getByRole('button', { name: messages['action.retry'], exact: true }),
+    ).toBeVisible();
+    control.auditProblem = null;
+    control.auditEvents = [auditReadEvent];
+    await page.getByRole('button', { name: messages['action.retry'], exact: true }).click();
+    await expect(row).toBeVisible();
+    expect(control.auditQueries.at(-1)?.get('category')).toBe('audit');
+    expect(control.auditQueries.every((query) => !query.has('action'))).toBe(true);
+  });
+}
