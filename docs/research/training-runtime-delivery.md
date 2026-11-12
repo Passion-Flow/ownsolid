@@ -351,3 +351,82 @@ the signed offline media. The embedded-notice checker remains in
 force. A preview image built from the accepted inputs still needs
 installed runtime injection and offline Qwen readback. The full
 training image and lock mapping remain separate.
+
+### Signed preview input fixture
+
+Reuse the existing release factory's explicit test profile and a
+temporary Ed25519 signer. Keep the full and projected locks, runtime
+manifest, actual wheels, tokenizer assets and candidate notices in the
+same signed manifest. Use pip's [binary-only hash checking](https://pip.pypa.io/en/stable/topics/secure-installs/)
+again after independently pinned archive preparation. Bind the base image
+reference to the locally observed Linux amd64 identity. Preserve the
+Debian [package copyright files](https://www.debian.org/doc/debian-policy/ch-docs.html#copyright-information)
+and the CPython license from the cached base as candidate evidence. The
+base notice bytes from a local image and the wheel notice archives have
+separate redistribution review. No new dependency, model, dataset,
+image pin or release trust is introduced by the fixture.
+
+Test different failure boundaries. A different public trust file must
+reject the original signature. A valid fixture signature cannot substitute
+for a required base notice or a matching wheel notice. Refuse such a
+fixture before staging an interpreter. Verify the existing release
+manifest and asset hashes before creating a private hash-installed
+runtime. Test the optional preview adapter with the resulting installed
+interpreter, the protected runtime code and its private scratch root.
+Test missing runtime configuration separately. Keep this test outside the
+production install path. The Control composition owner still needs typed,
+operator-provisioned injection under the published route.
+
+The recovered signing harness remains a prototype. The original base-image
+read recorded 106 Debian and CPython notice paths from the digest-pinned
+Python image. Its temporary notice archive and final signing transcript
+are unavailable. Re-read those bytes before fixture manufacture and
+complete the signature, notice, installation and bridge sequence in the
+scheduled Linux window. The factory refused the original 97-character
+MarkupSafe wheel filename under its 96-character path-component rule.
+The prototype now carries short asset paths and an independently signed
+filename map for private pip staging. That continuation still requires
+acceptance. A test scope marker for first-party inputs grants no
+redistribution approval.
+
+The retained input readback on Linux amd64 verified all 30 selected wheel
+hashes, the exact pip 26.2.1 installer, 69 embedded notices and both
+Tokenizers notice archives again. The full lock SHA-256 remained
+`250fee15d9e7eb9ec71793c743b02f62870094bb494a57a0c463c5ce29399946`
+and the projected lock remained
+`7873b0c15e07995060826373087b050437d10cee5af935e6c717b9e10622c19d`.
+The source checkout was `fa82b4dd`. This read-only check ran with no
+external route and an empty network system-call trace. A separate source
+check confirmed cleanup and a clean checkout after the reader's memory
+limit caused the final Git status command to fail. The transcript SHA-256
+is `ab33f97012df8161bb57f81841544bc87939b9df4d92065dbe12f4e095e7fa70`.
+The separate cleanup check has SHA-256
+`ed0d6467676bbb382845086dbcc432a4d763267b2c0db43d68247d10aee1c89f`.
+The recovered source archive has SHA-256
+`9db9acb248a54d20295fa4d62e1edd9c638e3b27a8b3819ef6d833d3c6968985`.
+
+### Installed preview composition handoff
+
+The shared handler builds `Datasets.Service` in
+`services/control/internal/modules/identity/http/handler.go`. Production
+composition has no caller of `NewTokenizerPreviewProcessor`. The existing
+constructor takes the same `Datasets.Service.Processor`, the handler's
+`Models.Service` and `TokenizerPreviewConfiguration`, then supplies
+`Datasets.TokenizerPreview`. The processor identity must match the service
+that handles the request.
+
+The configuration owner must provide a protected absolute
+`PythonExecutable`, `TrainingRoot`, `ScratchRoot` and validated
+`Resources`. The executable must be a regular file with protected parent
+permissions. A venv's default interpreter symlink fails this existing
+admission rule. `TrainingRoot` contains the signed runtime sources,
+manifest and full applicable lock. `ScratchRoot` belongs to the service
+identity, has mode 0700 and is separate from durable dataset and model
+storage. Keep these inputs under installation authority. The existing
+missing-runtime response is `DATASET_STORAGE_UNAVAILABLE`.
+
+Complete the approved notice assets and image manufacture before enabling
+the typed startup configuration. Acceptance must use the authenticated
+Admin and Portal routes, the installed interpreter and the exact source
+and lock binding. It must cover runtime absence, invalid protected files,
+changed tokenizer bytes, authority loss and retry, with recorded egress.
