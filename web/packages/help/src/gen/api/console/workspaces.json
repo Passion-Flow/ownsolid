@@ -7,12 +7,25 @@
    "path": "/api/v1/admin/workspaces",
    "parameters": [
     {
+     "name": "limit",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     },
+     "description": "Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100."
     },
     {
+     "name": "cursor",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     },
+     "description": "Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page."
     },
     {
      "name": "q",
@@ -60,12 +73,7 @@
    "id": "createWorkspace",
    "method": "post",
    "path": "/api/v1/admin/workspaces",
-   "parameters": [
-    {
-     "required": false,
-     "schema": {}
-    }
-   ],
+   "parameters": [],
    "body": {
     "$ref": "CreateWorkspace"
    },
@@ -113,8 +121,14 @@
    "path": "/api/v1/admin/workspaces/{workspace_id}",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
     }
    ],
    "body": null,
@@ -153,12 +167,14 @@
    "path": "/api/v1/admin/workspaces/{workspace_id}",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
     }
    ],
    "body": {
@@ -210,16 +226,35 @@
    "path": "/api/v1/admin/workspaces/{workspace_id}/members",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
     },
     {
+     "name": "limit",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     },
+     "description": "Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100."
     },
     {
+     "name": "cursor",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     },
+     "description": "Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page."
     }
    ],
    "body": null,
@@ -258,12 +293,14 @@
    "path": "/api/v1/admin/workspaces/{workspace_id}/members",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
     }
    ],
    "body": {
@@ -314,16 +351,24 @@
    "path": "/api/v1/admin/workspaces/{workspace_id}/members/{user_id}",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
     },
     {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
+     "name": "user_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
     }
    ],
    "body": {
@@ -374,16 +419,24 @@
    "path": "/api/v1/admin/workspaces/{workspace_id}/members/{user_id}",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
     },
     {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
+     "name": "user_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
     }
    ],
    "body": {

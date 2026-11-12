@@ -202,6 +202,29 @@ function reach(value, all, found) {
   for (const child of Object.values(value)) reach(child, all, found);
 }
 
+/** Resolve reusable parameters before deciding which ones the reference displays. */
+function resolveParameter(value, contract, where) {
+  const seen = new Set();
+  const description = value.description;
+  while (value.$ref !== undefined) {
+    const reference = value.$ref;
+    if (typeof reference !== 'string' || !/^#\/components\/parameters\/[^/]+$/.test(reference)) {
+      fail(`${where}: unsupported parameter reference ${reference}`);
+    }
+    if (seen.has(reference)) fail(`${where}: cyclic parameter reference ${reference}`);
+    seen.add(reference);
+    const name = decodeURIComponent(reference.slice('#/components/parameters/'.length))
+      .replaceAll('~1', '/')
+      .replaceAll('~0', '~');
+    value = contract.components?.parameters?.[name];
+    if (!value) fail(`${where}: missing parameter reference ${reference}`);
+  }
+  if (!value.name || !['path', 'query', 'header', 'cookie'].includes(value.in)) {
+    fail(`${where}: parameter requires a name and location`);
+  }
+  return description === undefined ? value : { ...value, description };
+}
+
 function api(files, index) {
   const domains = readdirSync(contracts, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -223,6 +246,9 @@ function api(files, index) {
           }
           if (!operation?.['x-audiences']?.includes(audience)) continue;
           const parameters = [...(item.parameters ?? []), ...(operation.parameters ?? [])]
+            .map((parameter) =>
+              resolveParameter(parameter, contract, `${domain}: ${method} ${path}`),
+            )
             // Origin and CSRF headers are the browser's business, not the caller's.
             .filter((parameter) => parameter.in !== 'header' && parameter.in !== 'cookie')
             .map((parameter) => ({

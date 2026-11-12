@@ -610,3 +610,39 @@ absence of import metadata. Verify the new error against its two
 operation declarations and the generated projections. The installed
 operator flow also depends on startup policy wiring and the Console
 expiry state.
+
+## S-108 Help parameter references and cutover errors
+
+The [OpenAPI Parameter Object](https://spec.openapis.org/oas/v3.1.1.html#parameter-object)
+allows parameter entries to reference reusable definitions. Resolve local
+component parameter references before applying Help's header and cookie
+filter. Follow component aliases and JSON Pointer escaping, and reject
+missing, cyclic or external parameter references with a source diagnostic.
+Silently treating a reference as a parameter loses its name and location.
+Removing the shared CSRF definitions would duplicate the identity contract.
+
+The registered adminCutoverAlias write shares planCutover with
+adminPreviewAliasCutover. Publish its actual conflict reasons together
+with authentication, request validation, idempotency and storage refusals.
+Keep HTTP statuses aligned with the shared Problem registry, and retain
+the existing operation ID, successful response and request shape.
+The [Problem Details format](https://www.rfc-editor.org/rfc/rfc9457.html)
+and the [SDK licences](sdk.md#licenses) apply. No dependency, model or
+data set is added.
+
+Verify reference chains, escaped names, path and operation parameter
+references, hidden header and cookie references, and clear failure for
+missing or cyclic references. Regenerate the actual identity Help for
+both entrances and require every visible parameter to have its name and
+location. Confirm the Admin cutover Help preserves the declared statuses,
+includes the five cutover conflicts, and stays absent from Portal.
+Exercise the existing real TLS and PostgreSQL cutover flow offline.
+
+The Linux amd64 disconnected check and build passed. The three existing
+PostgreSQL cutover tests passed through the actual TLS dispatcher or its
+underlying persisted flow. They covered CSRF, nullable fields, same-key
+replay, foreign scope, stale revisions and audit rollback. The Help
+generator tests reproduced the missing-name rows before regeneration,
+then passed for both entrances, including reusable path and pagination
+parameters. Three newly visible parameter descriptions have Simplified
+Chinese translations in the existing Help description catalog.

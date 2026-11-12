@@ -1346,7 +1346,47 @@
      }
     }
    ],
-   "errors": {}
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED",
+     "CSRF_INVALID",
+     "ORIGIN_REJECTED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND",
+     "MODEL_ALIAS_NOT_FOUND"
+    ],
+    "409": [
+     "VERSION_CONFLICT",
+     "ALIAS_PAUSE_REQUIRED",
+     "ALIAS_ALREADY_PAUSED",
+     "ALIAS_NOT_PAUSED",
+     "ALIAS_REQUESTS_UNDRAINED",
+     "ALIAS_ROLLBACK_TARGET_INVALID",
+     "MODEL_ALIAS_UNAVAILABLE",
+     "GATEWAY_INSTANCE_REVOKED",
+     "RESOURCE_LIMIT_REACHED",
+     "IDEMPOTENCY_CONFLICT",
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ],
+    "413": [
+     "PAYLOAD_TOO_LARGE"
+    ],
+    "415": [
+     "UNSUPPORTED_MEDIA_TYPE"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY"
+    ]
+   }
   },
   {
    "id": "adminPreviewAliasCutover",

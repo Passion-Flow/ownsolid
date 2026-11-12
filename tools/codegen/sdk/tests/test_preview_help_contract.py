@@ -35,6 +35,7 @@ class PreviewHelpContractTests(unittest.TestCase):
         ]
         for entrance, domain, name, expected in (
             ("console", "distribution", "adminPreviewAliasCutover", CUTOVER),
+            ("console", "distribution", "adminCutoverAlias", CUTOVER),
             ("console", "datasets", "adminPreviewDatasetTokenizer", TOKENIZER),
             ("portal", "datasets", "portalPreviewDatasetTokenizer", TOKENIZER),
         ):
@@ -62,6 +63,7 @@ class PreviewHelpContractTests(unittest.TestCase):
     def test_portal_help_excludes_admin_previews(self):
         for domain, name in (
             ("distribution", "adminPreviewAliasCutover"),
+            ("distribution", "adminCutoverAlias"),
             ("datasets", "adminPreviewDatasetTokenizer"),
         ):
             help_api = document(f"web/packages/help/src/gen/api/portal/{domain}.json")

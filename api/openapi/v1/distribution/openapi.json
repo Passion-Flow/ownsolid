@@ -2136,6 +2136,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "The alias revision, pause state, drain state or proposed target prevents the cutover. ALIAS_PAUSE_REQUIRED means pause the alias before changing its target. ALIAS_ALREADY_PAUSED means the alias is already paused. ALIAS_NOT_PAUSED means the alias must be paused before resuming. ALIAS_REQUESTS_UNDRAINED means outstanding requests still hold capacity. ALIAS_ROLLBACK_TARGET_INVALID means the ready target does not match the recorded source.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -2147,6 +2157,47 @@
               }
             }
           }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED",
+            "CSRF_INVALID",
+            "ORIGIN_REJECTED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND",
+            "MODEL_ALIAS_NOT_FOUND"
+          ],
+          "409": [
+            "VERSION_CONFLICT",
+            "ALIAS_PAUSE_REQUIRED",
+            "ALIAS_ALREADY_PAUSED",
+            "ALIAS_NOT_PAUSED",
+            "ALIAS_REQUESTS_UNDRAINED",
+            "ALIAS_ROLLBACK_TARGET_INVALID",
+            "MODEL_ALIAS_UNAVAILABLE",
+            "GATEWAY_INSTANCE_REVOKED",
+            "RESOURCE_LIMIT_REACHED",
+            "IDEMPOTENCY_CONFLICT",
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "413": [
+            "PAYLOAD_TOO_LARGE"
+          ],
+          "415": [
+            "UNSUPPORTED_MEDIA_TYPE"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY"
+          ]
         }
       },
       "parameters": [

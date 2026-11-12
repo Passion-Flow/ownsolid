@@ -96,5 +96,8 @@
  "How far the agent got with the gateway. Null for a manual gateway.": "agent 对该网关的处理进度。手动网关为 null。",
  "Why the agent's last start or stop failed; GATEWAY_TASK_EXPIRED when its task ended without a result.": "agent 上次启动或停止失败的原因；任务未返回结果就结束时为 GATEWAY_TASK_EXPIRED。",
  "When the serving certificate issued at activation expires.": "激活时签发的服务证书的到期时间。",
- "Where callers reach a gateway an administrator runs; required then. Omitted when the node's agent runs the gateway: the node declares its origin.": "由管理员运行的网关供调用方访问的地址，此时必填。由节点 agent 运行网关时省略：节点会声明自己的源。"
+ "Where callers reach a gateway an administrator runs; required then. Omitted when the node's agent runs the gateway: the node declares its origin.": "由管理员运行的网关供调用方访问的地址，此时必填。由节点 agent 运行网关时省略：节点会声明自己的源。",
+ "Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends.": "每页 1 至 100 条。省略时使用当前 runtime.ui.page_size 策略（随附默认值为 20），该策略同时提供给两个前端入口。",
+ "Omitted limit uses the public runtime.ui.page_size policy (shipped default20). Explicit limits remain1-100.": "省略 limit 时使用公开的 runtime.ui.page_size 策略（随附默认值为 20）。显式指定时仍为 1 至 100。",
+ "Opaque strict seek cursor bound to list kind,current tenant,Workspace where applicable,audience and actor. Invalid or old scope cursors return INVALID_CURSOR;restart with First page.": "不透明的严格定位游标，绑定列表类型、当前租户、工作空间（适用时）、入口和操作人。游标无效或作用域已变更时返回 INVALID_CURSOR，请从首页重新开始。"
 }

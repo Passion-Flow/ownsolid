@@ -29,12 +29,7 @@
    "id": "login",
    "method": "post",
    "path": "/api/v1/auth/login",
-   "parameters": [
-    {
-     "required": false,
-     "schema": {}
-    }
-   ],
+   "parameters": [],
    "body": {
     "$ref": "LoginRequest"
    },
@@ -70,12 +65,7 @@
    "id": "logout",
    "method": "post",
    "path": "/api/v1/auth/logout",
-   "parameters": [
-    {
-     "required": false,
-     "schema": {}
-    }
-   ],
+   "parameters": [],
    "body": null,
    "responses": [
     {
@@ -103,12 +93,7 @@
    "id": "requestPasswordReset",
    "method": "post",
    "path": "/api/v1/auth/password-reset-requests",
-   "parameters": [
-    {
-     "required": false,
-     "schema": {}
-    }
-   ],
+   "parameters": [],
    "body": {
     "$ref": "RecoveryRequest"
    },
@@ -140,12 +125,7 @@
    "id": "resetPassword",
    "method": "post",
    "path": "/api/v1/auth/password-resets",
-   "parameters": [
-    {
-     "required": false,
-     "schema": {}
-    }
-   ],
+   "parameters": [],
    "body": {
     "$ref": "ResetRequest"
    },
@@ -210,12 +190,7 @@
    "id": "updateMe",
    "method": "patch",
    "path": "/api/v1/me",
-   "parameters": [
-    {
-     "required": false,
-     "schema": {}
-    }
-   ],
+   "parameters": [],
    "body": {
     "$ref": "UpdateMeRequest"
    },
@@ -390,12 +365,7 @@
    "id": "changePassword",
    "method": "post",
    "path": "/api/v1/me/password-changes",
-   "parameters": [
-    {
-     "required": false,
-     "schema": {}
-    }
-   ],
+   "parameters": [],
    "body": {
     "$ref": "ChangePasswordRequest"
    },
@@ -441,12 +411,24 @@
    "path": "/api/v1/admin/users",
    "parameters": [
     {
+     "name": "limit",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     },
+     "description": "Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends."
     },
     {
+     "name": "cursor",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     }
     },
     {
      "name": "email_prefix",
@@ -514,8 +496,13 @@
    "path": "/api/v1/admin/users/{user_id}",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
+     "name": "user_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
     }
    ],
    "body": null,
@@ -549,12 +536,13 @@
    "path": "/api/v1/admin/users/{user_id}/status",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
+     "name": "user_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
     }
    ],
    "body": {
@@ -602,12 +590,24 @@
    "path": "/api/v1/admin/invitations",
    "parameters": [
     {
+     "name": "limit",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     },
+     "description": "Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends."
     },
     {
+     "name": "cursor",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     }
     },
     {
      "name": "status",
@@ -654,16 +654,7 @@
    "id": "createInvitation",
    "method": "post",
    "path": "/api/v1/admin/invitations",
-   "parameters": [
-    {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
-    }
-   ],
+   "parameters": [],
    "body": {
     "$ref": "CreateInvitationRequest"
    },
@@ -707,16 +698,13 @@
    "path": "/api/v1/admin/invitations/{invitation_id}/resends",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
+     "name": "invitation_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
     }
    ],
    "body": {
@@ -767,12 +755,13 @@
    "path": "/api/v1/admin/invitations/{invitation_id}/revocations",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
+     "name": "invitation_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
     }
    ],
    "body": {
@@ -820,12 +809,24 @@
    "path": "/api/v1/admin/audit-events",
    "parameters": [
     {
+     "name": "limit",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     },
+     "description": "Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends."
     },
     {
+     "name": "cursor",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     }
     },
     {
      "name": "action",
@@ -986,12 +987,24 @@
    "path": "/api/v1/admin/mail-deliveries",
    "parameters": [
     {
+     "name": "limit",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     },
+     "description": "Page size from 1 through the fixed 100-row wire bound. If omitted,the current runtime.ui.page_size applies(default policy20),also projected to both frontends."
     },
     {
+     "name": "cursor",
+     "in": "query",
      "required": false,
-     "schema": {}
+     "schema": {
+      "type": "string",
+      "maxLength": 512
+     }
     },
     {
      "name": "state",
@@ -1114,16 +1127,13 @@
    "path": "/api/v1/admin/mail-deliveries/{mail_delivery_id}/resends",
    "parameters": [
     {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
-    },
-    {
-     "required": false,
-     "schema": {}
+     "name": "mail_delivery_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
     }
    ],
    "body": {
