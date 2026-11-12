@@ -315,12 +315,12 @@ requirements above remain unchanged; no dependency, model or dataset is added.
 ### Selected external client source
 
 The selected external source is
-/root/lane-obs-tools/installed-registry-driver-v3. Its source-inputs.json
-SHA-256 is 765a71956c52b3626e55fbdbc18174ef363683c043a4e327744f19bdf708dee4.
+/root/lane-obs-tools/installed-registry-driver-v5. Its source-inputs.json
+SHA-256 is 800a63ca0f5b56418cac5d6bbacad5826305b130a7ab5a7b10071b89d0df7f84.
 The retained 81,920-byte source archive has SHA-256
-b44883f503f5c7252612dbfe78883879a5321dfb3c32529038908fe692b8f1f9.
+1a904372e8ca094b6c4f6db84883b17dee3a2bc08cf301221baf1c55b4843358.
 The optional input descriptor is
-/root/lane-obs-tools/installed-registry-optional-input.json; it explicitly marks
+/root/lane-obs-tools/installed-registry-optional-input-v5.json; it explicitly marks
 installed_input_ready=false and binds this source, the required real materials
 and the pre-history schedule. Earlier source drafts remain unrun and unselected.
 
@@ -336,7 +336,8 @@ uses the existing explicit reconcile-removal path before releasing its session.
 No direct CAS or database cleanup is introduced.
 
 Sixteen focused tests are prepared with controlled TLS/HTTP peers, temporary
-credentials and metadata. They cover the client flow, source/digest/scope and
+credentials and metadata. Their normal flow uses distinct source and tagless receipt values. They cover
+the client flow, source/digest/scope and
 input boundaries, replay and lost acknowledgement, cancellation, TLS/redirect
 refusal, cleanup uncertainty and session isolation. gofmt passed on both host
 copies and the Linux source manifest verified. The workstation nonblocking
@@ -350,3 +351,30 @@ fresh session, source/binary binding, independently checked source receipt and
 verified owned cleanup are still required. This is an optional preparation
 input only. It must not delay the already ready main acceptance flow or overlap
 history's quiet-count stage. NET-102 remains unticked.
+
+### Source archive and tagless transport are different receipts
+
+The public release catalog reports the signed asset's original archive size.
+The public pin reports ImportReceipt.TransportSHA256 and TransportBytes from
+[WriteTagless](../../tools/release/offline/internal/factory/import.go), invoked by
+[prepareImage](../../services/control/internal/modules/imageregistry/cas.go).
+They cannot share one expected archive field. The original source SHA/size belong
+to the approved asset; the tagless SHA/size belong to the derived runnable-platform
+archive. The manifest/config digests remain the selected runtime descriptors.
+
+WriteTagless checks the unchanged source and its signed SHA/size, preserves the
+selected runtime blobs in source order, emits fixed USTAR headers without a wall
+clock, and constructs a single-platform index. Its receipt is deterministic for
+the same unchanged approved source and selected inventory. Derive the expected
+transport receipt with that existing production library over the actual approved
+asset, not a hand-written repacker, an assumed equality, or a synthetic archive
+substituted for installed acceptance. The private source receipt still requires
+independent owner verification.
+
+The unrun client draft had conflated those two sizes. Correct its private input
+to retain original source SHA/size and derived tagless transport SHA/size
+separately, match the former catalog size and the latter pin metadata, and use
+distinct values in controlled client tests. None of the earlier drafts was
+compiled or invoked against an installation; no installed failure or passing
+qualification is inferred. Missing actual transport material keeps this optional
+input unready and leaves the main acceptance schedule unchanged.
