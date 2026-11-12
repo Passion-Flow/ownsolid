@@ -21,6 +21,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/cells/{cell_id}/admin/monitoring/fleet-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["adminFleetHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -239,6 +258,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SnapshotResponse"];
+                };
+            };
+            /** @description Safe refusal with zero successful projection. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminFleetHistory: {
+        parameters: {
+            query: {
+                workspace_id: string;
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path: {
+                site_id: string;
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized sparse fleet history committed with its diagnostic audit. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FleetHistoryResponse"];
+                };
+            };
+            /** @description A stable refusal without a successful history response. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A stable refusal without a successful history response. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description A stable refusal without a successful history response. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Safe refusal with zero successful projection. */
