@@ -209,7 +209,7 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 				delete(g.sessions, node)
 			}
 			g.mu.Unlock()
-			slog.Info("agent_session_closed", "node_id", node)
+			slog.Info("agent_session_closed", "node_id", node, "connection_id", httpserver.ConnectionID(ctx))
 		}
 	}()
 
@@ -282,7 +282,7 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 			g.sessions[node] = current
 			g.mu.Unlock()
 			registered = true
-			slog.Info("agent_session_opened", "node_id", node)
+			slog.Info("agent_session_opened", "node_id", node, "connection_id", httpserver.ConnectionID(ctx))
 		}
 		if e := stream.SendMsg(&reply); e != nil {
 			return nil
