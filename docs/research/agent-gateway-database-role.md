@@ -583,3 +583,15 @@ is GPL-2.0-only; it is an existing external test-host tool, not linked into or
 redistributed with the product by this diagnostic. Retain all prior dependency
 licence obligations. Use the same pinned PostgreSQL image, generated ECDSA trust,
 verify-full, required SCRAM binding, bounded admission and unconditional cleanup.
+
+
+The first artifact-owner diagnostic did not reach the claim: the dataset processor
+correctly rejected the retained Git-archive carrier's group-writable process.py
+(0664) and immediate directory (0775). The CPython executable was canonical,
+root-owned and 0755. Keep the trustedProgram guard and failed log; this is not a
+runtime reproduction of the missing-store hypothesis. The retry must copy only
+the verified source into its own disposable tree, preserving every byte and
+executable flag while restricting regular files/directories to ordinary 0644/0755
+checkout modes. Do not chmod the immutable retained baseline, weaken source trust
+or place processing code inside writable dataset storage. The processor retains
+its existing isolated -I/-B execution and all resource/file checks.
