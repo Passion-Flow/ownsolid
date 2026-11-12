@@ -63,6 +63,8 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   stop and requeue semantics. The owner must supply a durable, scoped
   preemption lineage to distinguish requeues from ordinary attempt retries,
   plus a checkpoint and exact positive stop result before capacity is freed.
+  The [preemption research](scheduling-preemption.md) records current upstream
+  retry/grace semantics, the rejected shadow runtime and exact acceptance cases.
 - SCH-106 requires trustworthy device and network topology observations. The
   current agent facts contract lacks the full PCIe, NUMA, NVLink and fabric
   inventory. [NVIDIA DCGM topology](https://docs.nvidia.com/datacenter/dcgm/latest/learn/core-services/topology-and-links.html)
