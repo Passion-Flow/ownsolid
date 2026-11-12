@@ -14,16 +14,20 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/sso"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+	"github.com/google/uuid"
 )
 
-type Handler struct{ Service *sso.Service }
+type Handler struct {
+	Service *sso.Service
+	// ConnectorTests selects the unpublished diagnostic adapter after explicit storage admission.
+	ConnectorTests *sso.ConnectorSignInTests
+}
 
 const (
 	maximumCallbackCodeBytes        = 4096
@@ -146,6 +150,9 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request, audience, sessi
 	query, e := url.ParseQuery(r.URL.RawQuery)
 	if e != nil {
 		return nil, 0, bad
+	}
+	if h.ConnectorTests != nil && len(parts) >= 7 && len(parts) <= 8 && parts[2] == "admin" && parts[3] == "sso" && parts[4] == "connectors" && parts[6] == "sign-in-tests" {
+		return h.connectorSignInTest(w, r, parts, query, audience, session, requestID)
 	}
 	ctx := r.Context()
 	accounts := h.Service.Identity

@@ -4,12 +4,15 @@ This owner manages configured connectors, account bindings, protected flow state
 
 [provider.go](provider.go) performs the bounded provider interaction; [provider_generated.go](provider_generated.go) comes from the provider contract generator. [flows.go](flows.go), [start_repository.go](start_repository.go), [claim_repository.go](claim_repository.go) and [completion_repository.go](completion_repository.go) separate start, exclusive claim and completion. A claimed flow is not a completed login.
 
-[crypto.go](crypto.go), [private_file.go](private_file.go) and [keyring_operator.go](keyring_operator.go) manage protected material; [maintenance.go](maintenance.go) owns bounded cleanup. Source/binding changes must revalidate existing sessions through identity. Historical platform migration000011 persists these owners; current cumulative
-account/000017 adds them after the immutable M10 prefix, retaining local sessions.
+[crypto.go](crypto.go), [private_file.go](private_file.go) and [keyring_operator.go](keyring_operator.go) manage protected material; [maintenance.go](maintenance.go) owns bounded cleanup. Source/binding changes must revalidate existing sessions through identity.
+PostgreSQL [migration 17](../../../migrations/postgresql/000017_sso.up.sql)
+adds these owners after the immutable sixteen-entry prefix and retains local sessions.
 
 Failures, replay, stale connector revisions, result loss and keyring changes retain explicit outcomes; never resend uncertain authentication mutations or accept another callback origin to “repair” a failure.
 
-Synchronize [contracts/sso](../../../../../contracts/sso), [M11](../../../../../docs/milestones/m11-sso), identity/session authority, config/examples/control SSO inputs, [SSO frontend](../../../../../web/README.md), HTTP/provider generators and deployment callback mapping.
+Synchronize the [versioned SSO contract](../../../../../api/openapi/v1/sso/openapi.json),
+identity/session authority, typed service configuration, the [SSO frontend](../../../../../web/README.md)
+and deployment callback mapping.
 
 Focused unit check: go -C services/control test ./internal/modules/sso. Real provider/browser/SQL/maintenance and start/completion commit-loss cases require their separate fixtures; a provider double is not live provider qualification.
 
@@ -128,3 +131,28 @@ revision, idempotency and audit transaction. Unreadable credentials cannot start
 sign-in or authorize sourced sessions. Callback refusal consumes the pending
 flow without contacting the provider. See the [research and production handoff](../../../../../docs/research/sso-keyring-recovery.md)
 for acceptance and the remaining startup, API and UI owners.
+
+## Interactive connector sign-in candidate
+
+`NewConnectorSignInTests` checks the explicitly selected PostgreSQL diagnostic
+projection. Its `Start`, `Complete` and `Get` operations bind the result to the
+same current Admin session and connector revision. They work on disabled
+connectors and have no binding or session-issuance path. Start retries recover
+the same pending encrypted intent; a consumed exchange requires a new start.
+
+The HTTP adapter is selected by assigning the owner to
+`identityHandler.SSO.ConnectorTests`. The default handler leaves these candidate
+routes closed. The proposed Admin namespace is
+`/api/v1/admin/sso/connectors/{id}/sign-in-tests`: POST starts a test,
+`/{test_id}` reads its result and `/callback` consumes the exact provider reply.
+The start uses the existing secure Admin SSO-flow cookie; one browser has one
+active SSO intent. A successful callback redirects to `/sso?test_id={test_id}`
+without issuing or rotating its login cookie. Errors use a fixed first-party
+redirect and existing stable codes.
+
+The composition owner must join `ConnectorSignInTests.Run` to maintenance and
+shutdown. Candidate DDL is under `testdata/connector_sign_in_tests.*.sql` for
+isolated qualification. Global numbering, catalog fingerprints, grants,
+backup/restore and the published HTTP/UI composition require their owners'
+admission. See [the research and acceptance](../../../../../docs/research/sso-interactive-connector-tests.md)
+and [ADR 0070](../../../../../docs/decisions/0070-isolate-connector-sign-in-tests-from-session-authority.md).
