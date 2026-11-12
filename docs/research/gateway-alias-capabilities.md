@@ -545,3 +545,37 @@ files before the parent closed its shared lock descriptor. Post-run queries
 confirmed that the owned container and network were absent; no host
 port was assigned. No second queue or test retry was started. Earlier
 native Linux evidence retains its original source and platform scope.
+
+#### Replacement transport and qualification
+
+Keep PostgreSQL on Docker's `none` network. An owned native loopback
+listener forwards bytes through non-TTY `docker exec -i` to a small Go
+standard-library helper, which dials PostgreSQL's container loopback.
+The [Docker exec contract](https://docs.docker.com/reference/cli/docker/container/exec/)
+keeps stdin attached without allocating a terminal. No host port is
+published by Docker and no container external route is introduced.
+Select and pin the local Docker Desktop context before creating any
+resource; reject a remote daemon and remove inherited test-database
+selectors.
+
+A [PostgreSQL SSLRequest](https://www.postgresql.org/docs/18/protocol-message-formats.html#PROTOCOL-MESSAGE-FORMATS-SSLREQUEST)
+checks the byte transport first. Native pgx then authenticates through
+the same loopback listener and executes a read-only query, under the
+original sandbox. Only after that proof may the unchanged four roots
+run with the exact DEV draft overlay. Reuse the recorded native test
+binary only after verifying its hash and the frozen source/overlay
+inputs. The fixture has bounded connection children and must stop them,
+remove its owned PostgreSQL container and credential files, and verify
+listener closure before releasing the shared descriptor.
+
+A normal externally routed bridge would weaken the offline proof, and
+a simulated database would not qualify the PostgreSQL protocol. Reject
+both. Reuse the pinned pgx driver instead of implementing authentication
+or SQL framing. The existing [Go standard library](https://go.dev/LICENSE)
+uses BSD-3-Clause; [pgx 5.11.0](https://github.com/jackc/pgx/blob/v5.11.0/LICENSE)
+uses MIT; [PostgreSQL](https://www.postgresql.org/about/licence/) and
+[pgvector 0.8.7](https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE)
+use the PostgreSQL License. These allow commercial redistribution with
+the required notices and offline use. No product dependency, model or
+dataset is added. This replacement is a prepared fixture prototype;
+source review and successful compilation do not establish its execution.
