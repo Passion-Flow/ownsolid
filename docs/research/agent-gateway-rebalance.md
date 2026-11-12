@@ -707,3 +707,38 @@ transport's remaining healthy time and prove that failed handshakes do not consu
 that whole window. Retired channels must remain bounded to one and join on explicit
 client shutdown. These small runs do not establish the unchanged installed
 500-agent drill; its earlier 497/500 failure remains open.
+
+
+The slow-candidate experiment reproduced that missing bound on the unchanged
+candidate: a deliberately held new TLS handshake consumed the full request budget,
+the original socket naturally aged meanwhile, and the next old-stream heartbeat
+failed. The retained negative log SHA-256 is
+`9d38bd1fec9e71554c804c2b42dada86be1981617f1c042f4bdf4ec9c2652000`.
+The corrected probe uses the minimum of the normal request budget, the old stream's
+remaining idle window, and half its remaining positive drain window. This leaves
+time for the existing healthy stream when a candidate handshake does not complete;
+an already expired transport still uses the existing bounded request budget.
+It adds no retry, capacity or server-age exception.
+
+The same strict slow-handshake test then passed along with all seven prototype
+roots (13 with metadata subcases) under race and vet, in 23.656 seconds on
+Darwin arm64, without skips. The healthy flow again retained seven authenticated
+transports, five natural retirements, no heartbeat/claim errors, one acknowledgement
+and cursor seven. The existing complete agent client suite also passed under race
+in 6.212 seconds. Both were ordinary Go package runs in a materialized external
+snapshot, with no overlay-only directory or disabled vet. Their log SHA-256 values
+are `39dd7ad1b399e0cf08e2993757c7b8574f690518ae0051bad79d5ff7a6ff22e0` and
+`f791796b229a282efd17a7f13bf57b5017f0c7d8451037a9665c38a08106bc50`.
+
+For implementation, keep the optional header names and bounded relative-duration
+format in the existing versioned Agent contract. Put the actual outgoing gRPC
+transport lifecycle in a cohesive public `services/agent/sessiontransport` package:
+it belongs to this one Go service, and the development simulator can borrow it to
+exercise the same lifecycle rather than copy the map, peer binding and retirement
+worker. Do not create a new service or an empty shared module, and do not make the
+contract module depend on gRPC. The simulator's dependency on the existing agent
+module is repository source, not a new third-party package or runtime download.
+Validate that dependency offline before adopting it. Preserve the simulator's
+legacy shared-connection mode; certificate-bearing agents already require one
+agent per connection, so a legacy multiplexed channel must not be silently replaced
+by one node's handoff. No product adoption or new simulator run is claimed here.
