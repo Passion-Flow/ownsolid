@@ -178,3 +178,63 @@ flows alongside those five existing regressions. The interface is accepted only
 when all seven real flows and the required repository/module gates pass.
 Production eligible-batch authority, durable priority configuration, current
 write admission and the authenticated UI flow remain owner integrations.
+
+
+## Atomic queue admission and bounded tenant fencing
+
+The published read interface does not make the final write decision atomic.
+ReserveQueuedWithin must read the current eligible batch after excluding
+competing reservation mutations, rank it from current shares and reserve the
+selected head in the owner's existing READ COMMITTED transaction. Exact held
+replays return false without reading an owner row that may already be dequeued.
+The owner commits physical holds, dequeue, attempts and audit with that hold.
+
+The inherited candidate locked every supplied workspace before reading the
+queue. The current typed Workspace policy permits up to 10,000 workspaces.
+That makes lock allocation and SQL round trips grow with the configured domain.
+PostgreSQL documents its finite
+[shared advisory-lock pool](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS).
+Use one tenant transaction-level read/write fence instead. Existing reservation,
+release and reclaim writers acquire its shared side; queued admission acquires
+its exclusive side. Different tenants retain independent fences. Hash collisions
+can only serialize unrelated tenants, never grant capacity or authority.
+
+PostgreSQL's
+[transaction advisory functions](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS)
+provide shared/exclusive conflict semantics, reentrancy and automatic release at
+transaction end. Keep the order policy, tenant, requesting workspace, cohort.
+The cohort never takes another workspace fence. Current quota-status reads
+retain their existing policy/workspace readback fences; snapshot ranking remains
+read-only and acquires no admission fence.
+
+Validate and normalize the complete server-owned workspace domain before the
+owner callback. It must include the requested workspace even for a held replay.
+The callback derives tenant/local scope, eligibility, priority and positive
+sequence from persisted owner authority, uses only the supplied executor, takes
+no other job row locks, and performs no write or network call. It returns all
+currently eligible rows or fails on the owning typed policy's bounds. Never
+filter it by the earlier domain: a newly eligible out-of-domain workspace must
+force a retry rather than disappear. Unknown/cancelled/foreign attempts publish
+no success. A non-head returns SCHEDULING_QUEUE_TURN_PENDING with fixed guidance.
+
+Reuse ReserveWithin after a head is selected. It already enforces hard quota,
+exact attempts, enabled borrowing, pending reclaim, durable commit and loan
+attribution. Duplicating those decisions in the wrapper could lose funding
+or admit before positive victim release. The old O(workspaces) lock protocol,
+global policy-exclusive locking, separate ranking transactions and owner-side
+usage counters are rejected. See [ADR 0071](../decisions/0071-bound-tenant-admission-locking.md).
+
+Acceptance uses real isolated PostgreSQL: non-head refusal; head/dequeue in one
+commit; owner/audit rollback; complete-domain refusal; concurrent same-attempt
+replay; cancellation; exact release with owner terminal state; lost COMMIT
+acknowledgement; and retained foreign scope. New cases prove that ordinary writers
+block behind an exclusive tenant fence, another tenant proceeds, rollback releases
+it, and 10,000 configured workspaces do not require 10,000 advisory locks. Enabled
+borrowing must retain exact loans, signal reclaim and wait for committed release
+before nominal admission. These are component fixtures, not actual training/UI
+acceptance. The production owner still owns authority, task delivery and cutover.
+
+The existing Go/UUID BSD-3-Clause, pgx MIT and PostgreSQL licenses permit commercial
+redistribution with notices and offline operation. Kueue remains an Apache-2.0
+reference, including its separate nominal, borrowing and lending limits. This
+change adds no dependency, model, data set, production table or runtime download.

@@ -125,3 +125,21 @@ rollback and acknowledgement-loss tests. A separate policy test must
 retain its original revision on a foreign hold and succeed after fixture
 correction. These tests qualify the transaction boundary. The physical
 stop source, runtime owner and production migration remain required.
+
+
+## Queue-admission compatibility
+
+The queue wrapper must delegate a selected head to ReserveWithin. That operation
+already calls borrowingForReservation and recordBorrowingWithin, including pending
+reclaim and positive local-release barriers. Queue ranking is not an alternative
+loan allocator. Test a queued borrower and a nominal lender together, including
+rollback and exact held replay, so a queue integration cannot silently bypass
+loan attribution or reclaim.
+
+The planned bounded admission fence in [ADR 0071](../decisions/0071-bound-tenant-admission-locking.md)
+extends the write order to policy, tenant, requesting workspace, cohort. Ordinary
+reservation/release/reclaim writers take the tenant shared fence; current queued
+admission takes its exclusive side. Cohort reads still lock no other workspace.
+Production activation requires all Control writers to use that protocol and the
+serving principal to execute both transaction advisory-lock functions. The
+existing reservation, loan and reclaim candidate DDL is unchanged.
