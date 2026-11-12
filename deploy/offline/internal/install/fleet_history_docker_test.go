@@ -118,7 +118,8 @@ func TestFleetHistoryPrivateDeploymentDocker(t *testing.T) {
 ` +
 		"up{" + labels + `,node_id="a1000000-0000-4000-8000-000000000004"} 0
 `
-	// Production rules use a one-minute evaluation interval. Keep the tiny source fresh.
+	// Allow two production evaluation intervals plus the datasource's latency offset.
+	// Keep the tiny source fresh without changing the one-minute production rules.
 	query := "https://" + c.Long.Listen + "/api/v1/query?query=" + url.QueryEscape(`ownsolid:workspace_cell_nodes_observed:count{workspace_id="a1000000-0000-4000-8000-000000000002"}`)
 	hasAggregate := func(body []byte) bool {
 		var result struct {
@@ -139,7 +140,7 @@ func TestFleetHistoryPrivateDeploymentDocker(t *testing.T) {
 		return reply
 	}
 	found := false
-	deadline := time.Now().Add(90 * time.Second)
+	deadline := time.Now().Add(150 * time.Second)
 	for time.Now().Before(deadline) {
 		do(rawClient, http.MethodPost, "https://"+c.Raw.Listen+"/api/v1/import/prometheus", sample)
 		body, _ := do(longClient, http.MethodGet, query, "")
