@@ -83,11 +83,15 @@ go -C services/control test -tags repository_integration -p 1 -count=1 \
 ```
 
 [testdata/replay_accepted_experiment.sh](testdata/replay_accepted_experiment.sh)
-runs the nine accepted-result and owner groups in its own disconnected
-PostgreSQL fixture. It includes the local-cell refusal and repair cases and
-requires the retained CPU
-output, publication and approved model directories through its three documented
-environment variables. Synthetic node/production/stop envelopes, actual CPU
-computation, installed Agent/control acceptance and physical NVIDIA execution
-are separate qualifications. Current outcomes and open boundaries are recorded
+runs ten accepted-result, owner and dual-entrance HTTPS groups in its own
+disconnected PostgreSQL fixture. It includes local-cell refusal/repair,
+idempotent job creation, metric keysets, CSRF refusal, recovery and current-role
+checks. Supply the retained CPU output, publication and approved model
+directories through the three variables checked at the top of the runner.
+Also set PROJECT_ONE_DATA_PYTHON to the protected CPython 3.12 interpreter
+for real dataset inspection/publication in the HTTPS scenario. The runner binds
+both repository and identity fixtures to its own private disposable DSN file.
+Synthetic node/production/stop envelopes, actual CPU computation, installed
+Agent/control acceptance and physical NVIDIA execution are separate
+qualifications. Current outcomes and open boundaries are recorded
 in [product status](../../../../../docs/product/status.md).
