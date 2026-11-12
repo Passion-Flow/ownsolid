@@ -8,13 +8,13 @@ responsible owners can extend their respective boundaries.
 | --- | --- |
 | MOD-101 | The models module resolves the legacy digest for upload, archive verification, publication and recovery. The two real archives exercised fail-closed admission and Qwen replay. The next slice needs the shared multi-entry API, immutable catalogue persistence and digest-bound Agent transfer in the [contract handoff](model-registry.md#contract-handoff). |
 | MOD-102 | The Admin catalogue endpoint returns a single approved descriptor, and the existing UI facets cover that descriptor or already imported rows. Type and capability coverage for the catalogue needs a multi-entry read contract and its UI consumer. |
-| MOD-103 | Preparation and published derived model detail reads expose the original training and holdout version references from the [retained snapshot](training-dataset-lineage.md#derived-model-detail). The [DEV handoff](training-dataset-lineage.md#dev-contract-handoff) defines the Admin detail contract and S-202 tab. Multiple versions and evaluation lineage remain open. Evaluation is owned by SCI. |
+| MOD-103 | Preparation and published derived model detail reads expose the original training and holdout version references from the [retained snapshot](training-dataset-lineage.md#derived-model-detail). The [DEV handoff](training-dataset-lineage.md#dev-contract-handoff) defines the Admin detail contract and S-202 tab. The [historical version boundary](training-dataset-lineage.md#remaining-model-version-history-boundary) separates retained records from the missing family/version history contract. Evaluation is owned by SCI. |
 | MOD-104 | Chat-template defaults need to reach the serving engine with an explicit command or request policy. The Agent inference adapter and its wire command are shared boundaries. |
 | MOD-105 | The preparation worker accepts the existing pinned recipe. LoRA merge and format conversion need an admitted recipe and an Agent runner that can dispatch and verify the new output; the current runtime alone cannot make the job usable. |
 | MOD-106 | Serving variants require recipe admission and a serving manifest accepted by the Agent, including matching quantization arguments and validation. |
 | MOD-107 | Deployment and alias reference checks run in the shared retirement callback. [Both commit orders](model-retirement-dependencies.md#disconnected-postgresql-acceptance) passed with actual deployment and retirement services. Complete application and key references require their owning modules to participate, and the existing UI only receives a generic refusal. |
 | MOD-108 | The [approved import review](model-import-file-safety.md#disconnected-postgresql-acceptance) refuses executable members and renamed pickle before extracting any payload. Generic catalogue admission and richer review require MOD-101 and a shared verifier contract. |
-| MOD-109 | The existing leased transfer checks the pinned digest when one request covers a complete file. [Disconnected TLS and SQL acceptance](model-transfer-integrity.md#disconnected-tls-and-postgresql-acceptance) verifies refusal and retry. Pre-warming from the site registry requires NET-102 and Agent changes. |
+| MOD-109 | Each leased transfer verifies the complete opened file against its pinned digest before serving any range. [Disconnected TLS and SQL acceptance](model-transfer-integrity.md#disconnected-tls-and-postgresql-acceptance) covers independent ranges, corruption outside the requested range, refusal and retry. Pre-warming from the site registry requires NET-102 and Agent changes. |
 | MOD-110 | Deployment admission checks the reviewed Qwen catalogue and on-site use. The [consumer handoff](model-license-admission.md#consumer-handoff) defines the startup configuration, public reasons, training and SCI launch checks still needed. |
 | MOD-113 | The signed index needs a trust root and delivery integration, plus a new multi-entry contract consumed by the UI. No unsigned index should replace the embedded trust decision. |
 | MOD-114 | Offline search depends on MOD-113. The browser's current local filter covers imported inventory. |
@@ -81,10 +81,14 @@ admission and node code. They reached main at `e97a4fb4` and `33bbf870`.
 
 ## Shared full-test order
 
-The workstation order is OPS, models, apps, identity and architecture.
-Acquire `/private/tmp/ownsolid-workstation-full-gate.lock`, inspect the
-legacy `/private/tmp/ownsolid-macos-full-gate.lock` and actual processes,
-and admit one heavy workstation gate. Product-target tests separately
+Follow the current resource handoff order. The carrier at
+`/private/tmp/ownsolid-workstation-full-gate.lock` is a persistent regular
+file owned by the current user. Reject symlinks and an occupied directory;
+acquire a nonblocking exclusive `fcntl.flock` and retain that file descriptor
+for the entire gate or publication window. Release it by unlocking and
+closing the descriptor. Never unlink, replace or truncate the carrier.
+Inspect the legacy `/private/tmp/ownsolid-macos-full-gate.lock` and actual
+processes before admitting one heavy workstation gate. Product-target tests separately
 acquire `/run/lock/ownsolid-heavy.lock` on the Linux test server after
 resource checks. Release the workstation window once its own heavy
 work is complete when Linux is occupied.
