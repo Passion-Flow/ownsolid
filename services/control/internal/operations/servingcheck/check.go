@@ -43,13 +43,23 @@ func ParseExpected(raw []byte) (Expected, error) {
 		return Expected{}, bad
 	}
 	var fields map[string]json.RawMessage
-	if json.Unmarshal(raw, &fields) != nil || len(fields) < 8 || len(fields) > 9 {
+	if json.Unmarshal(raw, &fields) != nil {
 		return Expected{}, bad
 	}
-	if _, present := fields["portal_listen_address"]; present && expected.PortalListenAddress == "" {
+	required := [...]string{"format_version", "transport_mode", "listen_address", "portal_origin", "admin_origin", "tls_certificate_file", "tls_private_key_file", "trusted_proxy_cidrs"}
+	fieldCount := len(required)
+	if _, present := fields["portal_listen_address"]; present {
+		fieldCount++
+		if expected.PortalListenAddress == "" {
+			return Expected{}, bad
+		}
+	}
+	// encoding/json accepts case-folded struct keys. Optional intent must
+	// still use its exact public spelling, including when all required keys exist.
+	if len(fields) != fieldCount {
 		return Expected{}, bad
 	}
-	for _, name := range []string{"format_version", "transport_mode", "listen_address", "portal_origin", "admin_origin", "tls_certificate_file", "tls_private_key_file", "trusted_proxy_cidrs"} {
+	for _, name := range required {
 		if _, exists := fields[name]; !exists {
 			return Expected{}, bad
 		}

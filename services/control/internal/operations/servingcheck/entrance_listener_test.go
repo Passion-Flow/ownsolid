@@ -47,4 +47,7 @@ func TestPortalListenerExpectedIntentPreservesOmissionAndExactBinding(t *testing
 	duplicated := bytes.Replace(raw, []byte(`"portal_listen_address":"127.0.0.1:29443"`), []byte(`"portal_listen_address":"127.0.0.1:29443","portal_listen_address":"127.0.0.1:29443"`), 1)
 	_, err = ParseExpected(duplicated)
 	servingCheckFailure(t, err, expectationInvalid)
+	wrongCase := bytes.Replace(raw, []byte(`"portal_listen_address"`), []byte(`"PORTAL_LISTEN_ADDRESS"`), 1)
+	_, err = ParseExpected(wrongCase)
+	servingCheckFailure(t, err, expectationInvalid)
 }

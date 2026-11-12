@@ -115,3 +115,15 @@ to the same bound address, without DNS during structural configuration validatio
 Only inspect sockets owned by this group; do not enumerate or close foreign
 processes. Test overlap between the selected group endpoints on both platforms,
 while retaining separate exact-occupied-socket and foreign-ownership assertions.
+
+## Exact optional intent keys
+
+Go's [JSON struct decoding](https://pkg.go.dev/encoding/json@go1.27.3#Unmarshal)
+accepts case-insensitive field matches. The existing strict token walk rejects
+duplicates/null and uses DisallowUnknownFields, but that alone does not forbid a
+case-folded known field. Required intent keys already have exact raw-map presence
+checks. Extend that same exactness to the optional Portal bind: a ninth field
+must be the canonical portal_listen_address key, never an alternate spelling.
+Preserve the eight-field omission contract. The added uppercase-key regression
+must fail on the retained pre-fix parser overlay and pass on the corrected parser;
+no valid deployment value, error contract or statement assertion is relaxed.
