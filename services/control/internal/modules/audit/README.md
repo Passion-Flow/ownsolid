@@ -46,5 +46,16 @@ The writer stores `actor_kind=product_assistant` and
 actor and a separate user subject. The action is `product_assistant.<tool_id>`.
 The existing chain binds the metadata digest. The operator can
 [disclose and verify the assistant actor offline](../../../../../tools/audit-verify/README.md#verify-a-disclosed-assistant-actor).
-The public audit list still needs a projection for the distinct actor and
-subject. See the [writer research](../../../../../docs/research/product-assistant-audit-writer.md).
+The [opt-in Admin projection](../../../../../docs/research/audit-list-assistant-projection.md#admin-http-representation)
+exposes verified assistant attribution while retaining the existing default
+representation. See the [writer research](../../../../../docs/research/product-assistant-audit-writer.md).
+
+## Diagnostic access consumers
+
+The license diagnostics reader already uses `WriteWithin` before returning its
+bounded download and clears it on transaction failure. This package owns no
+diagnostic HTTP reader or support collector. Identity audit reads and installer
+support collection must account for access at their actual entry points.
+`WriteWithin` resolves the installation tenant and default workspace; it does
+not authorize a supplied workspace or provide arbitrary workspace attribution.
+See the [consumer inventory and integration contract](../../../../../docs/research/audit-diagnostic-access.md).
