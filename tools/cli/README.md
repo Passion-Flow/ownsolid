@@ -81,6 +81,26 @@ emit the resource fields as an array for a list or an object for a detail.
 Prompts and errors go to stderr. A failed command exits nonzero. Run
 `ownsolid --help` or `ownsolid node list --help` for usage and examples.
 
+## Inspect and end Admin sessions
+
+```sh
+ownsolid session list --limit 20 --output json
+ownsolid session list --cursor "$NEXT_CURSOR" --output json
+ownsolid session revoke "$SESSION_ID" --confirm
+```
+
+The list covers the current account on the configured Admin origin. Read one
+page and continue with its cursor on the same account and entrance. JSON and
+YAML preserve the current-session flag, authentication method and timestamps.
+Use the displayed exact UUID when ending a session.
+
+A confirmed revocation ends that server session. Ending the CLI's current
+session also removes its saved local credential after the server acknowledges
+the change. Run `ownsolid login` before further authenticated commands.
+A failed or uncertain response preserves the local credential; inspect the
+session list and retry the same target while the current login remains active.
+Session changes share the local login/logout lock.
+
 ## Discover workspaces
 
 ```sh
