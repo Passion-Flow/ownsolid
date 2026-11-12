@@ -410,18 +410,26 @@ Evidence at /private/tmp/obs110-http-unit-_wbpygdx:
 - http-unit-tests.jsonl SHA-256
   fc6712d61c151be59d4fa52202c6c10cf421dcc4afc81067692dbdcd088f14f2.
 
-Earlier lock-busy admissions started no compiler or tests and are recorded
-separately from the completed runs. The frozen Linux 3cebfcef unit entry also
-refused admission at its global-heavy flock with exit 75, before resource
-preflight, compilation or tests. The original log at
-/root/lane-obs-tools/obs110-service.hJ8NtB/check.log has SHA-256
-953b27ae5dcf9bbfc1fca7cbf802ab55713921af7e8e053158160dc7cff3af1c;
-admission.json in that directory has SHA-256
-d0a308292d67a1d2e580bd8253ed049639145baa84f06a416a01453d0423d7ae.
-That refusal supplies no Linux unit or native qualification. The explicit pinned Linux gofmt check passed
+Earlier Mac lock-busy admissions started no compiler or tests and are recorded
+separately from completed runs. Two earlier frozen Linux c60 admissions entered
+the global-flock nonzero branch and mapped it to exit 75 before resource
+preflight, compilation or tests. Their raw flock return values, errno and
+failure-time owner descriptors were not captured. The holders at those moments
+remain unknown; a later negative scan or private self-contention control cannot
+establish their causes. The retrospective busy reason is not independent
+syscall evidence.
+
+The unchanged original logs are
+/root/lane-obs-tools/obs110-service.hJ8NtB/check.log, SHA-256
+953b27ae5dcf9bbfc1fca7cbf802ab55713921af7e8e053158160dc7cff3af1c,
+and /root/lane-obs-tools/obs110-service.HTBIuq/check.log, SHA-256
+b421e92461e1331f7f051fd5c57fa5aa27089d5c3b2faf4821bd2af691da21be.
+Neither refusal supplies Linux unit or native qualification; the separately
+qualified Linux unit run is recorded below. The explicit pinned Linux gofmt check passed
 all three candidate files; the noninteractive SSH default PATH did not expose
-gofmt. These are Mac pure-unit and formatting results only. Linux service/native
-PostgreSQL-store qualification, public registration, complete generated wire
+gofmt. These HTTP results are Mac pure units and formatting only. The Linux service
+pure-unit run below qualifies its original frozen source separately. Native
+PostgreSQL/store qualification, public registration, complete generated wire
 contracts, installed acceptance, Console and hard ingest enforcement remain open.
 
 ## Generated date and recovery contract
@@ -465,3 +473,55 @@ input, not a change to the shared Problem registry. The existing
 [SDK dependency review](sdk.md#licenses) covers the pinned Apache-2.0 generator
 and runtime, commercial/offline use and redistribution notices. No dependency,
 model or dataset is added by this review.
+
+## Linux service unit qualification
+
+The frozen service candidate 3cebfcef9f321364862a11d8b773c714facb6f68,
+tree 0f5c800140e1036a157de62ba4c339b4e2780468, passed the pure-unit command
+on Linux x86_64 with the existing Go 1.27.3 toolchain:
+
+```sh
+go -C services/control test -race -p 2 -count=1 \
+  ./internal/modules/monitoring/... ./internal/platform/monitoringmetrics
+```
+
+The four tested packages passed; four relay command packages had no test files.
+The frozen plain Go command did not emit individual test events or skip counts.
+Do not reuse the Mac 46-test/139-event count as a Linux measurement. The source
+was clean at the exact commit and tree before and after execution, and the
+recorded source-input manifest verified after the command.
+
+The original c60fbeba55bf54bdf61fa44d702ecc651a5005b6cad4f775c398668ecab127d6
+entry remains unchanged. A separate diagnostic copy, SHA-256
+6f70e6fda0c90ec265d51b9231662ec276112cfad9f4dacac7f61d15485d468b,
+preserves its lock order, descriptor lifetime, resource thresholds, unit command,
+failure mapping and 300-second/kill-after-ten-second caller bound. Removing
+diagnostics and restoring the two original commands and receipt prefix
+reproduces c60 byte for byte. Its private tmpfs control observed native flock
+return codes 0, 1 and 0 across acquisition, a conflicting independent open and
+a retry after release. That synthetic control establishes no cause for either
+earlier canonical failure.
+
+During the actual unit admission, both native flock return codes were zero with
+empty stderr. The owning Bash process held the real FLOCK descriptors for
+global dev 29/inode 82 and lane dev 64512/inode 7508772. Preflight observed
+6,477 MiB MemFree, 749 GiB available disk and zero I/O avg10. The unchanged
+guard then entered the isolated loopback unit command with offline dependencies
+and two Go workers. The entry printed CANDIDATE_unit_PASSED and EXIT_CODE=0.
+
+Evidence at /root/lane-obs-tools/obs110-unit-diagnostic.5ac9cL:
+
+- check.log SHA-256
+  109b3069dc730dc6bd486e3926db0bb4f6368a6996ec16ebf835f4ba61a9e5a9.
+- unit-proof.json SHA-256
+  43e8fda00f8f4b2293caf7076fe0fd1ff27b35867851870f1ed27bce3f0e7658.
+- source-inputs.sha256 SHA-256
+  e8d0b8fcebd5d9bb9c766d8625bdcdd4aa6c510031e1fb3122319666516211ec.
+
+The owning parent exited. Post-run inspection found no remaining descriptors
+with this job's recorded FLOCK markers; both canonical carrier identities
+were retained. No native VictoriaMetrics, PostgreSQL, Alertmanager, browser,
+installation or new HTTP candidate qualification ran. This proves Linux pure
+units at 3cebfcef only. Native service/store transactions, the later HTTP adapter
+on Linux, public contracts and UI, installed acceptance and hard ingest budgets
+remain open.
