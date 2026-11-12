@@ -105,12 +105,12 @@ exchange admitted before the age keeps its normal context and can
 deliver its reply. The v1 Agent retains its persisted acknowledged
 sequence and already retries an interrupted acknowledgement through
 the authenticated HTTPS path. The dedicated server's original process
-drain stays independent. A new HTTP request on an aged connection
-selects `Connection: close` before committing headers. The pinned
-[Go HTTP/2 server](https://github.com/golang/go/blob/go1.27.3/src/net/http/internal/http2/server.go)
-consumes that header to schedule GOAWAY and omits it from the wire.
-An existing stream whose headers were already sent drains at the
-application boundary, with the socket deadline as the final bound.
+drain stays independent. The connection's HTTP owner initiates standard
+HTTP/2 shutdown at the age instant, independently of later requests.
+The existing stream drains at the application boundary, with the socket
+deadline as the final bound. The earlier response-header mechanism only
+notified connections that made a new request after age; the stronger
+acceptance below requires automatic notification of an established stream.
 
 Reject use of the global Gateway drain for one connection. It would
 cancel existing claims and refuse every healthy connection. Avoid
@@ -129,13 +129,13 @@ does not reconnect. The Go and gRPC licences above apply and no
 new runtime dependency or data is added. This scope does not
 qualify installed gateways or fleet load.
 
-The two-listener regression passed under the Go race detector and
+The earlier deadline-based two-listener regression passed under the Go race detector and
 in an isolated Linux arm64 container with no network. It held a
 claim across age, received the next lease and the legacy drain
 status, then confirmed that the same listener accepted a new
 connection and the second listener received the previous acknowledged
 cursor.
-The transport test decoded a real HTTP/2 GOAWAY on an aged request
+That transport test decoded a real HTTP/2 GOAWAY on an aged request
 and proved the socket deadline closed a silent connection. The
 legacy configuration default, bounds and process-wide drain passed
 in the same disconnected run. For the focused replay use:
@@ -189,3 +189,14 @@ Keep the leased-claim/cursor regression, silent-peer deadline, healthy-peer
 acceptance and bounded process shutdown checks. Run the native target,
 installed two-gateway rollout and simulator distribution checks before
 closing ARC-107. Source review alone is not acceptance.
+
+The strengthened held-response test first failed with EOF after 1.91
+seconds: no request followed the age instant and no GOAWAY arrived.
+The connection-owned Shutdown implementation then passed three race
+repetitions of the frame-level and leased-claim checks, legacy age bounds
+and process drain. Normal and timed-out process shutdown and release of a
+single connection slot each passed three race repetitions. The complete
+httpserver, agentgateway, config and cmd/server package suites also passed
+with the race detector on macOS arm64, using a short-path private APFS
+temporary volume. Target Linux and installed rollout qualification of this
+new transport owner, including simulator resource measurements, remain open.
