@@ -150,45 +150,48 @@ that any of those dispatch paths has run.
 
 ## Native acceptance boundary for the local-cell candidates
 
-The local-cell code and regressions at `0b4ea8ff` passed formatting, diff
-review, layout and roadmap checks; all 18 current owner README link targets
-exist. The original CPU worker inputs are unchanged. One bounded acquisition
-of both original Linux locks requested the combined scope/dispatch/operator
-and retained CPU acceptance replay. The original preflight observed
-344,899,584 free bytes, below 3 GiB, with I/O full avg10 0.0 and avg60 0.45.
-It refused before the replay wrapper, Go compilation or PostgreSQL startup.
-The preserved `continued-cell-pg-attempt1.log` hashes to `86470fef7c4fd1dea0a0e0995b82764bafd87535814a9ca104bf7f430366dae0`.
-That admission executed neither an owner regression nor a repository gate.
+The source at `145852e7` rebases these owners onto main `95f85dbb` and its
+updated model-import implementation. On disconnected Linux amd64 PostgreSQL
+18.6 at schema 59, all nine retained-input and owner groups passed together,
+including all eight site/cell owner subcases, paired dispatch/operator and
+actual CPU accepted-result readback. `make check`, `make build` and the four
+ordinary Go owner packages (training, datasets, mongodatasets and
+modelpreparations) also passed on that exact source. The Go and repository
+gates used loopback-only network namespaces with offline dependency caches.
+No new worker computation or physical production stop ran.
 
-The prepared private `run-training-cell-regression.sh` runs the nine selected
-training test groups in one disposable disconnected PostgreSQL fixture. Its
-inputs are the retained CPU output, publication and approved model already
-used by the existing replay. Run it only after both locks and the unchanged
-resource preflight admit execution, then complete repository check/build and
-module tests against the actual rebased source. Preserve any failing log;
-do not loop the fixture while resources or an earlier lane's window block it.
-The local implementation and its runtime qualification remain separate.
+The immutable raw logs are retained in
+`/root/lane-trn-cpu-admission.RaaYxrR7`:
 
-The first schema-59 native replay at `8495818a` passed the eight neighboring
-training groups but stopped before later repository gates because the new
-cell-owner test snapshot compared `audit_events.target_id` (UUID) with text.
-The snapshot now compares the original UUID parameter directly. This is a
-test-only SQL correction; no production fence or error mapping is relaxed.
-The failed raw run is retained. The corrected group passed all eight site/cell
-subcases at `be30d3f4` on disconnected Linux amd64 PostgreSQL 18.6. The eight
-neighboring groups passed at `8495818a`; no production Go input changed
-between those sources. This includes the actual retained CPU adapter read,
-paired dispatch and operator flows. No new training computation ran.
+- `schema59-trn-rebased-145852e7.log`: SHA-256 `4adb47604619805c33467dbf4492884842494419beee48b8fd18a54a3911c603`.
+- `schema59-trn-gates-145852e7.log`: SHA-256 `dab17bd21f96b6d782ec7d2eea0809f80f005e28445591f3ba72010f5eb508bf`.
+- `schema59-trn-build-after-io-145852e7.log`: SHA-256 `1cd830f11f44547aba7cbedc7a94bdf3c5cf4f14f04a19d67c47ec12e164790c`.
+- `schema59-trn-final-modules-145852e7.log`: SHA-256 `9c222c04692015ee9be0b127ad89caa37b5d5f7939034d810f70718aa24f3695`.
 
-The retained logs in `/root/lane-trn-cpu-admission.RaaYxrR7` are
-`schema59-trn-native-8495818a.log` (SHA-256
-`f0a50d7789e70be7b945725348200b4bf70d0b6920b3d8f993abfb92eb66a336`)
-and `schema59-trn-native-be30d3f4.log` (SHA-256
-`ca07474c280c2c60ac1252dc22b8a6c64c44f10bb68dd46b2cb7230fc75362e2`).
-The second source also passed `make check` with loopback-only networking.
-Before `make build` started, I/O full avg60 was 6.4 percent and the original
-5-percent gate refused execution. Build, module tests and the exact retained
-CPU runtime unit suite remain pending. A later bounded lock request started
-none of those phases. Keep the unchanged passes and run only pending phases
-when the original double-lock and resource admission permit them. The
-maintained replay now includes all nine groups; its Bash syntax is checked.
+The first schema-59 replay at `8495818a` passed the eight neighboring groups
+but the new owner snapshot compared a UUID audit target with text. The
+correction was test-only SQL; the corrected group passed at `be30d3f4`, and
+the refreshed nine-group run above passed without relaxing product fences.
+The earlier raw log SHA-256 is
+`f0a50d7789e70be7b945725348200b4bf70d0b6920b3d8f993abfb92eb66a336`;
+the correction/check log SHA-256 is
+`ca07474c280c2c60ac1252dc22b8a6c64c44f10bb68dd46b2cb7230fc75362e2`.
+The original pre-compilation refusal at 344,899,584 free bytes is preserved
+in `continued-cell-pg-attempt1.log`, SHA-256
+`86470fef7c4fd1dea0a0e0995b82764bafd87535814a9ca104bf7f430366dae0`.
+
+Each admitted phase used both original Linux locks and the unchanged 3 GiB
+free-memory, 12 GiB available-memory, 15 GiB disk and 5-percent I/O guards.
+Refused preflights started no test or build. Passed phases were retained;
+only pending phases were requested after actual holder/resource changes.
+The maintained replay includes all nine groups and passes Bash syntax.
+
+An additional run of the existing 20 training Python unit tests in the
+retained complete 37-package CPU environment remains pending. The final
+Go-module phase passed, then the original I/O preflight (full avg10 33.49,
+avg60 30.37 percent) refused before any unit container was created. This is
+not a Python pass or a failure of the unchanged Python implementation.
+The actual installation, five worker invocations and step-one recovery
+retain their independent source/input scope. Installed Agent/control/UI,
+signed media and NVIDIA qualification, and the fair-queue prerequisites
+above remain open; no roadmap box is ticked by this component acceptance.
