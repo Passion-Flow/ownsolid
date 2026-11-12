@@ -372,3 +372,30 @@ replicated liveness, TLS, shed refresh, normal startup/catalog admission or
 installer provisioning. The independent connection-limit proof applies to this
 restricted fixture role, not to a deployed control/gateway resource budget. No
 production function, grant, credential or migration number was activated.
+
+## Verified TLS principal prototype acceptance
+
+The next external role fixture retains the composed observation, liveness, wake
+and connection-limit assertions and changes only the protected database transport.
+[PostgreSQL server SSL](https://www.postgresql.org/docs/18/ssl-tcp.html) requires
+an actual certificate/key pair and protected key permissions. Merely enabling SSL
+still allows plaintext unless the authentication policy refuses it. Use a
+fixture-owned hostssl/SCRAM rule and an explicit hostnossl rejection, in a
+network-none container with no published port.
+
+[Client SSL verification](https://www.postgresql.org/docs/18/libpq-ssl.html)
+distinguishes encryption, chain trust and endpoint-name validation. Select an
+explicit verify-full DSN with the protected fixture CA, retaining pgx's actual
+TLS verifier. Require no transport fallback and no InsecureSkipVerify; observe
+TLS on the independently logged-in role's own pg_stat_ssl row. Use generated
+synthetic local certificate material, never a production CA or signing key.
+
+Independently require an untrusted CA and a wrong certificate reference name to
+fail normal certificate verification, the wrong password to fail with 28P01,
+and plaintext to fail with 28000. Correct credentials must still execute the
+unchanged product Node/observer/worker slice over verified TLS. Keep all existing
+42501 cases and the aggregate 53300 overflow. No automatic retry with operator
+credentials, weaker SSL mode or broader grants is permitted. Remove the generated
+private key, password and protected database input with the owned container.
+This is database transport/role evidence only; delegated profiles and product
+startup/delivery remain separate open gates.
