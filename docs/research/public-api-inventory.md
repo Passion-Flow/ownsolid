@@ -803,8 +803,9 @@ Its single named-response review signal is the added explicit 409 binding.
 All component definitions are unchanged. The metadata-only input's four private
 Go wire cases were not compiled: their nonblocking Linux admission exited 75.
 The SDK correction below supersedes that fixture with ten canonical protocol
-cases; those have not been compiled or run either. Whole repository gates and actual
-installed qualification remain separate; the CLI b967d7c8 gate is unchanged.
+groups, now qualified on native Linux amd64 as described below. Whole repository
+gates and actual installed qualification remain separate; the CLI b967d7c8 gate
+is unchanged.
 
 ### Browser consumer retry boundary
 
@@ -869,11 +870,9 @@ separate deliberate calls and caller cancellation before and during dispatch.
 controls connection establishment, sending and response reads. Check cancellation
 with the generated operation and an actual waiting HTTP handler, then show that
 only a new uncancelled call can dispatch again. Cancellation or timeout cannot
-establish whether an earlier server access was recorded. Keep these cases
-unqualified until the native protocol tests actually run.
+establish whether an earlier server access was recorded.
 Use the existing SDK wire runner; no new service or qualification framework is
 needed. Generator unit/projection checks can run independently of Go compilation.
-Native Go wire qualification remains pending while heavy admission is withheld.
 No dependency, model, dataset or third-party implementation is added; existing
 Go BSD-3-Clause and SDK generator/runtime notice obligations remain unchanged.
 
@@ -885,8 +884,42 @@ metadata-only generation. Gofmt reports no diff in the helper and ten-case Go
 fixture. Eight controlled Python scenarios pass across sync/async,
 standard/assistant and 409/lost-response cases, each followed by one explicit
 new call. These exercise generated Python dispatch with MockTransport, not a
-real server or PostgreSQL. No new heavy admission or Mac queue attempt was
-made for this correction, and no native Go or repository-wide pass is claimed.
+real server or PostgreSQL.
+
+### Native Linux audit transport qualification
+
+Frozen fixture source 783567ea4a2e19f3b2f7ca065d47dfe59886633e and transport
+source 1e8f1fadf8caff8d7b9ac771cd91641ba19d4287 passed all ten top-level
+protocol groups and all six subtests, with zero skips and exit 0. The generated
+Identity client ran over loopback HTTP/TLS with Go 1.27.3 linux/amd64,
+`-race -count=1 -p=2 -mod=readonly -timeout=90s`. Its network namespace had
+only loopback; module and checksum downloads were disabled. This covers the
+shared GET positive replay control, repeated lost audit replies, separate
+manual calls, 409, client timeout, caller cancellation, CA/cookie preservation,
+redirect refusal, unsupported executors and concurrent calls. It does not
+exercise the Control dispatcher, PostgreSQL or an installed user flow.
+
+The two-group parent exited 1 after 49.817 seconds because the resource check
+before the independent model-history codec group observed I/O full avg10
+27.29, above its maximum 5. That second group never started: its actual root
+count is zero, with no test exit or skip. The audit group remains a qualified
+pass; the combined segment is not a pass. No admission retry was attempted.
+Both inherited lock descriptors closed, their original carriers remained,
+the temporary directory was removed and a separate observation found neither
+the parent nor its child process group. The earlier Mac wait remains exit 75
+with zero Go roots; it is not native Linux evidence.
+
+The private evidence on ownsolid-cpu is
+`/root/lane-rel-tools/identity-audit-contract/go-native-linux-proof.json`
+(SHA-256 `cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1`)
+and `go-wire-native-linux.log`
+(SHA-256 `f391f6191c1293348969b862e005b7126f4245a300000d978276ef027e985d15`).
+The audit fixture SHA-256 is
+`6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821`.
+All 122 generated audit SDK files and all 81 independent history SDK files
+were verified before execution and after release; their hashes are unchanged.
+Whole repository check/build/test, product generation and Web/installed
+qualification remain open. No roadmap box is ticked by this transport run.
 
 The separate Web relay includes a five-file generated/locale patch and a
 two-consumer retry/refetch patch. Both apply checks pass on the source base;
