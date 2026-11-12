@@ -8,11 +8,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -103,6 +105,16 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
 	emit(exact.Metric, "", g.f.Workspace, uuid.NewString())
 	fixtureRequest(t, g.ctx, http.MethodPost, source+"/api/v1/import", &samples)
 	fixtureRequest(t, g.ctx, http.MethodGet, source+"/internal/force_flush", nil)
+
+	waitForCardinalityFixture(t, g.ctx, source, day, []cardinalityFixtureScope{
+		{exact.Metric, g.f.Tenant, g.f.Workspace, 10000},
+		{"ownsolid_cardinality_app", g.f.Tenant, g.f.Workspace, 1},
+		{unicodeMetric, g.f.Tenant, g.f.Workspace, 1},
+		{exact.Metric, g.f.Tenant, other, 1},
+		{exact.Metric, foreignTenant, foreign, 1},
+		{exact.Metric, foreignTenant, g.f.Workspace, 1},
+		{exact.Metric, "", g.f.Workspace, 1},
+	})
 
 	// The overview exceeds the native scan cap even though only three ranks
 	// were requested. Narrowing to the exact 10,000-series metric must recover.
@@ -238,4 +250,59 @@ func (s *cardinalityCommitFault) Within(ctx context.Context, ro bool, fn func(co
 		}
 	}
 	return err
+}
+
+type cardinalityFixtureScope struct {
+	metric, tenant, workspace string
+	series                    uint64
+}
+
+// Read native fixture counts directly; product observations and their audit
+// assertions must remain single attempts through the authorized service.
+func waitForCardinalityFixture(t *testing.T, parent context.Context, origin string, day time.Time, scopes []cardinalityFixtureScope) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(parent, 5*time.Second)
+	defer cancel()
+	for _, scope := range scopes {
+		query := url.Values{
+			"date": {day.Format("2006-01-02")}, "topN": {"1"}, "timeout": {"2s"},
+			"match[]": {fmt.Sprintf("{__name__=%s,tenant_id=%s,workspace_id=%s}", strconv.Quote(scope.metric), strconv.Quote(scope.tenant), strconv.Quote(scope.workspace))},
+		}
+		for {
+			request, err := http.NewRequestWithContext(ctx, http.MethodGet, origin+"/api/v1/status/tsdb?"+query.Encode(), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			response, err := http.DefaultClient.Do(request)
+			if err != nil {
+				t.Fatalf("native cardinality fixture readiness: %v", err)
+			}
+			body, readErr := io.ReadAll(io.LimitReader(response.Body, 8193))
+			closeErr := response.Body.Close()
+			var reply struct {
+				Status   string   `json:"status"`
+				Partial  bool     `json:"isPartial"`
+				Warnings []string `json:"warnings"`
+				Data     *struct {
+					Total *uint64 `json:"totalSeries"`
+				} `json:"data"`
+			}
+			if readErr != nil || closeErr != nil || response.StatusCode != http.StatusOK || len(body) > 8192 ||
+				json.Unmarshal(body, &reply) != nil || reply.Status != "success" || reply.Partial || len(reply.Warnings) != 0 ||
+				reply.Data == nil || reply.Data.Total == nil {
+				t.Fatal("native cardinality fixture returned an invalid readiness response")
+			}
+			if *reply.Data.Total > scope.series {
+				t.Fatalf("native fixture has excess series for %q: %d, expected %d", scope.metric, *reply.Data.Total, scope.series)
+			}
+			if *reply.Data.Total == scope.series {
+				break
+			}
+			select {
+			case <-ctx.Done():
+				t.Fatalf("native fixture visibility deadline for %q: %d, expected %d", scope.metric, *reply.Data.Total, scope.series)
+			case <-time.After(100 * time.Millisecond):
+			}
+		}
+	}
 }

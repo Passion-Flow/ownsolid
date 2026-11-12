@@ -259,8 +259,8 @@ uses one filtered search for the total and ranked metric counts. Its
 [index implementation](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/storage/index_db.go#L1360-L1485)
 counts matching metric-name rows into that total and the metric ranks. An exact
 metric selector therefore has at most one metric rank, whose count must equal
-totalSeries. The configured native topN cap cannot truncate that one rank
-because the handler enforces a minimum of one.
+totalSeries. With an admitted positive native topN cap, truncation cannot remove that
+sole rank.
 
 Reject an exact-metric reply whose rank undercounts its positive total, rather
 than projecting contradictory successful counts. Add a malformed-source case
@@ -269,3 +269,21 @@ same equality rule to node ranks: missing node_id is valid and bounded node
 ranks can omit the remaining nodes. General overviews also retain bounded
 metric ranks. This is source projection validation, not an ingest budget or
 new scale measurement.
+
+## Native fixture visibility
+
+The [JSON stream parser](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/protoparser/vmimport/stream/streamparser.go#L17-L47)
+waits for its concurrent callbacks before returning. Successful import and
+force-flush responses still do not themselves assert the daily index counts
+needed by the scope test. The qualified shape prototype therefore waited for
+its exact scoped count before checking drilldowns.
+
+Retain that explicit fixture boundary in the service profile: poll bounded
+native daily counts for all seven imported metric/scope combinations, including
+the scope distractors and missing tenant. Start product observations only
+after every count matches. Reject an excess count or invalid native response;
+do not retry a failed product assertion or silently reimport data. Use one
+five-second deadline, bounded replies and cancellation-aware waits. Keep these
+fixture reads outside the product-read proxy so they cannot satisfy its
+authorization or request-audit assertions. This adds no product behavior or
+new dependency and does not qualify the service until the native profile runs.
