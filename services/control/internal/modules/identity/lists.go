@@ -495,8 +495,8 @@ func (s *Service) listForActor(ctx context.Context, a Auth, kind string, q url.V
 		if e != nil {
 			return e
 		}
-		if kind == "audit-events" && auditWorkspaceID == "" {
-			return recordAuditReadWithin(ctx, tx, a, p.limit, len(out.Items), audit != nil, requestID)
+		if kind == "audit-events" {
+			return recordAuditReadWithin(ctx, tx, a, auditWorkspaceID, p.limit, len(out.Items), audit != nil, requestID)
 		}
 		return nil
 	})
