@@ -24,8 +24,10 @@ or tenant authority solely to obtain a shared lock, and do not remove the lock.
 
 The native PostgreSQL prototype proves this mechanism on synthetic tables,
 including foreign scope, execution denial, temporary-name shadowing and competing
-writers. It does not activate a product function or replace full permission-closure
-review. The production catalog, protected operator preparation, normal and
+writers. A second external overlay proves the actual read-only Node heartbeat,
+claim and acknowledgement through a separate TCP/SCRAM login on schema 60, with
+seven permission refusals. Neither prototype activates a product function or
+replaces full permission-closure review. The production catalog, protected operator preparation, normal and
 post-restart readiness, every delegated profile and installed delivery still need
 independent acceptance. Existing control principal grants and old gateway/agent
 behavior remain unchanged during their rolling upgrade.

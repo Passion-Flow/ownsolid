@@ -222,3 +222,73 @@ provisioning. An extra candidate function deliberately changes the fixture catal
 it must not be mistaken for an activated, normally admitted product catalog.
 No production SQL, grant, protocol, migration number or default is changed by the
 prototype. Finish the complete permission closure before implementing ARC-111.
+
+## Actual product Node-path prototype
+
+The external overlay now passed the real Node service against PostgreSQL 18.6 on
+Linux amd64. The verified baseline was
+149a95013db6c6d1ca9dbadd09b05fff9b4c98de; its Node package, migrations,
+identity fixture, database platform and agent contract match the current product
+inputs. Only the installation/tenant shared-lock CTE was replaced by the narrow
+prototype function. Credential checks, node locking, Workspace status, task
+leases, acknowledged cursors and audit execution remained the actual product
+code. This is a source overlay outside the repository, not a serving change.
+
+The disposable database migrated to schema 60. The raw pg_tables count was 140,
+including 20 partition children; the catalog has 120 logical table roots. The
+fixture explicitly installed the already approved public vector extension 0.8.7
+before migration. An earlier attempt omitted that installer precondition and
+failed with KNOWLEDGE_APPROVED_VECTOR_EXTENSION_REQUIRED before any business
+migration or restricted-role flow. Its exit was 1 and its test-log SHA-256 is
+402ca2123d05e401f45dc058f435fb0a07dd20365e6004eb0f28b936598925fa.
+It is not a successful permission test. The corrected attempt changed only that
+fixture precondition; its overlay, grants and assertions were unchanged.
+
+The successful fixture created a separate LOGIN principal with NOINHERIT,
+NOSUPERUSER, NOCREATEDB, NOCREATEROLE, NOREPLICATION, NOBYPASSRLS and connection
+limit 2. Host authentication required SCRAM-SHA-256. An independent TCP connection
+verified both current_user and session_user as that principal, with a SCRAM
+verifier read back as a boolean. Generated credentials remained in memory or
+protected files and were never included in logs or command-line values. The
+Node, identity and Workspace services all used the same restricted pool; there
+was no privileged fallback. The reviewed grants for this read-only-node slice were:
+
+| Object | Right | Actual path |
+| --- | --- | --- |
+| installation_state, tenants, workspaces, sites, cells, agent_pacing, schema_migrations | SELECT | Installed identity, active scope, pacing and ledger reads |
+| managed_nodes, node_tasks | SELECT, UPDATE | Credential/heartbeat state, claims and acknowledgement |
+| node_task_history | SELECT, INSERT | Task state/history trigger path |
+| audit_events | INSERT | Existing private-owner audit trigger |
+| Owned fixture schema | USAGE | Qualified runtime objects |
+| Prototype authority-lock function | EXECUTE | Original installation/tenant shared-lock fence |
+
+This list is observed prototype input, not the complete gateway grant catalog.
+The function body bound qualified relations at creation, fixed its search path,
+and closed PUBLIC execution transactionally before exposing the caller grant.
+The restricted real service then:
+
+- Committed a heartbeat whose persisted timestamp matched the returned server time.
+- Refused a different enrolled node's credential with AGENT_UNAUTHORIZED.
+- Claimed an actual collect_facts.v1 task on attempt one and acknowledged its exact
+  sequence; persisted attempt, acknowledged attempt and node cursor matched.
+- Received SQLSTATE 42501 for direct installation and tenant mutation, human
+  identity and membership reads, private audit-head reads and journal writes.
+- Failed the next real claim closed, without a lease, after EXECUTE was revoked;
+  the traced seventh permission refusal was 42501.
+
+TestRestrictedReadOnlyGatewayAuthorityPrototype passed in 1.79 seconds with no
+skips. The owned network-none container published no host port and used two CPUs,
+1 GiB and the same pinned image as the synthetic prototype. Both resource locks
+were held; MemFree was 4102932 KiB, MemAvailable 20105108 KiB and full I/O PSI
+avg10 was 0.03. The container, anonymous volume, database input and password file
+were removed. The external input archive was 5271 bytes with SHA-256
+1201d518a9cecc3ff40fa5acd2bb506a6c9248f9a25a856a540099a7af0318dd;
+the actual test-log SHA-256 is
+5e3a67f7b9d82920d31e7133db8a547901536add97f3aa9e114e0f61fbbccf40.
+
+This proves independent local SCRAM login and the actual read-only Node SQL path.
+It does not prove TLS, aggregate connection exhaustion, component/inference or
+delegated profiles, background workers, normal catalog/readiness admission or an
+installed gateway. The candidate function intentionally changes the disposable
+catalog; no migration number, runtime grant, startup behavior or delivery default
+was activated. ARC-111 remains unticked while those acceptance gates remain open.
