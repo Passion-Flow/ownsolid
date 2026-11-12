@@ -144,6 +144,7 @@ func serveAgedConnection(ctx context.Context, conn *agingConn, tlsConfig *tls.Co
 		}
 		shutdown, cancel := context.WithTimeout(context.Background(), budget)
 		defer cancel()
+		startedAt := time.Now()
 		err := server.Shutdown(shutdown)
 		forced := err != nil
 		if err != nil {
@@ -155,10 +156,8 @@ func serveAgedConnection(ctx context.Context, conn *agingConn, tlsConfig *tls.Co
 			}
 		}
 		// Notify the transport before logging; a slow sink must not postpone GOAWAY.
-		slog.Info("http_connection_retired", "reason", reason,
-			"connection_id", conn.id,
-			"accepted_at", conn.acceptedAt.UTC(), "drain_at", conn.drainAt.UTC(),
-			"age_seconds", conn.drainAt.Sub(conn.acceptedAt).Seconds(), "forced", forced)
+		finishedAt := time.Now()
+		slog.Info("http_connection_retired", retirementLogFields(conn, reason, startedAt, finishedAt, forced)...)
 		shutdownDone <- err
 	}()
 	err := server.Serve(listener)
@@ -170,4 +169,15 @@ func serveAgedConnection(ctx context.Context, conn *agingConn, tlsConfig *tls.Co
 		return err
 	}
 	return <-shutdownDone
+}
+
+// Keep planned jitter separate from elapsed drain and transport completion.
+// Sub runs before UTC conversion so elapsed values retain monotonic semantics.
+func retirementLogFields(conn *agingConn, reason string, startedAt, finishedAt time.Time, forced bool) []any {
+	return []any{"reason", reason, "connection_id", conn.id,
+		"accepted_at", conn.acceptedAt.UTC(), "drain_at", conn.drainAt.UTC(),
+		"drain_started_at", startedAt.UTC(), "retired_at", finishedAt.UTC(),
+		"scheduled_age_seconds", conn.drainAt.Sub(conn.acceptedAt).Seconds(),
+		"drain_started_age_seconds", startedAt.Sub(conn.acceptedAt).Seconds(),
+		"age_seconds", finishedAt.Sub(conn.acceptedAt).Seconds(), "forced", forced}
 }

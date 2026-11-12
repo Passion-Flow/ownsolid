@@ -12,9 +12,12 @@ import (
 )
 
 type gatewayRetirement struct {
-	reason     string
-	ageSeconds float64
-	forced     bool
+	reason              string
+	ageSeconds          float64
+	scheduledAgeSeconds float64
+	startedAgeSeconds   float64
+	observed            bool
+	forced              bool
 }
 
 type gatewayConnectionState struct {
@@ -41,12 +44,14 @@ func parseGatewayConnections(output string) (gatewayConnectionState, error) {
 	state := gatewayConnectionState{active: map[string]string{}, retired: map[string]gatewayRetirement{}}
 	for _, line := range strings.Split(output, "\n") {
 		var entry struct {
-			Message      string   `json:"msg"`
-			Node         string   `json:"node_id"`
-			ConnectionID string   `json:"connection_id"`
-			Reason       string   `json:"reason"`
-			AgeSeconds   *float64 `json:"age_seconds"`
-			Forced       *bool    `json:"forced"`
+			Message             string   `json:"msg"`
+			Node                string   `json:"node_id"`
+			ConnectionID        string   `json:"connection_id"`
+			Reason              string   `json:"reason"`
+			AgeSeconds          *float64 `json:"age_seconds"`
+			ScheduledAgeSeconds *float64 `json:"scheduled_age_seconds"`
+			StartedAgeSeconds   *float64 `json:"drain_started_age_seconds"`
+			Forced              *bool    `json:"forced"`
 		}
 		if json.Unmarshal([]byte(line), &entry) != nil {
 			for _, field := range strings.Fields(line) {
@@ -61,12 +66,19 @@ func parseGatewayConnections(output string) (gatewayConnectionState, error) {
 					entry.ConnectionID = value
 				case "reason":
 					entry.Reason = value
-				case "age_seconds":
+				case "age_seconds", "scheduled_age_seconds", "drain_started_age_seconds":
 					number, err := strconv.ParseFloat(value, 64)
 					if err != nil {
 						return state, fmt.Errorf("invalid gateway age observation: %w", err)
 					}
-					entry.AgeSeconds = &number
+					switch key {
+					case "age_seconds":
+						entry.AgeSeconds = &number
+					case "scheduled_age_seconds":
+						entry.ScheduledAgeSeconds = &number
+					case "drain_started_age_seconds":
+						entry.StartedAgeSeconds = &number
+					}
 				case "forced":
 					forced, err := strconv.ParseBool(value)
 					if err != nil {
@@ -92,7 +104,24 @@ func parseGatewayConnections(output string) (gatewayConnectionState, error) {
 				math.IsNaN(*entry.AgeSeconds) || math.IsInf(*entry.AgeSeconds, 0) || *entry.AgeSeconds < 0 {
 				return state, fmt.Errorf("gateway retirement has an invalid transport identity or outcome")
 			}
-			state.retired[entry.ConnectionID] = gatewayRetirement{entry.Reason, *entry.AgeSeconds, *entry.Forced}
+			retirement := gatewayRetirement{reason: entry.Reason, ageSeconds: *entry.AgeSeconds, forced: *entry.Forced}
+			if entry.ScheduledAgeSeconds != nil || entry.StartedAgeSeconds != nil {
+				if entry.ScheduledAgeSeconds == nil || entry.StartedAgeSeconds == nil {
+					return state, fmt.Errorf("gateway retirement has incomplete observed ages")
+				}
+				for _, number := range []float64{*entry.ScheduledAgeSeconds, *entry.StartedAgeSeconds} {
+					if math.IsNaN(number) || math.IsInf(number, 0) || number < 0 {
+						return state, fmt.Errorf("gateway retirement has an invalid observed age")
+					}
+				}
+				if *entry.AgeSeconds < *entry.StartedAgeSeconds || entry.Reason == "connection_age" && *entry.StartedAgeSeconds < *entry.ScheduledAgeSeconds {
+					return state, fmt.Errorf("gateway retirement has inconsistent observed timing")
+				}
+				retirement.scheduledAgeSeconds = *entry.ScheduledAgeSeconds
+				retirement.startedAgeSeconds = *entry.StartedAgeSeconds
+				retirement.observed = true
+			}
+			state.retired[entry.ConnectionID] = retirement
 		}
 	}
 	return state, nil
@@ -200,14 +229,31 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
 				if !ok || current.active[node] == "" || current.active[node] == previousID {
 					return false
 				}
-				if retirement.reason != "connection_age" || retirement.forced ||
-					retirement.ageSeconds < 0.9*maximumAgeSeconds || retirement.ageSeconds > maximumAgeSeconds {
+				if retirement.reason != "connection_age" || retirement.forced || !retirement.observed ||
+					retirement.scheduledAgeSeconds < 0.9*maximumAgeSeconds || retirement.scheduledAgeSeconds > maximumAgeSeconds {
 					t.Fatalf("invalid automatic retirement: %+v", retirement)
 				}
 			}
 		}
 		return true
 	})
+	for _, pair := range pairs {
+		current := gatewayConnections(t, pair.gateway.name)
+		minimumStart, minimumRetirement := math.Inf(1), math.Inf(1)
+		maximumStart, maximumRetirement, maximumDelay := 0.0, 0.0, 0.0
+		for _, id := range pair.before.active {
+			retirement, ok := current.retired[id]
+			if !ok || !retirement.observed {
+				t.Fatal("original transport lost its elapsed timing observation")
+			}
+			minimumStart = min(minimumStart, retirement.startedAgeSeconds)
+			maximumStart = max(maximumStart, retirement.startedAgeSeconds)
+			minimumRetirement = min(minimumRetirement, retirement.ageSeconds)
+			maximumRetirement = max(maximumRetirement, retirement.ageSeconds)
+			maximumDelay = max(maximumDelay, retirement.startedAgeSeconds-retirement.scheduledAgeSeconds)
+		}
+		t.Logf("gateway=%s original_transports=%d observed_drain_age_seconds_min=%.6f max=%.6f observed_retirement_age_seconds_min=%.6f max=%.6f drain_delay_seconds_max=%.6f", pair.gateway.name, len(pair.before.active), minimumStart, maximumStart, minimumRetirement, maximumRetirement, maximumDelay)
+	}
 	t.Logf("all %d original connections replaced after %s", gatewayAgents, time.Since(aged).Round(100*time.Millisecond))
 	observer.checkpoint(t, "after_automatic_age")
 	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1"); running != strconv.Itoa(len(tasks)) {
@@ -268,4 +314,41 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
 		t.Fatalf("lifecycle fleet did not retain streams, renewals and preference checks: %+v", report)
 	}
 	e.requireFleetCursors(t, fleet)
+}
+
+func TestGatewayObservedRetirementTiming(t *testing.T) {
+	for _, line := range []string{
+		`{"msg":"http_connection_retired","connection_id":"observed","reason":"connection_age","scheduled_age_seconds":58.5,"drain_started_age_seconds":58.6,"age_seconds":60.5,"forced":false}`,
+		`msg=http_connection_retired connection_id=observed reason=connection_age scheduled_age_seconds=58.5 drain_started_age_seconds=58.6 age_seconds=60.5 forced=false`,
+	} {
+		state, err := parseGatewayConnections(line)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := state.retired["observed"]
+		if !got.observed || got.scheduledAgeSeconds != 58.5 || got.startedAgeSeconds != 58.6 || got.ageSeconds != 60.5 || got.forced {
+			t.Fatalf("lost planned or measured timing: %+v", got)
+		}
+	}
+	early := `{"msg":"http_connection_retired","connection_id":"early","reason":"process_shutdown","scheduled_age_seconds":58.5,"drain_started_age_seconds":0.1,"age_seconds":0.2,"forced":false}`
+	if state, err := parseGatewayConnections(early); err != nil || !state.retired["early"].observed || state.retired["early"].ageSeconds != 0.2 {
+		t.Fatal("early process stop lost its actual age", err)
+	}
+	legacy := `{"msg":"http_connection_retired","connection_id":"legacy","reason":"connection_age","age_seconds":58.5,"forced":false}`
+	if state, err := parseGatewayConnections(legacy); err != nil || state.retired["legacy"].observed {
+		t.Fatal("legacy planning log established an observed age", err)
+	}
+	for _, line := range []string{
+		`msg=http_connection_retired connection_id=bad reason=connection_age scheduled_age_seconds=58.5 age_seconds=60.5 forced=false`,
+		`msg=http_connection_retired connection_id=bad reason=connection_age drain_started_age_seconds=58.6 age_seconds=60.5 forced=false`,
+		`msg=http_connection_retired connection_id=bad reason=connection_age scheduled_age_seconds=-1 drain_started_age_seconds=58.6 age_seconds=60.5 forced=false`,
+		`msg=http_connection_retired connection_id=bad reason=connection_age scheduled_age_seconds=58.5 drain_started_age_seconds=NaN age_seconds=60.5 forced=false`,
+		`msg=http_connection_retired connection_id=bad reason=connection_age scheduled_age_seconds=+Inf drain_started_age_seconds=58.6 age_seconds=60.5 forced=false`,
+		`msg=http_connection_retired connection_id=bad reason=connection_age scheduled_age_seconds=58.5 drain_started_age_seconds=58.4 age_seconds=60.5 forced=false`,
+		`msg=http_connection_retired connection_id=bad reason=connection_age scheduled_age_seconds=58.5 drain_started_age_seconds=58.6 age_seconds=58.5 forced=false`,
+	} {
+		if _, err := parseGatewayConnections(line); err == nil {
+			t.Fatal("incomplete or inconsistent elapsed timing accepted", line)
+		}
+	}
 }
