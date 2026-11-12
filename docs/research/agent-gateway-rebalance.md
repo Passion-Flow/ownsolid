@@ -566,3 +566,79 @@ ac0bd47fca1353d3affad18d7c08622e0c722d3fdcfb1f0df2e3cc528f7aafcc
 and 5747bcdf90495217928272fc7b68b6accddc3928e63d90a7e82a44b784b7308c.
 The affected e2e race log SHA-256 is
 21ee38b0e59002b7ef59e2a3fd21a047e2cdc9c81f7e443f21629fef74fd70a9.
+
+
+## Age handoff prototype requirements
+
+The installed 497/500 terminal result remains a failure. Do not change the report
+accounting, suppress a known disconnect, stop aging, extend the tasks or relax the
+strict installed assertions to hide it. The next experiment addresses an actual
+planned-retirement exchange gap: establish an authenticated replacement between
+exchanges before the old transport reaches its unchanged age, while preserving
+natural retirement and all lease/cursor semantics. This is a prototype candidate,
+not an accepted product implementation or a new capacity result.
+
+The implemented [gRPC connection-management design](https://github.com/grpc/proposal/blob/master/A9-server-side-conn-mgt.md)
+uses GOAWAY and a grace period to retire transports; it does not promise to migrate
+one application's long-lived stream. The existing ownsolid preference probe
+already retains the old stream until a candidate heartbeat succeeds. The gateway
+already replaces an authenticated same-node session only after its first successful
+exchange, and its old cleanup does not remove the replacement. Reuse those
+properties; do not create a second task executor or replay an outstanding claim.
+
+[gRPC custom metadata](https://grpc.io/docs/guides/metadata/) can carry optional
+ASCII response hints without adding fields to the strict version-1 JSON frames.
+Prototype first-reply relative drain/close durations derived only from the owned
+socket's actual ConnectionDrainAt/close deadline. Send them only after a successful
+authenticated first heartbeat. The server's jittered age, graceful reply window
+and hard socket deadline stay unchanged. A request header can never select the
+socket identity, its age or the response hint.
+
+Compatibility is explicit: old agents ignore the extra response metadata and
+retain their existing reconnect behavior. New agents talking to old servers, a
+shared listener without age, or missing/duplicate/malformed/out-of-range hints
+retain that same legacy path. No message schema/version, task sequence, cursor,
+credential, certificate or persisted agent checkpoint changes. Reject a required
+new frame or a simultaneous fleet upgrade. Validate bounded integer durations;
+use a conservative local monotonic schedule rather than trusting remote wall time.
+A candidate probe is between exchanges, never an automatic claim/result replay.
+If it fails or capacity is full, keep the original authenticated path and the
+existing single retry owner.
+
+Closing the old gRPC ClientConn immediately would destroy the very natural-age
+proof the installed test requires. Keeping an unused ClientConn forever is also
+wrong: gRPC may reconnect a channel after its original transport ends. The pinned
+[gRPC-Go 1.85.0 stats contract](https://pkg.go.dev/google.golang.org/grpc@v1.85.0/stats#Handler)
+provides per-connection TagConn/ConnEnd events. Client RPC contexts do not inherit
+TagConn context, so do not assume they do. The pinned source instead attaches the
+actual transport's [peer local/remote addresses](https://pkg.go.dev/google.golang.org/grpc@v1.85.0/peer#FromContext)
+to ClientStream.Context; obtain them only after the first reply commits the
+attempt. An external prototype may bind that actual transport to its lifecycle
+record, then retire the unused ClientConn when that transport ends, with a bounded
+close-deadline fallback. Never correlate using a caller header or log credentials,
+metadata payloads or TLS keys. Keep at most one retiring ClientConn per Session;
+missing transport binding must keep the legacy behavior, not create an unbounded
+retirement list. Client close must join/resolve its own close callback safely.
+
+Prototype all this outside product code before choosing it. Use real normally
+verified loopback TLS/HTTP2 and the production codec/gateway/client through
+explicit source overlays, with synthetic backend facts. Require several natural
+age cycles without a failed healthy heartbeat/claim; the unchanged server-generated
+retirement IDs and ages must match. Delay an admitted lease reply across age, keep
+its single lease/cursor and exact acknowledgement, and prove cancellation joins
+all listeners/client connections. Also require old-server/new-client and retained
+old-client/new-server behavior, invalid metadata, wrong credentials/certificate,
+failed candidate, saturated session/connection budget and preference failback.
+The existing MaxSessions and common connection budget cannot silently grow to
+make a warm replacement pass. A saturated failed probe must leave the current
+session usable; this is not a zero-gap guarantee at arbitrary saturation.
+
+Use the existing pinned Go BSD-3-Clause toolchain, gRPC-Go 1.85.0 Apache-2.0,
+protobuf-go 1.36.12 BSD-3-Clause and x/net BSD-3-Clause with their retained notices;
+commercial use, redistribution with notices and offline execution are allowed.
+See [gRPC-Go](https://github.com/grpc/grpc-go/blob/v1.85.0/LICENSE) and
+[protobuf-go](https://github.com/protocolbuffers/protobuf-go/blob/v1.36.12/LICENSE).
+No new dependency, model or dataset is introduced. Even a passing small prototype
+must still be followed by full repository gates and the unchanged native installed
+500-agent simulator drill before ARC-107 can be accepted. No such new run is
+claimed here.
