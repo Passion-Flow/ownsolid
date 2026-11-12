@@ -121,3 +121,54 @@ func TestPostgresWorkspaceQueueRejectsForeignAndMissingScope(t *testing.T) {
 		t.Fatalf("write transaction accepted for rank: %v", err)
 	}
 }
+
+func TestPostgresWorkspaceQueueRefusesForeignReservationCoordinates(t *testing.T) {
+	f := newReservationFixture(t)
+	other := newBorrowingAttempt(f.first, f.other)
+	reserveBorrowing(t, f.store, f.first, 2)
+	reserveBorrowing(t, f.store, other, 1)
+	entries := []QueueEntry{
+		{JobID: "earlier", QueueID: f.first.WorkspaceID, Sequence: 1},
+		{JobID: "later", QueueID: f.other, Sequence: 2},
+	}
+	if _, err := f.pool.Exec(t.Context(), "INSERT INTO sites VALUES ('other-site'); INSERT INTO cells VALUES ('other-cell')"); err != nil {
+		t.Fatal(err)
+	}
+	rank := func(entries []QueueEntry, wantError error) {
+		t.Helper()
+		if err := pgx.BeginTxFunc(t.Context(), f.pool, submissionSnapshot, func(tx pgx.Tx) error {
+			counted := &rankReadCounter{Tx: tx}
+			got, err := RankWorkspaceQueueWithin(t.Context(), counted, f.first.TenantID, entries)
+			if !errors.Is(err, wantError) || counted.queries != 1 {
+				t.Fatalf("rank: %+v, %v, reads=%d", got, err, counted.queries)
+			}
+			if wantError != nil && got != nil {
+				t.Fatalf("foreign reservation exposed a partial rank: %+v", got)
+			}
+			if wantError == nil && len(got) != len(entries) {
+				t.Fatalf("valid rank: %+v", got)
+			}
+			return nil
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, coordinates := range [][2]string{{"other-site", "default"}, {"default", "other-cell"}} {
+		if _, err := f.pool.Exec(t.Context(), "UPDATE scheduling_reservations SET site_id=$1,cell_id=$2 WHERE attempt_id=$3",
+			coordinates[0], coordinates[1], other.ID); err != nil {
+			t.Fatal(err)
+		}
+		rank(entries, ErrQuotaPolicyUnavailable)
+		rank(entries[:1], nil)
+		var site, cell string
+		var held bool
+		if err := f.pool.QueryRow(t.Context(), "SELECT site_id,cell_id,released_at IS NULL FROM scheduling_reservations WHERE attempt_id=$1", other.ID).
+			Scan(&site, &cell, &held); err != nil || !held || site != coordinates[0] || cell != coordinates[1] {
+			t.Fatalf("read changed the foreign reservation: %q, %q, %v, %v", site, cell, held, err)
+		}
+	}
+	if _, err := f.pool.Exec(t.Context(), "UPDATE scheduling_reservations SET site_id=local_site_id(),cell_id=local_cell_id() WHERE attempt_id=$1", other.ID); err != nil {
+		t.Fatal(err)
+	}
+	rank(entries, nil)
+}
