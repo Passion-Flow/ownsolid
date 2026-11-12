@@ -21,7 +21,7 @@ func (opts *options) workspaceCommand() *cobra.Command {
 		Use: "workspace", Short: "Inspect workspaces available to the platform administrator.",
 		Example: "  ownsolid workspace list --output json",
 	}
-	group.AddCommand(opts.listWorkspaces(), &cobra.Command{
+	group.AddCommand(opts.listWorkspaces(), opts.workspaceMemberCommand(), &cobra.Command{
 		Use: "get <workspace-id>", Short: "Read a workspace by its exact UUID.",
 		Example: "  ownsolid workspace get \"$WORKSPACE_ID\" --output yaml",
 		Args:    cobra.ExactArgs(1),
