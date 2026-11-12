@@ -1,7 +1,8 @@
 # Version dataset snapshots with original sources
 
-Status: accepted design for the DAT-101 schema-60 file-owner increment;
-implementation and native acceptance remain pending.
+Status: accepted and implemented for the DAT-101 schema-60 file-owner increment.
+[Native component acceptance](../research/dataset-import.md#current-source-and-repository-gate-boundary)
+is source-qualified. Installed route, image and UI admission remain open.
 
 ## Context
 
