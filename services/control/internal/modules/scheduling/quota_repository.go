@@ -134,7 +134,8 @@ func writeQuotaWithin(ctx context.Context, q transaction.Executor, expected int6
 
 func checkActivePolicyWithin(ctx context.Context, q transaction.Executor, tree *QuotaTree) error {
 	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT s.tenant_id::text,s.workspace_id::text,r.key,sum(r.value::numeric)::text
+		`SELECT s.tenant_id::text,s.workspace_id::text,r.key,sum(r.value::numeric)::text,
+ bool_and((s.site_id=local_site_id() AND s.cell_id=local_cell_id()) IS TRUE)
  FROM scheduling_reservations s CROSS JOIN LATERAL jsonb_each_text(s.demand) r
  WHERE s.released_at IS NULL GROUP BY s.tenant_id,s.workspace_id,r.key`))
 	if err != nil {
@@ -144,8 +145,12 @@ func checkActivePolicyWithin(ctx context.Context, q transaction.Executor, tree *
 	for rows.Next() {
 		var tenant, workspace, raw string
 		var resource Resource
-		if err := rows.Scan(&tenant, &workspace, &resource, &raw); err != nil {
+		var local bool
+		if err := rows.Scan(&tenant, &workspace, &resource, &raw, &local); err != nil {
 			return policyError(ctx)
+		}
+		if !local {
+			return ErrQuotaPolicyUnavailable
 		}
 		usage, err := parseReservationUsage(resource, raw)
 		if err != nil {

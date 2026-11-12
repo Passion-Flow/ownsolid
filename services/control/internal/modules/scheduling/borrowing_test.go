@@ -277,3 +277,113 @@ func TestBorrowingNeedsEveryRequestedDimension(t *testing.T) {
 		t.Fatalf("partial allocation was exposed: %v, %v", loans, err)
 	}
 }
+
+func TestPostgresBorrowingRequiresLocalHoldsClaimsAndReleases(t *testing.T) {
+	f := newBorrowingFixture(t)
+	reserveBorrowing(t, f.store, f.first, 1)
+	intent := borrowingIntent(f.lender, 2)
+	if _, err := f.pool.Exec(t.Context(), "INSERT INTO sites VALUES ('other-site'); INSERT INTO cells VALUES ('other-cell')"); err != nil {
+		t.Fatal(err)
+	}
+	setReservationScope := func(site, cell string) {
+		t.Helper()
+		if _, err := f.pool.Exec(t.Context(), "UPDATE scheduling_reservations SET site_id=$1,cell_id=$2 WHERE attempt_id=$3", site, cell, f.first.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	setClaimScope := func(site, cell string) {
+		t.Helper()
+		if _, err := f.pool.Exec(t.Context(), "UPDATE scheduling_quota_reclaims SET site_id=$1,cell_id=$2 WHERE attempt_id=$3", site, cell, f.lender.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, coordinates := range [][2]string{{"other-site", "default"}, {"default", "other-cell"}} {
+		setReservationScope(coordinates[0], coordinates[1])
+		if plan, err := requestReclaimInTransaction(t.Context(), f.store, f.lender, intent); !errors.Is(err, ErrQuotaPolicyUnavailable) || plan.State != "" || len(plan.Victims) != 0 {
+			t.Fatalf("foreign cohort supplied a plan: %+v, %v", plan, err)
+		}
+	}
+	setReservationScope("default", "default")
+	plan, err := requestReclaimInTransaction(t.Context(), f.store, f.lender, intent)
+	if err != nil || plan.State != ReclaimPending || !slices.Equal(plan.Victims, []string{f.first.ID}) {
+		t.Fatalf("local reclaim: %+v, %v", plan, err)
+	}
+	for _, coordinates := range [][2]string{{"other-site", "default"}, {"default", "other-cell"}} {
+		setClaimScope(coordinates[0], coordinates[1])
+		if plan, err := requestReclaimInTransaction(t.Context(), f.store, f.lender, intent); !errors.Is(err, ErrReservationConflict) || plan.State != "" || len(plan.Victims) != 0 {
+			t.Fatalf("foreign claim replay: %+v, %v", plan, err)
+		}
+		if changed, err := reserveInTransaction(t.Context(), f.store, f.lender, intent); changed || !errors.Is(err, ErrReservationConflict) {
+			t.Fatalf("foreign claim admitted: %v, %v", changed, err)
+		}
+		if changed, err := reserveInTransaction(t.Context(), f.store, f.partner, borrowingIntent(f.partner, 1)); changed || !errors.Is(err, ErrQuotaPolicyUnavailable) {
+			t.Fatalf("foreign pending claim supplied cohort state: %v, %v", changed, err)
+		}
+		err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
+			changed, err := CancelReclaimWithin(ctx, q, f.lender)
+			if changed {
+				t.Fatal("foreign claim cancelled")
+			}
+			return err
+		})
+		if !errors.Is(err, ErrReservationConflict) {
+			t.Fatalf("foreign claim cancellation: %v", err)
+		}
+	}
+	setClaimScope("default", "default")
+	if changed, err := releaseInTransaction(t.Context(), f.store, f.first); err != nil || !changed {
+		t.Fatalf("release local victim: %v, %v", changed, err)
+	}
+	for _, coordinates := range [][2]string{{"other-site", "default"}, {"default", "other-cell"}} {
+		setReservationScope(coordinates[0], coordinates[1])
+		if changed, err := reserveInTransaction(t.Context(), f.store, f.lender, intent); changed || !errors.Is(err, ErrReclaimPending) {
+			t.Fatalf("foreign victim satisfied positive release evidence: %v, %v", changed, err)
+		}
+	}
+	setReservationScope("default", "default")
+	reserveBorrowing(t, f.store, f.lender, 2)
+	plan, err = requestReclaimInTransaction(t.Context(), f.store, f.lender, intent)
+	if err != nil || plan.State != ReclaimAdmitted {
+		t.Fatalf("local admitted replay: %+v, %v", plan, err)
+	}
+	var total, held int
+	if err := f.pool.QueryRow(t.Context(), "SELECT count(*),count(*) FILTER(WHERE released_at IS NULL) FROM scheduling_reservations").Scan(&total, &held); err != nil || total != 2 || held != 1 {
+		t.Fatalf("unexpected final holds: %d, %d, %v", total, held, err)
+	}
+}
+
+func TestPostgresQuotaReplacementRefusesForeignActiveHold(t *testing.T) {
+	f := newReservationFixture(t)
+	reserveBorrowing(t, f.store, f.first, 2)
+	if _, err := f.pool.Exec(t.Context(), "INSERT INTO sites VALUES ('other-site'); INSERT INTO cells VALUES ('other-cell')"); err != nil {
+		t.Fatal(err)
+	}
+	for _, coordinates := range [][2]string{{"other-site", "default"}, {"default", "other-cell"}} {
+		if _, err := f.pool.Exec(t.Context(), "UPDATE scheduling_reservations SET site_id=$1,cell_id=$2 WHERE attempt_id=$3", coordinates[0], coordinates[1], f.first.ID); err != nil {
+			t.Fatal(err)
+		}
+		err := pgx.BeginFunc(t.Context(), f.pool, func(tx pgx.Tx) error {
+			_, _, err := ReplaceQuotaWithin(t.Context(), tx, 1, f.policy)
+			return err
+		})
+		if !errors.Is(err, ErrQuotaPolicyUnavailable) {
+			t.Fatalf("foreign hold allowed quota replacement: %v", err)
+		}
+		var revision int64
+		if err := f.pool.QueryRow(t.Context(), "SELECT revision FROM scheduling_quota_policy").Scan(&revision); err != nil || revision != 1 {
+			t.Fatalf("failed replacement changed policy: %d, %v", revision, err)
+		}
+	}
+	if _, err := f.pool.Exec(t.Context(), "UPDATE scheduling_reservations SET site_id=local_site_id(),cell_id=local_cell_id() WHERE attempt_id=$1", f.first.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := pgx.BeginFunc(t.Context(), f.pool, func(tx pgx.Tx) error {
+		revision, changed, err := ReplaceQuotaWithin(t.Context(), tx, 1, f.policy)
+		if err == nil && (revision != 2 || !changed) {
+			t.Fatalf("local quota replacement: %d, %v", revision, changed)
+		}
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
