@@ -16,7 +16,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
@@ -94,8 +93,8 @@ func expectOIDCProfileSQLState(t *testing.T, f sourceRepositoryFixture, code, st
 		_, e := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, statement, args...))
 		return e
 	})
-	var native *pgconn.PgError
-	if !errors.As(e, &native) || native.Code != code {
+	var safe *transaction.Error
+	if !errors.As(e, &safe) || safe.SQLState != code {
 		t.Fatal("candidate did not enforce the expected PostgreSQL constraint", code)
 	}
 }
@@ -200,8 +199,8 @@ func TestPostgresOIDCProfileSchemaEnforcesOpaqueIdentityAndNonce(t *testing.T) {
 	f.exec(t, oidcProfileFlowStatement(t, f, id, connector, nonce))
 	reused := oidcProfileFlowStatement(t, f, uuid.NewString(), connector, nonce)
 	e := f.f.Store.Within(f.ctx, false, func(ctx context.Context, q transaction.Executor) error { _, e := q.Exec(ctx, reused); return e })
-	var native *pgconn.PgError
-	if !errors.As(e, &native) || native.Code != "23505" {
+	var safe *transaction.Error
+	if !errors.As(e, &safe) || safe.SQLState != "23505" {
 		t.Fatal("OIDC nonce reuse was accepted")
 	}
 	expectOIDCProfileSQLState(t, f, "P0001", `UPDATE sso_flows SET state='claimed',claim_id=$1,verifier_key_id=NULL,verifier_nonce=NULL,verifier_ciphertext=NULL,oidc_nonce_hash=$2 WHERE id=$3`, uuid.NewString(), security.Digest(security.Token()), id)
@@ -306,8 +305,8 @@ func TestPostgresOIDCProfileNonceRaceCommitsOneFlow(t *testing.T) {
 		t.Fatal("first nonce flow did not commit", e)
 	}
 	e = <-secondDone
-	var native *pgconn.PgError
-	if !errors.As(e, &native) || native.Code != "23505" {
+	var safe *transaction.Error
+	if !errors.As(e, &safe) || safe.SQLState != "23505" {
 		t.Fatal("second nonce flow did not retain its unique refusal")
 	}
 	var count int
