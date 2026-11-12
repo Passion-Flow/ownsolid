@@ -103,10 +103,19 @@ inspection confirmed removal; the lowercase diagnostic was retained and
 the harness check corrected. No product test was rerun to conceal that
 harness result. The owned temporary APFS volume was detached and removed.
 
-The native amd64 runner twice refused a busy shared CPU lock before source
-construction or containers started. This new lookup therefore has arm64
-execution evidence only; earlier native budget/loop evidence does not
-qualify it. Reuse the selected test roots above on the native target when
-the shared window is available. No persistent test service or queue was
-left running. The existing three model safety observations remain
-unqualified; this deterministic lookup invokes no model.
+The first two native attempts refused the busy CPU lock before source or
+containers started. After rebasing onto schema 59, source `8a6c7c13` passed
+the same five repository and two HTTPS roots on native Linux amd64 with
+PostgreSQL 18.6 in network mode `none`. The application, assistant, Web and
+Rust files were byte-identical to the complete-gate source above. Native
+repository log SHA-256 is
+`14a13be2dcf536f2396e0fc93c2ca406fbec586b3f228c35f52cf163acd7ccbf`;
+HTTPS log SHA-256 is
+`35362ca621bdbfee6ae9181e30a77f709c52e6ed57f9d1810ef5bc6907bf76c1`.
+The separate host readback returned `x86_64`. The native harness exited
+after its immediate inspection did not establish container removal; the
+exact cause was not captured. A later exact-container inspection confirmed
+absence. Retain both the original exit and the completion readback; no
+product test was repeated to replace that result. No persistent test service
+or queue was left running. The existing three model safety observations
+remain unqualified; this deterministic lookup invokes no model.
