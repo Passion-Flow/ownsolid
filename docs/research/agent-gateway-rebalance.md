@@ -664,3 +664,46 @@ it did not yet change or qualify the real agent's automatic handoff, compatibili
 lease/cursor behavior, saturation or the installed 500-agent drill. All code and
 logs remain outside the repository. The prototype released its resource lock and
 joined its listener; no service or container remains running.
+
+
+An external materialized snapshot of `ecc7a3b041ee0ff62e43ba038ccc8ec3c86a98ca`
+then passed the six prototype roots (12 including metadata subcases) using the
+actual agent Session implementation with candidate source changes, production
+listener/gateway/codec, normally verified server TLS and actual node certificates.
+There were no skips. The six-second automatic handoff flow observed seven
+authenticated physical connections and five unchanged natural retirements, no
+healthy heartbeat/claim errors, exactly one acknowledgement on attempt one, no
+HTTPS acknowledgement in the healthy flow, and sequence seven on every subsequent
+claim. A separate admitted lease reply crossed its actual connection drain time;
+it kept attempt one and sequence seven, received one acknowledgement through the
+existing HTTPS fallback, and was not claimed again after reconnecting.
+
+The full-session-budget refusal retained the original authenticated stream without
+raising MaxSessions. Missing, duplicate, overflowing, negative, noncanonical and
+close-before-drain metadata retained the legacy path. Missing node certificates
+and wrong credentials could not replace the authenticated session. The retained
+raw client also ignored the additive headers while completing its three natural
+retirement cycles. The actual-client package run took 23.081 seconds under race;
+the unchanged existing agent client suite with the candidate source took 6.464
+seconds under race. Both had vet enabled and exit zero. Their log SHA-256 values
+are `e99f83734f23a907063fbebca98b75c15e294429a5c96d7d5dfc773a2adb40e0` and
+`b28317f3e28475e860b206e2f8ca5b3d22ede0544efd84a2a17f97d58af2cdca`.
+
+The external harness failures remain retained separately: the first run supplied
+certificate filenames to UseCertificate, which correctly requires PEM contents,
+and a virtual-only bridge directory could not be entered by vet. Materialize the
+bridge only in the owned external source snapshot, rather than skipping vet. The
+next run's stack trace showed the test log collector recursively forwarding through
+slog's default standard-log bridge; use an explicit text handler and restore the
+prior standard logger after all owned listeners join. This was a harness deadlock,
+not a diagnosed SendHeader defect. The candidate uses SetHeader to attach metadata
+to the first real heartbeat reply, avoiding an unnecessary independent header flush.
+A subsequent lease fixture returned bare JSON rather than the existing data
+envelope and was corrected without changing the product decoder or assertions.
+No production source or capacity claim was changed by these experiments.
+
+Before product adoption, also bound a slow candidate probe by the original
+transport's remaining healthy time and prove that failed handshakes do not consume
+that whole window. Retired channels must remain bounded to one and join on explicit
+client shutdown. These small runs do not establish the unchanged installed
+500-agent drill; its earlier 497/500 failure remains open.
