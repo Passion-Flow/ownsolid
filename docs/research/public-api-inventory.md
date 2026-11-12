@@ -828,8 +828,19 @@ separate private projection of the producer's 29 contracts and Help inputs.
 Both generator checks pass with six private Chinese description additions.
 This is not a browser test or a resolution of the shared Help URL assertion.
 Generated Go parses with gofmt; three adapted Go codec groups are prepared but
-have not been compiled or run. No new Linux heavy admission or Mac queue was
-attempted. The independent 783567ea audit protocol input remains unchanged.
+have not been compiled or run. In the single admitted Linux amd64 segment,
+the independent audit fixture 783567ea passed its ten protocol groups first.
+The resource check before this history group then refused I/O full avg10
+27.29 against maximum 5. The parent exited 1 after 49.817 seconds and released
+both inherited lock descriptors and all owned processes and temporary files.
+History source 6a2dd96fb392444de755db1cf5bfb771867064b0 therefore has zero
+actual Go roots, zero skips and no test exit; this is a pre-execution resource
+refusal, not a codec test failure. No retry was made, and the earlier Mac
+exit-75 wait remains separate evidence. The private combined proof is
+`/root/lane-rel-tools/identity-audit-contract/go-native-linux-proof.json`
+(SHA-256 `cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1`).
+The audit pass does not qualify these independent history codecs or the
+dispatcher, authorization, PostgreSQL, schema installation or shared Help gate.
 
 The producer bounds compact encoded data envelopes. IAM must preserve that
 ceiling in the actual HTTP serialization, not assume that a decoded object or
