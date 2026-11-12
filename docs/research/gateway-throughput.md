@@ -291,3 +291,26 @@ compiled Rust binary in `PROJECT_ONE_GATEWAY_BINARY`. Run from the root.
 ```sh
 go -C services/control test -p 1 -tags gateway_integration ./internal/modules/distribution   -run '^Test(RealGoRustPostgres(RestartAfterLostOutcomeReply|LostOutcomeReply)|PostgresGatewayOutcomeMeteringAtomicRetry|AliasDescriptionPostgreSQLUpgradeAndHTTPS)$' -count=1
 ```
+
+
+## Committed schema-58 integration qualification
+
+The retained gateway source at 6f31064f, based on 106ca52d, passed
+13 focused PostgreSQL tests in a loopback-only namespace. The actual
+Go/Rust chain covered both shared and dedicated machine HTTPS,
+control outage, an acknowledgement lost after commit and recovery of
+the exact retained spool after process kill. The same qualification
+passed the scoped atomic metering retry, historical request binding,
+ordinary and consumed-key authority, optional human capability reads
+and two-issuer CA overlap. The fixture explicitly enabled the metering
+candidate against its own ledger; production receipt projection remains
+disabled. Deployment observations and upstream generation were synthetic.
+
+The Rust build passed offline; cargo test reported 84 passed and 6
+ignored, and clippy passed with warnings denied. The source and logs
+are retained in
+/root/lane-gw-acceptance/schema58-gateway-regression.zxq09kh2. Both
+shared Linux locks were held after the resource preflight. All owned
+containers and namespaces were disposed, with no host port published.
+These protocol and recovery results supplement the measured throughput
+above; sustained installation-scale throughput remains a separate gate.
