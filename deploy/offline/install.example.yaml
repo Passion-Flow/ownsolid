@@ -114,6 +114,9 @@ resources:
 telemetry:
   metrics_retention: 30d
   logs_retention: 30d
+  # Optional. Protected Control output directory returned by fleet-history apply.
+  # Store origins must use private host IPs reachable from the Control container.
+  # fleet_history_control_directory: /srv/ownsolid-fleet-history/inputs/<generation>/control
 
 # Optional, default 600. Time limit of each install step, 30 to 7200 seconds.
 step_seconds: 600
