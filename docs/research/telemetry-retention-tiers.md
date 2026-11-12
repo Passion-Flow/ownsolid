@@ -458,10 +458,11 @@ recovery, real hardware or an installed Console.
 
 ### Verified ninety-day aggregate shape
 
-Source fb699628 passed TestFleetHistoryNinetyDayAggregates with the race
-detector on the loopback-only Linux amd64 fixture. Native VictoriaMetrics
-1.155.0 counted exactly 1,296,000 samples before and after its graceful
-process restart. The data occupied 495,616 allocated file bytes after the
+Source 876f9c5b passed make check, make build, the complete owned-module
+race suite and all three native history profiles on loopback-only Linux
+amd64. TestFleetHistoryNinetyDayAggregates ran with the race detector.
+Native VictoriaMetrics 1.155.0 counted exactly 1,296,000 samples before and after its graceful
+process restart. The data occupied 491,520 allocated file bytes after the
 final stop. The 100-day store held the full settled 90-day input; this run
 does not test expiration or power-loss durability.
 
@@ -469,8 +470,8 @@ The normal authenticated TLS read returned five cells with 1,424 points
 each. Every timestamp, observed count, varying reachable count and measured
 zero matched the input, every request had its committed audit, and the raw
 guard received no request. The first read after restarting VictoriaMetrics
-took 925.76 ms. Thirty subsequent reads had a nearest-rank median of
-815.11 ms, p95 of 890.00 ms and maximum of 948.11 ms. Those client
+took 964.49 ms. Thirty subsequent reads had a nearest-rank median of
+915.57 ms, p95 of 967.37 ms and maximum of 1,003.02 ms. Those client
 measurements include the race detector, response schema and point/count
 validation, and SQL audit readback. They do not isolate native store
 execution or establish production percentiles. The host page cache was

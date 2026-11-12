@@ -1,12 +1,12 @@
 # Bounded HTTP request classes (OBS-106)
 
 The process recorder uses a closed set of route families. The monitoring
-contract already permits health as a family, but the implementation recognizes
+contract permits health as a family. Its earlier classifier recognized
 only /healthz and /readyz. The actual
 [health owner](../../services/control/internal/platform/health/handler.go) and
 [Admin dispatcher](../../services/control/internal/modules/identity/http/handler.go)
-serve /health/live and /health/ready. Those paths currently enter other,
-hiding them from a health-family view.
+serve /health/live and /health/ready. Before this correction, those paths
+entered other and were missing from the health-family view.
 
 [Prometheus instrumentation guidance](https://prometheus.io/docs/practices/instrumentation/#do-not-overuse-labels)
 bounds label cardinality. The
@@ -24,7 +24,7 @@ no readiness, authentication or serving policy.
 The same dispatcher recognizes the current /agent/v1/ and /gateway/v1/
 machine families plus the exact
 [agent gRPC SessionPath](../../api/agent/v1/session.go).
-The recorder currently recognizes only their legacy API-prefixed families.
+The earlier recorder recognized only their legacy API-prefixed families.
 Classify the canonical machine roots and the exact gRPC method after the
 existing cell-relative normalization, preserving legacy classes. Do not infer
 a family from a nearly matching version or arbitrary gRPC method name.
@@ -65,3 +65,8 @@ SSE, optional-interface, redaction and overflow tests passed in the same
 package run. This does not qualify agent or gateway authentication, RPC
 semantic outcomes, installed readiness or the complete OBS-106 dashboard.
 The in-process TLS listeners closed and no external service was started.
+
+The complete owned-module race suite passed again in the combined Linux
+acceptance at 876f9c5b, together with make check, make build and the three
+native history profiles. The route correction adds no label values beyond
+the existing closed families.
