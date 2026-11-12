@@ -52,8 +52,12 @@ only from a command line, which an offline site's administrator may not have to 
 - **Limits are honest.** A license carries no node, user or feature limit (the product decision: one
   whole-platform license), so the page says so and shows what does limit it: whether new work is
   allowed, and imports used of `runtime.licensing.maximum_imports`, which the API now reports. The
-  installer has no setting for it yet, so raising it means editing `control.yaml`, and `apply` rewrites
-  that file; the default of 64 is far from a yearly renewal's reach, and DEL-109 owns the gap.
+  installer already accepts `control_settings.runtime.licensing.maximum_imports`. Its
+  [renderer](../../deploy/offline/internal/install/materialize.go) retains the supplied runtime
+  settings for both Control profiles and owns the separate top-level `licensing.trust_file`.
+  Change the installation input and apply it; a hand edit to generated `control.yaml` is overwritten.
+  The default remains 64. Materializing and preserving an override does not establish installed
+  quota admission or renewal lifecycle acceptance, so those DEL-109 checks remain open.
 - **The first failure stays recoverable.** Inspection joins import in the list of actions a missing or
   expired license cannot block.
 
