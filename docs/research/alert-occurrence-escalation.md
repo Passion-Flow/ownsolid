@@ -95,3 +95,93 @@ observe resolution at different times, a same-label recurrence may wait for
 the notification repeat interval on the delayed route. A deployment must
 qualify recurrence timing, missed resolution reconciliation and group
 membership behavior before admitting this gate.
+
+## Group escalation qualification boundary
+
+The single-occurrence candidate must not be generalized by making one delivery
+claim per member. Forty members in one incident must still share one escalation
+step, with bounded retries under one durable idempotency receipt. The existing rack qualification proves
+inhibition and one initial notification, not this grouped acknowledgement and
+retry lifecycle.
+
+[PagerDuty's incident acknowledgement semantics](https://docs.pagerduty.com/developer/send-alert-event#event-action-behavior)
+keep an acknowledged incident quiet when further triggers join it; a trigger
+after resolution creates a new incident. This is a behavior reference only.
+No PagerDuty runtime, SDK, service account or cloud connection is introduced.
+For the next local prototype, retain acknowledgement while membership changes
+within the same open scoped incident. A genuinely new incident must not inherit
+an earlier acknowledgement.
+
+### What the native webhook establishes
+
+The pinned [webhook writer](https://github.com/prometheus/alertmanager/blob/v0.34.2/notify/webhook/webhook.go)
+provides groupKey and truncatedAlerts. It truncates before constructing template
+data. Reject any truncation rather than interpret a subset's status as the full
+group's state. The [notification pipeline](https://github.com/prometheus/alertmanager/blob/v0.34.2/notify/notify.go)
+applies inhibition and silence before receiver delivery, so even an untruncated
+webhook is a notification view, not a complete inventory of group members.
+
+The [v2 API schema](https://github.com/prometheus/alertmanager/blob/v0.34.2/api/v2/openapi.yaml)
+provides group labels, route labels, receiver and alerts, but no webhook groupKey
+or monotonic group generation. Alert updatedAt is a time, not a sequence. A
+prototype must prove an unambiguous lookup under one fixed receiver route;
+matching only group labels across several routes is insufficient. An absent,
+ambiguous, suppressed or unavailable source must defer a claim. Neither a
+silence nor disappearance constitutes an acknowledgement.
+
+The [upstream alert-client contract](https://github.com/prometheus/alertmanager/blob/v0.34.2/docs/alerts_api.md)
+requires recurring firing updates. Native alerts can resolve when endsAt expires,
+including after a sender stops. A resolved notification reports Alertmanager's
+lifecycle; it cannot by itself prove recovery of a node or rack. Qualification
+must pause updates through expiry and resume with the same fingerprint and
+startsAt, as well as with a genuinely new start. The current occurrence ID and
+relay transaction scheme omit refreshed endsAt. Whether they can represent that
+expiry/resumption without suppressing a later required notification remains an
+open native qualification, not an established product failure or a passing case.
+Pipeline missing-signal notification remains the independent OBS-206 boundary.
+
+### Next prototype and rejected shortcuts
+
+Keep source, receiver, tenant, Workspace and trusted grouping labels in every
+identity and database constraint. The group key selects a current scoped group;
+it cannot be the forever identity of an incident. Persist a separate incident
+identity and generation with bounded occurrence membership. Serialize group
+creation, acknowledgement and delivery claim in PostgreSQL, reusing the current
+lease, stale-completion and unknown-COMMIT controls. Use one idempotency key per
+incident escalation step. A changed member list must not mint another escalation
+step or reset an existing acknowledgement. Preserve individual occurrences
+for diagnostics without fanning out notifications.
+
+Reject one incident forever per groupKey, membership-digest incident IDs, one
+escalation per alert and label silences used as acknowledgement. They respectively
+conflate recurrence, reset acknowledgement during churn, amplify the storm or
+silence future incidents. Do not mount a product group handler until native
+lookup, closure and expiry/resumption behavior are proven outside product code.
+Only incident, acknowledgement, membership identity and delivery state belong in
+SQL. Metric samples, log entries, webhook payloads and label/annotation bodies
+remain in their existing external sources.
+
+For a declared layout of 10,000 nodes in 250 racks of 40, full-rack grouping
+contains 250 incidents and 10,000 member identities before delivery attempts.
+This is row-count arithmetic, not measured storage or latency. The prototype
+must report PostgreSQL relation and index bytes and request latency for that
+metadata shape with concurrent acknowledgement and claims. It must use indexed
+scoped lookups, bounded group membership, finite attempts and bounded retention.
+Keep those results separate from the native telemetry store's
+[17-million-series measurements](telemetry-scale.md#linux-amd64-qualification).
+
+Extend the disposable Alertmanager/PostgreSQL qualification with one 40-member
+group, concurrent responders and claimers, membership additions after
+acknowledgement, partial resolution, complete resolution and recurrence. Verify
+one accepted message after a lost durable receipt and restart. Include identical
+rack/group names in another Workspace and tenant, a truncated webhook, ambiguous
+source groups, silence/inhibition, source loss, expiry/resumption, delayed old
+webhooks, a coordinator crash, stale lease completion and an unknown commit.
+Every refused operation must preserve scope and make no unintended delivery.
+Use controlled intranet endpoints with no external route. No run is claimed for
+these new cases. The current single-occurrence proof retains its original scope.
+
+Reuse the Go, pgx, PostgreSQL, pgvector and Alertmanager versions and licenses
+recorded above; their commercial, offline and redistribution terms still apply.
+No dependency, model or external dataset is added, and no proprietary vendor
+implementation or documentation text is copied.
