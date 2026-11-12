@@ -1,0 +1,170 @@
+# SAML browser sign-in (IAM-104)
+
+## Primary sources and selected path
+
+The [OASIS browser SSO profile](https://docs.oasis-open.org/security/saml/v2.0/saml-profiles-2.0-os.pdf)
+and its [errata](https://docs.oasis-open.org/security/saml/v2.0/sstc-saml-errata-2.0-cd-04.html)
+require a valid bearer assertion, exact recipient and request correlation,
+time checks and verification of the signatures relied upon. Use that profile
+with an SP-initiated AuthnRequest and an HTTP-POST response. Keycloak's
+[SAML administration](https://www.keycloak.org/docs/latest/server_admin/index.html#_saml)
+provides a private provider reference, including client URLs, signatures and
+key configuration. Real IdP password/consent and signed response acceptance
+must precede product integration.
+
+Keep SAML inside the existing SSO connector, explicit binding, claim and
+session-source authority. It cannot install a separate session subsystem or
+replace ownsolid's server-side revocation checks. SP-initiated POST is the
+first complete path; additional bindings, unsolicited sign-in and federated
+logout require their own complete acceptance and remain unavailable until
+implemented. Local logout and connector/session revocation still work.
+
+## Provider and key trust
+
+An administrator imports bounded IdP metadata or approves one configured
+private TLS metadata endpoint. Select exactly one expected entity ID and
+approved SSO binding/endpoint. Browser input, assertion KeyInfo, redirects and
+metadata cannot introduce a new network destination or trust anchor. Reject
+remote key references, external entities and external XML signature references.
+Do not refresh metadata into new endpoint or signing-key authority without an
+audited connector revision and explicit trust policy.
+
+Pin the configured IdP signing certificate set, with explicit validity and
+rotation windows. Signature trust is not the server's TLS CA trust. Preserve
+an intentional overlap during key rotation and refuse removed keys after that
+overlap. Store SP signing/decryption keys only as protected file references.
+They have no relationship to entitlement issuance or license signing keys.
+Use a fixed SP entity ID and exact metadata/ACS URLs per configured entrance;
+request Host or forwarded headers cannot redefine them.
+
+Use RSA-SHA256 or a separately qualified modern signature algorithm. Do not
+accept unsigned assertions, SHA-1, arbitrary transform chains, detached/external
+references or a custom verifier that returns success without identifying the
+validated signed subtree. Assertion encryption needs a separately selected
+modern encryption/key-transport path and key rotation proof; encrypted data
+still needs signature and subject validation. Do not equate encrypted content
+with authenticated content or silently fall back to obsolete algorithms.
+
+## Flow, browser proof and CSRF
+
+Create a fresh server-held request ID and random RelayState for the exact
+tenant, connector revision, audience and browser. Linking additionally binds
+the current local session, credential epoch and password proof, as the existing
+Gitea path does. Keep issuer and connector identity immutable. Return only the
+configured provider URL or a bounded first-party form, with no arbitrary return
+URL. A terminal or uncertain flow is never exchanged or issued again.
+
+An IdP's POST is cross-site. The current Lax SSO cookie cannot be assumed to
+arrive on it. Prototype a distinct short-lived, Secure, HttpOnly, host-only
+SAML flow cookie with SameSite=None, bound to the exact audience and protocol.
+It conveys only an unguessable browser proof, never a login session. Start the
+flow through the normal first-party Origin/CSRF checks. The ACS validates its
+server-held request, browser proof, RelayState, IdP signature and exact
+recipient before issuing any authority. That protocol-specific CSRF proof is
+mandatory; it is not a configuration switch or a global Origin/CSRF bypass.
+The ordinary Admin/Portal session cookies keep their existing authority and
+transport policy. Cross-site browser cookie behavior needs real browser tests,
+including an unavailable-cookie retry outcome.
+
+Require response and bearer-subject `InResponseTo` to match the one claimed
+server request, exact response Destination and bearer Recipient to match the
+selected ACS, and issuer/audience to match the configured IdP/SP. Check all
+applicable Conditions and subject-confirmation times with bounded skew, and
+honor a shorter session limit from a used authentication statement. Require
+the expected successful status and one unambiguous authenticated subject.
+Reject unsolicited responses in this path. Persist the one-use claim before
+completion; append the audit and issue the sourced session atomically. Keep
+bounded replay identity with the existing flow lifecycle rather than a second
+receipt ledger. Replay protection must outlive the assertion's acceptance
+window, including clock skew, and survive restart.
+
+The identity key is the configured IdP entity plus persistent NameID format,
+qualifiers and exact value under the connector. Validate qualifier scope against
+the SP and IdP. No case folding, email matching or transient/email-format
+fallback can silently replace it. Require explicit control of an existing
+local account to bind it. Attributes are display/input data; group claims do
+not become privileges until IAM-110's mapping and the real resource evaluator
+authorize them. Provider failure does not make a local account into an Admin.
+
+## Candidate dependency and license inventory
+
+The selected research candidate is
+[crewjam/saml v0.6.3](https://github.com/crewjam/saml/tree/v0.6.3), exact tag
+`c5725cd857625e4c1f6dbbe5e0b3822def94b581`, published 2026-11-08.
+Its [module file](https://github.com/crewjam/saml/blob/v0.6.3/go.mod) requires
+Go 1.25. Resolve the final product module graph before admission. The following
+versions and source licenses were inspected outside the product; no dependency,
+model or dataset is added by this research.
+
+| Module | Selected version | Source license |
+| --- | --- | --- |
+| crewjam/saml | v0.6.3 | [BSD-2-Clause](https://github.com/crewjam/saml/blob/v0.6.3/LICENSE) |
+| beevik/etree | v1.8.1 | [BSD-2-Clause](https://github.com/beevik/etree/blob/v1.8.1/LICENSE) |
+| golang-jwt/jwt/v5 | v5.3.1 | [MIT](https://github.com/golang-jwt/jwt/blob/v5.3.1/LICENSE) |
+| google/go-cmp | v0.7.0 | [BSD-3-Clause](https://github.com/google/go-cmp/blob/v0.7.0/LICENSE) |
+| jonboulle/clockwork | v0.5.0 | [Apache-2.0](https://github.com/jonboulle/clockwork/blob/v0.5.0/LICENSE) |
+| russellhaering/goxmldsig | v1.6.1 | [Apache-2.0](https://github.com/russellhaering/goxmldsig/blob/v1.6.1/LICENSE) |
+| golang.org/x/crypto | v0.55.0 | [BSD-3-Clause](https://github.com/golang/crypto/blob/v0.55.0/LICENSE) |
+| gotest.tools/v3 | v3.5.2 | [Apache-2.0](https://github.com/gotestyourself/gotest.tools/blob/v3.5.2/LICENSE) |
+
+These licenses permit commercial use, redistribution and offline use while
+retaining their required copyright, license and applicable notices. The
+private Keycloak fixture's complete application and image dependency notices
+also apply; see the [selected provider inventory](oidc-sign-in.md#dependencies-and-acceptance).
+Do not copy it into ownsolid or describe the whole provider image as BSD or
+Apache only.
+
+## Library integration boundaries
+
+Use the [ServiceProvider protocol owner](https://github.com/crewjam/saml/blob/v0.6.3/service_provider.go),
+not the default [samlsp session middleware](https://github.com/crewjam/saml/blob/v0.6.3/samlsp/middleware.go).
+The latter creates its own request and JWT session cookies and can replay
+forms after login; those are not ownsolid sessions or mutation authority.
+Keep form replay and unsolicited sign-in unavailable. Do not register library
+metadata, logout or artifact endpoints merely because its middleware provides
+them.
+
+Validate a strict bounded XML envelope before expensive DOM/signature work:
+encoded/decoded bytes, depth, node/attribute counts, unique IDs, namespace and
+allowed message structure. Reject DTDs, entity declarations, external resources,
+ambiguous duplicate IDs, wrapping variants and parser round-trip differences.
+Read the actual signed element, not another assertion with a matching-looking
+subject. Exercise the library's round-trip and signed-subtree behavior using
+malicious but correctly signed fixtures; a modified invalid signature alone
+does not prove resistance to wrapping.
+
+The candidate has package-global time and artifact limits. Do not mutate them
+per connector or concurrently. Select a stricter per-adapter policy whose
+accepted window is within the library's hard acceptance, then check the verified
+assertion against it. No artifact/SOAP network exchange belongs to the first
+POST response path. A nil/default HTTP client is not an approved destination
+policy. Any later network binding must use the existing verified private TLS,
+no-redirect, byte/deadline/concurrency and endpoint restrictions.
+
+## Alternatives, prototype and finished-item acceptance
+
+Reject a hand-written XML signature implementation, email-only linking,
+generic JWT session cookies from the middleware, URL-derived tenant scope,
+unsolicited-response shortcuts and disabling signature/time/recipient checks
+to make an IdP fixture pass. OIDC is a separate provider path, not a conversion
+of SAML assertions into unverified claims.
+
+Prototype outside the product first, with the selected private Keycloak and
+actual SP-initiated browser/password/signature exchange over verified TLS.
+Exercise a positive persistent subject and independently inspect its exact
+qualifiers. Separately test a signed wrong issuer, audience, Destination,
+Recipient and request ID; expired/future/bounded-skew assertions; missing and
+wrong signatures; nested/duplicate IDs, namespace and wrapping attacks;
+oversized/deep XML; unsupported algorithms; old/new/removed signing keys;
+missing browser proof, RelayState replacement and concurrent replay. Verify
+that protected assertions, attributes, cookies and keys appear in no log,
+Problem or audit payload.
+
+Product acceptance additionally requires a current PostgreSQL migration,
+typed configuration and key inventory/restore behavior; server-resolved tenant
+and current-session checks on every connector, binding and flow operation;
+audit rollback and actual COMMIT-uncertainty behavior; durable one-use replay
+protection and sourced-session revocation; and a disconnected Admin/Portal UI
+for configuration, explicit linking, sign-in, clear refusal and retry. DEV,
+ARC and Web own their shared interfaces. The library, a protocol fixture or a
+standalone parser passing does not complete IAM-104.
