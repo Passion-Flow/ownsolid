@@ -718,3 +718,121 @@ exact Owns/Handle dispatch with the operation and reviewed locale files.
 The existing protected monitoring policy supplies store origins and
 retention settings. Installed retention delivery, trust distribution and
 the Console history view remain with their owning modules.
+## Producer-bound model history draft (DEV-101 / MOD-103)
+
+Reviewed 2026-11-13 against MODEL candidate
+2b4aaae5f8c690df9943b7dd7a7e4b5004aa421b and domain commit
+343cdd9d9a69572b77021baec5383b8acb4bfe64. The existing public Models contract
+is byte-identical in that producer and this candidate's 38aad603 base
+(SHA-256 7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc).
+Read the producer's models README, family.go, history.go, history_cursor.go,
+repository.go, reads_repository.go and unnumbered model_family_candidate SQL,
+along with its durable-family and DEV handoff sections. These are local domain
+inputs, not published dispatcher or installed-schema evidence.
+
+[MLflow registry](https://mlflow.org/docs/latest/ml/model-registry/) separates
+versions from mutable aliases; its
+[version search](https://mlflow.org/docs/latest/api_reference/rest-api.html#search-modelversions)
+uses bounded continuation. [AIP-158](https://google.aip.dev/158) explains opaque
+page tokens and preserving query context. ownsolid uses the producer's explicit
+persisted family UUID and exact version anchor, not MLflow's name grouping or
+the example AIP defaults/coercion. The producer permits changing limit between
+pages but binds the state filter and live authority. The existing pinned
+[OpenAPI response contract](https://spec.openapis.org/oas/v3.1.1.html#response-object)
+and SDK pipeline suffice; no new library or pagination framework is needed.
+
+| Producer entry | Draft boundary |
+| --- | --- |
+| StageVersionFamilyWithin | Borrow the publication transaction and recheck Admin authority before the exact version insert. Empty anchor creates an independent family. Do not add a speculative write route, family selector or new fields to existing import/deployment requests. ARC admits the unnumbered DDL and migration number. |
+| History | Current authenticated platform Admin, authorized workspace, exact anchor and optional limit/cursor/state. Return exactly workspace_id, family_id, anchor_version_id, items and required nullable next_cursor. |
+| HistoricalMetadata | Exactly id, workspace_id, name, model_key, kind, catalog_digest, state and created_at. No per-item family ID, ordinal, latest alias, manifest or lineage. |
+| HistoricalVersion | Exact anchor and exact member version in the same family; flat retained metadata plus family_id, anchor_version_id, existing manifest and optional existing dataset_lineage. No artifact IO or execution admission. |
+| VersionHistoryPolicy | Omitted limit uses runtime.ui.page_size, maximum 100, cursor 512 ASCII bytes, complete page 524288 bytes and detail 131072 bytes. Metadata items are bounded at 4096 bytes. No new policy endpoint is inferred. |
+
+Use separate historical schemas with ready/retired; never widen existing ready-only
+ModelVersion or AdminModelDetail. Keep their published manifests and lineage
+references unchanged. The old exploratory prototype's anchor_model_id and
+per-item family_id do not describe this producer. A family-ID detail selector
+also cannot call HistoricalVersion as implemented; the revised proposed detail
+path therefore carries anchor model_id and member version_id. IAM still owns
+final path registration and operation/status mapping. The new GET paths in the
+SDK test fixture are unregistered drafts, not additions to api/openapi/v1.
+
+Omitted limit/filter/cursor must stay omitted. Explicit zero, empty filter and
+empty cursor are invalid inputs, not defaults. Continuation is an opaque signed
+keyset over created_at DESC,id DESC. The producer binds actor, session, auth epoch,
+audience, tenant, workspace, family, exact anchor and state filter. It rechecks
+current authorization per call; no snapshot, total count, automatic aggregation,
+cross-session cursor reuse or independent token grant is promised. Key rotation
+requires restarting from the exact anchor. No IDs supplied by a client establish
+tenant authority. Retired metadata cannot authorize new execution or substitute
+another version.
+The domain requires IsPlatformAdmin, not merely an Admin-entrance session or a
+workspace role. Removing ordinary workspace membership does not demote the
+installation platform Admin; account, session, Admin role and workspace status
+still require the producer's live checks. Add no Portal history permission.
+The staged implementation is PostgreSQL-only. A different backend or missing
+candidate tables returns MODEL_HISTORY_UNAVAILABLE, not an empty history or a
+fallback grouping. Other database history support is not established by this draft.
+
+New MODEL_HISTORY_UNAVAILABLE, MODEL_HISTORY_INVALID and MODEL_FAMILY_INVALID
+have no entries in the producer's HTTP Problem registry. Repository setup and
+typed transaction failures also need the original route owner's explicit review.
+Keep existing Problem unchanged. A separate draft error schema can retain actual
+domain/normalized code vocabulary, but only a default error response is proposed:
+do not assign invented HTTP statuses to these new errors. Codec fixtures use
+already registered common Problems and do not qualify routing. IAM must choose
+admission or normalization of these codes, then register and test failures,
+body ceilings, deadlines, authenticated scope and suppression
+of data after failed or unknown transactions before public publication.
+
+The draft lives only in SDK testdata, with the producer revision recorded on it.
+Run projection/compatibility checks against the unchanged public Models contract,
+then generate through the existing pinned tools outside product output. Directed
+codec checks must retain exact anchor/member/family UUIDs, eight-field pages,
+required null continuation, state filter, optional lineage and explicit invalid
+options. Generate Help only in a private filesystem projection and hand its exact
+inputs to Web. Check Admin inclusion and Portal exclusion. These checks do not
+replace MODEL's PostgreSQL tests, ARC admission, IAM dispatcher acceptance or S-202.
+
+No dependency, model, dataset or third-party code is added. Existing SDK tool and
+runtime licenses, commercial/offline rights and redistribution notice obligations
+are recorded in [sdk.md](sdk.md#licenses). Synthetic fixture values are ours.
+Existing Qwen/Qwen3-0.6B catalogue metadata retains its published Apache-2.0
+terms; no model contents or training dataset is included. Synthetic derived
+manifests establish no graph approval, licence approval or execution permission.
+Primary documentation is a design reference only. The shared Help URL browser
+failure remains with Web; a focused replay or old suite result is not a replacement
+for the producer's currently failing complete gate. Keep all public/installed
+claims open until the documented owner sequence completes.
+
+### Draft verification
+
+Seven new projection/compatibility tests pass on the Mac with the documented
+Python 3.12. The default Mac python3 is 3.9 and cannot import the existing
+generator; use the pinned interpreter. Layout and whitespace checks pass. No product API
+or Web file changed.
+
+On Linux, with no external network, the existing pinned generators produced
+81 files for 15 Models operations: 13 existing operations and the two unregistered
+draft reads. Nine controlled HTTPX codec tests pass across sync/async, exact
+anchor/member/family IDs, eight-field metadata, required null continuation,
+omitted policy defaults, explicit zero/empty cursor, ready DTO compatibility,
+base-lineage omission and separate derived training/holdout references. The
+error examples use already registered common Problems; no invented status is
+assigned to an unmapped domain code. These are MockTransport replies, not an
+authenticated service, valid signed continuation or PostgreSQL run.
+
+The actual Web generators wrote 30 TypeScript files and 144 Help files in a
+separate private projection of the producer's 29 contracts and Help inputs.
+Both generator checks pass with six private Chinese description additions.
+This is not a browser test or a resolution of the shared Help URL assertion.
+Generated Go parses with gofmt; three adapted Go codec groups are prepared but
+have not been compiled or run. No new Linux heavy admission or Mac queue was
+attempted. The independent 783567ea audit protocol input remains unchanged.
+
+The producer bounds compact encoded data envelopes. IAM must preserve that
+ceiling in the actual HTTP serialization, not assume that a decoded object or
+an added wrapper has the same byte count. MODEL publication after the shared
+gate fix, ARC schema/role/catalog admission, IAM dispatch/error acceptance and
+Web's real S-202 flow still precede public contract/SDK publication.
