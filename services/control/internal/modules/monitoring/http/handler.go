@@ -13,8 +13,15 @@ const Path = "/api/v1/admin/monitoring"
 
 type Handler struct{ Service *monitoring.Service }
 
-func Owns(path string) bool { return path == Path }
+func Owns(path string) bool { return path == Path || path == FleetHistoryPath }
 func (h *Handler) Handle(r *http.Request, a identity.Auth, requestID string) (any, int, error) {
+	if r != nil && r.URL != nil && r.URL.Path == FleetHistoryPath {
+		body, status, err := h.HandleFleetHistory(r, a, requestID)
+		if err != nil {
+			return nil, 0, err
+		}
+		return body, status, nil
+	}
 	if err := h.checkRead(r, a, Path); err != nil {
 		return nil, 0, err
 	}
