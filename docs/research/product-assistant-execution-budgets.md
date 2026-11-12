@@ -162,10 +162,17 @@ session commands and both-entrance HTTPS policy cases also passed against
 disconnected PostgreSQL. These are component and staged-dispatcher results;
 they do not establish a production migration, policy source or browser flow.
 
-The same component passed the native full repository gate, including both
-complete browser suites at one worker, followed by focused race tests and
-vet. The [shared browser gate boundary](app-lane-questions.md#shared-browser-gate-boundary)
-retains the earlier failure separately. A subsequent upstream integration
-changed only Markdown documentation. All non-Markdown repository files
-were byte-identical to the measured source before the final documentation
-checks.
+The same component passed a complete native repository gate with both
+browser suites at one worker. After integrating the monitoring contract,
+it passed the full gate again at `3b49f6ae`, with two workers per entrance,
+no automatic retries, and focused race tests and vet. The
+[shared browser gate boundary](app-lane-questions.md#shared-browser-gate-boundary)
+retains the earlier failure separately.
+
+Later upstream changes added standalone CLI code and Markdown documentation.
+Comparison with the measured source verified that every non-CLI,
+non-Markdown repository file remained byte-identical. Only the CLI command
+imports its module. Repository checks and the complete build, CLI tests,
+CLI race tests and vet passed after that rebase before fast-forward
+publication at `279382f2`. This preserves the unchanged completed stages
+and records the affected module's separate acceptance.

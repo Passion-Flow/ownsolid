@@ -101,12 +101,14 @@ Keep the raw text out of the result and mark the evidence as retained
 native output replay. A controlled replay without the native archive
 keeps its existing mode.
 
-The [SCI gateway compatibility check](evaluation-performance-benchmark.md)
-found that the retained direct requests carry fields rejected by the
-current gateway. Adapting the body removes seed forwarding, so it
-cannot establish an equivalent production profile. A separately
-qualified gateway request, session-scoped admission, and positive
-capability evidence are needed before assigning a production tier.
+The [SCI gateway comparison](evaluation-performance-benchmark.md#authorized-cpu-gateway-pair)
+initially found direct request fields rejected by the gateway. Its later
+two-case greedy CPU pair matched the original completion digests and
+token counts, with authenticated HTTPS usage acknowledgments and scoped
+canonical receipts. That result qualifies the tested transport profile;
+it does not replay these three safety cases through a user-session-bound
+assistant route or establish positive assistant task capability. Those
+bindings and evidence remain required before assigning a production tier.
 The APP runner uses the existing bounded file reader and strict JSON
 decoding helpers. It adds no dependency, model or dataset.
 

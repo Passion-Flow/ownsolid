@@ -274,8 +274,12 @@ The paired constructor and audit fixture passed disconnected PostgreSQL
 checks and SCI input review. On 2026-11-12 the rebased assistant and audit
 source passed the native `make check`, `make build` and `make test` gate,
 with both complete browser suites run sequentially at one worker and no
-automatic retries. The assistant and audit race tests and vet, five
-qualification unit tests, real audit export with its independent verifier,
+automatic retries. After the monitoring contract integration, the full
+gate passed again with two workers per entrance and no retries. Later
+standalone CLI changes passed repository checks, a complete build, full
+CLI tests, race tests and vet; comparison verified that the other runtime,
+contract and fixture files were unchanged. The assistant and audit race
+tests and vet, five qualification unit tests, real audit export with its independent verifier,
 current-session commands and both-entrance HTTPS policy checks also passed.
 
 The [durable budget component](product-assistant-execution-budgets.md)
@@ -301,7 +305,7 @@ Portal keyboard visibility failure at
 drawer's `Download CSV` button with its focus indication, while the sampled
 rectangle was outside the viewport. The exact case is
 `a key's drawer with its sample calls: every control is reachable and shows focus`.
-Ten focused serial diagnostic runs and the final complete serial suite
-passed. Those results do not establish a fix for the earlier failure.
+Ten focused serial diagnostic runs and later complete one- and two-worker
+suites passed. Those results do not establish a fix for the earlier failure.
 The unchanged Web source remains outside APP ownership. Its owner needs
 the exact case and original trace for diagnosis. No assertion was changed.
