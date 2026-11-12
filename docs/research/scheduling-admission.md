@@ -139,6 +139,36 @@ samples, the wrong site or cell and missing dimensions. Check that no
 preview creates a hold or claim. Installed-cell acceptance requires the
 owner's complete source and one authorized offline submission flow.
 
+### Production capacity source boundary
+
+The managed-cell adapter in `959f818e` authenticates one exact Kueue
+Workload or Volcano Job. Its current `Observation` exports
+`ResourceVersion`, `State` and `Blocker`. It does not export the
+registered site/cell or cluster identity, a measurement time, an expiry,
+or complete total and occupied resource vectors. The object generation
+only fences its own conditions. An object resource version does not
+establish a common measurement across node and occupancy reads.
+
+Kueue's [pinned PodSetAssignment](https://github.com/kubernetes-sigs/kueue/blob/v0.20.0/apis/kueue/v1beta2/workload_types.go)
+describes the resources requested by this Workload's Pods at admission.
+Volcano's [JobStatus](https://github.com/volcano-sh/apis/blob/master/pkg/apis/batch/v1alpha1/job.go)
+records this Job's lifecycle and pod counts. Neither supplies the cell's
+complete capacity sample. Extending the state projection with assumed
+zeros or using the response arrival time would lose occupancy or make an
+old measurement appear current.
+
+ARC's cell-cluster owner supplies the registered site, cell, cluster,
+CA and member identities. The installed controller/cell inventory owner
+must bind complete resource totals and occupancy to that identity and
+one observation cut. It must include measurement time, coverage and the
+freshness policy's exclusive expiry. The workload owner supplies the
+selected cell and current submission authority. With those inputs,
+reuse the authenticated transport and feed `CellCapacitySample` to
+`EstimateSubmissionWithin`. Qualify real cell, stale, unavailable and
+cross-cell reads through the authorized submission flow before treating
+SCH-110 as complete. The present boundary remains open and creates no
+capacity producer.
+
 ## Atomic gang reservation and release
 
 The version 1 intent already describes named replica groups with counts and
