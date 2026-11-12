@@ -368,9 +368,7 @@ failure, full-bound memory and installed-flow acceptance remain required.
 IAM-103 stays open. The next persistence experiment must leave the last
 complete generation intact on scan failure and must not extend its expiry.
 
-## Rejected alternatives and acceptance
-
-### PostgreSQL publication experiment
+## PostgreSQL publication experiment
 
 Use a second external overlay experiment against the current complete control
 schema. Reuse SSO's actual `actorTransaction` ordering, current Identity
@@ -417,6 +415,81 @@ graph from the private fixture for a joined storage input; it is never customer
 data or a browser-submitted authority claim. Public start/status/preview,
 scheduled execution, production grants, LDAP binding/session issuance and
 installed UI acceptance remain separate admission work.
+
+### Storage qualification
+
+The external control overlay passed six actual PostgreSQL roots and 22 leaf
+cases in each of two runs: native Go with race detection against an owned
+loopback database, then a Linux arm64 binary with PostgreSQL in `--network none`
+and no host ports. The first topology does not isolate the Mac client's egress;
+only the second is disconnected. The fixture uses PostgreSQL 18.6/pgvector
+0.8.7 and the complete current control schema, version 60 with 120 tables.
+Its four prototype tables are external test DDL, not a formal migration.
+
+The actual OpenLDAP fixture exported seven groups, two distinct stable users
+and nine transitive memberships. Its reader reran the twelve native and eight
+live roots with the added private export instrumentation. Both storage runs
+then consumed that exact file and read back the same memberships. This joins
+the data representation across real protocols and storage; the exported input
+predates the database run and does not qualify a serving worker's fresh
+start/read/finish lifecycle. That composition must bind the observation to the
+actual run, selected directory profile and connector revision.
+
+The tests established:
+
+- Exact repeated starts retained the same run and deadlines; competing starts
+  were refused. Concurrent identical completions published one generation and
+  one completion event. A conflicting completion digest was refused.
+- A failed scan kept the previous complete head, memberships and original
+  expiry. An explicitly complete empty candidate replaced that head with an
+  empty result. Actual database-clock expiry refused stale membership; a new
+  start retired an expired run and allowed an explicit new attempt.
+- Start, completion, status and current-result methods refused foreign
+  connectors; completion/status also refused a foreign run paired with a local
+  connector. Mixed-scope group/head SQL parents were refused. Another current
+  session could not finish or inspect the initiator's run. Portal, revoked,
+  disabled, demoted and stale-epoch actors returned no DTO. Connector disable
+  or revision/auth-version change fenced publication and current membership.
+- Actual audit INSERT trigger failures rolled back start, complete and failed
+  outcomes. Cancellation after real membership INSERTs left no new rows/head
+  or finished state; independent reads during staging still saw the old head.
+  Explicit retry succeeded without extending the run's original validity.
+- The existing native wire fault injector withheld COMMIT or suppressed its
+  successful database acknowledgement for start, completion and failure.
+  Each attempt emitted one COMMIT and returned `STORAGE_COMMIT_OUTCOME_UNKNOWN`
+  with no DTO. Independent and authorized readback distinguished the atomic
+  zero/one outcome before an explicit retry; no automatic resend occurred.
+
+Evidence is `iam103-generation-20261113.t5wjk2m0`. Protocol run
+`qualification-yotx6rv5` has source-manifest SHA-256
+`c90df68550160f939ec3053d821e1eba251f2fb16a4a6ac4fd39ae2ce1993978`;
+the exported graph SHA-256 is
+`22bbfb1c4c17e4456569018d33bb434f3c0b334199b0241a618fb519cd6a0bb2`.
+Storage run `qualification-a9jc6u_g` qualified input `167a479e7187`, with
+source-hash-manifest SHA-256
+`533c7c246e2e99f677a709171fc47b310338d3bfc0c393831229f823e339b7f9`.
+Both topologies passed 28 named tests, including parent groups; there are
+22 independent leaves. Exact source, graph, logs, image/network inspection
+and cleanup evidence remain outside Git. All owned containers, anonymous
+database storage and the native bridge were removed. The permanent lock's
+carrier was neither replaced nor changed.
+
+The first storage run, `qualification-fpzp2e_2`, stopped in SSO fixture
+initialization: its Mac TMPDIR retained the `/var` symlink and private-file
+validation refused the keyring. The corrected driver resolves TMPDIR before
+running Go. It preserves the product's keyring validation, not a bypass.
+That failed run remains separate from the qualified native/disconnected pair.
+
+This is a manual PostgreSQL storage candidate using the existing Gitea catalog
+row solely as an authority fixture. It does not admit LDAP as a product provider,
+new serving-role grants, the prototype audit names, public contracts, startup,
+scheduled execution, explicit directory-account binding, local roles or UI.
+The superuser fixture does not qualify least-privilege grants for new tables.
+Direct-edge/explanation persistence, retention policy and full-bound resource
+qualification also remain for admission. IAM-103 remains open; repository
+publication changes research only and does not claim new full-product gates.
+
+## Rejected alternatives and acceptance
 
 Reject plaintext simple bind, certificate bypass, empty-password authentication,
 automatic endpoint/referral discovery, automatic DN/email rebinding and copying
