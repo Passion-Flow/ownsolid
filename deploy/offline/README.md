@@ -950,3 +950,32 @@ ownsolid-install agent-notices --bundle /mnt/release/ownsolid-agent.tar.gz \
 
 The command verifies the entire Agent archive against the site's independent
 trust and prints the signed inventory without changing the host.
+
+
+## Qualify the scheduled timer on Linux
+
+The [timer fixture](internal/install/testdata/scheduled-backup-timer/resume.sh)
+builds Linux amd64 inputs from a clean checkout containing the accepted
+Audit migration. Select an existing private evidence directory outside the
+checkout and pass the exact accepted SQL commit. The default test host is
+`ownsolid-cpu`; set `OWNSOLID_TIMER_HOST` for another prepared Linux host.
+
+```sh
+OWNSOLID_TIMER_EVIDENCE_DIRECTORY=/private/timer-evidence \
+  bash deploy/offline/internal/install/testdata/scheduled-backup-timer/resume.sh \
+  "$PWD" "$accepted_arc_commit"
+```
+
+The host needs systemd, Docker Compose, TUN and the pinned PostgreSQL image
+already present. It must use the documented shared lock paths. The fixture
+checks memory, disk and I/O pressure under both locks, creates its own
+network-isolated PostgreSQL service and starts the shipped timer under
+private runtime unit names. It verifies logical dump/restore, expiry,
+retention refusal and retry. The original database and ordinary backup
+sentinel must remain intact. Only the deliberate recorder probes are
+allowed. No product services or other lane resources are stopped.
+
+Input hashes and the Linux transcript stay in the selected evidence
+directory. Disposable units, database container and private scratch files
+are removed. This fixture does not establish Console configuration or
+backup-history UI acceptance.
