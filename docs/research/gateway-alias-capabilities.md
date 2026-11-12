@@ -587,8 +587,8 @@ uses MIT; [PostgreSQL](https://www.postgresql.org/about/licence/) and
 [pgvector 0.8.7](https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE)
 use the PostgreSQL License. These allow commercial redistribution with
 the required notices and offline use. No product dependency, model or
-dataset is added. This is a fixture prototype; its first execution
-boundary is below, and the four business roots remain unqualified.
+dataset is added. This fixture qualified the four business roots in the
+corrected-input run below. The earlier failed input remains preserved.
 
 #### Native stdio preflight boundary
 
@@ -618,7 +618,8 @@ cast retains the mask. The prepared correction selects both forms,
 compares host(inet_server_addr()), and records safe observed values or
 SQLSTATE/error type before refusing. The old runtime output is
 insufficient to prove this was its only failing condition. A new actual
-wire run must establish that; no second queue or runtime retry was made.
+wire run had to establish that. That failed input was not retried; the
+corrected-input run below used a separately authorized window.
 
 The entry removed its owned proxy, PostgreSQL container and credential
 files before the parent closed FD 3. The owned child group had exited,
@@ -634,3 +635,74 @@ correction is prepared separately at
 Production publication remains disabled, and complete repository gates,
 matching contract/client publication and installed UI acceptance remain
 separate unmet requirements.
+
+## Registered-entrance native acceptance on 219af27e
+
+The corrected fixture qualified the unchanged runtime source
+219af27e3d9f73c78acc1b8ab8324e086a6a2f62 with native Go 1.27.3 on
+darwin/arm64 and PostgreSQL 18.6 on linux/arm64 in Docker Desktop.
+The new fixture manifest is
+0d868f161da74908fb71f9b973f6949431dd85e3f827b71bddc75c72831212b4;
+it is separate from the earlier failed d76d9aff input. DEV's exact
+draft remains 7705c5a341458cb1be8ead80844198378d98c4e3, distribution
+0.12.0, SHA-256
+66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d.
+The original native test binary was verified and reused with SHA-256
+5cf63c1335fabe4a994105ace8649f9e8e500474c87f374a134bea8f50388dc1.
+No product source, production switch or public contract changed.
+
+### Actual protocol and catalogue scope
+
+The local desktop-linux context used its Unix endpoint and cached
+linux/arm64 image. Resources passed the original thresholds. The active
+sandbox rejected non-loopback outbound traffic; PostgreSQL used network
+none with no Docker-published port. SSLRequest, wrong-password SCRAM
+28P01, successful native pgx authentication and SQL all passed. SQL
+returned server_version_num 180006, raw address 127.0.0.1/32 and host()
+127.0.0.1. This observes the formatting defect in the earlier assertion;
+that earlier run did not retain enough SQL output to establish whether
+it had any additional failing condition.
+
+Each selected root ran once, passed once and had zero skipped or failed
+subtests. Three PostgreSQL roots used the normal complete embedded
+schema-60 migration path. database.Migrate finished CheckWithin before
+committing each fixture; this checks the lineage, catalogue and grants
+for the operator fixture. Each owned disposal recorded 120 tables.
+
+| Root | Actual result | Owned schema / disposal |
+| --- | --- | --- |
+| TestPostgresAliasReadCapabilitiesAtRegisteredEntrances | PASS, 1.92 s | m01_c10c925d5591445cbfdc9edaa3c6ee23 / 120 tables |
+| TestPostgresAliasCapabilityPublicContractBoundary | PASS, 1.16 s | m01_4b71073138d84fbd92964289807ff25b / 120 tables |
+| TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget | PASS, 1.34 s | m01_6dfd12f49b25479bb7a2ac1c0460c8b0 / 120 tables |
+| TestAliasContextCeilingRequiresRecognizedSource | PASS, 0.00 s | Pure context-source logic; no database fixture |
+
+The registered Admin/Portal list/detail paths validated the exact draft,
+paired description edit/clear/replay, unchanged route identity and
+immutable target history. Mixed pages and cursors, legacy omission,
+foreign tenant/workspace refusal, pause/retarget/resume, unchanged
+mutation shapes, default-disabled reads and enabled storage failures
+passed. The target observations were synthetic. This is not real model
+or GPU execution, an installed UI flow, a separate restore/rollback
+exercise or restricted serving-principal admission.
+
+### Release and remaining integration
+
+Parent 2443 waited 413.892 seconds and used FD 3 on the original device
+16777234 / inode 50313339. Its acquisition-to-finish interval was
+10.438 seconds and it exited 0. Child group 4250 had exited; the entry removed its own proxy, PostgreSQL container
+and credential files and verified that loopback port 60120 was closed
+before the parent closed the descriptor. The regular carrier and its
+identity were retained. Proof SHA-256 is
+bd48535902d0aa4bd2f7cfe8e561a6d25ddf7d62facc77ba427d03ea4384b511.
+The exact inputs, wire proof, verbose root log and result remain at
+/private/tmp/ownsolid-gw104-native-wire-fix.uxm7uway. Both earlier failed
+attempts remain intact. This single segment performed no full gate,
+publication or automatic second run.
+
+Production publication stays disabled. Complete current check/build/test
+and clippy qualification, then the same-source producer/typed-root
+integration and matching contract/client/Help release, remain separate
+requirements before installed catalogue acceptance. The known shared
+Help assertions must be resolved and rerun on the assembled source;
+historical browser PASS at an older source cannot supply that result.
+GW-104 remains open.
