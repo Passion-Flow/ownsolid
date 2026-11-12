@@ -41,6 +41,25 @@ The published manifest and the HTTP response retain their existing shapes.
 The native approved-base detail path retains its existing behavior.
 See the [lineage contract handoff](../../../../../docs/research/training-dataset-lineage.md#dev-contract-handoff).
 
+The staged PostgreSQL family domain uses unnumbered
+`testdata/model_family_candidate.up.sql`; it is not part of installed migrations.
+It backfills one independent family per legacy version and atomically assigns
+default membership when an import or derived version is inserted. Publishers
+can call `StageVersionFamilyWithin` with a current Admin and an exact anchor
+before their version insert in that same transaction. Empty anchor creates a
+new family. The caller owns commit and must suppress any result on a failed or
+unknown outcome. Membership is immutable; retirement never removes it.
+
+`History` and `HistoricalVersion` expose bounded currently authorized Admin
+metadata, including retired versions. They resolve family from an exact anchor
+and validate the existing retained graph. They perform no physical file IO and
+grant no execution permission. `VersionHistoryPolicy` reports the configured
+UI page default and fixed wire bounds. Continuation is signed with the installed
+Identity HMAC key and bound to actor, session, audience, scope, family, anchor
+and filter. An absent candidate schema or key fails closed. Public contracts,
+routes, formal migration/role/catalog admission and S-202 remain with their
+owners. See the [family domain contract](../../../../../docs/research/training-dataset-lineage.md#durable-family-domain-contract).
+
 After the import's version and audit event commit, the worker reclaims the
 upload chunks and failed stages. During import the store still needs space
 for the bundle and extracted model. The worker retains staging and logs
