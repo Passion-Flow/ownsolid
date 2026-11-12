@@ -518,3 +518,52 @@ UUID are BSD-3-Clause, pgx is MIT and PostgreSQL uses the PostgreSQL License, as
 recorded in [the cleanup research](model-import-cleanup.md#mod-121-abandoned-upload-retention).
 They permit commercial/offline use and redistribution with notices. The official
 registry and SQL documentation are design references only.
+
+### Service and wire policy handoff
+
+The staged model-owner entry points are:
+
+| Entry | Inputs and result |
+| --- | --- |
+| `StageVersionFamilyWithin` | Borrowed publication transaction, current authenticated Admin, requested workspace, exact new version ID, optional exact anchor, reason and server request ID; returns the persisted family UUID. An empty anchor selects a new independent family. The caller inserts the version and commits the whole reviewed/import publication, or suppresses the result on any failure. |
+| `History` | Current authenticated Admin, requested workspace, exact anchor and typed optional limit/cursor/state; returns `workspace_id`, `family_id`, `anchor_version_id`, bounded `items` and required nullable `next_cursor`. |
+| `HistoricalVersion` | Current authenticated Admin, requested workspace, exact anchor and exact member version; returns retained metadata, family and anchor IDs, the existing manifest and optional existing dataset lineage. |
+| `VersionHistoryPolicy` | Configured UI page default, maximum limit 100, cursor 512 bytes, page envelope 512 KiB and detail envelope 128 KiB. Metadata items have the fixed 4 KiB ceiling described above. |
+
+Every metadata item contains `id`, `workspace_id`, `name`, `model_key`, `kind`,
+`catalog_digest`, `state` and UTC `created_at`. The new historical state vocabulary
+is `ready`/`retired`; the stored `deleted` state and all existing DTOs remain intact.
+The complete body bound includes the existing `{data: ...}` envelope. No ordinal,
+count, latest alias, artifact-path authority or automatically aggregated history
+is returned. Default and explicit registration both use the existing version insert;
+the admitted DDL makes its membership atomic. Explicit selection must precede it.
+
+New history is Admin-only and requires an active installation workspace. A platform
+Admin's current authority spans that installation; removing an ordinary membership
+does not demote that Admin. Session, account, Admin-role and workspace revocation
+are checked again on every page. There is no new Portal history permission. Omitted
+limit selects policy; explicit zero is invalid. Omitted filter selects both retained
+states; explicit empty filter is invalid. Omitted cursor starts navigation; explicit
+empty, stale-key, tampered or differently bound cursor is invalid. Limits may change
+between pages without changing the bound anchor or filter. The current cursor has
+no independent grant lifetime and remains subject to the live session and key.
+
+Domain failures return a zero page/detail, never a partial `data` projection.
+`INVALID_CURSOR` requires restarting from the exact anchor. `VALIDATION_FAILED`
+rejects explicit invalid options. Existing `AUTH_SESSION_EXPIRED`, `ACCESS_DENIED`
+and `RESOURCE_NOT_FOUND` retain current authority/scope meanings.
+`MODEL_HISTORY_UNAVAILABLE` identifies an unadmitted backend/schema, unavailable
+signing key or invalid installed pagination policy. `MODEL_FAMILY_CONFLICT` refuses
+a different immutable membership choice. `MODEL_FAMILY_INVALID` and
+`MODEL_HISTORY_INVALID` require repairing retained metadata from a verified source.
+Existing `MODEL_FILE_INVALID` and `MODEL_DERIVED_CATALOG_INVALID` identify invalid
+catalogue or retained lineage. Storage and typed transaction failures retain the
+existing normalization and suppress projections, including unknown commit outcomes.
+
+These are module results, not newly registered HTTP Problems. DEV must admit the
+public request/response and Problem schemas and generated clients. The original
+route owner must bind the server-authenticated actor and resolved installation
+scope, preserve the body ceilings and current request deadline, and run real
+dispatcher acceptance. ARC must admit the unnumbered DDL, scoped role grants,
+catalog checks, backup/restore and data-preserving downgrade policy. Web then
+composes S-202 without changing legacy ready-only list/detail consumers.
