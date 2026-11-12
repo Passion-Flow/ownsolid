@@ -479,8 +479,14 @@ are refused at this admission boundary. No shared startup source changes.
 
 The pinned native TLS server and evaluator use the existing Apache-2.0
 VictoriaMetrics components. Their image distribution still requires the
-applicable component and base-image notices. Go and the existing YAML
-and bundle dependencies retain their current licenses. No model,
+applicable component and base-image notices. Go and golang.org/x/sys v0.49.0 use the BSD-3-Clause license.
+The existing go.yaml.in/yaml/v3 v3.0.5 has Apache-2.0 files and
+MIT-licensed libyaml ports. These permit commercial use, redistribution
+with their applicable notices and offline operation. See the
+[Go license](https://go.dev/LICENSE),
+[x/sys license](https://cs.opensource.google/go/x/sys/+/v0.49.0:LICENSE),
+and [YAML license](https://github.com/yaml/go-yaml/blob/v3.0.5/LICENSE).
+The internal bundle reader keeps its existing dependency inventory. No model,
 dataset or additional dependency is introduced.
 
 Unit checks must cover old installer configuration, protected file and
@@ -492,3 +498,59 @@ then replace the issuer and remove old trust while retaining the data.
 The normal authenticated history operation is verified with the matching
 OBS and DEV candidate. Formal public-operation publication remains with
 those owners.
+
+
+## Verified installer deployment
+
+On 2026-11-12, source `7682f5172412dfdb234eab633ec9e58d7ceaa8b2`
+passed `TestFleetHistoryPrivateDeploymentDocker` on `ownsolid-cpu`,
+Ubuntu 24.04 Linux amd64, in 152.40 seconds. The normal native installer
+command deployed two VictoriaMetrics 1.155.0 stores and vmalert 1.155.0.
+The unchanged production rules persisted the scoped two-node aggregate.
+After a real acknowledged stop was interrupted, the normal CLI retry
+retained the long-tier sample. Pretrusted issuer overlap, leaf replacement,
+connection draining and new-only trust all retained that sample. The
+old issuer-only client refused the replacement peer.
+
+The outer Docker 29.1.3 container had no external interface. The repository
+recorder was its only IPv4 and IPv6 default route, with a resolver present
+before starting Docker or application containers. Exactly five packets
+were captured: host TCP IPv4, TCP IPv6 and DNS, and publishing-bridge
+workload TCP IPv4 and DNS. The workload bridge was IPv4-only. Every probe
+was blocked; any additional packet or different DNS question failed the
+fixture. No other outbound packet was recorded through installation,
+aggregation, interrupted restart and issuer rotation. Input image loading
+and all Compose starts disabled pulling.
+
+The pinned metrics image ID was
+`sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84`.
+The evaluator fixture image used that base and the existing native vmalert
+binary with SHA-256
+`d1d1a8d2b04c2f9f32c37934b498ae1e5f031cb55fdf89ffb94eeaef57742171`.
+The fixture selected its immutable local image ID before deployment.
+The isolated daemon image ID was
+`sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5`.
+This fixture image is not the production release inventory.
+
+The successful transcript is retained as `linux-deployment-success.log`
+with SHA-256
+`0ef2d41ac5ab98ee0d1721570eb19d28dc7e156736108d029dfd0b812e9b834b`.
+The same evidence package retains the source bundle, Linux binaries,
+protected-input hashes, runner, deliberate probe and earlier failed runs.
+The fixture used private inner-host ports 37391, 42297 and 40263. Its stores,
+evaluator, probe, isolated daemon, temporary image tag and private fixture
+directory were removed. No lane-b container was changed.
+
+The new source passed disconnected Linux `make check` and `make build`.
+The root invocation of the installer unit suite correctly refused its
+inherited current-UID service fixtures; it is not a service-root exception.
+Both installer packages then passed as UID/GID 65534 in read-only,
+network-none Linux containers, followed by `go vet`. The final
+`2351a2ce` backup compatibility change passed the same two-package Linux
+suite and focused race checks. It retains the exact prior Compose writer
+profile and its original environment while refusing unreviewed profile
+changes and separate history state. Installed Control startup and query
+acceptance with the managed policy/trust files, the Console history view,
+retention expiry and the production image/notice inventory remain open.
+The normal authenticated API and SDK acceptance is recorded separately in
+[the public contract evidence](public-api-inventory.md#obs-109-fleet-history-publication-boundary).
