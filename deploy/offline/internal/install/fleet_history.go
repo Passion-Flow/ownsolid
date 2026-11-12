@@ -258,7 +258,12 @@ func applyHistory(ctx context.Context, site historySite, runner Runner, out io.W
 	if ctx == nil || runner == nil || out == nil || probe == nil {
 		return historyFailure("OWNER_REQUIRED", "provide an installer context and command runner")
 	}
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(site.config.RequestSeconds)*time.Second)
+	defer cancel()
 	if err := site.ownRoot(); err != nil {
+		return err
+	}
+	if err := checkLocalDocker(ctx, runner); err != nil {
 		return err
 	}
 	unlock, err := lockOperation(site.installerConfig())
@@ -269,8 +274,6 @@ func applyHistory(ctx context.Context, site historySite, runner Runner, out io.W
 	if err := site.ownRoot(); err != nil {
 		return err
 	}
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(site.config.RequestSeconds)*time.Second)
-	defer cancel()
 	if err := verifyHistoryProject(ctx, site, runner); err != nil {
 		return err
 	}
