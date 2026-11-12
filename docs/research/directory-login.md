@@ -311,12 +311,62 @@ All owned containers were removed and no directory server remains running.
 
 This qualifies the initial LDAPS protocol approach. Product dependencies,
 configuration, formal SQL, routes, local-account binding, sessions, synchronization
-jobs and UI are unchanged. AD ranged/nested membership, stable-reference
-reconciliation, complete-generation persistence and full-bound memory checks
+jobs and UI are unchanged. Real AD ranged/nested compatibility,
+complete-generation persistence and full-bound memory checks
 remain required before composition. This is not Windows AD, rendered-browser
 or Linux amd64 installation acceptance. IAM-103 remains open. Publication changes
 research only; layout, roadmap and whitespace checks do not replace the future
 feature's full repository and installed-flow gates.
+
+## Nested-group observation qualification
+
+The subsequent external experiment passed twelve non-live native test roots
+with race detection and eight actual OpenLDAP roots in a disconnected Linux
+arm64 container. Six native roots retain the earlier transport/parser/bind
+coverage; six cover stable graph closure, refusal/concurrency, range continuation
+and invalid object profiles. Live-only subtests skipped by the native invocation
+ran explicitly against the real directory. Parent test groups containing only
+skipped live subtests are excluded from the native count.
+
+The observed graph uses entryUUID for both group and user identity. Direct
+edges and transitive user membership remain separate, and shared users are
+deduplicated in each group's closure. The live tests read nested groups across
+pages, refused a dangling DN after a rename, then preserved the original group
+ID after its parent reference was corrected. Deleting and recreating a user
+at the same DN produced a new member ID; the old ID disappeared from the new
+closure. These results establish no local account binding or role grant.
+
+Actual cycles, missing members, out-of-base members and an unsupported object
+class returned no candidate. Mid-observation group membership changes,
+group/user recreation and group addition/removal were detected by stable-ID,
+entry-revision and final manifest checks. Cancellation and configured search,
+object, edge, closure and depth limits also returned no candidate. A fresh
+explicit retry succeeded after each corrected condition. A separate real empty
+group base returned a complete empty graph with an observation interval.
+
+Synthetic range fixtures accepted ordinary/empty membership and a three-part
+range sequence, including Microsoft's empty requested-wildcard placeholder
+beside the actual numbered range. Invalid names/indexes, overlaps, gaps,
+inconsistent counts, duplicate values/attributes, missing/empty continuation,
+fetch failure, invalid DNs/UTF-8 and byte/member/page limits failed without a
+partial result. The OpenLDAP reader still refuses ranged attributes; no Windows
+AD range-retrieval operation or AD consistency policy was qualified.
+
+The evidence set is `iam103-groups-20261113.wlv5gqe5`, run
+`qualification-ajos36gx`, source-manifest SHA-256
+`4e969b43e6517dcf95d33663267af5a3a30acb3fa65265f1f02b3e139f6880dd`.
+It pins the preceding signed-source/build inputs and unchanged LDAP module
+files, retains exact source, race/live output and the image/network inspection,
+and verifies container removal. The native run has 78 passing test names and
+the live run 23; those include parent groups and are not counts of independent
+leaf scenarios. No product source, dependency, schema, route or UI changed.
+
+The result remains a bounded observation under the reader's configured access,
+not a transactional snapshot. Atomic PostgreSQL publication, single-run
+ownership, tenant/connector revision fences, bounded freshness, audit/commit
+failure, full-bound memory and installed-flow acceptance remain required.
+IAM-103 stays open. The next persistence experiment must leave the last
+complete generation intact on scan failure and must not extend its expiry.
 
 ## Rejected alternatives and acceptance
 
