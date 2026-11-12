@@ -96,3 +96,22 @@ local configuration/material and intranet sockets, with no runtime network fetch
 
 ARC-110 remains unticked until its complete UI, operator and four-entrance
 installed path meets the repository definition of done.
+
+## Cross-platform wildcard overlap
+
+The first local race run exposed that an already listening loopback socket does
+not necessarily prevent a wildcard bind on the same port on macOS. The pinned
+Go BSD [socket implementation](https://github.com/golang/go/blob/go1.27.3/src/net/sockopt_bsd.go)
+enables address reuse for TCP listeners. Kernel bind refusal alone is therefore not a portable proof that
+selected entrance sockets do not overlap. The initial external-socket alias
+fixture and its failing log remain retained; do not claim that unrelated sockets
+can always be detected as conflicts by a portable TCP bind.
+
+Compare the actual TCP addresses of the listener group's owned sockets after
+binding each new socket and before serving. Refuse equal bound IP/port or a
+wildcard covering the same port, close the new socket and release earlier owned
+sockets through the existing failure path. This also covers DNS names resolving
+to the same bound address, without DNS during structural configuration validation.
+Only inspect sockets owned by this group; do not enumerate or close foreign
+processes. Test overlap between the selected group endpoints on both platforms,
+while retaining separate exact-occupied-socket and foreign-ownership assertions.

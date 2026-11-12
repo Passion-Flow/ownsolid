@@ -10,17 +10,29 @@ an explicitly configured plain HTTP/proxy backend while retaining connection,
 header/request/idle deadlines and bounded shutdown. The historical `Serve`
 entrypoint requires nonnil TLS; it cannot silently downgrade.
 
-[ListenConfigured](server.go) prebinds the browser socket and optional dedicated
+[ListenConfigured](server.go) prebinds the browser sockets and optional dedicated
 `config.MachineServerConfiguration` HTTPS socket before accepting requests. Its
 owned `ListenerGroup.Serve(ctx)` starts once; `Close()` before Serve releases
-both sockets, while Close during Serve cancels requests and joins both bounded
-shutdown calls. A bind failure closes the earlier socket. Both listeners share
+all sockets, while Close during Serve cancels requests and joins every bounded
+shutdown call. A bind failure closes the earlier sockets. All listeners share
 one `HTTPPolicy.MaxConnections` channel, rather than doubling the configured
 budget. Handler active-request admission remains with the shared identity owner.
 Caller composition must validate the actual browser and machine TLS material,
 retain both handlers and start business workers only after prebinding succeeds.
 TLS configurations are cloned for the owned listeners and must not be mutated
 after submission. This package does not select certificate files or create SQL.
+
+Optional `server.portal_listen_address` selects a Portal-only socket and makes
+`server.listen_address` Admin-only. `browserEntrance` resolves the original
+request with the existing transport owner and refuses the sibling audience
+before assets, health or business handling. It never rewrites Host or TLS. The
+same identity handler and active-request admission remain shared. Omission keeps
+the historical shared browser socket. `ServeConfigured` also honors this split
+through an owned listener group; it cannot silently ignore the extra bind.
+Refusals retain the correlated transport audit and fixed per-audience
+`ownsolid_http_entrance_rejections_total` counters from `ListenerGroup.Samples`;
+the production serving composition adds them to its existing metrics pusher.
+See [configuration and remaining qualification](../../../../../docs/research/entrance-listeners.md).
 
 [machine_request.go](machine_request.go) resolves only real direct TLS, the
 configured machine authority/SNI and the actual socket peer. It rejects all
