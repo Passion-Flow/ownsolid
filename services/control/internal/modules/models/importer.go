@@ -149,6 +149,10 @@ func safeImportError(e error) string {
 }
 
 // Run processes imports and reconciles eligible staging cleanup.
+// Configure the service before starting it. Run returns after cancellation and
+// completion of the current bounded pass. The caller must join Run before
+// closing the repository or model store. An active uploader retains its lock
+// and request context independently of this worker's cancellation.
 func (s *Service) Run(ctx context.Context) {
 	var cleanupCursor, expiryCursor string
 	for ctx.Err() == nil {

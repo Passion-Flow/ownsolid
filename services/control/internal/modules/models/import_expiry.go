@@ -28,9 +28,14 @@ type ImportExpiryPolicy struct {
 	InactiveFor time.Duration
 }
 
-func (p ImportExpiryPolicy) valid() bool {
-	return validID(p.WorkspaceID) && p.WorkspaceID != uuid.Nil.String() &&
-		p.InactiveFor >= time.Hour && p.InactiveFor <= 365*24*time.Hour && p.InactiveFor%time.Second == 0
+// Validate checks the enabled policy's workspace identifier and inactivity bounds.
+// The startup owner must separately authorize the workspace and selected backend.
+func (p ImportExpiryPolicy) Validate() error {
+	if !validID(p.WorkspaceID) || p.WorkspaceID == uuid.Nil.String() ||
+		p.InactiveFor < time.Hour || p.InactiveFor > 365*24*time.Hour || p.InactiveFor%time.Second != 0 {
+		return fail("MODEL_IMPORT_EXPIRY_POLICY_INVALID")
+	}
+	return nil
 }
 
 type importExpiryTarget struct {
@@ -51,8 +56,8 @@ func (s *Service) expireNextImport(ctx context.Context, after string) (string, e
 		return "", nil
 	}
 	policy := *s.ImportExpiry
-	if !policy.valid() {
-		return "", fail("MODEL_IMPORT_EXPIRY_POLICY_INVALID")
+	if e := policy.Validate(); e != nil {
+		return "", e
 	}
 	store, e := s.repository()
 	if e != nil {
