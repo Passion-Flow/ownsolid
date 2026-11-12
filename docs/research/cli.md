@@ -697,5 +697,12 @@ that installation boundary or DEV-102; keep the roadmap open.
 The complete Linux amd64 CLI race suite passed in 3.416 seconds with only
 loopback enabled in a separate network namespace and external routes absent;
 CLI vet, layout, roadmap and diff checks also passed. These client TLS fixtures
-retain the separate Admin/PostgreSQL and new-candidate whole-repository gate
-boundaries above.
+retain the separate Admin/PostgreSQL authorization boundary above. Exact
+source 5055d774 also passed make check and make build on Darwin arm64 with
+offline dependency resolution. A separate admitted native Linux amd64 build
+produced the same 12,112,783-byte static ELF as the Darwin cross-build, SHA-256
+676106019d2d0a044ce6f39a976c7f7fb4aba1ed7107dad19795b446a818d6e6.
+Thirteen isolated Linux startup checks passed with an empty private config,
+only loopback and no routes. These cover version/help, local refusals and absent
+credentials; installed authorization, the whole-repository Linux gate and the
+whole make test target remain unrun.
