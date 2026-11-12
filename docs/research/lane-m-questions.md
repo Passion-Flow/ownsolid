@@ -81,6 +81,15 @@ admission and node code. They reached main at `e97a4fb4` and `33bbf870`.
 
 ## Shared full-test order
 
+The staged MOD-103 source `684f07ef` on `db7ee24a` passed native `make check`
+and `make build`. Its `make test` stopped before unit-test recipes at the Portal
+offline Help case (`web/packages/shell/testing/help-flows.ts:165`): expected
+`/help/api`, received `/help/api?q=changePassword`. Portal reported 409 passed,
+10 skipped and one failed; the runner cancelled Console. Web and OpenAPI match
+that upstream baseline exactly. Preserve the failed trace, reproduce the single
+case and finish the unreached Go/Rust/Web recipes before claiming a complete
+gate. The Help implementation and assertion belong to the Web owner.
+
 Follow the current resource handoff order. The carrier at
 `/private/tmp/ownsolid-workstation-full-gate.lock` is a persistent regular
 file owned by the current user. Reject symlinks and an occupied directory;
