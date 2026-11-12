@@ -292,3 +292,44 @@ This exercises trusted issuer overlap at process startup. DEL owns the
 installed trust rotation, including vmalert's remote-write trust update
 and draining already established connections when old trust is removed.
 Run the `history-tls` selector with the pinned binaries to repeat it.
+
+## Admin route integration
+
+The source at main 203109c7 still owns only the snapshot in
+`monitoring/http.Owns`. The normal identity handler already checks
+the cell-relative monitoring family, request budget, Admin audience,
+Origin and authenticated session before calling `Monitoring.Handle`.
+Registering the exact FleetHistory path in the monitoring adapter can
+therefore reuse that chain. Coordinate publication with DEV's scoped
+OpenAPI, generated clients, Help and common problem registry before
+claiming that the route is available.
+
+The [shared success writer](../../services/control/internal/modules/identity/http/handler.go)
+encodes `{"data": body}`. Go's
+[Encoder.Encode](https://pkg.go.dev/encoding/json#Encoder.Encode)
+appends a newline. The 1 MiB response budget must include those ten
+bytes, in addition to the prepared data. The cap decision stays before
+the second authority check and successful audit. A unit test must
+encode the exact shared wrapper at the accepted boundary and reject
+one additional byte. The existing 4 MiB store reply and time-grid
+bounds continue to bound input work.
+
+Use a small offline fixture through identityfixture.New,
+identityhttp.New, a verified TLS listener, the public cell-scoped URL
+and a real session cookie. Do not construct a trusted actor at the
+history adapter in that test. Check no session, Portal, wrong cell,
+foreign Workspace, revoked session and mid-query Workspace revocation.
+Then exercise raw and long results, failed or unconfigured long,
+response-budget refusal and successful retry against the actual
+PostgreSQL and two native stores. Assert problem codes through the
+shared writer, not the candidate-only mapper. Check the request ID
+against committed audit, security headers and the complete response
+size. Keep large-fleet fixtures separate from this route acceptance.
+The existing Go, PostgreSQL and VictoriaMetrics dependencies and
+licenses apply. No model or data set is added.
+
+The existing protected monitoring file remains the typed startup
+input. DEL owns installing raw/long stores, evaluator, CA trust,
+retention and network permissions. ARC owns the selected serving
+wrapper and installation lease if that composition changes. A normal
+module HTTP fixture does not establish an installed delivery.
