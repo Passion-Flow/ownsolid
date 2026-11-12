@@ -296,6 +296,21 @@ in every other phase fail the test. Join the sampler before fixture cleanup.
 Report maxima as sampled observations, including draining sockets separately
 from authenticated sessions. This adds no runtime product endpoint or wire field.
 
+Input cfb48b4863097b0067bcc0dc14a8f5eecfeeedde passed the two focused
+e2e observation/log-parser roots with the race detector on Darwin arm64 in
+1.564 seconds, followed by e2e package vet and Linux amd64 fixture compilation.
+The tests cover live and deliberately stopped gateways, unexpected stops,
+missing or foreign stats, malformed and negative socket observations, kill
+races and a missing container. Log cases preserve a replacement session after
+a delayed old close, reset only on a parsed startup message, retain legacy
+logs and refuse incomplete, nonfinite or negative retirement outcomes.
+The race log SHA-256 is
+a1c9b0f2fc7f12ff2fe3a7e9a64103c718cfa7bf12d1dc940e0b5178fe08dd43.
+The embedded Python observer is byte-identical to the native Linux prototype,
+SHA-256 d2b250589d2c217a5599d398652de8a0e7bac781d0318d245f22a330d2a1d938.
+These results qualify the fixture helpers, not the pending installed
+500-agent lifecycle or a capacity claim.
+
 No dependency, model or dataset is added. Docker/Moby uses
 [Apache-2.0](https://github.com/moby/moby/blob/master/LICENSE), and the
 existing Python interpreter and standard library use
