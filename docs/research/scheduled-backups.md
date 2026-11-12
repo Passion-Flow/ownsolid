@@ -166,3 +166,48 @@ publications are verified, including the deliberate retention failure;
 only successful expiry has a count. This repair does not establish a run
 result. Keep the existing earlier failure evidence and source recovery
 separate from the resulting timer-to-restore acceptance.
+
+
+### Verified timer publication and retention recovery
+
+On 2026-11-12, source `bc6e4b0274d494109c0b726ec545bf90ac2409c5`
+passed the combined drill on Ubuntu 24.04 Linux amd64 and systemd 255.
+It contains the accepted Audit SQL commit
+`8c04ab6fa6d1d8736e9ddc14376e92c1a70f08a2`, admitted through main
+`106ca52d`. The native Control migration and schema check reported
+schema 58 and 118 tables; those observed values matched every manifest
+and independently restored PostgreSQL database.
+
+The four real systemd timer activations produced `succeeded`, `succeeded`,
+`failed`, `succeeded`. Their expiry counts were 0, 1, omitted, 2. Every
+publication had `backup_verified=true`. The deliberate owner symlink
+caused `INSTALL_BACKUP_RETENTION_FAILED` and service exit status 1 after
+publishing a readable new dump. Removing only that fixture marker let the
+next actual timer invocation succeed and expire both owned predecessors.
+All four history rows remained, including the retention failure.
+
+Each archive had a custom-format `PGDMP` header and exact manifest byte
+count and SHA-256. Each was loaded again with native `pg_restore` into a
+separate scratch database and compared for deployment UUID, schema and
+table count. The original live database OID and ordinary-backup sentinel
+remained unchanged. This was a database-aware export, not a database
+directory copy.
+
+The PostgreSQL service had no network interface beyond loopback and the
+recorder. Both defaults terminated at that recorder before database
+initialization. It observed and blocked the exact IPv4, IPv6 and DNS
+probes, then the complete capture stayed unchanged through migration,
+all four jobs and logical readbacks. The fixture used no published port.
+Its PostgreSQL container, runtime units, recorder and scratch directories
+were removed; the staging tmpfs returned to zero used bytes. Other lane
+containers were untouched.
+
+The retained transcript is `20261112T061113Z-linux.log`, SHA-256
+`ad353eff7b863e62f9fe5811188247a9b9dbefa987acd7ba0bdbff29cd46b9ed`.
+Its evidence package contains the exact binaries, build-source and accepted
+SQL identities, input hashes and runner. The tested timer, host wrapper,
+materialization test and probe are now kept with the
+[component fixture](../../deploy/offline/internal/install/testdata/scheduled-backup-timer).
+The launcher keeps new evidence outside the checkout. Earlier refusal and
+source-recovery records remain separate. Console configuration and history
+acceptance are not established by this drill; REL-108 remains unticked.
