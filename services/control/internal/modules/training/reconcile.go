@@ -6,12 +6,12 @@ import (
 	"errors"
 
 	"database/sql"
-	"github.com/google/uuid"
+	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/nodes"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 type undeliveredReceipt struct {
@@ -50,7 +50,7 @@ func (s *Service) ReconcileNext(ctx context.Context) (bool, error) {
 	var c candidate
 	missing := false
 	e := s.trainingStorageTransaction(ctx, true, func(ctx context.Context, q transaction.Executor) error {
-		e := q.QueryRow(ctx, acceptedAdapterSQL(q, `SELECT j.id::text,j.tenant_id::text,j.workspace_id::text,j.current_node_id::text,j.requested_by::text,j.requested_audience,j.requested_epoch,j.membership_authority::text FROM training_jobs j JOIN training_attempts a ON a.id=j.current_attempt_id AND a.job_id=j.id JOIN installation_state i ON i.tenant_id=j.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND j.state IN ('preparing','running','cancelling','recovery_required') AND a.physical_stopped_at IS NULL AND j.next_dispatch_at<=clock_timestamp() ORDER BY j.next_dispatch_at,j.created_at,j.id LIMIT 1`, `SELECT j.id,j.tenant_id,j.workspace_id,j.current_node_id,j.requested_by,j.requested_audience,j.requested_epoch,j.membership_authority FROM training_jobs j JOIN training_attempts a ON a.id=j.current_attempt_id AND a.job_id=j.id JOIN installation_state i ON i.tenant_id=j.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND j.state IN ('preparing','running','cancelling','recovery_required') AND a.physical_stopped_at IS NULL AND j.next_dispatch_at<=UTC_TIMESTAMP(6) ORDER BY j.next_dispatch_at,j.created_at,j.id LIMIT 1`)).Scan(&c.id, &c.tenant, &c.workspace, &c.node, &c.actor, &c.audience, &c.epoch, &c.membership)
+		e := q.QueryRow(ctx, acceptedAdapterSQL(q, `SELECT j.id::text,j.tenant_id::text,j.workspace_id::text,j.current_node_id::text,j.requested_by::text,j.requested_audience,j.requested_epoch,j.membership_authority::text FROM training_jobs j JOIN training_attempts a ON a.id=j.current_attempt_id AND a.job_id=j.id JOIN installation_state i ON i.tenant_id=j.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND j.site_id=local_site_id() AND j.cell_id=local_cell_id() AND j.state IN ('preparing','running','cancelling','recovery_required') AND a.physical_stopped_at IS NULL AND j.next_dispatch_at<=clock_timestamp() ORDER BY j.next_dispatch_at,j.created_at,j.id LIMIT 1`, `SELECT j.id,j.tenant_id,j.workspace_id,j.current_node_id,j.requested_by,j.requested_audience,j.requested_epoch,j.membership_authority FROM training_jobs j JOIN training_attempts a ON a.id=j.current_attempt_id AND a.job_id=j.id JOIN installation_state i ON i.tenant_id=j.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND j.state IN ('preparing','running','cancelling','recovery_required') AND a.physical_stopped_at IS NULL AND j.next_dispatch_at<=UTC_TIMESTAMP(6) ORDER BY j.next_dispatch_at,j.created_at,j.id LIMIT 1`)).Scan(&c.id, &c.tenant, &c.workspace, &c.node, &c.actor, &c.audience, &c.epoch, &c.membership)
 		if errors.Is(e, sql.ErrNoRows) {
 			missing = true
 			return nil
