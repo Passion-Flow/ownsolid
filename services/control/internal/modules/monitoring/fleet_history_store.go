@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
@@ -37,46 +35,11 @@ func (p FleetHistoryPolicy) valid() bool {
 	if p == (FleetHistoryPolicy{}) {
 		return true
 	}
-	raw, long := historyOrigin(p.RawOrigin), historyOrigin(p.LongOrigin)
-	return raw != nil && (p.LongOrigin == "" || long != nil && historyAuthority(raw) != historyAuthority(long)) &&
+	raw, long := metricsQueryOrigin(p.RawOrigin), metricsQueryOrigin(p.LongOrigin)
+	return raw != nil && (p.LongOrigin == "" || long != nil && metricsQueryAuthority(raw) != metricsQueryAuthority(long)) &&
 		p.RawHorizonSeconds > rawWindowSeconds+p.SettlingSeconds && p.RawHorizonSeconds <= maxFleetRangeSeconds &&
 		p.MaxRangeSeconds >= 60 && p.MaxRangeSeconds <= maxFleetRangeSeconds &&
 		p.SettlingSeconds >= 30 && p.SettlingSeconds <= 300
-}
-
-func historyOrigin(raw string) *url.URL {
-	u, e := url.Parse(raw)
-	if e != nil || u.Hostname() == "" || u.Opaque != "" || u.User != nil || u.Path != "" || u.ForceQuery || u.RawQuery != "" || u.Fragment != "" || u.String() != raw {
-		return nil
-	}
-	if strings.HasSuffix(u.Host, ":") {
-		return nil
-	}
-	if port := u.Port(); port != "" {
-		value, e := strconv.ParseUint(port, 10, 16)
-		if e != nil || value == 0 || strconv.FormatUint(value, 10) != port {
-			return nil
-		}
-	}
-	if u.Scheme == "https" || u.Scheme == "http" && net.ParseIP(u.Hostname()).IsLoopback() {
-		return u
-	}
-	return nil
-}
-
-func historyAuthority(u *url.URL) string {
-	host := strings.TrimSuffix(strings.ToLower(u.Hostname()), ".")
-	if ip := net.ParseIP(host); ip != nil {
-		host = ip.String()
-	}
-	port := u.Port()
-	if port == "" {
-		port = "80"
-		if u.Scheme == "https" {
-			port = "443"
-		}
-	}
-	return net.JoinHostPort(host, port)
 }
 
 type fleetHistoryReader struct {
@@ -85,17 +48,11 @@ type fleetHistoryReader struct {
 	client    *http.Client
 }
 
-func newFleetHistoryReader(p FleetHistoryPolicy) *fleetHistoryReader {
+func newFleetHistoryReader(p FleetHistoryPolicy, timeout time.Duration, concurrent int) *fleetHistoryReader {
 	if p.RawOrigin == "" {
 		return nil
 	}
-	// Use the system trust store and direct private routes. An environment proxy
-	// or redirect must never receive the scoped query.
-	transport := &http.Transport{IdleConnTimeout: 30 * time.Second, ForceAttemptHTTP2: true}
-	return &fleetHistoryReader{p, historyOrigin(p.RawOrigin), historyOrigin(p.LongOrigin), &http.Client{
-		Transport:     transport,
-		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}}
+	return &fleetHistoryReader{p, metricsQueryOrigin(p.RawOrigin), metricsQueryOrigin(p.LongOrigin), newMetricsQueryClient(timeout, concurrent)}
 }
 
 type historyTier struct {
