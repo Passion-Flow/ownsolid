@@ -72,7 +72,7 @@ only from those owners, and commit the request audit before releasing data.
 Expose explicit daily metric and node ranks, never arbitrary matchers,
 focus labels, query-usage metadata or the raw status response. Validate a
 canonical UTC date within the configured raw horizon, reject future days
-and reject the special upstream date=0/all-index query. The public contract
+and reject noncanonical input such as a bare date=0 value. The public contract
 and Console workflow still need their owning lanes before publication.
 
 Before a product implementation, repeat the native projection with the
@@ -525,3 +525,49 @@ installation or new HTTP candidate qualification ran. This proves Linux pure
 units at 3cebfcef only. Native service/store transactions, the later HTTP adapter
 on Linux, public contracts and UI, installed acceptance and hard ingest budgets
 remain open.
+
+## Native daily-index prerequisites
+
+Keep the product date contract separate from an assumed upstream sentinel.
+The pinned [status handler](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmselect/prometheus/prometheus.go#L575-L607)
+parses an explicit day and builds that day's search interval; the literal
+date=0 enters its numeric day-zero branch. Merely observing that branch does
+not establish a successful all-index read. The product accepts only canonical
+YYYY-MM-DD input, so a bare zero remains invalid without relying on that
+upstream behavior. This source correction changes no candidate request parser
+or previously recorded run.
+
+The more important source profile boundary is
+[disablePerDayIndex](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmstorage/main.go#L88-L91),
+which defaults to false. The selected
+[storage options](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/storage/storage.go#L151-L160)
+carry that setting into storage. In
+[containsTimeRange/containsDate](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/storage/index_db.go#L454-L499),
+a disabled per-day index adjusts a matching search to the global-index range.
+[TSDB status collection](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/storage/index_db.go#L1344-L1392)
+then uses the adjusted index prefix. An explicit query date alone therefore
+does not prove that the source used its per-day index.
+
+Before publishing the daily view, the owning installation/source profile must
+retain per-day indexing and the qualified scope, scan and duration bounds.
+A boolean assertion from the caller cannot establish that native profile.
+Verify the actual selected startup configuration and its source identity at the
+owning composition boundary. Do not present a disabled-index profile as an
+equivalent daily source, and do not assume narrowing a metric repairs index
+semantics. This prerequisite is still unqualified by the private service's
+pure-unit runs.
+
+Extend native qualification with distinct scoped series on two UTC days within
+one native partition, so a broader index cannot accidentally match the expected
+daily counts. Check totals and bounded metric/node ranks for each selected day,
+scope distractors, empty days, restart and midnight/churn behavior. Use an
+explicit disabled-per-day-index control to observe the native behavior and
+prove that the product's supported source admission refuses that profile.
+Do not require the native endpoint itself to reject it if its documented mode
+returns broader index statistics. The earlier one-day measurements are unchanged
+and do not cover these controls.
+
+These are source-based preconditions and planned native controls, not a recorded
+failure of an installed product or a new runtime qualification. The existing
+VictoriaMetrics Apache-2.0 and Go BSD-3-Clause dependencies remain unchanged;
+no model, dataset or package is added.
