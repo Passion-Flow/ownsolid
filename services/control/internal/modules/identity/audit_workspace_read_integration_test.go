@@ -39,8 +39,8 @@ func newWorkspaceAuditReadFixture(t *testing.T) workspaceAuditReadFixture {
 	if _, err := s.DB.Exec(ctx, `INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Disabled audit history','disabled')`, space, tenant); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.DB.Exec(ctx, `INSERT INTO audit_events(id,actor_user_id,tenant_id,workspace_id,audience,action,outcome,request_id,reason,metadata,identifier_digest)
-VALUES($1,$2,$3,$4,'admin','workspace.updated','success',$5,'Visible operator reason','{"protected":"workspace-private-sentinel"}',decode(repeat('ab',32),'hex'))`, uuid.NewString(), actor, tenant, space, seed); err != nil {
+	if _, err := s.DB.Exec(ctx, `INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,request_id,reason,metadata,identifier_digest)
+VALUES($1,clock_timestamp(),$2,$3,$4,'admin','workspace.updated','success',$5,'Visible operator reason','{"protected":"workspace-private-sentinel"}',decode(repeat('ab',32),'hex'))`, uuid.NewString(), actor, tenant, space, seed); err != nil {
 		t.Fatal(err)
 	}
 	admin := identityfixture.Login(t, s, "workspace-audit@example.invalid", password, "admin")

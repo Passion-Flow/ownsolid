@@ -80,8 +80,9 @@ The paired tests must call that actual identity method with a non-default
 workspace and independently read the committed event. Preserve restricted-role
 and assistant projection checks, foreign/missing workspace equivalence, forged
 context and revoked/current session refusal, bounded selection and protected
-field exclusion. An assistant-only pagination check must filter that family so
-new real human access events do not silently become its subject. Test append
+field exclusion. The assistant pagination check uses the existing Portal-audience filter so
+new human Admin access events do not silently become its subject; the public
+category grammar is unchanged. Test append
 refusal/repair, cancellation while the actual INSERT is blocked, concurrent
 reads and both real COMMIT wire-loss modes. A scoped writer test alone does
 not qualify this consumer, and this note claims no such execution yet.
