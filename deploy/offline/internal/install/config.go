@@ -183,6 +183,8 @@ type ResourceConfig struct {
 type TelemetryConfig struct {
 	MetricsRetention string `yaml:"metrics_retention"`
 	LogsRetention    string `yaml:"logs_retention"`
+	// FleetHistoryControlDirectory selects the protected Control outputs of fleet-history apply.
+	FleetHistoryControlDirectory string `yaml:"fleet_history_control_directory,omitempty"`
 }
 
 // Docker's CPU weight: 1024 is one default container, and the daemon refuses more than the
@@ -375,6 +377,14 @@ func (c Config) validate(fromBundle bool) error {
 	}
 	if !retentionPattern.MatchString(c.Telemetry.MetricsRetention) || !retentionPattern.MatchString(c.Telemetry.LogsRetention) {
 		return invalid("telemetry", "metrics_retention and logs_retention must be whole days like 30d")
+	}
+	if c.Telemetry.FleetHistoryControlDirectory != "" {
+		if !historyPath(c.Telemetry.FleetHistoryControlDirectory) {
+			return invalid("telemetry.fleet_history_control_directory", "must name the protected fleet-history Control directory")
+		}
+		if _, present := c.ControlSettings["monitoring_config_file"]; present {
+			return invalid("control_settings.monitoring_config_file", "use telemetry.fleet_history_control_directory as the single owner")
+		}
 	}
 	if r.PostgresMaxConnections < 20 || r.PostgresMaxConnections > 1000 {
 		return invalid("resources.postgres_max_connections", "must be 20 to 1000")

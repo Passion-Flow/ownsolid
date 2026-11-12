@@ -11,6 +11,106 @@ go -C deploy/offline build -o ownsolid-install ./cmd/install
 go -C deploy/offline test -count=1 ./...
 ```
 
+## Deploy private fleet-history stores
+
+`fleet-history` installs an independent raw store, long store and
+recording-rule evaluator. The existing platform process-metrics store
+keeps its current configuration. Load the approved VictoriaMetrics and
+vmalert images and retain their notices before running this command.
+Both image values must be immutable local image IDs or repository digests.
+
+Create a protected, root-owned site YAML file. Replace the image values
+with the exact approved digests. Select unused private ports and a
+nonoverlapping private subnet. The evaluator listener must use a loopback
+IPv4 address. The two store listeners accept loopback or private IPv4.
+
+```yaml
+format_version: 1
+root: /srv/ownsolid-fleet-history
+project: ownsolid-fleet-history
+uid: 10001
+gid: 10001
+subnet: 172.29.248.0/28
+metrics_image: sha256:<approved-local-metrics-image-id>
+evaluator_image: sha256:<approved-local-vmalert-image-id>
+evaluator_listen: 127.0.0.1:18880
+raw:
+  listen: 10.20.30.40:18428
+  retention: 2d
+  tls:
+    ca_file: /private/history/raw-ca.pem
+    certificate_file: /private/history/raw.pem
+    private_key_file: /private/history/raw-key.pem
+long:
+  listen: 10.20.30.40:28428
+  retention: 90d
+  tls:
+    ca_file: /private/history/long-ca.pem
+    certificate_file: /private/history/long.pem
+    private_key_file: /private/history/long-key.pem
+store_resources: {memory: 256m, cpus: "1", pids: 128}
+evaluator_resources: {memory: 128m, cpus: "1", pids: 128}
+rules_file: /private/history/fleet-rollup-rules.yaml
+rules_sha256: <approved-rule-file-sha256>
+monitoring_file: /private/history/monitoring.json
+control_ca_file: /private/history/control-ca.pem
+request_seconds: 120
+```
+
+All referenced inputs must be protected regular files outside the
+deployment root. Use mode 0600 and canonical absolute paths. The raw
+certificate must cover the published IP and the subnet's second host
+address, `172.29.248.2` in this example. The long certificate covers the
+published IP and third host address, `172.29.248.3`. The CA files contain
+current CA certificates only. `control_ca_file` must verify both published
+endpoints. Keep its applicable roots separate from the evaluator's raw
+and long CA files.
+
+Use the approved local
+[fleet recording rules](../../services/control/internal/modules/monitoring/alerting/fleet-rollup-rules.yaml)
+and their SHA-256. The protected monitoring JSON uses the existing module
+policy. Its `fleet_history` object must select exactly the two configured
+HTTPS origins, a raw horizon inside raw retention, a maximum range inside
+long retention, and a settling delay from 30 to 300 seconds.
+
+```sh
+ownsolid-install fleet-history validate --config /private/history/site.yaml
+ownsolid-install fleet-history apply --config /private/history/site.yaml
+```
+
+Apply runs as root on Linux amd64. It verifies local images, validates the
+local rules with vmalert and starts the services with pulling disabled.
+The network is internal and the evaluator's health port is loopback-only.
+Each store retains its own data directory. JSON success identifies the
+checked monitoring file and Control CA file under an immutable input
+generation. The operator log records the deployment attempt and outcome.
+Inspect runtime state with `docker compose -f
+/srv/ownsolid-fleet-history/compose.yaml ps`.
+
+To rotate issuers, provision old and next roots first, apply, replace the
+leaf and key, then apply again. After removing old roots, apply the new
+trust. Apply stops the evaluator and both stores before restart, closing
+connections established under old trust. Failed input validation leaves
+the running generation active. After an interrupted stop or start, repeat
+apply using the same root, project and endpoint assignment. The prior
+input generations and store data remain available for recovery.
+
+Set the ordinary install configuration's
+`telemetry.fleet_history_control_directory` to the emitted files' parent
+directory and run the normal `apply` or signed `apply-bundle`. The installer
+copies both protected files, selects the existing `monitoring_config_file`
+and process CA bundle, and restarts Control. Repeat this step after every
+history policy or trust change, including issuer removal. For containerized
+Control, store origins must use private host IPs reachable from its network;
+loopback-only listeners are suitable for host clients, not this integration.
+The existing HTTP process-metrics client has its own store. Public history dispatch
+and installed Admin/Portal acceptance follow the
+[OBS and DEV integration](../../docs/research/telemetry-retention-tiers.md#installer-continuation).
+The local-only coordinated backup profile refuses this optional integration;
+it does not cover the separate history stores. Ordinary database backups
+remain logical PostgreSQL exports. Protect and back up the separate history
+store data using the stores' supported snapshot procedure.
+
 ## Check a host before installation
 
 Set the `preflight` block in [install.example.yaml](install.example.yaml) to the site's
