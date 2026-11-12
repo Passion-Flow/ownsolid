@@ -449,3 +449,37 @@ action, then recover to the allowed operation. Keep these real-authentication
 checks separate from the preview suite and retain the frozen product
 revision when extending the private acceptance client. No dependency,
 model or dataset is added.
+
+### Download recovery qualification
+
+At source b49514bf6b34689e754533c86ec5a5d65d10749a, make check and
+both Web production builds passed. Four local Chromium cases, one per
+entrance and language, passed without skips, retries or unexpected
+results. Each retained the previously unseen contract's download link
+while offline, observed the real preview HTTP 503 with no-store and a
+failed native download, then cleared its own fault cookie and downloaded
+the actual audience-projected JSON. The Help article link and keyboard
+focus walk passed. No HTTP request left the local preview origin.
+
+The eight screenshots were read at desktop English and 390-pixel
+Simplified Chinese widths. S-108 retains its reference-list structure
+and inline details; finding an operation remains its primary action,
+with saving a contract secondary. Its seven state boundaries are listed
+above; interruption no longer removes the download address. S-107
+retains the reference-detail structure of back link, title, contents and
+sections. Reading an answer is its primary action. Its bundled initial
+content, unknown-article fallback, local loading and retry, signed-in
+gate and independent sections retain the existing state boundaries.
+First-time content and an unsuccessful search have distinct meanings.
+Both new language sections fit their viewports and their API links lead
+to the reference. No dialog or drawer is needed for either screen.
+
+The raw reports are retained outside Git in the native-503-st2hx3ct
+qualification directory, with source and exit records. The eight images
+are retained under help-contract-discovery/qualified-b49514bf in the
+session's visualization directory. These are local preview results with
+mocked authentication, not installed-server acceptance. The earlier
+page-route attempt remains a failed fault-injection result and is not
+counted as download-failure coverage. Actual installed login, entrance
+boundaries and workspace isolation remain open until a new same-source
+installation is available.
