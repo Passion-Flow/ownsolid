@@ -505,3 +505,43 @@ production grants, a role, catalog functions, startup admission or installer
 provisioning. ARC-111 remains unticked; the next acceptance slice is delegated
 training/preparation authority with closed column privileges, before product-role
 catalog and operator preparation work.
+
+
+## Delegated session claims and column privilege acceptance
+
+The next role slice must follow the actual session graph rather than grant every
+machine HTTP mutation to a gateway. Agent protocol v1 carries heartbeats, claims
+and acknowledgements through the session; training/preparation uploads and result
+HTTP traffic still use their existing control-owned HTTPS paths. Do not broaden
+this role to their whole serving role merely because the constructor builds those
+owners. Renewals can be separately verified as a reusable owner path, without
+claiming that this tier currently routes their HTTP requests.
+
+Current training and preparation delegated loaders read users(id, auth_epoch,
+status, is_platform_admin) and workspace_memberships(tenant_id, workspace_id,
+user_id, role, authority_id). On PostgreSQL those human authority reads retain
+the existing node-mediated revocation fence without locking shared human rows.
+The [column privilege contract](https://www.postgresql.org/docs/18/sql-grant.html)
+permits these reads without granting passwords, email, identity writes or whole
+membership tables. SELECT 1 is not a sufficient negative test after column grants:
+explicitly read an ungranted human field and separately verify forbidden writes.
+
+Prototype the reviewed grants against current verified source, using actual
+control-side dataset preparation/job dispatch and NewAgentGateway over an
+independent restricted LOGIN pool. Keep dataset file verification outside business
+locks and retain both delegated authority checks. For a real training claim,
+verify the exact attempt, task sequence, stop-token binding, acknowledgement and
+held GPU ownership; a lease response alone is insufficient. Missing column or
+attempt mutation privileges must fail without a delivered lease or partial task
+mutation. Then grant only the reviewed fields/operations and rerun a fresh owned
+scenario. Never add privileges dynamically after catching a product SQL error.
+
+Independently revoke the requester's epoch and membership authority, disable the
+Workspace/node and alter the frozen command. Each case must preserve physical
+ownership while refusing the next claim, with no operator-pool retry. An approved
+repair may admit a fresh actual retry where the existing business contract allows
+it; it must not change the same attempt after acknowledgement. Preparation claims
+need their own persisted authority and exact-attempt checks rather than inheriting
+training's acceptance. Keep existing control workers, source artifact ownership,
+scope fences and read-only/observation role cases unchanged. These are acceptance
+requirements; no delegated-profile role run is claimed yet.
