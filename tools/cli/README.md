@@ -81,6 +81,27 @@ emit the resource fields as an array for a list or an object for a detail.
 Prompts and errors go to stderr. A failed command exits nonzero. Run
 `ownsolid --help` or `ownsolid node list --help` for usage and examples.
 
+## Discover workspaces
+
+```sh
+ownsolid workspace list --query research --limit 20 --output json
+ownsolid workspace list --query research --limit 20 --cursor "$NEXT_CURSOR" --output json
+ownsolid workspace get "$WORKSPACE_ID" --output yaml
+```
+
+Use a returned ID with the deployment, training and monitoring commands'
+`--workspace` flag. Workspace reads use the Admin origin's installed
+tenant and current platform-administrator permissions. The list includes
+disabled workspaces. The configured site, cell and selected workspace apply
+to cell resources; workspace discovery uses the global Admin API.
+
+List reads one page. Keep the same `--query` when continuing with
+`next_cursor`. Search is a case-insensitive literal substring of the
+name, including spaces, percent and underscore characters. Omit `--limit`
+to use the server's page size, or choose 1 to 100. JSON and YAML preserve
+`items` and nullable `next_cursor`; tables display the continuation
+after the rows.
+
 ## Inspect gateway request history
 
 ```sh
