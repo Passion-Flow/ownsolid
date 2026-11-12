@@ -147,7 +147,7 @@ The native composition admitted both browser logins and wrong-socket refusals,
 but failed the node-join request with RESOURCE_NOT_FOUND before enrollment. Its
 new helper had reused an historical composition helper's cell-relative URL.
 [The actual cell router](../../services/control/internal/platform/cellroute/route.go)
-and [ADR 0006](../decisions/0006-cell-scope-from-the-first-key.md) require a public
+and [ADR 0006](../decisions/0006-cell-and-site-scope.md) require a public
 site/cell prefix for node-owned resources. The established
 [HTTP fixture](../../services/control/internal/testing/httpfixture/client.go)
 already uses cellroute.Public before constructing requests. Use the same public
