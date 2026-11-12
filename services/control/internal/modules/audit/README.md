@@ -59,3 +59,46 @@ support collection must account for access at their actual entry points.
 `WriteWithin` resolves the installation tenant and default workspace; it does
 not authorize a supplied workspace or provide arbitrary workspace attribution.
 See the [consumer inventory and integration contract](../../../../../docs/research/audit-diagnostic-access.md).
+
+## Exact workspace append
+
+`WriteScopedWithin(ctx, tx, ScopedEvent)` records a human Admin event against
+an exact installation tenant, workspace and local site/cell. Supply these IDs
+and `ActorUserID` only from current server authority in that same transaction.
+Resolve site/cell from the database, not the default constants or request data.
+Keep the existing session/epoch and operation checks; the SQL attribution guard
+is not authentication. Disabled workspace history remains readable for Admins.
+
+Use a canonical nonzero server-generated `RequestID`, including when the caller
+has no HTTP request. `Action` and optional `TargetType` are lowercase ASCII codes
+of at most 64 bytes. A target requires both type and canonical nonzero UUID.
+`Reason` permits at most 500 UTF-8 bytes without control characters and must be
+bounded server-generated selection facts. Do not pass raw queries, cursors,
+credentials or returned records. Subject, identifier digest and metadata retain
+their empty defaults; assistant events still use their dedicated contract.
+
+This first path requires a borrowed PostgreSQL transaction and an active Admin.
+Malformed events return `ErrScopedEventInvalid`; a well-formed missing or foreign
+actor/scope returns `ErrScopeDenied`. Propagate all other append errors. A pool
+is not a transaction. The writer commits and retries nothing. An unknown commit
+must release no response and cannot be treated as a confirmed append outcome.
+
+The least-privilege caller needs INSERT on `audit_events` and SELECT on
+`users(id,status,is_platform_admin)`, `workspaces(id,tenant_id)`,
+`installation_state(id,bootstrap_complete,tenant_id)` and
+`cells(id,site_id,is_local)`. It needs no private chain-head access or mutation
+privilege on those authority tables. Existing triggers assign positions and
+hashes in the caller's transaction. IAM owns the real workspace read consumer;
+Delivery owns support collection and its Control-down admission. The complete
+AUD-108 item remains open until those paths are accepted.
+
+Run the scoped contract tests with the real isolated PostgreSQL input documented
+in the development environment:
+
+```sh
+go -C services/control test -tags repository_integration \
+  ./internal/modules/audit -run '^TestScopedAudit' -count=1 -v
+```
+
+The tagged root requires a fixture instead of accepting a skipped database test.
+See the [design and acceptance](../../../../../docs/research/audit-diagnostic-access.md#scoped-append-contract).
