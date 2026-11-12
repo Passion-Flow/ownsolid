@@ -55,15 +55,24 @@ if [ -n "${OWNSOLID_E2E_MODEL_ARCHIVE:-}" ]; then
 fi
 docker run --detach --name "$name" --privileged --network none "${storage[@]}" "${model_archive[@]}" \
 	--env DOCKER_TLS_CERTDIR= --volume "$work:/bundle:ro" "$dind_image" >/dev/null
+echo "isolated Docker container $name"
 
 echo "waiting for the isolated Docker daemon"
 for _ in $(seq 1 60); do
 	if docker exec "$name" docker info >/dev/null 2>&1; then
 		break
 	fi
+	if [ "$(docker inspect --format '{{.State.Running}}' "$name")" != true ]; then
+		break
+	fi
 	sleep 1
 done
-docker exec "$name" docker info >/dev/null
+if ! docker exec "$name" docker info >/dev/null; then
+	echo "isolated Docker daemon failed before installation" >&2
+	docker inspect --format '{{json .State}}' "$name" >&2 || true
+	docker logs --tail 100 "$name" >&2 || true
+	exit 1
+fi
 
 echo "routing everything off the host to the egress recorder"
 docker exec --detach "$name" /bundle/egress-recorder -interface "$egress_interface" -log "$egress_log"
