@@ -467,6 +467,19 @@ transaction, rechecks Admin/session/workspace authority, records an existing aud
 event and never commits on its own. Different concurrent choices fail rather than
 reassigning membership. Deferred constraints refuse an orphan staged selection.
 
+Backfill must not alter a table while its deferred foreign-key events are pending.
+A real PostgreSQL minimal transaction reproduced that failure in the initial DDL.
+Create the cyclic constraints before population, add the predecessor version's
+required-membership FK as `NOT VALID`, populate both maps, then use named
+[SET CONSTRAINTS IMMEDIATE](https://www.postgresql.org/docs/18/sql-set-constraints.html)
+to finish this domain's checks before [validating the predecessor FK](https://www.postgresql.org/docs/18/sql-altertable.html).
+Restore only these named constraints to deferred mode. No invalid FK is left after
+admission, and unrelated owners' constraint modes are unchanged. Candidate downgrade
+refuses after any family has been adopted; formal rollback must retain those UUIDs.
+An isolated PostgreSQL transaction verified this ordering with an existing version,
+the complete candidate DDL, a new default registration and forced constraint checks.
+It observed two distinct families and rolled the entire prototype back successfully.
+
 History resolves an exact anchor, uses the existing retained catalogue and lineage
 checks, and orders by PostgreSQL [row comparison](https://www.postgresql.org/docs/18/functions-comparisons.html#ROW-WISE-COMPARISON)
 on `(created_at,id)` descending. Fetch at most `limit+1` entries and validate the
