@@ -2,9 +2,10 @@
 
 Research for TRN-101, DAT-101 and the ARC-111 composition boundary. Reviewed
 2026-11-13 before implementation. The separate Agent gateway currently constructs
-its dataset service without file access. The concrete reader source is the unmerged Linux candidate
-dc2db707fd7734be3d611f3079b922e742d2b463, including the export follow-up
-to the af5cefcd reader baseline. This note does not qualify that gateway,
+its dataset service without file access. The integration-ready source is the unmerged Linux candidate
+5b73fa05305c2c5d8178a256683ede8b4e9ef99f on main ancestor 97a563ba.
+Its complete dataset/training module bytes equal the qualified dc2db707 export
+follow-up to the af5cefcd reader baseline. This note does not qualify that gateway,
 its restricted database role or any new filesystem deployment.
 
 ## Current ownership and primary sources
@@ -325,3 +326,29 @@ fe6da1ecc0d2595754bd79ed8dc7f3b93f07706efb5380fcc6999a7b095b3a1a.
 It requires the existing 5a9b40d7 main ancestor and preserves both research
 commits, concrete readers and the export follow-up. The event candidate c527fb68
 remains separate and unchanged; the new reader evidence measures no fleet cost.
+
+## Current-main integration-ready candidate
+
+5b73fa05305c2c5d8178a256683ede8b4e9ef99f applies only the 21 owning module/
+README paths to main ancestor 97a563ba. All owning dataset/training bytes are
+identical to dc2db707; current scheduling implementation and the complete main
+research/decision records are retained. No source-research add/add merge is
+needed to adopt this candidate. The original qualified branches remain intact.
+
+The exact new shared-dependency composition passed these Darwin arm64 phases
+under one permanent workstation lock with CPython 3.12.14/offline dependencies:
+
+| Phase | Actual result | Log SHA-256 |
+| --- | --- | --- |
+| Ordinary dataset/training owners | 253 passed actions, 86 environment skips, no failures; 9.735 seconds | 021c13cc95b9ab704e0e008fa32427e02d0438bd7e546979e11fcb67b017c724 |
+| repository_integration compilation | Passed, zero test bodies executed; 2.964 seconds | 5d1219950ce8590fb05d5454e79cbdcde78bff3294b3fa1ae56d9763d2705a63 |
+| Complete make check | Passed; 32.000 seconds | d79d308eff230a74b2648f247388b09632c616cd3ebca638e610d391aa518856 |
+| Complete make build | Passed; 13.235 seconds | 4738b2ea3ff95fad0d2d98a470a3f5bc3965748577108329c919269c4dc923f4 |
+
+All earlier evidence remains source-specific. The unchanged reader implementation's
+race tests are recorded above; no new native Go/SQL, complete make test, gateway,
+restricted role or fleet-budget result is inferred from this composition run.
+The owned RAM disk and audit binary were removed; no service/worker was started.
+The c527fb68 event branch remains unchanged. Its prepared native replay driver
+pins c527fb68, so select that preserved source before invoking the event runner;
+it must not silently execute the reader candidate instead.
