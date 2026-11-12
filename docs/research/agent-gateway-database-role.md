@@ -595,3 +595,65 @@ executable flag while restricting regular files/directories to ordinary 0644/075
 checkout modes. Do not chmod the immutable retained baseline, weaken source trust
 or place processing code inside writable dataset storage. The processor retains
 its existing isolated -I/-B execution and all resource/file checks.
+
+
+## Reproduced gateway training claim failure
+
+The protected-source retry confirmed the constructor gap on current verified
+274d771c product sources. TestObserveGatewayTrainingClaimArtifactOwnership
+completed on native Linux in 2.25 seconds without skips. This diagnostic passed
+by observing a known undesired failure; it does not qualify training through the
+gateway or the restricted database role.
+
+The existing real CPython processor inspected/published generated JSONL, and the
+control-side fixture dispatched an actual training attempt and held its physical
+GPU reservation. Unchanged NewAgentGateway constructed its training dataset
+service with Store=nil despite configured artifact roots. The same control-side
+fixture principal then received DATASET_STORAGE_UNAVAILABLE from that gateway's
+Node claim graph, with no lease. Full checked task state/attempt/acknowledgement,
+lease/stop-token presence, physical reservation and node acknowledgement cursor
+were unchanged. Control's actual file-owning path immediately claimed and
+acknowledged the same task/attempt on attempt one, retaining physical ownership
+and the exact delivered sequence. No training image, model weights or GPU process
+was run. Synthetic model metadata does not constitute model execution evidence.
+
+The first nil-store refusal already occurs in PublishedSourceWithin, before its
+metadata read; VerifyTrainingInputSnapshot independently requires the real Store
+as well. runAgentGateway does not open either store after construction. Broader
+SQL grants cannot repair this path. Training claims through a separate gateway
+are not supported until the actual file-owner composition is fixed and verified.
+Control-side training and the previously measured read-only gateway path are
+separate capabilities. Do not add a privileged retry, fabricate file verification
+or deliver the generic training lease without its delegated authority checks.
+
+The diagnostic reverified all 5040 source paths and copied unchanged bytes into
+its own 0644/0755 checkout before compilation. It entered only the owned
+network-none PostgreSQL container's network namespace, checking its identity and
+namespace in the test. CPython 3.12.3 and util-linux nsenter 2.39.3 remained on the
+host filesystem; no host port or external service was exposed. Database access
+retained generated ECDSA trust, verify-full and required SCRAM binding. The run
+held both resource locks with MemFree 19931192 KiB, MemAvailable 22363188 KiB and
+full I/O PSI avg10 1.2. The owned container/volume, private key, DSN, password and
+readiness password were confirmed removed.
+
+The 1791-byte external diagnostic archive SHA-256 is
+07e0a60271977cc2412025d3a557f22b671ea076a226b44cd0ba4bb2275d0b0c;
+the corrected runner SHA-256 is
+554b2a5d7a07f5126464088b9e9d2195ff19e284381945c93c63fe0f1fb5f9c7.
+The actual test-log SHA-256 is
+69638e0915df065f9d8aee946340db86e1ce0456045089bc2be6a655e2b05235.
+
+The responsible identity/dataset composition is outside this lane's allowed
+business modules. Keep this boundary explicit and take the next owned item;
+there is no request for the owner to answer and no product-role activation.
+Any later permission-only experiment that borrows a real existing Store must
+state that fixture dependency and must not claim the unchanged gateway constructor
+passed. It may not replace the Store with a success callback.
+
+The permission review also finds FOR UPDATE on the complete training job and on
+published dataset/version rows. PostgreSQL requires UPDATE rights for those locks
+as it does for the installation lock. Granting arbitrary id updates or dropping
+the locks would repeat the already rejected authority-lock mistake. Their owners
+must preserve retirement/current-attempt fencing through a closed protected
+interface before claiming a fully narrow gateway grant catalog. Column SELECT on
+human authority fields alone is therefore insufficient to close ARC-111.
