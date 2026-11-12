@@ -370,6 +370,8 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
 				second := x
 				second.f.User = otherUser
 				secondActor := second.issue(t, "admin")
+				// Actor construction has its own real login audit, outside publication.
+				before = x.audits(t)
 				observer, err := pgx.ConnectConfig(x.ctx, x.f.PostgreSQL.Config().ConnConfig.Copy())
 				if err != nil {
 					t.Fatal(err)
@@ -453,8 +455,15 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
 				if name == "matching_concurrency" && len(failures) != 0 || name == "conflicting_concurrency" && (len(failures) != 1 || failures[0].Error() != "MODEL_FAMILY_CONFLICT") {
 					t.Fatal("concurrent selection", failures)
 				}
-				if familyID(t, x, id) != familyID(t, x, x.model) || x.audits(t) != before+1 {
-					t.Fatal("concurrent membership/audit duplicated")
+				var selections int
+				if err := x.f.Store.QueryRow(x.ctx, transaction.SQL(transaction.PostgreSQL,
+					`SELECT count(*) FROM audit_events WHERE tenant_id=$1 AND workspace_id=$2 AND action='model.version_family_selected' AND target_type='model_version' AND target_id=$3`,
+					x.f.Tenant, x.f.Workspace, id)).Scan(&selections); err != nil {
+					t.Fatal(err)
+				}
+				actual, expected, audits := familyID(t, x, id), familyID(t, x, x.model), x.audits(t)
+				if actual != expected || selections != 1 || audits != before+1 {
+					t.Fatalf("concurrent membership/audit: family=%s want=%s selections=%d audits=%d want=%d", actual, expected, selections, audits, before+1)
 				}
 			}
 		})
