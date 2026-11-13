@@ -491,6 +491,17 @@ authority rows and a fixture password form do not implement actual ownsolid
 Portal consent, catalog registration, scoped grants or revocation composition.
 IAM-106 remains open and its complete external qualification continues.
 
+The next fault run pins the RP's OAuth authentication style explicitly to the
+registered Basic method. The selected [OAuth client](https://github.com/golang/oauth2/blob/v0.38.0/internal/token.go)
+otherwise probes header authentication and can automatically retry with body
+credentials after an error while its style is unknown. That behavior must not
+retry an exchange whose COMMIT outcome was lost. Count actual RP token HTTP
+requests as well as PostgreSQL COMMIT frames, and require one of each for the
+controlled wire loss. This changes no module version or license obligation.
+Retain private child-process logs and inspect them against generated sensitive
+test values; no key, credential, code, bearer, state or verifier belongs in the
+published logs or research note.
+
 The external prototype must use separate real RP and OP HTTPS servers, verified
 private CA trust and actual PostgreSQL persistence. Prove discovery through code
 exchange, signed ID-token verification and matching UserInfo subject; then
