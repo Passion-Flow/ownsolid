@@ -23,6 +23,31 @@ header. The two tables, three trigger functions, deferred scoped foreign keys,
 advisory lock and immutable-family behavior remain MODEL-owned. No inferred
 grouping by name, digest, model key, source job or runtime revision is allowed.
 
+## Platform cell ownership
+
+The unnumbered candidate intentionally has no platform site/cell columns. The
+existing TestEveryCellOwnedTableCarriesScope requires both non-null local-default
+columns on every cell-owned table; model history is not global identity data.
+Adding these tables to its global allowlist would hide a real integration gap.
+Preserve that assertion and append a separate platform section after the original
+upward SQL, without changing its tables' domain keys, functions or trigger bodies.
+
+Use the existing local_site_id()/local_cell_id() defaults on both new tables.
+Add composite candidate keys and foreign keys so a family's initial version,
+each member's version and that member's family also agree on site and cell.
+The version links retain deferred checking for publication's existing cyclic
+transaction; the family link remains immediate. PostgreSQL's documented
+composite foreign keys and the existing migration59 scoped-key pattern provide
+the approach. Append removal of the added model_versions key after the unchanged
+downward SQL. Its original nonempty refusal still runs first.
+
+Default backfill is valid for the currently admitted local-cell database. An
+inconsistent predecessor with nonlocal version rows must refuse migration and
+roll back rather than silently relabel retained versions. Tests must compare
+the original version rows, check all three retained scope projections, refuse
+foreign site/cell references and preserve the strict cell inventory test.
+This is platform schema integration; MODEL's standalone candidate is unchanged.
+
 ## Approach and references
 
 [PostgreSQL constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)
