@@ -308,3 +308,34 @@ the installer ELF is
 They were built from the reviewed working source before this evidence prose was
 added. Linux execution and the actual image/installed flow remain separate,
 unclaimed qualifications.
+
+
+## Native desired-material unit admission
+
+The complete Linux amd64 test executable was received and independently checked:
+18,027,355 bytes, SHA-256
+`de5d6635221c2b377742a1a70f520b91dce869cc6ab0f38b701c22919d869309`.
+The receiver checked clean source
+`d2ca13940b9d224fb35ed6ac295dbe56ba08b17f`, tree
+`f063ce8ef5338dd559a0b7e24d64eb722f2376cd`, the nine changed-file hashes,
+canonical Compose and the pinned launcher inputs before invoking the parent.
+The earlier partial upload was never executed.
+
+The single `listener-tls-unit-native.b054i8dz` attempt returned exit 1 in
+0.100454 seconds at `Refused: Host memory gate failed`, before namespace or test
+creation. Its result SHA-256 is
+`de6d408ca98c8db2fe92b6cf468dd1a9aaa6e73c6cc6c20fa23719a82759facf`.
+The resource reader raised before returning its failed sample. Therefore this
+record does not distinguish MemFree below 2 GiB from MemAvailable below 8 GiB,
+and does not claim that disk or full I/O pressure passed. No later sample is
+substituted. The eight roots and twelve RUN records remain expectations, with
+zero actual unit runs and no test log. The limits were not lowered and the
+attempt was not repeated.
+
+Independent readback found the parent gone, no launcher entry, no namespace
+launch command or test log, and the source still clean. No namespace or private
+tmpfs was created; there is no host-fixture deletion to claim. No heavy lock,
+Docker command, container, database or host listener was used. Retain the
+successful earlier source-specific units and parser checks separately. The TLS
+fix still needs native execution and the final repository and installed-image
+qualification before DEL-114 can close.
