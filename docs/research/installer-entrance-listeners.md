@@ -178,6 +178,57 @@ The first Linux launcher refused before running any test because inherited
 sysfs showed the host network devices. Its zero-RUN result
 `portal-unit-native.r6pilce4` is retained separately. The corrected launcher
 uses the new namespace netlink view; it does not count that refusal as a test
-pass. The native Compose parser, historical Control image command, installed
-split-listener upgrade/rollback, browser flow and recorded zero-egress drill
-remain unqualified. DEL-114 stays open.
+pass. Native Compose parsing is qualified separately below. The historical
+Control image command, installed split-listener upgrade/rollback, browser flow
+and recorded zero-egress drill remain unqualified. DEL-114 stays open.
+
+
+## Native Compose parser verification
+
+The original generated shared, split, shared-again and split-override inputs
+passed the real Linux amd64 Docker 29.1.3 client and Compose
+2.40.3+ds1-0ubuntu1~24.04.1 `config --format json` parser. The candidate was
+`1a41d97981798440b7f02061d3a73853726b03bc`, tree
+`398d104c91ce834bec81b9231e28d2a2f6733548`; the 13-file input manifest was
+`bd0b6a78cbd04eb00551d8d6b59e9613fa19a888d2a6b6a354e67226d5c6f7cd`.
+All four actual invocations exited 0 with JSON and empty standard error. After
+normalizing only the generated installation root, shared/split/shared returned
+the same shared data model, the split case added only its explicit Portal
+publication, and the override changed only the operator image. The operator
+had no publication and all services retained `pull_policy: never`.
+
+The retained `compose-parser-native.qb17th2d` result SHA-256 is
+`b5a156ea12b5079ce3082aeceeaf6cfcc931e172ef64516cc69eb11ad77b50d8`.
+The parent finished in 1.191533 seconds under a 30-second total deadline that
+included cleanup. Each parser ran as UID/GID 65534 in private mount, PID and
+network namespaces, with read-only namespace sysfs, only loopback down, an
+empty owned Docker configuration, the original private HOME, an absent
+configured daemon socket,
+NoNewPrivs and an inherited ABI-checked seccomp filter refusing socket calls.
+These controls and the input pins were checked before the Docker exec attempt;
+the successful JSON comparisons establish completion separately from that
+attempt marker. One Go worker and a 128 MiB soft Go heap limit applied to this
+client-only experiment. It acquired no heavy-job locks.
+
+The first parser attempt, `compose-parser-native.sr2wi7jd`, stopped at the
+route-file line-count guard before Docker execution. No route bytes were
+retained, so its cause remains unknown. The reviewed
+[Linux 6.8 route iterator](https://raw.githubusercontent.com/torvalds/linux/v6.8/net/ipv4/fib_trie.c)
+can emit no header when the main table is absent. The revised guard accepts
+only bounded ASCII empty output or a recognized header without route data,
+and preserves byte count, hash, row counts and stage before refusal. Nine
+synthetic guard cases covered empty/header-only output and refusal of route
+rows, unknown headers, non-ASCII and oversized input. The new native run
+observed an absent table with zero bytes in all four cases. That observation
+does not establish the previous attempt's cause or replace its retained refusal.
+
+The parent reported joined children and removed its fixture. Independent
+readback confirmed the parent and all four launchers were absent, no process
+referenced either recorded network namespace inode, the exclusive owned
+fixture prefix was empty, and the frozen source remained clean. The wrapper
+did not retain the successful fixture's random suffix; this readback records
+prefix absence rather than claiming an exact path it did not observe. No
+container, image code, Control CLI, PostgreSQL, host publication or installed
+flow ran. No egress-attempt recorder ran. Historical-image admission, real
+TLS/UI installation, upgrade/rollback and the recorded zero-egress drill remain
+open; parser success does not tick DEL-114.
