@@ -268,11 +268,34 @@ Rust-backed hook is used; no such hook is scheduled here. Mac admission
 would require at least 2 GiB Free and 15 GiB disk as well as its permanent
 carrier, but no prepared Mac oapi-codegen was found in the inspected paths.
 
-The current two-generator-only execution scope excludes the transitive Go
-metadata commands. No new generation is authorized by this process-graph
-review. Do not hide the extra executable, synthesize its answers, disable
-formatting, install tools or compile a replacement to fit the list. The
-next execution plan must explicitly account for that fixed Go executable
-and its metadata arguments before it takes a carrier. Until then, generated
-file counts, peak memory and byte comparisons for this candidate remain
-unmeasured. No dependency, model or data set is added by this review.
+The reviewed lightweight command scope includes the fixed Go executable
+for exactly these metadata calls:
+
+```text
+go env -json GO111MODULE GOFLAGS GOINSECURE GOMOD GOMODCACHE GONOPROXY GONOSUMDB GOPATH GOPROXY GOROOT GOSUMDB GOWORK
+go list -m -e -json ...
+```
+
+The three-dot argument in the second command is literal. This does not
+allow arbitrary module selectors, Go subcommands, compiler tools or VCS
+commands. Keep GOPROXY=off, GOSUMDB=off, GOTOOLCHAIN=local and GOVCS=*:off,
+use only the prepared caches and preserve source and dependency files.
+A missing cache is an error, not an invitation to tidy or download.
+Retain only necessary public result fields; do not record the environment
+or credentials. Exact metadata queries replace the earlier command-scope
+boundary; they do not promote any earlier SDK result.
+
+The inspected Mac cache contains an existing Python 3.12.14 environment
+with openapi-python-client 0.29.1, all 24 locked package versions and
+110 generator package files. Its prepared Go metadata executable is
+Go 1.27.3. No compatible prepared oapi-codegen executable was found in
+PATH, the inspected tool, temporary and cache directories, Spotlight's
+indexed matches or the existing handoff records. Module source is not a
+prepared executable, and the pinned Linux ELF cannot run on Mac. No
+workstation carrier was opened and no nonblocking acquisition or generator
+was started. The new generation entry has no exit code or peak RSS result.
+Its remaining prerequisite is an already prepared Mac executable of the
+pinned generator with a verified format, version and hash. Do not compile,
+install, substitute the Linux binary or start an unassigned Linux fallback.
+Generated file counts and byte comparisons remain unmeasured. No dependency,
+model or data set is added by this review.
