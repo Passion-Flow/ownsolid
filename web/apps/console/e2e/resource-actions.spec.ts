@@ -69,6 +69,7 @@ for (const [locale, messages] of [
       await page.getByRole('menuitem', { name: messages['services.stop.open'], exact: true }).click();
       const stop = page.getByRole('dialog');
       await expect(stop).toBeVisible();
+      await capture('deployment-confirmation');
       await expect(stop.getByRole('button', { name: messages['services.stop.submit'], exact: true })).toBeDisabled();
       await page.keyboard.press('Escape');
       await expect(stop).toHaveCount(0);
@@ -84,6 +85,7 @@ for (const [locale, messages] of [
       const dialog = page.getByRole('dialog');
       await expect(dialog).toBeVisible();
       await expect(dialog.locator(':focus')).toHaveCount(1);
+      await capture('node-rename');
       await page.keyboard.press('Escape');
       await expect(dialog).toHaveCount(0);
       await expect(more()).toBeFocused();
