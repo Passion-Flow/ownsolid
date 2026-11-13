@@ -411,6 +411,16 @@ registration, introspection and end-session paths for this first experiment;
 do not advertise those closed paths as implemented. This limits prototype
 qualification, not the roadmap capability's eventual scope.
 
+The legacy SDK's [authorization error handler](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/error.go)
+logs the protocol state; `WithLogger` no longer supplies a provider-local
+logger. Avoid global logger changes or relying on SDK error redirects for the
+authorization/login callback. Compose the SDK's request parser/client validator,
+storage owner, code-response builder and redirect encoder directly at those
+two routes, returning fixed local errors before any sensitive state is logged.
+Keep the SDK token, UserInfo, revocation and key handlers behind their strict
+boundaries and fixed storage errors. Capture and inspect protocol logs in the
+prototype; do not copy upstream sample token-printing callbacks.
+
 Loading `pkg/op`, `pkg/client/rp` and pgxpool selected 45 modules and 57 legal
 files in `iam106-provider-20261113.q_ov5ppw`. The preceding 40 exact versions
 and notices are unchanged; the five additions are below. Module downloads were
