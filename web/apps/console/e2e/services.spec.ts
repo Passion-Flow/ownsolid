@@ -215,7 +215,8 @@ test('stopping names what breaks and confirms by typing', async ({ page }) => {
   control.aliases = [deploymentAlias];
   control.gatewayKeys = [deploymentKey];
   await page.goto(`/services/${runningDeployment.id}`);
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Stop', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toContainText(deploymentAlias.name);
   await expect(dialog).toContainText(`${deploymentKey.label} ${deploymentKey.prefix}`);
@@ -247,7 +248,8 @@ test('two people acting at once: the second is told and sees the new state', asy
 test('removing returns to the list', async ({ page }) => {
   control.deployments = [runningDeployment];
   await page.goto(`/services/${runningDeployment.id}`);
-  await page.getByRole('button', { name: 'Remove' }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Remove' }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toContainText('No gateway name sends traffic here');
   await dialog.getByRole('textbox').first().fill(readyModel.name);
@@ -267,11 +269,13 @@ test('explains a failure the node reported, in words', async ({ page }) => {
 test('shows traffic, logs, scaling and rollback as not ready, with reasons', async ({ page }) => {
   control.deployments = [runningDeployment];
   await page.goto(`/services/${runningDeployment.id}`);
-  await expect(page.getByRole('button', { name: 'Scale' })).toHaveAttribute(
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Scale' })).toHaveAttribute(
     'aria-disabled',
     'true',
   );
-  await expect(page.getByText('Scaling is not ready yet')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('Scaling is not ready yet', { exact: false })).toBeVisible();
   await expect(page.getByText('Rolling back is not ready yet')).toBeVisible();
   await page.getByRole('tab', { name: 'Logs' }).click();
   await expect(page.getByText('Logs are not ready yet')).toBeVisible();

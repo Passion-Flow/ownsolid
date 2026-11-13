@@ -325,3 +325,28 @@ new partial screenshots and actual review of every generated image. Fix the
 observed header hierarchy and unavailable-action explanations before accepting
 the detail screens. Full `make check`, `make build`, `make test`, native and
 installed SQL/authority/offline/SSO acceptance remain separate requirements.
+
+### Detail action hierarchy correction
+
+The existing [WAI-ARIA menu-button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/)
+keeps secondary commands under a named button, with Enter/Space, arrow navigation,
+Escape and focus return. Reuse the existing Radix-based Menu and MenuItem rather
+than building another focus manager. Radix is MIT; no dependency, model or dataset
+is added, and the existing commercial redistribution and offline notices apply.
+
+Keep one frequent node command beside More actions; put Rename, Disable/Enable
+and destructive Remove in that menu. Keep node drawers' existing layout and the
+same mutation, undo, permission and typed-confirmation paths. Deployment pages
+keep Start when available, otherwise Check, beside More actions. The menu retains
+verification, stopping, removal, scaling and rollback with their original guards.
+Unavailable commands stay in the command set, aria-disabled with a visible reason;
+replace roadmap-ID explanations with what this release can do. On Activity, header
+commands are secondary so Read activity is the sole primary. The model Deploy
+link becomes secondary only on Activity. No capability or confirmation is removed.
+
+Reject hiding unavailable commands, removing resource actions or replacing typed
+confirmation with direct destructive writes. Original node/deployment browser
+flows must open the menu before the same mutation assertions; add EN/ZH desktop
+and narrow keyboard/menu coverage and screenshots. Check menu-to-dialog focus,
+Escape return, disabled explanations, all original audit paging/recovery assertions,
+and the seven existing activity states. Candidate qualification remains pending.

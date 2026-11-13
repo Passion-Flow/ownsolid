@@ -15,6 +15,9 @@ import { useI18n } from '@ownsolid/i18n';
 import { everyPage, pageSize } from '@ownsolid/shell';
 import {
   Button,
+  Menu,
+  MenuItem,
+  MenuSeparator,
   ProblemNotice,
   Skeleton,
   TextField,
@@ -22,8 +25,8 @@ import {
   useToast,
 } from '@ownsolid/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, BadgeCheck, Play, Square, Trash2 } from 'lucide-react';
-import { useRef, useState, type ReactNode } from 'react';
+import { Activity, BadgeCheck, Ellipsis, Play, Scaling, Square, Trash2, Undo2 } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { canStart, canStop, deploymentKeys, deploymentsKey } from './deployment-state.ts';
 
 /** The gateway names that send traffic to a deployment, and the keys that call them. */
@@ -203,14 +206,14 @@ export function DeploymentActions({
   deployment,
   name,
   onRemoved,
-  extra,
+  primary = true,
 }: {
   deployment: Deployment;
   name: string;
   /** Where to go once a removal has been asked for. */
   onRemoved?: (() => void) | undefined;
-  /** Actions that come first, such as the page's own primary. */
-  extra?: ReactNode;
+  /** Activity owns the primary action while its tab is selected. */
+  primary?: boolean;
 }) {
   const { t } = useI18n();
   const toast = useToast();
@@ -231,60 +234,35 @@ export function DeploymentActions({
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {extra}
-        {canStart(deployment) ? (
-          <Button
-            variant="primary"
-            disabled={changing}
-            onClick={() => {
-              now('deploy');
-            }}
-          >
-            <Play aria-hidden />
-            {t('services.deploy.open')}
-          </Button>
-        ) : null}
         <Button
+          variant={primary ? 'primary' : 'secondary'}
           disabled={changing}
-          onClick={() => {
-            now('observe');
-          }}
+          onClick={() => { now(canStart(deployment) ? 'deploy' : 'observe'); }}
         >
-          <Activity aria-hidden />
-          {t('services.observe.open')}
+          {canStart(deployment) ? <Play aria-hidden /> : <Activity aria-hidden />}
+          {t(canStart(deployment) ? 'services.deploy.open' : 'services.observe.open')}
         </Button>
-        {deployment.observed_state === 'running' ? (
-          <Button
-            disabled={changing}
-            onClick={() => {
-              now('verify');
-            }}
-          >
-            <BadgeCheck aria-hidden />
-            {t('services.verify.open')}
-          </Button>
-        ) : null}
-        {canStop(deployment) ? (
-          <Button
-            disabled={changing}
-            onClick={() => {
-              setDialog('stop');
-            }}
-          >
-            <Square aria-hidden />
-            {t('services.stop.open')}
-          </Button>
-        ) : null}
-        <Button
-          variant="danger"
-          disabled={changing || deployment.desired_state === 'removed'}
-          onClick={() => {
-            setDialog('remove');
-          }}
-        >
-          <Trash2 aria-hidden />
-          {t('services.remove.open')}
-        </Button>
+        <Menu trigger={<Button><Ellipsis aria-hidden />{t('resource.actions')}</Button>}>
+          {canStart(deployment) ? <MenuItem disabled={changing} onSelect={() => { now('observe'); }}>
+            <Activity aria-hidden />{t('services.observe.open')}
+          </MenuItem> : null}
+          {deployment.observed_state === 'running' ? <MenuItem disabled={changing} onSelect={() => { now('verify'); }}>
+            <BadgeCheck aria-hidden />{t('services.verify.open')}
+          </MenuItem> : null}
+          <MenuItem aria-disabled aria-describedby="deployment-scale-not-ready" onSelect={(event) => { event.preventDefault(); }}>
+            <Scaling aria-hidden />{t('services.scale.open')}
+          </MenuItem>
+          <MenuItem aria-disabled aria-describedby="deployment-rollback-not-ready" onSelect={(event) => { event.preventDefault(); }}>
+            <Undo2 aria-hidden />{t('services.rollback.open')}
+          </MenuItem>
+          <MenuSeparator />
+          {canStop(deployment) ? <MenuItem disabled={changing} onSelect={() => { setDialog('stop'); }}>
+            <Square aria-hidden />{t('services.stop.open')}
+          </MenuItem> : null}
+          <MenuItem className="text-critical-ink data-[highlighted]:text-critical-ink" disabled={changing || deployment.desired_state === 'removed'} onSelect={() => { setDialog('remove'); }}>
+            <Trash2 aria-hidden />{t('services.remove.open')}
+          </MenuItem>
+        </Menu>
       </div>
       {isProblem(act.error) ? (
         <ProblemNotice className="w-full max-w-[560px] text-left" problem={act.error} />

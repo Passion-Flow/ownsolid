@@ -5,13 +5,16 @@ import { useI18n } from '@ownsolid/i18n';
 import {
   Button,
   Dialog,
+  Menu,
+  MenuItem,
+  MenuSeparator,
   ProblemNotice,
   TextField,
   TypedConfirmation,
   useToast,
 } from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Ban, Check, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { Ban, Check, Ellipsis, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { useRef, useState, type ReactNode, type SubmitEvent } from 'react';
 
 function RenameDialog({
@@ -127,7 +130,14 @@ export interface NodeActions {
 /** The actions on a node. `onChanged` runs before the toast that offers undo. */
 export function useNodeActions(
   node: Node | null,
-  { onChanged, onRemoved }: { onChanged: () => void; onRemoved: () => void },
+  { onChanged, onRemoved, detail = false, primary = true }: {
+    onChanged: () => void;
+    onRemoved: () => void;
+    /** A detail header keeps one frequent action and the secondary command menu. */
+    detail?: boolean;
+    /** Activity owns the primary action while its tab is selected. */
+    primary?: boolean;
+  },
 ): NodeActions {
   const { t } = useI18n();
   const toast = useToast();
@@ -188,15 +198,53 @@ export function useNodeActions(
 
   const active = node?.status === 'active';
   const removed = node?.status === 'removed';
+  const openDialog = (next: 'rename' | 'remove') => {
+    change.reset();
+    setDialog(next);
+  };
+  const toggle = () => {
+    if (!node) return;
+    reversible(
+      node,
+      { status: active ? 'disabled' : 'active' },
+      t(active ? 'nodes.reason.disable' : 'nodes.reason.enable'),
+      t(active ? 'nodes.disable.done' : 'nodes.enable.done', { name: node.name }),
+    );
+  };
   return {
     buttons:
-      node && !removed ? (
+      node && !removed ? detail ? (
+        <>
+          <Button
+            variant={primary ? 'primary' : 'secondary'}
+            disabled={active ? collect.isPending : change.isPending}
+            onClick={() => {
+              if (active) collect.mutate(node.id);
+              else toggle();
+            }}
+          >
+            {active ? <RefreshCw aria-hidden /> : <Check aria-hidden />}
+            {t(active ? 'nodes.collect.open' : 'nodes.enable.open')}
+          </Button>
+          <Menu trigger={<Button><Ellipsis aria-hidden />{t('resource.actions')}</Button>}>
+            <MenuItem onSelect={() => { openDialog('rename'); }}>
+              <Pencil aria-hidden />{t('nodes.rename.open')}
+            </MenuItem>
+            {active ? <MenuItem disabled={change.isPending} onSelect={toggle}>
+              <Ban aria-hidden />{t('nodes.disable.open')}
+            </MenuItem> : null}
+            <MenuSeparator />
+            <MenuItem className="text-critical-ink data-[highlighted]:text-critical-ink" onSelect={() => { openDialog('remove'); }}>
+              <Trash2 aria-hidden />{t('nodes.remove.open')}
+            </MenuItem>
+          </Menu>
+        </>
+      ) : (
         <>
           <Button
             variant="danger"
             onClick={() => {
-              change.reset();
-              setDialog('remove');
+              openDialog('remove');
             }}
           >
             <Trash2 aria-hidden />
@@ -204,8 +252,7 @@ export function useNodeActions(
           </Button>
           <Button
             onClick={() => {
-              change.reset();
-              setDialog('rename');
+              openDialog('rename');
             }}
           >
             <Pencil aria-hidden />
@@ -213,23 +260,7 @@ export function useNodeActions(
           </Button>
           <Button
             disabled={change.isPending}
-            onClick={() => {
-              if (active) {
-                reversible(
-                  node,
-                  { status: 'disabled' },
-                  t('nodes.reason.disable'),
-                  t('nodes.disable.done', { name: node.name }),
-                );
-              } else {
-                reversible(
-                  node,
-                  { status: 'active' },
-                  t('nodes.reason.enable'),
-                  t('nodes.enable.done', { name: node.name }),
-                );
-              }
-            }}
+            onClick={toggle}
           >
             {active ? <Ban aria-hidden /> : <Check aria-hidden />}
             {active ? t('nodes.disable.open') : t('nodes.enable.open')}

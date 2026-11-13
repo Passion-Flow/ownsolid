@@ -270,7 +270,7 @@ function Loaded({ model }: { model: ModelDetail }) {
         }
         actions={
           <>
-            <DeployLink model={model.id} />
+            <DeployLink model={model.id} primary={tab !== 'activity'} />
             <Button
               variant="danger"
               onClick={() => {

@@ -126,7 +126,8 @@ test('Activity says when there is none, and a failure can be retried', async ({ 
 
 test('renaming stays on the page and can be undone', async ({ page }) => {
   await page.goto(path);
-  await page.getByRole('button', { name: 'Rename' }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Rename' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox').fill('gpu-renamed');
   await dialog.getByRole('button', { name: 'Rename' }).click();
@@ -137,7 +138,8 @@ test('renaming stays on the page and can be undone', async ({ page }) => {
 
 test('removing goes back to the list', async ({ page }) => {
   await page.goto(path);
-  await page.getByRole('main').getByRole('button', { name: 'Remove' }).click();
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('menuitem', { name: 'Remove' }).click();
   const dialog = page.getByRole('dialog', { name: 'Remove this node' });
   await dialog.getByRole('textbox').first().fill(node.name);
   await dialog.getByRole('textbox').last().fill('Retired');

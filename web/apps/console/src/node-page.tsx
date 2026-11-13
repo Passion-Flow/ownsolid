@@ -84,6 +84,8 @@ function Loaded({ node }: { node: Node }) {
   const navigate = useNavigate();
   const [tab, setTab] = useChosenTab(tabs);
   const actions = useNodeActions(node, {
+    detail: true,
+    primary: tab !== 'activity',
     onChanged: () => undefined,
     onRemoved: () => {
       void navigate({ to: '/nodes' });

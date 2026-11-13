@@ -3,10 +3,9 @@
 import { getDeployment, isProblem, type Deployment } from '@ownsolid/api';
 import { useI18n } from '@ownsolid/i18n';
 import { runtimeConfigQuery } from '@ownsolid/shell';
-import { Button, Card, Detail, DetailList, Notice, Tabs } from '@ownsolid/ui';
+import { Card, Detail, DetailList, Notice, Tabs } from '@ownsolid/ui';
 import { useQuery } from '@tanstack/react-query';
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
-import { Scaling, Undo2 } from 'lucide-react';
 import { DeploymentActions } from './deployment-actions.tsx';
 import { DeploymentGateway } from './deployment-gateway.tsx';
 import {
@@ -151,18 +150,7 @@ function Loaded({ deployment }: { deployment: Deployment }) {
             onRemoved={() => {
               void navigate({ to: '/services' });
             }}
-            extra={
-              <>
-                <Button aria-disabled aria-describedby="deployment-scale-not-ready">
-                  <Scaling aria-hidden />
-                  {t('services.scale.open')}
-                </Button>
-                <Button aria-disabled aria-describedby="deployment-rollback-not-ready">
-                  <Undo2 aria-hidden />
-                  {t('services.rollback.open')}
-                </Button>
-              </>
-            }
+            primary={tab !== 'activity'}
           />
         }
       />
