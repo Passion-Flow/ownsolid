@@ -14,7 +14,7 @@ func TestCatalogAdmissionAfterLogicalRestore(t *testing.T) {
 	if os.Getenv("PROJECT_ONE_TEST_DSN_FILE") == "" && os.Getenv("PROJECT_ONE_TEST_DSN") == "" {
 		t.Skip("requires an owned PostgreSQL restore fixture")
 	}
-	for _, version := range []int{55, 56, 57, 58, 59, database.SchemaVersion} {
+	for _, version := range []int{55, 56, 57, 58, 59, 60, database.SchemaVersion} {
 		t.Run(fmt.Sprintf("restore_at_%d", version), func(t *testing.T) {
 			ctx := t.Context()
 			fixture.PreflightOwnedPostgres(t)

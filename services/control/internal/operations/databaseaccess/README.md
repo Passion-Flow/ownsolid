@@ -29,6 +29,13 @@ only on the migration journal; it does not grant schema ownership, DDL, trigger
 control, TRUNCATE or delegation. Repeat preparation/check must verify the same
 real target and role rather than silently repair conflicting privileges.
 
+The model-family migration 61 source candidate adds only model_families and
+model_family_members to the PostgreSQL Control principal's closed table list.
+The existing DML-only grant contract and MODEL-owned immutable triggers remain;
+no gateway role or other-engine catalog is extended. The actual predecessor-role
+grant-resume test must pass before this becomes a published runtime baseline.
+See [formal admission](../../../../../docs/research/model-family-schema-admission.md).
+
 ## MySQL uncertain account changes
 
 MySQL account creation, grants, and unlock are not one rollbackable transaction.
