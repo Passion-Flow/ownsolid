@@ -883,29 +883,35 @@ remain distinct evidence until that composition actually runs.
 The review source now calls actual Identity from the SSO domain owner. It is an
 unregistered, uncommitted candidate, not a serving capability. The immutable
 source artifact is
-`/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/review-source-v3.tar`.
+`/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/review-source-v4.tar`.
 Its SHA-256 is
-`b3319794244ce84fa8a3e37015458cd777d648b59158e2c5b63f52131520755b`;
-`review-source-v3-hashes.json` has SHA-256
-`74db54a16f2a20a9451aff308174b418380e1658a01bf0d97a08af719097dee4`.
-The review Git tree is `88af72c92b00c7c77206f9bee8b705b559861ef4`, based on
-`711cdd40d46349f72e6562091562fb343d8c600e`. Its explicit twelve-path
-`product-owner-v3.patch` has SHA-256
-`d2eec65db1b9bbf12c7f47735a2873d44c5ac9db7bfeef3846539a03798503f9`.
+`84ca300c0b1e673b9d1ded6da01a15be682b4dfe0cdb85aa6316aa7fb6118286`;
+`review-source-v4-hashes.json` has SHA-256
+`9571eb20fc22d07efa105e383f253d25a2bb77acdc35884f075b3eb81c24bf99`.
+The review Git tree is `0abbf5f0db217512c136f0406145b1fe719882f4`, based on
+`629fa3df07772538a4b848b04283dff3727e0b67`. Its explicit twelve-path
+`product-owner-v4.patch` has SHA-256
+`79a99299c45e0003cbcdbaae07ec3b005eed399bce07c8b2497f3d349fe20401`.
 The artifact contains those owners, the external producer/protocol tests,
-unnumbered cumulative SQL, alternate module locks, seven dependency/eight legal
+unnumbered cumulative Up/empty-only Down SQL, alternate module locks, seven dependency/eight legal
 files and exact no-database command/output/source hashes. It contains no provider
 credential, runtime key, database, binary or vendored implementation.
 
 Five focused product test roots/thirteen subtests passed for the source in this
 artifact. The combined repository-tagged fixture compiled with no test selected;
-it executed **zero** database cases. Its thirty-two authored roots include nine
-new completion roots, but none of those SQL cases has run. Keep the earlier
+it executed **zero** database cases. Its thirty-four authored combined roots
+include eleven completion roots. A separate real-provider domain root and its
+readiness root are also authored and compile, but none of these new SQL/provider
+cases has run. Keep the earlier
 signed-result qualification and these new checks separate. No current full
 `make check`, `make build`, `make test`, real-provider completion or browser/UI
 qualification is claimed. The first compile-only command omitted `GOWORK=off`
 and was refused by Go; its retained output and the corrected command are outside
-Git. Do not count that environment refusal as a product test failure or omit it.
+Git. The first real-provider fixture compile also refused a missing checksum
+for the already selected `golang.org/x/net v0.61.0`; the offline module cache
+supplied that exact checksum before the passing compile. This adds no module
+version or production dependency. Keep both environment refusals distinct from
+product test failures and retain their outputs.
 
 ### Domain and source composition
 
@@ -974,11 +980,14 @@ The existing all-or-none session-source columns and unique source flow remain.
 Their legacy binding/flow foreign keys cannot merely be removed: the candidate
 replaces their authority with exact protocol-dispatched issuance checks, source
 parent locks and retained-parent deletion checks, while preserving the Gitea
-one-issuance path. Both directions of concurrent parent deletion/issuance still
-need real PostgreSQL proof. Formal rollback must refuse to discard any retained
+one-issuance path. The candidate adds exact connector/context and request/context/result compound
+foreign keys; source reads also compare the immutable request context and ID.
+Both directions of concurrent parent deletion/issuance still need real PostgreSQL
+proof. Missing parents after a wait return the stable unusable-flow outcome. Formal rollback must refuse to discard any retained
 SAML authority, restore the exact legacy foreign keys/provider credential rules
-and issuance owner, and remove only empty candidate objects. No formal Down
-migration or existing migration is changed by this handoff.
+and issuance owner, and remove only empty candidate objects. The external `candidate.down.sql` and its three empty/refusal/transaction-rollback
+cases are authored but unexecuted. No formal Down migration or existing migration
+is changed by this handoff.
 
 Cleanup must use the existing typed retention, batch and timeout policy, delete
 results before terminal requests and preserve every parent referenced by any
@@ -1023,6 +1032,15 @@ secure Set-Cookie path; completion rotates the ordinary session, clears temporar
 proof and refreshes CSRF. Failures expose fixed stable codes and actionable fresh
 sign-in recovery, never provider XML/error objects. Unknown COMMIT must not be
 automatically retried.
+
+The private `qualify-live-completion.py` entry refuses to start until the exact
+34-root SQL candidate passes both native race and disconnected topologies. It
+then reuses that Linux arm64 test binary, with pinned PostgreSQL and Keycloak in
+one network-none namespace, verified IdP TLS, the real AuthnRequest/password/
+signed-response exchange and actual completion/source/revocation owners. It has
+no host port, HTTP ACS or rendered browser. This entry has only passed Python
+syntax inspection; neither database nor provider was started for it. It is not
+a substitute for the later approved real-browser/install window.
 
 Structured logs/metrics/traces must use bounded protocol/action/outcome labels
 and the server request ID, excluding XML, attributes, NameID, passwords, cookies,
