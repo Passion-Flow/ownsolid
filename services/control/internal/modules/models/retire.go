@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
 )
 
 type Retirement struct {
@@ -29,7 +29,7 @@ func (s *Service) Retire(ctx context.Context, a identity.Auth, id, reason, reque
 	e := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
 		var workspace string
 		e := q.QueryRow(ctx, modelSQL(q,
-			`SELECT m.workspace_id::text FROM model_versions m JOIN installation_state i ON i.tenant_id=m.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND m.id=$1`,
+			`SELECT m.workspace_id::text FROM model_versions m JOIN installation_state i ON i.tenant_id=m.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND m.id=$1 AND (m.site_id,m.cell_id)=(local_site_id(),local_cell_id())`,
 			`SELECT m.workspace_id FROM model_versions m JOIN installation_state i ON i.tenant_id=m.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND m.id=?`, id)).Scan(&workspace)
 		if errors.Is(e, sql.ErrNoRows) {
 			return fail("RESOURCE_NOT_FOUND")
@@ -46,7 +46,7 @@ func (s *Service) Retire(ctx context.Context, a identity.Auth, id, reason, reque
 		}
 		var state string
 		if e := q.QueryRow(ctx, modelSQL(q,
-			"SELECT state FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE",
+			"SELECT state FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND (site_id,cell_id)=(local_site_id(),local_cell_id()) FOR UPDATE",
 			"SELECT state FROM model_versions WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE", w.TenantID, w.ID, id)).Scan(&state); e != nil {
 			if errors.Is(e, sql.ErrNoRows) {
 				return fail("RESOURCE_NOT_FOUND")
@@ -68,7 +68,7 @@ func (s *Service) Retire(ctx context.Context, a identity.Auth, id, reason, reque
 			return fail("MODEL_VERSION_REFERENCED")
 		}
 		n, e := q.Exec(ctx, modelSQL(q,
-			"UPDATE model_versions SET state='deleted',deleted_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state='ready'",
+			"UPDATE model_versions SET state='deleted',deleted_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state='ready' AND (site_id,cell_id)=(local_site_id(),local_cell_id())",
 			"UPDATE model_versions SET state='deleted',deleted_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND id=? AND state='ready'", w.TenantID, w.ID, id))
 		if e != nil {
 			return e

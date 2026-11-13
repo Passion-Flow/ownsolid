@@ -45,9 +45,11 @@ The published manifest and the HTTP response retain their existing shapes.
 The native approved-base detail path retains its existing behavior.
 See the [lineage contract handoff](../../../../../docs/research/training-dataset-lineage.md#dev-contract-handoff).
 
-The staged PostgreSQL family domain uses unnumbered
-`testdata/model_family_candidate.up.sql`; it is not part of installed migrations.
-It backfills one independent family per legacy version and atomically assigns
+The reviewed PostgreSQL family SQL remains unchanged in
+`testdata/model_family_candidate.up.sql`. ARC's unpublished formal-lineage
+candidate carries it in migration 61 with additional platform site/cell keys.
+Its actual catalog fingerprints, runtime-role admission and native qualification
+are still pending. It backfills one independent family per legacy version and atomically assigns
 default membership when an import or derived version is inserted. Publishers
 can call `StageVersionFamilyWithin` with a current Admin and an exact anchor
 before their version insert in that same transaction. Empty anchor creates a
@@ -59,11 +61,19 @@ metadata, including retired versions. They resolve family from an exact anchor
 and validate the existing retained graph. They perform no physical file IO and
 grant no execution permission. `VersionHistoryPolicy` reports the configured
 UI page default and fixed wire bounds. Continuation is signed with the installed
-Identity HMAC key and bound to actor, session, audience, scope, family, anchor
+Identity HMAC key and bound to actor, session, audience, tenant/workspace, local site/cell, family, anchor
 and filter. Pagination requires that installed key; both reads fail closed if the
 candidate schema is absent. Public contracts,
 routes, formal migration/role/catalog admission and S-202 remain with their
 owners. See the [family domain contract](../../../../../docs/research/training-dataset-lineage.md#durable-family-domain-contract).
+
+Prepared repository tests now use the real full migration path, a separate
+Control login provisioned by the original `databaseaccess.Prepare` operation,
+and an explicit predecessor-60 fixture for backfill/rollback. They never apply
+testdata over the current schema, use `SET ROLE` instead of login, or replace
+catalog checks. Business service calls use that restricted pool; only deliberate
+fixture corruption uses its named operator. The source adaptation is not yet
+compiled or run. See the [formal owner handoff](../../../../../docs/research/training-dataset-lineage.md#formal-lineage-and-restricted-control-adaptation).
 
 After the import's version and audit event commit, the worker reclaims the
 upload chunks and failed stages. During import the store still needs space

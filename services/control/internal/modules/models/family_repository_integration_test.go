@@ -4,8 +4,6 @@ package models_test
 
 import (
 	"context"
-	"crypto/rand"
-	_ "embed"
 	"encoding/json"
 	"errors"
 	"reflect"
@@ -20,41 +18,13 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
+	"github.com/Passion-Flow/ownsolid/services/control/migrations"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
-
-//go:embed testdata/model_family_candidate.up.sql
-var familyCandidateUp string
-
-//go:embed testdata/model_family_candidate.down.sql
-var familyCandidateDown string
-
-func familyInstall(t *testing.T, x modelReadFixture) {
-	t.Helper()
-	if x.f.Store.Dialect() != transaction.PostgreSQL {
-		t.Fatal("Explicit PostgreSQL candidate required")
-	}
-	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
-		_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateUp))
-		return err
-	}); err != nil {
-		t.Fatal("candidate DDL", err)
-	}
-}
-
-func familySetup(t *testing.T) modelReadFixture {
-	t.Helper()
-	x := modelReadSetup(t)
-	x.owner.HMACKey = make([]byte, 32)
-	if _, err := rand.Read(x.owner.HMACKey); err != nil {
-		t.Fatal(err)
-	}
-	familyInstall(t, x)
-	return x
-}
 
 func familyInsert(ctx context.Context, q transaction.Executor, x modelReadFixture, id, state string, stamp time.Time) error {
 	raw, _ := json.Marshal(wire.ApprovedModel())
@@ -114,67 +84,109 @@ func familyDenied(t *testing.T, x modelReadFixture, a identity.Auth, workspace, 
 	}
 }
 
-func TestActualModelFamilyCandidateBackfillAndLifecycle(t *testing.T) {
-	t.Run("empty_candidate_rollback", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
-		defer cancel()
-		x := modelReadFixture{f: repositoryfixture.New(t), ctx: ctx}
-		familyInstall(t, x)
-		if err := x.f.Store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
-			_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateDown))
-			return err
-		}); err != nil {
-			t.Fatal("empty candidate downgrade", err)
-		}
-	})
-	x := modelReadSetup(t)
+func TestActualModelFamilyFormalBackfillAndLifecycle(t *testing.T) {
+	x := familyPredecessor(t)
 	old := uuid.NewString()
 	if err := familyInsert(x.ctx, x.f.Store, x, old, "deleted", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
 		t.Fatal(err)
 	}
-	// The retained deployment keeps its exact version reference across both DDL directions.
 	dep := retirementDeployment(t, x, x.f.Store, retirementNode(t, x), x.model, true)
-	fault := errors.New("explicit candidate rollback")
-	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
-		if _, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateUp)); err != nil {
-			return err
-		}
-		return fault
-	}); !errors.Is(err, fault) {
-		t.Fatal("DDL rollback", err)
+	var before string
+	if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT jsonb_agg(to_jsonb(v) ORDER BY id)::text FROM model_versions v`).Scan(&before); err != nil {
+		t.Fatal(err)
+	}
+	if version, err := database.CheckPrefixWithin(x.ctx, x.f.Store); err != nil || version != 60 {
+		t.Fatal("exact predecessor prefix", version, err)
+	}
+	if err := database.Check(x.ctx, x.f.PostgreSQL); err == nil || err.Error() != "SCHEMA_INCOMPATIBLE" {
+		t.Fatal("predecessor serving fence", err)
 	}
 	familyDenied(t, x, x.admin, x.f.Workspace, x.model, models.HistoryQuery{}, "MODEL_HISTORY_UNAVAILABLE")
-	familyInstall(t, x)
+	// Migrate uses a real savepoint; the outer transaction deliberately rolls back
+	// both the numbered DDL and its ledger, without substituting a catalog digest.
+	outer, err := x.f.PostgreSQL.Begin(x.ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer outer.Rollback(context.Background())
+	if err := database.Migrate(x.ctx, outer); err != nil {
+		t.Fatal("formal migration inside rollback", err)
+	}
+	if err := outer.Rollback(x.ctx); err != nil {
+		t.Fatal(err)
+	}
+	if version, err := database.CheckPrefixWithin(x.ctx, x.f.Store); err != nil || version != 60 {
+		t.Fatal("rollback changed predecessor ledger", version, err)
+	}
+	familyDenied(t, x, x.admin, x.f.Workspace, x.model, models.HistoryQuery{}, "MODEL_HISTORY_UNAVAILABLE")
+	if err := database.Migrate(x.ctx, x.f.PostgreSQL); err != nil {
+		t.Fatal("actual formal migration", err)
+	}
+	familyAdmitted(t, x)
+	var after string
+	if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT jsonb_agg(to_jsonb(v) ORDER BY id)::text FROM model_versions v`).Scan(&after); err != nil || after != before {
+		t.Fatal("formal backfill rewrote exact version metadata", err)
+	}
 	first, second := familyID(t, x, x.model), familyID(t, x, old)
 	if first == second || first == x.model || second == old || familyCount(t, x, "model_families") != 2 {
-		t.Fatal("legacy IDs inferred a group")
+		t.Fatal("legacy IDs inferred a family")
+	}
+	for range 2 {
+		if err := database.Migrate(x.ctx, x.f.PostgreSQL); err != nil {
+			t.Fatal("formal migration replay", err)
+		}
+		if familyID(t, x, x.model) != first || familyID(t, x, old) != second {
+			t.Fatal("migration replay changed a family")
+		}
+	}
+	var invalid int
+	if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT count(*) FROM model_family_members m JOIN model_families f ON f.id=m.family_id JOIN model_versions v ON v.id=m.version_id WHERE
+ (f.site_id,f.cell_id,m.site_id,m.cell_id,v.site_id,v.cell_id) IS DISTINCT FROM
+ (local_site_id(),local_cell_id(),local_site_id(),local_cell_id(),local_site_id(),local_cell_id())`).Scan(&invalid); err != nil || invalid != 0 {
+		t.Fatal("backfill scope mismatch", invalid, err)
 	}
 	x.s.Referenced = func(context.Context, transaction.Executor, string, string, string) (bool, error) { return false, nil }
 	retirementRetire(t, x, x.model)
+	detail, err := x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, x.model, x.model)
+	if err != nil || detail.State != "retired" || detail.FamilyID != first {
+		t.Fatal("retained upgraded exact version", err)
+	}
 	newID := uuid.NewString()
 	if err := familyInsert(x.ctx, x.f.Store, x, newID, "ready", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
 		t.Fatal(err)
 	}
 	if familyID(t, x, newID) == first {
-		t.Fatal("same-digest reimport inferred family")
+		t.Fatal("reimport inferred a family")
 	}
-	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
-		return x.s.ReadyWithin(ctx, q, x.f.Tenant, x.f.Workspace, x.model)
-	}); err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
-		t.Fatal("retired exact execution reference admitted", err)
+	if err := x.s.ReadyWithin(x.ctx, x.f.Store, x.f.Tenant, x.f.Workspace, x.model); err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
+		t.Fatal("retired exact execution admitted", err)
 	}
-	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
-		_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateDown))
-		return err
-	}); err == nil {
-		t.Fatal("adopted family identities were removable")
+	down, err := migrations.Files.ReadFile("postgresql/000061_model_families.down.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	downgrade, err := x.f.PostgreSQL.Begin(x.ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer downgrade.Rollback(context.Background())
+	_, err = downgrade.Exec(x.ctx, string(down))
+	var denied *pgconn.PgError
+	if !errors.As(err, &denied) || denied.Code != "0A000" || denied.Message != "MODEL_FAMILY_DOWNGRADE_REQUIRES_RETENTION" {
+		t.Fatal("populated formal downgrade", err)
+	}
+	if err := downgrade.Rollback(x.ctx); err != nil {
+		t.Fatal(err)
+	}
+	if familyID(t, x, x.model) != first || familyID(t, x, old) != second {
+		t.Fatal("refused downgrade changed a family")
 	}
 	var retained string
 	if err := x.f.Store.QueryRow(x.ctx, transaction.SQL(transaction.PostgreSQL, `SELECT model_id::text FROM deployments WHERE id=$1`, dep)).Scan(&retained); err != nil || retained != x.model {
-		t.Fatal("deployment reference changed", err)
+		t.Fatal("deployment exact reference changed", err)
 	}
 	if value, err := x.s.Get(x.ctx, x.admin, x.f.Workspace, newID); err != nil || value.ID != newID {
-		t.Fatal("legacy read alongside retained family identities", err)
+		t.Fatal("legacy local read after upgrade", err)
 	}
 }
 
@@ -354,15 +366,17 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
 					t.Fatal("orphan membership committed", err)
 				}
 			case "audit_rollback":
-				x.exec(t, `CREATE FUNCTION reject_family_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='model.version_family_selected' THEN RAISE EXCEPTION 'SYNTHETIC_AUDIT_FAILURE'; END IF; RETURN NEW; END $$; CREATE TRIGGER reject_family_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_family_audit()`, "")
+				familyOperatorExec(t, x, `CREATE FUNCTION reject_family_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='model.version_family_selected' THEN RAISE EXCEPTION 'SYNTHETIC_AUDIT_FAILURE'; END IF; RETURN NEW; END $$; CREATE TRIGGER reject_family_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_family_audit()`)
 				family, err := familyPublish(x, id, "", nil)
 				if err == nil || family != "" || familyCount(t, x, "model_families") != 1 || familyCount(t, x, "model_family_members") != 1 {
 					t.Fatal("audit failure left membership", err)
 				}
 			case "immutable":
-				for _, sql := range []string{`UPDATE model_family_members SET family_id=gen_random_uuid()`, `DELETE FROM model_family_members`, `UPDATE model_families SET initial_version_id=gen_random_uuid()`, `DELETE FROM model_families`, `TRUNCATE model_families CASCADE`} {
-					if _, err := x.f.Store.Exec(x.ctx, transaction.SQL(transaction.PostgreSQL, sql)); err == nil {
-						t.Fatal("mutable family identity", sql)
+				for _, sql := range []string{`UPDATE model_family_members SET family_id=gen_random_uuid()`, `DELETE FROM model_family_members`, `UPDATE model_families SET initial_version_id=gen_random_uuid()`, `DELETE FROM model_families`} {
+					_, err := x.f.PostgreSQL.Exec(x.ctx, sql)
+					var denied *pgconn.PgError
+					if !errors.As(err, &denied) || denied.Code != "23514" || denied.Message != "MODEL_FAMILY_IMMUTABLE" {
+						t.Fatal("immutable domain trigger", sql, err)
 					}
 				}
 			case "matching_concurrency", "conflicting_concurrency":
@@ -380,7 +394,7 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
 				secondActor := second.issue(t, "admin")
 				// Actor construction has its own real login audit, outside publication.
 				before = x.audits(t)
-				observer, err := pgx.ConnectConfig(x.ctx, x.f.PostgreSQL.Config().ConnConfig.Copy())
+				observer, err := pgx.ConnectConfig(x.ctx, x.operator.Config().ConnConfig.Copy())
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -481,6 +495,7 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
 func TestActualModelFamilyRetainedDerivedGraph(t *testing.T) {
 	x := familySetup(t)
 	c, want := seedModelHTTPLineage(t, x, nil)
+	familyScopedVersion(t, x, c.ModelID)
 	if familyID(t, x, c.ModelID) == familyID(t, x, x.model) {
 		t.Fatal("derivation parent inferred family")
 	}
@@ -497,9 +512,30 @@ func TestActualModelFamilyRetainedDerivedGraph(t *testing.T) {
 	if _, err = x.s.DecodeDerivedVersionWithin(x.ctx, x.f.Store, x.f.Tenant, x.f.Workspace, c.ModelID); err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
 		t.Fatal("retired derivation executable", err)
 	}
-	x.exec(t, `ALTER TABLE model_preparation_artifacts DISABLE TRIGGER model_preparation_artifact_immutable`, "")
+	var originalCell string
+	if err := x.operator.QueryRow(x.ctx, `SELECT cell_id FROM model_preparation_artifacts WHERE id=$1`, c.ArtifactID).Scan(&originalCell); err != nil {
+		t.Fatal(err)
+	}
+	foreignCell := "model-graph-foreign-cell"
+	if foreignCell == originalCell {
+		foreignCell = "model-graph-other-cell"
+	}
+	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts DISABLE TRIGGER model_preparation_artifact_immutable`)
+	familyOperatorExec(t, x, `UPDATE model_preparation_artifacts SET cell_id=$1 WHERE id=$2`, foreignCell, c.ArtifactID)
+	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts ENABLE TRIGGER model_preparation_artifact_immutable`)
+	familyDenied(t, x, x.admin, x.f.Workspace, c.ModelID, models.HistoryQuery{}, "MODEL_DERIVED_CATALOG_INVALID")
+	if detail, err = x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, c.ModelID, c.ModelID); err == nil || detail.ID != "" || detail.DatasetLineage != nil {
+		t.Fatal("foreign retained artifact released lineage", err)
+	}
+	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts DISABLE TRIGGER model_preparation_artifact_immutable`)
+	familyOperatorExec(t, x, `UPDATE model_preparation_artifacts SET cell_id=$1 WHERE id=$2`, originalCell, c.ArtifactID)
+	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts ENABLE TRIGGER model_preparation_artifact_immutable`)
+	if detail, err = x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, c.ModelID, c.ModelID); err != nil || detail.DatasetLineage == nil || *detail.DatasetLineage != want {
+		t.Fatal("local retained artifact recovery", err)
+	}
+	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts DISABLE TRIGGER model_preparation_artifact_immutable`)
 	x.exec(t, `UPDATE model_preparation_artifacts SET manifest_sha256=$1 WHERE id=$2`, "", strings.Repeat("f", 64), c.ArtifactID)
-	x.exec(t, `ALTER TABLE model_preparation_artifacts ENABLE TRIGGER model_preparation_artifact_immutable`, "")
+	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts ENABLE TRIGGER model_preparation_artifact_immutable`)
 	familyDenied(t, x, x.admin, x.f.Workspace, c.ModelID, models.HistoryQuery{}, "MODEL_DERIVED_CATALOG_INVALID")
 	if detail, err = x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, c.ModelID, c.ModelID); err == nil || detail.ID != "" || detail.DatasetLineage != nil {
 		t.Fatal("damaged graph leaked detail", err)
@@ -507,8 +543,7 @@ func TestActualModelFamilyRetainedDerivedGraph(t *testing.T) {
 }
 
 func TestActualModelFamilyDerivedRegistration(t *testing.T) {
-	g := registrationSetup(t)
-	familyInstall(t, g.x)
+	g := registrationSetupOn(t, familySetup(t))
 	fault := errors.New("synthetic reviewed publication rollback")
 	if _, err := registrationOwner(t, g, g.x.f.Store, fault); !errors.Is(err, fault) {
 		t.Fatal(err)
@@ -522,4 +557,5 @@ func TestActualModelFamilyDerivedRegistration(t *testing.T) {
 	if familyCount(t, g.x, "model_families") != 2 || familyID(t, g.x, g.c.ModelID) == familyID(t, g.x, g.x.model) {
 		t.Fatal("derived registration inherited base family")
 	}
+	familyScopedVersion(t, g.x, g.c.ModelID)
 }
