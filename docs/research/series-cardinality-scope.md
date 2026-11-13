@@ -543,3 +543,58 @@ pure-documentation main updates or repeating old native suites.
 Current-main targeted race checks, integration-tag compile, native/installed
 acceptance, the whole-repository gate and all remaining OBS-110 completion
 criteria remain open. No roadmap checkbox changes.
+
+
+### Exact producer opportunity and remaining validation
+
+The final prepared module source is
+66a3cafdbe1280d9b319f78077e89671253b5463, tree
+7971f52e403e879d1861d916adeb4262d9eb117b. ADR 0080 preserves main's
+training-reader ADR 0077 and the other delivery lane's private 0078/0079.
+The intervening ADR-number commits changed documentation only. Static
+self-review then found that removing the counting proxy had also removed
+net/url, still needed by the native readiness helper. Commit 66a3cafd restores
+that one import before any compiler was started. Runtime Go bytes are unchanged
+from d8a28bc4; that native-tagged test file has this one additional import.
+Every earlier source and wrapper remains preserved.
+
+The final Mac wrapper/config/source were independently reviewed together. The
+wrapper isolates the sole flock refusal as AdmissionBusy; other BlockingIOError
+failures remain ordinary errors. It explicitly rejects optimized Python before
+assertions can be removed. It clears inherited Go/CGO flags and native inputs,
+sets GOFLAGS empty and GOENV off, and pins the Darwin race environment. Only the
+last test-c command selects Linux/amd64; its binary is never executed. Five pure
+parameter/error-classification checks passed in 0.270 seconds without Go,
+opening the carrier or a real flock. These check the entry, not product logic.
+
+One authorized nonblocking v4 opportunity ran against the unchanged, clean
+66a3cafd source. Its single flock returned busy (errno 35); the wrapper exited
+75 in 0.09859775 seconds. It acquired no lock. Stages are empty: all 26 selected
+race roots and the Linux integration-tag compilation remain unexecuted, with no
+Go test/compile children or ELF artifact. The post-admission resource checks and
+Go version check were not reached. This is an admission refusal, not a failing
+or passing product test. No retry or waiting loop followed. The earlier v3/5d65
+execution count remains zero, and no older refusal is reattributed.
+
+Raw result:
+/private/tmp/obs110-main-integration-pb1qgf_t/obs110-producer-logic-v4.ow8h3efd/result.json,
+SHA-256 624b5255be4804212613fd5ff4971281ae7d2dbe3e8d7afdeb8f8d5387213e98.
+The exact copies in /root/lane-obs-tools/obs110-producer-v4-admission retain:
+
+- check-source-logic-v4.py: 5d7ffd2bbeaae46f8e0c1e3a7e9173f077e2ffc243ef51523ce5c3e1887c4db0.
+- source-logic-v4.json: 4e9ab201a940157e600bcdc20a8655ae2791bb09f73b723b6f425a465c6ac985.
+- test-source-logic-v4.py: 49e2d824bd23aec0cf5d37a3cccf27b06cab52b63050001e0102be3793881ef7.
+- observation.json: d02934d148d51160cf70248f9c02977652e2599e3634f5cd63bfef2b7c3e67f9.
+- stdout.log: d54f5dcab80ddcf8bbcd148f7441c2307f2be40be484d34b10ee8b2f32bfe822.
+
+The opened FD closed, cleanup errors are empty and no owned test group remains.
+Wrapper 60735 was waited/reaped and independently absent; observer 60734 was
+also independently absent after tool completion. The original regular carrier
+remained device 16777234/inode 50313339, zero bytes. Neither the holder nor its
+lane was inferred. No Linux compiler, VM, PostgreSQL, Control or other native
+service started. The opportunity was released to the coordinator's next lane.
+
+Current-main race and tag compilation, native/installed producer acceptance,
+shared startup/API/Console integration, hard ingest budgets and complete
+repository gates remain open. The source-specific 5f83cfbf native 59/119 result
+is unchanged and does not establish a 60/120 run. No roadmap checkbox changes.
