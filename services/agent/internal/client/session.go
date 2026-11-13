@@ -533,10 +533,7 @@ func (s *Session) exchangeOn(ctx context.Context, st *sessionStream, m wire.Agen
 	timer := time.AfterFunc(budget, st.cancel)
 	stop := context.AfterFunc(ctx, st.cancel)
 	var reply wire.ControlMessage
-	e := st.stream.SendMsg(&m)
-	if e == nil {
-		e = st.stream.RecvMsg(&reply)
-	}
+	e := sessiontransport.Exchange(st.stream, &m, &reply)
 	timely, live := timer.Stop(), stop()
 	if e != nil {
 		return reply, streamError(e)
