@@ -4,6 +4,12 @@ Research behind ARC-015: what "load tested with 2,000 simulated nodes at twice t
 load" means, how it is judged, and what it does not prove. ARC-105, ARC-203 and ARC-304 repeat
 it at larger sizes; ARC-106 publishes the numbers.
 
+Current ARC-106 acceptance: the unchanged native 2,000-agent test passed on
+3ae6bfeb, including every stream-recovery window. The reader-facing
+[measured baseline](../operations/fleet-capacity.md) and
+[input evidence](#accepted-native-kpi-baseline) distinguish it from the retained
+failed 821227ea candidate and the historical P0 runs.
+
 ## How others judge scale
 
 **Kubernetes** states scale as a promise with conditions: "If you promise to: correctly configure
@@ -331,13 +337,15 @@ of zero product egress and at least one observed fixture probe. A statistics
 reset, missing sample, incomplete report or early cleanup prevents publication
 of the affected KPI. Full repository gates are independently required.
 
-The actual new baseline and its publication remain pending; this section is a
-measurement specification, not a successful run result.
+This section specifies the measurement. The
+[accepted baseline](#accepted-native-kpi-baseline) records the successful input;
+the intervening failed candidate remains below.
 
 
 ## Current native baseline attempt
 
-ARC-106 remains open. The unchanged TestFleetLoad on source
+This candidate remains failed; the later accepted input is recorded below.
+The unchanged TestFleetLoad on source
 `821227ea5b94a8357f695c290e78af3b81c54f22` failed threshold 7 in 1,576.69 seconds.
 At seconds 1,200, 1,260 and 1,320, 76 of 2,000 nodes remained on HTTPS;
 only 1,924 were on streams. All 2,000 returned to streams by the 1,380-second
@@ -477,3 +485,83 @@ and complete fleet respectively are
 `4896f69f4c20170d118c12cc49d813d0942492a93c92c818fe0fd16172f54981`,
 `56601c15e90fe0dcfd3cf75d2b1594b41a4387c2db5ff2a8d5e7c069af9df4bf`,
 `6d23b95150d34b78f7e40e7693c9075aa83c07d18a72211b7593c576134ba928`.
+
+## Accepted native KPI baseline
+
+The unchanged TestFleetLoad passed in 1,558.49 seconds on source
+`3ae6bfebb67b47d684de4651cc597c26f104d725`, tree
+`afc11c111952100cd34b22b76b80db47d0e4709f`. It used the actual installer,
+schema-60 PostgreSQL 18.6/pgvector 0.8.7, fresh native binaries and same-source
+qualified web assets on Linux amd64. All 5,081 source paths and executable
+modes remained identical after the run. The isolated Docker host retained
+four CPUs, 6 GiB, 4,096 PIDs, network none and no host ports. Before admission,
+MemFree was 5,352,296 KiB, MemAvailable 20,259,496 KiB, disk free
+789,129,207,808 bytes and full I/O PSI avg10 0.03%. Both original heavy locks
+and resource thresholds were retained; no other compiler was active.
+
+| Indicator | Accepted result |
+| --- | --- |
+| Enrollment / initial connection of all 2,000 | 6 / 21 s |
+| Ten steady windows | All 2,000 connected and on streams; zero failed heartbeat or claim |
+| Heartbeat p99 upper bound by steady window, 120 through 660 s | 4.8, 517, 3.8, 3.1, 4.8, 3.1, 4.8, 3.8, 4.8, 3.1 ms |
+| Steady 1,000-task median / p99 / maximum | 0.181 / 1.339 / 1.538 s |
+| Steady database rate over 600 s | Approximately 24 inserted + 425 updated + 1 deleted = 450 logical row modifications/s |
+| Steady commits / WAL | Approximately 944/s / 227 KiB/s |
+| Disconnect of every node / partition of 600 nodes | Full recovery 4.111 / 55.879 s; partition timed from healing |
+| Control restart / persisted heartbeat from every idle node | 1.3 / 28.063 s |
+| Busy work across restart | All 100 retained acknowledged attempt one; total span 92.3 s |
+| Leases / ACKs / results | 1,100 / 1,100 / 1,100; zero resync, lost reply or revocation |
+| Required stream windows at 1,200, 1,260, 1,320, 1,380 and 1,440 s | Every window 2,000/2,000 |
+| Terminal connected / on stream | 2,000 / 2,000 |
+| Simulator CPU / maximum resident usage | 228 s user, 159 s system / 506 MiB |
+| Product egress / positive fixture probes | 0 / 1 |
+
+Keep the original logger's rounding and histogram precision. The whole-run
+averages, separately over 1,441 s, were approximately 938 commits/s,
+11 inserted + 405 updated + 1 deleted = 417 row modifications/s and 210 KiB
+WAL/s; they do not replace the steady rates. This input's worst steady
+heartbeat bucket was 517 ms, not the earlier failed candidate's 264.7 ms.
+Do not claim an improvement in every latency from a recovery-policy fix.
+
+The whole-run report retains fault errors: claims had 3 overload and 3,711
+connection failures; heartbeats had 258 overload and 4,361 connection failures;
+stream opens had 4,843 connection failures. The passing fault drill does not
+mean zero failed calls over the full run. All ten steady windows had zero
+failed heartbeat and claim, within the unchanged 1,000 ms heartbeat and
+5 s task-completion p99 objectives. No deadline, count, admission limit,
+task attempt or assertion was relaxed. The selected load test, 500-agent
+lifecycle test and original harness are byte-identical to the failed input;
+the selected load test SHA-256 is
+`471b66c32dce31e9cdb7aa0108b11e9ffe05fe19267120b62126029a19690e71`.
+
+All 138 independent database state observations kept the same postmaster
+start time, null statistics-reset timestamp and track_counts=on. PostgreSQL
+had zero restarts and no OOM kill. The corrected portable observer captured
+both default routes to the recorder. The owned outer container, nested
+disposable database and installation staging were removed; raw logs and
+immutable source/image identities are retained outside Git. The selected
+installed log SHA-256 is
+`ae87580c015f461c882a557379c115b478770c94b3f7ce24d6591469293f4bce`.
+After collection, both exact owned fixture image tags were removed only after
+confirming their recorded image IDs, source labels and absence of container
+references. Shared images, source snapshots and raw evidence were retained;
+no global cache or container prune was run.
+
+The same implementation passed six native complete affected race/vet profiles
+without skips, the unchanged installed 500-agent lifecycle and complete
+repository check/build/test. The published runtime integration 20069022
+also passed complete check/build/test with identical non-document bytes/modes;
+[qualification details](agent-gateway-rebalance.md#bounded-fallback-integration-qualification)
+retain the source, image and gate hashes. These are single-host synthetic
+read-only results, not KWOK, multiple cells, real accelerators, customer
+qualification or the standard release-image factory. Older v1 agents retain
+their old fallback policy and can coexist; this was not a mixed-version load run.
+
+The [operator page](../operations/fleet-capacity.md) publishes the accepted
+numbers, their measurement meaning and the selected-fixture command. No new
+dependency, dataset or model was added. PostgreSQL 18's
+[statistics definition](https://www.postgresql.org/docs/18/monitoring-stats.html#MONITORING-PG-STAT-DATABASE-VIEW)
+and [WAL write-location function](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADMIN-BACKUP)
+define the database counters. The pinned 18.6
+[transaction statistics source](https://github.com/postgres/postgres/blob/REL_18_6/src/backend/utils/activity/pgstat_database.c)
+also confirms commit counts are independent of whether rows were modified.

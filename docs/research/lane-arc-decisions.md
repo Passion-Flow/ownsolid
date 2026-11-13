@@ -2,19 +2,21 @@
 
 ## Kubernetes delivery and scale
 
-ARC-104 has the agent installer and the control orchestration from commits
-`27dc24c` and `f98a160`. Its offline release assets and the cluster creation and retry
-screens require delivery and web changes outside the ARC lane. Keep the item open
-until both paths are available and an offline install reaches Kubernetes Ready.
-ARC-105 depends on that managed cell. ARC-106 will use measured cell results and
-distinguish them from the single-control results in [the P0 run](fleet-load-test.md).
+ARC-104 has signed managed API acceptance documented in
+[Kubernetes cells](kubernetes-cells.md#signed-release-and-managed-api-acceptance).
+Its complete Console creation, installation and retry path still crosses delivery
+and web ownership. Keep the item open. ARC-105 retains its separate combined
+1,000-node managed-cell acceptance. ARC-106 publishes only the topology actually
+measured and keeps the single-control baseline distinct from future cell results;
+it does not accept ARC-105 or imply a multi-cell capacity result.
 
 ## Gateway listener and rebalancing
 
-ARC-107's HTTP/2 age and GOAWAY belong to the control HTTP listener and gateway
-lifecycle. The ARC lane can implement and verify client rebalancing with the
-existing v1 transport. [The research](agent-gateway-rebalance.md) records the
-remaining listener gate and the mixed-version behavior.
+ARC-107 is accepted on dedicated gateways: automatic age and GOAWAY, authenticated
+replacement, natural transport retirement and preferred return passed the
+unchanged native 500-agent lifecycle twice, including strict terminal counts and
+persisted cursors. The shared listener retains legacy behavior.
+[The research](agent-gateway-rebalance.md) records scope and mixed-version behavior.
 
 ## Agent call cost
 
@@ -26,8 +28,11 @@ Its delegated event and upload paths need work in training and preparation.
 
 ## Remaining P1 dependencies
 
-ARC-110 and ARC-111 need control listener, gateway startup and deployment
-configuration changes. ARC-112 depends on [FLT-101 inventory](fleet-inventory.md).
+ARC-110's split-browser runtime and native three-socket composition are qualified;
+the complete four-entrance installed and actual-browser flow remains open.
+ARC-111 has native restricted-role prototypes, but production role activation and
+the separate gateway's training artifact-owner failure remain open.
+ARC-112 depends on [FLT-101 inventory](fleet-inventory.md).
 ARC-113 needs installer changes. ARC-114 needs console and alerting. ARC-115,
 ARC-116 and FLT-111 need the installed and managed cluster from ARC-104.
 

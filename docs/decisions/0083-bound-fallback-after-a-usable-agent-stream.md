@@ -1,6 +1,6 @@
 # Bound fallback after a usable Agent stream
 
-Status: accepted for ARC-106 implementation after the external verified-TLS prototype; native installed and load acceptance remain open.
+Status: accepted; the external verified-TLS prototype, complete repository gates, six native affected race/vet profiles and unchanged installed 500/2,000-agent acceptance passed.
 
 ## Context
 
@@ -31,3 +31,8 @@ then native race/vet, full repository gates and unchanged 500/2,000-agent runs.
 
 [Research, licenses, rejected alternatives and retained failure](../research/fleet-load-test.md#previously-usable-streams-and-bounded-fallback)
 contain the exact input and acceptance criteria.
+
+The [accepted 2,000-agent input](../research/fleet-load-test.md#accepted-native-kpi-baseline)
+passed all five required post-restart stream windows and terminal 2,000/2,000,
+with every long task retaining its original acknowledged attempt. The earlier
+failed candidate and its three missed windows remain recorded.
