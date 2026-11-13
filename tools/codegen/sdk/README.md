@@ -127,9 +127,21 @@ for this path. Python's default HTTPX transport has zero connection retries;
 retain retries=0, verified TLS, trust_env=False and follow_redirects=False when
 configuring a transport. Keep any external retry wrapper disabled. Neither
 generated client's 409 decoder starts a retry.
-After regeneration, Go callers handle this status with
-GetApplicationproblemJSON409(); it is no longer decoded through the default
-Problem accessor. Python keeps the existing Problem model.
+New Go callers handle this status with GetApplicationproblemJSON409(). The
+generator preserves GetApplicationproblemJSONDefault(), its public Problem
+field and HeadersDefault for this 409 as well. Both Problem accessors refer
+to the same decoded value; header values are retained in both response fields.
+This v1 compatibility adaptation is limited to the audit-read parser. A changed
+409/default response reference or unreviewed generated parser fails generation.
+Python keeps the existing Problem model.
+
+The [409 migration decision](../../../docs/decisions/0085-preserve-audit-read-default-response-accessors.md)
+accepts the technical correction while retaining the raw source-review finding.
+The adaptation has not yet been qualified through fresh complete SDK generation
+and native checks. Old generated source does not acquire it until regeneration.
+Keep that qualification boundary separate from the pure Python transformation
+tests. For client upgrade and rollback steps, see the
+[public API migration guide](../../../api/openapi/README.md#audit-read-409-migration-in-v1).
 
 ## Stream and download responses
 

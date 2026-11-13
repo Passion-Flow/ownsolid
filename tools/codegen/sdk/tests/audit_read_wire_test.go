@@ -22,7 +22,8 @@ import (
 )
 
 const auditReadPath = "/api/v1/admin/audit-events"
-const auditReadProblem = `{"type":"about:blank","title":"STORAGE_COMMIT_OUTCOME_UNKNOWN","status":409,"code":"STORAGE_COMMIT_OUTCOME_UNKNOWN","request_id":"33333333-3333-4333-8333-333333333333"}`
+const auditReadRequestID = "33333333-3333-4333-8333-333333333333"
+const auditReadProblem = `{"type":"about:blank","title":"STORAGE_COMMIT_OUTCOME_UNKNOWN","status":409,"code":"STORAGE_COMMIT_OUTCOME_UNKNOWN","request_id":"` + auditReadRequestID + `"}`
 
 func auditReadParams(assistant bool) *identity.ListAuditEventsParams {
 	category, cursor, limit := "audit", identity.Cursor("opaque+/=%"), identity.Limit(2)
@@ -57,6 +58,7 @@ func auditReadHTTPClient(t *testing.T) (*http.Client, *http.Transport) {
 
 func writeAuditReadProblem(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/problem+json")
+	w.Header().Set("X-Request-ID", auditReadRequestID)
 	w.WriteHeader(http.StatusConflict)
 	io.WriteString(w, auditReadProblem)
 }
@@ -68,6 +70,39 @@ func requireAuditReadProblem(t *testing.T, result *identity.ListAuditEventsHTTPR
 	}
 	if string(result.GetApplicationproblemJSON409().Code) != "STORAGE_COMMIT_OUTCOME_UNKNOWN" {
 		t.Fatal("audit Problem code changed")
+	}
+	problem := result.GetApplicationproblemJSON409()
+	if result.GetApplicationproblemJSONDefault() != problem || result.ApplicationproblemJSONDefault != problem {
+		t.Fatal("the v1 default accessor lost the explicit 409 Problem")
+	}
+	headers, legacyHeaders := result.Headers409, result.HeadersDefault
+	if headers == nil || legacyHeaders == nil || headers.XRequestID == nil || legacyHeaders.XRequestID == nil {
+		t.Fatal("the v1 default headers lost the 409 request identity")
+	}
+	if *headers.XRequestID != *legacyHeaders.XRequestID || headers.XRequestID.String() != problem.RequestId.String() || headers.RetryAfter != nil || legacyHeaders.RetryAfter != nil {
+		t.Fatal("the v1 default headers lost the 409 request identity or gained a retry hint")
+	}
+}
+
+func TestAuditReadDefaultCompatibilityKeepsOtherDecoders(t *testing.T) {
+	for _, status := range []int{http.StatusBadRequest, http.StatusTeapot} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			response, err := identity.ParseListAuditEventsHTTPResponse(&http.Response{
+				StatusCode: status,
+				Header:     http.Header{"Content-Type": {"application/problem+json"}, "X-Request-ID": {auditReadRequestID}},
+				Body:       io.NopCloser(strings.NewReader(auditReadProblem)),
+			})
+			if err != nil || response == nil || response.ApplicationproblemJSON409 != nil || response.Headers409 != nil {
+				t.Fatalf("a non-409 response entered the compatibility branch: %v", err)
+			}
+			if status == http.StatusBadRequest {
+				if response.ApplicationproblemJSON400 == nil || response.Headers400 == nil || response.ApplicationproblemJSONDefault != nil || response.HeadersDefault != nil {
+					t.Fatal("an existing explicit status changed its decoder")
+				}
+			} else if response.ApplicationproblemJSONDefault == nil || response.HeadersDefault == nil {
+				t.Fatal("an undeclared status lost its default decoder")
+			}
+		})
 	}
 }
 

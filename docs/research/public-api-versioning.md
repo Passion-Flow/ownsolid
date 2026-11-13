@@ -265,3 +265,81 @@ f018d11ec45f5543229676f69688992e0ed4a984131c55165cfc7ca525f88aaa;
 it differs from the retained 910a412a report by the added inventory field,
 not by removed operations or a suppressed 409 finding. No SDK generation,
 compiler, socket, service, carrier or complete gate was used for this work.
+
+## Formal audit-read 409 migration decision
+
+The comparison is baseline 9e32b023a0a3deed6a8653a8878d52c2583fd6cf
+against joint source 2e64ab4c6c16bd84ae5c101b9de5444550760ff2. All
+identity components are equal. The operation changes only its description,
+the cursor description, the explicit 409 response and its x-error-codes entry.
+The existing default and new 409 reference the same Problem Response Object.
+AdminSession security, audience, method, path, operation ID, filters, required
+parameters, success schema and pagination are unchanged. The transaction
+adapter, HTTP problem registry, identity list service, audit-read accounting
+and actual commit-fault HTTP test sources are also unchanged between those
+two revisions. This is a correction to the documented existing failure,
+with a real generated-client source consequence, not a new server failure
+mode or an auditor false positive.
+
+The [OpenAPI Responses Object](https://spec.openapis.org/oas/v3.1.1.html#responses-object)
+uses default for otherwise undeclared statuses. The pinned
+[oapi-codegen response template](https://github.com/oapi-codegen/oapi-codegen/blob/v2.8.2/pkg/codegen/templates/client-with-responses.tmpl)
+instead chooses the explicit branch after regeneration. The retained identity
+SDK source confirms that 409 then fills ApplicationproblemJSON409 and
+Headers409, leaving the old Default fields empty. Python's retained decoder
+returns the same Problem class from either branch. These are source inspections;
+an old compiled SDK has not been run against a new server in this review.
+
+Keep API v1 and the explicit 409. Preserve the old Go Default Problem and
+header accessors for this response as well as the new 409 accessors. Apply
+the compatibility adaptation only to ParseListAuditEventsHTTPResponse,
+only when 409 and default retain the reviewed shared Problem reference.
+Refuse changed or ambiguous generated parser shapes. Preserve one decoded
+Problem value; copy the identically shaped header value using the
+[Go explicit struct conversion](https://go.dev/ref/spec#Conversions), so a
+future incompatible generated type fails compilation rather than losing fields.
+Do not change another operation, the HTTP transport, automatic retry behavior,
+contract metadata version 0.5.0 or the compatibility auditor. A synthetic
+API-major or SDK release number would not resolve the field regression.
+There is no selected published SDK release version to increment here.
+
+The alternative of requiring every caller to abandon the old Default fields
+would impose an avoidable source behavior change within v1. Removing 409
+would hide the actual runtime failure. Suppressing the audit finding or
+substituting the candidate as baseline would hide the migration. Reject all
+three. The chosen design is recorded in
+[ADR 0085](../decisions/0085-preserve-audit-read-default-response-accessors.md).
+No dependency, model or dataset is added. Existing generator Apache-2.0,
+Python PSF and Go BSD-3-Clause licence obligations remain as recorded in
+[SDK research](sdk.md#licenses); commercial, redistribution and offline use
+remain permitted under those terms.
+
+Pure Python tests must cover the scoped parser adaptation, reapplication,
+missing/ambiguous/changed parser and contract refusal, and preservation of
+other operations. Native assertions must check old/new fields, code, request
+ID and header values for both representations, one request after 409 and
+lost replies, and a deliberate second request with a distinct server ID.
+Existing real PostgreSQL/HTTPS tests cover both a COMMIT not forwarded
+(zero persisted reads) and an acknowledged server COMMIT whose reply is
+suppressed (one persisted read); neither releases a page or Retry-After.
+They also cover revoked sessions, forged entrance and cross-workspace refusal.
+These tests are acceptance requirements, not newly executed results.
+
+The raw 430-operation audit must still contain the one
+PUBLIC_RESPONSE_MODELS_CHANGED review and exit 1. Technical migration review
+is accepted with the compatibility adaptation; release compatibility remains
+unqualified until fresh full SDK generation, old/new client upgrade/rollback,
+native tests and complete check/build gates run on the final source. Retain
+the selected supported-release baseline; 9e32b023 is this review's exact
+comparison source, not proof that a released-support baseline was selected.
+
+The focused suite passes 56 Python tests: the retained 47 audit regressions,
+seven response-compatibility cases and two transport-hook text cases. It
+starts no compiler or real generator. An in-memory transformation of the
+retained 122-file identity SDK archive's actual Go parser also preserves
+every byte outside that parser and is unchanged on reapplication; no generated
+file is written. The current declaration audit returns 0 for 430 operations.
+The comparison against 9e32b023 returns 1 with the same sole 409 finding and
+the unchanged f018d11ec45f5543229676f69688992e0ed4a984131c55165cfc7ca525f88aaa
+report digest. The added native accessor/header assertions have not run.
+This is not fresh generation of all 28 SDK domains or a native/full-gate result.

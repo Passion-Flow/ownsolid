@@ -24,6 +24,53 @@ requirements, pagination, idempotency, defaults and semantics separately.
 Exercise old SDKs against the new server and confirm upgrade and rollback
 on the offline installation before declaring the release compatible.
 
+## Audit-read 409 migration in v1
+
+The comparison from 9e32b023 to 2e64ab4c explicitly declares HTTP 409
+STORAGE_COMMIT_OUTCOME_UNKNOWN for Admin GET /api/v1/admin/audit-events.
+The selected server sources already produce this failure; the previous default
+declares the same Problem body. Method, path, operation ID, Admin authority,
+tenant/workspace enforcement, request inputs and successful page are unchanged.
+Keep v1 and the explicit response. This is an accepted technical contract
+correction with a generated Go response migration; it is not an auditor error.
+See [ADR 0085](../../docs/decisions/0085-preserve-audit-read-default-response-accessors.md)
+for the scope and remaining release qualification.
+
+| Caller | Required handling |
+| --- | --- |
+| Existing Go SDK with default-only 409 decoding | Handle status 409 through GetApplicationproblemJSONDefault() and HeadersDefault. Preserve its code and request ID. Qualify its configured transport against lost replies; source compatibility does not guarantee absence of retries. |
+| Newly generated Go SDK | Prefer GetApplicationproblemJSON409() and Headers409. The owned generator also retains the legacy Default fields for 409 throughout v1. Fresh generation and native validation of this adaptation remain pending. |
+| Python sync and async SDK | Continue checking the detailed response status and Problem.code; both default and explicit branches use Problem. Disable caller/transport retry wrappers. |
+| CLI audit list | Existing error decoding retains HTTP status, stable code and request ID and does not render a successful page. Do not wrap this command in a retry loop. |
+| Raw HTTP consumer | Decode application/problem+json, retain the server request ID and treat 409 as uncertain access accounting. Never infer a returned page or a rolled-back audit from this failure. |
+
+Upgrade clients by regenerating from the reviewed contract and generator as one
+source set, then checking both the old Default and new 409 fields. Never copy-edit
+generated files. A lost reply or this 409 has no automatic recovery request:
+the access audit might have committed. A deliberate retry with the same filters,
+cursor and representation records a new access with a new server request ID.
+Keep the earlier ID when received; no idempotency key can replay this GET's audit.
+Neither an error body nor a retry may supply tenant/workspace authority.
+
+Before rollout, run old-client/new-server and regenerated-client/previous-server
+checks offline, with both standard and assistant representations. Inject a COMMIT
+that is not forwarded and a successful server COMMIT with its acknowledgement
+suppressed. Require 409 with the stable code, matching body/header request ID,
+no page, no Retry-After and no automatic second request; a deliberate read must
+have its own request ID. Recheck revoked sessions, forged entrance and denied
+workspace access. For client rollback, retain the previously qualified SDK and
+its transport configuration. Code using a newly introduced 409 accessor must
+either keep that SDK or use status and raw Problem decoding when compiled with
+the older SDK. Server rollback does not change the reviewed wire response.
+
+Keep the exact comparison baseline and raw 430-operation report: the explicit
+409 named-response finding remains present with exit 1. The migration decision
+does not turn that result into exit 0. A supported-release baseline still needs
+selection, and complete generation, native upgrade/rollback, make check, make
+build and related tests must pass on the final source before release compatibility
+is declared. No release version, completion tick or runtime qualification is
+created by this source review.
+
 ## Deprecate an operation
 
 1. Provide a usable replacement and test the existing and replacement paths

@@ -188,6 +188,62 @@ def guard_go_audit_read(source):
     return source[:start] + method.replace(ordinary, guarded) + source[end:]
 
 
+def audit_read_409_compatibility_required(operation):
+    """Require the reviewed shared response before preserving legacy Go accessors."""
+    responses = operation.get("responses", {})
+    if "409" not in responses:
+        return False
+    problem = {"$ref": "#/components/responses/Problem"}
+    if responses["409"] != problem or responses.get("default") != problem:
+        raise ValueError("audit-read 409/default responses changed; review legacy Go response compatibility")
+    return True
+
+
+def preserve_go_audit_read_default(source):
+    """Keep v1 audit-read Default fields populated when the explicit 409 is decoded."""
+    declaration = ("func ParseListAuditEventsHTTPResponse(rsp *http.Response) "
+                   "(*ListAuditEventsHTTPResponse, error) {")
+    matches = list(re.finditer("^" + re.escape(declaration), source, re.MULTILINE))
+    if len(matches) != 1:
+        raise ValueError("expected one generated audit-read response parser; review legacy Go accessors")
+    start = matches[0].start()
+    end = source.find("\n}", start)
+    if end < 0:
+        raise ValueError("generated audit-read response parser is incomplete")
+    end += 2
+    parser = source[start:end]
+    problem_case = '''\tcase strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+\t\tvar dest Problem
+\t\tif err := json.Unmarshal(bodyBytes, &dest); err != nil {
+\t\t\treturn nil, err
+\t\t}
+\t\tresponse.ApplicationproblemJSON409 = &dest
+'''
+    required = (problem_case, "\t\tresponse.ApplicationproblemJSONDefault = &dest\n",
+                "\t\tvar headers ListAuditEventsHTTPResponse409Headers\n",
+                "\t\tvar headers ListAuditEventsHTTPResponseDefaultHeaders\n",
+                "\t\tresponse.Headers409 = &headers\n", "\t\tresponse.HeadersDefault = &headers\n")
+    tail = "\treturn response, nil\n}"
+    legacy = '''\t// Preserve the v1 default accessors after declaring the existing 409 explicitly.
+\tif rsp.StatusCode == 409 {
+\t\tresponse.ApplicationproblemJSONDefault = response.ApplicationproblemJSON409
+\t\tif response.Headers409 != nil {
+\t\t\theaders := ListAuditEventsHTTPResponseDefaultHeaders(*response.Headers409)
+\t\t\tresponse.HeadersDefault = &headers
+\t\t}
+\t}
+
+'''
+    # Match whole lines: the nested legacy header assignment is not a second decoder.
+    if any(parser.count("\n" + fragment) != 1 for fragment in required) or parser.count(tail) != 1:
+        raise ValueError("generated audit-read 409 parser changed; review legacy Go response compatibility")
+    if parser.endswith(legacy + tail) and parser.count(legacy) == 1:
+        return source
+    if not parser.endswith(tail) or legacy in parser or "\tif rsp.StatusCode == 409 {" in parser:
+        raise ValueError("generated audit-read legacy adaptation changed; review legacy Go accessors")
+    return source[:start] + parser[:-len(tail)] + legacy + tail + source[end:]
+
+
 def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
     """Generate both clients from the same projected contract."""
     domain = source.parent.name.replace("-", "_")
@@ -207,6 +263,7 @@ def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
         or named_reads != [("/api/v1/admin/audit-events", "get")]
     ):
         raise ValueError("the published audit read moved or was renamed; review its SDK transport protection")
+    legacy_audit_response = audited_read is not None and audit_read_409_compatibility_required(audited_read)
     local_contract = temp / f"{domain}.json"
     local_contract.write_text(json.dumps(contract, sort_keys=True), encoding="utf-8")
 
@@ -223,7 +280,10 @@ def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
                        check=True, stdout=output)
     if audited_read is not None:
         client = go_out / "client.gen.go"
-        client.write_text(guard_go_audit_read(client.read_text(encoding="utf-8")), encoding="utf-8")
+        generated = guard_go_audit_read(client.read_text(encoding="utf-8"))
+        if legacy_audit_response:
+            generated = preserve_go_audit_read_default(generated)
+        client.write_text(generated, encoding="utf-8")
         shutil.copyfile(TEMPLATES / "audit_read.go.template", go_out / "audit_read.gen.go")
     python_out = python_root / domain
     subprocess.run([
