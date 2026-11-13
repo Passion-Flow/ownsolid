@@ -972,3 +972,64 @@ Control and simulator binary SHA-256 values are
 `9147131da211b22006605bc39bf1fc660dbbed71331f459a7eacfd0c69fad9a9` and
 `9e7d17c095107e4302fbeb942cc7ffa06d7f8f2a529e74ab599b6bf6ffe5d88e`.
 The fixture image ID is `sha256:0c57f136cefe12a877997a1477846ffe173912a715b3a8e0b42b6dcfdfde0b46`.
+
+### Bounded-fallback integration qualification
+
+Source `3ae6bfebb67b47d684de4651cc597c26f104d725`, tree
+`afc11c111952100cd34b22b76b80db47d0e4709f`, also passed the complete
+make check, make build and make test gate. Chromium again passed 1,191 Console
+and 410 Portal cases, with the existing 28/10 live-fixture skips and zero retries.
+The check/build/test log SHA-256 values are
+`00dfeeaf2182416fcab715ea37d54d03565e5745a7648cfc91f5a797e08f3e1d`,
+`fac2542c0f93246753059ae98677561216f52510cd99b84cebc4922641790409` and
+`7e03d8fbaaba4f61d7ebbcdaedbd815985108ad50130297fec1b82e011248fc3`.
+The private APFS scratch was detached and removed.
+
+All 5,081 native source paths and executable modes were verified before and
+after qualification. Seven native installation binaries were built, followed by
+complete client, sessiontransport, agentgateway, httpserver, agent-contract and
+simulator-fleet race/vet profiles without skips. The isolated test namespace
+had only loopback. Native build admission retained both heavy locks and the
+original resource thresholds: 6,192,876 KiB MemFree, 20,284,156 KiB MemAvailable,
+789,876,191,232 free disk bytes and 3.82% full I/O PSI avg10.
+
+The unchanged installed 500-agent lifecycle then passed in 312.93 seconds,
+including strict terminal 500/500 streams and every persisted cursor. Enrollment
+took 2 s and every node connected in 11 s. The original 244/256 assignments
+returned 38.9 s after readiness. All 500 original transports retired naturally
+57.1 s after the checkpoint and were replaced within 99.6 s, including busy work.
+The observed drain ages were 54.041462–59.961508 s on A and
+54.001404–59.996539 s on B; retirement ages were 54.043097–59.963102 s and
+54.002890–59.997898 s. The maximum drain scheduling delays were 0.001274 s and
+0.005944 s. After the intentional kill, all 475 idle nodes reached the survivor
+in 7.2 s and all 500 in 101.3 s, including the second busy batch.
+
+All 50 tasks, acknowledgements and results retained their original first
+attempt; 600 renewals succeeded with no failure, resync, lost reply or revocation.
+Keep the recorded fault errors: 214 claims, 18 heartbeats, 244 stream opens,
+983 preference probes and two age-handoff probes failed in the windows covering
+the intentionally stopped gateway. There were 3,275 successful age handoffs.
+No failure count was removed to accept the drill.
+
+The same two-CPU, 6 GiB, 4,096-PID, network-none outer topology and original
+assertions were retained. Among 120 observer rows, 23 marked A deliberately
+stopped. Sampled established socket maxima were 476 on A and 924 on B;
+TIME_WAIT maxima were 27 and 52. Available Docker CLI memory samples numbered
+37 on A and 60 on B, with maxima 105.9 and 198.9 MiB; CPU maxima were 22.00%
+and 34.27%, and PID maxima 20 and 22. These remain sampled cache-adjusted
+observations, not instantaneous peaks, RSS or a capacity claim.
+
+The portable external reader captured both recorder default routes successfully.
+Product egress was zero and the recorder saw one positive fixture probe. The
+owned outer container, nested disposable data and installation staging were
+removed. The exact new fixture image remains an input to ARC-106; raw logs,
+source snapshots and shared resources are retained. The selected installed log
+SHA-256 is `ba568cb7f05e1f2c84511244b62d05e48ec1b94e2a2ba41997443df2e6764ab7`;
+the image ID is `sha256:704f35c660d6a90fb4bf4d8756289c1045deaabd0f31bb4246537e1468683f89`.
+
+The documentation-only integration at 9ca0a470 preserved all 4,734 non-document
+paths byte-for-byte and mode-for-mode and passed a fresh make check. Its log
+SHA-256 is `e8029e0edbcd186e33fd194880ba048a2a9bfb741f48151494dd98a3aef70e85`.
+This qualification does not accept the still-open 2,000-agent ARC-106 baseline,
+whose earlier failed recovery windows remain in the
+[fleet measurement research](fleet-load-test.md#current-native-baseline-attempt).
