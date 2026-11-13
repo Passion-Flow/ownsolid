@@ -1283,3 +1283,57 @@ liblzma's upstream [license](https://raw.githubusercontent.com/tukaani-project/x
 is 0BSD (older releases used public-domain terms). Commercial and offline
 execution is allowed; redistribution must retain each applicable license and
 Git's corresponding-source obligations. No model or dataset is introduced.
+
+### Observed complete frame and strict cache-mode refusal
+
+The separately allocated opportunity used the frozen 720,340-byte frame above
+and the same source, binaries and SSH profile. The local sender actually wrote
+720,340 bytes into its OS pipe in 7.474354375 seconds and closed it; this local
+counter is separate from delivery. The authoritative remote receipt measured
+720,340 bytes in 2.256576253 seconds with the expected SHA-256 and EOF. The
+decoded 5,304,320-byte frame also matched its frozen hash. Input delivery is now
+measured for this one frame and opportunity, not for arbitrary future transfers.
+
+Fresh preflight observed Free 3,245,744,128 bytes, Available 20,747,808,768
+bytes, disk 788,916,449,280 bytes, full I/O PSI 0 and no competing heavy process.
+Both exact original locks passed one NB each; the cached image identity and
+platform matched. Authentication was observed at 5.6207 seconds, remote entry
+at 7.5918 seconds and payload completion at 9.9627 seconds of local elapsed
+time. These remain parent observation timestamps, not network packet times.
+
+The next strict source check failed with `SOURCE_MODE_MISMATCH` while reading
+the existing cache, before Git patch application or complete target-source
+verification. The remote failure receipt did not include the path or observed
+mode, so neither a filename nor a concrete permission value is known. The
+local prototype's normalized basis did not reproduce that remote cache state.
+Do not treat the completed frame or local reconstruction as actual source
+admission, and do not change an assertion to accept an unobserved cache mode.
+
+SSH and the outer driver both returned 1 naturally after 10.179709125 seconds.
+The remote runner recorded 2.582643375 seconds including 0.050232410 seconds
+of cleanup, no remaining owned group, both original FDs closed and carrier
+identities retained. No fixture UUID, container, volume, network or credential
+creation path was entered. No database, native binary, catalog, role or SQL
+profile ran; no source B or new pin exists. The local SSH group and wrapper were
+absent and the observer joined. The authoritative receipt and natural remote
+exit required no cleanup-only connection. The owned input/partial source scratch
+is retained for forensics; it contains no credential or running service. No
+global foreign-FD or customer-environment claim follows from this cleanup.
+
+The actual directory is `lane-arc-diagnostics/arc111-native-delta-observed.yvsxr0l4`.
+Outer result SHA-256 is
+`a3fd308b8cff6c124e847e9ea43ac2a73ba748879f7270b61b47d662e9ee7ba8`;
+cleanup/scope receipt SHA-256 is
+`da2b7e3ee9f7427c67f74d3c726222f2d30c8e4c8d748ec852774233927a70e4`.
+Both actual entry files are closed and this opportunity is ended without retry.
+
+A separate data-only diagnostic candidate preserves the exact verification
+assertions and adds the rejected relative path, expected/actual mode, length,
+digest, UID and link count to a failure. Four local cases prove that 0600,
+0664 and 0755 still fail against expected 0644, while exact 0644 succeeds.
+This does not identify the actual rejected cache mode. The candidate is
+unactivated; its source SHA-256 is
+`faf141220ffc0d2668ad6de3d64e463874fa31bae151d4922a7eee013a7e409e`.
+The next release condition is evidence of the actual cached input identity and
+mode, an exact target-source admission and then the original fresh/restore
+catalog work. Schema60 pins, original owner files and SQL assertions stay intact.

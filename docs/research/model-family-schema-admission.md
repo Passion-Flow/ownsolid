@@ -422,3 +422,16 @@ and [bounded input correction](agent-gateway-database-role.md#bounded-input-rece
 The private corrected receiver and expanded MODEL selector still require a new
 authorized transfer/run; their local checks do not qualify the seven SQL roots,
 cursor dimensions, migrations, restore paths or grants.
+
+The next allocated opportunity measured complete delivery of a smaller exact
+frame: 720,340 bytes, SHA-256 and EOF matched in 2.256576253 seconds remotely.
+Its decoded member hashes matched, but the unchanged strict source verification
+then refused a cached file with `SOURCE_MODE_MISMATCH`. The actual path and mode
+were not recorded. No complete target-source admission, PostgreSQL fixture,
+catalog JSON/SHA, restore, native binary or role case was reached. Both original
+locks closed, owned groups joined and credentials remained absent; SSH and outer
+both returned 1 in 10.179709125 seconds without a retry. The three binary hashes,
+expanded eight-root MODEL selector, formal61 SQL and schema60 pins remain fixed.
+See the [actual frame receipt and cache boundary](agent-gateway-database-role.md#observed-complete-frame-and-strict-cache-mode-refusal).
+This verifies only that specific frame's transport and integrity, not any of
+the outstanding database or reader capabilities.
