@@ -88,6 +88,29 @@ The finish URI is fixed by the server, with no provider data or arbitrary return
 URL. Actual cookie delivery and swapped-local-cookie refusal remain unproven
 until the rendered probe and Identity-backed completion pass.
 
+The rendered transport probe will reuse the repository's existing Web QA trust
+pattern: exact owned fixture certificate key pins, fixed literal hostname
+mapping, and `ignoreHTTPSErrors: false`. Precheck the generated leaf chain,
+hostname and validity, refuse every page origin outside the owned fixture,
+and require an unpinned-certificate negative control. Do not modify the system
+trust store or use a personal browser profile. Use distinct registrable sites
+and observe the browser's `Sec-Fetch-Site` as well as actual cookie delivery;
+two subdomains of one site would not test this boundary. The Mac probe is not
+a disconnected installed-flow result.
+
+This uses existing internal QA tools only: Go 1.27.3 (BSD-3-Clause), Node
+26.13.0 (MIT with bundled notices), Playwright/playwright-core 1.64.1
+(Apache-2.0 plus their NOTICE/ThirdPartyNotices), and the already installed
+Chrome for Testing 156.0.8078.4. Google's
+[testing-browser documentation](https://developer.chrome.com/docs/automation-and-testing/chrome-for-testing)
+describes versioned testing binaries without auto-update. The executable is
+subject to [Chrome's terms](https://www.google.com/chrome/terms/) and its bundled
+open-source credits, not a blanket BSD license. Retain those exact notices
+and runtime identity in the private QA evidence. The probe uses no media and
+only owned loopback content; no browser binary is copied into the product,
+redistributed, downloaded at runtime or admitted as an installer dependency.
+This research adds no product dependency, model or dataset.
+
 ### Browser claim and captured-actor handoff
 
 The current `claim_repository.go` authenticates the previous browser cookie,
