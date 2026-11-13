@@ -27,6 +27,8 @@ type Handler struct {
 	Service *sso.Service
 	// ConnectorTests selects the unpublished diagnostic adapter after explicit storage admission.
 	ConnectorTests *sso.ConnectorSignInTests
+	// SAMLCompletion selects only the unpublished first-party completion adapter.
+	SAMLCompletion *sso.SAMLCompletion
 }
 
 const (

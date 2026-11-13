@@ -102,9 +102,9 @@ func (s *Service) PublicConnectors(ctx context.Context) ([]PublicConnector, erro
 		projection += ",c.tenant_id::text,c.secret_key_id,c.secret_nonce,c.secret_ciphertext"
 	}
 	rows, e := store.Query(ctx, sourceBoundedSQL(store,
-		`SELECT `+projection+` FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND c.enabled ORDER BY c.created_at,c.id LIMIT $1`,
-		`SELECT c.id,c.name,c.provider,c.origin FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND t.status='active' AND c.enabled=1 ORDER BY c.created_at,c.id LIMIT ?`,
-		"SELECT C.ID,C.NAME,C.PROVIDER,C.ORIGIN FROM SSO_CONNECTORS C JOIN INSTALLATION_STATE I ON I.TENANT_ID=C.TENANT_ID JOIN TENANTS T ON T.ID=C.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND T.STATUS='active' AND C.ENABLED=1 ORDER BY C.CREATED_AT,C.ID LIMIT ",
+		`SELECT `+projection+` FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND t.status='active' AND c.enabled AND c.provider='gitea' ORDER BY c.created_at,c.id LIMIT $1`,
+		`SELECT c.id,c.name,c.provider,c.origin FROM sso_connectors c JOIN installation_state i ON i.tenant_id=c.tenant_id JOIN tenants t ON t.id=c.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND t.status='active' AND c.enabled=1 AND c.provider='gitea' ORDER BY c.created_at,c.id LIMIT ?`,
+		"SELECT C.ID,C.NAME,C.PROVIDER,C.ORIGIN FROM SSO_CONNECTORS C JOIN INSTALLATION_STATE I ON I.TENANT_ID=C.TENANT_ID JOIN TENANTS T ON T.ID=C.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND T.STATUS='active' AND C.ENABLED=1 AND C.PROVIDER='gitea' ORDER BY C.CREATED_AT,C.ID LIMIT ",
 		"",
 		s.policy.MaximumConnectors,
 		config.SSOMaximumConnectors))
@@ -166,9 +166,9 @@ func (s *Service) ListConnectors(ctx context.Context, a identity.Auth, limit int
 		if s.keyringRecovery {
 			pg += "," + connectorSecretColumns
 		}
-		pg += ` FROM sso_connectors WHERE tenant_id=$1`
-		my := `SELECT ` + mysqlConnectorColumns + ` FROM sso_connectors WHERE tenant_id=?`
-		dm := "SELECT " + damengConnectorColumns + " FROM SSO_CONNECTORS WHERE TENANT_ID=?"
+		pg += ` FROM sso_connectors WHERE tenant_id=$1 AND provider='gitea'`
+		my := `SELECT ` + mysqlConnectorColumns + ` FROM sso_connectors WHERE tenant_id=? AND provider='gitea'`
+		dm := "SELECT " + damengConnectorColumns + " FROM SSO_CONNECTORS WHERE TENANT_ID=? AND PROVIDER='gitea'"
 		pgArgs, myArgs := []any{tenantID}, []any{tenantID}
 		if rawCursor != "" {
 			if q.Dialect() == transaction.Dameng && !damengTimestamp(cursor.CreatedAt) {

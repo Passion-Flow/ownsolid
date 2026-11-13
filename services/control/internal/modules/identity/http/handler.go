@@ -565,6 +565,15 @@ func (h *Handler) api(w http.ResponseWriter, r *http.Request, audience, origin, 
 			return nil, 0, bad
 		}
 	}
+	// Accepted SAML linking finishes behind the ordinary Origin/CSRF boundary.
+	// Its selected owner enforces license integrity and current actor/result proof;
+	// neither the ACS protocol path nor any default route gains an exception.
+	if h.SSO != nil && h.SSO.SAMLCompletion != nil && ssohttp.SAMLCompletionPath(path) {
+		if h.SSO.Service == nil || h.SSO.Service.Identity != s {
+			return nil, 0, errors.New("SERVICE_NOT_READY")
+		}
+		return h.SSO.HandleSAMLCompletion(w, r, audience, requestID)
+	}
 	if monitoringhttp.Owns(path) {
 		if r.Method != http.MethodGet {
 			return nil, 0, errors.New("RESOURCE_NOT_FOUND")
