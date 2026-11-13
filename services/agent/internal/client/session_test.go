@@ -33,6 +33,7 @@ type control struct {
 	acks            []string
 	dropAck         bool
 	headers         metadata.MD
+	replyHeaders    metadata.MD
 	refuse          codes.Code
 	problem         *wire.SessionProblem
 	heartbeatStatus string
@@ -53,10 +54,14 @@ func (c *control) connect(stream grpc.ServerStream) error {
 	c.mu.Lock()
 	c.streams++
 	refuse, closeAt := c.refuse, c.closeAt
+	replyHeaders := c.replyHeaders.Copy()
 	c.headers, _ = metadata.FromIncomingContext(stream.Context())
 	c.mu.Unlock()
 	if refuse != codes.OK {
 		return status.Error(refuse, "AUTH_CAPACITY_EXCEEDED")
+	}
+	if err := stream.SetHeader(replyHeaders); err != nil {
+		return err
 	}
 	for n := 1; ; n++ {
 		var m wire.AgentMessage
