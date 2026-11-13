@@ -245,7 +245,83 @@ describe that boundary. The pinned Playwright 1.64.1 `fileIsModule` helper retur
 false for the original external entry and true for both the Console entry and a
 new probe copy with `package.json` declaring `type: module`. The test and fixture
 bytes remain unchanged. That isolated classification check passed; collection
-and browser execution of the corrected probe remain unrun. Keep the original
-failed operation intact, discover the corrected negative selection before a
-future build, and require its four actual policy failures before treating the
-negative control as accepted.
+and browser execution were still unrun at that prerequisite boundary. The
+subsequent execution below retains that original failed operation and the
+separate nonblocking-busy outcome without relabelling either as browser evidence.
+
+### Cursor transport regression and visual acceptance boundary
+
+The bounded Chromium execution on source `ce177336` used Web tree
+`0c70c6e25706594d17de574e1bae2f5989855a10`. Its Console build passed in
+7.652 seconds; all 696 asset hashes matched the earlier frozen runtime map.
+The corrected external ESM probe actually collected and ran four old-runtime
+cases. All four failed at the unchanged policy row assertion (expected two rows,
+received zero), with no collection errors, skips, retries or flaky results. This
+is the intended negative control, not a positive product pass.
+
+The positive resource-window file actually ran 21 cases: 17 passed and four
+failed, with no skips or retries. In both languages, next-page recovery expected
+41 rows but retained 21, and returning after a cancelled page expected 26 rows
+but retained 21. The tab and hook retained the successful first page's exact
+bounds, but `web/packages/api/src/audit.ts` omitted explicit `from` and `to`
+whenever a cursor was present. The policy-faithful fixture correctly refused the
+changed query fingerprint. No test assertion, fixture or cursor protocol was
+weakened.
+
+`f655af2b` preserves explicitly supplied bounds on cursor requests. `3f614d69`
+adds two transport regression cases: first-page and cursor query fingerprints
+must match, and cursor-only callers must not acquire invented time bounds.
+This follows the existing server contract described above and introduces no
+dependency, API field, permission or licence change. These two tests and the
+corrected source have **not run** through unit tests, typechecks, lint, a new
+build or browser acceptance. The existing 696 built assets still represent
+`ce177336`; they cannot qualify the corrected Web tree
+`da6882b8d6d0510323fd9ed50d080c8ca72876eb`.
+
+The remaining 90 planned positive browser cases did not run: the original
+41-case explicit-recovery suite, 19 resource/node-page cases, and 30 affected
+accessibility/keyboard cases. The private review runner also omitted the owned
+API source directory from its permitted correction paths. No supplemental
+executor or rerun started. Its absolute work cutoff expired while awaiting
+review; the parent then recorded a `PermissionError` during deadline handling,
+exit 1 after 540.278 seconds, and confirmed cleanup. A later read-only check found neither
+known parent/worker PID nor a listener on the two owned preview ports. Retain the
+cutoff and wrapper error as failures; this is not a clean successful guard run.
+
+#### Screenshot review
+
+The reporter embedded 25 PNG bodies in its JSON. The initial file-only collector
+reported zero images because those bodies were not separate PNG files. All 25
+were extracted without changing their bytes, hashed, opened and visually read.
+The original zero-image collector record remains intact. Two planned EN/ZH
+partial-page screenshots were never generated because pagination assertions
+failed. There are no screenshots of the corrected source.
+
+The actual images show five resources in English at desktop width and Simplified
+Chinese at 390 pixels, plus recent-empty, refused-range, historical,
+filtered-empty, loading, error and denied states in both languages, and one
+English invalid-local-date state. They establish the following review result:
+
+- **Archetype:** Detail, with breadcrumb/back link, name and textual status,
+  resource actions and an Activity tab. Node headers show four actions and
+  deployment headers six, exceeding the required two most-used visible actions.
+  The overall detail pages therefore fail visual acceptance.
+- **Seven states:** loading, the two different empty states, error and denied are
+  visible. Recent-empty offers earlier dates; filtered-empty explains the selected
+  period and offers to clear it. Partial has prepared assertions but its two
+  images are missing. Existing unready deployment actions remain visible with
+  reasons, but those reasons expose roadmap IDs rather than useful product guidance.
+  The Chinese filtered-empty image ends below the viewport before its remedy;
+  that image alone does not establish the remedy's keyboard or scroll access.
+- **One primary action:** the tab's intended action is Read activity. Node and
+  model pages also emphasize Collect facts or Deploy a model, creating competing
+  primary buttons in both desktop and narrow views. Connector and account images
+  show only the activity primary. Statuses include words as well as colour.
+
+Keep UX-127 open. Qualification requires the two new API tests, affected types
+and lint, a source-bound Console rebuild, the original 21 resource-window and
+41 recovery cases, resource/node pages, accessibility and keyboard coverage,
+new partial screenshots and actual review of every generated image. Fix the
+observed header hierarchy and unavailable-action explanations before accepting
+the detail screens. Full `make check`, `make build`, `make test`, native and
+installed SQL/authority/offline/SSO acceptance remain separate requirements.
