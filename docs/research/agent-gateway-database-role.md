@@ -832,3 +832,47 @@ deadlocking transport teardown. HTTP join and RPC/receive-loop join are both
 required before a process closer. The unit source covers real retained file
 descriptors, but its execution and the full composed reader contract remain
 unverified. No original IAM constructor, TRN owner path or agent v1 field changed.
+
+## Actual IAM constructor consumption
+
+The original IAM input is review tree1af0ca5497fbbe83875eb6af4769fad4198135ac
+on5bbc324d, archive e475f54c97137d11b7a9f40b687d809f69e4c65d0068822cd1d707858fd8feaf
+and hash manifest346e20c56a8032fba2815d4b06522c98ed9d96d7c814d9711f7161061757f6f5.
+All archive members, the four IAM owner paths and all21 original TRN paths were
+verified locally before import. The actual API differs from the earlier proposal:
+NewAgentGatewayWithPublishedReaders(s, ready, tenant) opens/binds the concrete
+readers itself; ClosePublishedReaders closes only those owners. ARC must consume
+this actual API, not retain its proposed option struct or duplicate reader opens.
+The original default constructor and all four imported owner paths remain intact.
+IAM's corrected Fstat observer and this combined graph are still unqualified.
+
+At process startup, no configured dataset/training namespace keeps the original
+constructor. If either artifact_root is configured, select the actual reader
+constructor; its required pair makes a partial/missing namespace fail visibly
+instead of returning an unbound graph. There is no fallback after a reader or
+graph error. Resolve tenant through installedTenant(startup, original store)
+only, after the existing bootstrap/schema admission, and pass only the original
+Config to the constructor. No deployment knob or client value selects a tenant,
+file path, writer or authorization mode. This is one complete reader-enabled
+path plus compatibility for the original namespace-free path.
+
+Register ClosePublishedReaders with the process lifecycle immediately after
+successful construction, before installation-fence admission, workers or listen.
+That gives every later startup error the same reverse close path. Retain the
+owner's exact close error in lifecycle failure before the generic store-close
+classification is added; its concrete errors are fixed storage codes, never
+private paths or credential values. A successful construction that has exhausted
+its startup context must also unwind and return that original context error.
+During serving, both real HTTP and RPC/receive-loop joins and all worker joins
+precede reader close, with the pool registered first and closed last. An
+unconfirmed join must never invoke reader or pool closers. Returned files remain
+owned and closed by their actual admitted handler, not by a replacement writer.
+
+Validation must combine IAM's original no-database graph/partial-open/failure
+tests, ARC's real HTTP/RPC/file lifetime tests, and the original real PostgreSQL
+retained-training-claim profile through this constructor. Actual CLI later-start
+failure, missing/foreign same-host namespace, shutdown/restart and read-only
+mount/role/offline runs remain required. Source imports and wiring prove none
+of those executions. No new dependency, model or dataset is introduced; the
+existing Go BSD-3-Clause, pgx MIT and gRPC-Go Apache-2.0 notices/offline rights
+remain unchanged.
