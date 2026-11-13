@@ -813,16 +813,14 @@ concurrent joins and delayed actual file close; they establish no SQL or trainin
 authorization evidence. Formatting/layout/roadmap/diff checks ran, but no compiler,
 unit/race execution, native process or full gate ran for this increment.
 
-Actual reader consumption is still blocked on IAM's additive graph entry. The
-minimal handoff is the concrete pair in AgentGatewayPublishedReaders above,
-borrowed from the process owner and bound to its single existing graph. ARC must
-receive the original signature and source before opening either configured
-namespace in runAgentGateway; it must not open unused readers and return success.
-The process input remains installedTenant(original selected store), the existing
-Datasets.ArtifactRoot/Training.ArtifactRoot and TRN e639db90's exact Open/Close
-APIs. A partial second open or construction failure must close only already opened
-readers in reverse order. Those operations are not implemented by an unused
-helper or an alternative unbound constructor in this increment.
+The earlier handoff proposal above is superseded by the actual IAM API recorded
+below. The private process source now calls that constructor with the tenant
+from installedTenant(original selected store) and only the existing configured
+artifact roots. It registers the real ClosePublishedReaders operation before
+later startup work, retains its exact error and refuses startup-context expiry.
+IAM owns partial-open/graph-failure cleanup; ARC owns all later startup and
+request/RPC/worker joins. No unused reader helper or alternate unbound graph is
+introduced. This is source wiring, not executed CLI/claim/mount qualification.
 
 The same completion counter also owns each session receive loop. It is registered
 while its admitted RPC callback is still counted; therefore a racing drain cannot
@@ -876,3 +874,14 @@ mount/role/offline runs remain required. Source imports and wiring prove none
 of those executions. No new dependency, model or dataset is introduced; the
 existing Go BSD-3-Clause, pgx MIT and gRPC-Go Apache-2.0 notices/offline rights
 remain unchanged.
+
+The actual caller is now wired directly in runAgentGateway. Its imported IAM
+README's research link is retained by importing the exact original9a0543b9 note,
+without changing that owner's four review paths. No typed option wrapper or
+alternate reader constructor was added. All four candidate paths remain the
+exact reviewed tree bytes; the original corrected observer/graph test roots and
+ARC's prepared lifetime tests remain required. Real process startup with the
+selected runtime principal, post-construction listen/fence failure cleanup,
+active training claim and installed read-only namespace behavior still need
+actual allocated execution. The old native opportunity remains NOTRUN and has
+not been reused for this source.

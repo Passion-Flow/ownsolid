@@ -229,8 +229,29 @@ func runAgentGateway(args []string) (result error) {
 		}
 		return fence.Ready()
 	}
-	gateway, e := identityhttp.NewAgentGateway(&identity.Service{DB: pool, Config: c}, ready)
+	service := &identity.Service{DB: pool, Config: c}
+	var gateway *identityhttp.AgentGateway
+	if c.Datasets.ArtifactRoot != "" || c.Training.ArtifactRoot != "" {
+		tenant, tenantError := installedTenant(startup, store)
+		if tenantError != nil {
+			return tenantError
+		}
+		gateway, e = identityhttp.NewAgentGatewayWithPublishedReaders(service, ready, tenant)
+	} else {
+		gateway, e = identityhttp.NewAgentGateway(service, ready)
+	}
 	if e != nil {
+		return e
+	}
+	g.closers = append(g.closers, func() error {
+		err := gateway.ClosePublishedReaders()
+		if err != nil {
+			// Keep the concrete owner's fixed close code alongside lifecycle context.
+			g.Fail(err)
+		}
+		return err
+	})
+	if e = startup.Err(); e != nil {
 		return e
 	}
 	if e = fence.check(startup); e != nil {
@@ -266,6 +287,9 @@ func runAgentGateway(args []string) (result error) {
 	nodes.RestoreShed(startup)
 	g.Loop("NODE_AGENT_SHED", nodes.RunAgentShed)
 	g.Loop("NODE_TASK_WAKES", nodes.RunWakes)
+	if e = startup.Err(); e != nil {
+		return e
+	}
 	machine := config.MachineServerConfiguration{ListenAddress: c.AgentGateway.ListenAddress, Origin: origin, TLSCertificateFile: c.AgentGateway.TLSCertificateFile, TLSPrivateKeyFile: c.AgentGateway.TLSPrivateKeyFile}
 	handler := &agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}
 	g.stops = append(g.stops, func(ctx context.Context) error {

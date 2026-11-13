@@ -37,9 +37,16 @@ handlers and actual RPC callbacks before closing process-owned stores. The pool
 is the first registered closer and closes last, including after partial startup;
 an unconfirmed join retains it. RPC callbacks may outlive a canceled HTTP
 transport, so transport closure alone never permits a file-owner close.
-Dataset/training reader graph binding still requires its original constructor
-owner. This source increment has not been compiled or run end to end; see the
-[reader ownership boundary](../../../../docs/research/agent-gateway-database-role.md#concrete-reader-constructor-dependency-and-process-ownership).
+Configured dataset/training namespaces select IAM's concrete published-reader
+constructor using the tenant read from the original installed store. Both existing
+namespaces are required; a partial/missing/foreign pair refuses startup without a
+writer or legacy fallback. A namespace-free configuration keeps the original
+constructor. Register reader close immediately after construction, so later
+startup failure or an exhausted startup context also unwinds those readers.
+Their original close codes are retained, and the same request/RPC/worker joins
+precede reader close during serving, with pool close last.
+This combined source increment has not been compiled or run end to end; see the
+[reader ownership boundary](../../../../docs/research/agent-gateway-database-role.md#actual-iam-constructor-consumption).
 
 [runtime_lifecycle.go](runtime_lifecycle.go) owns dependency construction, cancellation, worker readiness, stop/join order and closers. Component helpers such as artifactstores.go, imageregistry.go, task_events.go, middleware.go and monitoring.go connect their existing owners. The identity HTTP package still composes/routes domains; extracting that historical hub is a separate verified change, not an invitation to create duplicate owners here.
 
