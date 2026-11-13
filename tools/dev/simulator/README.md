@@ -6,6 +6,13 @@ held claims, acknowledgements, task progress and results. Faults are scripted, a
 writes a JSON report. Load tests use it ([ADR 0033](../../../docs/decisions/0033-agent-simulator.md),
 [research](../../../docs/research/agent-simulator.md)).
 
+Certificate-bearing agents use the Agent module's outgoing transport owner for
+optional authenticated connection-age handoff. Each keeps its own connection, and
+legacy multiplexed channels retain their existing behavior. The report records
+attempted handoffs as `connection_handoff`, including failed candidates, while the
+ordinary heartbeat and connection accounting remain unchanged. A replacement is
+adopted only after its heartbeat succeeds; no claim or result is retried by it.
+
 Simulated nodes enroll with the `read_only` profile and run `collect_facts.v1` tasks. They
 report the facts of a large GPU server and differ only in host name (`sim-000000` onwards).
 
@@ -155,3 +162,13 @@ The shape of the report, shortened, with example values:
 `go test ./...` runs the simulator against a small fake control plane in the test files,
 including every fault. `tests/e2e` runs it against a real offline install
 (`OWNSOLID_E2E_SIMULATED_AGENTS`, default 2,000).
+
+
+The simulator shares the Agent contract's fallback delay. Initial unsupported
+stream paths retain the two probes and five-minute window. A previously usable
+stream becomes eligible to retry after the currently adopted maximum reconnect
+backoff, capped at that original window. The actual attempt still follows pacing
+and retry hints. An injected Agent-process restart forgets this
+transport history and keeps the acknowledged cursor. Failure and on-stream
+accounting are unchanged; HTTPS is never counted as a stream. The failed and
+qualified inputs belong in the [fleet load research](../../../docs/research/fleet-load-test.md).

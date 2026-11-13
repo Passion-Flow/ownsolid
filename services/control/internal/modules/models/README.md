@@ -14,7 +14,11 @@ discard and is resumed by the next worker. See the
 
 [service.go](service.go) exposes import/list operations. [importer.go](importer.go), [import_lock.go](import_lock.go), [storage.go](storage.go) and [verification.go](verification.go) separate bounded import execution and stored-byte verification. Derived registration/storage/snapshot files bind accepted preparation output. [directory_cache.go](directory_cache.go) uses the configured cache without replacing business ownership.
 
-Model/version/import state originates in migration 000006. Bytes and SQL must agree on catalog/source/scope and digest. Queued/uploaded does not mean verified; cancellation, interrupted import, inconsistent directory identity and retirement need existing worker/recovery paths.
+Model/version/import state is stored by the cumulative `000011_models` migration;
+the later lifecycle migration binds derived publication. Bytes and SQL must agree
+on catalog/source/scope and digest. Queued/uploaded does not mean verified;
+cancellation, interrupted import, inconsistent directory identity and retirement
+need existing worker/recovery paths.
 
 [import_manifest.go](import_manifest.go) resolves the persisted catalogue digest
 to canonical metadata and the installed archive and directory verifiers.
@@ -40,6 +44,26 @@ the verified training and holdout versions separately to internal callers.
 The published manifest and the HTTP response retain their existing shapes.
 The native approved-base detail path retains its existing behavior.
 See the [lineage contract handoff](../../../../../docs/research/training-dataset-lineage.md#dev-contract-handoff).
+
+The staged PostgreSQL family domain uses unnumbered
+`testdata/model_family_candidate.up.sql`; it is not part of installed migrations.
+It backfills one independent family per legacy version and atomically assigns
+default membership when an import or derived version is inserted. Publishers
+can call `StageVersionFamilyWithin` with a current Admin and an exact anchor
+before their version insert in that same transaction. Empty anchor creates a
+new family. The caller owns commit and must suppress any result on a failed or
+unknown outcome. Membership is immutable; retirement never removes it.
+
+`History` and `HistoricalVersion` expose bounded currently authorized Admin
+metadata, including retired versions. They resolve family from an exact anchor
+and validate the existing retained graph. They perform no physical file IO and
+grant no execution permission. `VersionHistoryPolicy` reports the configured
+UI page default and fixed wire bounds. Continuation is signed with the installed
+Identity HMAC key and bound to actor, session, audience, scope, family, anchor
+and filter. Pagination requires that installed key; both reads fail closed if the
+candidate schema is absent. Public contracts,
+routes, formal migration/role/catalog admission and S-202 remain with their
+owners. See the [family domain contract](../../../../../docs/research/training-dataset-lineage.md#durable-family-domain-contract).
 
 After the import's version and audit event commit, the worker reclaims the
 upload chunks and failed stages. During import the store still needs space

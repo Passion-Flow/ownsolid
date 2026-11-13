@@ -66,6 +66,143 @@ The ordinary Admin/Portal session cookies keep their existing authority and
 transport policy. Cross-site browser cookie behavior needs real browser tests,
 including an unavailable-cookie retry outcome.
 
+The first rendered transport attempt found an invalid fixture assumption: an
+IdP page with `Referrer-Policy: no-referrer` sends `Origin: null` on its
+cross-site form POST, even though its dedicated flow cookie arrives and its
+ordinary Lax and Strict cookies do not. The
+[Fetch Origin-header algorithm](https://fetch.spec.whatwg.org/#append-a-request-origin-header)
+explicitly sets that header to null for this policy. An exact IdP Origin is not
+an authentication mechanism and cannot be required for all valid SAML POSTs.
+The next transport-only probe will cover both exact-origin and null-origin
+forms, with missing flow-cookie and wrong ordinary-session-cookie controls for
+each. It will accept null only at this owned fixture endpoint and grant no
+identity authority. Product ACS admission still requires the immutable
+server-request/browser-proof/RelayState and signed-response checks above;
+ordinary first-party Origin/CSRF enforcement stays mandatory. Missing or
+unexpected explicit Origin values remain separately reviewable signals, never
+substitutes for the SAML proof. This is a specification reference, with no
+runtime dependency, copied implementation, model or dataset.
+
+The target product flow stages a verified response at the ACS and
+redirects to a fixed first-party completion endpoint before changing an account
+binding or session. The ordinary Lax session cookie can then be checked again
+against the initiating cookie digest and actor. Rechecking only the captured
+server session on the IdP POST cannot detect that the browser now carries a
+different local account's cookie while the old session is still active.
+Preserve that browser-change refusal rather than broadening the ordinary
+session cookie to SameSite=None.
+
+ASP.NET Core demonstrates this separation in its
+[remote authentication handler](https://github.com/dotnet/aspnetcore/blob/v10.0.0/src/Security/Authentication/Core/src/RemoteAuthenticationHandler.cs)
+and [external-account linking callback](https://github.com/dotnet/aspnetcore/blob/v10.0.0/src/Identity/UI/src/Areas/Identity/Pages/V5/Account/Manage/ExternalLogins.cshtml.cs):
+the remote result is staged, then a GET callback reacquires the local user and
+checks the expected account before linking. This is an architectural reference,
+not a new dependency or copied implementation. ownsolid's staged result must
+remain server-side, one-use, bound to the exact request and source revision,
+and expire no later than the verified assertion. The browser receives only a
+protected random continuation proof, never an assertion or identity claim set.
+The finish URI is fixed by the server, with no provider data or arbitrary return
+URL. The [rendered transport probe](#rendered-cross-site-cookie-qualification) now
+qualifies cookie delivery and swapped-local-cookie refusal in its private
+fixture. Actual Identity-backed completion remains unproven.
+
+The rendered transport probe will reuse the repository's existing Web QA trust
+pattern: exact owned fixture certificate key pins, fixed literal hostname
+mapping, and `ignoreHTTPSErrors: false`. Precheck the generated leaf chain,
+hostname and validity, refuse every page origin outside the owned fixture,
+and require an unpinned-certificate negative control. Do not modify the system
+trust store or use a personal browser profile. Use distinct registrable sites
+and observe the browser's `Sec-Fetch-Site` as well as actual cookie delivery;
+two subdomains of one site would not test this boundary. The Mac probe is not
+a disconnected installed-flow result.
+
+This uses existing internal QA tools only: Go 1.27.3 (BSD-3-Clause), Node
+26.13.0 (MIT with bundled notices), Playwright/playwright-core 1.64.1
+(Apache-2.0 plus their NOTICE/ThirdPartyNotices), and the already installed
+Chrome for Testing 156.0.8078.4. Google's
+[testing-browser documentation](https://developer.chrome.com/docs/automation-and-testing/chrome-for-testing)
+describes versioned testing binaries without auto-update. The executable is
+subject to [Chrome's terms](https://www.google.com/chrome/terms/) and its bundled
+open-source credits, not a blanket BSD license. Retain those exact notices
+and runtime identity in the private QA evidence. The probe uses no media and
+only owned loopback content; no browser binary is copied into the product,
+redistributed, downloaded at runtime or admitted as an installer dependency.
+This research adds no product dependency, model or dataset.
+
+### Browser claim and captured-actor handoff
+
+The current `claim_repository.go` authenticates the previous browser cookie,
+compares its digest, resolves the Gitea provider, and decrypts OAuth PKCE/client
+credentials before claiming the row. `flows.go` then exchanges an OAuth code;
+its numeric Gitea subject contract is not the new persistent SAML identity.
+Do not feed a SAML response through that path with invented OAuth credentials
+or skip its previous-session checks when the Lax cookie is absent.
+
+[Chromium's SameSite documentation](https://www.chromium.org/updates/same-site/)
+requires Secure for SameSite=None cookies. The dedicated SAML flow cookie must
+carry only the short-lived browser proof; it cannot become a local session.
+For account linking, capture the authenticated local session reference, token
+digest, entrance, account epoch and credential version at the first-party start.
+After validating the flow cookie/RelayState, recheck that server-held reference
+through Identity's actual source/session authority, then require the initiating
+ordinary browser cookie again at first-party completion. Do not accept a session ID
+from the POST or add a public resume-by-session-ID operation. Explicit sign-out,
+credential/factor changes, idle/absolute expiry and source revocation must stop
+that captured authority even when its SAML browser proof remains valid.
+
+The next external experiment must retain the existing current-actor lock order
+and exclusive pending-to-claimed transition, with claim COMMIT confirmed before
+assertion verification or completion proceeds. A returned verification envelope
+also needs the exact request ID checked by the verifier, in addition to its
+tenant/connector/trust snapshot. Completion must compare it with the claimed
+request and retain bounded signed-assertion replay identity in that lifecycle.
+No automatic resend follows COMMIT uncertainty, and a claim error releases no
+worker proof or session. Binding, source session and audit remain one completion
+transaction; the identity lookup prototype alone proves none of them.
+
+### Isolated claim boundary
+
+The isolated claim experiment is limited to authenticated account-link request claims.
+Use a separate unnumbered test table, anchored to the actual scoped connector,
+user and session, and the existing Identity password-confirmation/current-actor
+owners. Store only request identity, browser/RelayState digests, immutable
+captured actor and callback scope, connector revisions, expiry and one claim ID.
+A server-owned tenant is resolved from installation authority; callers supply
+no tenant or captured actor. The IdP POST path deliberately has no ordinary
+session-cookie argument. It reconstructs only the stored private actor and
+rechecks actual user/source/session/credential authority through the existing
+user -> sorted source/target connectors -> exact session -> installation order.
+Under that transaction it exclusively changes pending to claimed, and returns
+a private request handle only after confirmed COMMIT. No PKCE/client secret,
+OAuth exchange, signed assertion, verified-result stage, binding or session is
+invented. This tests one prerequisite, not an authentication implementation.
+
+Exercise Admin and Portal, local and different-connector sourced actors,
+foreign tenant/connector/audience and browser/RelayState substitutions, expiry,
+logout, account/credential epoch changes, source/binding revocation and stale
+target revisions. Force actual concurrent row waits, cancellation, rollback,
+process-owner reconstruction/replay and both PostgreSQL COMMIT loss modes;
+errors must return no private claim handle and never automatically resend.
+Use real audit rollback only for an event actually written by this experiment,
+with synthetic action names confined to its private fixture. Acceptance of
+this boundary requires matching native race and disconnected PostgreSQL cases,
+not additional fake protocol successes. The first-party cookie comparison and
+signed-result lifecycle remain separate work. Existing first-party start
+Origin/CSRF checks are not replaced by direct repository tests.
+
+This adds no product dependency, model or dataset. It reuses the repository's
+pinned Go/pgx/UUID/test-fixture graph and its recorded licenses; no new SAML
+library enters the claim-only prototype. Existing Identity/SSO source is the
+authority for its current actor, lock order and transaction outcome semantics,
+not a copied identity model or a configurable bypass.
+
+Before serving admission, exercise actual Identity-backed link/login claims,
+missing ordinary session cookies on the IdP POST, cross-tenant/audience browser
+proof replacement, concurrent claims, source/logout/password interleavings,
+restart/replay and actual COMMIT loss. A Go cookie jar does not enforce browser
+SameSite behavior; the distinct-cookie path also needs a rendered browser with
+verified TLS. Ordinary session/Origin/CSRF policy must remain enforced.
+
 Require response and bearer-subject `InResponseTo` to match the one claimed
 server request, exact response Destination and bearer Recipient to match the
 selected ACS, and issuer/audience to match the configured IdP/SP. Check all
@@ -103,8 +240,81 @@ Do not concatenate arbitrarily long qualifier strings into a unique index or
 truncate/hash away the original identity to make it fit: PostgreSQL documents
 [B-tree entry size limits](https://www.postgresql.org/docs/18/btree.html) and
 [collation-specific index semantics](https://www.postgresql.org/docs/18/indexes-collations.html).
-The candidate storage representation, maximum-byte cases and foreign-tenant
-binding uniqueness still need a real SQL prototype and ARC's formal admission.
+The [SQL experiment below](#persistent-identity-sql-qualification) qualifies the
+selected exact-identity representation and scope constraints. Actual binding
+composition and ARC's formal admission remain open.
+
+### Persistent-identity storage experiment
+
+Normalize the immutable verified IdP/SP context into one tenant/connector scope
+row. Store both exact entity IDs there, with the selected persistent NameID
+format. The already-qualified verifier resolves omitted qualifiers to those
+same configured entities and refuses explicit foreign qualifiers. An identity
+row can therefore reference that scope and retain the exact NameID value;
+it need not repeat several potentially 4 KiB entity strings in a unique index.
+Use a tenant-scoped foreign key and uniqueness over tenant, scope UUID and
+the bounded value. A local UUID identifies the stored row, not a replacement
+for the upstream identity. Retain and return the full verified identity tuple.
+Do not change or admit the OIDC binding representation as part of this experiment.
+
+Use `text COLLATE "C"` with explicit character/byte checks for both entity IDs
+and the opaque value. PostgreSQL's
+[character-type contract](https://www.postgresql.org/docs/18/datatype-character.html)
+allows some overlength `varchar(n)` inputs or explicit casts to truncate,
+including excess spaces. That cannot silently change an authenticated NameID.
+Avoid bounded-varchar casts, `char(n)`, trimming, case folding, Unicode
+normalization and collation changes. Entity rows retain their 1,024-character/
+4,096-byte bounds; values retain 256 characters/1,024 bytes. The reduced index
+must work at the maximum value size without relying on TOAST compression.
+Changing configured issuer/SP identity requires a new scope rather than
+rewriting one that already identifies an external principal.
+
+Prototype this outside the product using the existing signed-assertion verifier
+as the positive producer and real PostgreSQL as the constraint owner. Cover
+full-length Unicode contexts/subjects, exact case/space/normalization identity,
+omitted/effective qualifier equivalence, foreign qualifiers and tenants, scope
+immutability, duplicate/concurrent resolution, rollback and index lookup.
+Direct SQL must refuse overlength values instead of quietly truncating them.
+No table row creates a local account, binding, role or session. Actual one-use
+browser claims and current-actor/session/audit completion remain separate,
+required integration work.
+
+The storage consumer must receive a server-bound verifier result, not an
+issuer/NameID tuple alone. Two tenants can configure identical entity names
+while approving different signing metadata. Load the tenant/connector context,
+revision and approved metadata fingerprint from the trusted store before
+constructing the verifier. Verify against that exact metadata, then carry that
+server-selected context with the result. Resolution rechecks the same tenant,
+connector, context, revision and fingerprint under its current-context lock.
+A valid result from the other tenant or trust revision is still refused even
+when its issuer/SP/NameID strings match. This fingerprint describes approved
+trust metadata; it never replaces or hashes away the exact external identity.
+Test shared entity names, foreign valid proofs and stale revisions explicitly.
+Trust-metadata or enabled-state changes must advance the current revision;
+the database experiment must refuse an unchanged or decreasing revision.
+
+The experiment can reuse the pinned SAML/XML graph and pgx v5.11.0 from the
+[qualified OP database inventory](catalog-oidc-provider.md#durable-protocol-prototype-plan-and-additional-licenses).
+Resolve and inspect their combined graph before compiling. Preserve all SAML,
+MIT/BSD/Apache and PostgreSQL/image notices; no model or dataset is involved.
+This representation remains a standalone experiment pending formal admission.
+
+The combined source-inspection graph in `iam104-storage-20261113.edr2wpvk`
+resolved 26 modules and 36 legal files. Exact versions/checksums and retained
+notices matched the previously inspected SAML/OP inventories except for the
+three Go submodules below. Their LICENSE and PATENTS bytes each matched the
+official pinned source and were retained with the combined inventory.
+
+| Additional selected version | Primary license |
+| --- | --- |
+| `golang.org/x/mod v0.38.0` | [BSD-3-Clause](https://github.com/golang/mod/blob/v0.38.0/LICENSE) |
+| `golang.org/x/sync v0.22.0` | [BSD-3-Clause](https://github.com/golang/sync/blob/v0.22.0/LICENSE) |
+| `golang.org/x/tools v0.48.0` | [BSD-3-Clause](https://github.com/golang/tools/blob/v0.48.0/LICENSE) |
+
+All three permit commercial/offline use and redistribution with their notices.
+These graph entries do not enable a tool or service at runtime. This inspection
+has not compiled or run the combined protocol/storage candidate and changes no
+product module, schema or route.
 
 ## Candidate dependency and license inventory
 
@@ -285,6 +495,688 @@ configuration/schema/dependency admission and the public/UI flow remain open.
 These are not Linux amd64 installed-flow results. The publication changes
 research only; its layout, roadmap and whitespace checks do not substitute for
 the future feature's full repository and installed-flow acceptance.
+
+## Persistent-identity SQL qualification
+
+The combined candidate passed fifteen roots, 73 independent leaves and 82
+named tests in each of native Go race/loopback PostgreSQL and disconnected
+Linux arm64/PostgreSQL. The new storage portion accounts for five roots,
+27 independent leaves and 31 names per topology. The other ten roots retain
+the qualified XML/signature checks. The two Keycloak-only roots were explicitly
+unconfigured and skipped; this run did not repeat the earlier real IdP flow.
+
+Positive storage inputs came from freshly RSA-SHA256-signed fixture assertions
+accepted by the actual selected verifier. The fixture uses two unnumbered,
+synthetic tables, not product connectors or bindings. Before verification it
+loads its server-owned tenant/connector context, revision and metadata digest
+in a short transaction; it commits that snapshot before XML verification.
+The resulting private envelope carries that authority. Resolution rechecks
+the exact current source under a shared lock in the caller's transaction.
+It does not commit independently or create any local sign-in authority.
+
+The actual database preserved 1,024-character IdP/SP URIs of 4,084 UTF-8 bytes
+each and a 256-character/1,024-byte opaque subject. The full verified identity
+tuple round-tripped unchanged. The maximum NameID occupied 1,028 bytes inline,
+including its varlena header, without compression. Case, trailing spaces and
+precomposed/decomposed Unicode produced distinct identities; omitted and
+explicit effective qualifiers resolved to the same stable identity. Direct SQL
+refused overlength characters, four-byte values and excess trailing spaces
+instead of truncating them. An actual analyzed lookup among 2,001 fixture
+identities used an index and returned exactly the maximum-size identity.
+
+Foreign-tenant connector lookup and a direct foreign-context foreign key were
+refused. A valid proof from another tenant with the same entity names and
+subject could not resolve under the local tenant. Its different approved
+signing metadata could not construct a verifier for the local snapshot either.
+Immutable tenant/connector/context/entity/format and identity-value rewrites
+were refused. Enabled/metadata changes required an advancing revision, and a
+decreasing revision was refused. Disable/reenable did not revive the old proof;
+fresh verification used the current revision. Foreign qualifier/issuer/SP,
+format and expired-result inputs returned no identity.
+
+Actual PostgreSQL uniqueness waits covered an owner committing, rolling back
+and a waiting resolver being canceled. Commit returned one shared stable ID;
+rollback let the waiter create a new ID; cancellation drained the actual SQL
+wait and explicit retry succeeded. Caller rollback left no identity row. These
+are identity-resolution transactions, not accepted authentication replays:
+the real browser/request one-use claim remains mandatory before completion.
+
+Evidence is `iam104-storage-20261113.edr2wpvk`, run
+`qualification-uf5y6rln`, qualified input `de19ee6842d2`. Source-hash manifest
+SHA-256 is
+`76b31d7bbbb5d1d8a4987baa4627bbcf3f1e8f67b83e7a4495cee63ba40e0a70`.
+Frozen/current source and native/disconnected passing names matched. The
+26-module/36-notice inventory, source, raw outputs and container/network
+inspection remain outside Git. Both owned containers, anonymous storage and
+the native bridge were removed. The earlier compile-only XML/snapshot helper
+variable collision was corrected without changing the protocol verifier.
+
+No product source, dependency, migration, binding, session, public contract or
+UI changed. The experiment's tenant source is its private server fixture, not
+actual Identity/current-actor composition. It does not qualify an installed
+ACS, browser cookie delivery, durable one-use claim, audited account linking,
+session issuance or actual provider-to-storage worker. IAM-104 remains open.
+
+## Rendered cross-site cookie qualification
+
+An owned Mac arm64 Chrome for Testing 156.0.8078.4 process with Playwright
+1.64.1 exercised six actual form submissions between distinct registrable
+HTTPS sites. One native Go race-test root passed without a skipped case. Both
+`no-referrer`/null-Origin and `strict-origin`/exact-IdP-Origin variants observed:
+
+- The ACS received POST with `Sec-Fetch-Site: cross-site`, the dedicated
+  SameSite=None flow cookie, and neither ordinary Lax nor Strict cookies.
+- A 303 to a fixed SP completion GET recovered the original ordinary Lax
+  cookie and a new host-only Lax continuation cookie. That GET still reported
+  cross-site fetch metadata; being an SP endpoint does not imply same-site
+  navigation provenance. Strict cookies remained absent on the redirect.
+- Removing the flow cookie returned ACS 403 and never reached completion.
+- Replacing the ordinary local cookie while at the IdP still reached the ACS,
+  but the completion GET returned 403 against the initiating cookie value.
+
+The fixture cookies were Secure, HttpOnly, host-only and Path=/, with separate
+flow/ordinary/Strict/continuation roles. Generated TLS certificates passed
+chain, DNS and validity checks before their exact leaf-key pins were supplied
+to the disposable QA browser. Contexts kept `ignoreHTTPSErrors: false`, service
+workers were blocked and page requests were restricted to the owned origins.
+A separately generated unpinned certificate was actually refused. No system
+trust or personal browser profile changed. The runtime's complete bundled
+credits were captured with SHA-256
+`695e9c5e9e3c04a10f895ee501e501940eb7a75808269708517bcbb4c2860fef`.
+The private license inventory retains the QA-tool notices and credits; no
+browser or new dependency enters the product or delivery bundle.
+
+Evidence is `iam104-browser-20261113.44wtq89s`, run
+`qualification-puevh9h9`, input `b3c2ef795698`. Its source-manifest SHA-256 is
+`43e2c23944a1ca897e55678296282a9c339a31ae8696e3535e5eb1a855e8f239`.
+Frozen and working source hashes matched. Sanitized server observations,
+browser cookie attributes, exact runtime versions, raw race output and both
+failed exact-Origin-assumption attempts remain outside Git. All owned Node,
+browser and Go test processes exited and released their loopback listeners
+and workstation lock.
+
+This is a browser transport qualification only: a synthetic IdP form carried
+no SAML assertion, and the fixture verified no signature, contacted no
+Identity/SQL authority and created no login, binding or session. It has no
+one-use durable claim or restart/replay proof. The native Mac run was not
+network-isolated or an installed Linux amd64/disconnected acceptance. Actual
+Identity-backed account switching, atomic claim/completion, signed-provider
+composition, public configuration and rendered product UI remain open. No
+product path, schema, public route or roadmap tick changed.
+
+## Captured current-actor claim qualification
+
+The isolated claim-only candidate passed seven roots, 31 independent leaves
+and 36 passing names in both native race and disconnected Linux arm64
+PostgreSQL 18.6/pgvector 0.8.7 runs. The complete passing-name sets and frozen
+versus working source hashes matched. It adds one unnumbered private test
+table through a Go test overlay, leaving product source, dependency files,
+formal schema, startup and public routes unchanged.
+
+The start actually authenticates an ordinary local or sourced session, confirms
+its current local password, rechecks the opaque confirmation and captures
+user/session/token digest, epoch, credential version, audience, exact configured
+callback and target revisions. Its tenant comes from actual installation
+authority. The dedicated browser proof is purpose-, tenant-, connector-,
+audience- and callback-bound; raw browser/RelayState values are never stored in
+the request table. SQL prevents rewriting captured authority or a claimed row.
+No OAuth credential or PKCE verifier is invented. Claim has no ordinary
+session-cookie or caller-supplied tenant/actor argument.
+
+Admin/Portal local and different-connector sourced actors passed through the
+actual Identity current-actor and SSO SourceGuard owners. Under the existing
+user -> sorted source/target connectors -> exact session -> installation order,
+claim rechecks credential and target revisions, exclusively changes pending to
+claimed and appends its synthetic audit in the same transaction. Only a
+confirmed COMMIT returns the private request handle. Owner reconstruction
+refused durable replay; this is not a process-restart test. Independent counts
+confirmed that claiming created no local binding or session.
+
+Actual PostgreSQL cases refused replaced browser/RelayState, wrong entrance or
+connector, changed configured callback, an otherwise copied foreign-tenant
+request, a foreign-tenant start, wrong password, captured-actor rewrite and
+expired requests. Logout, isolated idle/absolute expiry, disabled account,
+changed account epoch/password version, disabled or changed source connector,
+revoked source binding, stale/disabled target and changed installation tenant
+all returned no handle and retained pending state without a claim-success
+audit. Source/target faults are controlled repository fixtures, not additional
+public administration acceptance.
+
+Controlled row waits exercised two concurrent claimers and a canceled waiter:
+there was exactly one winner, cancellation drained the worker without changing
+the request, and explicit retry succeeded. Independent diagnostic connections
+observed actual PostgreSQL blocking without competing for the fixture's two
+application connections. A source revoker holding its connector could acquire
+and revoke sessions while claim waited for that connector; the later claim was
+refused. An actual audit trigger failure rolled back request claiming, and
+explicit repair/retry passed. A real PostgreSQL wire forwarder dropped COMMIT
+before forwarding and suppressed its acknowledgement after server success.
+Each observed exactly one COMMIT, returned `COMMIT_UNKNOWN` with an empty
+handle, and independent readback found zero/one atomic claim plus audit.
+
+Evidence is `iam104-claim-20261113.5tuta2y1`, run
+`qualification-ynqxh50s`, qualified input `bb101552d8c4`. Source-manifest
+SHA-256 is
+`4bdee7d4c795f61fe8fcedef4d8e21c8e594b83c8ee4c728f6b9ebdcff96740f`.
+The SQL, overlay, pinned base-owner hashes, raw outputs, actual wire controls,
+container inspections and matching names remain outside Git. Earlier failures
+retained macOS temporary-directory alias rejection, bounded fixture WAL
+exhaustion, invalid fault injections against existing SQL constraints and an
+observer queued behind the two-connection pool. The final driver resolves its
+temporary path and bounds WAL in its owned disposable database. Those changes
+neither relax private-file/SQL checks nor change product configuration. Owned
+containers, anonymous storage and the native bridge were removed and checked
+independently. No test-server or peer resource was changed.
+
+The claim-only code reuses the existing pinned product Go graph: pgx is MIT,
+Google UUID is BSD-3-Clause, Go and its crypto/system dependencies retain their
+BSD notices, and PostgreSQL/pgvector retain their PostgreSQL-license notices.
+No new dependency, model, dataset or installer redistribution is introduced.
+This is not a signed SAML response, actual AuthnRequest, metadata/trust-profile
+admission, staged verified result, first-party completion, account binding,
+sourced SAML session, MFA flow or installed browser acceptance. The actual
+SourceGuard in these tests protects existing Gitea-sourced sessions. It does
+not admit SAML as a serving provider. Structured telemetry for a future product
+path is also unqualified. IAM-104 remains open.
+
+## Signed-result/request composition approach
+
+Compose the already qualified strict verifier and persistent identity resolver
+with the actual-Identity claim overlay in a new external fork. Use an alternate
+private Go module file and sums, with the existing Control graph and the exact
+previously reviewed SAML versions, rather than changing product dependencies.
+Record the new graph and verify every added module's notices against the prior
+inventory before compilation. Do not downgrade shared Control dependencies.
+
+At start, capture the immutable identity-context ID, its revision and approved
+metadata digest under the existing target fence. Claim and staging must compare
+that source again. Retain the exact verified request ID in the verifier's private
+envelope; a valid assertion for another claimed request is not transferable.
+Stage only after strict upstream signature/profile verification, then recheck
+actual captured actor, credential, connector and profile authority. In one
+transaction, resolve the exact external identity, reserve the scoped signed
+assertion ID, store a minimized verified result and a random continuation digest,
+change claimed to verified and append the synthetic stage audit. Expire the
+result no later than either the request or the verified assertion. No XML,
+attributes, private key or raw continuation is stored as a result payload.
+
+The scoped assertion reservation belongs to the flow/result lifecycle, not a
+second receipt ledger. Keep it until the assertion can no longer be accepted,
+including any applicable clock skew. The experiment has no maintenance deletion
+path and therefore makes no retention/cleanup production claim. One-time staging
+and context fences must survive owner reconstruction. Correctly signed wrong
+request/context inputs, changed profile/source authority, duplicate assertion
+IDs on different requests, audit rollback, actual concurrent staging and both
+COMMIT wire-loss modes must return no continuation on failure. No automatic
+resend or signed-result fabrication is permitted. Product admission still needs
+first-party completion with the initiating ordinary cookie, local binding/session
+and source ownership, MFA policy, formal schema/contracts/startup and UI.
+
+The private alternate graph preserves the workspace's newer testify 1.12.1,
+`x/net` 0.61.0 and OAuth2 0.37.0 selections rather than using the Control module's
+lower standalone requirements. Its seven differences from the workspace
+baseline are etree 1.8.1 (BSD-2-Clause), crewjam/saml 0.6.3 (BSD-2-Clause),
+clockwork 0.5.0 (Apache-2.0), kr/pretty 0.3.1 (MIT), goxmldsig 1.6.1
+(Apache-2.0), objx 0.5.3 (MIT), and gotest.tools/v3 3.5.2 (Apache-2.0 plus its bundled difflib license). Six exact-version license inventories match the earlier private SAML
+inventory. The newly selected
+[objx 0.5.3 license](https://github.com/stretchr/objx/blob/v0.5.3/LICENSE) was
+read from its checksum-verified source archive. All seven retain eight legal
+files in the new private evidence. These licenses allow commercial and offline
+use and redistribution with their required notices; test-only graph membership
+does not remove those obligations. No private alternate module file or dependency
+archive is copied into the product or repository.
+
+The [signed-result staging experiment](#signed-result-staging-qualification) now
+qualifies this private graph and the bounded composition described below. The
+external experiment retains the existing MIT/BSD/Apache notices for its exact
+SAML graph and PostgreSQL licenses for its fixtures; it adds no model, dataset,
+product binary or runtime network access.
+
+## Signed-result staging qualification
+
+The external composition passed 23 roots, 96 leaf names and 111 complete
+passing names in both native race and disconnected Linux arm64 PostgreSQL
+runs, without a skipped test. Both passing-name sets and frozen/current source
+hashes matched. This comprises the ten strict protocol roots/46 leaves, seven
+actual-Identity claim roots/33 leaves and six staging roots/17 leaves. The two
+new claim cases refuse a profile revision change or disable after start. The
+protocol fixtures sign actual XML with generated private IdP keys and use the
+selected upstream signature verifier; this run starts no Keycloak or product
+HTTP/browser worker.
+
+A private alternate module/sum pair and Go source overlay compose the actual
+Identity/SSO owners with the existing strict verifier and exact persistent
+identity resolver. The seven-module/eight-legal-file difference matches its
+reviewed inventory exactly. The workspace's newer selected dependency versions
+remain selected; no product module, sum file or dependency changed. The verifier
+now retains its exact validated request ID in its private proof, and request
+start/claim additionally bind the approved identity-context ID, revision and
+metadata digest. Those fields have SQL immutability and scoped foreign keys.
+The identity resolver borrows the selected transaction through its executor,
+without opening or committing an independent identity write.
+
+Staging actually rechecks the captured current actor/credential, target and
+profile under their existing fences; checks the exact claimed request/claim ID,
+audience, callback and source snapshot; resolves the exact external identity;
+reserves the scoped assertion ID; stores a minimized verified result and a
+continuation digest; changes claimed to verified; and appends a synthetic audit
+in one transaction. The continuation is generated randomly and returned only
+after confirmed COMMIT. The result stores no XML, attributes, raw continuation
+or private key. Independently inspected request-shorter and assertion-shorter
+cases used the exact minimum deadline, and session/binding counts did not grow.
+
+Correctly signed proofs for another actual claimed request were refused.
+A proof produced under an independent actual foreign Identity/installation
+owner and approved signing context was also refused locally. Profile revision
+or disable, logout, changed password version, stale target revision, changed
+callback and a signed proof whose deadline had passed the actual database
+clock all returned no continuation and created no identity/result/stage audit.
+Reusing an assertion ID on two separately signed requests in the same scope
+was refused; an explicit fresh signed assertion succeeded. Owner reconstruction
+refused staging replay. This is not a process-restart qualification.
+
+Two concurrent stagers selected one continuation and retained one result,
+identity and stage audit. An actual audit trigger failure rolled all four
+changes back; explicit repair/retry passed. Both actual PostgreSQL COMMIT
+wire-loss modes returned `COMMIT_UNKNOWN` and an empty continuation with one
+observed COMMIT and no automatic resend. Independent readback found zero or
+one atomic verified flow, external identity, result and stage audit. Previous
+actual source-before-session, cancellation and claim-loss cases passed again
+under the composed graph.
+
+Evidence is `iam104-stage-20261113.ywp4mphe`, run
+`qualification-xnnbmxs7`, qualified input `3094de1e7a59`. Source-manifest
+SHA-256 is
+`597e4cd89e6f492e011ad7aca0504dd9e78e9abc1a4185ac4c7c67bb5c34a4fe`.
+Raw outputs, exact source/module hashes, delta legal files, matching case names,
+wire controls and container inspections remain outside Git. The owned
+containers, storage, native bridge and test processes were removed. Earlier
+attempts retained a copied fixture-name collision and an invalid nested XML
+fixture lookup; fixes changed the test helpers, not signature/profile checks.
+An optional whole-module tidy failed offline on unrelated uncached dependency
+tests; it was not a passing check. The actual selected-module readback and
+both qualification builds/tests ran with the proxy and checksum service off.
+
+This introduces four private unnumbered tables across context, external
+identity, request and verified result. It adds no product source, formal
+migration, startup dependency or public route. Its source actors are existing
+local/Gitea sessions, and the signed response is a generated IdP fixture.
+No real AuthnRequest/provider POST/ACS is joined to the earlier browser probe,
+and this run is not an installed Linux amd64 acceptance. No first-party finish,
+account linking, sourced SAML session, MFA policy, maintenance/restore ownership,
+public configuration or product UI is qualified. Result retention is not yet
+bounded by a production cleanup owner. Structured telemetry remains unqualified.
+[ADR 0084](../decisions/0084-bind-saml-results-to-request-and-browser-authority.md)
+records the target boundary. IAM-104 remains open.
+
+## First-party completion and session-source integration
+
+The next increment follows the same request/result lifecycle through explicit
+local account linking and actual Identity session issuance. The
+[upstream session codec](https://github.com/crewjam/saml/blob/v0.6.3/samlsp/session_jwt.go)
+distinguishes assertion acceptance from local session lifetime: it caps a
+configured local maximum with the signed AuthnStatement SessionNotOnOrAfter.
+Keep those separate in the private verified envelope. A pending result still
+expires at the earliest request/assertion/trust acceptance deadline. A session
+issued before that deadline is capped by the configured local/source maximum,
+approved trust lifetime and any shorter signed authentication-session end.
+Never extend an asserted session end with clock skew or a retry. Persist that
+source deadline and enforce it in both actual session expiry and every source
+recheck. This reuses the reviewed upstream source; it introduces no new license,
+model, dataset or runtime network dependency.
+
+Completion must reacquire the ordinary first-party cookie, compare its digest
+with the initiating browser, authenticate that exact current actor and recheck
+its credential version under the existing source/target/session lock order.
+Consume the exact result/continuation once. Link only the verified immutable
+external identity to that demonstrated local account; no email comparison,
+provider role or displayed NameID may select another user. A different active
+binding is a conflict. Bind/reactivate, source provenance, one issued session,
+request terminal state and audit must commit together. An audit or write failure
+returns no session; unknown COMMIT returns no token or automatic second write.
+A replay cannot reconstruct or reissue the original opaque session token.
+
+The existing Identity SessionSource is already a generic local-source tuple,
+but migration 17's foreign keys and issuance trigger currently target only
+Gitea binding/flow tables. Do not insert invented numeric subjects, OAuth
+secrets or synthetic Gitea flow rows to satisfy them. Keep the four SAML tables:
+profile, exact external identity (with explicit local binding/version), request
+and verified result. Use the existing session source columns for the actual
+SAML identity/request IDs only after an admitted database source discriminator
+or equivalent exact union constraint and single-issuance owner supports both
+protocols. Preserve legacy Gitea constraints, parent retention, manual sessions
+and all current-source checks. A combined SourceGuard must dispatch from
+server-held durable source authority and never fall back to Gitea after a SAML
+validation or storage error. An old/absent SAML owner must reject the new source.
+The precise union/retention SQL needs an external real-database prototype and
+its parent-deletion/issuance races before formal admission; it is not yet proven.
+
+The shared connector fence must stay common across protocols so current
+Gitea/SAML sources and mutation targets remain canonically ordered. Formal
+admission must permit actual SAML connector records without fictitious client
+credentials, and legacy secret inventories/provider adapters must select only
+the protocols they own. SAML's typed SP keys/trust/profile dependency is separate
+from Gitea's OAuth keyring. This is an ARC schema/startup handoff, not permission
+to occupy a migration number or alter another engine's registration.
+
+The domain owner may be written against a sealed trusted protocol dependency
+inside the SSO package while the reviewed SDK's production dependency admission
+is pending. The actual strict adapter must provide that dependency; missing
+protocol/schema/configuration fails closed. Do not supply a success stub, accept
+client-created verified envelopes or register routes before their contract and
+owners are admitted. Existing Admin MFA gates remain authoritative; an upstream
+authentication-class claim does not bypass them. Start with the Portal path and
+keep unqualified Admin/factor combinations refused.
+
+Qualification must join actual Identity persistence to completion and source
+rechecks: original-cookie/account replacement, credential rotation/logout,
+source/profile/connector disable, deadline and binding-version changes,
+concurrent finish, audit rollback, both actual COMMIT loss modes and attempted
+second issuance. Include foreign tenant/entrance/result/identity substitutions,
+legacy local and Gitea controls, and source-parent cleanup races. Then join the
+real AuthnRequest, approved Keycloak TLS exchange and provider POST to the earlier
+browser boundary. Generated signed XML fixtures and the prior cookie probe
+remain distinct evidence until that composition actually runs.
+
+## Completion owner and cross-lane admission contract
+
+The domain-only v4 review source calls actual Identity from the SSO owner. Its
+frozen tree is an unregistered review artifact, not a serving capability. The
+later HTTP increment is separately committed locally below; earlier checks do
+not qualify its changed bytes. The immutable
+source artifact is
+`/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/review-source-v4.tar`.
+Its SHA-256 is
+`84ca300c0b1e673b9d1ded6da01a15be682b4dfe0cdb85aa6316aa7fb6118286`;
+`review-source-v4-hashes.json` has SHA-256
+`9571eb20fc22d07efa105e383f253d25a2bb77acdc35884f075b3eb81c24bf99`.
+The review Git tree is `0abbf5f0db217512c136f0406145b1fe719882f4`, based on
+`629fa3df07772538a4b848b04283dff3727e0b67`. Its explicit twelve-path
+`product-owner-v4.patch` has SHA-256
+`79a99299c45e0003cbcdbaae07ec3b005eed399bce07c8b2497f3d349fe20401`.
+The artifact contains those owners, the external producer/protocol tests,
+unnumbered cumulative Up/empty-only Down SQL, alternate module locks, seven dependency/eight legal
+files and exact no-database command/output/source hashes. It contains no provider
+credential, runtime key, database, binary or vendored implementation.
+
+Five focused product test roots/thirteen subtests passed for the source in this
+artifact. The combined repository-tagged fixture compiled with no test selected;
+it executed **zero** database cases. Its thirty-four authored combined roots
+include eleven completion roots. A separate real-provider domain root and its
+readiness root are also authored and compile, but none of these new SQL/provider
+cases has run. Keep the earlier
+signed-result qualification and these new checks separate. No current full
+`make check`, `make build`, `make test`, real-provider completion or browser/UI
+qualification is claimed. The first compile-only command omitted `GOWORK=off`
+and was refused by Go; its retained output and the corrected command are outside
+Git. The first real-provider fixture compile also refused a missing checksum
+for the already selected `golang.org/x/net v0.61.0`; the offline module cache
+supplied that exact checksum before the passing compile. This adds no module
+version or production dependency. Keep both environment refusals distinct from
+product test failures and retain their outputs.
+
+### Domain and source composition
+
+The proposed product files are `sso/saml_completion.go`,
+`sso/saml_completion_owner.go`, `sso/saml_source.go`, their unit tests, and
+`identity/session_deadline.go` with its tests, all below
+`services/control/internal/modules/`. Existing Gitea catalog, connector adapter,
+startup-secret inventory and source reads explicitly select `provider='gitea'`.
+Shared connector fences still include all protocols. These changes keep a real
+SAML connector's absent OAuth credentials out of the Gitea adapter.
+
+The exact construction API is
+`NewSAMLCompletion(context.Context, *sso.Service) (*sso.SAMLCompletion, error)`.
+It validates the selected PostgreSQL projection, existing typed SSO policy and
+Identity owner. It does not register routes, contact a provider, accept a caller
+verifier or replace `Identity.Sources`. ARC selects the returned SourceGuard
+once, after admitting the complete producer/schema/source contract, and joins
+its actual maintenance/shutdown owners. Partial schema is refused. The existing
+Gitea constructor remains the default. No new production Go dependency is in
+this patch; admission of the reviewed strict protocol SDK remains separate.
+
+`Complete(ctx, SAMLCompleteInput, requestID)` accepts only server-resolved
+connector/entrance/flow and protected continuation/ordinary cookie values. The
+input has no JSON fields and redacts diagnostics. The candidate supports explicit
+Portal account linking only; it refuses Admin until actual MFA composition.
+It rechecks the original current actor, credential and exact result, locks the
+verified external identity, binds/reactivates it and issues a session through
+`Identity.IssueSessionUntilWithin`. That method retains the real account,
+source, rotation, MFA and audit owners, caps the configured lifetime by the
+persisted source end, confirms the exact postimage and never commits itself.
+Database timestamp reads are normalized to UTC microseconds. Unknown COMMIT
+returns an empty DTO; a repeat never reconstructs the opaque token.
+
+The combined SourceGuard dispatches from the common connector's immutable
+provider. Gitea reads and issuance do not depend on SAML tables. SAML requires the
+exact active local binding/version, completed result/request, current
+connector/profile/trust and source end; failure never falls back to another
+protocol. Local sessions keep their existing owner. The source guard rechecks
+time after waiting for source locks. Its current candidate remains PostgreSQL
+only; other engines have no implicit translator or fallback.
+
+### Formal schema and lifecycle obligations
+
+ARC owns the next contiguous migration number, both migration directions,
+`SchemaVersion`, `TableCount` (four new public tables), catalog fingerprints,
+runtime grants, legacy upgrades and backup/restore inventories. The artifact's
+`candidate.sql` is a cumulative **unqualified external fixture**, not an approved
+migration. Its four final table names and required relationships are:
+
+- `sso_saml_profiles`: immutable tenant/connector/context and exact IdP/SP scope,
+  metadata digest, revision, enabled state, approved trust end and typed local
+  session maximum. Material policy changes advance the revision.
+- `sso_saml_identities`: exact bounded persistent NameID under that context;
+  immutable identity/scope and once-assigned local user; explicit active flag and
+  monotonically increasing binding version. Email is never a binding key.
+- `sso_saml_requests`: immutable captured browser, current actor/credential,
+  callback, request/context/revisions, reason and expiry; exclusive claim;
+  verified-to-succeeded transition with exact authenticated user and at most one
+  issued-session identifier.
+- `sso_saml_results`: exact request/context/identity foreign keys, scoped assertion
+  ID uniqueness, continuation digest, assertion/result acceptance end and a
+  separate session-source end; only one completion binding version. No raw XML,
+  attribute set, cookie, session token or signing key is retained.
+
+The existing all-or-none session-source columns and unique source flow remain.
+Their legacy binding/flow foreign keys cannot merely be removed: the candidate
+replaces their authority with exact protocol-dispatched issuance checks, source
+parent locks and retained-parent deletion checks, while preserving the Gitea
+one-issuance path. The candidate adds exact connector/context and request/context/result compound
+foreign keys; source reads also compare the immutable request context and ID.
+Both directions of concurrent parent deletion/issuance still need real PostgreSQL
+proof. Missing parents after a wait return the stable unusable-flow outcome. Formal rollback must refuse to discard any retained
+SAML authority, restore the exact legacy foreign keys/provider credential rules
+and issuance owner, and remove only empty candidate objects. The external `candidate.down.sql` and its three empty/refusal/transaction-rollback
+cases are authored but unexecuted. No formal Down migration or existing migration
+is changed by this handoff.
+
+Cleanup must use the existing typed retention, batch and timeout policy, delete
+results before terminal requests and preserve every parent referenced by any
+session, including revoked/expired sessions until their own retention permits
+removal. Bound identities/profile scope remain retained. Replay reservation
+cannot disappear before the whole assertion acceptance window, including the
+approved skew. Restore must advance common connector authority and terminalize
+pending SAML intent without reactivating old sources. Cleanup/restore registration,
+actual cancellation/drain and restore-round-trip tests remain to be implemented.
+
+### Minimal HTTP and UI handoff
+
+DEV owns public OpenAPI/Problem/generated admission; WEB owns the rendered
+configuration/account/sign-in surfaces. The following route shapes are a proposal,
+not installed endpoints. The current candidate computes the exact callback
+`/api/v1/sso/saml/connectors/{id}/acs`; changing it invalidates captured requests.
+
+- First-party start POST creates a flow for one server-resolved connector and
+  entrance. Explicit linking needs the current local actor, password confirmation
+  and reason. The start needs a bounded idempotency key/fingerprint in the same
+  request lifecycle; that producer/idempotency path is not implemented yet.
+- The exact ACS POST accepts only bounded SAML form fields and durable
+  flow-cookie/RelayState/request proof plus strict signature verification. Its
+  narrowly selected protocol boundary must handle the reviewed null Origin
+  case; it cannot weaken ordinary mutation Origin/CSRF checks. It grants no
+  local session. It redirects with 303 to one fixed first-party landing and
+  transfers only a protected, host-only HttpOnly continuation cookie.
+- A flow-status GET returns minimized state only for the same protected browser
+  and current actor. It discloses no NameID, provider attributes or token and
+  performs no binding/session mutation.
+- The landing obtains normal CSRF through `GET /api/v1/auth/csrf`. Completion
+  POST requires the ordinary exact Origin, same-origin Fetch Metadata, one valid
+  CSRF token, exact ordinary cookie and continuation. Its strict empty body
+  rejects tenant/user/claim substitutions. It consumes one flow and never
+  repeats a token-bearing success after an unknown result.
+
+The cross-site 303 landing GET can still have cross-site Fetch Metadata and lack
+the Strict CSRF cookie, as the actual browser probe showed. It must not mutate an
+account. The normal subsequent first-party CSRF request and explicit POST close
+that gap without an invariant switch. Session values appear only in the existing
+secure Set-Cookie path; completion rotates the ordinary session, clears temporary
+proof and refreshes CSRF. Failures expose fixed stable codes and actionable fresh
+sign-in recovery, never provider XML/error objects. Unknown COMMIT must not be
+automatically retried.
+
+The private `qualify-live-completion.py` entry refuses to start until the exact
+34-root SQL candidate passes both native race and disconnected topologies. It
+then reuses that Linux arm64 test binary, with pinned PostgreSQL and Keycloak in
+one network-none namespace, verified IdP TLS, the real AuthnRequest/password/
+signed-response exchange and actual completion/source/revocation owners. It has
+no host port, HTTP ACS or rendered browser. This entry has only passed Python
+syntax inspection; neither database nor provider was started for it. It is not
+a substitute for the later approved real-browser/install window.
+
+Structured logs/metrics/traces must use bounded protocol/action/outcome labels
+and the server request ID, excluding XML, attributes, NameID, passwords, cookies,
+continuations and reason text. The candidate uses the actual transactional audit
+owner (`sso.saml_binding_linked` and `auth.sso_login_succeeded`); DEV must admit
+its action/error metadata and Web must supply both locales. Anonymous sign-in,
+Admin MFA, production cleanup/restore, real provider-to-ACS/browser completion,
+formal install/offline UI and the complete repository gates remain open. This
+handoff does not complete IAM-104.
+
+## First-party completion HTTP composition candidate
+
+The next owner increment adds only the ordinary first-party completion adapter.
+It must dispatch after the existing exact Origin, Fetch Metadata, audience-cookie
+and CSRF checks in `identity/http.Handler.api`. Keep the default owner nil and
+match only canonical
+`POST /api/v1/sso/saml/connectors/{connector_id}/flows/{flow_id}/complete`.
+GET does not consume a result; ACS is a different path and gains no exception
+from this adapter. Public OpenAPI/Problem/generated/UI and startup selection
+remain with DEV/WEB/ARC, and no schema is registered by IAM.
+
+The exact selected domain owner must belong to the same SSO/Identity instance.
+The outer dispatcher also rejects a different Identity pointer. Authenticate the
+ordinary session without touching it before calling the license-integrity owner,
+whose contract requires a current actor; domain completion then reacquires its
+exact captured actor under the existing transaction fences.
+Use a strict empty JSON object, reject query/encoded path aliases and require
+one canonical Idempotency-Key equal to the flow ID. The flow itself is the
+one-use mutation identity; repeated completion cannot recover an opaque token.
+No tenant, local user or provider proof is accepted from body/query/header.
+Read the initiating ordinary session through the existing cookie policy. The
+verified continuation uses the existing host-only HttpOnly Lax SSO-flow cookie
+only after ACS has replaced its old browser proof. This is one active SSO intent
+per browser, not a relaxation of the separate cross-site POST flow-cookie problem.
+Missing/duplicate cookies fail before domain mutation. Require the qualified
+HTTPS transport and Portal entrance; unqualified Admin MFA remains unavailable.
+
+Completion finishes previously accepted, password-confirmed linking work, like
+the current accepted Gitea callback. The narrowly selected adapter therefore
+checks actual business-license integrity, rather than changing the global
+recovery matcher or permitting new business after expiry. It runs only after
+ordinary Origin/CSRF and retains the domain's exact current actor/credential/
+result checks. No other route receives a license or authentication exception.
+Use the existing typed callback-rate limit. On success set the ordinary session
+cookie through the shared policy, clear the continuation and old CSRF context,
+and return the standard minimized Me projection, never IssuedSession/Token.
+The server's actual absolute expiry and source guard remain authoritative even
+when the ordinary cookie has the configured maximum age.
+
+An unknown completion COMMIT emits no token and clears only the continuation;
+it performs no recovery query, second mutation or automatic retry. A known
+rollback/storage failure retains proof for an explicit permitted retry. Preserve
+stable common Problems and admit operation-specific unknown-outcome/no-auto-retry
+metadata with DEV before a product client can call the route.
+
+Add tests for exact route/body/key/cookie authority, same-owner composition,
+missing/hostile/null/duplicate Origin, cross-site Fetch Metadata, missing/wrong/
+duplicate CSRF, foreign scope/entrance and claim substitutions. The real SQL
+fixture must drive the actual identity HTTP boundary through completion, cookie
+rotation, source expiry/revocation, audit rollback and both actual COMMIT loss
+modes. No adapter-only check or generated successful response qualifies this
+flow. This increment adds no dependency, model, dataset or runtime network path;
+it reuses the already reviewed Go/Identity/SSO/transaction/cookie owners.
+
+The HTTP increment now contains the typed same-owner predicate, concrete SSO
+adapter, narrow selected Identity dispatch and five authored HTTP roots. The
+original common Origin/Fetch Metadata/CSRF code and global license recovery
+matcher are unchanged. The ordinary session is authenticated without touch before
+license observation, and the domain retains its exact captured-actor transaction.
+No public contract, producer, schema, startup selector or ACS route is installed.
+
+A separate no-database unit opportunity was refused before Go with raw 78:
+1,078,312,960 free bytes against 2,147,483,648 required;
+165,050,195,968 disk-free bytes against 16,106,127,360 required.
+It held and released the original nonblocking workstation carrier, started no
+compiler/test/database/provider/browser, and queued no retry. The new HTTP source
+has only passed formatting and diff inspection; it is **not compiled or tested**.
+The earlier v4 five-root/thirteen-subtest check remains bound to v4 bytes and does
+not qualify this increment. The separately completed Agent gateway qualification
+and its 300-second opportunity are not reused for SAML.
+
+### Local HTTP source and exact next qualification input
+
+The seventeen-path owner candidate is safely committed only on local branch
+`codex/iam-saml-completion-http-20261113`:
+`c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba`, tree
+`ec378e511d51cdd4cbd7a2ed103115e6a2c05a28`, parent
+`e9e715e223f6879339a29fbd2c4b12473c0b026e`. It contains actual domain,
+source/session and HTTP owners with their authored tests, not a verified-result
+callback or success double. The new source remains uncompiled/unexecuted and
+is not pushed to main. No runtime, schema, OpenAPI or generated admission is
+included. The default handler never assigns the new owner.
+
+The source bundle is
+`/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-source-v5.bundle`,
+SHA-256 `bed3c3e2b37c799ef33c6ae3e0869dac0f8f379049131d6c569eebf536dc9769`.
+Git verified its named candidate ref and exact `e9e715e2` prerequisite. The
+seventeen-path patch SHA-256 is
+`1dd1c40f241771aed5522c3cc6be2eeaa453df2d926cfb7cf97d360f4d769431`.
+The complete fifty-six-file source/review archive, in that same directory, is
+`http-completion-v5-review-v2.tar`, SHA-256
+`122a7e599b919d7cee294a7733fd2ce54d31553f8ce183706e30bbec4e3f6308`;
+its adjacent manifest SHA-256 is
+`395383d5ff5fc5c525e0a81d9ee48a57551b3f59df83aeca386ccde2d52eea4f`.
+The first v5 archive remains immutable; v2 additionally includes required path/
+module-selection inputs and explicit qualification prerequisites. Original legal
+notices and unexecuted SQL/protocol/provider fixtures remain separate from a pass.
+
+Composition uses the existing domain construction and SourceGuard, then assigns
+that same owner to `identityHandler.SSO.SAMLCompletion`. The new exact HTTP APIs
+are `sso/http.SAMLCompletionPath(path string) bool` and
+`(*sso/http.Handler).HandleSAMLCompletion(w http.ResponseWriter, r *http.Request,
+audience, requestID string) (any, int, error)`. The same-owner predicate is
+`(*sso.SAMLCompletion).MatchesService(base *sso.Service) bool`; it verifies
+construction identity only and grants no readiness or actor authority.
+
+Before any future check, select the exact clean local source commit above.
+`check-saml-http-once.py` now refuses another HEAD or dirty source. Its ten
+selected no-database roots include the five new HTTP roots; it reuses the
+original nonblocking guard, 2 GiB/15 GiB admission, Go p1/GOMAX2/GOMEM512,
+local offline toolchain and bounded test command. Adding the exact-source/clean
+preconditions after the refusal changed no test, threshold, timeout or retry
+behavior, and no new invocation occurred. The archive authorizes no execution.
+The original combined SQL qualifier still tests the domain/protocol slice; it
+cannot qualify HTTP merely because the adapter compiles in another package.
+
+Production start must authenticate and observe actual new-business admission
+before creating the accepted linking intent. A sealed result can only derive
+from that admitted request and strict signed producer. The completion adapter
+can then observe integrity for already accepted work after expiry. Actual HTTP
+success/rollback/COMMIT-loss tests must compose the real license verifier and
+serving owners; do not substitute a checker returning success. Schema/source
+parent races, anonymous sign-in, Admin MFA, actual provider/ACS/browser, cleanup/
+restore, full gates and product UI all remain open.
 
 ## Alternatives, prototype and finished-item acceptance
 

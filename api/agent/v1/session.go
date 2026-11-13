@@ -35,11 +35,12 @@ const (
 	// Pacing.IdleSeconds extends it for an agent paced more slowly.
 	SessionIdleSeconds = 3 * HeartbeatSeconds
 	// SessionFallbackRetrySeconds is how long an agent stays on HTTPS long-polling after
-	// the stream could not be opened before it tries the stream again.
+	// the stream could not be opened before it tries the stream again. Previously usable
+	// streams use SessionFallbackDelay with the currently adopted pacing.
 	SessionFallbackRetrySeconds = 300
 	// SessionFallbackProbes is how many times in a row the stream must fail while HTTPS works
-	// before an agent stays on HTTPS. Once is what a control restart looks like; only a path
-	// without HTTP/2 does it every time.
+	// before an agent stays on HTTPS. A previously usable stream has a bounded fallback
+	// through SessionFallbackDelay; paired failures do not prove permanent incompatibility.
 	SessionFallbackProbes = 2
 )
 

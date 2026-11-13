@@ -67,6 +67,12 @@ The parent injects `server.listen_address`, certificate references and the valid
 
 ## Lifecycle and verification
 
+Dedicated Agent connections expose their owned drain and hard-close times through
+`ConnectionDrainAt` and `ConnectionCloseAt`. The gateway can advertise relative
+durations after authentication. These values come from the accepted TLS socket,
+and request headers cannot choose or extend them. Shared listeners return zero
+times; their ownership and shutdown behavior are unchanged.
+
 `TestTransportActualIPv6HTTPAndHTTPS` uses real IPv6 loopback sockets for localhost
 and bracketed `::1` origins, normal DNS/IP SAN verification, distinct audiences and
 mode-correct cookies. The focused package race run passes locally. It does not

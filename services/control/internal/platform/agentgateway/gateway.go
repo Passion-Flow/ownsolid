@@ -9,8 +9,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -57,13 +59,16 @@ type Policy struct {
 type Problem func(error) (string, int)
 
 type Gateway struct {
-	backend  Backend
-	policy   Policy
-	problem  Problem
-	server   *grpc.Server
-	slots    chan struct{}
-	mu       sync.Mutex
-	sessions map[string]*session
+	backend                Backend
+	policy                 Policy
+	problem                Problem
+	server                 *grpc.Server
+	slots                  chan struct{}
+	mu                     sync.Mutex
+	sessions               map[string]*session
+	connectionHints        atomic.Uint64
+	connectionHintFailures atomic.Uint64
+	idleTimeout            time.Duration
 	// draining ends when Drain is called, and every session with it.
 	draining context.Context
 	drain    context.CancelFunc
@@ -81,8 +86,7 @@ var errReplaced = errors.New("AGENT_SESSION_REPLACED")
 // errDraining ends the sessions of a gateway that is stopping; agents move to another one.
 var errDraining = errors.New("SERVICE_NOT_READY")
 
-// idleTimeout closes a session that sends nothing; tests shorten it.
-var idleTimeout = time.Duration(wire.SessionIdleSeconds) * time.Second
+const defaultIdleTimeout = time.Duration(wire.SessionIdleSeconds) * time.Second
 
 // The session codec is selected by the "application/grpc+json" content type. A stream in
 // any other encoding fails to decode its first message.
@@ -91,10 +95,14 @@ func init() { encoding.RegisterCodec(wire.SessionCodec{}) }
 // New builds a gateway. The gRPC server is never bound to a socket; ServeHTTP hands it
 // streams from the control HTTPS listener.
 func New(backend Backend, policy Policy, problem Problem) (*Gateway, error) {
-	if backend == nil || problem == nil || policy.MaxSessions < 1 || policy.ExchangeSeconds < 1 {
+	return newGateway(backend, policy, problem, defaultIdleTimeout)
+}
+
+func newGateway(backend Backend, policy Policy, problem Problem, idle time.Duration) (*Gateway, error) {
+	if backend == nil || problem == nil || policy.MaxSessions < 1 || policy.ExchangeSeconds < 1 || idle <= 0 {
 		return nil, errors.New("AGENT_GATEWAY_CONFIGURATION_INVALID")
 	}
-	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}}
+	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}, idleTimeout: idle}
 	g.draining, g.drain = context.WithCancel(context.Background())
 	g.server = grpc.NewServer(
 		grpc.MaxRecvMsgSize(wire.MaxSessionMessageBytes),
@@ -230,7 +238,7 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 		}
 	}()
 	// A session may stay silent for as long as its pacing allows (ADR 0013).
-	idleAfter := idleTimeout
+	idleAfter := g.idleTimeout
 	idle := time.NewTimer(idleAfter)
 	defer idle.Stop()
 	var aged <-chan time.Time
@@ -281,14 +289,29 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 			}
 			g.sessions[node] = current
 			g.mu.Unlock()
+
 			registered = true
+			if !age.IsZero() && reply.Disposition.AcceptsSessionRebalance() {
+				now := time.Now()
+				drain := age.Sub(now)
+				closing := httpserver.ConnectionCloseAt(ctx).Sub(now)
+				if drain > 0 && closing >= drain {
+					if err := stream.SetHeader(metadata.Pairs(wire.SessionDrainHeader, strconv.FormatInt(int64(drain), 10), wire.SessionCloseHeader, strconv.FormatInt(int64(closing), 10))); err != nil {
+						g.connectionHintFailures.Add(1)
+						slog.Warn("agent_session_connection_hint_failed", "node_id", node, "connection_id", httpserver.ConnectionID(ctx))
+						return nil
+					}
+					g.connectionHints.Add(1)
+				}
+			}
+
 			slog.Info("agent_session_opened", "node_id", node, "connection_id", httpserver.ConnectionID(ctx))
 		}
 		if e := stream.SendMsg(&reply); e != nil {
 			return nil
 		}
 		if reply.Disposition != nil && reply.Disposition.Pacing != nil {
-			idleAfter = max(idleTimeout, time.Duration(reply.Disposition.Pacing.IdleSeconds())*time.Second)
+			idleAfter = max(g.idleTimeout, time.Duration(reply.Disposition.Pacing.IdleSeconds())*time.Second)
 		}
 		// Silence counts from the reply: a held claim is control's time, not the agent's.
 		idle.Reset(idleAfter)
@@ -354,5 +377,9 @@ func (g *Gateway) exchange(ctx context.Context, address, node, credential string
 
 // Samples reports the open sessions and held claims for the metrics store.
 func (g *Gateway) Samples() []telemetrystore.Sample {
-	return []telemetrystore.Sample{{Name: "ownsolid_agent_gateway_sessions", Value: float64(g.Sessions())}}
+	return []telemetrystore.Sample{
+		{Name: "ownsolid_agent_gateway_sessions", Value: float64(g.Sessions())},
+		{Name: "ownsolid_agent_gateway_connection_hints_total", Value: float64(g.connectionHints.Load()), Labels: []telemetrystore.Label{{Name: "outcome", Value: "queued"}}},
+		{Name: "ownsolid_agent_gateway_connection_hints_total", Value: float64(g.connectionHintFailures.Load()), Labels: []telemetrystore.Label{{Name: "outcome", Value: "failed"}}},
+	}
 }

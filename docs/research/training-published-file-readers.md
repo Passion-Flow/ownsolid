@@ -129,7 +129,9 @@ The proposed owner boundary is recorded in
 
 ## Concrete owner integration surface
 
-Both owning packages now prepare the same narrow constructor shape:
+The original-author candidate qualified at e639db90 exposes the same narrow
+constructor shape in both owning packages; these APIs remain on its private
+source until integrated:
 
 - datasets.OpenPublishedReader(path, tenant string) (*datasets.PublishedReader, error).
   Set datasets.Service.PublishedReader and leave Store nil. PublishedSourceWithin,
@@ -355,6 +357,9 @@ it must not silently execute the reader candidate instead.
 
 ## Prepared native authority/writer cases and parent-boundary review
 
+The following observations describe preparation before the authorized single
+attempt recorded below; they are not its final opportunity status.
+
 The additive test-only source is e639db9035b0b2c0229c90175493c605f328e295,
 based on preserved 5b73fa05. Production code is unchanged. Dataset coverage now
 keeps its real writer open, checks its exclusion before/after reader Close,
@@ -374,8 +379,10 @@ Formatting, layout and roadmap checks passed. The workstation compilation
 attempts were refused before startup by its permanent guard (raw code 75); no
 new tagged compilation/body result is claimed for e639db90. The unchanged
 production candidate's earlier qualifications remain scoped to their sources.
-No unchanged complete make test was rerun; that gate remains open, and the
-shared Help issue remains with WEB.
+No unchanged complete make test was rerun; that gate remains open. WEB
+subsequently recorded its focused Help fixes and seeded/fresh-client evidence
+at f11aa11fc298c3eefed696a6f05db9e637ab0e05. This lane does not treat the
+previous Help failure as an unchanged blocker or inherit WEB test results.
 
 The existing native event parent SHA-256 is
 dc3f6f5eb9d35dc421e06101a7ce1cdab1adfe329b283901948a0c949b6dc3a1.
@@ -502,10 +509,363 @@ carrier and starts no Docker/Go/SQL body. The actual output is retained as
 server-input-check.log, SHA-256
 9ccb4cb633dae8db504cebc01fd3c2800367d043ef0b92cc596d9f60c0e8674d.
 
-The native opportunity remains unused: zero Linux carrier attempts, no new
-native compilation or Go/SQL bodies, no processor/GPU/fleet and no runtime
-resource started or left running. The workstation rule stays nonblocking busy
-75 with no additional queue. No unchanged complete suite was rerun; the shared
-Help issue remains WEB-owned. No P1 box, gateway/restricted-role qualification
-or fleet budget changed. The next native step is review of these concrete
-artifacts before execution; eligible independent owned work need not wait.
+Preparation itself made no Linux carrier attempt and started no native
+compilation, Go/SQL body, processor/GPU/fleet or runtime resource. The reviewed
+wrapper was then authorized for exactly one attempt; its actual refusal and
+opportunity status are recorded below. The workstation rule stays nonblocking
+busy 75 with no additional queue. WEB owns its now-recorded focused Help fixes;
+no complete suite result is inferred here. No P1 box, gateway/restricted-role
+qualification or fleet budget changed.
+
+
+## Authorized single native attempt: first carrier refusal
+
+The first opportunity used the exact reviewed bounded-v2 entry, source
+e639db9035b0b2c0229c90175493c605f328e295 and frozen plan/binding above. The
+outer raw exit code was 73, FIRST_LOCK_BUSY. Its one blocking first-carrier
+acquisition reached its 60-second deadline before ownership. The second
+carrier was never opened or attempted. There was no in-round retry and this
+first opportunity was consumed; it did not authorize an automatic
+second attempt. No parent, source, test, admission threshold or timeout was
+changed after the refusal.
+
+| Actual observation | Result |
+| --- | --- |
+| Complete entry wall time | 60.128525 seconds |
+| Parent elapsed at its final record | 60.055 seconds |
+| source_head child | Exit 0, reaped, group absent on audit |
+| source_status child | Exit 0, reaped, group absent on audit |
+| First carrier | FIRST_LOCK_BUSY, raw 73, no ownership obtained |
+| Second carrier | Not opened or attempted |
+| Original admission, PG creation and Go | Not started |
+| Native roots, subtests, packages and skips | All zero; no native test result |
+| Schema and DSN | None created; no Go fixture environment applied |
+| Actual parent platform | Linux x86_64, Python 3.12.3 |
+
+The pre-entry resource snapshot had 738 GiB disk free, MemFree 10,290 MiB,
+MemAvailable 20,038 MiB and full PSI avg10/avg60 of 0.32/5.71. That snapshot
+was not admission: first-lock refusal occurred before either the strict PSI
+check or original preflight ran. The recorded policy remains Free >=3 GiB,
+Available >=12 GiB, disk >=15 GiB and full avg10/avg60 <=5, with no competing
+heavy process. The observed 5.71 is not relabelled a passing resource check.
+
+The read-only post-run audit found no live exact entry/wrapper process, no
+remaining recorded child group and no container with this run's exact name
+lane-trn-reader-cda71224da6549fe95d9de11dae66c1d. Its inner evidence directory
+contains only result.json; no DSN, database, anonymous volume or worker was
+created. The first carrier FD was closed and its process exited; the second
+was never opened. Both permanent regular carriers still have their original
+device/inode/UID, zero size and 0644 mode: 29/82/0 and 64512/7508772/0. The
+audit acquired neither carrier and made no cleanup mutation; foreign resources
+were untouched. e639db90 remains clean and c527fb68 remains unchanged.
+
+| Retained evidence | SHA-256 |
+| --- | --- |
+| /root/lane-trn-reader-native-outer.jdncpuqh/receipt.json | 02143c12cee6538123d3d5b9aae20c59c64e038c62289f3298d798f66603ab45 |
+| /root/lane-trn-reader-native.2gldxtkt/result.json | 53b36680e6eb696f01c2ddbb5689ac99155f09e825742f081b6437f4a8c0338f |
+| outer.log in the receipt directory | a362548be564ba5dfb1afec9f294859e3cb6a07a525cc93c8fd19a537da2089f |
+| owned-cleanup-audit.json in the receipt directory | ef394161d778bde314cae5fb359b1fcf07bf9a4bcc54d4ae6de6cda60bb8e7f5 |
+| evidence-manifest.json in the receipt directory | be908255c4089a49f929c570d88b7c4d2243c2a43a821be60c67970659ba096d |
+| /root/lane-trn-tools/reader-native-single-attempt-e639db90.tgz | be3ae7c56dec995a1d44546a4fafa7b663edf6fcd2025745127f760a462f8c60 |
+
+The archive has 20 entries and 32,965 bytes; it includes the exact reviewed
+wrapper inputs, receipt/result, audit and per-file manifest. No model, data or
+database enters Git. The owner reader source stays private and unmerged.
+Darwin and kernel-prototype qualifications keep their original source/platform
+scope; zero native bodies does not establish current-role, writer-exclusion,
+SQL, restricted-role or installed-gateway acceptance. Actual ARC constructor,
+startup rollback/drain/Close, read-only namespace delivery, Model/Node and
+protected-function/grant contracts and the original fleet budgets remain open.
+All product boxes remain unchanged.
+
+
+## Authorized new opportunity after carrier release
+
+A new explicit opportunity followed actual release of the permanent carriers.
+It used the same reviewed bounded-v2 entry and clean frozen e639db90, unchanged
+plan/binding, inputs, thresholds and timeouts. It did not relabel or overwrite
+the original FIRST_LOCK_BUSY receipt/result. Both carriers were acquired, but
+the original admission failed on free memory before any PostgreSQL or Go work.
+The entry returned RESOURCE_REFUSED (driver/outer raw 78), with original
+admission child raw 1. Its complete wall time was 0.359098 seconds and parent
+elapsed at final record was 0.273 seconds. This new opportunity is consumed;
+there was no in-round retry or wait for memory to recover.
+
+| Actual admission field | Observation | Original requirement |
+| --- | --- | --- |
+| MemFree | 1,759,084,544 bytes | >=3,221,225,472 bytes; refused |
+| MemAvailable | 16,132,050,944 bytes | >=12,884,901,888 bytes |
+| Disk free | 790,032,785,408 bytes | >=16,106,127,360 bytes |
+| Full PSI avg10 / avg60 | 0.01 / 0.08 | Both <=5 |
+| Competing heavy process count | 0 | 0 |
+
+The raw assertion was shared-host free memory below admission threshold. No
+threshold was lowered, cache flushed, other process stopped or fixture
+changed. source_head/source_status exited 0 and original_admission exited 1;
+all three were reaped and their groups were absent on audit. No compile,
+native owner root/subtest/package, SQL, processor, GPU or fleet body started.
+There were zero test actions, including skips; this is no native test result.
+No schema or DSN was created and the Go fixture environment was not applied.
+The actual parent ran Linux x86_64, Python 3.12.3.
+
+Both owned carrier descriptors were released with no recorded release error.
+The read-only audit found no live exact entry/wrapper process and no container
+with the exact run name lane-trn-reader-dfbcb03d811645eda2500510611230f9. No
+container or anonymous volume creation was attempted; the private evidence
+directory contains only admission.log and result.json. Both permanent regular
+carriers remain 29/82/0 and 64512/7508772/0 (device/inode/UID), mode 0644 and
+zero bytes. The audit acquired neither carrier and performed no cleanup
+mutation or foreign-resource operation. All heavy leases had already ended
+before the subsequent evidence/document work.
+
+| New opportunity evidence | SHA-256 |
+| --- | --- |
+| /root/lane-trn-reader-native-outer.j49w8wib/receipt.json | 2a2f375737ca697d66aceb549712b1d7732db4fe541dc5805312985ff50e8dfa |
+| /root/lane-trn-reader-native.f6vcj2uw/result.json | df9f2e6a4385484a67506722a5962d02da1f1034646b6629b3ce499e5aafe09f |
+| admission.log in the result directory | f984c56f75fbef62f6ffc38031238c8e6ec340bdf347ffd475e9fc1ce9d53b3a |
+| outer.log in the receipt directory | 0837f96c65f9515f5511087ca7ae34713203eec29d538a1b2cda50f62c551c93 |
+| owned-cleanup-audit.json in the receipt directory | dc701e64adf36e374ec23236b659d35414faef94354a56068b4fe11270000e0d |
+
+The new archive /root/lane-trn-tools/reader-native-release-attempt-e639db90.tgz
+has 21 entries and 33,508 bytes, SHA-256
+18b850bc392e18942ff243f2f6875787972020690a1cd90688d19ff25286e613.
+Its evidence-manifest.json in the receipt directory hashes to
+95ac911b3b4f345945b32a6d7e55bfe7cc0f1765f0c27cbe0dfcfd0e1ac890a7.
+It includes the exact reviewed inputs and new admission/result/receipt/audit.
+
+The prior receipt/result retain their original hashes. The reader producer
+source stays private and unmerged; actual owner SQL, ARC construction/startup
+rollback/drain/Close, read-only namespace delivery, Model/Node/protected SQL
+and original fleet-budget acceptance remain independent open work. No new
+Mac wait or whole-suite run was added. Product boxes and original support
+scopes remain unchanged.
+
+
+## PostgreSQL readiness status contract
+
+The post-DEV opportunity reached the cached PostgreSQL fixture but exposed an
+error in the prepared v2 wrapper: its first pg_isready returned raw 2 while
+initdb was still writing configuration, and the wrapper treated that as fatal.
+The [PostgreSQL 18 exit-status contract](https://www.postgresql.org/docs/18/app-pg-isready.html)
+defines 0 as accepting, 1 as rejecting, 2 as no response and 3 as no connection
+attempt. A response of 2 does not establish a permanent database failure.
+
+The chosen minimal preparation fix is to retain 1 and 2 as startup probe
+outcomes inside the existing bounded readiness loop, require 0 before any
+extension or Go invocation, and keep 3/other errors fatal with their raw
+status. Preserve every numeric timeout, carrier rule, resource/image/source
+binding, test root and cleanup limit. Reject indefinite polling, native-body
+retry, reclassifying the original failed attempt or executing a modified parent
+under the consumed fixed-v2 opportunity.
+
+Pure local regression checks simulate 2/1/0 readiness, invalid-parameter
+status 3, and persistent status 2 exhausting the existing readiness window.
+They verify that readiness timeout never starts Go and still cleans only
+the exact owned fixture. All 29 checks passed in 0.029 seconds. Docker,
+permanent carriers and Go are mocked; this is no native qualification.
+No new dependency or licence is introduced.
+
+
+## Post-DEV opportunity: actual startup failure and release
+
+The separately authorized post-DEV opportunity used unchanged bounded-v2
+with clean e639db90. Its fresh pre-entry original preflight passed; its
+guarded original preflight passed again after both carriers were acquired.
+The guarded observation was MemFree 4,791,730,176 bytes, Available
+20,741,779,456 bytes, disk free 789,123,780,608 bytes, full PSI avg10/avg60
+0.00/0.01 and no competing heavy process. These actual observations replace
+no earlier refusal or threshold.
+
+The entry returned 1 in 2.344562 seconds (parent final-record elapsed 2.266
+seconds): CHILD_FAILED, phase pg_ready, raw child 2. Source head/status,
+admission, Docker context/image identity and PG create/start each returned 0.
+The first readiness probe returned 2 while postgres.log still showed initdb
+creating configuration. The wrapper's readiness-state error above stopped
+the attempt. No second native invocation or changed parent ran in this
+opportunity, and its failure remains intact.
+
+No extension command, product schema migration, Go compiler/test, native owner
+root/subtest/package, processor, GPU or fleet body started. There were zero
+test actions, including skips; no native owner/SQL result is inferred. No Go
+fixture environment was applied. The parent was Linux x86_64/Python 3.12.3;
+the cached pinned Linux image identity passed, but no server SQL/version
+query or vector extension ran.
+
+All cleanup child exits were 0, including exact presence/identity, logs, stop,
+remove-v, container readback and owned-volume readback. The independent
+read-only audit found all 15 recorded child groups absent, no exact live
+entry/wrapper process and no DSN or named container. Container
+a1a93e2e2e77805c998a9b99d71ede864c9023515fac5d2f2fa67023fc1c1183
+(name lane-trn-reader-a7eebd7223234f779de2a8607e3b06d5) was removed. Its
+volume e22ae2a318efce7d269851b7353c674f4bdfc69728dcd53fe43619f611d74a68
+was recovered from its container-bound unmount event and absent from the
+successful volume-list readback. Both original carrier FDs were released;
+the regular objects remain 29/82/0 and 64512/7508772/0, mode 0644, zero bytes.
+No post-run cleanup mutation or foreign-resource operation was needed.
+
+| Actual retained evidence | SHA-256 |
+| --- | --- |
+| /root/lane-trn-reader-native-outer.ifbikxy_/pre-entry-receipt.json | 9dfcb34dc7a854a162df40acf64423cf2b9bf91470ca4782566e7c25487ee899 |
+| receipt.json in that outer directory | 6de5dbfc7a5160fa2cb5e892ea43cbda63bfb895cf958a4e3e136f70019f92da |
+| /root/lane-trn-reader-native.xbl3dpmg/result.json | b64bc5892bcf712be222c23bfdf158382414b07b38606cded3e12b6b314f3faf |
+| admission.log in that result directory | 18dff289bb87ccf3b2d88fdfc69e4c2235cae0627c0516571dbe7169bae9f196 |
+| postgres.log in that result directory | 90ffb397eb61630755f7cba46d68b5850a4f3b827a76853f9166c810098b7ac3 |
+| outer.log in the outer directory | d28f65a268fe7e34e16e17beb23d3500f7db00ee81ce646b31553a5aa4956ef9 |
+| owned-cleanup-audit.json in the outer directory | 20379726457cbb5cde4b26b39ba04a5eea16185398d3245290ab14fa34d9a01b |
+
+Subsequent archive/download SSH commands failed with transport 502/raw 255.
+No successful archive or local raw-evidence download is claimed for this
+attempt. That post-run transport failure is separate from the real pg_ready
+raw 2 and entry raw 1. Cleanup had already completed and been audited.
+Earlier receipts, sources, plan/binding and native/refusal classifications
+are unchanged.
+
+## Prepared v3 readiness correction
+
+The local review artifact is native-bounded-review-v3 in the private
+qualification directory. Only the parent conditional changes from rc != 1
+to rc not in (1, 2). v2-to-v3.diff is the exact one-line delta; config and
+entry bytes retain their v2 hashes. No numeric bound, identity, carrier,
+resource, image, test-root or cleanup behavior changes.
+
+| New preparation artifact | SHA-256 |
+| --- | --- |
+| reader_native_bounded.py | 463b216824c437ccad5cd09444ed8c7594bcc3a33bca04b30ae87d6e16d77284 |
+| v2-to-v3.diff | 376b9de42527638fe91108a34d4917673b9574b1cc7b3ad34420c35f2cdac6f1 |
+| local-review.log (29 pure local checks) | 1bb0562dde3fb44441aa5d02e3c0bdc70902801dae57e26954dff340f92cfe47 |
+| Complete local manifest.json | 12a3d7f59af7b28c99f8e3fd90fe6feef3108617349322b8dc8b636b56bce5dc |
+| Local reader-native-bounded-v3-review.tgz (30,024 bytes) | c0203119f335e0900a7ae6638fd44be45891f2ab1cf215d9d177b2035aed120e |
+
+The three core files transferred to /root/lane-trn-tools/reader-native-bounded-v3/
+with exit 0. Its single read-only --check-config also returned 0, but raw
+output and remote SHA readback were not independently fetched. The remaining
+review metadata was not uploaded after the separate transport failures; the
+complete local manifest/review remains available. No v3 --execute occurred.
+The consumed frozen-v2 opportunity does not admit a modified-parent execution.
+Owner source remains private/unmerged, native reader/SQL and ARC actual
+construction/startup/Close/drain, Model/Node/protected SQL and fleet budgets
+remain open. All product boxes and original support scopes remain unchanged.
+
+
+## Native Linux owner reader qualification
+
+The explicitly reviewed v3 opportunity ran clean frozen
+e639db9035b0b2c0229c90175493c605f328e295, production owner bytes from
+5b73fa05305c2c5d8178a256683ede8b4e9ef99f. The actual v2-to-v3 parent delta
+was verified as the one readiness conditional, SHA-256
+376b9de42527638fe91108a34d4917673b9574b1cc7b3ad34420c35f2cdac6f1.
+All prior source, plan, binding and three receipts matched their frozen
+hashes. Thirteen confirmed missing review files were created exclusively;
+three existing core files were verified without writing, and the earlier
+server-input-check.log was retained. The new run-input manifest binds the
+actual diff, complete delivery inventory, config/entry/plan/binding/source
+hashes, retained inputs, exact roots and unchanged budgets. No unknown object
+was overwritten or resent.
+
+Both fresh pre-entry and guarded original admission passed. The guarded
+observation was MemFree 4,824,260,608 bytes, MemAvailable 20,781,772,800 bytes,
+disk free 789,123,268,608 bytes, full PSI avg10/avg60 0.66/1.53 and zero
+competing heavy processes. The entry ran once, without an in-round retry.
+The PostgreSQL readiness probes retained raw 2/2/2/2 before raw 0; these were
+bounded startup probes, not repeated native test invocations. All remaining
+setup, Go and cleanup child stages returned 0.
+
+| Actual native result | Elapsed |
+| --- | --- |
+| datasets package PASS | 1.468 seconds |
+| TestActualPublishedReaderTrainingSnapshotAndRetirement PASS | 1.450 seconds |
+| training package PASS | 1.825 seconds |
+| TestActualAcceptedExperimentRead PASS | 1.800 seconds |
+| Required independent_published_reader_with_real_accepted_bytes subcase PASS | 0.030 seconds |
+| Go child including native compilation, exit 0 | 135.048 seconds |
+| Complete entry, outer/driver exit 0 | 138.486532 seconds |
+| Parent elapsed at its final record | 138.412 seconds |
+
+There were two package passes, two root passes and the required subcase pass,
+with zero skips/failures. The subcase duration is contained in the training
+root/package duration, not additive. The real dataset writer remained held
+while its Store=nil consumer read the publication, retired/recovered its exact
+version, detected changed bytes, accepted exact repair and rejected its actual
+logged-out session after file I/O. The training consumer likewise used its
+concrete persistent reader with Store=nil through accepted bytes, experiment/
+adapter exports, current authority, corruption/repair and existing error
+propagation; writer exclusion remained intact before/after reader Close.
+These are full fixture-principal PostgreSQL owner flows. The retained CPU
+adapter files are actual; their declared physical/command envelope is still
+synthetic. The uncertain-outcome propagation case is not a wire-lost-COMMIT
+acceptance; the separate c527fb68 event scope remains unchanged.
+
+The actual platform was Linux x86_64, Go 1.27.3 linux/amd64 and Python 3.12.3.
+PostgreSQL startup logs identify 18.6 (Debian 18.6-1.pgdg12+2); the cached
+image identity and actual CREATE EXTENSION vector succeeded. No separate
+vector-version query was retained. The frozen migration source declares
+schema version 60 and 120 tables; the real fixture successfully migrated.
+Its qualified source consumes exactly PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA,
+creates that schema and sets search_path, here
+m20_repository_fe0210a21b7f4554a475a1d3fbbd9c2e. The PG log did not separately
+print that name, so schema identity is bound by admitted environment plus the
+successful exact fixture source, not an invented SQL-readback receipt.
+
+The identity and repository families used the same private DSN file. Actual
+Go inputs retained GOMAXPROCS=2, GOMEMLIMIT=1073741824B, GOFLAGS=-p=2,
+GOPROXY=off, GOSUMDB=off, GOTOOLCHAIN=local, go test -p 1 and 75-second
+package timeouts. No processor, new training computation, GPU or fleet run
+was started. Cached dependencies and the network-none fixture were used.
+
+The wrapper verified its exact owned container/image/labels/limits, removed
+the container and anonymous volumes with remove-v, then confirmed exact
+container and owned-volume absence with successful readbacks. The independent
+read-only audit confirmed no live exact entry/wrapper, all 24 recorded child
+groups absent/reaped, no container 3946a370cd69e00f372efd02583468ec200c83e59386685c3f4dbb08cd605cf3
+(name lane-trn-reader-fe0210a21b7f4554a475a1d3fbbd9c2e) and no DSN. Its event
+history query recovered no volume IDs; volume cleanup is supported by the
+wrapper's exact mount-inventory/readback path, not an independent recovered-ID
+claim. Both FDs were released without recorded errors, and the original
+regular carriers remain 29/82/0 and 64512/7508772/0, mode 0644, zero bytes.
+No post-run deletion or foreign-resource modification was performed. Heavy
+leases had ended before evidence packaging or document review.
+
+| Qualified run evidence | SHA-256 |
+| --- | --- |
+| /root/lane-trn-reader-native-outer.daj4zymh/run-input-manifest.json | e124c36536be9712b88be74babd90dbdf35640cac2fd60b845dbc5a324b512e8 |
+| receipt.json in that outer directory | 646782f5b2b2d41c729a0d87844c96ead12db617ef011017b6d2cd0344627d30 |
+| /root/lane-trn-reader-native.lyc08aa5/result.json | e83e8265b8d64f7d3c8a442da6d3f39f03cd9e6a5adb44ad8807b5d98a40d4f8 |
+| native.log in that result directory | d2505b74b0b997e31c1c826216277403cd2a7ed32f4ea501f8069f24c13ee3dd |
+| postgres.log in that result directory | 2e9664130f539cab7a1e2886bc914e90ce62a59883775be73c8b75ee1af894da |
+| admission.log in that result directory | 084f6b5bb440419a7e101247f59bcc4367f4f9c0659cf98cd82ee8506fbda191 |
+| owned-cleanup-audit.json in the outer directory | f00c8f7b8036e335b48bf52d28ba908c340e6653a0d00e2818f3cb4f578d0e9c |
+
+### Original-author bundle and ARC lifecycle handoff
+
+/root/lane-trn-tools/reader-native-qualified-source.e8nih817 contains:
+
+| Handoff artifact | SHA-256 |
+| --- | --- |
+| source.bundle | 3d971307f5a90b333c5a92f0ebf81f13bfe79fe53b790d44c272be545405cb32 |
+| handoff.json | 9cbf0ccfedd1d87d92aa0ee92e83f7081f2dd7ab0576216a4fbe04a2c937eb9f |
+| evidence-manifest.json | ef29781ca1926a8da6712d80595f9b576e3ca12844057df96ce6390e63b9e4e4 |
+| qualified-evidence.tgz (30 members, 74,167 bytes) | 7ae134579e23552dbbcd63d0158f0b3f6fab13609443c9927741ad29771b5e2c |
+
+The bundle exposes codex/trn-reader-native-qualification at exact e639db90,
+with prerequisite 97a563ba047869fc95acf50c0017ef3cdea13139. It was verified
+on Linux and again after transfer on the Mac. All 29 archive manifest entries
+were streamed and verified, and all 21 owner-path hashes matched the qualified
+original-author source. It includes the two owner commits plus the historical
+research note; integration must preserve current research evidence and take
+the exact owner runtime/readme files and strengthened tagged tests. No model,
+data, database, dependency or build output is bundled. The source stays
+private/unmerged until the integrated source graph is accepted.
+
+| Responsibility | Owner and exact handoff |
+| --- | --- |
+| Concrete producer | TRN/DAT provide the two OpenPublishedReader(path, trustedTenant) constructors and concrete PublishedReader service fields; set Store=nil. Both fields together fail STORAGE_MISMATCH. |
+| Init and namespace delivery | ARC resolves trusted installed tenant/configured roots and supplies the exact existing immutable namespaces/read-only mounts; the constructors create no state or worker. Close each successfully opened reader when a later init step fails. |
+| Shutdown | ARC stops admission, drains/joins active handlers and claims, then closes readers before the remaining graph resources. Returned file descriptors stay caller-owned and must be closed by that caller. |
+| Current authority | Preserve current SQL scope/actor checks after file I/O and all accepted-attempt/receipt/seal checks. File readers grant no SQL privilege or client authority. |
+| Remaining independent qualification | Actual newAgentPath/NewAgentGateway/runAgentGateway construction, startup rollback/drain/Close, installed read-only namespace delivery, Model/Node/protected lock functions/grants and original fleet budgets remain their owners' work. |
+
+This completes native qualification of the original owner reader flow. It
+does not qualify current-main ARC composition, a restricted database role, an
+installed gateway, GPU or fleet costs. Prior Darwin, kernel-prototype, refusal
+and failed-v2 evidence keeps its exact original scope. No product box or
+whole-platform support claim changes.

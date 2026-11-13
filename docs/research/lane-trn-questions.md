@@ -79,8 +79,8 @@ The original parents do not implement the newly assigned nonblocking second
 carrier and absolute 300-second complete lifetime. Safest choice: preserve the
 fixed c527fb68 event runner and all existing candidates/evidence, and prepare
 test-only source e639db90 plus the exact hashed native plan before any new heavy
-framework. The single native opportunity remains unused: zero Linux carrier
-attempts and zero new native Go/SQL test bodies. The
+framework. Preparation used no Linux carrier acquisition or native Go/SQL test body;
+the later authorized attempt is recorded below. The
 [bounded plan and inputs](training-published-file-readers.md#prepared-native-authoritywriter-cases-and-parent-boundary-review)
 retain all original resource thresholds and define the required existing-runner
 delta, cleanup, raw outcomes and no-retry behavior. ARC construction and formal
@@ -91,7 +91,42 @@ The separate bounded wrapper/config/diffs are now prepared and hashed in
 /root/lane-trn-tools/reader-native-bounded-v2/. Twenty-six pure local checks
 and a read-only Linux input/source check passed; details and exact hashes are
 in the [review artifact note](training-published-file-readers.md#bounded-reader-fixture-review-artifact).
-This resolves preparation only. No native carrier acquisition, compilation or
-Go/SQL body occurred and the single opportunity remains unused pending the
-concrete wrapper review. The original plan, binding and c527fb68 runner are
+This resolved preparation only. Its later single authorized invocation
+returned FIRST_LOCK_BUSY (raw 73) after 60.128525 seconds, before ownership,
+second-carrier open, admission, compilation or any Go/SQL body. The original
+opportunity is consumed and no in-round retry is permitted. See the
+[receipt, stage results and owned-resource audit](training-published-file-readers.md#authorized-single-native-attempt-first-carrier-refusal). The original plan, binding and c527fb68 runner are
 unchanged. No product or shared-owner contract is declared complete.
+
+
+After actual carrier release, a separately authorized new bounded-v2 opportunity
+acquired both original carriers and returned RESOURCE_REFUSED (outer/driver 78,
+original-admission child 1) in 0.359098 seconds: MemFree 1,759,084,544 bytes was
+below the unchanged 3 GiB floor. It created no PG/Go/SQL body, schema or DSN,
+released both FDs and left no owned runtime resource. This opportunity is also
+consumed without an in-round retry; the first 73 receipt is unchanged. The
+[new receipt and release audit](training-published-file-readers.md#authorized-new-opportunity-after-carrier-release)
+keep the exact source, thresholds and owner/ARC boundaries intact.
+
+
+The post-DEV opportunity passed guarded resource admission and started its
+exact private PG fixture, but bounded-v2 treated pg_isready raw 2 (no response
+during initdb) as fatal. Entry raw 1, 2.344562 seconds, zero Go/SQL bodies.
+All 15 child groups, both FDs, exact container, anonymous volume and DSN were
+confirmed absent after cleanup. [Actual evidence and the prepared one-line
+v3 correction](training-published-file-readers.md#post-dev-opportunity-actual-startup-failure-and-release)
+retain the failure and original thresholds. Twenty-nine mock/file checks
+passed; v3 was not run natively. Post-run SSH archive/download 502/255 leaves
+full server metadata delivery unconfirmed, distinct from the actual failure.
+
+
+The explicitly reviewed v3 opportunity now qualifies the exact original owner
+source e639db90 on native Linux amd64: two PostgreSQL package/root passes plus
+the required independent-reader subcase, zero skips/failures, Go/entry exits 0
+in 138.486532 seconds. All actual cleanup readbacks passed; the independent
+audit confirmed both FD releases, absent container/DSN and all 24 child groups
+gone. [Qualified evidence and original-author bundle/lifecycle handoff](training-published-file-readers.md#native-linux-owner-reader-qualification)
+are available to ARC. The typed producer boundary is supplied; actual ARC
+construction/init rollback/drain/Close, read-only namespace delivery, Model/
+Node/protected SQL and fleet budgets remain open. This is not installed
+gateway or restricted-role acceptance; source remains private until integrated.

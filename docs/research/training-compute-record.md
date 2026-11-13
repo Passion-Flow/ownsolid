@@ -1,9 +1,9 @@
 # Training compute record
 
-Research behind TRN-111. Each training job records how much compute it used, in the
-units regulators and model publishers use, so that a customer can show that a
-fine-tune stays far below every compute threshold, with figures the platform measured
-and did not guess.
+Research for TRN-111: record each training job's compute in units used by model
+publishers. Observed token counts, conventional arithmetic
+estimates, hardware ceilings and publisher-declared base figures stay separately
+labelled; an estimate is not a measured executed-operation count.
 
 ## Why customers need it
 
@@ -123,27 +123,53 @@ Fine-tuning details that change the arithmetic:
 
 ## Where it lands in the code
 
-Read at commit 85cd1c0. This is why the item is not small:
+Technical source dependencies rechecked at
+[b18d2b0b](https://github.com/Passion-Flow/ownsolid/tree/b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32).
+This is a static contract review, not a new runtime or SQL result. The policy
+reference table above has not been revalidated by this technical review.
 
-- `api/training/v1/result.go` decodes the result as an exact union with a closed field
-  list per status, and a failed result carries no metrics. The final totals need new
-  fields in that contract, and the figures of a failed attempt can only come from events.
-- `MetricValues` holds float64 values. Token totals need their own integer event field,
-  since float64 loses exactness above 2^53.
-- `Bindings` and sealed checkpoints identify a resume exactly, so the saved token total
-  has to enter the sealed state without changing what a resume is bound to.
+- [The result decoder](../../api/training/v1/result.go) still enforces an exact
+  status-discriminated field set. Failed results carry no metrics; trained and
+  cancelled variants have their own required/optional fields. Count totals need
+  an admitted versioned result/event extension, including the failure path.
+- [MetricValues and event decoding](../../api/training/v1/events.go) expose only
+  loss, learning rate, gradient norm and epoch as optional float64 values. Event
+  fields are closed by kind. Token totals need an exact integer field; placing
+  them in an existing float metric would lose exactness above 2^53, and an
+  unrecognized worker field is rejected by the present wire contract.
+- [Checkpoint verification](../../runtimes/training/projectone_training/checkpoints.py)
+  requires exactly schema_version, bindings, global_step and files at the
+  receipt level and verifies trainer state plus every sealed file. There is no
+  admitted exact token total. Resume accounting must enter sealed state through
+  a compatible contract with explicit unknown-version/refusal coverage; a
+  sidecar counter or optimizer-step estimate cannot supply exact observed tokens.
 - The worker contract also appears in `api/agent/v1/schema.json` and in the recorded
   fixture `tests/fixtures/training/actual-worker-v1.json`.
 - Attempt columns need migrations on every database chain.
-- The runtime has no unit tests in this repository, and the workstation has no PyTorch,
-  so the worker side runs on a test server.
+- The runtime now has [boundary](../../runtimes/training/tests/test_boundary.py),
+  [checkpoint](../../runtimes/training/tests/test_checkpoints.py) and
+  [tokenizer](../../runtimes/training/tests/test_tokenizer_preview.py) tests. The
+  retained exact CPU installation passed 20 tests without skips at private
+  source e24d9abd; [the preserved log and platform scope](training-runtime-delivery.md#complete-cpu-environment-unit-readback)
+  are the evidence. Real interrupted/resumed CPU worker files were compared
+  with an uninterrupted baseline. Neither result covers TRN-111 token totals
+  or a current-main full rerun. Real tensor/tokenizer tests use admitted pinned
+  runtime assets rather than assuming a workstation installation.
 
 ## What it waits for
 
 - **TRN-105:** the experiment record it is part of.
-- **Screens S-501 and S-502:** the job and run pages in stage 5 of the build plan. Neither
-  exists yet, and an item with a screen waits for that screen's entry in the plan.
-- **The module review** AGENTS.md requires before the first item of this module.
+- **Versioned shared contracts:** event/result counters, sealed-resume
+  identity, Agent validation and exact attempt persistence need agreement from
+  their owners. This lane does not change api/agent or Agent implementation or
+  add an independent compute ledger to work around those boundaries.
+- **Screens S-501 and S-502:** both entries exist in
+  [stage 5 of the build plan](../product/plan/README.md#stage-5--run-it); their
+  integration must expose the experiment record and its unavailable/inconsistent
+  states through the owning UI. A plan entry does not establish a shipped screen.
+- **The module review:** already recorded as 2026-11-09 in the training roadmap;
+  it is not an outstanding prerequisite. TRN-111 remains unticked for the actual
+  contract, counting, resume, persistence and UI flow above.
 
 ## Dependencies and licences
 

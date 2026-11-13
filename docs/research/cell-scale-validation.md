@@ -6,6 +6,13 @@ test release ran with two real RKE2 nodes on disconnected Linux
 The managed console remains a separate acceptance gate. Record developer
 installations separately from the signed managed API run.
 
+Current ARC-105 acceptance remains open. The latest host preflight returned
+75 before creating workloads: MemAvailable was 20,794,408,960 bytes (19.37 GiB),
+below the unchanged 22 GiB reservation. MemFree was 4.60 GiB and full I/O PSI
+avg10 0.08%; the only refusal was available memory. The successful separate
+2,000-agent ARC-106 baseline does not substitute for this combined managed-cell
+run. No foreign resource was stopped or removed to satisfy admission.
+
 ## Simulation and proof boundaries
 
 [KWOK in an existing cluster](https://kwok.sigs.k8s.io/docs/user/kwok-in-cluster/)

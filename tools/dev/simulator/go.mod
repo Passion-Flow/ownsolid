@@ -4,6 +4,7 @@ go 1.27.0
 
 require (
 	github.com/Passion-Flow/ownsolid/api v0.0.0
+	github.com/Passion-Flow/ownsolid/services/agent v0.0.0
 	google.golang.org/grpc v1.85.0
 )
 
@@ -16,3 +17,5 @@ require (
 )
 
 replace github.com/Passion-Flow/ownsolid/api => ../../../api
+
+replace github.com/Passion-Flow/ownsolid/services/agent => ../../../services/agent

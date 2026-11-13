@@ -104,6 +104,54 @@ the delta. An uncertain commit exposes neither a false success nor an automatic
 second mutation. No separate approval/receipt ledger belongs to this item;
 IAM-203 owns two-person approval.
 
+## Qualified inputs and remaining composition boundary
+
+The [directory generation candidate](directory-login.md#storage-qualification)
+now persists complete scoped generations and retains the last successful head
+after a failed scan. Its group graph is a bounded observation with detected
+churn controls, not an LDAP-wide snapshot. A mapping input must identify that
+exact successful run, connector revision/auth version, stable external user and
+group IDs, completion digest and unchanged validity bound. Never label an
+archived graph as a fresh serving-worker observation or extend its validity
+because a preview or reconciliation was retried.
+
+The [scoped-role experiment](scoped-role-authorization.md#selected-family-qualification)
+now reaches actual `ChangeNote` authorization, current membership lifetime,
+role/grant versions and the note/audit transaction. It admits no managed-source
+provenance or expiry yet. Copying directory rows into its ordinary manual grants
+would incorrectly preserve access after source expiry and let one source replace
+another source's or an operator's grant. That is not the next implementation.
+
+The current [GitLab LDAP synchronization guidance](https://docs.gitlab.com/administration/auth/ldap/ldap_synchronization/#ldap-servers-with-rate-limits)
+describes group-membership removals after a directory rate-limit error. Ownsolid
+selects its already stated complete-generation policy: a partial or unavailable
+scan is not an empty membership set, and failure does not refresh old authority.
+Existing mapped authority remains bounded by its original validity; after that
+bound it denies on the server. A truly complete empty generation may withdraw
+only grants belonging to that source. This distinction needs failure and retry
+coverage in the actual consumer, not only a parser or preview test.
+
+There is a transaction-order boundary to prove before composing these candidates.
+The directory owner currently takes actual current-actor/source and sorted
+source/target connector fences before installation and generation state. The
+Workspace owner takes actor/source, installation/tenant and then exact Workspace
+fences before reading current membership. Do not append a target connector lock
+after the Workspace fence, nor publish a reconciliation that inverts those
+orders against connector disable or role edits. The eventual owner must establish
+the complete actor/source/target set first and reuse the exact Workspace fence,
+then re-read source generation and policy revisions inside the same transaction.
+The existing declaration of both orders is not a measured combined wait graph.
+
+The next admissible experiment must join the actual source, managed-grant
+provenance/expiry and resource evaluator, then demonstrate a Portal note write
+before/after mapping and expiry. It must preserve manual and other-source grants,
+refuse stale preview and membership-lifetime substitution, retain one atomic
+audit/managed delta, and observe both source-disable/resource-write lock orders
+with independent PostgreSQL connections. Formal source/grant ownership,
+IAM-107/IAM-108's production evaluator and public/UI contracts remain prerequisites.
+No mapping code, public operation, grant or runtime dependency is introduced by
+this review, and IAM-110 remains open.
+
 ## Dependencies, alternatives and acceptance
 
 This design adds no dependency, model or dataset. Existing Go standard-library
