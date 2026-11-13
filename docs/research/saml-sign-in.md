@@ -102,8 +102,9 @@ remain server-side, one-use, bound to the exact request and source revision,
 and expire no later than the verified assertion. The browser receives only a
 protected random continuation proof, never an assertion or identity claim set.
 The finish URI is fixed by the server, with no provider data or arbitrary return
-URL. Actual cookie delivery and swapped-local-cookie refusal remain unproven
-until the rendered probe and Identity-backed completion pass.
+URL. The [rendered transport probe](#rendered-cross-site-cookie-qualification) now
+qualifies cookie delivery and swapped-local-cookie refusal in its private
+fixture. Actual Identity-backed completion remains unproven.
 
 The rendered transport probe will reuse the repository's existing Web QA trust
 pattern: exact owned fixture certificate key pins, fixed literal hostname
@@ -519,6 +520,53 @@ UI changed. The experiment's tenant source is its private server fixture, not
 actual Identity/current-actor composition. It does not qualify an installed
 ACS, browser cookie delivery, durable one-use claim, audited account linking,
 session issuance or actual provider-to-storage worker. IAM-104 remains open.
+
+## Rendered cross-site cookie qualification
+
+An owned Mac arm64 Chrome for Testing 156.0.8078.4 process with Playwright
+1.64.1 exercised six actual form submissions between distinct registrable
+HTTPS sites. One native Go race-test root passed without a skipped case. Both
+`no-referrer`/null-Origin and `strict-origin`/exact-IdP-Origin variants observed:
+
+- The ACS received POST with `Sec-Fetch-Site: cross-site`, the dedicated
+  SameSite=None flow cookie, and neither ordinary Lax nor Strict cookies.
+- A 303 to a fixed SP completion GET recovered the original ordinary Lax
+  cookie and a new host-only Lax continuation cookie. That GET still reported
+  cross-site fetch metadata; being an SP endpoint does not imply same-site
+  navigation provenance. Strict cookies remained absent on the redirect.
+- Removing the flow cookie returned ACS 403 and never reached completion.
+- Replacing the ordinary local cookie while at the IdP still reached the ACS,
+  but the completion GET returned 403 against the initiating cookie value.
+
+The fixture cookies were Secure, HttpOnly, host-only and Path=/, with separate
+flow/ordinary/Strict/continuation roles. Generated TLS certificates passed
+chain, DNS and validity checks before their exact leaf-key pins were supplied
+to the disposable QA browser. Contexts kept `ignoreHTTPSErrors: false`, service
+workers were blocked and page requests were restricted to the owned origins.
+A separately generated unpinned certificate was actually refused. No system
+trust or personal browser profile changed. The runtime's complete bundled
+credits were captured with SHA-256
+`695e9c5e9e3c04a10f895ee501e501940eb7a75808269708517bcbb4c2860fef`.
+The private license inventory retains the QA-tool notices and credits; no
+browser or new dependency enters the product or delivery bundle.
+
+Evidence is `iam104-browser-20261113.44wtq89s`, run
+`qualification-puevh9h9`, input `b3c2ef795698`. Its source-manifest SHA-256 is
+`43e2c23944a1ca897e55678296282a9c339a31ae8696e3535e5eb1a855e8f239`.
+Frozen and working source hashes matched. Sanitized server observations,
+browser cookie attributes, exact runtime versions, raw race output and both
+failed exact-Origin-assumption attempts remain outside Git. All owned Node,
+browser and Go test processes exited and released their loopback listeners
+and workstation lock.
+
+This is a browser transport qualification only: a synthetic IdP form carried
+no SAML assertion, and the fixture verified no signature, contacted no
+Identity/SQL authority and created no login, binding or session. It has no
+one-use durable claim or restart/replay proof. The native Mac run was not
+network-isolated or an installed Linux amd64/disconnected acceptance. Actual
+Identity-backed account switching, atomic claim/completion, signed-provider
+composition, public configuration and rendered product UI remain open. No
+product path, schema, public route or roadmap tick changed.
 
 ## Alternatives, prototype and finished-item acceptance
 
