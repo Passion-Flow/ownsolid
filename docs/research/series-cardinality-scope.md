@@ -535,7 +535,7 @@ services/control/cmd/server/monitoring.go. ARC must provide the installed-cell
 owner, call the opener with a bounded startup context, pass its result into
 NewWithSeriesCardinalitySource, close on construction failure and register
 Close in the existing shutdown chain. No shared configuration, startup, IAM,
-public route or Web change is included. See ADR 0078 and the module README for
+public route or Web change is included. See ADR 0080 and the module README for
 the exact contract. Shared schema is still 60/120; the coordinator reports only
 Help/TRN documentation changes after ecab4c98, which do not justify chasing
 pure-documentation main updates or repeating old native suites.

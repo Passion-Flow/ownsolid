@@ -1,4 +1,4 @@
-# 0078: Admit cardinality queries through runtime leases
+# 0080: Admit cardinality queries through runtime leases
 
 Status: Accepted
 Date: 2026-11-13
