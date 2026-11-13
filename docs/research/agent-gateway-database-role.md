@@ -657,3 +657,86 @@ the locks would repeat the already rejected authority-lock mistake. Their owners
 must preserve retirement/current-attempt fencing through a closed protected
 interface before claiming a fully narrow gateway grant catalog. Column SELECT on
 human authority fields alone is therefore insufficient to close ARC-111.
+
+
+## Concrete reader-constructor dependency and process ownership
+
+The real construction owner is IAM's identity/http/agent_path.go; ARC owns
+cmd/server/agent_gateway.go and runtime_lifecycle.go. TRN owns the two concrete
+PublishedReader types and their namespace/file behavior. Its candidate and native
+qualification must be explicitly admitted; an unpublished API or a source-only
+unit result is not a ready runtime dependency. The formal family lineage has its
+own [source/metadata qualification](model-family-schema-admission.md).
+
+The following is an interface proposal for IAM, not a declaration that exists or
+an interface ARC will guess at a call site. Keep the current two-argument
+NewAgentGateway and Control writer construction compatible; an additive entry
+can accept the already opened concrete readers:
+
+```go
+type AgentGatewayPublishedReaders struct {
+    Datasets *datasets.PublishedReader
+    Training *training.PublishedReader
+}
+
+func NewAgentGatewayWithPublishedReaders(
+    s *identity.Service,
+    ready func() error,
+    readers AgentGatewayPublishedReaders,
+) (*AgentGateway, error)
+```
+
+The original owner must bind these to the actual graph it constructs: the same
+dataset service must be shared by training and preparation, and the training
+reader must reach accepted checkpoint/adapter reads. All gateway Store fields
+stay nil; Control keeps its existing writer owners. Missing configured readers
+or a conflicting writer/reader must refuse, never silently select a side graph.
+The constructor borrows these owners; it must not initialize directories, take a
+writer lock, start a processor or hide a construction error. Zero/closed/foreign
+readers must fail through the real admitted owner contract; if startup needs an
+additional namespace-health operation, that concrete method remains TRN-owned.
+Do not reflect into private reader state or type-assert Nodes.Training to alter
+someone else's services. IAM supplies the final compiled signature, graph tests,
+error/ownership contract and exact source before ARC consumes it.
+
+ARC's caller will read the installed tenant from its authenticated selected
+store, open only c.Datasets.ArtifactRoot and c.Training.ArtifactRoot through the
+admitted owner APIs, and transfer no descriptor ownership to a request. A failed
+second open or constructor must close the first open and retain any close error.
+Configured namespaces must already exist; no new-writer/create fallback or
+client-selected tenant/path is permitted. Register process-owned closers only
+once and close in reverse order after admission stops, requests/streams and
+workers have actually joined. Files returned to an admitted handler remain that
+handler's responsibility until its own Close.
+
+## Join the existing cancellation drain
+
+The current runAgentGateway schedules Sessions.Drain with context.AfterFunc and
+only defers its stop function. [Go1.27.3 AfterFunc](https://pkg.go.dev/context@go1.27.3#AfterFunc)
+specifies that stopping the association does not wait for an already started
+callback. Therefore the process lifecycle cannot treat that callback as joined.
+This part is implementable in ARC without a reader API: replace the untracked
+callback with the existing lifecycle's Loop waiting for cancellation and then
+calling the same real Sessions.Drain. The existing worker wait then covers drain
+before closers, including normal cancellation and early listener return. No new
+public interface, generic wrapper, alternate gateway graph or test-only success
+path is needed.
+
+This only joins the drain operation. Sessions.Drain cancels sessions; it is not
+itself a request/stream/file-owner join. The current aged listener joins its
+connection workers, but a timed-out net/http Shutdown can close connections
+without proving that an uncooperative handler returned. The [HTTP shutdown
+contract](https://pkg.go.dev/net/http@go1.27.3#Server.Shutdown) requires preserving
+that distinction. Reader integration must retain confirmed handler/stream joins
+or return an unconfirmed shutdown without closing owners still in use; attaching
+readers now would conceal that open boundary.
+
+Reuse TestRuntimeNormalCancellationAndReverseOwnerJoin,
+TestRuntimeTimeoutRetainsLeaseUntilActualJoin,
+TestRuntimeUnconfirmedOwnerStopNeverClaimsJoin and the actual Gateway drain tests
+for the affected lifecycle primitives, then the real composed server shutdown,
+partial-start failure, retry/restart and native/offline profiles. Compilation,
+race, real claims/SQL and installed delivery remain separate required evidence.
+No dependency, model or dataset is added; Go remains BSD-3-Clause with its
+existing commercial redistribution/offline terms and notices. No runtime
+networking or protocol field changes are introduced by joining this callback.

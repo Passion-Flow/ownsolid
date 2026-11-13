@@ -128,33 +128,165 @@ refuses immutable mutations and checks that an orphan cannot commit. The origina
 restore matrix now explicitly includes predecessor 60 as well as 55 through 59
 and the current lineage. These are prepared assertions, not run results.
 
-Qualification requires an explicitly allocated carrier; start no queue or new
-fixture during the shared gate. Use the exact candidate commit and a source-byte
-manifest. The first bounded allocation is one pinned PostgreSQL 18.6/pgvector
-0.8.7 owned network-isolated fixture, at most two CPUs and 4 GiB for the native
-fixture, with serial compilation on two CPUs and GOMEMLIMIT=512MiB. Budget at
-most 20 minutes for metadata collection and focused SQL; a whole-repository gate
-is a separate allocation. Recheck the workstation gate and both Linux heavy locks,
-disk, memory, PSI, existing jobs and listening ports before any allocation. Keep
-the existing stricter preflights; no resource gate or assertion is relaxed.
+Qualification requires an explicitly allocated carrier and the MODEL owner's
+adapted formal-lineage source. Start no queue or fixture during another shared
+gate. The current immutable ARC input is 0f47a66bcb84c585b00bb1a92bf30f455017c1c9,
+tree d45ba1d14f18f0e0298c8a6d4c5106447d0a351b. Its prepared archive contains
+all 5,089 tracked paths with exact file/symlink bytes, modes and per-file hashes;
+8,964,003 compressed bytes, SHA-256
+3397ea71ef5458307eceeab12ccc53f12a6547ca6c07c23afb2ef8195cf7c579.
+The source-manifest SHA-256 is
+3d711332ecacb1fa52bd573ef50e4d48b90e8bafa5acd901b0a090cffd06988a.
+This is an unqualified ARC input, not an invented combined source. MODEL's
+adaptation and the final measured catalog-pin source remain unset.
+The external preparation contains source-manifest.json, migration-inputs.json,
+qualification-plan.json and sixteen plain SQL inputs. Their structural/hash
+checks ran locally; no SQL parser, compiler, Docker create/start, carrier or
+background queue ran. No input package has been sent to the test server.
 
-Collect actual CatalogSQL JSON and SHA-256 for fresh 61 and every restore at
-55 through 61 followed by the immutable remaining lineage. An external metadata
-collector may use the existing explicit-version fixture and original embedded
-SQL/checksums to collect those shapes before admission. This is fingerprint
-derivation only: it must not bypass or replace Migrate in acceptance tests.
-Register only the actually observed fingerprints, then run the original positive
-admission, restore/drift/ledger and runtime grant checks unchanged. The focused
-entries, with protected fixture references supplied by that allocation, are:
+## Metadata derivation followed by one admitted source
+
+The prepared metadata inputs contain the exact unchanged CatalogSQL, immutable
+prefixes 55 through 61, their original full-file migration checksums, and each
+remaining lineage through 61. They are inputs to the existing psql/pg_dump/
+pg_restore flow, not a new runner or a replacement test. SQL wrappers select only
+a generated owned schema and wrap the original migration bodies and journal rows
+in a transaction. They collect metadata only; they do not activate runtime grants
+or replace production Migrate.
+
+Use one owned PostgreSQL postmaster for the entire opportunity. Collect the full
+CatalogSQL JSON and its SHA-256 for fresh 61 and each restore at 55 through 61.
+For each restored prefix, replay only the immutable remaining lineage and exact
+journal checksums, then collect the final 61 catalog and full ledger. Restoring
+at 61 executes no new DDL. Preserve each original catalog, dump, restored catalog,
+ledger and error separately. Hash exactly the CatalogSQL text result, excluding
+only psql's output newline; do not normalize definitions or hide a drift. Verify
+122 logical tables and all 61 original checksums. The current schema-60 hashes
+remain strict until actual metadata has been collected.
+
+After the MODEL adaptation is available, assemble and commit one complete input A
+before admission; freeze its whole-source manifest and original test roots.
+Derive catalog fingerprints from A. Within the same bounded opportunity, register
+only the observed fingerprints in catalog.go and create source B. Retain A,
+its raw metadata and the exact A-to-B patch: only measured catalog constants and
+their explanatory comment may differ. Capture B's commit/tree, byte/mode manifest
+and compiled binary hashes before any positive acceptance. All database, role and
+MODEL acceptance must run from that same B against the same postmaster. Re-derive
+metadata from B's unchanged CatalogSQL/DDL and require the identical results.
+A changed domain body, migration, test, grant or fixture invalidates this sequence;
+stop and prepare a new source instead of silently mixing candidates. No passing
+Migrate result is claimed for A, and no guessed B identifier or hash is prepared.
+
+## Existing restore fixture and resource binding
+
+Keep TestCatalogAdmissionAfterLogicalRestore and its original owned-fixture
+checks. identityfixture.OwnedPostgres verifies actual Docker labels, cluster ID,
+server version and an explicit 127.0.0.1 published port. The old network-none
+prototype alone cannot satisfy that entry. Reuse its existing M12 Docker fixture
+contract: projectone.owner=mvp-development, projectone.milestone=M12, one generated
+fixture UUID and the matching knowledge-fixture- cluster name. Choose a free
+explicit loopback port once; verify the real HostConfig port binding equals the
+protected test input. Never fabricate inspector output, use a restore overlay,
+label a Linux toolchain as Darwin, or disable that original preflight.
+
+The proposed fixture uses one owned internal Docker bridge and only that
+loopback publication. Docker documents [internal isolation and host access](https://docs.docker.com/reference/cli/docker/network/create/#network-internal-mode---internal)
+and [bridge port publication](https://docs.docker.com/engine/network/drivers/bridge/).
+This combination is an inference from those contracts: actual loopback reachability,
+network membership, external isolation and the original fixture preflight must
+be verified in the fixture phase before any schema workload. Its presence in a
+plan is not a network-none or disconnected-install acceptance result. No public
+port or additional database is allocated outside the owned test cluster.
+
+Pin the cached Linux amd64 image by its immutable local configuration ID,
+sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47,
+with --pull=never. This ID was retained by the earlier ARC prototype; it is not
+presented as a repository manifest digest. A current read-only inspection could
+not complete because SSH timed out during banner exchange, exit255. No image,
+lock or native workload was created. At admission require an actual cached-image
+ID/platform match, then SQL server_version_num=180006 and vector0.8.7. Missing or
+different inputs refuse; do not pull an image or silently change the pin.
+
+The fixture is capped at two CPUs and 4 GiB. Serial Go uses the existing pinned
+1.27.3 toolchain and offline cache, GOMAXPROCS=2, GOMEMLIMIT=512MiB,
+GOTOOLCHAIN=local, GOPROXY=off, GOSUMDB=off, CGO_ENABLED=0 and -mod=readonly -p1.
+Use secret-file references only. Keep the existing nonblocking, inode-checked
+workstation/Linux carrier rules, both Linux heavy locks, free memory>=2GiB,
+available memory>=8GiB, disk>=30GiB, full I/O PSI avg10<=5 and foreign-job checks.
+Stricter current carrier rules take precedence. Admission itself does not grant
+a new opportunity while TRN or DEV owns the shared window.
+
+## One absolute 20-minute deadline
+
+The earlier 15-minute and 10-minute examples were not additive allowances.
+Replace them with one absolute monotonic deadline at T0+1,200 seconds, starting
+before the first carrier/admission attempt. The same controller retains that
+original deadline across every child, failure and cleanup; none may reset it.
+Each phase below includes its process termination/join overhead. An early finish
+may advance the next phase, but does not enlarge any phase cap or absolute end.
+
+| Phase | Maximum seconds | Absolute end from T0 |
+| --- | ---: | ---: |
+| Source/binding and nonblocking resource admission | 45 | 45 |
+| One fixture, readiness, real ownership/version/isolation checks | 60 | 105 |
+| All eight source-A metadata histories | 180 | 285 |
+| Observed catalog registration and freeze source B | 60 | 345 |
+| Serial compile of database, databaseaccess and MODEL test binaries | 240 | 585 |
+| Original database admission/restore/lineage/drift and family roots | 240 | 825 |
+| Original Control runtime-role upgrade/refusal roots | 150 | 975 |
+| MODEL original adapted family/history/retirement/scope roots | 105 | 1,080 |
+| Exact owned-child/container/volume/network cleanup and readback | 120 | 1,200 |
+
+Collect A's eight histories in the metadata phase. B-equivalence readback runs
+inside the source-freeze phase after constants are registered, from the same
+unchanged catalog/DDL and already collected databases; it has no extra time slot.
+After T0+1,080 start only cleanup. Within each cap, leave 15 seconds for TERM,
+KILL if needed and confirmed child-group reaping; do not add those seconds after
+its deadline. Readiness may observe pg_isready1/2 only within its original bounded
+window, and must reach0 before SQL; status3/other errors refuse. No native body,
+failed test or consumed opportunity is retried automatically.
+
+A cap is a stop bound, not evidence that unmeasured work fits. A phase failure or
+unfinished root makes this opportunity incomplete and prevents later acceptance
+phases. Keep every required case, error and refusal; do not trim the restore
+matrix, lower fixture scope or weaken an assertion to fit the allocation.
+Full check/build/test, affected race and installed/offline behavior require
+separate allocated gates; none is implied by this focused opportunity.
+
+Compile only from frozen B, once per package, without a test overlay:
 
 ```sh
-GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOMEMLIMIT=512MiB \
-  go -C services/control test -mod=readonly -p 1 -count=1 -timeout=15m \
-  ./internal/platform/database -run '^(TestModelFamily.*|TestEveryCellOwnedTableCarriesScope|TestCatalogAdmissionAfterLogicalRestore|TestLineageUpgradeFromEveryPrefixMatchesFreshCatalog|TestM02ActualUpgradeFailureRecoveryAndChecksums)$'
-GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOMEMLIMIT=512MiB \
-  go -C services/control test -mod=readonly -p 1 -count=1 -timeout=10m \
-  ./internal/operations/databaseaccess -run '^(TestCatalogMatchesImmutableMigrations|TestModelFamilyRuntimeGrantUpgradeRetainsPublicationAndDenial|TestUpgrade.*|TestFreshRuntimeGrants)$'
+go -C services/control test -mod=readonly -p 1 -c -o "$RUN/database.test" ./internal/platform/database
+go -C services/control test -mod=readonly -p 1 -c -o "$RUN/databaseaccess.test" ./internal/operations/databaseaccess
+go -C services/control test -mod=readonly -p 1 -c -tags repository_integration -o "$RUN/models.test" ./internal/modules/models
 ```
+
+Execute the resulting binaries from their original package directories, with
+the existing protected DSN/Docker/repository fixture bindings on that one cluster.
+The database root selector remains
+`^(TestModelFamily.*|TestEveryCellOwnedTableCarriesScope|TestCatalogAdmissionAfterLogicalRestore|TestLineageUpgradeFromEveryPrefixMatchesFreshCatalog|TestM02ActualUpgradeFailureRecoveryAndChecksums)$`.
+The role selector remains
+`^(TestCatalogMatchesImmutableMigrations|TestModelFamilyRuntimeGrantUpgradeRetainsPublicationAndDenial|TestUpgrade.*|TestFreshRuntimeGrants)$`.
+Use -test.count=1 and -test.v; the body timeouts are respectively225s/135s/90s,
+inside their phase caps. MODEL must bind its actual adapted roots and protected
+restricted-principal input before admission; the current five original roots are
+TestActualModelFamilyCandidateBackfillAndLifecycle,
+TestActualModelFamilyHistoryPagesAndAuthority,
+TestActualModelFamilySelectionTransactions,
+TestActualModelFamilyRetainedDerivedGraph and
+TestActualModelFamilyDerivedRegistration. Preserve their actual cases and include
+any additional formal-lineage roots supplied by the original owner. Root names
+alone are not a completed fixture contract. Missing bindings refuse before launch.
+
+Cleanup has no independent or renewable allowance. Bound child-group TERM/KILL
+and join to15s, log/metadata capture to20s, exact container stop/removal to25s,
+owned volume/network removal to20s, absence readback to20s and private credential
+removal/final record/carrier release to20s, clipped to the absolute remaining
+120 seconds. Verify IDs and ownership before each destructive step. Never prune,
+remove a foreign resource or destroy retained failure evidence. If any operation
+or absence cannot be confirmed by the global deadline, stop with that exact
+resource marked unconfirmed and do not report the carrier as cleanly released.
+No unbounded finally, wait, cleanup retry or background watcher is permitted.
 
 Every selected native test must actually run without a fixture skip. Full
 check/build/test, MODEL's adapted formal-lineage cases, offline native serving and
