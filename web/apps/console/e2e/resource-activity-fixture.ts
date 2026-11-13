@@ -39,7 +39,7 @@ export async function boundedActivity(
     const filter = fingerprint.toString();
     const rawCursor = query.get('cursor');
     const cursor = rawCursor ? cursors.get(rawCursor) : null;
-    if (rawCursor && (!cursor || cursor.filter !== filter))
+    if (rawCursor && cursor?.filter !== filter)
       return refuse(route, 400, 'INVALID_CURSOR');
     const now = Date.now();
     const from = query.get('from') ?? cursor?.from ?? new Date(now - 7 * 86_400_000).toISOString();
