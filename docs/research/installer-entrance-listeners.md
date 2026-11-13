@@ -122,3 +122,62 @@ Compose merging, historical-image acceptance/refusal, the Control command or an
 installed upgrade/rollback run. The optional Portal configuration/projection is
 not enabled by this preparatory admission change. Keep those qualifications and
 the complete address matrix open.
+
+## Projection prototype
+
+A temporary program outside product code used the pinned YAML library to add
+one long-form Control publication to the canonical Compose document. Parsing
+the output and removing only that added publication reproduced the entire
+original data model exactly, including other services and security settings.
+The published port remained a string and the target remained an integer.
+The source SHA-256 was
+`3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca`;
+the prototype output was
+`eb00992f5c9977b3683046a91cd99b1c2debf8d0b14d73422260d3ee60405fb6`.
+This establishes the local projection technique, not native Compose admission.
+
+Before enabling Portal selection on an existing installation, use its actual
+Control container image to check a private, temporary desired snapshot through
+the same CLI. Do this before replacing installed configuration or stopping the
+writer. If a first install was interrupted before creating Control, resolve the
+recorded environment's local image instead. Local image admission precedes this
+check so an interrupted first install can resume after archive loading. Never
+infer compatibility from an image tag or from the candidate's version string.
+Require canonical Compose port structure and reject ambiguous anchors, duplicate
+fields or preexisting extra publications rather than silently modifying them.
+Operational restore can reuse the installed two-port copy only when its extra
+publication exactly matches the selected typed listener. Other changes use the
+delivered canonical source. Existing advertised origins must remain exactly
+unchanged during listener selection; changing their port or hostname belongs to
+the session/SSO address migration item. A fresh installation selects them together.
+
+## Typed projection verification boundary
+
+The selected direct-HTTPS implementation passed the complete installer package
+on macOS arm64 (31.340 seconds), vet, the Linux amd64 installer build and full
+`make check`. The actual Linux amd64 test ELF
+`40f20c25cd507983794454d68bf8c2cf187c0064cfdf8430fbec607bec5b572f`
+then passed 15 selected unit roots and 50 RUN records, with no skips, in
+0.279832 seconds. The retained `portal-unit-native.de8rfidx` receipt binds the
+source-file hashes. It ran as UID/GID 65534 with a private 64 MiB tmpfs, mount,
+PID and network namespaces, only loopback up, one Go worker and a 128 MiB soft
+Go heap limit. The namespace launcher exited after the run; no host port,
+Docker container, Control process or database was created.
+
+Coverage includes explicit/null/merged-null input, port collisions, unchanged
+shared fingerprints, canonical template refusal before writes, shared/split/
+shared configuration and key preservation, exact installed projection reuse for
+restore, current-image ownership, source refusal before configuration changes,
+explicit retry, unchanged advertised origins, one Docker publication snapshot,
+and release of a first port reservation when the second cannot bind. Real local
+TLS servers verify Host/SNI and CA handling, refuse the wrong publication and an
+untrusted certificate, and reject a readiness redirect to a successful page.
+Docker and Control command responses remain controlled unit fixtures.
+
+The first Linux launcher refused before running any test because inherited
+sysfs showed the host network devices. Its zero-RUN result
+`portal-unit-native.r6pilce4` is retained separately. The corrected launcher
+uses the new namespace netlink view; it does not count that refusal as a test
+pass. The native Compose parser, historical Control image command, installed
+split-listener upgrade/rollback, browser flow and recorded zero-egress drill
+remain unqualified. DEL-114 stays open.

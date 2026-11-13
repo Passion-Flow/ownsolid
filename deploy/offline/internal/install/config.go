@@ -91,11 +91,21 @@ type ImagesConfig struct {
 type NetworkConfig struct {
 	BindAddress string `yaml:"bind_address"`
 	HTTPSPort   int    `yaml:"https_port"`
+	// PortalListener publishes a separate Portal socket; omission keeps shared serving.
+	PortalListener *PortalListenerConfig `yaml:"portal_listener,omitempty" json:",omitempty"`
 	// StateSubnet is the private IPv4 subnet of the internal network that carries
 	// database and telemetry traffic. Each store takes a fixed address in it, so no
 	// service ever asks DNS for one: a lookup while a store is stopped would otherwise
 	// be forwarded to the site resolvers, with the host's search domains appended.
 	StateSubnet string `yaml:"state_subnet"`
+}
+
+// PortalListenerConfig separates a host publication from its container socket.
+// All fields are explicit when the optional listener is selected.
+type PortalListenerConfig struct {
+	BindAddress   string `yaml:"bind_address"`
+	HTTPSPort     int    `yaml:"https_port"`
+	ContainerPort int    `yaml:"container_port"`
 }
 
 // State subnet sizes: large enough for every service of a node, small enough to fit
@@ -270,6 +280,9 @@ func decodeConfiguration(raw []byte) (Config, error) {
 	if e := decoder.Decode(&struct{}{}); !errors.Is(e, io.EOF) {
 		return Config{}, errors.New("INSTALL_CONFIG_INVALID: more than one document")
 	}
+	if err := validatePortalListenerYAML(raw); err != nil {
+		return Config{}, err
+	}
 	return c, nil
 }
 
@@ -348,6 +361,9 @@ func (c Config) validate(fromBundle bool) error {
 	}
 	if e := c.validateOrigins(); e != nil {
 		return e
+	}
+	if err := c.validatePortalListener(); err != nil {
+		return err
 	}
 	if e := c.validateTLS(); e != nil {
 		return e

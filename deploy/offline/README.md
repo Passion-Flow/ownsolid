@@ -35,6 +35,53 @@ exactly its four public fields: `listen_address`, `origin`,
 material. The Control checker owns their validation; the installer does not copy
 a second TLS implementation.
 
+## Select a separate Portal publication
+
+The optional direct-HTTPS path uses one Control container with two browser
+sockets. Keep the canonical delivered `compose.yaml` as `compose_file` and add
+the explicit selection to the authoritative installation YAML:
+
+```yaml
+network:
+  bind_address: 127.0.0.1
+  https_port: 8443
+  portal_listener:
+    bind_address: 127.0.0.1
+    https_port: 19443
+    container_port: 9443
+origins:
+  admin: https://admin.example.invalid:8443
+  portal: https://portal.example.invalid:19443
+```
+
+Select site addresses and unused published ports. The advertised origins stay
+separate from host bindings. Portal's container port must be from 1024 to 65535
+and differ from the existing Admin target 8443. Its host publication must not
+overlap Admin. The browser hostnames must differ; the installer does not select
+the shared-hostname identity policy. Both sockets use the existing browser TLS
+pair, which must cover both advertised identities.
+
+Apply checks the current image against a private desired snapshot before
+replacing an existing installation's configuration. Upgrade an older shared
+release first, then select Portal on that release. Keep both existing advertised
+origins unchanged, including their ports; selecting a socket does not migrate
+SSO callbacks or sessions. A fresh installation can select both publications
+and advertised origins together. An old image that cannot
+understand the selected listener is refused before Control stops or its files
+are replaced. A failed first install can retry after loading the recorded local
+image. The final image also checks the generated serving configuration before
+the writer stop. Published-port preflight checks both selected publications in
+one Docker snapshot; readiness probes use each publication with its original
+Host, SNI and CA, and refuse redirects.
+
+Omit the complete `portal_listener` group to return to shared serving. Apply
+regenerates the original Compose bytes and omits the Portal bind from both
+Control snapshots. Repeats retain existing keys. Rollback to an older image
+requires compatible listener intent; return to shared serving on the current
+release before selecting an image that lacks the optional listener. Address,
+session and SSO migration remains DEL-115. Native Compose, historical-image and
+installed split-listener qualification are still required for DEL-114.
+
 ## Configure license import capacity
 
 Set the Control policy in the authoritative install.yaml:

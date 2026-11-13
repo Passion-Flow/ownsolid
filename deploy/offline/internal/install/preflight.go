@@ -195,47 +195,81 @@ type portOwner struct {
 	Ports                        map[string][]portPublication
 }
 
-func checkPublishedPort(ctx context.Context, c Config, runner Runner) error {
+func checkPublishedPort(ctx context.Context, c Config, runner Runner) (err error) {
 	raw, err := runner.Run(ctx, "docker", "ps", "--quiet", "--no-trunc")
 	if err != nil {
 		return errors.New("INSTALL_PREFLIGHT_PORT_INSPECT: cannot read running Docker containers")
 	}
-	address := netip.MustParseAddr(c.Network.BindAddress).Unmap()
-	port := strconv.Itoa(c.Network.HTTPSPort)
-	owned := false
+	var owners []portOwner
 	if ids := strings.Fields(raw); len(ids) > 0 {
 		const format = `{"Project":{{json (index .Config.Labels "com.docker.compose.project")}},"Service":{{json (index .Config.Labels "com.docker.compose.service")}},"ConfigFile":{{json (index .Config.Labels "com.docker.compose.project.config_files")}},"Ports":{{json .NetworkSettings.Ports}}}`
-		result, err := runner.Run(ctx, "docker", append([]string{"inspect", "--type", "container", "--format", format, "--"}, ids...)...)
-		if err != nil {
+		result, readErr := runner.Run(ctx, "docker", append([]string{"inspect", "--type", "container", "--format", format, "--"}, ids...)...)
+		if readErr != nil {
 			return errors.New("INSTALL_PREFLIGHT_PORT_INSPECT: Docker port assignments changed or could not be read; retry")
 		}
 		decoder := json.NewDecoder(strings.NewReader(result))
 		for range ids {
 			var owner portOwner
-			if err = decoder.Decode(&owner); err != nil {
+			if decoder.Decode(&owner) != nil {
 				return errors.New("INSTALL_PREFLIGHT_PORT_INSPECT: Docker returned incomplete port assignments; retry")
 			}
-			for protocol, bindings := range owner.Ports {
-				if !strings.HasSuffix(protocol, "/tcp") {
+			owners = append(owners, owner)
+		}
+		if !errors.Is(decoder.Decode(&struct{}{}), io.EOF) {
+			return errors.New("INSTALL_PREFLIGHT_PORT_INSPECT: Docker returned excess port assignments; retry")
+		}
+	}
+	type publication struct {
+		address string
+		port    int
+		field   string
+	}
+	targets := []publication{{c.Network.BindAddress, c.Network.HTTPSPort, "network.https_port"}}
+	if portal := c.Network.PortalListener; portal != nil {
+		targets = append(targets, publication{portal.BindAddress, portal.HTTPSPort, "network.portal_listener.https_port"})
+	}
+	var listeners []net.Listener
+	defer func() {
+		for _, listener := range listeners {
+			err = errors.Join(err, listener.Close())
+		}
+	}()
+	for _, target := range targets {
+		listener, checkErr := checkBrowserPublication(ctx, c, owners, target.address, target.port, target.field)
+		if checkErr != nil {
+			return checkErr
+		}
+		if listener != nil {
+			listeners = append(listeners, listener)
+		}
+	}
+	return nil
+}
+
+func checkBrowserPublication(ctx context.Context, c Config, owners []portOwner, bind string, published int, field string) (net.Listener, error) {
+	address := netip.MustParseAddr(bind).Unmap()
+	port := strconv.Itoa(published)
+	owned := false
+	for _, owner := range owners {
+		for protocol, bindings := range owner.Ports {
+			if !strings.HasSuffix(protocol, "/tcp") {
+				continue
+			}
+			for _, binding := range bindings {
+				host, err := netip.ParseAddr(binding.HostIP)
+				if err != nil {
+					return nil, errors.New("INSTALL_PREFLIGHT_PORT_INSPECT: Docker returned an invalid bind address")
+				}
+				host = host.Unmap()
+				if binding.HostPort != port || !addressesOverlap(host, address) {
 					continue
 				}
-				for _, binding := range bindings {
-					host, err := netip.ParseAddr(binding.HostIP)
-					if err != nil {
-						return errors.New("INSTALL_PREFLIGHT_PORT_INSPECT: Docker returned an invalid bind address")
-					}
-					host = host.Unmap()
-					if binding.HostPort != port || !addressesOverlap(host, address) {
-						continue
-					}
-					base := c.Layout().ComposeFile
-					overlay := base + "," + filepath.Join(c.InstallRoot, pitrComposeName)
-					if owner.Project != c.Project || owner.Service != "control" ||
-						(owner.ConfigFile != base && owner.ConfigFile != overlay) || host != address {
-						return fmt.Errorf("INSTALL_PREFLIGHT_PORT: another Docker service publishes %s; choose an available network.https_port", netip.AddrPortFrom(address, uint16(c.Network.HTTPSPort)))
-					}
-					owned = true
+				base := c.Layout().ComposeFile
+				overlay := base + "," + filepath.Join(c.InstallRoot, pitrComposeName)
+				if owner.Project != c.Project || owner.Service != "control" || (owner.ConfigFile != base && owner.ConfigFile != overlay) || host != address {
+					return nil, fmt.Errorf("INSTALL_PREFLIGHT_PORT: another Docker service publishes %s; choose an available %s", netip.AddrPortFrom(address, uint16(published)), field)
 				}
+				owned = true
 			}
 		}
 	}
@@ -247,11 +281,11 @@ func checkPublishedPort(ctx context.Context, c Config, runner Runner) error {
 	listener, err := (&net.ListenConfig{}).Listen(ctx, network, target)
 	if err != nil {
 		if owned && errors.Is(err, syscall.EADDRINUSE) {
-			return nil
+			return nil, nil
 		}
-		return fmt.Errorf("INSTALL_PREFLIGHT_PORT: cannot bind %s; verify the address and free the port: %w", target, err)
+		return nil, fmt.Errorf("INSTALL_PREFLIGHT_PORT: cannot bind %s; verify the address and free %s: %w", target, field, err)
 	}
-	return listener.Close()
+	return listener, nil
 }
 
 func addressesOverlap(a, b netip.Addr) bool {

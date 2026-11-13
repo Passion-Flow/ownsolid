@@ -70,6 +70,14 @@ func (c Config) CredentialPath() string { return filepath.Join(c.Layout().Operat
 // are kept across runs; configuration derived from install.yaml is rewritten.
 func Materialize(c Config) error {
 	l := c.Layout()
+	composeFile, err := os.ReadFile(c.ComposeFile)
+	if err != nil {
+		return fmt.Errorf("INSTALL_INPUT_UNREADABLE: %s", c.ComposeFile)
+	}
+	composeFile, err = c.projectBrowserPorts(composeFile)
+	if err != nil {
+		return err
+	}
 	historyControl, err := readHistoryControl(c)
 	if err != nil {
 		return err
@@ -169,10 +177,6 @@ func Materialize(c Config) error {
 	if e = writeFile(filepath.Join(l.Operator, "bootstrap.json"), bootstrap, c, true); e != nil {
 		return e
 	}
-	composeFile, e := os.ReadFile(c.ComposeFile)
-	if e != nil {
-		return fmt.Errorf("INSTALL_INPUT_UNREADABLE: %s", c.ComposeFile)
-	}
 	if e = writeFile(l.ComposeFile, composeFile, c, false); e != nil {
 		return e
 	}
@@ -218,6 +222,9 @@ func (c Config) renderControl(dsnFile string, serving bool) ([]byte, error) {
 		"listen_address": containerListen, "portal_origin": c.Origins.Portal, "admin_origin": c.Origins.Admin,
 		"tls_certificate_file": containerConfigDir + "/certificate.pem", "tls_private_key_file": containerConfigDir + "/private-key.pem",
 		"portal_assets": imagePortalAssets, "admin_assets": imageAdminAssets,
+	}
+	if address := c.portalListenAddress(); address != "" {
+		document["server"].(map[string]any)["portal_listen_address"] = address
 	}
 	document["database"] = map[string]any{"dsn_file": dsnFile}
 	if c.Resources.DatabaseRoleConnections != 0 {

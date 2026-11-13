@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -125,8 +124,9 @@ func (i *installer) apply(ctx context.Context) error {
 		run  func(context.Context) error
 	}{
 		{"preflight", i.preflight},
-		{"configuration", func(context.Context) error { return Materialize(i.config) }},
 		{"images", i.images},
+		{"listener-compatibility", i.listenerCompatibility},
+		{"configuration", func(context.Context) error { return Materialize(i.config) }},
 		{"serving-transport", i.servingTransport},
 		{"stop-control", i.stopControl},
 		{"database", i.database},
@@ -359,18 +359,19 @@ func ProbeOrigin(ctx context.Context, c Config, origin string) error {
 	if !roots.AppendCertsFromPEM(authority) {
 		return errors.New("CA file invalid")
 	}
-	host := c.Network.BindAddress
-	if ip := net.ParseIP(host); ip != nil && ip.IsUnspecified() {
-		host = "127.0.0.1"
+	address, e := c.probeAddress(origin)
+	if e != nil {
+		return e
 	}
-	address := net.JoinHostPort(host, strconv.Itoa(c.Network.HTTPSPort))
 	dialer := &net.Dialer{Timeout: 5 * time.Second}
-	client := &http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{
-		DisableKeepAlives: true, TLSClientConfig: &tls.Config{RootCAs: roots, ServerName: u.Hostname(), MinVersion: tls.VersionTLS12},
-		DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
-			return dialer.DialContext(ctx, network, address)
-		},
-	}}
+	client := &http.Client{Timeout: 10 * time.Second,
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		Transport: &http.Transport{
+			DisableKeepAlives: true, TLSClientConfig: &tls.Config{RootCAs: roots, ServerName: u.Hostname(), MinVersion: tls.VersionTLS12},
+			DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
+				return dialer.DialContext(ctx, network, address)
+			},
+		}}
 	request, e := http.NewRequestWithContext(ctx, http.MethodGet, origin+"/health/ready", nil)
 	if e != nil {
 		return e

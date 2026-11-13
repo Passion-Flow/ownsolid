@@ -43,6 +43,14 @@ images:
 network:
   bind_address: 127.0.0.1
   https_port: 8443
+  # Optional. Omit for shared Admin/Portal serving. Selecting this makes the
+  # original socket Admin-only and this publication Portal-only. Use distinct
+  # advertised browser hostnames and the shipped canonical Compose source.
+  # Upgrade an older shared Control release before selecting the new listener.
+  # portal_listener:
+  #   bind_address: 127.0.0.1
+  #   https_port: 19443
+  #   container_port: 9443
   # Optional, default 172.31.254.0/26. Private IPv4 subnet, /16 to /28, of the internal
   # network that carries database and telemetry traffic; it must not overlap a network
   # this host reaches. The stores take fixed addresses in it, so none is ever looked up

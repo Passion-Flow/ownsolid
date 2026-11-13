@@ -149,3 +149,18 @@ func TestServingImageCheckKeepsInstalledFilesAndRemovesItsOverride(t *testing.T)
 		}
 	}
 }
+
+func TestServingCleanupFailureRemainsVisibleWhenTheVerifierAlsoRefuses(t *testing.T) {
+	directory := t.TempDir()
+	if err := os.WriteFile(filepath.Join(directory, "owned-input"), []byte("fixture"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var outcome error = &StepError{Code: "INSTALL_SERVING_TRANSPORT_REFUSED", Detail: "fixture refusal"}
+	// A nonempty directory deterministically refuses removal, including as root.
+	removeServingInput(directory, &outcome)
+	err := wrapStep("serving-transport", outcome)
+	var step *StepError
+	if !errors.As(err, &step) || step.Code != "INSTALL_SERVING_CHECK_CLEANUP_FAILED" || !strings.Contains(step.Detail, "INSTALL_SERVING_TRANSPORT_REFUSED") {
+		t.Fatalf("primary refusal hid cleanup failure: %v", err)
+	}
+}

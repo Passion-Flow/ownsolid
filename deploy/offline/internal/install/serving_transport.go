@@ -14,14 +14,15 @@ import (
 // These public fields follow api/configuration/v1/control-serving-expectation.
 // The Control command owns configuration and TLS validation, including machine TLS.
 type servingExpectation struct {
-	FormatVersion      int      `json:"format_version"`
-	TransportMode      string   `json:"transport_mode"`
-	ListenAddress      string   `json:"listen_address"`
-	PortalOrigin       string   `json:"portal_origin"`
-	AdminOrigin        string   `json:"admin_origin"`
-	TLSCertificateFile string   `json:"tls_certificate_file"`
-	TLSPrivateKeyFile  string   `json:"tls_private_key_file"`
-	TrustedProxyCIDRs  []string `json:"trusted_proxy_cidrs"`
+	FormatVersion       int      `json:"format_version"`
+	TransportMode       string   `json:"transport_mode"`
+	ListenAddress       string   `json:"listen_address"`
+	PortalListenAddress string   `json:"portal_listen_address,omitempty"`
+	PortalOrigin        string   `json:"portal_origin"`
+	AdminOrigin         string   `json:"admin_origin"`
+	TLSCertificateFile  string   `json:"tls_certificate_file"`
+	TLSPrivateKeyFile   string   `json:"tls_private_key_file"`
+	TrustedProxyCIDRs   []string `json:"trusted_proxy_cidrs"`
 }
 
 const servingTransportSuccess = "CONTROL_SERVING_TRANSPORT_OK"
@@ -32,6 +33,7 @@ func (c Config) servingArguments(configPath string) ([]string, error) {
 		PortalOrigin: c.Origins.Portal, AdminOrigin: c.Origins.Admin,
 		TLSCertificateFile: containerConfigDir + "/certificate.pem",
 		TLSPrivateKeyFile:  containerConfigDir + "/private-key.pem", TrustedProxyCIDRs: []string{},
+		PortalListenAddress: c.portalListenAddress(),
 	}
 	raw, err := json.Marshal(public)
 	if err != nil {
@@ -85,7 +87,11 @@ func (i *installer) servingTransport(ctx context.Context) error {
 // before an upgrade or rollback stops the writer. The override changes only the
 // operator image; installed files and the serving container remain untouched.
 func (i *installer) verifyServingImage(ctx context.Context, image string) (err error) {
-	args, err := i.config.servingArguments(i.runtimeConfig())
+	return i.verifyServingSnapshot(ctx, image, i.runtimeConfig())
+}
+
+func (i *installer) verifyServingSnapshot(ctx context.Context, image, configPath string) (err error) {
+	args, err := i.config.servingArguments(configPath)
 	if err != nil {
 		return err
 	}
@@ -98,11 +104,7 @@ func (i *installer) verifyServingImage(ctx context.Context, image string) (err e
 		return errors.New("INSTALL_SERVING_CHECK_UNAVAILABLE: cannot create the private image override")
 	}
 	path := override.Name()
-	defer func() {
-		if removeErr := os.Remove(path); removeErr != nil {
-			err = errors.Join(err, errors.New("INSTALL_SERVING_CHECK_CLEANUP_FAILED: cannot remove the private image override"))
-		}
-	}()
+	defer removeServingInput(path, &err)
 	document := map[string]any{"services": map[string]any{"control-operator": map[string]string{"image": image}}}
 	err = json.NewEncoder(override).Encode(document)
 	err = errors.Join(err, override.Close())
@@ -115,4 +117,11 @@ func (i *installer) verifyServingImage(ctx context.Context, image string) (err e
 		return &StepError{Code: "INSTALL_SERVING_TRANSPORT_REFUSED", Detail: "the admitted image rejected the installed serving intent; keep the active version and correct the configuration before retrying: " + lastLines(output)}
 	}
 	return nil
+}
+
+func removeServingInput(path string, outcome *error) {
+	if err := os.Remove(path); err != nil {
+		*outcome = &StepError{Code: "INSTALL_SERVING_CHECK_CLEANUP_FAILED",
+			Detail: "cannot remove private serving input " + path + "; remove it before retrying: " + lastLines(errors.Join(*outcome, err).Error())}
+	}
 }
