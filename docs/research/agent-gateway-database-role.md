@@ -1621,3 +1621,51 @@ cleanup reserve and every schema60 baseline assertion. A fresh allocated run
 is required for actual schema61 fresh/restore catalogs. A matching pin-source rebuild
 and genuine original runtime fixture remain prerequisites for role/MODEL
 qualification. No dependency, model or dataset is added.
+
+### Actual schema61 metadata collection and next runtime boundary
+
+The separately authorized metadata-network-none opportunity completed real
+PostgreSQL 18.6/vector 0.8.7 source-driven fresh61 and seven restore55..61
+histories. Every resulting directory has 122 tables and 61 exact migration
+checksums. The two original schema60 baselines matched unchanged pins. The
+[measured directory values and minimal rebuild candidate](model-family-schema-admission.md#measured-schema61-directories-and-rebuild-only-pin-candidate)
+retain exact raw CatalogSQL JSON/SHA, ledgers, dumps and source bindings. These
+are metadata PSQL/pg_dump/pg_restore results. No original Go test binary,
+production Migrate, Control runtime grant or MODEL/cursor root was executed.
+
+The actual fixture had network mode none, only lo, no default route or published
+port, at most 2 CPU/4 GiB, and the pinned image ID. Container-loopback TCP status
+passed and the real server query returned 180006, its exact own cluster UUID and
+vector 0.8.7. Metadata SQL then used the container-local Unix socket. No host
+DSN existed. Host-loopback/runtime fixture eligibility remained explicitly false.
+The successful state was METADATA_COMPLETE_REBUILD_REQUIRED, not full acceptance.
+
+The actual directory is `lane-arc-diagnostics/arc111-native-metadata-none.rrp7nmdh`.
+SSH and outer returned 0 in 86.575013333 seconds; remote elapsed 55.636742589
+seconds included 11.410610529 seconds cleanup. Container/volume removal and
+absence, credential removal, empty owned groups and both original FD closure
+checks passed. No owned network was created; built-in none was untouched.
+Local SSH 59390 and parent 59363 were absent, observer joined, and cleanup was
+confirmed at allocation 147.742705 seconds. No retry or extra connection followed.
+Outer result SHA-256 is
+`2adf83b9b36a9cad5547ada2568370014d0277db4a791e60b0b89229c1ac563e`;
+actual-metadata summary SHA-256 is
+`6be01a0347889e70c47e3b3ae78aaa686a090d717501988cf5a387c5a798bccf`;
+cleanup summary SHA-256 is
+`11b49311aab5e616f4b95fd4de075288146187dbf87c4b0a09382b26a99b889f`.
+All actual entries are closed. The new pin-only candidate `549c3ad6` is uncompiled,
+unqualified and separate; the original strict60 source and three binaries remain
+unchanged and cannot qualify that candidate.
+
+The earlier host-port failure has a concrete upstream explanation consistent
+with the actual Internal=true, empty gateway and null NetworkSettings mapping.
+[Moby's upstream explanation](https://github.com/moby/moby/discussions/53256)
+describes publication through the default-gateway network; internal-only
+endpoints do not provide it. [Current gateway selection source](https://github.com/moby/moby/blob/master/daemon/libnetwork/default_gateway.go)
+is corroborating upstream context, not proof of this host's exact daemon build.
+A normal second network grants outbound routing, and direct container IP is a
+different endpoint from the original fixture's required `127.0.0.1`. Neither was
+substituted to make its check pass. No fake inspector, protocol change, daemon
+setting, route or TLS exception was used. A genuine owned host-loopback TCP
+fixture and matching candidate-source binaries remain required before the
+original runtime profiles can qualify.

@@ -488,3 +488,77 @@ The next network-none projection is metadata-only, with unchanged actual SQL
 and no claim to qualify the original runtime loopback fixture or role/MODEL
 roots. Actual61 catalogs, matching pin source/binaries and those original tests
 remain outstanding.
+
+## Measured schema61 directories and rebuild-only pin candidate
+
+The metadata-only network-none projection actually ran on source `3513ab2b`,
+tree `c65b8e3f`, pinned Linux amd64 PostgreSQL 18.6/pgvector 0.8.7. The server query
+returned `180006`, the exact owned fixture cluster name, and extension 0.8.7.
+All 5,102 source paths, every one of the 61 migrations and all 16 SQL inputs
+retained their original byte hashes. These are real PSQL/CatalogSQL/pg_dump/pg_restore results,
+not production Migrate, original host-TCP fixture, Control grants or MODEL roots.
+
+The fresh60 and restored60 baselines reproduced exact original hashes
+`4999ec1b3e7ccad081e2290270860c362d23d56ba088441dee7869f734f608d7` and
+`93b8967dbcc4b90c1692dcf67076192a8b97ead256335cf2a4fbccb6dcdf87b4`.
+All eight schema61 histories have 122 tables and 61 exact checksum-ledger entries.
+The common ledger SHA-256 is
+`7e1536cefaa8cb1314280f5f48eb05bc1f4646aec60ced5a4cab4a0eb5424086`.
+Catalog fingerprints hash the exact returned JSON text bytes after removing
+one PSQL terminal newline, with no JSON normalization:
+
+| Actual history | Raw catalog bytes | SHA-256 |
+| --- | ---: | --- |
+| fresh61 | 694,801 | 4e4fd711b4432735c9387555260dcef156192fd12c8c68aba72f4233aaced0e8 |
+| restore at 55 then source 56..61 | 696,743 | cfb7af39c456bdd9866686fdbad6f3e37237b5cef89c2351cd9ccc0dfc430c3d |
+| restore at 56,57,58,59,60 or 61 then remaining source | 696,843 each | 0e3e88879d32c142af26edf76e41249c7819384fd2008cccd5a9e5cfe9a806e6 |
+
+The actual fresh61 table-name delta is exactly `model_families` and
+`model_family_members`. Both carry tenant/workspace/site/cell columns. This
+is schema evidence, not evidence that a restricted Control login has the right
+grants or denials. The existing `model_versions` shape also changes as required
+by the source migration. The captured original runtime-grant inventory is
+unchanged.
+
+The isolated unqualified pin candidate replaces only the three existing
+directory constants and their schema-version comment in `catalog.go`, using
+the three measured values above. It leaves CatalogSQL, the three-history
+predicate implementation, migrations, role inventory, assertions and fixtures
+unchanged. It is frozen separately from the active strict60 source. All three
+original native packages must be rebuilt from that exact candidate before
+runtime qualification. The old three binaries cannot prove the changed pins.
+No Mac compilation or pin activation is authorized in this allocation.
+
+Raw catalogs, ledgers, dumps, scripts and receipts are retained in
+`lane-arc-diagnostics/arc111-native-metadata-none.rrp7nmdh`.
+SSH and outer returned 0 in 86.575013333 seconds; remote elapsed 55.636742589
+seconds included 11.410610529 seconds of cleanup. Actual PG/container/volume
+removal/absence passed, credentials were removed, both FDs closed with original
+identities and owned groups were empty. Local SSH 59390 and parent 59363 were
+absent, observer joined, and confirmation was at allocation 147.742705 seconds.
+The built-in none network was neither created nor removed, and no host DSN
+was created. All actual entry files are closed, without a retry.
+
+The next qualification still requires a matching pin-source rebuild, a genuine
+original loopback TCP/shared MODEL fixture, and the unchanged original
+Migrate/admission/restore/drift/ledger/runtime-grant and seven MODEL SQL roots
+plus the cursor root and its eleven dimensions. Formal61 and ARC-111 remain
+open; no full, installed, fleet or end-user flow qualification follows from
+this directory collection.
+
+The separate unqualified candidate is commit
+`549c3ad699debc2acd0c7b9754fd59d97788d74c`, tree
+`1a7ad692d315e18f5658918a6bc2d1f01749afa3`, parent exact source
+`3513ab2ba5885bb5d782919f7611d96e35d28fc6`. Its temporary local branch is
+`codex/arc111-measured61-pins-1a7ad692`; it is not merged or pushed. Only
+`services/control/internal/platform/database/catalog.go` differs from that
+parent. CatalogSQL and every runtime predicate, migration, grant entry, test
+and original owner input remain byte-identical. The active worktree retains
+its strict60 catalog constants. Patch SHA-256 is
+`e9581694bf56bcd5ecbe2fc8fb7218bfcbcf5a7d1d23f6dfd2d8bb18ec0c8e87`;
+the one-commit source bundle SHA-256 is
+`14336b33c91f034b0e71b3c545e6b7cc6938f25b5984142e5f7150bfb6cc5363`
+and requires source `3513ab2b`. `schema61-pin-candidate/rebuild-plan.json` binds the
+exact three Linux amd64 package builds, original repository_integration MODEL
+tag, offline environment and matching source/tree. It is a future build input,
+not an executed compiler, test or allocation.
