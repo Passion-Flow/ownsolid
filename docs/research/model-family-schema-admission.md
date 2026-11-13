@@ -382,3 +382,27 @@ see the [gateway qualification boundary](agent-gateway-database-role.md#joint-so
 for the scoped process cleanup and preserved earlier evidence. A diagnostic
 connection's success does not qualify a later native entry. The original
 schema60 pins and every migration/role assertion remain unchanged.
+
+## Offline native-entry selector contract
+
+The original frozen qualification plan's MODEL selector
+`^TestActualModelFamily` selected the seven SQL roots but omitted
+`TestModelHistoryCursorIntegrityAndScope`, already required by the owner handoff
+above. An offline source audit reproduced that omission and froze the corrected
+selector `^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$`.
+All eight roots have exactly one definition in the unchanged original MODEL
+source; the repository_integration profile includes both the tagged SQL roots
+and the untagged cursor root. Its eleven original dimensions are account,
+session, epoch, audience, tenant, workspace, site, cell, family, anchor and filter.
+The corrected selector retains every original selected SQL root. No owner
+implementation, assertion, conditional skip or fixture was changed.
+
+The frozen delta is
+`lane-arc-diagnostics/arc111-ssh-offline.9vgaoj6h/model-profile-correction.json`,
+SHA-256 `c8e5f88a425546a7eb37c7906744c234f4fba39fc00cfac8b428b57a677c532d`.
+Static checks prove the seven-to-eight selection change, unique definitions,
+eleven dimension names and original file hashes. They execute zero Go/SQL cases
+and are not a binary test-list or cursor qualification. The original plan and
+three compiled binary hashes remain preserved; the correction is not activated.
+The matching binary list and every root/subcase still need actual execution
+after authorized connectivity/resource admission and a matching admitted source.
