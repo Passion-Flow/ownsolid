@@ -679,6 +679,44 @@ SourceGuard in these tests protects existing Gitea-sourced sessions. It does
 not admit SAML as a serving provider. Structured telemetry for a future product
 path is also unqualified. IAM-104 remains open.
 
+## Next signed-result/request composition experiment
+
+Compose the already qualified strict verifier and persistent identity resolver
+with the actual-Identity claim overlay in a new external fork. Use an alternate
+private Go module file and sums, with the existing Control graph and the exact
+previously reviewed SAML versions, rather than changing product dependencies.
+Record the new graph and verify every added module's notices against the prior
+inventory before compilation. Do not downgrade shared Control dependencies.
+
+At start, capture the immutable identity-context ID, its revision and approved
+metadata digest under the existing target fence. Claim and staging must compare
+that source again. Retain the exact verified request ID in the verifier's private
+envelope; a valid assertion for another claimed request is not transferable.
+Stage only after strict upstream signature/profile verification, then recheck
+actual captured actor, credential, connector and profile authority. In one
+transaction, resolve the exact external identity, reserve the scoped signed
+assertion ID, store a minimized verified result and a random continuation digest,
+change claimed to verified and append the synthetic stage audit. Expire the
+result no later than either the request or the verified assertion. No XML,
+attributes, private key or raw continuation is stored as a result payload.
+
+The scoped assertion reservation belongs to the flow/result lifecycle, not a
+second receipt ledger. Keep it until the assertion can no longer be accepted,
+including any applicable clock skew. The experiment has no maintenance deletion
+path and therefore makes no retention/cleanup production claim. One-time staging
+and context fences must survive owner reconstruction. Correctly signed wrong
+request/context inputs, changed profile/source authority, duplicate assertion
+IDs on different requests, audit rollback, actual concurrent staging and both
+COMMIT wire-loss modes must return no continuation on failure. No automatic
+resend or signed-result fabrication is permitted. Product admission still needs
+first-party completion with the initiating ordinary cookie, local binding/session
+and source ownership, MFA policy, formal schema/contracts/startup and UI.
+
+The resulting dependency selection and composition are not yet qualified. The
+external experiment retains the existing MIT/BSD/Apache notices for its exact
+SAML graph and PostgreSQL licenses for its fixtures; it adds no model, dataset,
+product binary or runtime network access.
+
 ## Alternatives, prototype and finished-item acceptance
 
 Reject a hand-written XML signature implementation, email-only linking,
