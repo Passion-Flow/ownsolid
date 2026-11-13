@@ -79,8 +79,8 @@ The original parents do not implement the newly assigned nonblocking second
 carrier and absolute 300-second complete lifetime. Safest choice: preserve the
 fixed c527fb68 event runner and all existing candidates/evidence, and prepare
 test-only source e639db90 plus the exact hashed native plan before any new heavy
-framework. The single native opportunity remains unused: zero Linux carrier
-attempts and zero new native Go/SQL test bodies. The
+framework. Preparation used no Linux carrier acquisition or native Go/SQL test body;
+the later authorized attempt is recorded below. The
 [bounded plan and inputs](training-published-file-readers.md#prepared-native-authoritywriter-cases-and-parent-boundary-review)
 retain all original resource thresholds and define the required existing-runner
 delta, cleanup, raw outcomes and no-retry behavior. ARC construction and formal
@@ -91,7 +91,9 @@ The separate bounded wrapper/config/diffs are now prepared and hashed in
 /root/lane-trn-tools/reader-native-bounded-v2/. Twenty-six pure local checks
 and a read-only Linux input/source check passed; details and exact hashes are
 in the [review artifact note](training-published-file-readers.md#bounded-reader-fixture-review-artifact).
-This resolves preparation only. No native carrier acquisition, compilation or
-Go/SQL body occurred and the single opportunity remains unused pending the
-concrete wrapper review. The original plan, binding and c527fb68 runner are
+This resolved preparation only. Its later single authorized invocation
+returned FIRST_LOCK_BUSY (raw 73) after 60.128525 seconds, before ownership,
+second-carrier open, admission, compilation or any Go/SQL body. The original
+opportunity is consumed and no in-round retry is permitted. See the
+[receipt, stage results and owned-resource audit](training-published-file-readers.md#authorized-single-native-attempt-first-carrier-refusal). The original plan, binding and c527fb68 runner are
 unchanged. No product or shared-owner contract is declared complete.

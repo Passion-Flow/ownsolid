@@ -414,7 +414,8 @@ and exact version together.
 The owner must also provide current-authority retained ready/retired metadata
 reads, complete cursor/response policy and actual error outcomes. DEV can then
 finalize public OpenAPI, generated Go/Python and Help; the model owner retains
-storage/authenticated routes and Web retains S-202. The isolated prototype is
+storage and domain authorization, the original route owner registers authenticated
+dispatch, and Web retains S-202. The isolated prototype is
 unregistered and changes no product API, SDK, model store or execution admission.
 
 ### Verification and licenses
@@ -444,3 +445,274 @@ No dependency, model, dataset or third-party code is added. Existing pinned SDK
 tool licenses and commercial, redistribution and offline notice requirements
 remain those in [sdk.md](sdk.md#licenses). The primary references are read for
 design only. No public operation or roadmap item is completed by this note.
+
+## Durable family domain contract
+
+Reviewed 2026-11-13 for the model-owner implementation. Follow
+[ADR 0081](../decisions/0081-retain-explicit-model-family-membership.md).
+The MLflow distinction between registry identities and immutable versions above
+is useful; its name-based registration is deliberately not ownsolid's grouping
+rule. Each legacy version gets its own random persisted family UUID, without
+rewriting its version ID or deployment references. Default new imports, reimports
+and derived publications also get separate families. Joining requires a current
+Admin's explicit exact anchor in the same version-publication transaction.
+
+Use PostgreSQL's [deferred scoped foreign keys](https://www.postgresql.org/docs/18/ddl-constraints.html)
+for membership, its [BEFORE INSERT trigger](https://www.postgresql.org/docs/18/trigger-definition.html)
+for default registration and a [transaction advisory lock](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)
+over the exact target version for both default and explicit selection. The trigger
+is part of the unnumbered candidate DDL. It activates only when the migration owner
+admits that DDL; existing Go publication paths do not probe for optional tables or
+silently skip membership. Explicit selection borrows the existing publication
+transaction, rechecks Admin/session/workspace authority, records an existing audit
+event and never commits on its own. Different concurrent choices fail rather than
+reassigning membership. Deferred constraints refuse an orphan staged selection.
+
+Backfill must not alter a table while its deferred foreign-key events are pending.
+A real PostgreSQL minimal transaction reproduced that failure in the initial DDL.
+Create the cyclic constraints before population, add the predecessor version's
+required-membership FK as `NOT VALID`, populate both maps, then use named
+[SET CONSTRAINTS IMMEDIATE](https://www.postgresql.org/docs/18/sql-set-constraints.html)
+to finish this domain's checks before [validating the predecessor FK](https://www.postgresql.org/docs/18/sql-altertable.html).
+Restore only these named constraints to deferred mode. No invalid FK is left after
+admission, and unrelated owners' constraint modes are unchanged. Candidate downgrade
+refuses after any family has been adopted; formal rollback must retain those UUIDs.
+An isolated PostgreSQL transaction verified this ordering with an existing version,
+the complete candidate DDL, a new default registration and forced constraint checks.
+It observed two distinct families and rolled the entire prototype back successfully.
+
+Retained detail checks the selected exact version and resolved family together
+before decoding its catalogue or graph. A different family's damaged metadata must
+still return `RESOURCE_NOT_FOUND` under the requested anchor. Add that negative
+case alongside same-family ready/retired detail and unknown-version reads.
+
+History resolves an exact anchor, uses the existing retained catalogue and lineage
+checks, and orders by PostgreSQL [row comparison](https://www.postgresql.org/docs/18/functions-comparisons.html#ROW-WISE-COMPARISON)
+on `(created_at,id)` descending. Fetch at most `limit+1` entries and validate the
+whole selected page before publishing it. The configured `runtime.ui.page_size`
+is the omitted limit; explicit limits are 1..100. Empty cursors and filters are
+invalid. Ready/retired filtering changes navigation only. Each page takes current
+actor/session and shared workspace fences; this is not a frozen history snapshot.
+
+The v1 cursor is at most 512 ASCII bytes: canonical unpadded base64url JSON plus
+an HMAC-SHA-256 signature with a model-history-specific domain separator. Reuse the
+installed Identity HMAC key and [constant-time comparison](https://pkg.go.dev/crypto/hmac).
+Bind its scope digest to account, session, auth epoch, audience, tenant, workspace,
+family, exact anchor and state filter. Persist no cursor secrets or page results.
+Key rotation invalidates old cursors and requires restarting navigation. Cursor
+positions retain UTC microseconds and canonical nonzero UUIDs.
+
+Wire ceilings are fixed protocol bounds: 4 KiB per metadata item, 512 KiB for a
+complete 100-item page including continuation, and 128 KiB for retained detail.
+The schema already bounds names to 100 characters, manifests to 16 KiB and retained
+input snapshots to 64 KiB. Metadata pages omit manifests and lineage; detail uses
+the existing manifest and dataset references. Check the complete encoded envelope
+before returning it. These ceilings are not host resource or deployment defaults.
+
+Acceptance requires real PostgreSQL legacy backfill, fresh/explicit registration,
+retired reimport, derived publication, transaction/audit rollback, conflicting and
+matching concurrent selections, exact tied-time pages and tampered/scope-swapped
+cursors. Revoke the actor/session and disable or change workspace membership between
+pages. Same-name/model-key families and same-digest distinct versions remain
+separate. Retired metadata must coexist with exact-version execution refusal.
+Missing or damaged retained graph data returns no partial page or detail. Unknown
+commit outcomes suppress projections. No public API, root wiring or S-202 result
+is claimed by these domain tests.
+
+No dependency, model or dataset is added. Existing Go standard library and Google
+UUID are BSD-3-Clause, pgx is MIT and PostgreSQL uses the PostgreSQL License, as
+recorded in [the cleanup research](model-import-cleanup.md#mod-121-abandoned-upload-retention).
+They permit commercial/offline use and redistribution with notices. The official
+registry and SQL documentation are design references only.
+
+### Service and wire policy handoff
+
+The staged model-owner entry points are:
+
+| Entry | Inputs and result |
+| --- | --- |
+| `StageVersionFamilyWithin` | Borrowed publication transaction, current authenticated Admin, requested workspace, exact new version ID, optional exact anchor, reason and server request ID; returns the persisted family UUID. An empty anchor selects a new independent family. The caller inserts the version and commits the whole reviewed/import publication, or suppresses the result on any failure. |
+| `History` | Current authenticated Admin, requested workspace, exact anchor and typed optional limit/cursor/state; returns `workspace_id`, `family_id`, `anchor_version_id`, bounded `items` and required nullable `next_cursor`. |
+| `HistoricalVersion` | Current authenticated Admin, requested workspace, exact anchor and exact member version; returns retained metadata, family and anchor IDs, the existing manifest and optional existing dataset lineage. |
+| `VersionHistoryPolicy` | Configured UI page default, maximum limit 100, cursor 512 bytes, page envelope 512 KiB and detail envelope 128 KiB. Metadata items have the fixed 4 KiB ceiling described above. |
+
+Every metadata item contains `id`, `workspace_id`, `name`, `model_key`, `kind`,
+`catalog_digest`, `state` and UTC `created_at`. The new historical state vocabulary
+is `ready`/`retired`; the stored `deleted` state and all existing DTOs remain intact.
+The complete body bound includes the existing `{data: ...}` envelope. No ordinal,
+count, latest alias, artifact-path authority or automatically aggregated history
+is returned. Default and explicit registration both use the existing version insert;
+the admitted DDL makes its membership atomic. Explicit selection must precede it.
+
+New history is Admin-only and requires an active installation workspace. A platform
+Admin's current authority spans that installation; removing an ordinary membership
+does not demote that Admin. Session, account, Admin-role and workspace revocation
+are checked again on every page. There is no new Portal history permission. Omitted
+limit selects policy; explicit zero is invalid. Omitted filter selects both retained
+states; explicit empty filter is invalid. Omitted cursor starts navigation; explicit
+empty, stale-key, tampered or differently bound cursor is invalid. Limits may change
+between pages without changing the bound anchor or filter. The current cursor has
+no independent grant lifetime and remains subject to the live session and key.
+
+Domain failures return a zero page/detail, never a partial `data` projection.
+`INVALID_CURSOR` requires restarting from the exact anchor. `VALIDATION_FAILED`
+rejects explicit invalid options. Existing `AUTH_SESSION_EXPIRED`, `ACCESS_DENIED`
+and `RESOURCE_NOT_FOUND` retain current authority/scope meanings.
+`MODEL_HISTORY_UNAVAILABLE` identifies an unadmitted backend/schema, unavailable
+signing key or invalid installed pagination policy. `MODEL_FAMILY_CONFLICT` refuses
+a different immutable membership choice. `MODEL_FAMILY_INVALID` and
+`MODEL_HISTORY_INVALID` require repairing retained metadata from a verified source.
+Existing `MODEL_FILE_INVALID` and `MODEL_DERIVED_CATALOG_INVALID` identify invalid
+catalogue or retained lineage. Storage and typed transaction failures retain the
+existing normalization and suppress projections, including unknown commit outcomes.
+
+The independent DEV draft `6a2dd96fb392444de755db1cf5bfb771867064b0`
+was checked against producer `2b4aaae5` and the unchanged domain sources.
+Its `domain-draft/handoff.json` names exactly these five unmapped codes; none
+requires a new domain error or DTO. Their existing stable meanings are:
+
+| Domain code | Existing cause and continuation |
+| --- | --- |
+| `MODEL_HISTORY_UNAVAILABLE` | The backend or candidate schema is unavailable, or installed history pagination/signing prerequisites are invalid. Repair installation prerequisites before restarting history; never substitute an empty page or inferred family. |
+| `MODEL_HISTORY_INVALID` | Retained metadata, the encoded envelope or an internally encoded cursor violates the domain's invariants. Repair the verified retained source or implementation; never release a partial projection. A malformed client cursor instead returns `INVALID_CURSOR`. |
+| `MODEL_FAMILY_INVALID` | An exact retained version lacks a valid established family/root membership, or that binding is inconsistent. Restore the verified membership; never assign a new family during a read. |
+| `MODEL_IDENTITY_REQUIRED` | The service lacks its Identity/Workspaces owners, or those owners do not share the same Identity instance. This is an installation composition failure, not an expired or unauthenticated caller. |
+| `MODEL_STORAGE_MISMATCH` | The configured owners use inconsistent stores, or explicit publication receives a pool/wrong-dialect executor instead of the matching borrowed transaction. Repair composition; never retry against a guessed store. |
+
+The three history/family codes survive `modelReadError`; the two setup failures
+return from repository validation before `readActor` starts its transaction.
+Explicit family selection also refuses an invalid borrowed executor directly.
+All failed historical reads return the zero DTO, and failed selection returns no
+family ID. The publication caller must also suppress a staged ID if its later
+commit fails or has an unknown outcome. Existing current-authority checks and typed
+transaction normalization remain separate. IAM must admit or normalize the five codes without confusing
+composition failure with caller authentication or returning success metadata.
+
+The draft's eight metadata fields, exact anchor/member selectors, flat retained
+detail, omitted options and required nullable continuation match the domain.
+This source/shape review adds no runtime result or public route. The draft's
+unregistered OpenAPI and generated codec inputs remain DEV-owned and untouched;
+the earlier PostgreSQL and native results retain their original source/platform.
+
+These are module results, not newly registered HTTP Problems. DEV must admit the
+public request/response and Problem schemas and generated clients. The original
+route owner must bind the server-authenticated actor and resolved installation
+scope, preserve the body ceilings and current request deadline, and run real
+dispatcher acceptance. ARC must admit the unnumbered DDL, scoped role grants,
+catalog checks, backup/restore and data-preserving downgrade policy. Web then
+composes S-202 without changing legacy ready-only list/detail consumers.
+
+### PostgreSQL family domain acceptance
+
+On 2026-11-13, Linux amd64 source `95dc2891`, based on `8b17a295`, ran
+against the schema 60 lineage, PostgreSQL 18.6 and pgvector 0.8.7 with
+`--network none`. Backfill/lifecycle, bounded history/authority, retained derived
+graph and verified derived registration roots passed. The selection transaction
+root also passed explicit and default publication rollback, orphan commit refusal,
+audit rollback and immutable membership controls. They exercised distinct IDs with
+the same name and digest, unchanged deployment references, retired metadata with
+exact-version execution refusal, tied timestamps, nullable continuation, invalid
+options, current session/account/Admin-role/epoch/workspace refusal, cross-scope
+refusal, damaged metadata/lineage and unknown-outcome projection suppression.
+
+The two concurrent selections reached real advisory-lock contention and the correct
+business outcomes. Their initial final assertion incorrectly included the second
+publisher's separately audited login. Source `052a7b18` corrected that test-only
+baseline, asserted the exact version's selection audit and passed both cases in
+3.03 seconds: matching selection converged and conflicting selection returned
+`MODEL_FAMILY_CONFLICT`, with one membership and one selection audit. Runtime and
+candidate DDL sources were unchanged. The already-passed cases were retained.
+The original cursor codec passed Linux's race detector, including all nine scope
+dimensions, tampering, invalid payloads and key rotation; its sources remain unchanged.
+
+Source `6abb7f16` then moved exact member selection ahead of retained metadata
+decoding in detail reads. The affected history/detail subcase passed again in
+1.53 seconds on a fresh disconnected PostgreSQL fixture. A damaged version in
+another family and an unknown exact version both returned `RESOURCE_NOT_FOUND`
+under the requested anchor; same-family retired detail and bounded navigation
+still passed. This fourth fixture and its private inputs were also removed.
+
+The initial DDL failure and its isolated corrected prototype remain preserved
+separately from these passed cases. Each disposable PostgreSQL fixture, temporary
+store and private credential file was removed; original logs, source and binaries
+remain preserved. These are domain/SQL and file-registration results using synthetic
+review metadata and small synthetic weights, not model quality, production approval,
+public dispatcher, installed migration or S-202 acceptance. MOD-103 remains open.
+
+The same model and preparation sources, rebased as `684f07ef` onto `db7ee24a`,
+passed native `make check` and `make build`. `make test` stopped in its browser
+prerequisite: Portal passed 409 cases, skipped 10 and failed the English offline
+Help contract-download case at `web/packages/shell/testing/help-flows.ts:165`.
+It expected `/help/api` but received `/help/api?q=changePassword`; the runner
+cancelled the sibling Console suite. Web and OpenAPI files were byte-identical
+to that upstream baseline. The trace and failed invocation are retained. Because
+browser tests are prerequisites, this invocation did not reach the Go, Rust or
+Web unit-test recipes. A focused replay of that unchanged Portal case passed in
+2.4 seconds. A separate continuation then passed all previously unreached Go
+modules, locked offline Rust tests and Web unit tests on the same runtime sources
+(`ba90c3a4`, documentation
+only since `684f07ef`). The original whole `make test` failure is retained; a
+complete browser-suite pass and public dispatcher acceptance are still unclaimed.
+
+After integrating the dataset-snapshot and training cell-fence changes from
+`d0ab719a`, source `b4e222a7` again passed `make check` and `make build`.
+The complete browser prerequisite reproduced the same Help URL assertion in
+Simplified Chinese while the English case passed. Portal again reported 409
+passed, 10 skipped and one failed, and Console was cancelled. The new baseline's
+Web files were unchanged. A separate Control-wide `go test ./... -count=1` then
+passed, including Models, model preparation, dataset and training tests. Reuse
+the unchanged modules' earlier unit results and the scoped PostgreSQL evidence;
+neither failed whole `make test` invocation is a pass. Keep this candidate
+unpublished until the required whole-repository gate can pass.
+
+The original Web owner subsequently published `44ab5229`, correcting the shared
+Help assertion to observe the settled saved filter, input and content. Its two
+Portal controls failed the former bare-URL assertion only after observing the
+real saved query; all four corrected Console/Portal English/Chinese cases passed
+without skip or retry. These are Web-owner results on its recorded source, not a
+new MODEL whole gate. Integrate the published correction and current main before
+M's next complete check/build/test. Preserve both earlier failed complete runs
+and the original source/platform of the PostgreSQL and native unit evidence.
+Formal schema/role/catalog admission, HTTP dispatch and S-202 remain separate.
+
+### Corrected native full gate
+
+Source `2783a46fa8990daa0792f11ee764c46a7795ef36`, tree
+`fd479f8e54563061274ec898923d9b16dcdccc0a`, on base `f11aa11f`
+passed complete `make check`, `make build` and `make test`, each with exit zero,
+on Darwin arm64 with Go 1.27.3, Python 3.12, Node 26.13.0/pnpm 12.16.1 and
+Rust 1.99.1. The original Makefile completed its browser prerequisite and every
+Go, Rust and Web unit-test recipe. Console passed 1,191 cases with 28 existing
+installation-dependent skips; Portal passed 410 with 10 such skips. All four
+corrected English/Chinese Help cases passed inside these complete suites.
+The retry configuration stayed zero and no skip or assertion was removed.
+
+The single blocking kernel wait took 662.728 seconds; execution independently
+took 511.522 seconds. The original permanent carrier and inherited FD were retained
+through fresh resource checks and the complete gate. The short APFS scratch began
+with 99.7 percent available, preserving the object-store threshold. Both entrances
+were freshly built from this exact source; all 1,230 output files were hashed and
+rechecked. The asset manifest SHA-256 is
+`f42290cb1cc5298f017f97a2f86a1822e3611e9a6441c1396eafea8f87a4b6c5`.
+The bounded parent result SHA-256 is
+`0da3d19840ef3c06ccea36b80a510a8af0a53e803237c07789d9090ffbdb8f3a`.
+The owned process group exited, FD closed, carrier identity and source remained
+unchanged, scratch was detached and removed, and both preview ports were free.
+
+Both earlier failed complete runs remain retained. This new gate qualifies its
+recorded native source only; it does not relabel earlier PostgreSQL sources or
+establish a new SQL, installed, hardware or S-202 result. The family DDL remains
+an unnumbered candidate and the history reads remain unregistered. MOD-103 stays
+open until ARC schema/role/catalog, IAM dispatch, DEV public contracts and Web
+integration are actually admitted and verified.
+
+To replay, configure the private PostgreSQL DSN and fresh owned schema as described
+by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
+Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
+non-weight files for the derived-registration fixture. The tests embed and apply
+the unnumbered DDL only inside their disposable schemas.
+
+```sh
+go -C services/control test -p=1 -tags repository_integration ./internal/modules/models \
+  -run '^TestActualModelFamily' -count=1 -v
+```
