@@ -361,6 +361,75 @@ the frozen `9e7404f6`/`82c602d3` full-gate source. The concrete lint observation
 28.147 seconds and the reported 2,075,901,952-byte maximum-RSS field; neither is
 a guaranteed future wall-time or total-tree memory cap.
 
+### Native tree sampling and exit-boundary rejection
+
+A subsequent single admitted memory-only job again selected exact source
+`56a19799bfec788170d71680b4f0663c23073107` and its unchanged tree and Web tree.
+Fresh raw Free was 4,864,524,288 bytes and disk free was 165,640,785,920 bytes.
+The same epoch carrier/open description covered execution and cleanup, with a
+600-second total, final 120-second cleanup reserve, 2048 MiB Node old-space
+ceiling and zero core-dump limit. The previously qualified seven real fixtures,
+372-file/config proof and seven real negatives were retained, not rerun or counted
+again. The conditional same-FD continuation into A required valid completed B;
+that prerequisite was not met, so A was never entered.
+
+The private sampler now uses Apple's native process API rather than a PGID
+filter. It records PID, PPID, PGID, UID, start time in seconds/microseconds and
+resident bytes, follows transitive child ownership, retains proven reparented
+lifetimes and rejects reused or unidentifiable lifetimes. It samples the guard,
+awake helper, controller, worker and command descendants. RSS sums count shared
+pages once per process; reads are non-atomic, and a 50 ms interval cannot promise
+the continuous maximum or observe every shorter-lived process. A failed sample,
+unattributed lifetime or interval over 250 ms rejects the full-command metric.
+
+The original complete CLI again reached an explicit heap OOM, exiting SIGABRT
+(-6) in 16.673 seconds. Its 313 timed snapshots plus one final cleanup snapshot
+were internally consistent; the maximum saved owner-tree RSS was 2,600,534,016
+bytes, with no sampling failure. Its separate `time -l` maximum-RSS field was
+2,560,540,672 bytes. This is a bounded failed baseline, not successful original
+lint or a continuous-peak measurement.
+
+The new command retained 544 internally consistent snapshots over 21 distinct
+lifetimes, including two command-descendant edges crossing PGIDs. Offline review
+checked unique PID lifetimes, UID, exact parent/child start identities, transitive
+origin, RSS sums and saved intervals; none of those saved frames failed those
+checks. This confirms the earlier PGID omission is addressed in the saved data,
+not that the whole measurement completed. Its maximum saved RSS, 2,197,012,480
+bytes, is only a partial-run observation and must not be compared as a complete
+peak. The final sample failed on known PID 74118: task information returned zero
+bytes with ESRCH, the BSD fallback did not establish a same-lifetime zombie,
+and signal-zero did not establish PID absence. The retained evidence cannot
+prove the exact exit boundary. Treating that uncertainty as zero RSS would be
+incorrect; the sampler raised `SampleGap` and refused the result.
+
+The new stdout contains complete JSON for 372 files with zero errors/warnings,
+and `time -l` reports 28.97 seconds and 2,038,513,664 bytes. The interrupted
+measurement wrapper did not capture the command exit, so neither output is
+promoted to a new successful run or used to repair the missing lifecycle proof.
+The actual parent exited 1 in 46.728 seconds with cleanup confirmed. Its owned
+groups, parent/controller and carrier descriptors were absent at readback; the
+carrier identity and creation-only manifest hash were unchanged. Original input
+hashes, raw results and failed conclusion remain immutable. No second NB,
+automatic retry, new queue or A execution followed.
+
+The next private correction must collect detailed return/errno values for every
+fallback and bind a kernel lifetime identifier while the task is readable.
+Apple's [libproc wrapper](https://github.com/apple-oss-distributions/xnu/blob/main/libsyscall/wrappers/libproc/libproc.c)
+and [resource definitions](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/resource.h)
+provide `proc_pid_rusage` / `RUSAGE_INFO_V0` with kernel start and exit timestamps;
+the installed SDK documents support for live processes and zombies. A prototype
+verified the local 96-byte ABI against reads of the reviewer process, and 15
+explicit synthetic lifecycle decisions passed. It emits retirement events only
+after same-lifetime kernel exit/zombie or confirmed PID absence, never a made-up
+RSS sample; changed identity, permission failure and unresolved live-task reads
+still reject. These checks did not observe a real exit transition, integrate the
+prototype into the executed sampler or start another workload. Historical frames
+lack that kernel-start/exit evidence, so this prototype cannot retroactively
+validate them. Another actual comparison remains necessary for the owner-tree
+peak claim; existing functional qualification and all A/installed/POR-112 limits
+remain unchanged. No dependency or upstream implementation is copied into the
+product by this private instrumentation research.
+
 ### Licences
 
 No dependency, model, dataset or external runtime request is added. Existing
