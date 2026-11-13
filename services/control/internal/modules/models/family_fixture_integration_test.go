@@ -181,6 +181,9 @@ func familyControlPool(t *testing.T, operator *pgxpool.Pool) *pgxpool.Pool {
 	if err := lease.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=$1)`, role).Scan(&existing); err != nil || existing {
 		t.Fatal("fresh owned Control principal required", err)
 	}
+	// Preserve the disposable principal identity for original-owner cleanup;
+	// its credential and URI must never enter test output.
+	t.Log("MODEL_FAMILY_OWNED_CONTROL_ROLE", role)
 	t.Cleanup(func() {
 		cleanup, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 		defer cancel()
