@@ -47,12 +47,16 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
           section.getByText(text['account.sessions.current'], { exact: true }),
         ).toBeVisible();
         expect(control.browserSessionReads[0]).toEqual({ cursor: null, background: true });
+        await page.screenshot({ path: info.outputPath('account-settings.png'), fullPage: true });
         const currentEnd = section.getByRole('listitem').first().getByRole('button');
         await expect(currentEnd).toHaveAttribute('aria-disabled', 'true');
         await currentEnd.focus();
         await page.keyboard.press('Enter');
         await expect(page.getByRole('dialog')).toHaveCount(0);
-        await page.screenshot({ path: info.outputPath('account-desktop.png'), fullPage: true });
+        await section.screenshot({ path: info.outputPath('account-desktop.png') });
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await section.screenshot({ path: info.outputPath('account-1440.png') });
+        await page.setViewportSize({ width: 1280, height: 720 });
         await section.getByRole('listitem').nth(1).getByRole('button').click();
         const dialog = page.getByRole('dialog', { name: text['account.sessions.confirm.title'] });
         await expect(dialog.getByRole('textbox')).toBeFocused();
@@ -66,13 +70,13 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
         await expect(section.getByText(text['account.sessions.onlyCurrent'])).toBeVisible();
         expect(control.browserSessionEnds).toEqual([other.id]);
         expect(control.browserSessionReads.at(-1)?.background).toBe(false);
-        await page.screenshot({ path: info.outputPath('current-only.png'), fullPage: true });
+        await section.screenshot({ path: info.outputPath('current-only.png') });
         control.browserSessions = [];
         await section
           .getByRole('button', { name: text['account.sessions.refresh'], exact: true })
           .click();
         await expect(section.getByText(text['account.sessions.empty.title'])).toBeVisible();
-        await page.screenshot({ path: info.outputPath('empty-live-list.png'), fullPage: true });
+        await section.screenshot({ path: info.outputPath('empty-live-list.png') });
         control.browserSessions = [{ ...browserSession }, { ...other }];
         await section
           .getByRole('button', { name: text['account.sessions.refresh'], exact: true })
@@ -84,14 +88,28 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
         expect(
           await page.locator('main').evaluate((main) => main.scrollWidth - main.clientWidth),
         ).toBe(0);
-        await page.screenshot({ path: info.outputPath('account-390.png'), fullPage: true });
+        await page
+          .getByRole('region', { name: text['shortcuts.switch'], exact: true })
+          .screenshot({ path: info.outputPath('keyboard-390.png') });
+        await section.screenshot({ path: info.outputPath('account-390.png') });
         await page.setViewportSize({ width: 360, height: 780 });
         await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
         await expectAccessible(page);
         expect(
           await page.locator('main').evaluate((main) => main.scrollWidth - main.clientWidth),
         ).toBe(0);
-        await page.screenshot({ path: info.outputPath('account-narrow-dark.png'), fullPage: true });
+        await page
+          .getByRole('region', { name: text['shortcuts.switch'], exact: true })
+          .screenshot({ path: info.outputPath('keyboard-narrow-dark.png') });
+        await section.screenshot({ path: info.outputPath('account-narrow-dark.png') });
+        await section.getByRole('listitem').nth(1).getByRole('button').click();
+        await expectAccessible(page);
+        await page.screenshot({
+          path: info.outputPath('end-confirmation-narrow-dark.png'),
+          fullPage: true,
+        });
+        await page.keyboard.press('Escape');
+        await expect(page.getByRole('dialog')).toHaveCount(0);
       });
     }
 
@@ -119,7 +137,7 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
       await expect(section.getByText(`Session ${browserSession.id}`, { exact: true })).toHaveCount(
         0,
       );
-      await page.screenshot({ path: info.outputPath('same-account-relogin.png'), fullPage: true });
+      await section.screenshot({ path: info.outputPath('same-account-relogin.png') });
     });
 
     test('replaces the current marker through the actual password form', async ({ page }, info) => {
@@ -140,7 +158,7 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
         0,
       );
       expect(control.browserSessionReads.at(-1)?.background).toBe(true);
-      await page.screenshot({ path: info.outputPath('password-rotation.png'), fullPage: true });
+      await section.screenshot({ path: info.outputPath('password-rotation.png') });
     });
 
     test('keeps earlier pages on an invalid cursor and failed restart', async ({ page }, info) => {
@@ -152,7 +170,7 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
       await section.getByRole('button', { name: 'Load more sessions' }).click();
       await expect(section.getByRole('alert')).toBeVisible();
       await expect(section.getByRole('listitem')).toHaveCount(1);
-      await page.screenshot({ path: info.outputPath('pagination-partial.png'), fullPage: true });
+      await section.screenshot({ path: info.outputPath('pagination-partial.png') });
       control.browserSessionReadProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
       await section.getByRole('button', { name: 'Restart from the first page' }).click();
       await expect(section.getByRole('button', { name: 'Read again' })).toBeVisible();
@@ -180,7 +198,7 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
             'aria-disabled',
             'true',
           );
-        await page.screenshot({ path: info.outputPath(`${code}.png`), fullPage: true });
+        await section.screenshot({ path: info.outputPath(`${code}.png`) });
       });
     }
 
@@ -223,7 +241,7 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
       const section = page.getByRole('region', { name: 'Sessions', exact: true });
       await expect(section.locator('.animate-pulse').first()).toBeVisible();
       await expect(page.getByLabel('Display name')).toBeEnabled();
-      await page.screenshot({ path: info.outputPath('loading-delayed.png'), fullPage: true });
+      await section.screenshot({ path: info.outputPath('loading-delayed.png') });
       release();
       await expect(section.getByRole('listitem')).toHaveCount(2);
     });

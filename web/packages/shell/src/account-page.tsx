@@ -142,9 +142,10 @@ function KeyboardCard() {
   const { t } = useI18n();
   const { singleKeyShortcuts, setSingleKeyShortcuts } = usePreferences();
   return (
-    <Card>
-      <CardHeader title={t('shortcuts.switch')} subtitle={t('shortcuts.switch.detail')} />
+    <Card aria-label={t('shortcuts.switch')}>
+      <CardHeader title={t('shortcuts.switch')} />
       <CardBody>
+        <p className="mt-0 text-text-3">{t('shortcuts.switch.detail')}</p>
         <div className="flex items-center justify-between gap-4">
           <p className="m-0 text-text-2">{t('shortcuts.switch.list')}</p>
           <Switch
