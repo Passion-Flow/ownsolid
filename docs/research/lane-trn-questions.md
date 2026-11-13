@@ -118,3 +118,15 @@ v3 correction](training-published-file-readers.md#post-dev-opportunity-actual-st
 retain the failure and original thresholds. Twenty-nine mock/file checks
 passed; v3 was not run natively. Post-run SSH archive/download 502/255 leaves
 full server metadata delivery unconfirmed, distinct from the actual failure.
+
+
+The explicitly reviewed v3 opportunity now qualifies the exact original owner
+source e639db90 on native Linux amd64: two PostgreSQL package/root passes plus
+the required independent-reader subcase, zero skips/failures, Go/entry exits 0
+in 138.486532 seconds. All actual cleanup readbacks passed; the independent
+audit confirmed both FD releases, absent container/DSN and all 24 child groups
+gone. [Qualified evidence and original-author bundle/lifecycle handoff](training-published-file-readers.md#native-linux-owner-reader-qualification)
+are available to ARC. The typed producer boundary is supplied; actual ARC
+construction/init rollback/drain/Close, read-only namespace delivery, Model/
+Node/protected SQL and fleet budgets remain open. This is not installed
+gateway or restricted-role acceptance; source remains private until integrated.
