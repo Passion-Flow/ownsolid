@@ -551,3 +551,48 @@ explicit clear being ignored must fail their own assertions. EN desktop and ZH
 390px retain screenshots for inspection. Completion requires accurate-source
 focused results, then the required complete gate in a separately qualified window.
 New installation-client checks and actual installed acceptance remain separate.
+
+
+### Seeded restoration qualification
+
+The two Portal controls at candidate `2b983dbf75feaf36f6ac3423f4d1b0a1ecf0fc52`
+first established the saved `changePassword` query through the real search UI,
+then waited for that value in the input after the actual article link. Both
+languages rejected the former bare-URL assertion with the observed
+`/help/api?q=changePassword`. Each failed only that expectation, without a case
+retry. The one-line negative patch, source/file hashes, raw exits and both native
+traces remain separate from the corrected results. This confirms the assertion
+contradicted restoration; it does not claim every unchanged old invocation must
+fail on every source or erase either reported MODEL failure.
+
+The corrected source passed four cases: EN and ZH in each entrance, with the two
+locale contexts running concurrently. All original offline discovery, real
+503/no-store, failed native download, recovered audience-projected file,
+keyboard and no-external-request checks remained. Final query/input/content,
+operation click and reload, an overriding explicit operation link, and a persisted
+clear followed by the article link all passed. No skips, flaky results, retries,
+fixed sleeps, global storage resets or production restoration edits were used.
+
+The correction was published at `44ab52293e516128ba2efc0edc2cb2053acc3462`.
+All Web/API/fixture/generator/capability/Makefile inputs match the focused candidate.
+Only the reviewed shared test helper differs from the prior 8dee production base,
+so its 1,230 qualified asset bytes remain reusable. The source Web tree includes
+test files and is now `d9da502cbd488c5576a73c909c2717621e677996`; this is not a
+claim that the old full tree or an old e5c/be62 package has been rebound.
+
+All twelve screenshots were actually read at English desktop and ZH 390px.
+The reference retains its back link, heading, search and matching operation card;
+the path wraps inside the narrow card, and the contract remains discoverable.
+Article pictures retain the real scroll position of the API link. No image was
+cropped, overlaid or edited. The reference-list/inline-detail and article-detail
+archetypes, existing seven-state boundaries and their distinct filtered recovery
+remain; finding an operation or explanation is primary, saving a contract secondary.
+
+A new code-only installation client bound to that exact published source passed
+TypeScript no-emit, eighteen input guards, four output-preservation guards and
+one GW120/Help/Scope discovery each. Those selftests created no browser and used
+no real server or credential; no old run, cookie, session or storage was copied.
+The actual image, live schema/table proof, ready bytes and protected runtime
+fixtures are still supplied by DEL. A complete gate with the corrected shared
+helper and actual new installed browser/independent SQL acceptance remain open.
+The prior c70 complete pass remains prior evidence, not a new-source full result.
