@@ -379,3 +379,22 @@ and generator/runtime licence terms apply. Native execution, baseline/new SDK
 generation and installed-server/database upgrade/rollback remain NOTRUN until
 the coordinated execution window. Python source transformation checks alone
 cannot qualify any of these Go paths.
+
+### Qualified generated-client migration
+
+The later fixed-window execution completes actual tagged tool construction,
+all 28 Go/Python domains and the four frozen Go caller groups. The exact
+e4bd3138 generator/ee7a214c fixture scope passes 23 root cases and 20 subcases,
+with zero skips under the race detector. Both language outputs account for
+all 430 operations. Compared with original 2e generation, 1,674 of 1,675 files
+are identical and only the intended Go identity parser adaptation differs.
+The default-only original 9e identity SDK is separately generated and actually
+compiled for the legacy and rollback callers. This updates the earlier
+Python-only qualification boundary; no test or output is reconstructed by hand.
+
+The [SDK evidence](sdk.md#qualified-tool-generation-and-go-client-migration)
+records source/tree IDs, exact output digests, native case counts and cleanup.
+The explicit 409 review remains visible with the unchanged compatibility
+report and exit 1. These SDK protocol results do not replace installed-server,
+database, Python SDK runtime or complete final-source platform gates, and do
+not select a supported-release baseline or complete DEV-204.

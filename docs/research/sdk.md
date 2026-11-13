@@ -405,4 +405,89 @@ Preserve all metadata bytes and verify actual binary version/buildinfo checksums
 do not build an unversioned checkout or inject a version label. Generation and
 native phases still use GOPROXY=off. This prospective correction is source-reviewed,
 not a successful tool build or a further acquisition; all 115 proxy artifact
-hashes and the failed command's actual stderr are retained privately.
+hashes and the failed command's actual stderr are retained privately. The
+qualification below subsequently executes this correction without replacing
+either failed attempt or its original results.
+
+## Qualified tool, generation and Go client migration
+
+The fixed-window job actually builds Mac arm64 oapi-codegen with the original
+versioned install, the authentic read-only file proxy and a private module cache.
+CLI and Go buildinfo both identify v2.8.2 and module checksum
+h1:68UGCFId8tysEuz1jqDgem0Lnz0d6T+73br+KwH/W6k=; all reported dependency
+versions/checksums match retained pins. The binary SHA-256 is
+bb920982e7de1e2b52cf436d60c3bc9f2c81a25d84ec5ad7b62f7fe9c745b1a1.
+The verified Go 1.27.3 builds it without editing a version label, proxy metadata,
+product module file or system configuration. Archives populate the private
+module cache from local files; no external dependency fetch occurs.
+
+Generation source e4bd3138b3850fb0c591e5622ba8606f0b368371, tree
+47e0e1170cab53bd53c73d1bdb3872dabe5c86e8, has exactly 36 inputs:
+29 raw contracts, six templates and generator SHA-256
+3d8069220982821288ddf8bf495048880bf49ddd05345589cf0977b80c658890.
+Actual Go/Python generation completes all 28 public domains and 430 operations.
+Per-domain reconciliation finds every generated Go operation and Python
+sync/async endpoint using the pinned upstream identifier normalization rules.
+Python 0.29.1 uses the verified prepared environment and empty post_hooks.
+Generation is sandboxed with network denied and GOPROXY/GOSUMDB off,
+GOTOOLCHAIN local and GOVCS disabled; compilers are not allowed in that phase.
+
+The original 2e64ab4c6c16bd84ae5c101b9de5444550760ff2 generator also
+completes 28 domains from its identical raw contracts/templates. Both outputs
+have 1,675 files: 1,674 are byte-identical, with no additions or removals.
+Only gen/go/identity/client.gen.go gains the intended Default adaptation.
+Against the retained 122-file identity archive, 121 files match and that same
+parser differs; none is missing. The original default-only 9e32b023 identity
+SDK is generated separately from its original inputs, producing 119 files in
+its identity/Go-module scope. Generated files are never manually edited and
+all bytes remain unchanged after native tests.
+
+The digests hash the canonical sorted JSON inventory of relative paths with
+byte counts and SHA-256. Complete inventories, output archives and raw command
+logs are retained privately; no build output enters Git.
+
+| Output | Files | Inventory SHA-256 |
+| --- | --- | --- |
+| e4bd3138, 28 domains | 1,675 | e07f6e712e73ede6d73880443a139a6cc8b3d228ca6d548d914b264c53cd42f3 |
+| 2e64ab4c, 28 domains | 1,675 | 88a726c379140be6645f2526301b1e374bc05b36e20777b6b1e12e5ed1fef368 |
+| 9e32b023, identity only | 119 | 4a34b0bb233f250a07e16d100697d8811a0205d98e8596d366d11ad820a05df8 |
+
+Native fixture source ee7a214ca2ec2c11873e33b6d3446816ede93e3f, tree
+18b7d3cfdb3eefca60f34cc8018dc13f0d12890c, is independently frozen.
+All four actual commands use the race detector, readonly modules, p=1,
+GOMAXPROCS=1 and GOMEMLIMIT=512 MiB with external network disabled.
+Only real loopback HTTP/TLS fixtures start, without Control or a database.
+
+| Native group | Root cases | Subcases | Skips | Exit |
+| --- | --- | --- | --- | --- |
+| Legacy caller, original 9e SDK | 4 | 4 | 0 | 0 |
+| Legacy caller, generated e4 SDK | 4 | 4 | 0 | 0 |
+| Explicit 409 caller, generated e4 SDK | 11 | 8 | 0 | 0 |
+| Client rollback to original 9e SDK | 4 | 4 | 0 | 0 |
+
+These 23 roots and 20 subcases cover old field assignment/getter reads,
+dedicated/legacy 409 mapping, body/header correlation, both representations,
+unknown status, lost replies, separate manual retry, TLS/cookies, timeouts,
+redirect/executor refusal and concurrency. This qualifies the generated Go
+protocol migration. Installed-server/database upgrade/rollback, Python SDK
+runtime execution, full 28-package Go compilation and full platform gates
+remain outside this run.
+
+The foreground job exits 0 in 44.899 seconds: preparation commands take 9.811
+seconds, generation 21.718 and native commands 11.699; all 122 exit 0.
+Maximum per-command wait4 RSS is 301,973,504 bytes and sampled process-group
+RSS is 293,748,736 bytes. The Go memory setting is soft, not a hard RSS cap.
+Parent PID 55667 FD 3 and worker PID 55672 FD 3 are original/inherited copies
+of the same carrier description, device 16777231/inode 53377467. Both close,
+all command groups clear and independent process readback finds no owned
+parent, worker or command group. Temporary directories are removed; original
+legacy generation inputs are retained. Carrier identity/manifest stay unchanged.
+No further acquisition or test rerun follows the reporting transport interruption.
+
+The existing exact e4 audit evidence remains 430 declaration operations with
+exit 0 and the sole explicit 409 baseline review with exit 1, report SHA-256
+f018d11ec45f5543229676f69688992e0ed4a984131c55165cfc7ca525f88aaa.
+These raw audits are retained, not rerun or waived here. Generation inputs
+remain unchanged. Supported-release baseline selection, actual installed
+flows and final-source check/build/test are required before publication or
+completion ticks; prior failed attempts and full-gate limits are preserved.

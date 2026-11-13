@@ -1,7 +1,8 @@
 # Preserve audit-read default response accessors
 
-Status: accepted technical migration decision. Final generated clients and release
-compatibility remain unqualified. Reviewed on 2026-11-14 for DEV-204.
+Status: accepted technical migration decision. Complete SDK generation and Go
+protocol migration are qualified for e4bd3138 with ee7a214c fixtures. Release and
+installed-server compatibility remain unqualified. Reviewed on 2026-11-14 for DEV-204.
 
 ## Context
 
@@ -62,3 +63,26 @@ Requiring a caller-only rewrite leaves an avoidable v1 regression. Removing 409
 misstates the server; suppressing the finding or changing the baseline conceals
 the review. Those alternatives are rejected. No dependency or runtime schema,
 permission, tenant, storage or retry policy changes with this decision.
+
+## Qualified generated-client scope
+
+An actual tagged v2.8.2 tool and Python generator 0.29.1 generated all 28 domains
+offline from e4bd3138's 36 inputs. Both language outputs account for all 430
+operations. The original 2e64ab4c generation produces the same 1,675-file set:
+1,674 files are byte-identical and only the intended Go identity parser gains
+the Default adaptation. The original default-only 9e32b023 identity SDK was
+generated separately without altering generated code.
+
+The same legacy caller compiled and ran against both old and new SDKs; the
+explicit-409 caller passed against the new SDK, and the legacy caller passed
+again for client rollback. All four groups exited 0 under the race detector,
+passing 23 root cases and 20 subcases with no skips. This includes old public
+field assignment, both representations, unknown status, lost replies, deliberate
+retry, TLS/cookies, timeout, redirect refusal and concurrency checks.
+
+These are generated SDK and real loopback HTTP protocol results, not a new
+Control/database, UI, supported-release or complete platform run. The raw
+430-operation audit remains declaration exit 0 and baseline review exit 1 with
+the sole explicit 409 finding. The
+[source and output evidence](../research/sdk.md#qualified-tool-generation-and-go-client-migration)
+retains the exact qualification and release boundaries.

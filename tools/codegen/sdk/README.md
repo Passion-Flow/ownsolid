@@ -122,7 +122,9 @@ build. Preserve its list, .info, .mod and archive bytes; never fabricate metadat
 or version labels. Verify the resulting binary's actual version, buildinfo and
 module checksums. This tool-preparation configuration is separate from pure
 SDK generation and native clients, which retain GOPROXY=off and no external network.
-The local-proxy build correction has not yet been executed.
+The local-proxy build is verified: actual v2.8.2 CLI/buildinfo, pinned module
+checksums and a Mac arm64 binary are recorded in the
+[SDK qualification](../../../docs/research/sdk.md#qualified-tool-generation-and-go-client-migration).
 
 ## Read the audit log deliberately
 
@@ -157,10 +159,11 @@ Python keeps the existing Problem model.
 
 The [409 migration decision](../../../docs/decisions/0085-preserve-audit-read-default-response-accessors.md)
 accepts the technical correction while retaining the raw source-review finding.
-The adaptation has not yet been qualified through fresh complete SDK generation
-and native checks. Old generated source does not acquire it until regeneration.
-Keep that qualification boundary separate from the pure Python transformation
-tests. For client upgrade and rollback steps, see the
+Fresh complete generation at e4bd3138 and four Go native groups using ee7a214c
+fixtures qualify this accessor adaptation. Old generated source acquires it only
+through regeneration. This proves the generated Go protocol migration, while
+installed-server and full platform qualification remain separate. For client
+upgrade and rollback steps, see the
 [public API migration guide](../../../api/openapi/README.md#audit-read-409-migration-in-v1).
 
 The standalone audit_read_legacy_test.go uses only the older Default API,
@@ -179,8 +182,10 @@ the coordinated native-test window:
 Rerun the first command for client rollback. The legacy fixture explicitly
 disables connection reuse and redirects for the older unguarded SDK. Real
 loopback requests cover 409, both representations, lost replies, distinct
-manual retries and an undeclared status. These commands have not run for the
-new migration. The retained 122-file identity archive already declares 409
+manual retries and an undeclared status. All four migration groups, including
+the rollback repeat, passed with the frozen ee7a214c fixtures: 23 root cases
+and 20 subcases, zero skips, under the race detector. The retained 122-file
+identity archive already declares 409
 and must not be substituted for the default-only SDK. Actual installed-server,
 database and supported-release upgrade/rollback checks remain separate.
 

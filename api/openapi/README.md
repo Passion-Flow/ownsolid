@@ -39,7 +39,7 @@ for the scope and remaining release qualification.
 | Caller | Required handling |
 | --- | --- |
 | Existing Go SDK with default-only 409 decoding | Handle status 409 through GetApplicationproblemJSONDefault() and HeadersDefault. Preserve its code and request ID. Qualify its configured transport against lost replies; source compatibility does not guarantee absence of retries. |
-| Newly generated Go SDK | Prefer GetApplicationproblemJSON409() and Headers409. The owned generator also retains the legacy Default fields for 409 throughout v1. Fresh generation and native validation of this adaptation remain pending. |
+| Newly generated Go SDK | Prefer GetApplicationproblemJSON409() and Headers409. The owned generator also retains the legacy Default fields for 409 throughout v1. Full generation and Go protocol checks passed for e4bd3138 with ee7a214c fixtures; installed-server and release qualification remain separate. |
 | Python sync and async SDK | Continue checking the detailed response status and Problem.code; both default and explicit branches use Problem. Disable caller/transport retry wrappers. |
 | CLI audit list | Existing error decoding retains HTTP status, stable code and request ID and does not render a successful page. Do not wrap this command in a retry loop. |
 | Raw HTTP consumer | Decode application/problem+json, retain the server request ID and treat 409 as uncertain access accounting. Never infer a returned page or a rolled-back audit from this failure. |
@@ -66,10 +66,13 @@ the older SDK. Server rollback does not change the reviewed wire response.
 Keep the exact comparison baseline and raw 430-operation report: the explicit
 409 named-response finding remains present with exit 1. The migration decision
 does not turn that result into exit 0. A supported-release baseline still needs
-selection, and complete generation, native upgrade/rollback, make check, make
-build and related tests must pass on the final source before release compatibility
-is declared. No release version, completion tick or runtime qualification is
-created by this source review.
+selection. Complete 28-domain generation and the four Go caller migration groups
+have passed for the exact e4bd3138/ee7a214c source pair; see the
+[SDK qualification](../../docs/research/sdk.md#qualified-tool-generation-and-go-client-migration).
+Actual installed-server/database upgrade and rollback, remaining SDK runtime
+checks, make check, make build and related tests still must pass on the final
+source before release compatibility is declared. No release version or completion
+tick is created by these SDK protocol checks.
 
 ## Deprecate an operation
 
