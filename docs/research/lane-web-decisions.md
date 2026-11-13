@@ -188,8 +188,8 @@ The implementation is prepared on `codex/web-serial-lint`, after the frozen
 glob, both container globs, both applications, six shared packages and the ignored
 dependency directory. Both new JavaScript files pass `node --check`; formatting
 of the five changed Web files completed with a 128 MiB maximum Node old-space
-limit. The seven real-CLI fixture tests, complete lint, coverage/config comparison,
-deliberate typed/plugin errors and peak-RSS benchmark have not run. No resource
+limit. At that preparation, the seven real-CLI fixture tests, complete lint, coverage/config comparison,
+deliberate typed/plugin errors and peak-RSS benchmark had not run. No resource
 lock or heavy lint process was started for this preparation. It is not yet an
 accepted replacement or a reduced-memory qualification.
 
@@ -213,14 +213,61 @@ and the memory/disk probes ran. No negative file, process group, lock FD, tool
 output, browser, build or service was created. No queue, repeated resource probe
 or retry followed. The complete 6 GiB gate profile was not changed.
 
-All seven real-CLI regressions, actual file/config equivalence, original and
-serial complete lint, typed/plugin negative controls and both peak-RSS
-measurements remain NOTRUN. No performance improvement, passing lint, full
+That refused entry left all seven real-CLI regressions, actual file/config equivalence,
+original and serial complete lint, typed/plugin negative controls and both peak-RSS
+measurements NOTRUN. No performance improvement, passing lint, full
 check/build/test or product qualification is claimed. The entry's source remains
 frozen; this documentation does not transfer a result to a different input.
 The next measurement requires a new resource opportunity with a fresh sample
 meeting the admitted floors. The existing OOM, earlier refusals and prepared
 comparison inputs remain intact.
+
+### New-epoch fixture result and private reporter failure
+
+The first independently authorized WEB job on epoch `ownsolid-2-20261113-e1`
+verified the immutable epoch manifest and the path/same-FD identity, then took
+one nonblocking lock. Fresh raw Free was 5,407,391,744 bytes, with
+166,387,277,824 bytes disk free. This selected only scope B: exact source
+`56a19799bfec788170d71680b4f0663c23073107`, tree
+`b2a8e44948370907c50b66702e3800f3a3fc4b6c`, Web tree
+`c6f7153f37ff0625017823ce4a3415d641e24a21`. Scope A's original four complete
+make targets were NOTRUN. No unverified tooling was mixed into that frozen full source.
+
+The real CLI regression command exited 0 after 2.998 seconds. All seven cases
+passed, with zero failed, cancelled, skipped or todo cases. They verified exact
+original/new fixture results across root/container/workspace/e2e/shared/config,
+hidden and future directories, original ignores, warnings, syntax errors,
+all-ignored failure, malformed config, terminated children and directory symlinks.
+The malformed-config and warning messages in its raw output are intentional
+negative-control diagnostics; they are not failed test cases. No test assertion
+was removed, rule weakened or input cached.
+
+The private benchmark wrapper then failed its own summary assertion: it expected
+TAP `# tests`/`# fail` lines, while this pinned Node invocation emitted its default
+spec reporter with the same actual seven-pass counters. That is a wrapper defect,
+not a failed fixture or product lint. The original output, private input hashes
+and actual parent exit 1 are retained. A separate data-only repair explicitly
+selects the supported TAP reporter and checks all six counters. Its syntax was
+checked; it was not executed and no second admission was attempted.
+
+The fixture command's `/usr/bin/time -l` maximum RSS was 94,142,464 bytes; the
+250 ms sampled owner-tree peak including the guard and runner was 262,094,848
+bytes. These measure only the small fixture suite, not original/new complete
+lint, and establish no reduced-memory performance claim. Node old-space was
+capped at 2048 MiB, commands were serial and core dumps were disabled.
+
+The original entry exited 1 after 4.229 seconds and confirmed cleanup. Parent and
+runner were gone, owned groups and previews were empty, no negative fixture had
+been created, the source was clean and no carrier FD remained at readback. The
+new carrier retained its exact identity, mode, link count and zero size; its
+creation-only manifest was unchanged. The 600-second/60-second cleanup limits,
+old closed entries and previous refusals remain intact. No queue or retry ran.
+
+Actual complete-file/config equivalence, original/new whole lint, real typed/plugin
+negative controls and comparative peak measurements remain NOTRUN. The seven
+fixture passes do not qualify the full tooling replacement, a complete gate or
+POR-112. The remaining benchmark work needs another explicit job opportunity;
+the reporter repair and the completed fixture evidence must stay source-bound.
 
 ### Licences
 
