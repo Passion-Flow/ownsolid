@@ -1410,3 +1410,59 @@ must precede fresh61/restore55..61 raw catalog collection. Any actual new catalo
 pins require a newly frozen source and matching native rebuild before the
 original Migrate/admission/grant/MODEL roots can qualify them. Those steps and
 the protected MODEL fixture inputs remain outstanding; no SQL or E2E passed.
+
+### Actual mixed cache modes and one failed native admission
+
+The next separately allocated opportunity activated the frozen corrected guard
+immediately, without rerunning the 5,015/5,102 local reconstruction. Both exact
+original NB carriers passed fresh checks: Free 3,165,466,624 bytes, Available
+20,766,806,016 bytes, disk 788,910,563,328 bytes, full I/O PSI 0 and no competing
+heavy process. The wire receipt again measured all 720,340 bytes, the frozen
+SHA-256 and EOF, in 2.231279672 seconds. No transport or digest failure occurred.
+
+The new real failure was `Makefile`, UID0, one link, 5,555 bytes, actual 0644
+against the private conversion path's expected tar 0664. Actual and expected
+SHA-256 both were
+`f6078f4b28aca143f680055c106fa31abf252415d99519caffa012f24ed2fe89`.
+Combined with the actual `.editorconfig` 0664 observation, this disproves the
+uniform archive-mode assumption for the retained remote cache. The local
+all-tar fixture remains a valid local result, but does not establish this
+mixed remote cache's complete source admission. The native attempt stopped
+before patch application, complete source verification or any fixture/SQL.
+
+SSH and outer both returned 1 after 9.662645250 seconds. The authoritative
+remote receipt recorded 2.566966554 seconds including 0.058393262 seconds of
+cleanup: no remaining owned group, both FDs closed, carrier identities retained
+and credential paths absent. Local SSH PID32880 and parent32878 were absent;
+the observer joined. Cleanup confirmation was at allocation65.780720 seconds,
+inside this new window and before its cleanup reserve. No PG, volume, network,
+DSN, catalog JSON/SHA, native binary root, role case, source B or new pin exists.
+The owned partial normalized cache remains for forensics; the original cache
+is unchanged. There was no native retry or additional cleanup connection.
+
+Actual evidence is in
+`lane-arc-diagnostics/arc111-native-cache-corrected.lq63tx0i`. Outer result
+SHA-256 is `e2cb078e6626e8db17b73e61e5ccfc2e24436463e68452539eb21240d824aadc`;
+cleanup receipt SHA-256 is
+`ba3a1912e81e6bb376c2b42a988f0dd1b3888e536c6575aa58d281462bc108b7`.
+Both actual entries are closed. The original `3513ab2b` source, native binaries,
+schema60 pins and 11-root race qualification are unaffected.
+
+A data-only correction now selects the exact transport representation per
+file: its original Git mode, or that same mode with only tar.umask=0002's group
+write bit. These are the two representations demonstrated by actual cache
+inputs. The subsequent no-follow read must match the selected actual mode,
+owner, type, single link, length, SHA-256 and Git blob; only a newly owned file
+is canonicalized. The final target remains exactly 0644/0755. Original
+`verify_file`, `read_cached_file`, `reconstruct_source` and receiver ASTs are
+unchanged. This corrects the private input contract; it does not accept arbitrary
+modes or alter the target source manifest.
+
+Twenty-four affected cases use actual basis blob bytes for `.editorconfig`,
+`Makefile` and an executable source input, across 0600/0640/0644/0664/0700/0755/
+0775/0777. Only each file's exact Git or tar representation is accepted;
+execution-bit changes and other modes fail. No full reconstruction, compiler,
+network, SQL or native run was repeated. The new candidate remains unactivated.
+Its hash and exact next-entry copy sources are frozen in this directory's
+`next-native-inputs.json`; a fresh allocation and actual complete remote source
+admission remain prerequisites to real61 catalogs and original role tests.

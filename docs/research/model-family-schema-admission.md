@@ -447,3 +447,16 @@ reported as an in-window confirmation. The new exact guard/input binding and
 remaining fresh allocation, actual61 catalogs, matching pin rebuild, original
 role tests and protected MODEL inputs are recorded in the
 [cache conversion boundary](agent-gateway-database-role.md#diagnosed-git-archive-mode-and-private-cache-conversion).
+
+The separately allocated next native attempt did start. Fresh original dual NB
+and complete wire/hash/EOF checks passed, then source conversion refused
+`Makefile`: actual 0644 versus the private uniform-tar policy 0664, with identical
+5,555-byte SHA-256. The actual cache therefore mixes canonical and archive
+permissions. SSH and outer returned 1 at 9.662645250 seconds; no fixture, catalog,
+SQL root, restricted-role case or source B was produced. Owned FD/group cleanup
+was confirmed at allocation65.780720 seconds. A new unactivated per-file input
+representation correction passed 24 affected cases and preserves exact target
+0644/0755 and original verification functions. See the
+[actual mixed-cache boundary](agent-gateway-database-role.md#actual-mixed-cache-modes-and-one-failed-native-admission).
+All real61 fresh/restore fingerprints and matching pin/binary qualification
+remain outstanding; the unchanged old binaries are not evidence for new pins.
