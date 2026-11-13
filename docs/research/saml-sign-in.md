@@ -604,6 +604,81 @@ Identity-backed account switching, atomic claim/completion, signed-provider
 composition, public configuration and rendered product UI remain open. No
 product path, schema, public route or roadmap tick changed.
 
+## Captured current-actor claim qualification
+
+The isolated claim-only candidate passed seven roots, 31 independent leaves
+and 36 passing names in both native race and disconnected Linux arm64
+PostgreSQL 18.6/pgvector 0.8.7 runs. The complete passing-name sets and frozen
+versus working source hashes matched. It adds one unnumbered private test
+table through a Go test overlay, leaving product source, dependency files,
+formal schema, startup and public routes unchanged.
+
+The start actually authenticates an ordinary local or sourced session, confirms
+its current local password, rechecks the opaque confirmation and captures
+user/session/token digest, epoch, credential version, audience, exact configured
+callback and target revisions. Its tenant comes from actual installation
+authority. The dedicated browser proof is purpose-, tenant-, connector-,
+audience- and callback-bound; raw browser/RelayState values are never stored in
+the request table. SQL prevents rewriting captured authority or a claimed row.
+No OAuth credential or PKCE verifier is invented. Claim has no ordinary
+session-cookie or caller-supplied tenant/actor argument.
+
+Admin/Portal local and different-connector sourced actors passed through the
+actual Identity current-actor and SSO SourceGuard owners. Under the existing
+user -> sorted source/target connectors -> exact session -> installation order,
+claim rechecks credential and target revisions, exclusively changes pending to
+claimed and appends its synthetic audit in the same transaction. Only a
+confirmed COMMIT returns the private request handle. Owner reconstruction
+refused durable replay; this is not a process-restart test. Independent counts
+confirmed that claiming created no local binding or session.
+
+Actual PostgreSQL cases refused replaced browser/RelayState, wrong entrance or
+connector, changed configured callback, an otherwise copied foreign-tenant
+request, a foreign-tenant start, wrong password, captured-actor rewrite and
+expired requests. Logout, isolated idle/absolute expiry, disabled account,
+changed account epoch/password version, disabled or changed source connector,
+revoked source binding, stale/disabled target and changed installation tenant
+all returned no handle and retained pending state without a claim-success
+audit. Source/target faults are controlled repository fixtures, not additional
+public administration acceptance.
+
+Controlled row waits exercised two concurrent claimers and a canceled waiter:
+there was exactly one winner, cancellation drained the worker without changing
+the request, and explicit retry succeeded. Independent diagnostic connections
+observed actual PostgreSQL blocking without competing for the fixture's two
+application connections. A source revoker holding its connector could acquire
+and revoke sessions while claim waited for that connector; the later claim was
+refused. An actual audit trigger failure rolled back request claiming, and
+explicit repair/retry passed. A real PostgreSQL wire forwarder dropped COMMIT
+before forwarding and suppressed its acknowledgement after server success.
+Each observed exactly one COMMIT, returned `COMMIT_UNKNOWN` with an empty
+handle, and independent readback found zero/one atomic claim plus audit.
+
+Evidence is `iam104-claim-20261113.5tuta2y1`, run
+`qualification-ynqxh50s`, qualified input `bb101552d8c4`. Source-manifest
+SHA-256 is
+`4bdee7d4c795f61fe8fcedef4d8e21c8e594b83c8ee4c728f6b9ebdcff96740f`.
+The SQL, overlay, pinned base-owner hashes, raw outputs, actual wire controls,
+container inspections and matching names remain outside Git. Earlier failures
+retained macOS temporary-directory alias rejection, bounded fixture WAL
+exhaustion, invalid fault injections against existing SQL constraints and an
+observer queued behind the two-connection pool. The final driver resolves its
+temporary path and bounds WAL in its owned disposable database. Those changes
+neither relax private-file/SQL checks nor change product configuration. Owned
+containers, anonymous storage and the native bridge were removed and checked
+independently. No test-server or peer resource was changed.
+
+The claim-only code reuses the existing pinned product Go graph: pgx is MIT,
+Google UUID is BSD-3-Clause, Go and its crypto/system dependencies retain their
+BSD notices, and PostgreSQL/pgvector retain their PostgreSQL-license notices.
+No new dependency, model, dataset or installer redistribution is introduced.
+This is not a signed SAML response, actual AuthnRequest, metadata/trust-profile
+admission, staged verified result, first-party completion, account binding,
+sourced SAML session, MFA flow or installed browser acceptance. The actual
+SourceGuard in these tests protects existing Gitea-sourced sessions. It does
+not admit SAML as a serving provider. Structured telemetry for a future product
+path is also unqualified. IAM-104 remains open.
+
 ## Alternatives, prototype and finished-item acceptance
 
 Reject a hand-written XML signature implementation, email-only linking,
