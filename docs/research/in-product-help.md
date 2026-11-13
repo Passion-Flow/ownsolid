@@ -483,3 +483,71 @@ page-route attempt remains a failed fault-injection result and is not
 counted as download-failure coverage. Actual installed login, entrance
 boundaries and workspace isolation remain open until a new same-source
 installation is available.
+
+
+## API reference filter restoration
+
+Reviewed 2026-11-13 for the shared UX-111 / POR-113 browser flow. MODEL reported
+Portal failures at `684f07ef` on `db7ee24a` and `b4e222a7` on `d0ab719a`:
+the article's API-reference link was expected to end at `/help/api`, but the
+observed final address included `q=changePassword`. A focused pass or the later
+complete `c70e9f59` Web pass does not erase either failed full invocation. Their
+native reports and traces remain with the original owner. A new source must be
+checked independently rather than presumed to fail or pass.
+
+### Product intent and source evidence
+
+The [list design](console-list-pattern.md#shareable-links-ux-114) makes an explicit
+list query authoritative. A destination without list parameters restores this
+browser's remembered screen and writes it into the address. The current
+[useListView](../../web/packages/shell/src/list/use-list-view.ts) implements that
+choice in its restoration effect; `linksList` also recognizes an explicitly empty
+`q` as a supplied filter. API reference uses this same list behavior. The real
+getting-started articles link to `/help/api` without a filter.
+
+The existing download-recovery test changes the API search to `changePassword`
+before following that article link. Expecting an unfiltered final URL contradicts
+the remembered-filter behavior. This is a source-based diagnosis until the seeded
+browser control runs. React's [effect reference](https://react.dev/reference/react/useEffect)
+describes synchronization after a commit, including possible paint before an
+effect. Playwright's [URL assertion](https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-url)
+waits for its predicate to match; a bare URL alone is not evidence that restored
+filter state, input and content have settled together.
+
+### Chosen verification and rejected changes
+
+Preserve remembered filters. Explicitly establish and verify this account's stored
+`help-api` query through the existing search UI before leaving the reference.
+Follow the actual article link, then assert the restored input, exact query and
+matching operation, including absence of the operation excluded by that filter.
+Open the real operation, reload it, and verify the query, anchor, expanded state
+and published detail. A different explicit operation link must override the prior
+remembered query. An explicit Clear search must empty the input and query while
+showing both operations; a later bare article link must then retain that empty
+state. Run both entrances and both languages using their normal isolated contexts.
+
+Keep an old-assertion control that waits for the restored input before checking
+the former bare URL. Record its exact source, test patch, output, exit and trace;
+expectation failures are not browser-runner failures. Keep all original offline,
+503/no-store, failed native download, retry, audience and keyboard checks.
+
+Reject changing production restoration to discard remembered filters, accepting
+any final URL, clearing global storage, disabling concurrency, retrying cases or
+adding sleeps. These change product intent or mask the transition without proving
+the final screen. Runtime code and generated inputs need no change if the seeded
+control confirms the diagnosis. The correction belongs in the shared assertion.
+
+### Licences, failure coverage and completion
+
+No dependency, model or dataset is added. Existing React/TanStack MIT and
+Playwright Apache-2.0 licences permit commercial use, redistribution and offline
+execution with their required notices. The test uses the current built reference
+and isolated preview control plane, never a replacement API index or external site.
+
+A missing saved query must fail before article navigation. A transient bare URL
+must not satisfy the final result check. Stale content, a wrong operation anchor,
+a lost filter on reload, a remembered query overriding an explicit link, or an
+explicit clear being ignored must fail their own assertions. EN desktop and ZH
+390px retain screenshots for inspection. Completion requires accurate-source
+focused results, then the required complete gate in a separately qualified window.
+New installation-client checks and actual installed acceptance remain separate.
