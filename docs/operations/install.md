@@ -139,6 +139,19 @@ Overrides range from 60 to 86,400 seconds. A current exchange can finish.
 The transport closes by the end of the bounded drain window. Reconnecting agents
 keep their acknowledged task sequence. Restart the gateway to change the setting.
 
+Newer gateways attach optional relative age hints after the first authenticated
+heartbeat. A newer agent can authenticate a replacement between exchanges before
+the old connection drains, then leave the unused transport to retire naturally.
+Gateway and agent upgrades can be staged: old agents ignore the hints, while new
+agents retain their previous reconnect behavior with an old server, a shared
+listener or an invalid hint. No v1 message or saved task cursor changes.
+
+Warm replacement needs temporary headroom within the configured HTTP connection
+and gateway session budgets. Those limits do not increase automatically. A full
+budget or failed candidate keeps the original path until the existing reconnect
+behavior is needed. A probe retains the normal request and idle bounds and uses
+at most half the old connection's remaining positive drain window.
+
 Give agents the gateways in their configuration, the addresses they reach them on:
 
 ```json
@@ -148,8 +161,11 @@ Give agents the gateways in their configuration, the addresses they reach them o
 Each agent holds one session, on the first gateway of an order of its own, so the fleet spreads
 evenly. When that gateway stops answering or is full, the agent's next attempt goes to the next
 one; it falls back to HTTPS only after every gateway failed. A gateway that is stopped with
-SIGTERM ends its sessions first, so its agents move at once. Agents that moved stay where they
-are when the gateway returns.
+SIGTERM ends its sessions first, so its agents move at once. An agent on a fallback
+gateway periodically checks a higher-ranked gateway between exchanges and moves
+only after its heartbeat succeeds. `gateway_rebalance_seconds` in the Agent JSON
+sets the minimum wait; it defaults to 60 seconds and adds up to one interval of
+jitter. A pending old-channel retirement postpones a preference probe.
 
 A gateway serves only while control is running: with control stopped, its readiness probe and
 every agent call answer `SERVICE_NOT_READY`, and it logs `agent_gateway_fenced`. When control
@@ -158,6 +174,10 @@ changed the schema it stops, and must be upgraded with control. Stop the gateway
 restore or a database maintenance command, which refuse while other clients are connected.
 Limits on agent calls apply per gateway. `ownsolid_agent_gateway_sessions` counts each
 gateway's open sessions, under `service="agent-gateway"`.
+`ownsolid_agent_gateway_connection_hints_total` has fixed `outcome="queued"` and
+`outcome="failed"` series. A queued hint means it was attached to the first reply;
+it does not prove that a client used it. Agent logs record
+`agent_session_connection_handoff` and `agent_session_connection_handoff_failed`.
 
 `ownsolid-install` does not place gateways on hosts yet: that comes with the topologies of more
 than one host (REL-101).
