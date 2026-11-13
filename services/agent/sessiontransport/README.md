@@ -22,7 +22,7 @@ The package changes no lease, acknowledgement cursor or protocol frame and retri
 no application request. It creates no second task executor. Warm replacement uses
 temporary headroom within the configured connection and session budgets; it never
 raises either budget. A failed probe can still require the existing reconnect path.
-See [the design and acceptance boundary](../../../docs/decisions/0077-authenticate-a-replacement-before-agent-connection-age.md).
+See [the design and acceptance boundary](../../../docs/decisions/0082-authenticate-a-replacement-before-agent-connection-age.md).
 
 `Exchange` sends one frame and receives one response or final status. A send-side
 EOF can represent an early remote refusal, so it reads the final receive status
