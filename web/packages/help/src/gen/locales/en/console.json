@@ -178,6 +178,10 @@
    {
     "title": "Finding an event",
     "anchor": "finding-an-event"
+   },
+   {
+    "title": "Audit read not confirmed",
+    "anchor": "audit-read-not-confirmed"
    }
   ]
  },

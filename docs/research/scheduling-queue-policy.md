@@ -178,3 +178,96 @@ flows alongside those five existing regressions. The interface is accepted only
 when all seven real flows and the required repository/module gates pass.
 Production eligible-batch authority, durable priority configuration, current
 write admission and the authenticated UI flow remain owner integrations.
+
+
+## Atomic queue admission and bounded tenant fencing
+
+The published read interface does not make the final write decision atomic.
+ReserveQueuedWithin must read the current eligible batch after excluding
+competing reservation mutations, rank it from current shares and reserve the
+selected head in the owner's existing READ COMMITTED transaction. Exact held
+replays return false without reading an owner row that may already be dequeued.
+The owner commits physical holds, dequeue, attempts and audit with that hold.
+
+The inherited candidate locked every supplied workspace before reading the
+queue. The current typed Workspace policy permits up to 10,000 workspaces.
+That makes lock allocation and SQL round trips grow with the configured domain.
+PostgreSQL documents its finite
+[shared advisory-lock pool](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS).
+Use one tenant transaction-level read/write fence instead. Existing reservation,
+release and reclaim writers acquire its shared side; queued admission acquires
+its exclusive side. Different tenants retain independent fences. Hash collisions
+can only serialize unrelated tenants, never grant capacity or authority.
+
+PostgreSQL's
+[transaction advisory functions](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS)
+provide shared/exclusive conflict semantics, reentrancy and automatic release at
+transaction end. Keep the order policy, tenant, requesting workspace, cohort.
+The cohort never takes another workspace fence. Current quota-status reads
+retain their existing policy/workspace readback fences; snapshot ranking remains
+read-only and acquires no admission fence.
+
+Validate and normalize the complete server-owned workspace domain before the
+owner callback. It must include the requested workspace even for a held replay.
+The callback derives tenant/local scope, eligibility, priority and positive
+sequence from persisted owner authority, uses only the supplied executor, takes
+no other job row locks, and performs no write or network call. It returns all
+currently eligible rows or fails on the owning typed policy's bounds. Never
+filter it by the earlier domain: a newly eligible out-of-domain workspace must
+force a retry rather than disappear. Unknown/cancelled/foreign attempts publish
+no success. A non-head returns SCHEDULING_QUEUE_TURN_PENDING with fixed guidance.
+
+Reuse ReserveWithin after a head is selected. It already enforces hard quota,
+exact attempts, enabled borrowing, pending reclaim, durable commit and loan
+attribution. Duplicating those decisions in the wrapper could lose funding
+or admit before positive victim release. The old O(workspaces) lock protocol,
+global policy-exclusive locking, separate ranking transactions and owner-side
+usage counters are rejected. See [ADR 0076](../decisions/0076-bound-tenant-admission-locking.md).
+
+Acceptance uses real isolated PostgreSQL: non-head refusal; head/dequeue in one
+commit; owner/audit rollback; complete-domain refusal; concurrent same-attempt
+replay; cancellation; exact release with owner terminal state; lost COMMIT
+acknowledgement; and retained foreign scope. New cases prove that ordinary writers
+block behind an exclusive tenant fence, another tenant proceeds, rollback releases
+it, and 10,000 configured workspaces do not require 10,000 advisory locks. Enabled
+borrowing must retain exact loans, signal reclaim and wait for committed release
+before nominal admission. These are component fixtures, not actual training/UI
+acceptance. The production owner still owns authority, task delivery and cutover.
+
+The existing Go/UUID BSD-3-Clause, pgx MIT and PostgreSQL licenses permit commercial
+redistribution with notices and offline operation. Kueue remains an Apache-2.0
+reference, including its separate nominal, borrowing and lending limits. This
+change adds no dependency, model, data set, production table or runtime download.
+
+
+### Component qualification
+
+Source d61d6879 on base a27fe64b passed 45 real PostgreSQL cases and 66
+top-level component tests with Go race instrumentation, PostgreSQL 18.6 and
+pgvector 0.8.7 on Linux amd64. That exact source also passed full Control
+modules, make check, make build and the platform configuration and HTTP server
+tests with Go 1.27.3 and offline dependencies. No browser tests ran.
+The component network namespace had no default route; the private database
+had no container network or host port.
+
+Tests verified current usage after ordinary and queued waits, shared-writer
+concurrency, tenant isolation, owner rollback and commit, replay, cancellation,
+positive release, borrowing/reclaim and a suppressed real COMMIT acknowledgement.
+The configured 10,000-workspace domain held exactly two advisory lock tags.
+This is not SCH-111 fleet admission latency evidence.
+
+Integration source bbc18ba8 on base 5a1f787c retains that exact-source native
+qualification. Its delta from the tested source was checked to contain only
+documentation; layout and roadmap checks were rerun. Earlier macOS and Linux
+runs retain their actual source identities and are not relabeled.
+
+With both protected fixture DSN variables configured, the native component
+command is:
+
+    go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -skip '^TestPostgresReservationCatalogRoundTrip$' -count=1 -timeout 8m -v
+
+The separate fresh/dump/restore catalog harness was explicitly excluded; this
+admission change has no production DDL. Privileged fixtures do not qualify native
+serving-role grants. Production eligible-batch and priority authority, all-writer
+protocol cutover, authenticated dispatch and the installed offline UI flow remain
+open. SCH-103 stays unticked.

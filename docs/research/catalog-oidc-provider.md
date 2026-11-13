@@ -142,7 +142,8 @@ JWT signing alone omits redirect, grant, request, consent and replay rules.
 Running another complete identity server as a mandatory catalog dependency
 would introduce another user/session authority and deployment lifecycle; the
 first path should instead integrate a protocol library with ownsolid's owners.
-The candidate still needs an external prototype before product implementation.
+The candidate still needs a complete external protocol prototype before product
+implementation.
 
 ### Complete source-inspection graph
 
@@ -150,8 +151,9 @@ Resolving the actual `pkg/op` import closure outside the product selected the
 following 40 modules, including graph-only/test dependencies. All 52 license,
 notice and patent files were retained with module sums and SHA-256 hashes in
 `iam106-20261113.f1ldyrpx`; every primary license link matches the inspected
-module bytes. Only source/import metadata was loaded, with Go 1.27.3; no
-compilation or server was started. This is the isolated candidate graph, not
+module bytes. The inventory stage loaded only source/import metadata with Go
+1.27.3; compilation belongs to the later strict-boundary experiment below.
+This is the isolated candidate graph, not
 the product's final minimal-version selection, which must be checked again
 before admission.
 
@@ -215,6 +217,316 @@ do not authorize outbound services or runtime exporters. Their actual import
 and network behavior still need the prototype's disconnected qualification.
 
 ## Failure coverage and concrete completion
+
+### First strict transport and crypto slice
+
+The pinned SDK's [provider constructor](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/op.go)
+creates AES-GCM encryption with a legacy AES-CFB decryption fallback. Its
+[crypto implementation](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/crypto.go)
+explicitly documents that CFB ciphertext is unauthenticated. Ownsolid has no
+legacy OP ciphertext to migrate. Supply `WithCrypto` with an owned, bounded,
+compact-JWE-only adapter around the SDK's AES-256-GCM implementation; never
+admit that compatibility fallback. Pin `A256GCMKW`/`A256GCM`, exact protected
+key IDs and the active/retiring key set. Refuse duplicate/unknown protected
+headers, noncanonical encodings, compression/critical/remote-key options,
+oversized input and invalid token-ID/subject shape before decryption. Keys
+come from the eventual private key-file owner; they are unrelated to licenses.
+
+For the confidential-client code profile, implement an outer request parser
+before starting storage transactions. Require a bounded POST form with exactly
+the admitted code-flow fields and one Basic Authorization header; refuse all
+query inputs, duplicate/unknown/body credential fields and mixed authentication.
+[RFC 6749 section 2.3.1](https://www.rfc-editor.org/rfc/rfc6749.html#section-2.3.1)
+requires form encoding the client ID and password before constructing Basic
+credentials; prove that special characters reach the SDK identically. Enforce
+the [RFC 7636 verifier syntax](https://www.rfc-editor.org/rfc/rfc7636.html#section-4.1)
+and S256 profile, then authenticate the exact registered client before any
+authorization-code row lookup. UserInfo accepts only a bounded Authorization
+bearer and the strict local JWE profile, so the SDK's query/form/JWT fallback
+cannot select another verification path.
+
+Native tests must include positive SDK interoperability controls as well as
+legacy CFB/default-fallback refusal, key rotation/retirement, protected-header
+tampering, malformed/oversized compact input and concurrency. Request tests
+cover malformed percent/form/Basic encodings, encoded duplicate names, unknown
+grants, body/header conflicts, verifier bounds and early authentication refusal.
+No native parser/crypto test qualifies PostgreSQL consumption, Portal consent
+or actual RP/OP HTTPS behavior. Those remain the subsequent complete prototype.
+Reuse the exact 40-module/52-notice graph above, with no new model, dataset,
+dependency or product import. Reject SDK-default compatibility merely for
+convenience, handwritten encryption and admitting unsupported protocol paths
+through an otherwise permissive SDK router.
+
+### Strict-boundary qualification
+
+The external adapter passed nine native test roots with race detection and
+the same nine roots in a Linux arm64 container with `--network none` and no
+host ports. Both passed 70 named tests, including parent groups, or 66
+independent leaves. This uses the unchanged inspected module files and actual
+pinned SDK constructor, crypto and token-request parser functions. It does not
+serve an OP endpoint or supply a serving storage implementation.
+
+Positive controls verified that the adapter's GCM output decrypts with the SDK
+and the SDK's GCM output decrypts with the adapter. A default SDK provider
+accepted legacy CFB, including altered ciphertext without an authentication
+failure. The strict adapter and explicit `WithCrypto` constructor refused both.
+Retiring GCM keys remained readable until removed; unknown/retired key IDs,
+altered compact segments, duplicate/escaped-duplicate protected headers,
+algorithm changes, compression, critical/remote-key options, padded/full-JSON
+input, invalid plaintext shape and configured limits returned no plaintext.
+Thirty-two concurrent encrypt/decrypt operations passed under the race detector.
+Static issuer construction ignored hostile Host/Forwarded values.
+
+The strict token parser and real SDK parser agreed on form-encoded Basic
+credentials containing spaces, colon, plus, slash and percent characters.
+Malformed/duplicate/query/body credentials, unknown fields, duplicate encoded
+form names, unsupported grants, invalid verifier/callback syntax and bounded
+body failures returned no parsed credentials. The staged owner callback was
+not reached before successful client authentication; invalid or canceled
+requests did not even invoke that authentication callback. UserInfo accepted
+only a header bearer with the strict compact profile and refused query, form,
+JWT-shaped, legacy, duplicate and missing bearer variants.
+
+Evidence is `iam106-boundary-20261113.sotincc4`, run
+`qualification-wb_q0iv_`, source-hash-manifest SHA-256
+`5d5934271b217a633dc14b3ea715d17776fac6b3c22eefc8460f16963e551012`.
+Exact source/module files, inherited legal hashes, native/disconnected logs,
+container inspection and cleanup were retained outside Git. The owned container
+was removed. Product source, dependencies, keys, schema, routes and UI did not
+change; publication runs layout/roadmap/whitespace checks only.
+
+This qualifies local parser/crypto composition, not registered-client database
+authentication, S256 code redemption, consent, authorization, signing, token
+revocation, transaction response release, actual RP/OP HTTPS or installed
+catalog integration. HTTP read deadlines and socket cancellation still need
+real-server qualification. IAM-106 remains open, and its next experiment must
+qualify the complete durable code/JWT/UserInfo path described below.
+
+### Authorization-code crypto composition
+
+Inspecting the actual [authorization-code builder](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/auth_request.go)
+adds an important constraint before serving composition: `BuildAuthRequestCode`
+encrypts the authorization request ID through the same `Crypto` interface used
+for access bearers. The qualified first adapter deliberately accepts only the
+token-ID/subject bearer shape. It cannot be wired unchanged as the complete
+provider's crypto; the earlier constructor test qualifies its explicit override,
+not authorization-code generation.
+
+Prototype a purpose-selecting composition with separate, disjoint code and
+bearer GCM key rings. Server-created request IDs use an `ar_` prefix and 32
+random bytes in canonical base64url. The code encrypter accepts only that
+shape; the bearer encrypter retains its two opaque identifiers. Reject shared
+key IDs or key material across the rings. Incoming `Crypto.Decrypt` admits
+only the bearer ring; code redemption locates the complete ciphertext's digest
+in the owned database, rather than decrypting a client-supplied request ID.
+Neither purpose admits CFB or broad arbitrary-string encryption. This uses the
+same SDK GCM implementation and unchanged licensed module graph.
+
+The next controls must call the actual SDK code builder, prove generated codes
+and access bearers use their selected rings, and refuse code-as-UserInfo,
+bearer-as-code-shape, wrong-purpose/unknown/retired keys and shared material.
+Native shape/key separation is not one-use code redemption: the real PostgreSQL
+owner still must bind code expiry, client, redirect, PKCE and current authority
+and atomically consume the digest with token creation/signing/audit. Do not
+weaken the first bearer's shape validation merely to make SDK callbacks pass.
+
+The purpose composition subsequently passed eleven native race roots and the
+same eleven roots in a disconnected Linux arm64 container: 72 named tests or
+68 independent leaves in each. The actual SDK `BuildAuthRequestCode` encrypted
+the server request ID using the code ring, while `CreateBearerToken` used the
+separate bearer ring. Code ciphertext was refused by incoming provider
+decryption and the UserInfo boundary. Invalid request-ID shapes, shared key
+IDs/material, caller mutation of supplied key arrays and private-ring rotation/
+retirement controls passed without relaxing the original bearer tests.
+
+This evidence is `iam106-purpose-20261113.99n43dmw`, run
+`qualification-xk8yyrkh`, source-hash-manifest SHA-256
+`936ee2aeafbaf3f31e2b9715a5ddcb715db5e5015f92a19c68a6ef253049727c`.
+Source/module hashes match both runs and the owned container was removed.
+The first run, `qualification-n6p7s0th`, retained a failed assertion whose
+constant-time comparison result was interpreted backwards in the caller-key
+copy test; correcting that test did not change key ownership or encryption.
+No serving authorization request, client, code row or token was created.
+
+Code ciphertext is matched by digest during future redemption, so removing a
+code-encryption key alone does not revoke an already stored code. Its database
+expiry, consumed state and current client/installation authority must do that.
+The native private-ring retirement control is not proof of code revocation.
+The complete PostgreSQL and RP/OP HTTPS prototype remains open.
+
+### Durable protocol prototype plan and additional licenses
+
+The complete standalone experiment will use two verified private-CA HTTPS
+servers and a disposable PostgreSQL database. Its synthetic account/password
+form tests protocol composition only; it is not a second ownsolid login owner
+or evidence of Portal/MFA consent integration. Client, installation, principal,
+source session and membership rows have explicit scope/revisions and stable
+opaque subjects. All credentials, signing/GCM keys and the database connection
+enter through private fixture files. No examples' plaintext passwords,
+insecure cookies, permissive callback handling or token logging are copied.
+
+Persist the browser-bound authorization request before login. Require its exact
+browser cookie and CSRF/Origin proof to approve it; require only the admitted
+`openid` code/S256 profile before the SDK. The SDK accepts several built-in
+scopes independently of `Client.IsScopeAllowed`, so that getter alone is not
+the registered-claim boundary. Save the generated code's digest once with a
+bounded expiry. Bind its subject, source-session epoch, current membership
+lifetime, exact client/installation revisions, redirect and challenge.
+
+At token exchange, the strict parser and current confidential-client check run
+before code-row locks. An owned request transaction then carries the resolved
+client through all SDK storage calls. Use a nonlocking scoped lookup only to
+resolve the complete authority lock set, acquire current client/installation,
+principal/session/membership fences and the exact code row, then recheck all
+bindings and expiry. Create the hashed opaque token ID, sign the ID token,
+consume the code and append the minimized event in that transaction.
+
+Buffer the SDK response under a configured byte limit. Release a successful
+token response only after the database confirms COMMIT. SDK errors, signing
+failure, cancellation and oversized output roll back the transaction; actual
+wire COMMIT loss releases a fixed error and no token, with no automatic resend.
+Store methods map failures to fixed protocol errors before SDK serialization
+and logging. UserInfo rechecks the token's bound subject/client and current
+installation, source session, membership lifetime and account epoch; the
+ciphertext's subject never supplies tenant scope. Uninstall, disable, rotation
+and removal must fence existing tokens as well as unconsumed codes.
+
+The RP will use the same pinned SDK's actual RP discovery, signature/token-hash
+and nonce verifier with a bounded approved-destination HTTPS client. A complete
+flow must survive OP restart with retained client, issuer, subject and keys.
+Tests must prove wrong/foreign client, secret, redirect, PKCE and browser refusal;
+duplicate redemption; signing failure and retry; revocation/removal propagation;
+wrong CA/name, response/request budgets and actual blocked-I/O cancellation.
+Signing rotation retains old public keys through issued-token expiry.
+[OIDC Core section 10.1](https://openid.net/specs/openid-connect-core-1_0.html#Signing)
+requires the signing private key to correspond to a published verification key.
+Check the configured active key ID and actual public/private pair before
+constructing the provider and whenever a file-backed signing key is read for
+issuance. A missing or mismatched active public key must fail closed, including
+after an operator replaces a file. Test missing active IDs, wrong public keys
+and a matching pair; a second retained public key must not mask a mismatched
+active key. Keep the previous public key through actual signed-token expiry
+and demonstrate a fresh RP verifier fetching it after process restart.
+Disabled
+grants and SDK routes remain explicitly closed rather than receiving success
+implementations. Native wire-loss tests reuse the repository's actual
+PostgreSQL forwarding helper outside the product, not simulated SQL responses.
+
+Revocation has a different input contract from UserInfo. Rechecking
+[RFC 7009 sections 2.1–2.2](https://www.rfc-editor.org/rfc/rfc7009.html#section-2.2)
+shows that an authenticated request for an invalid token returns HTTP 200 and
+an unknown token type hint is ignored. The prototype's earlier shared strict
+bearer-shape parser would incorrectly reject those requests. Before qualifying
+revocation, retain its bounded, unique form fields and mandatory Basic client
+authentication, but accept a bounded nonempty opaque token and bounded hint.
+The SDK may attempt its supported token interpretations; the store must require
+the current authenticated client and an exact own-tenant token binding before
+changing a row. Unknown, malformed, expired and already revoked values cannot
+create a grant or expose token validity. A foreign client must leave the token
+usable by its owner; unauthenticated requests are refused before token lookup.
+Test an unknown hint on a real issued access token, repeated revocation, foreign
+clients and audit failure with explicit retry. This is an external prototype
+correction, not evidence of a serving revocation endpoint.
+
+The SDK's [discovery builder](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/discovery.go)
+also advertises implicit response/grant types and endpoint locations that its
+router always registers. The prototype must project that generated metadata
+to the actually admitted code profile and expose only its selected routes.
+Close implicit, refresh, device, token exchange, request objects, dynamic
+registration, introspection and end-session paths for this first experiment;
+do not advertise those closed paths as implemented. This limits prototype
+qualification, not the roadmap capability's eventual scope.
+
+The legacy SDK's [authorization error handler](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/error.go)
+logs the protocol state; `WithLogger` no longer supplies a provider-local
+logger. Avoid global logger changes or relying on SDK error redirects for the
+authorization/login callback. Compose the SDK's request parser/client validator,
+storage owner, code-response builder and redirect encoder directly at those
+two routes, returning fixed local errors before any sensitive state is logged.
+Keep the SDK token, UserInfo, revocation and key handlers behind their strict
+boundaries and fixed storage errors. Capture and inspect protocol logs in the
+prototype; do not copy upstream sample token-printing callbacks.
+
+Loading `pkg/op`, `pkg/client/rp` and pgxpool selected 45 modules and 57 legal
+files in `iam106-provider-20261113.q_ov5ppw`. The preceding 40 exact versions
+and notices are unchanged; the five additions are below. Module downloads were
+checksum-verified and each added primary LICENSE matched the downloaded source
+bytes. This is metadata/license preparation only, not a build or protocol run.
+
+| Additional module | Version | Primary license |
+| --- | --- | --- |
+| `github.com/jackc/pgx/v5` | v5.11.0 | [MIT](https://github.com/jackc/pgx/blob/v5.11.0/LICENSE) |
+| `github.com/jackc/pgpassfile` | v1.0.0 | [MIT](https://github.com/jackc/pgpassfile/blob/v1.0.0/LICENSE) |
+| `github.com/jackc/pgservicefile` | v0.0.0-20240606120523-5a60cdf6a761 | [MIT](https://github.com/jackc/pgservicefile/blob/5a60cdf6a761/LICENSE) |
+| `github.com/jackc/puddle/v2` | v2.2.2 | [MIT](https://github.com/jackc/puddle/blob/v2.2.2/LICENSE) |
+| `github.com/stretchr/objx` | v0.1.0 | [MIT](https://github.com/stretchr/objx/blob/v0.1.0/LICENSE) |
+
+All five permit commercial/offline use and redistribution with preserved
+copyright/license text. The objx row is a graph/test dependency, not an enabled
+service. The test database/image and native build-tool notices retain the
+already inspected pinned PostgreSQL/pgvector and Go build-base obligations.
+This experiment adds no product dependency, model or dataset. Product admission
+must still resolve its complete graph and compose actual ownsolid authorities.
+
+### First private RP/OP flow qualification
+
+The standalone prototype passed fourteen non-worker roots and 82 independent
+leaves in each of two topologies: native Go with race detection against an
+owned loopback PostgreSQL, then a Linux arm64 binary, its child OP processes
+and PostgreSQL in one `--network none` container with no published ports.
+Both passed 88 named tests including parent groups. The worker-only root
+skips in the parent suite and runs explicitly in real child processes.
+The native Mac client is not egress-isolated; only the second topology is
+disconnected. The database uses the prototype's nine synthetic authority,
+request, token and event tables, not the product's Identity or audit owners.
+
+An actual RP HTTPS server and a separate OP HTTPS process used verified
+private-CA certificates and approved literal dial addresses. The RP used the
+pinned SDK's discovery, code exchange, signed ID-token/nonce/token-hash
+verification and UserInfo client. The synthetic password/CSRF form bound the
+request to its browser and source-session cookies. The first sign-in returned
+the registered opaque subject. Replaying its consumed code returned no token.
+The OP process then exited cleanly and a new PID started on the inherited
+owned listener with retained database/key files. The first access token still
+passed UserInfo and a fresh sign-in retained the same subject while issuing
+different code/token credentials. This is an actual process restart, not an
+in-memory provider reconstruction.
+
+Wrong secret, foreign-tenant client, another local client, redirect, verifier,
+tenant query and duplicate encoded code fields were refused without token
+creation or code consumption. Explicit corrected exchanges succeeded. Client
+disable/reenable and secret rotation, installation disable/reenable, account
+epoch changes, session revocation and membership delete/recreate fenced both
+existing UserInfo and pending codes. Repair did not revive that old authority;
+a fresh verified flow succeeded. The discovery response omitted closed routes.
+
+Evidence is `iam106-provider-20261113.q_ov5ppw`, first-flow run
+`qualification-fxtc85y1`, qualified input `ebeca4b66e22`. Its source-hash
+manifest SHA-256 is
+`2275d25830cad4d63b896cafe755a72476ec06720e51e450ba17f0c1991a1cb2`.
+Exact prototype source/module files, race/disconnected output, image/network
+inspection and container/storage/bridge cleanup remain outside Git. Child
+logs were still temporary in this first run; retained child-log inspection,
+signing/audit failure, cancellation, actual wire COMMIT uncertainty, concurrent
+redemption, key rotation and the remaining failure matrix are not qualified
+by this run. The earlier compile-only `rp` package/helper naming conflict was
+corrected with a package alias before this qualification.
+
+No product source, dependency, key, formal schema, API or UI changed. Synthetic
+authority rows and a fixture password form do not implement actual ownsolid
+Portal consent, catalog registration, scoped grants or revocation composition.
+IAM-106 remains open and its complete external qualification continues.
+
+The next fault run pins the RP's OAuth authentication style explicitly to the
+registered Basic method. The selected [OAuth client](https://github.com/golang/oauth2/blob/v0.38.0/internal/token.go)
+otherwise probes header authentication and can automatically retry with body
+credentials after an error while its style is unknown. That behavior must not
+retry an exchange whose COMMIT outcome was lost. Count actual RP token HTTP
+requests as well as PostgreSQL COMMIT frames, and require one of each for the
+controlled wire loss. This changes no module version or license obligation.
+Retain private child-process logs and inspect them against generated sensitive
+test values; no key, credential, code, bearer, state or verifier belongs in the
+published logs or research note.
 
 The external prototype must use separate real RP and OP HTTPS servers, verified
 private CA trust and actual PostgreSQL persistence. Prove discovery through code

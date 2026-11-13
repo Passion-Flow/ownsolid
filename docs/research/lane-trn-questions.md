@@ -71,3 +71,27 @@ belong to ARC. The training owner will not replace node SQL or carry cached
 authority across file I/O. Release requires the typed owner API, negative
 lifetime/scope tests and the original 50/3,000 HTTPS profile under unchanged
 budgets. This handoff claims no new measured statement count.
+
+
+## Native reader parent lifetime boundary
+
+The original parents do not implement the newly assigned nonblocking second
+carrier and absolute 300-second complete lifetime. Safest choice: preserve the
+fixed c527fb68 event runner and all existing candidates/evidence, and prepare
+test-only source e639db90 plus the exact hashed native plan before any new heavy
+framework. The single native opportunity remains unused: zero Linux carrier
+attempts and zero new native Go/SQL test bodies. The
+[bounded plan and inputs](training-published-file-readers.md#prepared-native-authoritywriter-cases-and-parent-boundary-review)
+retain all original resource thresholds and define the required existing-runner
+delta, cleanup, raw outcomes and no-retry behavior. ARC construction and formal
+protected functions/grants remain their owners' work.
+
+
+The separate bounded wrapper/config/diffs are now prepared and hashed in
+/root/lane-trn-tools/reader-native-bounded-v2/. Twenty-six pure local checks
+and a read-only Linux input/source check passed; details and exact hashes are
+in the [review artifact note](training-published-file-readers.md#bounded-reader-fixture-review-artifact).
+This resolves preparation only. No native carrier acquisition, compilation or
+Go/SQL body occurred and the single opportunity remains unused pending the
+concrete wrapper review. The original plan, binding and c527fb68 runner are
+unchanged. No product or shared-owner contract is declared complete.

@@ -95,6 +95,68 @@ role. Manual and scheduled synchronization share one bounded job owner,
 single active run per connector, durable result and cancellation semantics.
 No new receipt ledger is needed.
 
+## Stable references and nested-group prototype
+
+The [Keycloak 26.8.2 LDAP mapper documentation](https://github.com/keycloak/keycloak/blob/26.8.2/docs/documentation/server_admin/topics/user-federation/ldap.adoc)
+separates group inheritance, membership attributes and recursive membership
+retrieval. Its configured reader needs access to both user and group membership
+attributes; a directory can hide attributes without returning an access error.
+The owning operator must qualify that read policy. A successful search cannot
+prove that an administrator has granted complete visibility.
+
+[RFC 2696 section 3](https://www.rfc-editor.org/rfc/rfc2696.html#section-3)
+does not promise a snapshot when entries change during paging: entries can be
+omitted or repeated. Describe the result as a bounded, complete observation
+under the approved reader's visibility, not a global point-in-time directory
+snapshot. The next external experiment will collect all group pages, resolve
+every member by a base-object read on the same verified reader connection,
+and require a stable ID and an unambiguous approved user/group class. Refuse
+aliases, referrals, out-of-base references, unresolved objects and groups absent
+from the collected set. DNs locate entries; only stable IDs identify graph nodes.
+
+For the OpenLDAP profile, require the entry's `entryCSN` in addition to entryUUID.
+The [OpenLDAP replication documentation](https://www.openldap.org/doc/admin26/replication.html)
+distinguishes entry revisions from the provider's committed replication state.
+An individual entryCSN is not a database transaction or global snapshot token.
+Re-read resolved objects and repeat the complete group scan before returning a
+candidate; changed identities, revisions or group manifests refuse the whole
+attempt. This catches observed churn without claiming to exclude all changes
+between reads. Record the observation interval; a failed attempt never refreshes
+the previous generation's authority expiry.
+
+Build direct stable-ID edges and a bounded transitive user closure. Reject
+cycles, ambiguous identities and exceeded limits for objects, direct edges,
+derived memberships, depth and directory operations. Memoized subtrees must
+retain their height so reuse through a deeper parent cannot bypass the depth
+limit. All refusals return no candidate. Keep this graph separate from local
+roles; IAM-110 still owns reviewed mapping and current-authority reconciliation.
+
+The [Microsoft range-retrieval contract](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ldap/searching-using-range-retrieval)
+allows an empty requested attribute alongside the actual returned numbered
+range. A decoder must distinguish that placeholder from the terminal range,
+require contiguous inclusive indexes and matching value counts, and stop only
+on the actual `*` range. Prototype that decoder with synthetic LDAP entries;
+never infer a fixed server range size. Repeated/overlapping ranges, missing
+continuations, duplicate attributes, mixed nonempty ordinary/ranged values,
+oversized indexes and aggregate budgets must fail without partial membership.
+Those fixtures qualify parsing only, not an AD server or its consistency model.
+
+This extension reuses the exact already inspected LDAP module graph, signed
+OpenLDAP source and private build image; it adds no dependency, model or dataset.
+The existing commercial/offline/redistribution and notice obligations below
+apply unchanged. No product dependency or formal schema is admitted by this
+experiment. Reject recursive DN-string identity, unbounded nested traversal,
+partial graph publication, a local role grant derived from a display label and
+an assertion that two scans establish a transactional directory snapshot.
+
+Acceptance requires native race tests for the graph and range failure matrix,
+then actual disconnected OpenLDAP tests for nested membership, group cycles,
+unresolved/out-of-base references, rename/recreation, observed in-flight churn,
+bounded failure and explicit successful retry. A completed empty group scan
+must remain distinguishable from an interrupted scan. Atomic PostgreSQL
+publication, single-run ownership, current tenant/connector revision, audit and
+commit-uncertainty qualification remain a subsequent persistence slice.
+
 ## Candidate dependencies and licensing
 
 The candidate is [go-ldap v3.4.15](https://github.com/go-ldap/ldap/releases/tag/v3.4.15),
@@ -249,12 +311,183 @@ All owned containers were removed and no directory server remains running.
 
 This qualifies the initial LDAPS protocol approach. Product dependencies,
 configuration, formal SQL, routes, local-account binding, sessions, synchronization
-jobs and UI are unchanged. AD ranged/nested membership, stable-reference
-reconciliation, complete-generation persistence and full-bound memory checks
+jobs and UI are unchanged. Real AD ranged/nested compatibility,
+complete-generation persistence and full-bound memory checks
 remain required before composition. This is not Windows AD, rendered-browser
 or Linux amd64 installation acceptance. IAM-103 remains open. Publication changes
 research only; layout, roadmap and whitespace checks do not replace the future
 feature's full repository and installed-flow gates.
+
+## Nested-group observation qualification
+
+The subsequent external experiment passed twelve non-live native test roots
+with race detection and eight actual OpenLDAP roots in a disconnected Linux
+arm64 container. Six native roots retain the earlier transport/parser/bind
+coverage; six cover stable graph closure, refusal/concurrency, range continuation
+and invalid object profiles. Live-only subtests skipped by the native invocation
+ran explicitly against the real directory. Parent test groups containing only
+skipped live subtests are excluded from the native count.
+
+The observed graph uses entryUUID for both group and user identity. Direct
+edges and transitive user membership remain separate, and shared users are
+deduplicated in each group's closure. The live tests read nested groups across
+pages, refused a dangling DN after a rename, then preserved the original group
+ID after its parent reference was corrected. Deleting and recreating a user
+at the same DN produced a new member ID; the old ID disappeared from the new
+closure. These results establish no local account binding or role grant.
+
+Actual cycles, missing members, out-of-base members and an unsupported object
+class returned no candidate. Mid-observation group membership changes,
+group/user recreation and group addition/removal were detected by stable-ID,
+entry-revision and final manifest checks. Cancellation and configured search,
+object, edge, closure and depth limits also returned no candidate. A fresh
+explicit retry succeeded after each corrected condition. A separate real empty
+group base returned a complete empty graph with an observation interval.
+
+Synthetic range fixtures accepted ordinary/empty membership and a three-part
+range sequence, including Microsoft's empty requested-wildcard placeholder
+beside the actual numbered range. Invalid names/indexes, overlaps, gaps,
+inconsistent counts, duplicate values/attributes, missing/empty continuation,
+fetch failure, invalid DNs/UTF-8 and byte/member/page limits failed without a
+partial result. The OpenLDAP reader still refuses ranged attributes; no Windows
+AD range-retrieval operation or AD consistency policy was qualified.
+
+The evidence set is `iam103-groups-20261113.wlv5gqe5`, run
+`qualification-ajos36gx`, source-manifest SHA-256
+`4e969b43e6517dcf95d33663267af5a3a30acb3fa65265f1f02b3e139f6880dd`.
+It pins the preceding signed-source/build inputs and unchanged LDAP module
+files, retains exact source, race/live output and the image/network inspection,
+and verifies container removal. The native run has 78 passing test names and
+the live run 23; those include parent groups and are not counts of independent
+leaf scenarios. No product source, dependency, schema, route or UI changed.
+
+The result remains a bounded observation under the reader's configured access,
+not a transactional snapshot. Atomic PostgreSQL publication, single-run
+ownership, tenant/connector revision fences, bounded freshness, audit/commit
+failure, full-bound memory and installed-flow acceptance remain required.
+IAM-103 stays open. The next persistence experiment must leave the last
+complete generation intact on scan failure and must not extend its expiry.
+
+## PostgreSQL publication experiment
+
+Use a second external overlay experiment against the current complete control
+schema. Reuse SSO's actual `actorTransaction` ordering, current Identity
+recheck, installation tenant resolution and target-connector lock; do not put
+LDAP I/O inside that transaction. The current Gitea-only connector supplies
+the fixture's existing authority fence, not an admitted directory profile.
+No production provider enum, migration, SDK or route changes as part of this
+storage qualification.
+
+The candidate has a durable run, groups, transitive stable user memberships
+and one current-generation pointer per tenant/connector. Composite keys and
+[PostgreSQL foreign keys](https://www.postgresql.org/docs/18/ddl-constraints.html)
+keep every membership, group and head in the same tenant, connector and run.
+Bind each run to the initiating user/session/epoch and connector revision/auth
+version. A unique partial index permits one active run per connector. An
+explicit retry starts a new run after a failed/expired one; an exact repeated
+start returns the same run without extending any deadline.
+
+The [transaction](https://www.postgresql.org/docs/18/tutorial-transactions.html)
+that publishes the complete candidate inserts its groups/memberships, finishes
+the run, changes the current pointer and appends its minimized audit event
+together. Failure appends only the fixed failure outcome and finishes the run;
+it does not modify the previous complete generation. Bound scan time and
+source authority validity from the database's run-start time. Neither failed
+attempts nor idempotent replays refresh the old expiry. Reading effective
+membership requires a successful, unexpired head and the current enabled
+connector/revision; a retained historical result is not current authority.
+
+Use the existing current-actor and connector lock order, then the exact run
+row. [Row locks](https://www.postgresql.org/docs/18/explicit-locking.html)
+serialize completion, disable and competing starts. Recheck authority at
+completion, not only start. No result escapes an uncertain COMMIT, no automatic
+second publication occurs, and an authorized status read precedes a new intent.
+The experiment must test actual wire loss before COMMIT and after its database
+acknowledgement, audit refusal, cancellation, concurrent starts/completions,
+foreign connector/run substitutions and stale/revoked/Portal actors.
+
+The prototype uses existing pgx v5.11.0 (MIT), the control transaction/identity/
+audit owners and PostgreSQL 18.6 with pgvector 0.8.7 (PostgreSQL License).
+Their commercial, redistribution and offline use retain the repository's
+already packaged notices; no dependency graph changes. The directory module
+and private server retain the licenses above. Export a synthetic real-directory
+graph from the private fixture for a joined storage input; it is never customer
+data or a browser-submitted authority claim. Public start/status/preview,
+scheduled execution, production grants, LDAP binding/session issuance and
+installed UI acceptance remain separate admission work.
+
+### Storage qualification
+
+The external control overlay passed six actual PostgreSQL roots and 22 leaf
+cases in each of two runs: native Go with race detection against an owned
+loopback database, then a Linux arm64 binary with PostgreSQL in `--network none`
+and no host ports. The first topology does not isolate the Mac client's egress;
+only the second is disconnected. The fixture uses PostgreSQL 18.6/pgvector
+0.8.7 and the complete current control schema, version 60 with 120 tables.
+Its four prototype tables are external test DDL, not a formal migration.
+
+The actual OpenLDAP fixture exported seven groups, two distinct stable users
+and nine transitive memberships. Its reader reran the twelve native and eight
+live roots with the added private export instrumentation. Both storage runs
+then consumed that exact file and read back the same memberships. This joins
+the data representation across real protocols and storage; the exported input
+predates the database run and does not qualify a serving worker's fresh
+start/read/finish lifecycle. That composition must bind the observation to the
+actual run, selected directory profile and connector revision.
+
+The tests established:
+
+- Exact repeated starts retained the same run and deadlines; competing starts
+  were refused. Concurrent identical completions published one generation and
+  one completion event. A conflicting completion digest was refused.
+- A failed scan kept the previous complete head, memberships and original
+  expiry. An explicitly complete empty candidate replaced that head with an
+  empty result. Actual database-clock expiry refused stale membership; a new
+  start retired an expired run and allowed an explicit new attempt.
+- Start, completion, status and current-result methods refused foreign
+  connectors; completion/status also refused a foreign run paired with a local
+  connector. Mixed-scope group/head SQL parents were refused. Another current
+  session could not finish or inspect the initiator's run. Portal, revoked,
+  disabled, demoted and stale-epoch actors returned no DTO. Connector disable
+  or revision/auth-version change fenced publication and current membership.
+- Actual audit INSERT trigger failures rolled back start, complete and failed
+  outcomes. Cancellation after real membership INSERTs left no new rows/head
+  or finished state; independent reads during staging still saw the old head.
+  Explicit retry succeeded without extending the run's original validity.
+- The existing native wire fault injector withheld COMMIT or suppressed its
+  successful database acknowledgement for start, completion and failure.
+  Each attempt emitted one COMMIT and returned `STORAGE_COMMIT_OUTCOME_UNKNOWN`
+  with no DTO. Independent and authorized readback distinguished the atomic
+  zero/one outcome before an explicit retry; no automatic resend occurred.
+
+Evidence is `iam103-generation-20261113.t5wjk2m0`. Protocol run
+`qualification-yotx6rv5` has source-manifest SHA-256
+`c90df68550160f939ec3053d821e1eba251f2fb16a4a6ac4fd39ae2ce1993978`;
+the exported graph SHA-256 is
+`22bbfb1c4c17e4456569018d33bb434f3c0b334199b0241a618fb519cd6a0bb2`.
+Storage run `qualification-a9jc6u_g` qualified input `167a479e7187`, with
+source-hash-manifest SHA-256
+`533c7c246e2e99f677a709171fc47b310338d3bfc0c393831229f823e339b7f9`.
+Both topologies passed 28 named tests, including parent groups; there are
+22 independent leaves. Exact source, graph, logs, image/network inspection
+and cleanup evidence remain outside Git. All owned containers, anonymous
+database storage and the native bridge were removed. The permanent lock's
+carrier was neither replaced nor changed.
+
+The first storage run, `qualification-fpzp2e_2`, stopped in SSO fixture
+initialization: its Mac TMPDIR retained the `/var` symlink and private-file
+validation refused the keyring. The corrected driver resolves TMPDIR before
+running Go. It preserves the product's keyring validation, not a bypass.
+That failed run remains separate from the qualified native/disconnected pair.
+
+This is a manual PostgreSQL storage candidate using the existing Gitea catalog
+row solely as an authority fixture. It does not admit LDAP as a product provider,
+new serving-role grants, the prototype audit names, public contracts, startup,
+scheduled execution, explicit directory-account binding, local roles or UI.
+The superuser fixture does not qualify least-privilege grants for new tables.
+Direct-edge/explanation persistence, retention policy and full-bound resource
+qualification also remain for admission. IAM-103 remains open; repository
+publication changes research only and does not claim new full-product gates.
 
 ## Rejected alternatives and acceptance
 

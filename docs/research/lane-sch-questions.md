@@ -63,15 +63,22 @@ database owner to land or authorize the exact fresh and restored fingerprints.
   stop and requeue semantics. The owner must supply a durable, scoped
   preemption lineage to distinguish requeues from ordinary attempt retries,
   plus a checkpoint and exact positive stop result before capacity is freed.
+  The [preemption research](scheduling-preemption.md) records current upstream
+  retry/grace semantics, the rejected shadow runtime and exact acceptance cases.
 - SCH-106 requires trustworthy device and network topology observations. The
   current agent facts contract lacks the full PCIe, NUMA, NVLink and fabric
   inventory. [NVIDIA DCGM topology](https://docs.nvidia.com/datacenter/dcgm/latest/learn/core-services/topology-and-links.html)
   and the [Kubernetes Topology Manager](https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/)
   distinguish local hardware affinity from scheduler labels. Avoid inventing
   topology from node names or assuming every link is healthy.
+  The [topology research](scheduling-topology.md) separates physical graphs,
+  derived scheduler domain trees and current link observations, and records the
+  exact missing producer contract and hard/preferred acceptance conditions.
 - SCH-107 has observation readers. The signed offline install assets and
   RKE2 deployment, workload creation, RBAC provisioning and runtime reconciliation
-  remain part of the item.
+  remain part of the item. The [offline installation boundary](scheduling-cell-adapters.md#offline-controller-installation-and-upgrade-boundary)
+  records release-artifact rendering, node image delivery, scoped webhooks and
+  non-destructive upgrade acceptance; source-chart defaults are not offline payloads.
 - SCH-109 has candidate PostgreSQL loan attribution and ordered reclaim
   within enabled departments. [Borrowing and reclaim](scheduling-quota-borrowing.md)
   records the owner transaction, follow-on schema and positive release

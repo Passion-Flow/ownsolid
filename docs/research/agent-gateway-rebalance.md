@@ -566,3 +566,179 @@ ac0bd47fca1353d3affad18d7c08622e0c722d3fdcfb1f0df2e3cc528f7aafcc
 and 5747bcdf90495217928272fc7b68b6accddc3928e63d90a7e82a44b784b7308c.
 The affected e2e race log SHA-256 is
 21ee38b0e59002b7ef59e2a3fd21a047e2cdc9c81f7e443f21629fef74fd70a9.
+
+
+## Age handoff prototype requirements
+
+The installed 497/500 terminal result remains a failure. Do not change the report
+accounting, suppress a known disconnect, stop aging, extend the tasks or relax the
+strict installed assertions to hide it. The next experiment addresses an actual
+planned-retirement exchange gap: establish an authenticated replacement between
+exchanges before the old transport reaches its unchanged age, while preserving
+natural retirement and all lease/cursor semantics. This is a prototype candidate,
+not an accepted product implementation or a new capacity result.
+
+The implemented [gRPC connection-management design](https://github.com/grpc/proposal/blob/master/A9-server-side-conn-mgt.md)
+uses GOAWAY and a grace period to retire transports; it does not promise to migrate
+one application's long-lived stream. The existing ownsolid preference probe
+already retains the old stream until a candidate heartbeat succeeds. The gateway
+already replaces an authenticated same-node session only after its first successful
+exchange, and its old cleanup does not remove the replacement. Reuse those
+properties; do not create a second task executor or replay an outstanding claim.
+
+[gRPC custom metadata](https://grpc.io/docs/guides/metadata/) can carry optional
+ASCII response hints without adding fields to the strict version-1 JSON frames.
+Prototype first-reply relative drain/close durations derived only from the owned
+socket's actual ConnectionDrainAt/close deadline. Send them only after a successful
+authenticated first heartbeat. The server's jittered age, graceful reply window
+and hard socket deadline stay unchanged. A request header can never select the
+socket identity, its age or the response hint.
+
+Compatibility is explicit: old agents ignore the extra response metadata and
+retain their existing reconnect behavior. New agents talking to old servers, a
+shared listener without age, or missing/duplicate/malformed/out-of-range hints
+retain that same legacy path. No message schema/version, task sequence, cursor,
+credential, certificate or persisted agent checkpoint changes. Reject a required
+new frame or a simultaneous fleet upgrade. Validate bounded integer durations;
+use a conservative local monotonic schedule rather than trusting remote wall time.
+A candidate probe is between exchanges, never an automatic claim/result replay.
+If it fails or capacity is full, keep the original authenticated path and the
+existing single retry owner.
+
+Closing the old gRPC ClientConn immediately would destroy the very natural-age
+proof the installed test requires. Keeping an unused ClientConn forever is also
+wrong: gRPC may reconnect a channel after its original transport ends. The pinned
+[gRPC-Go 1.85.0 stats contract](https://pkg.go.dev/google.golang.org/grpc@v1.85.0/stats#Handler)
+provides per-connection TagConn/ConnEnd events. Client RPC contexts do not inherit
+TagConn context, so do not assume they do. The pinned source instead attaches the
+actual transport's [peer local/remote addresses](https://pkg.go.dev/google.golang.org/grpc@v1.85.0/peer#FromContext)
+to ClientStream.Context; obtain them only after the first reply commits the
+attempt. An external prototype may bind that actual transport to its lifecycle
+record, then retire the unused ClientConn when that transport ends, with a bounded
+close-deadline fallback. Never correlate using a caller header or log credentials,
+metadata payloads or TLS keys. Keep at most one retiring ClientConn per Session;
+missing transport binding must keep the legacy behavior, not create an unbounded
+retirement list. Client close must join/resolve its own close callback safely.
+
+Prototype all this outside product code before choosing it. Use real normally
+verified loopback TLS/HTTP2 and the production codec/gateway/client through
+explicit source overlays, with synthetic backend facts. Require several natural
+age cycles without a failed healthy heartbeat/claim; the unchanged server-generated
+retirement IDs and ages must match. Delay an admitted lease reply across age, keep
+its single lease/cursor and exact acknowledgement, and prove cancellation joins
+all listeners/client connections. Also require old-server/new-client and retained
+old-client/new-server behavior, invalid metadata, wrong credentials/certificate,
+failed candidate, saturated session/connection budget and preference failback.
+The existing MaxSessions and common connection budget cannot silently grow to
+make a warm replacement pass. A saturated failed probe must leave the current
+session usable; this is not a zero-gap guarantee at arbitrary saturation.
+
+Use the existing pinned Go BSD-3-Clause toolchain, gRPC-Go 1.85.0 Apache-2.0,
+protobuf-go 1.36.12 BSD-3-Clause and x/net BSD-3-Clause with their retained notices;
+commercial use, redistribution with notices and offline execution are allowed.
+See [gRPC-Go](https://github.com/grpc/grpc-go/blob/v1.85.0/LICENSE) and
+[protobuf-go](https://github.com/protocolbuffers/protobuf-go/blob/v1.36.12/LICENSE).
+No new dependency, model or dataset is introduced. Even a passing small prototype
+must still be followed by full repository gates and the unchanged native installed
+500-agent simulator drill before ARC-107 can be accepted. No such new run is
+claimed here.
+
+
+The external feasibility probe on source `2e4650c7b68feae6dffa64d5505c2eae6c073431` passed
+`TestPrototypeAuthenticatedStreamBindsNaturalTransportEnd` under the race detector
+on Darwin arm64: three authenticated replacements on actual verified TLS/HTTP2,
+4.38 seconds in the root and 5.910 seconds in its package. Each committed stream's
+actual peer local/remote addresses matched its own TagConn lifecycle record. Every
+retired channel had one transport begin and one end, with no retained transport;
+the old stream's cleanup preserved the replacement session. The three original
+physical connections retired naturally at their unchanged jittered ages with
+`forced=false`. No old ClientConn was closed before its transport end. The final
+active connection was closed explicitly during owned fixture shutdown and is not
+counted as natural-age evidence. The external test and log SHA-256 values are
+`9dcb1da41ab710c39ac97c1c0df54d4a55c9f951533ab759869ffbb045c2cce4` and
+`97666a1db004bf1630546e03131951c7715a7afe62a8e43bece3ebfbd5ffab45`.
+
+This qualifies the transport-binding feasibility only. It used the production
+listener, gateway and codec with a synthetic backend and a raw pinned gRPC client;
+it did not yet change or qualify the real agent's automatic handoff, compatibility,
+lease/cursor behavior, saturation or the installed 500-agent drill. All code and
+logs remain outside the repository. The prototype released its resource lock and
+joined its listener; no service or container remains running.
+
+
+An external materialized snapshot of `ecc7a3b041ee0ff62e43ba038ccc8ec3c86a98ca`
+then passed the six prototype roots (12 including metadata subcases) using the
+actual agent Session implementation with candidate source changes, production
+listener/gateway/codec, normally verified server TLS and actual node certificates.
+There were no skips. The six-second automatic handoff flow observed seven
+authenticated physical connections and five unchanged natural retirements, no
+healthy heartbeat/claim errors, exactly one acknowledgement on attempt one, no
+HTTPS acknowledgement in the healthy flow, and sequence seven on every subsequent
+claim. A separate admitted lease reply crossed its actual connection drain time;
+it kept attempt one and sequence seven, received one acknowledgement through the
+existing HTTPS fallback, and was not claimed again after reconnecting.
+
+The full-session-budget refusal retained the original authenticated stream without
+raising MaxSessions. Missing, duplicate, overflowing, negative, noncanonical and
+close-before-drain metadata retained the legacy path. Missing node certificates
+and wrong credentials could not replace the authenticated session. The retained
+raw client also ignored the additive headers while completing its three natural
+retirement cycles. The actual-client package run took 23.081 seconds under race;
+the unchanged existing agent client suite with the candidate source took 6.464
+seconds under race. Both had vet enabled and exit zero. Their log SHA-256 values
+are `e99f83734f23a907063fbebca98b75c15e294429a5c96d7d5dfc773a2adb40e0` and
+`b28317f3e28475e860b206e2f8ca5b3d22ede0544efd84a2a17f97d58af2cdca`.
+
+The external harness failures remain retained separately: the first run supplied
+certificate filenames to UseCertificate, which correctly requires PEM contents,
+and a virtual-only bridge directory could not be entered by vet. Materialize the
+bridge only in the owned external source snapshot, rather than skipping vet. The
+next run's stack trace showed the test log collector recursively forwarding through
+slog's default standard-log bridge; use an explicit text handler and restore the
+prior standard logger after all owned listeners join. This was a harness deadlock,
+not a diagnosed SendHeader defect. The candidate uses SetHeader to attach metadata
+to the first real heartbeat reply, avoiding an unnecessary independent header flush.
+A subsequent lease fixture returned bare JSON rather than the existing data
+envelope and was corrected without changing the product decoder or assertions.
+No production source or capacity claim was changed by these experiments.
+
+Before product adoption, also bound a slow candidate probe by the original
+transport's remaining healthy time and prove that failed handshakes do not consume
+that whole window. Retired channels must remain bounded to one and join on explicit
+client shutdown. These small runs do not establish the unchanged installed
+500-agent drill; its earlier 497/500 failure remains open.
+
+
+The slow-candidate experiment reproduced that missing bound on the unchanged
+candidate: a deliberately held new TLS handshake consumed the full request budget,
+the original socket naturally aged meanwhile, and the next old-stream heartbeat
+failed. The retained negative log SHA-256 is
+`9d38bd1fec9e71554c804c2b42dada86be1981617f1c042f4bdf4ec9c2652000`.
+The corrected probe uses the minimum of the normal request budget, the old stream's
+remaining idle window, and half its remaining positive drain window. This leaves
+time for the existing healthy stream when a candidate handshake does not complete;
+an already expired transport still uses the existing bounded request budget.
+It adds no retry, capacity or server-age exception.
+
+The same strict slow-handshake test then passed along with all seven prototype
+roots (13 with metadata subcases) under race and vet, in 23.656 seconds on
+Darwin arm64, without skips. The healthy flow again retained seven authenticated
+transports, five natural retirements, no heartbeat/claim errors, one acknowledgement
+and cursor seven. The existing complete agent client suite also passed under race
+in 6.212 seconds. Both were ordinary Go package runs in a materialized external
+snapshot, with no overlay-only directory or disabled vet. Their log SHA-256 values
+are `39dd7ad1b399e0cf08e2993757c7b8574f690518ae0051bad79d5ff7a6ff22e0` and
+`f791796b229a282efd17a7f13bf57b5017f0c7d8451037a9665c38a08106bc50`.
+
+For implementation, keep the optional header names and bounded relative-duration
+format in the existing versioned Agent contract. Put the actual outgoing gRPC
+transport lifecycle in a cohesive public `services/agent/sessiontransport` package:
+it belongs to this one Go service, and the development simulator can borrow it to
+exercise the same lifecycle rather than copy the map, peer binding and retirement
+worker. Do not create a new service or an empty shared module, and do not make the
+contract module depend on gRPC. The simulator's dependency on the existing agent
+module is repository source, not a new third-party package or runtime download.
+Validate that dependency offline before adopting it. Preserve the simulator's
+legacy shared-connection mode; certificate-bearing agents already require one
+agent per connection, so a legacy multiplexed channel must not be silently replaced
+by one node's handoff. No product adoption or new simulator run is claimed here.

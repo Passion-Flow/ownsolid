@@ -185,7 +185,7 @@ test('says when nothing is recorded and when filters hide everything', async ({ 
 test('a list that cannot load offers a retry', async ({ page }) => {
   control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
   await page.goto('/audit');
-  const retry = page.getByRole('button', { name: 'Try again' });
+  const retry = page.getByRole('button', { name: 'Read again' });
   await expect(retry).toBeVisible();
   control.auditProblem = null;
   await retry.click();
@@ -212,7 +212,9 @@ test('hides a column and keeps it hidden', async ({ page }) => {
 test('is not part of the portal', async ({ page }) => {
   control.audience = 'portal';
   await page.goto('/audit');
+  await expect(page.getByRole('alert')).toContainText(english['problem.RESOURCE_NOT_FOUND.title']);
   await expect(page.getByText('License imported')).toHaveCount(0);
+  expect(control.auditQueries).toHaveLength(1);
 });
 
 test.describe('in Chinese', () => {
@@ -297,11 +299,11 @@ for (const [locale, messages] of [
     control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
     await page.reload();
     await expect(
-      page.getByRole('button', { name: messages['action.retry'], exact: true }),
+      page.getByRole('button', { name: messages['audit.read.again'], exact: true }),
     ).toBeVisible();
     control.auditProblem = null;
     control.auditEvents = [auditReadEvent];
-    await page.getByRole('button', { name: messages['action.retry'], exact: true }).click();
+    await page.getByRole('button', { name: messages['audit.read.again'], exact: true }).click();
     await expect(row).toBeVisible();
     expect(control.auditQueries.at(-1)?.get('category')).toBe('audit');
     expect(control.auditQueries.every((query) => !query.has('action'))).toBe(true);

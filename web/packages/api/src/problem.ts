@@ -2,7 +2,7 @@
 
 /** Codes the client raises when no usable answer arrived from the server. */
 export const clientProblemCodes = [
-  /** The request did not reach the server: network down, server stopped, DNS failure. */
+  /** No usable response arrived; the request may already have reached the server. */
   'NETWORK_UNAVAILABLE',
   /** No answer within the configured request timeout. */
   'REQUEST_TIMEOUT',

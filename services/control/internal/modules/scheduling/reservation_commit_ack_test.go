@@ -137,3 +137,27 @@ func TestPostgresBorrowingAndReclaimCommitAcknowledgementLoss(t *testing.T) {
 	}
 	reserveBorrowing(t, f.store, lender, 2)
 }
+
+func TestPostgresQueuedReservationCommitAcknowledgementLoss(t *testing.T) {
+	f := newQueuedFixture(t)
+	store, proxy := reservationFaultStore(t, f.pool)
+	fault := f
+	fault.store = store
+	if err := proxy.Arm(commitfault.DropCommitAcknowledgement); err != nil {
+		t.Fatal(err)
+	}
+	changed, err := fault.admit(t.Context(), f.first, f.read, nil)
+	if changed {
+		t.Fatal("queued dispatch exposed an unacknowledged commit")
+	}
+	assertLostReservationCommit(t, proxy, "queued dispatch", err)
+	f.assertState(t, f.first, "preparing", 2, 1)
+	noRead := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
+		t.Fatal("unknown commit replay read the already-dequeued entry")
+		return nil, nil
+	}
+	if changed, err := f.admit(t.Context(), f.first, noRead, nil); err != nil || changed {
+		t.Fatalf("queued dispatch replay after unknown commit: %v, %v", changed, err)
+	}
+	f.assertState(t, f.first, "preparing", 2, 1)
+}

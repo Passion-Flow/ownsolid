@@ -6,10 +6,19 @@ import { article } from '@ownsolid/help/catalog';
 import { previewDownloadFailureCookie } from '@ownsolid/config/preview-download-failure';
 import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { expectContractAudience } from './contract-download.ts';
 import { mockControlPlane, type ControlPlane } from './control-plane.ts';
 import { expectFocusVisible } from './keyboard-flows.ts';
+
+async function rememberedApiQuery(page: Page, userId: string): Promise<string | undefined> {
+  return page.evaluate((key) => {
+    const stored = JSON.parse(localStorage.getItem(key) ?? 'null') as {
+      state?: { filters?: { q?: string } };
+    } | null;
+    return stored?.state?.filters?.q;
+  }, `ownsolid.list.help-api.${userId}`);
+}
 
 /** Registers the help flows for one entrance. */
 export function helpFlows(audience: ControlPlane['audience']): void {
@@ -150,6 +159,8 @@ export function helpFlows(audience: ControlPlane['audience']): void {
         const retry = page.waitForEvent('download');
         await save.click();
         await expectContractAudience(await retry, audience);
+        // Establish the remembered query before following a link that supplies no filter.
+        await expect.poll(() => rememberedApiQuery(page, control.user.id)).toBe('changePassword');
         await page.goto('/help/getting-started');
         const reference = page
           .getByRole('main')
@@ -162,7 +173,61 @@ export function helpFlows(audience: ControlPlane['audience']): void {
         await page.emulateMedia({ reducedMotion: 'reduce' });
         await expectFocusVisible(page);
         await reference.click();
+        const search = page.getByLabel(messages['help.api.search']);
+        const password = page.getByRole('button', { name: / changePassword$/ });
+        const workspace = page.getByRole('button', { name: new RegExp(` ${operation}$`) });
+        await expect(search).toHaveValue('changePassword');
+        await expect(page).toHaveURL(/\/help\/api\?q=changePassword$/);
+        await expect(password).toBeVisible();
+        await expect(workspace).toHaveCount(0);
+        await info.attach(`contract-restored-search-${locale}`, {
+          body: await page.screenshot({ animations: 'disabled' }),
+          contentType: 'image/png',
+        });
+        await password.click();
+        await expect(page).toHaveURL(/\/help\/api\?q=changePassword#identity\.changePassword$/);
+        await expect(password).toHaveAttribute('aria-expanded', 'true');
+        await page.reload();
+        await expect(search).toHaveValue('changePassword');
+        await expect(page).toHaveURL(/\/help\/api\?q=changePassword#identity\.changePassword$/);
+        await expect(password).toHaveAttribute('aria-expanded', 'true');
+        await expect(page.getByRole('heading', { name: messages['help.api.body'] })).toBeVisible();
+
+        // An explicit operation link wins over the remembered password filter.
+        await page.goto(`/help/api?q=${operation}#workspaces.${operation}`);
+        await expect(search).toHaveValue(operation);
+        await expect(page).toHaveURL(
+          (url) =>
+            url.pathname === '/help/api' &&
+            url.search === `?q=${operation}` &&
+            url.hash === `#workspaces.${operation}`,
+        );
+        await expect(workspace).toHaveAttribute('aria-expanded', 'true');
+        await expect(password).toHaveCount(0);
+        await expect.poll(() => rememberedApiQuery(page, control.user.id)).toBe(operation);
+
+        // Clearing is deliberate; it must not restore the query that was just cleared.
+        await search.fill('nothing-has-this-operation');
+        await expect(
+          page.getByRole('heading', { name: messages['help.api.empty.title'] }),
+        ).toBeVisible();
+        await page.getByRole('button', { name: messages['help.empty.clear'] }).click();
+        await expect(search).toHaveValue('');
+        await expect(page).toHaveURL(
+          (url) =>
+            url.pathname === '/help/api' &&
+            url.search === '' &&
+            url.hash === `#workspaces.${operation}`,
+        );
+        await expect(password).toBeVisible();
+        await expect(workspace).toHaveAttribute('aria-expanded', 'true');
+        await expect.poll(() => rememberedApiQuery(page, control.user.id)).toBeUndefined();
+        await page.goto('/help/getting-started');
+        await reference.click();
+        await expect(search).toHaveValue('');
         await expect(page).toHaveURL(/\/help\/api$/);
+        await expect(password).toBeVisible();
+        await expect(workspace).toBeVisible();
       });
 
       test(`the published operation explains its error in ${locale}`, async ({ page }, info) => {
