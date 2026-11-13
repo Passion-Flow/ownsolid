@@ -178,6 +178,12 @@ uncertain outcome or adds a variant before the targeted path works.
 
 ## Acceptance and remaining work
 
+S-308 in the build plan is the specification for this shared Account section, reviewed
+against published main `6f785818` on 2026-11-13. S-408 remains the separate future administrator
+screen; it is not part of this item. The explicit filtered-empty state is inapplicable because
+the session endpoint has no filter. A current-only list and a genuinely empty live list have
+different explanations; neither invents a row or a filter.
+
 Add typed client functions and transport tests for the existing GET and bodyless
 204 DELETE, then the shared account section and bilingual Help. Test list loading,
 both empty contexts, paging, invalid cursor, rollback, lost reply, unknown commit,
