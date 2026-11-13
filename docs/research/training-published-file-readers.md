@@ -743,3 +743,21 @@ The consumed frozen-v2 opportunity does not admit a modified-parent execution.
 Owner source remains private/unmerged, native reader/SQL and ARC actual
 construction/startup/Close/drain, Model/Node/protected SQL and fleet budgets
 remain open. All product boxes and original support scopes remain unchanged.
+
+## Bounded native owner qualification plan
+
+Preserve 5b73fa05 and the original evidence. Prepare an additive test-only source
+that keeps the independent writer open while reader-only services exercise both
+owners against real PostgreSQL. The training experiment's corruption/repair,
+export, uncertain-outcome propagation and actual final-session logout must run
+through its real PublishedReader. The dataset case adds authenticated snapshot
+readback and final authority refusal after real file I/O, plus explicit writer
+exclusion before and after reader Close. All existing SQL locks/assertions stay.
+
+The previously prepared event parent is not eligible for the new native window:
+it waits for both locks and allows a 420-second child; its shell test timeout is
+five minutes before setup/cleanup. That does not meet the assigned 300-second
+parent lifetime and nonblocking second-lock contract. Do not repurpose the fixed
+c527fb68 event driver. Prepare the exact test source, input hashes and bounded
+runner-delta plan before any new heavy native framework is run. No lock attempt
+or native SQL outcome is implied by this preparation.

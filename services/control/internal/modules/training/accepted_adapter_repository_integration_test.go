@@ -599,6 +599,49 @@ func TestActualAcceptedExperimentRead(t *testing.T) {
 		!reflect.DeepEqual(out.Files, g.descriptor.Files) {
 		t.Fatal("accepted experiment did not retain exact bindings", e)
 	}
+	t.Run("independent_published_reader_with_real_accepted_bytes", func(t *testing.T) {
+		reader, err := training.OpenPublishedReader(g.root, g.f.Tenant)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer reader.Close()
+		consumer := *g.s
+		consumer.Store, consumer.PublishedReader = nil, reader
+		retained, err := read(&consumer, g.f.Workspace)
+		if err != nil || !reflect.DeepEqual(retained, out) {
+			t.Fatal("read-only owner changed accepted experiment identity", err)
+		}
+		reader.Close()
+		refuse(read(&consumer, g.f.Workspace))
+	})
+	// Exercise every following file, retry, export and final authorization
+	// assertion through the independent real reader, with the writer still
+	// open in the fixture. No file-verification callback is substituted.
+	reader, e := training.OpenPublishedReader(g.root, g.f.Tenant)
+	if e != nil {
+		t.Fatal(e)
+	}
+	assertWriterHeld := func() {
+		t.Helper()
+		second, err := training.OpenStore(g.root, g.f.Tenant, 4096, wire.MaximumCheckpointBytes, wire.MaximumCheckpointFiles)
+		if err == nil {
+			second.Close()
+			t.Fatal("independent reader released the real training writer")
+		}
+		if err.Error() != "TRAINING_STORE_IN_USE" {
+			t.Fatal("training writer ownership refusal changed", err)
+		}
+	}
+	assertWriterHeld()
+	defer func() {
+		if err := reader.Close(); err != nil {
+			t.Error(err)
+		}
+		assertWriterHeld()
+	}()
+	consumer := *g.s
+	consumer.Store, consumer.PublishedReader = nil, reader
+	g.s = &consumer
 	other, e := g.s.Workspaces.Create(g.ctx, g.a, "Second experiment workspace", g.f.User, uuid.NewString())
 	if e != nil {
 		t.Fatal(e)

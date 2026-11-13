@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
 const mysqlPublishedDatasetFields = `id,workspace_id,name,origin,license,rights_asserted,created_by,revision,created_at,updated_at,retired_at,retire_reason`
@@ -62,8 +62,8 @@ func (s *Service) PublishedSourceWithin(ctx context.Context, q transaction.Execu
 	if store.Dialect() != q.Dialect() || q.Dialect() != transaction.PostgreSQL && q.Dialect() != transaction.MySQL && q.Dialect() != transaction.Dameng {
 		return Version{}, failure("DATASET_STORAGE_MISMATCH")
 	}
-	if s.Store == nil {
-		return Version{}, failure("DATASET_STORAGE_UNAVAILABLE")
+	if _, e := s.publishedFileAccess(""); e != nil {
+		return Version{}, e
 	}
 	parent, e := scanDataset(q.QueryRow(ctx, publishedSourceSQL(q,
 		"SELECT "+datasetFields+" FROM datasets WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE",
@@ -80,6 +80,9 @@ func (s *Service) PublishedSourceWithin(ctx context.Context, q transaction.Execu
 		tenant, workspace, dataset, version)))
 	if e != nil {
 		return Version{}, publishedSourceError(e)
+	}
+	if _, e := s.publishedFileAccess(tenant); e != nil {
+		return Version{}, e
 	}
 	if !retained && (parent.RetiredAt != nil || value.RetiredAt != nil) {
 		return Version{}, failure("DATASET_RETIRED")
