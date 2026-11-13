@@ -433,3 +433,47 @@ the strict 500-agent lifecycle and unchanged 2,000-agent test. Existing Go
 BSD-3-Clause, gRPC-Go Apache-2.0 and protobuf/x/net BSD-3-Clause licenses suffice;
 no dependency, model, dataset or wire field is added. Older agents retain the
 old retry policy and can coexist throughout the rollout.
+
+
+The external verified-TLS prototype on source 77b9b37b reproduced the old
+five-minute fallback independently in the actual Client and simulator. Their
+strict negative logs have SHA-256 values
+`b795380a0868f3ae96c2811cd43050c4dae7aae5edeb5a273de7ed421b5dfb7e`
+and `5034fb063a44665ea329fd47822ff0e35a865b2a02f006f9f93cb1d5ab371e99`.
+The candidate then passed the pure-policy cases, actual Client fallback cases,
+simulator recovery and unchanged initial unsupported-path cases under race,
+and vet for all three packages. The Client and simulator positive log hashes are
+`b5358ab28e3135d32f75acf2f1175fa72d0f84da022dc56b2318ce15e82f48bc`
+and `7e2aa32570436cb6fa6f8b5a6b1484f6c73093a7f96a5e14d15f6d83c1fafac7`.
+A successful valid stream still used the same cursor, one explicit claim and no
+ACK replay. The initial HTTP/1.1 path retained 300 seconds. These are selected
+synthetic-backend protocol checks, not the missing native 2,000-agent acceptance.
+The implementation adopts that proven shared scheduling rule and adds new
+process-forgetting and failed-HTTPS regressions before requalification.
+
+
+The complete simulator race suite then retained a separate fixture failure:
+TestHTTPSOnlyFaultMovesAgentsToLongPolling observed a correctly restored stream
+at its 18-second terminal snapshot, two seconds after its 15-second fault ended.
+The log hash is `f0e9299ebdbecaa8c3e2c9d8d1b2d7b682ecc8906cf20a39ed226f540ebe6626`.
+Keep its original two nodes, two successful tasks, zero-stream snapshot and
+exactly two initial stream opens, but collect that snapshot during the active
+fault after both results and the next HTTPS heartbeat. Join cancellation before
+fixture disposal. Add an independent post-heal test requiring both streams,
+exactly two new successful opens and the same two successful tasks within the
+advertised reconnect bound plus the ordinary paced cycle and failed-cycle
+backoff. Do not accept a mixed terminal count. The original 18-second fixture
+limit and 15-second fault are unchanged; all native 500/2,000-agent assertions
+and timing remain unchanged. Fallback eligibility does not bypass pacing or a
+server retry hint.
+
+
+The adopted policy and permanent regressions passed the complete Agent contract,
+Client/transport and simulator fleet race suites and all affected vet checks.
+The fleet suite includes strict in-fault and full post-heal stream recovery,
+new-process forgetting, cursor retention and unsupported-path behavior. No
+installed acceptance is inferred. Race log SHA-256 values for contract, Agent
+and complete fleet respectively are
+`4896f69f4c20170d118c12cc49d813d0942492a93c92c818fe0fd16172f54981`,
+`56601c15e90fe0dcfd3cf75d2b1594b41a4387c2db5ff2a8d5e7c069af9df4bf`,
+`6d23b95150d34b78f7e40e7693c9075aa83c07d18a72211b7593c576134ba928`.
