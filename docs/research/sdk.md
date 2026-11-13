@@ -386,3 +386,23 @@ go-difflib lack a source go.mod. No module source or synthesized metadata was
 edited. No second carrier acquisition, Go compilation, SDK generation or
 native run followed this correction. The 36 generation inputs remain those
 of e4bd3138; this helper is a separate tool-preparation input.
+
+The separately allocated follow-up passes all 23 module checks, then its real
+pinned go install command exits 1 before compilation: loading deprecation is
+disabled by GOPROXY=off. The foreground job ends after 0.632 seconds, with no
+download, binary, generated SDK or native test. Each allocated job used one
+nonblocking acquisition and closed its parent/worker copies of the same carrier;
+the second failure does not reset the first result.
+
+Go's [CheckDeprecation](https://github.com/golang/go/blob/go1.27.3/src/cmd/go/internal/modload/modfile.go)
+queries latest metadata even for this pinned installation. The actual cache
+already has the pinned .info, .mod, archive, ziphash and version list for all
+23 modules. Go's [file proxy and latest fallback](https://github.com/golang/go/blob/go1.27.3/src/cmd/go/internal/modfetch/proxy.go)
+can read those authentic cache artifacts without network access. The next
+tool-build payload therefore uses that read-only file proxy and a private
+GOMODCACHE, retaining sandbox network denial and the exact versioned go install.
+Preserve all metadata bytes and verify actual binary version/buildinfo checksums;
+do not build an unversioned checkout or inject a version label. Generation and
+native phases still use GOPROXY=off. This prospective correction is source-reviewed,
+not a successful tool build or a further acquisition; all 115 proxy artifact
+hashes and the failed command's actual stderr are retained privately.

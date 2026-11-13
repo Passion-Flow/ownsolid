@@ -114,6 +114,16 @@ notice hashes. Older modules can legitimately lack a source go.mod; their cached
 .mod must still match its pin. This does not download or compile a tool and does
 not qualify a binary or renew a consumed execution attempt.
 
+A fixed-version go install still queries module deprecation metadata. Verified
+source directories alone do not make GOPROXY=off sufficient for that command.
+For offline tool preparation, Go supports the authentic prepared cache/download
+directory as a read-only file proxy, with a separate private GOMODCACHE for the
+build. Preserve its list, .info, .mod and archive bytes; never fabricate metadata
+or version labels. Verify the resulting binary's actual version, buildinfo and
+module checksums. This tool-preparation configuration is separate from pure
+SDK generation and native clients, which retain GOPROXY=off and no external network.
+The local-proxy build correction has not yet been executed.
+
 ## Read the audit log deliberately
 
 listAuditEvents records access before releasing its page. A 409
