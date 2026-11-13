@@ -86,3 +86,12 @@ Control/database, UI, supported-release or complete platform run. The raw
 the sole explicit 409 finding. The
 [source and output evidence](../research/sdk.md#qualified-tool-generation-and-go-client-migration)
 retains the exact qualification and release boundaries.
+
+The later joint SDK checks compile all 28 Go packages and import 1,643 Python
+modules under the separate locked runtime environment. The corrected Python TCP
+fixture covers explicit 409 and undeclared 418, both representations and both
+caller modes, with sixteen passing scenarios and no automatic retry. Exact
+0cb1627b/aef3d943 source scopes and cleanup are retained in the
+[joint runtime evidence](../research/sdk.md#joint-sdk-runtime-qualification-and-full-gate-admission).
+Full platform entry is resource-refused before any check/build/test starts;
+these results do not qualify installed-server or release compatibility.

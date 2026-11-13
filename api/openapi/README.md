@@ -69,8 +69,10 @@ does not turn that result into exit 0. A supported-release baseline still needs
 selection. Complete 28-domain generation and the four Go caller migration groups
 have passed for the exact e4bd3138/ee7a214c source pair; see the
 [SDK qualification](../../docs/research/sdk.md#qualified-tool-generation-and-go-client-migration).
-Actual installed-server/database upgrade and rollback, remaining SDK runtime
-checks, make check, make build and related tests still must pass on the final
+The later [joint SDK runtime checks](../../docs/research/sdk.md#joint-sdk-runtime-qualification-and-full-gate-admission)
+also compile all 28 Go packages and verify Python imports and TCP behavior.
+Actual installed-server/database upgrade and rollback, make check, make build
+and related tests still must pass on the final
 source before release compatibility is declared. No release version or completion
 tick is created by these SDK protocol checks.
 

@@ -239,12 +239,14 @@ python tools/codegen/sdk/tests/wire_smoke.py "$SDK_DIR" --python-only --expected
 
 This imports every generated module from that exact SDK and checks the domain
 count before running serialization, streaming, error and retry scenarios.
-It includes eight real loopback TCP audit-read cases across sync/async,
-standard/assistant and 409/lost-response paths, alongside the existing
+It includes sixteen real loopback TCP audit-read cases across sync/async,
+standard/assistant, explicit 409/undeclared 418 and lost-response paths, alongside the existing
 controlled-transport cases. It invokes no Go command; the default entry keeps
-the combined Go/Python checks. The new Python runtime entry is prepared and
-requires its own actual execution; orchestration unit tests do not qualify SDK
-imports, sockets or generated clients.
+the combined Go/Python checks. Actual runtime qualification imported 1,643
+modules across all 28 domains under the locked eight-package environment;
+the corrected TCP fixture passed all sixteen scenarios. The exact source and
+scope are in the [runtime evidence](../../../docs/research/sdk.md#joint-sdk-runtime-qualification-and-full-gate-admission).
+Orchestration unit tests alone do not qualify imports, sockets or generated clients.
 
 ## Audit the public operation inventory
 

@@ -398,3 +398,10 @@ The explicit 409 review remains visible with the unchanged compatibility
 report and exit 1. These SDK protocol results do not replace installed-server,
 database, Python SDK runtime or complete final-source platform gates, and do
 not select a supported-release baseline or complete DEV-204.
+
+The subsequent [joint SDK runtime qualification](sdk.md#joint-sdk-runtime-qualification-and-full-gate-admission)
+adds actual compilation of all 28 Go packages, 1,643 Python module imports and
+sixteen explicit/undeclared-status TCP scenarios. Its source scopes and retained
+input hashes are explicit. Platform check/build/test remains NOTRUN after fresh
+raw Free refuses the separate 6 GiB full-stage admission. The explicit 409 audit
+finding and original exit remain unchanged.
