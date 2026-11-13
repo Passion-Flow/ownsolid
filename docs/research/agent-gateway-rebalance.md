@@ -858,3 +858,32 @@ control and simulator race log SHA-256 values are
 `1f754eabbb4703f7411773e53b252ba9abb0e8e0997887c4cc6855f30294d526`.
 Native package execution and installed lifecycle acceptance remain pending. Keep
 both original native failures; the earlier full Mac result does not erase them.
+
+
+## Instance-owned gateway idle baseline
+
+The corrected native client and outgoing transport suites passed on cf93c92e with
+proper package working directories. The next native gateway race run exposed an
+existing test-only global mutation: TestSlowlyPacedSessionOutlivesTheDefaultIdleTime
+restored idleTimeout while an HTTP/2 session handler still read it. Preserve the
+strict race report, SHA-256 `342d1d84d19a3cab60ae1d5cd5328f523ca4a668cb20c6b71b302962cc1b9909`.
+A successful Mac suite does not erase this native failure.
+
+Replace the mutable package default with the unchanged protocol constant captured
+by each Gateway at construction. A private constructor supplies the explicitly
+bounded baseline for the existing short-clock fixtures. Production New always
+uses the same version-1 default; runtime pacing can still extend the idle window.
+Do not add a configuration switch, change the 200 ms fixture clocks or relax the
+silence and held-claim assertions. Add an actual two-gateway independence test.
+An external source overlay passed all native gateway race tests and vet, including
+that test, before adoption. Its archive SHA-256 is
+`095997d301860ea4afa816e00826f355ebd475ec1596730b4a5d222ee05d704a`
+and race log SHA-256 is
+`eb3368dc05d440c28d57bc8017ba004925085ccd46c89c495b7429611da259aa`.
+The native race command finished in 5.193 seconds with no skips. No dependency,
+wire frame, server age enforcement or retry policy changes.
+
+Complete Mac check/build/test also passed cf93c92e with 1,191/410 browser cases and
+the existing 28/10 environment skips. The native fixture race still prevented
+installed acceptance at that input. Requalify the adopted immutable baseline and
+retain the unchanged installed 500-agent assertions.
