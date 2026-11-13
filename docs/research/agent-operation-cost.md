@@ -191,7 +191,7 @@ Close the original TLS test listener and construct a fresh production dispatcher
 against the same pool, retaining the issued node certificate and existing trust.
 [httptest.Server.Close](https://pkg.go.dev/net/http/httptest#Server.Close) joins
 outstanding requests before the next listener is used. Measure the first current
-deployment report with a cold process cache under the same independent shared-row
+deployment report with fresh node/pacing state under the same independent shared-row
 holder. Advance desired state through the real stop action, then measure the old
 revision's delayed failed report. Independently compare the complete deployment
 and GPU reservation rows before/after that stale report; it must not change them.
@@ -212,3 +212,20 @@ race/full gates. The shared native window currently admits no new workload or
 background queue. Its original package roots and strict assertions remain the
 future entry; preparing this extension neither qualifies ARC-108 nor resolves
 the other operation families and retained cost overruns.
+
+The source preparation has been formatted and passed layout, roadmap consistency
+and diff checks. No compiler, native SQL, service or simulated fleet has started
+for this extension. The future focused entry uses the existing protected test
+fixture and pinned offline cache, with no fixture skip accepted:
+
+```sh
+GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOMEMLIMIT=512MiB \
+  go -C services/control test -mod=readonly -p 1 -count=1 -timeout=10m -v \
+  ./internal/modules/nodes -run '^(TestComponentHeartbeatCostAtFleetSizes|TestInferenceHeartbeatStatementCost)$'
+```
+
+Use one explicitly allocated pinned PostgreSQL 18.6/pgvector 0.8.7 fixture with
+network none, two CPUs and at most 2 GiB, and budget 15 minutes for serial build
+and the focused replay. The workstation gate and both Linux heavy locks, their
+existing memory/disk/PSI and foreign-job checks apply before starting. Full
+check/build/test and affected race acceptance require their own allocation.

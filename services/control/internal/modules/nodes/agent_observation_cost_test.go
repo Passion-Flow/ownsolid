@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -23,14 +24,17 @@ import (
 )
 
 type observationCostFixture struct {
-	account   *identity.Service
-	admin     identity.Auth
-	handler   *transport.Handler
-	client    *httpfixture.Client
-	handshake wire.Handshake
-	node      wire.Enrolled
-	path      string
-	recorder  agentcost.Recorder
+	account     *identity.Service
+	admin       identity.Auth
+	handler     *transport.Handler
+	client      *httpfixture.Client
+	handshake   wire.Handshake
+	node        wire.Enrolled
+	path        string
+	recorder    agentcost.Recorder
+	server      *httptest.Server
+	roots       *x509.CertPool
+	certificate tls.Certificate
 }
 
 func newObservationCostFixture(t *testing.T, profile string, peers int) *observationCostFixture {
@@ -84,9 +88,22 @@ func newObservationCostFixture(t *testing.T, profile string, peers int) *observa
 		t.Fatal(err)
 	}
 	f.client = f.client.WithCertificate(cert)
+	f.server, f.roots, f.certificate = server, roots, cert
 	f.path = "/agent/v1" + (wire.Scope{SiteID: f.node.SiteID, CellID: f.node.CellID}).Path() + "/nodes/" + f.node.NodeID + "/heartbeat"
 	seedObservationCostFleet(t, f.account.DB, f.node.NodeID, f.admin.Me.User.ID, profile, peers)
 	return f
+}
+
+func (f *observationCostFixture) restartDispatcher(t *testing.T) {
+	t.Helper()
+	authority := f.handler.Nodes.Service.Certificates
+	f.server.Close()
+	f.handler = transport.New(f.account)
+	f.handler.Nodes.Service.Certificates = authority
+	f.server = httpfixture.NewTLSServerAskingClients(t, f.handler, f.roots)
+	t.Cleanup(f.server.Close)
+	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/nodes/openapi.json")
+	f.client = httpfixture.New(t, f.server, "admin", schemas).WithCertificate(f.certificate)
 }
 
 // The independent holder makes a fleet-wide exclusive authority lock fail the

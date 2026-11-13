@@ -16,7 +16,7 @@ func TestInferenceHeartbeatStatementCost(t *testing.T) {
 	const smallPeers, largePeers = 50, 3000
 	small := measureInferenceHeartbeats(t, smallPeers)
 	large := measureInferenceHeartbeats(t, largePeers)
-	compareObservationCosts(t, []string{"first inference report", "inference update", "foreign credential"}, small, large)
+	compareObservationCosts(t, []string{"first inference report", "inference update", "foreign credential", "retained deployment cold report", "stale deployment revision"}, small, large)
 }
 
 func measureInferenceHeartbeats(t *testing.T, peers int) map[string]agentcost.Cost {
@@ -51,24 +51,30 @@ func measureInferenceHeartbeats(t *testing.T, peers int) map[string]agentcost.Co
 			}
 			continue
 		}
-		raw, err := json.Marshal(reply)
-		if err != nil {
-			t.Fatal("encode heartbeat response", err)
-		}
-		var out wire.Disposition
-		if err = json.Unmarshal(raw, &out); err != nil {
-			t.Fatal("decode heartbeat response", err)
-		}
-		if out.Status != "active" || !out.ServerTime.Equal(actual.heartbeatAt) {
-			t.Fatal("heartbeat reply did not match its committed timestamp")
-		}
-		var stored wire.InferenceObservation
-		if json.Unmarshal([]byte(actual.observation), &stored) != nil || !reflect.DeepEqual(stored, *h.Inference) || !actual.local {
-			t.Fatal("inference report did not retain the exact observation and node scope")
-		}
+		assertInferenceHeartbeat(t, reply, h, actual)
 		latest = actual
 	}
+	measureRetainedInferenceHeartbeats(t, f, &h, peers, measured)
 	return measured
+}
+
+func assertInferenceHeartbeat(t *testing.T, reply map[string]any, h wire.Handshake, actual inferenceHeartbeatSnapshot) {
+	t.Helper()
+	raw, err := json.Marshal(reply)
+	if err != nil {
+		t.Fatal("encode heartbeat response", err)
+	}
+	var out wire.Disposition
+	if err = json.Unmarshal(raw, &out); err != nil {
+		t.Fatal("decode heartbeat response", err)
+	}
+	if out.Status != "active" || !out.ServerTime.Equal(actual.heartbeatAt) {
+		t.Fatal("heartbeat reply did not match its committed timestamp")
+	}
+	var stored wire.InferenceObservation
+	if json.Unmarshal([]byte(actual.observation), &stored) != nil || !reflect.DeepEqual(stored, *h.Inference) || !actual.local {
+		t.Fatal("inference report did not retain the exact observation and node scope")
+	}
 }
 
 type inferenceHeartbeatSnapshot struct {

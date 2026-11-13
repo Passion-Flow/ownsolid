@@ -111,6 +111,13 @@ support. Other component/inference exchanges, preparation and registry
 coverage remain required for ARC-108. See the
 [approach and acceptance scope](../../../../../docs/research/agent-operation-cost.md).
 
+The prepared inference extension also includes a retained deployment after a
+dispatcher restart and a delayed report after a desired-revision change. It seeds
+peer deployments and held leases, retains the original statement/index/growth
+checks and compares complete deployment/reservation rows after the stale report.
+These two additional exchanges still require their allocated native replay;
+their source presence does not extend the measured scope below.
+
 The shared-fixture and inference HTTP extension passed both actual cost roots
 on disconnected Linux arm64 PostgreSQL, affected race/vet and the full
 repository gate at a91a817b. See the
