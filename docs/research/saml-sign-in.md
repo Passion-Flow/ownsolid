@@ -880,8 +880,10 @@ remain distinct evidence until that composition actually runs.
 
 ## Completion owner and cross-lane admission contract
 
-The review source now calls actual Identity from the SSO domain owner. It is an
-unregistered, uncommitted candidate, not a serving capability. The immutable
+The domain-only v4 review source calls actual Identity from the SSO owner. Its
+frozen tree is an unregistered review artifact, not a serving capability. The
+later HTTP increment is separately committed locally below; earlier checks do
+not qualify its changed bytes. The immutable
 source artifact is
 `/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/review-source-v4.tar`.
 Its SHA-256 is
@@ -1050,6 +1052,131 @@ its action/error metadata and Web must supply both locales. Anonymous sign-in,
 Admin MFA, production cleanup/restore, real provider-to-ACS/browser completion,
 formal install/offline UI and the complete repository gates remain open. This
 handoff does not complete IAM-104.
+
+## First-party completion HTTP composition candidate
+
+The next owner increment adds only the ordinary first-party completion adapter.
+It must dispatch after the existing exact Origin, Fetch Metadata, audience-cookie
+and CSRF checks in `identity/http.Handler.api`. Keep the default owner nil and
+match only canonical
+`POST /api/v1/sso/saml/connectors/{connector_id}/flows/{flow_id}/complete`.
+GET does not consume a result; ACS is a different path and gains no exception
+from this adapter. Public OpenAPI/Problem/generated/UI and startup selection
+remain with DEV/WEB/ARC, and no schema is registered by IAM.
+
+The exact selected domain owner must belong to the same SSO/Identity instance.
+The outer dispatcher also rejects a different Identity pointer. Authenticate the
+ordinary session without touching it before calling the license-integrity owner,
+whose contract requires a current actor; domain completion then reacquires its
+exact captured actor under the existing transaction fences.
+Use a strict empty JSON object, reject query/encoded path aliases and require
+one canonical Idempotency-Key equal to the flow ID. The flow itself is the
+one-use mutation identity; repeated completion cannot recover an opaque token.
+No tenant, local user or provider proof is accepted from body/query/header.
+Read the initiating ordinary session through the existing cookie policy. The
+verified continuation uses the existing host-only HttpOnly Lax SSO-flow cookie
+only after ACS has replaced its old browser proof. This is one active SSO intent
+per browser, not a relaxation of the separate cross-site POST flow-cookie problem.
+Missing/duplicate cookies fail before domain mutation. Require the qualified
+HTTPS transport and Portal entrance; unqualified Admin MFA remains unavailable.
+
+Completion finishes previously accepted, password-confirmed linking work, like
+the current accepted Gitea callback. The narrowly selected adapter therefore
+checks actual business-license integrity, rather than changing the global
+recovery matcher or permitting new business after expiry. It runs only after
+ordinary Origin/CSRF and retains the domain's exact current actor/credential/
+result checks. No other route receives a license or authentication exception.
+Use the existing typed callback-rate limit. On success set the ordinary session
+cookie through the shared policy, clear the continuation and old CSRF context,
+and return the standard minimized Me projection, never IssuedSession/Token.
+The server's actual absolute expiry and source guard remain authoritative even
+when the ordinary cookie has the configured maximum age.
+
+An unknown completion COMMIT emits no token and clears only the continuation;
+it performs no recovery query, second mutation or automatic retry. A known
+rollback/storage failure retains proof for an explicit permitted retry. Preserve
+stable common Problems and admit operation-specific unknown-outcome/no-auto-retry
+metadata with DEV before a product client can call the route.
+
+Add tests for exact route/body/key/cookie authority, same-owner composition,
+missing/hostile/null/duplicate Origin, cross-site Fetch Metadata, missing/wrong/
+duplicate CSRF, foreign scope/entrance and claim substitutions. The real SQL
+fixture must drive the actual identity HTTP boundary through completion, cookie
+rotation, source expiry/revocation, audit rollback and both actual COMMIT loss
+modes. No adapter-only check or generated successful response qualifies this
+flow. This increment adds no dependency, model, dataset or runtime network path;
+it reuses the already reviewed Go/Identity/SSO/transaction/cookie owners.
+
+The HTTP increment now contains the typed same-owner predicate, concrete SSO
+adapter, narrow selected Identity dispatch and five authored HTTP roots. The
+original common Origin/Fetch Metadata/CSRF code and global license recovery
+matcher are unchanged. The ordinary session is authenticated without touch before
+license observation, and the domain retains its exact captured-actor transaction.
+No public contract, producer, schema, startup selector or ACS route is installed.
+
+A separate no-database unit opportunity was refused before Go with raw 78:
+1,078,312,960 free bytes against 2,147,483,648 required;
+165,050,195,968 disk-free bytes against 16,106,127,360 required.
+It held and released the original nonblocking workstation carrier, started no
+compiler/test/database/provider/browser, and queued no retry. The new HTTP source
+has only passed formatting and diff inspection; it is **not compiled or tested**.
+The earlier v4 five-root/thirteen-subtest check remains bound to v4 bytes and does
+not qualify this increment. The separately completed Agent gateway qualification
+and its 300-second opportunity are not reused for SAML.
+
+### Local HTTP source and exact next qualification input
+
+The seventeen-path owner candidate is safely committed only on local branch
+`codex/iam-saml-completion-http-20261113`:
+`c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba`, tree
+`ec378e511d51cdd4cbd7a2ed103115e6a2c05a28`, parent
+`e9e715e223f6879339a29fbd2c4b12473c0b026e`. It contains actual domain,
+source/session and HTTP owners with their authored tests, not a verified-result
+callback or success double. The new source remains uncompiled/unexecuted and
+is not pushed to main. No runtime, schema, OpenAPI or generated admission is
+included. The default handler never assigns the new owner.
+
+The source bundle is
+`/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-source-v5.bundle`,
+SHA-256 `bed3c3e2b37c799ef33c6ae3e0869dac0f8f379049131d6c569eebf536dc9769`.
+Git verified its named candidate ref and exact `e9e715e2` prerequisite. The
+seventeen-path patch SHA-256 is
+`1dd1c40f241771aed5522c3cc6be2eeaa453df2d926cfb7cf97d360f4d769431`.
+The complete fifty-six-file source/review archive, in that same directory, is
+`http-completion-v5-review-v2.tar`, SHA-256
+`122a7e599b919d7cee294a7733fd2ce54d31553f8ce183706e30bbec4e3f6308`;
+its adjacent manifest SHA-256 is
+`395383d5ff5fc5c525e0a81d9ee48a57551b3f59df83aeca386ccde2d52eea4f`.
+The first v5 archive remains immutable; v2 additionally includes required path/
+module-selection inputs and explicit qualification prerequisites. Original legal
+notices and unexecuted SQL/protocol/provider fixtures remain separate from a pass.
+
+Composition uses the existing domain construction and SourceGuard, then assigns
+that same owner to `identityHandler.SSO.SAMLCompletion`. The new exact HTTP APIs
+are `sso/http.SAMLCompletionPath(path string) bool` and
+`(*sso/http.Handler).HandleSAMLCompletion(w http.ResponseWriter, r *http.Request,
+audience, requestID string) (any, int, error)`. The same-owner predicate is
+`(*sso.SAMLCompletion).MatchesService(base *sso.Service) bool`; it verifies
+construction identity only and grants no readiness or actor authority.
+
+Before any future check, select the exact clean local source commit above.
+`check-saml-http-once.py` now refuses another HEAD or dirty source. Its ten
+selected no-database roots include the five new HTTP roots; it reuses the
+original nonblocking guard, 2 GiB/15 GiB admission, Go p1/GOMAX2/GOMEM512,
+local offline toolchain and bounded test command. Adding the exact-source/clean
+preconditions after the refusal changed no test, threshold, timeout or retry
+behavior, and no new invocation occurred. The archive authorizes no execution.
+The original combined SQL qualifier still tests the domain/protocol slice; it
+cannot qualify HTTP merely because the adapter compiles in another package.
+
+Production start must authenticate and observe actual new-business admission
+before creating the accepted linking intent. A sealed result can only derive
+from that admitted request and strict signed producer. The completion adapter
+can then observe integrity for already accepted work after expiry. Actual HTTP
+success/rollback/COMMIT-loss tests must compose the real license verifier and
+serving owners; do not substitute a checker returning success. Schema/source
+parent races, anonymous sign-in, Admin MFA, actual provider/ACS/browser, cleanup/
+restore, full gates and product UI all remain open.
 
 ## Alternatives, prototype and finished-item acceptance
 
