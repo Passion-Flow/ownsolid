@@ -385,3 +385,42 @@ sample satisfying both memory and disk floors. DEV must first publish its own ex
 the frontend lane then combines actual published main and reviews the true affected changes
 before publication. Even a passing joint full gate would leave real peer revocation,
 independent SQL audit, disconnected installation and real SSO UI acceptance open for POR-112.
+
+### Current full-gate admission prerequisites
+
+After the workstation update, the new authorized full opportunity was prepared
+from exact frozen source `82c602d32b2d957459b3a742499de96867da27a9`, tree
+`fbbf65a10a349d43726a355e60fdb171837c97d5`, and Web tree
+`8ce0c9946a8403a5d4502b54e4337a754de38bfc`. All 5099 tracked files were hashed
+with a clean source. The original unsplit ESLint command remained; the separately
+unqualified `56a19799` tooling and the later strict-JSON generator were excluded.
+The original DEV `2e64ab4c` ancestry and frontend `379aab98`/`6d3d6b8c` inputs remain.
+
+Read-only reconciliation found only the prior terminal resource refusal: its
+work child had never started, cleanup was confirmed and its parent was gone.
+No newer owned full-gate instance or result existed, and neither preview port
+had a listener. The required permanent carrier, previously regular and owned by
+UID 501 at inode 50313339, was now absent (`lstat` ENOENT). Its identity cannot
+be verified by recreating the path, and no replacement or alternative lock was
+created. The cause of the disappearance was not established.
+
+A separate fresh read-only sample at 2026-11-13 10:54:59 UTC measured 361,013
+free 16 KiB pages (5.509 GiB) and 156.342 GiB disk free. It does not reuse the
+coordinator's earlier larger sample or replace an actual admission preflight.
+It also falls below this full profile's unchanged 6 GiB memory floor; the disk
+floor remains 30 GiB. The intended entry keeps 1800 seconds including at least
+120 seconds of cleanup, the inherited stricter Node cap or at most 4096 MiB,
+Go package parallelism one/GOMAXPROCS at most two, Cargo jobs one and the
+original complete targets, offline caches and worker controls.
+
+No entry or nonblocking acquisition was attempted: no descriptor, work child,
+scratch volume, service, test, new asset or negative fixture was created.
+`web-install`, `check`, `build`, `test`, cases/skips/retries and asset qualification
+are all NOTRUN. No retry or resource waiter followed. The frozen joint and
+serial-lint branches remain unchanged; this record lives on a separate
+documentation branch. The prior refusals, original 430-operation audit exit 1
+and scoped frontend evidence remain separate. Full work needs the authorized
+shared carrier identity restored or explicitly superseded through coordination,
+then a fresh sample satisfying the same resource floors before one admission.
+POR-112's installed revocation, independent SQL audit, offline and SSO acceptance
+remain open regardless of future full-gate results.
