@@ -712,6 +712,21 @@ resend or signed-result fabrication is permitted. Product admission still needs
 first-party completion with the initiating ordinary cookie, local binding/session
 and source ownership, MFA policy, formal schema/contracts/startup and UI.
 
+The private alternate graph preserves the workspace's newer testify 1.12.1,
+`x/net` 0.61.0 and OAuth2 0.37.0 selections rather than using the Control module's
+lower standalone requirements. Its seven differences from the workspace
+baseline are etree 1.8.1 (BSD-2-Clause), crewjam/saml 0.6.3 (BSD-2-Clause),
+clockwork 0.5.0 (Apache-2.0), kr/pretty 0.3.1 (MIT), goxmldsig 1.6.1
+(Apache-2.0), objx 0.5.3 (MIT), and gotest.tools/v3 3.5.2 (Apache-2.0 with
+NOTICE). Six exact-version license inventories match the earlier private SAML
+inventory. The newly selected
+[objx 0.5.3 license](https://github.com/stretchr/objx/blob/v0.5.3/LICENSE) was
+read from its checksum-verified source archive. All seven retain eight legal
+files in the new private evidence. These licenses allow commercial and offline
+use and redistribution with their required notices; test-only graph membership
+does not remove those obligations. No private alternate module file or dependency
+archive is copied into the product or repository.
+
 The resulting dependency selection and composition are not yet qualified. The
 external experiment retains the existing MIT/BSD/Apache notices for its exact
 SAML graph and PostgreSQL licenses for its fixtures; it adds no model, dataset,
