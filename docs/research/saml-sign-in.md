@@ -726,10 +726,88 @@ use and redistribution with their required notices; test-only graph membership
 does not remove those obligations. No private alternate module file or dependency
 archive is copied into the product or repository.
 
-The resulting dependency selection and composition are not yet qualified. The
+The [signed-result staging experiment](#signed-result-staging-qualification) now
+qualifies this private graph and the bounded composition described below. The
 external experiment retains the existing MIT/BSD/Apache notices for its exact
 SAML graph and PostgreSQL licenses for its fixtures; it adds no model, dataset,
 product binary or runtime network access.
+
+## Signed-result staging qualification
+
+The external composition passed 23 roots, 96 leaf names and 111 complete
+passing names in both native race and disconnected Linux arm64 PostgreSQL
+runs, without a skipped test. Both passing-name sets and frozen/current source
+hashes matched. This comprises the ten strict protocol roots/46 leaves, seven
+actual-Identity claim roots/33 leaves and six staging roots/17 leaves. The two
+new claim cases refuse a profile revision change or disable after start. The
+protocol fixtures sign actual XML with generated private IdP keys and use the
+selected upstream signature verifier; this run starts no Keycloak or product
+HTTP/browser worker.
+
+A private alternate module/sum pair and Go source overlay compose the actual
+Identity/SSO owners with the existing strict verifier and exact persistent
+identity resolver. The seven-module/eight-legal-file difference matches its
+reviewed inventory exactly. The workspace's newer selected dependency versions
+remain selected; no product module, sum file or dependency changed. The verifier
+now retains its exact validated request ID in its private proof, and request
+start/claim additionally bind the approved identity-context ID, revision and
+metadata digest. Those fields have SQL immutability and scoped foreign keys.
+The identity resolver borrows the selected transaction through its executor,
+without opening or committing an independent identity write.
+
+Staging actually rechecks the captured current actor/credential, target and
+profile under their existing fences; checks the exact claimed request/claim ID,
+audience, callback and source snapshot; resolves the exact external identity;
+reserves the scoped assertion ID; stores a minimized verified result and a
+continuation digest; changes claimed to verified; and appends a synthetic audit
+in one transaction. The continuation is generated randomly and returned only
+after confirmed COMMIT. The result stores no XML, attributes, raw continuation
+or private key. Independently inspected request-shorter and assertion-shorter
+cases used the exact minimum deadline, and session/binding counts did not grow.
+
+Correctly signed proofs for another actual claimed request were refused.
+A proof produced under an independent actual foreign Identity/installation
+owner and approved signing context was also refused locally. Profile revision
+or disable, logout, changed password version, stale target revision, changed
+callback and a signed proof whose deadline had passed the actual database
+clock all returned no continuation and created no identity/result/stage audit.
+Reusing an assertion ID on two separately signed requests in the same scope
+was refused; an explicit fresh signed assertion succeeded. Owner reconstruction
+refused staging replay. This is not a process-restart qualification.
+
+Two concurrent stagers selected one continuation and retained one result,
+identity and stage audit. An actual audit trigger failure rolled all four
+changes back; explicit repair/retry passed. Both actual PostgreSQL COMMIT
+wire-loss modes returned `COMMIT_UNKNOWN` and an empty continuation with one
+observed COMMIT and no automatic resend. Independent readback found zero or
+one atomic verified flow, external identity, result and stage audit. Previous
+actual source-before-session, cancellation and claim-loss cases passed again
+under the composed graph.
+
+Evidence is `iam104-stage-20261113.ywp4mphe`, run
+`qualification-xnnbmxs7`, qualified input `3094de1e7a59`. Source-manifest
+SHA-256 is
+`597e4cd89e6f492e011ad7aca0504dd9e78e9abc1a4185ac4c7c67bb5c34a4fe`.
+Raw outputs, exact source/module hashes, delta legal files, matching case names,
+wire controls and container inspections remain outside Git. The owned
+containers, storage, native bridge and test processes were removed. Earlier
+attempts retained a copied fixture-name collision and an invalid nested XML
+fixture lookup; fixes changed the test helpers, not signature/profile checks.
+An optional whole-module tidy failed offline on unrelated uncached dependency
+tests; it was not a passing check. The actual selected-module readback and
+both qualification builds/tests ran with the proxy and checksum service off.
+
+This introduces four private unnumbered tables across context, external
+identity, request and verified result. It adds no product source, formal
+migration, startup dependency or public route. Its source actors are existing
+local/Gitea sessions, and the signed response is a generated IdP fixture.
+No real AuthnRequest/provider POST/ACS is joined to the earlier browser probe,
+and this run is not an installed Linux amd64 acceptance. No first-party finish,
+account linking, sourced SAML session, MFA policy, maintenance/restore ownership,
+public configuration or product UI is qualified. Result retention is not yet
+bounded by a production cleanup owner. Structured telemetry remains unqualified.
+[ADR 0084](../decisions/0084-bind-saml-results-to-request-and-browser-authority.md)
+records the target boundary. IAM-104 remains open.
 
 ## Alternatives, prototype and finished-item acceptance
 
