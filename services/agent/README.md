@@ -79,3 +79,13 @@ that age between exchanges, then leaves the old transport to retire naturally.
 This applies with one gateway as well as multiple gateways. No protocol cutover or
 simultaneous fleet upgrade is required; missing or invalid hints retain the prior
 reconnect behavior. See [rollout and remaining acceptance](../../docs/research/agent-gateway-rebalance.md#age-handoff-prototype-requirements).
+
+
+A session that has never completed a valid stream heartbeat keeps the original
+two paired probes and five-minute HTTPS fallback. Once that process session has
+used an active or disabled stream, a later fallback becomes eligible to retry
+after the lesser of five minutes and its currently adopted maximum reconnect
+backoff. The next ordinary paced cycle and retry hints still govern the actual
+attempt; no background probe or task replay is added.
+Restarting the Agent forgets this transport history while preserving its normal
+persisted identity and acknowledged cursor. See [the policy decision](../../docs/decisions/0083-bound-fallback-after-a-usable-agent-stream.md).

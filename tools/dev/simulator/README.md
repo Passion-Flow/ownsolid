@@ -162,3 +162,13 @@ The shape of the report, shortened, with example values:
 `go test ./...` runs the simulator against a small fake control plane in the test files,
 including every fault. `tests/e2e` runs it against a real offline install
 (`OWNSOLID_E2E_SIMULATED_AGENTS`, default 2,000).
+
+
+The simulator shares the Agent contract's fallback delay. Initial unsupported
+stream paths retain the two probes and five-minute window. A previously usable
+stream becomes eligible to retry after the currently adopted maximum reconnect
+backoff, capped at that original window. The actual attempt still follows pacing
+and retry hints. An injected Agent-process restart forgets this
+transport history and keeps the acknowledged cursor. Failure and on-stream
+accounting are unchanged; HTTPS is never counted as a stream. The failed and
+qualified inputs belong in the [fleet load research](../../../docs/research/fleet-load-test.md).

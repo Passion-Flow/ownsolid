@@ -34,14 +34,31 @@ func enrolled(t *testing.T, f *fakeControl, agents, seconds int, faults ...confi
 // runAsync runs the fleet and returns the report when it ends.
 func runAsync(t *testing.T, c config.Config) <-chan report.Report {
 	t.Helper()
+	return runAsyncWithContext(t.Context(), t, c)
+}
+
+func runAsyncWithContext(ctx context.Context, t *testing.T, c config.Config) <-chan report.Report {
+	t.Helper()
+	running, cancel := context.WithCancel(ctx)
 	done := make(chan report.Report, 1)
 	go func() {
-		out, e := Run(context.Background(), c)
-		if e != nil {
-			t.Error(e)
+		defer close(done)
+		out, err := Run(running, c)
+		if err != nil {
+			t.Error(err)
 		}
 		done <- out
 	}()
+	t.Cleanup(func() {
+		cancel()
+		timer := time.NewTimer(time.Duration(c.RequestSeconds) * time.Second)
+		defer timer.Stop()
+		select {
+		case <-done:
+		case <-timer.C:
+			t.Error("simulator did not join after cancellation")
+		}
+	})
 	return done
 }
 
@@ -354,18 +371,70 @@ func TestManyAgentsLongPollAtOnceOverASmallHTTPSPool(t *testing.T) {
 func TestHTTPSOnlyFaultMovesAgentsToLongPolling(t *testing.T) {
 	t.Parallel()
 	f := newFakeControl(t)
-	// Long enough for both failures of the stream, a heartbeat cycle apart.
-	c := enrolled(t, f, 2, 18, config.Fault{Kind: config.FaultHTTPSOnly, AtSeconds: 1, Percent: 100, DurationSeconds: 15})
-	done := runAsync(t, c)
+	// Keep the original fault and strict snapshot while that fault is still active.
+	fault := config.Fault{Kind: config.FaultHTTPSOnly, AtSeconds: 1, Percent: 100, DurationSeconds: 15}
+	c := enrolled(t, f, 2, 18, fault)
+	running, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	started := time.Now()
+	done := runAsyncWithContext(running, t, c)
 	waitUntil(t, f, 6*time.Second, "heartbeats over HTTPS", everyNode(func(n *fakeNode) bool {
 		return len(n.heartbeats) > 0 && n.heartbeats[len(n.heartbeats)-1].transport == "https"
 	}))
+	heartbeats := map[string]int{}
+	f.set(func(f *fakeControl) {
+		for id, node := range f.nodes {
+			heartbeats[id] = len(node.heartbeats)
+		}
+	})
 	f.enqueue()
+	// A subsequent heartbeat proves that the result's client-side accounting completed.
+	waitUntil(t, f, 6*time.Second, "completed HTTPS tasks and their next heartbeat", everyNode(func(n *fakeNode) bool {
+		if len(n.results) != 1 || len(n.heartbeats) <= heartbeats[n.id] || n.heartbeats[len(n.heartbeats)-1].transport != "https" {
+			return false
+		}
+		for _, count := range n.results {
+			if count != 1 {
+				return false
+			}
+		}
+		return true
+	}))
+	if time.Since(started) >= time.Duration(fault.AtSeconds+fault.DurationSeconds)*time.Second {
+		t.Fatal("the HTTPS-only snapshot escaped its active fault window")
+	}
+	cancel()
 	out := <-done
 	if out.Tasks.Succeeded != 2 || out.Connected != 2 || out.OnStream != 0 {
 		t.Fatalf("report %+v", out)
 	}
 	if opens := out.Calls[report.CallStreamOpen]; opens.Succeeded != 2 || opens.Failed["CONTROL_CONNECTION_FAILED"] == 0 {
+		t.Fatalf("stream opens %+v", opens)
+	}
+}
+
+func TestHTTPSOnlyFaultReturnsEveryPreviouslyUsableStream(t *testing.T) {
+	t.Parallel()
+	f := newFakeControl(t)
+	fault := config.Fault{Kind: config.FaultHTTPSOnly, AtSeconds: 1, Percent: 100, DurationSeconds: 15}
+	// Eligibility, the next paced cycle and a failed-cycle backoff bound recovery.
+	recovery := f.pacing.HeartbeatSeconds + 2*f.pacing.ReconnectMaxSeconds
+	deadlineSeconds := fault.AtSeconds + fault.DurationSeconds + recovery
+	c := enrolled(t, f, 2, deadlineSeconds+f.pacing.HeartbeatSeconds, fault)
+	started := time.Now()
+	done := runAsync(t, c)
+	waitUntil(t, f, 6*time.Second, "every agent on HTTPS during the fault", everyNode(func(n *fakeNode) bool {
+		return len(n.heartbeats) > 0 && n.heartbeats[len(n.heartbeats)-1].transport == "https"
+	}))
+	f.enqueue()
+	waitUntil(t, f, time.Until(started.Add(time.Duration(deadlineSeconds)*time.Second)), "every stream restored after healing", everyNode(func(n *fakeNode) bool {
+		return len(n.heartbeats) > 0 && n.heartbeats[len(n.heartbeats)-1].transport == "stream"
+	}))
+	out := <-done
+	if out.Tasks.Succeeded != 2 || out.Connected != 2 || out.OnStream != 2 {
+		t.Fatalf("report %+v", out)
+	}
+	if opens := out.Calls[report.CallStreamOpen]; opens.Succeeded != 4 || opens.Failed["CONTROL_CONNECTION_FAILED"] == 0 {
 		t.Fatalf("stream opens %+v", opens)
 	}
 }

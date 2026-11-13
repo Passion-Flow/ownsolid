@@ -50,12 +50,14 @@ type Session struct {
 	// probeHTTPS makes the next heartbeat try HTTPS because the stream could not be opened.
 	probeHTTPS bool
 	// probes counts the HTTPS heartbeats that worked since the stream last did.
-	probes       int
-	transport    string
-	pollHTTP     *http.Client
-	pacing       wire.Pacing
-	lastExchange time.Time
-	now          func() time.Time
+	probes int
+	// previouslyUsable belongs to this process session, not its persisted identity.
+	previouslyUsable bool
+	transport        string
+	pollHTTP         *http.Client
+	pacing           wire.Pacing
+	lastExchange     time.Time
+	now              func() time.Time
 	// gateways are the agent gateways in this node's order, or none when the session goes
 	// to the control origin (ADR 0048). gateway is the one in use, and unanswered counts
 	// the gateways that failed one after another since a stream last opened.
@@ -166,6 +168,9 @@ func (s *Session) Heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 	if e != nil {
 		return wire.Disposition{}, e
 	}
+	if s.transport == TransportStream {
+		s.previouslyUsable = true
+	}
 	s.adopt(out.Pacing)
 	return out, nil
 }
@@ -242,8 +247,9 @@ func (s *Session) fallBack(ctx context.Context, h wire.Handshake) (wire.Disposit
 }
 
 func (s *Session) stayOnHTTPS() {
-	slog.Warn("agent_session_fallback", "retry_seconds", wire.SessionFallbackRetrySeconds)
-	s.fallbackUntil = s.now().Add(time.Duration(wire.SessionFallbackRetrySeconds) * time.Second)
+	delay := wire.SessionFallbackDelay(s.pacing, s.previouslyUsable)
+	slog.Warn("agent_session_fallback", "retry_seconds", int(delay/time.Second))
+	s.fallbackUntil = s.now().Add(delay)
 }
 
 func (s *Session) heartbeatHTTPS(ctx context.Context, h wire.Handshake) (wire.Disposition, error) {
