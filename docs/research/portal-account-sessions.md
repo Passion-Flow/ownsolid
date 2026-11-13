@@ -187,9 +187,10 @@ different explanations; neither invents a row or a filter.
 ### Product implementation
 
 The implementation is isolated on `codex/portal-account-sessions`, based on published
-`6f785818`. Source `763169e3` passed the scoped frontend checks below, with Web tree
-`7bab205eb4942575843dfb628f13538ff5265178`. Post-review candidate `6d3d6b8c` has Web tree
-`b656b51b998d4e2a23fa9b3b6f2062b60669f282` and needs its own qualification. The previous UX-127
+`6f785818`. Corrected source `0a50a040` passed the scoped frontend checks and visual review
+below, with Web tree `b656b51b998d4e2a23fa9b3b6f2062b60669f282`. Its layout correction is
+`6d3d6b8c`. The earlier `763169e3` evidence remains tied to its separate Web tree
+`7bab205eb4942575843dfb628f13538ff5265178`. The previous UX-127
 source remains on `codex/web-resource-history-ui` at `ce177336` with its own asset and check
 records. Neither branch's qualification is transferred to the other.
 
@@ -276,20 +277,61 @@ left the page at an unrelated setting, so the 390px/360px and re-login captures 
 session target; some full-page empty/partial images also clipped its lower edge. The shortcut
 heading was squeezed beside a long explanation: three English lines and a vertical Chinese
 column. Candidate `6d3d6b8c` moves that explanation below the heading and captures the actual
-session section, with separate page context, 1440px, shortcut and narrow-dialog views. This
-candidate has not been rebuilt, checked or photographed. Earlier green tests are not transferred
-to it, and visual acceptance remains open.
+session section, with separate page context, 1440px, shortcut and narrow-dialog views. That
+correction required the separate qualification below; the earlier green tests were not transferred.
 
-Both entrances need EN/ZH, keyboard, axe, desktop and narrow-width screenshots that are
-actually opened. An installed flow must create two real same-account sessions,
+### Corrected source and visual qualification
+
+The separately authorized `portal-account-sessions-visual-6tebiwnq` entry froze
+`0a50a0405b4841e8117d40ce65b000a2344ceaea` and Web tree
+`b656b51b998d4e2a23fa9b3b6f2062b60669f282`. Its own preflight measured 391,025 free 16 KiB
+pages, with more than 15 GiB disk free. The original carrier was acquired once. The same reviewed
+absolute-deadline parent, unchanged 512 MiB heap cap, single concurrent worker and per-stage
+bounds applied. It exited 0 in 74.826 seconds; process groups, previews, wake guard and FD were
+confirmed gone before any image was opened. No extra admission, queue or background waiter ran.
+
+Only the two changed Shell inputs were formatted/linted; the formatter made no changes.
+Shell types, 33 Account/session tests and 34 applicable UI tests passed. Both exact-source
+application builds passed. Each entrance collected and passed all 11 account-sessions cases,
+with zero skips, retries or flaky outcomes. No unchanged API, i18n or Help suite was rerun to
+inflate the count. The current source has not been combined with later DEV-generated contracts;
+composition and its affected checks/full gates are separate work.
+
+This entry generated 56 raw PNGs and all 56 were individually opened after cleanup. Actual
+review confirms:
+
+- **Settings archetype:** separate full-page context shows the Account title and independently
+  saved sections. The 1280px and 1440px target captures show the complete session card, with
+  labeled facts, textual current marker, disabled current action and its Sign out explanation.
+- **States:** the delayed loading images now contain both row skeletons. Current-only and
+  empty-live captures show their distinct explanations and complete refresh action. Partial
+  pagination retains the earlier row and names the incomplete read; denied contains no rows;
+  service-not-ready retains the unavailable action and reason. Filtered-empty is explicitly
+  inapplicable because the endpoint supplies no filter.
+- **Primary:** Change password remains the main Account action; End session belongs to its
+  section. Desktop and mobile confirmations show one irreversible decision, the exact target,
+  focused typed field, Cancel and a blocked End until confirmed. Escape dismissal and axe passed.
+- **Narrow layout:** 390px light and 360px dark captures contain the actual session section in
+  both languages. Facts stack without horizontal overflow, long IDs wrap, and shortcut headings
+  stay on one line with the explanation underneath. Re-login images show the new current ID;
+  password rotation shows one current row, with the existing transient success toast visible.
+
+The scripted single-sign-on row only verifies the authentication-method label. It does not
+qualify a real provider session. Previous input/failed-run packages and the 70/36 generated/read
+counts stay unchanged; they are not merged with this entry's 56/56 counts.
+
+The local scripted entrance flows cover EN/ZH, keyboard, axe, desktop and narrow-width views.
+An installed flow must still create two real same-account sessions,
 end the peer from the UI, prove the peer is rejected while the manager remains
 usable, and independently verify the single durable revocation audit. Preserve
 cross-account, cross-entrance, no-workspace and license-blocked acceptance. Use a
 real SSO session for the sourced-session case; the backend HTTP fixture alone is
 not rendered-browser acceptance.
 
-The post-review candidate still needs focused checks and same-source browser/visual acceptance.
-`make check && make build && make test`, disconnected-network installation and the installed
+The corrected source is qualified for this scoped frontend path. `make check && make build
+&& make test`, disconnected-network installation and the installed
 authority/audit/real-SSO flow remain unqualified. No previous UX-127, Help or audit asset is
 relabelled as this implementation. POR-112 remains open. The one scoped frontend opportunity
-is consumed and cleaned up; no full/native/installed opportunity was used or queued.
+and corrected-source frontend opportunities are consumed and cleaned up; no full/native/installed
+opportunity was used or queued. Publish no fully qualified release or roadmap tick before those
+requirements and the later same-source composition checks hold.
