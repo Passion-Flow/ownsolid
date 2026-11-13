@@ -193,6 +193,8 @@ type AgentGateway struct {
 	// Logs and Metrics are nil when no telemetry stores are configured.
 	Logs    *telemetrystore.Logs
 	Metrics *telemetrystore.MetricsPusher
+
+	publishedReaders *agentGatewayPublishedReaders
 }
 
 // NewAgentGateway builds the agent path for a gateway process. ready fences every session
@@ -205,5 +207,9 @@ func NewAgentGateway(s *identity.Service, ready func() error) (*AgentGateway, er
 	if p.err != nil {
 		return nil, p.err
 	}
-	return &AgentGateway{Nodes: p.nodes, Sessions: p.sessions, Logs: p.logs, Metrics: p.metrics}, nil
+	return agentGatewayFromPath(p), nil
+}
+
+func agentGatewayFromPath(p agentPath) *AgentGateway {
+	return &AgentGateway{Nodes: p.nodes, Sessions: p.sessions, Logs: p.logs, Metrics: p.metrics}
 }
