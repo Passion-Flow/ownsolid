@@ -103,8 +103,9 @@ Do not concatenate arbitrarily long qualifier strings into a unique index or
 truncate/hash away the original identity to make it fit: PostgreSQL documents
 [B-tree entry size limits](https://www.postgresql.org/docs/18/btree.html) and
 [collation-specific index semantics](https://www.postgresql.org/docs/18/indexes-collations.html).
-The candidate storage representation, maximum-byte cases and foreign-tenant
-binding uniqueness still need a real SQL prototype and ARC's formal admission.
+The [SQL experiment below](#persistent-identity-sql-qualification) qualifies the
+selected exact-identity representation and scope constraints. Actual binding
+composition and ARC's formal admission remain open.
 
 ### Persistent-identity storage experiment
 
@@ -159,7 +160,7 @@ The experiment can reuse the pinned SAML/XML graph and pgx v5.11.0 from the
 [qualified OP database inventory](catalog-oidc-provider.md#durable-protocol-prototype-plan-and-additional-licenses).
 Resolve and inspect their combined graph before compiling. Preserve all SAML,
 MIT/BSD/Apache and PostgreSQL/image notices; no model or dataset is involved.
-This is a proposed representation pending SQL evidence and formal admission.
+This representation remains a standalone experiment pending formal admission.
 
 The combined source-inspection graph in `iam104-storage-20261113.edr2wpvk`
 resolved 26 modules and 36 legal files. Exact versions/checksums and retained
@@ -357,6 +358,67 @@ configuration/schema/dependency admission and the public/UI flow remain open.
 These are not Linux amd64 installed-flow results. The publication changes
 research only; its layout, roadmap and whitespace checks do not substitute for
 the future feature's full repository and installed-flow acceptance.
+
+## Persistent-identity SQL qualification
+
+The combined candidate passed fifteen roots, 73 independent leaves and 82
+named tests in each of native Go race/loopback PostgreSQL and disconnected
+Linux arm64/PostgreSQL. The new storage portion accounts for five roots,
+27 independent leaves and 31 names per topology. The other ten roots retain
+the qualified XML/signature checks. The two Keycloak-only roots were explicitly
+unconfigured and skipped; this run did not repeat the earlier real IdP flow.
+
+Positive storage inputs came from freshly RSA-SHA256-signed fixture assertions
+accepted by the actual selected verifier. The fixture uses two unnumbered,
+synthetic tables, not product connectors or bindings. Before verification it
+loads its server-owned tenant/connector context, revision and metadata digest
+in a short transaction; it commits that snapshot before XML verification.
+The resulting private envelope carries that authority. Resolution rechecks
+the exact current source under a shared lock in the caller's transaction.
+It does not commit independently or create any local sign-in authority.
+
+The actual database preserved 1,024-character IdP/SP URIs of 4,084 UTF-8 bytes
+each and a 256-character/1,024-byte opaque subject. The full verified identity
+tuple round-tripped unchanged. The maximum NameID occupied 1,028 bytes inline,
+including its varlena header, without compression. Case, trailing spaces and
+precomposed/decomposed Unicode produced distinct identities; omitted and
+explicit effective qualifiers resolved to the same stable identity. Direct SQL
+refused overlength characters, four-byte values and excess trailing spaces
+instead of truncating them. An actual analyzed lookup among 2,001 fixture
+identities used an index and returned exactly the maximum-size identity.
+
+Foreign-tenant connector lookup and a direct foreign-context foreign key were
+refused. A valid proof from another tenant with the same entity names and
+subject could not resolve under the local tenant. Its different approved
+signing metadata could not construct a verifier for the local snapshot either.
+Immutable tenant/connector/context/entity/format and identity-value rewrites
+were refused. Enabled/metadata changes required an advancing revision, and a
+decreasing revision was refused. Disable/reenable did not revive the old proof;
+fresh verification used the current revision. Foreign qualifier/issuer/SP,
+format and expired-result inputs returned no identity.
+
+Actual PostgreSQL uniqueness waits covered an owner committing, rolling back
+and a waiting resolver being canceled. Commit returned one shared stable ID;
+rollback let the waiter create a new ID; cancellation drained the actual SQL
+wait and explicit retry succeeded. Caller rollback left no identity row. These
+are identity-resolution transactions, not accepted authentication replays:
+the real browser/request one-use claim remains mandatory before completion.
+
+Evidence is `iam104-storage-20261113.edr2wpvk`, run
+`qualification-uf5y6rln`, qualified input `de19ee6842d2`. Source-hash manifest
+SHA-256 is
+`76b31d7bbbb5d1d8a4987baa4627bbcf3f1e8f67b83e7a4495cee63ba40e0a70`.
+Frozen/current source and native/disconnected passing names matched. The
+26-module/36-notice inventory, source, raw outputs and container/network
+inspection remain outside Git. Both owned containers, anonymous storage and
+the native bridge were removed. The earlier compile-only XML/snapshot helper
+variable collision was corrected without changing the protocol verifier.
+
+No product source, dependency, migration, binding, session, public contract or
+UI changed. The experiment's tenant source is its private server fixture, not
+actual Identity/current-actor composition. It does not qualify an installed
+ACS, browser cookie delivery, durable one-use claim, audited account linking,
+session issuance or actual provider-to-storage worker. IAM-104 remains open.
 
 ## Alternatives, prototype and finished-item acceptance
 
