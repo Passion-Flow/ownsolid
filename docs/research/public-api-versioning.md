@@ -166,3 +166,54 @@ binding review and exit 1, with no declaration findings. No rule or failure exit
 was weakened. The separate exact 9be Linux full attempt remains failed at Web
 ESLint under the acceptance wrapper's imposed 2048 MiB heap limit; this Python correction does not qualify or rerun
 that gate. Release and runtime deprecation work remain open.
+
+## Reachable response schema types and the audit-read 409 review
+
+The retained 430-operation report has one source-compatibility review:
+GET /api/v1/admin/audit-events, Admin listAuditEvents, adds an explicit
+409 application/problem+json binding to Problem. Baseline 9e32b023 already
+has the same default Problem response and the same Problem schema. The
+server registry maps STORAGE_COMMIT_OUTCOME_UNKNOWN to 409 and the HTTP
+handler propagates its service error without releasing a page. These are
+static source observations, not a new HTTP or database run. Regeneration
+changes which Go response accessor decodes 409; the SDK README records
+GetApplicationproblemJSON409() and deliberate retry behavior. Neither
+that migration text nor successful declaration checks approve the source
+transition on behalf of the release owner.
+
+Exact source audits on 2e64ab4c, 37cbb09c, 9f26da06 and WEB 82c602d3
+produce the same report against 9e32b023, byte for byte, with exit 1.
+The 2e and WEB declaration-only reports each have 430 operations, no
+findings and exit 0. Thus this finding predates the strict JSON reader.
+Do not remove 409, replace the baseline with the candidate, suppress the
+finding or call declaration success a compatibility pass.
+
+A separate reproduced auditor defect accepts a numeric response schema,
+a reference to a string and a reference to an array, returning exit 0.
+The [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
+uses [JSON Schema object or boolean schemas](https://json-schema.org/draft/2020-12/json-schema-core#section-4.3.1).
+Require those two types at a declared response media schema root and at
+each followed schema reference. An omitted media schema remains allowed;
+an explicitly null schema does not become an omission. Do not interpret
+examples or other annotations as schemas, validate every unreferenced
+component, or introduce a general dialect validator. Preserve boolean
+schemas, recursive schemas, the Response Object resolver and current
+status/model review semantics.
+
+Invalid inputs must fail with exit 2 and no partial JSON report. Add the
+source filename, method and URL to response traversal failures so an
+operator can identify the broken declaration. Do not echo scalar payload
+values. Tests cover root and referenced invalid types, both booleans,
+empty object and omitted schemas, shared Response Objects, annotations,
+baseline errors and the intentional default-to-explicit 409 review. All
+current operation rows and findings must remain unchanged. The standard
+library and existing PSF licence suffice; no dependency, model or dataset
+is added. Full generation, native clients and complete release gates
+remain outside these static checks.
+
+The schema-type correction passed 39 focused Python cases, including eight
+new cases. Its complete 430-operation comparison against 9e32b023 remains
+byte-identical to the retained original report, SHA-256
+910a412a5bef5071ac9a0409adc5388b7507001cf4bef306fc4f8803df240422,
+with exactly the explicit 409 source-review finding and exit 1. No generated
+client, HTTP handler, API document or Web file changed with this correction.

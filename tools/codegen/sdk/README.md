@@ -178,7 +178,10 @@ Run `python3 tools/codegen/sdk/audit.py` from the repository root. The JSON
 report lists public operations and flags missing operation IDs, duplicate
 IDs within a document, and duplicate method and path declarations in the
 same audience. Exit 1 reports findings and exit 2 indicates unreadable or
-invalid input. The audit runs from local files and uses the same audience
+invalid input. A declared response media schema and each followed schema
+reference must target an object or boolean. Invalid inputs name the owning
+file, method and path and emit no partial report. An omitted media schema
+remains valid; this is not a general OpenAPI or JSON Schema validator. The audit runs from local files and uses the same audience
 rules as SDK generation. With `--baseline`, it also reports named response
 model reference changes and closed response object shape changes for review.
 The shape inventory records property names, required names and closure at local

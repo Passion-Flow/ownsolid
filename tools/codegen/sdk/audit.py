@@ -27,6 +27,10 @@ def response_object_shape(schema):
 
 def response_surface(document, operation):
     """Collect named models and object shapes for each local response schema."""
+    def require_schema(value):
+        if not isinstance(value, (dict, bool)):
+            raise ValueError("response schema must be an object or boolean")
+
     def resolve(reference):
         if not isinstance(reference, str) or not reference.startswith("#"):
             raise ValueError("response references must use local JSON pointers")
@@ -92,6 +96,7 @@ def response_surface(document, operation):
                         if not isinstance(reference, str):
                             raise ValueError("response reference must be a string")
                         target, pointer = resolve(reference)
+                        require_schema(target)
                         if pointer.startswith("/components/schemas/"):
                             references.add(reference)
                         if reference not in seen:
@@ -114,7 +119,9 @@ def response_surface(document, operation):
                                 escaped = name.replace("~", "~0").replace("/", "~1")
                                 visit(child, f"{location}/{keyword}/{escaped}")
 
-            visit(content.get("schema"), "#")
+            if "schema" in content:
+                require_schema(content["schema"])
+                visit(content["schema"], "#")
             if references:
                 models[f"{status} {media_type}"] = sorted(references)
             if objects:
@@ -144,7 +151,10 @@ def inventory(contracts):
                     operation_ids[(domain, operation_id)].append((method.upper(), path, audiences))
                 if not audiences:
                     continue
-                models, shapes = response_surface(document, operation)
+                try:
+                    models, shapes = response_surface(document, operation)
+                except ValueError as exc:
+                    raise ValueError(f"{source}: {method.upper()} {path}: {exc}") from exc
                 row = {
                     "domain": domain, "method": method.upper(), "path": path, "audiences": audiences,
                     "operation_id": operation_id, "summary": bool(operation.get("summary")),
