@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -161,7 +162,7 @@ func open(t *testing.T, conn *grpc.ClientConn, pairs ...string) grpc.ClientStrea
 
 func exchange(t *testing.T, stream grpc.ClientStream, m wire.AgentMessage) (wire.ControlMessage, error) {
 	t.Helper()
-	if e := stream.SendMsg(&m); e != nil {
+	if e := stream.SendMsg(&m); e != nil && !errors.Is(e, io.EOF) {
 		return wire.ControlMessage{}, e
 	}
 	var reply wire.ControlMessage
