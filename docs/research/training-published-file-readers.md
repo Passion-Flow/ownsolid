@@ -458,29 +458,33 @@ separate reviewed step. Python's standard library adds no dependency; its
 offline redistribution subject to its notices. Existing retained inputs and
 image licences remain as previously recorded; nothing is downloaded.
 
-The review bundle is /root/lane-trn-tools/reader-native-bounded-v1/. Its
+The review bundle is /root/lane-trn-tools/reader-native-bounded-v2/. Its
 review.md explains the exact parent/fixture deltas, deadline ledger, raw outcome
 classification, cleanup ownership and retained limitations. The originals were
 copied for comparison only; no original source, plan or binding was changed.
 
 | Review artifact | SHA-256 |
 | --- | --- |
-| reader_native_bounded.py | 0304baaa4cd97f4f8870786e7fa34cd2f4751eb4290a38e497f5d5dbb10b636f |
+| reader_native_bounded.py | a9b7a943abcf7c615906f6b71401ff34cf5490a6da7aaf6879007af9606f8589 |
 | config.json | efac4a20bd4be8941a008a19fa52d5015120c3c6243e5467eb63f440719d534e |
 | entry.sh | 6fa7a2aa825dbd3e27209319c7653394540126ff7e30cf0149bdd0965dcb4343 |
-| parent.diff | 786eec10bae5253a0a907f5657945ec1fa6507c3957e2265405877482f095ef8 |
+| parent.diff | 622a15aa03aafeaa21b5f4a6e28b2db422e02303f386e11d542021cb214dd6cb |
 | accepted-fixture.diff | f265abe1ca411f79730be73fe9ff66ad48758978df49b4d0aa48c2757cd84548 |
 | event-fixture.diff | f4e9f403f6fadc123262aaab0936cbf19c4ef37d198d104468533c1399b5709e |
-| manifest.json | 734f826af2b99fdd502b11cf9d603c2f7aa826d6dbfc08a7f54d99989cc16cd5 |
+| manifest.json | 0455559de4aa037b4ccae4da495baf837603eed0a8bb026a4bc03137cba463c4 |
 
 The exact prepared entry is:
 
 ```sh
-bash /root/lane-trn-tools/reader-native-bounded-v1/entry.sh --execute
+bash /root/lane-trn-tools/reader-native-bounded-v2/entry.sh --execute
 ```
 
-That command has not been run. It wraps the one-shot parent in a 295-second
-TERM / 5-second KILL backstop. The inner work cutoff is 270 seconds, cleanup
+That command has not been run. The initial v1 review bytes are retained,
+unexecuted. The current v2 also preserves the live started state if final-record
+writing fails, forces nonqualification and reports driver exit 1 instead of
+misreporting zero starts after a late error.
+
+The entry wraps the one-shot parent in a 295-second TERM / 5-second KILL backstop. The inner work cutoff is 270 seconds, cleanup
 commands end by 295 seconds and the final five seconds are for records. Each Go
 child including its termination/reap has at most the smaller of 170 seconds and
 the remaining work budget. No new child work starts during reserved cleanup.
@@ -488,9 +492,9 @@ After a hard kill records can be partial; the outer raw status and exact owned
 resources must be inspected before any cleanup claim. This is a prepared bound,
 not an observed complete native wall-clock qualification.
 
-Twenty-five pure local mock/file checks passed in 0.019 seconds, and Bash syntax
+Twenty-six pure local mock/file checks passed in 0.024 seconds, and Bash syntax
 passed. Their log SHA-256 is
-ea0fb370516180258e9b8112d41683cf235436a476a59d1cf06e5b91c84248f1.
+f683c70ad40eb0193d9b1fb4ce26ef8a724271bd9df233b7c14206d4a0d18a57.
 One Linux --check-config passed against clean e639db90, the unchanged originals,
 all source hashes and four retained CPU input hashes streamed in blocks. It only
 stats the permanent carriers and runs bounded Git reads; it opens/acquires no
