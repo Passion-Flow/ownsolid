@@ -1,0 +1,31 @@
+{
+  "format_version": 1,
+  "source_revision": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+  "source_modified": false,
+  "os": "linux",
+  "arch": "amd64",
+  "binary_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+  "build_host": "darwin/arm64",
+  "go_version": "go version go1.27.3 darwin/arm64",
+  "toolchain_binary_sha256": "aa355b078a81158d418079a3f8c776719eb99cc6f527e39ffa3250c66566aafb",
+  "cli_product_tree": "55c12ee7b60f422459dda810b1a1cf55c98586d5",
+  "pinned_inputs": {
+    "go.work": "d2da06271b98cf27596a65743b8f6f39504cc5557c95b8842c1c97c861b593b8",
+    "tools/cli/go.mod": "3dd74502d148f32625f3c4a203ec8662e437fc88f1a982cc372b024866349fc2",
+    "tools/cli/go.sum": "21f06fc568cf3afbdc705df533c8970301c2af23b72de34478be1a92119f735b"
+  },
+  "flags": [
+    "-buildvcs=true",
+    "-trimpath",
+    "CGO_ENABLED=0",
+    "GOOS=linux",
+    "GOARCH=amd64",
+    "GOFLAGS=-p=1"
+  ],
+  "network_scope": "Go proxy/sumdb, Cargo network and every pnpm install disabled; no runtime zero-egress conclusion",
+  "full_gate_host": "darwin/arm64",
+  "full_check_passed": true,
+  "full_build_passed": true,
+  "installed_acceptance": false,
+  "native_linux_startup_run": false
+}

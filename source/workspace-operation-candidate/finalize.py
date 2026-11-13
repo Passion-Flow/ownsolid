@@ -1,0 +1,14 @@
+"""Record verified platform scopes and retain installation boundaries."""
+import json,hashlib,sys,subprocess
+from pathlib import Path
+root=Path('/root/lane-rel-workspace-operations');e=Path('/root/lane-rel-tools/workspace-operations');mac=json.loads(sys.argv[1]);source='5055d774ec6941df008f21f7e69abd48bad3fab0'
+proof=json.loads((e/'native-client-5055d774/native-startup.json').read_text());assert proof['source']==mac['source']==source and proof['exit']==0 and proof['cases_passed']==13 and mac['make_check'] and mac['make_build']
+assert proof['binary_sha256']==mac['client_sha256']=='676106019d2d0a044ce6f39a976c7f7fb4aba1ed7107dad19795b446a818d6e6'
+def git(*args):return subprocess.check_output(['git','-C',str(root),*args],text=True).strip()
+assert git('rev-parse','HEAD')==source and not git('status','--porcelain')
+(e/'mac-qualification-5055d774.json').write_text(json.dumps(mac,indent=2)+'\n')
+p=root/'docs/product/status.md';s=p.read_text();old='Read-only workspace-operation lookup is another local candidate; its complete offline CLI race suite and vet pass, while original Admin/PostgreSQL authorization and its whole-repository gate remain unrun.';new='Read-only workspace-operation lookup is another local candidate; its complete offline CLI race suite and vet pass. Combined source `5055d774` passed `make check` and `make build` on Darwin arm64, and compiled natively offline on Linux amd64 with a byte-identical static ELF and thirteen isolated startup checks. Original Admin/PostgreSQL authorization, the whole-repository Linux gate and whole `make test` remain unrun.';assert s.count(old)==1;s=s.replace(old,new);p.write_text(s)
+p=root/'docs/research/cli.md';s=p.read_text();old='These client TLS fixtures\nretain the separate Admin/PostgreSQL and new-candidate whole-repository gate\nboundaries above.';new='These client TLS fixtures\nretain the separate Admin/PostgreSQL authorization boundary above. Exact\nsource 5055d774 also passed make check and make build on Darwin arm64 with\noffline dependency resolution. A separate admitted native Linux amd64 build\nproduced the same 12,112,783-byte static ELF as the Darwin cross-build, SHA-256\n676106019d2d0a044ce6f39a976c7f7fb4aba1ed7107dad19795b446a818d6e6.\nThirteen isolated Linux startup checks passed with an empty private config,\nonly loopback and no routes. These cover version/help, local refusals and absent\ncredentials; installed authorization, the whole-repository Linux gate and the\nwhole make test target remain unrun.';assert s.count(old)==1;p.write_text(s.replace(old,new))
+subprocess.run(['git','-C',str(root),'diff','--check'],check=True)
+assert set(git('diff','--name-only').splitlines())=={'docs/research/cli.md','docs/product/status.md'}
+print(git('diff','--stat'));print(git('diff','--','docs/research/cli.md'))

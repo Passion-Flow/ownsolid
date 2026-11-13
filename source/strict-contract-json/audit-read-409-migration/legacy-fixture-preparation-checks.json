@@ -1,0 +1,22 @@
+{
+  "checks": [
+    {
+      "name": "wire-smoke-python-syntax",
+      "exit": 0,
+      "seconds": 0.0018
+    },
+    {
+      "name": "layout",
+      "exit": 0,
+      "seconds": 0.6604
+    },
+    {
+      "name": "roadmap",
+      "exit": 0,
+      "seconds": 0.0154
+    }
+  ],
+  "native": "NOTRUN",
+  "generation": "NOTRUN",
+  "total_seconds": 0.6776
+}

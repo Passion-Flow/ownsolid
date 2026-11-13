@@ -1,0 +1,1 @@
+{"package": "identity", "generate": {"models": true, "client": true}, "output-options": {"response-type-suffix": "HTTPResponse"}}

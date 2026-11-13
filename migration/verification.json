@@ -1,0 +1,75 @@
+{
+  "main_before": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "main_commits_added": 0,
+  "candidate_ahead": 43,
+  "candidate_behind": 8,
+  "rebase": "NOTRUN",
+  "make_check": "NOTRUN",
+  "make_build": "NOTRUN",
+  "admission": {
+    "checked_utc": "20261113T232241Z",
+    "carrier": "/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock",
+    "identity": {
+      "device": 16777231,
+      "inode": 53377467,
+      "uid": 501,
+      "mode": "0o600",
+      "regular": true,
+      "nlink": 1,
+      "size": 0
+    },
+    "raw_free_bytes": 1610727424,
+    "required_raw_free_bytes": 6442450944,
+    "disk_free_bytes": 161010348032,
+    "required_disk_free_bytes": 32212254720,
+    "make_check": "NOTRUN",
+    "make_build": "NOTRUN",
+    "rebase": "NOTRUN",
+    "reason": "raw free memory below 6 GiB; preserve original DAG on salvage as authorized",
+    "lock_attempts": 0
+  },
+  "original_dag_atomic_push_exit": 0,
+  "original_remote_readback_exit": 0,
+  "original_refs_count": 42,
+  "own_worktree_heads_count": 9,
+  "original_remote_tip_count": 23,
+  "source_archive_file_count": 120,
+  "prior_measured_evidence": {
+    "source": "b57e975bbd3f87a972a044587cfe2f249d2fd200",
+    "go_packages": 28,
+    "python_modules": 1643,
+    "directed_python_tcp_cases": 16,
+    "runtime_commands_exit": 0,
+    "full_check_build": "NOTRUN_RESOURCE_REFUSED",
+    "new_roadmap_boxes_ticked": false
+  },
+  "migration_transport_anomalies": [
+    {
+      "command": "initial individual push of 126523d883efd153c1afbfd3cc98bb35a01401e2",
+      "exit": 1,
+      "message": "Remote ref already exists; exact SHA subsequently independently verified; no overwrite"
+    },
+    {
+      "command": "initial direct HTTPS ls-remote",
+      "exit": 128,
+      "message": "Connection reset by peer; recovered through verified local proxy"
+    },
+    {
+      "command": "direct HTTPS/1.1 ls-remote for detached api-compat salvage ref",
+      "exit": null,
+      "runner_status": "TIMEOUT",
+      "timeout_seconds": 90,
+      "message": "Python subprocess timeout; no transport process remained before proxy transfer"
+    }
+  ],
+  "excluded_objects": [
+    {
+      "sha": "2111dd24c5720e440705382f2f7c45e78212b69a",
+      "reason": "Unreferenced Mach-O binary, not reachable from selected tips"
+    }
+  ],
+  "reflog_only_shared_history": "Coordinator owns original 4,171-commit inventory and preservation; no duplicate shared-history export",
+  "cpu_stage": "Not touched in this Mac-only migration",
+  "full_gate_lock_attempts": 0,
+  "roadmap_completion": "No new item is marked complete by this migration. Existing DEV-103 and CMP-215 checkboxes are retained; DEV-101, DEV-102, DEV-204 and GPU work retain their existing open state."
+}

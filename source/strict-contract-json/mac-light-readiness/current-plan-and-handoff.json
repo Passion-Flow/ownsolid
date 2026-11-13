@@ -1,0 +1,166 @@
+{
+  "candidate_source": "bde51eb7d601b8b8ca671cc409ffc1fafe716237",
+  "candidate_tree": "3348a537166d96a79e9ce5e19ce73d6b88a467ef",
+  "input_manifest_source": "71902626dda10e4a1b3c555a69e09487f49ea243",
+  "source_input_files": 36,
+  "public_domains": 28,
+  "public_operations": 430,
+  "all_generation_inputs_identical_to_37_and_a62": true,
+  "metadata_scope_boundary_closed": true,
+  "authorized_go_executable": {
+    "path": "/Users/passion./.local/opt/go/bin/go",
+    "resolved": "/Users/passion./.local/opt/go/bin/go",
+    "sha256": "aa355b078a81158d418079a3f8c776719eb99cc6f527e39ffa3250c66566aafb",
+    "magic_hex": "cffaedfe",
+    "version_from_buildinfo": "go1.27.3"
+  },
+  "allowed_go_argv": [
+    [
+      "env",
+      "-json",
+      "GO111MODULE",
+      "GOFLAGS",
+      "GOINSECURE",
+      "GOMOD",
+      "GOMODCACHE",
+      "GONOPROXY",
+      "GONOSUMDB",
+      "GOPATH",
+      "GOPROXY",
+      "GOROOT",
+      "GOSUMDB",
+      "GOWORK"
+    ],
+    [
+      "list",
+      "-m",
+      "-e",
+      "-json",
+      "..."
+    ]
+  ],
+  "go_subcommand_wildcards_allowed": false,
+  "forbidden_go_commands": [
+    "build",
+    "test",
+    "run",
+    "install",
+    "mod tidy",
+    "mod download",
+    "tool compile",
+    "tool asm",
+    "tool link",
+    "tool cgo"
+  ],
+  "offline_environment": {
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOTOOLCHAIN": "local",
+    "GOVCS": "*:off",
+    "PIP_NO_INDEX": "1"
+  },
+  "dependency_policy": "Existing prepared caches only; source, go.mod/go.sum and go.work inputs remain read-only; missing cache ends the run without repair.",
+  "mac_python": {
+    "version": "0.29.1",
+    "interpreter": {
+      "path": "/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+      "resolved": "/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+      "sha256": "042454a41d6c32f2be126c4bbae2a4b8a54488c66f4b07379cd24dee75f93abb",
+      "magic_hex": "cffaedfe"
+    },
+    "launcher": {
+      "path": "/Users/passion./.cache/uv/archive-v0/H-DeR60BgeD5EnJG/bin/openapi-python-client",
+      "resolved": "/Users/passion./.cache/uv/archive-v0/H-DeR60BgeD5EnJG/bin/openapi-python-client",
+      "sha256": "2a27f63e60f5648a0b70a54b9d056892ece7e60c65f1c947b85adc65ac8f812d",
+      "magic_hex": "23212f62"
+    },
+    "locked_versions_all_match": true,
+    "package_files": 110,
+    "full_hash_manifest": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-light-readiness/tool-readiness.json",
+    "full_hash_manifest_sha256": "68dc64fde996cbe32949f31acb74e5e89841215c632bdb7dfe017b9821dbae59",
+    "entry_invocation": "Use fixed interpreter + fixed launcher directly in the bounded subprocess adapter; the shell trampoline is a Python string literal. No shell hook is scheduled."
+  },
+  "mac_oapi_codegen": null,
+  "tools_ready": false,
+  "blocking_code": "PREPARED_MAC_OAPI_CODEGEN_UNAVAILABLE",
+  "blocking_reason": "No compatible prepared v2.8.2 executable was found in inspected locations; Linux binary and module source cannot satisfy the Mac executable prerequisite.",
+  "unblocking_condition": "An already prepared readable/executable Mac arm64 oapi-codegen v2.8.2 with independently verified binary format, version and SHA-256. No build, install, download or unassigned Linux fallback.",
+  "helper": {
+    "path": "/Users/passion./.local/state/ownsolid/lane-rel/with_mac_window.py",
+    "sha256": "71d1d2b7403b5606d01e7a34d8e4f5e80a23b0d151288a6877b7b6a7c66804c2",
+    "mode": "Existing run() with wait_seconds=0 and expected_inode; no carrier creation, replacement or polling.",
+    "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+    "device": 16777234,
+    "inode": 50313339,
+    "uid": 501,
+    "stat_only_no_fd_open": true
+  },
+  "mac_workload_profile": {
+    "free_mib_min": 2048,
+    "disk_gib_min": 15,
+    "absolute_seconds_max": 300,
+    "cleanup_reserve_seconds_min": 30,
+    "external_command_seconds_max": 60,
+    "serial_domains": true,
+    "single_cpu_target": true,
+    "GOMAXPROCS": "1",
+    "GOMEMLIMIT_max_bytes": 536870912,
+    "GOMEMLIMIT_kind": "soft runtime limit; not a hard RSS bound",
+    "RAYON_NUM_THREADS": "1 where applicable",
+    "retain_all_stricter_inherited_limits": true,
+    "actual_hard_limits": "NOTRUN: record inherited limits and actual enforcement facts if entry starts",
+    "new_full_gate_profile_changes": false
+  },
+  "execution_state": {
+    "authorization_for_one_mac_nb_workload_received": true,
+    "nb_attempts_started": 0,
+    "carrier_opened": false,
+    "metadata_go_commands_executed": false,
+    "generator_commands_executed": false,
+    "entry_exit": null,
+    "sdk_output_directory_created": false,
+    "partial_sdk_output": "none: generation did not start",
+    "peak_rss": "NOTRUN",
+    "new_file_count": "NOTRUN",
+    "new_37_vs_old_122_sdk_bytes": "NOTRUN",
+    "new_37_vs_2e_full_28_sdk_bytes": "NOTRUN",
+    "ssh_attempted_in_this_phase": false,
+    "new_framework_created": false,
+    "native_or_full_qualification": false
+  },
+  "search_summary": {
+    "kind": "Observed bounded discovery; not a claim of global filesystem absence",
+    "PATH_matches": [],
+    "Spotlight_matches": "Module source and module-cache paths only",
+    "rg_roots": [
+      "/private/tmp",
+      "/private/var/folders",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/.tools",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid-lane-d",
+      "/Users/passion./.local",
+      "/Users/passion./.cache",
+      "/usr/local/bin",
+      "/opt/homebrew/bin"
+    ],
+    "initial_rg_error_lines": 98,
+    "later_cache_and_tool_rg_error_lines": 0,
+    "go_build_cache_files_examined": 475679,
+    "matching_cached_macho_oapi_executables": 0,
+    "existing_private_handoff_mac_executable_paths": [],
+    "additional_checked_roots": [
+      "/Users/passion./.codex",
+      "/Users/passion./.agents",
+      "/Users/passion./Downloads",
+      "/private/var/tmp"
+    ],
+    "additional_matches": [],
+    "additional_error_lines": 0
+  },
+  "old_qualifications": {
+    "source_37_focused_tests": 49,
+    "source_37_projection_domains": 28,
+    "retained_430_audit_exit": 1,
+    "old_sdk_or_native_scope_promoted": false,
+    "full_6gib_profile_and_both_consumed_refusals": "unchanged"
+  }
+}

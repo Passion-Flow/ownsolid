@@ -1,0 +1,657 @@
+{
+  "snapshot_utc": "2026-11-13T23:50:24.627458+00:00",
+  "github_repository": "https://github.com/Passion-Flow/ownsolid",
+  "original_refs": [
+    {
+      "repo": "independent",
+      "original_ref": "refs/heads/codex/lane-rel-api-compat",
+      "oid": "ff0f32389760cf2868402cdc9a3630658beae237",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-api-compat-ff0f32389760",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/heads/codex/lane-rel-audit-delivery",
+      "oid": "e3bbbeaf62d17c83a13930278e32212a004f16b9",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/heads/codex/lane-rel-cli-delivery",
+      "oid": "b967d7c8824b0efc00f8e5df0c50fa28ab3d8b68",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-cli-delivery-b967d7c8824b",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/heads/codex/lane-rel-identity-audit-contract",
+      "oid": "d16d7f11699ef00e1d26fa576be2db76a8d640af",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-identity-audit-contract-d16d7f11699e",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/heads/codex/lane-rel-joint-api-review",
+      "oid": "4e8330240b9d5b9917da3998a2bf236e8a813a8a",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/heads/codex/lane-rel-model-history-contract",
+      "oid": "6a4c354ddbbf6064bc26e03b5ac86c717a6dcfe3",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-model-history-contract-6a4c354ddbbf",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/heads/codex/lane-rel-response-references",
+      "oid": "20e30dac8196548561b6fccca2bed19dd33068d9",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/heads/codex/lane-rel-strict-contract-json",
+      "oid": "b57e975bbd3f87a972a044587cfe2f249d2fd200",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/api-compat-89c1610e",
+      "oid": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-custom-api-compat-89c1610e-89c1610e8de0",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/api-compat-ff0f3238",
+      "oid": "ff0f32389760cf2868402cdc9a3630658beae237",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-api-compat-ff0f32389760",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/api-compat-frozen-89c1610e",
+      "oid": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-custom-api-compat-89c1610e-89c1610e8de0",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/audit-joint-pre-model-main-a27",
+      "oid": "a27ac7e441bfeeb2c89b23442a240842c4b56132",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/audit-native-frozen-c9820e25",
+      "oid": "c9820e25077ccfe6252068d6549af41c0818df17",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-custom-audit-native-frozen-c9820e25-c9820e25077c",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/composition-tested-4b1e5c99",
+      "oid": "4b1e5c99bdc2e9349eabc40378c6c8743e62b82f",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-custom-composition-tested-4b1e5c99-4b1e5c99bdc2",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/dev-source-input-d16d7f11",
+      "oid": "d16d7f11699ef00e1d26fa576be2db76a8d640af",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-identity-audit-contract-d16d7f11699e",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/identity-audit-contract-cf8d1c10",
+      "oid": "cf8d1c10536125525d42304f74801661f8c59836",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-custom-audit-native-frozen-c9820e25-c9820e25077c",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/observed-public-main",
+      "oid": "9a0543b9a84fbe82f45e3e67da24cca67748aaf2",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-custom-observed-public-main-9a0543b9a84f",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/lane-rel/web-owner-c7ba6271",
+      "oid": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-custom-web-owner-c7ba6271-c7ba62718fa4",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/20261112-6100a2fe",
+      "oid": "6100a2fe78f81db3b289cc335b5a3ce2efd57023",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-20261112-6100a2fe-6100a2fe78f8",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/joint-handoff-d575e86e",
+      "oid": "d575e86ed93d649a2018af909ebc75b6e45dabe1",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-joint-handoff-d575e86e-d575e86ed93d",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/migration-88404b04",
+      "oid": "88404b0410787a9af14354f3ed5bdcfdb10ca27a",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-migration-88404b04-88404b041078",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/offline-ab02c3b1",
+      "oid": "ab02c3b15f249028373df2c5f1f925d17a97ee55",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-offline-ab02c3b1-ab02c3b15f24",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/original-candidates",
+      "oid": "e1e6363e1e67e82bf70e9a26630a118f8934fcf8",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-original-candidates-e1e6363e1e67",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/pre-merge-126523d8",
+      "oid": "126523d883efd153c1afbfd3cc98bb35a01401e2",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-pre-merge-126523d8-126523d883ef",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/resumed-0abd4f3b",
+      "oid": "0abd4f3b5dbe6e3a8aa342b8da9fdd0dddf068f2",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-resumed-0abd4f3b-0abd4f3b5dbe",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/shared-device-91d77b14",
+      "oid": "91d77b143d17044c7dbad82ee9f71f466a5c5bd2",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-shared-device-91d77b14-91d77b143d17",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "refs/tags/iam-evidence/sso-keyring-7e77b814",
+      "oid": "7e77b814cb0ff61aa1b1d25b00d22a4ac5ba64c2",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-evidence-sso-keyring-7e77b814-7e77b814cb0f",
+      "coverage": "identical"
+    },
+    {
+      "repo": "primary",
+      "original_ref": "refs/lane-rel/gw104-web-copy",
+      "oid": "8b987d4a3738702c9ab357810116411a13b6ffdd",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/primary-custom-gw104-web-copy-8b987d4a3738",
+      "coverage": "identical"
+    },
+    {
+      "repo": "primary",
+      "original_ref": "refs/lane-rel/response-audit-main03-candidate",
+      "oid": "1aad4eed3b735c012be2ddfe8b5ab2746d9ffee9",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "primary",
+      "original_ref": "refs/lane-rel/response-model-audit-candidate",
+      "oid": "27cac766a4f3ba06fc0f2b3847f79beb1ad12d95",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/primary-custom-response-model-audit-candidate-27cac766a4f3",
+      "coverage": "identical"
+    },
+    {
+      "repo": "primary",
+      "original_ref": "refs/lane-rel/session-cli-review",
+      "oid": "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "primary",
+      "original_ref": "refs/lane-rel/user-reads-review",
+      "oid": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "primary",
+      "original_ref": "refs/lane-rel/user-reads-status-review",
+      "oid": "f91c7ecbc046a5509dbc6cfb00f1679086993fff",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "primary",
+      "original_ref": "refs/lane-rel/workspace-cli-review",
+      "oid": "8f4dd72cb9c6c58c0860bb9125289986cfc180d1",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "primary",
+      "original_ref": "refs/lane-rel/workspace-members-review",
+      "oid": "7055df31f10d23a3a237601c6e781eceaaa8397b",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "portable",
+      "original_ref": "refs/heads/base",
+      "oid": "b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "portable",
+      "original_ref": "refs/heads/dev",
+      "oid": "47fa03253b0d2655be26925a7e4492547c3e9a42",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "portable",
+      "original_ref": "refs/heads/joint",
+      "oid": "871e3df7df9ea0f0f5adb8f3bd91a226a52b44af",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "portable",
+      "original_ref": "refs/heads/joint-final",
+      "oid": "a27ac7e441bfeeb2c89b23442a240842c4b56132",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "portable",
+      "original_ref": "refs/heads/joint-main",
+      "oid": "6ed5c627a04a52b97d273f6782fdb0733d8703c4",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "coverage": "ancestor"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "detached:gate-native-5055d774/work",
+      "oid": "5055d774ec6941df008f21f7e69abd48bad3fab0",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+      "coverage": "identical"
+    },
+    {
+      "repo": "independent",
+      "original_ref": "detached:api-compat/work",
+      "oid": "2126f33d56c16785edc2064f008b395e80c543b8",
+      "object_type": "commit",
+      "covered_by": "refs/heads/salvage/mac/dev/independent-detached-api-compat-work-2126f33d56c1",
+      "coverage": "identical"
+    }
+  ],
+  "worktree_heads": {
+    "heads": [
+      {
+        "repo": "independent",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/gate-native-5055d774/work",
+        "branch": "DETACHED",
+        "head": "5055d774ec6941df008f21f7e69abd48bad3fab0",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+        "coverage": "identical"
+      },
+      {
+        "repo": "independent",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/api-compat/work",
+        "branch": "DETACHED",
+        "head": "2126f33d56c16785edc2064f008b395e80c543b8",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-detached-api-compat-work-2126f33d56c1",
+        "coverage": "identical"
+      },
+      {
+        "repo": "independent",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/work",
+        "branch": "refs/heads/codex/lane-rel-cli-delivery",
+        "head": "b967d7c8824b0efc00f8e5df0c50fa28ab3d8b68",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-head-cli-delivery-b967d7c8824b",
+        "coverage": "identical"
+      },
+      {
+        "repo": "independent",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/work",
+        "branch": "refs/heads/codex/lane-rel-audit-delivery",
+        "head": "e3bbbeaf62d17c83a13930278e32212a004f16b9",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+        "coverage": "ancestor"
+      },
+      {
+        "repo": "independent",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/joint-api-review/work",
+        "branch": "refs/heads/codex/lane-rel-joint-api-review",
+        "head": "4e8330240b9d5b9917da3998a2bf236e8a813a8a",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+        "coverage": "ancestor"
+      },
+      {
+        "repo": "independent",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/work",
+        "branch": "refs/heads/codex/lane-rel-model-history-contract",
+        "head": "6a4c354ddbbf6064bc26e03b5ac86c717a6dcfe3",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-head-model-history-contract-6a4c354ddbbf",
+        "coverage": "identical"
+      },
+      {
+        "repo": "independent",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/response-reference-audit/work",
+        "branch": "refs/heads/codex/lane-rel-response-references",
+        "head": "20e30dac8196548561b6fccca2bed19dd33068d9",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+        "coverage": "ancestor"
+      },
+      {
+        "repo": "independent",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/work",
+        "branch": "refs/heads/codex/lane-rel-strict-contract-json",
+        "head": "b57e975bbd3f87a972a044587cfe2f249d2fd200",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+        "coverage": "identical"
+      },
+      {
+        "repo": "primary",
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/gate-native-410ed356/work",
+        "branch": "DETACHED",
+        "head": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+        "source_status": "",
+        "covered_by": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+        "coverage": "ancestor"
+      }
+    ],
+    "stash_refs": {
+      "independent": "",
+      "primary": "refs/stash c1b11aab517905bcd793989822b28a6d71fa9f18"
+    },
+    "reflog_only_commit_preservation_owner": "coordinator: original 4,171-commit inventory; no duplicate export in DEV migration",
+    "original_refs_unchanged": true,
+    "stash_classification": {
+      "independent": "No stash refs",
+      "primary": "Shared IAM stash; not DEV-owned; retained in place and left to coordinator history preservation",
+      "primary_stash_head": "c1b11aab517905bcd793989822b28a6d71fa9f18",
+      "primary_stash_reflog_heads": [
+        "c1b11aab517905bcd793989822b28a6d71fa9f18",
+        "a35691d4c7b321666691f71adc1fb215cc732b06",
+        "7a396121171df1b553ba2f51aef7183b4cf5c4d4"
+      ]
+    }
+  },
+  "verified_remote_refs": [
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f",
+      "expected_sha": "b57e975bbd3f87a972a044587cfe2f249d2fd200",
+      "remote_sha": "b57e975bbd3f87a972a044587cfe2f249d2fd200",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "verified_utc": "2026-11-13T23:26:35.254540+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-resumed-0abd4f3b-0abd4f3b5dbe",
+      "expected_sha": "0abd4f3b5dbe6e3a8aa342b8da9fdd0dddf068f2",
+      "remote_sha": "0abd4f3b5dbe6e3a8aa342b8da9fdd0dddf068f2",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "verified_utc": "2026-11-13T23:26:42.026441+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-pre-merge-126523d8-126523d883ef",
+      "expected_sha": "126523d883efd153c1afbfd3cc98bb35a01401e2",
+      "remote_sha": "126523d883efd153c1afbfd3cc98bb35a01401e2",
+      "push_exit": 1,
+      "verify_exit": 0,
+      "note": "Exact remote ref read back after prior creation response; no overwrite.",
+      "verified_utc": "2026-11-13T23:43:03.994157+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-detached-api-compat-work-2126f33d56c1",
+      "expected_sha": "2126f33d56c16785edc2064f008b395e80c543b8",
+      "remote_sha": "2126f33d56c16785edc2064f008b395e80c543b8",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780194+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/primary-custom-response-model-audit-candidate-27cac766a4f3",
+      "expected_sha": "27cac766a4f3ba06fc0f2b3847f79beb1ad12d95",
+      "remote_sha": "27cac766a4f3ba06fc0f2b3847f79beb1ad12d95",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780480+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-custom-composition-tested-4b1e5c99-4b1e5c99bdc2",
+      "expected_sha": "4b1e5c99bdc2e9349eabc40378c6c8743e62b82f",
+      "remote_sha": "4b1e5c99bdc2e9349eabc40378c6c8743e62b82f",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780485+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-detached-gate-native-5055d774-work-5055d774ec69",
+      "expected_sha": "5055d774ec6941df008f21f7e69abd48bad3fab0",
+      "remote_sha": "5055d774ec6941df008f21f7e69abd48bad3fab0",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780488+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-20261112-6100a2fe-6100a2fe78f8",
+      "expected_sha": "6100a2fe78f81db3b289cc335b5a3ce2efd57023",
+      "remote_sha": "6100a2fe78f81db3b289cc335b5a3ce2efd57023",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780491+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-head-model-history-contract-6a4c354ddbbf",
+      "expected_sha": "6a4c354ddbbf6064bc26e03b5ac86c717a6dcfe3",
+      "remote_sha": "6a4c354ddbbf6064bc26e03b5ac86c717a6dcfe3",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780495+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-sso-keyring-7e77b814-7e77b814cb0f",
+      "expected_sha": "7e77b814cb0ff61aa1b1d25b00d22a4ac5ba64c2",
+      "remote_sha": "7e77b814cb0ff61aa1b1d25b00d22a4ac5ba64c2",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780498+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-migration-88404b04-88404b041078",
+      "expected_sha": "88404b0410787a9af14354f3ed5bdcfdb10ca27a",
+      "remote_sha": "88404b0410787a9af14354f3ed5bdcfdb10ca27a",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780501+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-custom-api-compat-89c1610e-89c1610e8de0",
+      "expected_sha": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+      "remote_sha": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780504+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/primary-custom-gw104-web-copy-8b987d4a3738",
+      "expected_sha": "8b987d4a3738702c9ab357810116411a13b6ffdd",
+      "remote_sha": "8b987d4a3738702c9ab357810116411a13b6ffdd",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780507+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-shared-device-91d77b14-91d77b143d17",
+      "expected_sha": "91d77b143d17044c7dbad82ee9f71f466a5c5bd2",
+      "remote_sha": "91d77b143d17044c7dbad82ee9f71f466a5c5bd2",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780511+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-custom-observed-public-main-9a0543b9a84f",
+      "expected_sha": "9a0543b9a84fbe82f45e3e67da24cca67748aaf2",
+      "remote_sha": "9a0543b9a84fbe82f45e3e67da24cca67748aaf2",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780514+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-offline-ab02c3b1-ab02c3b15f24",
+      "expected_sha": "ab02c3b15f249028373df2c5f1f925d17a97ee55",
+      "remote_sha": "ab02c3b15f249028373df2c5f1f925d17a97ee55",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780517+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-head-cli-delivery-b967d7c8824b",
+      "expected_sha": "b967d7c8824b0efc00f8e5df0c50fa28ab3d8b68",
+      "remote_sha": "b967d7c8824b0efc00f8e5df0c50fa28ab3d8b68",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780521+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-custom-web-owner-c7ba6271-c7ba62718fa4",
+      "expected_sha": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "remote_sha": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780524+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-custom-audit-native-frozen-c9820e25-c9820e25077c",
+      "expected_sha": "c9820e25077ccfe6252068d6549af41c0818df17",
+      "remote_sha": "c9820e25077ccfe6252068d6549af41c0818df17",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780528+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-head-identity-audit-contract-d16d7f11699e",
+      "expected_sha": "d16d7f11699ef00e1d26fa576be2db76a8d640af",
+      "remote_sha": "d16d7f11699ef00e1d26fa576be2db76a8d640af",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780531+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-joint-handoff-d575e86e-d575e86ed93d",
+      "expected_sha": "d575e86ed93d649a2018af909ebc75b6e45dabe1",
+      "remote_sha": "d575e86ed93d649a2018af909ebc75b6e45dabe1",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780536+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-evidence-original-candidates-e1e6363e1e67",
+      "expected_sha": "e1e6363e1e67e82bf70e9a26630a118f8934fcf8",
+      "remote_sha": "e1e6363e1e67e82bf70e9a26630a118f8934fcf8",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780541+00:00"
+    },
+    {
+      "ref": "refs/heads/salvage/mac/dev/independent-head-api-compat-ff0f32389760",
+      "expected_sha": "ff0f32389760cf2868402cdc9a3630658beae237",
+      "remote_sha": "ff0f32389760cf2868402cdc9a3630658beae237",
+      "push_exit": 0,
+      "verify_exit": 0,
+      "transport": "verified local proxy; one atomic push",
+      "verified_utc": "2026-11-13T23:48:54.780545+00:00"
+    }
+  ],
+  "source_repository_paths": {
+    "independent": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/work",
+    "primary": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid",
+    "portable": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/portable-source-check.git"
+  },
+  "portable_bare_symbolic_head": "refs/heads/main (unborn; preserve the five named branches)",
+  "origin_configuration": "Original origin configuration remains unchanged; transfer used the explicitly verified GitHub HTTPS URL. Private original configuration is recorded in the local inventory.json."
+}

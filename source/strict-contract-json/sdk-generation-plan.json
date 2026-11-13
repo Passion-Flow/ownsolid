@@ -1,0 +1,198 @@
+{
+  "source": "37cbb09c3d4933a53e4aea844a979d8b91d67b58",
+  "tree": "6f8edee01936c8e43ab2ffb2a943ddd50c41ea2e",
+  "base": "2e64ab4c6c16bd84ae5c101b9de5444550760ff2",
+  "changed_paths_since_base": [
+    "docs/product/status.md",
+    "docs/research/public-api-inventory.md",
+    "docs/research/sdk.md",
+    "tools/codegen/sdk/README.md",
+    "tools/codegen/sdk/generate.py",
+    "tools/codegen/sdk/tests/test_contract_json.py"
+  ],
+  "generator_sha256": "b4efc6b842c4556ea2ba84c250dc11c686da35f07b69ddba9753763c1fa0219f",
+  "contracts_sha256": {
+    "api/openapi/v1/applications/openapi.json": "89e152ca0063b70af6cd0b0fd04256e28cd26c83103b258ce3b7838a0c1821c3",
+    "api/openapi/v1/artifactstores/openapi.json": "255dec207dc3b95310d4fd19a95b572d371970396fbc7d1d1661cf7e469aecc2",
+    "api/openapi/v1/capabilities/openapi.json": "c0c15685230a8692441864b81b23dc5f9c5d266e2cfa51ee38e863aaf73f60c7",
+    "api/openapi/v1/cell-clusters/openapi.json": "36a4dc787dbb989939c28d2cc9716e8efe30f4e8848b8e4fc9e43ddf225ed555",
+    "api/openapi/v1/cloud-inventory/openapi.json": "dd85e0facbe7ef58728c32866461464923ebd2b4e6417c72ef9ffb98b21a16d5",
+    "api/openapi/v1/components/openapi.json": "c1678677c74b9b89348e6edd29a815223079d35adb0c3e4020633c66c2308245",
+    "api/openapi/v1/datasets/openapi.json": "89d0fcae1a3400dbed45999edc6c5e44374939bbce15d69f0c4d25b5b4b6f70e",
+    "api/openapi/v1/deployments/openapi.json": "96fe52930877602b346843698aa28128835d0073586912f2158686ee06517d6f",
+    "api/openapi/v1/distribution/openapi.json": "8bae640fb784f3909d31c81f22a4474ac37bf8cd23f3e4df4a243bede0aa664c",
+    "api/openapi/v1/identity/openapi.json": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+    "api/openapi/v1/knowledge/openapi.json": "38d6aae7ae7a5ad4c1bc2883caa19d23ff84e14099abc57168db5d5b0de3487f",
+    "api/openapi/v1/licensing/openapi.json": "f87a723f3563d9b6fb0503997f33449309b1a645402ec1b1065d614e8a60a098",
+    "api/openapi/v1/localization/openapi.json": "bb4e45dd7e644dc5dd7019768eca1a114c7e42031b978d3def4602e4ba3c9b07",
+    "api/openapi/v1/middleware/openapi.json": "c7cfd0ee95ff706fe1f52f72531a11472c205599f90cd668ab5a9af2b154b7c3",
+    "api/openapi/v1/model-gateway/openapi.json": "8f9b969bb890042044511c1833357c0813c22b8fdbe65eab0c8782bdeabb63ef",
+    "api/openapi/v1/model-lifecycle/openapi.json": "0ea246b2fb7881134c34b8a912f76d1656a1fada6575dc70c95d81d8bb655d77",
+    "api/openapi/v1/models/openapi.json": "7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc",
+    "api/openapi/v1/monitoring/openapi.json": "92a72afd45c90a1c5345c8d2aebad6e72b2ab4eed024d48f0b1c864facd9a834",
+    "api/openapi/v1/nodes/openapi.json": "4c3c292a1fd509eae1740370a0e24dc2bcd06ed1a275c26439aff666bd47d978",
+    "api/openapi/v1/notifications/openapi.json": "0314a7f482b38104d6e3f2f79d0f03d02ca60ee1556eda041c78088f4666e2cd",
+    "api/openapi/v1/plugins/openapi.json": "23d5334f10000297e7a6a65b5ed641c138af6a863d94d28e03e0fa70017d144b",
+    "api/openapi/v1/preferences/openapi.json": "7002ec5bdbd3292bae56e32db99532f067ccf2dc6116b7d2d9485484b66a622e",
+    "api/openapi/v1/privateclusters/openapi.json": "ef48170e4537460b62fe1d6c7eedc8e1d0383af89c40c4c5c7570937a00b5c6b",
+    "api/openapi/v1/releases/openapi.json": "3c1693f5db457f5874b94610743baf31bf8e1099e7f893c3322278f7ec6e8358",
+    "api/openapi/v1/sso/openapi.json": "593fbc491f3877b470e34ae0c093565d78f50743c98290f8ae27b9eb82e38fa5",
+    "api/openapi/v1/taskdeliveries/openapi.json": "b69d0fa1268a84c16cb77998d669777106b2f4432b7a8bb9c2c32ce5d6aaacbb",
+    "api/openapi/v1/training/openapi.json": "0480d6472cade491781bb46e264129fed875f12047b4a06c4af186d08d33da68",
+    "api/openapi/v1/workflows/openapi.json": "c4090a504ba236a3f87f3473e7edf0f6db3a7ff533d1046405c87f32dc2431e6",
+    "api/openapi/v1/workspaces/openapi.json": "39fd8b24294752b5173062161023085400771686e8085db651a52d53127bb5ba"
+  },
+  "same_raw_contracts_as_base": true,
+  "focused_tests_reference": {
+    "tests": 49,
+    "new_tests": 11,
+    "log_sha256": "69b24c6ba2016772f29c6f429f4b2d8467dc88372c80759bbd973385f8df8ee8",
+    "rerun_in_generator_attempt": false
+  },
+  "prior_projected_sha256": {
+    "applications": "6db5b88d1f4a5ad4f03d30b492e2c250cff4f5ac7578773808487aa2df0a277b",
+    "artifactstores": "9fbea39853ac02ccc71f28a3ef6147f6b14ed249de16740f7fc483f625d7a70b",
+    "capabilities": "1652a1da00c41cc504afb6d8715b65410b008eb1e65973433ce46690c7cb86e8",
+    "cell-clusters": "fac27e848139844cd39f67124633fe2c70d33c84045f49db8e9a2e5061168653",
+    "cloud-inventory": "84c239536fcbba8660e3487564d2cf965f2c42ed55b101ffe95368739c237257",
+    "components": "65da431f887580d22fe819461c7ff2836ca81591c0e127b38f42fba68c20d2bc",
+    "datasets": "cacb38cabd6d00e2c7d49f7956d70bbb58f54f68b4b5671a0a03b79d7c5b69b3",
+    "deployments": "bffb8bc5ab7ad0177ba774777ce65d85d3cc35e2ebe7c178e6bc27f94801668a",
+    "distribution": "1bb3bdea851d02a21bb6e73b8c902884e829c61cf60be9b87b409fdbcd1a3d50",
+    "identity": "b46be219cfcf1e4c41b0063b783e515179e298e1e6592e66e089f6af2062f569",
+    "licensing": "7042fc210fcf92d0c756f8511e7c779c967fd848b729c0e59fc1d6df2e7dd7ac",
+    "localization": "2f185766a412f5b7bc15b544b97464fb2e9486954e64ec52aa46b4a2864c9078",
+    "middleware": "b814d2dc468475010f8d7904f51eda1c228d32b7e49725c0e6ec8b1b2586b037",
+    "model-gateway": "680933466f31f02b132322a98225596a189bcec26a50a6145a5fdbece3056428",
+    "model-lifecycle": "5abef2a0f38659c588178e1a5b9ab26b9734010637ed4996edca7721b5bd2612",
+    "models": "30f1b44f71b8d084520420b2d4fb3dc643536e7c921b69fef8afeb9f94ba7bcb",
+    "monitoring": "31602d36e4bb44a4fccc2ec78c7af1b2809a68bba913adca0bc31bf2b6ca0200",
+    "nodes": "dbe685f18bc88f8c54165ac5903c698ff0a7685dfc8119bf33b7f026451454d4",
+    "notifications": "6bbddc24b8ee298fdc026d2a79c973d18e20d0c188467d48a0593e25d421b0ca",
+    "plugins": "255cb7046cbcc34dac4a33bfb04901ac92a900494eb77c68a6cff9e8ab7a4981",
+    "preferences": "5ddd54cd1da39d33c9a44f1277ebfd1d21374703c6b1905080fa790d0a141462",
+    "privateclusters": "ff83a902d76fb7950a8a24df461f078852f699ef4389d990f6fa628dc3b02152",
+    "releases": "8b798b7053253a1f0a64b02dd6562d7e6d125029ea3dcaae068c9291084d6e9b",
+    "sso": "0fabcc2108338bcbb430feb4d4759be4ddd78248692f84cdf940905871645f59",
+    "taskdeliveries": "e03d20bffe89eab0f4ba3db96e3f364ad2e7f5ae75bd99989a840b453d259021",
+    "training": "d6eaee38e4fba313b30c6151f704e2d9b0ce51355ef190f947b42e301eefec66",
+    "workflows": "9476a7eb137ec1e563cdcd20a89028df48009085afdf5df037f8b92f3de3dcb5",
+    "workspaces": "837b0124395bdd8a17df8e1399c3a2b9fc12bcea2995b56245952d332007ae59"
+  },
+  "base_generator_sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2",
+  "old_identity_archive_sha256": "6ba53a09b2f1fc3794f4f723366b05629ad7cc54a4dbecd81144f52a33365aa2",
+  "heavy_entry_sha256": "f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a",
+  "go_binary_sha256": "5bbfa70129a46c3ad55c55c8b56f95a358e4305f56054b59facb1c00cb66af0b",
+  "python_launcher_sha256": "a24567ff66ed74f71820e8677b1830274ea65efdd39e566b29396c94c887d519",
+  "original_author_ancestors": [
+    "47fa03253b0d2655be26925a7e4492547c3e9a42",
+    "a84c4eb0e2653a8a0b326d1aca8913175cfb0536",
+    "2e64ab4c6c16bd84ae5c101b9de5444550760ff2"
+  ],
+  "runner_sha256": "5c31a1fb5fafe2761d63af4eb0ca2702d2a76f716abd645129032c3149a0ae14",
+  "next_execution_preparation": {
+    "generation_source": "e4bd3138b3850fb0c591e5622ba8606f0b368371",
+    "fixture_source": "ee7a214ca2ec2c11873e33b6d3446816ede93e3f",
+    "inputs_and_commands": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/inputs-and-commands.json",
+    "sha256": "88790a32e32b89665f5507efee48c2fa4fbf416c960a23b379a09c0885092117",
+    "generator_sha256": "3d8069220982821288ddf8bf495048880bf49ddd05345589cf0977b80c658890",
+    "preparation_only": true,
+    "queued": false,
+    "tools_ready": true,
+    "next_required_stage": "Only the separately admitted exact final-source platform gates and remaining SDK/runtime/installed qualifications listed in final-handoff remain. Do not rerun the completed tool, generation or four Go migration groups without changed inputs or a new concern.",
+    "consumed_attempt": {
+      "record": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-e4-sdk-ee7a214c-once/execution-and-correction.json",
+      "sha256": "73a80e9687c0e61e3fe9f1e11ab99f2a5e5435323b0e3d1d8bd54941db3f4e05",
+      "exit": 1,
+      "nb_attempts": 1,
+      "elapsed_seconds": 10.845,
+      "tool_build_started": false,
+      "generation_started": false,
+      "native_started": false
+    },
+    "module_verifier": {
+      "source": "2e7df2e38630f06f01e433ed832a9907edfbe8f2",
+      "frozen_path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/toolprep-2e7df2e3/verify_tool_modules.py",
+      "sha256": "16832be4369d5f4679abaf9da586fce1af91e5c41c21ac37c6f6d083c86f5854",
+      "function": "verify_cached_modules",
+      "required_change": "A new admitted wrapper must call this verifier instead of hashing source-root go.mod. The consumed wrapper is retained unchanged and must not be relaunched.",
+      "argv": [
+        "/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+        "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/toolprep-2e7df2e3/verify_tool_modules.py",
+        "--cache-root",
+        "/Users/passion./go/pkg/mod",
+        "--pins",
+        "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-e4-sdk-ee7a214c-once/config.json"
+      ],
+      "regression_tests_passed": 7,
+      "actual_cached_modules_verified": 23,
+      "module_cache_state": "All 23 retained pins verified; no pinned download missing in this readback. Recheck at the next admission."
+    },
+    "execution_authorized": false,
+    "second_consumed_attempt": {
+      "record": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-e4-sdk-ee7a214c-second/execution-and-proxy-correction.json",
+      "sha256": "7b4de74eb7dde4978fe3d16024468dae3a03be398a58507b072d27fab7c0d389",
+      "exit": 1,
+      "seconds": 0.632,
+      "nb_attempts": 1
+    },
+    "required_tool_environment_correction": {
+      "GOPROXY": "file:///Users/passion./go/pkg/mod/cache/download",
+      "GOMODCACHE": "New admitted job private tool-module-cache directory",
+      "network": "Still denied by tool-build sandbox",
+      "authentic_proxy_artifacts_verified_present": 115,
+      "metadata_not_rewritten": true,
+      "original_failed_worker_unchanged": true,
+      "prospective_worker_input": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-e4-sdk-ee7a214c-second/worker-local-proxy.py.input",
+      "prospective_worker_sha256": "20264dfbc0a51b8313277072b159106fd72d614044344f5837f4cfd78d6babe2",
+      "execution": "NOTRUN; no grant renewed"
+    },
+    "sdk_and_go_migration_scope": "COMPLETE: actual tagged tool, current/original 28-domain outputs and all four Go client groups",
+    "actual_prepared_tool": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-fileproxy-fixed-window/attempt-1/bin/oapi-codegen",
+      "sha256": "bb920982e7de1e2b52cf436d60c3bc9f2c81a25d84ec5ad7b62f7fe9c745b1a1",
+      "version_output": "github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen\nv2.8.2",
+      "GOOS": "darwin",
+      "GOARCH": "arm64",
+      "module_source_h1": "h1:68UGCFId8tysEuz1jqDgem0Lnz0d6T+73br+KwH/W6k="
+    },
+    "qualification": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-fileproxy-fixed-window/attempt-1/qualification.json",
+      "sha256": "1ff7a15fe2ea428f13b92d217383e3cfe1af71dd98650d9d94bbc033ed0b7470"
+    },
+    "final_source": "d4cf29ddc1fb0f46b908307093090a0ad8685f21",
+    "final_tree": "a5d913ed036b9a5ea5297ec49bd437e2be7d4f0f",
+    "final_handoff": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-fileproxy-fixed-window/attempt-1/final-handoff.json",
+      "sha256": "3f30efb48e0dcc3bb36b8da2fd98ee57162554e195cbee1443d889e54467340a"
+    }
+  },
+  "next_joint_qualification": {
+    "source": "b57e975bbd3f87a972a044587cfe2f249d2fd200",
+    "tree": "a04ca66a2ca30b46744fc995f2d7db8378b9f237",
+    "merge": "512e6d561b2479f39ad42899c0aa2a26acf50bb1",
+    "inputs_and_commands": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/joint-por112-sdk/joint-inputs-and-commands.json",
+    "sha256": "717d877275b7012728255bf5b8e3b87ae8f354a297f29e1fc01b81e1b10136d4",
+    "generation_inputs_unchanged": true,
+    "go_native_reused_without_rerun": true,
+    "new_python_runtime_harness_sha256": "d60fa6a1554a8517526ea00afa7eea2cbebb14e594eda99f8cc97ae77961d96f",
+    "next_steps": [
+      "Exact final-source full make check/build/test once full resource prechecks and grant pass",
+      "WEB owns joint UI/visual failures; DEV owns SDK/contract and exact source qualification",
+      "Installed persistent SQL/disconnected/SSO acceptance remains separate"
+    ],
+    "execution_authorized": false,
+    "queued": false,
+    "published": false,
+    "sdk_runtime_status": "PASS: 28 Go packages; 1643 Python modules; corrected 16 real TCP cases",
+    "actual_sdk_runtime_receipt": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/qualification-summary.json",
+      "sha256": "f34b2de69c6116f3ff1560758c73d5393da2b89cd6094f747396c57758092b98"
+    },
+    "final_handoff": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/final-handoff.json",
+      "sha256": "7a7f54637baf1b0e4a1f31cafbf110522429c89dac201433fb72121029cc9fbf"
+    },
+    "full_status": "NOTRUN_RESOURCE_REFUSED"
+  }
+}

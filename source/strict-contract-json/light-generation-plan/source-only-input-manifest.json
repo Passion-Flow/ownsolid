@@ -1,0 +1,282 @@
+{
+  "source": "71902626dda10e4a1b3c555a69e09487f49ea243",
+  "generator_sha256": "b4efc6b842c4556ea2ba84c250dc11c686da35f07b69ddba9753763c1fa0219f",
+  "post_hooks": [],
+  "public_domains": 28,
+  "operations": 430,
+  "domain_inputs": {
+    "applications": {
+      "source": "api/openapi/v1/applications/openapi.json",
+      "raw_sha256": "89e152ca0063b70af6cd0b0fd04256e28cd26c83103b258ce3b7838a0c1821c3",
+      "projection_sha256": "3f181cefcce3e6240abbe2fb0dfae80934188880b59eb65bbbdd6e807f8cad6c",
+      "prior_indent2_projection_sha256": "6db5b88d1f4a5ad4f03d30b492e2c250cff4f5ac7578773808487aa2df0a277b",
+      "operations": 2,
+      "path_aliases": []
+    },
+    "artifactstores": {
+      "source": "api/openapi/v1/artifactstores/openapi.json",
+      "raw_sha256": "255dec207dc3b95310d4fd19a95b572d371970396fbc7d1d1661cf7e469aecc2",
+      "projection_sha256": "73be369d2ca1d0dbcf3b1bff5551f7b77721d46986d10e3cbfb81fba777556ad",
+      "prior_indent2_projection_sha256": "9fbea39853ac02ccc71f28a3ef6147f6b14ed249de16740f7fc483f625d7a70b",
+      "operations": 45,
+      "path_aliases": []
+    },
+    "capabilities": {
+      "source": "api/openapi/v1/capabilities/openapi.json",
+      "raw_sha256": "c0c15685230a8692441864b81b23dc5f9c5d266e2cfa51ee38e863aaf73f60c7",
+      "projection_sha256": "a6943a8773826352f46a7d0971e65e76a789bc6ce1395963a8a786eb3f978871",
+      "prior_indent2_projection_sha256": "1652a1da00c41cc504afb6d8715b65410b008eb1e65973433ce46690c7cb86e8",
+      "operations": 1,
+      "path_aliases": []
+    },
+    "cell-clusters": {
+      "source": "api/openapi/v1/cell-clusters/openapi.json",
+      "raw_sha256": "36a4dc787dbb989939c28d2cc9716e8efe30f4e8848b8e4fc9e43ddf225ed555",
+      "projection_sha256": "b3c8796a78edb9f8ee439c4537cda8bbcdb97a2479773497a433212d0f72f06d",
+      "prior_indent2_projection_sha256": "fac27e848139844cd39f67124633fe2c70d33c84045f49db8e9a2e5061168653",
+      "operations": 7,
+      "path_aliases": []
+    },
+    "cloud-inventory": {
+      "source": "api/openapi/v1/cloud-inventory/openapi.json",
+      "raw_sha256": "dd85e0facbe7ef58728c32866461464923ebd2b4e6417c72ef9ffb98b21a16d5",
+      "projection_sha256": "3f92f01ea62db32e60b93c41265e87078f0e5abc072e03813bb85f5db0533223",
+      "prior_indent2_projection_sha256": "84c239536fcbba8660e3487564d2cf965f2c42ed55b101ffe95368739c237257",
+      "operations": 6,
+      "path_aliases": []
+    },
+    "components": {
+      "source": "api/openapi/v1/components/openapi.json",
+      "raw_sha256": "c1678677c74b9b89348e6edd29a815223079d35adb0c3e4020633c66c2308245",
+      "projection_sha256": "f5ebf9aee10f30d51d22e103ee09f179a6ce61dc3958197d6bda4c5c250dfcec",
+      "prior_indent2_projection_sha256": "65da431f887580d22fe819461c7ff2836ca81591c0e127b38f42fba68c20d2bc",
+      "operations": 4,
+      "path_aliases": []
+    },
+    "datasets": {
+      "source": "api/openapi/v1/datasets/openapi.json",
+      "raw_sha256": "89d0fcae1a3400dbed45999edc6c5e44374939bbce15d69f0c4d25b5b4b6f70e",
+      "projection_sha256": "acd4de5f967a67be8e2ee5b79043e93e8125a087b25b8914d2595c44e0a06288",
+      "prior_indent2_projection_sha256": "cacb38cabd6d00e2c7d49f7956d70bbb58f54f68b4b5671a0a03b79d7c5b69b3",
+      "operations": 48,
+      "path_aliases": []
+    },
+    "deployments": {
+      "source": "api/openapi/v1/deployments/openapi.json",
+      "raw_sha256": "96fe52930877602b346843698aa28128835d0073586912f2158686ee06517d6f",
+      "projection_sha256": "3a1dea97c09e6cc49ed3ea7590a01146954c2a3d8aeb4b70aff456bc8465125b",
+      "prior_indent2_projection_sha256": "bffb8bc5ab7ad0177ba774777ce65d85d3cc35e2ebe7c178e6bc27f94801668a",
+      "operations": 9,
+      "path_aliases": []
+    },
+    "distribution": {
+      "source": "api/openapi/v1/distribution/openapi.json",
+      "raw_sha256": "8bae640fb784f3909d31c81f22a4474ac37bf8cd23f3e4df4a243bede0aa664c",
+      "projection_sha256": "33143ed5c3c9e587cdeed3045db22db82e0c9a055131f9a17f9241ef08dc48b8",
+      "prior_indent2_projection_sha256": "1bb3bdea851d02a21bb6e73b8c902884e829c61cf60be9b87b409fdbcd1a3d50",
+      "operations": 36,
+      "path_aliases": []
+    },
+    "identity": {
+      "source": "api/openapi/v1/identity/openapi.json",
+      "raw_sha256": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+      "projection_sha256": "799daa0e0aca1e5dcee9cd1f745030055dfc5b4fd96832ff0f86a404201c8c80",
+      "prior_indent2_projection_sha256": "b46be219cfcf1e4c41b0063b783e515179e298e1e6592e66e089f6af2062f569",
+      "operations": 25,
+      "path_aliases": []
+    },
+    "licensing": {
+      "source": "api/openapi/v1/licensing/openapi.json",
+      "raw_sha256": "f87a723f3563d9b6fb0503997f33449309b1a645402ec1b1065d614e8a60a098",
+      "projection_sha256": "2e85fd2846df22245c37fd614ba11ca72da5a7b2f9803d39764d48ec76c0642c",
+      "prior_indent2_projection_sha256": "7042fc210fcf92d0c756f8511e7c779c967fd848b729c0e59fc1d6df2e7dd7ac",
+      "operations": 5,
+      "path_aliases": []
+    },
+    "localization": {
+      "source": "api/openapi/v1/localization/openapi.json",
+      "raw_sha256": "bb4e45dd7e644dc5dd7019768eca1a114c7e42031b978d3def4602e4ba3c9b07",
+      "projection_sha256": "a7ff8a240963716091e60d99e5162b7aabc20d1b239063094e2ba9b1c3d9a50c",
+      "prior_indent2_projection_sha256": "2f185766a412f5b7bc15b544b97464fb2e9486954e64ec52aa46b4a2864c9078",
+      "operations": 4,
+      "path_aliases": []
+    },
+    "middleware": {
+      "source": "api/openapi/v1/middleware/openapi.json",
+      "raw_sha256": "c7cfd0ee95ff706fe1f52f72531a11472c205599f90cd668ab5a9af2b154b7c3",
+      "projection_sha256": "5bf93dd09dc1d608150e952b7d428fe999b93a63293217db4712d6717673d405",
+      "prior_indent2_projection_sha256": "b814d2dc468475010f8d7904f51eda1c228d32b7e49725c0e6ec8b1b2586b037",
+      "operations": 20,
+      "path_aliases": []
+    },
+    "model-gateway": {
+      "source": "api/openapi/v1/model-gateway/openapi.json",
+      "raw_sha256": "8f9b969bb890042044511c1833357c0813c22b8fdbe65eab0c8782bdeabb63ef",
+      "projection_sha256": "43451987b9bc50877b411cd9eb521525bc279a7c4017e97d2d0bfdcfac9edc37",
+      "prior_indent2_projection_sha256": "680933466f31f02b132322a98225596a189bcec26a50a6145a5fdbece3056428",
+      "operations": 2,
+      "path_aliases": []
+    },
+    "model-lifecycle": {
+      "source": "api/openapi/v1/model-lifecycle/openapi.json",
+      "raw_sha256": "0ea246b2fb7881134c34b8a912f76d1656a1fada6575dc70c95d81d8bb655d77",
+      "projection_sha256": "b4848fbfef236fef032eb013ec6be4a2b44e7f58e6c9a8fd54da7c60aecc2fb6",
+      "prior_indent2_projection_sha256": "5abef2a0f38659c588178e1a5b9ab26b9734010637ed4996edca7721b5bd2612",
+      "operations": 29,
+      "path_aliases": []
+    },
+    "models": {
+      "source": "api/openapi/v1/models/openapi.json",
+      "raw_sha256": "7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc",
+      "projection_sha256": "9ba362d8f73df9b2a8f5ed188a519b693e14aa488caff1fa40f168968f0b3076",
+      "prior_indent2_projection_sha256": "30f1b44f71b8d084520420b2d4fb3dc643536e7c921b69fef8afeb9f94ba7bcb",
+      "operations": 13,
+      "path_aliases": []
+    },
+    "monitoring": {
+      "source": "api/openapi/v1/monitoring/openapi.json",
+      "raw_sha256": "92a72afd45c90a1c5345c8d2aebad6e72b2ab4eed024d48f0b1c864facd9a834",
+      "projection_sha256": "403b6b9bd9dacf6b01085c5087bea7e48cc25b95292346d3ac89d48329cbd528",
+      "prior_indent2_projection_sha256": "31602d36e4bb44a4fccc2ec78c7af1b2809a68bba913adca0bc31bf2b6ca0200",
+      "operations": 2,
+      "path_aliases": []
+    },
+    "nodes": {
+      "source": "api/openapi/v1/nodes/openapi.json",
+      "raw_sha256": "4c3c292a1fd509eae1740370a0e24dc2bcd06ed1a275c26439aff666bd47d978",
+      "projection_sha256": "237a8e8023db67e54094e0af181a43bd9b13a32d5df1d90928d5db1323bdbe29",
+      "prior_indent2_projection_sha256": "dbe685f18bc88f8c54165ac5903c698ff0a7685dfc8119bf33b7f026451454d4",
+      "operations": 23,
+      "path_aliases": [
+        "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter",
+        "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/actions",
+        "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs",
+        "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/components/node-exporter"
+      ]
+    },
+    "notifications": {
+      "source": "api/openapi/v1/notifications/openapi.json",
+      "raw_sha256": "0314a7f482b38104d6e3f2f79d0f03d02ca60ee1556eda041c78088f4666e2cd",
+      "projection_sha256": "0f5384eec540ceec3f2cb304fc801bd970fb444b3fa96ff31153134285cee4aa",
+      "prior_indent2_projection_sha256": "6bbddc24b8ee298fdc026d2a79c973d18e20d0c188467d48a0593e25d421b0ca",
+      "operations": 3,
+      "path_aliases": []
+    },
+    "plugins": {
+      "source": "api/openapi/v1/plugins/openapi.json",
+      "raw_sha256": "23d5334f10000297e7a6a65b5ed641c138af6a863d94d28e03e0fa70017d144b",
+      "projection_sha256": "db11475168afd8cffee8905532562683bb709e400f90d25324e479014509438a",
+      "prior_indent2_projection_sha256": "255cb7046cbcc34dac4a33bfb04901ac92a900494eb77c68a6cff9e8ab7a4981",
+      "operations": 11,
+      "path_aliases": []
+    },
+    "preferences": {
+      "source": "api/openapi/v1/preferences/openapi.json",
+      "raw_sha256": "7002ec5bdbd3292bae56e32db99532f067ccf2dc6116b7d2d9485484b66a622e",
+      "projection_sha256": "8adb4c3d07bb32c5dda7ccbb9a6f13988edef97db66d0be7557c5fe9c4746ae6",
+      "prior_indent2_projection_sha256": "5ddd54cd1da39d33c9a44f1277ebfd1d21374703c6b1905080fa790d0a141462",
+      "operations": 7,
+      "path_aliases": []
+    },
+    "privateclusters": {
+      "source": "api/openapi/v1/privateclusters/openapi.json",
+      "raw_sha256": "ef48170e4537460b62fe1d6c7eedc8e1d0383af89c40c4c5c7570937a00b5c6b",
+      "projection_sha256": "48fbad3b090bd71bac01c184a669e2659a894ed1d437fdeed7e8d42fba0a1975",
+      "prior_indent2_projection_sha256": "ff83a902d76fb7950a8a24df461f078852f699ef4389d990f6fa628dc3b02152",
+      "operations": 25,
+      "path_aliases": []
+    },
+    "releases": {
+      "source": "api/openapi/v1/releases/openapi.json",
+      "raw_sha256": "3c1693f5db457f5874b94610743baf31bf8e1099e7f893c3322278f7ec6e8358",
+      "projection_sha256": "65a9938d401fcca30af2ab3478ed4bde32220c61411b831e10cab17f91870f50",
+      "prior_indent2_projection_sha256": "8b798b7053253a1f0a64b02dd6562d7e6d125029ea3dcaae068c9291084d6e9b",
+      "operations": 2,
+      "path_aliases": []
+    },
+    "sso": {
+      "source": "api/openapi/v1/sso/openapi.json",
+      "raw_sha256": "593fbc491f3877b470e34ae0c093565d78f50743c98290f8ae27b9eb82e38fa5",
+      "projection_sha256": "1f67799dc2b1c2a77199ad16ec365ce68e8f653f2ea01ace89e793e2ead997b7",
+      "prior_indent2_projection_sha256": "0fabcc2108338bcbb430feb4d4759be4ddd78248692f84cdf940905871645f59",
+      "operations": 10,
+      "path_aliases": []
+    },
+    "taskdeliveries": {
+      "source": "api/openapi/v1/taskdeliveries/openapi.json",
+      "raw_sha256": "b69d0fa1268a84c16cb77998d669777106b2f4432b7a8bb9c2c32ce5d6aaacbb",
+      "projection_sha256": "2260d7f7b5f0a410e1621d85d2e7a2cce6d714ff86807cda3a77934e7fb16b6c",
+      "prior_indent2_projection_sha256": "e03d20bffe89eab0f4ba3db96e3f364ad2e7f5ae75bd99989a840b453d259021",
+      "operations": 8,
+      "path_aliases": []
+    },
+    "training": {
+      "source": "api/openapi/v1/training/openapi.json",
+      "raw_sha256": "0480d6472cade491781bb46e264129fed875f12047b4a06c4af186d08d33da68",
+      "projection_sha256": "c1667b539ccc38b72aaf58afa88903cf0e7e4f0c4fb3a082a0c226e4e914f208",
+      "prior_indent2_projection_sha256": "d6eaee38e4fba313b30c6151f704e2d9b0ce51355ef190f947b42e301eefec66",
+      "operations": 24,
+      "path_aliases": []
+    },
+    "workflows": {
+      "source": "api/openapi/v1/workflows/openapi.json",
+      "raw_sha256": "c4090a504ba236a3f87f3473e7edf0f6db3a7ff533d1046405c87f32dc2431e6",
+      "projection_sha256": "98fd054faa43c86d4b904592eaa217a3c863f4b8539a715ee3c0fd542aaedc3e",
+      "prior_indent2_projection_sha256": "9476a7eb137ec1e563cdcd20a89028df48009085afdf5df037f8b92f3de3dcb5",
+      "operations": 36,
+      "path_aliases": []
+    },
+    "workspaces": {
+      "source": "api/openapi/v1/workspaces/openapi.json",
+      "raw_sha256": "39fd8b24294752b5173062161023085400771686e8085db651a52d53127bb5ba",
+      "projection_sha256": "804311b4d5039b424c9795681a6a7423a3cd75546d337cdee686f76c0927e904",
+      "prior_indent2_projection_sha256": "837b0124395bdd8a17df8e1399c3a2b9fc12bcea2995b56245952d332007ae59",
+      "operations": 23,
+      "path_aliases": []
+    }
+  },
+  "source_files_sha256": {
+    "tools/codegen/sdk/generate.py": "b4efc6b842c4556ea2ba84c250dc11c686da35f07b69ddba9753763c1fa0219f",
+    "tools/codegen/sdk/templates/audit_read.go.template": "81914fe9c6d17de6b2c3e5f95a4fade9e4322714d1c9446840a5f8f578c16c5d",
+    "tools/codegen/sdk/templates/go.mod.template": "b47670b95a80813ca6674e8186ba8ff8721404d8d08932f0c3c2af5e42ef6fda",
+    "tools/codegen/sdk/templates/go.sum.template": "6d652a6316a6298d6f933a3bdecf9de7199a97cb51c876ee4a1da8d863ee11ba",
+    "tools/codegen/sdk/templates/python-config.json": "1dedad25331345fb018a5c91bb8a36cfa31f2c100f38aee4c34a8fb22ef41c55",
+    "tools/codegen/sdk/templates/requirements.txt": "52acf5f3db05d396622e1fb9eef4ac7e237f0ae7d77896b43e409d617e90b284",
+    "tools/codegen/sdk/templates/streaming.py.template": "1cfeb17c29ab13a9bf88755c11fdc71069e05531feca5dc11f9081645c1e8725",
+    "api/openapi/v1/applications/openapi.json": "89e152ca0063b70af6cd0b0fd04256e28cd26c83103b258ce3b7838a0c1821c3",
+    "api/openapi/v1/artifactstores/openapi.json": "255dec207dc3b95310d4fd19a95b572d371970396fbc7d1d1661cf7e469aecc2",
+    "api/openapi/v1/capabilities/openapi.json": "c0c15685230a8692441864b81b23dc5f9c5d266e2cfa51ee38e863aaf73f60c7",
+    "api/openapi/v1/cell-clusters/openapi.json": "36a4dc787dbb989939c28d2cc9716e8efe30f4e8848b8e4fc9e43ddf225ed555",
+    "api/openapi/v1/cloud-inventory/openapi.json": "dd85e0facbe7ef58728c32866461464923ebd2b4e6417c72ef9ffb98b21a16d5",
+    "api/openapi/v1/components/openapi.json": "c1678677c74b9b89348e6edd29a815223079d35adb0c3e4020633c66c2308245",
+    "api/openapi/v1/datasets/openapi.json": "89d0fcae1a3400dbed45999edc6c5e44374939bbce15d69f0c4d25b5b4b6f70e",
+    "api/openapi/v1/deployments/openapi.json": "96fe52930877602b346843698aa28128835d0073586912f2158686ee06517d6f",
+    "api/openapi/v1/distribution/openapi.json": "8bae640fb784f3909d31c81f22a4474ac37bf8cd23f3e4df4a243bede0aa664c",
+    "api/openapi/v1/identity/openapi.json": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+    "api/openapi/v1/knowledge/openapi.json": "38d6aae7ae7a5ad4c1bc2883caa19d23ff84e14099abc57168db5d5b0de3487f",
+    "api/openapi/v1/licensing/openapi.json": "f87a723f3563d9b6fb0503997f33449309b1a645402ec1b1065d614e8a60a098",
+    "api/openapi/v1/localization/openapi.json": "bb4e45dd7e644dc5dd7019768eca1a114c7e42031b978d3def4602e4ba3c9b07",
+    "api/openapi/v1/middleware/openapi.json": "c7cfd0ee95ff706fe1f52f72531a11472c205599f90cd668ab5a9af2b154b7c3",
+    "api/openapi/v1/model-gateway/openapi.json": "8f9b969bb890042044511c1833357c0813c22b8fdbe65eab0c8782bdeabb63ef",
+    "api/openapi/v1/model-lifecycle/openapi.json": "0ea246b2fb7881134c34b8a912f76d1656a1fada6575dc70c95d81d8bb655d77",
+    "api/openapi/v1/models/openapi.json": "7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc",
+    "api/openapi/v1/monitoring/openapi.json": "92a72afd45c90a1c5345c8d2aebad6e72b2ab4eed024d48f0b1c864facd9a834",
+    "api/openapi/v1/nodes/openapi.json": "4c3c292a1fd509eae1740370a0e24dc2bcd06ed1a275c26439aff666bd47d978",
+    "api/openapi/v1/notifications/openapi.json": "0314a7f482b38104d6e3f2f79d0f03d02ca60ee1556eda041c78088f4666e2cd",
+    "api/openapi/v1/plugins/openapi.json": "23d5334f10000297e7a6a65b5ed641c138af6a863d94d28e03e0fa70017d144b",
+    "api/openapi/v1/preferences/openapi.json": "7002ec5bdbd3292bae56e32db99532f067ccf2dc6116b7d2d9485484b66a622e",
+    "api/openapi/v1/privateclusters/openapi.json": "ef48170e4537460b62fe1d6c7eedc8e1d0383af89c40c4c5c7570937a00b5c6b",
+    "api/openapi/v1/releases/openapi.json": "3c1693f5db457f5874b94610743baf31bf8e1099e7f893c3322278f7ec6e8358",
+    "api/openapi/v1/sso/openapi.json": "593fbc491f3877b470e34ae0c093565d78f50743c98290f8ae27b9eb82e38fa5",
+    "api/openapi/v1/taskdeliveries/openapi.json": "b69d0fa1268a84c16cb77998d669777106b2f4432b7a8bb9c2c32ce5d6aaacbb",
+    "api/openapi/v1/training/openapi.json": "0480d6472cade491781bb46e264129fed875f12047b4a06c4af186d08d33da68",
+    "api/openapi/v1/workflows/openapi.json": "c4090a504ba236a3f87f3473e7edf0f6db3a7ff533d1046405c87f32dc2431e6",
+    "api/openapi/v1/workspaces/openapi.json": "39fd8b24294752b5173062161023085400771686e8085db651a52d53127bb5ba"
+  },
+  "raw_contract_count": 29,
+  "old_identity_archive_files": 122,
+  "sdk_generation_started": false,
+  "new_sdk_output_count": null,
+  "new_sdk_byte_comparison": "NOTRUN",
+  "peak_memory": "NOTRUN"
+}

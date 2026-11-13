@@ -1,0 +1,4180 @@
+{
+  "excluded_scopes": [
+    {
+      "path": "__pycache__",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "workspace-members-candidate.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-members-candidate.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "user-reads-candidate.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "current-main-review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "dev102-current-handoff.before-9be-preparation-f7aae727.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "replay-preparation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "user-reads-native-status.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "user-reads-status.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "user-reads-candidate.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-7055.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-members-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "last-handoff-sync.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "dev102-current-handoff.json.before-oom-interpretation-f37ab211d4d5",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "user-reads-status.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "monitoring-history-base.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "mac-gate-completion.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "dev102-current-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/commit-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/native-startup-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/status-commit-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/status-update-review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/qualification-loopback-launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/native-status.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/write-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/staged-review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/candidate.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/qualification-launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/payload.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/native-build-launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "workspace-operation-candidate/native-startup-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "joint-api-review/current-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/delivery-2e64ab4c-c5e4f1cb.tar.gz",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/composition-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/index-reconciliation.stderr.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/static-lint-diagnosis.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/authorized-2e64-ssh.stderr.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/delivery-files-sha256.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/current-handoff-delivery-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/actual-joint-native-gate-2e64ab4c.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/linux-delivery-2e64ab4c.stderr.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/actual-joint-native-gate-2e64ab4c-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/actual-execution-state.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/prepared-entry-vs-executed.diff",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/projection-input-sha256.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/index-read-only-reconciliation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/prepared-policy-verification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/joint-owned-19.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/current-handoff.attempted-11132b349c2d.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/actual-authorized-2e64ab4c-launch-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/authorized-2e64-ssh.stdout.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/authorized-2e64-attempt-summary.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/delivery-packet.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/joint-source-2e64ab4c.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/linux-staging-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/linux-delivery-summary.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "joint-api-review/linux-delivery-2e64ab4c.stdout.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "api-compat/rebase-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/full-native-gate-absolute-deadline.diff",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/handoff.before-9be-preparation-b979181c.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/targeted-checks-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/targeted-checks.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/model-history-comparison.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/handoff.json.before-oom-interpretation-8f6eccde6cc1",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/joint-native-gate-9be01cbb-entry-safety.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/native-gate-retry-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/checks-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/tooling-tests-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/native-gate-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/candidate.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/joint-native-gate-9be01cbb-entry-safety.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/commit-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/joint-native-gate-9be01cbb-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/tooling-tests.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/joint-native-gate-9be01cbb.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/handoff.native89c1610e.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/targeted-checks.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/reviewed-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/tooling-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/qualification-commit-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "api-compat/native-gate-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "model-history-contract/revision-b-wire-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft-inputs.tar.gz",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/python-wire-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/generation-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-transfer.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/producer-inputs.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/native-status.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/research.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/research-publication.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-generation-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/go-wire-launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/research-bundle-transfer.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/python-wire-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/generation-compatibility-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/model-owner-decisions.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/wire/fixtures/ids.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/wire/fixtures/retired.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/wire/fixtures/catalog.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/wire/fixtures/ready.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/wire/fixtures/page.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/draft-a/model-owner-decisions.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/draft-a/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/prototype/v1/models/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/go-wire-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/go-wire.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/go-wire.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/python-wire-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/model-owner-decisions.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/generation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/python-wire.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "model-history-contract/domain-draft/projection-work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "model-history-contract/domain-draft/sdk",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "model-history-contract/domain-draft/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/projection-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/producer-inputs.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/python-wire-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/candidate.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/go-mac-inputs.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/generation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/unregistered-projection.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/v1/models/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/wire/fixtures/ids.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/wire/fixtures/derived.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/wire/fixtures/retired.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/wire/fixtures/catalog.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/wire/fixtures/ready.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "model-history-contract/domain-draft/wire/fixtures/page.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/delivery-baseline",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "identity-audit-contract/joint-baseline",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "identity-audit-contract/composition-projection",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "identity-audit-contract/sdk",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "identity-audit-contract/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "identity-audit-contract/composition-baseline",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "identity-audit-contract/portable-source-check.git",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "identity-audit-contract/joint-test-tools-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/short-mac-window.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-absolute-ssh-stderr-syntax-corrected.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/python-wire-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-absolute-attempt-summary.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/projection-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/go-wire-mac-prepared-before-bounded.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/generation-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/web-owner-c7ba6271-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-source-generation-871e3df7.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-make-generate.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/composition-inventory.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/current-main-integration-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/go-wire-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-test-tools.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-absolute-ssh-capture.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/base-8b17a295.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-native-replay.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/web-owner-c7ba6271.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-composition-proof.before-9be-preparation-325f8758.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/projection-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-result-handoff-previous-sha256.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/handoff.source47fa.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/handoff.composition-d16.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/candidate-783567ea.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-cargo-metadata.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/short-mac-window-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/compatibility-review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-web-cache-preparation.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/composition-projection-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/native-status.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/dev-source-input-d16d7f11.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-absolute-attempt-previous-sha256.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/go-wire-independent-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/self-review-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-preparation-observation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/short-mac-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/sdk-guard-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-native-preparation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-go-module-graph.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-native-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/composition.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/base-source-transfer.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-entry-absolute-deadline-review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/admitted-checks-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/final-static-check-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/composition-targeted-tests.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-preparation-sync-previous-sha256.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-browser-cache-preparation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/dev-source.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/mac-window-private-tests-final.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/go-wire-mac-prepared.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-composition-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/composition-preview.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-absolute-attempt-summary-syntax-corrected.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-make-generate-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/sdk-guard-unit.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/current-main-integration-proof.before-9be-preparation-9f9703b5.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-doc-followup-e3bbbeaf.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/browser-boundary-commit-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/delivery-inventory.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/tested-composition-4b1e5c99.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-result-handoff-sync.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/candidate.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/go-native-linux-release-observation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/handoff.before-9be-preparation-a3fc2907.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/handoff.native783567ea.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-execution-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/candidate-1e8f1fad.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-source.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/commit-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/portable-source-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/private-entry-correction.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-absolute-ssh-capture-syntax-corrected.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/delivery-consistency-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/generation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/dev-source-input-d16d7f11.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-preparation-observation.before-9be-preparation-9b96a758.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/mac-window-private-tests.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-inventory.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/web-owner-c7ba6271.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-generation-check.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-dual-lock-adaptation.diff",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/candidate-cf8d1c10.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-source-before-model-main-a27.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/go-guard-wire-status.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/contract-check-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/python-guard-wire.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/identity-sdk-inputs.tar.gz",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-preparation-sync-corrected.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/composition-targeted-tests.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/handoff.json.before-oom-interpretation-167d4a34fd45",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/go-wire-native-linux.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-consistency-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-preparation-review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-preparation-sync.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/linux-source-toolchain-preparation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/joint-absolute-ssh-stderr.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/go-native-linux-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/web-owner-current-main.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/handoff.source47fa.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/handoff.json.before-oom-interpretation-e23b1e7f47c1",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/web-consumer-retry.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/handoff.pre-source-delivery.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/web-owner.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/browser-retry-review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/handoff.before-9be-preparation-b240db17.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "identity-audit-contract/relay/locales/zh-cn/api-descriptions.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/bin",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "gate-native-410ed356/rust-target",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "gate-native-410ed356/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "gate-native-410ed356/native-startup-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/qualification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/native-transfer-preflight.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/chunk-transfer-attempts.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/gate.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/handoff-publish-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/native-startup-sysfs-failure-command.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/ack-transfer-events.jsonl",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/gate-node-heap-failure.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/gate-node-heap-failure.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/native-status-commit-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/client-transfer.gz",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/native-build-admission-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/native-build-launch-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/handoff-update-payload.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/native-startup-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/gate.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/client/ownsolid",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-410ed356/client/build-metadata.txt",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/main9e-contracts",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "response-reference-audit/__pycache__",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "response-reference-audit/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "response-reference-audit/handoff.json.before-oom-interpretation-704f9c4fd9ce",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/main9e-compatibility-audit.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/aggregate-before-followup-sha256.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/delivery-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/response-reference-fix.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/reference-reproduction-before-fix.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/main9e-compatibility-audit.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/server-read-only-receipt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/verification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/audit-regression-tests.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "response-reference-audit/public-inventory-after-fix.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "old-epoch-closure-50313339/retained-inputs",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "old-epoch-closure-50313339/entry-closure.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "old-epoch-closure-50313339/new-epoch-e1-creation-receipt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "old-epoch-closure-50313339/receipt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "session-installed-0d262a8a/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-7055df31/bin",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "gate-native-7055df31/gate.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-7055df31/gate.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-5055d774/bin",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "gate-native-5055d774/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "gate-native-5055d774/qualification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-5055d774/gate.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-5055d774/gate.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-5055d774/client/ownsolid",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "gate-native-5055d774/client/build-metadata.txt",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "cli-delivery/publication-b967d7c8.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/bundle-transfer.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/delivery-status.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/rebase-initial.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/full-gate.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/full-gate-admission-busy.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/full-gate-admission-busy-second.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/full-gate-admission-busy-second.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/full-gate-admission-busy-third.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/full-gate.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/candidate-source.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/full-gate-admission-busy.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "cli-delivery/full-gate-admission-busy-third.exit",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "obs110-review-3cebfcef/mac-unit-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "obs110-review-3cebfcef/private-http-unit-proof.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "obs110-review-3cebfcef/delivery-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "obs110-review-3cebfcef/review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/__pycache__",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/work",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/focused-parser-tests.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/linux-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/strict-json-and-admission-71902626.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-launch-started.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/linux-attempt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-independent-readback.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/handoff-delivery-receipt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/strict-json-and-admission-71902626.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-launch-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-staging.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/next-scope-review.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/strict-contract-json-37cbb09c.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-attempt.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/verification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-attempt.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/reproduction-before-fix.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-generation-final-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-staging-receipt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/linux-staging-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/sdk-staging.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/linux-delivery-receipt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/candidate-a62a63b5.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/source-only-inputs.tar.gz",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/candidate-a62a63b5.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/prepared-tool-and-graph-inventory.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/cell-clusters.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/distribution.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/localization.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/deployments.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/models.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/training.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/capabilities.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/model-lifecycle.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/workflows.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/sso.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/privateclusters.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/workspaces.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/cloud-inventory.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/datasets.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/identity.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/middleware.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/notifications.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/releases.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/components.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/applications.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/licensing.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/monitoring.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/taskdeliveries.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/preferences.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/artifactstores.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/nodes.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/model-gateway.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/projected-inputs/plugins.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/inputs-and-commands.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/joint-2e/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/joint-2e/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/baseline-9e/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/baseline-9e/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/fixtures-ee7a214c/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/toolprep-2e7df2e3/__pycache__",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/candidate-e4/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/candidate-e4/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/bin",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/command-001.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/build.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/execution-and-proxy-correction.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/generation.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/download.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/command-001.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/native.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/worker-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/worker-local-proxy.py.input",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/attempt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/telemetry/mode",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/metadata-bin/go",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/current-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/final-compatibility.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/final-python-regression.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/declaration.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/roadmap.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/audit-read-409-migration-e4bd3138.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/roadmap.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/declaration.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/final-python-regression.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/final-compatibility.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/lightweight-verification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/python-regression.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/layout.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/compatibility.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/python-regression-first-run.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/final-declaration.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/final-declaration.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/python-regression-first-run.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/legacy-sdk-fixtures-ee7a214c.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/compatibility.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/layout.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/python-regression.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/start.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/bin",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/__pycache__",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/tool-module-cache",
+      "reason": "dependency/cache output",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-101.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-001.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-062.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/baseline-2e-outputs.tar.gz",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-013.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-113.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-070.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-025.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-087.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-058.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-099.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-046.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-095.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-037.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-029.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-054.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-021.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-083.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-121.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-042.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-091.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-033.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-050.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-105.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-005.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-078.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-066.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-017.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-117.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/build.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-009.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-109.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-074.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/domain-operation-first-pass-normalization.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-052.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-093.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-031.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/qualification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-040.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-023.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-081.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-076.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-015.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-115.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-068.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-119.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-019.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-064.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-107.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-007.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/actual-identity-parser-diff.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/generation.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-072.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-011.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-111.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-060.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-103.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-003.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-089.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-056.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-097.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-035.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-048.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-039.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-044.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-027.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-085.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-060.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-103.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-003.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-072.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-011.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-111.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-044.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-039.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/qualification-summary.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-027.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-085.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-056.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-089.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-048.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-097.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-035.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/download.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-040.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-023.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-081.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-052.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-093.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-031.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-064.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-119.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-019.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-107.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-007.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-076.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-068.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-015.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-115.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-091.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-033.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-050.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-021.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-083.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-121.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-042.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/sdk-migration-qualification-d4cf29dd.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-017.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-117.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-074.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-009.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-109.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-078.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-105.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-005.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-066.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-013.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-113.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/final-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-070.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-101.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-001.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/native.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-062.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-095.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-037.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/worker-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-054.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-029.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-058.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-025.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-087.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-046.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-099.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-067.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-079.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-004.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-104.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/baseline-9e-identity-outputs.tar.gz",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-075.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-108.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-008.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-116.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-016.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-043.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-120.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-082.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-020.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-051.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-032.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-090.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/go-metadata.jsonl",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-047.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-098.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-059.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-086.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-024.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-055.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-028.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-036.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-094.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-063.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-100.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-071.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-112.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-012.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-049.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-034.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-096.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-057.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-088.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-084.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-026.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-045.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-038.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-110.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-010.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-073.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-002.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-102.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-061.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-069.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-114.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-014.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-077.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/current-outputs.tar.gz",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-006.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-106.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-065.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-018.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-118.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-030.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-092.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/attempt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-053.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-080.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-122.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-022.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-041.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-006.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-106.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-018.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-118.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-065.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-114.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-014.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-069.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/domain-operation-accounting.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-077.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-080.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-122.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-022.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-041.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-030.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-092.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-053.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-084.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-026.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-038.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-045.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-034.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-096.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-049.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-088.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-057.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-002.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-102.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-061.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-110.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-010.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-073.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-028.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-055.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-036.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-094.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-098.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-047.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-086.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-024.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-059.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-071.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-112.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-012.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-063.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-100.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-108.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-008.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-075.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-116.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-016.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-067.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-004.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-104.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/cleanup-readback.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-079.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-051.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-032.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-090.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-043.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-120.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-082.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/command-020.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/baseline-9e-sdk/gen",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/baseline-2e-sdk/gen",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/retained-generation-inputs/baseline-9e/identity.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/telemetry/mode",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/metadata-bin/go",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/current-sdk/gen",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/current-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/independent-readback.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/build.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/generation.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/download.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/candidate-9f26da06.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/candidate-9f26da06.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/attempt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-light-readiness/mac-readiness-bde51eb7.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-light-readiness/candidate-bde51eb7.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-light-readiness/artifact-index.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-light-readiness/tool-readiness.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/joint-2e-declaration.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/current-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/response-binding-reproduction-before.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/composed-2e-reader-verification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/joint-2e-against-9e.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/binding-fix-current-declaration.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/schema-fix-verification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/binding-fix-verification.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/binding-fix-web-82.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/audit-fixes-3e82919e-b404fa46.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/409-binding-diagnosis.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/referenced-array-before.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/composed-2e-audit-fixes-against-9e.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/schema-fix-against-9e.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/binding-fix-current.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/binding-fix-strict-37.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/current-9f-against-9e.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/strict-37-against-9e.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/web-82-against-9e.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/schema-regression.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/inline-scalar-before.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/artifact-index.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/binding-regression.log",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/audit-fixes-b404fa46.bundle",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/actual-before.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/joint-2e-against-9e.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/web-82-against-9e.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/all-430-response-binding-reconciliation.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/web-82-declaration.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/joint-2e-declaration.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/web-82-declaration.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/binding-fix-joint-2e.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/current-9f-against-9e.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/invalid-schema-reproduction-before.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/referenced-scalar-before.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/strict-37-against-9e.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/web-source-availability.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/joint-2e/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/joint-2e/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/joint-2e/source.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/repro-referenced-array/sample/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/repro-response-media/before/sample/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/repro-response-media/after/sample/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/baseline-9e/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/baseline-9e/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/baseline-9e/source.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/repro-referenced-scalar/sample/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/composed-2e-audit-fixes/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/composed-2e-audit-fixes/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/strict-37/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/strict-37/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/strict-37/source.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/repro-inline-scalar/sample/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/current-9f/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/current-9f/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/current-9f/source.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/web-82/tools",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/web-82/api",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/web-82/source.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/repro-response-no-content-status/before/sample/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/offline-audit-resolution/repro-response-no-content-status/after/sample/openapi.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/joint-inputs-and-commands.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/roadmap.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/python-runtime-fixtures-0cb1627b.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/roadmap.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/lightweight-checks.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/layout.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/python-entry-orchestration.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/python-entry-orchestration.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/layout.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/command-001.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/joint-sdk-runtime-qualification-b57e975b.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/command-003.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/command-003.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/qualification-summary.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/final-handoff.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/command-001.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/python-sdk.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/platform.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/command-002.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/attempt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/command-002.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/cleanup-readback.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/go-sdk.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/command-001.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/command-001.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/python-sdk.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/runtime-launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/attempt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/bootstrap.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/telemetry/mode",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/inputs-0cb1627b/python-runtime-inputs.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/inputs-0cb1627b/python-runtime-launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/bin",
+      "reason": "Git worktree/history copy, dependency, generated output, or build/cache directory",
+      "scope": "directory"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/command-001.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/verifier-regression.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/actual-23-module-cache.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/build.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/generation.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/download.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/actual-23-module-cache.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/verifier-correction-checks.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/command-001.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/native.sb",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/verifier-regression.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/worker-result.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/legacy-module-verifier-2e7df2e3.patch",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/verifier-final-static-checks.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/execution-and-correction.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/command-002.stderr",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/attempt.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/launch.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/command-002.stdout",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/cleanup-readback.json",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/telemetry/mode",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/metadata-bin/go",
+      "reason": "non-source output, bundle, log, receipt, or temporary artifact",
+      "scope": "file"
+    }
+  ],
+  "additional_excluded_original_objects": [
+    {
+      "sha": "2111dd24c5720e440705382f2f7c45e78212b69a",
+      "reason": "Unreferenced Mach-O binary; not reachable from selected source tips. Original object retained."
+    }
+  ]
+}

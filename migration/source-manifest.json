@@ -1,0 +1,608 @@
+{
+  "original_source_root": "/Users/passion./.local/state/ownsolid/lane-rel",
+  "source_file_count": 120,
+  "source_bytes": 842823,
+  "files": [
+    {
+      "path": "MAC-WINDOW.md",
+      "bytes": 1667,
+      "sha256": "c43727f64634f0aa1579b3a7925ae3f19d2c557929df353a6749c1dbc5fa61e4"
+    },
+    {
+      "path": "with_mac_window.py",
+      "bytes": 499,
+      "sha256": "db2285e2f83cc0e4ca4f22be42d2606cd029b0a954ca828304b3d12288689f88"
+    },
+    {
+      "path": "test_mac_window.py",
+      "bytes": 4651,
+      "sha256": "5e569141673d252d2896ba3940ad3d8b47ca01bd591fa028360536cb4c03864c"
+    },
+    {
+      "path": "workspace-operation-candidate/workspace_operation_reads_test.go",
+      "bytes": 6539,
+      "sha256": "9ba30282c559c4d808e10e7bbd9b1dbb8062d4aa5b79ce9965a04d7bc5a822a5"
+    },
+    {
+      "path": "workspace-operation-candidate/qualify-loopback.sh",
+      "bytes": 1384,
+      "sha256": "b914b80acc7f9a7be18076e46437025fea03b86d6544bea55b5d7134d7dc1f88"
+    },
+    {
+      "path": "workspace-operation-candidate/try_native_build.py",
+      "bytes": 4345,
+      "sha256": "9ccb0398a9d02ab16356d3131731ffd455e289cf0901f40ec4686ae811c79617"
+    },
+    {
+      "path": "workspace-operation-candidate/finalize.py",
+      "bytes": 2806,
+      "sha256": "48398f1605bd672fcd62ae539cf91033225859490d0fefd499f1f1d17500864f"
+    },
+    {
+      "path": "workspace-operation-candidate/native_startup.py",
+      "bytes": 5549,
+      "sha256": "124c519fa538c9df0e6cc470c8bdd27b4ed9309915ddf977e0829ce098bd01fb"
+    },
+    {
+      "path": "workspace-operation-candidate/qualify.sh",
+      "bytes": 1361,
+      "sha256": "7de90cd3f6faa9e623fb98096f5163d2651a2256f96d3f25c95cf2d1055a2bec"
+    },
+    {
+      "path": "workspace-operation-candidate/workspace_operation_reads.go",
+      "bytes": 3281,
+      "sha256": "18af8f8585c150e257993483b0e8eafdedd77c56deb579364060312176896b38"
+    },
+    {
+      "path": "joint-api-review/execute_authorized_2e64.py",
+      "bytes": 1614,
+      "sha256": "1367728087f9b455458e61c4c1f7610abee6e78b7e6edf6bf9c3daa5a7139835"
+    },
+    {
+      "path": "joint-api-review/full_native_gate.prepared.py",
+      "bytes": 13337,
+      "sha256": "f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a"
+    },
+    {
+      "path": "joint-api-review/stage_linux_2e64.py",
+      "bytes": 13531,
+      "sha256": "f1fdd93c5d1e0babd3f07694218461353d73c59ced4940da9188746a96bfa762"
+    },
+    {
+      "path": "joint-api-review/verify_prepared_policy.py",
+      "bytes": 3471,
+      "sha256": "36d9ababb77c36fabff2f4c84135f93823f56c9183a9a5f3c7247b23ac7ecf6d"
+    },
+    {
+      "path": "joint-api-review/joint-full-gate-2e64ab4c-manifest.json",
+      "bytes": 5018,
+      "sha256": "60db5ee075c6b24e06d16a0453e851d140ffa44b88b2207310f911901b73f47c"
+    },
+    {
+      "path": "joint-api-review/execute_authorized_2e64_remote.py",
+      "bytes": 7788,
+      "sha256": "97c8323e168c142dbb50258959192326219b5c7b1b66aebcd391a703b4668a81"
+    },
+    {
+      "path": "joint-api-review/build_linux_delivery.py",
+      "bytes": 2303,
+      "sha256": "04eeec1c35f2c4e5fd65e67a39c37093833802ccbcf9bec72ba085fe642e86d7"
+    },
+    {
+      "path": "joint-api-review/deliver_linux_2e64.py",
+      "bytes": 2527,
+      "sha256": "4da8ec9e0ae657618cc855ebbc78cc213e8aab5543290fbb1c6180317efbc878"
+    },
+    {
+      "path": "api-compat/full_native_gate.pre-joint-d16.py",
+      "bytes": 6218,
+      "sha256": "54011cb536dbb92fdd3a1eeb6180fcb3379954fe37ff3b33a4af23bd6eef7e7a"
+    },
+    {
+      "path": "api-compat/check_entry_safety.py",
+      "bytes": 5230,
+      "sha256": "05de40dc266a85a5ce4566f14e3652d1c698a387e7d4614817d1fb89a4544009"
+    },
+    {
+      "path": "api-compat/full_native_gate.py",
+      "bytes": 12767,
+      "sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c"
+    },
+    {
+      "path": "api-compat/full_native_gate.before-absolute-deadline-321c3d94.py",
+      "bytes": 7758,
+      "sha256": "321c3d948945d1a6b1160ba20f56f0c60787b6d81cb6d79b72adf5b8fc7dda96"
+    },
+    {
+      "path": "api-compat/full_native_gate.pre-cache-artifact-9be-dd3fb929.py",
+      "bytes": 6733,
+      "sha256": "dd3fb9294b7477e863f260a6ee35bc2ee22ac9e80294322cf759b3ba0ff12f50"
+    },
+    {
+      "path": "api-compat/full_native_gate.legacy-three-carrier.py",
+      "bytes": 4694,
+      "sha256": "d1c4378fe2aa719803dda8043dc39fe66cba4e44a3bd72be7e150995fb0d6877"
+    },
+    {
+      "path": "model-history-contract/generate_prototype.py",
+      "bytes": 2298,
+      "sha256": "e53cf7a5a03b5fb3d71105a5e9a72c4ae4a950c33cebba85c04b7edf6f0cabf5"
+    },
+    {
+      "path": "model-history-contract/contract-research-section.md",
+      "bytes": 4515,
+      "sha256": "b1c9faa6ddc97a69cd5bb88528b203f79f3ebccf6a13b53d17524cb162863336"
+    },
+    {
+      "path": "model-history-contract/run_go_wire.sh",
+      "bytes": 1118,
+      "sha256": "91b2ac5c83569b108523a680e79b5870d4756ab2b9d79e0d7716b653e19f9edf"
+    },
+    {
+      "path": "model-history-contract/build_compatibility_prototype.py",
+      "bytes": 1989,
+      "sha256": "14aebd5fd394dde691dfa2c82a18b7f1693e0b8fc43501ebbc20b72ddae9b903"
+    },
+    {
+      "path": "model-history-contract/wire/test_python_wire.py",
+      "bytes": 6166,
+      "sha256": "bb3f3df68270257d766a62dc01c5937ba453844834b6e2ff674e192152d1456f"
+    },
+    {
+      "path": "model-history-contract/wire/go/history_wire_test.go",
+      "bytes": 7024,
+      "sha256": "ce9926c1fcb90692ea4918ceab5fdc2ac637832ff92227e30a45dbf0595a352b"
+    },
+    {
+      "path": "model-history-contract/draft-a/test_python_wire.py",
+      "bytes": 6304,
+      "sha256": "a83ba52086904d8b32c655f0c00608140e6f63f0bf3647ee247d3825c8c925a8"
+    },
+    {
+      "path": "model-history-contract/draft-a/history_wire_test.go",
+      "bytes": 6769,
+      "sha256": "8c742a2fb6e5f14fd3025da064990d2e8cf91abd144816e822af05cbe313285d"
+    },
+    {
+      "path": "model-history-contract/prototype/README.md",
+      "bytes": 1067,
+      "sha256": "68cd51ea8779c512251b4e89fbca213729bb4f7071a9238199393426b9486bdf"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/wire/go/go.mod",
+      "bytes": 364,
+      "sha256": "93d2d8295bd6180a6a4304c6baa6babde495bff9b70527c17dd5f0c451b8abe2"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/wire/go/go.sum",
+      "bytes": 2071,
+      "sha256": "6d652a6316a6298d6f933a3bdecf9de7199a97cb51c876ee4a1da8d863ee11ba"
+    },
+    {
+      "path": "model-history-contract/revision-b-proof/wire/go/history_wire_test.go",
+      "bytes": 7140,
+      "sha256": "0515b3f68b798e9fe366d06a23d48b57d4fc29e27caffa8522a9a3f48765c95a"
+    },
+    {
+      "path": "model-history-contract/domain-draft/input-manifest.json",
+      "bytes": 12484,
+      "sha256": "aaf67e274b89d835db5e4f942ce5647cbeedeba876d701301d5a9b63c18af4d1"
+    },
+    {
+      "path": "model-history-contract/domain-draft/README.md",
+      "bytes": 2177,
+      "sha256": "023faf04930fbf249dc41ead041c3c87f00085a13a9415a87f0a31b4a351dad9"
+    },
+    {
+      "path": "model-history-contract/domain-draft/wire/test_python_wire.py",
+      "bytes": 9576,
+      "sha256": "29ea616ff852bb3579acfa83a8a761c23f28d52365e09516af8c706cf89fa8dd"
+    },
+    {
+      "path": "model-history-contract/domain-draft/wire/go/history_wire_test.go",
+      "bytes": 7864,
+      "sha256": "66caf521ccef7b2aa1483f72465fe4d6b587459a818229f2b608164789cc3270"
+    },
+    {
+      "path": "identity-audit-contract/short-mac-commands.sh",
+      "bytes": 85,
+      "sha256": "b6df5c0c644d2d74b63ad2983e2a00334f985941f7f1ff0f24a16ce156f4c6b7"
+    },
+    {
+      "path": "identity-audit-contract/with_mac_window-before-bounded.py",
+      "bytes": 159,
+      "sha256": "ee1b8c4b24161160160190b916b082534794f1988f53add679d09b560e05f550"
+    },
+    {
+      "path": "identity-audit-contract/run_go_wire_mac-before-window-fd.py",
+      "bytes": 159,
+      "sha256": "ee1b8c4b24161160160190b916b082534794f1988f53add679d09b560e05f550"
+    },
+    {
+      "path": "identity-audit-contract/joint-full-gate-manifest.json",
+      "bytes": 9042,
+      "sha256": "9a5e296cd3612ae6f9bdd36294148a83dfc4110e4319e837552f76975d096843"
+    },
+    {
+      "path": "identity-audit-contract/joint-full-gate-manifest.before-9be-preparation-92b0a7cf.json",
+      "bytes": 6406,
+      "sha256": "92b0a7cf44b52fe44df0d799c5bac391faa6b722e52508df949ca12e2e32e448"
+    },
+    {
+      "path": "identity-audit-contract/run_go_wire.legacy-three-carrier.py",
+      "bytes": 4530,
+      "sha256": "3dd821258a58db62fae5edf3f678aab4c9989fb8b8d2ce6649564f5616468c17"
+    },
+    {
+      "path": "identity-audit-contract/refresh_joint_handoffs.py",
+      "bytes": 11168,
+      "sha256": "9d29aebd6c101f99c6ab1ae20aa5009b7dc35d60ae5a94f3b1f0289f4a1dbfae"
+    },
+    {
+      "path": "identity-audit-contract/run_go_wire_native.executed.py",
+      "bytes": 11137,
+      "sha256": "75b607b355497b987e1b7ab7061df7aad06c5f3b7070070d110a6bd5688d7fa0"
+    },
+    {
+      "path": "identity-audit-contract/run_joint_absolute_attempt_syntax_corrected.py",
+      "bytes": 6219,
+      "sha256": "7eb436c898215077f0b3094485df470f55753319b23ab98bcbb08ae18c384deb"
+    },
+    {
+      "path": "identity-audit-contract/run_go_wire_mac.py",
+      "bytes": 159,
+      "sha256": "ee1b8c4b24161160160190b916b082534794f1988f53add679d09b560e05f550"
+    },
+    {
+      "path": "identity-audit-contract/run_go_wire_before_sdk_guard.py",
+      "bytes": 3865,
+      "sha256": "e168b4c7bbdc6395a50c7cfd6926b4c6990c7067f4ed97fafefacb60e56e3d01"
+    },
+    {
+      "path": "identity-audit-contract/sync_joint_preparation.py",
+      "bytes": 3757,
+      "sha256": "d820e400dbff2a1383a81070eeefe23973bc50f1880c0e14c8191236cd7ad284"
+    },
+    {
+      "path": "identity-audit-contract/run_joint_absolute_attempt.py",
+      "bytes": 6033,
+      "sha256": "44789253db626c3e86c62ae7529818eedd382f820670d4127c7052228ae5f2df"
+    },
+    {
+      "path": "identity-audit-contract/run_go_wire_native.py",
+      "bytes": 11867,
+      "sha256": "47480e455308fbcb5497050be6c578aaa83f65ba65817b9aefbbbbd51d1b1faa"
+    },
+    {
+      "path": "identity-audit-contract/run_go_wire.py",
+      "bytes": 376,
+      "sha256": "964debd88571d0be80374732403bca5d9edf41a3e6649b091e29f75121582545"
+    },
+    {
+      "path": "identity-audit-contract/MAC-GO-WIRE.md",
+      "bytes": 2744,
+      "sha256": "dc511ab0641f3b0796b3eca3926697ade072963659a7260693cf6abc7171d969"
+    },
+    {
+      "path": "identity-audit-contract/inspect_linux_preparation.py",
+      "bytes": 8272,
+      "sha256": "2432582928a6834a53dbdf79130dab7c6016d961f976b1f1f69c325fccf8cee3"
+    },
+    {
+      "path": "identity-audit-contract/wire/test_python_wire.py",
+      "bytes": 6102,
+      "sha256": "73e1acc4d274d2aea6c184e2add62a19f5460564ebd95b11c911bd8aba2acb2c"
+    },
+    {
+      "path": "identity-audit-contract/wire/go/audit_wire_test.go",
+      "bytes": 7129,
+      "sha256": "5552f7eef20fe10ea300133b94a22017d97749c56b014ae99d3b21d90e21c1b0"
+    },
+    {
+      "path": "identity-audit-contract/relay/README.md",
+      "bytes": 3032,
+      "sha256": "7e76dad3789ac0a9f5a51774996806fee484606f02a0b6136031588f136356a2"
+    },
+    {
+      "path": "gate-native-410ed356/ack_receiver.py",
+      "bytes": 5093,
+      "sha256": "b3bab6cdbd96e6d75082740079afd6b3183ee056f168fc8191c791e59f033947"
+    },
+    {
+      "path": "gate-native-410ed356/ack_sender.py",
+      "bytes": 5932,
+      "sha256": "20c215a248268b7c4b45c3d56357a59f37e24c486a3d506c2850f9c601fd454c"
+    },
+    {
+      "path": "gate-native-410ed356/mac-gate.sh",
+      "bytes": 3044,
+      "sha256": "050789530e1967b2b0d9c1c1e0813268ce004c2b09d04ffe5fc626149858bada"
+    },
+    {
+      "path": "gate-native-410ed356/try_native_build.py",
+      "bytes": 4295,
+      "sha256": "d57c0819fd26e0fe6dd02cc36849a4c19c871b51fea558c62dca4c5c939a1853"
+    },
+    {
+      "path": "gate-native-410ed356/ack-transfer-config.json",
+      "bytes": 2891,
+      "sha256": "79f3e0fbea4e405c7324a4352a067998c99c672a394a6b1ea466162e122ceea9"
+    },
+    {
+      "path": "gate-native-410ed356/native_startup.py",
+      "bytes": 3901,
+      "sha256": "e70a19ff3d68440ae23a3fb5c0eb3e2243de71cb87d222a4fb86015678cad3f5"
+    },
+    {
+      "path": "gate-native-410ed356/transfer_client.py",
+      "bytes": 4793,
+      "sha256": "5109162d9cc24d43e46e8d0666d48f17196100e8b714be5c8e8fffe795bad431"
+    },
+    {
+      "path": "gate-native-410ed356/finalize_handoff.py",
+      "bytes": 6274,
+      "sha256": "e9d2fdf70e5c2097ac955013cb7c4fa788e2983cec9ba1f0a0f09e73b8adcac5"
+    },
+    {
+      "path": "gate-native-410ed356/record_native_status.py",
+      "bytes": 4833,
+      "sha256": "2304202d6ba318df6c8d2b65569451047c815d5045d2be0d6994ac1dc476b498"
+    },
+    {
+      "path": "gate-native-410ed356/native_startup_received.py",
+      "bytes": 5320,
+      "sha256": "96ffab694d2c744e619ef32f8df5e9d3d953ad6a402fe40016fe931ca3d5d30e"
+    },
+    {
+      "path": "gate-native-410ed356/publish_current_handoff.py",
+      "bytes": 5389,
+      "sha256": "d901130247d70c6160a15c152356d8fe0e2fb9c9c50df689ff565105df0cd48d"
+    },
+    {
+      "path": "gate-native-410ed356/client/client-manifest.json",
+      "bytes": 1199,
+      "sha256": "201816c62d9c451beb63e3274b399d4644266618dbcf5ebc552af5e96174b772"
+    },
+    {
+      "path": "response-reference-audit/audit-before-pointer-fix.py",
+      "bytes": 13239,
+      "sha256": "dab60b175ccf3455650d00cf1c4d2e594701b839b5cd144e1cda1a5641484068"
+    },
+    {
+      "path": "gate-native-7055df31/mac-gate.sh",
+      "bytes": 3055,
+      "sha256": "de0aed2199c14e7dc3acd92762f92121b01d6dbc39accb1b6441caa7fcb4ba7b"
+    },
+    {
+      "path": "gate-native-5055d774/mac-gate.sh",
+      "bytes": 3106,
+      "sha256": "38d6d7cd8a7e76174f1374052c63ac677415435a2d4950c21f4d210724bc495b"
+    },
+    {
+      "path": "gate-native-5055d774/client/client-manifest.json",
+      "bytes": 1199,
+      "sha256": "0626cd085362632bf2301365ed39fd2a27fbffd06aa80b53e12c3396bf616db2"
+    },
+    {
+      "path": "cli-delivery/full_gate.py",
+      "bytes": 5994,
+      "sha256": "76fcc60aae819d84396452b601afaf7b4ec3681f4e3a37b57a2177eca7ea8247"
+    },
+    {
+      "path": "obs110-review-3cebfcef/contract-review.md",
+      "bytes": 16769,
+      "sha256": "51d113265033cc59c12dded2c5140f8c9ae6459af135570a1e7d6e0df209e885"
+    },
+    {
+      "path": "obs110-review-3cebfcef/deliver.py",
+      "bytes": 1852,
+      "sha256": "1aac24005d73c933e18aa4ccde0ff760a066011977ad1d24c81a2e8604cb047b"
+    },
+    {
+      "path": "strict-contract-json/sdk-generation-plan.json",
+      "bytes": 13923,
+      "sha256": "5c58386737418c5fa04391c6736cd3f8108ecc825912a59c12406d3092ef7387"
+    },
+    {
+      "path": "strict-contract-json/run_sdk_generation_once.py",
+      "bytes": 10299,
+      "sha256": "5c31a1fb5fafe2761d63af4eb0ca2702d2a76f716abd645129032c3149a0ae14"
+    },
+    {
+      "path": "strict-contract-json/base_generate_2e64.py",
+      "bytes": 12378,
+      "sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2"
+    },
+    {
+      "path": "strict-contract-json/generate-before-fix.py",
+      "bytes": 12378,
+      "sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/source-only-input-manifest.json",
+      "bytes": 16993,
+      "sha256": "96a94dd3608b3ae41cfdbc013c757ca91d158949ffe34f986e7faa6a48d33f60"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/execution-plan.json",
+      "bytes": 8622,
+      "sha256": "9b8da5805261e3854316801308a62e933bd7d5a4502c722cefcb0c4766163d35"
+    },
+    {
+      "path": "strict-contract-json/light-generation-plan/frozen-inputs-e4bd3138/toolprep-2e7df2e3/verify_tool_modules.py",
+      "bytes": 4049,
+      "sha256": "16832be4369d5f4679abaf9da586fce1af91e5c41c21ac37c6f6d083c86f5854"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/worker.py",
+      "bytes": 20885,
+      "sha256": "3751f2c1c7c9e429af4227c75077193b1e2d023fde3a53c222c25dc0dc9c90ee"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/launch_once.py",
+      "bytes": 3577,
+      "sha256": "2c3264809a62a4f8ffcb254a42f0e4b7ee0eed0ebbf5252f25d904b5e1d5febb"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/config.json",
+      "bytes": 26239,
+      "sha256": "5f5fc75e9004dd7ddb86a82057fe629c70b61810e7b2e5ef6b486ea5cb888cea"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/baseline_generate.py",
+      "bytes": 12378,
+      "sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/metadata-go.py",
+      "bytes": 865,
+      "sha256": "e2c106ed84afe9202ef88371b9ecde1caf42b06fe16f7acde98d91f101eb710c"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-second/build/go.mod",
+      "bytes": 52,
+      "sha256": "f739b0d9c19ddfb10486e2d5b03fdc4bff46d7f3eac45f6fe0ff41a5ffc4a98c"
+    },
+    {
+      "path": "strict-contract-json/audit-read-409-migration/legacy-fixture-preparation-checks.json",
+      "bytes": 349,
+      "sha256": "2f83c270d9e11931c21d24b7465e5a25a0d9dd2a56e78a6817dd0eb39f3b417d"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/worker.py",
+      "bytes": 21456,
+      "sha256": "20264dfbc0a51b8313277072b159106fd72d614044344f5837f4cfd78d6babe2"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/launch_once.py",
+      "bytes": 3753,
+      "sha256": "5f96b6fc5a11f33f9087a320e833d42d8f5394085fc3c34a75792691eb77cfd1"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/config.json",
+      "bytes": 26382,
+      "sha256": "977fbc1e3de30f0eb53e510d2800bcaa3fb676a6c8af817fe1a4a475a283c16a"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/baseline_generate.py",
+      "bytes": 12378,
+      "sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/metadata-go.py",
+      "bytes": 865,
+      "sha256": "e2c106ed84afe9202ef88371b9ecde1caf42b06fe16f7acde98d91f101eb710c"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/metadata-module/go.mod",
+      "bytes": 217,
+      "sha256": "b47670b95a80813ca6674e8186ba8ff8721404d8d08932f0c3c2af5e42ef6fda"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/metadata-module/go.sum",
+      "bytes": 2071,
+      "sha256": "6d652a6316a6298d6f933a3bdecf9de7199a97cb51c876ee4a1da8d863ee11ba"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/retained-generation-inputs/baseline-9e/go-config.json",
+      "bytes": 129,
+      "sha256": "8e389dd380fe42d4228fbbcd708e2b4d8e497619d9f43f28b7914adaa956b2e5"
+    },
+    {
+      "path": "strict-contract-json/mac-fileproxy-fixed-window/attempt-1/build/go.mod",
+      "bytes": 52,
+      "sha256": "f739b0d9c19ddfb10486e2d5b03fdc4bff46d7f3eac45f6fe0ff41a5ffc4a98c"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/worker.py",
+      "bytes": 159,
+      "sha256": "ee1b8c4b24161160160190b916b082534794f1988f53add679d09b560e05f550"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/launch_once.py",
+      "bytes": 159,
+      "sha256": "ee1b8c4b24161160160190b916b082534794f1988f53add679d09b560e05f550"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/baseline_generate.py",
+      "bytes": 12378,
+      "sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/manifest.json",
+      "bytes": 25397,
+      "sha256": "c7905b073fd129451743e551941c16ef9ecd0e193c4516e53f3567bbc04c1d43"
+    },
+    {
+      "path": "strict-contract-json/mac-tool-and-sdk-d186e304/metadata-go.py",
+      "bytes": 867,
+      "sha256": "1c5eab070188005a67928036de187f31932342ad14db0cf7f87b30ea936114f0"
+    },
+    {
+      "path": "strict-contract-json/mac-light-readiness/current-plan-and-handoff.json",
+      "bytes": 6306,
+      "sha256": "8ea7a78cedc153a39d915372538b3f32a361766c3d3809e0543703d5fc99b460"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/plan.json",
+      "bytes": 23646,
+      "sha256": "717d877275b7012728255bf5b8e3b87ae8f354a297f29e1fc01b81e1b10136d4"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/execute.py",
+      "bytes": 11676,
+      "sha256": "d86a06dad47629b31d324f13453d218c320964bc913f3758a4c52cdea9f55bf4"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/wire_smoke.py",
+      "bytes": 25358,
+      "sha256": "07c44d3fd035a5f107808ef07b2a26a1bbae7f269038acfc5c3c1498333a649e"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/plan.json",
+      "bytes": 23646,
+      "sha256": "bd6d7477a16438aac12e24b351fc19ba0740df040fed6263ddedb7f2dd6c9323"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/actual-runtime-full-0cb1627b/directed-aef3d943/execute.py",
+      "bytes": 10066,
+      "sha256": "3aad6cd324f188d25b7b96beca1bd8c2cbd7295fed83d3f0326c364c6333369f"
+    },
+    {
+      "path": "strict-contract-json/joint-por112-sdk/inputs-0cb1627b/wire_smoke.py",
+      "bytes": 24822,
+      "sha256": "d60fa6a1554a8517526ea00afa7eea2cbebb14e594eda99f8cc97ae77961d96f"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/worker.py",
+      "bytes": 21046,
+      "sha256": "85044f26379b3f6c24ca80b023def27bedeb697b324ccc6655e8ee90431fc09c"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/launch_once.py",
+      "bytes": 3404,
+      "sha256": "508d54f2d9315bbc2f94c508c53364856f7c454a61b1a7ef8bf528a069431f23"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/config.json",
+      "bytes": 25892,
+      "sha256": "45138da7840c6ddc197b841cad5c4f65310858b47e6e6011ff8eb165c80daff8"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/baseline_generate.py",
+      "bytes": 12378,
+      "sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/metadata-go.py",
+      "bytes": 865,
+      "sha256": "e2c106ed84afe9202ef88371b9ecde1caf42b06fe16f7acde98d91f101eb710c"
+    },
+    {
+      "path": "strict-contract-json/mac-e4-sdk-ee7a214c-once/build/go.mod",
+      "bytes": 52,
+      "sha256": "f739b0d9c19ddfb10486e2d5b03fdc4bff46d7f3eac45f6fe0ff41a5ffc4a98c"
+    }
+  ],
+  "content_scan_findings": []
+}

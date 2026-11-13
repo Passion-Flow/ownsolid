@@ -1,0 +1,44 @@
+{
+  "root": "/root/lane-rel-tools/user-reads/client-410ed356",
+  "directory": "verified-e630d9ff",
+  "size": 6779854,
+  "gzip_sha256": "e4d6d1b953b551b6007150ba5083c0ce00cf970c6ce68672faaa79415cf3a847",
+  "elf_size": 12101750,
+  "elf_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+  "source": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+  "status_source": "f91c7ecbc046a5509dbc6cfb00f1679086993fff",
+  "seed_size": 524288,
+  "seed_sha256": "624ab0270437c3f0f84f7dd40148ca0e290b05ea3670bad7a8840960133e8475",
+  "client_manifest": {
+    "format_version": 1,
+    "source_revision": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+    "source_modified": false,
+    "os": "linux",
+    "arch": "amd64",
+    "binary_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+    "build_host": "darwin/arm64",
+    "go_version": "go version go1.27.3 darwin/arm64",
+    "toolchain_binary_sha256": "aa355b078a81158d418079a3f8c776719eb99cc6f527e39ffa3250c66566aafb",
+    "cli_product_tree": "55c12ee7b60f422459dda810b1a1cf55c98586d5",
+    "pinned_inputs": {
+      "go.work": "d2da06271b98cf27596a65743b8f6f39504cc5557c95b8842c1c97c861b593b8",
+      "tools/cli/go.mod": "3dd74502d148f32625f3c4a203ec8662e437fc88f1a982cc372b024866349fc2",
+      "tools/cli/go.sum": "21f06fc568cf3afbdc705df533c8970301c2af23b72de34478be1a92119f735b"
+    },
+    "flags": [
+      "-buildvcs=true",
+      "-trimpath",
+      "CGO_ENABLED=0",
+      "GOOS=linux",
+      "GOARCH=amd64",
+      "GOFLAGS=-p=1"
+    ],
+    "network_scope": "Go proxy/sumdb, Cargo network and every pnpm install disabled; no runtime zero-egress conclusion",
+    "full_gate_host": "darwin/arm64",
+    "full_check_passed": true,
+    "full_build_passed": true,
+    "installed_acceptance": false,
+    "native_linux_startup_run": false
+  },
+  "build_metadata": "/Users/passion./.local/state/ownsolid/lane-rel/gate-native-410ed356/client/ownsolid: go1.27.3\n\tpath\tgithub.com/Passion-Flow/ownsolid/tools/cli/cmd/ownsolid\n\tmod\tgithub.com/Passion-Flow/ownsolid/tools/cli\t(devel)\t\n\tdep\tgithub.com/spf13/cobra\tv1.10.2\th1:DMTTonx5m65Ic0GOoRY2c16WCbHxOOw6xxezuLaBpcU=\n\tdep\tgithub.com/spf13/pflag\tv1.0.9\th1:9exaQaMOCwffKiiiYk6/BndUBv+iRViNW+4lEMi0PvY=\n\tdep\tgo.yaml.in/yaml/v3\tv3.0.5\th1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=\n\tdep\tgolang.org/x/sys\tv0.49.0\th1:XbzkgYJHdqh/8m2Uu0W/dQv8nktxx4BFHp1M0gROTXA=\n\tdep\tgolang.org/x/term\tv0.47.0\th1:cpyOwQkr2Nzxe2p6KnrTG7Ei2wtzjsuSjhpXXepZ/BM=\n\tdep\tgolang.org/x/text\tv0.43.0\th1:1QivrlhwAsnMOcqgOdl9my7s9OyZl8O5/UGUTJVXoWc=\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\t-trimpath=true\n\tbuild\tCGO_ENABLED=0\n\tbuild\tGOARCH=amd64\n\tbuild\tGOOS=linux\n\tbuild\tGOAMD64=v1\n\tbuild\tvcs=git\n\tbuild\tvcs.revision=410ed356ffaf9c5a54a32d9b19e20ea457090f7b\n\tbuild\tvcs.time=2026-11-12T13:11:06Z\n\tbuild\tvcs.modified=false\n"
+}
