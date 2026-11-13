@@ -152,6 +152,8 @@ A valid result from the other tenant or trust revision is still refused even
 when its issuer/SP/NameID strings match. This fingerprint describes approved
 trust metadata; it never replaces or hashes away the exact external identity.
 Test shared entity names, foreign valid proofs and stale revisions explicitly.
+Trust-metadata or enabled-state changes must advance the current revision;
+the database experiment must refuse an unchanged or decreasing revision.
 
 The experiment can reuse the pinned SAML/XML graph and pgx v5.11.0 from the
 [qualified OP database inventory](catalog-oidc-provider.md#durable-protocol-prototype-plan-and-additional-licenses).
