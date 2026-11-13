@@ -17,8 +17,8 @@ export type AuditPage = Schemas['AuditListResponse']['data'];
 const client = createClient<identityContract.paths>();
 
 /**
- * Lists events, newest first. The first page sets the window, which its cursor then carries, so
- * later pages pass only the cursor and the filters and the list cannot shift while it is read.
+ * Lists events, newest first. A cursor pins its window; callers that supplied explicit
+ * bounds must preserve them and the filters on later pages for the query fingerprint.
  */
 export function listAuditEvents(
   query: {
