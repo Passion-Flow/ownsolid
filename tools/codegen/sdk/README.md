@@ -181,9 +181,14 @@ same audience. Exit 1 reports findings and exit 2 indicates unreadable or
 invalid input. A declared response media schema and each followed schema
 reference must target an object or boolean. Invalid inputs name the owning
 file, method and path and emit no partial report. An omitted media schema
-remains valid; this is not a general OpenAPI or JSON Schema validator. The audit runs from local files and uses the same audience
-rules as SDK generation. With `--baseline`, it also reports named response
-model reference changes and closed response object shape changes for review.
+remains valid; this is not a general OpenAPI or JSON Schema validator. The
+audit runs from local files and uses the same audience rules as SDK generation. With `--baseline`, it also reports named response
+model reference changes, closed response object shape changes and removed
+response status/media declarations for review. The response_media_types field
+retains every resolved status, with an empty list for a response without
+content. Inline and omitted schemas still participate in declaration removal
+checks. A default fallback does not suppress review of a removed explicit
+status. New declarations do not acquire removal findings.
 The shape inventory records property names, required names and closure at local
 schema pointers. It catches a new optional field in an existing closed model,
 which named references alone cannot reveal. These findings can also describe a

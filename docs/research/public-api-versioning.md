@@ -211,9 +211,57 @@ library and existing PSF licence suffice; no dependency, model or dataset
 is added. Full generation, native clients and complete release gates
 remain outside these static checks.
 
-The schema-type correction passed 39 focused Python cases, including eight
+The schema-type correction at 3e82919e passed 39 focused Python cases, including eight
 new cases. Its complete 430-operation comparison against 9e32b023 remains
 byte-identical to the retained original report, SHA-256
 910a412a5bef5071ac9a0409adc5388b7507001cf4bef306fc4f8803df240422,
 with exactly the explicit 409 source-review finding and exit 1. No generated
 client, HTTP handler, API document or Web file changed with this correction.
+
+## Response status and media declaration removals
+
+The next offline reproduction removes application/json from an inline
+string response while retaining text/plain. A second removes a declared
+204 response while retaining 200. Both currently return exit 0: neither
+uses a named model or a closed object, so the existing checks have no
+edge to compare. These are valid before/after operation declarations,
+not malformed-schema cases. The
+[OpenAPI Responses Object](https://spec.openapis.org/oas/v3.1.1.html#responses-object)
+and [Media Type Object](https://spec.openapis.org/oas/v3.1.1.html#media-type-object)
+identify status and media bindings independently of schema names. Generated
+decoders depend on these declarations even when the schema is inline or
+omitted. The existing AIP-180 source/semantic distinction applies.
+
+Inventory every resolved response status with its declared media types,
+including an empty list for a response without content. For unchanged
+operation identity and audience, emit PUBLIC_RESPONSE_BINDING_REMOVED if
+an old status disappears or an old media type is removed. A new default
+response does not prove that an old generated status accessor survives;
+retain that review. Additions, descriptions and ordering stay inert. This
+is a declaration/source review, not a directional wire-safety proof. It
+must not redefine the existing named-model or closed-shape findings.
+
+Reuse the resolved response traversal and the same-identity matching for
+all three response comparisons. Preserve the existing response_surface
+function's pair return for its callers. No second resolver, dependency,
+model or dataset is needed; Python's existing PSF licence applies.
+Test inline and omitted schemas, no-content statuses, shared responses,
+both audiences, default fallback, identity changes, harmless additions and
+annotation/order changes. Reconcile all 430 actual operations, retaining
+exactly the original explicit 409 review against 9e32b023. The report gains
+response_media_types; old retained reports remain immutable, and their
+original fields must match rather than claiming whole-report byte identity.
+
+The expanded regression set passed 47 Python cases, including eight schema
+cases and eight response-declaration cases. All 430 old operation fields
+remain identical. The current inventory adds 1,254 status declarations and
+1,192 media bindings. Comparing every operation against 9e32b023 finds 429
+unchanged response declarations and exactly one added explicit 409 binding
+for the Admin audit read. No old status or media binding was removed. Fresh
+checks of the 2e, 37, current and WEB82 input directories each preserve the
+one original named-model review and exit 1. Declaration-only current audit
+returns 0. The expanded report SHA-256 is
+f018d11ec45f5543229676f69688992e0ed4a984131c55165cfc7ca525f88aaa;
+it differs from the retained 910a412a report by the added inventory field,
+not by removed operations or a suppressed 409 finding. No SDK generation,
+compiler, socket, service, carrier or complete gate was used for this work.

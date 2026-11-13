@@ -25,8 +25,8 @@ def response_object_shape(schema):
     }
 
 
-def response_surface(document, operation):
-    """Collect named models and object shapes for each local response schema."""
+def _response_details(document, operation):
+    """Resolve response declarations once for their media, models and shapes."""
     def require_schema(value):
         if not isinstance(value, (dict, bool)):
             raise ValueError("response schema must be an object or boolean")
@@ -61,7 +61,7 @@ def response_surface(document, operation):
             raise ValueError("response reference does not resolve in the local contract") from exc
         return value, pointer
 
-    models, shapes = {}, {}
+    models, shapes, media_types = {}, {}, {}
     responses = operation.get("responses", {})
     if not isinstance(responses, dict):
         raise ValueError("responses must be an object")
@@ -78,6 +78,7 @@ def response_surface(document, operation):
         content_types = response.get("content", {})
         if not isinstance(content_types, dict):
             raise ValueError("response content must be an object")
+        media_types[status] = sorted(content_types)
         for media_type, content in sorted(content_types.items()):
             if not isinstance(content, dict):
                 raise ValueError("response media type must be an object")
@@ -126,6 +127,12 @@ def response_surface(document, operation):
                 models[f"{status} {media_type}"] = sorted(references)
             if objects:
                 shapes[f"{status} {media_type}"] = dict(sorted(objects.items()))
+    return models, shapes, media_types
+
+
+def response_surface(document, operation):
+    """Collect named models and object shapes for each local response schema."""
+    models, shapes, _ = _response_details(document, operation)
     return models, shapes
 
 
@@ -152,7 +159,7 @@ def inventory(contracts):
                 if not audiences:
                     continue
                 try:
-                    models, shapes = response_surface(document, operation)
+                    models, shapes, media_types = _response_details(document, operation)
                 except ValueError as exc:
                     raise ValueError(f"{source}: {method.upper()} {path}: {exc}") from exc
                 row = {
@@ -161,6 +168,7 @@ def inventory(contracts):
                     "description": bool(operation.get("description")),
                     "deprecated": operation.get("deprecated", False) is True,
                     "response_models": models, "response_objects": shapes,
+                    "response_media_types": media_types,
                 }
                 operations.append(row)
                 if not isinstance(operation_id, str) or not operation_id.strip():
@@ -209,59 +217,73 @@ def compare_operations(baseline, current):
 
 
 
-def compare_response_models(baseline, current):
-    """Flag named response model changes for review without classifying wire safety."""
+def _same_operation_pairs(baseline, current):
+    """Yield response comparisons only inside their preserved identity and audience."""
     current_operations = {
         (op["domain"], op["method"], op["path"], audience): op
         for op in current["operations"] for audience in op["audiences"]
     }
-    findings = []
     for previous in baseline["operations"]:
         for audience in previous["audiences"]:
             key = previous["domain"], previous["method"], previous["path"], audience
             candidate = current_operations.get(key)
             if candidate is None or candidate["operation_id"] != previous["operation_id"]:
                 continue
-            before, after = previous.get("response_models", {}), candidate.get("response_models", {})
-            if before != after:
-                findings.append({
-                    "code": "PUBLIC_RESPONSE_MODELS_CHANGED",
-                    "domain": previous["domain"], "method": previous["method"],
-                    "path": previous["path"], "audience": audience,
-                    "operation_id": previous["operation_id"],
-                    "previous_response_models": before, "current_response_models": after,
-                })
+            yield previous, candidate, audience
+
+
+def compare_response_models(baseline, current):
+    """Flag named response model changes for review without classifying wire safety."""
+    findings = []
+    for previous, candidate, audience in _same_operation_pairs(baseline, current):
+        before, after = previous.get("response_models", {}), candidate.get("response_models", {})
+        if before != after:
+            findings.append({
+                "code": "PUBLIC_RESPONSE_MODELS_CHANGED",
+                "domain": previous["domain"], "method": previous["method"],
+                "path": previous["path"], "audience": audience,
+                "operation_id": previous["operation_id"],
+                "previous_response_models": before, "current_response_models": after,
+            })
     return findings
 
 
 def compare_response_objects(baseline, current):
     """Flag closed response object shape changes without claiming wire safety."""
-    current_operations = {
-        (op["domain"], op["method"], op["path"], audience): op
-        for op in current["operations"] for audience in op["audiences"]
-    }
     findings = []
-    for previous in baseline["operations"]:
-        for audience in previous["audiences"]:
-            key = previous["domain"], previous["method"], previous["path"], audience
-            candidate = current_operations.get(key)
-            if candidate is None or candidate["operation_id"] != previous["operation_id"]:
-                continue
-            before = previous.get("response_objects", {})
-            after = candidate.get("response_objects", {})
-            for body in sorted(before):
-                for location, old_shape in sorted(before[body].items()):
-                    new_shape = after.get(body, {}).get(location)
-                    was_or_is_closed = old_shape["closed"] or new_shape is not None and new_shape["closed"]
-                    if old_shape != new_shape and was_or_is_closed:
-                        findings.append({
-                            "code": "PUBLIC_RESPONSE_OBJECT_SHAPE_CHANGED",
-                            "domain": previous["domain"], "method": previous["method"],
-                            "path": previous["path"], "audience": audience,
-                            "operation_id": previous["operation_id"],
-                            "response": body, "schema_location": location,
-                            "previous_shape": old_shape, "current_shape": new_shape,
-                        })
+    for previous, candidate, audience in _same_operation_pairs(baseline, current):
+        before = previous.get("response_objects", {})
+        after = candidate.get("response_objects", {})
+        for body in sorted(before):
+            for location, old_shape in sorted(before[body].items()):
+                new_shape = after.get(body, {}).get(location)
+                was_or_is_closed = old_shape["closed"] or new_shape is not None and new_shape["closed"]
+                if old_shape != new_shape and was_or_is_closed:
+                    findings.append({
+                        "code": "PUBLIC_RESPONSE_OBJECT_SHAPE_CHANGED",
+                        "domain": previous["domain"], "method": previous["method"],
+                        "path": previous["path"], "audience": audience,
+                        "operation_id": previous["operation_id"],
+                        "response": body, "schema_location": location,
+                        "previous_shape": old_shape, "current_shape": new_shape,
+                    })
+    return findings
+
+
+def compare_response_media_types(baseline, current):
+    """Flag removed response statuses or media declarations, including untyped bodies."""
+    findings = []
+    for previous, candidate, audience in _same_operation_pairs(baseline, current):
+        before, after = previous["response_media_types"], candidate["response_media_types"]
+        for status, types in sorted(before.items()):
+            if status not in after or set(types) - set(after[status]):
+                findings.append({
+                    "code": "PUBLIC_RESPONSE_BINDING_REMOVED",
+                    "domain": previous["domain"], "method": previous["method"],
+                    "path": previous["path"], "audience": audience,
+                    "operation_id": previous["operation_id"], "response_status": status,
+                    "previous_media_types": types, "current_media_types": after.get(status),
+                })
     return findings
 
 
@@ -280,6 +302,7 @@ def main():
             report["compatibility_findings"] = (
                 compare_operations(previous, report) + compare_response_models(previous, report)
                 + compare_response_objects(previous, report)
+                + compare_response_media_types(previous, report)
             )
     except (ValueError, KeyError, TypeError, OSError) as exc:
         parser.exit(2, f"OpenAPI audit failed: {exc}\n")
