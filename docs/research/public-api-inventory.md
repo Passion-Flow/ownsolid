@@ -809,7 +809,8 @@ is unchanged.
 
 ### Browser consumer retry boundary
 
-Static review of current main 726f2149 found a separate Web consumer gap.
+Static review of main 726f2149 found a separate Web consumer gap, since fixed
+by the Web owner in e9186ade with the complete gate recorded at 124520b9.
 The shared [query client](../../web/packages/shell/src/session.ts) retries
 ApiProblems while failures is below two and retryable is true. The
 [problem classifier](../../web/packages/api/src/problem.ts) makes status-zero
@@ -822,15 +823,17 @@ audited reads automatically after an uncertain reply. A 409 itself is outside
 the current retryable status set. No browser or SQL reproduction is claimed
 for this static review.
 
-The Web owner must scope explicit retry behavior to both audit consumers and
-verify first-page and continuation failures, network loss, timeout, 409 and a
-manual retry. Review focus/reconnect/remount behavior after an uncertain result
-as well as the immediate retry policy. Keep other query defaults intact and
-preserve the existing event projection. The generated five-file relay does not
-implement this behavior. Accurate public metadata can be reviewed independently;
-the complete manual-retry user flow stays open until its owner fixes and
-qualifies the consumers. Existing global write-oriented commit-unknown copy
-also needs a contextual audit-read recovery review.
+The owner now scopes explicit retry and refetch behavior to both audit consumers,
+including initial and continuation recovery, uncertain replies, denied caches,
+reader/scope separation, focus, reconnect, invalidation and remount. Its built-in
+Help article explains the same recovery in both languages. The complete Web gate
+at c70e9f59 passed 1,191 Console and 410 Portal cases, with 28 and 10 existing
+conditional skips. The failing old six-request controls and corrected no-data
+invalidation failure remain separate evidence. See the owner's
+[explicit recovery and complete gate](identity-audit-read-access.md#explicit-web-read-recovery).
+These are owner-qualified scripted Web results, not a DEV installed or SQL run.
+The generated five-file public metadata relay remains a separate required change;
+the earlier two-consumer prototype patch is superseded and must not be applied.
 
 ### Generated Go transport correction
 
@@ -921,17 +924,46 @@ were verified before execution and after release; their hashes are unchanged.
 Whole repository check/build/test, product generation and Web/installed
 qualification remain open. No roadmap box is ticked by this transport run.
 
-The separate Web relay includes a five-file generated/locale patch and a
-two-consumer retry/refetch patch. Both apply checks pass on the source base;
-neither was applied to product Web here. The latter does not complete the
-recovery UI: the owner must surface continuation errors, preserve the failed
-selection/cursor on explicit retry and qualify bilingual read-oriented copy
-in the existing audit and resource-page browser suites.
+### Composition with current public metadata tooling
+
+The audit candidate and DEV-204 closed-object review tooling were rebased and
+composed on main 9975d769 in input 4b1e5c99. The audit contract, SDK generator,
+Go helper and actual native wire fixture are byte-identical to the qualified
+783567ea input. Its Linux ten-root transport result remains bound to that
+original source; no native Go rerun or second resource admission was attempted.
+The Models contract still has SHA-256
+`7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc`;
+the private Model history draft and its unexecuted codecs are not composed here.
+
+Thirty-two targeted contract/generator/inventory tests passed on the composition.
+The actual 430-operation comparison against main 9975d769 has no declaration
+conflicts, operation identity changes or closed-object shape findings. Its one
+named-response review finding is the explicit 409 shared Problem binding for
+listAuditEvents. The generated Go 409 accessor change is intentional and
+documented in the SDK README; it must not be reported as a general compatibility
+pass or silently removed from the review report.
+
+A separate private projection used the current main Help articles and pinned
+parser dependencies. Both actual Web generators and both checks passed: 30
+TypeScript and 144 Help files. Exactly the original five generated/locale paths
+change; the updated relay patch SHA-256 is
+`a3def1685309d4a7609274852cbc17f0904f9477a8edcaa9d016b4ced085dea9`.
+No product Web file was changed. The owner must land that metadata generation
+before the new OpenAPI can pass the repository's generated-output gate.
+This projection does not qualify the separate shared Help URL assertion.
+
+Required remaining gates are the five-file product generation handoff and a
+complete check/build/test on their actual integrated source after the shared
+Help URL fix. CLI b967d7c8 whole make test and installed AUD-108 acceptance
+remain distinct. Existing native audit transport and owner Web recovery results
+cannot substitute for those gates. No roadmap checkbox moves here.
 
 SCI 8531226d supplies WriteScopedWithin for a caller-owned PostgreSQL transaction
-and performs no commit or retry itself. Review of main d99dbb25 confirms that
-Identity's existing public installation-wide read still uses WriteWithin, while
-the exact workspace Go view skips that installation append and has not paired
-the scoped writer. Keep that integration with IAM. The exact action whitelist
-still excludes audit.events_read; this SDK correction does not extend it or
-change the thirteen-field response projection.
+and performs no commit or retry itself. Main now pairs the actual workspace Go
+consumer with that writer; the owner's dc7feaf1 qualification covers exact scope,
+append refusal, cancellation and both real COMMIT wire-loss modes. The published
+installation-wide HTTP view still uses WriteWithin and gains no workspace query
+or route. These are owner-qualified SQL results, not this SDK's transport run.
+The current server exact-action whitelist still excludes audit.events_read;
+retain category=audit and do not extend that enumeration or change the thirteen
+standard response fields.
