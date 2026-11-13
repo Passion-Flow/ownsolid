@@ -14,8 +14,8 @@ snapshot as well as handler and SDK tests.
 Compare the audit's per-domain, per-audience operations against a
 local baseline. Detect removed operation identities, audience removal
 and operation ID changes, while accepting additional operations.
-Keep the analysis bounded to operation identities and the named response
-model references below. Full schema compatibility
+Keep the analysis bounded to operation identities, named response model
+references and closed response object shapes below. Full schema compatibility
 needs direction-aware JSON Schema checks, and behavior needs real server
 tests. A general diff such as [oasdiff](https://www.oasdiff.com/docs/breaking-changes)
 can support deeper review, but introducing it solely for this check adds
@@ -72,3 +72,97 @@ references. Run the audit offline against the actual GW-104 candidate and
 its local published baseline. Keep DEV-204 open: release-baseline selection,
 general directional schema compatibility and runtime deprecation signaling
 still require their owning release and server paths.
+
+## Closed response object shape review
+
+The MOD-103 family-history prototype exposed a gap in the named-model check:
+adding family_id to the existing closed AdminModelDetail keeps its component
+name but gives old strict-schema consumers a field their schema rejects.
+The [JSON Schema object reference](https://json-schema.org/understanding-json-schema/reference/object#additionalproperties)
+defines additionalProperties=false, and the [required keyword](https://json-schema.org/understanding-json-schema/reference/object#required)
+distinguishes an optional field from an always-present field. The existing
+AIP-180 distinction between source, wire and semantic compatibility still
+applies; generated SDK source can change even when some decoders tolerate a
+wire change.
+
+Extend the existing offline response traversal with a small shape inventory:
+property names, required names and whether each reachable object is closed.
+Keep stable document-local reference locations and escaped inline JSON pointers,
+with the existing visited-reference guard. Compare an existing operation only
+when domain, method, path, audience and operation ID match. A changed or removed
+shape involving a previously or currently closed object requires review.
+Keep the named-model signal independently: changing a reference and changing
+the fields of the same reference are separate cases.
+
+This is a review signal, not a directional Schema-subset proof. A narrower
+response can still change a generated source type. Numeric/string constraints,
+property value schemas, requests, effective composition and runtime behavior
+remain outside this shape comparison. In particular, unchanged shape names do
+not establish compatibility. Do not solve arbitrary JSON Schema implication
+or add a second diff dependency for this focused regression.
+
+Tests must cover a newly optional field on a closed response, field removal,
+required-name changes, opening/closing an object, inline array items, recursive
+and escaped references, status/media separation and both audiences. Annotation
+and key/required ordering must be inert. Unchanged objects and new operations
+must not acquire findings. Retain invalid/local-reference refusal and existing
+named-model checks, and compare the actual isolated model-history revisions:
+revision A changes old closed metadata, while revision B leaves it unchanged.
+No dependency, model, dataset or third-party source is added. The existing
+Python PSF licence permits commercial and offline use and redistribution under
+its terms. DEV-204 remains open for release baselines, complete directional
+Schema review and runtime deprecation signaling.
+
+The targeted Linux tests passed in a network namespace without an external
+interface: nine shape cases, six named-model cases and seven inventory cases.
+The actual revision-A prototype produced one old AdminModelDetail field-shape
+finding while retaining its named response binding. Revision B produced no
+shape or named-model findings for its existing same-identity reads. The current
+430-operation inventory had no declaration conflicts, and self-comparison was
+empty. These results do not qualify the prototypes' new routes or missing
+non-prototype operations. Layout, roadmap and diff checks also passed. The
+complete offline make test-tools target also passed on Linux: 13 layout tests
+and all 57 SDK/tooling cases. It reused prepared pinned Node parser dependencies
+through a read-only cache path in an isolated network namespace. No assertion,
+case or expected result changed. A fresh worktree needs those Web dependencies
+before its Help projection cases; the first full-check attempt stopped at that
+missing prerequisite and its failed log is retained. Whole repository
+checks/build/test remain a separate publication boundary for this candidate.
+
+## Document-local response pointer evaluation
+
+The existing response audit refuses a valid reference into an allOf array and
+an encoded component name, while accepting an invalid tilde escape when a
+matching literal key exists. [RFC 6901 sections 3, 4 and 6](https://www.rfc-editor.org/rfc/rfc6901)
+define token escapes, array indices and UTF-8 URI fragments. The
+[OpenAPI Reference Object](https://spec.openapis.org/oas/v3.1.1.html#reference-object)
+uses URI references. Decode a local fragment once, apply tilde escapes once,
+and distinguish object names from canonical zero-based array indices.
+
+Keep the existing nonempty document-root pointer scope. Reject malformed
+percent/UTF-8/tilde encodings, invalid indices, missing values and external
+resources with a clear ValueError. Preserve raw named-reference bindings and
+the visited set so this correction does not redefine compatibility findings.
+Anchors, external retrieval and nested resource base-URI resolution remain
+outside this bounded audit. A second resolver dependency or a broader Schema
+compatibility engine is unnecessary. Python's existing urllib.parse and
+standard-library code use the PSF licence already recorded above; commercial,
+redistribution and offline use remain permitted under its notices. No model,
+dataset, third-party implementation or standards text is incorporated.
+
+Tests must reproduce array-element response shapes and review their changes,
+encoded names including UTF-8 and a literal percent, one-pass tilde/percent
+decoding, recursive references and shared Response Objects. Malformed indices
+must fail even if Python would otherwise accept them; numeric object keys stay
+valid. Invalid encodings and missing/external targets fail without opening a
+socket. Unchanged public contracts must retain the same inventory and findings.
+These tests do not qualify runtime compatibility or complete DEV-204.
+
+The focused response/inventory regression set passed all thirty-one cases,
+including nine new pointer cases. The actual 430-operation inventory is byte
+identical before and after this resolver correction. Comparing against main
+9e32b023 still produces exactly the existing explicit audit-read 409 model
+binding review and exit 1, with no declaration findings. No rule or failure exit
+was weakened. The separate exact 9be Linux full attempt remains failed at Web
+ESLint under the acceptance wrapper's imposed 2048 MiB heap limit; this Python correction does not qualify or rerun
+that gate. Release and runtime deprecation work remain open.

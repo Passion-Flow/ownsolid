@@ -329,7 +329,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List safe audit metadata */
+        /**
+         * List safe audit metadata
+         * @description Read one page under current platform-administrator authority. The server reads the page before recording this access as audit.events_read in the same transaction; a successful page cannot contain its own access event. No page or assistant attribution is released unless that transaction is confirmed. STORAGE_COMMIT_OUTCOME_UNKNOWN (409) means the access audit may or may not have committed. Do not retry automatically after that response or a lost reply. A deliberate retry with the same filters, cursor and representation is a new audited read, not a replay or proof that the earlier audit is absent. Preserve the earlier request ID for diagnosis. Use category=audit to select audit-family events; the exact action filter accepts only its declared enumeration.
+         */
         get: operations["listAuditEvents"];
         put?: never;
         post?: never;
@@ -1512,6 +1515,7 @@ export interface operations {
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
             403: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
             default: components["responses"]["Problem"];
         };

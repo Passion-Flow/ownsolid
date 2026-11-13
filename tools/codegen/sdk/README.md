@@ -93,6 +93,33 @@ with httpx.Client(
     print(response.status_code)
 ```
 
+## Read the audit log deliberately
+
+listAuditEvents records access before releasing its page. A 409
+STORAGE_COMMIT_OUTCOME_UNKNOWN or a lost response leaves that access audit
+uncertain. Do not automatically retry the read. An explicit retry with the same
+filters, cursor and X-Ownsolid-Audit-Actor preference records a new access; it
+neither replays the earlier operation nor proves that its audit was rolled back.
+Keep the earlier request ID for diagnosis. Use category=audit for audit-family
+events; exact action accepts only the published enumeration.
+
+The generated Go method requires a standard *http.Client with a standard
+*http.Transport (or its default). It clones that transport for one HTTP/1
+request, disables connection reuse and refuses redirects. Installation CA/client
+certificate configuration, the cookie jar and client timeout are retained;
+the caller's shared client is unchanged. A general shared Go transport can
+transparently replay an eligible GET after a network error on a reused
+connection. Custom request executors and transports are rejected before this
+read because their retry behavior cannot be inspected. Other operations keep
+their configured executor. Disable application, proxy and load-balancer retries
+for this path. Python's default HTTPX transport has zero connection retries;
+retain retries=0, verified TLS, trust_env=False and follow_redirects=False when
+configuring a transport. Keep any external retry wrapper disabled. Neither
+generated client's 409 decoder starts a retry.
+After regeneration, Go callers handle this status with
+GetApplicationproblemJSON409(); it is no longer decoded through the default
+Problem accessor. Python keeps the existing Problem model.
+
 ## Stream and download responses
 
 For model gateway chat with `stream=True`, use the raw response adapter. It
@@ -114,13 +141,25 @@ client. For downloads, read `iter_bytes()` after checking the status and
 media type. In Go, use the generated method without the `WithResponse`
 suffix to read or close the HTTP response body directly.
 
+The Help projection tests also need the locked Web parser dependencies. In a
+new worktree, prepare them from the local pnpm store first:
+
+```sh
+(cd web && pnpm install --offline --frozen-lockfile --ignore-scripts)
+```
+
 Run the projection checks with
 `python3 -m unittest discover -s tools/codegen/sdk/tests`. With the SDK runtime
 environment installed, run
 `python tools/codegen/sdk/tests/wire_smoke.py "$SDK_DIR"` for the Go and Python
 loopback checks. They exercise login, cookie reuse, typed node lists and a
 binary dataset request with its declared media type. The same test verifies
-Python streaming response ownership and error bodies.
+Python streaming response ownership and error bodies. Audit-read checks exercise
+Go's shared-connection replay control, lost replies, explicit retry, 409,
+TLS/cookies, timeouts, redirects, custom-executor refusal and concurrency.
+Python checks both sync and async audit reads after 409 or a lost reply with
+standard and assistant representations. These loopback/controlled-transport
+checks do not qualify server authorization, SQL commits or a browser flow.
 
 ## Audit the public operation inventory
 
@@ -130,8 +169,12 @@ IDs within a document, and duplicate method and path declarations in the
 same audience. Exit 1 reports findings and exit 2 indicates unreadable or
 invalid input. The audit runs from local files and uses the same audience
 rules as SDK generation. With `--baseline`, it also reports named response
-model reference changes for source review. These findings can describe a
-wire-compatible change that still changes generated return types. The
-comparison does not establish general schema or behavior compatibility.
+model reference changes and closed response object shape changes for review.
+The shape inventory records property names, required names and closure at local
+schema pointers. It catches a new optional field in an existing closed model,
+which named references alone cannot reveal. These findings can also describe a
+wire-compatible change that changes generated source types. Property value
+constraints, requests and effective composition remain outside this check;
+an empty finding list does not establish general schema or behavior compatibility.
 It measures the published contracts. Verification
 against running handlers remains the responsibility of each API owner.

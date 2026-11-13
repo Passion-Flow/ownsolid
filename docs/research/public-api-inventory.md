@@ -718,3 +718,391 @@ exact Owns/Handle dispatch with the operation and reviewed locale files.
 The existing protected monitoring policy supplies store origins and
 retention settings. Installed retention delivery, trust distribution and
 the Console history view remain with their owning modules.
+
+## Identity audit-read commit outcome (DEV-101 / AUD-108)
+
+Reviewed 2026-11-13 against identity runtime fcbb839a, its qualification in
+[identity audit-read access](identity-audit-read-access.md#qualification), and
+current main 8b17a295. The actual GET /api/v1/admin/audit-events reads its
+bounded page and appends audit.events_read in the same transaction. The shared
+Problem registry already maps STORAGE_COMMIT_OUTCOME_UNKNOWN to HTTP 409 and
+the Identity Problem enum already includes it. The operation lacks its explicit
+409 response and x-error-codes entry; reuse that existing Problem without a
+new error code, endpoint, receipt store or response field.
+
+[RFC 9110 safe methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.1)
+allows incidental request logging, while its
+[retry rules](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2)
+do not establish whether this particular access audit committed. A 409 or lost
+reply must not produce successful data or an automatic second access append.
+A deliberate later read is a new audited operation, not a replay or a rollback
+claim. Keep the same filters, cursor and representation when retrying. Preserve
+the earlier request ID for diagnosis rather than inventing an idempotency key.
+Read the page before its access event is appended, so the page cannot contain
+that same read's event.
+
+The current server auditActions whitelist does not include audit.events_read.
+Do not add it to the exact-action OpenAPI enum. category=audit already selects
+the family. The IAM owner must first admit and qualify the exact action before
+DEV can publish that enum value. Keep the thirteen standard response fields and
+the existing optional verified assistant pair unchanged.
+
+Add a per-operation cursor description so the current Help parameter projection
+can carry the recovery semantics. Operation descriptions are retained in the
+served OpenAPI but are not shown in today's Help operation summary. Web owns
+the required Simplified Chinese description and generated Web/Help files;
+prepare their exact inputs without editing that lane's source or locales.
+
+[Go Transport](https://pkg.go.dev/net/http#Transport) can transparently replay
+an eligible GET after a network error on a reused connection. The generated
+Go dispatch now uses an isolated single-use transport for this audited read;
+callers must disable any application/proxy retry policy. Python callers must also keep transport retries
+disabled. Merely calling GET does not establish one access append. Controlled
+409 codec tests prove one generated call and explicit retry; they do not
+qualify arbitrary caller transports, real commit faults or installed services.
+
+No dependency, model or dataset is added. The existing SDK generator/runtime
+licences in [sdk.md](sdk.md#licenses) permit commercial, redistribution and
+offline use with their existing notices; Go is BSD-3-Clause and HTTPX is BSD-3-Clause.
+Standards and upstream documentation are design references, not embedded code.
+
+Verify the explicit 409 mapping in the raw and projected contract, the unchanged
+Problem/standard fields and assistant pair, exact-action parity with the actual
+server whitelist, Help's recovery description and error metadata, and generated
+Go/Python 409 decoding without automatic retry. Explicit re-read must be a new
+call with the original selection. Retain the IAM owner's actual PostgreSQL and
+wire-fault qualification separately; none is rerun or inferred from codec tests.
+Public generation and whole-repository gates remain required before publication.
+
+The explicit 409 response creates a status-specific Go Problem accessor after
+SDK regeneration. Existing wire clients still receive the same Problem shape,
+but regenerated Go consumers must use GetApplicationproblemJSON409 rather than
+assuming every unspecified error uses the default accessor. Python retains its
+existing Problem model. Keep this source-review distinction visible; declaring
+the already-existing runtime status does not prove every consumer is unchanged.
+
+Ten lightweight Linux contract regressions passed in a network namespace
+without external networking: five audited-read cases, the existing assistant
+projection case and four existing browser-session cases. Pinned offline
+identity generation at metadata-only input 2426699b preserved all 25 public
+operations and produced 121 Go and Python files. Six controlled Python sync/async wire cases passed, including
+explicit 409 decoding, a new deliberate read after 409, unchanged selection,
+transport failure and permission refusal without an automatic extra call.
+
+A private filesystem projection, using the actual generators and cached pinned
+Node dependencies, produced all 29 Web contract types and 144 Help files. Both
+generator --check commands passed there. Only five Web paths differ from the
+baseline: Identity types, the Admin Help summary and raw contract, and the source
+and generated Chinese description catalogues. Admin Help retains the 409 and
+recovery description; Portal excludes the Admin operation. Product Web files
+were not edited. The Web owner must apply that relay and run product generation
+before this contract candidate can be published.
+
+The source comparison reports no operation-identity or closed-object changes.
+Its single named-response review signal is the added explicit 409 binding.
+All component definitions are unchanged. The metadata-only input's four private
+Go wire cases were not compiled: their nonblocking Linux admission exited 75.
+The SDK correction below supersedes that fixture with ten canonical protocol
+groups, now qualified on native Linux amd64 as described below. Whole repository
+gates and actual installed qualification remain separate; the CLI b967d7c8 gate
+is unchanged.
+
+### Browser consumer retry boundary
+
+Static review of main 726f2149 found a separate Web consumer gap, since fixed
+by the Web owner in e9186ade with the complete gate recorded at 124520b9.
+The shared [query client](../../web/packages/shell/src/session.ts) retries
+ApiProblems while failures is below two and retryable is true. The
+[problem classifier](../../web/packages/api/src/problem.ts) makes status-zero
+network and timeout failures retryable, and the
+[transport](../../web/packages/api/src/transport.ts) produces those failures
+when a reply is lost. Both the [audit page](../../web/apps/console/src/audit-page.tsx)
+and [resource activity](../../web/apps/console/src/resource-page.tsx) use
+listAuditEvents without a local retry override. This path can issue additional
+audited reads automatically after an uncertain reply. A 409 itself is outside
+the current retryable status set. No browser or SQL reproduction is claimed
+for this static review.
+
+The owner now scopes explicit retry and refetch behavior to both audit consumers,
+including initial and continuation recovery, uncertain replies, denied caches,
+reader/scope separation, focus, reconnect, invalidation and remount. Its built-in
+Help article explains the same recovery in both languages. The complete Web gate
+at c70e9f59 passed 1,191 Console and 410 Portal cases, with 28 and 10 existing
+conditional skips. The failing old six-request controls and corrected no-data
+invalidation failure remain separate evidence. See the owner's
+[explicit recovery and complete gate](identity-audit-read-access.md#explicit-web-read-recovery).
+These are owner-qualified scripted Web results, not a DEV installed or SQL run.
+The generated five-file public metadata relay remains a separate required change;
+the earlier two-consumer prototype patch is superseded and must not be applied.
+
+### Generated Go transport correction
+
+The standard shared Go transport can retry an eligible GET on a connection
+that was used before. Documentation alone leaves that SDK-owned default unsafe
+for an audited read whose reply was lost. Use the pinned generator's existing
+postprocessing boundary for only Identity listAuditEvents at its existing path.
+Emit a small private method with the generated Identity package. It clones a
+standard http.Transport for one HTTP/1 call, disables connection reuse, refuses
+redirects and retains the configured TLS trust/client certificate, cookie jar
+and timeout. It does not catch a failed call or issue a second request.
+
+[Go 1.27.3 Transport.Clone](https://pkg.go.dev/net/http@go1.27.3#Transport.Clone)
+keeps configuration separate from connection reuse; the
+[Client redirect contract](https://pkg.go.dev/net/http@go1.27.3#Client)
+allows the original redirect response to be returned without following it.
+Require an ordinary http.Client with a standard transport for this operation;
+a custom request executor or transport can hide its own retries, so reject it
+before dispatch with an actionable configuration error. Other operations retain
+their configured request executor. HTTP/1 admission is explicit for this read.
+No TLS verification, actor, scope or audit policy becomes optional.
+
+Reject generated output that no longer has the pinned method/dispatch shape,
+and reject an unnoticed operation rename, route move or domain move. A general retry
+framework, empty-body tricks and mutating a shared transport are not selected.
+Pinned [HTTPX 0.28.1](https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py)
+defaults to zero connection retries; its generated Python
+operation has no failure/retry loop. Keep that behavior and test both sync and
+async calls, including a lost reply and an explicit second read.
+
+Tests must cover the actual generated Go operation with a primed shared-client
+control, lost response, explicit 409, explicit retry, preserved TLS/cookie trust,
+redirect refusal, unsupported request executors and concurrent independent calls.
+Within those ten protocol test groups, retain consecutive lost replies across
+separate deliberate calls and caller cancellation before and during dispatch.
+[Go request context](https://pkg.go.dev/net/http@go1.27.3#Request.WithContext)
+controls connection establishment, sending and response reads. Check cancellation
+with the generated operation and an actual waiting HTTP handler, then show that
+only a new uncancelled call can dispatch again. Cancellation or timeout cannot
+establish whether an earlier server access was recorded.
+Use the existing SDK wire runner; no new service or qualification framework is
+needed. Generator unit/projection checks can run independently of Go compilation.
+No dependency, model, dataset or third-party implementation is added; existing
+Go BSD-3-Clause and SDK generator/runtime notice obligations remain unchanged.
+
+With no external network, 58 SDK tooling tests, 13 layout tests, the layout and
+roadmap checks passed. The pinned one-domain generation still has 25 public
+operations and now has 122 files: only the Go dispatch changed and its one
+helper was added; all 118 Python output files are byte-identical to the
+metadata-only generation. Gofmt reports no diff in the helper and ten-case Go
+fixture. Eight controlled Python scenarios pass across sync/async,
+standard/assistant and 409/lost-response cases, each followed by one explicit
+new call. These exercise generated Python dispatch with MockTransport, not a
+real server or PostgreSQL.
+
+### Native Linux audit transport qualification
+
+Frozen fixture source 783567ea4a2e19f3b2f7ca065d47dfe59886633e and transport
+source 1e8f1fadf8caff8d7b9ac771cd91641ba19d4287 passed all ten top-level
+protocol groups and all six subtests, with zero skips and exit 0. The generated
+Identity client ran over loopback HTTP/TLS with Go 1.27.3 linux/amd64,
+`-race -count=1 -p=2 -mod=readonly -timeout=90s`. Its network namespace had
+only loopback; module and checksum downloads were disabled. This covers the
+shared GET positive replay control, repeated lost audit replies, separate
+manual calls, 409, client timeout, caller cancellation, CA/cookie preservation,
+redirect refusal, unsupported executors and concurrent calls. It does not
+exercise the Control dispatcher, PostgreSQL or an installed user flow.
+
+The two-group parent exited 1 after 49.817 seconds because the resource check
+before the independent model-history codec group observed I/O full avg10
+27.29, above its maximum 5. That second group never started: its actual root
+count is zero, with no test exit or skip. The audit group remains a qualified
+pass; the combined segment is not a pass. No admission retry was attempted.
+Both inherited lock descriptors closed, their original carriers remained,
+the temporary directory was removed and a separate observation found neither
+the parent nor its child process group. The earlier Mac wait remains exit 75
+with zero Go roots; it is not native Linux evidence.
+
+The private evidence on ownsolid-cpu is
+`/root/lane-rel-tools/identity-audit-contract/go-native-linux-proof.json`
+(SHA-256 `cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1`)
+and `go-wire-native-linux.log`
+(SHA-256 `f391f6191c1293348969b862e005b7126f4245a300000d978276ef027e985d15`).
+The audit fixture SHA-256 is
+`6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821`.
+All 122 generated audit SDK files and all 81 independent history SDK files
+were verified before execution and after release; their hashes are unchanged.
+Whole repository check/build/test, product generation and Web/installed
+qualification remain open. No roadmap box is ticked by this transport run.
+
+### Composition with current public metadata tooling
+
+The audit candidate and DEV-204 closed-object review tooling were rebased and
+composed on main 9975d769 in input 4b1e5c99. The audit contract, SDK generator,
+Go helper and actual native wire fixture are byte-identical to the qualified
+783567ea input. Its Linux ten-root transport result remains bound to that
+original source; no native Go rerun or second resource admission was attempted.
+The Models contract still has SHA-256
+`7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc`;
+the private Model history draft and its unexecuted codecs are not composed here.
+
+Thirty-two targeted contract/generator/inventory tests passed on the composition.
+The actual 430-operation comparison against main 9975d769 has no declaration
+conflicts, operation identity changes or closed-object shape findings. Its one
+named-response review finding is the explicit 409 shared Problem binding for
+listAuditEvents. The generated Go 409 accessor change is intentional and
+documented in the SDK README; it must not be reported as a general compatibility
+pass or silently removed from the review report.
+
+A separate private projection used the current main Help articles and pinned
+parser dependencies. Both actual Web generators and both checks passed: 30
+TypeScript and 144 Help files. Exactly the original five generated/locale paths
+change; the updated relay patch SHA-256 is
+`a3def1685309d4a7609274852cbc17f0904f9477a8edcaa9d016b4ced085dea9`.
+That private projection changed no product Web file. The subsequent original-
+author composition below qualifies the product generation separately.
+This projection does not qualify the separate shared Help URL assertion.
+The Web owner has since fixed that assertion at
+44ab52293e516128ba2efc0edc2cb2053acc3462; f11aa11f records four focused
+bilingual entrance cases and a fresh installation-client self-check. The two
+earlier MODEL failures remain evidence, and those focused checks are not a
+complete gate for this API/SDK composition.
+
+### Original-author joint generation
+
+The source-only DEV commit 47fa03253b0d2655be26925a7e4492547c3e9a42 and
+Web's original c7ba62718fa4cded20914c179473cb2a02bf2ea9 are composed in input
+871e3df7df9ea0f0f5adb8f3bd91a226a52b44af on main 6ed5c627. The Web leaf's
+actual parent is unpublished research f1ccc065. Replay only its five agreed
+projection/locale paths as a84c4eb0, preserving its author and original-commit
+footer, rather than importing the unrelated research ancestor. Both original
+bundles and commits remain retained; all five Web postimages match the original
+leaf. The audit-read hook, both consumers, the 41-case recovery fixture and the
+shared Help helper retain the owner's exact hashes. The old consumer prototype
+patch was not applied.
+
+Actual `make generate` passed on that joint tree, including the unchanged
+web-install prerequisite: all 414 packages were reused, none downloaded and
+install scripts were disabled. Node 26.13.0 and pnpm 12.16.1 generated 30 API
+TypeScript and 144 Help files. The subsequent real generate:check, layout and
+roadmap checks passed. No committed bytes changed. All 79 projection inputs,
+with the owner's intended locale postimage, and all 122 SDK files were verified.
+The SDK generator, templates, contract and native fixture remain byte-identical
+to the retained 783567ea qualification; no new native SDK test is claimed.
+The complete tooling target on 2c20c8cc also passed all 13 layout and 67
+SDK/tooling cases. These bounded checks start no compiler, browser or container
+and are distinct from the still-unrun whole-repository gate.
+
+The actual joint-source comparison against main 6ed5c627 still inventories 430
+operations with no declaration conflicts and exactly one compatibility finding,
+PUBLIC_RESPONSE_MODELS_CHANGED, exiting 1. It adds only the explicit 409 Problem
+binding to an already implemented server outcome. The shared server registry
+maps STORAGE_COMMIT_OUTCOME_UNKNOWN to 409, and the actual repository wire test
+covers withheld COMMIT and suppressed acknowledgement with no released page and
+one deliberate new read. The generated Go decoder now uses
+GetApplicationproblemJSON409(), as documented in the SDK README and covered by
+the retained native fixture. Preserve this intentional source-review signal;
+it is neither a server-contract defect nor a general compatibility pass.
+
+Complete check/build/full make test on the final integrated source, current-main
+alignment and fast-forward publication remain required. No new heavy window or
+queue was requested for these lightweight generation checks. CLI b967d7c8 whole
+make test and installed AUD-108 acceptance remain distinct. Existing native
+audit transport, focused Help and owner Web recovery results cannot substitute
+for the integrated gates. No roadmap checkbox moves here.
+
+SCI 8531226d supplies WriteScopedWithin for a caller-owned PostgreSQL transaction
+and performs no commit or retry itself. Main now pairs the actual workspace Go
+consumer with that writer; the owner's dc7feaf1 qualification covers exact scope,
+append refusal, cancellation and both real COMMIT wire-loss modes. The published
+installation-wide HTTP view still uses WriteWithin and gains no workspace query
+or route. These are owner-qualified SQL results, not this SDK's transport run.
+The current server exact-action whitelist still excludes audit.events_read;
+retain category=audit and do not extend that enumeration or change the thirteen
+standard response fields.
+
+### Linux integrated gate boundary
+
+The exact joint source 9be01cbbf0144a2f2537667834539de31e40f58f, tree
+b8aea641ecd1b79be71270ad80ab03c1e131df31, includes main 9e32b023 with
+the published MODEL family/history domain and its unnumbered candidate DDL.
+The private 6a2 history projection remains excluded. The owned source difference
+remains the original-author eighteen paths; no Web consumer was changed.
+
+The corrected native entry has a 1200-second absolute budget including
+preconditions, all four original Make targets and final cleanup, with twenty
+seconds reserved for cleanup. External metadata commands use the remaining
+budget. A Linux [child subreaper](https://man7.org/linux/man-pages/man2/PR_SET_CHILD_SUBREAPER.2const.html)
+and [waitpid](https://man7.org/linux/man-pages/man2/waitpid.2.html) reclaim only
+owned descendants, including detached orphans, before continuing or explicitly
+closing inherited shared lock FDs. Six actual Linux safety fixtures passed
+normal exit, orphan and detached-orphan descriptor cleanup, a TERM-resistant
+metadata timeout, an expired budget with no new process, and lower inherited
+CPU/Node limits. These are entry-helper checks, not product or installed tests.
+No new dependency is distributed.
+
+The single actual admission succeeded. Its initial sample had MemFree 4692 MiB, MemAvailable
+19811 MiB, free disk 789124411392 bytes and I/O full avg10 0.00. The same
+permanent global and SCI carriers were acquired once, nonblocking, in order.
+Each executed Make target used an offline network namespace with only loopback,
+Go parallelism one, GOMAXPROCS at most two, Cargo jobs one and a Node heap
+at most 2048 MiB. No overlay, target skip, third carrier, queue or admission
+retry was used.
+
+Actual web-install exited 0. The check target passed layout, the 589-item
+roadmap check, thirteen layout tests, all sixty-seven SDK/tooling tests and
+generated API consistency for twenty-nine contracts. Web ESLint then exhausted
+the 2048 MiB V8 heap and aborted with exit 134. Make check exited 2 and the
+parent exited 1 after 89.572 seconds. Build and full make test were not started.
+This is a failed lint execution under the acceptance wrapper's imposed
+2048 MiB heap, not a resource-admission refusal or a failed SDK assertion.
+The failure alone does not establish a Web source/configuration defect or a
+repository-wide heap limit. The wrapper's resource profile belongs to this
+lane. Its next bounded profile must raise admission together with any heap
+increase and retain the original lint scope. A new exact-source full attempt
+still needs its own actual resource assignment; the failed result stays frozen.
+
+All five owned process groups were verified empty, both shared FDs closed,
+both carrier identities preserved and the exact source remained clean.
+Entry SHA-256 is
+`1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c`;
+raw log SHA-256 is
+`fbcc353ee78c27155e318b3c71fd4ec57fea98bf551080391dd094736c1044c3`;
+result SHA-256 is
+`ea63d0f4d26a25744f322da5402381397c7fd14768c7afb8ab9b4c8509aaa5fe`.
+The raw 430-operation audit remains exit 1 for its explicit 409 binding
+review. The older 783 native result and combined-parent failure remain
+source-bound; there is no new SDK native, private-history, installed or
+CLI b967 qualification, publication or roadmap tick from this attempt.
+
+### Bounded lint memory preparation
+
+The failed input's configured subcommand is the full workspace eslint command
+with packages/config/eslint.config.js, zero allowed warnings and the current
+directory as its target. It enables strict/stylistic typed linting with
+projectService=true. All eight package tsconfigs have explicit include lists;
+none uses an unbounded include-everything fallback. The generated-directory
+ESLint ignores already exist. The API barrel imports its generated index, and
+the API project's src include also contains those types. Static inventory of
+the unchanged Web input has 390 tracked TS/TSX files, including 31 generated
+files with 39775 lines and 1730637 bytes. These facts identify the type graph;
+they do not identify a measured allocation hotspot or prove duplicate Programs.
+
+The official [typescript-eslint performance guidance](https://typescript-eslint.io/troubleshooting/typed-linting/performance/)
+explains typed-lint memory requirements, targeted tsconfig includes and a
+higher Node old-space limit when needed. The [Node CLI documentation](https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-megabytes)
+defines that limit in MiB; more heap permits more memory use, rather than
+reducing the work. The pinned typescript-eslint version is 8.72.1. An
+[upstream overlapping-project report](https://github.com/typescript-eslint/typescript-eslint/issues/13109)
+is an investigation lead only; its cause has not been reproduced on ownsolid.
+No Web rule, include list, dependency or source change is justified by the
+failed acceptance sample alone, and no owner patch task was issued.
+
+The executed wrapper explicitly capped old-space at 2048 MiB, consistent with
+the raw V8 heap failure. Historical parent NODE_OPTIONS were not recorded.
+A separate read-only inspection of the current toolchain environment found no
+parent old-space cap; that observation does not reconstruct the earlier parent
+environment. No environment contents or credentials are recorded. Repository
+guidance supplies a Linux free-memory floor but no global Node heap ceiling.
+The previous 2048 MiB limit was the assigned acceptance profile.
+
+Prepare a revised old-space maximum of 4096 MiB only with MemFree at least
+6 GiB, MemAvailable at least 12 GiB, free disk at least 30 GiB and full I/O PSI
+avg10 at most 5. Preserve stricter inherited absolute limits. The four original
+Make targets, offline namespaces, permanent two-carrier nonblocking admission,
+Go parallelism one, GOMAXPROCS at most two, Cargo jobs one, 1200-second absolute
+deadline and bounded owned-process cleanup remain unchanged. Do not change
+semi-space, single-run heuristics, rule sets or the scan scope. Ambiguous
+inherited heap-percentage/total-heap policies fail clearly instead of being
+silently overridden. This is a prepared capacity proposal, not a measured
+4096 MiB pass or authorization to rerun. The next source also contains published
+ARC runtime changes and needs its own full checks; the 9be result cannot qualify it.

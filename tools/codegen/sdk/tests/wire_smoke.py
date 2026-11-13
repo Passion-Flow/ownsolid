@@ -231,9 +231,101 @@ def exercise_monitoring_problems():
     print("Python SDK verified history transaction refusals and canonical timestamps")
 
 
+def exercise_audit_reads_python(sdk):
+    """Check the generated operation, without a retrying HTTP or application wrapper."""
+    sys.path.insert(0, str(sdk / "gen" / "python"))
+    import httpx
+    from ownsolid_sdk.identity import AuthenticatedClient
+    from ownsolid_sdk.identity.api.administration import list_audit_events
+    from ownsolid_sdk.identity.models.list_audit_events_x_ownsolid_audit_actor import ListAuditEventsXOwnsolidAuditActor
+    from ownsolid_sdk.identity.models.problem import Problem
+
+    selection = {"category": "audit", "cursor": "opaque+/=%", "limit": 2}
+    code = "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+
+    def scenario(assistant, lost_reply):
+        calls = []
+
+        def respond(request):
+            calls.append(request)
+            assert request.method == "GET" and request.url.path == "/api/v1/admin/audit-events"
+            assert dict(request.url.params) == {key: str(value) for key, value in selection.items()}
+            assert request.content == b"" and "Idempotency-Key" not in request.headers
+            assert request.headers.get("X-Ownsolid-Audit-Actor") == ("true" if assistant else None)
+            if len(calls) == 1:
+                if lost_reply:
+                    raise httpx.ReadError("synthetic lost reply", request=request)
+                return httpx.Response(409, headers={"Content-Type": "application/problem+json"}, json={
+                    "type": "about:blank", "title": code, "status": 409, "code": code,
+                    "request_id": "33333333-3333-4333-8333-333333333333",
+                })
+            return httpx.Response(200, json={"data": {"items": [], "next_cursor": None}})
+
+        client = AuthenticatedClient(
+            base_url="https://admin.example.invalid", token="",
+            httpx_args={"transport": httpx.MockTransport(respond), "trust_env": False},
+        )
+        params = dict(selection)
+        if assistant:
+            params["x_ownsolid_audit_actor"] = ListAuditEventsXOwnsolidAuditActor.TRUE
+        return client, params, calls
+
+    def check_first(result, calls):
+        assert len(calls) == 1 and result.status_code == 409
+        assert isinstance(result.parsed, Problem) and result.parsed.code == code
+
+    def check_second(result, calls):
+        assert len(calls) == 2 and result.status_code == 200
+        assert result.parsed.data.items == [] and result.parsed.data.next_cursor is None
+
+    async def check_async(assistant, lost_reply):
+        client, params, calls = scenario(assistant, lost_reply)
+        async with client:
+            if lost_reply:
+                try:
+                    await list_audit_events.asyncio_detailed(client=client, **params)
+                except httpx.ReadError:
+                    assert len(calls) == 1
+                else:
+                    raise AssertionError("a lost reply became success")
+            else:
+                check_first(await list_audit_events.asyncio_detailed(client=client, **params), calls)
+            check_second(await list_audit_events.asyncio_detailed(client=client, **params), calls)
+
+    for assistant in (False, True):
+        for lost_reply in (False, True):
+            client, params, calls = scenario(assistant, lost_reply)
+            with client:
+                if lost_reply:
+                    try:
+                        list_audit_events.sync_detailed(client=client, **params)
+                    except httpx.ReadError:
+                        assert len(calls) == 1
+                    else:
+                        raise AssertionError("a lost reply became success")
+                else:
+                    check_first(list_audit_events.sync_detailed(client=client, **params), calls)
+                check_second(list_audit_events.sync_detailed(client=client, **params), calls)
+            asyncio.run(check_async(assistant, lost_reply))
+    print("Python SDK verified eight audit-read failure/manual-retry scenarios")
+
+
+def exercise_audit_reads_go(sdk):
+    """Run the actual generated Go operation against loopback protocol fixtures."""
+    subprocess.run(
+        ["go", "test", "-race", "-count=1", str(Path(__file__).with_name("audit_read_wire_test.go").resolve())],
+        cwd=sdk / "gen" / "go",
+        env={**os.environ, "GOWORK": "off", "GOPROXY": "off", "GOSUMDB": "off"},
+        check=True, timeout=120,
+    )
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("sdk", type=Path)
-    exercise(parser.parse_args().sdk.resolve())
+    sdk = parser.parse_args().sdk.resolve()
+    exercise(sdk)
     exercise_streaming()
     exercise_monitoring_problems()
+    exercise_audit_reads_python(sdk)
+    exercise_audit_reads_go(sdk)

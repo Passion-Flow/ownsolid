@@ -826,7 +826,8 @@
      "schema": {
       "type": "string",
       "maxLength": 512
-     }
+     },
+     "description": "Continue from the previous confirmed page. After a failed or lost response, retry the same filters, cursor and representation only explicitly. A retry records a new audited read; it does not confirm whether the earlier access was recorded. No page is returned unless its access audit transaction is confirmed."
     },
     {
      "name": "action",
@@ -975,6 +976,9 @@
     ],
     "403": [
      "ACCESS_DENIED"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
     ],
     "503": [
      "STORAGE_UNAVAILABLE"
