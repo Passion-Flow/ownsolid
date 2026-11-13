@@ -6,9 +6,10 @@ afterEach(() => {
 });
 
 it('preserves the first-page query fingerprint with an opaque cursor', async () => {
-  const fetch = vi.fn((_url: string) =>
-    Promise.resolve(new Response(JSON.stringify({ data: { items: [], next_cursor: null } }))),
-  );
+  const fetch = vi.fn((url: string) => {
+    expect(url).toContain('/api/v1/admin/audit-events?');
+    return Promise.resolve(new Response(JSON.stringify({ data: { items: [], next_cursor: null } })));
+  });
   vi.stubGlobal('fetch', fetch);
   const query = {
     limit: 20,
@@ -31,9 +32,10 @@ it('preserves the first-page query fingerprint with an opaque cursor', async () 
 });
 
 it('does not invent explicit bounds when a caller only has a cursor', async () => {
-  const fetch = vi.fn((_url: string) =>
-    Promise.resolve(new Response(JSON.stringify({ data: { items: [], next_cursor: null } }))),
-  );
+  const fetch = vi.fn((url: string) => {
+    expect(url).toContain('/api/v1/admin/audit-events?');
+    return Promise.resolve(new Response(JSON.stringify({ data: { items: [], next_cursor: null } })));
+  });
   vi.stubGlobal('fetch', fetch);
   await listAuditEvents({ limit: 20, cursor: 'opaque-next' });
   const params = new URL(fetch.mock.calls[0]?.[0] ?? '', 'http://example.test').searchParams;

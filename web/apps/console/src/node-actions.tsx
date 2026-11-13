@@ -15,7 +15,7 @@ import {
 } from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ban, Check, Ellipsis, Pencil, RefreshCw, Trash2 } from 'lucide-react';
-import { useRef, useState, type ReactNode, type SubmitEvent } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type SubmitEvent } from 'react';
 
 function RenameDialog({
   node,
@@ -148,6 +148,18 @@ export function useNodeActions(
   const toast = useToast();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<'rename' | 'remove' | null>(null);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
+  const restoreMenuFocus = useRef(false);
+  const closeDialog = () => {
+    restoreMenuFocus.current = detail;
+    setDialog(null);
+  };
+  useEffect(() => {
+    if (dialog === null && restoreMenuFocus.current) {
+      restoreMenuFocus.current = false;
+      menuTrigger.current?.focus();
+    }
+  }, [dialog]);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['nodes'] });
   const change = useMutation({
     mutationFn: (input: { target: Node; name?: string; status?: Node['status']; reason: string }) =>
@@ -184,7 +196,7 @@ export function useNodeActions(
       {
         onSuccess: (updated) => {
           // The toast sits behind a modal, so its undo is out of reach until the drawer closes.
-          setDialog(null);
+          closeDialog();
           onChanged();
           toast({
             message: done,
@@ -234,7 +246,7 @@ export function useNodeActions(
             </Button>
             <Menu
               trigger={
-                <Button>
+                <Button ref={menuTrigger}>
                   <Ellipsis aria-hidden />
                   {t('resource.actions')}
                 </Button>
@@ -329,7 +341,7 @@ export function useNodeActions(
             pending={change.isPending}
             problem={change.error}
             onClose={() => {
-              setDialog(null);
+              closeDialog();
             }}
             onRename={(name) => {
               reversible(
@@ -347,14 +359,14 @@ export function useNodeActions(
             pending={change.isPending}
             problem={change.error}
             onClose={() => {
-              setDialog(null);
+              closeDialog();
             }}
             onRemove={(reason) => {
               change.mutate(
                 { target: node, status: 'removed', reason },
                 {
                   onSuccess: () => {
-                    setDialog(null);
+                    closeDialog();
                     onRemoved();
                     toast({ message: t('nodes.remove.done', { name: node.name }) });
                   },
