@@ -307,3 +307,33 @@ a second writer, reflect into fields or add a constructor that returns success
 without binding the real readers. Missing candidate objects or an unavailable
 joint source is not permission to guess that interface. The reproduced dataset
 storage refusal remains unresolved until the actual composed claim passes.
+
+## Exact original-owner joint input and transport refusal
+
+The clean assembled input is e321fdcb84fd20586c503cbdf3ae179eea1c6c10,
+tree efa43828c7febdadd72d03b70c30a28aefd800ef. It merges original MODEL
+db8435034a2a94a3285a059f6bd40237322ae1c2 and original TRN
+e639db9035b0b2c0229c90175493c605f328e295 onto the ARC input through baa584c3.
+All13 MODEL module paths match its original author, and all21 TRN module paths
+match its original author. The original formal61 SQL and schema60 catalog pins
+remain byte-identical to0f47a66b. The later dirty request/RPC join increment is
+not included in this input. MODEL's seven original TestActualModelFamily roots
+and TestModelHistoryCursorIntegrityAndScope remain required, with its exact
+protected PostgreSQL/schema and pinned approved non-weight file inputs.
+
+The regenerated full-source manifest covers5,096 paths. Its archive is8,987,025
+bytes, SHA-256 bb96b822445bc540e8b0853b051104b2d64f05e1cae8f2dee7fe82c698fdeee1;
+manifest SHA-256 ca272a2f9f5902aee32b8b4ce0e6900ad18f9253007f42e9995a4137f912752d.
+This replaces no earlier source or evidence; it is the actual new unqualified
+input A. There is no observed schema61 fingerprint or admitted input B.
+
+The one granted Linux opportunity stopped before entry. The required read-only
+image/resource SSH inspection returned255 with banner-exchange timeout. An earlier
+read-only command connected, but its clipped process-list output cannot establish
+usable final resource/image admission. No retry followed the transport refusal.
+No permanent carrier was opened, no source was uploaded, no compiler/test group
+or SQL statement ran, and no container, volume, namespace or credential was
+created. The result is NOTRUN, not a failed SQL assertion or a passed preflight.
+The local native-notrun.json retains the exact source and refusal classification;
+cleanup is not applicable rather than an invented successful cleanup result.
+The original1,200-second ceiling and every assertion remain unchanged.
