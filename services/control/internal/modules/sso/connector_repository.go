@@ -169,7 +169,7 @@ func saveConnectorIntent(ctx context.Context, q transaction.Executor, tenant str
 }
 
 func selectConnectorWithin(ctx context.Context, q transaction.Executor, tenant, id string) (Connector, error) {
-	result, e := scanConnector(q.QueryRow(ctx, sourceSQL(q, `SELECT `+connectorColumns+` FROM sso_connectors WHERE tenant_id=$1 AND id=$2`, `SELECT `+mysqlConnectorColumns+` FROM sso_connectors WHERE tenant_id=? AND id=?`, "SELECT "+damengConnectorColumns+" FROM SSO_CONNECTORS WHERE TENANT_ID=? AND ID=?", tenant, id)))
+	result, e := scanConnector(q.QueryRow(ctx, sourceSQL(q, `SELECT `+connectorColumns+` FROM sso_connectors WHERE tenant_id=$1 AND id=$2 AND provider='gitea'`, `SELECT `+mysqlConnectorColumns+` FROM sso_connectors WHERE tenant_id=? AND id=? AND provider='gitea'`, "SELECT "+damengConnectorColumns+" FROM SSO_CONNECTORS WHERE TENANT_ID=? AND ID=? AND PROVIDER='gitea'", tenant, id)))
 	// pgx's binary timestamptz codec defaults to time.Local even when the SQL
 	// session uses UTC; the repository owns its public timestamp representation.
 	result.CreatedAt, result.UpdatedAt = result.CreatedAt.UTC(), result.UpdatedAt.UTC()
