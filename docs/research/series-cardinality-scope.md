@@ -468,3 +468,78 @@ bounded decoding and release of each acquired query lease. Full startup,
 source-owner integration and installed acceptance remain explicit prerequisites.
 The existing Go BSD-3-Clause and VictoriaMetrics Apache-2.0 terms apply, with
 no new dependency, model or dataset.
+
+The module producer preparation uses a private Go composition owner that opens
+one live, immutable generation lease per query. The lease reports the approved
+inventory digest and the observed running executable digest, actual argv, source
+reference and origin; it supplies the single-hop transport and a cancellation
+context. The module requires matching canonical identities/digests, explicit
+unique false daily-index mode, a finite configured scan cap, sufficient native
+rank and whole-day retention, and a query-duration ceiling within the operation
+budget. Missing authority fails before store I/O. Root must create this owner
+from the installed cell and authenticated source inventory, never request JSON.
+
+VictoriaMetrics v1.155.0 [envflag source](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/envflag/envflag.go)
+expands environment templates before parsing and defaults environment flag
+loading to disabled. This initial profile rejects templates, ambiguous required
+flag syntax, duplicate profile flags and enabled environment flag loading.
+[Storage initialization](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/app/vmstorage/main.go)
+passes the selected daily-index mode to storage. Alternate retention syntax and
+unverified profile variants are refused rather than inferred. Tests cover
+identity/profile refusal, zero-I/O refusal, lease loss and replacement, query
+cancellation, response limits and deterministic cleanup. Opening/closing a
+query adapter must never start or stop the native producer. The original startup
+owner supplies those lifecycle facts and closes the adapter at shutdown.
+
+
+### Module producer preparation
+
+The source following integration commit 5ef9c4e8 now implements the typed
+SeriesCardinalitySourceOwner/SeriesCardinalitySourceLease contract,
+OpenSeriesCardinalityQuerySource and NewWithSeriesCardinalitySource. Policy
+adds a canonical source_id and finite maximum_scan_series. Normal New refuses a
+configured source without the concrete admitted adapter. There is no raw-URL
+fallback. Startup admission makes no module store request, releases its lease,
+and has an independent adapter lifetime. Every query validates a fresh lease,
+limits its operation context, and closes its response body and lease. Context
+loss and release errors discard the result; private owner errors are sanitized.
+Close cancels query authority and never stops the native producer.
+
+The new native-tagged fixture adapter obtains argv/running digest from the
+actual child, reads the approved fixture executable independently, and observes
+process exit/stop cancellation. Its true-index control is also passed to the
+typed adapter as a negative. That adapter remains synthetic test composition;
+it cannot prove authenticated installed source approval. No native run has
+executed this changed source. The original 5f83cfbf daily proof stays frozen.
+
+Seven new pure test roots prepare identity/profile refusal, missing/typed-nil
+owner and lease refusal, per-query revalidation and zero-I/O refusal after
+changed source evidence, source loss/restart/retry, bounded acquisition,
+startup/policy binding, caller/generation/adapter cancellation, response/body
+failure and cleanup. Existing cardinality/HTTP/history/route tests are the
+necessary regression selection. Integration-tag compilation prepares the new
+fixture calls without starting native services.
+
+Pinned Go formatting/parser and whitespace checks passed. The repository layout
+check passed on Linux without a compiler or service. The single new Mac
+nonblocking opportunity returned raw 75 at the original permanent carrier
+before compilation or test children. Its unmodified result is
+/private/tmp/obs110-main-integration-pb1qgf_t/producer-logic-result.json; the
+later corrections and completed source have only static verification here.
+Do not count this refusal as a test failure or as qualified producer tests.
+No further lock attempt, Linux compiler, VictoriaMetrics or PostgreSQL process
+was started. The carrier remained unchanged and its opened FD closed.
+
+The shared startup call site remains openMonitoring in
+services/control/cmd/server/monitoring.go. ARC must provide the installed-cell
+owner, call the opener with a bounded startup context, pass its result into
+NewWithSeriesCardinalitySource, close on construction failure and register
+Close in the existing shutdown chain. No shared configuration, startup, IAM,
+public route or Web change is included. See ADR 0077 and the module README for
+the exact contract. Shared schema is still 60/120; the coordinator reports only
+Help/TRN documentation changes after ecab4c98, which do not justify chasing
+pure-documentation main updates or repeating old native suites.
+
+Current-main targeted race checks, integration-tag compile, native/installed
+acceptance, the whole-repository gate and all remaining OBS-110 completion
+criteria remain open. No roadmap checkbox changes.

@@ -21,7 +21,11 @@ const (
 
 // SeriesCardinalityPolicy selects a private raw index and bounds its UTC-day view.
 type SeriesCardinalityPolicy struct {
+	// SourceID references the trusted installed source; a URL alone grants no authority.
+	SourceID  string `json:"source_id"`
 	RawOrigin string `json:"raw_origin"`
+	// MaximumScanSeries must equal the observed finite native scan limit.
+	MaximumScanSeries uint64 `json:"maximum_scan_series"`
 	// LookbackDays includes today and must fit within the raw retention.
 	LookbackDays int `json:"lookback_days"`
 	MaximumRanks int `json:"maximum_ranks"`
@@ -31,7 +35,8 @@ func (p SeriesCardinalityPolicy) valid() bool {
 	if p == (SeriesCardinalityPolicy{}) {
 		return true
 	}
-	return metricsQueryOrigin(p.RawOrigin) != nil && p.LookbackDays >= 1 &&
+	return validID(p.SourceID) && p.MaximumScanSeries > 0 && p.MaximumScanSeries <= maximumCardinalityCount &&
+		metricsQueryOrigin(p.RawOrigin) != nil && p.LookbackDays >= 1 &&
 		p.LookbackDays <= 366 && p.MaximumRanks >= 1 && p.MaximumRanks <= maximumCardinalityRanks
 }
 

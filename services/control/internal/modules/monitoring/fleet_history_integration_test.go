@@ -321,6 +321,7 @@ func startMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme, 
 type monitoringFixtureProcess struct {
 	origin, binarySHA256 string
 	argv                 []string
+	life                 context.Context
 	stop                 func()
 }
 
@@ -348,9 +349,11 @@ func launchMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme,
 	if e != nil {
 		t.Fatal(e)
 	}
+	life, cancelLife := context.WithCancel(context.Background())
 	finished := make(chan error, 1)
-	go func() { finished <- cmd.Wait() }()
+	go func() { err := cmd.Wait(); cancelLife(); finished <- err }()
 	stop := sync.OnceFunc(func() {
+		cancelLife()
 		_ = cmd.Process.Signal(syscall.SIGTERM)
 		select {
 		case e := <-finished:
@@ -396,7 +399,7 @@ func launchMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme,
 			resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
 				t.Logf("started %s on %s", name, address)
-				return monitoringFixtureProcess{origin: origin, binarySHA256: fmt.Sprintf("%x", digest.Sum(nil)), argv: argv, stop: stop}
+				return monitoringFixtureProcess{origin: origin, binarySHA256: fmt.Sprintf("%x", digest.Sum(nil)), argv: argv, life: life, stop: stop}
 			}
 		}
 		time.Sleep(50 * time.Millisecond)

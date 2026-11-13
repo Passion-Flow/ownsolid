@@ -18,8 +18,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	agent "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	gateway "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	licensewire "github.com/Passion-Flow/ownsolid/pkg/license/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/components"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/deployments"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
@@ -33,29 +34,29 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/monitoringmetrics"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
-	gateway "github.com/Passion-Flow/ownsolid/api/gateway/v1"
-	licensewire "github.com/Passion-Flow/ownsolid/pkg/license/v1"
+	"github.com/google/uuid"
 )
 
 type story struct {
-	t             *testing.T
-	f             repositoryfixture.Fixture
-	ctx           context.Context
-	i             *identity.Service
-	w             *workspaces.Service
-	n             *nodes.Service
-	c             *components.Service
-	d             *distribution.Service
-	l             *licensing.Service
-	s             *monitoring.Service
-	m             *monitoringmetrics.Recorder
-	admin, portal identity.Auth
-	adminToken    string
-	offset        atomic.Int64
-	config        monitoring.Config
-	gateway       distribution.Provisioned
-	alias         distribution.Alias
-	key           distribution.MintedKey
+	cardinalitySource *monitoring.SeriesCardinalityQuerySource
+	t                 *testing.T
+	f                 repositoryfixture.Fixture
+	ctx               context.Context
+	i                 *identity.Service
+	w                 *workspaces.Service
+	n                 *nodes.Service
+	c                 *components.Service
+	d                 *distribution.Service
+	l                 *licensing.Service
+	s                 *monitoring.Service
+	m                 *monitoringmetrics.Recorder
+	admin, portal     identity.Auth
+	adminToken        string
+	offset            atomic.Int64
+	config            monitoring.Config
+	gateway           distribution.Provisioned
+	alias             distribution.Alias
+	key               distribution.MintedKey
 }
 
 func setup(t *testing.T, licensed bool) *story {
@@ -115,7 +116,7 @@ func setup(t *testing.T, licensed bool) *story {
 func (g *story) rebuild() {
 	g.t.Helper()
 	var e error
-	g.s, e = monitoring.New(g.i, g.w, g.l, g.c, g.d, g.m, g.config)
+	g.s, e = monitoring.NewWithSeriesCardinalitySource(g.i, g.w, g.l, g.c, g.d, g.m, g.config, g.cardinalitySource)
 	if e != nil {
 		g.t.Fatal(e)
 	}

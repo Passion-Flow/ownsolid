@@ -20,14 +20,14 @@ const maximumCardinalityReplyBytes = 4 << 20
 type seriesCardinalityReader struct {
 	policy SeriesCardinalityPolicy
 	origin *url.URL
-	client *http.Client
+	source *SeriesCardinalityQuerySource
 }
 
-func newSeriesCardinalityReader(p SeriesCardinalityPolicy, timeout time.Duration, concurrent int) *seriesCardinalityReader {
-	if p.RawOrigin == "" {
+func newSeriesCardinalityReader(p SeriesCardinalityPolicy, source *SeriesCardinalityQuerySource) *seriesCardinalityReader {
+	if p.RawOrigin == "" || source == nil {
 		return nil
 	}
-	return &seriesCardinalityReader{p, metricsQueryOrigin(p.RawOrigin), newMetricsQueryClient(timeout, concurrent)}
+	return &seriesCardinalityReader{p, metricsQueryOrigin(p.RawOrigin), source}
 }
 
 func cardinalitySourceError(ctx context.Context) error {
@@ -38,7 +38,7 @@ func cardinalitySourceError(ctx context.Context) error {
 }
 
 func (r *seriesCardinalityReader) read(ctx context.Context, scope workspaces.Workspace, now time.Time, selection SeriesCardinalityQuery) (SeriesCardinality, error) {
-	if ctx == nil || r == nil || r.origin == nil || r.client == nil {
+	if ctx == nil || r == nil || r.origin == nil || r.source == nil {
 		return SeriesCardinality{}, errors.New("MONITORING_OWNER_REQUIRED")
 	}
 	today := now.UTC().Truncate(24 * time.Hour)
@@ -53,50 +53,61 @@ func (r *seriesCardinalityReader) read(ctx context.Context, scope workspaces.Wor
 	if limit < 1 || limit > r.policy.MaximumRanks {
 		return SeriesCardinality{}, errors.New("VALIDATION_FAILED")
 	}
-	deadline, ok := ctx.Deadline()
+	_, ok := ctx.Deadline()
 	if !ok {
 		return SeriesCardinality{}, errors.New("MONITORING_OWNER_REQUIRED")
 	}
 	if err := ctx.Err(); err != nil {
 		return SeriesCardinality{}, err
 	}
-	query := url.Values{
-		"date":                  {selection.Date.Format(cardinalityDateFormat)},
-		"topN":                  {strconv.Itoa(limit)},
-		"focusLabel":            {"node_id"},
-		"extra_label":           {"tenant_id=" + scope.TenantID, "workspace_id=" + scope.ID},
-		"timeout":               {strconv.FormatInt(max(1, time.Until(deadline).Milliseconds()), 10) + "ms"},
-		"deny_partial_response": {"1"},
-	}
-	if selection.Metric != "" {
-		query.Set("match[]", "{__name__="+strconv.Quote(selection.Metric)+"}")
-	}
-	endpoint := *r.origin
-	endpoint.Path, endpoint.RawQuery = "/api/v1/status/tsdb", query.Encode()
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint.String(), nil)
+	var out SeriesCardinality
+	err := r.source.withLease(ctx, func(operation context.Context, lease SeriesCardinalitySourceLease) error {
+		deadline, _ := operation.Deadline()
+		query := url.Values{
+			"date":                  {selection.Date.Format(cardinalityDateFormat)},
+			"topN":                  {strconv.Itoa(limit)},
+			"focusLabel":            {"node_id"},
+			"extra_label":           {"tenant_id=" + scope.TenantID, "workspace_id=" + scope.ID},
+			"timeout":               {strconv.FormatInt(max(1, time.Until(deadline).Milliseconds()), 10) + "ms"},
+			"deny_partial_response": {"1"},
+		}
+		if selection.Metric != "" {
+			query.Set("match[]", "{__name__="+strconv.Quote(selection.Metric)+"}")
+		}
+		endpoint := *r.origin
+		endpoint.Path, endpoint.RawQuery = "/api/v1/status/tsdb", query.Encode()
+		request, err := http.NewRequestWithContext(operation, http.MethodGet, endpoint.String(), nil)
+		if err != nil {
+			return cardinalitySourceError(ctx)
+		}
+		response, err := lease.RoundTrip(request)
+		if err != nil || response == nil || response.Body == nil {
+			if response != nil && response.Body != nil {
+				_ = response.Body.Close()
+			}
+			return cardinalitySourceError(ctx)
+		}
+		if response.StatusCode != http.StatusOK {
+			response.Body.Close()
+			return cardinalitySourceError(ctx)
+		}
+		body, readError := io.ReadAll(io.LimitReader(response.Body, maximumCardinalityReplyBytes+1))
+		closeError := response.Body.Close()
+		if readError != nil || closeError != nil || len(body) > maximumCardinalityReplyBytes || !utf8.Valid(body) {
+			return cardinalitySourceError(ctx)
+		}
+		var reply cardinalityReply
+		if json.Unmarshal(body, &reply) != nil || reply.Status != "success" || !reply.complete() || len(reply.Warnings) != 0 || reply.Data == nil {
+			return cardinalitySourceError(ctx)
+		}
+		out, err = reply.project(scope, selection, limit)
+		if err != nil {
+			return cardinalitySourceError(ctx)
+		}
+		return nil
+	})
 	if err != nil {
-		return SeriesCardinality{}, cardinalitySourceError(ctx)
-	}
-	response, err := r.client.Do(request)
-	if err != nil {
-		return SeriesCardinality{}, cardinalitySourceError(ctx)
-	}
-	if response.StatusCode != http.StatusOK {
-		response.Body.Close()
-		return SeriesCardinality{}, cardinalitySourceError(ctx)
-	}
-	body, readError := io.ReadAll(io.LimitReader(response.Body, maximumCardinalityReplyBytes+1))
-	closeError := response.Body.Close()
-	if readError != nil || closeError != nil || len(body) > maximumCardinalityReplyBytes || !utf8.Valid(body) {
-		return SeriesCardinality{}, cardinalitySourceError(ctx)
-	}
-	var reply cardinalityReply
-	if json.Unmarshal(body, &reply) != nil || reply.Status != "success" || !reply.complete() || len(reply.Warnings) != 0 || reply.Data == nil {
-		return SeriesCardinality{}, cardinalitySourceError(ctx)
-	}
-	out, err := reply.project(scope, selection, limit)
-	if err != nil {
-		return SeriesCardinality{}, cardinalitySourceError(ctx)
+		return SeriesCardinality{}, err
 	}
 	return out, nil
 }

@@ -10,9 +10,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httptest"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -32,19 +29,10 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
 		t.Fatal("cardinality qualification requires real isolated PostgreSQL")
 	}
 	g := setup(t, false)
-	source, diskBytes, stop := startHistoryVM(t, g.ctx, "7d", "-disablePerDayIndex=false", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3")
-	target, _ := url.Parse(source)
-	proxy := httputil.NewSingleHostReverseProxy(target)
+	process, diskBytes := startHistoryVMIn(t, g.ctx, filepath.Join(t.TempDir(), "index"), "7d", "http", "-disablePerDayIndex=false", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3")
+	source, stop := process.origin, process.stop
 	var reads atomic.Int32
 	var onRead atomic.Pointer[func()]
-	counted := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reads.Add(1)
-		if callback := onRead.Load(); callback != nil {
-			(*callback)()
-		}
-		proxy.ServeHTTP(w, r)
-	}))
-	defer counted.Close()
 	stamp := time.Now().UTC().Truncate(time.Minute).Add(-time.Minute)
 	day := stamp.Truncate(24 * time.Hour)
 	exact := monitoring.SeriesCardinalityQuery{Date: day, Metric: "ownsolid_cardinality_cpu"}
@@ -66,7 +54,13 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
 		t.Fatalf("unexpected cardinality refusal: %+v %v, expected %v", out, err, codes)
 	}
 	refused(g.admin, g.f.Workspace, exact, "MONITORING_CARDINALITY_NOT_CONFIGURED")
-	g.config.SeriesCardinality = monitoring.SeriesCardinalityPolicy{RawOrigin: counted.URL, LookbackDays: 7, MaximumRanks: 3}
+	g.config.SeriesCardinality = monitoring.SeriesCardinalityPolicy{SourceID: uuid.NewString(), RawOrigin: source, MaximumScanSeries: 10000, LookbackDays: 7, MaximumRanks: 3}
+	g.cardinalitySource = openCardinalityFixtureSource(t, g, process, func() {
+		reads.Add(1)
+		if callback := onRead.Load(); callback != nil {
+			(*callback)()
+		}
+	})
 	g.rebuild()
 	other, foreignTenant, foreign := uuid.NewString(), uuid.NewString(), uuid.NewString()
 	g.exec("INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Other cardinality scope','active')", "", other, g.f.Tenant)
@@ -243,8 +237,8 @@ func qualifyDailyCardinalityFixture(t *testing.T, g *story, other, foreignTenant
 	emit(second, cpu, g.f.Tenant, other, uuid.NewString())
 	flags := []string{"-disablePerDayIndex=false", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3"}
 	dir := filepath.Join(t.TempDir(), "daily")
-	original := g.config.SeriesCardinality
-	defer func() { g.config.SeriesCardinality = original; g.rebuild() }()
+	original, originalSource := g.config.SeriesCardinality, g.cardinalitySource
+	defer func() { g.config.SeriesCardinality, g.cardinalitySource = original, originalSource; g.rebuild() }()
 	for _, stage := range []string{"ingested", "restarted"} {
 		process, disk := startHistoryVMIn(t, g.ctx, dir, "7d", "http", flags...)
 		if err := admitDailyCardinalityFixture(process.argv); err != nil {
@@ -266,6 +260,7 @@ func qualifyDailyCardinalityFixture(t *testing.T, g *story, other, foreignTenant
 			})
 		}
 		g.config.SeriesCardinality.RawOrigin = process.origin
+		g.cardinalitySource = openCardinalityFixtureSource(t, g, process, nil)
 		g.rebuild()
 		checks := []struct {
 			day               time.Time
@@ -307,6 +302,13 @@ func qualifyDailyCardinalityFixture(t *testing.T, g *story, other, foreignTenant
 	control, disk := startHistoryVMIn(t, g.ctx, filepath.Join(t.TempDir(), "global"), "7d", "http", flags...)
 	if err := admitDailyCardinalityFixture(control.argv); err == nil {
 		t.Fatal("disabled actual source profile was admitted")
+	}
+	controlPolicy := g.config
+	controlPolicy.SeriesCardinality.RawOrigin = control.origin
+	ctx, cancel := context.WithTimeout(g.ctx, 5*time.Second)
+	defer cancel()
+	if adapter, err := monitoring.OpenSeriesCardinalityQuerySource(ctx, controlPolicy, newCardinalityFixtureOwner(t, controlPolicy, control, nil)); err == nil || adapter != nil {
+		t.Fatal("typed query adapter admitted actual true-index control")
 	}
 	t.Logf("disabled-index control refused by fixture admission: actual binary SHA-256 %s; disablePerDayIndex=true; not an installed-product admission result", control.binarySHA256)
 	fixtureRequest(t, g.ctx, http.MethodPost, control.origin+"/api/v1/import", bytes.NewReader(samples.Bytes()))

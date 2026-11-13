@@ -44,19 +44,31 @@ type Snapshot struct {
 	NextNodeCursor *string                            `json:"next_node_cursor"`
 }
 
+// New constructs monitoring without an admitted cardinality source. Configuring
+// cardinality requires NewWithSeriesCardinalitySource instead of URL authority.
 func New(i *identity.Service, w *workspaces.Service, l *licensing.Service, c *components.Service, d *distribution.Service, m *monitoringmetrics.Recorder, policy Config) (*Service, error) {
+	return NewWithSeriesCardinalitySource(i, w, l, c, d, m, policy, nil)
+}
+
+// NewWithSeriesCardinalitySource binds the module to a separately owned trusted
+// query adapter. Root retains Close ownership, including constructor failures.
+func NewWithSeriesCardinalitySource(i *identity.Service, w *workspaces.Service, l *licensing.Service, c *components.Service, d *distribution.Service, m *monitoringmetrics.Recorder, policy Config, source *SeriesCardinalityQuerySource) (*Service, error) {
 	if i == nil || w == nil || w.Identity != i || l == nil || !l.UsesIdentity(i) || c == nil || c.Nodes == nil || c.Nodes.Identity != i || c.Nodes.Workspaces != w || d == nil || d.Identity != i || d.Workspaces != w || d.Nodes != c.Nodes || m == nil {
 		return nil, errors.New("MONITORING_OWNER_REQUIRED")
 	}
 	if policy.Validate() != nil || !m.MatchesPolicy(policy.HTTP) {
 		return nil, errors.New("MONITORING_CONFIGURATION_INVALID")
 	}
+	configuredCardinality := policy.SeriesCardinality != (SeriesCardinalityPolicy{})
+	if configuredCardinality && !source.matches(policy) || !configuredCardinality && source != nil {
+		return nil, errors.New("MONITORING_CARDINALITY_SOURCE_REQUIRED")
+	}
 	if _, e := i.Repository(); e != nil {
 		return nil, e
 	}
 	return &Service{
 		identity: i, workspaces: w, license: l, components: c, distribution: d, metrics: m,
-		cardinality:  newSeriesCardinalityReader(policy.SeriesCardinality, time.Duration(policy.OperationSeconds)*time.Second, policy.ConcurrentSnapshots),
+		cardinality:  newSeriesCardinalityReader(policy.SeriesCardinality, source),
 		fleetHistory: newFleetHistoryReader(policy.FleetHistory, time.Duration(policy.OperationSeconds)*time.Second, policy.ConcurrentSnapshots), config: policy, slots: make(chan struct{}, policy.ConcurrentSnapshots),
 	}, nil
 }

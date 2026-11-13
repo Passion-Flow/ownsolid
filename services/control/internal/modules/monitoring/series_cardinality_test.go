@@ -19,7 +19,7 @@ import (
 )
 
 func TestSeriesCardinalityConfiguration(t *testing.T) {
-	const valid = `{"series_cardinality":{"raw_origin":"https://metrics.example.invalid","lookback_days":7,"maximum_ranks":20}}`
+	const valid = `{"series_cardinality":{"source_id":"66666666-6666-4666-8666-666666666666","maximum_scan_series":10000,"raw_origin":"https://metrics.example.invalid","lookback_days":7,"maximum_ranks":20}}`
 	for _, tc := range []struct {
 		input string
 		valid bool
@@ -36,6 +36,11 @@ func TestSeriesCardinalityConfiguration(t *testing.T) {
 		{strings.Replace(valid, "https://metrics.example.invalid", "https://user@metrics.example.invalid", 1), false},
 		{strings.Replace(valid, "https://metrics.example.invalid", "https://metrics.example.invalid/path", 1), false},
 		{strings.Replace(valid, "maximum_ranks", "arbitrary_setting", 1), false},
+		{strings.Replace(valid, `"maximum_scan_series":10000`, `"maximum_scan_series":0`, 1), false},
+		{strings.Replace(valid, `"maximum_scan_series":10000`, `"maximum_scan_series":9007199254740992`, 1), false},
+		{strings.Replace(valid, `"maximum_scan_series":10000`, `"maximum_scan_series":true`, 1), false},
+		{strings.Replace(valid, `"source_id":"66666666-6666-4666-8666-666666666666",`, "", 1), false},
+		{strings.Replace(valid, `"maximum_scan_series":10000,`, "", 1), false},
 	} {
 		file := filepath.Join(t.TempDir(), "monitoring.json")
 		if err := os.WriteFile(file, []byte(tc.input), 0600); err != nil {
@@ -98,8 +103,7 @@ func TestSeriesCardinalityScopedNativeProjection(t *testing.T) {
 		fmt.Fprintf(w, `{"status":"success","data":{"totalSeries":2,"seriesCountByMetricName":[{"name":%s,"value":2}],"seriesCountByFocusLabelValue":[{"name":%q,"value":1}],"seriesCountByLabelValuePair":[{"name":"foreign-private-label","value":999}],"metricNameStats":{"records":[{"metricName":"foreign-private-metric","requestsCount":900}]}}}`, name, node)
 	}))
 	defer server.Close()
-	r := newSeriesCardinalityReader(SeriesCardinalityPolicy{RawOrigin: server.URL, LookbackDays: 7, MaximumRanks: 3}, 5*time.Second, 2)
-	t.Cleanup(r.client.CloseIdleConnections)
+	r := newTestSeriesCardinalityReader(t, SeriesCardinalityPolicy{RawOrigin: server.URL, LookbackDays: 7, MaximumRanks: 3}, 5*time.Second, 2)
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
 	out, err := r.read(ctx, scope, date.Add(12*time.Hour), SeriesCardinalityQuery{Date: date, Metric: metric})
@@ -151,8 +155,7 @@ func TestSeriesCardinalityRejectsMalformedAndIncompleteSource(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(tc.status); fmt.Fprint(w, tc.body) }))
 			defer server.Close()
-			reader := newSeriesCardinalityReader(SeriesCardinalityPolicy{RawOrigin: server.URL, LookbackDays: 1, MaximumRanks: 3}, time.Second, 1)
-			defer reader.client.CloseIdleConnections()
+			reader := newTestSeriesCardinalityReader(t, SeriesCardinalityPolicy{RawOrigin: server.URL, LookbackDays: 1, MaximumRanks: 3}, time.Second, 1)
 			ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 			defer cancel()
 			date := time.Date(2026, 11, 12, 0, 0, 0, 0, time.UTC)
@@ -165,8 +168,7 @@ func TestSeriesCardinalityRejectsMalformedAndIncompleteSource(t *testing.T) {
 }
 
 func TestSeriesCardinalityDateAndRankAdmission(t *testing.T) {
-	reader := newSeriesCardinalityReader(SeriesCardinalityPolicy{RawOrigin: "http://127.0.0.1:1", LookbackDays: 7, MaximumRanks: 2}, time.Second, 1)
-	defer reader.client.CloseIdleConnections()
+	reader := newTestSeriesCardinalityReader(t, SeriesCardinalityPolicy{RawOrigin: "http://127.0.0.1:1", LookbackDays: 7, MaximumRanks: 2}, time.Second, 1)
 	today := time.Date(2026, 11, 12, 0, 0, 0, 0, time.UTC)
 	for _, tc := range []struct {
 		q    SeriesCardinalityQuery
@@ -194,8 +196,7 @@ func TestSeriesCardinalityRedirectAndCancellation(t *testing.T) {
 	redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, target.URL, 302) }))
 	defer redirect.Close()
 	date := time.Date(2026, 11, 12, 0, 0, 0, 0, time.UTC)
-	reader := newSeriesCardinalityReader(SeriesCardinalityPolicy{RawOrigin: redirect.URL, LookbackDays: 1, MaximumRanks: 1}, time.Second, 1)
-	defer reader.client.CloseIdleConnections()
+	reader := newTestSeriesCardinalityReader(t, SeriesCardinalityPolicy{RawOrigin: redirect.URL, LookbackDays: 1, MaximumRanks: 1}, time.Second, 1)
 	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 	defer cancel()
 	if _, err := reader.read(ctx, workspaces.Workspace{}, date, SeriesCardinalityQuery{Date: date}); err == nil || err.Error() != "MONITORING_CARDINALITY_UNAVAILABLE" {

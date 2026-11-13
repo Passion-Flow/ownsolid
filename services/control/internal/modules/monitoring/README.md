@@ -546,19 +546,23 @@ published public operation or Console workflow. Its optional protected policy is
 ```json
 {
   "series_cardinality": {
+    "source_id": "66666666-6666-4666-8666-666666666666",
     "raw_origin": "https://metrics.example.invalid",
+    "maximum_scan_series": 10000,
     "lookback_days": 7,
     "maximum_ranks": 20
   }
 }
 ```
 
-Omit this policy to disable the read. All three values must be explicit when it
-is enabled. Lookback includes the current UTC day and must fit the raw store's
+Omit this policy to disable the read. All five values must be explicit when it
+is configured. Configuration alone does not enable queries: the trusted runtime
+owner must supply an admitted query source, as described below. Lookback includes the current UTC day and must fit the raw store's
 configured retention. Set native search.maxTSDBStatusSeries and
 search.maxStatusRequestDuration in the installed store as well; topN is only a
-returned-rank cap. Use direct private HTTPS with the process's configured CA trust.
-The operation budget also bounds connection establishment and response headers.
+returned-rank cap. Use direct private HTTPS with the runtime owner's configured CA trust and endpoint
+binding. Its transport must bound connection and header I/O by the request
+context and must never use ambient proxies or follow redirects.
 
 GetSeriesCardinality and GetSeriesCardinalityJSON accept a UTC midnight date,
 an optional exact metric name and a rank limit. Zero selects the configured
@@ -632,3 +636,57 @@ The 5f83cfbf native qualification above is preserved at its original 59/119
 source. This new baseline declares 60/120 but has not run that native scope.
 Trusted producer composition, shared cardinality API/dispatch, Console and
 current-main native/full gates remain open.
+
+
+## Trusted cardinality producer composition
+
+The module exposes these internal Go composition entry points:
+
+```go
+OpenSeriesCardinalityQuerySource(ctx context.Context, config Config, owner SeriesCardinalitySourceOwner) (*SeriesCardinalityQuerySource, error)
+NewWithSeriesCardinalitySource(i *identity.Service, w *workspaces.Service, l *licensing.Service, c *components.Service, d *distribution.Service, m *monitoringmetrics.Recorder, policy Config, source *SeriesCardinalityQuerySource) (*Service, error)
+```
+
+SeriesCardinalitySourceOwner implements OpenSeriesCardinalitySource(ctx, sourceID).
+It returns a SeriesCardinalitySourceLease with Observation, Context, RoundTrip
+and Close. The owner must derive source identity and approved executable digest
+from authenticated installed inventory for the actual installed site/cell. It
+must bind that inventory to the observed process digest, actual argv, endpoint
+and canonical InstanceID. It cannot serialize monitoring configuration into an
+observation or accept these identities from HTTP input. A supervised immutable
+process observation can be reused for leases in the same generation; this API
+does not require hashing the native executable for every query.
+
+The lease's live context must be cancelled when approval is lost, the process
+exits or the endpoint/profile changes. Its one-hop transport must preserve TLS
+verification and the endpoint binding, honor request cancellation, and avoid
+proxy or DNS escape. Each acquired lease is released after bounded decoding,
+including failures; release must not stop the producer. Every query reacquires
+a lease, so a fresh verified generation can recover after a restart. A lost
+source or failed lease release discards the response. Private native details
+never enter user JSON or error messages.
+
+The first accepted profile requires one explicit -disablePerDayIndex=false,
+-search.maxTSDBStatusSeries equal to maximum_scan_series, a native TopN cap
+between maximum_ranks and 100, a positive native status-query duration within
+operation_seconds, and explicit whole-day retention covering lookback_days.
+Duplicates, aliases, environment templates and enabled envflag loading are
+refused. Other native flags and resource configuration remain the runtime
+owner's responsibility. This profile preparation does not enforce ingest limits.
+
+At services/control/cmd/server/monitoring.go, the startup owner must replace the
+existing monitoring.New call inside openMonitoring only after it has a real
+installed-cell source owner. First open the adapter with a bounded startup
+context, then pass it to NewWithSeriesCardinalitySource. Close the adapter if
+module construction fails; register its Close with the owning shutdown chain
+on success. Closing it cancels in-flight query authority, while the runtime
+owner separately supervises and stops VictoriaMetrics. A normal New call with
+configured cardinality now returns MONITORING_CARDINALITY_SOURCE_REQUIRED;
+empty policy preserves the existing disabled default.
+
+That shared startup integration, its concrete installed owner and lifecycle
+qualification are not implemented by this module slice. Public schema/dispatch,
+Console, current-main native/full gates and hard ingest limits remain open.
+The native fixture now prepares the same typed interface from its actual child
+and separately read approved fixture binary. This is a test-process adapter,
+never an installed-product authority.
