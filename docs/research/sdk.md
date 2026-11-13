@@ -65,6 +65,8 @@ Preserve upstream license notices if redistributing the tools themselves.
 | dprotaso/go-yit 9ba8df137936, getkin/kin-openapi 0.142.0, oasdiff/yaml 0.1.1, speakeasy-api/openapi 1.24.0 | MIT |
 | go.yaml.in/yaml/v3 3.0.4, gopkg.in/yaml.v3 3.0.1, oasdiff/yaml3 0.0.14 | Apache-2.0 and MIT for libyaml-derived files |
 | golang.org/x/mod 0.38.0, golang.org/x/sync 0.22.0, golang.org/x/text 0.40.0, golang.org/x/tools 0.48.0 | BSD-3-Clause |
+| [davecgh/go-spew d8f796af33cc](https://raw.githubusercontent.com/davecgh/go-spew/d8f796af33cc/LICENSE), in the pinned tool module graph | ISC |
+| [pmezard/go-difflib 5d4384ee4fb2](https://raw.githubusercontent.com/pmezard/go-difflib/5d4384ee4fb2/LICENSE), in the pinned tool module graph | BSD-3-Clause |
 | openapi-python-client 0.29.1, annotated-doc 0.0.5, annotated-types 0.8.0, markdown-it-py 4.2.0, mdurl 0.1.2, pydantic 2.14.3, pydantic-core 2.50.4, rich 15.0.0, ruamel.yaml 0.19.1, ruff 0.17.4, typer 0.27.3, typing-inspection 0.4.5 | MIT |
 | Jinja2 3.1.6, MarkupSafe 3.0.4 | BSD-3-Clause |
 | Pygments 2.21.0 | BSD-2-Clause |
