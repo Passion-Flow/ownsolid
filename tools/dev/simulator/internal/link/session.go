@@ -9,6 +9,7 @@ import (
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	"github.com/Passion-Flow/ownsolid/services/agent/sessiontransport"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -32,13 +33,14 @@ var ErrBusy = fmt.Errorf("%w: gateway full", ErrRefused)
 type Connection struct {
 	dialer *Dialer
 	mu     sync.Mutex
-	conn   *grpc.ClientConn
+	conn   *sessiontransport.Connection
 	// gateways are the agent gateways in the order of the connection's first node; gateway
 	// is the one in use and unanswered counts those that failed in a row (ADR 0048).
 	gateways   []string
 	gateway    int
 	unanswered int
 	rebalance  wire.SessionRebalance
+	retiring   *sessiontransport.Retirement
 }
 
 // Connection returns a new, unconnected session connection to the dialer's address.
@@ -66,6 +68,10 @@ func (c *Connection) Gateway() string {
 func (c *Connection) Next() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.retiring != nil {
+		_ = c.retiring.Close()
+		c.retiring = nil
+	}
 	if len(c.gateways) < 2 {
 		return false
 	}
@@ -89,7 +95,7 @@ func (c *Connection) Opened() {
 	c.unanswered = 0
 }
 
-func (c *Connection) get() (*grpc.ClientConn, error) {
+func (c *Connection) get() (*sessiontransport.Connection, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.conn != nil {
@@ -100,13 +106,13 @@ func (c *Connection) get() (*grpc.ClientConn, error) {
 	return conn, e
 }
 
-func (c *Connection) dial(rank int) (*grpc.ClientConn, error) {
+func (c *Connection) dial(rank int) (*sessiontransport.Connection, error) {
 	d := c.dialer
 	address := d.address
 	if len(c.gateways) > 0 {
 		address = c.gateways[rank]
 	}
-	conn, e := grpc.NewClient("passthrough:///"+address,
+	conn, e := sessiontransport.New("passthrough:///"+address,
 		grpc.WithTransportCredentials(credentials.NewTLS(d.tls.Clone())),
 		grpc.WithAuthority(d.origin.Host),
 		grpc.WithNoProxy(),
@@ -121,6 +127,10 @@ func (c *Connection) dial(rank int) (*grpc.ClientConn, error) {
 func (c *Connection) Reset() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.retiring != nil {
+		_ = c.retiring.Close()
+		c.retiring = nil
+	}
 	c.rebalance = wire.SessionRebalance{}
 	if c.conn != nil {
 		c.conn.Close()
@@ -131,15 +141,23 @@ func (c *Connection) Reset() {
 // Rebalance checks a higher-ranked gateway using a heartbeat. It returns a live
 // replacement only after that gateway answers and the original connection is still
 // current. A nil stream and nil error mean no check was due.
-func (c *Connection) Rebalance(ctx context.Context, interval time.Duration, node Node, h wire.Handshake) (*Stream, *wire.Disposition, error) {
+func (c *Connection) Rebalance(ctx context.Context, currentStream *Stream, interval time.Duration, node Node, h wire.Handshake) (*Stream, *wire.Disposition, error) {
 	c.mu.Lock()
+	if c.retirementPending() {
+		c.mu.Unlock()
+		return nil, nil, nil
+	}
 	current := c.conn
 	rank := c.rebalance.Candidate(time.Now(), interval, c.gateway)
 	c.mu.Unlock()
 	if current == nil || rank < 0 {
 		return nil, nil, nil
 	}
-	ctx, cancel := context.WithTimeout(ctx, c.dialer.request)
+	budget := c.dialer.request
+	if currentStream != nil && currentStream.connection == current && currentStream.age.Lifetime != nil {
+		budget = currentStream.age.ProbeBudget(time.Now(), budget)
+	}
+	ctx, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
 	conn, e := c.dial(rank)
 	if e != nil {
@@ -152,7 +170,7 @@ func (c *Connection) Rebalance(ctx context.Context, interval time.Duration, node
 		if e == nil && !reply.Disposition.AcceptsSessionRebalance() {
 			e = ErrInvalid
 		}
-		if e == nil && c.adoptCandidate(ctx, current, conn, rank) {
+		if e == nil && c.adoptCandidate(ctx, currentStream, current, conn, rank) {
 			return stream, reply.Disposition, nil
 		}
 		stream.Close()
@@ -164,25 +182,38 @@ func (c *Connection) Rebalance(ctx context.Context, interval time.Duration, node
 	return nil, nil, e
 }
 
-func (c *Connection) adoptCandidate(ctx context.Context, current, candidate *grpc.ClientConn, rank int) bool {
+func (c *Connection) adoptCandidate(ctx context.Context, currentStream *Stream, current, candidate *sessiontransport.Connection, rank int) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	// A simulated fault may have reset the original connection while the check ran.
 	if c.conn != current || ctx.Err() != nil {
 		return false
 	}
+	var retirement *sessiontransport.Retirement
+	if currentStream != nil && currentStream.connection == current && currentStream.age.Lifetime != nil {
+		var err error
+		retirement, err = current.Retire(currentStream.age.Lifetime, currentStream.age.CloseAt)
+		if err != nil {
+			return false
+		}
+	}
 	c.conn, c.gateway, c.unanswered = candidate, rank, 0
+	c.retiring = retirement
 	c.rebalance = wire.SessionRebalance{}
-	current.Close()
+	if retirement == nil {
+		current.Close()
+	}
 	return true
 }
 
 // Stream is one open session. Its exchanges are sequential.
 type Stream struct {
-	stream grpc.ClientStream
-	cancel context.CancelFunc
-	last   uint64
-	budget time.Duration
+	stream     grpc.ClientStream
+	cancel     context.CancelFunc
+	last       uint64
+	budget     time.Duration
+	connection *sessiontransport.Connection
+	age        connectionAge
 }
 
 // Open opens a session for node on c within the request budget.
@@ -194,7 +225,7 @@ func (c *Connection) Open(ctx context.Context, node Node) (*Stream, error) {
 	return c.open(ctx, conn, node)
 }
 
-func (c *Connection) open(ctx context.Context, conn *grpc.ClientConn, node Node) (*Stream, error) {
+func (c *Connection) open(ctx context.Context, conn *sessiontransport.Connection, node Node) (*Stream, error) {
 	md := metadata.Pairs("authorization", "Bearer "+node.Credential, wire.SessionNodeHeader, node.ID, wire.SessionSiteHeader, node.Scope.SiteID, wire.SessionCellHeader, node.Scope.CellID)
 	streamContext, cancel := context.WithCancel(metadata.NewOutgoingContext(context.Background(), md))
 	budget := c.dialer.request
@@ -206,7 +237,7 @@ func (c *Connection) open(ctx context.Context, conn *grpc.ClientConn, node Node)
 		cancel()
 		return nil, streamError(e)
 	}
-	return &Stream{stream: stream, cancel: cancel, budget: budget}, nil
+	return &Stream{stream: stream, cancel: cancel, budget: budget, connection: conn}, nil
 }
 
 // Close ends the stream.
@@ -215,6 +246,7 @@ func (s *Stream) Close() { s.cancel() }
 // Exchange sends m and returns control's validated reply. A claim's budget grows by its
 // wait. A failed exchange leaves the stream broken; the caller closes it.
 func (s *Stream) Exchange(ctx context.Context, m wire.AgentMessage) (wire.ControlMessage, error) {
+	started := time.Now()
 	m.ID = s.last + 1
 	budget := s.budget
 	if m.Claim != nil {
@@ -240,6 +272,9 @@ func (s *Stream) Exchange(ctx context.Context, m wire.AgentMessage) (wire.Contro
 	}
 	if reply.Problem != nil {
 		return reply, &Problem{Code: reply.Problem.Code, Status: reply.Problem.Status, RetryAfter: time.Duration(reply.Problem.RetryAfterSeconds) * time.Second}
+	}
+	if m.ID == 1 && reply.Disposition.AcceptsSessionRebalance() {
+		s.readAge(started)
 	}
 	return reply, nil
 }

@@ -46,12 +46,14 @@ func (c *agingConn) SetReadDeadline(t time.Time) error  { return c.Conn.SetReadD
 func (c *agingConn) SetWriteDeadline(t time.Time) error { return c.Conn.SetWriteDeadline(c.bound(t)) }
 
 type connectionDrainKey struct{}
+type connectionCloseKey struct{}
 type connectionIdentityKey struct{}
 
 func withConnectionDrainAt(ctx context.Context, conn net.Conn) context.Context {
 	if secured, ok := conn.(*tls.Conn); ok {
 		if aged, ok := secured.NetConn().(*agingConn); ok {
 			ctx = context.WithValue(ctx, connectionDrainKey{}, aged.drainAt)
+			ctx = context.WithValue(ctx, connectionCloseKey{}, aged.closeAt)
 			return context.WithValue(ctx, connectionIdentityKey{}, aged.id)
 		}
 	}
@@ -69,5 +71,12 @@ func ConnectionID(ctx context.Context) string {
 // exchanges. A zero time indicates that the listener has no age policy.
 func ConnectionDrainAt(ctx context.Context) time.Time {
 	at, _ := ctx.Value(connectionDrainKey{}).(time.Time)
+	return at
+}
+
+// ConnectionCloseAt reports the dedicated transport's unchanged hard deadline.
+// A zero time indicates a listener without a connection-age policy.
+func ConnectionCloseAt(ctx context.Context) time.Time {
+	at, _ := ctx.Value(connectionCloseKey{}).(time.Time)
 	return at
 }

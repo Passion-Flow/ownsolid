@@ -8,6 +8,16 @@
 
 [backoff.go](backoff.go) paces retries with the full-jitter delays of the contract (`api/agent/v1/backoff.go`), which the agent simulator shares. The session adopts the pacing in every heartbeat reply, and a heartbeat or claim makes one request per attempt, so the run loop is the one retry layer ([ADR 0013](../../../../docs/decisions/0013-agent-pacing.md)). A refusal keeps control's retry hint, from `Retry-After` or the session problem, in `Problem.RetryAfter`; `RetryHint` reads it and `AfterHint` spreads the wait above it. The run loop, model range retries and lease renewals wait at least the hint ([ADR 0018](../../../../docs/decisions/0018-agent-call-admission.md)).
 
+[session_age.go](session_age.go) authenticates a replacement between exchanges when
+a dedicated gateway supplies a valid first-reply age hint. It uses the shared
+[physical transport owner](../../sessiontransport/README.md), keeps at most one
+unused channel until natural retirement, and joins that owner on close. Candidate
+probes retain the request/idle budgets and half the remaining positive drain window.
+Failed candidates keep the original stream; claims and results are never replayed.
+Old agents ignore the additive metadata, and new agents retain the legacy path with
+old servers, shared listeners or invalid hints. The existing configured connection
+and session budgets remain authoritative.
+
 Artifact transfers bind the current lease and approved recipe length/digest rather than trusting a downloaded filename. [models.go](models.go), [training.go](training.go), [model_preparation.go](model_preparation.go) and [registry.go](registry.go) own their versioned file/event/upload interfaces. [enrollment_outcome.go](enrollment_outcome.go) preserves enrollment outcome distinctions; a lost reply must not be presented as confirmed absence or successful enrollment.
 
 Credentials come from the runtime/state owner and stay out of command arguments and diagnostics. Responses, remote errors and transfer sizes must remain bounded. Client.Close releases its HTTP transports; it does not delete durable node or workload state.
