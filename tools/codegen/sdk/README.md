@@ -31,7 +31,13 @@ Use a Python 3.12 virtual environment for the generator:
 ## Generate and use the SDKs
 
 Choose an output directory that does not exist. The generator reads local
-contracts and invokes the prepared tools by absolute path.
+contracts and invokes the prepared tools by absolute path. Keep the prepared
+Go toolchain on PATH as well: the pinned Go formatter queries go env -json,
+and module resolution can query go list -m -e -json. These are metadata
+queries, so a command allowlist for disconnected generation must account
+for the fixed Go executable in addition to the two generator entrypoints.
+The current Python post_hooks list is empty; it runs no Ruff or shell hook.
+See the [process graph and resource boundary](../../../docs/research/sdk.md#file-only-generation-process-graph).
 
 Source contracts must be JSON objects with unique member names at every depth.
 Duplicate names and the nonstandard NaN/Infinity tokens fail with the owning
