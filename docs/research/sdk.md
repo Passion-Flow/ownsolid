@@ -346,3 +346,43 @@ establish successful tool construction, reproducible SDK bytes or native
 SDK behavior. The existing 49 tests, 28 projection results, retained
 430-operation audit exit 1, earlier admission refusals and native scope
 remain attached to their original sources. No model or data set is added.
+
+## Cached module verification before the Mac tool build
+
+The allocated e4bd3138/ee7a214c Mac attempt passed fresh resource admission
+and acquired the new carrier once. It downloaded the two previously missing,
+pinned go-spew and go-difflib versions; both Go-reported Sum and GoModSum
+matched the retained pins. Preparation then failed before compilation because
+the private verifier tried to open go-spew's source-directory go.mod.
+The foreground attempt ended after 10.845 seconds with both child groups
+cleared, the same carrier/manifest preserved and both held FD copies closed.
+No tool binary, SDK output or native test was produced; the attempt was not retried.
+
+This is a verifier defect. Go's
+[LegacyGoMod](https://github.com/golang/go/blob/go1.27.3/src/cmd/go/internal/modfetch/coderepo.go)
+supports older modules without a source go.mod by synthesizing a module
+directive. The actual download report identifies its canonical GoMod file in
+cache/download/<escaped-module>/@v/<escaped-version>.mod. Verify GoModSum
+against that file, including for legacy modules. Keep the independent full
+source-directory h1 check and license-notice hashes. If a source go.mod
+exists, require its bytes to agree with the cached .mod. Do not manufacture
+a source go.mod or omit its checksum check to admit a legacy dependency.
+
+Use the existing
+[Go h1 directory hashing algorithm](https://github.com/golang/go/blob/go1.27.3/src/cmd/vendor/golang.org/x/mod/sumdb/dirhash/hash.go)
+in a read-only Python verifier for the pinned module cache. Reject changed
+source, missing or changed cached .mod, inconsistent source/cache module
+metadata, symlinks and unsafe module/version paths. Test both source-go.mod
+and synthesized-go.mod cases and their refusal paths, then verify all retained
+module pins against the actual prepared cache without starting Go or taking
+the carrier again. This adds no dependency, model or dataset; the existing
+PSF and Go BSD-3-Clause terms apply. A passing cache verification is not a
+compiled v2.8.2 tool, generated SDK, native result or renewed execution grant.
+
+The corrected verifier passes seven pure Python cases and a read-only check of
+all 23 actual retained module pins. Source h1, canonical cached .mod h1 and
+available notice hashes are retained for every module. Exactly go-spew and
+go-difflib lack a source go.mod. No module source or synthesized metadata was
+edited. No second carrier acquisition, Go compilation, SDK generation or
+native run followed this correction. The 36 generation inputs remain those
+of e4bd3138; this helper is a separate tool-preparation input.

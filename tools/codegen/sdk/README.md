@@ -104,6 +104,16 @@ with httpx.Client(
     print(response.status_code)
 ```
 
+## Verify prepared tool sources
+
+For cache-first private tool preparation, verify already downloaded module pins
+with `python3 tools/codegen/sdk/verify_tool_modules.py --cache-root "$MODULE_CACHE" --pins "$PREPARATION_JSON"`.
+The preparation JSON has a modules list with module, version, sum and go_mod_sum.
+This read-only check covers source h1, the canonical cached .mod h1 and licence
+notice hashes. Older modules can legitimately lack a source go.mod; their cached
+.mod must still match its pin. This does not download or compile a tool and does
+not qualify a binary or renew a consumed execution attempt.
+
 ## Read the audit log deliberately
 
 listAuditEvents records access before releasing its page. A 409
