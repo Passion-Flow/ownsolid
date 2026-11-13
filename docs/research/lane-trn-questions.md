@@ -88,7 +88,7 @@ protected functions/grants remain their owners' work.
 
 
 The separate bounded wrapper/config/diffs are now prepared and hashed in
-/root/lane-trn-tools/reader-native-bounded-v1/. Twenty-five pure local checks
+/root/lane-trn-tools/reader-native-bounded-v2/. Twenty-six pure local checks
 and a read-only Linux input/source check passed; details and exact hashes are
 in the [review artifact note](training-published-file-readers.md#bounded-reader-fixture-review-artifact).
 This resolves preparation only. No native carrier acquisition, compilation or
