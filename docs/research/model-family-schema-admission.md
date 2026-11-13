@@ -370,3 +370,15 @@ prefix55..61 restore, drift/ledger, original grant-resume and MODEL's seven SQL
 roots plus cursor dimensions still require the original native environment,
 protected shared fixture inputs and a newly allocated opportunity. The strict
 schema60 directory fingerprints remain in force.
+
+The independently renewed original-source opportunity likewise returned NOTRUN:
+one SSH child, exit 255 after 19.858641375 seconds, no remote resource/preflight
+JSON or entry receipt. The original source archive/manifest, 61 migration assets,
+16 metadata inputs and three native binary hashes were verified before entry.
+No actual catalog JSON or fingerprint was collected, and no pin/source B patch
+can be derived from this refusal. The matching exact result SHA-256 is
+`fed248a4ece4bc3ef9c8fc698d51a6d38088c8744f3f2bad16288d06ebd38d1a`;
+see the [gateway qualification boundary](agent-gateway-database-role.md#joint-source-local-lifecycle-qualification)
+for the scoped process cleanup and preserved earlier evidence. A diagnostic
+connection's success does not qualify a later native entry. The original
+schema60 pins and every migration/role assertion remain unchanged.

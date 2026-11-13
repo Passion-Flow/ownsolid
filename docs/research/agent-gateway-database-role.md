@@ -992,3 +992,28 @@ qualification exists. The original schema60 pins, CatalogSQL and all assertions
 remain unchanged. Actual CLI startup rollback, real restricted-role training
 claims, read-only mount delivery, persistence, offline installed execution and
 fleet cost remain open, as do the complete check/build/test gates and ARC-111.
+
+The separately reauthorized native opportunity also stopped before a remote
+preflight was received. Its sole SSH child returned 255 after 19.858641375
+seconds with the same raw `Connection to UNKNOWN port 65535 timed out` error.
+The exact `3513ab2b` source archive/manifest, all 61 migration hashes, all 16
+metadata inputs and the three retained native binary hashes were verified
+locally first. There is no remote entry receipt, catalog JSON, SQL case, role
+execution, new pin patch or source B from this opportunity. The result is
+NOTRUN; it does not supersede the earlier 8.616071125-second refusal or the
+passing Mac qualification. No Mac carrier was opened or compiler started; no retry or
+queue followed, and all legacy entries remain closed.
+
+The exact SSH PID 59504, its wrapper PID 59392 and its owned process group were
+absent at readback. Its one-shot private local entry was closed. Remote
+workload admission was never confirmed; no global foreign-process or FD
+absence is inferred. The retained result is
+`lane-arc-diagnostics/arc111-native-formal61.qtc543lk/outer-result.json`, SHA-256
+`fed248a4ece4bc3ef9c8fc698d51a6d38088c8744f3f2bad16288d06ebd38d1a`;
+local cleanup readback has SHA-256
+`390aa5c1b49245ab8db81e9479699392c9eed4744be2288a1fe577bf7f716c7c`.
+Actual catalog collection requires a new authorized native opportunity whose
+single SSH/resource admission succeeds. Matching source/pin binaries and the
+protected original fixture inputs remain prerequisites for subsequent SQL
+acceptance. The previously observed successful diagnostic SSH connection
+establishes only its own observation, not continued access for this entry.
