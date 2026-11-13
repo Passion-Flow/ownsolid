@@ -441,7 +441,7 @@ def exercise_audit_reads_python_protocol(sdk, *, statuses=(409, 418)):
                     raise AssertionError("a physically lost reply became success")
             else:
                 check_first(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations, first_status)
-            check_second(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations, first_status)
+            check_second(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations)
 
     for first_status in statuses:
         assert first_status in (409, 418), "unsupported audit protocol fixture status"
@@ -464,7 +464,7 @@ def exercise_audit_reads_python_protocol(sdk, *, statuses=(409, 418)):
                                         raise AssertionError("a physically lost reply became success")
                                 else:
                                     check_first(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations, first_status)
-                                check_second(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations, first_status)
+                                check_second(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations)
                         print(json.dumps({"check": "python_audit_tcp", "mode": mode, "assistant": assistant,
                                           "lost_reply": lost_reply, "first_status": first_status, "requests": len(calls), "exit": 0}))
 
