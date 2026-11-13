@@ -3,7 +3,7 @@ import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { expect, test } from '@playwright/test';
 import { expectAccessible } from './accessibility-flows.ts';
 import { browserSession } from './browser-sessions.ts';
-import { mockControlPlane, type ControlPlane } from './control-plane.ts';
+import { account, mockControlPlane, type ControlPlane } from './control-plane.ts';
 
 const other = {
   ...browserSession,
@@ -16,10 +16,25 @@ const other = {
 export function accountSessionFlows(audience: ControlPlane['audience']): void {
   test.describe(`account sessions, ${audience}`, () => {
     let control: ControlPlane;
-    test.beforeEach(async ({ page }) => {
+    const failures: string[] = [];
+    test.beforeEach(async ({ page, baseURL }) => {
+      failures.length = 0;
+      page.on('request', (request) => {
+        if (!request.url().startsWith(baseURL ?? '') && !request.url().startsWith('data:')) {
+          failures.push(`outside request: ${request.url()}`);
+        }
+      });
+      page.on('console', (message) => {
+        if (message.type() === 'error' && message.text().includes('Content Security Policy')) {
+          failures.push(message.text());
+        }
+      });
       control = await mockControlPlane(page, audience);
       control.signedIn = true;
       control.browserSessions = [{ ...browserSession }, { ...other }];
+    });
+    test.afterEach(() => {
+      expect(failures).toEqual([]);
     });
 
     for (const locale of ['en', 'zh-CN'] as const) {
@@ -64,6 +79,12 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
           .first()
           .click();
         await expect(section.getByRole('listitem')).toHaveCount(2);
+        await page.setViewportSize({ width: 390, height: 844 });
+        await expectAccessible(page);
+        expect(
+          await page.locator('main').evaluate((main) => main.scrollWidth - main.clientWidth),
+        ).toBe(0);
+        await page.screenshot({ path: info.outputPath('account-390.png'), fullPage: true });
         await page.setViewportSize({ width: 360, height: 780 });
         await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
         await expectAccessible(page);
@@ -73,6 +94,53 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
         await page.screenshot({ path: info.outputPath('account-narrow-dark.png'), fullPage: true });
       });
     }
+
+    test('replaces the current marker after a real same-account sign-out and sign-in', async ({
+      page,
+    }, info) => {
+      await page.goto('/account');
+      const section = page.getByRole('region', { name: 'Sessions', exact: true });
+      await expect(
+        section.getByText(`Session ${browserSession.id}`, { exact: true }),
+      ).toBeVisible();
+      await page.getByRole('button', { name: 'Account menu' }).click();
+      await page.getByRole('menuitem', { name: 'Sign out', exact: true }).click();
+      await page.getByLabel('Email').fill(account.email);
+      await page.getByLabel('Password', { exact: true }).fill(account.password);
+      await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+      await page.goto('/account');
+      const current = section.getByRole('listitem').filter({ hasText: 'Current session' });
+      await expect(current).toHaveCount(1);
+      const newId = control.browserSessions.find((row) => row.current)?.id;
+      expect(newId).toBeTruthy();
+      expect(newId).not.toBe(browserSession.id);
+      await expect(current.getByText(`Session ${newId ?? ''}`, { exact: true })).toBeVisible();
+      await expect(section.getByText(`Session ${browserSession.id}`, { exact: true })).toHaveCount(
+        0,
+      );
+      await page.screenshot({ path: info.outputPath('same-account-relogin.png'), fullPage: true });
+    });
+
+    test('replaces the current marker through the actual password form', async ({ page }, info) => {
+      await page.goto('/account');
+      const section = page.getByRole('region', { name: 'Sessions', exact: true });
+      await expect(section.getByRole('listitem')).toHaveCount(2);
+      await page.getByLabel('Current password').fill(account.password);
+      await page.getByLabel('New password', { exact: true }).fill('another sufficient password');
+      await page.getByLabel('Confirm the password').fill('another sufficient password');
+      await page.getByRole('button', { name: 'Change password', exact: true }).click();
+      await expect(section.getByRole('listitem')).toHaveCount(1);
+      const newId = control.browserSessions[0]?.id;
+      expect(newId).toBeTruthy();
+      expect(newId).not.toBe(browserSession.id);
+      await expect(section.getByText(`Session ${newId ?? ''}`, { exact: true })).toBeVisible();
+      await expect(section.getByText('Current session', { exact: true })).toBeVisible();
+      await expect(section.getByText(`Session ${browserSession.id}`, { exact: true })).toHaveCount(
+        0,
+      );
+      expect(control.browserSessionReads.at(-1)?.background).toBe(true);
+      await page.screenshot({ path: info.outputPath('password-rotation.png'), fullPage: true });
+    });
 
     test('keeps earlier pages on an invalid cursor and failed restart', async ({ page }, info) => {
       control.browserSessionPageSize = 1;

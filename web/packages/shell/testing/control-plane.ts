@@ -500,6 +500,7 @@ export async function mockControlPlane(
   await page.route('**/api/v1/auth/logout', (route) => {
     if (state.signOutProblem) return problem(route, state.signOutProblem);
     state.signedIn = false;
+    state.browserSessions = state.browserSessions.filter((row) => !row.current);
     return route.fulfill({ status: 204 });
   });
   const accountWrite = (route: Route, answer: unknown) => {

@@ -212,7 +212,10 @@ describe('shared Account screen integration', () => {
     await screen.findByText(english['account.sessions.id'].replace('{id}', current.id));
     read.mockResolvedValue({ items: [{ ...other, current: true }], next_cursor: null });
     await userEvent.type(screen.getByLabelText('Email', { exact: true }), me.user.email);
-    await userEvent.type(screen.getByLabelText('Password', { exact: true }), 'same account password');
+    await userEvent.type(
+      screen.getByLabelText('Password', { exact: true }),
+      'same account password',
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await waitFor(() => {
       expect(
@@ -220,7 +223,10 @@ describe('shared Account screen integration', () => {
       ).not.toBeInTheDocument();
     });
     await screen.findByText(english['account.sessions.id'].replace('{id}', other.id));
-    expect(signIn).toHaveBeenCalledWith({ email: me.user.email, password: 'same account password' });
+    expect(signIn).toHaveBeenCalledWith({
+      email: me.user.email,
+      password: 'same account password',
+    });
     expect(client.getQueryData(['unrelated'])).toBe('retained');
   });
 
