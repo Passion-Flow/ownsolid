@@ -86,7 +86,7 @@ fleet budgets. No IAM/TRN/DAT/ARC checkbox is earned by a source or compile chec
 
 ## Exact source and execution boundary
 
-The uncommitted four-path IAM review is Git tree
+The initial four-path IAM review is Git tree
 `1af0ca5497fbbe83875eb6af4769fad4198135ac` on
 `5bbc324d0bb9edb6f127dff469edadc5b2fee20c`. Its explicit patch SHA-256 is
 `8907bbf2f38ce3aec7effb424d33aa4f40bff795ac72fd638d14d1208e0fb53d`.
@@ -128,7 +128,8 @@ On macOS, `stat(/dev/fd/N)` describes that path instead of the target inode.
 A separate Python descriptor prototype confirmed that direct `fstat(N)` sees
 the owned root and that the descriptor appears in the inventory. The corrected
 Go observer uses `syscall.Fstat` without opening or closing borrowed descriptors.
-It has not run. This failed check is not product/SQL/gateway qualification.
+Its subsequent admitted no-database qualification is recorded below. The
+original failed check is not product/SQL/gateway qualification.
 
 The initial resource sample had only 454,164,480 free bytes (below 2 GiB), but
 was mistakenly combined with test launch instead of evaluated first. The
@@ -140,7 +141,72 @@ against 2,147,483,648 required; disk free was 165,373,104,128 bytes against
 retry. Both raw attempts remain preserved. The permanent workstation carrier
 was released and not recreated, truncated or removed.
 
-No corrected unit pass, race run, real SQL claim, provider, processor, GPU,
-installed gateway or full repository gate is claimed. The actual no-database
-fix needs a fresh admitted opportunity; the actual integrated gateway still
-needs ARC's original native construction/startup/drain/role and fleet acceptance.
+The failed/refused opportunities contribute no corrected unit pass. The later
+qualification below retains its own exact inputs. A race run, real SQL claim,
+provider, processor, GPU, installed gateway and complete repository gates remain
+outside these constructor checks; ARC's original native startup/drain/role and
+fleet acceptance remain required.
+
+
+## Corrected constructor qualification and local source commit
+
+The explicitly allocated single 300-second Mac opportunity completed with raw
+exit 0. Actual guarded admission observed 4,894,343,168 free bytes and
+164,990,779,392 disk-free bytes, above the unchanged 2 GiB/15 GiB limits.
+It did not borrow the coordinator's earlier resource sample. The original
+permanent carrier was acquired nonblocking once, held through the original
+check and released unchanged (device 16777234, inode 50313339, UID 501,
+zero bytes). The final cleanup record observed no remaining owned process group.
+Parent elapsed at that record was 9.018893875 seconds, with thirty seconds
+reserved for cleanup inside the original 300-second budget. There was no retry.
+
+All three original no-database roots and all three cleanup subtests passed:
+exact shared services/concrete reader attachment, two independent root/carrier
+pairs, eight concurrent idempotent closes, retained exclusive writer ownership,
+foreign-tenant refusal, first-reader cleanup when the second namespace is missing,
+and both-reader cleanup on graph-construction failure. Lazy pool dial hooks
+refused networking and their zero-call assertions passed. There were zero skips,
+failures and database cases. Go retained `-p=1`, `GOMAXPROCS=2`,
+`GOMEMLIMIT=512MiB`, local toolchain and disabled dependency network resolution.
+No PostgreSQL, service, browser, SAML, full suite or native target was mixed in.
+
+The candidate's four product paths exactly match the previously frozen Fstat
+review, including patch SHA-256
+`8907bbf2f38ce3aec7effb424d33aa4f40bff795ac72fd638d14d1208e0fb53d`.
+All twenty-one original producer files matched exact `e639db90`; runtime Go
+files also matched `5b73fa05`. The earlier stat observer failure, invalid resource
+admission and subsequent raw-78 refusal remain intact and are not reclassified.
+
+The safely reviewed local source commit is
+`b3c2a700fe55e50be61c35155f9d43de665ff5ae`, tree
+`d5e83cf914f3866a8d9e219dff63470886ee134f`, branch
+`codex/iam-agent-readers-20261113`, directly on
+`9a0543b9a84fbe82f45e3e67da24cca67748aaf2`.
+It contains only the four IAM paths listed above; it imports no producer file,
+changes no runtime selector and is not pushed to main. Its qualification graph
+requires original-author producer `e639db9035b0b2c0229c90175493c605f328e295`
+(runtime bytes `5b73fa05305c2c5d8178a256683ede8b4e9ef99f`). ARC retains
+its own `87c27032` request-join/startup work and must admit the combined graph
+before claiming an actual gateway. The two exact public signatures above are
+unchanged.
+
+The source bundle is
+`/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/qualified-graph-source-v1.bundle`,
+SHA-256 `7016466592a837b546850baaa5fda481e2f3e9746549337a3ea1ec92a84cf1d4`.
+`git bundle verify` confirms the candidate ref and the exact `9a0543b9`
+prerequisite. A first SHA-only range was refused as an empty bundle (raw 128);
+using the named candidate ref with its explicit prerequisite corrected packaging,
+without rerunning a test or changing source.
+
+The forty-two-file source/evidence archive is `qualified-graph-evidence.tar`
+in that same directory, SHA-256
+`d13300c4246b6a91983678b9f9f10f9b29c163d3bbb2a8b3f2824eb2c717bc90`;
+its adjacent manifest has SHA-256
+`971defa22bb9b2ff1dbf706beb842cc01d64aab250a7f5862cf66804ace3a85a`.
+The raw Go log hashes to
+`26bdb9ee3769e19ac0527520023b83fafaa76ba5a8198b908df1f98084d0bebe`;
+the bounded opportunity result hashes to
+`19556c297c46005cc0c2639d39ee9945f5aa137d87c6c56106aa2e34b4621b17`.
+`qualified-handoff.json` binds the source/tree/bundle/DAG, full signatures and
+qualification scope. Actual SQL, restricted role, mount, request drain/join,
+installed gateway, full repository gates and product checkboxes remain open.
