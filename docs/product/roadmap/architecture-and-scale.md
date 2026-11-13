@@ -58,8 +58,8 @@ agents is not.
 - [ ] ARC-105 Load tested with 1,000 simulated nodes per cell at twice the load, including a Kubernetes cell simulated with KWOK (P1)
   - [Prepared signed managed-cell load fixture and admission evidence](../../research/cell-scale-validation.md#prepared-launch-and-admission-result). The combined 1,000-node run at twice the load remains open.
 - [ ] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1)
-- [ ] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)
-  - Client-side rebalancing is implemented with the existing v1 wire contract. [Simulator and listener evidence](../../research/agent-gateway-rebalance.md).
+- [x] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)
+  - Evidence: 821227ea; complete check/build/test, native affected race/vet without skips and unchanged installed 500-agent lifecycle passed, including terminal 500/500 and persisted cursors. Dedicated gateway scope, observed natural ages, 50 exact-attempt tasks and sampled connection overlap are in the [measured acceptance](../../research/agent-gateway-rebalance.md#authenticated-handoff-installed-acceptance). Optional v1 metadata permits old/new coexistence; shared control listeners keep legacy behavior.
 - [ ] ARC-108 Measure the component, inference, model preparation and image registry operations in the agent cost test, so every operation of every call has an exchange (P1)
 - [ ] ARC-109 Cut the declared cost of claims, event batches and upload chunks, which repeat the same authority checks: one check per call, one per batch (P1)
   - Node-owned PostgreSQL claims share one authority check when preflight is read-only. [Statement counts and delegated paths](../../research/agent-claim-authority.md).
