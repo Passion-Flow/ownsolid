@@ -1,7 +1,8 @@
 # Browser sessions on the account page
 
-Reviewed 2026-11-13 for the session-control part of POR-112. This is a frontend
-research and interaction proposal, not an implemented or visually accepted page.
+Reviewed 2026-11-13 for the session-control part of POR-112. The corrected frontend
+implementation has scoped browser and visual qualification; full joint-source and
+installed qualification remain open.
 The [session-management research](session-management.md) owns the server protocol,
 authority, audit and real-provider evidence; this note owns the account interface.
 
@@ -9,9 +10,9 @@ authority, audit and real-provider evidence; this note owns the account interfac
 
 The shared [Account page](../../web/packages/shell/src/account-page.tsx) already
 provides profile, password, language, keyboard preferences and linked providers.
-It has no way to review or end another browser session. The generated identity
-contract already exposes both operations, but
-`web/packages/api/src/identity.ts` has no typed convenience functions for them.
+Before this implementation it had no way to review or end another browser session.
+The generated identity contract already exposed both operations; the implementation
+adds their typed convenience functions in `web/packages/api/src/identity.ts`.
 There is no reason to invent another service or request tenant/workspace IDs.
 
 - [GitLab Active Sessions](https://docs.gitlab.com/user/profile/active_sessions/)
@@ -294,8 +295,8 @@ Only the two changed Shell inputs were formatted/linted; the formatter made no c
 Shell types, 33 Account/session tests and 34 applicable UI tests passed. Both exact-source
 application builds passed. Each entrance collected and passed all 11 account-sessions cases,
 with zero skips, retries or flaky outcomes. No unchanged API, i18n or Help suite was rerun to
-inflate the count. The current source has not been combined with later DEV-generated contracts;
-composition and its affected checks/full gates are separate work.
+inflate the count. That entry preceded composition with the later DEV-generated contracts;
+its checks and screenshots do not qualify the joint source below.
 
 This entry generated 56 raw PNGs and all 56 were individually opened after cleanup. Actual
 review confirms:
@@ -332,6 +333,55 @@ The corrected source is qualified for this scoped frontend path. `make check && 
 && make test`, disconnected-network installation and the installed
 authority/audit/real-SSO flow remain unqualified. No previous UX-127, Help or audit asset is
 relabelled as this implementation. POR-112 remains open. Both scoped frontend opportunities
-are consumed and cleaned up; no full/native/installed
-opportunity was used or queued. Publish no fully qualified release or roadmap tick before those
-requirements and the later same-source composition checks hold.
+are consumed and cleaned up. The separate joint full-entry refusal below does not extend
+their qualification. Publish no fully qualified release or roadmap tick before the full and
+installed requirements and later same-source composition checks hold.
+
+### Original-author joint source and full-entry boundary
+
+Joint candidate `9e7404f63fe7587ace0decb34fd01b6214977181` has exactly two parents:
+the frontend/document source `379aab980485df41b1a66c6fb5e6af65814f886f` and DEV's
+original-author `2e64ab4c6c16bd84ae5c101b9de5444550760ff2`. The candidate tree is
+`6c5938e198745062ba5a14e1f952cb4593797ccd`; its Web tree is
+`8ce0c9946a8403a5d4502b54e4337a754de38bfc`. It preserves `6d3d6b8c`'s visual correction.
+The exact missing bundle prerequisites were imported from the author's local object store
+before bundle verification. No file patch or replacement author history was substituted.
+
+Composition review verified all 19 author delivery paths, all 122 external generated SDK
+files and all five protected Web consumer/helper files against their frozen manifests.
+All 79 projection inputs match the author's source. In the joint source, 77 remain equal;
+the two Account Help source articles retain the frontend branch's exact bytes. The merge
+also inherits four original-author SAML/group-mapping research and decision paths through
+its real ancestry. There were no merge conflicts or manual changes to DEV files. Both
+owners' status and research facts remain. The original 430-operation compatibility audit
+still has its explicit 409 source-review signal and actual exit 1; it was not rerun or
+converted to a successful full-gate result.
+
+The separately authorized `portal-account-joint-full-4deb4qpz` entry admitted this exact clean
+candidate through one nonblocking acquisition of the existing permanent regular carrier,
+inode 50313339. The reviewed deadline/cleanup guard retained one 1800-second absolute budget
+with 120 seconds reserved for cleanup. Its prepared original targets were `make web-install`,
+`make check`, `make build` and `make test`, with no Makefile overlay or changed test selection.
+The prepared limits were Node old-space at most 4096 MiB while preserving stricter inherited
+limits, Go package parallelism one and GOMAXPROCS at most two, Cargo jobs one, and serial
+workspace/browser/test workers. These are prepared controls, not evidence that work ran.
+
+Actual entry exited 1 after 0.072 seconds: `vm_stat` reported only 22,958 free 16 KiB pages
+(about 0.350 GiB), below the required 6 GiB. It refused before any work child, wake guard,
+scratch volume, install, check, build or test target started. The separate disk readback was
+about 154 GiB free; it does not replace the failed live memory sample. Cleanup was confirmed,
+the parent exited, both preview ports were empty, the carrier FD was closed and its inode
+was preserved. The consumed entry is not queued or automatically retried.
+
+This is a resource refusal, not a product/test failure or a passing gate. No joint assets,
+browser cases, skips, retries, Linux/native run or installed acceptance were produced. The
+earlier 1233-file scoped frontend archive stays bound to `0a50a040` and its own Web tree;
+it is not a joint-source release artifact. Mac cache-only tooling would not establish a
+Linux network namespace or a disconnected installed flow. The later strict-JSON generator
+candidate is not part of `2e64ab4c`, this composition or any qualification claimed here.
+
+The next full-source attempt needs a new explicit resource opportunity and a fresh live
+sample satisfying both memory and disk floors. DEV must first publish its own exact source;
+the frontend lane then combines actual published main and reviews the true affected changes
+before publication. Even a passing joint full gate would leave real peer revocation,
+independent SQL audit, disconnected installation and real SSO UI acceptance open for POR-112.
