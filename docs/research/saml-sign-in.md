@@ -66,6 +66,23 @@ The ordinary Admin/Portal session cookies keep their existing authority and
 transport policy. Cross-site browser cookie behavior needs real browser tests,
 including an unavailable-cookie retry outcome.
 
+The first rendered transport attempt found an invalid fixture assumption: an
+IdP page with `Referrer-Policy: no-referrer` sends `Origin: null` on its
+cross-site form POST, even though its dedicated flow cookie arrives and its
+ordinary Lax and Strict cookies do not. The
+[Fetch Origin-header algorithm](https://fetch.spec.whatwg.org/#append-a-request-origin-header)
+explicitly sets that header to null for this policy. An exact IdP Origin is not
+an authentication mechanism and cannot be required for all valid SAML POSTs.
+The next transport-only probe will cover both exact-origin and null-origin
+forms, with missing flow-cookie and wrong ordinary-session-cookie controls for
+each. It will accept null only at this owned fixture endpoint and grant no
+identity authority. Product ACS admission still requires the immutable
+server-request/browser-proof/RelayState and signed-response checks above;
+ordinary first-party Origin/CSRF enforcement stays mandatory. Missing or
+unexpected explicit Origin values remain separately reviewable signals, never
+substitutes for the SAML proof. This is a specification reference, with no
+runtime dependency, copied implementation, model or dataset.
+
 The next browser experiment will stage a verified response at the ACS and
 redirect to a fixed first-party completion endpoint before changing an account
 binding or session. The ordinary Lax session cookie can then be checked again
