@@ -758,10 +758,10 @@ these extra profiles, the installed500-agent drill or a whole-repository gate.
 ## Original TRN input and complete request ownership
 
 The integration tree merges original e639db9035b0b2c0229c90175493c605f328e295
-with baa584c3. All21 owning dataset/training module paths, including README/test
+with baa584c3. All 21 owning dataset/training module paths, including README/test
 inputs, compare byte-for-byte to the original author; both research records are
 preserved. The owner's reported native v3 qualification is two packages/two roots
-and required independent-reader cases, zero skips/failures in138.486532s. That
+and required independent-reader cases, zero skips/failures in 138.486532 s. That
 is author evidence for e639db90, not a run of this combined schema/process tree.
 No reader graph binding is inferred from importing its source.
 
@@ -803,3 +803,32 @@ commercial/offline redistribution retains their original notices. Runtime
 filesystem and network scope do not grow. This preparation is not a native,
 compiler or product qualification; all original checks and resource allocation
 requirements remain in force.
+
+The concrete source increment now registers HTTP and RPC joins in runAgentGateway,
+retains the real pool as the last lifecycle closer and exposes DrainAndWait from
+the existing Gateway. Prepared isolated tests use real HTTPS/file descriptors
+for request-owner retention and the existing unit backend fixture for a callback
+that remains active after cancellation/transport close. They exercise refusal,
+concurrent joins and delayed actual file close; they establish no SQL or training
+authorization evidence. Formatting/layout/roadmap/diff checks ran, but no compiler,
+unit/race execution, native process or full gate ran for this increment.
+
+Actual reader consumption is still blocked on IAM's additive graph entry. The
+minimal handoff is the concrete pair in AgentGatewayPublishedReaders above,
+borrowed from the process owner and bound to its single existing graph. ARC must
+receive the original signature and source before opening either configured
+namespace in runAgentGateway; it must not open unused readers and return success.
+The process input remains installedTenant(original selected store), the existing
+Datasets.ArtifactRoot/Training.ArtifactRoot and TRN e639db90's exact Open/Close
+APIs. A partial second open or construction failure must close only already opened
+readers in reverse order. Those operations are not implemented by an unused
+helper or an alternative unbound constructor in this increment.
+
+The same completion counter also owns each session receive loop. It is registered
+while its admitted RPC callback is still counted; therefore a racing drain cannot
+miss that descendant. It is released only when RecvMsg/channel handling exits,
+after stream cancellation/RPC return, without waiting inside the callback and
+deadlocking transport teardown. HTTP join and RPC/receive-loop join are both
+required before a process closer. The unit source covers real retained file
+descriptors, but its execution and the full composed reader contract remain
+unverified. No original IAM constructor, TRN owner path or agent v1 field changed.

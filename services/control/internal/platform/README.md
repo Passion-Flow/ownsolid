@@ -28,6 +28,13 @@ Platform packages provide bounded shared mechanisms. Domain owners still decide 
 
 ## Invariants
 
+Gateway Drain remains nonblocking. A process that owns file/database dependencies
+uses DrainAndWait to join admitted RPC callbacks and their receive loops, together
+with its HTTP request join; an HTTP transport can end before its backend callback.
+A canceled wait reports no completion and never reopens admission. The dedicated
+gateway retains process owners until both joins finish. This source addition
+still requires its affected runtime, race and native composition acceptance.
+
 [database/transaction](database/transaction/README.md) borrows an already configured pool. Repository-owned SQL names its dialect explicitly; the platform does not rewrite SQL, commit inside borrowed callbacks, or log statements and arguments. Preserve uncertain commit classification. [mysqlstore](database/mysqlstore/README.md) owns its protected connection/session invariants; [mysqlmigrate](database/mysqlmigrate/README.md) owns the separate DDL journal and reconciliation.
 
 Transports do not grant business authority. Object keys use server-resolved UUID scope. Task bus publication/consumption transports existing task intent; it does not authorize task execution. Localization is installed offline data, never a customer-runtime translation API.

@@ -132,13 +132,19 @@ type agentGatewayHandler struct {
 	machine  config.MachineServerConfiguration
 	sessions *agentgateway.Gateway
 	ready    func() error
+	requests agentGatewayRequests
 }
 
-func (h agentGatewayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *agentGatewayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	requestID := uuid.NewString()
 	w.Header().Set("X-Request-ID", requestID)
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if !h.requests.begin() {
+		httpserver.Problem(w, requestID, errInstallationNotServing)
+		return
+	}
+	defer h.requests.end()
 	connection, e := httpserver.ResolveMachineRequest(r, h.machine)
 	if e != nil {
 		httpserver.Problem(w, requestID, e)
@@ -195,7 +201,13 @@ func runAgentGateway(args []string) (result error) {
 	if e != nil {
 		return e
 	}
-	defer pool.Close()
+	g := newRuntimeLifecycle(ctx)
+	g.closers = append(g.closers, func() error { pool.Close(); return nil })
+	defer func() {
+		cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), config.Seconds(policy.HTTP.ShutdownSeconds))
+		defer cancel()
+		result = errors.Join(result, g.Close(cleanup))
+	}()
 	store, e := transaction.FromPostgreSQL(pool)
 	if e != nil {
 		return e
@@ -211,12 +223,6 @@ func runAgentGateway(args []string) (result error) {
 		return errors.New("BOOTSTRAP_REQUIRED")
 	}
 	fence := &installationFence{pool: pool, store: store, ready: errInstallationNotServing}
-	g := newRuntimeLifecycle(ctx)
-	defer func() {
-		cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), config.Seconds(policy.HTTP.ShutdownSeconds))
-		defer cancel()
-		result = errors.Join(result, g.Close(cleanup))
-	}()
 	ready := func() error {
 		if e := g.Err(); e != nil {
 			return errors.New("SERVICE_NOT_READY")
@@ -261,6 +267,12 @@ func runAgentGateway(args []string) (result error) {
 	g.Loop("NODE_AGENT_SHED", nodes.RunAgentShed)
 	g.Loop("NODE_TASK_WAKES", nodes.RunWakes)
 	machine := config.MachineServerConfiguration{ListenAddress: c.AgentGateway.ListenAddress, Origin: origin, TLSCertificateFile: c.AgentGateway.TLSCertificateFile, TLSPrivateKeyFile: c.AgentGateway.TLSPrivateKeyFile}
+	handler := &agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}
+	g.stops = append(g.stops, func(ctx context.Context) error {
+		handler.requests.stop()
+		gateway.Sessions.Drain()
+		return errors.Join(handler.requests.wait(ctx), gateway.Sessions.DrainAndWait(ctx))
+	})
 	listener, e := net.Listen("tcp", c.AgentGateway.ListenAddress)
 	if e != nil {
 		return errors.New("SERVER_LISTEN_FAILED")
@@ -269,6 +281,7 @@ func runAgentGateway(args []string) (result error) {
 	// for the shutdown to cut their streams. Join the drain before store closers.
 	g.Loop("AGENT_GATEWAY_DRAIN", func(ctx context.Context) {
 		<-ctx.Done()
+		handler.requests.stop()
 		gateway.Sessions.Drain()
 	})
 	fmt.Println("AGENT_GATEWAY_STARTED")
@@ -278,7 +291,7 @@ func runAgentGateway(args []string) (result error) {
 		// Allow a peer check, one admitted exchange and a bounded reply.
 		Grace: config.Seconds(3*policy.HTTP.RequestSeconds + wire.MaxClaimWaitSeconds),
 	}
-	e = httpserver.ServeListener(g.ctx, listener, tlsConfig, agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}, policy.HTTP, age)
+	e = httpserver.ServeListener(g.ctx, listener, tlsConfig, handler, policy.HTTP, age)
 	if e != nil {
 		result = errors.New("SERVER_FAILED")
 	}

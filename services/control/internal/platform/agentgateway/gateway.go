@@ -72,6 +72,9 @@ type Gateway struct {
 	// draining ends when Drain is called, and every session with it.
 	draining context.Context
 	drain    context.CancelFunc
+	// work includes RPC callbacks and their independently running receive loops.
+	work   int
+	joined chan struct{}
 }
 
 type session struct{ cancel context.CancelCauseFunc }
@@ -102,7 +105,7 @@ func newGateway(backend Backend, policy Policy, problem Problem, idle time.Durat
 	if backend == nil || problem == nil || policy.MaxSessions < 1 || policy.ExchangeSeconds < 1 || idle <= 0 {
 		return nil, errors.New("AGENT_GATEWAY_CONFIGURATION_INVALID")
 	}
-	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}, idleTimeout: idle}
+	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}, idleTimeout: idle, joined: make(chan struct{})}
 	g.draining, g.drain = context.WithCancel(context.Background())
 	g.server = grpc.NewServer(
 		grpc.MaxRecvMsgSize(wire.MaxSessionMessageBytes),
@@ -146,7 +149,47 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request, address stri
 
 // Drain ends every session and refuses new ones, so that agents move to another gateway
 // before this one stops. It does not wait; the sessions end as their streams return.
-func (g *Gateway) Drain() { g.drain() }
+func (g *Gateway) Drain() {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.draining.Err() != nil {
+		return
+	}
+	g.drain()
+	if g.work == 0 {
+		close(g.joined)
+	}
+}
+
+// DrainAndWait refuses new RPC callbacks and waits for admitted callbacks and
+// their receive loops, including backend work that may outlive its HTTP transport. Cancellation
+// returns the context error without reopening admission or claiming a join.
+func (g *Gateway) DrainAndWait(ctx context.Context) error {
+	if ctx == nil {
+		return errors.New("AGENT_GATEWAY_CONTEXT_REQUIRED")
+	}
+	g.Drain()
+	select {
+	case <-g.joined:
+		return nil
+	default:
+	}
+	select {
+	case <-g.joined:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (g *Gateway) completeWork() {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.work--
+	if g.work == 0 && g.draining.Err() != nil {
+		close(g.joined)
+	}
+}
 
 // Sessions reports the number of open streams and held long-poll claims.
 func (g *Gateway) Sessions() int { return len(g.slots) }
@@ -171,6 +214,14 @@ func header(md metadata.MD, name string) (string, bool) {
 }
 
 func (g *Gateway) connect(stream grpc.ServerStream) error {
+	g.mu.Lock()
+	if g.draining.Err() != nil {
+		g.mu.Unlock()
+		return status.Error(codes.Unavailable, errDraining.Error())
+	}
+	g.work++
+	g.mu.Unlock()
+	defer g.completeWork()
 	age := httpserver.ConnectionDrainAt(stream.Context())
 	if !age.IsZero() && !time.Now().Before(age) {
 		return status.Error(codes.Unavailable, errDraining.Error())
@@ -223,7 +274,13 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 
 	messages := make(chan wire.AgentMessage)
 	received := make(chan error, 1)
+	// This descendant is registered while its admitted callback is still owned,
+	// even when drain raced with peer checks. Its stream is canceled on RPC exit.
+	g.mu.Lock()
+	g.work++
+	g.mu.Unlock()
 	go func() {
+		defer g.completeWork()
 		for {
 			var m wire.AgentMessage
 			if e := stream.RecvMsg(&m); e != nil {
