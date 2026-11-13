@@ -1043,12 +1043,13 @@ roadmap check, thirteen layout tests, all sixty-seven SDK/tooling tests and
 generated API consistency for twenty-nine contracts. Web ESLint then exhausted
 the 2048 MiB V8 heap and aborted with exit 134. Make check exited 2 and the
 parent exited 1 after 89.572 seconds. Build and full make test were not started.
-This is a Web lint execution failure, not a resource-admission refusal or a
-failed SDK assertion. The typed-lint project/heap correction belongs to the
-Web owner; its generated-file ignores were already present. Raising the cap,
-skipping lint or changing another owner's Web configuration is not a fix
-within this lane. The release condition is a qualified owner correction and
-a separately assigned exact-source full attempt.
+This is a failed lint execution under the acceptance wrapper's imposed
+2048 MiB heap, not a resource-admission refusal or a failed SDK assertion.
+The failure alone does not establish a Web source/configuration defect or a
+repository-wide heap limit. The wrapper's resource profile belongs to this
+lane. Its next bounded profile must raise admission together with any heap
+increase and retain the original lint scope. A new exact-source full attempt
+still needs its own actual resource assignment; the failed result stays frozen.
 
 All five owned process groups were verified empty, both shared FDs closed,
 both carrier identities preserved and the exact source remained clean.
@@ -1062,3 +1063,46 @@ The raw 430-operation audit remains exit 1 for its explicit 409 binding
 review. The older 783 native result and combined-parent failure remain
 source-bound; there is no new SDK native, private-history, installed or
 CLI b967 qualification, publication or roadmap tick from this attempt.
+
+### Bounded lint memory preparation
+
+The failed input's configured subcommand is the full workspace eslint command
+with packages/config/eslint.config.js, zero allowed warnings and the current
+directory as its target. It enables strict/stylistic typed linting with
+projectService=true. All eight package tsconfigs have explicit include lists;
+none uses an unbounded include-everything fallback. The generated-directory
+ESLint ignores already exist. The API barrel imports its generated index, and
+the API project's src include also contains those types. Static inventory of
+the unchanged Web input has 390 tracked TS/TSX files, including 31 generated
+files with 39775 lines and 1730637 bytes. These facts identify the type graph;
+they do not identify a measured allocation hotspot or prove duplicate Programs.
+
+The official [typescript-eslint performance guidance](https://typescript-eslint.io/troubleshooting/typed-linting/performance/)
+explains typed-lint memory requirements, targeted tsconfig includes and a
+higher Node old-space limit when needed. The [Node CLI documentation](https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-megabytes)
+defines that limit in MiB; more heap permits more memory use, rather than
+reducing the work. The pinned typescript-eslint version is 8.72.1. An
+[upstream overlapping-project report](https://github.com/typescript-eslint/typescript-eslint/issues/13109)
+is an investigation lead only; its cause has not been reproduced on ownsolid.
+No Web rule, include list, dependency or source change is justified by the
+failed acceptance sample alone, and no owner patch task was issued.
+
+The executed wrapper explicitly capped old-space at 2048 MiB, consistent with
+the raw V8 heap failure. Historical parent NODE_OPTIONS were not recorded.
+A separate read-only inspection of the current toolchain environment found no
+parent old-space cap; that observation does not reconstruct the earlier parent
+environment. No environment contents or credentials are recorded. Repository
+guidance supplies a Linux free-memory floor but no global Node heap ceiling.
+The previous 2048 MiB limit was the assigned acceptance profile.
+
+Prepare a revised old-space maximum of 4096 MiB only with MemFree at least
+6 GiB, MemAvailable at least 12 GiB, free disk at least 30 GiB and full I/O PSI
+avg10 at most 5. Preserve stricter inherited absolute limits. The four original
+Make targets, offline namespaces, permanent two-carrier nonblocking admission,
+Go parallelism one, GOMAXPROCS at most two, Cargo jobs one, 1200-second absolute
+deadline and bounded owned-process cleanup remain unchanged. Do not change
+semi-space, single-run heuristics, rule sets or the scan scope. Ambiguous
+inherited heap-percentage/total-heap policies fail clearly instead of being
+silently overridden. This is a prepared capacity proposal, not a measured
+4096 MiB pass or authorization to rerun. The next source also contains published
+ARC runtime changes and needs its own full checks; the 9be result cannot qualify it.

@@ -164,5 +164,5 @@ identical before and after this resolver correction. Comparing against main
 9e32b023 still produces exactly the existing explicit audit-read 409 model
 binding review and exit 1, with no declaration findings. No rule or failure exit
 was weakened. The separate exact 9be Linux full attempt remains failed at Web
-ESLint's 2048 MiB heap limit; this Python correction does not qualify or rerun
+ESLint under the acceptance wrapper's imposed 2048 MiB heap limit; this Python correction does not qualify or rerun
 that gate. Release and runtime deprecation work remain open.
