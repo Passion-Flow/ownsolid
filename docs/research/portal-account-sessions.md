@@ -637,6 +637,74 @@ legacy entries were unchanged. The private packet
 process/listener/health events, exact case coverage and limits. Its terminal
 record's `SystemExit(0)` is the worker's normal exit, not a hidden failure.
 No second NB, full-gate attempt, peak work, automatic retry or queued follow-up
-occurred. The original full test failure, omitted ten cases, DEV compatibility
-review and installed authority/SQL/offline/SSO evidence remain open; POR-112 is
-not complete and nothing is published.
+occurred. At that attempt the omitted ten cases also remained unverified; their
+later complete-file result is recorded below. The original full test failure,
+DEV compatibility review and installed authority/SQL/offline/SSO evidence remain
+open; POR-112 is not complete and nothing is published.
+
+### Completed failure-ID reconciliation and full-stage refusal
+
+An independently admitted continuation ran the whole original
+`e2e/node-page.spec.ts` using the anchored filename expression
+`(?:^|/)e2e/node-page[.]spec[.]ts$`. Offline discovery matched exactly that one
+file; the actual browser run selected its ten cases, passed all ten and exited
+0 in 12.003 seconds, with no skip or retry. Exact original path, line and case
+names all matched the ten omitted failure IDs. No assertion, timeout, fixture,
+host, port or protocol changed. The already passed original six controls,
+current eight controls and prior 129 cases were not rerun.
+
+The source remains frozen `82c602d32b2d957459b3a742499de96867da27a9`, tree
+`fbbf65a10a349d43726a355e60fdb171837c97d5`, Web tree
+`8ce0c9946a8403a5d4502b54e4337a754de38bfc`. All 5099 tracked and 1233 production
+asset hashes matched before and after. The actual failed-ID reconciliation now
+has 71 covered by the prior directed run and ten by this complete file, with no
+uncovered ID. This is evidence across two source-identical directed attempts;
+it does not turn the original failed 1250-case run into a passing suite or
+establish why its navigation failed.
+
+The retained single-worker, 512 MiB Node profile took one NB on the same epoch
+carrier/open description. Fresh admission Free was 5,313,921,024 bytes and disk
+free 163,487,207,424 bytes, above the directed 3 GiB/15 GiB floors. Its
+600-second absolute budget reserved 60 seconds for owned cleanup. The entry
+actually exited 0 after 13.142 seconds, with cleanup confirmed.
+
+The observed preview was PID 50418, kernel birth `1794588481.222942`, FD 17 at
+`[::1]:31036`. Eleven health probes returned 200 during the original file. The
+twelve identity snapshots had no BSD lookup-error entry; six previously seen
+tasks became unavailable and were marked without asserting an exit. Its
+launcher exited with SIGKILL after Playwright requested teardown. Vite's own
+final status was not observed, so that gap and the previous attempt's eleven
+BSD uncertainties are not silently cleared. No historical reload/socket error
+reproduced or acquired a proven cause.
+
+After actual targeted cleanup, one immediate fresh sample reported
+5,059,379,200 bytes raw Free and 163,487,219,712 bytes disk free. The full memory
+floor was 6,442,450,944 bytes; disk sufficiency did not replace that failed
+condition. Full `make test` and its Console/Portal/Go/Rust/Web stages were
+NOTRUN. There was no resource wait, second lock attempt or queued continuation.
+The original install/check/build exits remain 0 on their original evidence.
+Their source/configuration/lockfile/generated and asset bindings matched, but
+the old packet lacks a complete historical external-toolchain byte manifest;
+no unconditional transfer of those whole qualifications was claimed. New
+full-phase install/check/build qualification was likewise NOTRUN.
+
+Review also found a preparation defect in the unentered private full branch:
+its worker alarm called the directed `budget()` default and would cap that
+alarm at 600 seconds instead of using the full work cutoff. The executed file
+and input hashes remain intact. A separate candidate calls `budget(1800)`;
+Python syntax, five isolated budget checks and the full-rearm AST check passed.
+No actual full timer, full branch or workload validated that candidate. The
+resource refusal was the actual reason no full work ran; the unentered defect
+does not change the ten passes or justify treating that branch as qualified.
+
+Post-exit checks found no matching live lifetime among the twenty observed own
+PIDs, no known parent/runner/preview/browser PID, no preview listener or carrier
+FD, and a clean tracked source before documentation. The carrier/manifest,
+original failure evidence, prior directed evidence, production assets and 89
+closed entries were unchanged. The private packet
+`epoch-e1-web-node-page-_u9t_ix5` retains exact selection, all 81 case IDs,
+original command bindings, safe logs, health/process events, refusal and cleanup
+proof, and the separate unvalidated full-timer repair. No install/build/native
+test, peak work, new unit count, publication or roadmap tick is inferred. Full
+testing, DEV's original compatibility audit and installed authority/SQL/offline/
+SSO acceptance remain open.
