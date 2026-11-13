@@ -6,11 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
-	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 )
 
 // FleetHistory is a scoped, sparse snapshot of the requested evaluation grid.
@@ -43,21 +40,10 @@ func (s *Service) GetFleetHistory(ctx context.Context, a identity.Auth, workspac
 	return s.getFleetHistory(ctx, a, workspace, from, to, requestID, nil)
 }
 
-const (
-	maximumHistoryJSONBytes = 1 << 20
-	// The serving owner writes {"data": body} and a newline.
-	historyJSONEnvelopeBytes = len(`{"data":`) + len("}\n")
-)
+const maximumHistoryJSONBytes = 1 << 20
 
 func encodeFleetHistoryJSON(out FleetHistory) (json.RawMessage, error) {
-	body, err := json.Marshal(out)
-	if err != nil {
-		return nil, errors.New("STORAGE_UNAVAILABLE")
-	}
-	if len(body) > maximumHistoryJSONBytes-historyJSONEnvelopeBytes {
-		return nil, errors.New("MONITORING_HISTORY_RESPONSE_LIMIT")
-	}
-	return body, nil
+	return encodeMetricsJSON(out, maximumHistoryJSONBytes, "MONITORING_HISTORY_RESPONSE_LIMIT")
 }
 
 // GetFleetHistoryJSON uses the same scope, tier and audit as GetFleetHistory.
@@ -77,76 +63,31 @@ func (s *Service) GetFleetHistoryJSON(ctx context.Context, a identity.Auth, work
 }
 
 func (s *Service) getFleetHistory(ctx context.Context, a identity.Auth, workspace string, from, to time.Time, requestID string, prepare func(FleetHistory) error) (FleetHistory, error) {
-	if ctx == nil || !s.ready() {
-		return FleetHistory{}, errors.New("MONITORING_OWNER_REQUIRED")
-	}
-	if a.Me.Audience != "admin" || !a.Me.User.IsPlatformAdmin {
-		return FleetHistory{}, errors.New("ACCESS_DENIED")
-	}
-	if !validID(workspace) || !validID(requestID) || from.Unix() < 0 || from.Nanosecond() != 0 || to.Nanosecond() != 0 || !from.Before(to) {
-		return FleetHistory{}, errors.New("VALIDATION_FAILED")
-	}
-	select {
-	case s.slots <- struct{}{}:
-		defer func() { <-s.slots }()
-	default:
-		return FleetHistory{}, errors.New("MONITORING_BUSY")
-	}
-	store, e := s.identity.Repository()
-	if e != nil {
-		return FleetHistory{}, safeError(e)
-	}
-	operation, cancel := context.WithTimeout(ctx, time.Duration(s.config.OperationSeconds)*time.Second)
-	defer cancel()
-	var scope workspaces.Workspace
-	var now time.Time
-	e = store.Within(operation, false, func(ctx context.Context, q transaction.Executor) error {
-		var e error
-		scope, e = s.authorizedScopeWithin(ctx, q, a, workspace)
-		if e != nil {
-			return e
-		}
-		now, e = observationTimeWithin(ctx, q)
-		return e
+	var out FleetHistory
+	err := s.observeMetrics(ctx, a, workspace, requestID, metricsObservation{
+		validate: func() error {
+			if from.Unix() < 0 || from.Nanosecond() != 0 || to.Nanosecond() != 0 || !from.Before(to) {
+				return errors.New("VALIDATION_FAILED")
+			}
+			return nil
+		},
+		read: func(ctx context.Context, scope workspaces.Workspace, now time.Time) error {
+			if s.fleetHistory == nil {
+				return errors.New("MONITORING_HISTORY_NOT_CONFIGURED")
+			}
+			var err error
+			out, err = s.fleetHistory.read(ctx, scope, now, from, to)
+			return err
+		},
+		prepare: func() error {
+			if prepare != nil {
+				return prepare(out)
+			}
+			return nil
+		},
 	})
-	if e != nil {
-		return FleetHistory{}, safeError(e)
-	}
-	if s.fleetHistory == nil {
-		return FleetHistory{}, errors.New("MONITORING_HISTORY_NOT_CONFIGURED")
-	}
-
-	// Leave SQL unlocked during store I/O. A subsequent authority change
-	// invalidates the assembled snapshot before any response is released.
-	out, e := s.fleetHistory.read(operation, scope, now, from, to)
-	if e != nil {
-		return FleetHistory{}, safeError(e)
-	}
-	var preparationError error
-	if prepare != nil {
-		preparationError = prepare(out)
-	}
-	e = store.Within(operation, false, func(ctx context.Context, q transaction.Executor) error {
-		current, e := s.authorizedScopeWithin(ctx, q, a, workspace)
-		if e != nil {
-			return e
-		}
-		if current.ID != scope.ID || current.TenantID != scope.TenantID {
-			return errors.New("ACCESS_DENIED")
-		}
-		if _, e := s.license.MonitoringWithin(ctx, q, a); e != nil {
-			return e
-		}
-		if preparationError != nil {
-			return preparationError
-		}
-		return insertSnapshotAuditWithin(ctx, q, uuid.NewString(), a.Me.User.ID, scope.ID, requestID, scope.TenantID)
-	})
-	if e != nil {
-		return FleetHistory{}, safeError(e)
-	}
-	if e := operation.Err(); e != nil {
-		return FleetHistory{}, safeError(e)
+	if err != nil {
+		return FleetHistory{}, err
 	}
 	return out, nil
 }

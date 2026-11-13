@@ -27,6 +27,7 @@ type Service struct {
 	components   *components.Service
 	distribution *distribution.Service
 	metrics      *monitoringmetrics.Recorder
+	cardinality  *seriesCardinalityReader
 	fleetHistory *fleetHistoryReader
 	config       Config
 	slots        chan struct{}
@@ -55,7 +56,8 @@ func New(i *identity.Service, w *workspaces.Service, l *licensing.Service, c *co
 	}
 	return &Service{
 		identity: i, workspaces: w, license: l, components: c, distribution: d, metrics: m,
-		fleetHistory: newFleetHistoryReader(policy.FleetHistory), config: policy, slots: make(chan struct{}, policy.ConcurrentSnapshots),
+		cardinality:  newSeriesCardinalityReader(policy.SeriesCardinality, time.Duration(policy.OperationSeconds)*time.Second, policy.ConcurrentSnapshots),
+		fleetHistory: newFleetHistoryReader(policy.FleetHistory, time.Duration(policy.OperationSeconds)*time.Second, policy.ConcurrentSnapshots), config: policy, slots: make(chan struct{}, policy.ConcurrentSnapshots),
 	}, nil
 }
 

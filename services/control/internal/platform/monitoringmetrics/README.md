@@ -8,7 +8,7 @@ This package records bounded in-process HTTP facts for the [monitoring domain](.
 
 `Middleware` wraps an existing handler using the reviewed `httpsnoop` hooks, preserving its actual optional response interfaces. It observes header commitment, Write/WriteString/ReadFrom, flush, hijack, cancellation, write failure and panic outcomes. It counts bytes actually reported written; it does not buffer bodies or turn partial streams into successful responses.
 
-Methods and route classes are closed labels, never raw URLs, query strings, bodies, identities or arbitrary user labels. The current route classification is defined by `route` in [recorder.go](recorder.go); add route categories intentionally rather than assuming every health or new module path has a special category. Logs are rate-bounded and count skips. Only a canonical server response request ID is eligible for inclusion.
+Methods and route classes are closed labels, never raw URLs, query strings, bodies, identities or arbitrary user labels. The current route classification is defined by `route` in [recorder.go](recorder.go); add route categories intentionally rather than assuming every health or new module path has a special category. The agent family includes the current /agent/v1/ paths and exact agent gRPC SessionPath, and gateway includes /gateway/v1/ after cell-relative normalization. Legacy API-prefixed classes are retained. The health family includes the exact /health/live and /health/ready paths and the legacy /healthz and /readyz classifications; unknown suffixes remain other. Logs are rate-bounded and count skips. Only a canonical server response request ID is eligible for inclusion.
 
 ## Snapshots and restart semantics
 
@@ -45,7 +45,10 @@ for measured size, throughput and query times.
 ## Scoped series cardinality fixture
 
 The fixture checks the native TSDB status rankings and totals for one
-workspace with 10,000 synthetic agents. It also reproduces cross-scope
+workspace with 10,000 synthetic node UUIDs under the actual node_id label.
+It checks a native scan-limit refusal despite topN=1, the exact boundary,
+rank capping and a narrowed retry after restarting the store. Both
+processes are joined on exit. It also reproduces cross-scope
 metric-name usage metadata in the raw response. A customer-facing
 projection must expose the qualified counts and omit usage metadata.
 See the [scope and admission boundary](../../../../../docs/research/series-cardinality-scope.md).

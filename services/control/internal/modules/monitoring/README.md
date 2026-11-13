@@ -25,7 +25,13 @@ read using the same current authorized Admin session.
 
 [config.go](config.go) owns snapshot concurrency, deadlines, limits and the matching recorder policy. The control root loads MonitoringConfigFile. This module uses existing persistent authorities rather than adding a migration. Cursor format, bounded admission and sanitized error codes must stay consistent with the HTTP contract.
 
-Synchronize [monitoring configuration](../../../../../config/examples/monitoring/README.md), [M30](../../../../../docs/milestones/m30-reliability), platform/monitoringmetrics, component/distribution observation sources, HTTP/frontend contracts and [reliability harnesses](../../../../../tools/quality/reliability). Changes to a metric's source or null semantics require consumer and capacity-report updates; a dashboard must not invent an observed value.
+Synchronize [monitoring configuration](../../../config/examples/monitoring/README.md),
+the [public API contract](../../../../../api/openapi/v1/monitoring/openapi.json),
+platform/monitoringmetrics, component/distribution observation sources and
+frontend contracts. Keep the [observability roadmap](../../../../../docs/product/roadmap/observability-and-alerting.md)
+and [native monitoring profiles](testdata/) current. Changes to a metric's source
+or null semantics require consumer and capacity-report updates; a dashboard must
+not invent an observed value.
 
 Focused native check: `go -C services/control test ./internal/modules/monitoring`. Native SQL, real full-server observations and capacity workloads are separate acceptance profiles. Capacity reports describe their actual process, request and dataset sizes; they do not establish unmeasured production scale.
 
@@ -411,6 +417,16 @@ the large-fleet workload:
 
     bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http
 
+The retained-aggregate cost profile streams 1,296,000 synthetic samples over
+90 days into ten recording-output series, verifies the persisted count across
+a graceful native restart, and measures the normal authenticated query. It
+uses a 100-day store horizon and reports the first read after restart and
+thirty subsequent reads, including schema and audit verification. This is
+aggregate storage/query qualification; it does not reproduce node traffic,
+elapsed retention or production latency percentiles.
+
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-retention
+
 To qualify the protected configuration and native TLS with separately
 trusted raw and long origins, run the same fixture with the TLS selector.
 
@@ -520,3 +536,99 @@ The fixture stops each store before starting the restored instance. It
 reads back a metric and two UTC log partitions, with a separate LogsQL
 query for each of two native accounts. Installation scheduling and
 cross-store recovery coordination remain separate from this check.
+
+
+## Scoped series cardinality service
+
+The owning service also has a bounded daily cardinality read. It is not yet a
+published public operation or Console workflow. Its optional protected policy is:
+
+```json
+{
+  "series_cardinality": {
+    "raw_origin": "https://metrics.example.invalid",
+    "lookback_days": 7,
+    "maximum_ranks": 20
+  }
+}
+```
+
+Omit this policy to disable the read. All three values must be explicit when it
+is enabled. Lookback includes the current UTC day and must fit the raw store's
+configured retention. Set native search.maxTSDBStatusSeries and
+search.maxStatusRequestDuration in the installed store as well; topN is only a
+returned-rank cap. Use direct private HTTPS with the process's configured CA trust.
+The operation budget also bounds connection establishment and response headers.
+
+GetSeriesCardinality and GetSeriesCardinalityJSON accept a UTC midnight date,
+an optional exact metric name and a rank limit. Zero selects the configured
+maximum. A requested limit above it is rejected. Tenant and Workspace selectors
+come from current server authority, and the focus label is always node_id. The
+result counts series present on that UTC day, not enrolled nodes, current agents
+or enforced ingestion budgets. Metrics without node_id retain their total and metric count but have no node
+rank. Only canonical node UUIDs are accepted; an empty identifier is invalid
+source data. Never infer an unattributed count from a truncated rank remainder. Query-usage statistics and all other raw source metadata are omitted.
+
+Both reads share the existing Platform Admin and active Workspace fences,
+observation slots, operation deadline and final license/audit transaction with
+history. Store I/O holds no SQL locks. An authority change or lost commit outcome
+releases no result. JSON is bounded before the success audit commits, including
+its serving envelope; the upstream reply has a separate four-MiB cap.
+
+A missing policy returns MONITORING_CARDINALITY_NOT_CONFIGURED. A day outside the
+configured horizon returns MONITORING_CARDINALITY_RANGE_INVALID. Source failure,
+scan refusal, incomplete/malformed data or transport failure returns
+MONITORING_CARDINALITY_UNAVAILABLE. Narrow to an exact metric after a scan refusal;
+do not increase limits automatically. An excessive encoded response returns
+MONITORING_CARDINALITY_RESPONSE_LIMIT. These are owning-service errors pending
+formal public API and bilingual recovery publication.
+
+The targeted native profile reuses the isolated PostgreSQL/metrics fixture:
+
+```sh
+bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh cardinality
+```
+
+Supply the same locally verified image and metrics binary inputs as the history
+profiles above. This profile requires Linux and the shared resource/lock guard
+before invocation. Its successful paths use the native index, not a source double.
+The service, profile and tests remain a candidate until their actual run is recorded
+in the [cardinality research](../../../../../docs/research/series-cardinality-scope.md).
+
+The candidate cardinality entry additionally checks two completed UTC days in one
+monthly partition, distinct daily metric/node ranks, scope distractors, an empty
+day and a same-profile restart. It inspects the actual child argv and executable
+identity. Its positive source explicitly uses -disablePerDayIndex=false; a separate
+-disablePerDayIndex=true process is rejected by the test fixture before product
+binding and queried directly as a global-index negative control. This fixture
+admission does not implement installed-product source admission.
+
+The affected helper tests can run without native services:
+
+```sh
+go -C services/control test -race -p 2 -count=1 \
+  -run '^(TestDailyCardinalityFixtureAdmission|TestCardinalityFixtureUTCPartitionDays)$' \
+  ./internal/modules/monitoring
+```
+
+Those helper units and Linux/amd64 integration-tagged cross-compilation passed
+at 5f83cfbf. The unchanged source subsequently passed all four Linux amd64 native
+entries: cardinality, history-http, history-tls and history-retention. The daily
+controls verified the two distinct days, same-profile restart, actual procfs
+identity and separate disabled-index control. All owned stores and four
+PostgreSQL containers stopped and were removed; the original lock carriers
+remained. This qualifies the exact 59-migration/119-table native fixture, not
+current-main, installed-product source admission, public cardinality dispatch
+or Console. Keep those publication requirements open. See the
+[native qualification](../../../../../docs/research/series-cardinality-scope.md#linux-native-daily-index-qualification).
+
+## Current-main private HTTP candidate
+
+The integration candidate is based on main ecab4c98 and includes the separate
+d8 private SeriesCardinality HTTP adapter. It does not register a public route.
+Its UTC date, literal metric and optional rank parsing remain the d8 contract;
+the owning service supplies current scope, producer policy and request audit.
+The 5f83cfbf native qualification above is preserved at its original 59/119
+source. This new baseline declares 60/120 but has not run that native scope.
+Trusted producer composition, shared cardinality API/dispatch, Console and
+current-main native/full gates remain open.
