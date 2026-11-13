@@ -948,8 +948,8 @@ parser dependencies. Both actual Web generators and both checks passed: 30
 TypeScript and 144 Help files. Exactly the original five generated/locale paths
 change; the updated relay patch SHA-256 is
 `a3def1685309d4a7609274852cbc17f0904f9477a8edcaa9d016b4ced085dea9`.
-No product Web file was changed. The owner must land that metadata generation
-before the new OpenAPI can pass the repository's generated-output gate.
+That private projection changed no product Web file. The subsequent original-
+author composition below qualifies the product generation separately.
 This projection does not qualify the separate shared Help URL assertion.
 The Web owner has since fixed that assertion at
 44ab52293e516128ba2efc0edc2cb2053acc3462; f11aa11f records four focused
@@ -957,11 +957,45 @@ bilingual entrance cases and a fresh installation-client self-check. The two
 earlier MODEL failures remain evidence, and those focused checks are not a
 complete gate for this API/SDK composition.
 
-Required remaining gates are the five-file product generation handoff and a
-complete check/build/test on their actual integrated source, including the
-owner's shared Help fix. CLI b967d7c8 whole make test and installed AUD-108 acceptance
-remain distinct. Existing native audit transport and owner Web recovery results
-cannot substitute for those gates. No roadmap checkbox moves here.
+### Original-author joint generation
+
+The source-only DEV commit 47fa03253b0d2655be26925a7e4492547c3e9a42 and
+Web's original c7ba62718fa4cded20914c179473cb2a02bf2ea9 are composed in input
+871e3df7df9ea0f0f5adb8f3bd91a226a52b44af on main 6ed5c627. The Web leaf's
+actual parent is unpublished research f1ccc065. Replay only its five agreed
+projection/locale paths as a84c4eb0, preserving its author and original-commit
+footer, rather than importing the unrelated research ancestor. Both original
+bundles and commits remain retained; all five Web postimages match the original
+leaf. The audit-read hook, both consumers, the 41-case recovery fixture and the
+shared Help helper retain the owner's exact hashes. The old consumer prototype
+patch was not applied.
+
+Actual `make generate` passed on that joint tree, including the unchanged
+web-install prerequisite: all 414 packages were reused, none downloaded and
+install scripts were disabled. Node 26.13.0 and pnpm 12.16.1 generated 30 API
+TypeScript and 144 Help files. The subsequent real generate:check, layout and
+roadmap checks passed. No committed bytes changed. All 79 projection inputs,
+with the owner's intended locale postimage, and all 122 SDK files were verified.
+The SDK generator, templates, contract and native fixture remain byte-identical
+to the retained 783567ea qualification; no new native SDK test is claimed.
+
+The actual joint-source comparison against main 6ed5c627 still inventories 430
+operations with no declaration conflicts and exactly one compatibility finding,
+PUBLIC_RESPONSE_MODELS_CHANGED, exiting 1. It adds only the explicit 409 Problem
+binding to an already implemented server outcome. The shared server registry
+maps STORAGE_COMMIT_OUTCOME_UNKNOWN to 409, and the actual repository wire test
+covers withheld COMMIT and suppressed acknowledgement with no released page and
+one deliberate new read. The generated Go decoder now uses
+GetApplicationproblemJSON409(), as documented in the SDK README and covered by
+the retained native fixture. Preserve this intentional source-review signal;
+it is neither a server-contract defect nor a general compatibility pass.
+
+Complete check/build/full make test on the final integrated source, current-main
+alignment and fast-forward publication remain required. No new heavy window or
+queue was requested for these lightweight generation checks. CLI b967d7c8 whole
+make test and installed AUD-108 acceptance remain distinct. Existing native
+audit transport, focused Help and owner Web recovery results cannot substitute
+for the integrated gates. No roadmap checkbox moves here.
 
 SCI 8531226d supplies WriteScopedWithin for a caller-owned PostgreSQL transaction
 and performs no commit or retry itself. Main now pairs the actual workspace Go
