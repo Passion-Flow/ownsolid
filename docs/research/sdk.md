@@ -296,8 +296,53 @@ indexed matches or the existing handoff records. Module source is not a
 prepared executable, and the pinned Linux ELF cannot run on Mac. No
 workstation carrier was opened and no nonblocking acquisition or generator
 was started. The new generation entry has no exit code or peak RSS result.
-Its remaining prerequisite is an already prepared Mac executable of the
-pinned generator with a verified format, version and hash. Do not compile,
-install, substitute the Linux binary or start an unassigned Linux fallback.
-Generated file counts and byte comparisons remain unmeasured. No dependency,
-model or data set is added by this review.
+At that generation-only boundary, obtaining a prepared Mac executable of
+the pinned generator was required before taking a carrier. Building it was
+outside that entry's scope. The distinct tool-preparation workload below
+does not rewrite the earlier zero-attempt record or qualify an SDK output.
+
+## Mac tool preparation resource boundary
+
+Prepare the missing Mac tool with the README's exact
+`go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.8.2`
+entry, a private GOBIN and a disposable tool module. Keep Go 1.27.3 fixed
+and verify the executable's real version, Darwin arm64 format and SHA-256.
+The pinned module's source h1 is
+`h1:68UGCFId8tysEuz1jqDgem0Lnz0d6T+73br+KwH/W6k=` and its go.mod h1 is
+`h1:yae2TI9IYB5vxQ35gFrpXh9L5H1eJv4MAUK1jumGMTo=`.
+The cached origin identifies tag v2.8.2 at
+`a2b197fda12f9d2db33144dddb3c64e5ebdf5594`.
+A filesystem source-hash calculation matched the cached checksum before
+execution. The source, module sums and original notices are build inputs,
+not a replacement for the tool's actual version command.
+
+The prepared inventory covers twenty tool-module versions and three
+existing SDK metadata-module versions. The pinned go-spew and go-difflib
+modules represented in the license table were missing. Their proposed
+downloads are separate preparation commands, pinned by the original
+module's go.sum, and would be checked through HTTPS and the Go checksum
+database. They do not change product dependencies. The full twenty-three-
+module source verification belongs to the worker and remained unrun. Preparation and tool compilation have at most 300
+seconds. The combined Mac entry has at most 600 seconds and retains at
+least 60 seconds for cleanup. A successful preparation would switch to
+GOPROXY=off, GOSUMDB=off, GOTOOLCHAIN=local and GOVCS=*:off for source
+generation; it would compile no SDK and run no native, database, browser
+or complete repository gate.
+
+The source d186e304 attempt returned 75 at its first resource preflight:
+raw Free was 160.21875 MiB, below 2,048 MiB. Disk free was
+164,234,719,232 bytes, above 15 GiB. It exited after 0.097 seconds,
+before opening the permanent carrier or making a nonblocking acquisition.
+The worker did not start. Neither planned module was downloaded, no tool
+was built and neither the current nor the 2e comparison SDK was generated.
+No worker command log, partial SDK, peak RSS or worker exit result exists.
+The thirty-six generation inputs were independently read back unchanged,
+and the carrier inode was preserved. This resource-refused attempt is
+consumed and was not retried or queued.
+
+A new allocated workload requires the same live resource admission before
+preparation can run. The prepared source and command inventories do not
+establish successful tool construction, reproducible SDK bytes or native
+SDK behavior. The existing 49 tests, 28 projection results, retained
+430-operation audit exit 1, earlier admission refusals and native scope
+remain attached to their original sources. No model or data set is added.
