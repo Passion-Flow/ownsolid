@@ -130,7 +130,12 @@ export interface NodeActions {
 /** The actions on a node. `onChanged` runs before the toast that offers undo. */
 export function useNodeActions(
   node: Node | null,
-  { onChanged, onRemoved, detail = false, primary = true }: {
+  {
+    onChanged,
+    onRemoved,
+    detail = false,
+    primary = true,
+  }: {
     onChanged: () => void;
     onRemoved: () => void;
     /** A detail header keeps one frequent action and the secondary command menu. */
@@ -213,71 +218,91 @@ export function useNodeActions(
   };
   return {
     buttons:
-      node && !removed ? detail ? (
-        <>
-          <Button
-            variant={primary ? 'primary' : 'secondary'}
-            disabled={active ? collect.isPending : change.isPending}
-            onClick={() => {
-              if (active) collect.mutate(node.id);
-              else toggle();
-            }}
-          >
-            {active ? <RefreshCw aria-hidden /> : <Check aria-hidden />}
-            {t(active ? 'nodes.collect.open' : 'nodes.enable.open')}
-          </Button>
-          <Menu trigger={<Button><Ellipsis aria-hidden />{t('resource.actions')}</Button>}>
-            <MenuItem onSelect={() => { openDialog('rename'); }}>
-              <Pencil aria-hidden />{t('nodes.rename.open')}
-            </MenuItem>
-            {active ? <MenuItem disabled={change.isPending} onSelect={toggle}>
-              <Ban aria-hidden />{t('nodes.disable.open')}
-            </MenuItem> : null}
-            <MenuSeparator />
-            <MenuItem className="text-critical-ink data-[highlighted]:text-critical-ink" onSelect={() => { openDialog('remove'); }}>
-              <Trash2 aria-hidden />{t('nodes.remove.open')}
-            </MenuItem>
-          </Menu>
-        </>
-      ) : (
-        <>
-          <Button
-            variant="danger"
-            onClick={() => {
-              openDialog('remove');
-            }}
-          >
-            <Trash2 aria-hidden />
-            {t('nodes.remove.open')}
-          </Button>
-          <Button
-            onClick={() => {
-              openDialog('rename');
-            }}
-          >
-            <Pencil aria-hidden />
-            {t('nodes.rename.open')}
-          </Button>
-          <Button
-            disabled={change.isPending}
-            onClick={toggle}
-          >
-            {active ? <Ban aria-hidden /> : <Check aria-hidden />}
-            {active ? t('nodes.disable.open') : t('nodes.enable.open')}
-          </Button>
-          {active ? (
+      node && !removed ? (
+        detail ? (
+          <>
             <Button
-              variant="primary"
-              disabled={collect.isPending}
+              variant={primary ? 'primary' : 'secondary'}
+              disabled={active ? collect.isPending : change.isPending}
               onClick={() => {
-                collect.mutate(node.id);
+                if (active) collect.mutate(node.id);
+                else toggle();
               }}
             >
-              <RefreshCw aria-hidden />
-              {t('nodes.collect.open')}
+              {active ? <RefreshCw aria-hidden /> : <Check aria-hidden />}
+              {t(active ? 'nodes.collect.open' : 'nodes.enable.open')}
             </Button>
-          ) : null}
-        </>
+            <Menu
+              trigger={
+                <Button>
+                  <Ellipsis aria-hidden />
+                  {t('resource.actions')}
+                </Button>
+              }
+            >
+              <MenuItem
+                onSelect={() => {
+                  openDialog('rename');
+                }}
+              >
+                <Pencil aria-hidden />
+                {t('nodes.rename.open')}
+              </MenuItem>
+              {active ? (
+                <MenuItem disabled={change.isPending} onSelect={toggle}>
+                  <Ban aria-hidden />
+                  {t('nodes.disable.open')}
+                </MenuItem>
+              ) : null}
+              <MenuSeparator />
+              <MenuItem
+                className="text-critical-ink data-[highlighted]:text-critical-ink"
+                onSelect={() => {
+                  openDialog('remove');
+                }}
+              >
+                <Trash2 aria-hidden />
+                {t('nodes.remove.open')}
+              </MenuItem>
+            </Menu>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="danger"
+              onClick={() => {
+                openDialog('remove');
+              }}
+            >
+              <Trash2 aria-hidden />
+              {t('nodes.remove.open')}
+            </Button>
+            <Button
+              onClick={() => {
+                openDialog('rename');
+              }}
+            >
+              <Pencil aria-hidden />
+              {t('nodes.rename.open')}
+            </Button>
+            <Button disabled={change.isPending} onClick={toggle}>
+              {active ? <Ban aria-hidden /> : <Check aria-hidden />}
+              {active ? t('nodes.disable.open') : t('nodes.enable.open')}
+            </Button>
+            {active ? (
+              <Button
+                variant="primary"
+                disabled={collect.isPending}
+                onClick={() => {
+                  collect.mutate(node.id);
+                }}
+              >
+                <RefreshCw aria-hidden />
+                {t('nodes.collect.open')}
+              </Button>
+            ) : null}
+          </>
+        )
       ) : null,
     notices: (
       <>

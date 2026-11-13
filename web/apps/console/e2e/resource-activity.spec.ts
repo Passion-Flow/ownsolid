@@ -46,7 +46,9 @@ async function screenshot(page: Page, info: TestInfo, state: string) {
   });
   if (state.startsWith('filtered-empty-')) {
     const messages = state.endsWith('zh-CN') ? chinese : english;
-    await page.getByRole('button', { name: messages['resource.activity.clearDates'], exact: true }).scrollIntoViewIfNeeded();
+    await page
+      .getByRole('button', { name: messages['resource.activity.clearDates'], exact: true })
+      .scrollIntoViewIfNeeded();
     await info.attach(`resource-history-${state}-remedy`, {
       body: await page.screenshot({ animations: 'disabled', fullPage: true }),
       contentType: 'image/png',

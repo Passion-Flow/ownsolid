@@ -3,9 +3,14 @@ import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import { mockControlPlane, node, readyModel, runningDeployment } from '@ownsolid/shell/testing';
 import { expect, test } from '@playwright/test';
 
-for (const [locale, messages] of [['en', english], ['zh-CN', chinese]] as const) {
+for (const [locale, messages] of [
+  ['en', english],
+  ['zh-CN', chinese],
+] as const) {
   for (const width of [1440, 390]) {
-    test(`detail actions preserve commands and one activity primary in ${locale} at ${String(width)}px`, async ({ page }, info) => {
+    test(`detail actions preserve commands and one activity primary in ${locale} at ${String(width)}px`, async ({
+      page,
+    }, info) => {
       const control = await mockControlPlane(page, 'admin');
       control.signedIn = true;
       control.preferences.locale = locale;
@@ -26,14 +31,21 @@ for (const [locale, messages] of [['en', english], ['zh-CN', chinese]] as const)
         ['deployment', `/services/${runningDeployment.id}`],
       ]) {
         await page.goto(`${path}?tab=activity`);
-        await expect(page.getByRole('tab', { name: messages['resource.tab.activity'], exact: true })).toHaveAttribute('aria-selected', 'true');
+        await expect(
+          page.getByRole('tab', { name: messages['resource.tab.activity'], exact: true }),
+        ).toHaveAttribute('aria-selected', 'true');
         await expect(page.getByRole('main').locator('.bg-accent-strong')).toHaveCount(1);
-        await expect(page.getByRole('main').locator('.bg-accent-strong')).toHaveText(messages['resource.activity.read']);
+        await expect(page.getByRole('main').locator('.bg-accent-strong')).toHaveText(
+          messages['resource.activity.read'],
+        );
         await capture(kind ?? 'resource');
       }
       await more().focus();
       await page.keyboard.press('Enter');
-      const scale = page.getByRole('menuitem', { name: messages['services.scale.open'], exact: true });
+      const scale = page.getByRole('menuitem', {
+        name: messages['services.scale.open'],
+        exact: true,
+      });
       await expect(scale).toHaveAttribute('aria-disabled', 'true');
       await expect(scale).toHaveAccessibleDescription(messages['services.scale.notReady']);
       await scale.focus();

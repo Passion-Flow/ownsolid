@@ -237,30 +237,84 @@ export function DeploymentActions({
         <Button
           variant={primary ? 'primary' : 'secondary'}
           disabled={changing}
-          onClick={() => { now(canStart(deployment) ? 'deploy' : 'observe'); }}
+          onClick={() => {
+            now(canStart(deployment) ? 'deploy' : 'observe');
+          }}
         >
           {canStart(deployment) ? <Play aria-hidden /> : <Activity aria-hidden />}
           {t(canStart(deployment) ? 'services.deploy.open' : 'services.observe.open')}
         </Button>
-        <Menu trigger={<Button><Ellipsis aria-hidden />{t('resource.actions')}</Button>}>
-          {canStart(deployment) ? <MenuItem disabled={changing} onSelect={() => { now('observe'); }}>
-            <Activity aria-hidden />{t('services.observe.open')}
-          </MenuItem> : null}
-          {deployment.observed_state === 'running' ? <MenuItem disabled={changing} onSelect={() => { now('verify'); }}>
-            <BadgeCheck aria-hidden />{t('services.verify.open')}
-          </MenuItem> : null}
-          <MenuItem aria-disabled aria-describedby="deployment-scale-not-ready" onSelect={(event) => { event.preventDefault(); }}>
-            <Scaling aria-hidden />{t('services.scale.open')}
+        <Menu
+          trigger={
+            <Button>
+              <Ellipsis aria-hidden />
+              {t('resource.actions')}
+            </Button>
+          }
+        >
+          {canStart(deployment) ? (
+            <MenuItem
+              disabled={changing}
+              onSelect={() => {
+                now('observe');
+              }}
+            >
+              <Activity aria-hidden />
+              {t('services.observe.open')}
+            </MenuItem>
+          ) : null}
+          {deployment.observed_state === 'running' ? (
+            <MenuItem
+              disabled={changing}
+              onSelect={() => {
+                now('verify');
+              }}
+            >
+              <BadgeCheck aria-hidden />
+              {t('services.verify.open')}
+            </MenuItem>
+          ) : null}
+          <MenuItem
+            aria-disabled
+            aria-describedby="deployment-scale-not-ready"
+            onSelect={(event) => {
+              event.preventDefault();
+            }}
+          >
+            <Scaling aria-hidden />
+            {t('services.scale.open')}
           </MenuItem>
-          <MenuItem aria-disabled aria-describedby="deployment-rollback-not-ready" onSelect={(event) => { event.preventDefault(); }}>
-            <Undo2 aria-hidden />{t('services.rollback.open')}
+          <MenuItem
+            aria-disabled
+            aria-describedby="deployment-rollback-not-ready"
+            onSelect={(event) => {
+              event.preventDefault();
+            }}
+          >
+            <Undo2 aria-hidden />
+            {t('services.rollback.open')}
           </MenuItem>
           <MenuSeparator />
-          {canStop(deployment) ? <MenuItem disabled={changing} onSelect={() => { setDialog('stop'); }}>
-            <Square aria-hidden />{t('services.stop.open')}
-          </MenuItem> : null}
-          <MenuItem className="text-critical-ink data-[highlighted]:text-critical-ink" disabled={changing || deployment.desired_state === 'removed'} onSelect={() => { setDialog('remove'); }}>
-            <Trash2 aria-hidden />{t('services.remove.open')}
+          {canStop(deployment) ? (
+            <MenuItem
+              disabled={changing}
+              onSelect={() => {
+                setDialog('stop');
+              }}
+            >
+              <Square aria-hidden />
+              {t('services.stop.open')}
+            </MenuItem>
+          ) : null}
+          <MenuItem
+            className="text-critical-ink data-[highlighted]:text-critical-ink"
+            disabled={changing || deployment.desired_state === 'removed'}
+            onSelect={() => {
+              setDialog('remove');
+            }}
+          >
+            <Trash2 aria-hidden />
+            {t('services.remove.open')}
           </MenuItem>
         </Menu>
       </div>

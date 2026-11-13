@@ -18,7 +18,9 @@ it('preserves the first-page query fingerprint with an opaque cursor', async () 
   };
   await listAuditEvents(query);
   await listAuditEvents({ ...query, cursor: 'opaque-next' });
-  const parameters = fetch.mock.calls.map(([url]) => new URL(url, 'http://example.test').searchParams);
+  const parameters = fetch.mock.calls.map(
+    ([url]) => new URL(url, 'http://example.test').searchParams,
+  );
   expect(parameters[1]?.get('cursor')).toBe('opaque-next');
   for (const params of parameters) {
     params.delete('cursor');
