@@ -85,3 +85,13 @@ attempts and zero new native Go/SQL test bodies. The
 retain all original resource thresholds and define the required existing-runner
 delta, cleanup, raw outcomes and no-retry behavior. ARC construction and formal
 protected functions/grants remain their owners' work.
+
+
+The separate bounded wrapper/config/diffs are now prepared and hashed in
+/root/lane-trn-tools/reader-native-bounded-v1/. Twenty-five pure local checks
+and a read-only Linux input/source check passed; details and exact hashes are
+in the [review artifact note](training-published-file-readers.md#bounded-reader-fixture-review-artifact).
+This resolves preparation only. No native carrier acquisition, compilation or
+Go/SQL body occurred and the single opportunity remains unused pending the
+concrete wrapper review. The original plan, binding and c527fb68 runner are
+unchanged. No product or shared-owner contract is declared complete.
