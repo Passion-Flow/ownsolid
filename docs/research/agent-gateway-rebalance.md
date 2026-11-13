@@ -808,3 +808,53 @@ have SHA-256 values `20bf03147db7aa23a93e0acaa43a6393580d11ec69906490d1dc87fa1f2
 The sorted Go-source/module-input fingerprint is `12727b32504ae011e1fb46e357c74b17c6453ab3c3c1a0c22de7dff0e57712df`.
 Full check/build/test and the unchanged installed native 500-agent drill remain
 required. Do not infer acceptance or a new capacity claim from these focused runs.
+
+
+## Native terminal-status and fixture-directory findings
+
+Input `f086998549595603686e56ec8c2156a2873065c1` passed complete Mac check,
+build and test: 1,191 Console and 410 Portal browser cases, with the existing
+28/10 environment skips. Native source verification covered all 5,062 tracked
+paths, and all seven current Linux binaries compiled without downloads. The first
+native client race run failed; its retained log SHA-256 is `fc8b81765b1d9b2f7f7ff3b293da0a9e47a6ceae9b11dafc1ddc741f16d55832`.
+No installed 500-agent run was started from that failed prerequisite.
+
+One failure was the runner's working directory. A compiled Go package test must run
+from its package directory, as go test does; the model-range test correctly refused
+a missing relative fixture when the runner used the module directory. Correct the
+external runner's directory, not the fixture path, digest check or assertion.
+
+The other failure was the existing strict revoked-session test receiving
+CONTROL_CONNECTION_FAILED on a repeated immediate refusal. The pinned
+[gRPC ClientStream contract](https://pkg.go.dev/google.golang.org/grpc@v1.85.0#ClientStream)
+and [implementation](https://github.com/grpc/grpc-go/blob/v1.85.0/stream.go)
+require reading RecvMsg after a SendMsg EOF to obtain a remotely generated final
+status. Treating that EOF as an ordinary network error can lose an early
+Unauthenticated status. Add a deterministic sender-EOF/receiver-refusal regression
+before changing the implementation. Share one send/receive helper between the
+actual Agent and simulator; preserve final refusal codes, one send, one receive,
+existing cancellation/timeouts and frame validation. A non-EOF send error remains
+final. Do not replay a heartbeat, claim, acknowledgement or result, and do not
+classify an empty successful stream termination as an answered application message.
+The raw gateway test client's I/O must honor the same upstream rule. The existing
+Go BSD-3-Clause and gRPC Apache-2.0 dependencies suffice; add no dependency.
+
+
+The deterministic regression failed on both revoked-credential and missing-certificate
+refusals before the fix, each reporting CONTROL_CONNECTION_FAILED instead of the
+final authentication status. Its log SHA-256 is
+`160360d4fb77cc23c8bbaeb0e48d625c65226ad70f73faed019aa055360a6936`.
+The shared single-send/single-receive helper now reads the final RPC status after
+send EOF. The original strict authentication assertions pass, alongside permanent
+no-replay, local-send-error, empty-termination and decoded-reply tests. The actual
+Agent and simulator adapters both use that helper; the raw gateway fixture observes
+the same documented I/O contract without changing any refusal assertion.
+
+After the fix, all affected Agent contract, client/transport, gateway/HTTP and
+simulator link/report race profiles and affected vet profiles passed. The Agent,
+control and simulator race log SHA-256 values are
+`ddaafb6fc230627c18c90bbcc64d96a4454947b35fadabf9558a84865226e21f`,
+`8eef3de17d4dfee0164de516d14bfe0f3c6cd354631729a258ab02cfc2b94d93` and
+`1f754eabbb4703f7411773e53b252ba9abb0e8e0997887c4cc6855f30294d526`.
+Native package execution and installed lifecycle acceptance remain pending. Keep
+both original native failures; the earlier full Mac result does not erase them.
