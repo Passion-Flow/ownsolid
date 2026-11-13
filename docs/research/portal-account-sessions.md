@@ -477,3 +477,85 @@ followed by a separately admitted original complete run; the consumed entry must
 not be retried automatically. POR-112 stays unticked pending complete gates,
 original-owner publication conditions and the installed authority/SQL/offline/SSO
 evidence described above.
+
+### Offline navigation diagnosis and pending observation candidate
+
+Read-only review of the original 81 traces narrowed the incident without running
+Node, a preview, a browser, an installer or another lock admission. The first
+failing navigation is exactly
+`http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075`:
+the reload at `web/apps/console/e2e/models.spec.ts:744` began at
+`2026-11-13T14:29:43.747849Z` and failed at
+`2026-11-13T14:30:01.815951Z`, after 18.068 seconds. UTC is derived from each
+trace's wall-time/monotonic-time anchor, not a kernel process timestamp. The
+preceding expiry, failure recovery and restart-link assertions had completed;
+the failure was browser navigation, not a test-runner timeout or the parent
+work deadline.
+
+Cases 910 through 989 then failed while navigating the same configured origin
+`http://localhost:31036`; the last socket error ended at
+`2026-11-13T14:31:01.650413Z`. Case 990 passed. Treat these as one contiguous
+navigation incident, not 80 independently established product defects. The
+evidence establishes their shared destination and order, not that the first
+test caused the others. The model fixture matches the admin API path and does
+not intercept these main-document paths; trace contexts were not offline.
+Neither the Web inputs nor Makefile changed between joint merge `9e7404f6` and
+tested source `82c602d3`; the later `45344aab` changes documentation only.
+
+The preview receipt records invocation PID 17612, and its startup warning names
+Node PID 17613. No retained parent edge or precise kernel birth binds those two
+PIDs, so numeric adjacency is not promoted to process ancestry. Readiness first
+returned HTTP 200 at `14:16:30.967Z`; the initial readiness probes used `::1`.
+The library logs teardown at `14:33:54.762Z` and completion three milliseconds
+later. There is no actual intermediate Vite exit code, listener identity or
+timestamped separate stderr stream. These observations cannot establish that
+one OS listener survived the whole incident, that localhost selected the same
+address family during failure, or why navigation recovered.
+
+Inspection of the pinned installed Playwright 1.64.1 runner supplies a concrete
+instrumentation explanation. Its WebServer plugin passes `log: () => {}` to
+the process launcher, discarding the launcher's PID, close code and signal
+messages. The exit promise is raced during startup readiness, rather than used
+as a continuous suite liveness assertion. Therefore absence of a mid-suite exit
+message is not liveness evidence. This is a proven private evidence gap; it is
+not proof of a preview crash. Startup resource floors, later socket counts,
+parent cleanup and eventual successful cases do not reconstruct the missing
+historical listener/process observations. Browser, OS, server, resource and
+external network causes remain unproven, so no product, address-family, proxy,
+socket-limit or timeout correction is selected.
+
+The same private packet now contains a source-bound passive diagnostic candidate
+under `offline-navigation-diagnosis/`, separate from its unchanged original
+82-file evidence manifest. `preview-lifecycle-observer.cjs` has SHA-256
+`ca777d7173d0ce88efde51f93c77c1b64362041153a2903da91ae5f073311ad4`.
+It observes the existing preview launch's exact ChildProcess handle and its
+spawn/exit/signal/close events. In Vite it records bootstrap PID/PPID, a lifetime
+nonce, actual Server address/listening/error/close events and timestamped
+unchanged output bytes. Node time origin is explicitly not a kernel birth
+timestamp. Error-monitor events preserve unhandled-error behavior; it installs
+no signal handler, sends no probe or external request, samples no memory and
+retains original command arguments, write callbacks and return values. It is
+opt-in through a future private entry and does not change product/test inputs.
+An unavailable observer invalidates diagnostic completeness rather than hiding
+an output error or supplying a successful observation.
+
+This candidate and its six prepared VM controls have not run, including syntax
+validation: starting Node is outside the current offline-only authorization.
+The controls must verify inactive unrelated commands, unchanged listen/spawn
+arguments and return values, actual-handle exit/signal association, preserved
+output bytes/callbacks, visible logging failure and unchanged signal/error
+defaults. The frozen affected-input manifest covers the eleven relevant source,
+configuration, lockfile and Makefile inputs. A future independently admitted
+diagnostic run should retain original Console `models.spec.ts`,
+`navigation.spec.ts`, `nodes.spec.ts` and `overview.spec.ts`, both languages,
+one worker and zero retries with this passive evidence enabled. No existing
+assertion, timeout, skip, host or port changes. Those files include all 81 failed
+cases and the preceding expiry success; a focused pass would not replace the
+complete suite or prove a late-run transient is fixed. No new execution entry
+was activated or queued. The original failed gate, DEV compatibility audit and
+installed acceptance conditions remain open.
+
+No dependency or upstream implementation is added or copied. The private
+candidate uses Node's existing built-ins; their existing MIT notice obligations
+remain. Playwright's inspected Apache-2.0 source and Vite's existing MIT source
+are pinned installed research inputs, not modified dependencies.
