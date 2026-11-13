@@ -29,3 +29,21 @@ profile, four private management mTLS endpoints and selected PostgreSQL.
 Checkpoint and backup publication use owners outside artifactstores.
 Extending the existing model and dataset ingress without binding those
 owners would leave the S3 contract incomplete. NET-101 stays open.
+
+
+## Current repository entry points
+
+The API source is api/openapi/v1/artifactstores/openapi.json. Typed deployment
+examples live under services/control/config/examples/object-storage, while
+the module's repository integration and backup fixture remain beside its code.
+The responsibility roadmap is docs/product/roadmap/network-and-storage.md.
+The inherited module README still pointed to removed root config/contracts,
+tools/quality and M22 milestone paths; replace those references with these
+existing owners, rather than recreating obsolete directory structures.
+
+This is a documentation correction, not a changed S3 protocol, dependency or
+provider claim. Keep native runner invocation subject to the development
+environment's resource/allocation checks; the helper does not allocate a shared
+execution window. Validate local link targets and the two backup-note anchors
+without starting Go, a database or S3. NET-101 remains open for the acceptance
+requirements above.

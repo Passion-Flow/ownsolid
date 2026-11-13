@@ -8,7 +8,7 @@ Migration 000023 owns object, part, grant and ingestion records. Expected length
 
 The repository selects explicit PostgreSQL, MySQL or Dameng statements. Native Dameng uses the existing transaction owner, quoted identifiers, text JSON bindings and UTC microsecond timestamps; it does not rewrite another dialect. [dameng.go](dameng.go) owns positional bindings and [dameng_restore.go](dameng_restore.go) fences restored operations. The [native integration contract](dameng-integration.md) lists the exact schema and shared activation prerequisites. This source path is not yet an activated or verified Dameng deployment.
 
-Adjust deployment settings through control ObjectStorage configuration and [object-storage examples](../../../../../config/examples/object-storage). Synchronize [object-storage contracts](../../../../../contracts/object-storage), datasets/models, [frontend](../../../../../web/README.md), [quality harnesses](../../../../../tools/quality/object-storage) and [M22](../../../../../docs/milestones/m22-object-storage). Storage paths must remain disjoint from other artifact owners.
+Adjust deployment settings through control ObjectStorage configuration and [object-storage examples](../../../config/examples/object-storage). Keep the [artifactstores HTTP contract](../../../../../api/openapi/v1/artifactstores/openapi.json), dataset/model owners, [frontend](../../../../../web/README.md), [domain integration checks](repository_integration_test.go) and [NET-101 roadmap](../../../../../docs/product/roadmap/network-and-storage.md) aligned. The [S3 transport](../../platform/objectstore) owns separate protocol checks. Storage paths must remain disjoint from other artifact owners.
 
 Focused unit check: `go -C services/control test ./internal/modules/artifactstores`. Actual multipart, isolation, license, ingestion and recovery checks require the declared selected database and S3 fixture; unit transport doubles do not qualify a production provider.
 
@@ -33,9 +33,10 @@ for the provider and installer boundary and the Linux reproduction.
 
 The [PostgreSQL hold candidate](backup_hold_candidate.go) and
 [unnumbered up](testdata/backup-hold.up.sql) and [down](testdata/backup-hold.down.sql) scripts qualify cell scope and coordinator takeover
-in the isolated backup fence fixture. Run the existing
-`testdata/run-backup-fence.sh` with the verified SeaweedFS binary and
-PostgreSQL image ID. The candidate is private to this module. Both tables are cell-owned. Bind the admitted staging UUID before
+in the isolated backup fence fixture. After an allocated native window and
+the [environment/resource checks](../../../../../docs/development/environment.md),
+run `testdata/run-backup-fence.sh` with the verified SeaweedFS binary and
+PostgreSQL image ID. The helper does not acquire the shared execution window. The candidate is private to this module. Both tables are cell-owned. Bind the admitted staging UUID before
 serving the candidate. Downgrade refuses any used hold generation.
 Production activation requires a numbered migration, least-privilege database
 composition, durable writer permits and qualified provider exclusion.
