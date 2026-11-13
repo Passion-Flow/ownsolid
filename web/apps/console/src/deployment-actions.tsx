@@ -275,6 +275,7 @@ export function DeploymentActions({
             </MenuItem>
           ) : null}
           <MenuItem
+            className="aria-disabled:cursor-not-allowed aria-disabled:opacity-55"
             aria-disabled
             aria-describedby="deployment-scale-not-ready"
             onSelect={(event) => {
@@ -285,6 +286,7 @@ export function DeploymentActions({
             {t('services.scale.open')}
           </MenuItem>
           <MenuItem
+            className="aria-disabled:cursor-not-allowed aria-disabled:opacity-55"
             aria-disabled
             aria-describedby="deployment-rollback-not-ready"
             onSelect={(event) => {
