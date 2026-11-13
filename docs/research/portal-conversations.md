@@ -32,12 +32,13 @@ the server. The browser does not persist prompts or results in local storage.
 
 **Does** finds and resumes the person's own conversations.
 
-**Content** title, New conversation, application filter, then a paged list. Each row shows
+**Content** title, New conversation, history search and application filter, then a paged list. Each row shows
 the application, when the conversation started, turn count and last activity. Show the
 pinned version number when the list response includes it. The default list uses recent
 activity order. Selecting an application gives a creation-ordered view and resets paging.
-The application filter lives in the address. The contract supplies cursors and no total
-count. A general history search needs a server filter before it can search across pages.
+The application filter and accepted search term live in the address. The contract supplies
+cursors and no total count. History search uses the published `q` parameter on the owned
+cross-application projection; it never searches only the currently loaded browser page.
 
 **Click** the row opens a drawer with its app, version when known, turn count and an Open
 conversation link. The row name is a direct link to the detail page. Home's recent rows
@@ -56,6 +57,7 @@ There is no drawer or second dialog inside the create dialog.
 offers New conversation. If there are no published applications, explain who publishes
 them and keep the action visible with its reason. A selected application with no history
 names that application and offers Clear filter. These are distinct from an absent workspace.
+An accepted search with no matches names the term and offers Clear search instead.
 
 ### Conversation `/conversations/$workflowId/$conversationId`
 
@@ -106,7 +108,7 @@ outstanding run and removes the conversation and its turns from Portal access.
 | --- | --- |
 | Loading | Delay skeletons for fast reads. For a slower request, match the list or transcript layout. An admitted run has its own textual state. |
 | Empty, first time | The list offers New conversation. An empty transcript invites the first message and names the application it will use. |
-| Empty, filtered | The list names the chosen application and offers Clear filter. The transcript has no result filter. |
+| Empty, filtered | The list names the chosen application or accepted search term and offers the corresponding Clear action. The transcript has no result filter. |
 | Partial | Keep owned history when metadata or the next page fails. Keep prior turns when the active run cannot be refreshed. A result withheld by the server has its own explanation. |
 | Error | Keep unsent input. Explain permission, unavailable publication, concurrency, quota and timeout failures with the appropriate retry or next step. |
 | Denied | A session or membership failure offers sign-in or workspace recovery as appropriate. An unknown or another person's ID gets the same unavailable record experience. |
@@ -133,7 +135,7 @@ workspace and session. Resource IDs select records inside that scope.
 | Route | Use and response |
 | --- | --- |
 | GET `{cell}/applications` | Published apps. `workspace_id`, `limit`, `cursor`. Uses `version_id`, `can_execute`, and `question_bytes`. |
-| GET `{cell}/application-conversations` | Owned recent conversations. Same query parameters. Includes `workflow_name`, `version_number`, `turn_count`, `updated_at`, `can_execute`, and `question_bytes`. |
+| GET `{cell}/application-conversations` | Owned recent conversations. `workspace_id`, `limit`, `cursor`, and optional `q`. Includes `workflow_name`, `version_number`, `turn_count`, `updated_at`, `can_execute`, and `question_bytes`. |
 | GET `{flow}/conversations` | Owned history filtered to one app, ordered by creation. The compact response has `version_id` and `revision`, without the enriched display fields. |
 | POST `{flow}/conversations` | Create with `version_id` and an audit `reason`. Requires an idempotency key. Returns a conversation with 201. |
 | GET `{flow}/conversations/{conversation_id}` | Owned conversation and revision for detail and destructive confirmation. |
@@ -149,3 +151,41 @@ collects a human reason. The typed client sends CSRF headers for writes. The wor
 operations still lack per-operation error declarations at the reviewed revision. Match the
 handlers' actual codes and add both locale explanations before shipping the UI. No changes
 to those contracts or the formal plan are part of this handoff.
+
+## Published search input and remaining screen boundary
+
+Review on 2026-11-13 found that the draft's earlier search dependency had been satisfied:
+`ListApplicationConversations` declares `q` with 1–120 characters, and the owning Applications
+service implements it ([contract](../../api/openapi/v1/applications/openapi.json),
+[owner](../../services/control/internal/modules/applications/service.go),
+[search research](application-conversation-search.md)). The owner records its own registered
+TLS/PostgreSQL and disconnected acceptance. That evidence is not a Portal UI run. The generated
+contract already includes `q`; the convenience `listConversations` helper still accepts only
+limit/cursor and needs the additive typed option when S-302 is adopted. No generated file needs
+a manual edit or a new server field.
+
+The per-workflow conversation endpoint has no `q`. Keep application filtering and global
+history search visible without inventing their conjunction: while an application is selected,
+search is unavailable with a reason and Clear application filter; while a term is active,
+application choices stay visible but unavailable until Clear search. An address containing both
+must explain the invalid combination and offer to clear either, rather than silently ignore one
+or filter a bounded result locally. A future conjunction needs an owner contract before its UI.
+
+An empty search omits `q` and uses the original unfiltered continuation. A submitted term starts
+at the first page. Bind the term, account, audience, workspace and credential generation in the
+view's query identity; changing term/workspace/session must never reuse a signed cursor or show
+old-term results under the new term. A failed next page preserves only earlier pages of that
+same authorized search. INVALID_CURSOR offers an explicit first-page restart. A refusal hides
+rows and any preview. Preserve the draft and the owning Problem on failure; never substitute an
+unfiltered response when search is unavailable, or infer a database-engine reason from a generic
+503. Test literal wildcard input, Unicode character limits, blank/over-limit input, term changes,
+same-account re-login, cursor substitution, cross-owner/workspace refusal, empty results and
+next-page recovery. Use only existing pinned dependencies and their licences above.
+
+The public Applications read declares entrance/error metadata. The reviewed Workflow operations
+still have their shared default response and no per-operation `x-error-codes`; matching their
+actual handler outcomes remains UX-131 work with that owner. S-302 is still only a table entry
+in the mandatory build plan, so this note remains the concrete adoption draft, not authority to
+ship a new screen. The next implementation boundary is a complete formal S-302 entry, followed
+by the typed helpers and one full create/send/reload/stop/delete path. No conversation or search
+UI implementation, browser run or installed workflow execution is claimed by this review.

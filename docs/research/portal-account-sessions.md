@@ -331,7 +331,7 @@ not rendered-browser acceptance.
 The corrected source is qualified for this scoped frontend path. `make check && make build
 && make test`, disconnected-network installation and the installed
 authority/audit/real-SSO flow remain unqualified. No previous UX-127, Help or audit asset is
-relabelled as this implementation. POR-112 remains open. The one scoped frontend opportunity
-and corrected-source frontend opportunities are consumed and cleaned up; no full/native/installed
+relabelled as this implementation. POR-112 remains open. Both scoped frontend opportunities
+are consumed and cleaned up; no full/native/installed
 opportunity was used or queued. Publish no fully qualified release or roadmap tick before those
 requirements and the later same-source composition checks hold.
