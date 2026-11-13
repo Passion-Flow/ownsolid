@@ -40,15 +40,28 @@ The published source has byte-identical Web, API, fixture, generator, capability
 and Makefile inputs. Native checks/build/tests also passed at the intermediate
 integration source `4b432dbf249e01ff9af447b3e5efc354a8682403`.
 
-The later published source includes a scheduling integration. Its fresh native
-combination checks and newly rebound installation-client selftests have not run:
-the permanent workstation guard returned occupied without starting the command.
-No new waiter or acquisition loop was created, and its carrier was not deleted,
-replaced or truncated. The prepared fixed-source pipeline can resume when the
-existing owner releases the shared window. This is a verification boundary, not
-a claim that the newer native combination or installed browser/SQL flow passed.
-Actual GW120, Help, Scope and independent SQL still require the new immutable
-installation and fresh private fixtures. Keep the corresponding items unticked.
+The newer source's complete native combination still needs its own qualified
+window. The shared Help assertion correction is now published at
+`44ab52293e516128ba2efc0edc2cb2053acc3462`. Its four EN/ZH focused cases passed;
+two saved-query controls rejected the old bare-URL assertion after confirming
+the restored input. Both earlier MODEL full-run failures and the negative traces
+remain separate. The [Help qualification](in-product-help.md#seeded-restoration-qualification)
+does not relabel the prior c70 pass as a complete corrected-helper result.
+
+A new independent client bound to that exact source passed TypeScript, eighteen
+input guards, four output-preservation guards and one GW120/Help/Scope discovery
+each. It reuses the byte-identical 8dee Web runtime assets; only the reviewed test
+helper changes the full Web tree. Older a4f/e5c and be62 packages remain immutable.
+One authorized kernel wait used the permanent carrier's same parent descriptor;
+the focused/browser/client execution then took about 28 seconds and released it.
+No acquisition loop, replacement carrier or new long suite ran in that narrow slot.
+
+Actual GW120, Help, Scope and independent SQL still require DEL's new immutable
+installation and fresh private fixtures. Client discovery is not installed browser
+acceptance, and source schema constants are not live SQL observations. WEB's
+`gw120` description browser flow precedes Help and Scope; the GW owner's independent
+same-source API/permission/DB check follows WEB and the independent SQL proof.
+Keep the corresponding complete items unticked.
 
 The next independent correction is the existing UX-127 activity window: the
 creation-to-now query is rejected once it exceeds configured audit bounds.
