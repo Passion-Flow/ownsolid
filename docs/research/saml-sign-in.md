@@ -717,8 +717,7 @@ The private alternate graph preserves the workspace's newer testify 1.12.1,
 lower standalone requirements. Its seven differences from the workspace
 baseline are etree 1.8.1 (BSD-2-Clause), crewjam/saml 0.6.3 (BSD-2-Clause),
 clockwork 0.5.0 (Apache-2.0), kr/pretty 0.3.1 (MIT), goxmldsig 1.6.1
-(Apache-2.0), objx 0.5.3 (MIT), and gotest.tools/v3 3.5.2 (Apache-2.0 with
-NOTICE). Six exact-version license inventories match the earlier private SAML
+(Apache-2.0), objx 0.5.3 (MIT), and gotest.tools/v3 3.5.2 (Apache-2.0 plus its bundled difflib license). Six exact-version license inventories match the earlier private SAML
 inventory. The newly selected
 [objx 0.5.3 license](https://github.com/stretchr/objx/blob/v0.5.3/LICENSE) was
 read from its checksum-verified source archive. All seven retain eight legal
