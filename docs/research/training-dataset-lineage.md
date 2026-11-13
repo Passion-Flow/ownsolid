@@ -665,6 +665,16 @@ the unchanged modules' earlier unit results and the scoped PostgreSQL evidence;
 neither failed whole `make test` invocation is a pass. Keep this candidate
 unpublished until the required whole-repository gate can pass.
 
+The original Web owner subsequently published `44ab5229`, correcting the shared
+Help assertion to observe the settled saved filter, input and content. Its two
+Portal controls failed the former bare-URL assertion only after observing the
+real saved query; all four corrected Console/Portal English/Chinese cases passed
+without skip or retry. These are Web-owner results on its recorded source, not a
+new MODEL whole gate. Integrate the published correction and current main before
+M's next complete check/build/test. Preserve both earlier failed complete runs
+and the original source/platform of the PostgreSQL and native unit evidence.
+Formal schema/role/catalog admission, HTTP dispatch and S-202 remain separate.
+
 To replay, configure the private PostgreSQL DSN and fresh owned schema as described
 by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
 Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
