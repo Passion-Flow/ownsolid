@@ -169,3 +169,46 @@ of `make test` on the newer Web tree is asserted. Final check/build log
 SHA-256 values are respectively
 c27586b5b20596d712641bb24d5608d085612f641f4f136652a9a4738730b93c
 and 3595d621654b9622c347b324cad66c757a8fc16076946248c6f523bf3f9c159d.
+
+## Retained deployment coverage in the shared heartbeat root
+
+The current shared inference root measures first/update hardware reports and
+credential refusal, but not a heartbeat that reaches a retained deployment.
+The separate Deployments-owner test and two-fleet diagnostic already established
+the real public path for a current and a stale desired revision. Incorporate
+those exchanges into the existing Nodes-owned root instead of creating another
+enrollment/HTTPS recorder or editing the domain's test.
+
+Create the target through the real deployment service after publishing synthetic
+approved model metadata and a valid GPU observation. Keep its actual queued task
+and held reservation. No synthetic successful task result or generated-text
+verification is needed for a loading report. Seed an exact retained deployment
+and held GPU lease for each existing peer, with unique synthetic GPU identities,
+then analyze those tables outside recording. These are query-cost histories,
+not connected machines or hardware acceptance.
+
+Close the original TLS test listener and construct a fresh production dispatcher
+against the same pool, retaining the issued node certificate and existing trust.
+[httptest.Server.Close](https://pkg.go.dev/net/http/httptest#Server.Close) joins
+outstanding requests before the next listener is used. Measure the first current
+deployment report with a cold process cache under the same independent shared-row
+holder. Advance desired state through the real stop action, then measure the old
+revision's delayed failed report. Independently compare the complete deployment
+and GPU reservation rows before/after that stale report; it must not change them.
+Both successful reports must retain their actual heartbeat timestamp, full
+observation and node scope.
+
+The existing [auto_explain](https://www.postgresql.org/docs/18/auto-explain.html)
+recorder and exact 11-statement declaration remain unchanged. All five exchanges
+must be present on both 50/3,000-peer histories, with equal statements, bounded
+scanned-row growth and usable indexes. Keep the three original cases and their
+stored-state/credential assertions. A cold/stale failure remains a failure;
+neither a new budget nor an owner implementation copy is permitted. No new
+dependency, wire field, protocol version, model or external dataset is added;
+the existing licence/offline analysis above applies.
+
+This source preparation requires its own allocated PostgreSQL replay and affected
+race/full gates. The shared native window currently admits no new workload or
+background queue. Its original package roots and strict assertions remain the
+future entry; preparing this extension neither qualifies ARC-108 nor resolves
+the other operation families and retained cost overruns.
