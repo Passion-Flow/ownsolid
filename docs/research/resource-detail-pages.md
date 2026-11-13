@@ -211,9 +211,11 @@ not-ready capability is introduced; existing unavailable detail tabs keep their
 visible reason. These are design definitions pending visual acceptance.
 
 Source formatting and Help generation are authoring steps, not passed tests.
-Automated, visual and installed acceptance remain unverified for this correction.
-Before publication, run the focused unit/browser
-cases, the unchanged explicit-recovery suite and resource-page flows, inspect
+At `314a133a`, focused lint, Console/i18n typechecks, 22 Console tests for date
+validation and explicit audit reads, and 22 i18n formatter/catalog tests passed.
+This is not browser, visual, full/native or installed acceptance. Before
+publication, run the browser cases, the unchanged explicit-recovery suite,
+node and resource-page flows, inspect
 their screenshots, then complete `make check`, `make build` and `make test` on the
 combined source. Installed acceptance must use a newly qualified asset/client
 package, not a renamed earlier audit or Help archive.
