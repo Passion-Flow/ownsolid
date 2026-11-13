@@ -135,7 +135,7 @@
     },
     {
      "type": "text",
-     "value": " on a node, account or single sign-on connector to see changes to it.\nAn account's "
+     "value": " on a node, model, deployment, account or single sign-on connector to see changes to it.\nAn account's "
     },
     {
      "type": "strong",

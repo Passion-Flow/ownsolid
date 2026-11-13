@@ -15,7 +15,7 @@ from where and with what outcome.
 
 ## A resource's activity
 
-Open **Activity** on a node, account or single sign-on connector to see changes to it.
+Open **Activity** on a node, model, deployment, account or single sign-on connector to see changes to it.
 An account's **Their actions** tab shows what that person did instead.
 
 Activity starts with the last 24 hours. Choose **Choose dates**, enter the start and end in your

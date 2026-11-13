@@ -83,7 +83,7 @@ test('Tasks says when there are none, and a failure can be retried', async ({ pa
   await expect(page.getByText('No tasks yet')).toBeVisible();
 });
 
-test('Activity shows what people did to this node over its whole life', async ({ page }) => {
+test('Activity opens a historical period for this node and links its event', async ({ page }) => {
   const mine = {
     ...systemEvent,
     id: '6f1c7a1e-0000-4000-8000-0000000000e1',
@@ -91,12 +91,18 @@ test('Activity shows what people did to this node over its whole life', async ({
     target_id: node.id,
   };
   control.auditEvents = [mine, { ...systemEvent, id: '6f1c7a1e-0000-4000-8000-0000000000e2' }];
-  await page.goto(`${path}?tab=activity`);
+  const search = new URLSearchParams({
+    tab: 'activity',
+    activity_from: new Date(Date.parse(node.created_at) - 60_000).toISOString(),
+    activity_to: new Date(Date.parse(node.created_at) + 60_000).toISOString(),
+  });
+  await page.goto(`${path}?${search.toString()}`);
   const rows = page.getByRole('tabpanel').getByRole('row');
   await expect(rows).toHaveCount(2);
   const asked = control.auditQueries.at(-1);
   expect(asked?.get('target_id')).toBe(node.id);
   expect(Date.parse(asked?.get('from') ?? '')).toBeLessThanOrEqual(Date.parse(node.created_at));
+  expect(Date.parse(asked?.get('to') ?? '')).toBeGreaterThanOrEqual(Date.parse(node.created_at));
   await expectAccessible(page);
   await rows.nth(1).getByRole('link').click();
   await expect(page).toHaveURL(new RegExp(`/audit\\?.*open=${mine.id}`));
@@ -106,7 +112,7 @@ test('Activity shows what people did to this node over its whole life', async ({
 test('Activity says when there is none, and a failure can be retried', async ({ page }) => {
   control.auditEvents = [];
   await page.goto(`${path}?tab=activity`);
-  await expect(page.getByText('No activity yet')).toBeVisible();
+  await expect(page.getByText('No activity in these 24 hours')).toBeVisible();
   const before = control.auditQueries.length;
   control.auditProblem = { status: 503, code: 'INTERNAL_ERROR' };
   await page.reload();
@@ -114,7 +120,7 @@ test('Activity says when there is none, and a failure can be retried', async ({ 
   expect(control.auditQueries).toHaveLength(before + 1);
   control.auditProblem = null;
   await page.getByRole('button', { name: 'Read again' }).click();
-  await expect(page.getByText('No activity yet')).toBeVisible();
+  await expect(page.getByText('No activity in these 24 hours')).toBeVisible();
   expect(control.auditQueries).toHaveLength(before + 2);
 });
 

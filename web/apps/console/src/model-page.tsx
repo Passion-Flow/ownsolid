@@ -308,9 +308,7 @@ function Loaded({ model }: { model: ModelDetail }) {
           </Card>
         ) : null}
         {tab === 'deployments' ? <ModelDeployments model={model} /> : null}
-        {tab === 'activity' ? (
-          <ResourceActivity target={model.id} since={model.created_at} />
-        ) : null}
+        {tab === 'activity' ? <ResourceActivity target={model.id} /> : null}
       </Tabs>
       {retiring ? (
         <RetireDialog

@@ -1,10 +1,15 @@
 import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import {
+  activeConnector,
   expectAccessible,
   licenseEvent,
   memberUser,
   mockControlPlane,
+  node,
+  readyModel,
+  runningDeployment,
+  ssoOn,
 } from '@ownsolid/shell/testing';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { boundedActivity } from './resource-activity-fixture.ts';
@@ -30,6 +35,7 @@ async function configure(page: Page, locale: 'en' | 'zh-CN') {
   await page.setViewportSize(
     locale === 'en' ? { width: 1440, height: 900 } : { width: 390, height: 844 },
   );
+  return control;
 }
 
 async function screenshot(page: Page, info: TestInfo, state: string) {
@@ -45,6 +51,46 @@ for (const [locale, messages] of [
 ] as const) {
   test.describe(`bounded resource history in ${locale}`, () => {
     test.use({ timezoneId: 'UTC' });
+
+    for (const subject of [
+      { name: 'node', id: node.id, path: `/nodes/${node.id}` },
+      { name: 'model', id: readyModel.id, path: `/library/${readyModel.id}` },
+      { name: 'deployment', id: runningDeployment.id, path: `/services/${runningDeployment.id}` },
+      { name: 'connector', id: activeConnector.id, path: `/sso/${activeConnector.id}` },
+    ]) {
+      test(`reads recent activity on an old ${subject.name} under a one-day policy`, async ({
+        page,
+      }, info) => {
+        const control = await configure(page, locale);
+        const created_at = new Date(Date.now() - 400 * 86_400_000).toISOString();
+        control.nodes = [{ ...node, created_at }];
+        control.models = [{ ...readyModel, created_at }];
+        control.deployments = [{ ...runningDeployment, created_at }];
+        control.ssoConfiguration = { ...ssoOn };
+        control.ssoConnectorList = [{ ...activeConnector, created_at }];
+        const fixture = await boundedActivity(
+          page,
+          [
+            {
+              ...licenseEvent,
+              occurred_at: new Date(Date.now() - 60_000).toISOString(),
+              target_id: subject.id,
+            },
+          ],
+          1,
+        );
+        await page.goto(`${subject.path}?tab=activity`);
+        await expect(page.getByRole('tabpanel').getByRole('row')).toHaveCount(2);
+        expect(fixture.queries).toHaveLength(1);
+        expect(fixture.queries[0]?.get('target_id')).toBe(subject.id);
+        expect(
+          Date.parse(fixture.queries[0]?.get('to') ?? '') -
+            Date.parse(fixture.queries[0]?.get('from') ?? ''),
+        ).toBe(86_400_000);
+        await expectAccessible(page);
+        await screenshot(page, info, `${subject.name}-recent-${locale}`);
+      });
+    }
 
     for (const maximumDays of [1, 31]) {
       test(`reads current activity for a 400-day-old resource with a ${maximumDays}-day policy`, async ({

@@ -184,9 +184,7 @@ function Loaded({ deployment }: { deployment: Deployment }) {
         ) : null}
         {tab === 'logs' ? <Logs deployment={deployment} /> : null}
         {tab === 'configuration' ? <Configuration deployment={deployment} /> : null}
-        {tab === 'activity' ? (
-          <ResourceActivity target={deployment.id} since={deployment.created_at} />
-        ) : null}
+        {tab === 'activity' ? <ResourceActivity target={deployment.id} /> : null}
       </Tabs>
     </>
   );

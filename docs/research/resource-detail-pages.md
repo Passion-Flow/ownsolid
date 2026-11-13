@@ -190,8 +190,9 @@ context in `useAuditRead`. It adds no API fields, permissions, dependencies or
 cursor decoding. Help source and its generated article projection describe the
 recent snapshot and historical read flow together.
 
-The browser cases in `resource-activity.spec.ts` use a 400-day-old resource with
-current events under one-day and 31-day policies. Their fixture checks the raw
+The browser cases in `resource-activity.spec.ts` use 400-day-old nodes, models,
+deployments, accounts and connectors with current events under a one-day policy,
+and additionally check the default 31-day policy. Their fixture checks the raw
 query fingerprint, so omitting explicit time bounds on subsequent pages fails.
 They cover historical ranges, URL/tab restoration, refusal and correction,
 draft cancellation, distinct empty states, failed restart, loading and revoked
