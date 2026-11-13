@@ -637,3 +637,109 @@ rollback/drain/Close, read-only namespace delivery, Model/Node/protected SQL
 and original fleet-budget acceptance remain independent open work. No new
 Mac wait or whole-suite run was added. Product boxes and original support
 scopes remain unchanged.
+
+
+## PostgreSQL readiness status contract
+
+The post-DEV opportunity reached the cached PostgreSQL fixture but exposed an
+error in the prepared v2 wrapper: its first pg_isready returned raw 2 while
+initdb was still writing configuration, and the wrapper treated that as fatal.
+The [PostgreSQL 18 exit-status contract](https://www.postgresql.org/docs/18/app-pg-isready.html)
+defines 0 as accepting, 1 as rejecting, 2 as no response and 3 as no connection
+attempt. A response of 2 does not establish a permanent database failure.
+
+The chosen minimal preparation fix is to retain 1 and 2 as startup probe
+outcomes inside the existing bounded readiness loop, require 0 before any
+extension or Go invocation, and keep 3/other errors fatal with their raw
+status. Preserve every numeric timeout, carrier rule, resource/image/source
+binding, test root and cleanup limit. Reject indefinite polling, native-body
+retry, reclassifying the original failed attempt or executing a modified parent
+under the consumed fixed-v2 opportunity.
+
+Pure local regression checks simulate 2/1/0 readiness, invalid-parameter
+status 3, and persistent status 2 exhausting the existing readiness window.
+They verify that readiness timeout never starts Go and still cleans only
+the exact owned fixture. All 29 checks passed in 0.029 seconds. Docker,
+permanent carriers and Go are mocked; this is no native qualification.
+No new dependency or licence is introduced.
+
+
+## Post-DEV opportunity: actual startup failure and release
+
+The separately authorized post-DEV opportunity used unchanged bounded-v2
+with clean e639db90. Its fresh pre-entry original preflight passed; its
+guarded original preflight passed again after both carriers were acquired.
+The guarded observation was MemFree 4,791,730,176 bytes, Available
+20,741,779,456 bytes, disk free 789,123,780,608 bytes, full PSI avg10/avg60
+0.00/0.01 and no competing heavy process. These actual observations replace
+no earlier refusal or threshold.
+
+The entry returned 1 in 2.344562 seconds (parent final-record elapsed 2.266
+seconds): CHILD_FAILED, phase pg_ready, raw child 2. Source head/status,
+admission, Docker context/image identity and PG create/start each returned 0.
+The first readiness probe returned 2 while postgres.log still showed initdb
+creating configuration. The wrapper's readiness-state error above stopped
+the attempt. No second native invocation or changed parent ran in this
+opportunity, and its failure remains intact.
+
+No extension command, product schema migration, Go compiler/test, native owner
+root/subtest/package, processor, GPU or fleet body started. There were zero
+test actions, including skips; no native owner/SQL result is inferred. No Go
+fixture environment was applied. The parent was Linux x86_64/Python 3.12.3;
+the cached pinned Linux image identity passed, but no server SQL/version
+query or vector extension ran.
+
+All cleanup child exits were 0, including exact presence/identity, logs, stop,
+remove-v, container readback and owned-volume readback. The independent
+read-only audit found all 15 recorded child groups absent, no exact live
+entry/wrapper process and no DSN or named container. Container
+a1a93e2e2e77805c998a9b99d71ede864c9023515fac5d2f2fa67023fc1c1183
+(name lane-trn-reader-a7eebd7223234f779de2a8607e3b06d5) was removed. Its
+volume e22ae2a318efce7d269851b7353c674f4bdfc69728dcd53fe43619f611d74a68
+was recovered from its container-bound unmount event and absent from the
+successful volume-list readback. Both original carrier FDs were released;
+the regular objects remain 29/82/0 and 64512/7508772/0, mode 0644, zero bytes.
+No post-run cleanup mutation or foreign-resource operation was needed.
+
+| Actual retained evidence | SHA-256 |
+| --- | --- |
+| /root/lane-trn-reader-native-outer.ifbikxy_/pre-entry-receipt.json | 9dfcb34dc7a854a162df40acf64423cf2b9bf91470ca4782566e7c25487ee899 |
+| receipt.json in that outer directory | 6de5dbfc7a5160fa2cb5e892ea43cbda63bfb895cf958a4e3e136f70019f92da |
+| /root/lane-trn-reader-native.xbl3dpmg/result.json | b64bc5892bcf712be222c23bfdf158382414b07b38606cded3e12b6b314f3faf |
+| admission.log in that result directory | 18dff289bb87ccf3b2d88fdfc69e4c2235cae0627c0516571dbe7169bae9f196 |
+| postgres.log in that result directory | 90ffb397eb61630755f7cba46d68b5850a4f3b827a76853f9166c810098b7ac3 |
+| outer.log in the outer directory | d28f65a268fe7e34e16e17beb23d3500f7db00ee81ce646b31553a5aa4956ef9 |
+| owned-cleanup-audit.json in the outer directory | 20379726457cbb5cde4b26b39ba04a5eea16185398d3245290ab14fa34d9a01b |
+
+Subsequent archive/download SSH commands failed with transport 502/raw 255.
+No successful archive or local raw-evidence download is claimed for this
+attempt. That post-run transport failure is separate from the real pg_ready
+raw 2 and entry raw 1. Cleanup had already completed and been audited.
+Earlier receipts, sources, plan/binding and native/refusal classifications
+are unchanged.
+
+## Prepared v3 readiness correction
+
+The local review artifact is native-bounded-review-v3 in the private
+qualification directory. Only the parent conditional changes from rc != 1
+to rc not in (1, 2). v2-to-v3.diff is the exact one-line delta; config and
+entry bytes retain their v2 hashes. No numeric bound, identity, carrier,
+resource, image, test-root or cleanup behavior changes.
+
+| New preparation artifact | SHA-256 |
+| --- | --- |
+| reader_native_bounded.py | 463b216824c437ccad5cd09444ed8c7594bcc3a33bca04b30ae87d6e16d77284 |
+| v2-to-v3.diff | 376b9de42527638fe91108a34d4917673b9574b1cc7b3ad34420c35f2cdac6f1 |
+| local-review.log (29 pure local checks) | 1bb0562dde3fb44441aa5d02e3c0bdc70902801dae57e26954dff340f92cfe47 |
+| Complete local manifest.json | 12a3d7f59af7b28c99f8e3fd90fe6feef3108617349322b8dc8b636b56bce5dc |
+| Local reader-native-bounded-v3-review.tgz (30,024 bytes) | c0203119f335e0900a7ae6638fd44be45891f2ab1cf215d9d177b2035aed120e |
+
+The three core files transferred to /root/lane-trn-tools/reader-native-bounded-v3/
+with exit 0. Its single read-only --check-config also returned 0, but raw
+output and remote SHA readback were not independently fetched. The remaining
+review metadata was not uploaded after the separate transport failures; the
+complete local manifest/review remains available. No v3 --execute occurred.
+The consumed frozen-v2 opportunity does not admit a modified-parent execution.
+Owner source remains private/unmerged, native reader/SQL and ARC actual
+construction/startup/Close/drain, Model/Node/protected SQL and fleet budgets
+remain open. All product boxes and original support scopes remain unchanged.
