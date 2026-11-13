@@ -45,8 +45,8 @@ function Loaded({ user }: { user: User }) {
             <UserFacts user={user} />
           </Card>
         ) : null}
-        {tab === 'activity' ? <ResourceActivity target={user.id} since={user.created_at} /> : null}
-        {tab === 'actions' ? <ResourceActivity actor={user.id} since={user.created_at} /> : null}
+        {tab === 'activity' ? <ResourceActivity target={user.id} /> : null}
+        {tab === 'actions' ? <ResourceActivity actor={user.id} /> : null}
       </Tabs>
       {actions.dialogs}
     </>

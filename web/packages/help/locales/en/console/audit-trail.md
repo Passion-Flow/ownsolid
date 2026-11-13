@@ -13,6 +13,20 @@ from where and with what outcome.
 - The list names each action in your language. Its details keep the action's identifier for scripts
   and support, and a reason as it was recorded.
 
+## A resource's activity
+
+Open **Activity** on a node, account or single sign-on connector to see changes to it.
+An account's **Their actions** tab shows what that person did instead.
+
+Activity starts with the last 24 hours. Choose **Choose dates**, enter the start and end in your
+time zone, then choose **Read activity** to look further back. Editing dates does not query the
+trail; **Cancel** discards those edits. Applied dates stay in the link when you switch tabs or
+reload. If the installation refuses a long period, shorten it and read again.
+
+The displayed dates describe the result already read. Returning to the tab keeps that snapshot;
+**Read activity** refreshes it. **Clear dates** returns to the recent period. An empty recent
+period does not mean the resource has never had activity.
+
 ## Audit read not confirmed
 
 Successful reads of this trail and a resource's Activity also record access. If an answer is lost,

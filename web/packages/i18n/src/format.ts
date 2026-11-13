@@ -7,6 +7,8 @@ type Moment = Date | string;
 
 /** What {@link createFormatter} returns. Bad input shows as a dash, never as an exception. */
 export interface Formatter {
+  /** The time zone used by the displayed dates and native local date/time fields. */
+  timeZone: string;
   /** A calendar date: Nov 4, 2026. */
   date: (value: Moment) => string;
   /** A date and time: Nov 4, 2026, 8:00 AM. */
@@ -78,6 +80,7 @@ export function createFormatter(locale: string, timeZone?: string): Formatter {
   const parts = new Intl.ListFormat(locale, { style: 'narrow', type: 'unit' });
 
   return {
+    timeZone: new Intl.DateTimeFormat(locale, zone).resolvedOptions().timeZone,
     date: moments({ dateStyle: 'medium' }),
     dateTime: moments({ dateStyle: 'medium', timeStyle: 'short' }),
     time: moments({ timeStyle: 'short' }),

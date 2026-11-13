@@ -181,3 +181,38 @@ filter-cache revisits; revoked permissions and cross-workspace refusal; and
 network disconnection. Run EN/ZH, keyboard, screen-reader checks, desktop and
 390px, then actually inspect the screenshots. Each explicit action must yield its
 single expected read. Real installed consumer acceptance remains required.
+
+### Candidate acceptance boundary
+
+The candidate uses `activity-window.ts` for UTC URL bounds and local date input,
+`resource-activity.tsx` for the inline period form, and typed first-page client
+context in `useAuditRead`. It adds no API fields, permissions, dependencies or
+cursor decoding. Help source and its generated article projection describe the
+recent snapshot and historical read flow together.
+
+The browser cases in `resource-activity.spec.ts` use a 400-day-old resource with
+current events under one-day and 31-day policies. Their fixture checks the raw
+query fingerprint, so omitting explicit time bounds on subsequent pages fails.
+They cover historical ranges, URL/tab restoration, refusal and correction,
+draft cancellation, distinct empty states, failed restart, loading and revoked
+access in both languages, plus a daylight-saving gap. Shared hook tests cover
+first-page metadata replacement, pending-page cancellation and actual cache
+expiry. These are prepared acceptance cases, not a claim that they have run.
+
+The screen remains the Detail archetype: existing breadcrumb, name/status,
+resource actions and tabs stay in place. Its primary tab action is Read activity;
+date changes are an inline form, while failures are persistent inline alerts.
+Loading uses a table-shaped skeleton after 300 ms. The recent and selected-period
+empty states have different titles and remedies. Partial reads retain rows and
+their window. Errors retain dates and a server request ID. Denied access removes
+rows and leaves the controls disabled with an administrator remedy. No new
+not-ready capability is introduced; existing unavailable detail tabs keep their
+visible reason. These are design definitions pending visual acceptance.
+
+Source formatting and Help generation are authoring steps, not passed tests.
+Automated, visual and installed acceptance remain unverified for this correction.
+Before publication, run the focused unit/browser
+cases, the unchanged explicit-recovery suite and resource-page flows, inspect
+their screenshots, then complete `make check`, `make build` and `make test` on the
+combined source. Installed acceptance must use a newly qualified asset/client
+package, not a renamed earlier audit or Help archive.

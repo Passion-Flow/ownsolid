@@ -549,7 +549,13 @@ export const consolePages: readonly PageState[] = [
     open: async (page, control) => {
       control.signedIn = true;
       control.nodes = [node];
-      control.auditEvents = [{ ...systemEvent, occurred_at: node.created_at, target_id: node.id }];
+      control.auditEvents = [
+        {
+          ...systemEvent,
+          occurred_at: new Date(Date.now() - 3_600_000).toISOString(),
+          target_id: node.id,
+        },
+      ];
       await page.goto(`/nodes/${node.id}?tab=activity`);
       await page.getByRole('tabpanel').getByRole('table').waitFor();
     },
@@ -1054,6 +1060,64 @@ export const consolePages: readonly PageState[] = [
       control.ssoConfiguration = { ...ssoOn, enabled: false };
       await page.goto('/sso');
       await page.getByText('Single sign-on is off for this installation').waitFor();
+    },
+  },
+  {
+    name: 'resource activity with no recent events',
+    path: '/users/$userId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [memberUser];
+      await page.goto(`/users/${memberUser.id}?tab=activity`);
+      await page.getByRole('button', { name: 'Choose earlier dates', exact: true }).waitFor();
+    },
+  },
+  {
+    name: 'resource activity with no events in a selected period',
+    path: '/users/$userId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [memberUser];
+      const search = new URLSearchParams({
+        tab: 'activity',
+        activity_from: '2026-01-01T00:00:00Z',
+        activity_to: '2026-01-02T00:00:00Z',
+      });
+      await page.goto(`/users/${memberUser.id}?${search.toString()}`);
+      await page.getByRole('button', { name: 'Clear dates', exact: true }).waitFor();
+    },
+  },
+  {
+    name: 'resource activity with invalid selected dates',
+    path: '/users/$userId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [memberUser];
+      await page.goto(`/users/${memberUser.id}?tab=activity&activity_from=invalid`);
+      await page.getByLabel('From', { exact: true }).waitFor();
+      await page.getByText('Choose when the window starts and ends.', { exact: true }).waitFor();
+    },
+  },
+  {
+    name: 'resource activity with access refused',
+    path: '/users/$userId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [memberUser];
+      control.auditProblem = { status: 403, code: 'ACCESS_DENIED' };
+      await page.goto(`/users/${memberUser.id}?tab=activity`);
+      await page.getByRole('alert').waitFor();
+    },
+  },
+  {
+    name: 'resource activity waiting for the initial read',
+    path: '/users/$userId',
+    open: async (page, control) => {
+      control.signedIn = true;
+      control.users = [memberUser];
+      await page.route('**/api/v1/admin/audit-events?*', () => undefined);
+      await page.goto(`/users/${memberUser.id}?tab=activity`);
+      await page.getByRole('tabpanel').locator('[aria-busy="true"]').waitFor();
     },
   },
   {

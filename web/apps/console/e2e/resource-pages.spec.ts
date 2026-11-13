@@ -39,14 +39,18 @@ test.describe('a person', () => {
 
   test('tells what was done to them from what they did', async ({ page }) => {
     control.auditEvents = [
-      { ...systemEvent, occurred_at: memberUser.created_at, target_id: memberUser.id },
+      {
+        ...systemEvent,
+        occurred_at: new Date(Date.now() - 3_600_000).toISOString(),
+        target_id: memberUser.id,
+      },
     ];
     await page.goto(`${path}?tab=activity`);
     await expect(page.getByRole('tabpanel').getByRole('row')).toHaveCount(2);
     expect(control.auditQueries.at(-1)?.get('target_id')).toBe(memberUser.id);
     await expectAccessible(page);
     await page.getByRole('tab', { name: 'Their actions' }).click();
-    await expect(page.getByText('No activity yet')).toBeVisible();
+    await expect(page.getByText('No activity in these 24 hours')).toBeVisible();
     expect(control.auditQueries.at(-1)?.get('actor_user_id')).toBe(memberUser.id);
     expect(control.auditQueries.at(-1)?.has('target_id')).toBe(false);
   });
@@ -117,7 +121,11 @@ test.describe('a connector', () => {
 
   test('its activity lists who changed it', async ({ page }) => {
     control.auditEvents = [
-      { ...systemEvent, occurred_at: activeConnector.created_at, target_id: activeConnector.id },
+      {
+        ...systemEvent,
+        occurred_at: new Date(Date.now() - 3_600_000).toISOString(),
+        target_id: activeConnector.id,
+      },
     ];
     await page.goto(`${path}?tab=activity`);
     await expect(page.getByRole('tabpanel').getByRole('row')).toHaveCount(2);

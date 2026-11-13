@@ -64,6 +64,14 @@ comes back empty offers to clear the filters.
 
 ## Interaction principles
 
+Resource history stays on the detail page's Activity tab. Its inline period controls
+have one primary action, Read activity. Draft dates do not request data, and Cancel
+restores the applied selection. The last 24 hours and a chosen historical period use
+different empty-state messages. Always label the actual cached bounds, retain partial
+rows on failure, and keep denied controls visible with their access explanation.
+Changing detail tabs preserves applied dates in the address. A deliberate read is
+required to refresh a cached recent period; returning to the tab does not move it.
+
 1. **Decide for the user, allow overrides.** Offer a recommended choice, such as
    automatic model placement, and keep advanced options collapsed.
 2. **Every problem carries its next step.** Alerts and errors state the likely cause

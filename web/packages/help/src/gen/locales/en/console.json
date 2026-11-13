@@ -180,6 +180,10 @@
     "anchor": "finding-an-event"
    },
    {
+    "title": "A resource's activity",
+    "anchor": "a-resource-s-activity"
+   },
+   {
     "title": "Audit read not confirmed",
     "anchor": "audit-read-not-confirmed"
    }

@@ -117,3 +117,11 @@ already have produced an access record; Read again is a new explicit read. Faile
 pagination retains earlier pages and retries only its cursor. An invalid cursor
 offers one first-page restart, retaining history until that read succeeds. A
 current permission refusal removes cached event rows and any preview from view.
+
+Resource Activity starts with the last 24 hours, including on older resources.
+Choose dates and Read activity to inspect an earlier period. Draft edits and Cancel
+do not read the audit trail. Applied dates stay in the address when changing detail
+tabs. The displayed bounds belong to the cached read; returning to a tab keeps that
+snapshot until the person explicitly reads again. Each cursor page reuses the exact
+first-page bounds. The server enforces its configured maximum period; a refusal
+keeps the dates and explains how to shorten them.

@@ -54,9 +54,7 @@ function Loaded({
         onChange={setTab}
       >
         {tab === 'overview' ? <Card className="p-[18px]">{surface.body}</Card> : null}
-        {tab === 'activity' ? (
-          <ResourceActivity target={connector.id} since={connector.created_at} />
-        ) : null}
+        {tab === 'activity' ? <ResourceActivity target={connector.id} /> : null}
       </Tabs>
       {surface.dialogs}
     </>

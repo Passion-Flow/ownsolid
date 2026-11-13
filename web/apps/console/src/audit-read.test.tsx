@@ -32,13 +32,20 @@ const me: Me = {
   },
 };
 
-function setup(read: AuditReader) {
+function setup<TPage extends AuditPage = AuditPage>(
+  read: (
+    cursor: string | null,
+    signal: AbortSignal,
+    firstPage: TPage | undefined,
+  ) => Promise<TPage>,
+) {
   const client = createQueryClient({ onSignedOut: () => undefined });
   client.setQueryData(sessionKey, me);
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
-  const mount = () => renderHook(() => useAuditRead({ queryKey: ['audit'], read }), { wrapper });
+  const mount = () =>
+    renderHook(() => useAuditRead<TPage>({ queryKey: ['audit'], read }), { wrapper });
   return { client, mount };
 }
 
@@ -48,6 +55,146 @@ afterEach(() => {
 });
 
 describe('explicit audit reads', () => {
+  it('keeps cursor window context with old pages until a first-page replacement succeeds', async () => {
+    interface WindowedPage extends AuditPage {
+      clientWindow: { from: string; to: string };
+    }
+    const old: WindowedPage = {
+      ...first,
+      clientWindow: { from: '2026-11-11T00:00:00.000Z', to: '2026-11-12T00:00:00.000Z' },
+    };
+    const fresh: WindowedPage = {
+      ...first,
+      clientWindow: { from: '2026-11-12T00:00:00.000Z', to: '2026-11-13T00:00:00.000Z' },
+    };
+    const read = vi
+      .fn<
+        (
+          cursor: string | null,
+          signal: AbortSignal,
+          cached: WindowedPage | undefined,
+        ) => Promise<WindowedPage>
+      >()
+      .mockResolvedValueOnce(old)
+      .mockResolvedValueOnce({ ...old, next_cursor: 'last' })
+      .mockRejectedValueOnce(new ApiProblem('INVALID_CURSOR', { status: 400 }))
+      .mockRejectedValueOnce(new ApiProblem('STORAGE_COMMIT_OUTCOME_UNKNOWN', { status: 409 }))
+      .mockResolvedValueOnce(fresh)
+      .mockResolvedValueOnce({ ...fresh, next_cursor: null });
+    const { client, mount } = setup(read);
+    const initial = mount();
+    await waitFor(() => {
+      expect(initial.result.current.isSuccess).toBe(true);
+    });
+    await act(async () => {
+      await initial.result.current.fetchNextPage({ cancelRefetch: false });
+    });
+    initial.unmount();
+    const again = mount();
+    expect(read).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      await again.result.current.fetchNextPage({ cancelRefetch: false });
+    });
+    act(() => {
+      again.result.current.readAgain();
+    });
+    await waitFor(() => {
+      expect(read).toHaveBeenCalledTimes(4);
+    });
+    await waitFor(() => {
+      expect(again.result.current.fetchStatus).toBe('idle');
+    });
+    expect(again.result.current.data?.pages).toHaveLength(2);
+    expect(again.result.current.data?.pages[0]?.clientWindow).toEqual(old.clientWindow);
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: ['audit'] });
+    });
+    expect(read).toHaveBeenCalledTimes(4);
+    act(() => {
+      again.result.current.readAgain();
+    });
+    await waitFor(() => {
+      expect(again.result.current.data?.pages).toEqual([fresh]);
+    });
+    await act(async () => {
+      await again.result.current.fetchNextPage({ cancelRefetch: false });
+    });
+    expect(read.mock.calls.map(([cursor, , cached]) => [cursor, cached?.clientWindow])).toEqual([
+      [null, undefined],
+      ['next', old.clientWindow],
+      ['last', old.clientWindow],
+      [null, old.clientWindow],
+      [null, old.clientWindow],
+      ['next', fresh.clientWindow],
+    ]);
+    again.unmount();
+    client.clear();
+  });
+
+  it('cancels a pending page without discarding its window or replaying on reconnect', async () => {
+    const read = vi
+      .fn<AuditReader>()
+      .mockResolvedValueOnce(first)
+      .mockImplementationOnce(
+        (_, signal) =>
+          new Promise((_, reject) => {
+            signal.addEventListener(
+              'abort',
+              () => {
+                reject(signal.reason);
+              },
+              { once: true },
+            );
+          }),
+      );
+    const { client, mount } = setup(read);
+    const { result, unmount } = mount();
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    act(() => {
+      void result.current.fetchNextPage({ cancelRefetch: false });
+    });
+    await waitFor(() => {
+      expect(result.current.isFetchingNextPage).toBe(true);
+    });
+    await act(async () => {
+      await client.cancelQueries({ queryKey: ['audit'] });
+    });
+    expect(read.mock.calls[1]?.[1].aborted).toBe(true);
+    expect(result.current.data?.pages).toEqual([first]);
+    await act(async () => {
+      onlineManager.setOnline(false);
+      onlineManager.setOnline(true);
+      await client.invalidateQueries({ queryKey: ['audit'] });
+    });
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(result.current.fetchStatus).toBe('idle');
+    unmount();
+    client.clear();
+  });
+
+  it('reads a new snapshot only when an expired view is explicitly reopened', async () => {
+    const read = vi.fn<AuditReader>().mockResolvedValue(first);
+    const { client, mount } = setup(read);
+    client.setQueryDefaults(['audit'], { gcTime: 10 });
+    const initial = mount();
+    await waitFor(() => {
+      expect(initial.result.current.isSuccess).toBe(true);
+    });
+    initial.unmount();
+    await waitFor(() => {
+      expect(client.getQueryCache().findAll({ queryKey: ['audit'] })).toHaveLength(0);
+    });
+    expect(read).toHaveBeenCalledTimes(1);
+    const reopened = mount();
+    await waitFor(() => {
+      expect(reopened.result.current.isSuccess).toBe(true);
+    });
+    expect(read).toHaveBeenCalledTimes(2);
+    reopened.unmount();
+    client.clear();
+  });
   it.each(['reader', 'workspace', 'tenant'] as const)(
     'does not reuse another %s snapshot after a session change',
     async (scope) => {

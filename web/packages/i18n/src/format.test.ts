@@ -26,6 +26,9 @@ describe('dates', () => {
 
   it('uses the browser time zone unless told otherwise', () => {
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    expect(createFormatter('en').timeZone).toBe(zone);
+    expect(english.timeZone).toBe('UTC');
+    expect(chinese.timeZone).toBe('Asia/Shanghai');
     expect(createFormatter('en').dateTime(moment)).toBe(
       createFormatter('en', zone).dateTime(moment),
     );

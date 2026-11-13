@@ -6,12 +6,18 @@ import {
   infiniteQueryOptions,
   useInfiniteQuery,
   useQueryClient,
+  type InfiniteData,
   type QueryKey,
 } from '@tanstack/react-query';
 
-interface AuditReadOptions {
+interface AuditReadOptions<TPage extends AuditPage> {
   queryKey: QueryKey;
-  read: (cursor: string | null, signal: AbortSignal) => Promise<AuditPage>;
+  /** The cached first page carries any client-only context required by its cursor. */
+  read: (
+    cursor: string | null,
+    signal: AbortSignal,
+    firstPage: TPage | undefined,
+  ) => Promise<TPage>;
   enabled?: boolean;
 }
 
@@ -32,7 +38,11 @@ function deniedRead(error: unknown): boolean {
 }
 
 /** Audit access is recorded: another attempt must be the person's explicit choice. */
-export function useAuditRead({ queryKey, read, enabled = true }: AuditReadOptions) {
+export function useAuditRead<TPage extends AuditPage = AuditPage>({
+  queryKey,
+  read,
+  enabled = true,
+}: AuditReadOptions<TPage>) {
   const client = useQueryClient();
   const session = useSession();
   const key = [
@@ -49,7 +59,11 @@ export function useAuditRead({ queryKey, read, enabled = true }: AuditReadOption
     queryKey: key,
     queryFn: async ({ pageParam, signal }) => {
       try {
-        return await read(pageParam, signal);
+        return await read(
+          pageParam,
+          signal,
+          client.getQueryData<InfiniteData<TPage>>(key)?.pages[0],
+        );
       } catch (error) {
         if (deniedRead(error)) {
           // Keep the active refusal cached so remounting cannot retry it. Discard
@@ -90,7 +104,7 @@ export function useAuditRead({ queryKey, read, enabled = true }: AuditReadOption
       void client.infiniteQuery({ ...options, pages: 1, staleTime: 0 }).catch(() => undefined);
     }
   };
-  return { ...events, data: denied ? undefined : events.data, readAgain };
+  return { ...events, data: denied ? undefined : events.data, denied, readAgain };
 }
 
 /** An audit-specific recovery that preserves the server's Problem and correlation ID. */
@@ -99,11 +113,13 @@ export function AuditReadFailure({
   partial = false,
   busy,
   onRetry,
+  detail,
 }: {
   error: unknown;
   partial?: boolean;
   busy: boolean;
   onRetry: () => void;
+  detail?: string | undefined;
 }) {
   const { t } = useI18n();
   const problem = isProblem(error) ? error : null;
@@ -125,7 +141,7 @@ export function AuditReadFailure({
         <ProblemNotice
           problem={problem}
           title={uncertain ? t('audit.read.unknown.title') : undefined}
-          detail={uncertain ? t('audit.read.unknown.detail') : undefined}
+          detail={detail ?? (uncertain ? t('audit.read.unknown.detail') : undefined)}
           recovery={noRecovery ? undefined : { label, onClick: onRetry, disabled: busy }}
         />
       ) : (

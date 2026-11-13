@@ -118,7 +118,7 @@ function Loaded({ node }: { node: Node }) {
           </Card>
         ) : null}
         {tab === 'tasks' ? <TasksTab node={node} /> : null}
-        {tab === 'activity' ? <ResourceActivity target={node.id} since={node.created_at} /> : null}
+        {tab === 'activity' ? <ResourceActivity target={node.id} /> : null}
       </Tabs>
       {actions.dialogs}
     </>

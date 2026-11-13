@@ -1,35 +1,11 @@
 // What every resource's own page shares: its header, its tab in the address, its failures and its activity
 // (docs/research/resource-detail-pages.md).
-import { isProblem, listAuditEvents, type AuditOutcome } from '@ownsolid/api';
-import { useI18n } from '@ownsolid/i18n';
-import { runtimeConfigQuery } from '@ownsolid/shell';
-import {
-  Button,
-  Card,
-  EmptyState,
-  ProblemNotice,
-  Skeleton,
-  StatusPill,
-  Table,
-  Td,
-  Th,
-  Tr,
-  cn,
-  type StatusTone,
-} from '@ownsolid/ui';
-import { useQuery } from '@tanstack/react-query';
+import { isProblem } from '@ownsolid/api';
+import { Card, EmptyState, ProblemNotice, Skeleton, cn } from '@ownsolid/ui';
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
-import { ArrowLeft, History, SearchX } from 'lucide-react';
+import { ArrowLeft, SearchX } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { auditEventSearch } from './audit-link.ts';
-import { ActionName } from './audit-names.tsx';
-import { AuditReadFailure, useAuditRead } from './audit-read.tsx';
-
-const outcomeTones: Record<AuditOutcome, StatusTone> = {
-  success: 'good',
-  accepted: 'neutral',
-  failure: 'critical',
-};
+export { ResourceActivity } from './resource-activity.tsx';
 
 /** The chosen tab lives in the address, so a view of a resource can be sent to a colleague. */
 export function useChosenTab<T extends string>(tabs: readonly [T, ...T[]]): [T, (tab: T) => void] {
@@ -40,7 +16,10 @@ export function useChosenTab<T extends string>(tabs: readonly [T, ...T[]]): [T, 
   return [
     tabs.find((tab) => tab === chosen) ?? first,
     (tab) => {
-      const search = tab === first ? '' : `?tab=${tab}`;
+      const params = new URLSearchParams(location.searchStr);
+      if (tab === first) params.delete('tab');
+      else params.set('tab', tab);
+      const search = params.size ? `?${params.toString()}` : '';
       void router.navigate({ href: `${location.pathname}${search}`, replace: true });
     },
   ];
@@ -155,115 +134,6 @@ export function ResourceUnavailable({
           </EmptyState>
         </Card>
       )}
-    </>
-  );
-}
-
-/** What the audit trail holds about a resource, or by a person, since it began. */
-export function ResourceActivity({
-  target,
-  actor,
-  since,
-}: {
-  /** The events about this resource. */
-  target?: string;
-  /** The events this person caused. */
-  actor?: string;
-  /** When it began: its whole life is shown, not the trail's default window. */
-  since: string;
-}) {
-  const { t, format } = useI18n();
-  const limit = useQuery(runtimeConfigQuery()).data?.ui.pageSize ?? 20;
-  const events = useAuditRead({
-    queryKey: ['resource-activity', target, actor, since, limit],
-    read: (cursor, signal) =>
-      listAuditEvents(
-        // The minute covers the moment it began, whose event may carry a slightly earlier time.
-        {
-          limit,
-          cursor: cursor ?? undefined,
-          targetId: target,
-          actorUserId: actor,
-          from: new Date(Date.parse(since) - 60_000).toISOString(),
-        },
-        { signal },
-      ),
-  });
-  if (events.isPending) return <Skeleton className="h-11 w-full" />;
-  if (!events.data) {
-    return (
-      <AuditReadFailure error={events.error} busy={events.isFetching} onRetry={events.readAgain} />
-    );
-  }
-  const items = events.data.pages.flatMap((page) => page.items);
-  if (items.length === 0) {
-    return (
-      <Card>
-        <EmptyState icon={History} title={t('resource.activity.empty.title')}>
-          {t('resource.activity.empty.detail')}
-        </EmptyState>
-      </Card>
-    );
-  }
-  return (
-    <>
-      {events.error ? (
-        <AuditReadFailure
-          error={events.error}
-          partial
-          busy={events.isFetching}
-          onRetry={events.readAgain}
-        />
-      ) : null}
-      <Card className="overflow-hidden">
-        <Table>
-          <thead>
-            <tr>
-              <Th>{t('audit.column.time')}</Th>
-              <Th>{t('audit.column.person')}</Th>
-              <Th>{t('audit.column.action')}</Th>
-              <Th>{t('audit.column.outcome')}</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((event) => (
-              <Tr key={event.id}>
-                <Td className="font-medium whitespace-nowrap">
-                  <Link
-                    to="/audit"
-                    search={auditEventSearch(event)}
-                    className="text-text underline-offset-2 hover:underline"
-                  >
-                    {format.dateTime(event.occurred_at)}
-                  </Link>
-                </Td>
-                <Td className="text-text-2">
-                  {event.actor_email ?? event.actor_user_id ?? t('audit.system')}
-                </Td>
-                <Td>
-                  <ActionName action={event.action} />
-                </Td>
-                <Td>
-                  <StatusPill tone={outcomeTones[event.outcome]}>
-                    {t(`audit.outcome.${event.outcome}`)}
-                  </StatusPill>
-                </Td>
-              </Tr>
-            ))}
-          </tbody>
-        </Table>
-      </Card>
-      {events.hasNextPage && !events.error ? (
-        <Button
-          className="mt-4"
-          disabled={events.isFetching}
-          onClick={() => {
-            void events.fetchNextPage({ cancelRefetch: false });
-          }}
-        >
-          {t('audit.loadMore')}
-        </Button>
-      ) : null}
     </>
   );
 }

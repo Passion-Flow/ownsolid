@@ -110,6 +110,137 @@
    "children": [
     {
      "type": "text",
+     "value": "A resource's activity"
+    }
+   ],
+   "data": {
+    "id": "a-resource-s-activity"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Open "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Activity"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " on a node, account or single sign-on connector to see changes to it.\nAn account's "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Their actions"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " tab shows what that person did instead."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Activity starts with the last 24 hours. Choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Choose dates"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ", enter the start and end in your\ntime zone, then choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Read activity"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " to look further back. Editing dates does not query the\ntrail; "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Cancel"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " discards those edits. Applied dates stay in the link when you switch tabs or\nreload. If the installation refuses a long period, shorten it and read again."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The displayed dates describe the result already read. Returning to the tab keeps that snapshot;\n"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Read activity"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " refreshes it. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Clear dates"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " returns to the recent period. An empty recent\nperiod does not mean the resource has never had activity."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
      "value": "Audit read not confirmed"
     }
    ],
