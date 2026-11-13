@@ -351,7 +351,7 @@ def exercise_audit_reads_go(sdk):
     )
 
 
-def exercise_audit_reads_python_protocol(sdk):
+def exercise_audit_reads_python_protocol(sdk, *, statuses=(409, 418)):
     """Exercise the actual generated sync/async operations over owned loopback TCP."""
     sys.path.insert(0, str(sdk / "gen/python"))
     import httpx
@@ -360,12 +360,12 @@ def exercise_audit_reads_python_protocol(sdk):
     from ownsolid_sdk.identity.models.list_audit_events_x_ownsolid_audit_actor import ListAuditEventsXOwnsolidAuditActor
     from ownsolid_sdk.identity.models.problem import Problem
 
-    code = "STORAGE_COMMIT_OUTCOME_UNKNOWN"
     ids = ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"]
     selection = {"category": "audit", "cursor": "opaque+/=%", "limit": 2}
 
     @contextmanager
-    def scenario(assistant, lost_reply):
+    def scenario(assistant, lost_reply, first_status):
+        code = "STORAGE_COMMIT_OUTCOME_UNKNOWN" if first_status == 409 else "SERVICE_NOT_READY"
         calls, violations = [], []
 
         class API(BaseHTTPRequestHandler):
@@ -390,10 +390,10 @@ def exercise_audit_reads_python_protocol(sdk):
                     self.connection.close()
                     return
                 first = len(calls) == 1
-                body = ({"type": "about:blank", "title": code, "status": 409, "code": code, "request_id": ids[0]}
+                body = ({"type": "about:blank", "title": code, "status": first_status, "code": code, "request_id": ids[0]}
                         if first else {"data": {"items": [], "next_cursor": None}})
                 payload = json.dumps(body).encode()
-                self.send_response(409 if first else 200)
+                self.send_response(first_status if first else 200)
                 self.send_header("Content-Type", "application/problem+json" if first else "application/json")
                 self.send_header("X-Request-ID", ids[0] if first else ids[1])
                 self.send_header("Content-Length", str(len(payload)))
@@ -416,8 +416,9 @@ def exercise_audit_reads_python_protocol(sdk):
             values["x_ownsolid_audit_actor"] = ListAuditEventsXOwnsolidAuditActor.TRUE
         return values
 
-    def check_first(result, calls, violations):
-        assert not violations and len(calls) == 1 and result.status_code == 409
+    def check_first(result, calls, violations, first_status):
+        code = "STORAGE_COMMIT_OUTCOME_UNKNOWN" if first_status == 409 else "SERVICE_NOT_READY"
+        assert not violations and len(calls) == 1 and result.status_code == first_status
         assert isinstance(result.parsed, Problem) and result.parsed.code == code
         assert str(result.parsed.request_id) == ids[0] and result.headers["X-Request-ID"] == ids[0]
         assert "Retry-After" not in result.headers and "data" not in json.loads(result.content)
@@ -427,7 +428,7 @@ def exercise_audit_reads_python_protocol(sdk):
         assert result.parsed.data.items == [] and result.parsed.data.next_cursor is None
         assert result.headers["X-Request-ID"] == ids[1]
 
-    async def check_async(origin, calls, violations, assistant, lost_reply):
+    async def check_async(origin, calls, violations, assistant, lost_reply, first_status):
         async with httpx.AsyncClient(base_url=origin, transport=httpx.AsyncHTTPTransport(retries=0, trust_env=False),
                                      trust_env=False, follow_redirects=False, timeout=5) as transport:
             client = AuthenticatedClient(base_url=origin, token="").set_async_httpx_client(transport)
@@ -439,31 +440,33 @@ def exercise_audit_reads_python_protocol(sdk):
                 else:
                     raise AssertionError("a physically lost reply became success")
             else:
-                check_first(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations)
-            check_second(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations)
+                check_first(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations, first_status)
+            check_second(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations, first_status)
 
-    for assistant in (False, True):
-        for lost_reply in (False, True):
-            for mode in ("sync", "async"):
-                with scenario(assistant, lost_reply) as (origin, calls, violations):
-                    if mode == "async":
-                        asyncio.run(check_async(origin, calls, violations, assistant, lost_reply))
-                    else:
-                        with httpx.Client(base_url=origin, transport=httpx.HTTPTransport(retries=0, trust_env=False),
-                                          trust_env=False, follow_redirects=False, timeout=5) as transport:
-                            client = AuthenticatedClient(base_url=origin, token="").set_httpx_client(transport)
-                            if lost_reply:
-                                try:
-                                    list_audit_events.sync_detailed(client=client, **params(assistant))
-                                except httpx.TransportError:
-                                    assert not violations and len(calls) == 1
+    for first_status in statuses:
+        assert first_status in (409, 418), "unsupported audit protocol fixture status"
+        for assistant in (False, True):
+            for lost_reply in (False, True):
+                for mode in ("sync", "async"):
+                    with scenario(assistant, lost_reply, first_status) as (origin, calls, violations):
+                        if mode == "async":
+                            asyncio.run(check_async(origin, calls, violations, assistant, lost_reply, first_status))
+                        else:
+                            with httpx.Client(base_url=origin, transport=httpx.HTTPTransport(retries=0, trust_env=False),
+                                              trust_env=False, follow_redirects=False, timeout=5) as transport:
+                                client = AuthenticatedClient(base_url=origin, token="").set_httpx_client(transport)
+                                if lost_reply:
+                                    try:
+                                        list_audit_events.sync_detailed(client=client, **params(assistant))
+                                    except httpx.TransportError:
+                                        assert not violations and len(calls) == 1
+                                    else:
+                                        raise AssertionError("a physically lost reply became success")
                                 else:
-                                    raise AssertionError("a physically lost reply became success")
-                            else:
-                                check_first(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations)
-                            check_second(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations)
-                    print(json.dumps({"check": "python_audit_tcp", "mode": mode, "assistant": assistant,
-                                      "lost_reply": lost_reply, "requests": len(calls), "exit": 0}))
+                                    check_first(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations, first_status)
+                                check_second(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations, first_status)
+                        print(json.dumps({"check": "python_audit_tcp", "mode": mode, "assistant": assistant,
+                                          "lost_reply": lost_reply, "first_status": first_status, "requests": len(calls), "exit": 0}))
 
 
 def run_checks(sdk, *, python_only=False, expected_domains=None):
