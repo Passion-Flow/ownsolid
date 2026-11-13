@@ -442,6 +442,55 @@ already inspected pinned PostgreSQL/pgvector and Go build-base obligations.
 This experiment adds no product dependency, model or dataset. Product admission
 must still resolve its complete graph and compose actual ownsolid authorities.
 
+### First private RP/OP flow qualification
+
+The standalone prototype passed fourteen non-worker roots and 82 independent
+leaves in each of two topologies: native Go with race detection against an
+owned loopback PostgreSQL, then a Linux arm64 binary, its child OP processes
+and PostgreSQL in one `--network none` container with no published ports.
+Both passed 88 named tests including parent groups. The worker-only root
+skips in the parent suite and runs explicitly in real child processes.
+The native Mac client is not egress-isolated; only the second topology is
+disconnected. The database uses the prototype's nine synthetic authority,
+request, token and event tables, not the product's Identity or audit owners.
+
+An actual RP HTTPS server and a separate OP HTTPS process used verified
+private-CA certificates and approved literal dial addresses. The RP used the
+pinned SDK's discovery, code exchange, signed ID-token/nonce/token-hash
+verification and UserInfo client. The synthetic password/CSRF form bound the
+request to its browser and source-session cookies. The first sign-in returned
+the registered opaque subject. Replaying its consumed code returned no token.
+The OP process then exited cleanly and a new PID started on the inherited
+owned listener with retained database/key files. The first access token still
+passed UserInfo and a fresh sign-in retained the same subject while issuing
+different code/token credentials. This is an actual process restart, not an
+in-memory provider reconstruction.
+
+Wrong secret, foreign-tenant client, another local client, redirect, verifier,
+tenant query and duplicate encoded code fields were refused without token
+creation or code consumption. Explicit corrected exchanges succeeded. Client
+disable/reenable and secret rotation, installation disable/reenable, account
+epoch changes, session revocation and membership delete/recreate fenced both
+existing UserInfo and pending codes. Repair did not revive that old authority;
+a fresh verified flow succeeded. The discovery response omitted closed routes.
+
+Evidence is `iam106-provider-20261113.q_ov5ppw`, first-flow run
+`qualification-fxtc85y1`, qualified input `ebeca4b66e22`. Its source-hash
+manifest SHA-256 is
+`2275d25830cad4d63b896cafe755a72476ec06720e51e450ba17f0c1991a1cb2`.
+Exact prototype source/module files, race/disconnected output, image/network
+inspection and container/storage/bridge cleanup remain outside Git. Child
+logs were still temporary in this first run; retained child-log inspection,
+signing/audit failure, cancellation, actual wire COMMIT uncertainty, concurrent
+redemption, key rotation and the remaining failure matrix are not qualified
+by this run. The earlier compile-only `rp` package/helper naming conflict was
+corrected with a package alias before this qualification.
+
+No product source, dependency, key, formal schema, API or UI changed. Synthetic
+authority rows and a fixture password form do not implement actual ownsolid
+Portal consent, catalog registration, scoped grants or revocation composition.
+IAM-106 remains open and its complete external qualification continues.
+
 The external prototype must use separate real RP and OP HTTPS servers, verified
 private CA trust and actual PostgreSQL persistence. Prove discovery through code
 exchange, signed ID-token verification and matching UserInfo subject; then
