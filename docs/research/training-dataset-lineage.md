@@ -498,7 +498,7 @@ The v1 cursor is at most 512 ASCII bytes: canonical unpadded base64url JSON plus
 an HMAC-SHA-256 signature with a model-history-specific domain separator. Reuse the
 installed Identity HMAC key and [constant-time comparison](https://pkg.go.dev/crypto/hmac).
 Bind its scope digest to account, session, auth epoch, audience, tenant, workspace,
-family, exact anchor and state filter. Persist no cursor secrets or page results.
+local site/cell, family, exact anchor and state filter. Persist no cursor secrets or page results.
 Key rotation invalidates old cursors and requires restarting navigation. Cursor
 positions retain UTC microseconds and canonical nonzero UUIDs.
 
@@ -706,13 +706,122 @@ an unnumbered candidate and the history reads remain unregistered. MOD-103 stays
 open until ARC schema/role/catalog, IAM dispatch, DEV public contracts and Web
 integration are actually admitted and verified.
 
+### Formal lineage and restricted Control adaptation
+
+Review input is ARC's unpublished `0f47a66bcb84c585b00bb1a92bf30f455017c1c9`,
+not a released schema. It appends platform site/cell defaults and composite keys
+to the reviewed domain SQL in migration 61; the original candidate inputs remain
+unchanged. The domain's initial-version/member cycle stays deferred, membership
+stays immutable, and populated downgrade still refuses before any object drops.
+The added foreign keys ensure related rows agree; they do not restrict a read to
+the server's local cell. New historical reads, explicit selection and retirement
+must also enforce that local scope, including the existing retained derivation
+and input rows. A matching snapshot must not authenticate a foreign-cell artifact.
+Bind navigation to the resolved local site
+and cell as well as the existing actor/anchor/filter dimensions. Neither identity
+comes from request input. No public DTO changes are required.
+
+Follow PostgreSQL's [composite and deferred constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)
+and [named constraint timing](https://www.postgresql.org/docs/18/sql-set-constraints.html).
+Run normal family tests on the actual `Migrate` lineage, never apply testdata over
+an already-migrated schema. Use the existing explicit predecessor-60 fixture for
+backfill and migration rollback, retaining its exact prefix/version fence. A
+pgx [nested transaction](https://pkg.go.dev/github.com/jackc/pgx/v5@v5.11.0#Tx)
+provides a real savepoint inside an owned rollback test; normal upgrade calls
+still use the real pool and exact catalog admission. Read the numbered downward
+asset only for explicit downgrade refusal, not as a replacement migration path.
+
+For service acceptance, create a fresh runtime through ARC's existing
+`LoadRuntime`/`Prepare`/`Check` operations, then connect separately as that actual
+Control login. Do not duplicate GRANT catalogs, use `SET ROLE` as a substitute
+login, or expose credentials in diagnostics. Privileged fixture corruption uses
+the retained operator pool explicitly; all business calls use the restricted
+pool. ARC remains responsible for predecessor-principal grant resume and its OID,
+authenticator, exact-catalog, DDL and journal fences. Consistently foreign
+family/member/version records must not produce history or permit retirement;
+mismatched scope must fail the real composite keys without partial state.
+
+Prepare coverage for nonempty 60-to-61 backfill with unchanged exact IDs and
+deployment references, local scope on all three rows, explicit/default publication
+rollback, orphan/audit/concurrent outcomes, current-authority keysets, retired
+read versus execution refusal, derived retained graphs and populated downgrade.
+The untouched platform catalog pins currently describe 60: ARC must collect and
+register actual 61 fingerprints before these positive tests can pass. Never relax
+that check or manufacture a digest. No compile, SQL, native or full-gate result
+is claimed by this source adaptation; the earlier 2783/dba acceptance stays exact.
+
+No dependency, model or dataset is added. This uses the existing Go/UUID BSD-3-Clause,
+pgx MIT and PostgreSQL licenses above. The pinned go-yaml 3.0.5 fixture serializer
+retains its upstream [MIT and Apache notices](https://github.com/yaml/go-yaml/blob/v3.0.5/LICENSE).
+All permit commercial/offline use and redistribution with their notices. Records
+and credentials are synthetic and disposable; original migration/role ownership,
+formal HTTP/API and S-202 qualification remain separate.
+
+The owner adaptation retains seven selected SQL roots:
+
+- `TestActualModelFamilyFormalBackfillAndLifecycle`: actual predecessor-60
+  version/ledger fence, nested real-Migrate rollback, normal migration/replay,
+  unchanged version rows and deployment references, scope consistency, retained
+  retirement and exact populated-down refusal.
+- `TestActualModelFamilyHistoryPagesAndAuthority`: existing bounded pages,
+  filter/cursor, current-authority, cross-workspace, damaged metadata and
+  unknown-outcome controls, now through the real restricted Control login.
+- `TestActualModelFamilySelectionTransactions`: existing explicit/default
+  rollback, orphan/audit failure, immutable triggers and real concurrent choices.
+- `TestActualModelFamilyRetainedDerivedGraph` and
+  `TestActualModelFamilyDerivedRegistration`: existing retained graph and verified
+  file publication, with explicit operator-only corruption, foreign-cell artifact
+  refusal/recovery and restricted DML.
+- `TestActualModelFamilyRestrictedPrincipal`: journal SELECT, actual DDL,
+  TRUNCATE, trigger and protected-head refusals, followed by retained retirement.
+- `TestActualModelFamilyFormalCellScope`: both mismatched composite references
+  and fully consistent foreign-site/foreign-cell graphs, no partial SQL state,
+  refused history/selection/execution/retirement and subsequent local recovery.
+
+The cursor unit root now prepares eleven binding dimensions, adding site/cell;
+its earlier nine-dimension result remains evidence of the original source only.
+This changes no wire fields or public DTO. The new fixture invokes ARC's public
+role operations; it implements no grant table list or role-creation SQL. It owns
+its random Control principal, private generated credential/configuration and
+disposable schema. Login identity, strict runtime admission and all three local
+scope projections are asserted before normal family cases. Both outer actor
+construction and synthetic metadata remain test fixtures, not installed UI use.
+
+For the joint native allocation, provide the existing private
+`PROJECT_ONE_TEST_DSN_FILE` and `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE`
+references for the same disposable loopback `_test` PostgreSQL instance, plus
+`PROJECT_ONE_REPOSITORY_ENGINE=postgresql` and the existing exact owned
+`PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA`. The repository reference must be the
+explicit URI accepted by the original RuntimeInput parser, including its actual
+transport policy. Preserve the original setup limits or supply the original
+protected setup-policy file; do not extend a process budget implicitly.
+Derived registration also needs the existing
+`PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` of approved pinned non-weight files.
+No credential value belongs in a command or output. The owner root selection is
+`^TestActualModelFamily`; compilation, these SQL cases and the eleven-dimension
+cursor unit root remain unrun for this adaptation.
+
+ARC must register actually observed 61 catalog fingerprints before these
+positive migration/Control cases can run. Its formal empty-down, nonlocal
+predecessor rollback and original-principal grant-resume tests remain mandatory
+joint entries; MODEL does not replace them with a broader allowlist or new role
+orchestrator. Retain the existing strict predecessor-60 inventory and every
+original migration asset. Broader legacy inventory/import/cache/transfer cell
+coverage remains with the corresponding open MOD-101/MOD-102/MOD-109 paths;
+this slice changes only history, explicit family selection, retained-graph
+validation, retirement and exact-version execution guards. Actual public routes and offline user
+flows still require IAM/DEV/Web and their original qualification.
+
 To replay, configure the private PostgreSQL DSN and fresh owned schema as described
 by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
 Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
-non-weight files for the derived-registration fixture. The tests embed and apply
-the unnumbered DDL only inside their disposable schemas.
+non-weight files for the derived-registration fixture. The tests use the formal
+migration in their disposable schemas. They require ARC's actual 61 catalog
+registration; the retained unnumbered SQL is a review input, not fixture setup.
+After joint native allocation, the intended owner selection is:
 
 ```sh
-go -C services/control test -p=1 -tags repository_integration ./internal/modules/models \
-  -run '^TestActualModelFamily' -count=1 -v
+go -C services/control test -mod=readonly -p=1 -tags repository_integration \
+  -run '^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$' \
+  -count=1 -timeout=15m -v ./internal/modules/models
 ```

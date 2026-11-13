@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
@@ -19,6 +18,8 @@ import (
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type modelReadFixture struct {
@@ -29,12 +30,20 @@ type modelReadFixture struct {
 	admin, portal identity.Auth
 	model         string
 	imports       []string
+	operator      *pgxpool.Pool
 }
+
+const modelReadFixtureTimeout = 60 * time.Second
 
 func modelReadSetup(t *testing.T) modelReadFixture {
 	t.Helper()
 	f := repositoryfixture.New(t)
-	ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
+	return modelReadSetupOn(t, f)
+}
+
+func modelReadSetupOn(t *testing.T, f repositoryfixture.Fixture) modelReadFixture {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), modelReadFixtureTimeout)
 	t.Cleanup(cancel)
 	x := modelReadFixture{f: f, ctx: ctx, owner: &identity.Service{Storage: f.Store}, model: uuid.NewString()}
 	x.s = &models.Service{Identity: x.owner, Workspaces: &workspaces.Service{Identity: x.owner}}

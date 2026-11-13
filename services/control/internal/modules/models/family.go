@@ -17,7 +17,11 @@ func historyAvailable(ctx context.Context, q transaction.Executor) error {
 	var present bool
 	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT
  to_regclass(format('%I.model_families',current_schema())) IS NOT NULL AND
- to_regclass(format('%I.model_family_members',current_schema())) IS NOT NULL`)).Scan(&present)
+ to_regclass(format('%I.model_family_members',current_schema())) IS NOT NULL AND
+ (SELECT count(*) FROM pg_attribute WHERE attrelid IN (
+  to_regclass(format('%I.model_families',current_schema())),
+  to_regclass(format('%I.model_family_members',current_schema())))
+  AND attname IN ('site_id','cell_id') AND attnotnull AND NOT attisdropped)=4`)).Scan(&present)
 	if err != nil {
 		return modelReadError(err)
 	}
@@ -33,7 +37,10 @@ func versionFamilyWithin(ctx context.Context, q transaction.Executor, tenant, wo
 SELECT m.family_id::text FROM model_family_members m
 JOIN model_families f ON (f.tenant_id,f.workspace_id,f.id)=(m.tenant_id,m.workspace_id,m.family_id)
 JOIN model_family_members r ON (r.tenant_id,r.workspace_id,r.family_id,r.version_id)=(f.tenant_id,f.workspace_id,f.id,f.initial_version_id)
-WHERE m.tenant_id=$1 AND m.workspace_id=$2 AND m.version_id=$3`, tenant, workspace, version)).Scan(&family)
+WHERE m.tenant_id=$1 AND m.workspace_id=$2 AND m.version_id=$3
+ AND (m.site_id,m.cell_id)=(local_site_id(),local_cell_id())
+ AND (f.site_id,f.cell_id)=(local_site_id(),local_cell_id())
+ AND (r.site_id,r.cell_id)=(local_site_id(),local_cell_id())`, tenant, workspace, version)).Scan(&family)
 	if errors.Is(err, sql.ErrNoRows) || err == nil && !nonzeroModelID(family) {
 		return "", fail("MODEL_FAMILY_INVALID")
 	}
@@ -90,7 +97,7 @@ func (s *Service) StageVersionFamilyWithin(ctx context.Context, q transaction.Ex
 	var previous string
 	var previousAnchor *string
 	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT family_id::text,anchor_version_id::text FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND version_id=$3`, w.TenantID, w.ID, version)).Scan(&previous, &previousAnchor)
+		`SELECT family_id::text,anchor_version_id::text FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND version_id=$3 AND (site_id,cell_id)=(local_site_id(),local_cell_id())`, w.TenantID, w.ID, version)).Scan(&previous, &previousAnchor)
 	if err == nil {
 		established, checkError := versionFamilyWithin(ctx, q, w.TenantID, w.ID, version)
 		if checkError != nil {

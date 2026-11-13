@@ -44,7 +44,7 @@ func (s *Service) ReadyWithin(ctx context.Context, q transaction.Executor, tenan
 	var digest string
 	var manifest []byte
 	e := q.QueryRow(ctx, modelNativeSQL(q, `SELECT CATALOG_DIGEST,MANIFEST FROM MODEL_VERSIONS WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=? AND KIND='approved_base' AND STATE='ready' FOR UPDATE`,
-		"SELECT catalog_digest,manifest FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND kind='approved_base' AND state='ready' FOR SHARE",
+		"SELECT catalog_digest,manifest FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND kind='approved_base' AND state='ready' AND (site_id,cell_id)=(local_site_id(),local_cell_id()) FOR SHARE",
 		"SELECT catalog_digest,manifest FROM model_versions WHERE tenant_id=? AND workspace_id=? AND id=? AND kind='approved_base' AND state='ready' FOR SHARE", tenant, workspace, id)).Scan(&digest, &manifest)
 	if errors.Is(e, sql.ErrNoRows) {
 		return fail("RESOURCE_NOT_FOUND")
@@ -74,7 +74,7 @@ func (s *Service) derivedVersionWithin(ctx context.Context, q transaction.Execut
 	var digest, kind string
 	var preparation, attempt, artifact, base, report string
 	e := q.QueryRow(ctx, modelSQL(q,
-		`SELECT v.manifest,v.catalog_digest,v.kind,d.catalog,d.preparation_id::text,d.attempt_id::text,d.artifact_id::text,d.base_model_id::text,d.report_sha256 FROM model_versions v JOIN model_derivations d ON d.tenant_id=v.tenant_id AND d.workspace_id=v.workspace_id AND d.model_id=v.id AND d.catalog_digest=v.catalog_digest WHERE v.tenant_id=$1 AND v.workspace_id=$2 AND v.id=$3 AND (NOT $4::boolean OR v.state='ready') FOR SHARE OF v,d`,
+		`SELECT v.manifest,v.catalog_digest,v.kind,d.catalog,d.preparation_id::text,d.attempt_id::text,d.artifact_id::text,d.base_model_id::text,d.report_sha256 FROM model_versions v JOIN model_derivations d ON d.tenant_id=v.tenant_id AND d.workspace_id=v.workspace_id AND d.model_id=v.id AND d.catalog_digest=v.catalog_digest WHERE v.tenant_id=$1 AND v.workspace_id=$2 AND v.id=$3 AND (NOT $4::boolean OR v.state='ready') AND (v.site_id,v.cell_id)=(local_site_id(),local_cell_id()) AND (d.site_id,d.cell_id)=(local_site_id(),local_cell_id()) FOR SHARE OF v,d`,
 		`SELECT v.manifest,v.catalog_digest,v.kind,d.catalog,d.preparation_id,d.attempt_id,d.artifact_id,d.base_model_id,d.report_sha256 FROM model_versions v JOIN model_derivations d ON d.tenant_id=v.tenant_id AND d.workspace_id=v.workspace_id AND d.model_id=v.id AND d.catalog_digest=v.catalog_digest WHERE v.tenant_id=? AND v.workspace_id=? AND v.id=? AND v.state IN ('ready','deleted') AND (NOT ? OR v.state='ready') FOR SHARE`, tenant, workspace, model, ready)).Scan(&raw, &digest, &kind, &record, &preparation, &attempt, &artifact, &base, &report)
 	if errors.Is(e, sql.ErrNoRows) {
 		return zero, fail("RESOURCE_NOT_FOUND")
