@@ -1,0 +1,342 @@
+--- original-unrun
++++ restricted-unrun
+@@ -22,17 +22,25 @@
+ 
+ 
+ def save(path, value):
+-    with path.open('w') as stream:
++    pending = path.with_name('.' + path.name + '.pending')
++    with pending.open('w') as stream:
+         json.dump(value, stream, indent=2, sort_keys=True)
+         stream.write('\n')
+         stream.flush()
+         os.fsync(stream.fileno())
++    os.replace(pending, path)
+ 
+ 
+ def run(config, config_path):
++    if sys.flags.optimize:
++        raise RuntimeError('Use python3 -I without -O')
+     os.umask(0o077)
+     start = time.monotonic()
+     deadline = start + config['hard_seconds']
++    def timed_out(signum, frame):
++        raise TimeoutError('Transport absolute parent deadline reached')
++    previous_alarm = signal.signal(signal.SIGALRM, timed_out)
++    signal.setitimer(signal.ITIMER_REAL, max(0.001, deadline - time.monotonic()))
+     output = Path(tempfile.mkdtemp(prefix='command-transport-native.', dir=config['output_parent']))
+     print(output, flush=True)
+     run_id = str(uuid.uuid4())
+@@ -40,15 +48,23 @@
+               'run_id': run_id, 'status': 'prepared', 'leases': [], 'commands': [], 'cases': [], 'cleanup_errors': []}
+     descriptors = []
+     fixture = None
++    fixture_identity = None
+     containers = []
++    closed = set()
++    owned_volumes = {}
++    active_process = None
+     code = 1
+     def interrupted(signum, frame):
+         raise RuntimeError('Prototype parent interrupted: ' + str(signum))
+     handlers = {value: signal.signal(value, interrupted) for value in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
+-    environment = {key: os.environ[key] for key in ['PATH', 'HOME', 'DOCKER_CONFIG'] if key in os.environ}
+-    environment.update(GOMAXPROCS='2', GOMEMLIMIT=str(config['go_memory_bytes']) + 'B')
++    docker_config = output / 'empty-docker-config'
++    docker_config.mkdir(mode=0o700)
++    environment = {key: os.environ[key] for key in ['PATH', 'HOME'] if key in os.environ}
++    environment['DOCKER_CONFIG'] = str(docker_config)
++    environment.update(GOMAXPROCS='1', GOMEMLIMIT=str(config['go_memory_bytes']) + 'B')
+ 
+     def command(args, *, cleanup=False, limit=None, permit_failure=False):
++        nonlocal active_process
+         available = deadline - time.monotonic() - (0 if cleanup else config['cleanup_seconds'])
+         if available <= 0:
+             raise TimeoutError('Prototype work or cleanup deadline reached')
+@@ -59,9 +75,10 @@
+         save(output / 'result.json', result)
+         log_path = output / f'command-{number:03d}.log'
+         # Namespace PID 1 exiting joins its entire local client subtree.
+-        argv = [config['unshare'], '--pid', '--fork', '--kill-child=KILL', '--mount-proc', *args]
++        argv = [config['unshare'], '--mount', '--propagation', 'private', '--pid', '--fork', '--kill-child=KILL', '--mount-proc', *args]
+         with log_path.open('w') as log:
+-            process = subprocess.Popen(argv, env=environment, stdout=log, stderr=subprocess.STDOUT)
++            process = subprocess.Popen(argv, env=environment, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, close_fds=True, start_new_session=True)
++            active_process = process
+             handle = None
+             try:
+                 handle = os.pidfd_open(process.pid)
+@@ -72,12 +89,19 @@
+                         signal.pidfd_send_signal(handle, signal.SIGKILL)
+                     else:
+                         process.kill()
+-                    process.wait(timeout=config['join_seconds'])
++                    remaining = deadline - time.monotonic()
++                    if remaining <= 0:
++                        raise TimeoutError('No local child join budget remains')
++                    process.wait(timeout=min(config['join_seconds'], remaining))
+                 record['exit'] = process.returncode
++                if process.poll() is not None:
++                    active_process = None
+                 if handle is not None:
+                     os.close(handle)
+         record['log'] = log_path.name
+         save(output / 'result.json', result)
++        if log_path.stat().st_size > 1024**2:
++            raise RuntimeError('Prototype command output exceeds the bounded projection')
+         raw = log_path.read_text()
+         if record['exit'] != 0 and not permit_failure:
+             raise RuntimeError('Prototype command failed: ' + str(number))
+@@ -87,40 +111,77 @@
+         return command([config['docker'], '--host', 'unix://' + config['docker_socket'], *args], **kwargs)
+ 
+     def inspect(name, *, cleanup=False):
+-        status, raw = docker('container', 'inspect', name, cleanup=cleanup, permit_failure=True)
+-        if status:
+-            if 'No such container' not in raw and 'No such object' not in raw:
+-                raise RuntimeError('Container absence is unconfirmed')
+-            # An engine outage is not evidence that the owned container is gone.
+-            docker('version', '--format', '{{.Server.Version}}', cleanup=cleanup)
++        # A successful empty listing establishes absence; daemon errors never do.
++        _, listing = docker('container', 'ls', '--all', '--no-trunc', '--filter',
++                            'name=^/' + name + '$', '--format', '{{.ID}}', cleanup=cleanup)
++        identifiers = listing.split()
++        if not identifiers:
+             return None
+-        values = json.loads(raw)
+-        if len(values) != 1:
+-            raise RuntimeError('Ambiguous prototype container readback')
+-        return values[0]
++        if len(identifiers) != 1 or not re.fullmatch(r'[0-9a-f]{64}', identifiers[0]):
++            raise RuntimeError('Ambiguous prototype container identity')
++        projection = ('{"Id":{{json .Id}},"Image":{{json .Image}},'
++                      '"Config":{"Labels":{"io.ownsolid.prototype.run_id":'
++                      '{{json (index .Config.Labels "io.ownsolid.prototype.run_id")}}}},'
++                      '"HostConfig":{"NetworkMode":{{json .HostConfig.NetworkMode}},'
++                      '"ReadonlyRootfs":{{json .HostConfig.ReadonlyRootfs}},'
++                      '"PortBindings":{{json .HostConfig.PortBindings}},'
++                      '"Memory":{{json .HostConfig.Memory}},"PidsLimit":{{json .HostConfig.PidsLimit}},'
++                      '"CapDrop":{{json .HostConfig.CapDrop}},"SecurityOpt":{{json .HostConfig.SecurityOpt}}},'
++                      '"Mounts":{{json .Mounts}}}')
++        _, raw = docker('container', 'inspect', '--format', projection, identifiers[0], cleanup=cleanup)
++        observed = json.loads(raw)
++        if observed['Id'] != identifiers[0]:
++            raise RuntimeError('Container identity changed during readback')
++        return observed
+ 
+     def networks(project, *, cleanup=False):
+         _, raw = docker('network', 'ls', '--filter', 'label=com.docker.compose.project=' + project,
+                         '--format', '{{.ID}}', cleanup=cleanup)
+         return raw.split()
+ 
++    def remember_volumes(name, observed):
++        labels = observed['Config'].get('Labels') or {}
++        if labels.get('io.ownsolid.prototype.run_id') != run_id or observed['Image'] != config['image']:
++            raise RuntimeError('Refuse cleanup of an unowned or replaced container')
++        volumes, bind_count = set(), 0
++        for mount in observed['Mounts']:
++            if mount['Type'] == 'bind':
++                if (mount['Source'] != str(fixture / 'prototype.test') or mount['Destination'] != '/fixture/prototype.test'
++                        or mount['RW'] is not False):
++                    raise RuntimeError('Unexpected bind mount; preserve the container for review')
++                bind_count += 1
++            elif mount['Type'] == 'volume' and re.fullmatch(r'[0-9a-f]{64}', mount.get('Name', '')):
++                volumes.add(mount['Name'])
++            else:
++                raise RuntimeError('Unexpected mount; preserve the container for review')
++        if bind_count != 1:
++            raise RuntimeError('Prototype helper mount is ambiguous')
++        previous = owned_volumes.setdefault(name, volumes)
++        if previous != volumes:
++            raise RuntimeError('Owned anonymous volume set changed')
++
+     def close_container(name):
++        if name in closed:
++            return
+         observed = inspect(name, cleanup=True)
+         if observed is not None:
+-            labels = observed['Config'].get('Labels') or {}
+-            if labels.get('io.ownsolid.prototype.run_id') != run_id or observed['Image'] != config['image']:
+-                raise RuntimeError('Refuse cleanup of an unowned or replaced container')
+-            docker('rm', '--force', '--volumes', name, cleanup=True)
++            remember_volumes(name, observed)
++            docker('rm', '--force', '--volumes', observed['Id'], cleanup=True)
+             if inspect(name, cleanup=True) is not None:
+                 raise RuntimeError('Owned prototype container remains')
+-        for identifier in networks(name, cleanup=True):
+-            _, raw = docker('network', 'inspect', identifier, cleanup=True)
+-            observed = json.loads(raw)[0]
+-            if (observed.get('Labels') or {}).get('com.docker.compose.project') != name or observed.get('Containers'):
+-                raise RuntimeError('Refuse cleanup of an occupied or foreign network')
+-            docker('network', 'rm', identifier, cleanup=True)
++        elif name not in owned_volumes:
++            raise RuntimeError('Create acknowledgement and anonymous volume cleanup are unconfirmed')
++        checks = []
++        for volume in sorted(owned_volumes[name]):
++            _, raw = docker('volume', 'ls', '--quiet', '--filter', 'name=' + volume, cleanup=True)
++            if raw.split():
++                raise RuntimeError('Owned anonymous volume removal remains unconfirmed')
++            checks.append({'name': volume, 'absent': True})
+         if networks(name, cleanup=True):
+-            raise RuntimeError('Prototype project network cleanup remains unconfirmed')
++            raise RuntimeError('Unexpected project network; preserve it for review')
++        result.setdefault('cleanup_readbacks', []).append({'container': name, 'absent': True,
++                                                         'volumes': checks, 'project_networks': []})
++        closed.add(name)
+ 
+     try:
+         assert sys.platform == 'linux' and os.uname().machine == 'x86_64' and os.geteuid() == 0
+@@ -142,9 +203,13 @@
+         assert 0 < config['memory_bytes'] <= 256 * 1024**2
+         assert config['container_seconds'] <= 30 and config['operation_seconds'] <= 8
+         assert config['test_seconds'] <= 15 and config['join_seconds'] <= config['cleanup_seconds']
++        assert config['hard_seconds'] == 60 and config['cleanup_seconds'] == 20
++        assert Path(environment['HOME']).stat().st_uid == 0 and Path(environment['HOME']).stat().st_mode & 0o077 == 0
++        assert digest(config['docker']) == config['docker_sha256']
++        assert digest(config['compose_plugin']) == config['compose_sha256']
+         source = Path(config['source'])
+-        head = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
+-        changed = subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'], text=True)
++        head = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True, timeout=2).strip()
++        changed = subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'], text=True, timeout=2)
+         assert head == config['candidate'] and not changed
+         assert digest(config['binary']) == config['binary_sha256']
+         with Path(config['binary']).open('rb') as binary:
+@@ -156,7 +221,7 @@
+         shutil.copyfile(__file__, output / 'parent.py')
+         shutil.copyfile(config_path, output / 'runtime.json')
+         for name in config['locks']:
+-            fd = os.open(name, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
++            fd = os.open(name, os.O_RDWR | os.O_NOFOLLOW)
+             descriptors.append(fd)
+             info = os.fstat(fd)
+             assert stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+@@ -177,15 +242,20 @@
+             result['resource_error'] = str(error)
+             result['status'], code = 'resource-refused', 75
+             return code
+-        _, raw = docker('image', 'inspect', config['image'])
+-        image = json.loads(raw)[0]
++        projection = '{"Id":{{json .Id}},"Os":{{json .Os}},"Architecture":{{json .Architecture}}}'
++        _, raw = docker('image', 'inspect', '--format', projection, config['image'])
++        image = json.loads(raw)
+         assert image['Id'] == config['image'] and image['Os'] == 'linux' and image['Architecture'] == 'amd64'
+-        _, raw = docker('version', '--format', '{{json .}}')
++        projection = '{"Client":{"Version":{{json .Client.Version}}},"Server":{"Version":{{json .Server.Version}}}}'
++        _, raw = docker('version', '--format', projection)
+         version = json.loads(raw)
+         assert version['Client']['Version'] == config['docker_version'] and version['Server']['Version'] == config['docker_version']
+         _, compose_version = docker('compose', 'version', '--short')
++        assert compose_version.strip() == config['compose_version']
++        result['home_preserved'] = environment['HOME'] == os.environ['HOME']
+         result['versions'] = {'docker': config['docker_version'], 'compose': compose_version.strip()}
+         fixture = Path(tempfile.mkdtemp(prefix='lane-del-command-', dir=config['fixture_parent']))
++        fixture_identity = fixture.stat()
+         fixture.chmod(0o700)
+         binary = fixture / 'prototype.test'
+         shutil.copyfile(config['binary'], binary)
+@@ -205,7 +275,10 @@
+                        'entrypoint': ['/bin/sh', '-c', 'sleep ' + str(config['container_seconds'])],
+                        'volumes': [str(binary) + ':/fixture/prototype.test:ro'], 'cpus': config['cpus'],
+                        'mem_limit': config['memory_bytes'], 'memswap_limit': config['memory_bytes'],
+-                       'pids_limit': config['pids_limit'],
++                       'pids_limit': config['pids_limit'], 'read_only': True, 'user': '65534:65534',
++                       'cap_drop': ['ALL'], 'security_opt': ['no-new-privileges:true'],
++                       'healthcheck': {'disable': True}, 'pull_policy': 'never',
++                       'environment': {'GOMAXPROCS': '1', 'GOMEMLIMIT': '33554432B'},
+                        'labels': {'io.ownsolid.prototype.run_id': run_id}}
+             # This service uses the explicit none network and has no published port.
+             save(compose_file, {'services': {'probe': service}})
+@@ -216,6 +289,11 @@
+             assert observed is not None and observed['HostConfig']['NetworkMode'] == 'none'
+             assert not observed['HostConfig'].get('PortBindings')
+             assert observed['HostConfig']['Memory'] == config['memory_bytes']
++            assert observed['HostConfig']['ReadonlyRootfs'] is True
++            assert observed['HostConfig']['PidsLimit'] == config['pids_limit']
++            assert observed['HostConfig']['CapDrop'] == ['ALL']
++            assert 'no-new-privileges:true' in observed['HostConfig']['SecurityOpt']
++            remember_volumes(name, observed)
+             assert observed['Config']['Labels']['io.ownsolid.prototype.run_id'] == run_id
+             target = (['exec', '--interactive', name] if kind == 'direct'
+                       else [*prefix, 'exec', '--no-TTY', 'probe'])
+@@ -235,32 +313,61 @@
+                                    else 'no-helper-observed-after-return')
+             close_container(name)
+         assert digest(config['binary']) == config['binary_sha256']
+-        assert not subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'])
++        assert not subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'], timeout=2)
+         result['status'], code = 'experiment-completed', 0
+     except BaseException as error:
+         result['status'] = 'failed'
+         result['error'] = type(error).__name__ + ': ' + str(error)
+         code = 1
+     finally:
+-        for item in handlers:
+-            signal.signal(item, signal.SIG_IGN)
+-        for name in reversed(containers):
+-            try:
++        work_status, work_code = result['status'], code
++        result.update(status='cleanup-unconfirmed', work_status=work_status, exit=1,
++                      elapsed_seconds=time.monotonic() - start)
++        code = 1
++        try:
++            if time.monotonic() >= deadline:
++                raise TimeoutError('No cleanup budget remains')
++            save(output / 'result.json', result)
++            if active_process is not None and active_process.poll() is None:
++                active_process.kill()
++                remaining = deadline - time.monotonic()
++                if remaining <= 0:
++                    raise TimeoutError('No final child join budget remains')
++                active_process.wait(timeout=min(config['join_seconds'], remaining))
++            for name in reversed(containers):
+                 close_container(name)
+-            except BaseException as error:
+-                result['cleanup_errors'].append(name + ': ' + str(error))
+-        if not result['cleanup_errors'] and fixture is not None:
+-            shutil.rmtree(fixture)
+-        if result['cleanup_errors']:
+-            result['status'], code = 'cleanup-unconfirmed', 1
+-        result['elapsed_seconds'], result['exit'] = time.monotonic() - start, code
+-        save(output / 'result.json', result)
+-        for fd in reversed(descriptors):
+-            fcntl.flock(fd, fcntl.LOCK_UN)
+-            os.close(fd)
+-        print(json.dumps({'evidence': str(output), 'status': result['status'], 'exit': code}), flush=True)
+-        for item, handler in handlers.items():
+-            signal.signal(item, handler)
++            if fixture is not None:
++                assert not fixture.is_symlink() and os.path.samestat(fixture_identity, fixture.lstat())
++                shutil.rmtree(fixture)
++                result['owned_fixture_removed'] = not fixture.exists()
++            assert not docker_config.is_symlink() and docker_config.parent == output
++            shutil.rmtree(docker_config)
++            result['owned_docker_config_removed'] = not docker_config.exists()
++            result['children_joined'] = active_process is None or active_process.poll() is not None
++            for lease in result['leases']:
++                assert os.path.samestat(os.fstat(lease['fd']), Path(lease['path']).lstat())
++            if time.monotonic() >= deadline:
++                raise TimeoutError('No final evidence budget remains')
++            result.update(status=work_status, exit=work_code, elapsed_seconds=time.monotonic() - start)
++            save(output / 'result.json', result)
++            code = work_code
++        except BaseException as error:
++            result['cleanup_errors'].append(type(error).__name__ + ': ' + str(error))
++            result.update(status='cleanup-unconfirmed', exit=1, elapsed_seconds=time.monotonic() - start)
++            if time.monotonic() < deadline:
++                try:
++                    save(output / 'result.json', result)
++                except BaseException:
++                    pass
++        finally:
++            # Actual parent descriptors remain held through cleanup and evidence.
++            for fd in reversed(descriptors):
++                os.close(fd)
++            signal.setitimer(signal.ITIMER_REAL, 0)
++            signal.signal(signal.SIGALRM, previous_alarm)
++            for item, handler in handlers.items():
++                signal.signal(item, handler)
++
+     return code
+ 
+ 

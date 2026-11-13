@@ -1,0 +1,104 @@
+"""Receive one bounded public test artifact over SSH, acknowledging disk writes."""
+import datetime
+import gzip
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import struct
+import subprocess
+import sys
+
+os.umask(0o077)
+root = Path('/root/lane-rel-tools/lane-del-combination-4463bbe6')
+directory = root / 'artifact-preparation-91fc9bc6'
+directory.mkdir(mode=0o700, exist_ok=True)
+assert not directory.is_symlink() and directory.stat().st_uid == os.geteuid()
+compressed = directory / 'client.gz.part'
+expected_size = 5908786
+expected_gzip = '973cbd629b86a9b84e257a3d92a16c27d508d2cc28097ffa9eee990341124e7c'
+expected_elf = '91fc9bc6962a5829613fb0cb8d0913995cef856ff0832bce95f6cc587199b708'
+events = directory / 'receive-events.jsonl'
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def emit(value):
+    value['utc'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    with events.open('a') as stream:
+        stream.write(json.dumps(value) + '\n')
+    print(json.dumps(value), flush=True)
+
+
+if not compressed.exists():
+    original = root / 'installed-history-fixed-91fc9bc6.gz.partial'
+    info = original.lstat()
+    assert stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+    assert info.st_size == 2752512
+    assert digest(original) == '787c00f459fff500dd3563fb84a054f412e998c333527fcac7fb5af35db58b97'
+    with compressed.open('xb') as stream:
+        stream.write(original.read_bytes())
+        stream.flush()
+        os.fsync(stream.fileno())
+info = compressed.lstat()
+assert stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid() and not info.st_mode & 0o077
+assert 0 <= info.st_size <= expected_size
+emit({'event': 'ready', 'offset': info.st_size, 'prefix_sha256': digest(compressed)})
+with compressed.open('ab') as stream:
+    offset = info.st_size
+    chunks = 0
+    while offset < expected_size:
+        header = sys.stdin.buffer.readline(256)
+        match = re.fullmatch(rb'([0-9]+) ([0-9a-f]{64})\n', header)
+        assert match, 'Missing or invalid bounded chunk header'
+        length = int(match[1])
+        assert 0 < length <= 65536 and offset + length <= expected_size
+        data = bytearray()
+        while len(data) < length:
+            part = sys.stdin.buffer.read(length - len(data))
+            assert part, 'SSH ended before a complete chunk; no incomplete chunk written'
+            data.extend(part)
+        chunk_digest = hashlib.sha256(data).hexdigest()
+        assert chunk_digest.encode() == match[2]
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
+        offset += length
+        emit({'event': 'chunk', 'offset': offset, 'chunk_sha256': chunk_digest})
+        chunks += 1
+        if chunks == 2 and offset < expected_size:
+            emit({'event': 'paused', 'offset': offset, 'prefix_sha256': digest(compressed)})
+            sys.exit(0)
+assert digest(compressed) == expected_gzip
+target = directory / 'installed-history-linux-amd64'
+if not target.exists():
+    staged = directory / 'elf.staged'
+    assert not staged.exists()
+    with gzip.open(compressed, 'rb') as source, staged.open('xb') as output:
+        total = 0
+        while data := source.read(65536):
+            total += len(data)
+            assert total <= 10505478
+            output.write(data)
+        output.flush()
+        os.fsync(output.fileno())
+    assert total == 10505478 and digest(staged) == expected_elf
+    os.chmod(staged, 0o500)
+    os.rename(staged, target)
+assert not target.is_symlink() and target.stat().st_size == 10505478 and digest(target) == expected_elf
+header = target.read_bytes()[:64]
+assert header[:6] == b'\x7fELF\x02\x01' and struct.unpack_from('<H', header, 18)[0] == 62
+description = subprocess.check_output(['file', str(target)], text=True).strip()
+assert 'statically linked' in description
+receipt = {'event': 'complete', 'binary_path': str(target), 'binary_bytes': target.stat().st_size,
+           'binary_sha256': digest(target), 'gzip_sha256': expected_gzip, 'file': description,
+           'source_sha256': '48ed1588c41cd4ffca484849166ef558be632acafb142b40486fb56f479a856b',
+           'source_test_sha256': 'f77a6d8e1ae1983be5415a3d1937290b953ca664db18097f26f1305a1c933a2d',
+           'mac_proof_sha256': '8f7c695ec66af39dce486aa49a96f17a0c6ece9dccbd48358851b99e413b7bd7',
+           'boundary': 'Artifact reception and ELF validation only; no compiler, services, locks or acceptance phases'}
+(directory / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+emit(receipt)

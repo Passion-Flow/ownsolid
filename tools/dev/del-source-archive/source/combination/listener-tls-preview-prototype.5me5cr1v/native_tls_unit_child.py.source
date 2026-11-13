@@ -1,0 +1,42 @@
+"""Execute the pinned filesystem-only test roots inside private namespaces."""
+from pathlib import Path
+import ctypes,errno,json,os,resource,shutil,subprocess,sys
+
+config=json.loads(Path(sys.argv[1]).read_text());stage=Path(config['stage'])
+assert os.geteuid()==0 and os.getpid()==1 and os.uname().machine=='x86_64'
+subprocess.run(['/usr/bin/mount','--make-rprivate','/'],check=True)
+subprocess.run(['/usr/bin/mount','-t','tmpfs','-o','nosuid,nodev,mode=1777,size='+str(config['tmpfs_bytes']),'tmpfs','/tmp'],check=True)
+subprocess.run(['/usr/bin/mount','-t','sysfs','-o','ro,nosuid,nodev,noexec','sysfs','/sys'],check=True)
+links=json.loads(subprocess.check_output(['/usr/sbin/ip','-json','link','show'],text=True))
+assert [v['ifname'] for v in links]==['lo'] and 'UP' not in links[0]['flags']
+for family in ['-4','-6']:
+ assert json.loads(subprocess.check_output(['/usr/sbin/ip','-json',family,'route','show','table','all'],text=True))==[]
+root=Path(config['unit_root']);root.mkdir(mode=0o755);root.chmod(0o755)
+for relative in ['bin','working/deploy/compose','working/deploy/offline/internal/install','tmp','empty-docker-config']:
+ p=root/relative;p.mkdir(parents=True,exist_ok=True,mode=0o755)
+ for ancestor in [p,*p.parents]:
+  if ancestor==root:break
+  if root in ancestor.parents:ancestor.chmod(0o755)
+binary=root/'bin/installer.test';shutil.copyfile(stage/'installer.test',binary);binary.chmod(0o555)
+compose=root/'working/deploy/compose/compose.yaml';shutil.copyfile(stage/'canonical-compose.yaml',compose);compose.chmod(0o444)
+for name in ['tmp','empty-docker-config']:
+ p=root/name;p.chmod(0o700);os.chown(p,65534,65534)
+resource.setrlimit(resource.RLIMIT_CPU,(config['cpu_seconds'],config['cpu_seconds']))
+resource.setrlimit(resource.RLIMIT_CORE,(0,0));resource.setrlimit(resource.RLIMIT_NOFILE,(64,64))
+resource.setrlimit(resource.RLIMIT_NPROC,(64,64));resource.setrlimit(resource.RLIMIT_FSIZE,(4*1024**2,4*1024**2))
+os.setgroups([]);os.setgid(65534);os.setuid(65534)
+class Filter(ctypes.Structure):
+ _fields_=[('code',ctypes.c_ushort),('jt',ctypes.c_ubyte),('jf',ctypes.c_ubyte),('k',ctypes.c_uint32)]
+class Program(ctypes.Structure):
+ _fields_=[('length',ctypes.c_ushort),('instructions',ctypes.POINTER(Filter))]
+items=[(0x20,0,0,4),(0x15,1,0,0xc000003e),(0x06,0,0,0x80000000),(0x20,0,0,0),(0x35,0,1,0x40000000),(0x06,0,0,0x80000000)]
+for number in [41,42,43,44,45,46,47,49,50,53,288,299,307]:items.extend([(0x15,0,1,number),(0x06,0,0,0x00050000|errno.EPERM)])
+items.append((0x06,0,0,0x7fff0000));filters=(Filter*len(items))(*(Filter(*v) for v in items));program=Program(len(items),filters)
+libc=ctypes.CDLL(None,use_errno=True)
+if libc.prctl(38,1,0,0,0)!=0 or libc.prctl(22,2,ctypes.byref(program),0,0)!=0:raise OSError(ctypes.get_errno(),'Cannot install unit socket restriction')
+status=dict(line.split(':',1) for line in Path('/proc/self/status').read_text().splitlines() if ':' in line)
+assert status['NoNewPrivs'].strip()=='1' and status['Seccomp'].strip()=='2'
+os.chdir(root/'working/deploy/offline/internal/install')
+print(json.dumps({'scope':'Filesystem-only Linux unit tests; no Docker/Control/DB/host listener or egress capture','uid':os.geteuid(),'gid':os.getegid(),'mount_namespace':os.stat('/proc/self/ns/mnt').st_ino,'network_namespace':os.stat('/proc/self/ns/net').st_ino,'pid_namespace':os.stat('/proc/self/ns/pid').st_ino,'only_loopback_down':True,'no_routes':True,'socket_syscalls_denied':True,'no_new_privileges':True,'home_preserved':os.environ['HOME']==config['original_home']}),flush=True)
+os.environ.update(TMPDIR=str(root/'tmp')+'/',DOCKER_CONFIG=str(root/'empty-docker-config'),GOMAXPROCS='1',GOMEMLIMIT=str(config['go_memory_bytes'])+'B')
+os.execv(str(binary),[str(binary),'-test.run='+config['test_pattern'],'-test.v','-test.timeout='+str(config['test_seconds'])+'s'])

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+printf '%s\n' "DEL_WORKSTATION_ENTRY_RETIRED: no job started; wait for the coordinator's explicit epoch activation." >&2
+exit 78

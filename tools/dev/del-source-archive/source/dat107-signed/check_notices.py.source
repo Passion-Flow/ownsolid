@@ -1,0 +1,123 @@
+"""Inspect exact retained Tokenizers notice candidates without extracting them."""
+from collections import Counter
+from hashlib import sha256
+from io import BytesIO
+import json
+from pathlib import Path, PurePosixPath
+import sys
+import tarfile
+import zipfile
+
+
+WHEEL = "tokenizers-0.23.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+WHEEL_SHA = "376851d22bcf9d650a5c3090bb83e6cf9e895fbf0595369fa4cd43c1f69b5f87"
+ELF_SHA = "4b1458a379296762a034d3bc89299c0c35b4eefb0577acca922f481b262c65a1"
+PIP_SHA = "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e"
+
+
+def digest(data):
+    return sha256(data).hexdigest()
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def load_archive(raw, expected):
+    require(digest(raw) == expected, "Candidate archive digest mismatch")
+    files = {}
+    paths = set()
+    with tarfile.open(fileobj=BytesIO(raw), mode="r:gz") as archive:
+        for entry in archive:
+            path = PurePosixPath(entry.name)
+            require(not path.is_absolute() and ".." not in path.parts, "Unsafe archive path")
+            require(path not in paths, "Duplicate archive path")
+            paths.add(path)
+            if entry.isdir():
+                continue
+            require(entry.isreg() and entry.size <= 2 * 1024 * 1024, "Invalid archive member")
+            with archive.extractfile(entry) as member:
+                files[str(path)] = member.read()
+    return files
+
+
+def check_inventory(files, rows):
+    names = {row["path"] for row in rows}
+    require(names | {"inventory.json"} == files.keys(), "Archive membership mismatch")
+    for row in rows:
+        data = files[row["path"]]
+        require(len(data) == row["bytes"] and digest(data) == row["sha256"],
+                f'Inventory member changed: {row["path"]}')
+    return len(names)
+
+
+def expect_error(action, message):
+    try:
+        action()
+    except ValueError as error:
+        require(message in str(error), str(error))
+    else:
+        raise ValueError(f"Corruption was accepted: {message}")
+
+
+def main(wheelhouse, retained):
+    wheel_raw = (wheelhouse / WHEEL).read_bytes()
+    require(digest(wheel_raw) == WHEEL_SHA, "Wheel digest mismatch")
+    with zipfile.ZipFile(BytesIO(wheel_raw)) as wheel:
+        [extension] = [name for name in wheel.namelist() if name.endswith(".so")]
+        [sbom_name] = [name for name in wheel.namelist() if ".dist-info/sboms/" in name]
+        require(digest(wheel.read(extension)) == ELF_SHA, "ELF digest mismatch")
+        embedded_sbom = wheel.read(sbom_name)
+    installer = (retained / "pip-26.2.1-py3-none-any.whl").read_bytes()
+    require(len(installer) == 1_816_632 and digest(installer) == PIP_SHA, "pip pin mismatch")
+
+    dependency_sha = "2eb423cd61dec1cf9a2e0c0349d954d2daa15341e86db6b064e7408069d93204"
+    dependency_raw = (retained / "tokenizers-0.23.3-linux-amd64-notices.tar.gz").read_bytes()
+    dependency_files = load_archive(dependency_raw, dependency_sha)
+    require(digest(dependency_files["inventory.json"]) ==
+            "d74c6d354671f827e7bdb7c2d82b872da1f30809d6c2b13cbcf4d252fbda76bc",
+            "Dependency inventory pin mismatch")
+    dependency = json.loads(dependency_files["inventory.json"])
+    require((dependency["wheel"], dependency["wheel_sha256"], dependency["native_extension_sha256"]) ==
+            (WHEEL, WHEEL_SHA, ELF_SHA), "Dependency notice wheel or ELF binding mismatch")
+    require(embedded_sbom == dependency_files["upstream/wheel-sbom.json"], "Embedded SBOM bytes differ")
+    sbom = json.loads(embedded_sbom)
+    components = dependency["components"]
+    component_keys = lambda rows: Counter((row["name"], row["version"]) for row in rows)
+    require(len(components) == 127 and component_keys(components) == component_keys(sbom["components"]),
+            "Notice coverage differs from the embedded SBOM")
+    require(all(row.get("notices") for row in components), "SBOM component lacks retained notices")
+    dependency_rows = dependency["evidence"] + [dependency["upstream_license"]]
+    for row in components:
+        dependency_rows.extend(row["notices"])
+        evidence = row.get("source_evidence")
+        if evidence:
+            dependency_rows.append(evidence)
+            vcs = json.loads(dependency_files[evidence["path"]])
+            require(vcs["git"]["sha1"] == row["source_commit"], "Source commit evidence differs")
+    dependency_count = check_inventory(dependency_files, dependency_rows)
+
+    rust_sha = "39b279fc31fb3bbf743cf0569d7605dd92125aa0fe305e99b5675aae44a0d787"
+    rust_raw = (retained / "tokenizers-0.23.3-linux-amd64-rust-std-notices.tar.gz").read_bytes()
+    rust_files = load_archive(rust_raw, rust_sha)
+    require(digest(rust_files["inventory.json"]) ==
+            "79e88854fbb39e90e37dc9adad3e0f324a1d43e652550924aaf5e97094a0ca3f",
+            "Rust inventory pin mismatch")
+    rust = json.loads(rust_files["inventory.json"])
+    require((rust["wheel_sha256"], rust["elf_sha256"]) == (WHEEL_SHA, ELF_SHA),
+            "Rust notice wheel or ELF binding mismatch")
+    rust_count = check_inventory(rust_files, rust["files"])
+    require(rust_count == 18, "Rust notice file count differs")
+
+    changed = dependency_raw[:-1] + bytes([dependency_raw[-1] ^ 1])
+    expect_error(lambda: load_archive(changed, dependency_sha), "Candidate archive digest mismatch")
+    changed_rust = rust_files | {"COPYRIGHT-library.html": b"changed"}
+    expect_error(lambda: check_inventory(changed_rust, rust["files"]), "Inventory member changed")
+    print("Pinned installer, wheel, native extension and embedded CycloneDX SBOM matched")
+    print(f"127 SBOM components, {dependency_count} dependency archive files and {rust_count} Rust files matched")
+    print("Changed archive and changed Rust notice bytes were refused")
+
+
+if __name__ == "__main__":
+    main(Path(sys.argv[1]), Path(sys.argv[2]))

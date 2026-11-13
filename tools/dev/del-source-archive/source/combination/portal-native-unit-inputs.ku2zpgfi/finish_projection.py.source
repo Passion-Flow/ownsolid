@@ -1,0 +1,18 @@
+from pathlib import Path
+import hashlib,json,subprocess
+repo=Path('/root/lane-del-entrance-projection');stage=Path('/root/lane-rel-tools/portal-native-unit-inputs.szhs0gfc')
+v=json.loads((stage/'source.json').read_text());result=json.loads(Path('/root/lane-rel-tools/portal-unit-native.de8rfidx/result.json').read_text())
+assert result['passed'] and result['exit']==0 and result['root_count']==15 and result['test_run_count']==50
+for name,sha in v['files'].items():assert hashlib.sha256((repo/name).read_bytes()).hexdigest()==sha
+p=stage/'research-update.json';update=json.loads(p.read_text());research=repo/'docs/research/installer-entrance-listeners.md'
+assert hashlib.sha256(research.read_bytes()).hexdigest()==update['before_sha256'];research.write_text(update['text'])
+for args in [['make','check-layout'],['python3','tools/dev/roadmap_progress.py','--check'],['git','diff','--check']]:subprocess.run(args,cwd=repo,check=True)
+expected=set(v['files']);actual=subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True);assert {line[3:] for line in actual.splitlines()}==expected
+subprocess.run(['git','add','--',*sorted(expected)],cwd=repo,check=True)
+subprocess.run(['git','diff','--cached','--check'],cwd=repo,check=True)
+print(subprocess.check_output(['git','diff','--cached','--stat'],cwd=repo,text=True))
+subprocess.run(['git','-c','user.name=Passion.','-c','user.email=279058513+Passion-Flow@users.noreply.github.com','commit','-m','DEL-114: Project separate Portal listeners without replacing serving identity','-m','Keep one canonical Compose source and preserve shared bytes, keys and optional-field fingerprints. Admit the actual current image against a private desired snapshot before replacing installed configuration; preserve advertised origins and reject incompatible or foreign identities. Reuse only an exact installed projection during operational restore. Batch both publication checks and probe each listener with pinned TLS, refusing redirects. Keep the complete transport matrix and actual Compose/image/installed acceptance open. Verified full make check, full installer tests (31.340s), vet and Linux amd64 installer build; isolated Linux UID 65534 passed 15 roots/50 RUN with no skips (0.279832s). Retain the earlier zero-test namespace-view refusal.'],cwd=repo,check=True)
+assert not subprocess.check_output(['git','status','--porcelain'],cwd=repo)
+subprocess.run(['git','bundle','create','/root/lane-rel-tools/del-portal-projection-complete.bundle',v['base']+'..HEAD'],cwd=repo,check=True)
+print('SOURCE',subprocess.check_output(['git','rev-parse','HEAD','HEAD^{tree}'],cwd=repo,text=True))
+print('BUNDLE',hashlib.sha256(Path('/root/lane-rel-tools/del-portal-projection-complete.bundle').read_bytes()).hexdigest())

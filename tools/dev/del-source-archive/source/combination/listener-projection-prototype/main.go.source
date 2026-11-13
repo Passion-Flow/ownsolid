@@ -1,0 +1,38 @@
+package main
+
+import (
+ "crypto/sha256"
+ "fmt"
+ "os"
+ "reflect"
+ "go.yaml.in/yaml/v3"
+)
+
+func field(n *yaml.Node, name string) *yaml.Node {
+ if n.Kind != yaml.MappingNode { panic("mapping required") }
+ for i:=0;i<len(n.Content);i+=2 { if n.Content[i].Value==name { return n.Content[i+1] } }
+ panic("missing field: "+name)
+}
+
+func main() {
+ raw,err:=os.ReadFile(os.Args[1]); if err!=nil {panic(err)}
+ var doc yaml.Node; if err=yaml.Unmarshal(raw,&doc);err!=nil {panic(err)}
+ ports:=field(field(field(doc.Content[0],"services"),"control"),"ports")
+ if ports.Kind!=yaml.SequenceNode || len(ports.Content)!=1 {panic("canonical port required")}
+ var extra yaml.Node
+ if err=extra.Encode(map[string]any{"target":9443,"published":"19443","host_ip":"127.0.0.1","protocol":"tcp"});err!=nil {panic(err)}
+ ports.Content=append(ports.Content,&extra)
+ projected,err:=yaml.Marshal(&doc);if err!=nil {panic(err)}
+ var before,after map[string]any
+ if err=yaml.Unmarshal(raw,&before);err!=nil {panic(err)}
+ if err=yaml.Unmarshal(projected,&after);err!=nil {panic(err)}
+ control:=after["services"].(map[string]any)["control"].(map[string]any)
+ values:=control["ports"].([]any)
+ added:=values[1].(map[string]any)
+ if added["target"]!=9443 || added["published"]!="19443" || added["host_ip"]!="127.0.0.1" || added["protocol"]!="tcp" {panic("port types changed")}
+ control["ports"]=values[:1]
+ if !reflect.DeepEqual(before,after) {panic("projection changes unrelated Compose semantics")}
+ if err=os.WriteFile(os.Args[2],projected,0600);err!=nil {panic(err)}
+ fmt.Printf("YAML_NODE_PROJECTION_SEMANTICS_PRESERVED source=%x projected=%x\n",sha256.Sum256(raw),sha256.Sum256(projected))
+ fmt.Println("No native Compose parser, image or service was invoked")
+}

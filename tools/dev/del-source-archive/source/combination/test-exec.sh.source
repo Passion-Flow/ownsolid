@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+case "$PWD" in */services/agent/internal/training) export TMPDIR="$OWNSOLID_DEL_RAM_TMP/" ;; esac
+exec "$@"

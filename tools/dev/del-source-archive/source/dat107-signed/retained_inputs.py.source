@@ -1,0 +1,60 @@
+"""Read retained preview inputs without staging or installing a runtime."""
+import hashlib
+import json
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import check_notices
+
+repo, cache, retained = map(Path, sys.argv[1:4])
+sys.path.insert(0, str(repo / "tools/release/offline"))
+import tokenizer_wheelhouse as fixture
+
+training = repo / "runtimes/training"
+runtime_raw = fixture.read_contract(training / "runtime.json")
+runtime = json.loads(runtime_raw)
+full_lock = fixture.read_contract(training / "requirements" / fixture.LOCK)
+pins, projected = fixture.project_lock(full_lock, runtime["locks"][fixture.LOCK])
+found = {}
+notices = 0
+manufacturing = runtime["linux_manufacturing"]
+platforms = set(manufacturing["platforms"]) | {"any"}
+abis = set(manufacturing["abis"])
+for path in sorted(cache.glob("*.whl")):
+    match = fixture.WHEEL.fullmatch(path.name)
+    fixture.require(match is not None, "Invalid retained wheel filename")
+    distribution, version, _, abi, platform = match.groups()
+    name = fixture.normalized(distribution)
+    if name not in pins:
+        continue
+    expected_version, hashes = pins[name]
+    fixture.require(name not in found and version == expected_version, "Duplicate or wrong wheel pin")
+    fixture.require(platforms.intersection(platform.split(".")) and abis.intersection(abi.split(".")),
+                    "Incompatible retained wheel")
+    with path.open("rb") as stream:
+        actual = hashlib.file_digest(stream, "sha256").hexdigest()
+    fixture.require(actual in hashes, f"Retained wheel digest differs: {name}")
+    metadata = fixture.wheel_inventory(path, name, version)
+    fixture.require(bool(metadata["notices"]) or name == "tokenizers", f"Missing wheel notices: {name}")
+    notices += len(metadata["notices"])
+    found[name] = actual
+fixture.require(found.keys() == pins.keys(), "Incomplete retained wheelhouse")
+installer = manufacturing["image_installer"]
+pip_path = retained / installer["filename"]
+fixture.require(pip_path.stat().st_size == installer["size_bytes"], "Retained installer size differs")
+with pip_path.open("rb") as stream:
+    fixture.require(hashlib.file_digest(stream, "sha256").hexdigest() == installer["sha256"],
+                    "Retained installer digest differs")
+check_notices.main(cache, retained)
+print(json.dumps({
+    "profile": "retained_input_readback_only",
+    "source_commit": sys.argv[4],
+    "runtime_sha256": hashlib.sha256(runtime_raw).hexdigest(),
+    "full_lock_sha256": hashlib.sha256(full_lock).hexdigest(),
+    "projected_lock_sha256": hashlib.sha256(projected).hexdigest(),
+    "selected_wheels": len(found),
+    "embedded_wheel_notices": notices,
+    "pip_version": installer["version"],
+    "pip_sha256": installer["sha256"],
+}, sort_keys=True))

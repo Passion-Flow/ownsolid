@@ -1,0 +1,24 @@
+from pathlib import Path
+import sys,hashlib,gzip,shutil,json,signal,time,os
+start=time.monotonic()
+def timeout(signum,frame):raise TimeoutError('Binary upload deadline reached')
+signal.signal(signal.SIGALRM,timeout);signal.setitimer(signal.ITIMER_REAL,150)
+p=Path('/root/lane-rel-tools/listener-tls-unit-inputs');assert p.is_dir() and not p.is_symlink()
+f=p/'installer.test.gz';assert not os.path.lexists(f)
+record={'scope':'Inert test ELF upload only; not executed','expected_gzip_bytes':10329686,'expected_gzip_sha256':'ecffed38dbe74e2dff5ff28259d789974f1c1082b3f98c00027eb33ed8894385','status':'incomplete'}
+try:
+ with f.open('xb') as target:shutil.copyfileobj(sys.stdin.buffer,target,1024*1024)
+ record['gzip_bytes']=f.stat().st_size;record['gzip_sha256']=hashlib.file_digest(f.open('rb'),'sha256').hexdigest()
+ assert record['gzip_bytes']==record['expected_gzip_bytes'] and record['gzip_sha256']==record['expected_gzip_sha256']
+ target=p/'installer.test.pending';assert not target.exists()
+ with gzip.open(f,'rb') as source,target.open('xb') as output:
+  copied=0
+  while data:=source.read(1024*1024):
+   copied+=len(data);assert copied<=18027355;output.write(data)
+ record['elf_bytes']=target.stat().st_size;record['elf_sha256']=hashlib.file_digest(target.open('rb'),'sha256').hexdigest()
+ assert record['elf_bytes']==18027355 and record['elf_sha256']=='de5d6635221c2b377742a1a70f520b91dce869cc6ab0f38b701c22919d869309'
+ os.chmod(target,0o400);os.rename(target,p/'installer.test');record['status']='upload-verified-not-executed'
+finally:
+ record['elapsed_seconds']=time.monotonic()-start
+ (p/'binary-upload.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record),flush=True)
+ signal.setitimer(signal.ITIMER_REAL,0)

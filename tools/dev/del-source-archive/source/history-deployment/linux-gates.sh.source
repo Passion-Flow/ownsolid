@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(realpath "$1")
+case "$root" in /root/lane-rel-tools/lane-del-source.????????) ;; *) exit 1 ;; esac
+source /root/lane-rel-tools/env
+export GOMAXPROCS=2 GOFLAGS=-p=1 GOPROXY=off GOSUMDB=off
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2
+export VITEST_MAX_WORKERS=2 npm_config_offline=true PYTHONDONTWRITEBYTECODE=1
+exec 9>/run/lock/ownsolid-heavy.lock
+for attempt in $(seq 1 12); do
+ if flock -w 45 -E 75 9; then break; fi
+ echo "Shared Linux lock still held; repository gates have not started"
+ if [ "$attempt" -eq 12 ]; then exit 75; fi
+done
+exec 8>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 8
+df -h /
+free -m
+cat /proc/pressure/io
+awk '/^MemAvailable:/ {a=$2} /^MemFree:/ {f=$2} END {exit !(a>=4194304 && f>=2097152)}' /proc/meminfo
+awk '/^full / {split($2,x,"=");exit !(x[2]<=20)}' /proc/pressure/io
+cd "$root/work"
+test -z "$(git status --porcelain)"
+echo "SOURCE_COMMIT=$(git rev-parse HEAD)"
+cleanup(){
+ status=$?
+ test ! -f tools/audit-verify/audit-verify || rm -- tools/audit-verify/audit-verify
+ git status --short
+ exit "$status"
+}
+trap cleanup EXIT
+unshare --net bash -ec '
+ ip link set lo up
+ test "$(ip -o link show | wc -l)" -eq 1
+ test -z "$(ip route show default)"
+ test -z "$(ip -6 route show default)"
+ pnpm --dir web install --offline --frozen-lockfile --ignore-scripts
+ make check
+ echo MAKE_CHECK_PASSED
+ make build
+ echo MAKE_BUILD_PASSED
+ go -C deploy/offline test ./... -count=1
+ go -C deploy/offline vet ./...
+ echo LINUX_INSTALLER_TESTS_AND_VET_PASSED
+'

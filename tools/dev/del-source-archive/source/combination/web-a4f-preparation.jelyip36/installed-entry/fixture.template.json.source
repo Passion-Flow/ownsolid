@@ -1,0 +1,26 @@
+{
+  "sourceSha": "FULL_NEW_FROZEN_SOURCE_SHA",
+  "imageDigest": "sha256:NEW_IMMUTABLE_IMAGE_DIGEST",
+  "schemaVersion": 60,
+  "stableTables": 120,
+  "readyFile": "/absolute/path/to/new-installed-ready.json",
+  "readySha256": "SHA256_OF_EXACT_READY_FILE",
+  "adminOrigin": "https://admin.private.invalid",
+  "portalOrigin": "https://portal.private.invalid",
+  "admin": {
+    "email": "admin@private.invalid",
+    "passwordFile": "/absolute/private/admin-password.json"
+  },
+  "member": {
+    "email": "member@private.invalid",
+    "passwordFile": "/absolute/private/member-password.json"
+  },
+  "site": "default",
+  "cell": "default",
+  "workspace": "OWN_WORKSPACE_UUID",
+  "otherWorkspace": "FOREIGN_WORKSPACE_UUID",
+  "alias": "OWNED_ALIAS_UUID",
+  "aliasName": "del-gw120-OWNED_ALIAS_NAME",
+  "deployment": "REAL_DEPLOYMENT_UUID",
+  "fixturePrefix": "del-gw120-"
+}

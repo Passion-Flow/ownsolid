@@ -1,0 +1,53 @@
+#!/bin/sh
+set -eu
+recorder=
+daemon=
+cleanup(){
+ status=$?
+ if [ -n "$daemon" ]; then kill "$daemon" 2>/dev/null || true; wait "$daemon" 2>/dev/null || true; fi
+ if [ -n "$recorder" ]; then kill "$recorder" 2>/dev/null || true; wait "$recorder" 2>/dev/null || true; fi
+ cat /tmp/egress.jsonl 2>/dev/null || true
+ tail -12 /tmp/dockerd.log 2>/dev/null || true
+ exit "$status"
+}
+trap cleanup EXIT
+/bundle/egress-recorder -interface egress0 -log /tmp/egress.jsonl &
+recorder=$!
+for n in $(seq 1 50); do
+ if ip link show egress0 >/dev/null 2>&1; then break; fi
+ sleep .1
+done
+ip link set lo up
+ip link set egress0 up
+ip addr add 198.18.0.1/32 dev egress0
+ip -6 addr add 2001:db8:e9e5::1/128 dev egress0
+sleep 2
+ip route add default dev egress0
+ip -6 route add default dev egress0
+printf 'nameserver 192.0.2.53\n' > /etc/resolv.conf
+/bundle/probe
+sleep .2
+test "$(wc -l < /tmp/egress.jsonl)" = 3
+dockerd --host unix:///var/run/docker.sock --log-level error > /tmp/dockerd.log 2>&1 &
+daemon=$!
+for n in $(seq 1 90); do
+ if docker info >/dev/null 2>&1; then break; fi
+ sleep 1
+done
+docker info >/dev/null
+docker load -i /bundle/images.tar >/dev/null
+mkdir -p /tmp/history-tests
+TMPDIR=/tmp/history-tests OWNSOLID_HISTORY_DOCKER=1 \
+ OWNSOLID_HISTORY_METRICS_IMAGE="$METRICS_IMAGE" \
+ OWNSOLID_HISTORY_EVALUATOR_IMAGE="$EVALUATOR_IMAGE" \
+ OWNSOLID_HISTORY_INSTALLER=/bundle/ownsolid-install \
+ OWNSOLID_HISTORY_RULES_FILE=/bundle/fleet-rollup-rules.yaml \
+ OWNSOLID_HISTORY_PROBE=/bundle/probe \
+ /bundle/history.test -test.run '^TestFleetHistoryPrivateDeploymentDocker$' -test.v -test.timeout 360s
+test "$(wc -l < /tmp/egress.jsonl)" = 5
+test "$(grep -Fc '"destination":"192.0.2.10:9"' /tmp/egress.jsonl)" = 2
+test "$(grep -Fc '"destination":"[2001:db8::10]:9"' /tmp/egress.jsonl)" = 1
+test "$(grep -Fc '"destination":"192.0.2.53:53"' /tmp/egress.jsonl)" = 2
+test "$(grep -Fc '"dns_question":"probe.invalid. A"' /tmp/egress.jsonl)" = 2
+kill -0 "$recorder"
+echo 'Only the deliberate host IPv4/IPv6/DNS and workload IPv4/DNS probes were captured'

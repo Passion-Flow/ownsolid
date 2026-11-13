@@ -1,0 +1,119 @@
+--- native_transport_parent.py
++++ image_inventory_parent.py
+@@ -1,4 +1,4 @@
+-"""One scheduled Linux command-lifetime experiment; no installation qualification."""
++"""One scheduled cached-image filesystem inspection; never start the container."""
+ import argparse
+ import fcntl
+ import hashlib
+@@ -33,10 +33,10 @@
+     os.umask(0o077)
+     start = time.monotonic()
+     deadline = start + config['hard_seconds']
+-    output = Path(tempfile.mkdtemp(prefix='command-transport-native.', dir=config['output_parent']))
++    output = Path(tempfile.mkdtemp(prefix='image-inventory-native.', dir=config['output_parent']))
+     print(output, flush=True)
+     run_id = str(uuid.uuid4())
+-    result = {'scope': 'Real command lifetime observation; no product fix, database, installed flow or zero-egress qualification',
++    result = {'scope': 'Never-started cached image inspection only; no runtime, license approval, installed flow or zero-egress qualification',
+               'run_id': run_id, 'status': 'prepared', 'leases': [], 'commands': [], 'cases': [], 'cleanup_errors': []}
+     descriptors = []
+     fixture = None
+@@ -185,58 +185,47 @@
+         assert version['Client']['Version'] == config['docker_version'] and version['Server']['Version'] == config['docker_version']
+         _, compose_version = docker('compose', 'version', '--short')
+         result['versions'] = {'docker': config['docker_version'], 'compose': compose_version.strip()}
+-        fixture = Path(tempfile.mkdtemp(prefix='lane-del-command-', dir=config['fixture_parent']))
+-        fixture.chmod(0o700)
+-        binary = fixture / 'prototype.test'
+-        shutil.copyfile(config['binary'], binary)
+-        binary.chmod(0o555)
+-        assert digest(binary) == config['binary_sha256']
+-        for kind in ['direct', 'compose']:
+-            name = 'lane-del-cancel-' + run_id[:20] + '-' + kind
+-            if inspect(name) is not None:
+-                raise RuntimeError('Prototype name is occupied; preserve it')
+-            project = name
+-            if networks(project):
+-                raise RuntimeError('Prototype project network namespace is occupied; preserve it')
+-            case = {'kind': kind, 'container': name, 'project': project}
+-            result['cases'].append(case)
+-            compose_file = fixture / (kind + '.json')
+-            service = {'image': config['image'], 'container_name': name, 'network_mode': 'none',
+-                       'entrypoint': ['/bin/sh', '-c', 'sleep ' + str(config['container_seconds'])],
+-                       'volumes': [str(binary) + ':/fixture/prototype.test:ro'], 'cpus': config['cpus'],
+-                       'mem_limit': config['memory_bytes'], 'memswap_limit': config['memory_bytes'],
+-                       'pids_limit': config['pids_limit'],
+-                       'labels': {'io.ownsolid.prototype.run_id': run_id}}
+-            # This service uses the explicit none network and has no published port.
+-            save(compose_file, {'services': {'probe': service}})
+-            prefix = ['compose', '--project-name', project, '--file', str(compose_file)]
+-            containers.append(name)
+-            docker(*prefix, 'up', '--detach', '--pull', 'never', '--no-build')
+-            observed = inspect(name)
+-            assert observed is not None and observed['HostConfig']['NetworkMode'] == 'none'
+-            assert not observed['HostConfig'].get('PortBindings')
+-            assert observed['HostConfig']['Memory'] == config['memory_bytes']
+-            assert observed['Config']['Labels']['io.ownsolid.prototype.run_id'] == run_id
+-            target = (['exec', '--interactive', name] if kind == 'direct'
+-                      else [*prefix, 'exec', '--no-TTY', 'probe'])
+-            args = [str(binary), '-test.run=^TestTemporaryCommandTransport$', '-test.v',
+-                    '-test.timeout=' + str(config['test_seconds']) + 's', '--',
+-                    config['docker'], '--host', 'unix://' + config['docker_socket'], *target,
+-                    '/fixture/prototype.test', '-test.run=^TestTemporaryCommandCancellationHelper$',
+-                    '-test.timeout=5s', '--', 'parent']
+-            _, raw = command(args, limit=config['test_seconds'] + config['join_seconds'])
+-            match = re.search(r'TRANSPORT_CANCEL_TO_RETURN_SECONDS=([0-9.]+)', raw)
+-            if match is None or 'TRANSPORT_OBSERVATION_ONLY' not in raw:
+-                raise RuntimeError('Transport observer did not report an actual dispatch and cancellation')
+-            case['cancel_to_return_seconds'] = float(match.group(1))
+-            _, top = docker('top', name, '-eo', 'pid,comm,args')
+-            case['remote_helpers_after_return'] = [line for line in top.splitlines()[1:] if '/fixture/prototype.test' in line]
+-            case['observation'] = ('returned-with-remote-helper' if case['remote_helpers_after_return']
+-                                   else 'no-helper-observed-after-return')
+-            close_container(name)
++        name = 'lane-del-image-inventory-' + run_id[:20]
++        if inspect(name) is not None or networks(name):
++            raise RuntimeError('Inventory name is occupied; preserve it')
++        containers.append(name)
++        docker('create', '--pull', 'never', '--name', name, '--network', 'none',
++               '--read-only', '--cpus', str(config['cpus']), '--memory', str(config['memory_bytes']),
++               '--memory-swap', str(config['memory_bytes']), '--pids-limit', str(config['pids_limit']),
++               '--no-healthcheck', '--label', 'io.ownsolid.prototype.run_id=' + run_id,
++               '--entrypoint', '/bin/false', config['image'])
++        state = inspect(name)
++        assert state is not None and state['State']['Status'] == 'created'
++        assert not state['State']['Running'] and state['State']['Pid'] == 0
++        assert state['HostConfig']['NetworkMode'] == 'none' and state['HostConfig']['ReadonlyRootfs']
++        assert not state['HostConfig'].get('PortBindings')
++        save(output / 'never-started-container.json', state)
++        case = {'kind': 'never-started-image-inventory', 'container': name, 'copies': {}}
++        result['cases'].append(case)
++        for source, target, required in [('/lib/apk/db/installed', 'apk-installed', True),
++                                         ('/etc/alpine-release', 'alpine-release', True),
++                                         ('/usr/share/licenses', 'image-licenses', False)]:
++            status, _ = docker('cp', '--quiet', name + ':' + source, str(output / target), permit_failure=True)
++            case['copies'][source] = {'exit': status, 'target': target}
++            if required:
++                assert status == 0 and stat.S_ISREG((output / target).lstat().st_mode)
++                case['copies'][source]['sha256'] = digest(output / target)
++        packages = []
++        for paragraph in (output / 'apk-installed').read_text().split('\n\n'):
++            fields = dict(line.split(':', 1) for line in paragraph.splitlines()
++                          if len(line) > 1 and line[1] == ':' and line[0] in 'PVLUo')
++            if fields:
++                assert fields.get('P') and fields.get('V') and fields.get('L')
++                packages.append(fields)
++        assert packages
++        save(output / 'declared-package-licenses.json', packages)
++        case['package_count'] = len(packages)
++        case['declared_licenses'] = sorted({item['L'] for item in packages})
++        case['scope'] = 'Declared package metadata only; notices still need review; no image code was executed'
++        close_container(name)
+         assert digest(config['binary']) == config['binary_sha256']
+         assert not subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'])
+-        result['status'], code = 'experiment-completed', 0
++        result['status'], code = 'image-inventory-collected', 0
+     except BaseException as error:
+         result['status'] = 'failed'
+         result['error'] = type(error).__name__ + ': ' + str(error)

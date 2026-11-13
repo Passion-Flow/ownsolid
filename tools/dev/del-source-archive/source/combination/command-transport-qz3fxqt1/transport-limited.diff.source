@@ -1,0 +1,19 @@
+--- restricted-unrun
++++ client-limited-unrun
+@@ -205,6 +205,8 @@
+         assert config['test_seconds'] <= 15 and config['join_seconds'] <= config['cleanup_seconds']
+         assert config['hard_seconds'] == 60 and config['cleanup_seconds'] == 20
+         assert Path(environment['HOME']).stat().st_uid == 0 and Path(environment['HOME']).stat().st_mode & 0o077 == 0
++        assert config['exec_environment'] == '/usr/bin/env'
++        assert digest(config['exec_environment']) == config['exec_environment_sha256']
+         assert digest(config['docker']) == config['docker_sha256']
+         assert digest(config['compose_plugin']) == config['compose_sha256']
+         source = Path(config['source'])
+@@ -299,6 +301,7 @@
+                       else [*prefix, 'exec', '--no-TTY', 'probe'])
+             args = [str(binary), '-test.run=^TestTemporaryCommandTransport$', '-test.v',
+                     '-test.timeout=' + str(config['test_seconds']) + 's', '--',
++                    config['exec_environment'], 'GOMAXPROCS=1', 'GOMEMLIMIT=134217728B',
+                     config['docker'], '--host', 'unix://' + config['docker_socket'], *target,
+                     '/fixture/prototype.test', '-test.run=^TestTemporaryCommandCancellationHelper$',
+                     '-test.timeout=5s', '--', 'parent']

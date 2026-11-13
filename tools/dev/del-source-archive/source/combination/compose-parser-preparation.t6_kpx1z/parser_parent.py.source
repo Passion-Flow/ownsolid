@@ -1,0 +1,194 @@
+"""One reviewed native client-parser experiment; never contact a daemon or execute image code."""
+from pathlib import Path
+import argparse
+import copy
+import hashlib
+import json
+import os
+import re
+import shutil
+import signal
+import stat
+import subprocess
+import tempfile
+import time
+
+
+def digest(path):
+    with Path(path).open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def save(path, value):
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + '\n')
+
+
+def run(config, config_path):
+    started = time.monotonic()
+    os.umask(0o077)
+    assert os.geteuid() == 0 and os.uname().machine == 'x86_64'
+    assert config['hard_seconds'] == 30 and config['cleanup_seconds'] == 10
+    assert config['operation_seconds'] == 4 and config['cpu_seconds'] == 5
+    assert config['go_memory_bytes'] == 134217728 and config['maximum_output_bytes'] == 4 * 1024**2
+    assert re.fullmatch(r'[0-9a-f]{40}', config['candidate']) and re.fullmatch(r'[0-9a-f]{40}', config['tree'])
+    source, inputs = Path(config['source']), Path(config['inputs'])
+    output = Path(tempfile.mkdtemp(prefix='compose-parser-native.', dir=config['output_parent']))
+    print(output, flush=True)
+    result = {'scope': 'Synthetic client parser only; no Control CLI, image execution, daemon, installed flow or egress-attempt capture',
+              'parent_pid': os.getpid(), 'status': 'prepared', 'commands': [], 'cleanup_errors': [],
+              'heavy_leases': 'Not requested or opened for this bounded client parser'}
+    deadline = started + config['hard_seconds']
+    child = fixture = None
+    fixture_identity = None
+    models = {}
+    code = 1
+
+    def timed_out(signum, frame):
+        raise TimeoutError('Parser parent deadline reached')
+    previous = signal.signal(signal.SIGALRM, timed_out)
+    signal.alarm(config['hard_seconds'])
+    try:
+        def git(*args):
+            return subprocess.check_output(['git', '-C', str(source), *args], text=True, timeout=2).strip()
+        assert git('rev-parse', 'HEAD') == config['candidate'] and git('rev-parse', 'HEAD^{tree}') == config['tree']
+        assert not git('status', '--porcelain')
+        assert stat.S_ISREG((inputs / 'input-manifest.json').lstat().st_mode)
+        assert digest(inputs / 'input-manifest.json') == config['manifest_sha256']
+        manifest = json.loads((inputs / 'input-manifest.json').read_text())
+        assert manifest['canonical_sha256'] == digest(source / 'deploy/compose/compose.yaml')
+        assert digest(config['child']) == config['child_sha256']
+        assert digest('/usr/bin/docker') == config['docker_sha256']
+        assert digest('/usr/libexec/docker/cli-plugins/docker-compose') == config['compose_sha256']
+        plugin_paths = [Path(root) / 'docker-compose' for root in ['/usr/local/lib/docker/cli-plugins', '/usr/local/libexec/docker/cli-plugins', '/usr/lib/docker/cli-plugins', '/usr/libexec/docker/cli-plugins']]
+        assert [str(path) for path in plugin_paths if path.exists()] == ['/usr/libexec/docker/cli-plugins/docker-compose']
+        expected = set(manifest['files']) | {'input-manifest.json'}
+        assert {str(path.relative_to(inputs)) for path in inputs.rglob('*') if path.is_file()} == expected
+        for name, expected_digest in manifest['files'].items():
+            assert Path(name).parts[0] in ['shared', 'split', 'shared-again', 'split-override']
+            assert len(Path(name).parts) == 2 and Path(name).name in ['compose.yaml', '.env', 'desired-serving-intent.json', 'compose.override.yaml']
+            path = inputs / name
+            info = path.lstat()
+            assert stat.S_ISREG(info.st_mode) and info.st_size < 1024**2 and digest(path) == expected_digest
+        home = os.environ['HOME']
+        assert Path(home).stat().st_uid == 0 and Path(home).stat().st_mode & 0o077 == 0
+        result['source'] = {'candidate': config['candidate'], 'tree': config['tree'], 'clean': True,
+                            'wrapper_sha256': digest(__file__), 'config_sha256': digest(config_path),
+                            'child_sha256': config['child_sha256'], 'manifest_sha256': config['manifest_sha256']}
+        result['resources'] = {'meminfo': Path('/proc/meminfo').read_text(), 'io': Path('/proc/pressure/io').read_text(),
+                               'disk_free_bytes': shutil.disk_usage(config['fixture_parent']).free}
+        shutil.copyfile(__file__, output / 'parent.py')
+        shutil.copyfile(config_path, output / 'runtime.json')
+        fixture = Path(tempfile.mkdtemp(prefix='lane-del-compose-parser-', dir=config['fixture_parent']))
+        fixture_identity = fixture.stat()
+        fixture.chmod(0o711)
+        shutil.copyfile(config['child'], fixture / 'child.py')
+        (fixture / 'child.py').chmod(0o444)
+        docker_config = fixture / 'empty-docker-config'
+        docker_config.mkdir(mode=0o700)
+        os.chown(docker_config, 65534, 65534)
+        for case in ['shared', 'split', 'shared-again', 'split-override']:
+            available = deadline - time.monotonic() - config['cleanup_seconds']
+            if available <= 0:
+                raise TimeoutError('Parser work allowance exhausted')
+            work = fixture / case
+            shutil.copytree(inputs / case, work)
+            for path in [work, *work.iterdir()]:
+                os.chown(path, 65534, 65534)
+                path.chmod(0o700 if path.is_dir() else 0o400)
+            installation = work / 'installation'
+            for name in ['config', 'operator', 'socket', 'secrets', 'data/postgres', 'data/metrics', 'data/logs', 'data/models']:
+                (installation / name).mkdir(parents=True, exist_ok=True, mode=0o700)
+            (installation / 'secrets/postgres-password').write_bytes(b'')
+            for path in [installation, *installation.rglob('*')]:
+                os.chown(path, 65534, 65534)
+                path.chmod(0o700 if path.is_dir() else 0o400)
+            intent = json.loads((work / 'desired-serving-intent.json').read_text())
+            assert len(intent) == (9 if case.startswith('split') else 8)
+            assert intent.get('portal_listen_address') == ('0.0.0.0:9443' if case.startswith('split') else None)
+            proof_path = work / 'guard.json'
+            runtime = dict(original_home=home, host_network_inode=os.stat('/proc/self/ns/net').st_ino,
+                           cpu_seconds=config['cpu_seconds'], maximum_output_bytes=config['maximum_output_bytes'], proof=str(proof_path))
+            child_config = fixture / (case + '-runtime.json')
+            save(child_config, runtime)
+            child_config.chmod(0o444)
+            environment = {'PATH': '/usr/bin:/bin', 'HOME': home, 'DOCKER_CONFIG': str(docker_config),
+                           'DOCKER_HOST': 'unix://' + str(fixture / 'absent-daemon.sock'),
+                           'COMPOSE_PROFILES': 'operator', 'PARSER_INSTALL_ROOT': str(installation),
+                           'GOMAXPROCS': '1', 'GOMEMLIMIT': '134217728B'}
+            argv = ['/usr/bin/unshare', '--mount', '--net', '--pid', '--fork', '--kill-child=KILL', '--mount-proc',
+                    '/usr/bin/python3', '-I', str(fixture / 'child.py'), str(child_config)]
+            record = {'case': case, 'docker_argv': ['/usr/bin/docker', 'compose', 'config', '--format', 'json']}
+            result['commands'].append(record)
+            save(output / 'result.json', result)
+            begin = time.monotonic()
+            with (work / 'stdout.json').open('wb') as stdout, (output / (case + '-stderr.log')).open('wb') as stderr:
+                child = subprocess.Popen(argv, cwd=work, env=environment, stdin=subprocess.DEVNULL,
+                                         stdout=stdout, stderr=stderr, close_fds=True, start_new_session=True)
+                record['launcher_pid'] = child.pid
+                try:
+                    record['exit'] = child.wait(timeout=min(available, config['operation_seconds']))
+                finally:
+                    if child.poll() is None:
+                        os.killpg(child.pid, signal.SIGKILL)
+                        child.wait(timeout=2)
+                    record['exit'] = child.returncode
+            record['elapsed_seconds'] = time.monotonic() - begin
+            raw = (work / 'stdout.json').read_bytes()
+            record['stdout_sha256'], record['stdout_bytes'] = hashlib.sha256(raw).hexdigest(), len(raw)
+            record['stderr_sha256'] = digest(output / (case + '-stderr.log'))
+            if record['exit'] != 0:
+                raise RuntimeError('Native parser refused case ' + case)
+            proof = json.loads(proof_path.read_text())
+            assert proof['uid'] == 65534 and proof['gid'] == 65534 and proof['home_preserved']
+            assert proof['only_loopback_down'] and proof['seccomp_filter_installed'] and proof['no_new_privileges']
+            save(output / (case + '-guard.json'), proof)
+            # Normalize only the generated fixture root before structural comparison.
+            models[case] = json.loads(raw.replace(str(installation).encode(), b'/fixture/installation'))
+            assert set(models[case]['services']) == {'control', 'control-operator', 'postgres', 'metrics', 'logs'}
+            assert not models[case]['services']['control-operator'].get('ports')
+            assert all(service['pull_policy'] == 'never' for service in models[case]['services'].values())
+        assert models['shared'] == models['shared-again']
+        split = copy.deepcopy(models['split'])
+        ports = split['services']['control']['ports']
+        assert len(ports) == 2
+        extra = [port for port in ports if port['target'] == 9443]
+        assert len(extra) == 1 and extra[0]['published'] == '19443' and extra[0]['host_ip'] == '127.0.0.1' and extra[0]['protocol'] == 'tcp'
+        ports.remove(extra[0])
+        assert split == models['shared']
+        override = copy.deepcopy(models['split-override'])
+        assert override['services']['control-operator']['image'] == 'sha256:' + 'e' * 64
+        override['services']['control-operator']['image'] = models['split']['services']['control-operator']['image']
+        assert override == models['split']
+        assert not git('status', '--porcelain') and git('rev-parse', 'HEAD') == config['candidate']
+        result['structural_checks'] = {'shared_round_trip_equal': True, 'split_adds_only_portal_publication': True,
+                                       'override_changes_only_operator_image': True, 'operator_has_no_publication': True}
+        result['status'], code = 'client-parser-checks-passed', 0
+    except BaseException as error:
+        result['status'], result['error'] = 'failed', type(error).__name__ + ': ' + str(error)
+    finally:
+        signal.alarm(0)
+        if child is not None and child.poll() is None:
+            os.killpg(child.pid, signal.SIGKILL)
+            child.wait(timeout=2)
+        if fixture is not None:
+            try:
+                assert os.path.samestat(fixture_identity, fixture.lstat()) and not fixture.is_symlink()
+                shutil.rmtree(fixture)
+                result['owned_fixture_removed'] = not fixture.exists()
+            except BaseException as error:
+                result['cleanup_errors'].append(type(error).__name__ + ': ' + str(error))
+        result['children_joined'] = child is None or child.poll() is not None
+        if result['cleanup_errors']:
+            result['status'], code = 'cleanup-unconfirmed', 1
+        result['elapsed_seconds'], result['exit'] = time.monotonic() - started, code
+        save(output / 'result.json', result)
+        signal.signal(signal.SIGALRM, previous)
+        print(json.dumps({'evidence': str(output), 'status': result['status'], 'exit': code}), flush=True)
+    return code
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config', type=Path, required=True)
+    args = parser.parse_args()
+    raise SystemExit(run(json.loads(args.config.read_text()), args.config))

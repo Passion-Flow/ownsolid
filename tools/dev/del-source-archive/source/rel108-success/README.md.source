@@ -1,0 +1,46 @@
+# REL-108 isolated timer success qualification
+
+Run after the ARC 000058 migration acceptance has completed. Update the
+isolated worktree to the selected main revision. The second argument is
+the full commit SHA containing the accepted ARC migration. The wrapper
+verifies ancestry, the exact up and down migration files, and a clean
+checkout. It builds the Linux amd64 inputs
+from that exact checkout and records the source and binary digests.
+
+```sh
+bash resume.sh "$ownsolid_worktree" "$accepted_arc_commit"
+```
+
+The host must already contain the digest-pinned PostgreSQL 18.6 and
+pgvector 0.8.7 image referenced by the wrapper. The combined run requires
+Linux amd64, systemd, Docker Compose, TUN, at least 4 GiB available
+memory and 20 GiB free disk, and full I/O pressure at most 20 percent
+over the previous ten seconds. The fixture checks resources before and
+after taking both shared Linux locks. Exit 75 denotes a busy lock or a resource
+refusal. No container or unit is started in that case.
+
+The runner uses the existing installer materialization path, the real
+Control migration and the shipped service and timer under private
+names. It starts only one capped PostgreSQL container, with a tmpfs
+data volume, no published ports and no external network. A native
+egress recorder is the only IPv4 and IPv6 default route.
+
+The four actual timer outcomes must be succeeded, succeeded, failed,
+succeeded. Every row must confirm verified publication. Successful
+expiry counts must be zero, one and two, in order. The failed expiry
+must have code INSTALL_BACKUP_RETENTION_FAILED and omit the count.
+The injected owner link belongs to the fixture. It is removed before
+the retry. The failed publication remains readable, and its history
+survives expiry. Each publication is independently loaded into a
+scratch database and compared with the current deployment, schema and
+table count. The live OID and ordinary backup sentinel must survive.
+The capture must contain only the harness's IPv4, IPv6 and DNS probes.
+
+The wrapper stores the input hashes and Linux transcript under logs.
+It removes only its own container, runtime units and scratch files.
+
+Both locks are held for the entire host run. The wrapper first acquires
+/run/lock/ownsolid-heavy.lock and then /root/lane-sci-tools/heavy-test.lock.
+A refusal to acquire either lock exits 75. Follow the coordinated Linux
+queue and use the delivery window after Audit and Gateway qualification.
+Source recovery and shell checks do not establish timer-to-database success.

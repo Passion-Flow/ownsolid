@@ -1,0 +1,4 @@
+"""Retired DEL workstation gate entry; coordinator activation is required."""
+import sys
+sys.stderr.write("DEL_WORKSTATION_ENTRY_RETIRED: no job started; wait for the coordinator's explicit epoch activation.\n")
+raise SystemExit(78)

@@ -1,0 +1,11 @@
+from pathlib import Path
+import os,subprocess,json,hashlib
+w=Path("/Users/passion./Documents/Passion's WorkSpace/Development/lane-del-listener-tls-preview")
+p=Path('/Users/passion./Documents/Codex/2026-11-12/ownsolid-del-recovery/combination/listener-tls-preview-prototype.5me5cr1v')
+assert not [key for key in os.environ if key.startswith(('OWNSOLID_', 'PROJECT_ONE_', 'PLAYWRIGHT_'))]
+env=dict(os.environ,GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='1',GOMEMLIMIT='268435456B',GOFLAGS='-p=1')
+go=['/Users/passion./.local/opt/go/bin/go','-C',str(w/'deploy/offline')]
+commands=[go+['test','-overlay',str(p/'overlay-fixed.json'),'-count=1','-timeout=45s','-run=^TestTemporaryPortalCompatibilityChecksDesiredTLS$','-v','./internal/install'],go+['test','-count=1','-timeout=90s','-run=^Test(PortalTLS|PortalCompatibility|PortalSelection|Materialize)','-v','./internal/install']]
+for args in commands:
+ print('RUN',json.dumps(args),flush=True);subprocess.run(args,env=env,check=True,timeout=100)
+print('Focused desired-TLS checks passed; no Control/image/server/installed qualification',flush=True)

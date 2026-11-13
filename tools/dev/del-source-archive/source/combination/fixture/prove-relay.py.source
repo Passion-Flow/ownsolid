@@ -1,0 +1,86 @@
+import concurrent.futures
+import os
+from pathlib import Path
+import signal
+import socket
+import ssl
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+
+relay = Path(__file__).with_name('tls-relay.py')
+with tempfile.TemporaryDirectory(prefix='ownsolid-relay-', dir=os.environ.get('OWNSOLID_RELAY_TMPDIR', '/private/tmp')) as temp:
+    root = Path(temp).resolve()
+    root.chmod(0o700)
+    subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
+                    '-keyout', str(root/'key.pem'), '-out', str(root/'cert.pem'),
+                    '-subj', '/CN=localhost', '-days', '1'],
+                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    server_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    server_context.load_cert_chain(root/'cert.pem', root/'key.pem')
+    listener = socket.socket()
+    listener.bind(('127.0.0.1', 0))
+    listener.listen(10)
+    port = listener.getsockname()[1]
+    stopped = threading.Event()
+
+    def serve():
+        listener.settimeout(0.2)
+        while not stopped.is_set():
+            try:
+                peer, _ = listener.accept()
+            except socket.timeout:
+                continue
+            try:
+                with server_context.wrap_socket(peer, server_side=True) as stream:
+                    stream.settimeout(2)
+                    data = stream.recv(4096)
+                    stream.sendall(b'opaque:'+data)
+            except (ssl.SSLError, ConnectionError, TimeoutError):
+                peer.close()
+
+    thread = threading.Thread(target=serve)
+    thread.start()
+    path = root/'private.sock'
+    with (root/'relay.log').open('wb') as log:
+        process = subprocess.Popen([sys.executable, str(relay), str(path), str(port)],
+                                   stdout=log, stderr=log)
+        try:
+            for attempt in range(100):
+                if path.exists():
+                    break
+                assert process.poll() is None
+                time.sleep(0.02)
+            assert path.exists() and path.stat().st_mode & 0o777 == 0o600
+            context = ssl.create_default_context(cafile=str(root/'cert.pem'))
+            # Only the explicit temporary trust is accepted; hostname verification stays on.
+            def connect(unix, trusted=True):
+                raw = socket.socket(socket.AF_UNIX if unix else socket.AF_INET)
+                raw.settimeout(3)
+                raw.connect(str(path) if unix else ('127.0.0.1', port))
+                selected = context if trusted else ssl.create_default_context()
+                with selected.wrap_socket(raw, server_hostname='localhost') as stream:
+                    stream.sendall(b'checked-TLS-bytes')
+                    assert stream.recv(4096) == b'opaque:checked-TLS-bytes'
+                    return stream.getpeercert(binary_form=True)
+            assert connect(False) == connect(True)
+            try:
+                connect(True, False)
+                raise AssertionError('Untrusted TLS was admitted')
+            except ssl.SSLCertVerificationError:
+                pass
+            # A second invocation must never replace a socket it did not create.
+            result = subprocess.run([sys.executable, str(relay), str(path), str(port)],
+                                    stdout=log, stderr=log)
+            assert result.returncode != 0 and path.exists()
+            print('PASS: byte-identical server certificate; trusted TLS echo; untrusted TLS refused; foreign socket preserved')
+        finally:
+            process.send_signal(signal.SIGTERM)
+            assert process.wait(timeout=10) == 0
+            assert not path.exists()
+            stopped.set()
+            thread.join(timeout=5)
+            listener.close()
+            print('PASS: own relay socket and temporary server removed')

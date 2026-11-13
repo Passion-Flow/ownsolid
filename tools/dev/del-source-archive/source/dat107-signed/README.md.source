@@ -1,0 +1,41 @@
+# Preview input test-signing prototype
+
+The source was recovered from the original command records. The complete
+signature, notice admission, installation and Control bridge sequence
+requires a new Linux acceptance run in the scheduled delivery window.
+
+The base-notice archive is a candidate read from the cached pinned Python
+image. Its full archive was held in temporary storage and needs fresh
+readback. The original transcript records 106 Debian and CPython notices.
+The fixture source uses a private test scope marker for first-party code.
+It grants no redistribution approval. Formal source and binary notices
+remain release inputs.
+
+Both Linux host wrappers acquire /run/lock/ownsolid-heavy.lock followed by
+/root/lane-sci-tools/heavy-test.lock and recheck memory, disk and I/O pressure.
+Run only after the accepted ARC audit58 and GW qualification windows. The
+REL-108 timer continuation has first priority in the delivery window.
+
+Use the restored replay script only when a separately approved window and
+the exact source checkout are available. Confirm its recorded source
+matches the remote checkout. The test generates an ephemeral Ed25519 key.
+No production key is needed. Resolve the exact Qwen LICENSE from its
+catalogue pin before running replay.sh.
+
+retained_inputs.py is the smaller read-only path. Run it in an isolated
+network namespace with strace restricted to network syscalls. It checks
+the protected contracts and retained wheel and notice bytes without
+starting an interpreter environment, container or service.
+
+The retained-input transcript ends with a Git status failure caused by
+the fixture's 256 MiB address-space limit being inherited by Git.
+The archive checks and empty network trace completed successfully before
+that command. cleanup-check.log records the separate successful source
+and directory check. The runtime/signing prototype has separate pending
+acceptance.
+
+Run the prototype after its window is assigned using
+`bash replay.sh "$clean_checkout" "$accepted_audit58_commit"`.
+Provide the catalogue-matching Qwen LICENSE as qwen-license beside the
+script. Its SHA-256 is
+832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e.

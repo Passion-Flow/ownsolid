@@ -1,0 +1,26 @@
+from pathlib import Path
+import subprocess,json,base64,hashlib
+p=Path('/root/lane-rel-tools/del-current-inputs.AksJFVcI/latest');p.mkdir(mode=0o700,exist_ok=True)
+for n,r in json.loads('{"latest-main-c6d5d1c.bundle": {"sha256": "f8f2a6cab039cb077aa3590b0ed5f071199dd4ac8cefe69f44247335396d40c9", "data": "OMITTED_GIT_BUNDLE_BINARY_SHA256_f8f2a6cab039cb077aa3590b0ed5f071199dd4ac8cefe69f44247335396d40c9"}, "latest-main-c6d5d1c.json": {"sha256": "a21b55fe7a96292bf69d61eee6fc8845e70f5bd3fdc896a776bf20bb55653a47", "data": "ewogICJzY29wZSI6ICJQcmVwYXJhdGlvbiBvbmx5LCBubyBpbmhlcml0ZWQgcXVhbGlmaWNhdGlvbiIsCiAgInNvdXJjZSI6ICJjNmQ1ZDFjMWRiZWRlZjM3NzRhN2Y4ODYyZjExOWNlNDY0ZjNlMjQwIiwKICAidHJlZSI6ICI2MzQzNzA0NjhmOGRkZjA1ZDc0ZTNkM2FjOTM1NTcxNGQwNWVkNGRiIiwKICAib3JpZ2luYWxfbWFpbiI6ICI5ZTMyYjAyM2EwYTNkZWVkNmE4NjUzYTg4NzhkNTJjMjU4M2ZkNmNmIiwKICAiaW5wdXRzIjogewogICAgIjVlNzY0ZWE1NjdiMzYxM2U5NjY3OWNjM2MwZWE0ZDY1MTcwNzgyNmMiOiB7CiAgICAgICJ3ZWIiOiAiZDlkYTUwMmNiZDQ4OGM1NTc2YTczYzkwOWMyNzE3NjIxZTY3Nzk5NiIsCiAgICAgICJhcGkiOiAiMWYxYTlhMzRlYWJhZDFlNTkwZjgzNTNkNGFjYWE1ZGFkZjA0ZTVjNSIsCiAgICAgICJhcGkvb3BlbmFwaSI6ICI0NWNiMTAwZGI2NTA0YjgwYmY1NDE4ZTJmZmUwZThkOTkzY2VkMjdjIiwKICAgICAgInBrZy9jYXBhYmlsaXRpZXMiOiAiNDNmN2RkOGZlMjhlZWQyMGM3NWI1Zjc3YThkMTQ0MmM1ODM3YmRhYyIsCiAgICAgICJ0b29scy9jb2RlZ2VuIjogIjI4N2ZiNzkyNmJhNWNlOTJiOTM1OTJiOTZlMjgwMzA5YTMxYTU5NTUiLAogICAgICAic2VydmljZXMvY29udHJvbC9taWdyYXRpb25zIjogIjgxYTcwMGU5YzY3OWQxYTZlODhiOGNjNTg3OGNlOTYwMTBiNzZmZmIiCiAgICB9LAogICAgIjQ0YWI1MjI5M2U1MTYxMjhiYTJlZmMwZWRjMmNiMjA1M2FjYzM0NjIiOiB7CiAgICAgICJ3ZWIiOiAiZDlkYTUwMmNiZDQ4OGM1NTc2YTczYzkwOWMyNzE3NjIxZTY3Nzk5NiIsCiAgICAgICJhcGkiOiAiMWYxYTlhMzRlYWJhZDFlNTkwZjgzNTNkNGFjYWE1ZGFkZjA0ZTVjNSIsCiAgICAgICJhcGkvb3BlbmFwaSI6ICI0NWNiMTAwZGI2NTA0YjgwYmY1NDE4ZTJmZmUwZThkOTkzY2VkMjdjIiwKICAgICAgInBrZy9jYXBhYmlsaXRpZXMiOiAiNDNmN2RkOGZlMjhlZWQyMGM3NWI1Zjc3YThkMTQ0MmM1ODM3YmRhYyIsCiAgICAgICJ0b29scy9jb2RlZ2VuIjogIjI4N2ZiNzkyNmJhNWNlOTJiOTM1OTJiOTZlMjgwMzA5YTMxYTU5NTUiLAogICAgICAic2VydmljZXMvY29udHJvbC9taWdyYXRpb25zIjogIjgxYTcwMGU5YzY3OWQxYTZlODhiOGNjNTg3OGNlOTYwMTBiNzZmZmIiCiAgICB9LAogICAgImM2ZDVkMWMxZGJlZGVmMzc3NGE3Zjg4NjJmMTE5Y2U0NjRmM2UyNDAiOiB7CiAgICAgICJ3ZWIiOiAiZDlkYTUwMmNiZDQ4OGM1NTc2YTczYzkwOWMyNzE3NjIxZTY3Nzk5NiIsCiAgICAgICJhcGkiOiAiMWYxYTlhMzRlYWJhZDFlNTkwZjgzNTNkNGFjYWE1ZGFkZjA0ZTVjNSIsCiAgICAgICJhcGkvb3BlbmFwaSI6ICI0NWNiMTAwZGI2NTA0YjgwYmY1NDE4ZTJmZmUwZThkOTkzY2VkMjdjIiwKICAgICAgInBrZy9jYXBhYmlsaXRpZXMiOiAiNDNmN2RkOGZlMjhlZWQyMGM3NWI1Zjc3YThkMTQ0MmM1ODM3YmRhYyIsCiAgICAgICJ0b29scy9jb2RlZ2VuIjogIjI4N2ZiNzkyNmJhNWNlOTJiOTM1OTJiOTZlMjgwMzA5YTMxYTU5NTUiLAogICAgICAic2VydmljZXMvY29udHJvbC9taWdyYXRpb25zIjogIjgxYTcwMGU5YzY3OWQxYTZlODhiOGNjNTg3OGNlOTYwMTBiNzZmZmIiCiAgICB9CiAgfSwKICAiYnVuZGxlIjogewogICAgInNoYTI1NiI6ICJmOGYyYTZjYWIwMzljYjA3N2FhMzU5MGIwZWQ1ZjA3MTE5OWRkNGFjOGNlZmU2OWY0NDI0NzMzNTM5NmQ0MGM5IiwKICAgICJieXRlcyI6IDcwOTQ0CiAgfQp9Cg=="}}').items():
+ raw=base64.b64decode(r['data'],validate=True);assert hashlib.sha256(raw).hexdigest()==r['sha256'];f=p/n
+ if f.exists():assert not f.is_symlink() and f.read_bytes()==raw
+ else:
+  with f.open('xb') as stream:stream.write(raw)
+src=Path('/root/lane-del-current-main-preparation');target=Path('/root/lane-del-latest-main-preparation');head='c6d5d1c1dbedef3774a7f8862f119ce464f3e240';branch='codex/del-latest-main-preparation'
+def git(w,*a):return subprocess.check_output(['git','-C',str(w),*a],text=True,timeout=10).strip()
+assert git(src,'rev-parse','HEAD')=='5e764ea567b3613e96679cc3c0ea4d651707826c' and not git(src,'status','--porcelain')
+subprocess.run(['git','-C',str(src),'bundle','verify',str(p/'latest-main-c6d5d1c.bundle')],check=True,timeout=10)
+subprocess.run(['git','-C',str(src),'bundle','unbundle',str(p/'latest-main-c6d5d1c.bundle')],check=True,timeout=10)
+r=subprocess.run(['git','-C',str(src),'rev-parse','--verify','--quiet','refs/heads/'+branch],capture_output=True,text=True,timeout=5)
+if r.returncode==0:assert r.stdout.strip()==head
+else:
+ assert r.returncode==1
+ subprocess.run(['git','-C',str(src),'branch',branch,head],check=True,timeout=5)
+if not target.exists():subprocess.run(['git','-C',str(src),'worktree','add',str(target),branch],check=True,timeout=15)
+assert git(target,'rev-parse','HEAD')==head and not git(target,'status','--porcelain')
+assert git(target,'rev-parse','HEAD^{tree}')=='634370468f8ddf05d74e3d3ac9355714d05ed4db'
+for a in ['9e32b023a0a3deed6a8653a8878d52c2583fd6cf','c23aba57c2c4dc841dfe87636d4df0519415ccff']:
+ subprocess.run(['git','-C',str(target),'merge-base','--is-ancestor',a,head],check=True,timeout=5)
+assert git(src,'rev-parse','HEAD')=='5e764ea567b3613e96679cc3c0ea4d651707826c' and not git(src,'status','--porcelain')
+r={'source':head,'tree':git(target,'rev-parse','HEAD^{tree}'),'path':str(target),'clean':True,'scope':'Original main/model and own evidence DAG preparation only; no new runtime qualification'}
+(p/'linux-source-sync.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps(r),flush=True)

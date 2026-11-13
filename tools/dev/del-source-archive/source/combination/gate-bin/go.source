@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+real=/Users/passion./.local/opt/go/bin/go
+if [ "${1:-}" = test ]; then shift; exec "$real" test -exec=/Users/passion./Documents/Codex/2026-11-12/ownsolid-del-recovery/combination/test-exec.sh "$@"; fi
+exec "$real" "$@"

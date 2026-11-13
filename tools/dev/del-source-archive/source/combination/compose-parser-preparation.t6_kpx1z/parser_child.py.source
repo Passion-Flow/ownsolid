@@ -1,0 +1,54 @@
+"""Isolated, unprivileged synthetic Compose parser; no network or daemon access."""
+import ctypes
+import errno
+import json
+import os
+from pathlib import Path
+import resource
+import sys
+import subprocess
+
+config = json.loads(Path(sys.argv[1]).read_text())
+assert sys.platform == 'linux' and os.uname().machine == 'x86_64'
+assert os.environ['HOME'] == config['original_home']
+assert os.getpid() == 1
+subprocess.run(['/usr/bin/mount', '--make-rprivate', '/'], check=True)
+subprocess.run(['/usr/bin/mount', '-t', 'sysfs', '-o', 'ro,nosuid,nodev,noexec', 'sysfs', '/sys'], check=True)
+assert sorted(os.listdir('/sys/class/net')) == ['lo']
+assert Path('/sys/class/net/lo/operstate').read_text().strip() == 'down'
+assert len(Path('/proc/net/route').read_text().splitlines()) == 1
+network = os.stat('/proc/self/ns/net').st_ino
+assert network != config['host_network_inode']
+resource.setrlimit(resource.RLIMIT_CPU, (config['cpu_seconds'], config['cpu_seconds']))
+resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
+resource.setrlimit(resource.RLIMIT_NPROC, (64, 64))
+resource.setrlimit(resource.RLIMIT_FSIZE, (config['maximum_output_bytes'], config['maximum_output_bytes']))
+resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+os.setgroups([])
+os.setgid(65534)
+os.setuid(65534)
+
+# Linux v6.8 seccomp_filter documentation: check the syscall ABI, forbid x32,
+# then refuse socket creation and connection/bind/listen/message syscalls. The
+# fixed, pinned Go client/plugin inherit this filter through fork and exec.
+class Filter(ctypes.Structure):
+    _fields_ = [('code', ctypes.c_ushort), ('jt', ctypes.c_ubyte), ('jf', ctypes.c_ubyte), ('k', ctypes.c_uint32)]
+class Program(ctypes.Structure):
+    _fields_ = [('length', ctypes.c_ushort), ('instructions', ctypes.POINTER(Filter))]
+items = [(0x20, 0, 0, 4), (0x15, 1, 0, 0xc000003e), (0x06, 0, 0, 0x80000000),
+         (0x20, 0, 0, 0), (0x35, 0, 1, 0x40000000), (0x06, 0, 0, 0x80000000)]
+for number in [41, 42, 43, 44, 45, 46, 47, 49, 50, 53, 288, 299, 307]:
+    items.extend([(0x15, 0, 1, number), (0x06, 0, 0, 0x00050000 | errno.EPERM)])
+items.append((0x06, 0, 0, 0x7fff0000))
+filters = (Filter * len(items))(*(Filter(*item) for item in items))
+program = Program(len(items), filters)
+libc = ctypes.CDLL(None, use_errno=True)
+if libc.prctl(38, 1, 0, 0, 0) != 0 or libc.prctl(22, 2, ctypes.byref(program), 0, 0) != 0:
+    raise OSError(ctypes.get_errno(), 'Parser syscall restriction could not be installed')
+status = dict(line.split(':', 1) for line in Path('/proc/self/status').read_text().splitlines() if ':' in line)
+assert status['NoNewPrivs'].strip() == '1' and status['Seccomp'].strip() == '2'
+proof = {'uid': os.geteuid(), 'gid': os.getegid(), 'home_preserved': os.environ['HOME'] == config['original_home'],
+         'network_inode': network, 'only_loopback_down': True, 'ipv4_routes': [], 'no_new_privileges': True,
+         'seccomp_filter_installed': True, 'scope': 'Socket syscalls denied; this is not an egress-attempt capture'}
+Path(config['proof']).write_text(json.dumps(proof, indent=2) + '\n')
+os.execv('/usr/bin/docker', ['/usr/bin/docker', 'compose', 'config', '--format', 'json'])

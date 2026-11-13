@@ -1,0 +1,88 @@
+package datasets
+
+import (
+	"io"
+	"os"
+	"path/filepath"
+	"testing"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+)
+
+func TestVerifiedPreviewRuntimeBridge(t *testing.T) {
+	root := os.Getenv("OWNSOLID_SIGNED_PREVIEW_FIXTURE")
+	if root == "" {
+		t.Fatal("signed preview fixture input required")
+	}
+	prepared := filepath.Join(root, "prepared")
+	trainingRoot := filepath.Join(prepared, "runtimes/training")
+	python := filepath.Join(root, "installed/venv/bin/python")
+	dataScript := filepath.Join(prepared, "runtimes/data-processing/process.py")
+	scope := t.TempDir()
+	scratchRoot := filepath.Join(scope, "scratch")
+	modelRoot := filepath.Join(scope, "model-store")
+	datasetRoot := filepath.Join(scope, "data-store")
+	for _, dir := range []string{scratchRoot, modelRoot, datasetRoot} {
+		if err := os.Mkdir(dir, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	policy := config.DefaultDatasetPolicy()
+	processor, err := NewProcessor(config.DatasetConfiguration{
+		ArtifactRoot: datasetRoot, PythonExecutable: python, ProcessorFile: dataScript,
+	}, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	modelSource := &models.Service{RootDirectory: modelRoot}
+	configuration := TokenizerPreviewConfiguration{
+		TrainingRoot: trainingRoot, ScratchRoot: scratchRoot, Resources: policy.Resources,
+	}
+	configuration.Resources.WallSeconds = 30
+	if worker, err := NewTokenizerPreviewProcessor(processor, modelSource, configuration); worker != nil || err == nil || err.Error() != "DATASET_STORAGE_UNAVAILABLE" {
+		t.Fatalf("missing runtime injection: %v", err)
+	}
+	t.Log("Missing optional runtime injection refused: DATASET_STORAGE_UNAVAILABLE")
+	configuration.PythonExecutable = python
+	worker, err := NewTokenizerPreviewProcessor(processor, modelSource, configuration)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requestRoot, err := os.MkdirTemp(scratchRoot, "run-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	model := filepath.Join(requestRoot, "model")
+	if err := os.Mkdir(model, 0700); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range tokenizerPreviewAssets {
+		src, err := os.Open(filepath.Join(prepared, "model", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := os.OpenFile(filepath.Join(model, name), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+		if err != nil {
+			src.Close()
+			t.Fatal(err)
+		}
+		_, copyErr := io.Copy(out, src)
+		closeErr := out.Close()
+		src.Close()
+		if copyErr != nil || closeErr != nil {
+			t.Fatal(copyErr, closeErr)
+		}
+	}
+	row := wire.Record{SourceID: "fixture-row", Prompt: "Which city is the capital of France?", Completion: "Paris."}
+	digest, err := row.ContentDigest(policy.Limits)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := worker.execute(t.Context(), requestRoot, 32, []tokenizerPreviewRow{{LineNumber: 1, Record: row}}, []string{digest})
+	if err != nil || len(result.Samples) != 1 || result.Samples[0].TotalTokens < 1 {
+		t.Fatalf("verified runtime did not serve the Qwen sample: %v", err)
+	}
+	t.Logf("Installed interpreter and protected code returned %d tokens for the approved local Qwen fixture", result.Samples[0].TotalTokens)
+}

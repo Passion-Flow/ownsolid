@@ -1,0 +1,11 @@
+import os,subprocess
+expected='5893a7c6bf1b1e9314e463c09b9b363c64d0d3bc'
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==expected
+assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+subprocess.run(['df','-h','/'],check=True)
+print('Source before check',expected,flush=True)
+environment=dict(os.environ,GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off')
+subprocess.run(['make','check','PYTHON=/Users/passion./.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12'],env=environment,check=True)
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==expected
+assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+print('Source after check',expected,'clean',flush=True)

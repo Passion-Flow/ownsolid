@@ -1,0 +1,24 @@
+import hashlib,json,os,subprocess,tempfile
+from pathlib import Path
+source=Path("/Users/passion./Documents/Passion's WorkSpace/Development/lane-del-acceptance-guard")
+fixtures=source/'deploy/offline/internal/install/testdata/installed-acceptance'
+output=Path(tempfile.mkdtemp(prefix='guard-typecheck-',dir=Path.cwd()))
+env=os.environ.copy();env.update(GOMAXPROCS='2',GOFLAGS='-p=2',GOPROXY='off',GOSUMDB='off',GOTOOLCHAIN='local',GOOS='linux',GOARCH='amd64',CGO_ENABLED='0')
+report={'scope':'Mac cross-compile/typecheck only; no Linux services or qualification','results':[]}
+for name,module,target in [
+ ('history_prepare_test.go','deploy/offline','internal/install/temporary_combined_prepare_test.go'),
+ ('installed_acceptance_test.go','tests/e2e','temporary_combined_installed_test.go'),
+ ('installed_scope_test.go','services/control','cmd/server/temporary_combined_scope_test.go')]:
+ replacement={str(source/module/target):str(fixtures/name)}
+ if name=='installed_acceptance_test.go':replacement[str(source/'tests/e2e/egress_test.go')]=str(fixtures/'strict_egress_test.go')
+ overlay=output/(name+'.json');overlay.write_text(json.dumps({'Replace':replacement}))
+ package='./internal/install' if module=='deploy/offline' else './cmd/server' if module=='services/control' else '.'
+ binary=output/(name+'.bin')
+ command=['go','-C',str(source/module),'test','-c','-overlay',str(overlay),'-o',str(binary),package]
+ with (output/(name+'.log')).open('w') as log:result=subprocess.run(command,env=env,stdout=log,stderr=subprocess.STDOUT)
+ report['results'].append({'fixture':name,'exit':result.returncode,'source_sha256':hashlib.sha256((fixtures/name).read_bytes()).hexdigest()})
+ (output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
+ print(name,result.returncode,flush=True)
+ if result.returncode: print((output/(name+'.log')).read_text());raise SystemExit(result.returncode)
+ binary.unlink()
+print('TYPECHECK_EVIDENCE='+str(output),flush=True)

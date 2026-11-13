@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source /root/lane-rel-tools/env
+root=/root/lane-rel-tools/lane-del-combination-4463bbe6
+cd "$root"
+exec 9>>/run/lock/ownsolid-heavy.lock
+flock -w 540 -E 75 9
+exec 8>>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 8
+df -h /
+free -m
+cat /proc/pressure/io
+awk '/^MemAvailable:/ {a=$2} /^MemFree:/ {f=$2} END {exit !(a>=8388608 && f>=2097152)}' /proc/meminfo
+awk '/^full / {split($2,x,"=");exit !(x[2]<=20)}' /proc/pressure/io
+test "$(cat source-sha)" = 4463bbe628f60486bbdb92c15f72311fb53d076a
+if [ ! -e INPUTS.before-public-modes.sha256 ]; then
+ cp INPUTS.sha256 INPUTS.before-public-modes.sha256
+ cp control-image-id control-image-before-public-modes-id
+ cp evaluator-image-id evaluator-image-before-public-modes-id
+fi
+chmod 0555 control-context/control evaluator-context/vmalert
+chmod 0444 control-context/password-blocklist.txt
+for component in data-processing portal admin; do
+ find "control-context/$component" -type d -exec chmod 0555 '{}' +
+ find "control-context/$component" -type f -exec chmod 0444 '{}' +
+done
+DOCKER_BUILDKIT=0 docker build --pull=false --network none --tag ownsolid/control:lane-del-combined-4463bbe6 control-context > control-image-build-public-modes.log 2>&1
+DOCKER_BUILDKIT=0 docker build --pull=false --network none --tag ownsolid/vmalert:lane-del-combined-4463bbe6 evaluator-context > evaluator-image-build-public-modes.log 2>&1
+docker image inspect --format '{{.Id}}' ownsolid/control:lane-del-combined-4463bbe6 > control-image-id
+docker image inspect --format '{{.Id}}' ownsolid/vmalert:lane-del-combined-4463bbe6 > evaluator-image-id
+control=$(cat control-image-id)
+evaluator=$(cat evaluator-image-id)
+docker run --rm --pull never --network none --read-only --user 10001:10001 --entrypoint python3 "$control" -c '
+import os, pathlib, subprocess
+assert os.geteuid()==10001
+assert os.access("/usr/local/bin/control",os.X_OK)
+for root in ("/opt/projectone/admin","/opt/projectone/portal","/opt/projectone/data-processing"):
+ for path in pathlib.Path(root).rglob("*"):
+  assert os.access(path,os.R_OK),str(path)
+with open("/opt/projectone/security/password-blocklist.txt") as stream: assert stream.read()
+result=subprocess.run(["/usr/local/bin/control","--help"],capture_output=True)
+assert result.returncode in (0,1,2)
+print("PUBLIC_CONTROL_ASSETS_READABLE_AND_EXECUTABLE_AS_UID_10001")
+'
+docker run --rm --pull never --network none --read-only --user 10001:10001 --entrypoint /vmalert "$evaluator" -version
+docker image save --output images.tar ownsolid/control:lane-del-combined-4463bbe6 ownsolid/vmalert:lane-del-combined-4463bbe6 \
+ sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47 \
+ sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84 \
+ sha256:45dc9bef07c0c404255790e41f2c22c62ff55a690a1d556e0f9cb6f6e2556f1b
+python3 - <<'PY'
+from pathlib import Path
+import hashlib
+p=Path('INPUTS.sha256')
+names=[line.split('  ',1)[1] for line in p.read_text().splitlines()]
+p.write_text(''.join(hashlib.sha256(Path(name).read_bytes()).hexdigest()+'  '+name+'\n' for name in names))
+PY
+sha256sum -c INPUTS.sha256
+echo REPACKED_NATIVE_INPUTS_VERIFIED_AS_NONROOT

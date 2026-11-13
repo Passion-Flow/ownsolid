@@ -1,0 +1,107 @@
+package factory
+
+import (
+	"context"
+	"crypto/ed25519"
+	"encoding/base64"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"slices"
+	"testing"
+
+	wire "github.com/Passion-Flow/ownsolid/api/release/v1"
+)
+
+func TestSignedPreviewInputReadback(t *testing.T) {
+	root := os.Getenv("OWNSOLID_SIGNED_PREVIEW_FIXTURE")
+	if root == "" {
+		t.Fatal("signed preview fixture input required")
+	}
+	c, manifest, _ := setup(t)
+	c.ArtifactRoot = filepath.Join(root, "payload")
+	c.MaximumAssetBytes = 32 << 20
+	c.MaximumTotalBytes = 128 << 20
+	public, key, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	put(t, c.PrivateKeyFile, []byte(base64.StdEncoding.EncodeToString(key)))
+	put(t, c.TrustFile, Encode(Trust{Keys: map[string]string{
+		wire.Digest(public): base64.StdEncoding.EncodeToString(public),
+	}}))
+	raw, err := os.ReadFile(filepath.Join(root, "assets.json"))
+	if err != nil || json.Unmarshal(raw, &manifest.Assets) != nil {
+		t.Fatal("read fixture asset inventory", err)
+	}
+	manifest.ReleaseID = "tokenizer-preview-input-test"
+	manifest.SourceSHA256 = wire.Digest(raw)
+	manifest.Capabilities = []string{}
+	manifest.Prerequisites = []string{}
+	ctx := context.Background()
+	for _, target := range []string{"prepared", "prepared-without-base"} {
+		selection := manifest
+		if target == "prepared-without-base" {
+			selection.Assets = nil
+			for _, asset := range manifest.Assets {
+				switch asset.ID {
+				case "base-image-notices":
+					continue
+				case "base-identity":
+					asset.Licenses = []string{"fixture-scope-notice"}
+				case "wheel-tokenizers":
+					asset.Licenses = slices.DeleteFunc(slices.Clone(asset.Licenses), func(id string) bool {
+						return id == "base-image-notices"
+					})
+				}
+				selection.Assets = append(selection.Assets, asset)
+			}
+		}
+		c.OutputFile = filepath.Join(filepath.Dir(c.OutputFile), target+".tar.gz")
+		manifestBytes := Encode(selection)
+		put(t, c.ManifestFile, manifestBytes)
+		signed, err := Build(ctx, c)
+		if err != nil {
+			t.Fatal("fixture build", err)
+		}
+		archiveBytes, err := os.ReadFile(c.OutputFile)
+		if err != nil || wire.Digest(archiveBytes) != signed.ArchiveSHA256 ||
+			wire.Digest(manifestBytes) != signed.ManifestSHA256 {
+			t.Fatal("published archive or manifest digest differs", err)
+		}
+		verify := c
+		verify.PrivateKeyFile = ""
+		verify.ManifestFile = ""
+		dest := filepath.Join(root, target)
+		if target == "prepared" {
+			other, _, err := ed25519.GenerateKey(nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			wrong := verify
+			wrong.TrustFile = filepath.Join(filepath.Dir(c.TrustFile), "different-public-trust")
+			put(t, wrong.TrustFile, Encode(Trust{Keys: map[string]string{
+				wire.Digest(other): base64.StdEncoding.EncodeToString(other),
+			}}))
+			if _, err := Unpack(ctx, wrong, c.OutputFile, dest, signed.ArchiveSHA256, signed.ManifestSHA256); ErrorCode(err) != "RELEASE_SIGNATURE_UNTRUSTED_OR_INVALID" {
+				t.Fatalf("wrong signature authority: %v", err)
+			}
+			t.Log("Wrong public trust refused: RELEASE_SIGNATURE_UNTRUSTED_OR_INVALID")
+			disabled := verify
+			disabled.AllowTestFixture = false
+			if _, err := Inspect(ctx, disabled, c.OutputFile); err == nil {
+				t.Fatal("default factory policy admitted test media")
+			}
+		}
+		if _, err := Unpack(ctx, verify, c.OutputFile, dest, signed.ArchiveSHA256, signed.ManifestSHA256); err != nil {
+			t.Fatal("prepare verified fixture", err)
+		}
+		verified, err := VerifyPrepared(ctx, verify, dest, signed.ArchiveSHA256, signed.ManifestSHA256)
+		if err != nil || verified.Manifest.Profile != wire.FixtureProfile ||
+			len(verified.Manifest.Assets) != len(selection.Assets) {
+			t.Fatal("read complete fixture under test trust", err)
+		}
+		t.Logf("Prepared %s with %d signed assets; archive %s, manifest %s",
+			target, len(selection.Assets), signed.ArchiveSHA256, signed.ManifestSHA256)
+	}
+}

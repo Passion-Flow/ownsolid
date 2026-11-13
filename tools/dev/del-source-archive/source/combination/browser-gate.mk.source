@@ -1,0 +1,3 @@
+test-web-browser:
+	@cd web/apps/console && pnpm exec playwright test --workers=3 --output "$(OWNSOLID_DEL_GATE_EVIDENCE)/console-results"
+	@cd web/apps/portal && pnpm exec playwright test --workers=3 --output "$(OWNSOLID_DEL_GATE_EVIDENCE)/portal-results"

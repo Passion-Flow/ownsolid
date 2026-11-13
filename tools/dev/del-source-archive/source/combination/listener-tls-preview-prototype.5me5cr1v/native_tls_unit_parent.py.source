@@ -1,0 +1,88 @@
+"""One bounded lightweight Linux filesystem/TLS unit verification."""
+from pathlib import Path
+import hashlib,json,os,re,shutil,signal,stat,subprocess,sys,tempfile,time
+
+
+def digest(path):
+ with Path(path).open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
+
+
+def save(path,value):
+ pending=path.with_name('.'+path.name+'.pending');pending.write_text(json.dumps(value,indent=2,sort_keys=True)+'\n');os.replace(pending,path)
+
+
+def run(path):
+ started=time.monotonic();deadline=started+25
+ def timeout(signum,frame):raise TimeoutError('TLS unit absolute parent deadline reached')
+ previous=signal.signal(signal.SIGALRM,timeout);signal.setitimer(signal.ITIMER_REAL,25)
+ child=None;output=None;result={'status':'cleanup-unconfirmed','work_status':'prepared','parent_pid':os.getpid(),'commands':[],'cleanup_errors':[],'scope':'Filesystem-only actual installer units; controlled command fixtures, no Docker/Control/image/DB/listener/installed flow/egress capture','heavy_leases':'Not opened for lightweight private unit tests'};code=1
+ try:
+  if sys.flags.optimize:raise RuntimeError('Use python3 -I without -O')
+  os.umask(0o077);assert os.geteuid()==0 and os.uname().machine=='x86_64'
+  config=json.loads(path.read_text());stage=Path(config['stage']);source=Path(config['source'])
+  assert config['hard_seconds']==25 and config['cleanup_seconds']==5 and config['operation_seconds']==15 and config['test_seconds']==12 and config['cpu_seconds']==10
+  assert config['tmpfs_bytes']==64*1024**2 and config['go_memory_bytes']==128*1024**2 and config['root_count']==8
+  assert config['test_pattern']=='^(TestPortalTLSAdmissionRetainsSelectedBytesAcrossApplyAndRetry|TestPortalTLSAdmissionRepairsGeneratedMaterialWithoutEarlyWrites|TestPortalTLSAdmissionRefusesUnreadableInputBeforeStaging|TestPortalTLSCleanupFailurePreservesThePrimaryRefusal|TestMaterializeTLSReadsRepeatedSourceReferences|TestMaterializeWritesPrivateFilesAndKeepsSecrets|TestMaterializeRepairsInterruptedServingKeyUpdate|TestPortalCompatibilityRefusalKeepsTheInstalledConfiguration)$'
+  assert config['unit_root']=='/tmp/ownsolid-tls-unit'
+  assert config['minimum_free_memory_bytes']==2*1024**3 and config['minimum_available_memory_bytes']==8*1024**3 and config['minimum_disk_bytes']==30*1024**3 and config['maximum_io_avg10']==5
+  output=Path(tempfile.mkdtemp(prefix='listener-tls-unit-native.',dir=config['output_parent']));print(output,flush=True)
+  def git(*args):return subprocess.check_output(['git','-C',str(source),*args],text=True,timeout=2).strip()
+  assert git('rev-parse','HEAD')==config['candidate'] and git('rev-parse','HEAD^{tree}')==config['tree'] and not git('status','--porcelain')
+  assert digest(stage/'source.json')==config['manifest_sha256'] and digest(stage/'native_tls_unit_child.py')==config['child_sha256']
+  manifest=json.loads((stage/'source.json').read_text())
+  assert manifest['candidate']==config['candidate'] and manifest['tree']==config['tree']
+  for name,sha in manifest['files'].items():assert digest(source/name)==sha
+  assert digest(stage/'installer.test')==manifest['binary_sha256']
+  assert digest(stage/'canonical-compose.yaml')==manifest['canonical_sha256']==digest(source/'deploy/compose/compose.yaml')
+  with (stage/'installer.test').open('rb') as f:header=f.read(20)
+  assert header[:6]==b'\x7fELF\x02\x01' and int.from_bytes(header[18:20],'little')==62
+  home=os.environ['HOME'];home_info=Path(home).stat();assert home_info.st_uid==0 and home_info.st_mode&0o077==0
+  assert config['original_home']==home
+  sys.path.insert(0,str(source/'deploy/offline/internal/install/testdata/installed-acceptance'));import host_runner
+  result.update(source=manifest,wrapper_sha256=digest(__file__),config_sha256=digest(path),child_sha256=config['child_sha256'])
+  # This is an unlocked light-unit precondition sample, not heavy-job admission.
+  result['unlocked_resource_sample']=host_runner.resources(dict(config,output_directory=str(output)))
+  shutil.copyfile(__file__,output/'parent.py');shutil.copyfile(stage/'native_tls_unit_child.py',output/'child.py');shutil.copyfile(path,output/'runtime.json')
+  result['work_status']='starting';save(output/'result.json',result)
+  argv=['/usr/bin/unshare','--mount','--net','--pid','--fork','--kill-child=KILL','--mount-proc','/usr/bin/python3','-I',str(stage/'native_tls_unit_child.py'),str(path)]
+  result['commands'].append({'kind':'private-namespace-unit-launcher','argv':argv})
+  available=deadline-time.monotonic()-config['cleanup_seconds']
+  if available<=0:raise TimeoutError('No unit work budget remains')
+  with (output/'tests.log').open('wb') as log:
+   child=subprocess.Popen(argv,env={'PATH':'/usr/sbin:/usr/bin:/sbin:/bin','HOME':home},stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,close_fds=True,start_new_session=True)
+   result['launcher_pid']=child.pid
+   status=child.wait(timeout=min(config['operation_seconds'],available))
+  text=(output/'tests.log').read_text();result.update(exit=status,root_count=len(re.findall(r'^=== RUN   Test[^/\n]+$',text,re.M)),test_run_count=len(re.findall(r'^=== RUN   ',text,re.M)),skip_count=text.count('--- SKIP:'))
+  first=text.splitlines()[0];result['namespace_guard']=json.loads(first)
+  assert status==0 and result['root_count']==8 and result['skip_count']==0 and '[no tests to run]' not in text
+  assert len(re.findall(r'^--- PASS: Test[^/\n]+ \(',text,re.M))==8
+  assert digest(stage/'installer.test')==manifest['binary_sha256'] and git('rev-parse','HEAD')==config['candidate'] and not git('status','--porcelain')
+  result['status']='unit-checks-passed';code=0
+ except BaseException as error:
+  result.update(status='failed',error=type(error).__name__+': '+str(error))
+ finally:
+  work_status,work_code=result['status'],code;code=1;result.update(status='cleanup-unconfirmed',work_status=work_status,exit=1,elapsed_seconds=time.monotonic()-started)
+  try:
+   if time.monotonic()>=deadline:raise TimeoutError('No cleanup budget remains')
+   if output is not None:save(output/'result.json',result)
+   if child is not None and child.poll() is None:
+    os.killpg(child.pid,signal.SIGKILL);remaining=deadline-time.monotonic()
+    if remaining<=0:raise TimeoutError('No child join budget remains')
+    child.wait(timeout=min(2,remaining))
+   result['launcher_joined']=child is None or child.poll() is not None
+   result['private_tmpfs_lifetime']='Private tmpfs is discarded when its namespace PID 1 exits; no host test directory is created'
+   if time.monotonic()>=deadline:raise TimeoutError('No evidence budget remains')
+   result.update(status=work_status,exit=work_code,elapsed_seconds=time.monotonic()-started)
+   if output is not None:save(output/'result.json',result)
+   code=work_code
+  except BaseException as error:
+   result['cleanup_errors'].append(type(error).__name__+': '+str(error));result.update(status='cleanup-unconfirmed',exit=1,elapsed_seconds=time.monotonic()-started)
+   if output is not None and time.monotonic()<deadline:
+    try:save(output/'result.json',result)
+    except BaseException:pass
+  finally:
+   signal.setitimer(signal.ITIMER_REAL,0);signal.signal(signal.SIGALRM,previous)
+ return code
+
+
+if __name__=='__main__':raise SystemExit(run(Path(sys.argv[1])))

@@ -1,0 +1,17 @@
+from pathlib import Path
+import os,subprocess,json,hashlib
+w=Path("/Users/passion./Documents/Passion's WorkSpace/Development/lane-del-listener-tls-preview")
+p=Path('/Users/passion./Documents/Codex/2026-11-12/ownsolid-del-recovery/combination/listener-tls-preview-prototype.5me5cr1v')
+assert not [k for k in os.environ if k.startswith(('OWNSOLID_','PROJECT_ONE_','PLAYWRIGHT_'))]
+env=dict(os.environ,GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='1',GOMEMLIMIT='268435456B',GOFLAGS='-p=1')
+go=['/Users/passion./.local/opt/go/bin/go','-C',str(w/'deploy/offline')]
+for a in [['test','-count=1','-timeout=180s','./...'],['vet','./...']]:
+ print('RUN',json.dumps(a),flush=True);subprocess.run(go+a,env=env,check=True,timeout=200)
+env.update(CG0_ENABLED='0')
+env.pop('CG0_ENABLED');env.update(CGO_ENABLED='0',GOOS='linux',GOARCH='amd64')
+for a in [['test','-c','-o',str(p/'listener-tls-linux-amd64.test'),'./internal/install'],['build','-o',str(p/'ownsolid-install-linux-amd64'),'./cmd/install']]:
+ print('RUN',json.dumps(a),flush=True);subprocess.run(go+a,env=env,check=True,timeout=120)
+r={'scope':'Installer package tests/vet and own Linux amd64 cross-builds only; no Control/image/build or installed acceptance','files':{}}
+for f in ['listener-tls-linux-amd64.test','ownsolid-install-linux-amd64']:
+ r['files'][f]={'sha256':hashlib.file_digest((p/f).open('rb'),'sha256').hexdigest(),'bytes':(p/f).stat().st_size}
+(p/'build-verification.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps(r),flush=True)

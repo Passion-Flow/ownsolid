@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+inputs=$(realpath "$1")
+case "$inputs" in /dev/shm/lane-del-rel108-success.????????) ;; *) exit 1 ;; esac
+trap 'rm -r -- "$inputs"' EXIT
+cd "$inputs"
+sha256sum -c SHA256SUMS
+cat build-inputs.txt
+[[ $(uname -sm) == "Linux x86_64" && -c /dev/net/tun ]]
+df -h /root /dev/shm
+free -m
+cat /proc/pressure/io
+ss -lntp | wc -l
+ready() {
+    awk '/^MemAvailable:/ { exit ! ($2 >= 4194304) }' /proc/meminfo &&
+        awk '/^full / { split($2, score, "="); exit ! (score[2] <= 20) }' /proc/pressure/io &&
+        df -Pk /root | awk 'END { exit ! ($4 >= 20 * 1024 * 1024) }'
+}
+ready || { echo 'Shared host preflight refused' >&2; exit 75; }
+export -f ready
+flock -n -E 75 /run/lock/ownsolid-heavy.lock bash -ec '
+    ready || exit 75
+    docker image inspect pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47 >/dev/null
+    exec timeout 360 bash "$1/timer-acceptance.sh" "$1"
+' _ "$inputs"
+echo 'Combined timer acceptance finished and cleaned up'

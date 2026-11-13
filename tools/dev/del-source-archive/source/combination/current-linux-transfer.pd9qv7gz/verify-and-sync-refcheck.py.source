@@ -1,0 +1,32 @@
+from pathlib import Path
+import hashlib,json,subprocess,tarfile,shutil,os
+stage=Path('/root/lane-rel-tools/del-current-inputs.AksJFVcI')
+archive=stage/'inputs.tar'
+assert hashlib.file_digest(archive.open('rb'),'sha256').hexdigest()=='de4789e3282427e5c8c4d6cae616e488c38eb4edfb9e441efb8cd36dd5f5086d'
+verified=stage/'verified'
+assert not verified.exists();verified.mkdir(mode=0o700)
+with tarfile.open(archive) as tar:
+ members=tar.getmembers();names=[x.name for x in members]
+ assert len(names)==len(set(names)) and all(x.isfile() and Path(x.name).name==x.name and x.size<10*1024**2 for x in members)
+ for member in members:
+  with (verified/member.name).open('xb') as target:shutil.copyfileobj(tar.extractfile(member),target)
+manifest=json.loads((verified/'manifest.json').read_text())
+assert set(manifest)|{'manifest.json'}=={x.name for x in verified.iterdir()}
+for name,sha in manifest.items():assert hashlib.file_digest((verified/name).open('rb'),'sha256').hexdigest()==sha
+source=Path('/root/lane-del-entrance-projection');target=Path('/root/lane-del-current-main-preparation')
+base='1a41d97981798440b7f02061d3a73853726b03bc';head='5e764ea567b3613e96679cc3c0ea4d651707826c';branch='codex/del-current-main-preparation'
+def git(root,*args):return subprocess.check_output(['git','-C',str(root),*args],text=True,timeout=15).strip()
+assert git(source,'rev-parse','HEAD')==base and not git(source,'status','--porcelain')
+subprocess.run(['git','-C',str(source),'bundle','verify',str(verified/'current-main.bundle')],check=True,timeout=15)
+ref=subprocess.run(['git','-C',str(source),'rev-parse','--verify','--quiet','refs/heads/'+branch],text=True,capture_output=True,timeout=15)
+if ref.returncode==0:assert ref.stdout.strip()==head
+else:
+ assert ref.returncode==1
+ subprocess.run(['git','-C',str(source),'fetch',str(verified/'current-main.bundle'),'refs/heads/'+branch+':refs/heads/'+branch],check=True,timeout=30)
+if not target.exists():subprocess.run(['git','-C',str(source),'worktree','add',str(target),branch],check=True,timeout=30)
+assert git(target,'rev-parse','HEAD')==head and not git(target,'status','--porcelain')
+assert git(target,'rev-parse','HEAD^{tree}')=='97bbe87fb95824dde35a4345378f242d891aaa3c'
+for ancestor in ['6ed5c627a04a52b97d273f6782fdb0733d8703c4',base]:subprocess.run(['git','-C',str(target),'merge-base','--is-ancestor',ancestor,head],check=True,timeout=10)
+assert git(source,'rev-parse','HEAD')==base and not git(source,'status','--porcelain')
+record={'source':head,'tree':git(target,'rev-parse','HEAD^{tree}'),'path':str(target),'clean':True,'verified_input_files':len(manifest),'asset_sha256':manifest['qualified-aud108-web-build.tar.gz'],'client_sha256':manifest['installed-entry-help-44ab5229-inputs.tar.gz'],'frozen_parser_source_unchanged':base,'scope':'Source and inert input synchronization only; no build, image execution, browser, server, SQL, or acceptance'}
+(stage/'source-sync.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record),flush=True)

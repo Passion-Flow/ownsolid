@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work=$(realpath "$1")
+case "$work" in /root/lane-rel-tools/lane-del-history.????????) ;; *) exit 1 ;; esac
+cd "$work"
+ready(){
+ awk '/^MemAvailable:/ {a=$2} /^MemFree:/ {f=$2} END {exit !(a>=4194304 && f>=2097152)}' /proc/meminfo &&
+ awk '/^full / {split($2,x,"=");exit !(x[2]<=20)}' /proc/pressure/io &&
+ df -Pk / | awk 'END {exit !($4>=20971520)}'
+}
+df -h /
+free -m
+cat /proc/pressure/io
+ss -lntp | wc -l
+if ! ready; then echo 'Resource admission pending; no workload started'; fi
+exec 9>/run/lock/ownsolid-heavy.lock
+for attempt in $(seq 1 12); do
+ if flock -w 45 -E 75 9; then break; fi
+ echo "Shared Linux lock still held; deployment has not started"
+ if [ "$attempt" -eq 12 ]; then exit 75; fi
+done
+exec 8>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 8
+ready || { echo 'Shared host preflight refused under both locks'; exit 75; }
+echo 'Shared preflight passed under both Linux locks'
+outer="lane-del-history-${work##*.}"
+evaltag="ownsolid-history-fixture:${work##*.}"
+if docker container inspect "$outer" >/dev/null 2>&1 || docker image inspect "$evaltag" >/dev/null 2>&1; then exit 1; fi
+cleanup(){
+ status=$?
+ docker rm -f --volumes "$outer" >/dev/null 2>&1 || true
+ docker image rm "$evaltag" >/dev/null 2>&1 || true
+ rm -r -- "$work"
+ exit "$status"
+}
+trap cleanup EXIT
+metrics=sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84
+dind=sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5
+docker image inspect "$metrics" "$dind" >/dev/null
+mkdir context
+cp /root/lane-obs-tools/vmalert-prod context/vmalert
+sha256sum context/vmalert
+context/vmalert -version
+cat > context/Dockerfile <<EOF
+FROM $metrics
+COPY vmalert /vmalert
+ENTRYPOINT ["/vmalert"]
+EOF
+DOCKER_BUILDKIT=0 docker build --network none --pull=false --tag "$evaltag" context >/dev/null
+evaluator=$(docker image inspect --format '{{.Id}}' "$evaltag")
+docker image save --output "$work/images.tar" "$metrics" "$evaluator"
+docker run --rm --name "$outer" --hostname history-fixture --add-host history-fixture:127.0.0.1 \
+ --network none --privileged --cgroupns private --cpus 2 --memory 1536m --pids-limit 512 \
+ --tmpfs /var/lib/docker:size=1g --env DOCKER_TLS_CERTDIR= \
+ --env METRICS_IMAGE="$metrics" --env EVALUATOR_IMAGE="$evaluator" \
+ --volume "$work:/bundle:ro" --entrypoint /usr/local/bin/dind "$dind" /bin/sh /bundle/dind.sh

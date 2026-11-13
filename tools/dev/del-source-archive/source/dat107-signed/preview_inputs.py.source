@@ -1,0 +1,198 @@
+"""Assemble and read the explicit signed test fixture using existing wheel checks."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import sys
+import tarfile
+import zipfile
+
+import check_notices
+
+repo, fixture, wheelhouse, retained, model, model_license = map(Path, sys.argv[2:])
+sys.path.insert(0, str(repo / "tools/release/offline"))
+import tokenizer_wheelhouse as wheelcheck
+
+SOURCE = "fixture-scope-notice"
+BASE = "base-image-notices"
+NATIVE = "tokenizers-native-notices"
+RUST = "tokenizers-rust-notices"
+EMBEDDED = "wheel-embedded-notices"
+MODEL = "qwen-license"
+
+
+def digest(path):
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def read_runtime(root):
+    train = root / "runtimes/training"
+    runtime = json.loads(wheelcheck.read_contract(train / "runtime.json"))
+    pins, lock = wheelcheck.project_lock(
+        wheelcheck.read_contract(train / "requirements" / wheelcheck.LOCK),
+        runtime["locks"][wheelcheck.LOCK],
+    )
+    return runtime, pins, lock
+
+
+def stage():
+    assets = fixture / "payload"
+    assets.mkdir(mode=0o700)
+    entries = []
+    embedded = {}
+
+    def add(source, relative, asset_id, kind, licenses=(), hashes=None, size=None):
+        target = assets / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        identity = wheelcheck.copy_checked(source, target, hashes or {digest(source)}, size)
+        entries.append(dict(id=asset_id, path=relative, kind=kind,
+                            size_bytes=identity["size_bytes"], sha256=identity["sha256"],
+                            licenses=list(licenses)))
+        return target
+
+    scope = fixture / "fixture-scope.txt"
+    scope.write_text("Private test fixture scope for source contracts and code. "
+                     "This marker grants no redistribution approval.\n")
+    add(scope, "notices/fixture-scope.txt", SOURCE, "license")
+    add(fixture / "base-notices.tar", "notices/base-image.tar", BASE, "license")
+    add(fixture / "base-identity.json", "base-identity.json", "base-identity", "source_evidence", [BASE])
+    with tarfile.open(assets / "notices/base-image.tar") as archive:
+        names = set(archive.getnames())
+    for package in ("libc6", "libgcc-s1", "libstdc++6"):
+        if f"usr/share/doc/{package}/copyright" not in names:
+            raise ValueError(f"Base image is missing copyright for {package}")
+    if "usr/local/lib/python3.12/LICENSE.txt" not in names:
+        raise ValueError("Base image is missing the CPython license")
+
+    native_archive = "tokenizers-0.23.3-linux-amd64-notices.tar.gz"
+    rust_archive = "tokenizers-0.23.3-linux-amd64-rust-std-notices.tar.gz"
+    check_notices.main(wheelhouse, retained)
+    add(retained / native_archive, f"notices/{native_archive}", NATIVE, "license")
+    add(retained / rust_archive, f"notices/{rust_archive}", RUST, "license")
+    runtime, pins, lock = read_runtime(repo)
+    installer = runtime["linux_manufacturing"]["image_installer"]
+    pins["pip"] = (installer["version"], {installer["sha256"]})
+    platforms = set(runtime["linux_manufacturing"]["platforms"]) | {"any"}
+    abis = set(runtime["linux_manufacturing"]["abis"])
+    wheel_sources = sorted(wheelhouse.glob("*.whl")) + [retained / installer["filename"]]
+    wheel_names = {}
+    for source in wheel_sources:
+        match = wheelcheck.WHEEL.fullmatch(source.name)
+        if match is None:
+            raise ValueError("Invalid wheel filename")
+        distribution, version, _, abi, platform = match.groups()
+        name = wheelcheck.normalized(distribution)
+        # The retained cache also supplies other training fixtures.
+        if name not in pins:
+            continue
+        expected, hashes = pins[name]
+        if name in wheel_names or version != expected or not (
+                platforms.intersection(platform.split(".")) and abis.intersection(abi.split("."))):
+            raise ValueError(f"Duplicate or incompatible wheel {name}")
+        wheel_names[name] = source.name
+        notices = [NATIVE, RUST, BASE] if name == "tokenizers" else [EMBEDDED]
+        target = add(source, f"wheels/{name}.wheel", "wheel-" + name, "runtime_inputs", notices,
+                     hashes, installer["size_bytes"] if name == "pip" else None)
+        metadata = wheelcheck.wheel_inventory(target, name, version)
+        if name != "tokenizers" and not metadata["notices"]:
+            raise ValueError(f"Missing embedded notice for {name}")
+        embedded[name] = metadata["notices"]
+    if wheel_names.keys() != pins.keys():
+        raise ValueError("Incomplete projected wheelhouse")
+
+    with zipfile.ZipFile(fixture / "wheel-notices.zip", "w", compression=zipfile.ZIP_DEFLATED) as notice_archive:
+        for name, files in embedded.items():
+            wheel_path, = [assets / entry["path"] for entry in entries if entry["id"] == "wheel-" + name]
+            with zipfile.ZipFile(wheel_path) as wheel:
+                for path, expected in files.items():
+                    raw = wheel.read(path)
+                    if hashlib.sha256(raw).hexdigest() != expected:
+                        raise ValueError(f"Changed embedded notice for {name}")
+                    notice_archive.writestr(f"{name}/{path}", raw)
+    add(fixture / "wheel-notices.zip", "notices/embedded-wheel-notices.zip", EMBEDDED, "license")
+    # The release wire caps each path component at 96 bytes. Bind the
+    # original wheel filenames and recreate them only in private pip staging.
+    wheel_layout = fixture / "wheel-filenames.json"
+    wheel_layout.write_text(json.dumps(wheel_names, sort_keys=True))
+    add(wheel_layout, "wheel-filenames.json", "wheel-filenames", "source_evidence", [SOURCE])
+    (fixture / "tokenizer.lock").write_bytes(lock)
+    add(fixture / "tokenizer.lock", "tokenizer.lock", "projected-lock", "dependency_lock", [SOURCE])
+    train = "runtimes/training"
+    data = "runtimes/data-processing"
+    catalogue_path = "api/agent/v1/model-catalog.json"
+    files = [f"{train}/runtime.json", f"{train}/requirements/{wheelcheck.LOCK}",
+             f"{data}/process.py", catalogue_path]
+    for package in (f"{train}/projectone_training", f"{data}/projectone_data"):
+        files.extend(str(path.relative_to(repo)) for path in sorted((repo / package).glob("*.py")))
+    for index, path in enumerate(files):
+        add(repo / path, path, f"runtime-source-{index}",
+            "dependency_lock" if path.endswith(".lock") else "source_evidence", [SOURCE])
+    catalogue = json.loads((assets / catalogue_path).read_bytes())
+    approved = {entry["path"]: entry for entry in catalogue["files"]}
+    for name in sorted(wheelcheck.MODEL_FILES):
+        spec = approved[name]
+        is_license = name == "LICENSE"
+        add(model_license if is_license else model / name, "model/" + name,
+            MODEL if is_license else "qwen-" + name.lower(), "license" if is_license else "model",
+            [] if is_license else [MODEL], {spec["sha256"]}, spec["size_bytes"])
+    (fixture / "assets.json").write_text(json.dumps(entries))
+    print(f"Staged {len(entries)} fixture assets including {len(wheel_names)} real wheels")
+
+
+def install():
+    for name in ("prepared-without-base", "prepared"):
+        prepared = fixture / name
+        manifest = json.loads((prepared / "manifest.json").read_bytes())
+        entries = {item["id"]: item for item in manifest["assets"]}
+        required = {"base-identity": {BASE}, "wheel-tokenizers": {BASE, NATIVE, RUST}}
+        has_notices = all(ids <= set(entries[asset]["licenses"]) and
+                          all(entries[notice]["kind"] == "license" for notice in ids)
+                          for asset, ids in required.items())
+        if not has_notices:
+            if name == "prepared":
+                raise ValueError("FIXTURE_PREVIEW_NOTICE_BINDING_REQUIRED")
+            print("Valid test signature refused at notice boundary: FIXTURE_PREVIEW_NOTICE_BINDING_REQUIRED")
+            continue
+        if name == "prepared-without-base":
+            raise ValueError("Test fixture unexpectedly admitted without base notice binding")
+        runtime, pins, lock = read_runtime(prepared)
+        if lock != (prepared / "tokenizer.lock").read_bytes():
+            raise ValueError("Projected lock does not match verified full lock")
+        installed = fixture / "installed"
+        installed.mkdir(mode=0o700)
+        (installed / "wheels").mkdir()
+        (installed / "tokenizer.lock").write_bytes(lock)
+        installer = runtime["linux_manufacturing"]["image_installer"]
+        pins["pip"] = (installer["version"], {installer["sha256"]})
+        wheel_layout = json.loads((prepared / "wheel-filenames.json").read_bytes())
+        if wheel_layout.keys() != pins.keys():
+            raise ValueError("Signed wheel filename coverage differs")
+        wheels = {}
+        for name, filename in wheel_layout.items():
+            match = wheelcheck.WHEEL.fullmatch(filename)
+            version, hashes = pins[name]
+            if match is None or wheelcheck.normalized(match.group(1)) != name or match.group(2) != version:
+                raise ValueError("Invalid signed wheel filename")
+            source = prepared / entries["wheel-" + name]["path"]
+            output = installed / "wheels" / filename
+            identity = wheelcheck.copy_checked(source, output, hashes)
+            wheels[name] = dict(wheelcheck.wheel_inventory(output, name, version),
+                                path=filename, sha256=identity["sha256"])
+        wheelcheck.install(installed, runtime, wheels)
+        interpreter = installed / "venv/bin/python"
+        # The published Control bridge requires a real protected executable.
+        executable = interpreter.resolve(strict=True)
+        interpreter.unlink()
+        shutil.copy2(executable, interpreter)
+        print("Installed 30 verified dependencies with pinned pip and checked the exact package set")
+
+
+if sys.argv[1] == "stage":
+    stage()
+elif sys.argv[1] == "install":
+    install()
+else:
+    raise SystemExit("Unknown fixture phase")

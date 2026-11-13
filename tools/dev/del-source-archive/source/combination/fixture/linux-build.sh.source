@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source /root/lane-rel-tools/env
+source_root=/root/lane-del-combination-4463bbe6
+evidence=/root/lane-rel-tools/lane-del-combination-4463bbe6
+sha=4463bbe628f60486bbdb92c15f72311fb53d076a
+export GOMAXPROCS=2 GOFLAGS=-p=2 GOPROXY=off GOSUMDB=off
+export CARGO_TARGET_DIR=/root/lane-del-combination-02d911ad/services/gateway/target
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2 npm_config_offline=true
+export VITEST_MAX_WORKERS=2 PYTHONDONTWRITEBYTECODE=1
+exec 9>/run/lock/ownsolid-heavy.lock
+for attempt in $(seq 1 12); do
+ if flock -w 45 -E 75 9; then break; fi
+ echo 'Linux build queued; shared lock retained by its existing owner'
+ test "$attempt" -lt 12 || exit 75
+done
+exec 8>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 8
+df -h /
+free -m
+cat /proc/pressure/io
+awk '/^MemAvailable:/ {a=$2} /^MemFree:/ {f=$2} END {exit !(a>=4194304 && f>=2097152)}' /proc/meminfo
+awk '/^full / {split($2,x,"=");exit !(x[2]<=20)}' /proc/pressure/io
+df -Pk / | awk 'END {exit !($4>=20971520)}'
+cd "$source_root"
+test "$(git rev-parse HEAD)" = "$sha"
+test -z "$(git status --porcelain)"
+echo '6c11e833744f96d4fe6eacfe3e1d95e334666fd2188b24ef2604afec425c12c5  /root/lane-rel-tools/lane-del-combined-4463bbe6.bundle' | sha256sum -c -
+printf '%s\n' "$sha" > "$evidence/source-sha"
+unshare --net bash -ec '
+ ip link set lo up
+ test "$(ip -o link show | wc -l)" -eq 1
+ test -z "$(ip route show default)"
+ test -z "$(ip -6 route show default)"
+ pnpm --dir web install --offline --frozen-lockfile --ignore-scripts
+ make check
+ echo LINUX_MAKE_CHECK_PASSED
+ make build
+ echo LINUX_MAKE_BUILD_PASSED
+' > "$evidence/check-build.log" 2>&1
+echo LINUX_MAKE_CHECK_AND_BUILD_PASSED
+test ! -f tools/audit-verify/audit-verify || rm -- tools/audit-verify/audit-verify
+git diff --exit-code
+test -z "$(git status --porcelain)"
+python3 - "$source_root" "$evidence" <<'PY'
+import json,sys
+from pathlib import Path
+source,evidence=map(Path,sys.argv[1:])
+for name,target in [('history_prepare_test.go','deploy/offline/internal/install/temporary_combined_prepare_test.go'),('installed_acceptance_test.go','tests/e2e/temporary_combined_installed_test.go'),('installed_scope_test.go','services/control/cmd/server/temporary_combined_scope_test.go')]:
+ replacements={str(source/target):str(evidence/name)}
+ if name=='installed_acceptance_test.go':replacements[str(source/'tests/e2e/egress_test.go')]=str(evidence/'strict_egress_test.go')
+ (evidence/(name+'.overlay.json')).write_text(json.dumps({'Replace':replacements})+'\n')
+PY
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C services/control build -trimpath -o "$evidence/control" ./cmd/server
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C deploy/offline build -trimpath -o "$evidence/ownsolid-install" ./cmd/install
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C deploy/offline test -overlay "$evidence/history_prepare_test.go.overlay.json" -c -o "$evidence/history-prepare.test" ./internal/install
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C tests/e2e test -overlay "$evidence/installed_acceptance_test.go.overlay.json" -c -o "$evidence/installed.test" .
+"$evidence/installed.test" -test.run '^TestTemporaryStrictEgressRecorderGuard$' -test.v -test.timeout 30s
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C services/control test -overlay "$evidence/installed_scope_test.go.overlay.json" -c -o "$evidence/scope.test" ./cmd/server
+cp services/control/resources/security/password-blocklist.txt "$evidence/password-blocklist.txt"
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C tests/e2e build -trimpath -o "$evidence/egress-recorder" ./cmd/egress-recorder
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o "$evidence/probe" deploy/offline/internal/install/testdata/scheduled-backup-timer/probe.go
+cp deploy/compose/compose.yaml "$evidence/compose.yaml"
+cp services/control/internal/modules/monitoring/alerting/fleet-rollup-rules.yaml "$evidence/fleet-rollup-rules.yaml"
+context="$evidence/control-context"
+mkdir "$context"
+cp "$evidence/control" "$context/control"
+cp services/control/resources/security/password-blocklist.txt "$context/password-blocklist.txt"
+cp -r runtimes/data-processing "$context/data-processing"
+cp -r web/apps/portal/dist "$context/portal"
+cp -r web/apps/console/dist "$context/admin"
+chmod 0555 "$context/control"
+chmod 0444 "$context/password-blocklist.txt"
+for component in data-processing portal admin; do
+ find "$context/$component" -type d -exec chmod 0555 '{}' +
+ find "$context/$component" -type f -exec chmod 0444 '{}' +
+done
+cat > "$context/Dockerfile" <<'EOF'
+FROM docker.io/library/python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1
+COPY control /usr/local/bin/control
+COPY password-blocklist.txt /opt/projectone/security/password-blocklist.txt
+COPY data-processing/ /opt/projectone/data-processing/
+COPY portal/ /opt/projectone/portal/
+COPY admin/ /opt/projectone/admin/
+LABEL io.ownsolid.acceptance.source=4463bbe628f60486bbdb92c15f72311fb53d076a
+USER 10001:10001
+ENTRYPOINT ["/usr/local/bin/control"]
+CMD ["serve", "--config", "/run/projectone/control.yaml"]
+EOF
+tag=ownsolid/control:lane-del-combined-4463bbe6
+test -z "$(docker image ls --quiet "$tag")"
+DOCKER_BUILDKIT=0 docker build --pull=false --network none --tag "$tag" "$context" > "$evidence/control-image-build.log" 2>&1
+docker image inspect --format '{{.Id}}' "$tag" > "$evidence/control-image-id"
+eval_context="$evidence/evaluator-context"
+mkdir "$eval_context"
+cp /root/lane-obs-tools/vmalert-prod "$eval_context/vmalert"
+chmod 0555 "$eval_context/vmalert"
+echo "d1d1a8d2b04c2f9f32c37934b498ae1e5f031cb55fdf89ffb94eeaef57742171  $eval_context/vmalert" | sha256sum -c -
+cat > "$eval_context/Dockerfile" <<'EOF'
+FROM sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84
+COPY vmalert /vmalert
+ENTRYPOINT ["/vmalert"]
+EOF
+eval_tag=ownsolid/vmalert:lane-del-combined-4463bbe6
+test -z "$(docker image ls --quiet "$eval_tag")"
+DOCKER_BUILDKIT=0 docker build --pull=false --network none --tag "$eval_tag" "$eval_context" > "$evidence/evaluator-image-build.log" 2>&1
+docker image inspect --format '{{.Id}}' "$eval_tag" > "$evidence/evaluator-image-id"
+docker image save --output "$evidence/images.tar" "$tag" "$eval_tag" \
+ sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47 \
+ sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84 \
+ sha256:45dc9bef07c0c404255790e41f2c22c62ff55a690a1d556e0f9cb6f6e2556f1b
+cd "$evidence"
+sha256sum history_prepare_test.go installed_acceptance_test.go installed_scope_test.go strict_egress_test.go tls-relay.py installed-host.sh installed-dind.sh control ownsolid-install history-prepare.test installed.test scope.test password-blocklist.txt egress-recorder probe compose.yaml fleet-rollup-rules.yaml images.tar control-image-id evaluator-image-id source-sha > INPUTS.sha256
+echo COMBINED_NATIVE_LINUX_INPUTS_READY

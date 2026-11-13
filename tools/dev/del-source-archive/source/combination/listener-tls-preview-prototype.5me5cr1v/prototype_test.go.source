@@ -1,0 +1,120 @@
+package install
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"go.yaml.in/yaml/v3"
+)
+
+func TestTemporaryPortalCompatibilityChecksDesiredTLS(t *testing.T) {
+	c := portalConfig(t)
+	portal := c.Network.PortalListener
+	c.Network.PortalListener = nil
+	if err := Materialize(c); err != nil {
+		t.Fatal(err)
+	}
+	before := map[string][]byte{}
+	for _, name := range []string{"certificate.pem", "private-key.pem", "ca.pem", "control.yaml"} {
+		path := filepath.Join(c.Layout().Config, name)
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		before[path] = raw
+	}
+	t.Cleanup(func() {
+		for path, raw := range before {
+			after, err := os.ReadFile(path)
+			if err != nil || !bytes.Equal(raw, after) {
+				t.Errorf("compatibility changed an installed file: %s: %v", filepath.Base(path), err)
+			}
+		}
+	})
+	authority, authorityKey, err := generateCA("synthetic replacement CA")
+	if err != nil {
+		t.Fatal(err)
+	}
+	hosts, err := c.originHosts()
+	if err != nil {
+		t.Fatal(err)
+	}
+	certificate, key, err := issueServerCertificate(authority, authorityKey, hosts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	directory := shortTempDir(t)
+	c.TLS = TLSConfig{Source: "files", CertificateFile: filepath.Join(directory, "certificate.pem"), PrivateKeyFile: filepath.Join(directory, "private-key.pem"), CAFile: filepath.Join(directory, "ca.pem")}
+	for path, raw := range map[string][]byte{c.TLS.CertificateFile: certificate, c.TLS.PrivateKeyFile: key, c.TLS.CAFile: authority} {
+		if err := os.WriteFile(path, raw, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	c.Network.PortalListener = portal
+	checks := 0
+	runner := listenerRunner(func(_ context.Context, name string, args ...string) (string, error) {
+		line := name + " " + strings.Join(args, " ")
+		switch {
+		case strings.Contains(line, "ps --all --quiet control"):
+			return strings.Repeat("a", 64), nil
+		case strings.Contains(line, "inspect --type container"):
+			raw, _ := json.Marshal(map[string]string{"Image": "sha256:" + strings.Repeat("b", 64), "Project": c.Project, "Service": "control", "ConfigFile": c.Layout().ComposeFile})
+			return string(raw), nil
+		case strings.Contains(line, "verify-serving-transport"):
+			checks++
+			hostPath := func(path string) string {
+				for container, host := range map[string]string{containerConfigDir: c.Layout().Config, containerOperatorDir: c.Layout().Operator} {
+					if relative, ok := strings.CutPrefix(path, container+"/"); ok {
+						return filepath.Join(host, relative)
+					}
+				}
+				t.Fatalf("unexpected snapshot reference: %s", path)
+				return ""
+			}
+			var snapshotPath string
+			for n, arg := range args {
+				if arg == "--config" {
+					snapshotPath = hostPath(args[n+1])
+				}
+			}
+			raw, err := os.ReadFile(snapshotPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var snapshot struct {
+				Server struct {
+					Certificate string `yaml:"tls_certificate_file"`
+					Key         string `yaml:"tls_private_key_file"`
+				} `yaml:"server"`
+			}
+			if err := yaml.Unmarshal(raw, &snapshot); err != nil {
+				t.Fatal(err)
+			}
+			actualCertificate, err := os.ReadFile(hostPath(snapshot.Server.Certificate))
+			if err != nil {
+				t.Fatal(err)
+			}
+			actualKey, err := os.ReadFile(hostPath(snapshot.Server.Key))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !bytes.Equal(actualCertificate, certificate) || !bytes.Equal(actualKey, key) {
+				return "DESIRED_TLS_NOT_OBSERVED\n", errors.New("checker received installed TLS rather than configured replacement")
+			}
+			return servingTransportSuccess + "\n", nil
+		}
+		return "", errors.New("unexpected prototype command")
+	})
+	if err := (&installer{config: c, runner: runner}).listenerCompatibility(t.Context()); err != nil {
+		t.Fatalf("valid replacement material did not reach the source checker: %v", err)
+	}
+	if checks != 1 {
+		t.Fatalf("source checks=%d", checks)
+	}
+}

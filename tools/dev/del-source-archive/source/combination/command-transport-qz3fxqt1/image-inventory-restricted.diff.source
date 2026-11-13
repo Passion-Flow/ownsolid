@@ -1,0 +1,141 @@
+--- image_inventory_parent.py
++++ image_inventory_restricted_parent.py
+@@ -41,11 +41,16 @@
+     descriptors = []
+     fixture = None
+     containers = []
++    closed = set()
++    owned_volumes = {}
+     code = 1
+     def interrupted(signum, frame):
+         raise RuntimeError('Prototype parent interrupted: ' + str(signum))
+     handlers = {value: signal.signal(value, interrupted) for value in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
+-    environment = {key: os.environ[key] for key in ['PATH', 'HOME', 'DOCKER_CONFIG'] if key in os.environ}
++    docker_config = output / 'empty-docker-config'
++    docker_config.mkdir(mode=0o700)
++    environment = {key: os.environ[key] for key in ['PATH', 'HOME'] if key in os.environ}
++    environment['DOCKER_CONFIG'] = str(docker_config)
+     environment.update(GOMAXPROCS='2', GOMEMLIMIT=str(config['go_memory_bytes']) + 'B')
+ 
+     def command(args, *, cleanup=False, limit=None, permit_failure=False):
+@@ -87,7 +92,15 @@
+         return command([config['docker'], '--host', 'unix://' + config['docker_socket'], *args], **kwargs)
+ 
+     def inspect(name, *, cleanup=False):
+-        status, raw = docker('container', 'inspect', name, cleanup=cleanup, permit_failure=True)
++        projection = ('[{"Image":{{json .Image}},"State":{"Status":{{json .State.Status}},'
++                      '"Running":{{json .State.Running}},"Pid":{{json .State.Pid}}},'
++                      '"Config":{"Labels":{"io.ownsolid.prototype.run_id":'
++                      '{{json (index .Config.Labels "io.ownsolid.prototype.run_id")}}}},'
++                      '"HostConfig":{"NetworkMode":{{json .HostConfig.NetworkMode}},'
++                      '"ReadonlyRootfs":{{json .HostConfig.ReadonlyRootfs}},'
++                      '"PortBindings":{{json .HostConfig.PortBindings}}},"Mounts":{{json .Mounts}}}]')
++        status, raw = docker('container', 'inspect', '--format', projection, name,
++                             cleanup=cleanup, permit_failure=True)
+         if status:
+             if 'No such container' not in raw and 'No such object' not in raw:
+                 raise RuntimeError('Container absence is unconfirmed')
+@@ -104,23 +117,42 @@
+                         '--format', '{{.ID}}', cleanup=cleanup)
+         return raw.split()
+ 
++    def remember_volumes(name, observed):
++        labels = observed['Config'].get('Labels') or {}
++        if labels.get('io.ownsolid.prototype.run_id') != run_id or observed['Image'] != config['image']:
++            raise RuntimeError('Refuse cleanup of an unowned or replaced container')
++        volumes = set()
++        for mount in observed['Mounts']:
++            if mount['Type'] != 'volume' or not re.fullmatch(r'[0-9a-f]{64}', mount.get('Name', '')):
++                raise RuntimeError('Unexpected mount; preserve it for review')
++            volumes.add(mount['Name'])
++        previous = owned_volumes.setdefault(name, volumes)
++        if previous != volumes:
++            raise RuntimeError('Owned anonymous volume set changed')
++        return sorted(volumes)
++
+     def close_container(name):
++        if name in closed:
++            return
+         observed = inspect(name, cleanup=True)
+         if observed is not None:
+-            labels = observed['Config'].get('Labels') or {}
+-            if labels.get('io.ownsolid.prototype.run_id') != run_id or observed['Image'] != config['image']:
+-                raise RuntimeError('Refuse cleanup of an unowned or replaced container')
++            remember_volumes(name, observed)
+             docker('rm', '--force', '--volumes', name, cleanup=True)
+             if inspect(name, cleanup=True) is not None:
+                 raise RuntimeError('Owned prototype container remains')
+-        for identifier in networks(name, cleanup=True):
+-            _, raw = docker('network', 'inspect', identifier, cleanup=True)
+-            observed = json.loads(raw)[0]
+-            if (observed.get('Labels') or {}).get('com.docker.compose.project') != name or observed.get('Containers'):
+-                raise RuntimeError('Refuse cleanup of an occupied or foreign network')
+-            docker('network', 'rm', identifier, cleanup=True)
++        elif name not in owned_volumes:
++            raise RuntimeError('Create acknowledgement or owned volume cleanup is unconfirmed')
++        volume_checks = []
++        for volume in sorted(owned_volumes[name]):
++            _, raw = docker('volume', 'ls', '--quiet', '--filter', 'name=' + volume, cleanup=True)
++            if raw.split():
++                raise RuntimeError('Owned anonymous volume removal is unconfirmed')
++            volume_checks.append({'name': volume, 'absent': True})
+         if networks(name, cleanup=True):
+-            raise RuntimeError('Prototype project network cleanup remains unconfirmed')
++            raise RuntimeError('Unexpected project network; preserve it for review')
++        result.setdefault('cleanup_readbacks', []).append({
++            'container': name, 'absent': True, 'volumes': volume_checks, 'project_networks': []})
++        closed.add(name)
+ 
+     try:
+         assert sys.platform == 'linux' and os.uname().machine == 'x86_64' and os.geteuid() == 0
+@@ -177,10 +209,12 @@
+             result['resource_error'] = str(error)
+             result['status'], code = 'resource-refused', 75
+             return code
+-        _, raw = docker('image', 'inspect', config['image'])
+-        image = json.loads(raw)[0]
++        projection = '{"Id":{{json .Id}},"Os":{{json .Os}},"Architecture":{{json .Architecture}}}'
++        _, raw = docker('image', 'inspect', '--format', projection, config['image'])
++        image = json.loads(raw)
+         assert image['Id'] == config['image'] and image['Os'] == 'linux' and image['Architecture'] == 'amd64'
+-        _, raw = docker('version', '--format', '{{json .}}')
++        projection = '{"Client":{"Version":{{json .Client.Version}}},"Server":{"Version":{{json .Server.Version}}}}'
++        _, raw = docker('version', '--format', projection)
+         version = json.loads(raw)
+         assert version['Client']['Version'] == config['docker_version'] and version['Server']['Version'] == config['docker_version']
+         _, compose_version = docker('compose', 'version', '--short')
+@@ -199,17 +233,18 @@
+         assert not state['State']['Running'] and state['State']['Pid'] == 0
+         assert state['HostConfig']['NetworkMode'] == 'none' and state['HostConfig']['ReadonlyRootfs']
+         assert not state['HostConfig'].get('PortBindings')
++        remember_volumes(name, state)
+         save(output / 'never-started-container.json', state)
+         case = {'kind': 'never-started-image-inventory', 'container': name, 'copies': {}}
+         result['cases'].append(case)
+-        for source, target, required in [('/lib/apk/db/installed', 'apk-installed', True),
++        for image_path, target, required in [('/lib/apk/db/installed', 'apk-installed', True),
+                                          ('/etc/alpine-release', 'alpine-release', True),
+                                          ('/usr/share/licenses', 'image-licenses', False)]:
+-            status, _ = docker('cp', '--quiet', name + ':' + source, str(output / target), permit_failure=True)
+-            case['copies'][source] = {'exit': status, 'target': target}
++            status, _ = docker('cp', '--quiet', name + ':' + image_path, str(output / target), permit_failure=True)
++            case['copies'][image_path] = {'exit': status, 'target': target}
+             if required:
+                 assert status == 0 and stat.S_ISREG((output / target).lstat().st_mode)
+-                case['copies'][source]['sha256'] = digest(output / target)
++                case['copies'][image_path]['sha256'] = digest(output / target)
+         packages = []
+         for paragraph in (output / 'apk-installed').read_text().split('\n\n'):
+             fields = dict(line.split(':', 1) for line in paragraph.splitlines()
+@@ -240,6 +275,11 @@
+                 result['cleanup_errors'].append(name + ': ' + str(error))
+         if not result['cleanup_errors'] and fixture is not None:
+             shutil.rmtree(fixture)
++        try:
++            shutil.rmtree(docker_config)
++            result['empty_docker_config_removed'] = not docker_config.exists()
++        except OSError as error:
++            result['cleanup_errors'].append('Owned empty Docker config: ' + str(error))
+         if result['cleanup_errors']:
+             result['status'], code = 'cleanup-unconfirmed', 1
+         result['elapsed_seconds'], result['exit'] = time.monotonic() - start, code

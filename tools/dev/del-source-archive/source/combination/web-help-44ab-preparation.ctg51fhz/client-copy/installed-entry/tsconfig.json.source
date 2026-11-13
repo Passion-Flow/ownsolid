@@ -1,0 +1,14 @@
+{
+  "extends": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-del-current-main-preparation/web/tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-del-current-main-preparation/web/apps/console/node_modules/@types"
+    ]
+  },
+  "include": [
+    "*.ts"
+  ]
+}

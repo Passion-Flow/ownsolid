@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work=$1
+recorder_pid=
+cleanup() {
+    if [[ -n $recorder_pid ]]; then
+        kill "$recorder_pid" 2>/dev/null || true
+        wait "$recorder_pid" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
+test "$(ip -o link show | wc -l)" = 1
+ip link set lo up
+"$work/egress-recorder" -interface egress0 -log "$work/egress.jsonl" &
+recorder_pid=$!
+for _ in {1..50}; do
+    if ip link show egress0 >/dev/null 2>&1; then break; fi
+    sleep 0.1
+done
+ip link set egress0 up
+ip addr add 198.18.0.1/32 dev egress0
+ip -6 addr add 2001:db8:e9e5::1/128 dev egress0 nodad
+ip route add default dev egress0
+ip -6 route add default dev egress0
+ip -o link show
+python3 -IB - <<'PY'
+import socket
+import struct
+for family, host in ((socket.AF_INET, "192.0.2.10"), (socket.AF_INET6, "2001:db8::10")):
+    with socket.socket(family) as client:
+        client.settimeout(0.5)
+        try:
+            client.connect((host, 9))
+        except OSError:
+            continue
+        raise SystemExit("Outbound TCP unexpectedly connected")
+with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+    query = struct.pack("!6H", 1, 256, 1, 0, 0, 0) + b"\x05probe\x07invalid\x00\x00\x01\x00\x01"
+    client.sendto(query, ("192.0.2.53", 53))
+PY
+for _ in {1..50}; do
+    if [[ $(wc -l < "$work/egress.jsonl") == 3 ]]; then break; fi
+    sleep 0.1
+done
+test "$(wc -l < "$work/egress.jsonl")" = 3
+grep -F '"destination":"192.0.2.10:9"' "$work/egress.jsonl"
+grep -F '"destination":"[2001:db8::10]:9"' "$work/egress.jsonl"
+grep -F '"dns_question":"probe.invalid. A"' "$work/egress.jsonl"
+baseline=$(sha256sum "$work/egress.jsonl")
+python3 -IB "$work/check-notices.py" \
+    /root/lane-rel-tools/dat107-runtime.sFD1lDN2/wheelhouse \
+    /root/lane-trn-tools/retained-inputs
+sleep 0.4
+test "$(sha256sum "$work/egress.jsonl")" = "$baseline"
+kill -0 "$recorder_pid"
+echo "No candidate review egress"

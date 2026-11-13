@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source /root/lane-rel-tools/env
+root=/root/lane-rel-tools/lane-del-combination-4463bbe6
+cd "$root"
+exec 9>/run/lock/ownsolid-heavy.lock
+for attempt in $(seq 1 12); do
+ if flock -w 45 -E 75 9; then break; fi
+ echo 'Installed acceptance queued; no service started'
+ test "$attempt" -lt 12 || exit 75
+done
+exec 8>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 8
+df -h /
+free -m
+cat /proc/pressure/io
+ss -lntp
+awk '/^MemAvailable:/ {a=$2} /^MemFree:/ {f=$2} END {exit !(a>=8388608 && f>=2097152)}' /proc/meminfo
+awk '/^full / {split($2,x,"=");exit !(x[2]<=20)}' /proc/pressure/io
+df -Pk / | awk 'END {exit !($4>=20971520)}'
+sha256sum -c INPUTS.sha256
+cp /root/lane-obs-tools/installed-history-driver/main.go installed-history-source.go
+chmod 400 installed-history-source.go
+echo 'f0f994c6aa1bf399643f483699bd99cc0a880d6cbdf37bae43170f9318746626  installed-history-source.go' | sha256sum -c -
+cp /root/lane-obs-tools/installed-history-driver/installed-history installed-history
+echo 'ed9b93244fe665e019ac6b3e43981806a33b50252a21d201e3a972d16148c125  installed-history' | sha256sum -c -
+file installed-history
+sha256sum installed-history-source.go installed-history > INSTALLED_DRIVER.sha256
+cat INSTALLED_DRIVER.sha256
+outer=lane-del-installed-4463bbe6
+test ! -e runtime-evidence
+test ! -e private-tls.sock
+test -z "$(docker container ls --all --quiet --filter name=^${outer}$)"
+mkdir -m 700 runtime-evidence
+relay=
+cleanup(){
+ result=$?
+ trap - EXIT
+ if [ -n "$relay" ]; then kill "$relay" 2>/dev/null || true; wait "$relay" 2>/dev/null || true; fi
+ if docker container inspect "$outer" >/dev/null 2>&1; then
+  docker logs "$outer" > "$root/installed-container.log" 2>&1 || true
+  docker rm --force --volumes "$outer" >/dev/null
+ fi
+ printf '%s\n' "$result" > "$root/installed-exit"
+ echo "Stopped and removed only $outer and its private relay; installed acceptance exit=$result"
+ exit "$result"
+}
+trap cleanup EXIT
+control=$(cat control-image-id)
+evaluator=$(cat evaluator-image-id)
+docker run --detach --pull never --name "$outer" --hostname lane-del-installed \
+ --add-host lane-del-installed:127.0.0.1 --network none --privileged --cgroupns private \
+ --cpus 4 --memory 6g --pids-limit 1024 --tmpfs /var/lib/docker:size=3g \
+ --env DOCKER_TLS_CERTDIR= --env CONTROL_IMAGE="$control" --env EVALUATOR_IMAGE="$evaluator" \
+ --env POSTGRES_IMAGE=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47 \
+ --env METRICS_IMAGE=sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84 \
+ --env LOGS_IMAGE=sha256:45dc9bef07c0c404255790e41f2c22c62ff55a690a1d556e0f9cb6f6e2556f1b \
+ --volume "$root:/bundle:ro" --volume "$root/runtime-evidence:/evidence" \
+ --entrypoint /usr/local/bin/dind sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5 \
+ /bin/sh /bundle/installed-dind.sh >/dev/null
+pid=$(docker inspect --format '{{.State.Pid}}' "$outer")
+nsenter --target "$pid" --net python3 "$root/tls-relay.py" "$root/private-tls.sock" 8443 > "$root/relay.log" 2>&1 &
+relay=$!
+deadline=$((SECONDS+4200))
+while [ "$(docker inspect --format '{{.State.Running}}' "$outer")" = true ]; do
+ kill -0 "$relay"
+ test "$SECONDS" -lt "$deadline" || { echo 'Installed acceptance deadline reached'; exit 1; }
+ sleep 2
+done
+docker logs "$outer"
+result=$(docker inspect --format '{{.State.ExitCode}}' "$outer")
+exit "$result"

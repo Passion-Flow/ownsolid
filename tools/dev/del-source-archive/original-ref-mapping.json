@@ -1,0 +1,1120 @@
+{
+  "baseline": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "original_candidate": "e3aff53eaeae247011215cdaa37e4940fa20a02a",
+  "original_ref_mapping": [
+    {
+      "ref": "refs/codex/del-cancellation-research-842",
+      "sha": "842fe0b310e02873e7b95c0c886ce031dd535a5e",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/codex/del-full-io-linux-620",
+      "sha": "620f76daef06b0028112022b652281bc61bfdae0",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/codex/del-license-policy-linux-e03",
+      "sha": "e03ce1bf87fca171d0aa2f5b9e4e5da9948e0194",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/codex/del-rollback-linux-f68",
+      "sha": "f68d062df0b605eec8a9d56f55399bd5edb03cfa",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-acceptance-guard",
+      "sha": "93366c73fbebbb096a039e8c73097159df810d26",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-backup-output-path",
+      "sha": "5893a7c6bf1b1e9314e463c09b9b363c64d0d3bc",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-cleanup-absence",
+      "sha": "823e1cf8ee795a91cbb91fa5dd513d73ead8baaa",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-command-cancellation",
+      "sha": "c23aba57c2c4dc841dfe87636d4df0519415ccff",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-current-main-preparation",
+      "sha": "5e764ea567b3613e96679cc3c0ea4d651707826c",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-delivery-combination",
+      "sha": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-entrance-projection",
+      "sha": "1a41d97981798440b7f02061d3a73853726b03bc",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-fixture-admission",
+      "sha": "cb45ea93d31ea6ad8076c716171f68a85282f42c",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-latest-main-preparation",
+      "sha": "c6d5d1c1dbedef3774a7f8862f119ce464f3e240",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-license-policy",
+      "sha": "e03ce1bf87fca171d0aa2f5b9e4e5da9948e0194",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-listener-tls-preview",
+      "sha": "d2ca13940b9d224fb35ed6ac295dbe56ba08b17f",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-main60-preparation",
+      "sha": "5893a7c6bf1b1e9314e463c09b9b363c64d0d3bc",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-recovered-acceptance",
+      "sha": "9372c0dcf93a9198c048d160ffeeb4c02e915d16",
+      "covered_by_e3": false,
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583",
+      "remote_tip": "1389de2895831f44cff9706561a969f336dde722"
+    },
+    {
+      "ref": "refs/heads/codex/del-reliability-targets",
+      "sha": "f9db6ae7f6c42b3d023af688583ac135ec8b4c09",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-rollback-admission",
+      "sha": "f68d062df0b605eec8a9d56f55399bd5edb03cfa",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-support-linux-input",
+      "sha": "93366c73fbebbb096a039e8c73097159df810d26",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/codex/del-tls-qualification-notes",
+      "sha": "e3aff53eaeae247011215cdaa37e4940fa20a02a",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae",
+      "remote_tip": "e3aff53eaeae247011215cdaa37e4940fa20a02a"
+    },
+    {
+      "ref": "refs/heads/lane-h",
+      "sha": "b23f6bc074893295010baef176e77e2c30ea276c",
+      "covered_by_e3": true,
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff",
+      "remote_tip": "00bc789eb7ff8a9aecbd5404c4fc641c733ec2c8"
+    }
+  ],
+  "owned_history_commit_mapping": [
+    {
+      "sha": "000d544dd67ffb2af506535529638c92877efb47",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "00bc789eb7ff8a9aecbd5404c4fc641c733ec2c8",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "0126e8b5fdde3b4998c8a0586a4bb652ebefc387",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9762d95e3851"
+    },
+    {
+      "sha": "02d911ad6193e6a095a6dff8fb22d3ab439f1307",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "03b57e6d8e5f704cdc65e47e497db76f17ab0d19",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "03f413391d6cfdebc0cfc325378f9a4a93a99cf9",
+      "remote_ref": "refs/heads/salvage/mac/del/history-abdeaa768de0"
+    },
+    {
+      "sha": "04865152a019f29b115e213b0ad3d75898c2901a",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c1cebfecb700"
+    },
+    {
+      "sha": "04c25687b17df0acfe45c2678e26fefb17b892d1",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "0866be6760f2396e144c6c31188e202099177ab9",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "086bdbb149a7c78c6bd93f0befe143fb8f9a1014",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c1cebfecb700"
+    },
+    {
+      "sha": "095425967a8a14bd8c07a4857c80bc4fbf2150bc",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "0a45fc3bd7df3e5d0d99f55d746efa11d6cf1a46",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "0a9995208e9c8301c8318b260045b7ff34fe2153",
+      "remote_ref": "refs/heads/salvage/mac/del/history-0a9995208e9c"
+    },
+    {
+      "sha": "0d8a456c5236d5b4b5a2b0212f82a85dda0ae626",
+      "remote_ref": "refs/heads/salvage/mac/del/history-0d8a456c5236"
+    },
+    {
+      "sha": "0f9c10effc80d5a3dfa927c1c8ecc07aac1046b2",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1a8a57d63128"
+    },
+    {
+      "sha": "132b023ee4f49c67d75a68d55e5f2c16c55f396a",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "1389de2895831f44cff9706561a969f336dde722",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "147c818bdb0e4da650b11cf43b34e0d1d46407b7",
+      "remote_ref": "refs/heads/salvage/mac/del/history-147c818bdb0e"
+    },
+    {
+      "sha": "14de60fb9077f1f5f30a17a88169046f4179b66e",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "18bbb9634ce703d80654943ed0a8f37d5a2d41a8",
+      "remote_ref": "refs/heads/salvage/mac/del/history-18bbb9634ce7"
+    },
+    {
+      "sha": "19e4b522338ad0fb3b91b6e735de1bed97baeeb2",
+      "remote_ref": "refs/heads/salvage/mac/del/history-19e4b522338a"
+    },
+    {
+      "sha": "1a41d97981798440b7f02061d3a73853726b03bc",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "1a8a57d6312812c19742dda6c35086984d9ee665",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1a8a57d63128"
+    },
+    {
+      "sha": "1aad4eed3b735c012be2ddfe8b5ab2746d9ffee9",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "1ab9c939d2cc109c076a1e7eb824e47421b7b588",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9dd7bf993078"
+    },
+    {
+      "sha": "1b7ba42c290bc5b08a836ad9866673fec8436235",
+      "remote_ref": "refs/heads/salvage/mac/del/history-af2889e3ea05"
+    },
+    {
+      "sha": "1e612adab3e5516e59d3465d77180f26d2541ee2",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "1f0db54f9d20cefc499689a97ae38fd68533922b",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c7c5645a5a7f"
+    },
+    {
+      "sha": "1fabbd768e26ecd7f27e29ca207c178cf4359f43",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "20862925324b7023751d3b5645f448d7eb093dbe",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c339dcd7cd46"
+    },
+    {
+      "sha": "226e9ca446eb8c4aa2ca617b0c0a9e4505880fd6",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "2351a2cec5e40e4f13152cac5bc5ea0534f2fdad",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b9d2296760f3"
+    },
+    {
+      "sha": "25719bd9735a361ac40d75c605d24936646296ab",
+      "remote_ref": "refs/heads/salvage/mac/del/history-f3a2124fa86d"
+    },
+    {
+      "sha": "25fff701bcc431901e31a702b59c5d79bec647f3",
+      "remote_ref": "refs/heads/salvage/mac/del/history-25fff701bcc4"
+    },
+    {
+      "sha": "26f9013090236d3b4e77c3e4867cffa620c92cec",
+      "remote_ref": "refs/heads/salvage/mac/del/history-26f901309023"
+    },
+    {
+      "sha": "288fd016b2d8ccfe7a5c04fac8b58f0ef7471d1b",
+      "remote_ref": "refs/heads/salvage/mac/del/history-7a07eb4bbdb2"
+    },
+    {
+      "sha": "28f76a320692d7d13cf8fab8e06bedc227025608",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "2a3b7d04d69314a2fae63987f8e0a587e0494213",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "2bd0729339488afa306921c873d3de0a606f3884",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "2be230fe331de77f283ab507e2dc3e0f7bf6ed68",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b29bb92cd21a"
+    },
+    {
+      "sha": "2d958cb5185b4e4a41dcc8ec56410468a99f11c6",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "2efbfebdac36158a854e324bf564520db50a5caf",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "3045126b42f2b725895164bfb93480f9f2d17adc",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "32551daed8cc19b25eba32eade7368e0d6a313d9",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "3302dc9d908bc6a23907caf612ea10ad4c0d7301",
+      "remote_ref": "refs/heads/salvage/mac/del/history-3302dc9d908b"
+    },
+    {
+      "sha": "33293fc971c919e4adad8417d368c6f9b431775c",
+      "remote_ref": "refs/heads/salvage/mac/del/history-33293fc971c9"
+    },
+    {
+      "sha": "336a65471198f8830318a73dafdce38e94a75a83",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "33e584601a0cb3f4d58ee4f97b7cf824698283ed",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "35bda9109b4447ba21edf732489f4441338f2beb",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "39e558a340cd06d696dfdbac1ab5cd5aec2350a0",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "3a30686d1c5de875b24a09de56b2d68ccd9bd12b",
+      "remote_ref": "refs/heads/salvage/mac/del/history-33293fc971c9"
+    },
+    {
+      "sha": "3a4e4cb7b41a3a2836eff47d8bab6fc996019694",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "3b94ed751c017b163870cc3bd6e806878f1b07d6",
+      "remote_ref": "refs/heads/salvage/mac/del/history-3b94ed751c01"
+    },
+    {
+      "sha": "3be70bed209d1fa9e5270a8cdee30d7937afdcd4",
+      "remote_ref": "refs/heads/salvage/mac/del/history-3be70bed209d"
+    },
+    {
+      "sha": "3ceccf911f86790e25bd6d026ebe203f259bcc03",
+      "remote_ref": "refs/heads/salvage/mac/del/history-3ceccf911f86"
+    },
+    {
+      "sha": "3fcf084bb488644e250bb7edb44adbfa0b5cdb81",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b962c021b03b"
+    },
+    {
+      "sha": "40976d3093afcb41ad936e2f02bfdff5efa1b41d",
+      "remote_ref": "refs/heads/salvage/mac/del/history-40976d3093af"
+    },
+    {
+      "sha": "41a09d77ed6337eb27a4cb55727f8fbaefde4e68",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "434445a5b05ac12cf6ab35f24510e96b46a703dc",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "4540bf61d08620410a8383b48b192fd106e1e8a7",
+      "remote_ref": "refs/heads/salvage/mac/del/history-3ceccf911f86"
+    },
+    {
+      "sha": "492f8b17352ec512f1d6cea7cdce179fd8f961e0",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "49846a5bb8849c3d37223a2e8041f15684857c8c",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "4a6489bd05c7b07dcdc9be326f52516b1f8d97f6",
+      "remote_ref": "refs/heads/salvage/mac/del/history-33293fc971c9"
+    },
+    {
+      "sha": "4af478ece83c798601bb25fc43d3ad67d20ec4f6",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "4c60ec217bf59f3a85af78ba284c75fc1dbfbb88",
+      "remote_ref": "refs/heads/salvage/mac/del/history-4c60ec217bf5"
+    },
+    {
+      "sha": "4dac504f52daeb4211100e1cb3d75c04c35c8502",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "4de541ea1f07730a2c36a4f94b834bdaaee45dc9",
+      "remote_ref": "refs/heads/salvage/mac/del/history-26f901309023"
+    },
+    {
+      "sha": "4e35b565803bed9fdb5b4a5e700b2c1add23f7aa",
+      "remote_ref": "refs/heads/salvage/mac/del/history-0a9995208e9c"
+    },
+    {
+      "sha": "524c3eabcfe5c8ec91e9a1f088698e0252c03235",
+      "remote_ref": "refs/heads/salvage/mac/del/history-524c3eabcfe5"
+    },
+    {
+      "sha": "557daa0f5617f628a07b58def81a0654906ac5ff",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "5876679290c3cbfc4e53b25adbe03e4784f4e331",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "5893a7c6bf1b1e9314e463c09b9b363c64d0d3bc",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "58e6036e166823520c45d5d3502e0da89d70c623",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "5da625ff73e34cbaec23398ea23ceb75a847b8c4",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "5df78b5505ac3e45ff5b76feb0e82c8013ca4a98",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "5e764ea567b3613e96679cc3c0ea4d651707826c",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "61b977a18268abb01b7a576a304c2c18b1dcda99",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "620f76daef06b0028112022b652281bc61bfdae0",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "6486f38991faea05622c66941c3d8ec0c53aa550",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "66a82201b523132469bcb6426eaa0ca6ccaa832c",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "673fe10b7574c44519c55790420d2585ff3d149b",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "69ba1bf86ba6c6525fa3d88a3e7ba449681ecc6f",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9dd7bf993078"
+    },
+    {
+      "sha": "6b9ff1e588ab6a0261edb833a94d25148bd8b8bc",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "6ba792fc82ec1a40109df930b0a0dd09f3dbf748",
+      "remote_ref": "refs/heads/salvage/mac/del/history-6ba792fc82ec"
+    },
+    {
+      "sha": "745452f4ab55cda51f08b992ea1f25a9e7d90bc9",
+      "remote_ref": "refs/heads/salvage/mac/del/history-f3a2124fa86d"
+    },
+    {
+      "sha": "75268a6e8fb2e67b8acbac47bc9b9d3d116fb50e",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "761f8b1157e823d2bd9d952345ebad5ad6175c88",
+      "remote_ref": "refs/heads/salvage/mac/del/history-761f8b1157e8"
+    },
+    {
+      "sha": "7682f5172412dfdb234eab633ec9e58d7ceaa8b2",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b9d2296760f3"
+    },
+    {
+      "sha": "76a9172c39d7781efbf60d5021100dad66a87ded",
+      "remote_ref": "refs/heads/salvage/mac/del/history-76a9172c39d7"
+    },
+    {
+      "sha": "76d1ff36218a3986f38c8ac8bd18c9d9ee3a7db0",
+      "remote_ref": "refs/heads/salvage/mac/del/history-965524f8d7ba"
+    },
+    {
+      "sha": "7769eb67f1a5c800945403736d98e662a3852305",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "77de241d343149e1dbee156b8c8b4bcecfdaf8b8",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "78c93a332c7591ccf7f1cebdb1a7931add2e283d",
+      "remote_ref": "refs/heads/salvage/mac/del/history-78c93a332c75"
+    },
+    {
+      "sha": "7a07eb4bbdb2b1b1ce5de9728896fa8cdb092644",
+      "remote_ref": "refs/heads/salvage/mac/del/history-7a07eb4bbdb2"
+    },
+    {
+      "sha": "7a69b57c01d5ffb4d5d19a5b90bd911417bc2968",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9dd7bf993078"
+    },
+    {
+      "sha": "7c6f99e7d15f614302fb245bb91e2735baf49167",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "7d738f7a8c83bd6984c9594578e6ef1b68ca6361",
+      "remote_ref": "refs/heads/salvage/mac/del/history-0a9995208e9c"
+    },
+    {
+      "sha": "7e836109a599422e10d517d646a5a841a5dec9e9",
+      "remote_ref": "refs/heads/salvage/mac/del/history-7a07eb4bbdb2"
+    },
+    {
+      "sha": "7f7363e0b1ec3731e72c63226cccb48181b1ad2f",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "7f9e85afdfdade1eca0ae93f8aded63792c66bdd",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "81d0f48d577df0fea3c05f8624dd20a982813495",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9dd7bf993078"
+    },
+    {
+      "sha": "823e1cf8ee795a91cbb91fa5dd513d73ead8baaa",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "82797d7b43069009905fd2f3267b869e0fe6e5a5",
+      "remote_ref": "refs/heads/salvage/mac/del/history-33293fc971c9"
+    },
+    {
+      "sha": "8385b5f1d4d8f02686ec4db120b5e0a1a68011c7",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "842fe0b310e02873e7b95c0c886ce031dd535a5e",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "8492cce09bcdf7ee6ae58593fee7b802f819e027",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c7c5645a5a7f"
+    },
+    {
+      "sha": "84cb3dd4eb4f3a9170111b28c8032df7c6cc3a47",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "852f3456797c86b33dacc6c44a439b1260900f10",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "855d0ce8c7ebc0ef84ea7b2edf01d1a4e47fc087",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b9d2296760f3"
+    },
+    {
+      "sha": "85c2abdd4b3deacc6c12a5929f77f5a5c579cbfc",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "861e72e505f99a7dfad24bc68d6099114a3aa156",
+      "remote_ref": "refs/heads/salvage/mac/del/history-861e72e505f9"
+    },
+    {
+      "sha": "8b3b89aa50a3b3f87d584456e2ce6a127d372b8d",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "8c81fb296538534a2c85decd87918a483fe3ac52",
+      "remote_ref": "refs/heads/salvage/mac/del/history-8c81fb296538"
+    },
+    {
+      "sha": "8d2d2ebc61b5e6da22645c3813e82707d826cdf9",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "8e15ec91a426e9dda71d1600abb908e625dd1140",
+      "remote_ref": "refs/heads/salvage/mac/del/history-99c5b93d9531"
+    },
+    {
+      "sha": "908ec3d3cd0c407c8b983800781ebe97db3ea2d9",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "9093e8d74ea2a5c2837fb36ca2d85930ac09c9ac",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "93366c73fbebbb096a039e8c73097159df810d26",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "9372c0dcf93a9198c048d160ffeeb4c02e915d16",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "9390df0ecb728fca939b1f0652e7af1f653b092c",
+      "remote_ref": "refs/heads/salvage/mac/del/history-0d8a456c5236"
+    },
+    {
+      "sha": "93d766f62a1f79450a00072525621a09532ca2fd",
+      "remote_ref": "refs/heads/salvage/mac/del/history-93d766f62a1f"
+    },
+    {
+      "sha": "965524f8d7ba1bea47af6fff64834b328a46a747",
+      "remote_ref": "refs/heads/salvage/mac/del/history-965524f8d7ba"
+    },
+    {
+      "sha": "967da9f0dbd9db5b97598f864e1de9566211ce57",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "9762d95e3851932c53e06a4fee892d66541eeacf",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9762d95e3851"
+    },
+    {
+      "sha": "986ba04c13d0daea07ed542c1408417f5d7125f0",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b962c021b03b"
+    },
+    {
+      "sha": "9950d0f82e1f21353664658d2299e2d7a2cc4ed8",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9950d0f82e1f"
+    },
+    {
+      "sha": "99c5b93d95313f987393d20086ae749bb44688fc",
+      "remote_ref": "refs/heads/salvage/mac/del/history-99c5b93d9531"
+    },
+    {
+      "sha": "9af73080c0a2efe0ce4b806409314176a5584221",
+      "remote_ref": "refs/heads/salvage/mac/del/history-33293fc971c9"
+    },
+    {
+      "sha": "9af8e4ffe53c426024164821a930688f94edeed1",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "9b4f1045202295a7ea0e6e0b5ae41f42f121f3a2",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "9c9c8ef054d50262bd9d794c57b10382f6373963",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "9ccc828833ae60db3621d33a00938edaf3093948",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "9dd7bf993078a2b5b254789cad5163b50c8deaad",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9dd7bf993078"
+    },
+    {
+      "sha": "9def460ffab7bb33b8bfd15d266d04765b2705bf",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "a0d5f792a039f7d0eb87f1128724194ac0b19e4f",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "a182bf9a29d283b30695b156058fd92e91367363",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "a31ffa127aeeec2d13e25222e08115ed1ab938be",
+      "remote_ref": "refs/heads/salvage/mac/del/history-93d766f62a1f"
+    },
+    {
+      "sha": "a492e4160420a6965d9583565e39a0b09fc9eb1d",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "a67c5f8fb88299cb68441fb092e07d1f1fff1726",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "a957bce46163d83b5de2bb92f89d72bbc38f6a78",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "a9972e630a673d49d9cda3dd37c59134130b5027",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "ab7e3ee084871856e79fe0c7f139fe7e4cbcda5b",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "abdeaa768de0f2d31f98983af23509a56c11ce4c",
+      "remote_ref": "refs/heads/salvage/mac/del/history-abdeaa768de0"
+    },
+    {
+      "sha": "ac361230cce0d94b09ce468f3daff529eb035b89",
+      "remote_ref": "refs/heads/salvage/mac/del/history-ac361230cce0"
+    },
+    {
+      "sha": "ae150ec5fa5d902e34c56e758b5d0975a453a53c",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b962c021b03b"
+    },
+    {
+      "sha": "ae459b18d40e71368a761ad143ad19ee8a2967c3",
+      "remote_ref": "refs/heads/salvage/mac/del/history-ae459b18d40e"
+    },
+    {
+      "sha": "af2889e3ea051251d0e1834828a06f38da867b94",
+      "remote_ref": "refs/heads/salvage/mac/del/history-af2889e3ea05"
+    },
+    {
+      "sha": "af292111f30404e588eb0c8dde94a46801f0fcb7",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "b16ec4581804598ecc8cf2eccee0078d1b574502",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "b23f6bc074893295010baef176e77e2c30ea276c",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "b29638531d4bab20ac917cc81099f8deac5c5ddf",
+      "remote_ref": "refs/heads/salvage/mac/del/history-d6a4f1a6fc3b"
+    },
+    {
+      "sha": "b29bb92cd21acb2b58183c9939024e96a6e60119",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b29bb92cd21a"
+    },
+    {
+      "sha": "b36fca09ce8f58eaedc3b02e9e030e52af8cb620",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "b376c97ec486369bc610129d333da79d93a29839",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c1cebfecb700"
+    },
+    {
+      "sha": "b74fe45ec7383e5f2e27307f0a74dfdbdf2b0c10",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b7d2be95a1f0"
+    },
+    {
+      "sha": "b7ce99baa2ff102253ed128da896bcefd2f71201",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "b7d2be95a1f08c2e7b8a2ff0aa13f27030e0b5ef",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b7d2be95a1f0"
+    },
+    {
+      "sha": "b887078a6eafb9a70bcbd646daf2d8d3e990ac7b",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b887078a6eaf"
+    },
+    {
+      "sha": "b919c5867896c6b7551f0def19046f8389e9d439",
+      "remote_ref": "refs/heads/salvage/mac/del/history-f3a2124fa86d"
+    },
+    {
+      "sha": "b962c021b03b0ca7c2e0614f58c75e1a369fe17d",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b962c021b03b"
+    },
+    {
+      "sha": "b976be942651bd1a59e10b17a2fe0e6263326e96",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "b9d2296760f3e049b22040be05fab773c36e51a0",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b9d2296760f3"
+    },
+    {
+      "sha": "bc10f8d56521777182bb2f9fdb0be65e8e8947a0",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "bc6e4b0274d494109c0b726ec545bf90ac2409c5",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "bf4361436608c36618d69e6d903a82572d14c3be",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "c063eace23644ae862a00921358c220be70ee08f",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "c0e48c367a5ae625ff27693fd043962b3463b2be",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "c15062991cffcb295145791372c872579e5895ec",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "c1939365d6f477c18f8fab327e9ee4e43c5c7165",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "c1cebfecb700b0040c9ae010121f3c80ee0f5d2c",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c1cebfecb700"
+    },
+    {
+      "sha": "c20bc3897e538b53f40dea623ada0d66f040c1c8",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "c23aba57c2c4dc841dfe87636d4df0519415ccff",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "c26dfd9e28d570f61f120376178769a707e96cf3",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "c339dcd7cd46438788524837031ed7f55c8319f7",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c339dcd7cd46"
+    },
+    {
+      "sha": "c4b917fae3358d06e8158d0bd319cb41d3afda4c",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "c670ab346cd0842d85474efae02a48a7182797c3",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "c6d5d1c1dbedef3774a7f8862f119ce464f3e240",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "c7c5645a5a7f2e71255c00d8b6a94dbe0ad7aa47",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c7c5645a5a7f"
+    },
+    {
+      "sha": "c8ac8d81fe639679ffb857c9a0d7eebe1f0df8fa",
+      "remote_ref": "refs/heads/salvage/mac/del/history-861e72e505f9"
+    },
+    {
+      "sha": "c9037ca2b0fb8d95ab93b4966ecbb36bd80e4b69",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "cb45ea93d31ea6ad8076c716171f68a85282f42c",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "cd193b497a13d771fb262c5dfa8639a6ebf038d8",
+      "remote_ref": "refs/heads/salvage/mac/del/history-0a9995208e9c"
+    },
+    {
+      "sha": "cdd3c8ac30b66faa69e290d7df88ae335f3fb30a",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "ce418068348c32b4c8f712d6b2220c5f647e0b9d",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "cf1ec07039393de2ec3530ece05c4e10557baa00",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "d22cf96d30234aae981a7dfca204e4a38ea52ef9",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "d2ca13940b9d224fb35ed6ac295dbe56ba08b17f",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "d49e5af8e88d72e74440f60f0d96ea0124b484be",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "d5c36b3e24df23cb0e709a1f23f8961623ad129c",
+      "remote_ref": "refs/heads/salvage/mac/del/history-524c3eabcfe5"
+    },
+    {
+      "sha": "d5e341e957c7a893791f8aa1aee088dd4487a926",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "d6a4f1a6fc3b6d9c4dbd44612ae20be2be3dbc56",
+      "remote_ref": "refs/heads/salvage/mac/del/history-d6a4f1a6fc3b"
+    },
+    {
+      "sha": "d9ca79d006efc9275a35cd8092419884465b7ba2",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c1cebfecb700"
+    },
+    {
+      "sha": "db5c70ee73c6dc9d192d6453632480378c180bf6",
+      "remote_ref": "refs/heads/salvage/mac/del/history-1389de289583"
+    },
+    {
+      "sha": "dc0d5a090914b7412216a914f5e08fa6abeb5fab",
+      "remote_ref": "refs/heads/salvage/mac/del/history-dc0d5a090914"
+    },
+    {
+      "sha": "ded6a8a494cef12bd703988a82e294fc7eba77ce",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "e03ce1bf87fca171d0aa2f5b9e4e5da9948e0194",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "e06fad04075ce7c00355bbf1a4cf50d75362f0e8",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9dd7bf993078"
+    },
+    {
+      "sha": "e18beaee22f389b679a4c7e3adaa85d4c70711ec",
+      "remote_ref": "refs/heads/salvage/mac/del/history-fc3cfacaa3e4"
+    },
+    {
+      "sha": "e1dba7e79e5c09a20722ed8ff89d8058208bc3ca",
+      "remote_ref": "refs/heads/salvage/mac/del/history-00bc789eb7ff"
+    },
+    {
+      "sha": "e3109778119c41385ca98c0f5b2f9989d5376559",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "e3aff53eaeae247011215cdaa37e4940fa20a02a",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "e4fdbc9d578a904bfc7d697f4f5589ca0691f58a",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "e55bed9001a08864a80d08b3c42a1e84c7e2298b",
+      "remote_ref": "refs/heads/salvage/mac/del/history-9dd7bf993078"
+    },
+    {
+      "sha": "e5c8484274e5b1ddf75eefc437750377318608c0",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "e8c8824ddf776f387117589077adaa18d20beea9",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "f190baebd73c8dbd87fd3807ea6625bffa503ead",
+      "remote_ref": "refs/heads/salvage/mac/del/history-b9d2296760f3"
+    },
+    {
+      "sha": "f262761dbe949e5cf5594d86b81e972bd98cb9cf",
+      "remote_ref": "refs/heads/salvage/mac/del/history-f262761dbe94"
+    },
+    {
+      "sha": "f3a2124fa86d30d292433a5a40ef8c2e95677c0e",
+      "remote_ref": "refs/heads/salvage/mac/del/history-f3a2124fa86d"
+    },
+    {
+      "sha": "f485bc887f47141281524d131a33ae1830f7ca43",
+      "remote_ref": "refs/heads/salvage/mac/del/history-0a9995208e9c"
+    },
+    {
+      "sha": "f643ac515c631665205fa79abd8641798eca6809",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "f68d062df0b605eec8a9d56f55399bd5edb03cfa",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "f793f321a0526401eb560400c53bcc29175a564f",
+      "remote_ref": "refs/heads/salvage/mac/del/history-f793f321a052"
+    },
+    {
+      "sha": "f83f62071cf3668d01ce34bb25d9ac4876515eb3",
+      "remote_ref": "refs/heads/salvage/mac/del/history-f83f62071cf3"
+    },
+    {
+      "sha": "f884a26fd8b4e41abab37703b763ddf907c64ef7",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "f90bf3c80a8311eb91fc3eb292f5b3150e9f9091",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "f9db6ae7f6c42b3d023af688583ac135ec8b4c09",
+      "remote_ref": "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae"
+    },
+    {
+      "sha": "fa880a71c2dc36258ec5cef45e480a015f5b34a0",
+      "remote_ref": "refs/heads/salvage/mac/del/history-02d911ad6193"
+    },
+    {
+      "sha": "fb7a6e99a9b52e6beed5bbe69d1e00e359651eca",
+      "remote_ref": "refs/heads/salvage/mac/del/history-fb7a6e99a9b5"
+    },
+    {
+      "sha": "fc3cfacaa3e409e782ba03d873417714a0436610",
+      "remote_ref": "refs/heads/salvage/mac/del/history-fc3cfacaa3e4"
+    },
+    {
+      "sha": "fcbd324b15708c7aa36d34a57a2cb8e0d4b14e6b",
+      "remote_ref": "refs/heads/salvage/mac/del/history-fcbd324b1570"
+    },
+    {
+      "sha": "fed794bb4310a17e31a950064226c7767a4572a2",
+      "remote_ref": "refs/heads/salvage/mac/del/history-33293fc971c9"
+    },
+    {
+      "sha": "ff7969a4cec0d25b484c335412c1a6afb7444dc6",
+      "remote_ref": "refs/heads/salvage/mac/del/history-c7c5645a5a7f"
+    }
+  ],
+  "immutable_remote_refs": {
+    "refs/heads/salvage/mac/del/history-00bc789eb7ff": "00bc789eb7ff8a9aecbd5404c4fc641c733ec2c8",
+    "refs/heads/salvage/mac/del/history-02d911ad6193": "02d911ad6193e6a095a6dff8fb22d3ab439f1307",
+    "refs/heads/salvage/mac/del/history-0a9995208e9c": "0a9995208e9c8301c8318b260045b7ff34fe2153",
+    "refs/heads/salvage/mac/del/history-0d8a456c5236": "0d8a456c5236d5b4b5a2b0212f82a85dda0ae626",
+    "refs/heads/salvage/mac/del/history-1389de289583": "1389de2895831f44cff9706561a969f336dde722",
+    "refs/heads/salvage/mac/del/history-147c818bdb0e": "147c818bdb0e4da650b11cf43b34e0d1d46407b7",
+    "refs/heads/salvage/mac/del/history-18bbb9634ce7": "18bbb9634ce703d80654943ed0a8f37d5a2d41a8",
+    "refs/heads/salvage/mac/del/history-19e4b522338a": "19e4b522338ad0fb3b91b6e735de1bed97baeeb2",
+    "refs/heads/salvage/mac/del/history-1a8a57d63128": "1a8a57d6312812c19742dda6c35086984d9ee665",
+    "refs/heads/salvage/mac/del/history-25fff701bcc4": "25fff701bcc431901e31a702b59c5d79bec647f3",
+    "refs/heads/salvage/mac/del/history-26f901309023": "26f9013090236d3b4e77c3e4867cffa620c92cec",
+    "refs/heads/salvage/mac/del/history-3302dc9d908b": "3302dc9d908bc6a23907caf612ea10ad4c0d7301",
+    "refs/heads/salvage/mac/del/history-33293fc971c9": "33293fc971c919e4adad8417d368c6f9b431775c",
+    "refs/heads/salvage/mac/del/history-3b94ed751c01": "3b94ed751c017b163870cc3bd6e806878f1b07d6",
+    "refs/heads/salvage/mac/del/history-3be70bed209d": "3be70bed209d1fa9e5270a8cdee30d7937afdcd4",
+    "refs/heads/salvage/mac/del/history-3ceccf911f86": "3ceccf911f86790e25bd6d026ebe203f259bcc03",
+    "refs/heads/salvage/mac/del/history-40976d3093af": "40976d3093afcb41ad936e2f02bfdff5efa1b41d",
+    "refs/heads/salvage/mac/del/history-4c60ec217bf5": "4c60ec217bf59f3a85af78ba284c75fc1dbfbb88",
+    "refs/heads/salvage/mac/del/history-524c3eabcfe5": "524c3eabcfe5c8ec91e9a1f088698e0252c03235",
+    "refs/heads/salvage/mac/del/history-6ba792fc82ec": "6ba792fc82ec1a40109df930b0a0dd09f3dbf748",
+    "refs/heads/salvage/mac/del/history-761f8b1157e8": "761f8b1157e823d2bd9d952345ebad5ad6175c88",
+    "refs/heads/salvage/mac/del/history-76a9172c39d7": "76a9172c39d7781efbf60d5021100dad66a87ded",
+    "refs/heads/salvage/mac/del/history-78c93a332c75": "78c93a332c7591ccf7f1cebdb1a7931add2e283d",
+    "refs/heads/salvage/mac/del/history-7a07eb4bbdb2": "7a07eb4bbdb2b1b1ce5de9728896fa8cdb092644",
+    "refs/heads/salvage/mac/del/history-861e72e505f9": "861e72e505f99a7dfad24bc68d6099114a3aa156",
+    "refs/heads/salvage/mac/del/history-8c81fb296538": "8c81fb296538534a2c85decd87918a483fe3ac52",
+    "refs/heads/salvage/mac/del/history-93d766f62a1f": "93d766f62a1f79450a00072525621a09532ca2fd",
+    "refs/heads/salvage/mac/del/history-965524f8d7ba": "965524f8d7ba1bea47af6fff64834b328a46a747",
+    "refs/heads/salvage/mac/del/history-9762d95e3851": "9762d95e3851932c53e06a4fee892d66541eeacf",
+    "refs/heads/salvage/mac/del/history-9950d0f82e1f": "9950d0f82e1f21353664658d2299e2d7a2cc4ed8",
+    "refs/heads/salvage/mac/del/history-99c5b93d9531": "99c5b93d95313f987393d20086ae749bb44688fc",
+    "refs/heads/salvage/mac/del/history-9dd7bf993078": "9dd7bf993078a2b5b254789cad5163b50c8deaad",
+    "refs/heads/salvage/mac/del/history-abdeaa768de0": "abdeaa768de0f2d31f98983af23509a56c11ce4c",
+    "refs/heads/salvage/mac/del/history-ac361230cce0": "ac361230cce0d94b09ce468f3daff529eb035b89",
+    "refs/heads/salvage/mac/del/history-ae459b18d40e": "ae459b18d40e71368a761ad143ad19ee8a2967c3",
+    "refs/heads/salvage/mac/del/history-af2889e3ea05": "af2889e3ea051251d0e1834828a06f38da867b94",
+    "refs/heads/salvage/mac/del/history-b29bb92cd21a": "b29bb92cd21acb2b58183c9939024e96a6e60119",
+    "refs/heads/salvage/mac/del/history-b7d2be95a1f0": "b7d2be95a1f08c2e7b8a2ff0aa13f27030e0b5ef",
+    "refs/heads/salvage/mac/del/history-b887078a6eaf": "b887078a6eafb9a70bcbd646daf2d8d3e990ac7b",
+    "refs/heads/salvage/mac/del/history-b962c021b03b": "b962c021b03b0ca7c2e0614f58c75e1a369fe17d",
+    "refs/heads/salvage/mac/del/history-b9d2296760f3": "b9d2296760f3e049b22040be05fab773c36e51a0",
+    "refs/heads/salvage/mac/del/history-c1cebfecb700": "c1cebfecb700b0040c9ae010121f3c80ee0f5d2c",
+    "refs/heads/salvage/mac/del/history-c339dcd7cd46": "c339dcd7cd46438788524837031ed7f55c8319f7",
+    "refs/heads/salvage/mac/del/history-c7c5645a5a7f": "c7c5645a5a7f2e71255c00d8b6a94dbe0ad7aa47",
+    "refs/heads/salvage/mac/del/history-d6a4f1a6fc3b": "d6a4f1a6fc3b6d9c4dbd44612ae20be2be3dbc56",
+    "refs/heads/salvage/mac/del/history-dc0d5a090914": "dc0d5a090914b7412216a914f5e08fa6abeb5fab",
+    "refs/heads/salvage/mac/del/history-f262761dbe94": "f262761dbe949e5cf5594d86b81e972bd98cb9cf",
+    "refs/heads/salvage/mac/del/history-f3a2124fa86d": "f3a2124fa86d30d292433a5a40ef8c2e95677c0e",
+    "refs/heads/salvage/mac/del/history-f793f321a052": "f793f321a0526401eb560400c53bcc29175a564f",
+    "refs/heads/salvage/mac/del/history-f83f62071cf3": "f83f62071cf3668d01ce34bb25d9ac4876515eb3",
+    "refs/heads/salvage/mac/del/history-fb7a6e99a9b5": "fb7a6e99a9b52e6beed5bbe69d1e00e359651eca",
+    "refs/heads/salvage/mac/del/history-fc3cfacaa3e4": "fc3cfacaa3e409e782ba03d873417714a0436610",
+    "refs/heads/salvage/mac/del/history-fcbd324b1570": "fcbd324b15708c7aa36d34a57a2cb8e0d4b14e6b",
+    "refs/heads/salvage/mac/del/del-tls-qualification-notes-e3aff53eaeae": "e3aff53eaeae247011215cdaa37e4940fa20a02a",
+    "refs/heads/salvage/mac/del/del-recovered-acceptance-9372c0dcf93a": "9372c0dcf93a9198c048d160ffeeb4c02e915d16"
+  },
+  "private_index": {
+    "path": "/Users/passion./Documents/Codex/2026-11-12/ownsolid-del-recovery/index",
+    "sha256": "126063da7fc975e4ec2a85e01e46a4faf9e35fc68bb0b990c251ded5465fac48",
+    "source_head": "836c8048a21b4e34c49b74bb2e0c05f4d9a4d8ad",
+    "entry_count": 4906,
+    "uncovered_entries": 0
+  },
+  "main_commits_pushed": 0,
+  "source_archive_is_separate_root_history": true
+}

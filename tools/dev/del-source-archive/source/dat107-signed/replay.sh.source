@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+fixture=$(cd "$(dirname "$0")" && pwd -P)
+if [[ $# != 2 || ! $2 =~ ^[a-f0-9]{40}$ ]]; then
+    echo 'Usage: replay.sh <clean checkout> <accepted audit58 commit>, in the scheduled Linux delivery window' >&2
+    exit 75
+fi
+source_root=$(cd "$1" && pwd -P)
+expected=$(git -C "$source_root" rev-parse HEAD)
+accepted_arc=$2
+git -C "$source_root" merge-base --is-ancestor "$accepted_arc" "$expected"
+test -z "$(git -C "$source_root" status --porcelain)"
+for suffix in up down; do
+    migration="services/control/migrations/postgresql/000058_audit_chain_head_scope.$suffix.sql"
+    git -C "$source_root" diff-tree --no-commit-id --name-only -r "$accepted_arc" -- "$migration" |
+        grep -Fxq "$migration"
+    git -C "$source_root" cat-file -e "$accepted_arc:$migration"
+    git -C "$source_root" diff --quiet "$accepted_arc" "$expected" -- "$migration"
+done
+printf '%s  %s\n' 832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e "$fixture/qwen-license" | shasum -a 256 -c -
+COPYFILE_DISABLE=1 tar --no-xattrs -C "$fixture" -czf "$fixture/inputs.tar.gz" \
+    host.sh isolated.sh preview_inputs.py check_notices.py qwen-license signed_preview_fixture_test.go signed_preview_bridge_test.go
+remote=$(ssh -o BatchMode=yes -o ConnectTimeout=10 ownsolid-cpu 'umask 077; mktemp -d /dev/shm/lane-del-dat107-signed.XXXXXXXX')
+case "$remote" in /dev/shm/lane-del-dat107-signed.????????) ;; *) exit 1 ;; esac
+printf '%s\n' "$remote" > "$fixture/remote-path"
+ssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=4 ownsolid-cpu \
+    "set -e; trap 'rm -r -- $remote' EXIT; tar -xzf - -C '$remote'; bash '$remote/host.sh' '$remote' /root/lane-del '$expected'" \
+    < "$fixture/inputs.tar.gz"

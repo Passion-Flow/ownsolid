@@ -1,0 +1,18 @@
+from pathlib import Path
+import json,os,subprocess,sys
+root=Path(__file__).resolve().parent;client=root/'installed-entry'
+source=Path("/Users/passion./Documents/Passion's WorkSpace/Development/lane-del-main60-preparation")
+revision='5893a7c6bf1b1e9314e463c09b9b363c64d0d3bc'
+subprocess.run(['df','-h','/'],check=True)
+environment={k:v for k,v in os.environ.items() if not k.startswith(('OWNSOLID_','PLAYWRIGHT_'))}
+environment['PATH']=str(Path(sys.executable).parent)+os.pathsep+environment['PATH']
+subprocess.run([sys.executable,str(client/'bind.py'),str(source),revision],env=environment,check=True)
+subprocess.run(['bash',str(client/'checks.sh'),str(client)],cwd=client,env=environment,check=True)
+assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()==revision
+assert not subprocess.check_output(['git','status','--porcelain'],cwd=source,text=True).strip()
+result=json.loads((root/'verification.json').read_text())
+result['candidate_checks']='TypeScript, 18 input guards, 4 output guards, three discoveries completed; inspect original logs'
+result['binding']=json.loads((client/'binding.json').read_text())
+result['browser_started']=False;result['server_used']=False;result['runtime_fixture']='Intentionally invalid until new installed inputs exist'
+(root/'candidate-checks.json').write_text(json.dumps(result,indent=2)+'\n')
+print('Candidate binding checks completed; no freeze or installed run',flush=True)

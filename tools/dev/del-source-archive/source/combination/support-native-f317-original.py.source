@@ -1,0 +1,215 @@
+"""One coordinator-authorized, five-minute local support/CLI opportunity."""
+import argparse
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import signal
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+import uuid
+
+def digest(path):
+    h=hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda:stream.read(1048576),b''): h.update(block)
+    return h.hexdigest()
+
+def save(path,value):
+    with path.open('w') as stream:
+        json.dump(value,stream,sort_keys=True,indent=2)
+        stream.write('\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+
+def run(config, config_path):
+    os.umask(0o077)
+    started=time.monotonic()
+    deadline=started+config['hard_seconds']
+    source=Path(config['source'])
+    output=Path(tempfile.mkdtemp(prefix='support-native.',dir=config['evidence_parent']))
+    print(output,flush=True)
+    state={'parent':{'pid':os.getpid(),'start_ticks':Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]},'scope':'Exact working-tree support unit/CLI protocol only; no product, database, server audit or release qualification',
+           'steps':[],'leases':[],'status':'prepared'}
+    descriptors=[]
+    children=[]
+    fixture=None
+    result=1
+    def interrupted(signum,frame):raise RuntimeError("Parent interrupted by signal "+str(signum))
+    previous={signum:signal.signal(signum,interrupted) for signum in [signal.SIGTERM,signal.SIGINT,signal.SIGHUP]}
+    def remaining():
+        value=deadline-time.monotonic()-config['cleanup_seconds']
+        if value<=0:raise TimeoutError('Work deadline reached')
+        return value
+    def execute(stage,args,env=None,cwd=None,limit=120):
+        seconds=min(limit,remaining())
+        with (output/(stage+'.log')).open('w') as log:
+            process=subprocess.Popen(args,env=env,cwd=cwd,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            children.append(process)
+            step={'stage':stage,'pid':process.pid,'timeout_seconds':seconds}
+            state['steps'].append(step)
+            save(output/'result.json',state)
+            try:
+                code=process.wait(timeout=seconds)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid,signal.SIGTERM)
+                try:process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    os.killpg(process.pid,signal.SIGKILL)
+                    process.wait(timeout=5)
+                step['exit']=process.returncode
+                raise
+            step['exit']=code
+            save(output/'result.json',state)
+            if code:raise RuntimeError(stage+' exited '+str(code))
+    try:
+        assert 0 < config['hard_seconds'] <= 300 and 1 <= config['workers'] <= 2
+        assert config['minimum_free_memory_bytes'] >= 2*1024**3
+        assert config['minimum_available_memory_bytes'] >= 8*1024**3
+        assert config['minimum_disk_bytes'] >= 30*1024**3
+        assert config['maximum_full_io_avg10'] <= 5
+        assert config['uid'] > 0 and config['gid'] > 0
+        assert config['locks'] == ['/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock']
+        assert sys.platform=='linux' and os.uname().machine=='x86_64' and os.geteuid()==0
+        head=subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True).strip()
+        changed=subprocess.check_output(['git','-C',str(source),'diff','HEAD','--binary'])
+        names=subprocess.check_output(['git','-C',str(source),'ls-files','--modified','--others','--exclude-standard'],text=True).splitlines()
+        allowed={'deploy/offline/README.md','docs/research/support-diagnostics.md',
+                 'docs/decisions/0071-record-diagnostic-reads-before-local-collection.md'}
+        allowed.update('deploy/offline/internal/install/'+name for name in [
+            'support.go','support_cluster.go','support_operations.go','support_access.go',
+            'support_access_test.go','support_access_cli_test.go'])
+        assert head == config['candidate'] and not names and not changed, 'Require pinned source with no staged, unstaged or untracked changes'
+        selected=allowed | {'go.work','deploy/offline/go.mod','deploy/offline/go.sum',
+            'deploy/offline/internal/install/testdata/installed-acceptance/acceptance_guard.py',
+            'deploy/offline/internal/install/testdata/installed-acceptance/native_capture_selftest.py'}
+        hashes={name:digest(source/name) for name in sorted(selected)}
+        save(output/'source.json',{'base_commit':head,'working_tree_modified':bool(names),
+            'tracked_diff_sha256':hashlib.sha256(changed).hexdigest(),'files':hashes,
+            'runner_sha256':digest(__file__),'config_sha256':digest(config_path),'config':config})
+        shutil.copyfile(__file__,output/'parent.py')
+        shutil.copyfile(config_path,output/'runtime.json')
+        (output/'own-changes.patch').write_bytes(changed)
+        (output/'committed-change.patch').write_bytes(subprocess.check_output(
+            ['git','-C',str(source),'show','--format=','--binary',head]))
+        for path in config['locks']:
+            fd=os.open(path,os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW,0o600)
+            descriptors.append(fd)
+            info=os.fstat(fd)
+            assert stat.S_ISREG(info.st_mode) and info.st_uid==os.geteuid()
+            assert os.path.samestat(info,Path(path).lstat())
+            item={'path':path,'fd':fd,'device':info.st_dev,'inode':info.st_ino,'acquired':False}
+            state['leases'].append(item)
+            try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError:
+                key=':%d'%info.st_ino
+                item['kernel_matches']=[line for line in Path('/proc/locks').read_text().splitlines() if key in line]
+                state['status']='lease-busy'
+                result=75
+                return result
+            item['acquired']=True
+        state['parent']={'pid':os.getpid(),'start_ticks':Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]}
+        memory={line.split(':')[0]:int(line.split()[1])*1024 for line in Path('/proc/meminfo').read_text().splitlines()}
+        pressure=Path('/proc/pressure/io').read_text()
+        full=float(next(line for line in pressure.splitlines() if line.startswith('full ')).split('avg10=')[1].split()[0])
+        disk=shutil.disk_usage(output)
+        state['resources']={'memfree':memory['MemFree'],'memavailable':memory['MemAvailable'],
+                            'swapfree':memory['SwapFree'],'disk_free':disk.free,'io':pressure}
+        if not (memory['MemFree']>=config['minimum_free_memory_bytes'] and
+                memory['MemAvailable']>=config['minimum_available_memory_bytes'] and
+                disk.free>=config['minimum_disk_bytes'] and full<=config['maximum_full_io_avg10']):
+            state['status']='resource-refused'
+            result=75
+            return result
+        save(output/'parent.json',{'parent':state['parent'],'leases':state['leases'],'resources':state['resources']})
+        env=dict(os.environ,GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',CGO_ENABLED='0',
+                 GOFLAGS='-p='+str(config['workers']),GOMAXPROCS=str(config['workers']),
+                 GOMEMLIMIT=str(config['go_memory_bytes'])+'B',TMPDIR='/tmp/')
+        execute('build-installer',[config['go'],'-C',str(source/'deploy/offline'),'build','-trimpath','-o',str(output/'ownsolid-install'),'./cmd/install'],env)
+        execute('build-tests',[config['go'],'-C',str(source/'deploy/offline'),'test','-c','-trimpath','-o',str(output/'install.test'),'./internal/install'],env)
+        for name,sha in hashes.items():assert digest(source/name)==sha
+        fixture=Path(tempfile.mkdtemp(prefix='lane-del-support-',dir=config['fixture_parent']))
+        fixture.chmod(0o711)
+        (fixture/'bin').mkdir(mode=0o755)
+        (fixture/'tmp').mkdir(mode=0o700)
+        os.chown(fixture/'tmp',config['uid'],config['gid'])
+        for name in ['ownsolid-install','install.test']:
+            shutil.copyfile(output/name,fixture/'bin'/name)
+            (fixture/'bin'/name).chmod(0o555)
+        (fixture/'resolv.conf').write_text('nameserver 192.0.2.53\n')
+        (fixture/'resolv.conf').chmod(0o644)
+        fixture_source=source/'deploy/offline/internal/install/testdata/installed-acceptance'
+        sys.path.insert(0,str(fixture_source))
+        import native_capture_selftest
+        import acceptance_guard
+        inside=native_capture_selftest.INSIDE
+        inside=inside.replace('ip link set lo up','mount --make-rprivate /\nmount --bind "$6/resolv.conf" /etc/resolv.conf\nip link set lo up',1)
+        insert=r"""
+# Restore the IPv6 default after the second IPv4-only calibration batch.
+ip -6 route add default dev egress0
+work=$6
+cd "$work/tmp"
+code=0
+umask 022
+setpriv --reuid "$7" --regid "$8" --clear-groups env TMPDIR="$work/tmp/" \
+ OWNSOLID_SUPPORT_INSTALLER="$work/bin/ownsolid-install" \
+ OWNSOLID_CLUSTER_SUPPORT_INSTALLER="$work/bin/ownsolid-install" \
+ "$work/bin/install.test" -test.run '^TestSupport' -test.v -test.timeout 60s || code=$?
+umask 077
+# The private PID namespace contains only this fixture's descendants.
+pkill -TERM -u "$7" 2>/dev/null || true
+for n in $(seq 1 50); do
+ if ! pgrep -u "$7" >/dev/null; then break; fi
+ sleep .05
+done
+test -z "$(pgrep -u "$7" || true)"
+"""
+        inside=inside.replace('if [ "$mode" = deadline ]; then',insert+'\nif [ "$mode" = deadline ]; then',1)
+        inside+='\nexit "$code"\n'
+        run_id=str(uuid.uuid4())
+        state['artifacts']={name:digest(output/name) for name in ['ownsolid-install','install.test']}
+        state['tools']={name:digest(config[name]) for name in ['recorder','probe']}
+        state['run_id']=run_id
+        try:
+            execute('disconnected-tests',['unshare','--mount','--net','--pid','--fork','--kill-child=KILL','--mount-proc',
+                '/bin/bash','-c',inside,'support-native',config['recorder'],config['probe'],str(output),run_id,
+                'normal',str(fixture),str(config['uid']),str(config['gid'])],limit=90)
+        finally:
+            state['capture']=acceptance_guard.capture_result(output,run_id)
+        for name,sha in hashes.items():assert digest(source/name)==sha
+        assert state['capture']['status']=='capture-passed'
+        state['status']='passed'
+        result=0
+    except BaseException as error:
+        state['status']='failed'
+        state['error_type']=type(error).__name__
+        state['error']=str(error)
+        result=1
+    finally:
+        for signum in previous:signal.signal(signum,signal.SIG_IGN)
+        for child in children:
+            if child.poll() is None:
+                os.killpg(child.pid,signal.SIGKILL)
+                child.wait(timeout=5)
+        if fixture is not None:shutil.rmtree(fixture)
+        for name in ['ownsolid-install','install.test']:
+            (output/name).unlink(missing_ok=True)
+        state['elapsed_seconds']=time.monotonic()-started
+        state['exit']=result
+        save(output/'result.json',state)
+        for fd in reversed(descriptors):
+            fcntl.flock(fd,fcntl.LOCK_UN)
+            os.close(fd)
+        print(json.dumps({'evidence':str(output),'status':state['status'],'exit':result}),flush=True)
+    return result
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config',type=Path,required=True)
+    args=parser.parse_args()
+    raise SystemExit(run(json.loads(args.config.read_text()),args.config))

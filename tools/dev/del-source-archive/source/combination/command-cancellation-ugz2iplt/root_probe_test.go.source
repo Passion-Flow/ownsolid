@@ -1,0 +1,92 @@
+package install
+
+import (
+	"bytes"
+	"context"
+	"flag"
+	"fmt"
+	"os"
+	"os/exec"
+
+	installer "github.com/Passion-Flow/ownsolid/deploy/offline/internal/install"
+	"sync"
+	"testing"
+	"time"
+)
+
+type temporaryCancellationWriter struct {
+	ready chan struct{}
+	once  sync.Once
+	data  bytes.Buffer
+}
+
+func (w *temporaryCancellationWriter) Write(p []byte) (int, error) {
+	w.data.Write(p)
+	if bytes.Contains(w.data.Bytes(), []byte("READY\n")) {
+		w.once.Do(func() { close(w.ready) })
+	}
+	return len(p), nil
+}
+
+func TestTemporaryCommandCancellationHelper(t *testing.T) {
+	args := flag.Args()
+	if len(args) != 1 {
+		t.Fatal("helper mode required")
+	}
+	if args[0] == "child" {
+		time.Sleep(2 * time.Second)
+		return
+	}
+	if args[0] != "parent" {
+		t.Fatal("unknown helper mode")
+	}
+	command := exec.Command(os.Args[0], "-test.run=^TestTemporaryCommandCancellationHelper$", "-test.timeout=5s", "--", "child")
+	command.Stdout, command.Stderr = os.Stdout, os.Stderr
+	if err := command.Start(); err != nil {
+		t.Fatal(err)
+	}
+	fmt.Fprintln(os.Stdout, "READY")
+	if err := command.Wait(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTemporaryCommandCancellationBaseline(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	output := &temporaryCancellationWriter{ready: make(chan struct{})}
+	result := make(chan error, 1)
+	finished := make(chan struct{})
+	go func() {
+		defer close(finished)
+		_, err := (installer.ExecRunner{}).Stream(ctx, nil, output, os.Args[0], "-test.run=^TestTemporaryCommandCancellationHelper$", "-test.timeout=5s", "--", "parent")
+		result <- err
+	}()
+	t.Cleanup(func() {
+		cancel()
+		select {
+		case <-finished:
+		case <-time.After(6 * time.Second):
+			t.Error("prototype child lifetime was not bounded")
+		}
+	})
+	select {
+	case <-output.ready:
+	case err := <-result:
+		t.Fatalf("helper returned before cancellation: %v", err)
+	case <-time.After(3 * time.Second):
+		t.Fatal("helper startup timed out")
+	}
+	start := time.Now()
+	cancel()
+	err := <-result
+	elapsed := time.Since(start)
+	if err == nil {
+		t.Fatal("cancelled direct parent reported success")
+	}
+	t.Logf("context_cancel_to_return_seconds=%.6f direct_parent_error=%v", elapsed.Seconds(), err)
+	if elapsed < time.Second {
+		t.Fatal("inherited-pipe delay hypothesis was not reproduced")
+	}
+	t.Log("BASELINE_INHERITED_PIPE_DELAY_OBSERVED; not a fixed-path acceptance")
+}

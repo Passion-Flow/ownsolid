@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source /root/lane-rel-tools/env
+root=/root/lane-rel-tools/lane-del-combination-4463bbe6
+source_root=/root/lane-del-combination-4463bbe6
+exec 9>/run/lock/ownsolid-heavy.lock
+for attempt in $(seq 1 12); do
+ if flock -w 45 -E 75 9; then break; fi
+ echo 'Native history gate queued; no fixture started'
+ test "$attempt" -lt 12 || exit 75
+done
+exec 8>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 8
+df -h /
+free -m
+cat /proc/pressure/io
+awk '/^MemAvailable:/ {a=$2} /^MemFree:/ {f=$2} END {exit !(a>=4194304 && f>=2097152)}' /proc/meminfo
+awk '/^full / {split($2,x,"=");exit !(x[2]<=20)}' /proc/pressure/io
+cd "$source_root"
+test "$(git rev-parse HEAD)" = 4463bbe628f60486bbdb92c15f72311fb53d076a
+test -z "$(git status --porcelain)"
+echo 'aca3c49816db88c0e48012772fcf2a94eb66aaccd925b35d397b8b6f7f40fb43  /root/lane-obs-tools/victoria-metrics-prod' | sha256sum -c -
+echo 'd1d1a8d2b04c2f9f32c37934b498ae1e5f031cb55fdf89ffb94eeaef57742171  /root/lane-obs-tools/vmalert-prod' | sha256sum -c -
+export GOMAXPROCS=2 GOFLAGS='-p=2 -race' GOPROXY=off GOSUMDB=off CGO_ENABLED=1
+export OWNSOLID_TEST_POSTGRES_IMAGE=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+export OWNSOLID_TEST_VICTORIA_METRICS=/root/lane-obs-tools/victoria-metrics-prod
+export OWNSOLID_TEST_VMALERT=/root/lane-obs-tools/vmalert-prod
+for mode in history-http history-tls history-retention; do
+ echo "NATIVE_HISTORY_BEGIN source=4463bbe628f60486bbdb92c15f72311fb53d076a mode=$mode"
+ bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh "$mode" > "$root/native-$mode.log" 2>&1
+ tail -12 "$root/native-$mode.log"
+ echo "NATIVE_HISTORY_PASSED mode=$mode"
+done

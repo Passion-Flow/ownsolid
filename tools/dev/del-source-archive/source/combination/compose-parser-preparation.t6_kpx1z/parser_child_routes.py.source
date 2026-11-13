@@ -1,0 +1,75 @@
+"""Isolated, unprivileged synthetic Compose parser; no network or daemon access."""
+import ctypes
+import errno
+import hashlib
+import json
+import os
+from pathlib import Path
+import resource
+import sys
+import subprocess
+
+def route_observation(raw):
+    if len(raw) > 4096:
+        raise ValueError('Route observation exceeds the bounded guard input')
+    lines = raw.decode('ascii').splitlines()
+    rows = [line.split() for line in lines if line.strip()]
+    header = 'Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT'.split()
+    state = ('absent-table' if not rows else 'header-only' if rows == [header]
+             else 'routes-present' if rows[0] == header else 'unrecognized')
+    return {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(),
+            'line_count': len(lines), 'blank_line_count': sum(not line.strip() for line in lines),
+            'nonblank_rows': len(rows), 'format': state, 'no_ipv4_routes': state in ['absent-table', 'header-only']}
+
+config = json.loads(Path(sys.argv[1]).read_text())
+assert sys.platform == 'linux' and os.uname().machine == 'x86_64'
+assert os.environ['HOME'] == config['original_home']
+assert os.getpid() == 1
+subprocess.run(['/usr/bin/mount', '--make-rprivate', '/'], check=True)
+subprocess.run(['/usr/bin/mount', '-t', 'sysfs', '-o', 'ro,nosuid,nodev,noexec', 'sysfs', '/sys'], check=True)
+assert sorted(os.listdir('/sys/class/net')) == ['lo']
+assert Path('/sys/class/net/lo/operstate').read_text().strip() == 'down'
+network = os.stat('/proc/self/ns/net').st_ino
+assert network != config['host_network_inode']
+# A namespace without RT_TABLE_MAIN emits no header (Linux v6.8 fib_trie.c).
+# Preserve bounded public diagnostics before refusing any unexpected route data.
+with Path('/proc/net/route').open('rb') as stream:
+    route = route_observation(stream.read(4097))
+proof = {'stage': 'route-observed', 'network_inode': network, 'only_loopback_down': True,
+         'ipv4_route_observation': route, 'docker_exec_attempted': False}
+Path(config['proof']).write_text(json.dumps(proof, indent=2) + '\n')
+os.chown(config['proof'], 65534, 65534)
+assert route['no_ipv4_routes'], 'Private namespace contains route rows or an unrecognized header' 
+resource.setrlimit(resource.RLIMIT_CPU, (config['cpu_seconds'], config['cpu_seconds']))
+resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
+resource.setrlimit(resource.RLIMIT_NPROC, (64, 64))
+resource.setrlimit(resource.RLIMIT_FSIZE, (config['maximum_output_bytes'], config['maximum_output_bytes']))
+resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+os.setgroups([])
+os.setgid(65534)
+os.setuid(65534)
+
+# Linux v6.8 seccomp_filter documentation: check the syscall ABI, forbid x32,
+# then refuse socket creation and connection/bind/listen/message syscalls. The
+# fixed, pinned Go client/plugin inherit this filter through fork and exec.
+class Filter(ctypes.Structure):
+    _fields_ = [('code', ctypes.c_ushort), ('jt', ctypes.c_ubyte), ('jf', ctypes.c_ubyte), ('k', ctypes.c_uint32)]
+class Program(ctypes.Structure):
+    _fields_ = [('length', ctypes.c_ushort), ('instructions', ctypes.POINTER(Filter))]
+items = [(0x20, 0, 0, 4), (0x15, 1, 0, 0xc000003e), (0x06, 0, 0, 0x80000000),
+         (0x20, 0, 0, 0), (0x35, 0, 1, 0x40000000), (0x06, 0, 0, 0x80000000)]
+for number in [41, 42, 43, 44, 45, 46, 47, 49, 50, 53, 288, 299, 307]:
+    items.extend([(0x15, 0, 1, number), (0x06, 0, 0, 0x00050000 | errno.EPERM)])
+items.append((0x06, 0, 0, 0x7fff0000))
+filters = (Filter * len(items))(*(Filter(*item) for item in items))
+program = Program(len(items), filters)
+libc = ctypes.CDLL(None, use_errno=True)
+if libc.prctl(38, 1, 0, 0, 0) != 0 or libc.prctl(22, 2, ctypes.byref(program), 0, 0) != 0:
+    raise OSError(ctypes.get_errno(), 'Parser syscall restriction could not be installed')
+status = dict(line.split(':', 1) for line in Path('/proc/self/status').read_text().splitlines() if ':' in line)
+assert status['NoNewPrivs'].strip() == '1' and status['Seccomp'].strip() == '2'
+proof.update({'stage': 'exec-prepared', 'docker_exec_attempted': True, 'uid': os.geteuid(), 'gid': os.getegid(), 'home_preserved': os.environ['HOME'] == config['original_home'],
+         'network_inode': network, 'only_loopback_down': True, 'ipv4_routes': [], 'no_new_privileges': True,
+         'seccomp_filter_installed': True, 'scope': 'Socket syscalls denied; this is not an egress-attempt capture'})
+Path(config['proof']).write_text(json.dumps(proof, indent=2) + '\n')
+os.execv('/usr/bin/docker', ['/usr/bin/docker', 'compose', 'config', '--format', 'json'])
