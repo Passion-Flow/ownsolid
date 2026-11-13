@@ -402,6 +402,15 @@ grants and SDK routes remain explicitly closed rather than receiving success
 implementations. Native wire-loss tests reuse the repository's actual
 PostgreSQL forwarding helper outside the product, not simulated SQL responses.
 
+The SDK's [discovery builder](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/discovery.go)
+also advertises implicit response/grant types and endpoint locations that its
+router always registers. The prototype must project that generated metadata
+to the actually admitted code profile and expose only its selected routes.
+Close implicit, refresh, device, token exchange, request objects, dynamic
+registration, introspection and end-session paths for this first experiment;
+do not advertise those closed paths as implemented. This limits prototype
+qualification, not the roadmap capability's eventual scope.
+
 Loading `pkg/op`, `pkg/client/rp` and pgxpool selected 45 modules and 57 legal
 files in `iam106-provider-20261113.q_ov5ppw`. The preceding 40 exact versions
 and notices are unchanged; the five additions are below. Module downloads were
