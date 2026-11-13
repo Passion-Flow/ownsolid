@@ -539,9 +539,10 @@ opt-in through a future private entry and does not change product/test inputs.
 An unavailable observer invalidates diagnostic completeness rather than hiding
 an output error or supplying a successful observation.
 
-This candidate and its six prepared VM controls have not run, including syntax
-validation: starting Node is outside the current offline-only authorization.
-The controls must verify inactive unrelated commands, unchanged listen/spawn
+At preparation, this candidate and its six VM controls had not run: starting
+Node was outside that offline-only grant. The later directed grant below records
+actual source-bound results. The controls were prepared to verify inactive
+unrelated commands, unchanged listen/spawn
 arguments and return values, actual-handle exit/signal association, preserved
 output bytes/callbacks, visible logging failure and unchanged signal/error
 defaults. The frozen affected-input manifest covers the eleven relevant source,
@@ -549,13 +550,93 @@ configuration, lockfile and Makefile inputs. A future independently admitted
 diagnostic run should retain original Console `models.spec.ts`,
 `navigation.spec.ts`, `nodes.spec.ts` and `overview.spec.ts`, both languages,
 one worker and zero retries with this passive evidence enabled. No existing
-assertion, timeout, skip, host or port changes. Those files include all 81 failed
-cases and the preceding expiry success; a focused pass would not replace the
-complete suite or prove a late-run transient is fixed. No new execution entry
-was activated or queued. The original failed gate, DEV compatibility audit and
+assertion, timeout, skip, host or port changes. The four-file plan was later found
+to cover 71 of the 81 failed cases and the preceding expiry success; ten failures
+in `node-page.spec.ts` were omitted. Its earlier all-81 claim was incorrect, as
+the exact case comparison below records. A focused pass would not replace the
+complete suite or prove a late-run transient is fixed. That offline preparation
+activated or queued no new execution entry. The original failed gate, DEV compatibility audit and
 installed acceptance conditions remain open.
 
 No dependency or upstream implementation is added or copied. The private
 candidate uses Node's existing built-ins; their existing MIT notice obligations
 remain. Playwright's inspected Apache-2.0 source and Vite's existing MIT source
 are pinned installed research inputs, not modified dependencies.
+
+### Directed browser observation and corrected coverage
+
+The separately admitted directed job retained product/test source `82c602d3`,
+tree `fbbf65a10a349d43726a355e60fdb171837c97d5`, Web tree
+`8ce0c9946a8403a5d4502b54e4337a754de38bfc`, all 5099 tracked input hashes and
+1233 exact production asset hashes. There was no dependency install or rebuild.
+The previously executed browser profile used a 512 MiB Node heap and one worker;
+this job retained that stricter heap, raised its old raw-Free floor to 3 GiB and
+used the 15 GiB disk floor. Fresh local Free was 4,496,769,024 bytes and disk
+free was 163,521,044,480 bytes. One NB/same-FD epoch admission allowed 600
+absolute seconds with a final 60-second cleanup reserve.
+
+The original immutable observer's six prepared controls actually passed, exit 0
+in 0.068 seconds, without changing their assertions. The new private metadata
+candidate retained those six and passed two additional privacy controls, exit 0
+in 0.095 seconds. Its SHA-256 is
+`620136aeaea77198a5ea7e62f3dedfe57c0cd13b0247d5818236a1e21b859d3d`.
+It observes launcher stderr as byte count, digest and error codes, without raw
+content; Vite output writes are untouched in metadata-only mode. A bounded
+native companion reads only this job's descendant identities across PGIDs,
+verifies PID plus kernel start time before/after listener lookup, and probes
+only its verified preview's `/` status. The diagnostic collector stores no
+response body, credential, header, URL query/fragment or memory sample.
+Network trace attachments
+were disabled for this diagnostic run; assertions, navigation, timeout,
+workers, retry settings, host/port and production protocol were unchanged.
+
+The original four target files completed with 129 passes and zero failures in
+99.977 seconds. The unanchored CLI filename arguments also matched eight
+existing live-environment cases, all skipped by their original missing-fixture
+conditions. Total selection was therefore 137, with 129 passed, eight skipped
+and zero retries. No new skip was added. This is the actual observed selection,
+not an exact-four-file discovery result.
+
+An exact path/name comparison against the retained full-run failures disproved
+the plan's all-81 coverage statement: 71 original failures were present and
+passed, including both pending-expiry reload scenarios; ten cases in
+`node-page.spec.ts` were not selected. Their old failed result remains. The
+future data-only selection now anchors exact paths to avoid live-prefix
+matches and explicitly includes that fifth file only for a new grant. Offline
+filename and previous-case-path checks passed; no fifth-file or second browser
+run followed. Neither selection correction changes a product test or assertion.
+
+The observed preview was Node PID 64652, kernel birth
+`1794585653.871713`, parent/launcher 64651 and PGID 64652, distinct from its
+launcher and runner groups. Its server instance began listening at
+`2026-11-13T16:00:54.067Z`; all 92 listener observations bound the same PID,
+birth, FD 17 and `[::1]:31036`. Ninety-two health probes returned HTTP 200
+between `16:00:54.718Z` and `16:02:33.389Z`, with no health error. This is sampled
+evidence, not continuous liveness. Three null-address startup server events
+were kept separate from the actual preview binding, not counted as restarts.
+The one launcher stderr chunk had no collected error code.
+
+At `16:02:33.572Z` Playwright requested teardown. Its exact launcher handle
+recorded PID 64651 exiting with SIGKILL one millisecond later and stream closure
+at `.576Z`; the runner then exited 0. Vite's own final code/signal was not directly
+observed and must not be replaced by its launcher's result. The native companion
+retained eleven BSD zero-byte/ESRCH observations over ten snapshots and ten
+other PIDs; all those snapshots still had the verified preview listener. Nine
+have no earlier saved snapshot row and one does. They are explicit diagnostic
+uncertainty, not asserted exits or product failures. No private observation
+exception was converted into a failed test. No old reload/socket failure
+reproduced, so its historical cause remains open.
+
+The entry actually exited 0 in 101.405 seconds with owned cleanup confirmed.
+All 59 observed own PID lifetimes were unavailable at post-exit readback;
+known parent, runner, preview, browser and wake PIDs were absent, owned groups
+and preview listeners empty, and no carrier FD remained. Source/assets,
+carrier/manifest, the old 82-file failure evidence manifest and 89 closed
+legacy entries were unchanged. The private packet
+`epoch-e1-web-preview-focus-7dx_hyoj` keeps stage exits, safe output/digests,
+process/listener/health events, exact case coverage and limits. Its terminal
+record's `SystemExit(0)` is the worker's normal exit, not a hidden failure.
+No second NB, full-gate attempt, peak work, automatic retry or queued follow-up
+occurred. The original full test failure, omitted ten cases, DEV compatibility
+review and installed authority/SQL/offline/SSO evidence remain open; POR-112 is
+not complete and nothing is published.
