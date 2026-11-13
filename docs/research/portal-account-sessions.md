@@ -88,7 +88,7 @@ Do not remove a row optimistically before the server confirms the operation.
   target and confirmation input, show the request ID, honor Retry-After and offer
   an explicit retry of the same bodyless DELETE.
 - `STORAGE_COMMIT_OUTCOME_UNKNOWN` needs a fresh list read before a further
-  explicit write. Preserve the target and do not automatically replay deletion.
+  explicit write. Retain the Problem, close the confirmation and do not automatically replay deletion.
   A bounded page omitting a target does not prove that this request ended it.
   Override a generic full-page Reload remedy with a section-specific read so the
   other Account drafts are not discarded.
@@ -110,7 +110,7 @@ navigates; explicit `useSignOut` clears the client, but the error handler does
 not clear all cached queries. The new section must discard or withhold old
 snapshots across authentication changes and perform a current authorized read
 before enabling actions. The outside-product prototype below establishes the
-observer/cache boundary; React lifecycle integration still needs its own checks.
+observer/cache boundary; the actual React checks are described below.
 Password rotation must invalidate the view's current-marker snapshot as well.
 
 ### Cache prototype and selected direction
@@ -148,10 +148,11 @@ It supplies no server, browser, SQL or durable revocation evidence.
 ## States and presentation
 
 This remains the Settings archetype: account heading, independent sections and
-section-specific actions. Use the existing table, StatusPill, ProblemNotice and
-TypedConfirmation. All text belongs in both locale catalogs; statuses carry words.
+section-specific actions. Responsive fact rows fit a narrow settings section without a
+second resource route or a horizontally scrolling table. Reuse Card, ProblemNotice and
+TypedConfirmation; the current marker always carries text. All text belongs in both locale catalogs.
 
-Loading has a delayed table-shaped skeleton. A first successful list containing
+Loading has a delayed row-shaped skeleton. A first successful list containing
 only the current entry explains that there are no other sessions. A live list
 page emptied by expiry explains that the list changed and offers Refresh; it must
 not reuse the first-empty text or erase previously loaded rows. A true filtered
@@ -159,8 +160,7 @@ empty state is not claimed in this first path: no filter contract or misleading
 page-local search is introduced. Partial, error and denied behavior are specified
 above. An older service that does not expose the operations keeps the section and
 its unavailable reason visible; do not misreport that service as a current
-permission refusal. These definitions still need final screen specification and
-actual screenshot review before implementation is called done.
+permission refusal. S-308 now specifies these states; actual screenshot review remains necessary.
 
 ## Dependencies, licences and rejected alternatives
 
@@ -184,13 +184,60 @@ screen; it is not part of this item. The explicit filtered-empty state is inappl
 the session endpoint has no filter. A current-only list and a genuinely empty live list have
 different explanations; neither invents a row or a filter.
 
-Add typed client functions and transport tests for the existing GET and bodyless
-204 DELETE, then the shared account section and bilingual Help. Test list loading,
-both empty contexts, paging, invalid cursor, rollback, lost reply, unknown commit,
-Retry-After, duplicate clicks, cancellation and denied access. Exercise same-account
-relogin and password rotation so old Current markers cannot be reused.
+### Product implementation
 
-Both entrances need EN/ZH, keyboard, axe, desktop and 390px screenshots that are
+Candidate `2efbdfaa` is isolated on `codex/portal-account-sessions`, based on published
+`6f785818`; its Web tree is `c86857e40124d0dd28658abc83a4787b0620130b`. The previous UX-127
+source remains on `codex/web-resource-history-ui` at `ce177336` with its own asset and check
+records. Neither branch's qualification is transferred to the other.
+
+The shared Account page now contains the session section, typed GET and bodyless 204 DELETE
+clients, English/Simplified Chinese text and shared Help. No backend contract, device field,
+Admin navigation or S-408 route is added. GET omits limit to use the installed page size.
+The transport's existing CSRF retry is explicitly disabled for this DELETE; other operations
+keep their previous default. Typed confirmation can remain blocked during Retry-After without
+losing the target. Section recovery never requires discarding other Account drafts.
+
+Each mounted view owns a random query key and cancels reads on unmount. A QueryClient-scoped
+WeakMap holds an additional memory-only credential generation. SignInPage and the confirmed
+PasswordCard callback replace it; useSyncExternalStore delivers that change synchronously,
+instead of waiting for a deferred query observer notification. The first integration test of
+the deferred version found an old current marker still visible immediately after a same-account
+sign-in boundary. The synchronous version passed that test. Neither profile edits nor workspace
+changes invent a new credential generation. Late password and revoke callbacks check the view
+that started them; they cannot replace a later view's identity. A permission refusal is latched
+until a successful first-page read, so a failed recovery cannot reveal old authorized rows.
+
+Shared scripted browser fixtures and both entrances' account-sessions specs are prepared. They
+include bilingual screenshots of the settings section, one confirmation, current-only and
+empty-live lists, delayed loading, partial pagination, refusal, unavailable service and narrow
+dark layout. A lost reply and 404/unknown commit never replay DELETE. These are test definitions,
+not executed browser evidence.
+
+### Actual focused checks and limits
+
+On 2026-11-13 the existing bounded workstation admission ran these checks serially with a
+512 MiB Node heap and one Vitest worker:
+
+- API/session transport: 30 tests passed, including CSRF refusal without replay and empty 204.
+- Shell session/Account integration: 31 tests passed, including StrictMode, same-account
+  credential-boundary replacement, the actual password form callback, late page/write results,
+  sticky denial, invalid cursor, retained history, rollback, Retry-After and duplicate clicks.
+- Shared UI components: 33 tests passed, including a typed confirmation blocked by a retry
+  prerequisite. Internationalization: 49 passed. Generated Help: 19 passed.
+- API, Shell, Console and Portal types passed. Changed-file lint passed in five sequential
+  package/application groups; formatter checks passed. The initial combined lint exceeded the
+  512 MiB heap. Splitting retained the same rules, cap and all changed TypeScript paths.
+
+The later candidate adds the real SignInPage callback test, a late-password-after-relogin test,
+and a null-recovery regression test. That candidate's final attempt was refused by resource
+preflight at 46,555 free 16 KiB pages (about 728 MiB), below the 2 GiB floor. No formatter,
+typecheck, test or browser work child started in that attempt. Those additions and the small
+generic-retry suppression fix still need the final focused rerun; earlier passing counts are
+not relabelled as final-source qualification. Raw successes, failures, OOM and preflight evidence
+are retained in the local portal-account-sessions qualification packets.
+
+Both entrances need EN/ZH, keyboard, axe, desktop and narrow-width screenshots that are
 actually opened. An installed flow must create two real same-account sessions,
 end the peer from the UI, prove the peer is rejected while the manager remains
 usable, and independently verify the single durable revocation audit. Preserve
@@ -198,9 +245,8 @@ cross-account, cross-entrance, no-workspace and license-blocked acceptance. Use 
 real SSO session for the sourced-session case; the backend HTTP fixture alone is
 not rendered-browser acceptance.
 
-The public operations and observer/cache prototype are ready inputs. React
-integration, implementation, browser/visual checks, full gates and installed
-acceptance have not run for this frontend slice. POR-112 remains open. Shared
-browser/full/install resources and
-the existing specification boundary remain explicit; this research adds no UI
-shell or support claim while those checks are unavailable.
+The product implementation is present; its final focused rerun, rendered-browser/visual checks,
+`make check && make build && make test`, disconnected-network acceptance and the installed flow
+remain unqualified. Screenshots generated/read: zero/zero for this slice. No previous UX-127,
+Help or audit asset is relabelled as this implementation. POR-112 remains open, and no new
+browser/full/native/installed opportunity was consumed or queued.

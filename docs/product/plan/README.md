@@ -287,7 +287,7 @@ Screens, to be expanded before the stage starts:
 | S-305 | Playground `#/portal-models/playground` | flow | run |
 | S-306 | My API keys `#/portal-keys` | list | new key |
 | S-307 | My usage `#/portal-usage` | overview | — |
-| S-308 | My account `#/portal-account` | settings | change password |
+| S-308 | My account `/account` in either entrance | settings | change password |
 | S-309 | App catalogue, admin side `#/catalog` | list | publish an app |
 
 The portal's rule, from [ADR 0035](../../decisions/0035-what-belongs-in-each-entrance.md):
