@@ -107,3 +107,71 @@ Google UUID use BSD-3-Clause, pgx uses MIT and PostgreSQL uses the
 offline execution and redistribution with their required notices are permitted.
 Synthetic fixture records establish SQL behavior, not hardware, installed
 delivery or ARC-111 completion.
+
+## Prepared integration and qualification boundary
+
+The source candidate contains the numbered up/down pair, schema version 61,
+122 logical tables including the migration journal, and exactly 120 tables in
+the closed Control DML list. The audit head and journal receive no new DML.
+Static byte comparison retains all 72 predecessor migration assets, the original
+CatalogSQL/fingerprints, cell inventory assertion and grant-resume helper.
+The owner's upward body and entire downward input remain exact prefixes before
+the explicit platform section. Source formatting, layout and diff checks are
+separate from compilation or SQL qualification; neither has run for this candidate.
+
+The database tests exercise nonempty backfill, unchanged version rows and UUIDs,
+repeated migration, populated downgrade refusal, exact empty rollback, mismatched
+site/cell references and an inconsistent predecessor's unchanged catalog/ledger
+after repeated refusal. The role test consumes the actual predecessor role helper,
+publishes a version through the restricted principal, verifies local scope,
+refuses immutable mutations and checks that an orphan cannot commit. The original
+restore matrix now explicitly includes predecessor 60 as well as 55 through 59
+and the current lineage. These are prepared assertions, not run results.
+
+Qualification requires an explicitly allocated carrier; start no queue or new
+fixture during the shared gate. Use the exact candidate commit and a source-byte
+manifest. The first bounded allocation is one pinned PostgreSQL 18.6/pgvector
+0.8.7 owned network-isolated fixture, at most two CPUs and 4 GiB for the native
+fixture, with serial compilation on two CPUs and GOMEMLIMIT=512MiB. Budget at
+most 20 minutes for metadata collection and focused SQL; a whole-repository gate
+is a separate allocation. Recheck the workstation gate and both Linux heavy locks,
+disk, memory, PSI, existing jobs and listening ports before any allocation. Keep
+the existing stricter preflights; no resource gate or assertion is relaxed.
+
+Collect actual CatalogSQL JSON and SHA-256 for fresh 61 and every restore at
+55 through 61 followed by the immutable remaining lineage. An external metadata
+collector may use the existing explicit-version fixture and original embedded
+SQL/checksums to collect those shapes before admission. This is fingerprint
+derivation only: it must not bypass or replace Migrate in acceptance tests.
+Register only the actually observed fingerprints, then run the original positive
+admission, restore/drift/ledger and runtime grant checks unchanged. The focused
+entries, with protected fixture references supplied by that allocation, are:
+
+```sh
+GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOMEMLIMIT=512MiB \
+  go -C services/control test -mod=readonly -p 1 -count=1 -timeout=15m \
+  ./internal/platform/database -run '^(TestModelFamily.*|TestEveryCellOwnedTableCarriesScope|TestCatalogAdmissionAfterLogicalRestore|TestLineageUpgradeFromEveryPrefixMatchesFreshCatalog|TestM02ActualUpgradeFailureRecoveryAndChecksums)$'
+GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOMEMLIMIT=512MiB \
+  go -C services/control test -mod=readonly -p 1 -count=1 -timeout=10m \
+  ./internal/operations/databaseaccess -run '^(TestCatalogMatchesImmutableMigrations|TestModelFamilyRuntimeGrantUpgradeRetainsPublicationAndDenial|TestUpgrade.*|TestFreshRuntimeGrants)$'
+```
+
+Every selected native test must actually run without a fixture skip. Full
+check/build/test, MODEL's adapted formal-lineage cases, offline native serving and
+retained/public history are further prerequisites for publication or ticking an
+item. Existing agent v1 frames and version negotiation are unchanged. The database
+upgrade requires matching control and gateway binaries: an old exact-schema
+binary must fence schema 61 rather than claim mixed-database-version support.
+
+The separate gateway reader dependency remains outside this migration. TRN's
+5b73fa05 exposes read-only PublishedReader owners, but the current published
+NewAgentGateway constructor has no reader binding input. Its construction owner
+must provide an additive binding entry that keeps the existing Control writer
+path and validates the same service graph. The process consumer then opens only
+the configured existing namespaces for the installed tenant and joins admitted
+requests, session drain and workers before closing reader descriptors. Do not
+type-assert Nodes.Training to overwrite another owner's internal services, create
+a second writer, reflect into fields or add a constructor that returns success
+without binding the real readers. Missing candidate objects or an unavailable
+joint source is not permission to guess that interface. The reproduced dataset
+storage refusal remains unresolved until the actual composed claim passes.

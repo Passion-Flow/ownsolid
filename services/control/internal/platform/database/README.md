@@ -24,6 +24,15 @@ When a schema or database policy changes, update the owning repository, migratio
 
 Focused native checks: `go -C services/control test ./internal/platform/database ./internal/platform/database/transaction ./internal/platform/database/mysqlstore ./internal/platform/database/mysqlmigrate`. Real server, restricted-role, migration interruption and native backup/restore profiles remain separate from package checks.
 
+The local model-family integration candidate assigns migration 61 to the unchanged
+MODEL-owned SQL plus additive platform cell constraints and registers 122 logical
+tables. Its existing schema 60 catalog fingerprints remain strict: migration and
+serving refuse the new shape until
+actual fresh/restored fingerprints are qualified. This source is not a published
+schema baseline yet. The [admission research](../../../../../docs/research/model-family-schema-admission.md)
+records owner inputs, retention, role and resource gates. No table-count-only
+admission or guessed fingerprint is allowed.
+
 The optional [Dameng check command](../../../cmd/dameng-connector-check/README.md)
 uses explicit [protected connector inputs](../../../../../config/examples/domestic-platform/README.md)
 and the existing public-manager build gate. Its local IPC path does not activate
