@@ -66,6 +66,28 @@ The ordinary Admin/Portal session cookies keep their existing authority and
 transport policy. Cross-site browser cookie behavior needs real browser tests,
 including an unavailable-cookie retry outcome.
 
+The next browser experiment will stage a verified response at the ACS and
+redirect to a fixed first-party completion endpoint before changing an account
+binding or session. The ordinary Lax session cookie can then be checked again
+against the initiating cookie digest and actor. Rechecking only the captured
+server session on the IdP POST cannot detect that the browser now carries a
+different local account's cookie while the old session is still active.
+Preserve that browser-change refusal rather than broadening the ordinary
+session cookie to SameSite=None.
+
+ASP.NET Core demonstrates this separation in its
+[remote authentication handler](https://github.com/dotnet/aspnetcore/blob/v10.0.0/src/Security/Authentication/Core/src/RemoteAuthenticationHandler.cs)
+and [external-account linking callback](https://github.com/dotnet/aspnetcore/blob/v10.0.0/src/Identity/UI/src/Areas/Identity/Pages/V5/Account/Manage/ExternalLogins.cshtml.cs):
+the remote result is staged, then a GET callback reacquires the local user and
+checks the expected account before linking. This is an architectural reference,
+not a new dependency or copied implementation. ownsolid's staged result must
+remain server-side, one-use, bound to the exact request and source revision,
+and expire no later than the verified assertion. The browser receives only a
+protected random continuation proof, never an assertion or identity claim set.
+The finish URI is fixed by the server, with no provider data or arbitrary return
+URL. Actual cookie delivery and swapped-local-cookie refusal remain unproven
+until the rendered probe and Identity-backed completion pass.
+
 ### Browser claim and captured-actor handoff
 
 The current `claim_repository.go` authenticates the previous browser cookie,
@@ -81,7 +103,8 @@ carry only the short-lived browser proof; it cannot become a local session.
 For account linking, capture the authenticated local session reference, token
 digest, entrance, account epoch and credential version at the first-party start.
 After validating the flow cookie/RelayState, recheck that server-held reference
-through Identity's actual source/session authority. Do not accept a session ID
+through Identity's actual source/session authority, then require the initiating
+ordinary browser cookie again at first-party completion. Do not accept a session ID
 from the POST or add a public resume-by-session-ID operation. Explicit sign-out,
 credential/factor changes, idle/absolute expiry and source revocation must stop
 that captured authority even when its SAML browser proof remains valid.
