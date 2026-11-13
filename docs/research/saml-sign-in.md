@@ -809,6 +809,75 @@ bounded by a production cleanup owner. Structured telemetry remains unqualified.
 [ADR 0084](../decisions/0084-bind-saml-results-to-request-and-browser-authority.md)
 records the target boundary. IAM-104 remains open.
 
+## First-party completion and session-source integration
+
+The next increment follows the same request/result lifecycle through explicit
+local account linking and actual Identity session issuance. The
+[upstream session codec](https://github.com/crewjam/saml/blob/v0.6.3/samlsp/session_jwt.go)
+distinguishes assertion acceptance from local session lifetime: it caps a
+configured local maximum with the signed AuthnStatement SessionNotOnOrAfter.
+Keep those separate in the private verified envelope. A pending result still
+expires at the earliest request/assertion/trust acceptance deadline. A session
+issued before that deadline is capped by the configured local/source maximum,
+approved trust lifetime and any shorter signed authentication-session end.
+Never extend an asserted session end with clock skew or a retry. Persist that
+source deadline and enforce it in both actual session expiry and every source
+recheck. This reuses the reviewed upstream source; it introduces no new license,
+model, dataset or runtime network dependency.
+
+Completion must reacquire the ordinary first-party cookie, compare its digest
+with the initiating browser, authenticate that exact current actor and recheck
+its credential version under the existing source/target/session lock order.
+Consume the exact result/continuation once. Link only the verified immutable
+external identity to that demonstrated local account; no email comparison,
+provider role or displayed NameID may select another user. A different active
+binding is a conflict. Bind/reactivate, source provenance, one issued session,
+request terminal state and audit must commit together. An audit or write failure
+returns no session; unknown COMMIT returns no token or automatic second write.
+A replay cannot reconstruct or reissue the original opaque session token.
+
+The existing Identity SessionSource is already a generic local-source tuple,
+but migration 17's foreign keys and issuance trigger currently target only
+Gitea binding/flow tables. Do not insert invented numeric subjects, OAuth
+secrets or synthetic Gitea flow rows to satisfy them. Keep the four SAML tables:
+profile, exact external identity (with explicit local binding/version), request
+and verified result. Use the existing session source columns for the actual
+SAML identity/request IDs only after an admitted database source discriminator
+or equivalent exact union constraint and single-issuance owner supports both
+protocols. Preserve legacy Gitea constraints, parent retention, manual sessions
+and all current-source checks. A combined SourceGuard must dispatch from
+server-held durable source authority and never fall back to Gitea after a SAML
+validation or storage error. An old/absent SAML owner must reject the new source.
+The precise union/retention SQL needs an external real-database prototype and
+its parent-deletion/issuance races before formal admission; it is not yet proven.
+
+The shared connector fence must stay common across protocols so current
+Gitea/SAML sources and mutation targets remain canonically ordered. Formal
+admission must permit actual SAML connector records without fictitious client
+credentials, and legacy secret inventories/provider adapters must select only
+the protocols they own. SAML's typed SP keys/trust/profile dependency is separate
+from Gitea's OAuth keyring. This is an ARC schema/startup handoff, not permission
+to occupy a migration number or alter another engine's registration.
+
+The domain owner may be written against a sealed trusted protocol dependency
+inside the SSO package while the reviewed SDK's production dependency admission
+is pending. The actual strict adapter must provide that dependency; missing
+protocol/schema/configuration fails closed. Do not supply a success stub, accept
+client-created verified envelopes or register routes before their contract and
+owners are admitted. Existing Admin MFA gates remain authoritative; an upstream
+authentication-class claim does not bypass them. Start with the Portal path and
+keep unqualified Admin/factor combinations refused.
+
+Qualification must join actual Identity persistence to completion and source
+rechecks: original-cookie/account replacement, credential rotation/logout,
+source/profile/connector disable, deadline and binding-version changes,
+concurrent finish, audit rollback, both actual COMMIT loss modes and attempted
+second issuance. Include foreign tenant/entrance/result/identity substitutions,
+legacy local and Gitea controls, and source-parent cleanup races. Then join the
+real AuthnRequest, approved Keycloak TLS exchange and provider POST to the earlier
+browser boundary. Generated signed XML fixtures and the prior cookie probe
+remain distinct evidence until that composition actually runs.
+
 ## Alternatives, prototype and finished-item acceptance
 
 Reject a hand-written XML signature implementation, email-only linking,
