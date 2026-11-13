@@ -66,6 +66,43 @@ The ordinary Admin/Portal session cookies keep their existing authority and
 transport policy. Cross-site browser cookie behavior needs real browser tests,
 including an unavailable-cookie retry outcome.
 
+### Browser claim and captured-actor handoff
+
+The current `claim_repository.go` authenticates the previous browser cookie,
+compares its digest, resolves the Gitea provider, and decrypts OAuth PKCE/client
+credentials before claiming the row. `flows.go` then exchanges an OAuth code;
+its numeric Gitea subject contract is not the new persistent SAML identity.
+Do not feed a SAML response through that path with invented OAuth credentials
+or skip its previous-session checks when the Lax cookie is absent.
+
+[Chromium's SameSite documentation](https://www.chromium.org/updates/same-site/)
+requires Secure for SameSite=None cookies. The dedicated SAML flow cookie must
+carry only the short-lived browser proof; it cannot become a local session.
+For account linking, capture the authenticated local session reference, token
+digest, entrance, account epoch and credential version at the first-party start.
+After validating the flow cookie/RelayState, recheck that server-held reference
+through Identity's actual source/session authority. Do not accept a session ID
+from the POST or add a public resume-by-session-ID operation. Explicit sign-out,
+credential/factor changes, idle/absolute expiry and source revocation must stop
+that captured authority even when its SAML browser proof remains valid.
+
+The next external experiment must retain the existing current-actor lock order
+and exclusive pending-to-claimed transition, with claim COMMIT confirmed before
+assertion verification or completion proceeds. A returned verification envelope
+also needs the exact request ID checked by the verifier, in addition to its
+tenant/connector/trust snapshot. Completion must compare it with the claimed
+request and retain bounded signed-assertion replay identity in that lifecycle.
+No automatic resend follows COMMIT uncertainty, and a claim error releases no
+worker proof or session. Binding, source session and audit remain one completion
+transaction; the identity lookup prototype alone proves none of them.
+
+Before serving admission, exercise actual Identity-backed link/login claims,
+missing ordinary session cookies on the IdP POST, cross-tenant/audience browser
+proof replacement, concurrent claims, source/logout/password interleavings,
+restart/replay and actual COMMIT loss. A Go cookie jar does not enforce browser
+SameSite behavior; the distinct-cookie path also needs a rendered browser with
+verified TLS. Ordinary session/Origin/CSRF policy must remain enforced.
+
 Require response and bearer-subject `InResponseTo` to match the one claimed
 server request, exact response Destination and bearer Recipient to match the
 selected ACS, and issuer/audience to match the configured IdP/SP. Check all
