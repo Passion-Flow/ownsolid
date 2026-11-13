@@ -107,3 +107,14 @@ released both FDs and left no owned runtime resource. This opportunity is also
 consumed without an in-round retry; the first 73 receipt is unchanged. The
 [new receipt and release audit](training-published-file-readers.md#authorized-new-opportunity-after-carrier-release)
 keep the exact source, thresholds and owner/ARC boundaries intact.
+
+
+The post-DEV opportunity passed guarded resource admission and started its
+exact private PG fixture, but bounded-v2 treated pg_isready raw 2 (no response
+during initdb) as fatal. Entry raw 1, 2.344562 seconds, zero Go/SQL bodies.
+All 15 child groups, both FDs, exact container, anonymous volume and DSN were
+confirmed absent after cleanup. [Actual evidence and the prepared one-line
+v3 correction](training-published-file-readers.md#post-dev-opportunity-actual-startup-failure-and-release)
+retain the failure and original thresholds. Twenty-nine mock/file checks
+passed; v3 was not run natively. Post-run SSH archive/download 502/255 leaves
+full server metadata delivery unconfirmed, distinct from the actual failure.
