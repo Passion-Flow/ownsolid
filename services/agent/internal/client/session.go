@@ -13,6 +13,7 @@ import (
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
 	"github.com/Passion-Flow/ownsolid/services/agent/internal/settings"
+	"github.com/Passion-Flow/ownsolid/services/agent/sessiontransport"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -43,7 +44,7 @@ type Session struct {
 	client        *Client
 	node          string
 	mu            sync.Mutex
-	conn          *grpc.ClientConn
+	conn          *sessiontransport.Connection
 	stream        *sessionStream
 	fallbackUntil time.Time
 	// probeHTTPS makes the next heartbeat try HTTPS because the stream could not be opened.
@@ -62,12 +63,15 @@ type Session struct {
 	gateway    int
 	unanswered int
 	rebalance  wire.SessionRebalance
+	retiring   *sessiontransport.Retirement
 }
 
 type sessionStream struct {
-	stream grpc.ClientStream
-	cancel context.CancelFunc
-	last   uint64
+	stream     grpc.ClientStream
+	cancel     context.CancelFunc
+	last       uint64
+	connection *sessiontransport.Connection
+	age        ageHint
 }
 
 // errStreamRefused marks a stream that control answered but refused; it is not a reason
@@ -139,6 +143,10 @@ func (s *Session) Close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.dropStream()
+	if s.retiring != nil {
+		s.retiring.Close()
+		s.retiring = nil
+	}
 	if s.conn != nil {
 		s.conn.Close()
 		s.conn = nil
@@ -170,6 +178,9 @@ func (s *Session) heartbeat(ctx context.Context, h wire.Handshake) (wire.Disposi
 	}
 	if s.stream != nil {
 		if disposition := s.tryRebalance(ctx, h); disposition != nil {
+			return *disposition, nil
+		}
+		if disposition := s.tryAgeHandoff(ctx, h); disposition != nil {
 			return *disposition, nil
 		}
 		reply, e := s.exchange(ctx, wire.AgentMessage{Heartbeat: &h})
@@ -372,7 +383,7 @@ func (s *Session) longPollClient() *http.Client {
 	return s.pollHTTP
 }
 
-func (s *Session) connection() (*grpc.ClientConn, error) {
+func (s *Session) connection() (*sessiontransport.Connection, error) {
 	if s.conn != nil {
 		return s.conn, nil
 	}
@@ -385,7 +396,7 @@ func (s *Session) connection() (*grpc.ClientConn, error) {
 	return conn, e
 }
 
-func (s *Session) dial(address string) (*grpc.ClientConn, error) {
+func (s *Session) dial(address string) (*sessiontransport.Connection, error) {
 	origin, e := url.Parse(s.client.Origin)
 	if e != nil || s.client.tls == nil {
 		return nil, errStreamUnavailable
@@ -402,7 +413,7 @@ func (s *Session) dial(address string) (*grpc.ClientConn, error) {
 	verify := s.client.tls.Clone()
 	// passthrough dials the address exactly as the HTTPS client does, without a proxy.
 	// The authority is the origin's, which control checks as it checks the Host header.
-	conn, e := grpc.NewClient("passthrough:///"+address,
+	conn, e := sessiontransport.New("passthrough:///"+address,
 		grpc.WithTransportCredentials(credentials.NewTLS(verify)),
 		grpc.WithAuthority(origin.Host),
 		grpc.WithNoProxy(),
@@ -430,7 +441,7 @@ func (s *Session) openWithHeartbeat(ctx context.Context, h wire.Handshake) (wire
 	return reply, e
 }
 
-func (s *Session) openStream(ctx context.Context, conn *grpc.ClientConn) (*sessionStream, error) {
+func (s *Session) openStream(ctx context.Context, conn *sessiontransport.Connection) (*sessionStream, error) {
 	scope := s.client.Scope
 	md := metadata.Pairs("authorization", "Bearer "+s.client.Credential, wire.SessionNodeHeader, s.node, wire.SessionSiteHeader, scope.SiteID, wire.SessionCellHeader, scope.CellID)
 	streamContext, cancel := context.WithCancel(metadata.NewOutgoingContext(context.Background(), md))
@@ -442,12 +453,15 @@ func (s *Session) openStream(ctx context.Context, conn *grpc.ClientConn) (*sessi
 		cancel()
 		return nil, errors.New("CONTROL_CONNECTION_FAILED")
 	}
-	return &sessionStream{stream: stream, cancel: cancel}, nil
+	return &sessionStream{stream: stream, cancel: cancel, connection: conn}, nil
 }
 
 // tryRebalance leaves the fallback in place until the candidate authenticates and
 // answers. Neither stream has an outstanding claim during the check.
 func (s *Session) tryRebalance(ctx context.Context, h wire.Handshake) *wire.Disposition {
+	if s.retirementPending() {
+		return nil
+	}
 	now := s.now()
 	interval := s.client.GatewayRebalanceSeconds
 	if interval == 0 {
@@ -458,7 +472,11 @@ func (s *Session) tryRebalance(ctx context.Context, h wire.Handshake) *wire.Disp
 		return nil
 	}
 	idleRemaining := s.lastExchange.Add(settings.Seconds(s.pacing.IdleSeconds() - sessionIdleMarginSeconds)).Sub(now)
-	probe, cancel := context.WithTimeout(ctx, min(idleRemaining, settings.Seconds(s.policy().ControlRequestSeconds)))
+	budget := min(idleRemaining, settings.Seconds(s.policy().ControlRequestSeconds))
+	if s.stream.age.Lifetime != nil {
+		budget = s.stream.age.ProbeBudget(now, budget)
+	}
+	probe, cancel := context.WithTimeout(ctx, budget)
 	defer cancel()
 	conn, e := s.dial(s.gateways[rank])
 	if e != nil {
@@ -469,8 +487,20 @@ func (s *Session) tryRebalance(ctx context.Context, h wire.Handshake) *wire.Disp
 		reply, exchangeErr := s.exchangeOn(probe, st, wire.AgentMessage{Heartbeat: &h})
 		if exchangeErr == nil && reply.Disposition.AcceptsSessionRebalance() && probe.Err() == nil {
 			from := s.gateways[s.gateway]
+			var retirement *sessiontransport.Retirement
+			if s.stream.age.Lifetime != nil {
+				retirement, e = s.conn.Retire(s.stream.age.Lifetime, s.stream.age.CloseAt)
+				if e != nil {
+					st.cancel()
+					_ = conn.Close()
+					return nil
+				}
+			}
 			s.dropStream()
-			s.conn.Close()
+			if retirement == nil {
+				s.conn.Close()
+			}
+			s.retiring = retirement
 			s.conn, s.stream, s.gateway = conn, st, rank
 			s.lastExchange = s.now()
 			s.rebalance = wire.SessionRebalance{}
@@ -494,6 +524,7 @@ func (s *Session) exchange(ctx context.Context, m wire.AgentMessage) (wire.Contr
 }
 
 func (s *Session) exchangeOn(ctx context.Context, st *sessionStream, m wire.AgentMessage) (wire.ControlMessage, error) {
+	started := s.now()
 	m.ID = st.last + 1
 	budget := settings.Seconds(s.policy().ControlRequestSeconds)
 	if m.Claim != nil {
@@ -516,6 +547,9 @@ func (s *Session) exchangeOn(ctx context.Context, st *sessionStream, m wire.Agen
 	st.last = m.ID
 	if reply.Validate(m) != nil {
 		return reply, errors.New("CONTROL_RESPONSE_INVALID")
+	}
+	if m.ID == 1 && reply.Disposition.AcceptsSessionRebalance() {
+		st.readAge(started)
 	}
 	return reply, nil
 }
