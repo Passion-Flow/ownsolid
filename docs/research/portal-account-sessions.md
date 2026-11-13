@@ -109,9 +109,41 @@ Do not rely on an inaccurate cache-clearing assumption: the current
 navigates; explicit `useSignOut` clears the client, but the error handler does
 not clear all cached queries. The new section must discard or withhold old
 snapshots across authentication changes and perform a current authorized read
-before enabling actions. Prototype that cache lifecycle outside product code
-and cover expiry/relogin of the same account before choosing its final hook.
+before enabling actions. The outside-product prototype below establishes the
+observer/cache boundary; React lifecycle integration still needs its own checks.
 Password rotation must invalidate the view's current-marker snapshot as well.
+
+### Cache prototype and selected direction
+
+A standalone prototype used pinned TanStack Query 5.105.3, synthetic rows, no HTTP,
+and one process capped at 256 MiB and five seconds. Eight assertions passed across
+seven fixture reads. It deliberately retained inactive cache entries indefinitely
+so the result could not depend on garbage collection:
+
+- A naive reused account/entrance key returned its old Current marker after the
+  simulated authentication handler set the identity to null and the same account
+  signed in again. This is a negative control for a proposed hook, not a test of
+  an existing session-management interface.
+- A fresh per-view key showed no old rows while its own first read was pending;
+  a refusal still exposed none. One explicit recovery replaced the marker with
+  the new response.
+- Leaving cancelled a pending next page. Its late fixture answer could not enter
+  the newly mounted view.
+- An explicit view reset for credential rotation withheld the prior marker until
+  a fresh read. A subsequent 401 hid rows even though the cached page remained.
+- Focus, reconnect and invalidation did not replay the failed read.
+
+Use an ephemeral identifier per mounted session section in addition to account
+and entrance. Keep it only in memory and never send it as authority or a request
+parameter. Reset the section after a confirmed password change and authentication
+transition. Inactive pages may be collected immediately in the implementation;
+the prototype proves isolation without relying on that collection. Current
+authority refusals must also hide the view's rows and selected target.
+
+The prototype does not mount React, exercise StrictMode or prove that the existing
+password/sign-in callbacks reset the section. Those integrations, cancellation
+during React remount and confirmation-target removal remain implementation tests.
+It supplies no server, browser, SQL or durable revocation evidence.
 
 ## States and presentation
 
@@ -160,8 +192,9 @@ cross-account, cross-entrance, no-workspace and license-blocked acceptance. Use 
 real SSO session for the sourced-session case; the backend HTTP fixture alone is
 not rendered-browser acceptance.
 
-The public operations are ready inputs. The cache prototype, implementation,
-browser/visual checks, full gates and installed acceptance have not run for this
-frontend slice. POR-112 remains open. Shared browser/full/install resources and
+The public operations and observer/cache prototype are ready inputs. React
+integration, implementation, browser/visual checks, full gates and installed
+acceptance have not run for this frontend slice. POR-112 remains open. Shared
+browser/full/install resources and
 the existing specification boundary remain explicit; this research adds no UI
 shell or support claim while those checks are unavailable.
