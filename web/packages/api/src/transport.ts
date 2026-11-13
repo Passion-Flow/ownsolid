@@ -16,6 +16,8 @@ export interface RequestOptions {
    * activity: an open tab must not hold a session past its idle timeout.
    */
   background?: boolean | undefined;
+  /** Disable the transport's CSRF replay for an operation requiring a new explicit decision. */
+  retryCsrf?: boolean | undefined;
 }
 
 /** HTTP methods that change state; they carry a CSRF token. */
@@ -151,11 +153,12 @@ function csrfToken(signal?: AbortSignal): Promise<CsrfToken> {
   return pending;
 }
 
-/** Sends a write with a CSRF token. A refused token is replaced once and the call repeated. */
+/** Sends a write with CSRF; by default a refused token is replaced once and the call repeated. */
 async function withCsrf<T>(
   path: string,
   init: (token: string) => RequestInit,
   signal: AbortSignal | undefined,
+  retryCsrf = true,
 ): Promise<T> {
   const attempt = async (): Promise<T> => {
     const { token } = await csrfToken(signal);
@@ -166,13 +169,15 @@ async function withCsrf<T>(
   } catch (error) {
     if (!(error instanceof ApiProblem) || error.code !== 'CSRF_INVALID') throw error;
     resetCsrf();
+    if (!retryCsrf) throw error;
     return attempt();
   }
 }
 
 /**
  * Changes state. The call carries a CSRF token, fetched and cached as needed. When
- * the server rejects the token, the call is repeated once with a fresh token.
+ * the server rejects the token, the call is repeated once with a fresh token unless
+ * the operation disables `retryCsrf` to require another explicit decision.
  */
 export function write<T>(
   method: WriteMethod,
@@ -191,6 +196,7 @@ export function write<T>(
       return init;
     },
     options.signal,
+    options.retryCsrf,
   );
 }
 

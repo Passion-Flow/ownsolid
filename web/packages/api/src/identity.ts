@@ -41,6 +41,38 @@ export function getSessionStatus(options?: RequestOptions): Promise<SessionStatu
   return client.get('/api/v1/me/session', options);
 }
 
+/** An active browser sign-in, including the server-authoritative current marker. */
+export type BrowserSession = Schemas['BrowserSession'];
+
+/** One configured-size page of the account's active sessions at this entrance. */
+export type BrowserSessionPage = Schemas['BrowserSessionList'];
+
+/** Reads a cursor unchanged; omitting limit uses the installation's configured page size. */
+export function listBrowserSessions(
+  cursor?: string | null,
+  options?: Pick<RequestOptions, 'signal' | 'background'>,
+): Promise<BrowserSessionPage> {
+  return client.get('/api/v1/me/sessions', {
+    ...options,
+    query: cursor === null || cursor === undefined ? {} : { cursor },
+  });
+}
+
+/**
+ * Ends one owned session with no body or query. A 204 has no payload. No automatic
+ * replay, including CSRF recovery: the caller must read and make another explicit decision.
+ */
+export async function revokeBrowserSession(
+  sessionId: string,
+  options?: Pick<RequestOptions, 'signal'>,
+): Promise<void> {
+  await client.delete('/api/v1/me/sessions/{session_id}', {
+    ...options,
+    path: { session_id: sessionId },
+    retryCsrf: false,
+  });
+}
+
 /** Signs in on the current origin. The session cookie is set by the server. */
 export async function signIn(
   credentials: Credentials,

@@ -23,8 +23,9 @@ export interface ProblemNoticeProps {
   title?: string | undefined;
   /** A next step that depends on where the failure happened. */
   detail?: string | undefined;
-  /** Operation-specific recovery, honoring Retry-After instead of the generic reload/retry. */
+  /** Operation-specific recovery honoring Retry-After; null suppresses generic reload/retry. */
   recovery?:
+    | null
     | {
         label: string;
         onClick: () => void;
@@ -102,7 +103,7 @@ function Explained({
         {recovery.label}
       </Button>
     );
-  } else if (reload) {
+  } else if (recovery !== null && reload) {
     action = (
       <Button
         size="sm"
@@ -113,7 +114,7 @@ function Explained({
         {t('action.reload')}
       </Button>
     );
-  } else if (onRetry && problem.retryable) {
+  } else if (recovery !== null && onRetry && problem.retryable) {
     action = (
       <Button size="sm" disabled={wait > 0} onClick={onRetry}>
         {t('action.retry')}

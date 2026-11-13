@@ -287,7 +287,7 @@ Screens, to be expanded before the stage starts:
 | S-305 | Playground `#/portal-models/playground` | flow | run |
 | S-306 | My API keys `#/portal-keys` | list | new key |
 | S-307 | My usage `#/portal-usage` | overview | — |
-| S-308 | My account `#/portal-account` | settings | change password |
+| S-308 | My account `/account` in either entrance | settings | change password |
 | S-309 | App catalogue, admin side `#/catalog` | list | publish an app |
 
 The portal's rule, from [ADR 0035](../../decisions/0035-what-belongs-in-each-entrance.md):
@@ -340,6 +340,58 @@ administrator adds you to one. No model on the gateway: an administrator publish
 because that page is not the person's.
 **Done when** a person issues, rotates and revokes only their own keys and reads only their own calls, and the
 samples on the page work as written ([research](../../research/portal-api-keys.md)).
+
+### S-308  My account                                 `/account` in either entrance
+**For** the signed-in person, including administrators managing their own account ·
+**Archetype** settings · **Primary** change password.
+
+**Does** lets a person change their account and end an unfamiliar sign-in at this entrance.
+**Content** independently saved Profile, Password, Language, Keyboard shortcuts and Sign-in
+providers sections, followed by Sessions. Sessions shows only the server's sign-in method,
+created time, last active time, absolute expiry and current-session label. The session ID
+identifies the confirmation target. No inferred device, address, location, total or local
+expiry verdict. Account security is independent of workspace selection and business licensing.
+**Click** the account menu and command menu open this shared page. Refresh reads the first page;
+Load more uses the server cursor and configured page size. Initial reads are background reads;
+explicit reads count as activity. The current row's End action stays visible, `aria-disabled`,
+with a reason to use Sign out in the account menu. Help opens the shared account article.
+**Dialogs** End another session → one typed confirmation of its ID, identifying its method
+and created time and explaining that sign-in ends immediately and cannot be undone. No undo,
+drawer or nested dialog. The pending action cannot be submitted twice. A confirmed 204 closes
+it and reads the list again; neither a 404 nor absence from a later list proves success.
+An explicit rollback keeps the typed target for a deliberate retry after Retry-After. A lost
+reply or unknown commit requires a fresh first-page read before another explicit confirmation;
+it never automatically replays DELETE. Permission or authentication refusal clears the target.
+
+**States**
+- **Loading:** a delayed (300 ms) row-shaped skeleton; other settings remain usable.
+- **Empty, first time:** no other sessions explains that signing in at this entrance creates
+  one. A genuinely empty server page says the list changed and offers Refresh; no invented row.
+- **Empty, filtered:** not applicable: the endpoint has no filters and this section adds none.
+  This is explicitly different from an empty server page; there is no fake Clear filter action.
+- **Partial:** earlier authorized pages stay visible when pagination fails; say more sessions
+  could not be read and retry only that cursor. INVALID_CURSOR offers a first-page restart;
+  keep the earlier pages until it succeeds. This section failing never hides the other settings.
+- **Error:** explain the failed read or end, the next step and request ID. Honor Retry-After.
+  A failed post-success refresh remains a read failure beside the confirmed result.
+- **Denied:** hide cached rows and any selected target immediately on 401/403; the existing
+  sign-in flow handles expired credentials. A permission refusal says to contact an administrator
+  and offers a fresh read, with no stale-data action.
+- **Not ready:** a service-not-ready reply keeps the section and disabled End action visible,
+  naming the reason; it never claims that an unavailable service means missing permission.
+
+**Empty** the two legitimate empty meanings above have different copy. The server's current
+row may remain visible when there are no other sessions; it is never synthesized.
+**Done when** both entrances use this section in English and Simplified Chinese; read pagination
+and a bodyless 204 DELETE use the existing typed contract; current is server-authoritative;
+401/403, Retry-After, rollback, unknown commit, 404, lost reply, invalid cursor, duplicate
+submission and independent settings failures are tested. Actual React mount/unmount,
+StrictMode, same-account sign-in, confirmed password rotation and late-result tests prove
+per-view in-memory isolation without clearing the whole query cache. Browser screenshots are
+read and reviewed against the settings archetype, seven states and primary action, including
+keyboard, narrow width and offline assets; an installed server run proves persistence and
+authority, and the full gates pass before POR-112 is ticked
+([research](../../research/portal-account-sessions.md)).
 
 # Stage 4 — Keep control
 

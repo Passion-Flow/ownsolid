@@ -50,6 +50,8 @@ export {
 export {
   getMe,
   getSessionStatus,
+  listBrowserSessions,
+  revokeBrowserSession,
   register,
   requestPasswordReset,
   resetPassword,
@@ -57,6 +59,8 @@ export {
   signOut,
   validateInvitation,
   type Audience,
+  type BrowserSession,
+  type BrowserSessionPage,
   type Credentials,
   type InvitationDetails,
   type Me,

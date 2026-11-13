@@ -6,10 +6,52 @@ import {
   QueryClient,
   queryOptions,
   useQuery,
+  useQueryClient,
 } from '@tanstack/react-query';
+import { useCallback, useSyncExternalStore } from 'react';
 
 /** Query key of the current session. */
 export const sessionKey = ['session'] as const;
+
+interface SessionGeneration {
+  value: string;
+  listeners: Set<() => void>;
+}
+const generations = new WeakMap<QueryClient, SessionGeneration>();
+
+function generationFor(client: QueryClient): SessionGeneration {
+  let generation = generations.get(client);
+  if (!generation) {
+    generation = { value: '', listeners: new Set() };
+    generations.set(client, generation);
+  }
+  return generation;
+}
+
+/** Replaces credentials after a confirmed sign-in or password rotation, even for the same account. */
+export function establishSession(client: QueryClient, me: Me): void {
+  const generation = generationFor(client);
+  generation.value = crypto.randomUUID();
+  client.setQueryData(sessionKey, me);
+  for (const listener of generation.listeners) listener();
+}
+
+/** A memory-only credential boundary, independent of profile versions and global cache clearing. */
+export function useSessionGeneration(): string {
+  const client = useQueryClient();
+  const generation = generationFor(client);
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      generation.listeners.add(listener);
+      return () => {
+        generation.listeners.delete(listener);
+      };
+    },
+    [generation],
+  );
+  const snapshot = useCallback(() => generation.value, [generation]);
+  return useSyncExternalStore(subscribe, snapshot, snapshot);
+}
 
 /** Codes meaning the session is missing or over; the user has to sign in again. */
 export const signedOutCodes = ['AUTH_REQUIRED', 'AUTH_SESSION_EXPIRED'] as const;

@@ -75,6 +75,14 @@ Writes carry the CSRF token and retry once when it is stale. Where the contract 
 `Idempotency-Key`, `idempotencyKey` is required: create it when the user starts the action
 and reuse it for retries.
 
+Account's Sessions section uses the same typed session endpoints at both entrances.
+Initial reads are background reads; Refresh and Load more are explicit. Ending a session
+has no request body, accepts an empty 204 and opts out of CSRF replay. A lost reply,
+unknown commit or not-found result requires a fresh first-page read before another
+decision. Authentication boundaries and confirmed password rotations synchronously replace
+the mounted session view; its random read key is memory-only. Permission refusals hide
+earlier pages until a fresh read succeeds, including when a recovery read also fails.
+
 Administrators edit a published model's description on its deployment detail, under
 On the gateway. The short form keeps the draft on failure, reads the current description
 before retrying a revision conflict, and offers Undo after clearing. Portal users read

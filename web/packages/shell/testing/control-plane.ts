@@ -3,6 +3,12 @@
 import type { CapabilityDeclaration } from '@ownsolid/api';
 import { readFileSync } from 'node:fs';
 import type { Page, Route } from '@playwright/test';
+import {
+  emptyBrowserSessionScript,
+  rotateBrowserSession,
+  routeBrowserSessions,
+  type BrowserSessionScript,
+} from './browser-sessions.ts';
 import { emptyDeploymentScript, routeDeployments, type DeploymentScript } from './deployments.ts';
 import { emptyGatewayScript, routeGateway, type GatewayScript } from './gateway.ts';
 import { emptyModelScript, routeModels, type ModelScript } from './models.ts';
@@ -189,6 +195,7 @@ export interface ControlPlane
     AuditScript,
     WorkspaceScript,
     SsoScript,
+    BrowserSessionScript,
     ApplicationScript {
   audience: 'admin' | 'portal';
   /** The workspace the session reports, or null for a person in none. */
@@ -329,6 +336,7 @@ export async function mockControlPlane(
     ...emptyWorkspaceScript(),
     ...emptySsoScript(),
     ...emptyApplicationScript(),
+    ...emptyBrowserSessionScript(),
     audience,
     sessionWorkspace: workspace,
     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
@@ -464,6 +472,7 @@ export async function mockControlPlane(
       return problem(route, { status: 422, code: 'PASSWORD_POLICY_VIOLATION' });
     }
     state.password = body.new_password;
+    rotateBrowserSession(state, true);
     state.user = { ...state.user, version: state.user.version + 1 };
     return data(route, identity());
   });
@@ -482,6 +491,7 @@ export async function mockControlPlane(
       return problem(route, { status: 401, code: 'AUTH_INVALID_CREDENTIALS' });
     }
     state.signedIn = true;
+    rotateBrowserSession(state, false);
     return data(route, {
       ...identity(),
       session: { absolute_expires_at: '2026-11-05T00:00:00Z', idle_timeout_seconds: 1800 },
@@ -490,6 +500,7 @@ export async function mockControlPlane(
   await page.route('**/api/v1/auth/logout', (route) => {
     if (state.signOutProblem) return problem(route, state.signOutProblem);
     state.signedIn = false;
+    state.browserSessions = state.browserSessions.filter((row) => !row.current);
     return route.fulfill({ status: 204 });
   });
   const accountWrite = (route: Route, answer: unknown) => {
@@ -785,5 +796,6 @@ export async function mockControlPlane(
     state.mail = [queued, ...state.mail];
     return data(route, queued);
   });
+  await routeBrowserSessions(page, state);
   return state;
 }

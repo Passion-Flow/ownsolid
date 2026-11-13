@@ -19,6 +19,8 @@ export interface TypedConfirmationProps {
   /** The button, repeating the verb of the title. */
   confirmLabel: string;
   pending: boolean;
+  /** Keeps confirmation unavailable while an operation-specific prerequisite is unmet. */
+  confirmDisabled?: boolean | undefined;
   onClose: () => void;
   onConfirm: () => void;
   /** Further fields, and the failure of the last attempt. */
@@ -41,6 +43,7 @@ export function TypedConfirmation({
   expected,
   confirmLabel,
   pending,
+  confirmDisabled = false,
   onClose,
   onConfirm,
   children,
@@ -56,7 +59,7 @@ export function TypedConfirmation({
   }, []);
   const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (ready && !pending) onConfirm();
+    if (ready && !pending && !confirmDisabled) onConfirm();
   };
   return (
     <Dialog
@@ -66,7 +69,12 @@ export function TypedConfirmation({
       footer={
         <>
           <Button onClick={onClose}>{t('action.cancel')}</Button>
-          <Button type="submit" form={formId} variant="danger" disabled={!ready || pending}>
+          <Button
+            type="submit"
+            form={formId}
+            variant="danger"
+            disabled={!ready || pending || confirmDisabled}
+          >
             {pending ? <Spinner label={confirmLabel} /> : null}
             {confirmLabel}
           </Button>

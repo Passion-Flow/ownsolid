@@ -15,11 +15,12 @@ import {
 } from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { useState, type SubmitEvent } from 'react';
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import { ProvidersCard } from './account-providers.tsx';
+import { AccountSessions } from './account-sessions.tsx';
 import { FailureNotice } from './auth-layout.tsx';
 import { NewPasswordFields, useNewPassword } from './password-fields.tsx';
-import { sessionKey, useSession } from './session.ts';
+import { establishSession, sessionKey, useSession } from './session.ts';
 
 function ProfileCard({ user }: { user: User }) {
   const { t, format } = useI18n();
@@ -141,9 +142,10 @@ function KeyboardCard() {
   const { t } = useI18n();
   const { singleKeyShortcuts, setSingleKeyShortcuts } = usePreferences();
   return (
-    <Card>
-      <CardHeader title={t('shortcuts.switch')} subtitle={t('shortcuts.switch.detail')} />
+    <Card aria-label={t('shortcuts.switch')}>
+      <CardHeader title={t('shortcuts.switch')} />
       <CardBody>
+        <p className="mt-0 text-text-3">{t('shortcuts.switch.detail')}</p>
         <div className="flex items-center justify-between gap-4">
           <p className="m-0 text-text-2">{t('shortcuts.switch.list')}</p>
           <Switch
@@ -164,10 +166,28 @@ function PasswordCard({ email }: { email: string }) {
   const fields = useNewPassword();
   const [current, setCurrent] = useState('');
   const [missing, setMissing] = useState(false);
+  const life = useRef({ active: false });
+  useEffect(() => {
+    const owner = { active: true };
+    life.current = owner;
+    return () => {
+      owner.active = false;
+    };
+  }, []);
   const change = useMutation({
-    mutationFn: () => changePassword(current, fields.password),
-    onSuccess: (me) => {
-      client.setQueryData(sessionKey, me);
+    mutationFn: async () => {
+      const owner = life.current;
+      try {
+        const me = await changePassword(current, fields.password);
+        return { me, owner };
+      } catch (error) {
+        if (!owner.active) return null;
+        throw error;
+      }
+    },
+    onSuccess: (result) => {
+      if (!result?.owner.active) return;
+      establishSession(client, result.me);
       setCurrent('');
       setMissing(false);
       fields.reset();
@@ -246,7 +266,7 @@ export function AccountPage() {
       <div className="grid items-start gap-4 xl:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-4">
           <ProfileCard user={me.user} />
-          <PasswordCard email={me.user.email} />
+          <PasswordCard key={`${me.audience}:${me.user.id}`} email={me.user.email} />
         </div>
         <div className="flex min-w-0 flex-col gap-4">
           <LanguageCard />
@@ -254,6 +274,7 @@ export function AccountPage() {
           <ProvidersCard />
         </div>
       </div>
+      <AccountSessions key={`${me.audience}:${me.user.id}`} me={me} />
     </>
   );
 }
