@@ -68,3 +68,126 @@ creation-to-now query is rejected once it exceeds configured audit bounds.
 The [bounded-history research](resource-detail-pages.md#bounded-history-review)
 records the source contract, eight passing isolated cache assertions, chosen
 approach and product acceptance cases. Its UI correction is not implemented yet.
+
+## Complete typed lint with independent project processes
+
+Reviewed 2026-11-13 against the exact joint source `82c602d3`. The Linux `9be01cbb`
+full attempt exhausted the wrapper's 2048 MiB Node heap in typed ESLint. That is
+not proof of a product/configuration defect. The later Mac joint entry at
+`9e7404f6` measured 0.350 GiB free against its 6 GiB floor and started no work
+child. Both original outcomes remain; no larger-heap qualification is inferred.
+
+### Primary sources and actual configuration
+
+- [typescript-eslint monorepo guidance](https://typescript-eslint.io/troubleshooting/typed-linting/monorepos/#important-note-regarding-large--10-multi-package-monorepos)
+  explicitly suggests one package per process using the existing configuration
+  when a multi-project lint runs out of memory. The section discusses the older
+  project option, so it motivates process isolation, not a guaranteed memory
+  figure for this repository's Project Service.
+- [Typed-lint performance](https://typescript-eslint.io/troubleshooting/typed-linting/performance/)
+  explains that TypeScript type complexity affects memory and that increasing
+  Node old-space raises available memory without reducing work. The
+  [Project Service guidance](https://typescript-eslint.io/troubleshooting/typed-linting/)
+  recommends retaining the nearest real tsconfig and compiler options.
+- [ESLint CLI](https://eslint.org/docs/latest/use/command-line-interface) documents
+  explicit config selection, JSON output, warning limits and unmatched-pattern
+  handling. [Its Node API](https://eslint.org/docs/latest/integrate/nodejs-api)
+  supplies the same calculated per-file config used by the CLI. The installed
+  10.14.0 `eslint-helpers.js` expands directory inputs, applies configuration
+  ignores and matches only configured files before linting; top-level `*`
+  matches immediate files, not descendants.
+- [Node child processes](https://nodejs.org/api/child_process.html) provide direct
+  executable/argument invocation and completion events. Awaiting `close` before
+  starting the next process releases its type graph and drains diagnostics.
+
+The pinned workspace is ESLint 10.14.0, typescript-eslint 8.72.1, TypeScript 6.0.3,
+React Hooks plugin 7.1.1 and jsx-a11y-x 0.2.0. The one config retains
+`projectService: true`, strict/stylistic type-checked rules, TSX Hooks/accessibility
+rules, locale-literal/formatting checks and existing test/i18n exceptions.
+Applications include both `src` and `e2e`; shared Shell includes its testing
+helpers. Config JS and all other configured root/shared files must remain covered.
+
+### Selected implementation and equivalence obligation
+
+Run the pinned original ESLint CLI serially from the same `web/` cwd, with the
+same explicit config, cache disabled by default and `--max-warnings 0`. Discover
+partition directories at invocation time, not from a maintained workspace list:
+
+1. `*` covers immediate web-root files, including newly added configured files.
+2. `apps/*` and `packages/*` cover immediate container files.
+3. Every immediate directory under those two containers is checked recursively
+   in its own process, including config, source, e2e and testing helpers.
+4. Every other immediate root directory is also checked recursively. Hidden and
+   future non-workspace directories are not excluded by this runner.
+
+ESLint still decides extensions and ignores for every partition. The only added
+discovery option permits an empty partition, such as root Markdown/JSON or an
+ignored `node_modules` directory. It does not change parsing, rules, plugins,
+severity or warning thresholds. The complete invocation fails if all partitions
+are empty, if a process fails or returns invalid JSON, or if a file appears twice.
+It aggregates errors/warnings across partitions; a warning in any one fails.
+Each child inherits Node resource options; no larger heap is selected by code.
+No Makefile, tsconfig, rule configuration, ignore pattern or dependency changes.
+
+The set identity to verify is the disjoint union of those partitions equals the
+original `eslint .` file set under the same configuration. Directory splitting
+changes process lifetime only; imports and type resolution are still read by
+Project Service through the same real tsconfigs. Root/shared/e2e files are not
+special-cased out. JSON formatting supports an exact per-file result comparison.
+
+Reject per-package cwd changes (they can change config/glob interpretation), a
+fixed package list (future/root files would be missed), excluding generated type
+imports from programs, disabling typed rules, a second lint tsconfig, caches,
+changed-file-only lint and a larger heap as the implementation. Those either
+change coverage/type information or do not lower retained multi-project memory.
+Fresh processes may still exceed a small heap for one individually large project;
+the benchmark must measure that rather than promise a pass.
+
+### Verification and peak-memory plan
+
+Node's built-in test runner will cover real small ESLint fixtures: root and
+container files, source/e2e/shared/config files, new/hidden directories, original
+ignores, warning failure, syntax failure, duplicate/empty protection and child
+failure. It adds no test framework. Tests belong beside the config runner and
+join the existing config package test command.
+
+The next authorized bounded window must retain exact source/input hashes, plan,
+original/new commands, raw stdout/stderr, exits and cleanup. Under the same
+inherited 2048 MiB ceiling, run the original unsplit command once and the entire
+new `pnpm lint` once, never concurrently. A retained OOM is a baseline outcome,
+not a reason to retry or skip its input. Compare successful JSON results by
+absolute file path and complete diagnostics, including suppressed messages and
+warning counts. If the unsplit process cannot complete, collect its exact
+pre-parse inventory through the pinned installed ESLint discovery implementation
+and compare it with all new results; do not call partial baseline output a full
+result comparison. Record that private API's exact source hashes and keep it
+outside production code. Calculate original/new config fingerprints for every
+selected file using the public API; parser metadata/options, rules, plugins,
+globals and linter options must match.
+
+Use `/usr/bin/time -l` for per-command maximum RSS on Mac, and sample the owned
+process tree's RSS to include the coordinator and active child. Node old-space
+is a heap ceiling, not total RSS. Linux uses `/usr/bin/time -v` in its own future
+opportunity. Record wall time as well: repeating imported types can lower peak
+memory while costing time. The expected reduction is unmeasured until that run.
+
+Inject deliberate errors outside product inputs using the original cwd/config
+and real representative filenames: unsafe typed member access, an unhandled
+Promise in e2e/shared/config TS, conditional React Hooks, inaccessible JSX and
+untranslated product JSX. Both original and partitioned paths must reject them.
+A root JavaScript undefined name and an explicit warning must also fail. Check
+that existing locale/test exceptions retain their exact calculated config.
+
+The whole 6 GiB full-profile threshold remains unchanged. No heavy lint, resource
+acquisition or background queue is authorized during source preparation. This
+tooling change cannot qualify POR-112, UX-127, full check/build/test or installed
+offline/SQL/SSO paths without their own exact-source runs.
+
+### Licences
+
+No dependency, model, dataset or external runtime request is added. Existing
+ESLint, typescript-eslint and both ESLint plugins are MIT; TypeScript is
+Apache-2.0; Node uses its existing MIT distribution and bundled notices. These
+licences permit commercial use, redistribution and offline execution under their
+notice requirements. Only the installed pinned tools and Node standard library
+are used; no upstream code is copied into the product.
