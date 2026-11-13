@@ -232,3 +232,79 @@ container, image code, Control CLI, PostgreSQL, host publication or installed
 flow ran. No egress-attempt recorder ran. Historical-image admission, real
 TLS/UI installation, upgrade/rollback and the recorded zero-egress drill remain
 open; parser success does not tick DEL-114.
+
+
+## Desired TLS admission boundary
+
+Listener compatibility renders the desired runtime snapshot before replacing
+installed files. Its current TLS references still name the installed browser
+certificate and key. In contrast, `Materialize` later reads the references from
+`tls.source: files`, or renews generated material. These are separate reads of
+potentially different bytes. A source-image check of the old pair cannot admit
+the replacement pair. It can also refuse a repair because the installed pair
+is broken even when the explicitly selected pair is valid. A read-only test
+overlay separately compares the exact pair visible through the desired snapshot
+with the configured replacement. On unchanged source c23aba57, this overlay
+failed in the actual installer package with `DESIRED_TLS_NOT_OBSERVED`:
+0.564 seconds for the package and 0.11 seconds for the case. The original
+`support-gate-68d3eecc0daa456c878a0e6db3d17958` log is retained. Its cleanup
+assertions kept installed files unchanged. This is a local byte-flow failure,
+not a native Control command or installed qualification.
+
+[Kubernetes' projected-secret writer](https://github.com/kubernetes/kubernetes/blob/v1.34.0/pkg/volume/util/atomic_writer.go)
+stages a payload before exposing it. Its symlink publication strategy is not
+copied here. Use the installer's existing private-directory and atomic file
+writer, whose [Go rename primitive](https://pkg.go.dev/os#Rename) replaces the
+same-filesystem target. [Docker bind mounts](https://docs.docker.com/engine/storage/bind-mounts/)
+make the already mounted private operator directory visible to the checker;
+no new host mount or installed-secret overwrite is necessary.
+
+Resolve the desired browser material once without publishing it. Read each
+configured file reference independently in a fixed order. Reusing one source
+path for a combined PEM certificate/key must not collapse either destination. Reuse the
+existing generated-CA and leaf-selection rules, including the current renewal
+window, pair repair and stable existing CA. Stage that selected certificate and
+key in a private, runtime-owned child of the operator directory. Render the
+desired snapshot and public expectation with those temporary file references.
+The existing Control command remains the only serving TLS validator; the
+installer does not reproduce its keypair, validity or identity policy. Retain
+the admitted bytes in the current Apply instance and pass them to the normal
+materialization step. This prevents a second read of changed external inputs
+or a second generated leaf from substituting material after admission.
+
+Reject replacing installed TLS temporarily and restoring it after the check:
+a crash or simultaneous service restart could observe the wrong pair. Reject
+checking installed bytes and assuming their replacement is equivalent. Reject
+adding another Control TLS implementation to the installer. No dependency,
+model or dataset is added. Go's existing BSD-3-Clause and YAML's MIT terms allow
+commercial/offline use and redistribution with required notices. Kubernetes
+Apache-2.0 source is a design reference only; no code or fixture is copied.
+
+Regression acceptance must prove exact replacement-byte admission, refusal of
+invalid replacement material without any installed-file change, explicit repair
+and retry, renewal and broken-pair repair in generated mode, stable CA and keys
+on repeated Apply, cleanup after checker refusal and errors, runtime ownership
+and private permissions of temporary inputs, and retention of the exact admitted
+bytes if external input files change. Existing standalone Materialize and its
+interrupted-key repair tests must continue to pass. Linux unit/filesystem
+verification is separate from the actual old-image/current-image command,
+installed TLS/UI, upgrade/rollback and egress-attempt capture; keep DEL-114 open.
+
+
+The same external byte-flow prototype passed against the corrected source in
+1.227 seconds. The final complete installer package passed on macOS arm64 in
+32.885 seconds, with the command package in 1.089 seconds; vet and both owned
+Linux amd64 cross-builds passed. The retained package log is
+`support-gate-cbee7921234342969cd1e9d9d5e788b7`. Tests cover replacement-byte
+retention despite external input changes, invalid-pair refusal before the writer
+stop, repair and repeat on the same Apply instance, generated renewal and
+mismatched-key repair under the original CA, missing-input repair, private
+staging and cleanup failure, and repeated source paths for combined PEM files.
+The Docker/Control responses in these package tests are controlled fixtures.
+The test ELF is
+`de5d6635221c2b377742a1a70f520b91dce869cc6ab0f38b701c22919d869309`;
+the installer ELF is
+`cef8df1e450583dd9c23d6b0f1d237ec7e707b27a722ddcc8913213e72936b32`.
+They were built from the reviewed working source before this evidence prose was
+added. Linux execution and the actual image/installed flow remain separate,
+unclaimed qualifications.

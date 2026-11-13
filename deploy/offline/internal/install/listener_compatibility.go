@@ -16,6 +16,7 @@ import (
 // listenerCompatibility checks new listener intent before Materialize can replace
 // the configuration an existing Control image needs to restart.
 func (i *installer) listenerCompatibility(ctx context.Context) (err error) {
+	i.admittedTLS = nil
 	if i.config.Network.PortalListener == nil {
 		return nil
 	}
@@ -43,24 +44,41 @@ func (i *installer) listenerCompatibility(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	snapshot, err := i.config.renderControl(containerOperatorDir+"/operator-dsn", false)
+	material, err := i.config.resolveServingTLS(l)
 	if err != nil {
 		return err
 	}
-	file, err := os.CreateTemp(l.Operator, "serving-intent-*.yaml")
+	directory, err := os.MkdirTemp(l.Operator, "serving-intent-*")
 	if err != nil {
-		return errors.New("INSTALL_SERVING_CHECK_UNAVAILABLE: cannot reserve a private desired snapshot")
+		return errors.New("INSTALL_SERVING_CHECK_UNAVAILABLE: cannot reserve private desired material")
 	}
-	path := file.Name()
-	closeErr := file.Close()
-	defer removeServingInput(path, &err)
-	if closeErr != nil {
-		return errors.New("INSTALL_SERVING_CHECK_UNAVAILABLE: cannot close the private desired snapshot")
-	}
-	if err := writeFile(path, snapshot, i.config, true); err != nil {
+	defer removeServingDirectory(directory, &err)
+	if err := privateDirectory(directory, i.config, true); err != nil {
 		return err
 	}
-	return i.verifyServingSnapshot(ctx, image, containerOperatorDir+"/"+filepath.Base(path))
+	for name, raw := range map[string][]byte{"certificate.pem": material.certificate, "private-key.pem": material.privateKey} {
+		if err := writeFile(filepath.Join(directory, name), raw, i.config, true); err != nil {
+			return err
+		}
+	}
+	containerDirectory := containerOperatorDir + "/" + filepath.Base(directory)
+	certificateFile, privateKeyFile := containerDirectory+"/certificate.pem", containerDirectory+"/private-key.pem"
+	snapshot, err := i.config.renderControlWithTLS(containerOperatorDir+"/operator-dsn", false, certificateFile, privateKeyFile)
+	if err != nil {
+		return err
+	}
+	if err := writeFile(filepath.Join(directory, "control.yaml"), snapshot, i.config, true); err != nil {
+		return err
+	}
+	args, err := i.config.servingArgumentsWithTLS(containerDirectory+"/control.yaml", certificateFile, privateKeyFile)
+	if err != nil {
+		return err
+	}
+	if err = i.verifyServingIntent(ctx, image, args); err != nil {
+		return err
+	}
+	i.admittedTLS = material
+	return nil
 }
 
 // Changing a listener must not silently migrate SSO callbacks or session origins.

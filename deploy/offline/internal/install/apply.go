@@ -83,6 +83,7 @@ func retryWith(e error, command string) error {
 type Probe func(ctx context.Context, c Config, origin string) error
 
 type installer struct {
+	admittedTLS  *servingTLSMaterial
 	config       Config
 	runner       Runner
 	probe        Probe
@@ -126,7 +127,7 @@ func (i *installer) apply(ctx context.Context) error {
 		{"preflight", i.preflight},
 		{"images", i.images},
 		{"listener-compatibility", i.listenerCompatibility},
-		{"configuration", func(context.Context) error { return Materialize(i.config) }},
+		{"configuration", func(context.Context) error { return materialize(i.config, i.admittedTLS) }},
 		{"serving-transport", i.servingTransport},
 		{"stop-control", i.stopControl},
 		{"database", i.database},

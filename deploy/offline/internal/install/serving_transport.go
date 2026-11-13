@@ -28,11 +28,15 @@ type servingExpectation struct {
 const servingTransportSuccess = "CONTROL_SERVING_TRANSPORT_OK"
 
 func (c Config) servingArguments(configPath string) ([]string, error) {
+	return c.servingArgumentsWithTLS(configPath, containerConfigDir+"/certificate.pem", containerConfigDir+"/private-key.pem")
+}
+
+func (c Config) servingArgumentsWithTLS(configPath, certificateFile, privateKeyFile string) ([]string, error) {
 	public := servingExpectation{
 		FormatVersion: 1, TransportMode: "direct_https", ListenAddress: containerListen,
 		PortalOrigin: c.Origins.Portal, AdminOrigin: c.Origins.Admin,
-		TLSCertificateFile: containerConfigDir + "/certificate.pem",
-		TLSPrivateKeyFile:  containerConfigDir + "/private-key.pem", TrustedProxyCIDRs: []string{},
+		TLSCertificateFile: certificateFile,
+		TLSPrivateKeyFile:  privateKeyFile, TrustedProxyCIDRs: []string{},
 		PortalListenAddress: c.portalListenAddress(),
 	}
 	raw, err := json.Marshal(public)
@@ -95,6 +99,10 @@ func (i *installer) verifyServingSnapshot(ctx context.Context, image, configPath
 	if err != nil {
 		return err
 	}
+	return i.verifyServingIntent(ctx, image, args)
+}
+
+func (i *installer) verifyServingIntent(ctx context.Context, image string, args []string) (err error) {
 	digest, pinned := strings.CutPrefix(image, "sha256:")
 	if !pinned || !wire.ValidSHA256(digest) {
 		return errors.New("INSTALL_SERVING_IMAGE_INVALID: supply the admitted immutable Control image")
@@ -114,13 +122,20 @@ func (i *installer) verifyServingSnapshot(ctx context.Context, image, configPath
 	command := append([]string{"-f", filepath.Clean(path), "--profile", "operator", "run", "--rm", "--no-deps", "--no-TTY", "control-operator"}, args...)
 	output, runErr := i.compose(ctx, command...)
 	if runErr != nil || !containsLine(output, servingTransportSuccess) {
-		return &StepError{Code: "INSTALL_SERVING_TRANSPORT_REFUSED", Detail: "the admitted image rejected the installed serving intent; keep the active version and correct the configuration before retrying: " + lastLines(output)}
+		return &StepError{Code: "INSTALL_SERVING_TRANSPORT_REFUSED", Detail: "the admitted image rejected the selected serving intent; keep the active version and correct the configuration before retrying: " + lastLines(output)}
 	}
 	return nil
 }
 
 func removeServingInput(path string, outcome *error) {
 	if err := os.Remove(path); err != nil {
+		*outcome = &StepError{Code: "INSTALL_SERVING_CHECK_CLEANUP_FAILED",
+			Detail: "cannot remove private serving input " + path + "; remove it before retrying: " + lastLines(errors.Join(*outcome, err).Error())}
+	}
+}
+
+func removeServingDirectory(path string, outcome *error) {
+	if err := os.RemoveAll(path); err != nil {
 		*outcome = &StepError{Code: "INSTALL_SERVING_CHECK_CLEANUP_FAILED",
 			Detail: "cannot remove private serving input " + path + "; remove it before retrying: " + lastLines(errors.Join(*outcome, err).Error())}
 	}

@@ -69,6 +69,10 @@ func (c Config) CredentialPath() string { return filepath.Join(c.Layout().Operat
 // Materialize creates or refreshes the files under install_root. Generated secrets
 // are kept across runs; configuration derived from install.yaml is rewritten.
 func Materialize(c Config) error {
+	return materialize(c, nil)
+}
+
+func materialize(c Config, admittedTLS *servingTLSMaterial) error {
 	l := c.Layout()
 	composeFile, err := os.ReadFile(c.ComposeFile)
 	if err != nil {
@@ -115,7 +119,7 @@ func Materialize(c Config) error {
 	if e = c.materializeRuntimeSecrets(l); e != nil {
 		return e
 	}
-	if e = c.materializeTLS(l); e != nil {
+	if e = c.materializeTLS(l, admittedTLS); e != nil {
 		return e
 	}
 	copies := []struct{ source, target string }{{c.License.TrustFile, "license-trust.json"}}
@@ -213,6 +217,10 @@ func (c Config) materializeRuntimeSecrets(l Layout) error {
 // Only serving gets the model store: the operator tasks run before the first
 // administrator exists, and the control plane refuses a store until one does.
 func (c Config) renderControl(dsnFile string, serving bool) ([]byte, error) {
+	return c.renderControlWithTLS(dsnFile, serving, containerConfigDir+"/certificate.pem", containerConfigDir+"/private-key.pem")
+}
+
+func (c Config) renderControlWithTLS(dsnFile string, serving bool, certificateFile, privateKeyFile string) ([]byte, error) {
 	document := map[string]any{}
 	for key, value := range c.ControlSettings {
 		document[key] = value
@@ -220,7 +228,7 @@ func (c Config) renderControl(dsnFile string, serving bool) ([]byte, error) {
 	document["topology"] = map[string]any{"size": c.Topology.Size}
 	document["server"] = map[string]any{
 		"listen_address": containerListen, "portal_origin": c.Origins.Portal, "admin_origin": c.Origins.Admin,
-		"tls_certificate_file": containerConfigDir + "/certificate.pem", "tls_private_key_file": containerConfigDir + "/private-key.pem",
+		"tls_certificate_file": certificateFile, "tls_private_key_file": privateKeyFile,
 		"portal_assets": imagePortalAssets, "admin_assets": imageAdminAssets,
 	}
 	if address := c.portalListenAddress(); address != "" {

@@ -338,11 +338,8 @@ func TestPortalCompatibilityRefusalKeepsTheInstalledConfiguration(t *testing.T) 
 					calls++
 					for n, arg := range args {
 						if arg == "--config" {
-							directory := c.Layout().Operator
-							if strings.HasPrefix(args[n+1], containerConfigDir+"/") {
-								directory = c.Layout().Config
-							}
-							raw, err := os.ReadFile(filepath.Join(directory, filepath.Base(args[n+1])))
+							path := listenerSnapshotHostPath(t, c, args[n+1])
+							raw, err := os.ReadFile(path)
 							if err != nil || !bytes.Contains(raw, []byte("portal_listen_address: 0.0.0.0:9443")) {
 								t.Fatalf("desired snapshot missing: %v", err)
 							}
