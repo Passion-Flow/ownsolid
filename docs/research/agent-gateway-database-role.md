@@ -923,12 +923,72 @@ The imported `9a0543b9` research is the frozen earlier source input.
 This closes the original constructor's source and file-only test dependency.
 It does not execute ARC's actual `runAgentGateway` branch or qualify combined
 HTTP/RPC/receive/worker shutdown, later startup rollback, restricted SQL,
-training claims, installed read-only mounts or fleet cost. The combined source
-still needs a local compiler and its existing 11 explicit no-database test roots
-across `cmd/server`, `internal/platform/agentgateway` and
-`internal/modules/identity/http`. Compile-only and test-list output must remain
+training claims, installed read-only mounts or fleet cost. The combined source's
+11 explicit no-database test roots have now run as recorded below, across
+`cmd/server`, `internal/platform/agentgateway` and
+`internal/modules/identity/http`. Compile-only and test-list output remain
 separate from execution: a run is acceptable only when its complete expected
 root set appears with passes, with no empty selection, skip or failure.
 The original native SQL opportunity remains NOTRUN on SSH banner timeout255;
 it is neither reopened nor reassigned to this source. All product boxes stay
 open, and no runtime role or new support claim is activated.
+
+### Joint source local lifecycle qualification
+
+Exact source `3513ab2ba5885bb5d782919f7611d96e35d28fc6`, tree
+`c65b8e3fde9833369c253c8303b70c3f13cae5d8`, passed the prepared local
+qualification with its original IAM four paths, TRN 21 paths and MODEL 13 paths
+and their original ancestors unchanged. All 5,102 manifest entries were checked
+before entry. This is the joint source, not a reuse of IAM's earlier isolated
+overlay result.
+
+| Package | Actual race roots passed | Cleanup subcases passed | Skips/failures |
+| --- | --- | --- | --- |
+| cmd/server | 5 | 0 | 0/0 |
+| internal/platform/agentgateway | 3 | 0 | 0/0 |
+| internal/modules/identity/http | 3 | 3 | 0/0 |
+
+Each package compiled, its binary list exactly matched the declared roots, and
+the real JSON execution included every required run/pass and the package pass.
+The cmd/server roots exercise sealed HTTP admission, a real HTTPS handler/file
+owner, reverse lifecycle join, timed-out join retention and an unconfirmed stop.
+The gateway roots exercise actual TLS gRPC cancellation, a callback retaining
+an open file after transport close, concurrent joins and empty/repeated drain.
+The original IAM roots exercise the one shared graph, failure rollback and
+trusted-owner validation. They use explicit file-only fixtures and establish
+no SQL or actual CLI claim authority.
+
+The single Mac opportunity took 66.690797834 seconds including 0.561827958
+seconds of cleanup and three additional serial Linux amd64 test-binary builds.
+It used Go 1.27.3, race-enabled local tests, Go-p1/GOMAXPROCS=2,
+GOMEMLIMIT=512MiB and offline caches, with no dependency download. Fresh raw
+free memory after admission was 6,273,236,992 bytes, disk free 164,483,067,904
+bytes and pressure 1, with no competing heavy process. The new coordinator
+epoch carrier matched its exact path/FD identity throughout one NB admission,
+all children and cleanup. All 13 child PIDs and the wrapper PID were absent
+at readback; no owned group remained, the carrier was unlocked/closed and its
+one-shot private entry was closed. No database, Docker volume, browser or
+installed service was started. The real loopback test listeners ended with
+their tests and processes. The original 82 legacy entries remain closed.
+
+The retained evidence directory is `lane-arc-diagnostics/arc111-mac-e1.shn25mqk`.
+Its unchanged result SHA-256 is
+`44490f1356166aa4efd066fd62bd1b6b57b158447f90e512b6afe98b4353f313`;
+the independent local cleanup readback SHA-256 is
+`6872648ab89ade526f1e5a63d82d5c3cbd0c46c5dc3db12d989b768af9b9a8f2`.
+The compiled database, databaseaccess and repository-tagged MODEL Linux binaries
+are bound to that same source. Compilation executes no native SQL root.
+
+After the Mac carrier was released, the separately granted single Linux
+preflight returned SSH exit255 after 8.616071125 seconds, with
+`Connection to UNKNOWN port 65535 timed out`. It received no resource JSON,
+opened no native carrier, uploaded no input and started no database, SQL,
+container, volume or credential. No retry followed. The exact source's native
+result is NOTRUN, retained in
+`lane-arc-diagnostics/arc111-native-e1.7axxa0p5/preflight-result.json`, SHA-256
+`167ce561f41006e262a06eb0de132a0f5c1fd0a2314f1c91f4b4c71988175b31`.
+No actual schema61 catalog JSON/fingerprint, admitted source B or runtime grant
+qualification exists. The original schema60 pins, CatalogSQL and all assertions
+remain unchanged. Actual CLI startup rollback, real restricted-role training
+claims, read-only mount delivery, persistence, offline installed execution and
+fleet cost remain open, as do the complete check/build/test gates and ARC-111.

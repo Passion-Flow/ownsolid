@@ -117,7 +117,8 @@ Static byte comparison retains all 72 predecessor migration assets, the original
 CatalogSQL/fingerprints, cell inventory assertion and grant-resume helper.
 The owner's upward body and entire downward input remain exact prefixes before
 the explicit platform section. Source formatting, layout and diff checks are
-separate from compilation or SQL qualification; neither has run for this candidate.
+separate from compilation or SQL qualification. The joint source's original
+packages now compile as recorded below; actual SQL qualification has not run.
 
 The database tests exercise nonempty backfill, unchanged version rows and UUIDs,
 repeated migration, populated downgrade refusal, exact empty rollback, mismatched
@@ -337,3 +338,35 @@ created. The result is NOTRUN, not a failed SQL assertion or a passed preflight.
 The local native-notrun.json retains the exact source and refusal classification;
 cleanup is not applicable rather than an invented successful cleanup result.
 The original1,200-second ceiling and every assertion remain unchanged.
+
+## Joint-source compilation and renewed native refusal
+
+Joint source `3513ab2ba5885bb5d782919f7611d96e35d28fc6`, tree
+`c65b8e3fde9833369c253c8303b70c3f13cae5d8`, retains the exact formal61
+candidate, original MODEL/TRN/IAM bytes and original author DAGs. Its three
+affected local packages passed all 11 explicit race roots and three IAM cleanup
+subcases, without skips or failures; see the
+[gateway lifecycle qualification](agent-gateway-database-role.md#joint-source-local-lifecycle-qualification).
+These are no-database component tests, not formal migration or role execution.
+
+The same bounded Mac opportunity serially compiled the original Linux amd64
+database, databaseaccess and repository-tagged MODEL test packages, with no
+overlay or assertion change. The binary SHA-256 values are:
+
+| Original package | SHA-256 |
+| --- | --- |
+| internal/platform/database | 2bc2623083210a5265dd215647f4762a9959ada8a3d1be13f102820e05da0124 |
+| internal/operations/databaseaccess | 293ab7afe7db552a9c450634394a013fc5bbc856ff19915c199a12707b3a7be5 |
+| internal/modules/models (repository_integration) | 6ff49492f7a535dd1a1d67880aa3d6b330ac9538eb6a2376456ba4d90dc80947 |
+
+The new original native opportunity then stopped at its single SSH/resource
+preflight: exit255, 8.616071125 seconds, no resource JSON. No native carrier was
+opened, input uploaded, SQL executed or database/container/volume/credential
+created. Its exact result SHA-256 is
+`167ce561f41006e262a06eb0de132a0f5c1fd0a2314f1c91f4b4c71988175b31`.
+It is a distinct NOTRUN for the joint source, preserving the earlier e321fdc
+refusal. No source B or schema61 fingerprints were invented. Actual fresh61,
+prefix55..61 restore, drift/ledger, original grant-resume and MODEL's seven SQL
+roots plus cursor dimensions still require the original native environment,
+protected shared fixture inputs and a newly allocated opportunity. The strict
+schema60 directory fingerprints remain in force.

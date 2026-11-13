@@ -45,8 +45,10 @@ constructor. Register reader close immediately after construction, so later
 startup failure or an exhausted startup context also unwinds those readers.
 Their original close codes are retained, and the same request/RPC/worker joins
 precede reader close during serving, with pool close last.
-This combined source increment has not been compiled or run end to end; see the
-[reader ownership boundary](../../../../docs/research/agent-gateway-database-role.md#actual-iam-constructor-consumption).
+The combined source passes local race tests for HTTP/RPC/file lifetime and the
+original shared-reader constructor. Actual command startup, restricted-role
+claims and installed read-only mounts still require end-to-end qualification;
+see the [exact tested source and remaining boundary](../../../../docs/research/agent-gateway-database-role.md#joint-source-local-lifecycle-qualification).
 
 [runtime_lifecycle.go](runtime_lifecycle.go) owns dependency construction, cancellation, worker readiness, stop/join order and closers. Component helpers such as artifactstores.go, imageregistry.go, task_events.go, middleware.go and monitoring.go connect their existing owners. The identity HTTP package still composes/routes domains; extracting that historical hub is a separate verified change, not an invitation to create duplicate owners here.
 
