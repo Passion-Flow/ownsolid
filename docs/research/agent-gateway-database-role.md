@@ -1337,3 +1337,76 @@ unactivated; its source SHA-256 is
 The next release condition is evidence of the actual cached input identity and
 mode, an exact target-source admission and then the original fresh/restore
 catalog work. Schema60 pins, original owner files and SQL assertions stay intact.
+
+### Diagnosed Git archive mode and private cache conversion
+
+One later authorized read-only diagnostic localized the first rejected input
+to `.editorconfig`: no destination file had been copied. Its lstat and fstat
+both reported a regular file, full mode 33204, permissions 0664, UID/GID 0,
+one link, 281 bytes and no symlink. The manifest's string `100644` parses to
+33188 and permissions 0644. SHA-256 and Git blob ID matched exactly. The
+retained owner-binding JSON identified source `149a9501`, tree `aa85534e`,
+5,015 paths and the original verification; its SHA-256 is
+`0c6cc92715ef72a1d433250c8dbd2c4e8c7890f7314cdbfc636fa286c00dfe96`.
+The owning parent was UID/GID 0, mode 0700; the source directory was 0775.
+Diagnostic SSH exited 0 in 6.658725084 seconds, without locks, services or writes.
+
+This is the private cache's Git tar permission representation, not a content,
+SSH or target-manifest hash failure. An exact local archive of the same basis
+has 5,003 files at 0664 and twelve at 0775. The corrected private path requires
+that exact archive mapping, owner, regular type, single link, byte length,
+SHA-256 and Git blob identity for every old input. It writes a new owned cache
+under the new private root, sets only those new files to the Git 0644/0755
+permissions, and reads their actual metadata through the unchanged strict
+source verifier. Existing cache files are never chmodded or replaced. Any
+different archive mode fails; there is no arbitrary accepted-mode set.
+
+The complete local conversion and target reconstruction passed for 5,015
+basis inputs and all 5,102 target paths (42,132,271 bytes) in 2.982140042 seconds.
+Raw 0600, 0644 and 0777 were refused against the exact raw 0664 requirement.
+The local fixture used its own actual binding hash; the native caller retains
+the exact remotely diagnosed binding hash above. These are local source-input
+checks only. Native source, SQL, runtime grants and MODEL qualification still
+need the actual opportunity. The original source/binary contracts, receiver
+deadline and schema60 pins remain unchanged.
+
+The original allocation was not reset. Native activation's local precondition
+refused with exit 1 before copying an executable entry: a subsequent readback
+at 1,128.726795 seconds found the 1,080-second work cutoff exceeded and no
+native driver. There were zero native connections, carrier opens, PostgreSQL
+fixtures or SQL/catalog/role cases. The actual read-only diagnostic had ended
+at allocation 79.983887 seconds, and the last local conversion prototype had
+ended before the readback at 322.552754 seconds. Final PID/group absence and
+entry closure were recorded at 1,258.001454 seconds, outside the 1,200-second
+window; this final confirmation is not claimed to have met that deadline.
+The diagnostic remote PID/start identity was not captured. Its natural SSH 0
+and no-child/no-service/no-lock program establish its scoped completion; no
+additional remote connection or global process/FD assertion is made.
+
+After the conversation interruption, a read-only local recheck inspected the
+actual retained directories, not only their manifests: 5,015 normalized basis
+files totaling 41,079,987 bytes (5,003 at 0644, twelve at 0755), and 5,102 target
+files totaling 42,132,271 bytes (5,090 at 0644, twelve at 0755). Every length,
+SHA-256, Git blob, actual mode, regular type, single link and local owner UID501
+matched. These are Mac fixture results, not remote UID0 source admission.
+All three compiled native binary hashes still match the original joint source.
+
+The private directory is `lane-arc-diagnostics/arc111-cache-admission.as02x_ht`.
+The corrected native guard SHA-256 is
+`11ac2be397cd9bfdb279a00dcf5bbd29896234aa56c0052790a687dd40a44b2e`;
+the allocation-bounded parent SHA-256 is
+`7da60acd7be7ef748a4176fc12ef3965fee0eaf6b8512ee00d769b0c1557f246`.
+Actual metadata/result, local file verification, deadline refusal and scoped
+cleanup receipts are retained there. All actual entry files are closed; frozen
+data and named local source fixtures remain for review. No existing remote
+cache, owner implementation, source pin or binary was changed.
+
+`next-native-inputs.json` binds the next exact source, payload, guard, binaries,
+resource conditions and original profiles. It is data, not an allocated run.
+A fresh authorized private entry and allocation are required before the minimal
+`python3 -I "${NEW_OWNED_ENTRY_DIR}/driver.py"` invocation is usable. Do not run
+the closed old entry or edit its expired allocation. Actual source admission
+must precede fresh61/restore55..61 raw catalog collection. Any actual new catalog
+pins require a newly frozen source and matching native rebuild before the
+original Migrate/admission/grant/MODEL roots can qualify them. Those steps and
+the protected MODEL fixture inputs remain outstanding; no SQL or E2E passed.

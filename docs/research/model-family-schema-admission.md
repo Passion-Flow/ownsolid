@@ -435,3 +435,15 @@ expanded eight-root MODEL selector, formal61 SQL and schema60 pins remain fixed.
 See the [actual frame receipt and cache boundary](agent-gateway-database-role.md#observed-complete-frame-and-strict-cache-mode-refusal).
 This verifies only that specific frame's transport and integrity, not any of
 the outstanding database or reader capabilities.
+
+The follow-up read-only diagnostic proved the cache rejection was the exact
+`.editorconfig` tar mode 0664 versus Git `100644`/0644, with matching content,
+regular type, UID/GID0 and a single link. A corrected private conversion passed
+all actual local 5,015 basis and 5,102 target files while preserving strict source
+checks. No native run followed: activation was refused after the original work
+cutoff, with zero new native connections, carriers, PG or SQL cases. Final local
+process absence was confirmed after the original 1,200-second window and is not
+reported as an in-window confirmation. The new exact guard/input binding and
+remaining fresh allocation, actual61 catalogs, matching pin rebuild, original
+role tests and protected MODEL inputs are recorded in the
+[cache conversion boundary](agent-gateway-database-role.md#diagnosed-git-archive-mode-and-private-cache-conversion).
