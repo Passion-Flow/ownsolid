@@ -6,6 +6,9 @@ The Go agent executes work for one enrolled node under an explicit execution pro
 
 The [internal owner index](internal/README.md) links each execution manager and shared state/transport/configuration guide.
 
+[sessiontransport](sessiontransport/README.md) is the outgoing gRPC transport owner
+shared with the development simulator. It authenticates no node and retries no task.
+
 [cmd/agent/main.go](cmd/agent/main.go) dispatches facts, enroll, run, exact fenced-workload removal and explicit Registry operations. [internal/runtime/runtime.go](internal/runtime/runtime.go) loads protected typed configuration and composes managers. [lease.go](internal/runtime/lease.go) checks the complete operation/profile/payload before dispatch.
 
 | Internal owner | Responsibility |
@@ -69,3 +72,20 @@ Set `gateway_rebalance_seconds` in the agent JSON configuration to change the
 minimum wait between checks. It defaults to 60 seconds and accepts 5 through
 3,600 seconds. Each wait adds up to one more interval of jitter. Restart the
 agent to apply a change.
+
+Dedicated gateways can also advertise their existing physical connection age in
+optional first-reply metadata. A newer agent authenticates a replacement before
+that age between exchanges, then leaves the old transport to retire naturally.
+This applies with one gateway as well as multiple gateways. No protocol cutover or
+simultaneous fleet upgrade is required; missing or invalid hints retain the prior
+reconnect behavior. See [rollout and remaining acceptance](../../docs/research/agent-gateway-rebalance.md#age-handoff-prototype-requirements).
+
+
+A session that has never completed a valid stream heartbeat keeps the original
+two paired probes and five-minute HTTPS fallback. Once that process session has
+used an active or disabled stream, a later fallback becomes eligible to retry
+after the lesser of five minutes and its currently adopted maximum reconnect
+backoff. The next ordinary paced cycle and retry hints still govern the actual
+attempt; no background probe or task replay is added.
+Restarting the Agent forgets this transport history while preserving its normal
+persisted identity and acknowledged cursor. See [the policy decision](../../docs/decisions/0083-bound-fallback-after-a-usable-agent-stream.md).

@@ -97,3 +97,13 @@ second-carrier open, admission, compilation or any Go/SQL body. The original
 opportunity is consumed and no in-round retry is permitted. See the
 [receipt, stage results and owned-resource audit](training-published-file-readers.md#authorized-single-native-attempt-first-carrier-refusal). The original plan, binding and c527fb68 runner are
 unchanged. No product or shared-owner contract is declared complete.
+
+
+After actual carrier release, a separately authorized new bounded-v2 opportunity
+acquired both original carriers and returned RESOURCE_REFUSED (outer/driver 78,
+original-admission child 1) in 0.359098 seconds: MemFree 1,759,084,544 bytes was
+below the unchanged 3 GiB floor. It created no PG/Go/SQL body, schema or DSN,
+released both FDs and left no owned runtime resource. This opportunity is also
+consumed without an in-round retry; the first 73 receipt is unchanged. The
+[new receipt and release audit](training-published-file-readers.md#authorized-new-opportunity-after-carrier-release)
+keep the exact source, thresholds and owner/ARC boundaries intact.

@@ -1,11 +1,11 @@
 # Agent gateway rebalancing
 
-Current acceptance: **ARC-107 remains open**. The integrated repository gate
-passed at 353b46af, but the selected native 500-agent lifecycle run failed its
-unchanged terminal 500/500 assertion with 497 connected/on-stream. It completed the
-observed retirement, both 25-task batches and preferred assignment recovery; final
-persisted-cursor readback was not reached. See the
-[actual installed result](#installed-lifecycle-run-with-busy-task-boundaries).
+Current acceptance: the dedicated gateway path passed the unchanged native
+500-agent lifecycle test on sources `821227ea5b94a8357f695c290e78af3b81c54f22`
+and `3ae6bfebb67b47d684de4651cc597c26f104d725`,
+including strict terminal 500/500 streams and final persisted cursors. Complete
+repository check/build/test also passed both sources. The earlier 497/500 run
+remains a failed historical input; see [current measured acceptance](#bounded-fallback-integration-qualification).
 Earlier results below apply only to their stated input and fixture scope.
 
 Research for ARC-107. An agent keeps the session that survived an outage, so rolling a
@@ -742,3 +742,304 @@ Validate that dependency offline before adopting it. Preserve the simulator's
 legacy shared-connection mode; certificate-bearing agents already require one
 agent per connection, so a legacy multiplexed channel must not be silently replaced
 by one node's handoff. No product adoption or new simulator run is claimed here.
+
+
+## Shared Agent transport qualification
+
+The public Agent transport candidate was exercised from both real implementations
+in an external materialized snapshot of `56a75ee89422a4f0e3e42a7dc5e66c73fa3f79f8`.
+All nine real-TLS/gRPC prototype roots (15 with metadata subcases) passed under race
+and vet in 31.081 seconds. The simulator completed six authenticated handoffs across
+seven transports with no healthy heartbeat/claim errors, one acknowledgement,
+attempt one and cursor seven. Its legacy two-node shared connection remained one
+physical transport with two usable streams. The shared retirement worker tests
+cover physical end, explicit and concurrent close/join, deadline expiry, missing
+or foreign lifetime, late duplicate end events and concurrent record release.
+The actual Agent client, transport helper and Agent contract packages passed under
+race in 5.483, 1.529 and 2.436 seconds respectively.
+
+The complete simulator module also passed under race, with fleet, link, report and
+configuration packages in 114.087, 2.116, 1.485 and 1.528 seconds. GOPROXY and GOSUMDB
+were off and the pinned local toolchain was used throughout. The prototype and
+simulator log SHA-256 values are
+`f19d0c9c5278d961c7e932527b5f238ffa71a7c9068a865dc757ec65c4b720b5` and
+`22f11a9fb742f42110d0c21338dd9905d71f1a2959aa0b01d1cab8c8101681eb`.
+This is a small controlled flow and package regression run, not a fleet-scale or
+native installed result. Its bridges and synthetic backend remain outside product
+source. Preserve the production simulator's existing connection accounting.
+
+A separate simulator link-package compilation with GOWORK=off, GOPROXY=off,
+GOSUMDB=off and -mod=readonly passed against the same candidate module declaration.
+Its command deliberately selected no tests and is only dependency/build evidence;
+log SHA-256 `a5e745bb7a7d080ba849be742cedf3ab3133631dd133daa0cdb40f15e31297b5`.
+The earlier full module-graph inventory query with GOWORK=off failed because
+nonselected graph metadata was absent from the local offline cache. That query is
+not a successful inventory or a failure of the compiled transport; retain its
+log SHA-256 `81dcfe45e9636b445d171d21e8c224cc196af9042177c936cb51f77429296109`.
+No package version was changed or downloaded to bypass it. Product source still
+requires complete repository gates and the unchanged native installed drill.
+
+
+## Implementation regression qualification
+
+The initial age-first ordering could indefinitely postpone a recovered preferred
+gateway: every heartbeat after an old retirement finished could choose another
+same-gateway age handoff before checking preference. The new permanent regression
+`TestConnectionHandoffDoesNotStarveRecoveredPreferredGateway` reproduced the exact
+simultaneously-due case and failed without changing its assertions; negative log
+SHA-256 `b972b51ad0aa3363e0d4c60782f6f05dc1bfeeca91db9eff6a8e21df70a9a3de`.
+Give an eligible preference probe priority over same-gateway age refresh. Apply
+the same positive-drain-window budget to either kind of candidate. With a valid
+age binding, a successful preference move also retires its unused old channel
+naturally; legacy preference moves retain their prior close behavior. At most one
+retirement remains live, and both callers still defer probes while it is pending.
+
+The corrected product code passed race checks for the complete Agent contract,
+Agent client, outgoing transport, gateway, HTTP transport, simulator link and report
+packages, followed by the complete affected vet profiles including simulator fleet.
+Agent client/transport took 6.569/1.510 seconds; gateway/HTTP took 5.213/7.059 seconds;
+simulator link/report took 1.598/1.416 seconds. Permanent tests cover valid and
+legacy headers, authority ordering, bounded hint metrics, no ACK replay, cursor
+preservation, capacity refusal, one retirement, shutdown join, shared channels and
+the recovered preference regression. The Agent, control and simulator race logs
+have SHA-256 values `20bf03147db7aa23a93e0acaa43a6393580d11ec69906490d1dc87fa1f2f4d75`,
+`def85f8e676699eaee2f0c554ec46545b1bc1054c381d196c59bc610b66f2115` and
+`d7cd033a731c3297785d7c58abb26fc3eb531ce522a93e2cdf7e1d2f6063be91`.
+The sorted Go-source/module-input fingerprint is `12727b32504ae011e1fb46e357c74b17c6453ab3c3c1a0c22de7dff0e57712df`.
+Full check/build/test and the unchanged installed native 500-agent drill remain
+required. Do not infer acceptance or a new capacity claim from these focused runs.
+
+
+## Native terminal-status and fixture-directory findings
+
+Input `f086998549595603686e56ec8c2156a2873065c1` passed complete Mac check,
+build and test: 1,191 Console and 410 Portal browser cases, with the existing
+28/10 environment skips. Native source verification covered all 5,062 tracked
+paths, and all seven current Linux binaries compiled without downloads. The first
+native client race run failed; its retained log SHA-256 is `fc8b81765b1d9b2f7f7ff3b293da0a9e47a6ceae9b11dafc1ddc741f16d55832`.
+No installed 500-agent run was started from that failed prerequisite.
+
+One failure was the runner's working directory. A compiled Go package test must run
+from its package directory, as go test does; the model-range test correctly refused
+a missing relative fixture when the runner used the module directory. Correct the
+external runner's directory, not the fixture path, digest check or assertion.
+
+The other failure was the existing strict revoked-session test receiving
+CONTROL_CONNECTION_FAILED on a repeated immediate refusal. The pinned
+[gRPC ClientStream contract](https://pkg.go.dev/google.golang.org/grpc@v1.85.0#ClientStream)
+and [implementation](https://github.com/grpc/grpc-go/blob/v1.85.0/stream.go)
+require reading RecvMsg after a SendMsg EOF to obtain a remotely generated final
+status. Treating that EOF as an ordinary network error can lose an early
+Unauthenticated status. Add a deterministic sender-EOF/receiver-refusal regression
+before changing the implementation. Share one send/receive helper between the
+actual Agent and simulator; preserve final refusal codes, one send, one receive,
+existing cancellation/timeouts and frame validation. A non-EOF send error remains
+final. Do not replay a heartbeat, claim, acknowledgement or result, and do not
+classify an empty successful stream termination as an answered application message.
+The raw gateway test client's I/O must honor the same upstream rule. The existing
+Go BSD-3-Clause and gRPC Apache-2.0 dependencies suffice; add no dependency.
+
+
+The deterministic regression failed on both revoked-credential and missing-certificate
+refusals before the fix, each reporting CONTROL_CONNECTION_FAILED instead of the
+final authentication status. Its log SHA-256 is
+`160360d4fb77cc23c8bbaeb0e48d625c65226ad70f73faed019aa055360a6936`.
+The shared single-send/single-receive helper now reads the final RPC status after
+send EOF. The original strict authentication assertions pass, alongside permanent
+no-replay, local-send-error, empty-termination and decoded-reply tests. The actual
+Agent and simulator adapters both use that helper; the raw gateway fixture observes
+the same documented I/O contract without changing any refusal assertion.
+
+After the fix, all affected Agent contract, client/transport, gateway/HTTP and
+simulator link/report race profiles and affected vet profiles passed. The Agent,
+control and simulator race log SHA-256 values are
+`ddaafb6fc230627c18c90bbcc64d96a4454947b35fadabf9558a84865226e21f`,
+`8eef3de17d4dfee0164de516d14bfe0f3c6cd354631729a258ab02cfc2b94d93` and
+`1f754eabbb4703f7411773e53b252ba9abb0e8e0997887c4cc6855f30294d526`.
+Native package execution and installed lifecycle acceptance remain pending. Keep
+both original native failures; the earlier full Mac result does not erase them.
+
+
+## Instance-owned gateway idle baseline
+
+The corrected native client and outgoing transport suites passed on cf93c92e with
+proper package working directories. The next native gateway race run exposed an
+existing test-only global mutation: TestSlowlyPacedSessionOutlivesTheDefaultIdleTime
+restored idleTimeout while an HTTP/2 session handler still read it. Preserve the
+strict race report, SHA-256 `342d1d84d19a3cab60ae1d5cd5328f523ca4a668cb20c6b71b302962cc1b9909`.
+A successful Mac suite does not erase this native failure.
+
+Replace the mutable package default with the unchanged protocol constant captured
+by each Gateway at construction. A private constructor supplies the explicitly
+bounded baseline for the existing short-clock fixtures. Production New always
+uses the same version-1 default; runtime pacing can still extend the idle window.
+Do not add a configuration switch, change the 200 ms fixture clocks or relax the
+silence and held-claim assertions. Add an actual two-gateway independence test.
+An external source overlay passed all native gateway race tests and vet, including
+that test, before adoption. Its archive SHA-256 is
+`095997d301860ea4afa816e00826f355ebd475ec1596730b4a5d222ee05d704a`
+and race log SHA-256 is
+`eb3368dc05d440c28d57bc8017ba004925085ccd46c89c495b7429611da259aa`.
+The native race command finished in 5.193 seconds with no skips. No dependency,
+wire frame, server age enforcement or retry policy changes.
+
+Complete Mac check/build/test also passed cf93c92e with 1,191/410 browser cases and
+the existing 28/10 environment skips. The native fixture race still prevented
+installed acceptance at that input. Requalify the adopted immutable baseline and
+retain the unchanged installed 500-agent assertions.
+
+
+## Authenticated handoff installed acceptance
+
+Source `821227ea5b94a8357f695c290e78af3b81c54f22`, tree
+`08ac231f728e6eb93a1fcde86838725b00520b7f`, passed complete offline-cache
+make check, make build and make test on Darwin arm64. Chromium passed 1,191
+Console and 410 Portal cases with the existing 28/10 live-environment skips and
+zero retries. The owned private APFS scratch was detached and removed.
+
+Native Linux amd64 qualification verified every byte and executable mode of all
+5,068 source paths, compiled all seven actual installation inputs with Go 1.27.3,
+and passed complete client, sessiontransport, agentgateway and httpserver race
+and vet profiles with no skipped cases. The private network namespace admitted
+only loopback. The retained earlier sender-EOF failure and global-idle race are
+resolved by this input, without relaxing their assertions or fixture clocks.
+
+The actual installed test then passed in 323.13 seconds, with its original
+500 agents, 60-second maximum age, 54–60-second jitter envelope, both 25-task
+batches of 100-second acknowledged work, three-minute move bounds, two-minute
+dispatch bounds and strict terminal assertions unchanged. The fixture ran the
+real installer, schema-60 PostgreSQL and two real dedicated gateway processes,
+using individually verified node certificates. The image used freshly compiled
+native control bytes and the same-source qualified Mac web assets; the standard
+release-image factory is outside this test. The outer isolated Docker daemon had
+no host ports, network none, two CPUs, a 6 GiB memory ceiling and 4,096 PID ceiling.
+
+| Measurement | Actual result |
+| --- | --- |
+| Enrollment / all connected | 3 s / 11 s |
+| Original preferred sessions A/B | 244 / 256 |
+| Original transports retired naturally | All 500; 56.1 s after the age checkpoint; zero forced |
+| A observed drain / retirement age | 54.024153–59.987182 s / 54.025736–59.991372 s |
+| B observed drain / retirement age | 54.025462–59.974299 s / 54.026935–59.975899 s |
+| Maximum observed drain scheduling delay A/B | 0.007622 / 0.001703 s |
+| All original transports replaced | 100.2 s after the age checkpoint, including completion of the busy tasks |
+| Idle agents reaching survivor after kill | 475 / 475 in 8.2 s |
+| All agents reaching survivor | 500 / 500 in 101.2 s, including completion of the second busy batch |
+| Original preferred assignment restored | 244 / 256 in 39 s after readiness |
+| Work / ACKs / results | 50 / 50 / 50; all original acknowledged attempt one |
+| Lease renewal | 600 successful, zero failed |
+| Authenticated age handoff | 3,289 successful, zero failed |
+| Final connected / on stream | 500 / 500 |
+| Persisted cursors | Final installed readback passed for every simulated node |
+| Revoked / resync / lost replies | 0 / 0 / 0 |
+| Egress | Zero product attempts; one observed fixture probe |
+
+The intentionally killed gateway produced recorded connection failures: 218
+claims, 15 heartbeats, 244 stream opens and 976 failed preference probes. Keep
+these totals in the raw simulator report; the passing fault test does not mean
+zero network errors or establish a steady-load SLO.
+
+There were 122 observer rows at the unchanged declared five-second interval,
+including 23 deliberately stopped A rows. These are sampled maxima, not an
+instantaneous peak or RSS:
+
+| Gateway | Established serving-port sockets | TIME_WAIT | Docker CLI cache-adjusted memory | CPU | PIDs |
+| --- | --- | --- | --- | --- | --- |
+| A | 477 | 24 | 106.2 MiB | 21.86% | 21 |
+| B | 932 | 51 | 198.5 MiB | 41.53% | 21 |
+
+The physical overlap is real: authenticated warm replacement and natural
+retirement consume temporary headroom inside the existing limits. Neither the
+limits nor the simulator connection accounting was increased to accept the run.
+No 10,000-node capacity, real accelerator, customer-environment or separate-host
+gateway claim follows from this 500-agent functional drill. Connection aging
+applies to dedicated serve-agent-gateway listeners; the shared control listener
+retains its legacy behavior. The separate training artifact-owner failure and
+gateway database role remain ARC-111 work.
+
+The owned outer container, nested database/workloads and installation staging
+were removed. Its exact fixture image is retained only as an input to the next
+owned ARC-106 measurement; shared images, source snapshots and foreign resources
+remain untouched. Raw native logs, simulator JSON, socket observations, route-read diagnostics,
+egress and image evidence are retained outside Git.
+
+Full check/build/test log SHA-256 values are
+`c418a96622f450b1426dc74cf8dbe283b920c60c736e45d9e3b142ddbe3503df`,
+`129dcbcd4df5a0f9304cefa377e3a71be68de2c4782209981ed6e8d9991f6006`,
+`39f212e85ea71a24d3eed33f15245d94b882b707e8332c7f380d33cf171d021c`.
+The selected installed log SHA-256 is
+`5338ca5e650289a30456c48a42bdab800183597b7006b4696c234abb9a7b6447`.
+Control and simulator binary SHA-256 values are
+`9147131da211b22006605bc39bf1fc660dbbed71331f459a7eacfd0c69fad9a9` and
+`9e7d17c095107e4302fbeb942cc7ffa06d7f8f2a529e74ab599b6bf6ffe5d88e`.
+The fixture image ID is `sha256:0c57f136cefe12a877997a1477846ffe173912a715b3a8e0b42b6dcfdfde0b46`.
+
+### Bounded-fallback integration qualification
+
+Source `3ae6bfebb67b47d684de4651cc597c26f104d725`, tree
+`afc11c111952100cd34b22b76b80db47d0e4709f`, also passed the complete
+make check, make build and make test gate. Chromium again passed 1,191 Console
+and 410 Portal cases, with the existing 28/10 live-fixture skips and zero retries.
+The check/build/test log SHA-256 values are
+`00dfeeaf2182416fcab715ea37d54d03565e5745a7648cfc91f5a797e08f3e1d`,
+`fac2542c0f93246753059ae98677561216f52510cd99b84cebc4922641790409` and
+`7e03d8fbaaba4f61d7ebbcdaedbd815985108ad50130297fec1b82e011248fc3`.
+The private APFS scratch was detached and removed.
+
+All 5,081 native source paths and executable modes were verified before and
+after qualification. Seven native installation binaries were built, followed by
+complete client, sessiontransport, agentgateway, httpserver, agent-contract and
+simulator-fleet race/vet profiles without skips. The isolated test namespace
+had only loopback. Native build admission retained both heavy locks and the
+original resource thresholds: 6,192,876 KiB MemFree, 20,284,156 KiB MemAvailable,
+789,876,191,232 free disk bytes and 3.82% full I/O PSI avg10.
+
+The unchanged installed 500-agent lifecycle then passed in 312.93 seconds,
+including strict terminal 500/500 streams and every persisted cursor. Enrollment
+took 2 s and every node connected in 11 s. The original 244/256 assignments
+returned 38.9 s after readiness. All 500 original transports retired naturally
+57.1 s after the checkpoint and were replaced within 99.6 s, including busy work.
+The observed drain ages were 54.041462–59.961508 s on A and
+54.001404–59.996539 s on B; retirement ages were 54.043097–59.963102 s and
+54.002890–59.997898 s. The maximum drain scheduling delays were 0.001274 s and
+0.005944 s. After the intentional kill, all 475 idle nodes reached the survivor
+in 7.2 s and all 500 in 101.3 s, including the second busy batch.
+
+All 50 tasks, acknowledgements and results retained their original first
+attempt; 600 renewals succeeded with no failure, resync, lost reply or revocation.
+Keep the recorded fault errors: 214 claims, 18 heartbeats, 244 stream opens,
+983 preference probes and two age-handoff probes failed in the windows covering
+the intentionally stopped gateway. There were 3,275 successful age handoffs.
+No failure count was removed to accept the drill.
+
+The same two-CPU, 6 GiB, 4,096-PID, network-none outer topology and original
+assertions were retained. Among 120 observer rows, 23 marked A deliberately
+stopped. Sampled established socket maxima were 476 on A and 924 on B;
+TIME_WAIT maxima were 27 and 52. Available Docker CLI memory samples numbered
+37 on A and 60 on B, with maxima 105.9 and 198.9 MiB; CPU maxima were 22.00%
+and 34.27%, and PID maxima 20 and 22. These remain sampled cache-adjusted
+observations, not instantaneous peaks, RSS or a capacity claim.
+
+The portable external reader captured both recorder default routes successfully.
+Product egress was zero and the recorder saw one positive fixture probe. The
+owned outer container, nested disposable data and installation staging were
+removed. The exact new fixture image remains an input to ARC-106; raw logs,
+source snapshots and shared resources are retained. The selected installed log
+SHA-256 is `ba568cb7f05e1f2c84511244b62d05e48ec1b94e2a2ba41997443df2e6764ab7`;
+the image ID is `sha256:704f35c660d6a90fb4bf4d8756289c1045deaabd0f31bb4246537e1468683f89`.
+
+The documentation-only integration at 9ca0a470 preserved all 4,734 non-document
+paths byte-for-byte and mode-for-mode and passed a fresh make check. Its log
+SHA-256 is `e8029e0edbcd186e33fd194880ba048a2a9bfb741f48151494dd98a3aef70e85`.
+The lifecycle qualification alone does not accept a 2,000-agent baseline.
+The independent [ARC-106 acceptance](fleet-load-test.md#accepted-native-kpi-baseline)
+and its retained earlier failed recovery windows are recorded separately.
+
+The published integration `20069022c889c22ed9dc804bfcb443534f6f9b85` also passed
+the complete check/build/test gate with the same browser totals and unchanged
+environment skips. Its non-document bytes and modes match the native qualified
+3ae6bfeb input. The check/build/test log SHA-256 values are
+`49ee74eae23cd599a1f3f5f905964dad7617dda3dbaa56be9d897da4abd83730`,
+`31036011b9aaa10b9fd376d804784ba761713ebc4cccde7a25f5755c16c0eb01` and
+`7db54d132ca209b2cc869a8ea50b3efe07ab60d511e86201f8b799d351f9eff6`.
+The owned scratch image was verified detached and removed.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -121,7 +122,12 @@ func start(t *testing.T, backend Backend, sessions int) (*Gateway, *grpc.ClientC
 
 func startWith(t *testing.T, backend Backend, policy Policy) (*Gateway, *grpc.ClientConn) {
 	t.Helper()
-	g, e := New(backend, policy, problem)
+	return startWithIdle(t, backend, policy, defaultIdleTimeout)
+}
+
+func startWithIdle(t *testing.T, backend Backend, policy Policy, idle time.Duration) (*Gateway, *grpc.ClientConn) {
+	t.Helper()
+	g, e := newGateway(backend, policy, problem, idle)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -161,7 +167,7 @@ func open(t *testing.T, conn *grpc.ClientConn, pairs ...string) grpc.ClientStrea
 
 func exchange(t *testing.T, stream grpc.ClientStream, m wire.AgentMessage) (wire.ControlMessage, error) {
 	t.Helper()
-	if e := stream.SendMsg(&m); e != nil {
+	if e := stream.SendMsg(&m); e != nil && !errors.Is(e, io.EOF) {
 		return wire.ControlMessage{}, e
 	}
 	var reply wire.ControlMessage
@@ -428,15 +434,13 @@ func TestNewRefusesIncompletePolicy(t *testing.T) {
 // A session is as long-lived as its pacing asks for: a slow agent is not closed between
 // two heartbeats even though it stays silent longer than the default.
 func TestSlowlyPacedSessionOutlivesTheDefaultIdleTime(t *testing.T) {
-	saved := idleTimeout
-	idleTimeout = 200 * time.Millisecond
-	t.Cleanup(func() { idleTimeout = saved })
-	_, conn := start(t, &fakeBackend{pacing: &wire.Pacing{HeartbeatSeconds: wire.MaxHeartbeatSeconds, ReconnectBaseSeconds: 1, ReconnectMaxSeconds: 1}}, 4)
+	const idle = 200 * time.Millisecond
+	_, conn := startWithIdle(t, &fakeBackend{pacing: &wire.Pacing{HeartbeatSeconds: wire.MaxHeartbeatSeconds, ReconnectBaseSeconds: 1, ReconnectMaxSeconds: 1}}, Policy{MaxSessions: 4, ExchangeSeconds: 5}, idle)
 	stream := open(t, conn)
 	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
 		t.Fatal(e)
 	}
-	time.Sleep(4 * idleTimeout)
+	time.Sleep(4 * idle)
 	if _, e := exchange(t, stream, heartbeat(2)); e != nil {
 		t.Fatalf("session closed while its pacing allowed the silence: %v", e)
 	}
@@ -445,11 +449,9 @@ func TestSlowlyPacedSessionOutlivesTheDefaultIdleTime(t *testing.T) {
 // Silence counts from the reply, so a claim held for longer than the idle time is not
 // the agent's silence.
 func TestHeldClaimDoesNotCountAsSilence(t *testing.T) {
-	saved := idleTimeout
-	idleTimeout = 200 * time.Millisecond
-	t.Cleanup(func() { idleTimeout = saved })
-	b := &fakeBackend{hold: 3 * idleTimeout}
-	_, conn := start(t, b, 4)
+	const idle = 200 * time.Millisecond
+	b := &fakeBackend{hold: 3 * idle}
+	_, conn := startWithIdle(t, b, Policy{MaxSessions: 4, ExchangeSeconds: 5}, idle)
 	stream := open(t, conn)
 	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
 		t.Fatal(e)
@@ -463,10 +465,8 @@ func TestHeldClaimDoesNotCountAsSilence(t *testing.T) {
 }
 
 func TestSilentSessionIsClosed(t *testing.T) {
-	saved := idleTimeout
-	idleTimeout = 200 * time.Millisecond
-	t.Cleanup(func() { idleTimeout = saved })
-	g, conn := start(t, &fakeBackend{}, 4)
+	const idle = 200 * time.Millisecond
+	g, conn := startWithIdle(t, &fakeBackend{}, Policy{MaxSessions: 4, ExchangeSeconds: 5}, idle)
 	stream := open(t, conn)
 	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
 		t.Fatal(e)
@@ -539,5 +539,23 @@ func TestDrainEndsSessionsAndRefusesNewOnes(t *testing.T) {
 	}
 	if g.Sessions() != 0 {
 		t.Fatalf("open sessions %d", g.Sessions())
+	}
+}
+
+func TestIndependentGatewayIdlePolicies(t *testing.T) {
+	_, fast := startWithIdle(t, &fakeBackend{}, Policy{MaxSessions: 4, ExchangeSeconds: 5}, 200*time.Millisecond)
+	_, ordinary := start(t, &fakeBackend{}, 4)
+	early, normal := open(t, fast), open(t, ordinary)
+	for _, stream := range []grpc.ClientStream{early, normal} {
+		if _, err := exchange(t, stream, heartbeat(1)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var reply wire.ControlMessage
+	if err := early.RecvMsg(&reply); status.Code(err) != codes.DeadlineExceeded {
+		t.Fatalf("short idle did not close: %v", err)
+	}
+	if _, err := exchange(t, normal, heartbeat(2)); err != nil {
+		t.Fatalf("another gateway's short idle changed the ordinary session: %v", err)
 	}
 }
