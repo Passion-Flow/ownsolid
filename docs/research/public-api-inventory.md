@@ -1009,3 +1009,56 @@ or route. These are owner-qualified SQL results, not this SDK's transport run.
 The current server exact-action whitelist still excludes audit.events_read;
 retain category=audit and do not extend that enumeration or change the thirteen
 standard response fields.
+
+### Linux integrated gate boundary
+
+The exact joint source 9be01cbbf0144a2f2537667834539de31e40f58f, tree
+b8aea641ecd1b79be71270ad80ab03c1e131df31, includes main 9e32b023 with
+the published MODEL family/history domain and its unnumbered candidate DDL.
+The private 6a2 history projection remains excluded. The owned source difference
+remains the original-author eighteen paths; no Web consumer was changed.
+
+The corrected native entry has a 1200-second absolute budget including
+preconditions, all four original Make targets and final cleanup, with twenty
+seconds reserved for cleanup. External metadata commands use the remaining
+budget. A Linux [child subreaper](https://man7.org/linux/man-pages/man2/PR_SET_CHILD_SUBREAPER.2const.html)
+and [waitpid](https://man7.org/linux/man-pages/man2/waitpid.2.html) reclaim only
+owned descendants, including detached orphans, before continuing or explicitly
+closing inherited shared lock FDs. Six actual Linux safety fixtures passed
+normal exit, orphan and detached-orphan descriptor cleanup, a TERM-resistant
+metadata timeout, an expired budget with no new process, and lower inherited
+CPU/Node limits. These are entry-helper checks, not product or installed tests.
+No new dependency is distributed.
+
+The single actual admission succeeded. Its initial sample had MemFree 4692 MiB, MemAvailable
+19811 MiB, free disk 789124411392 bytes and I/O full avg10 0.00. The same
+permanent global and SCI carriers were acquired once, nonblocking, in order.
+Each executed Make target used an offline network namespace with only loopback,
+Go parallelism one, GOMAXPROCS at most two, Cargo jobs one and a Node heap
+at most 2048 MiB. No overlay, target skip, third carrier, queue or admission
+retry was used.
+
+Actual web-install exited 0. The check target passed layout, the 589-item
+roadmap check, thirteen layout tests, all sixty-seven SDK/tooling tests and
+generated API consistency for twenty-nine contracts. Web ESLint then exhausted
+the 2048 MiB V8 heap and aborted with exit 134. Make check exited 2 and the
+parent exited 1 after 89.572 seconds. Build and full make test were not started.
+This is a Web lint execution failure, not a resource-admission refusal or a
+failed SDK assertion. The typed-lint project/heap correction belongs to the
+Web owner; its generated-file ignores were already present. Raising the cap,
+skipping lint or changing another owner's Web configuration is not a fix
+within this lane. The release condition is a qualified owner correction and
+a separately assigned exact-source full attempt.
+
+All five owned process groups were verified empty, both shared FDs closed,
+both carrier identities preserved and the exact source remained clean.
+Entry SHA-256 is
+`1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c`;
+raw log SHA-256 is
+`fbcc353ee78c27155e318b3c71fd4ec57fea98bf551080391dd094736c1044c3`;
+result SHA-256 is
+`ea63d0f4d26a25744f322da5402381397c7fd14768c7afb8ab9b4c8509aaa5fe`.
+The raw 430-operation audit remains exit 1 for its explicit 409 binding
+review. The older 783 native result and combined-parent failure remain
+source-bound; there is no new SDK native, private-history, installed or
+CLI b967 qualification, publication or roadmap tick from this attempt.
