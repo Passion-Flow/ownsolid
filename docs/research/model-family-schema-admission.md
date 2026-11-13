@@ -460,3 +460,17 @@ representation correction passed 24 affected cases and preserves exact target
 [actual mixed-cache boundary](agent-gateway-database-role.md#actual-mixed-cache-modes-and-one-failed-native-admission).
 All real61 fresh/restore fingerprints and matching pin/binary qualification
 remain outstanding; the unchanged old binaries are not evidence for new pins.
+
+A later native attempt retained the complete 5,015-path cache metadata map.
+Only 4,879 inputs passed byte/SHA/Git-blob verification; 135 at 0600 and one
+executable at 0700 were refused before content read. No complete 5,102-path
+target admission or SQL followed. SSH/outer returned 1 in 14.702682875 seconds;
+owned FD/process cleanup was confirmed at allocation 218.835505 seconds.
+The next data-only input carries all original frozen source files in one
+5,952,828-byte XZ envelope, with no legacy-cache dependency and no change to
+the source, binaries, SQL, strict target modes or 45-second receive deadline.
+The complete local frame/pipe/EOF/decode checks passed, but no native transfer
+of that larger frame has occurred. See the
+[complete mapping and full-source boundary](agent-gateway-database-role.md#complete-legacy-cache-inventory-and-full-source-delivery-boundary).
+Real61 fingerprints, matching pin rebuild and all original SQL/role/MODEL
+qualification remain open.

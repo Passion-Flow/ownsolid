@@ -1466,3 +1466,84 @@ network, SQL or native run was repeated. The new candidate remains unactivated.
 Its hash and exact next-entry copy sources are frozen in this directory's
 `next-native-inputs.json`; a fresh allocation and actual complete remote source
 admission remain prerequisites to real61 catalogs and original role tests.
+
+### Complete legacy cache inventory and full-source delivery boundary
+
+The next one-attempt native run inspected every one of the 5,015 actual basis
+paths and retained the full input mapping, rather than stopping at one mode.
+Every input was regular, UID0, single-link and not a symlink. The actual
+permission inventory was:
+
+| Input permissions | Files | Content/Git blob/SHA verified |
+| --- | ---: | ---: |
+| 0664 | 4,770 | 4,770 |
+| 0644 | 98 | 98 |
+| 0600 | 135 | 0: rejected before content read |
+| 0775 | 10 | 10 |
+| 0755 | 1 | 1 |
+| 0700 | 1 | 0: rejected before content read |
+
+The 135 files at 0600 have Git mode `100644`. The 0700 input is
+`services/control/internal/modules/datasets/testdata/replay_draft_import.sh`,
+Git mode `100755`. All 136 failures were `CACHE_TRANSPORT_MODE_MISMATCH`; do not
+infer their content hashes from the manifest. The other 4,879 inputs passed
+actual length, byte hash, Git blob, selected input mode and new-cache canonical
+mode verification. The complete metadata inventory is not a complete content
+qualification: none of the 5,102 target paths, SQL roots or roles was admitted.
+The two-representation assumption is therefore insufficient for this cache.
+
+Fresh original dual NB and image admission passed. The 720,340-byte frame,
+SHA-256 and EOF arrived in 1.222372606 seconds. SSH/outer both returned 1 after
+14.702682875 seconds. The remote receipt recorded 3.744495256 seconds including
+0.047743459 seconds of cleanup, empty owned groups, both FDs closed, unchanged
+carrier identities and absent credentials. Local SSH 23549 and parent 23547 were
+absent, and the observer joined. Cleanup confirmation at allocation 218.835505
+seconds was inside the original window and before the cleanup reserve. No
+fixture, PG, volume, network, DSN, catalog, source B or new pin was created.
+The old cache is unchanged; only the new partial owned cache is retained.
+There was no reconnect or native retry after this refusal.
+
+The evidence directory is
+`lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p`.
+Complete input-map SHA-256 is
+`1edecc5172eb07ec324cd538a99204d192b03239d0c6063755b633a48a27941d`;
+outer result SHA-256 is
+`40e6200c65a0a6119dfcbcb04de4df2773d22815117be8c5b2499a7190c5ec6f`;
+cleanup/map-summary SHA-256 is
+`f413f42301936e55183bd38f4dd021a46a427844bf36bd52db4b3bb93ea8a953`.
+All actual entries are closed. Earlier local 5,015/5,102 reconstruction and
+24-case checks remain scoped to their exact fixtures, not this failed native
+source admission. Original source, binaries, SQL and schema60 pins are unchanged.
+
+The chosen next transport removes the inherited cache dependency. It carries
+the complete original frozen source tar, derived from the unchanged gzip input
+with SHA-256 prefix `15027f9f`, inside one XZ envelope. The original gzip hash remains a
+local reference, not a claim that its compressed bytes are sent. All 5,102
+source files were checked as a stream against the existing manifest, including
+their Git blobs, exact 0664/0775 tar headers and UID/GID0. No local source tree
+was rebuilt. Native extraction writes only a fresh owned source directory and
+requires the unchanged exact 0644/0755, UID/type/link/path/content checks. It
+does not read, chmod or broaden admission for the old cache's 0600/0700 files.
+This avoids guessing additional legacy-cache modes or changing a strict target
+assertion to make an incomplete cache pass.
+
+The full-source wire frame is 5,952,828 bytes, SHA-256
+`2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773`;
+the decoded tar is 50,145,280 bytes, SHA-256
+`d377f3c233893ec451448f4b26a3505dbeec1c8fe473aea209745a435f8e88c6`.
+The complete real local OS pipe matched length/SHA/EOF, joined its writer,
+verified the bounded XZ boundary and all 21 exact envelope members. The original
+strict verifier, no-follow reader and receiver ASTs are unchanged. This is a
+transport prototype only, with no additional connection or SQL execution.
+The original 45-second admission window remains. Even excluding extraction,
+this frame requires 132,285.07 bytes/s; the prior small-frame receipt does not
+guarantee that rate for the larger frame. A real bounded receive is still
+required and may fail. No deadline is extended on that assumption.
+
+The unactivated full-source guard SHA-256 is
+`6b070e08d806f9b9ef3da8a38a418fcd6344409a8f68a63c5a8d47c1518289b3`.
+Its exact copy sources, frame and original binary/profile bindings are in
+`full-source-transport/next-native-inputs.json` under the same directory.
+A fresh allocated entry is required. Actual full-source admission, real61
+fresh/restore catalogs, matching new-pin rebuild and original role/MODEL cases
+remain open. No new dependency, model or dataset is introduced.
