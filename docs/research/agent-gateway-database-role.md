@@ -842,7 +842,8 @@ NewAgentGatewayWithPublishedReaders(s, ready, tenant) opens/binds the concrete
 readers itself; ClosePublishedReaders closes only those owners. ARC must consume
 this actual API, not retain its proposed option struct or duplicate reader opens.
 The original default constructor and all four imported owner paths remain intact.
-IAM's corrected Fstat observer and this combined graph are still unqualified.
+The original IAM source now has the file-only qualification recorded below.
+This combined process graph remains unqualified.
 
 At process startup, no configured dataset/training namespace keeps the original
 constructor. If either artifact_root is configured, select the actual reader
@@ -885,3 +886,49 @@ selected runtime principal, post-construction listen/fence failure cleanup,
 active training claim and installed read-only namespace behavior still need
 actual allocated execution. The old native opportunity remains NOTRUN and has
 not been reused for this source.
+
+### Qualified original IAM graph and combined-source boundary
+
+The original IAM source is now committed as
+`b3c2a700fe55e50be61c35155f9d43de665ff5ae`, tree
+`d5e83cf914f3866a8d9e219dff63470886ee134f`, parent
+`9a0543b9a84fbe82f45e3e67da24cca67748aaf2`. All four owner paths are
+byte-identical to the earlier reviewed input already consumed at `8e9a6c4a`.
+The exact original patch remains
+`8907bbf2f38ce3aec7effb424d33aa4f40bff795ac72fd638d14d1208e0fb53d`.
+The verified original-author bundle has SHA-256
+`7016466592a837b546850baaa5fda481e2f3e9746549337a3ea1ec92a84cf1d4`.
+The independent ARC candidate preserves both original DAGs through merge
+`6999a6e5b8b16a9eb741e87487eba368a3a1621c`; its complete tree is exactly
+the `8e9a6c4a` tree, including all 21 TRN and 13 MODEL owner paths. This joins
+the original source identity without replacing the reviewed process input.
+
+The owner's actual bounded opportunity passed the three original roots
+`TestAgentGatewayPublishedReaderGraph`,
+`TestAgentGatewayPublishedReaderFailureCleanup` and
+`TestAgentGatewayPublishedReaderRequiresTrustedOwner`, plus the three cleanup
+subcases `foreign_tenant`, `missing_second_namespace` and `invalid_graph`.
+The raw JSON log contains all six passes and no skip or failure. The opportunity
+took 9.018893875 seconds, including compilation and cleanup; its result SHA-256
+is `19556c297c46005cc0c2639d39ee9945f5aa137d87c6c56106aa2e34b4621b17`.
+All four tested owner hashes and all 21 producer hashes match the combined
+candidate. The real file-only graph retained held writers, exercised eight
+concurrent idempotent closes and attempted no database connection. The owned
+process groups and the unchanged carrier were independently accounted for by
+the original opportunity. Earlier failed/refused attempts remain retained.
+The current upstream evidence is recorded in the original
+[IAM qualification commit](https://github.com/Passion-Flow/ownsolid/commit/e9e715e223f6879339a29fbd2c4b12473c0b026e).
+The imported `9a0543b9` research is the frozen earlier source input.
+
+This closes the original constructor's source and file-only test dependency.
+It does not execute ARC's actual `runAgentGateway` branch or qualify combined
+HTTP/RPC/receive/worker shutdown, later startup rollback, restricted SQL,
+training claims, installed read-only mounts or fleet cost. The combined source
+still needs a local compiler and its existing 11 explicit no-database test roots
+across `cmd/server`, `internal/platform/agentgateway` and
+`internal/modules/identity/http`. Compile-only and test-list output must remain
+separate from execution: a run is acceptable only when its complete expected
+root set appears with passes, with no empty selection, skip or failure.
+The original native SQL opportunity remains NOTRUN on SSH banner timeout255;
+it is neither reopened nor reassigned to this source. All product boxes stay
+open, and no runtime role or new support claim is activated.
