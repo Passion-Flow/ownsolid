@@ -193,6 +193,35 @@ deliberate typed/plugin errors and peak-RSS benchmark have not run. No resource
 lock or heavy lint process was started for this preparation. It is not yet an
 accepted replacement or a reduced-memory qualification.
 
+### Actual benchmark admission boundary
+
+The next authorized lint-only entry bound exact source
+`56a19799bfec788170d71680b4f0663c23073107`, tree
+`b2a8e44948370907c50b66702e3800f3a3fc4b6c`, Web tree
+`c6f7153f37ff0625017823ce4a3415d641e24a21`, and verified all 5101 tracked-file
+hashes plus the prepared input hashes. Its current DEV prerequisite was resolved
+using that attempt's explicit, hash-verified zero-resource refusal, not an older
+exit, chat activity or an empty lock listing. No fictitious cleanup of resources
+that had never been created was required.
+
+The fresh workstation preflight at 2026-11-13 09:44:13 UTC measured 17,673 free
+16 KiB pages (0.2697 GiB) and 152.816 GiB disk free. The lint-only profile required
+3 GiB free memory and 15 GiB disk, within a 600-second total including at least
+60 seconds for cleanup. It refused before opening the carrier or starting any
+lint work child, exit 75 after 0.597 seconds. Only source/receipt verification
+and the memory/disk probes ran. No negative file, process group, lock FD, tool
+output, browser, build or service was created. No queue, repeated resource probe
+or retry followed. The complete 6 GiB gate profile was not changed.
+
+All seven real-CLI regressions, actual file/config equivalence, original and
+serial complete lint, typed/plugin negative controls and both peak-RSS
+measurements remain NOTRUN. No performance improvement, passing lint, full
+check/build/test or product qualification is claimed. The entry's source remains
+frozen; this documentation does not transfer a result to a different input.
+The next measurement requires a new resource opportunity with a fresh sample
+meeting the admitted floors. The existing OOM, earlier refusals and prepared
+comparison inputs remain intact.
+
 ### Licences
 
 No dependency, model, dataset or external runtime request is added. Existing
