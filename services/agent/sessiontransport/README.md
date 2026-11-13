@@ -24,6 +24,11 @@ temporary headroom within the configured connection and session budgets; it neve
 raises either budget. A failed probe can still require the existing reconnect path.
 See [the design and acceptance boundary](../../../docs/decisions/0077-authenticate-a-replacement-before-agent-connection-age.md).
 
+`Exchange` sends one frame and receives one response or final status. A send-side
+EOF can represent an early remote refusal, so it reads the final receive status
+before its caller classifies authentication, admission or transport failure. It
+never repeats the send and does not turn an empty stream termination into success.
+
 Focused checks are `go -C services/agent test -race ./sessiontransport` and the
 Agent client's session tests. Real gateway age, certificates, leases and fleet
 resources require the separate installed simulator drill.
