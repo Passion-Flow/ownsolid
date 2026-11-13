@@ -185,3 +185,23 @@ and `foreign` with workspace and marker. Each workspace has id, name
 and application. The browser writes `scope-proof.json` next to the
 fixture for its independent database verifier. Keep both files outside
 the repository and remove the generated credentials after the run.
+
+### Account security is scoped to the person and entrance
+
+The shared S-308 Account route is an account-security surface, not a workspace business
+resource. The [identity contract](../../api/openapi/v1/identity/openapi.json) exposes session
+reads and revocation at `/api/v1/me/sessions`, without a workspace selector. The UI's
+[typed helpers](../../web/packages/api/src/identity.ts) send only the cursor on GET and no
+query/body on DELETE. The server derives account and entrance from authentication. Do not
+add a workspace field to make Account look like Home or Models, and do not disable personal
+session security when there is no selected workspace or a license blocks new business.
+
+Extend installed POR-114 acceptance by observing the Account page's ordinary requests after
+a workspace switch and with a foreign `workspace_id` in the page address: neither may forward
+that parameter or change the owning account/entrance. Create a second same-account sign-in
+through the actual entrance, revoke it through the manager UI, and verify its next request is
+refused while the manager remains usable. Another account and the other entrance must keep
+the same not-found response for that session ID. Verify durable revocation and audit separately
+against PostgreSQL; a scripted browser fixture is not authority evidence. The existing opt-in
+Home/Models scope flow still needs its real private fixture and independent database verifier.
+These additions introduce no dependency, model, dataset or new server contract.
