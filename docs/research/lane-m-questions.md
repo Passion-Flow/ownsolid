@@ -8,13 +8,13 @@ responsible owners can extend their respective boundaries.
 | --- | --- |
 | MOD-101 | The models module resolves the legacy digest for upload, archive verification, publication and recovery. The two real archives exercised fail-closed admission and Qwen replay. The next slice needs the shared multi-entry API, immutable catalogue persistence and digest-bound Agent transfer in the [contract handoff](model-registry.md#contract-handoff). |
 | MOD-102 | The Admin catalogue endpoint returns a single approved descriptor, and the existing UI facets cover that descriptor or already imported rows. Type and capability coverage for the catalogue needs a multi-entry read contract and its UI consumer. |
-| MOD-103 | Preparation and published derived model detail reads expose the original training and holdout version references from the [retained snapshot](training-dataset-lineage.md#derived-model-detail). The [DEV handoff](training-dataset-lineage.md#dev-contract-handoff) defines the Admin detail contract and S-202 tab. The [historical version boundary](training-dataset-lineage.md#remaining-model-version-history-boundary) separates retained records from the missing family/version history contract. Evaluation is owned by SCI. |
+| MOD-103 | Retained training and holdout references use the existing publication graph. The [staged family/history domain](training-dataset-lineage.md#durable-family-domain-contract) now supplies unnumbered atomic membership DDL, signed bounded keysets and current-authority ready/retired reads with [PostgreSQL evidence](training-dataset-lineage.md#postgresql-family-domain-acceptance). ARC must admit migration/roles/catalog and retained-identity rollback; DEV and the route owner must admit public schemas and dispatcher, and Web owns S-202. Evaluation remains with SCI. |
 | MOD-104 | Chat-template defaults need to reach the serving engine with an explicit command or request policy. The Agent inference adapter and its wire command are shared boundaries. |
 | MOD-105 | The preparation worker accepts the existing pinned recipe. LoRA merge and format conversion need an admitted recipe and an Agent runner that can dispatch and verify the new output; the current runtime alone cannot make the job usable. |
 | MOD-106 | Serving variants require recipe admission and a serving manifest accepted by the Agent, including matching quantization arguments and validation. |
 | MOD-107 | Deployment and alias reference checks run in the shared retirement callback. [Both commit orders](model-retirement-dependencies.md#disconnected-postgresql-acceptance) passed with actual deployment and retirement services. Complete application and key references require their owning modules to participate, and the existing UI only receives a generic refusal. |
 | MOD-108 | The [approved import review](model-import-file-safety.md#disconnected-postgresql-acceptance) refuses executable members and renamed pickle before extracting any payload. Generic catalogue admission and richer review require MOD-101 and a shared verifier contract. |
-| MOD-109 | Each leased transfer verifies the complete opened file against its pinned digest before serving any range. [Disconnected TLS and SQL acceptance](model-transfer-integrity.md#disconnected-tls-and-postgresql-acceptance) covers independent ranges, corruption outside the requested range, refusal and retry. Pre-warming from the site registry requires NET-102 and Agent changes. |
+| MOD-109 | A complete-file request compares its digest with the pinned catalogue. A bounded range of a larger file carries its own response digest; the Agent verifies the assembled file against the catalogue before use. [Disconnected TLS and SQL acceptance](model-transfer-integrity.md#disconnected-tls-and-postgresql-acceptance) covers complete-file substitution, two-range assembly, descriptor refusals and retry. Site-registry pre-warming still requires the Agent owner. |
 | MOD-110 | Deployment admission checks the reviewed Qwen catalogue and on-site use. The [consumer handoff](model-license-admission.md#consumer-handoff) defines the startup configuration, public reasons, training and SCI launch checks still needed. |
 | MOD-113 | The signed index needs a trust root and delivery integration, plus a new multi-entry contract consumed by the UI. No unsigned index should replace the embedded trust decision. |
 | MOD-114 | Offline search depends on MOD-113. The browser's current local filter covers imported inventory. |
@@ -80,6 +80,43 @@ disconnected PostgreSQL after rebasing onto the updated catalogue
 admission and node code. They reached main at `e97a4fb4` and `33bbf870`.
 
 ## Shared full-test order
+
+The staged MOD-103 source `684f07ef` on `db7ee24a` passed native `make check`
+and `make build`. Its `make test` stopped before unit-test recipes at the Portal
+offline Help case (`web/packages/shell/testing/help-flows.ts:165`): expected
+`/help/api`, received `/help/api?q=changePassword`. Portal reported 409 passed,
+10 skipped and one failed; the runner cancelled Console. Web and OpenAPI match
+that upstream baseline exactly. Preserve the failed trace, reproduce the single
+case and complete the browser suites before claiming a complete gate. The focused
+case subsequently passed with unchanged Web sources; the previously unreached
+Go/Rust/Web unit recipes all passed separately on `ba90c3a4`. The original full
+invocation remains failed. The Help implementation and assertion belong to the Web owner.
+
+The rebased candidate `b4e222a7` on `d0ab719a` again passed `make check`
+and `make build`, then reproduced that assertion in the Chinese case while the
+English case passed. Control-wide unit tests passed separately after the rebase.
+Do not repeat unchanged full suites hoping for a different scheduling outcome.
+`ApiReferencePage` uses the `help-api` list definition; `useListView` restores
+its saved `q` filter on mount when a link supplies no list parameter. The failed
+trace shows article navigation returning to `/help/api?q=changePassword`, matching
+that restoration. The bare-URL assertion can observe the preceding navigation
+before restoration, which explains the focused pass; this timing explanation is
+an inference from the source and the two traces. Preserve the complete traces
+and keep M's candidate unpublished until the mandatory whole gate passes.
+
+The Web owner published the assertion correction in `44ab5229`. Its two Portal
+negative controls first established the saved query and settled input, then
+failed only the old bare-URL assertion. The corrected Console/Portal English and
+Chinese cases passed without skip, retry or flaky result. This is the Web owner's
+focused evidence; it does not replace M's two complete failures. The corrected
+helper preserves saved-filter restoration and tests explicit links, clearing and
+reload. M subsequently ran the [complete corrected gate](training-dataset-lineage.md#corrected-native-full-gate)
+on exact source `2783a46f`: check, build and test passed with zero exits. Console
+passed 1,191 and Portal 410, retaining 28/10 existing conditional skips and zero
+retries. Its single kernel wait and actual execution took 662.728/511.522 seconds;
+FD, child group and owned scratch were released, and the carrier was preserved.
+Keep that exact source qualification and both earlier failures distinct. Formal
+schema/roles/catalog, real history dispatch and S-202 remain pending their owners.
 
 Follow the current resource handoff order. The carrier at
 `/private/tmp/ownsolid-workstation-full-gate.lock` is a persistent regular

@@ -355,6 +355,9 @@ it must not silently execute the reader candidate instead.
 
 ## Prepared native authority/writer cases and parent-boundary review
 
+The following observations describe preparation before the authorized single
+attempt recorded below; they are not its final opportunity status.
+
 The additive test-only source is e639db9035b0b2c0229c90175493c605f328e295,
 based on preserved 5b73fa05. Production code is unchanged. Dataset coverage now
 keeps its real writer open, checks its exclusion before/after reader Close,
@@ -374,8 +377,10 @@ Formatting, layout and roadmap checks passed. The workstation compilation
 attempts were refused before startup by its permanent guard (raw code 75); no
 new tagged compilation/body result is claimed for e639db90. The unchanged
 production candidate's earlier qualifications remain scoped to their sources.
-No unchanged complete make test was rerun; that gate remains open, and the
-shared Help issue remains with WEB.
+No unchanged complete make test was rerun; that gate remains open. WEB
+subsequently recorded its focused Help fixes and seeded/fresh-client evidence
+at f11aa11fc298c3eefed696a6f05db9e637ab0e05. This lane does not treat the
+previous Help failure as an unchanged blocker or inherit WEB test results.
 
 The existing native event parent SHA-256 is
 dc3f6f5eb9d35dc421e06101a7ce1cdab1adfe329b283901948a0c949b6dc3a1.
@@ -502,10 +507,71 @@ carrier and starts no Docker/Go/SQL body. The actual output is retained as
 server-input-check.log, SHA-256
 9ccb4cb633dae8db504cebc01fd3c2800367d043ef0b92cc596d9f60c0e8674d.
 
-The native opportunity remains unused: zero Linux carrier attempts, no new
-native compilation or Go/SQL bodies, no processor/GPU/fleet and no runtime
-resource started or left running. The workstation rule stays nonblocking busy
-75 with no additional queue. No unchanged complete suite was rerun; the shared
-Help issue remains WEB-owned. No P1 box, gateway/restricted-role qualification
-or fleet budget changed. The next native step is review of these concrete
-artifacts before execution; eligible independent owned work need not wait.
+Preparation itself made no Linux carrier attempt and started no native
+compilation, Go/SQL body, processor/GPU/fleet or runtime resource. The reviewed
+wrapper was then authorized for exactly one attempt; its actual refusal and
+opportunity status are recorded below. The workstation rule stays nonblocking
+busy 75 with no additional queue. WEB owns its now-recorded focused Help fixes;
+no complete suite result is inferred here. No P1 box, gateway/restricted-role
+qualification or fleet budget changed.
+
+
+## Authorized single native attempt: first carrier refusal
+
+The sole authorized invocation used the exact reviewed bounded-v2 entry, source
+e639db9035b0b2c0229c90175493c605f328e295 and frozen plan/binding above. The
+outer raw exit code was 73, FIRST_LOCK_BUSY. Its one blocking first-carrier
+acquisition reached its 60-second deadline before ownership. The second
+carrier was never opened or attempted. There was no in-round retry and this
+one native opportunity is consumed; it is not available for an automatic
+second attempt. No parent, source, test, admission threshold or timeout was
+changed after the refusal.
+
+| Actual observation | Result |
+| --- | --- |
+| Complete entry wall time | 60.128525 seconds |
+| Parent elapsed at its final record | 60.055 seconds |
+| source_head child | Exit 0, reaped, group absent on audit |
+| source_status child | Exit 0, reaped, group absent on audit |
+| First carrier | FIRST_LOCK_BUSY, raw 73, no ownership obtained |
+| Second carrier | Not opened or attempted |
+| Original admission, PG creation and Go | Not started |
+| Native roots, subtests, packages and skips | All zero; no native test result |
+| Schema and DSN | None created; no Go fixture environment applied |
+| Actual parent platform | Linux x86_64, Python 3.12.3 |
+
+The pre-entry resource snapshot had 738 GiB disk free, MemFree 10,290 MiB,
+MemAvailable 20,038 MiB and full PSI avg10/avg60 of 0.32/5.71. That snapshot
+was not admission: first-lock refusal occurred before either the strict PSI
+check or original preflight ran. The recorded policy remains Free >=3 GiB,
+Available >=12 GiB, disk >=15 GiB and full avg10/avg60 <=5, with no competing
+heavy process. The observed 5.71 is not relabelled a passing resource check.
+
+The read-only post-run audit found no live exact entry/wrapper process, no
+remaining recorded child group and no container with this run's exact name
+lane-trn-reader-cda71224da6549fe95d9de11dae66c1d. Its inner evidence directory
+contains only result.json; no DSN, database, anonymous volume or worker was
+created. The first carrier FD was closed and its process exited; the second
+was never opened. Both permanent regular carriers still have their original
+device/inode/UID, zero size and 0644 mode: 29/82/0 and 64512/7508772/0. The
+audit acquired neither carrier and made no cleanup mutation; foreign resources
+were untouched. e639db90 remains clean and c527fb68 remains unchanged.
+
+| Retained evidence | SHA-256 |
+| --- | --- |
+| /root/lane-trn-reader-native-outer.jdncpuqh/receipt.json | 02143c12cee6538123d3d5b9aae20c59c64e038c62289f3298d798f66603ab45 |
+| /root/lane-trn-reader-native.2gldxtkt/result.json | 53b36680e6eb696f01c2ddbb5689ac99155f09e825742f081b6437f4a8c0338f |
+| outer.log in the receipt directory | a362548be564ba5dfb1afec9f294859e3cb6a07a525cc93c8fd19a537da2089f |
+| owned-cleanup-audit.json in the receipt directory | ef394161d778bde314cae5fb359b1fcf07bf9a4bcc54d4ae6de6cda60bb8e7f5 |
+| evidence-manifest.json in the receipt directory | be908255c4089a49f929c570d88b7c4d2243c2a43a821be60c67970659ba096d |
+| /root/lane-trn-tools/reader-native-single-attempt-e639db90.tgz | be3ae7c56dec995a1d44546a4fafa7b663edf6fcd2025745127f760a462f8c60 |
+
+The archive has 20 entries and 32,965 bytes; it includes the exact reviewed
+wrapper inputs, receipt/result, audit and per-file manifest. No model, data or
+database enters Git. The owner reader source stays private and unmerged.
+Darwin and kernel-prototype qualifications keep their original source/platform
+scope; zero native bodies does not establish current-role, writer-exclusion,
+SQL, restricted-role or installed-gateway acceptance. Actual ARC constructor,
+startup rollback/drain/Close, read-only namespace delivery, Model/Node and
+protected-function/grant contracts and the original fleet budgets remain open.
+All product boxes remain unchanged.

@@ -106,6 +106,64 @@ truncate/hash away the original identity to make it fit: PostgreSQL documents
 The candidate storage representation, maximum-byte cases and foreign-tenant
 binding uniqueness still need a real SQL prototype and ARC's formal admission.
 
+### Persistent-identity storage experiment
+
+Normalize the immutable verified IdP/SP context into one tenant/connector scope
+row. Store both exact entity IDs there, with the selected persistent NameID
+format. The already-qualified verifier resolves omitted qualifiers to those
+same configured entities and refuses explicit foreign qualifiers. An identity
+row can therefore reference that scope and retain the exact NameID value;
+it need not repeat several potentially 4 KiB entity strings in a unique index.
+Use a tenant-scoped foreign key and uniqueness over tenant, scope UUID and
+the bounded value. A local UUID identifies the stored row, not a replacement
+for the upstream identity. Retain and return the full verified identity tuple.
+Do not change or admit the OIDC binding representation as part of this experiment.
+
+Use `text COLLATE "C"` with explicit character/byte checks for both entity IDs
+and the opaque value. PostgreSQL's
+[character-type contract](https://www.postgresql.org/docs/18/datatype-character.html)
+allows some overlength `varchar(n)` inputs or explicit casts to truncate,
+including excess spaces. That cannot silently change an authenticated NameID.
+Avoid bounded-varchar casts, `char(n)`, trimming, case folding, Unicode
+normalization and collation changes. Entity rows retain their 1,024-character/
+4,096-byte bounds; values retain 256 characters/1,024 bytes. The reduced index
+must work at the maximum value size without relying on TOAST compression.
+Changing configured issuer/SP identity requires a new scope rather than
+rewriting one that already identifies an external principal.
+
+Prototype this outside the product using the existing signed-assertion verifier
+as the positive producer and real PostgreSQL as the constraint owner. Cover
+full-length Unicode contexts/subjects, exact case/space/normalization identity,
+omitted/effective qualifier equivalence, foreign qualifiers and tenants, scope
+immutability, duplicate/concurrent resolution, rollback and index lookup.
+Direct SQL must refuse overlength values instead of quietly truncating them.
+No table row creates a local account, binding, role or session. Actual one-use
+browser claims and current-actor/session/audit completion remain separate,
+required integration work.
+
+The experiment can reuse the pinned SAML/XML graph and pgx v5.11.0 from the
+[qualified OP database inventory](catalog-oidc-provider.md#durable-protocol-prototype-plan-and-additional-licenses).
+Resolve and inspect their combined graph before compiling. Preserve all SAML,
+MIT/BSD/Apache and PostgreSQL/image notices; no model or dataset is involved.
+This is a proposed representation pending SQL evidence and formal admission.
+
+The combined source-inspection graph in `iam104-storage-20261113.edr2wpvk`
+resolved 26 modules and 36 legal files. Exact versions/checksums and retained
+notices matched the previously inspected SAML/OP inventories except for the
+three Go submodules below. Their LICENSE and PATENTS bytes each matched the
+official pinned source and were retained with the combined inventory.
+
+| Additional selected version | Primary license |
+| --- | --- |
+| `golang.org/x/mod v0.38.0` | [BSD-3-Clause](https://github.com/golang/mod/blob/v0.38.0/LICENSE) |
+| `golang.org/x/sync v0.22.0` | [BSD-3-Clause](https://github.com/golang/sync/blob/v0.22.0/LICENSE) |
+| `golang.org/x/tools v0.48.0` | [BSD-3-Clause](https://github.com/golang/tools/blob/v0.48.0/LICENSE) |
+
+All three permit commercial/offline use and redistribution with their notices.
+These graph entries do not enable a tool or service at runtime. This inspection
+has not compiled or run the combined protocol/storage candidate and changes no
+product module, schema or route.
+
 ## Candidate dependency and license inventory
 
 The selected research candidate is
