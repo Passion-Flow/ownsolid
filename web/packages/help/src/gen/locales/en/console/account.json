@@ -153,6 +153,133 @@
      "value": "Before a session ends for inactivity, a warning offers to keep you signed in."
     }
    ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Check your sign-ins"
+    }
+   ],
+   "data": {
+    "id": "check-your-sign-ins"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Sessions lists your active sign-ins at this entrance. Admin and Portal have separate lists.\nEach entry shows its sign-in method, sign-in time, last activity and expiry as returned by\nthe server. It does not identify a device or location. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Current session"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " identifies the\nsign-in making this request; use "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Sign out"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " in the account menu to leave it."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Use "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Refresh"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " to check the first page and "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Load more sessions"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " to continue. The list\ndoes not refresh in the background. A partial failure keeps earlier pages; an expired\ncursor offers to restart from the first page. A permission refusal hides earlier entries."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "To end another sign-in, choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "End session"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " and type its session ID. This immediately\nends its access and cannot be undone. A confirmed end reads the list again. If the result\nis uncertain, choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Read again"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " before another explicit attempt. A missing entry or\nnot-found reply alone does not prove the end succeeded. The page never automatically\nreplays an end request. When a retry delay is shown, wait until it ends before retrying."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Changing your password replaces this browser's session and ends all your other sessions.\nThe Sessions section starts a new read rather than reusing the previous current marker."
+    }
+   ]
   }
  ]
 }

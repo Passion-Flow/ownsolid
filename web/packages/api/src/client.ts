@@ -43,7 +43,8 @@ type KeyOption<O> = O extends { parameters: { header: { 'Idempotency-Key': unkno
 export type Options<O> = PathOption<O> &
   QueryOption<O> &
   BodyOption<O> &
-  KeyOption<O> & { signal?: AbortSignal | undefined; background?: boolean | undefined };
+  KeyOption<O> &
+  Pick<RequestOptions, 'signal' | 'background' | 'retryCsrf'>;
 
 type Args<O> = object extends Options<O> ? [options?: Options<O>] : [options: Options<O>];
 
@@ -111,11 +112,17 @@ export function buildUrl(
   return filled + queryString(query);
 }
 
-function requestOptions({ signal, idempotencyKey, background }: LooseOptions): RequestOptions {
+function requestOptions({
+  signal,
+  idempotencyKey,
+  background,
+  retryCsrf,
+}: LooseOptions): RequestOptions {
   return {
     ...(signal ? { signal } : {}),
     ...(idempotencyKey ? { idempotencyKey } : {}),
     ...(background ? { background } : {}),
+    ...(retryCsrf === undefined ? {} : { retryCsrf }),
   };
 }
 

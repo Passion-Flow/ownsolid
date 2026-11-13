@@ -144,10 +144,31 @@ describe('TypedConfirmation', () => {
     await userEvent.type(field, 'Node-1{Enter}');
     expect(onConfirm).not.toHaveBeenCalled();
   });
+
+  it('keeps a typed target while a retry prerequisite blocks both click and Enter', async () => {
+    const onConfirm = vi.fn();
+    inEnglish(<TypedConfirmation {...props} confirmDisabled onConfirm={onConfirm} />);
+    const field = screen.getByLabelText('Type Node-1 to confirm');
+    await userEvent.type(field, 'Node-1{Enter}');
+    expect(screen.getByRole('button', { name: 'Remove', hidden: true })).toBeDisabled();
+    expect(field).toHaveValue('Node-1');
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
 });
 
 describe('ProblemNotice', () => {
   const base = { requestId: 'req-1', retryable: true };
+
+  it('allows the caller to suppress a generic retry while another recovery owns it', () => {
+    inEnglish(
+      <ProblemNotice
+        problem={{ ...base, code: 'STORAGE_UNAVAILABLE' }}
+        recovery={null}
+        onRetry={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+  });
 
   it('shows the cause, the request ID and a retry for a known code', async () => {
     const onRetry = vi.fn();

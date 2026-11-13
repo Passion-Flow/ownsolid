@@ -5,6 +5,7 @@ export {
   type AccessibilityFlowOptions,
 } from './accessibility-flows.ts';
 export { accountFlows } from './account-flows.ts';
+export { accountSessionFlows } from './account-session-flows.ts';
 export {
   publishedApplication,
   recentConversation,

@@ -3,6 +3,7 @@
 // fail when a route has no state here.
 import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
 import type { Page } from '@playwright/test';
+import { browserSession } from './browser-sessions.ts';
 import {
   account,
   giteaBinding,
@@ -281,6 +282,56 @@ export const shellPages: readonly PageState[] = [
       control.signedIn = true;
       await page.goto('/account');
       await page.getByRole('heading', { name: chinese['account.title'], level: 1 }).waitFor();
+    },
+  },
+  {
+    name: 'account sessions, current only',
+    path: '/account',
+    open: async (page, control) => {
+      await openAccount(page, control);
+      await page.getByText('No other sessions at this entrance.', { exact: false }).waitFor();
+    },
+  },
+  {
+    name: 'account sessions, empty live list',
+    path: '/account',
+    open: async (page, control) => {
+      control.browserSessions = [];
+      await openAccount(page, control);
+      await page.getByText('The session list changed', { exact: true }).waitFor();
+    },
+  },
+  {
+    name: 'account sessions, permission refused',
+    path: '/account',
+    open: async (page, control) => {
+      control.browserSessionReadProblem = { status: 403, code: 'ACCESS_DENIED' };
+      await openAccount(page, control);
+      await page.getByText('Your sessions cannot be shown', { exact: true }).waitFor();
+    },
+  },
+  {
+    name: 'account sessions, service unavailable',
+    path: '/account',
+    open: async (page, control) => {
+      control.browserSessionReadProblem = { status: 503, code: 'SERVICE_NOT_READY' };
+      await openAccount(page, control);
+      await page.getByRole('button', { name: 'End session' }).waitFor();
+    },
+  },
+  {
+    name: 'account sessions, end confirmation',
+    path: '/account',
+    open: async (page, control) => {
+      control.browserSessions.push({
+        ...browserSession,
+        id: '22222222-2222-4222-8222-222222222222',
+        current: false,
+      });
+      await openAccount(page, control);
+      const section = page.getByRole('region', { name: 'Sessions', exact: true });
+      await section.getByRole('listitem').nth(1).getByRole('button').click();
+      await page.getByRole('dialog', { name: 'End this session' }).waitFor();
     },
   },
   {

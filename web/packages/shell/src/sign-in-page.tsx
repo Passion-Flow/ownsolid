@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useRef, useState, type SubmitEvent } from 'react';
 import { AuthLayout, FailureNotice } from './auth-layout.tsx';
-import { sessionKey } from './session.ts';
+import { establishSession } from './session.ts';
 import { SsoButtons } from './sso.tsx';
 
 /** Props for {@link SignInPage}. */
@@ -36,7 +36,7 @@ export function SignInPage({ audience, sessionEnded = false, onSignedIn }: SignI
     mutationFn: () => signIn({ email: email.trim(), password }),
     onSuccess: (result) => {
       const me: Me = { user: result.user, workspace: result.workspace, audience: result.audience };
-      queryClient.setQueryData(sessionKey, me);
+      establishSession(queryClient, me);
       onSignedIn(me);
     },
     onError: (error) => {
