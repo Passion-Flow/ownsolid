@@ -43,7 +43,17 @@ func derivedLineageWithin(ctx context.Context, q transaction.Executor, catalog l
 	err := q.QueryRow(ctx, modelSQL(q,
 		`SELECT p.input_snapshot,p.input_sha256,p.training_job_id::text,p.training_attempt_id::text,p.training_artifact_id::text,p.heldout_id::text,
  j.dataset_id::text,j.dataset_version_id::text,j.dataset_manifest_sha256,h.dataset_id::text,h.dataset_version_id::text,h.manifest_sha256,t.manifest_sha256,v.attempt_id::text`+
-			derivedLineageGraph+`WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.model_id=$3 AND b.catalog_digest=$4`,
+			derivedLineageGraph+`WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.model_id=$3 AND b.catalog_digest=$4
+ AND (d.site_id,d.cell_id)=(local_site_id(),local_cell_id())
+ AND (p.site_id,p.cell_id)=(local_site_id(),local_cell_id())
+ AND (a.site_id,a.cell_id)=(local_site_id(),local_cell_id())
+ AND (f.site_id,f.cell_id)=(local_site_id(),local_cell_id())
+ AND (r.site_id,r.cell_id)=(local_site_id(),local_cell_id())
+ AND (b.site_id,b.cell_id)=(local_site_id(),local_cell_id())
+ AND (j.site_id,j.cell_id)=(local_site_id(),local_cell_id())
+ AND (t.site_id,t.cell_id)=(local_site_id(),local_cell_id())
+ AND (h.site_id,h.cell_id)=(local_site_id(),local_cell_id())
+ AND (v.site_id,v.cell_id)=(local_site_id(),local_cell_id())`,
 		`SELECT p.input_snapshot,p.input_sha256,p.training_job_id,p.training_attempt_id,p.training_artifact_id,p.heldout_id,
  j.dataset_id,j.dataset_version_id,j.dataset_manifest_sha256,h.dataset_id,h.dataset_version_id,h.manifest_sha256,t.manifest_sha256,v.attempt_id`+
 			derivedLineageGraph+`WHERE d.tenant_id=? AND d.workspace_id=? AND d.model_id=? AND b.catalog_digest=?`,

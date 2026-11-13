@@ -122,7 +122,7 @@ func (s *Service) retainedGraphWithin(ctx context.Context, q transaction.Executo
 
 func (s *Service) retainedVersionWithin(ctx context.Context, q transaction.Executor, tenant, workspace, version string) (Version, error) {
 	out, err := scanVersion(q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
-		`SELECT `+versionFields+` FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state IN ('ready','deleted') FOR SHARE`, tenant, workspace, version)), tenant)
+		`SELECT `+versionFields+` FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state IN ('ready','deleted') AND (site_id,cell_id)=(local_site_id(),local_cell_id()) FOR SHARE`, tenant, workspace, version)), tenant)
 	if err == nil {
 		err = s.retainedGraphWithin(ctx, q, tenant, workspace, &out)
 	}
@@ -133,9 +133,10 @@ func (s *Service) retainedVersionWithin(ctx context.Context, q transaction.Execu
 }
 
 type historyAnchor struct {
-	workspace workspaces.Workspace
-	version   Version
-	family    string
+	workspace  workspaces.Workspace
+	version    Version
+	family     string
+	site, cell string
 }
 
 func (s *Service) historyAnchorWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace, anchor string) (historyAnchor, error) {
@@ -157,7 +158,11 @@ func (s *Service) historyAnchorWithin(ctx context.Context, q transaction.Executo
 	if err != nil {
 		return historyAnchor{}, err
 	}
-	return historyAnchor{workspace: w, version: selected, family: family}, nil
+	var site, cell string
+	if err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT local_site_id(),local_cell_id()`)).Scan(&site, &cell); err != nil {
+		return historyAnchor{}, err
+	}
+	return historyAnchor{workspace: w, version: selected, family: family, site: site, cell: cell}, nil
 }
 
 // History resolves the family from an exact anchor under current Admin authority.
@@ -193,7 +198,7 @@ func (s *Service) History(ctx context.Context, a identity.Auth, workspace, ancho
 				return fail("VALIDATION_FAILED")
 			}
 		}
-		scope := historyScope(a, w.TenantID, w.ID, family, anchor, state)
+		scope := historyScope(a, w.TenantID, w.ID, frame.site, frame.cell, family, anchor, state)
 		var stamp, after any
 		if input.Cursor != nil {
 			cursor, err := decodeHistoryCursor(*input.Cursor, scope, s.Identity.HMACKey)
@@ -206,6 +211,8 @@ func (s *Service) History(ctx context.Context, a identity.Auth, workspace, ancho
 SELECT v.id::text,v.workspace_id::text,v.name,v.model_key,v.catalog_digest,v.manifest,v.state,v.created_at,v.kind
 FROM model_family_members m JOIN model_versions v ON (v.tenant_id,v.workspace_id,v.id)=(m.tenant_id,m.workspace_id,m.version_id)
 WHERE m.tenant_id=$1 AND m.workspace_id=$2 AND m.family_id=$3 AND v.state IN ('ready','deleted')
+ AND (m.site_id,m.cell_id)=(local_site_id(),local_cell_id())
+ AND (v.site_id,v.cell_id)=(local_site_id(),local_cell_id())
  AND ($4='' OR v.state=CASE WHEN $4='retired' THEN 'deleted' ELSE $4 END)
  AND ($5::timestamptz IS NULL OR (v.created_at,v.id)<($5,$6::uuid))
 ORDER BY v.created_at DESC,v.id DESC LIMIT $7 FOR SHARE OF v`, w.TenantID, w.ID, family, state, stamp, after, limit+1))
@@ -273,7 +280,7 @@ func (s *Service) HistoricalVersion(ctx context.Context, a identity.Auth, worksp
 		if version != anchor {
 			var member bool
 			err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT EXISTS(
- SELECT 1 FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND family_id=$3 AND version_id=$4)`,
+ SELECT 1 FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND family_id=$3 AND version_id=$4 AND (site_id,cell_id)=(local_site_id(),local_cell_id()))`,
 				w.TenantID, w.ID, family, version)).Scan(&member)
 			if err != nil {
 				return err

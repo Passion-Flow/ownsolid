@@ -27,8 +27,8 @@ type historyCursor struct {
 	Scope   string    `json:"scope"`
 }
 
-func historyScope(a identity.Auth, tenant, workspace, family, anchor, state string) string {
-	raw, _ := json.Marshal([]any{a.Me.User.ID, a.SessionID, a.Epoch, a.Me.Audience, tenant, workspace, family, anchor, state})
+func historyScope(a identity.Auth, tenant, workspace, site, cell, family, anchor, state string) string {
+	raw, _ := json.Marshal([]any{a.Me.User.ID, a.SessionID, a.Epoch, a.Me.Audience, tenant, workspace, site, cell, family, anchor, state})
 	sum := sha256.Sum256(raw)
 	return hex.EncodeToString(sum[:])
 }

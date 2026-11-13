@@ -14,12 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
+	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
-	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/google/uuid"
 )
 
 type registrationStory struct {
@@ -35,6 +35,11 @@ type registrationStory struct {
 func registrationSetup(t *testing.T) registrationStory {
 	t.Helper()
 	x := modelReadSetup(t)
+	return registrationSetupOn(t, x)
+}
+
+func registrationSetupOn(t *testing.T, x modelReadFixture) registrationStory {
+	t.Helper()
 	accessRoot(t, x)
 	p := retirementTraining(t, x, x.model)
 	retirementPreparation(t, x, p, x.model)
