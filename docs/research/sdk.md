@@ -491,3 +491,30 @@ These raw audits are retained, not rerun or waived here. Generation inputs
 remain unchanged. Supported-release baseline selection, actual installed
 flows and final-source check/build/test are required before publication or
 completion ticks; prior failed attempts and full-gate limits are preserved.
+
+## Remaining Python runtime and complete-package checks
+
+Joint-source verification must first compile every generated Go package and
+run Python with the eight runtime-lock distributions, including attrs 25.4.0,
+rather than the generator's 24-package environment with attrs 26.1.0. Cached
+distribution metadata is preparation evidence, not an SDK import or protocol
+result. A Python-only wire entry should import every generated module, verify
+the expected domain count, then retain the existing request serialization,
+stream ownership, error parsing and controlled-transport refusal checks.
+It must not repeat the separately qualified Go migration commands.
+
+Add real loopback audit-read scenarios as well: sync/async, standard/assistant,
+409/physically closed reply, one first request and one deliberate second read.
+Keep body/header request IDs, cursor and representation checks; an unexpected
+request must fail the scenario even if it resembles a lost reply. The pinned
+[HTTPX transport](https://www.python-httpx.org/advanced/transports/#http-transport)
+has retries=0 for sync and async transports. A physically closed response can
+raise RemoteProtocolError, a TransportError, rather than the existing mock's
+ReadError. Assert the real transport failure and request count without changing
+the SDK or adding a retry. Join/close each owned server and client in finally.
+
+The Python-only selector and complete-module import entry require pure Python
+orchestration tests without opening a socket or importing generated SDKs.
+Actual imports, serialization, error and TCP retry scenarios remain pending
+the separately admitted runtime window. No dependency, model or dataset is
+added; existing Python PSF, HTTPX BSD-3-Clause and runtime-lock terms apply.

@@ -230,6 +230,22 @@ Python checks both sync and async audit reads after 409 or a lost reply with
 standard and assistant representations. These loopback/controlled-transport
 checks do not qualify server authorization, SQL commits or a browser flow.
 
+For targeted Python qualification, use the locked eight-package runtime
+environment and run:
+
+```sh
+python tools/codegen/sdk/tests/wire_smoke.py "$SDK_DIR" --python-only --expected-domains 28
+```
+
+This imports every generated module from that exact SDK and checks the domain
+count before running serialization, streaming, error and retry scenarios.
+It includes eight real loopback TCP audit-read cases across sync/async,
+standard/assistant and 409/lost-response paths, alongside the existing
+controlled-transport cases. It invokes no Go command; the default entry keeps
+the combined Go/Python checks. The new Python runtime entry is prepared and
+requires its own actual execution; orchestration unit tests do not qualify SDK
+imports, sockets or generated clients.
+
 ## Audit the public operation inventory
 
 Run `python3 tools/codegen/sdk/audit.py` from the repository root. The JSON

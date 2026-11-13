@@ -2,21 +2,25 @@
 
 import argparse
 import asyncio
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from hashlib import sha256
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 import json
+import importlib
 from pathlib import Path
 import os
 import secrets
+import socket
 import subprocess
 import sys
 import threading
 from uuid import uuid4
+from urllib.parse import parse_qs, urlsplit
 
 
-def exercise(sdk):
+def exercise(sdk, *, include_go=True):
     sys.path.insert(0, str(sdk / "gen" / "python"))
     import httpx
     from ownsolid_sdk.datasets import AuthenticatedClient as Datasets
@@ -113,20 +117,44 @@ def exercise(sdk):
                 )
                 assert result.status_code == 403 and result.parsed.code == "ACCESS_DENIED"
 
-            subprocess.run(
-                ["go", "run", str(Path(__file__).with_name("wire.go").resolve())],
-                cwd=sdk / "gen" / "go",
-                env={**os.environ, "GOWORK": "off", "GOPROXY": "off"},
-                input=json.dumps({
-                    "Origin": origin, "Email": email, "Password": password, "DatasetID": str(dataset_id),
-                    "DraftID": str(draft_id), "Payload": payload.decode(),
-                }),
-                text=True, check=True, timeout=120,
-            )
+            if include_go:
+                subprocess.run(
+                    ["go", "run", str(Path(__file__).with_name("wire.go").resolve())],
+                    cwd=sdk / "gen" / "go",
+                    env={**os.environ, "GOWORK": "off", "GOPROXY": "off"},
+                    input=json.dumps({
+                        "Origin": origin, "Email": email, "Password": password, "DatasetID": str(dataset_id),
+                        "DraftID": str(draft_id), "Payload": payload.decode(),
+                    }),
+                    text=True, check=True, timeout=120,
+                )
         finally:
             server.shutdown()
             thread.join()
-    print("Go and Python SDKs verified CSRF, login, session cookies, node lists and NDJSON requests")
+    clients = "Go and Python" if include_go else "Python"
+    print(f"{clients} SDKs verified CSRF, login, session cookies, node lists and NDJSON requests")
+
+
+def exercise_imports(sdk, expected_domains=None):
+    """Import every generated module from the intended SDK rather than another installation."""
+    python = (sdk / "gen/python").resolve()
+    package = python / "ownsolid_sdk"
+    domains = sorted(path.name for path in package.iterdir() if (path / "client.py").is_file())
+    assert domains, "the generated SDK has no client domains"
+    if expected_domains is not None:
+        assert len(domains) == expected_domains, f"expected {expected_domains} SDK domains, found {len(domains)}"
+    sys.path.insert(0, str(python))
+    modules = []
+    for source in sorted(package.rglob("*.py")):
+        parts = source.relative_to(python).with_suffix("").parts
+        if parts[-1] == "__init__":
+            parts = parts[:-1]
+        name = ".".join(parts)
+        module = importlib.import_module(name)
+        assert Path(module.__file__).resolve().is_relative_to(python), f"{name} came from another SDK"
+        modules.append(name)
+    print(json.dumps({"check": "python_sdk_imports", "domains": domains, "modules": len(modules)}))
+    return domains, modules
 
 
 def exercise_streaming():
@@ -323,12 +351,137 @@ def exercise_audit_reads_go(sdk):
     )
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("sdk", type=Path)
-    sdk = parser.parse_args().sdk.resolve()
-    exercise(sdk)
+def exercise_audit_reads_python_protocol(sdk):
+    """Exercise the actual generated sync/async operations over owned loopback TCP."""
+    sys.path.insert(0, str(sdk / "gen/python"))
+    import httpx
+    from ownsolid_sdk.identity import AuthenticatedClient
+    from ownsolid_sdk.identity.api.administration import list_audit_events
+    from ownsolid_sdk.identity.models.list_audit_events_x_ownsolid_audit_actor import ListAuditEventsXOwnsolidAuditActor
+    from ownsolid_sdk.identity.models.problem import Problem
+
+    code = "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ids = ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"]
+    selection = {"category": "audit", "cursor": "opaque+/=%", "limit": 2}
+
+    @contextmanager
+    def scenario(assistant, lost_reply):
+        calls, violations = [], []
+
+        class API(BaseHTTPRequestHandler):
+            def log_message(self, _format, *_args):
+                return
+
+            def do_GET(self):
+                calls.append(self.path)
+                target = urlsplit(self.path)
+                valid = (target.path == "/api/v1/admin/audit-events"
+                         and parse_qs(target.query) == {key: [str(value)] for key, value in selection.items()}
+                         and self.headers.get("X-Ownsolid-Audit-Actor") == ("true" if assistant else None)
+                         and self.headers.get("Idempotency-Key") is None
+                         and self.headers.get("Content-Length", "0") == "0")
+                if not valid:
+                    violations.append("audit selection, representation or body changed")
+                    self.send_error(400)
+                    return
+                if len(calls) == 1 and lost_reply:
+                    self.close_connection = True
+                    self.connection.shutdown(socket.SHUT_RDWR)
+                    self.connection.close()
+                    return
+                first = len(calls) == 1
+                body = ({"type": "about:blank", "title": code, "status": 409, "code": code, "request_id": ids[0]}
+                        if first else {"data": {"items": [], "next_cursor": None}})
+                payload = json.dumps(body).encode()
+                self.send_response(409 if first else 200)
+                self.send_header("Content-Type", "application/problem+json" if first else "application/json")
+                self.send_header("X-Request-ID", ids[0] if first else ids[1])
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+
+        with ThreadingHTTPServer(("127.0.0.1", 0), API) as server:
+            thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=0.05))
+            thread.start()
+            try:
+                yield f"http://127.0.0.1:{server.server_port}", calls, violations
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+                assert not thread.is_alive(), "owned audit fixture server did not stop"
+
+    def params(assistant):
+        values = dict(selection)
+        if assistant:
+            values["x_ownsolid_audit_actor"] = ListAuditEventsXOwnsolidAuditActor.TRUE
+        return values
+
+    def check_first(result, calls, violations):
+        assert not violations and len(calls) == 1 and result.status_code == 409
+        assert isinstance(result.parsed, Problem) and result.parsed.code == code
+        assert str(result.parsed.request_id) == ids[0] and result.headers["X-Request-ID"] == ids[0]
+        assert "Retry-After" not in result.headers and "data" not in json.loads(result.content)
+
+    def check_second(result, calls, violations):
+        assert not violations and len(calls) == 2 and result.status_code == 200
+        assert result.parsed.data.items == [] and result.parsed.data.next_cursor is None
+        assert result.headers["X-Request-ID"] == ids[1]
+
+    async def check_async(origin, calls, violations, assistant, lost_reply):
+        async with httpx.AsyncClient(base_url=origin, transport=httpx.AsyncHTTPTransport(retries=0, trust_env=False),
+                                     trust_env=False, follow_redirects=False, timeout=5) as transport:
+            client = AuthenticatedClient(base_url=origin, token="").set_async_httpx_client(transport)
+            if lost_reply:
+                try:
+                    await list_audit_events.asyncio_detailed(client=client, **params(assistant))
+                except httpx.TransportError:
+                    assert not violations and len(calls) == 1
+                else:
+                    raise AssertionError("a physically lost reply became success")
+            else:
+                check_first(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations)
+            check_second(await list_audit_events.asyncio_detailed(client=client, **params(assistant)), calls, violations)
+
+    for assistant in (False, True):
+        for lost_reply in (False, True):
+            for mode in ("sync", "async"):
+                with scenario(assistant, lost_reply) as (origin, calls, violations):
+                    if mode == "async":
+                        asyncio.run(check_async(origin, calls, violations, assistant, lost_reply))
+                    else:
+                        with httpx.Client(base_url=origin, transport=httpx.HTTPTransport(retries=0, trust_env=False),
+                                          trust_env=False, follow_redirects=False, timeout=5) as transport:
+                            client = AuthenticatedClient(base_url=origin, token="").set_httpx_client(transport)
+                            if lost_reply:
+                                try:
+                                    list_audit_events.sync_detailed(client=client, **params(assistant))
+                                except httpx.TransportError:
+                                    assert not violations and len(calls) == 1
+                                else:
+                                    raise AssertionError("a physically lost reply became success")
+                            else:
+                                check_first(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations)
+                            check_second(list_audit_events.sync_detailed(client=client, **params(assistant)), calls, violations)
+                    print(json.dumps({"check": "python_audit_tcp", "mode": mode, "assistant": assistant,
+                                      "lost_reply": lost_reply, "requests": len(calls), "exit": 0}))
+
+
+def run_checks(sdk, *, python_only=False, expected_domains=None):
+    """Run Python runtime checks and optionally the separate Go protocol checks."""
+    exercise_imports(sdk, expected_domains)
+    exercise(sdk, include_go=not python_only)
     exercise_streaming()
     exercise_monitoring_problems()
     exercise_audit_reads_python(sdk)
-    exercise_audit_reads_go(sdk)
+    exercise_audit_reads_python_protocol(sdk)
+    if not python_only:
+        exercise_audit_reads_go(sdk)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("sdk", type=Path)
+    parser.add_argument("--python-only", action="store_true", help="run Python runtime checks without invoking Go")
+    parser.add_argument("--expected-domains", type=int, help="require this exact generated domain count")
+    args = parser.parse_args()
+    run_checks(args.sdk.resolve(), python_only=args.python_only, expected_domains=args.expected_domains)
