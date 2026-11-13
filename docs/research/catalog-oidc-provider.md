@@ -216,6 +216,43 @@ patent grants. Graph-only GitHub clients, test generators and telemetry APIs
 do not authorize outbound services or runtime exporters. Their actual import
 and network behavior still need the prototype's disconnected qualification.
 
+## Serving authority and recovery admission
+
+The protocol fixture creates its own password session. Product composition must
+instead reuse Identity's current Portal session and Workspace authority, without
+asking an already authenticated Portal user for a second password. An Admin
+session, a pending MFA challenge or a request-supplied user/session reference
+cannot substitute for that source. Persist the actual source session, account
+epoch and membership lifetime; recheck them at code issuance, exchange and
+UserInfo, including concurrent sign-out and account or installation disable.
+
+[OIDC Core's ID-token claims](https://openid.net/specs/openid-connect-core-1_0.html#IDToken)
+describe authentication time and methods. The existing device-list projection
+reports only local versus SSO; that display value cannot prove MFA or a specific
+upstream method. Derive claims from retained, server-verified authentication
+evidence. Preserve the original authentication time when authorizing an app;
+consent time is not a fresh authentication. Do not copy the fixture's `pwd`
+assertion into a federated or multifactor session. Verify that an uncompleted
+factor challenge releases neither a code nor an app session.
+
+The standalone OP process refuses invalid key files at construction. Embedding
+that failure as a fatal Control startup error would undo IAM-119 recovery.
+Missing or mismatched OP signing/encryption material must close the affected
+protocol operation and expose an actionable operator state while local password
+sign-in remains usable. Keep OP signing/encryption keys separate from upstream
+connector wrapping keys and license verification keys. Test actual lost-file
+startup, local sign-in, operator repair and fresh app authorization before
+admitting serving composition; process restart with intact files proves only
+the narrower retention path.
+
+Use Identity's trusted business-admission owner rather than inventing an OP
+license switch. Its integrity/new-work observations commit outside a business
+transaction; the serving contract must classify registration and issuance
+before opening the protocol transaction. Catalog owns the installed app,
+credential projection and uninstall lifecycle. These joint boundaries remain
+unadmitted; none of the synthetic fixture tables or sessions grants product
+authority.
+
 ## Failure coverage and concrete completion
 
 ### First strict transport and crypto slice
