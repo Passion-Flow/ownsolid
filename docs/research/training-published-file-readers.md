@@ -428,3 +428,80 @@ amd64 PostgreSQL image ID are bound by the plan. Metadata inspection started no
 fixture, container, child worker or service. No permanent carrier was acquired,
 and no owned runtime resource remains. Standalone gateway/role/Model/Node
 contracts, all product boxes and the original fleet budgets remain open.
+
+
+## Bounded reader fixture review artifact
+
+The prepared bounded wrapper keeps the existing fixture's PostgreSQL image, loopback
+namespace, extension, private file DSN and exact reader roots. It replaces
+only the parent/fixture lifetime and ownership handling in a separate review
+artifact; the original event runner, source binding and plan remain unchanged.
+[Python subprocess](https://docs.python.org/3.12/library/subprocess.html) documents
+that child startup can exceed a communicate timeout and timeout handling needs
+explicit termination/reaping. [Python signals](https://docs.python.org/3.12/library/signal.html)
+are handled by the interpreter, so the wrapper must not claim an unconditional
+hard wall-clock guarantee for uninterruptible kernel/daemon operations. It
+arms an absolute timer before input inspection, reserve cleanup, bound every
+owned child group and retain raw outcomes. No queue or retry framework is added.
+[Linux flock](https://man7.org/linux/man-pages/man2/flock.2.html) supports one
+blocking first acquisition and one nonblocking second acquisition; closing all
+owned descriptors releases ownership. A failed second acquisition must close
+the first before evidence writing or container work.
+
+Pure local tests cover deadline arithmetic, strict full PSI parsing,
+source/input binding, lock release order, child failure classification and
+foreign-resource cleanup refusal. They mock the permanent carriers and
+Docker/Go, leaving the native opportunity unused. The wrapper is not
+qualified by these tests to run native owner bodies. Execution remains a
+separate reviewed step. Python's standard library adds no dependency; its
+[PSF licence](https://docs.python.org/3.12/license.html) permits commercial and
+offline redistribution subject to its notices. Existing retained inputs and
+image licences remain as previously recorded; nothing is downloaded.
+
+The review bundle is /root/lane-trn-tools/reader-native-bounded-v1/. Its
+review.md explains the exact parent/fixture deltas, deadline ledger, raw outcome
+classification, cleanup ownership and retained limitations. The originals were
+copied for comparison only; no original source, plan or binding was changed.
+
+| Review artifact | SHA-256 |
+| --- | --- |
+| reader_native_bounded.py | 0304baaa4cd97f4f8870786e7fa34cd2f4751eb4290a38e497f5d5dbb10b636f |
+| config.json | efac4a20bd4be8941a008a19fa52d5015120c3c6243e5467eb63f440719d534e |
+| entry.sh | 6fa7a2aa825dbd3e27209319c7653394540126ff7e30cf0149bdd0965dcb4343 |
+| parent.diff | 786eec10bae5253a0a907f5657945ec1fa6507c3957e2265405877482f095ef8 |
+| accepted-fixture.diff | f265abe1ca411f79730be73fe9ff66ad48758978df49b4d0aa48c2757cd84548 |
+| event-fixture.diff | f4e9f403f6fadc123262aaab0936cbf19c4ef37d198d104468533c1399b5709e |
+| manifest.json | 734f826af2b99fdd502b11cf9d603c2f7aa826d6dbfc08a7f54d99989cc16cd5 |
+
+The exact prepared entry is:
+
+```sh
+bash /root/lane-trn-tools/reader-native-bounded-v1/entry.sh --execute
+```
+
+That command has not been run. It wraps the one-shot parent in a 295-second
+TERM / 5-second KILL backstop. The inner work cutoff is 270 seconds, cleanup
+commands end by 295 seconds and the final five seconds are for records. Each Go
+child including its termination/reap has at most the smaller of 170 seconds and
+the remaining work budget. No new child work starts during reserved cleanup.
+After a hard kill records can be partial; the outer raw status and exact owned
+resources must be inspected before any cleanup claim. This is a prepared bound,
+not an observed complete native wall-clock qualification.
+
+Twenty-five pure local mock/file checks passed in 0.019 seconds, and Bash syntax
+passed. Their log SHA-256 is
+ea0fb370516180258e9b8112d41683cf235436a476a59d1cf06e5b91c84248f1.
+One Linux --check-config passed against clean e639db90, the unchanged originals,
+all source hashes and four retained CPU input hashes streamed in blocks. It only
+stats the permanent carriers and runs bounded Git reads; it opens/acquires no
+carrier and starts no Docker/Go/SQL body. The actual output is retained as
+server-input-check.log, SHA-256
+9ccb4cb633dae8db504cebc01fd3c2800367d043ef0b92cc596d9f60c0e8674d.
+
+The native opportunity remains unused: zero Linux carrier attempts, no new
+native compilation or Go/SQL bodies, no processor/GPU/fleet and no runtime
+resource started or left running. The workstation rule stays nonblocking busy
+75 with no additional queue. No unchanged complete suite was rerun; the shared
+Help issue remains WEB-owned. No P1 box, gateway/restricted-role qualification
+or fleet budget changed. The next native step is review of these concrete
+artifacts before execution; eligible independent owned work need not wait.
