@@ -160,6 +160,42 @@ No automatic resend follows COMMIT uncertainty, and a claim error releases no
 worker proof or session. Binding, source session and audit remain one completion
 transaction; the identity lookup prototype alone proves none of them.
 
+### Next isolated claim experiment
+
+The next experiment is limited to authenticated account-link request claims.
+Use a separate unnumbered test table, anchored to the actual scoped connector,
+user and session, and the existing Identity password-confirmation/current-actor
+owners. Store only request identity, browser/RelayState digests, immutable
+captured actor and callback scope, connector revisions, expiry and one claim ID.
+A server-owned tenant is resolved from installation authority; callers supply
+no tenant or captured actor. The IdP POST path deliberately has no ordinary
+session-cookie argument. It reconstructs only the stored private actor and
+rechecks actual user/source/session/credential authority through the existing
+user -> sorted source/target connectors -> exact session -> installation order.
+Under that transaction it exclusively changes pending to claimed, and returns
+a private request handle only after confirmed COMMIT. No PKCE/client secret,
+OAuth exchange, signed assertion, verified-result stage, binding or session is
+invented. This tests one prerequisite, not an authentication implementation.
+
+Exercise Admin and Portal, local and different-connector sourced actors,
+foreign tenant/connector/audience and browser/RelayState substitutions, expiry,
+logout, account/credential epoch changes, source/binding revocation and stale
+target revisions. Force actual concurrent row waits, cancellation, rollback,
+process-owner reconstruction/replay and both PostgreSQL COMMIT loss modes;
+errors must return no private claim handle and never automatically resend.
+Use real audit rollback only for an event actually written by this experiment,
+with synthetic action names confined to its private fixture. Acceptance of
+this boundary requires matching native race and disconnected PostgreSQL cases,
+not additional fake protocol successes. The first-party cookie comparison and
+signed-result lifecycle remain separate work. Existing first-party start
+Origin/CSRF checks are not replaced by direct repository tests.
+
+This adds no product dependency, model or dataset. It reuses the repository's
+pinned Go/pgx/UUID/test-fixture graph and its recorded licenses; no new SAML
+library enters the claim-only prototype. Existing Identity/SSO source is the
+authority for its current actor, lock order and transaction outcome semantics,
+not a copied identity model or a configurable bypass.
+
 Before serving admission, exercise actual Identity-backed link/login claims,
 missing ordinary session cookies on the IdP POST, cross-tenant/audience browser
 proof replacement, concurrent claims, source/logout/password interleavings,
