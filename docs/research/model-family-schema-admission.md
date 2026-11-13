@@ -562,3 +562,34 @@ and requires source `3513ab2b`. `schema61-pin-candidate/rebuild-plan.json` binds
 exact three Linux amd64 package builds, original repository_integration MODEL
 tag, offline environment and matching source/tree. It is a future build input,
 not an executed compiler, test or allocation.
+
+## Source-B Mac resource refusal
+
+The next explicitly assigned short Mac opportunity targeted exact source B
+`549c3ad6`/tree `1a7ad692`. A detached owned worktree was created at
+`../lane-arc111-measured61`; its source, single catalog-file delta, original
+IAM/TRN/MODEL ancestry and byte-bound entrypoint definitions were checked.
+The new one-shot guard requires all three matching Linux binaries and the
+original 11 lifetime race roots, plus the original no-database catalog-inventory
+and cursor checks. None executed: fresh preflight observed 899,858,432 free
+bytes, below the required 2,147,483,648, with 161,442,013,184 disk-free bytes,
+pressure level 1 and no competing compiler process. The guard returned 1/NOTRUN
+in 0.457871292 seconds before opening the carrier or attempting NB.
+
+There were zero Go children, selected test roots, new binaries or Linux
+connections. Carrier release is not applicable: no carrier FD or lease was
+acquired; manifest-read descriptors close in the verifier. The wrapper exited
+naturally; its PID/start identity was not captured. No active owned Go group
+exists, and the source worktree is clean. The actual entry is closed; its
+executed source and refusal receipt are retained in
+`lane-arc-diagnostics/arc111-mac-measured61.fjzkicy1`. Result SHA-256 is
+`a63940ca514f76af7417120fc83165e41924b6592313e3ac3234afdc7141aa03`;
+refusal/cleanup receipt SHA-256 is
+`5b6d78410e8805553cf6ac9a8b5d62a572153fab914d3569a0dbc45ac2671ab8`.
+
+The dependent Linux runtime opportunity was not entered because the matching
+rebuild prerequisite did not pass. No old source-A binary was used as proof
+for source B, no threshold was reduced and no resource retry was queued.
+The previous real eight-directory PG collection remains valid within its
+metadata-only scope. Source B remains uncompiled and unqualified; original
+host-TCP/Migrate/grant/MODEL eligibility and full gates remain outstanding.

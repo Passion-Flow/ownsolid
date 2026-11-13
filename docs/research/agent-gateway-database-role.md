@@ -1669,3 +1669,12 @@ substituted to make its check pass. No fake inspector, protocol change, daemon
 setting, route or TLS exception was used. A genuine owned host-loopback TCP
 fixture and matching candidate-source binaries remain required before the
 original runtime profiles can qualify.
+
+The first separately assigned source-B rebuild opportunity then refused fresh
+Mac Free 899,858,432 bytes against the 2 GiB minimum before carrier open or NB.
+It returned 1/NOTRUN in 0.457871292 seconds with no Go child, test root or new
+binary. The dependent Linux runtime phase did not start. Its exact source,
+closed entry and receipt are recorded in the
+[source-B resource boundary](model-family-schema-admission.md#source-b-mac-resource-refusal).
+The original source-A evidence and actual metadata results are preserved;
+neither is transferred to an uncompiled source-B runtime qualification.
