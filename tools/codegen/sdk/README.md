@@ -33,6 +33,11 @@ Use a Python 3.12 virtual environment for the generator:
 Choose an output directory that does not exist. The generator reads local
 contracts and invokes the prepared tools by absolute path.
 
+Source contracts must be JSON objects with unique member names at every depth.
+Duplicate names and the nonstandard NaN/Infinity tokens fail with the owning
+file in the error. The same rules apply to the Components alias owner. Correct
+that source and retry; a rejected input publishes no partial SDK output.
+
 ```sh
 python3 tools/codegen/sdk/generate.py --out "$SDK_DIR" \
   --go-generator "$GO_GENERATOR" \

@@ -38,9 +38,32 @@ def public_sources(contracts):
             if source.parent.name not in UNLISTED)
 
 
+def _read_contract_json(source):
+    """Reject ambiguous JSON before a source contract can lose operations."""
+    def unique_object(pairs):
+        result = {}
+        for name, value in pairs:
+            if name in result:
+                raise ValueError(f"{source}: duplicate JSON member {json.dumps(name)}")
+            result[name] = value
+        return result
+
+    def reject_constant(value):
+        raise ValueError(f"{source}: non-finite JSON number {value} is not supported")
+
+    try:
+        document = json.loads(source.read_text(encoding="utf-8"),
+                              object_pairs_hook=unique_object, parse_constant=reject_constant)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{source}: invalid JSON: {exc}") from exc
+    if not isinstance(document, dict):
+        raise ValueError(f"{source}: OpenAPI contract must be a JSON object")
+    return document
+
+
 def read_contract(source):
     """Resolve the supported local path aliases before client projection."""
-    document = json.loads(source.read_text(encoding="utf-8"))
+    document = _read_contract_json(source)
     aliases = set()
     owner = None
     for path, item in document.get("paths", {}).items():
@@ -52,7 +75,7 @@ def read_contract(source):
             raise ValueError(f"{source}: unsupported OpenAPI path reference for {path}")
         if owner is None:
             target = source.parent.parent / "components" / "openapi.json"
-            owner = json.loads(target.read_text(encoding="utf-8"))
+            owner = _read_contract_json(target)
         canonical = owner.get("paths", {}).get(path)
         if not canonical or "$ref" in canonical or not METHODS.intersection(canonical):
             raise ValueError(f"{source}: missing canonical OpenAPI path for {path}")

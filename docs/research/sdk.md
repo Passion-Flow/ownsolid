@@ -166,3 +166,49 @@ UUID and transmitted its canonical text. The generated Go clients compiled,
 and the Python probe decoded the predecessor problem and the typed replay
 result. The generator regression checks preserve omitted UUIDs and string
 headers.
+
+## Unambiguous JSON contract inputs
+
+The contract reader uses Python's default last-member-wins decoding. A small
+local fixture with duplicate paths members silently lost its first public
+operation before projection. This does not claim that the currently published
+contracts contain duplicates. [RFC 8259 section 4](https://www.rfc-editor.org/rfc/rfc8259#section-4)
+recommends unique object names for interoperable interpretation. The
+[Python JSON decoder](https://docs.python.org/3.12/library/json.html#repeated-names-within-an-object)
+documents its default replacement behavior and the object_pairs_hook override.
+[Kubernetes strict field validation](https://kubernetes.io/docs/reference/using-api/api-concepts/#field-validation)
+also exposes duplicate-field refusal as an explicit policy.
+
+Reject duplicate members in SDK source contracts and the admitted Components
+alias owner, before generating from that domain. Treat this as ownsolid's
+unambiguous-source policy, not a claim that every JSON parser must reject them.
+Use the existing standard-library pair hook; regex scanning would mishandle
+nesting and escaped names, while a new parser dependency adds no value. Include
+the owning file and member name in the error, with no member values. Require a
+JSON object at the document root and retain useful syntax-error context. Keep
+all existing alias, audience and local-reference boundaries.
+
+Cover repeated path/method/schema names, escaped-equivalent names, the shared
+alias owner, malformed and non-object roots, and valid repeated names in
+separate objects or array values. A failed input must publish no partial SDK
+and invoke no external generator for its domain. Compare current valid contract
+and projected document values before and after the parser correction. Python's
+existing PSF licence permits commercial, offline and redistribution use under
+its notice terms; no dependency, model, data set or third-party implementation
+is added. A changed generator source hash requires its own regeneration and
+release qualification; old 783/122-file evidence cannot be relabeled for it.
+
+The same reader also rejects Python's accepted NaN and Infinity extensions:
+the standard JSON grammar excludes them, and JavaScript's JSON decoder does
+not accept them as portable contract input. Use the decoder's parse_constant
+hook and cover all three non-finite spellings. This remains input parsing;
+it is not a new general OpenAPI or JSON Schema validator.
+
+The targeted parser, projection and audit tests passed all forty-nine cases,
+including eleven new input cases. All twenty-eight current SDK source
+contracts retain the same normalized document, alias set and projected
+document. Their public inventory still has 430 operations and no declaration
+findings. Invalid-input audit errors retain exit 2; the separate existing
+explicit 409 compatibility review retains exit 1. No SDK regeneration, native
+client run or complete repository qualification is claimed for this new
+generator source hash. The exact 2e admission refusal remains unchanged.
