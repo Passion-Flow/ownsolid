@@ -82,9 +82,12 @@ exceeds the default maximum by one minute. A creation-to-now read therefore cann
 provide reliable lifetime history. No public policy-bounds projection is present
 in the current Web/OpenAPI inputs.
 
-A cursor pins the window's start and end. If those bounds are omitted on the next
-page, the parser restores the cursor's window; explicitly supplied bounds must
-match it exactly. The client must forward the opaque cursor without inspecting it.
+A cursor pins the window's start and end, but its filter fingerprint also covers
+the original query parameters, including explicit time bounds. The parser can
+restore omitted bounds only when the first page omitted them too. After an
+explicit first-page window, every subsequent page must send the same `from` and
+`to` strings. Otherwise the fingerprint check rejects the cursor before restoring
+its window. The client forwards the opaque cursor without inspecting it.
 The audit schema, category filter, 13 event fields, server-derived authority and
 existing audit-read permission remain unchanged.
 
@@ -103,6 +106,10 @@ existing audit-read permission remain unchanged.
   describe mount/focus/reconnect refetch and static queries. The pinned version's
   failed-initial-query behavior is separately covered by
   [the audit-read research](identity-audit-read-access.md).
+- [Native local date/time fields](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/datetime-local)
+  carry no time zone and may accept nonexistent daylight-saving times. Interpret
+  them in the browser's displayed zone, reject normalization by round-tripping
+  local components, and serialize valid instants as UTC for the existing API.
 
 ### Chosen approach
 
@@ -116,8 +123,10 @@ Store the actual first-page bounds as typed client-only cache metadata beside th
 returned audit page. The recent range is snapped when its explicit initial read
 starts, and the visible dates describe that cached read. Remounting the tab must
 not silently move the window or create a new cache key. Next-page reads send the
-cursor and stable resource/person filters, omitting time bounds so the server
-restores its pinned window. A successful one-page restart replaces both the old
+cursor, stable resource/person filters and the exact cached first-page bounds.
+The shared read hook exposes typed first-page client data to its read callback;
+no server response field or cursor interpretation is introduced. A successful
+one-page restart replaces both the old
 pages and their window metadata; a failed read preserves them together.
 
 Reuse `useAuditRead` rather than a second retry framework. Keep retries, focus,
@@ -128,12 +137,16 @@ The server validates its configured maximum; the UI never guesses it. A refused
 valid custom range keeps its fields and offers an actionable shorter-range remedy.
 
 An isolated Node prototype used pinned `@tanstack/react-query` 5.105.3 before
-product changes. Eight assertions passed: initial 24-hour bounds; next-page
-cursor with omitted client bounds; first-page metadata retained through paging;
+product changes. Eight assertions passed: initial 24-hour bounds; a next-page
+fixture read; first-page metadata retained through paging;
 remount without a read; unknown response retaining two old pages and their bounds;
 invalidation without a read; exactly one explicit recovery request; and successful
 recovery replacing one page and its bounds. There were four explicit fixture reads.
 This proves the cache mechanism only, not a product, server, browser or SQL run.
+The fixture incorrectly allowed omitted next-page bounds. Source review of
+`makeScopedListPlan` corrected that assumption before implementation. Acceptance
+must enforce the original query fingerprint as well as the pinned window; the
+prototype's paging assertion is not evidence for the real cursor protocol.
 
 Rejected: a fixed 31-day policy limit, an unlabelled recent slice, an automatic
 multi-window history scan, weakening server validation, parsing the cursor in the
