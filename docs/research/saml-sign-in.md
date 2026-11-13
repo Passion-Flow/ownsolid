@@ -141,6 +141,18 @@ No table row creates a local account, binding, role or session. Actual one-use
 browser claims and current-actor/session/audit completion remain separate,
 required integration work.
 
+The storage consumer must receive a server-bound verifier result, not an
+issuer/NameID tuple alone. Two tenants can configure identical entity names
+while approving different signing metadata. Load the tenant/connector context,
+revision and approved metadata fingerprint from the trusted store before
+constructing the verifier. Verify against that exact metadata, then carry that
+server-selected context with the result. Resolution rechecks the same tenant,
+connector, context, revision and fingerprint under its current-context lock.
+A valid result from the other tenant or trust revision is still refused even
+when its issuer/SP/NameID strings match. This fingerprint describes approved
+trust metadata; it never replaces or hashes away the exact external identity.
+Test shared entity names, foreign valid proofs and stale revisions explicitly.
+
 The experiment can reuse the pinned SAML/XML graph and pgx v5.11.0 from the
 [qualified OP database inventory](catalog-oidc-provider.md#durable-protocol-prototype-plan-and-additional-licenses).
 Resolve and inspect their combined graph before compiling. Preserve all SAML,
