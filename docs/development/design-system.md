@@ -103,6 +103,8 @@ retain their original undo or confirmation paths in that menu. On Activity, head
 secondary so Read activity is the sole primary. At narrow widths the name and state precede the
 command row. Unavailable menu commands remain visible with their reason and disabled styling.
 Closing a command dialog returns focus to the menu trigger.
+A selected tab stays visible within its horizontal strip on selection and size changes; revealing it
+does not move the page vertically or change focus.
 
 ## Forms
 

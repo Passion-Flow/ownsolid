@@ -411,11 +411,11 @@ evidence. This is component execution evidence, not a successful full guard gate
 Post-exit checks found no known worker PID or owned preview listener. The four
 unchanged old-runtime negative failures remain earlier evidence and were not rerun.
 
-Keep UX-127 and POR-112 open. Freeze and validate the latest fixes, including API
-lint/unit assertions, detail-header types/build, original node/service mutation
-flows, menu/dialog focus and EN/ZH desktop/narrow screenshots. Recheck any affected
-inventory and active-tab visibility. The full make gates and real installed
-SQL/authority/offline/SSO consumer acceptance remain unqualified.
+At that boundary, the latest fixes still required API lint/unit assertions,
+detail-header types/build, node/service mutation flows, menu/dialog focus and
+EN/ZH desktop/narrow screenshots. The source-bound verification below supersedes
+those pending correction checks. Full make and installed consumer acceptance
+remain separate.
 
 ### Focus and narrow-layout correction boundary
 
@@ -440,3 +440,68 @@ project-grouped lint, rebuilt assets, resource activity states and paging,
 resource/node and service mutations, plus accessibility and keyboard inventories.
 The unchanged 41 request-recovery cases and the earlier remaining units retain
 only their exact-input evidence; do not count a new run that did not happen.
+
+### Verified focus and narrow-layout corrections
+
+The corrected runtime is source `f430afe3a31631d9e9a0f65e79f6bbaae6d91b33`, tree
+`69030b656ce87905d50cd912d9bb36cd740719ed`, Web tree
+`33dbeaf1db84c4a2ddc73feea6b79a6eea68311c`. It retains the original four focus-return
+assertions and adds deployment-confirmation cancellation, disabled styling,
+selected-tab bounds and short-name layout checks. Node and deployment dialogs
+share `useCommandDialog`; Tabs reveals selection within its own horizontal strip
+and observes size changes without scrolling page ancestors or changing selection.
+
+Actual qualification on that exact source:
+
+| Check | Result |
+| --- | --- |
+| API cursor transport regressions | 2 passed |
+| UI package unit tests | 54 passed across four files |
+| API and UI typechecks | Both exit 0 |
+| API, Console source, Console browser and UI lint groups | All four exit 0, same rules and 512 MiB heap |
+| Owned formatting check | Exit 0 |
+| Console typecheck and build | Exit 0 |
+| Original four bilingual desktop/narrow focus cases | 4 passed |
+| Resource activity states and cursor recovery | 21 passed |
+| Resource and node pages | 19 passed |
+| Existing service flows | 23 passed |
+| Affected accessibility inventory | 20 passed |
+| Affected keyboard inventory | 10 passed |
+
+All 97 browser cases passed with zero skipped, flaky or retried cases. No timeout,
+assertion or conditional skip was weakened. The unchanged 41 original request-
+recovery cases, other API/Console/i18n unit results and four old-runtime negative
+failures were not rerun or counted as new passes. Their exact-source evidence
+remains intact. The shared Tabs consumer in the gateway-key usage panel also
+serves Portal; its separate Portal build/flow remains part of joint qualification.
+
+The rebuilt Console contains 697 files. Its new source-bound asset manifest has
+SHA-256 `f56c166fd1e50e18c700eace2ccca7d2cb368a618f542ba21f5f968e0ce5fdee`.
+The previous 697-file package remains a separate checked archive; no earlier
+asset manifest was relabelled as this runtime.
+
+All 57 generated PNGs were extracted, hashed, opened and visually read: 28 action,
+menu and native-dialog images and 29 activity images. English and Simplified
+Chinese at 1440 and 390 pixels show full names above narrow command rows, visible
+active tabs, one Activity primary, dimmed unavailable commands with explanations,
+and menus/dialogs within the viewport. Seven activity states are represented;
+recent and filtered empties differ, both partial states retain rows and explicit
+recovery, and a separate scrolled image shows the narrow filtered-empty remedy.
+The confirmation images include the callers-loading skeleton; the existing
+service flows separately assert resolved callers and typed-name admission.
+No remaining visual failure was observed in this directed scope. The old 61-image
+review and its four focus failures remain preserved as earlier evidence.
+
+The directed guard contains no full-gate branch. Before admission, lightweight
+AST and deadline-boundary checks verified its single nonblocking carrier attempt,
+NOFOLLOW open without creation/truncation, fixed 600-second total and 60-second
+cleanup reserve. The actual worker and every stage inherited the same checked
+carrier descriptor. Test child, wrapper operation and cleanup each exited 0;
+total elapsed time was 418.816 seconds. Post-exit checks found no known owned
+PID, preview listener or parent/worker descriptor. No fixture data remained and
+no further admission or Node work started after exit.
+
+This closes the observed UI correction scope. UX-127 and POR-112 remain open:
+whole-platform make gates, joint Portal consumers, real installed authority,
+durable SQL, disconnected delivery and real SSO acceptance are not qualified by
+scripted browser fixtures. No publication or roadmap completion is claimed.
