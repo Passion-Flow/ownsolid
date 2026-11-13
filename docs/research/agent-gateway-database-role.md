@@ -1547,3 +1547,77 @@ Its exact copy sources, frame and original binary/profile bindings are in
 A fresh allocated entry is required. Actual full-source admission, real61
 fresh/restore catalogs, matching new-pin rebuild and original role/MODEL cases
 remain open. No new dependency, model or dataset is introduced.
+
+### Actual full-source admission and unpublished fixture port
+
+The next authorized native opportunity used the frozen full frame directly.
+The actual sender wrote 5,952,828 bytes in 11.208989250 seconds and closed its
+pipe. The authoritative remote receipt recorded the same 5,952,828 bytes,
+SHA-256 `2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773`
+and EOF in 5.825986198 seconds. Decoded length/hash also matched. Extraction and
+strict actual-file verification completed in 2.318304650 seconds: all 5,102
+paths, 42,132,271 bytes, 5,090 files at 0644 and twelve at 0755, regular type, UID0,
+single links, SHA-256 and Git blobs matched the original target manifest.
+The returned full input map was independently compared with every original
+manifest row. Map SHA-256 is
+`ecb971a94663dccb5672d174e6ce202bae797946b9a141f595d99e4710986b63`.
+All 61 migration and 16 SQL input checks passed. The original 45-second source
+deadline was retained and met. No old cache was read.
+
+Fresh original dual NB/resource/image admission passed. The owned PostgreSQL
+container and volume were created and PostgreSQL 18.6 started, as its own log
+records. The first failed stage was fixture host TCP reachability, error 111
+`Connection refused`, before vector/version queries or CatalogSQL. The real
+container inspection shows requested HostConfig binding 127.0.0.1:45001, but
+actual `NetworkSettings.Ports` is `{"5432/tcp":null}`. Its internal bridge has
+no container default gateway. The private preflight checked the requested
+binding, which is insufficient to prove a publisher. Container Unix-socket
+`pg_isready` returned 0; that is a different endpoint. Waiting longer cannot
+establish a port that inspection does not report as published.
+
+[Docker's port contract](https://docs.docker.com/engine/network/port-publishing/)
+describes the actual NetworkSettings mapping and loopback binding behavior.
+[PostgreSQL's readiness contract](https://www.postgresql.org/docs/18/app-pg-isready.html)
+distinguishes host/port from Unix-socket targets and does not require successful
+authentication to report status. The retained evidence proves this fixture's
+missing mapping; it does not establish a general outage or every Docker
+version's internal-network behavior. No daemon, routing or TLS setting changed.
+
+SSH and outer returned 1 in 25.001918542 seconds; the remote receipt recorded
+14.698804820 seconds including 1.704786662 seconds of cleanup. Actual
+container/volume/network removal and absence checks passed. Credentials were
+removed, owned groups were empty, both original FDs closed and identities
+retained. SSH 98736 and parent 98660 were absent, and the observer joined.
+Confirmation was at allocation 101.241932 seconds, inside the original window
+and before its cleanup reserve. No reconnect or retry followed. PG did start;
+version/vector SQL, catalog records, runtime-role cases and test-binary roots
+were zero. No source B or new pin was produced.
+
+Evidence is under `lane-arc-diagnostics/arc111-native-full-source.rz7njuic`.
+The complete source-only admission is reusable for this exact source/frame;
+it is not SQL, CLI, installed or fleet qualification. Original binaries,
+11-root race evidence, strict60 pins and source `3513ab2b`/tree `c65b8e3f` remain unchanged.
+
+The next private candidate explicitly limits itself to the already-declared
+metadata-derivation phase. It uses
+[Docker network none](https://docs.docker.com/engine/network/drivers/none/),
+checks the actual network mode, no published ports, loopback-only interface and
+no default route, and waits for container TCP 127.0.0.1:5432 rather than the
+temporary Unix-socket server. Original PSQL, CatalogSQL, pg_dump and pg_restore
+commands execute against the real owned server inside that namespace. No host
+DSN, port publisher, relay or forged Docker inspection is created. The original
+runtime `identityfixture.OwnedPostgres`/loopback requirements and all role/MODEL
+tests remain unchanged and unqualified. This projection cannot satisfy those
+tests and does not claim to do so. A network-not-created field refers only to
+owned resources; the built-in Docker none network is never removed.
+
+The source receiver, strict file verifier, full-source extractor, CatalogSQL and
+PSQL function ASTs are unchanged. Twelve static projection checks passed; they
+are not a native fixture or SQL run. The unactivated candidate is frozen in
+`metadata-network-none/`, guard SHA-256
+`d4af5e2f5d9560c84ca62c539f7941ed2216c3ae97f9080959d7cf990be5e7ed`.
+It preserves the 60-second fixture phase, 180-second metadata phase, absolute
+cleanup reserve and every schema60 baseline assertion. A fresh allocated run
+is required for actual schema61 fresh/restore catalogs. A matching pin-source rebuild
+and genuine original runtime fixture remain prerequisites for role/MODEL
+qualification. No dependency, model or dataset is added.

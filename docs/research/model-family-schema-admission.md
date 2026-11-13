@@ -474,3 +474,17 @@ of that larger frame has occurred. See the
 [complete mapping and full-source boundary](agent-gateway-database-role.md#complete-legacy-cache-inventory-and-full-source-delivery-boundary).
 Real61 fingerprints, matching pin rebuild and all original SQL/role/MODEL
 qualification remain open.
+
+The full-source candidate subsequently passed actual Linux admission: the
+5,952,828-byte frame/hash/EOF in 5.825986198 seconds, all 5,102 canonical target
+paths and their exact type/UID/link/mode/SHA/Git-blob bindings, and all 61 migration
+and 16 SQL input checks. PostgreSQL 18.6 started, but host TCP was refused: the
+requested loopback publication was absent in actual NetworkSettings.Ports.
+No vector/version query, catalog fingerprint, role case or source B followed.
+Owned PG/container/volume/network/credentials/FD cleanup was confirmed at
+allocation 101.241932 seconds. See the
+[actual source admission and fixture boundary](agent-gateway-database-role.md#actual-full-source-admission-and-unpublished-fixture-port).
+The next network-none projection is metadata-only, with unchanged actual SQL
+and no claim to qualify the original runtime loopback fixture or role/MODEL
+roots. Actual61 catalogs, matching pin source/binaries and those original tests
+remain outstanding.
