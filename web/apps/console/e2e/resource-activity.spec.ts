@@ -39,10 +39,19 @@ async function configure(page: Page, locale: 'en' | 'zh-CN') {
 }
 
 async function screenshot(page: Page, info: TestInfo, state: string) {
+  if (state.startsWith('partial-')) await page.getByRole('alert').scrollIntoViewIfNeeded();
   await info.attach(`resource-history-${state}`, {
     body: await page.screenshot({ animations: 'disabled', fullPage: true }),
     contentType: 'image/png',
   });
+  if (state.startsWith('filtered-empty-')) {
+    const messages = state.endsWith('zh-CN') ? chinese : english;
+    await page.getByRole('button', { name: messages['resource.activity.clear'], exact: true }).scrollIntoViewIfNeeded();
+    await info.attach(`resource-history-${state}-remedy`, {
+      body: await page.screenshot({ animations: 'disabled', fullPage: true }),
+      contentType: 'image/png',
+    });
+  }
 }
 
 for (const [locale, messages] of [
