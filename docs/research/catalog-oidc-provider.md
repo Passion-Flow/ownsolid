@@ -402,6 +402,22 @@ grants and SDK routes remain explicitly closed rather than receiving success
 implementations. Native wire-loss tests reuse the repository's actual
 PostgreSQL forwarding helper outside the product, not simulated SQL responses.
 
+Revocation has a different input contract from UserInfo. Rechecking
+[RFC 7009 sections 2.1–2.2](https://www.rfc-editor.org/rfc/rfc7009.html#section-2.2)
+shows that an authenticated request for an invalid token returns HTTP 200 and
+an unknown token type hint is ignored. The prototype's earlier shared strict
+bearer-shape parser would incorrectly reject those requests. Before qualifying
+revocation, retain its bounded, unique form fields and mandatory Basic client
+authentication, but accept a bounded nonempty opaque token and bounded hint.
+The SDK may attempt its supported token interpretations; the store must require
+the current authenticated client and an exact own-tenant token binding before
+changing a row. Unknown, malformed, expired and already revoked values cannot
+create a grant or expose token validity. A foreign client must leave the token
+usable by its owner; unauthenticated requests are refused before token lookup.
+Test an unknown hint on a real issued access token, repeated revocation, foreign
+clients and audit failure with explicit retry. This is an external prototype
+correction, not evidence of a serving revocation endpoint.
+
 The SDK's [discovery builder](https://github.com/zitadel/oidc/blob/v3.52.0/pkg/op/discovery.go)
 also advertises implicit response/grant types and endpoint locations that its
 router always registers. The prototype must project that generated metadata
