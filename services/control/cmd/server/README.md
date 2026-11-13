@@ -32,6 +32,12 @@ for partial/unknown outcomes, role/serving writes and Kubernetes qualification.
 
 [agent_gateway.go](agent_gateway.go) serves `serve-agent-gateway`: the agent session stream from a process beside control, with its own pool and no installation lock, fenced on the lock's holder and drained on stop ([ADR 0048](../../../../docs/decisions/0048-agent-gateways-beside-control.md)). It builds the agent path with `identityhttp.NewAgentGateway`, the constructor control's own handler uses.
 
+Its session drain is a lifecycle-owned cancellation loop, so confirmed worker
+shutdown includes the drain operation before process-owned stores close. This
+does not itself join arbitrary request handlers or bind dataset/training readers;
+the original constructor owner and actual request/file-owner shutdown remain
+required for ARC-111. See the [reader ownership boundary](../../../../docs/research/agent-gateway-database-role.md#concrete-reader-constructor-dependency-and-process-ownership).
+
 [runtime_lifecycle.go](runtime_lifecycle.go) owns dependency construction, cancellation, worker readiness, stop/join order and closers. Component helpers such as artifactstores.go, imageregistry.go, task_events.go, middleware.go and monitoring.go connect their existing owners. The identity HTTP package still composes/routes domains; extracting that historical hub is a separate verified change, not an invitation to create duplicate owners here.
 
 Configuration comes from [platform/config](../../internal/platform/config/README.md), protected command inputs and explicit policy environment mapping. Bootstrap packets and verification-store helpers preserve exact installation/artifact identity. Unknown commit, failed readiness, interrupted backup or failed worker shutdown must remain visible; cleanup cannot silently destroy the only recovery evidence.

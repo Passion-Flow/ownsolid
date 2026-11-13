@@ -266,8 +266,11 @@ func runAgentGateway(args []string) (result error) {
 		return errors.New("SERVER_LISTEN_FAILED")
 	}
 	// Agents leave a stopping gateway for the next one in their order instead of waiting
-	// for the shutdown to cut their streams.
-	defer context.AfterFunc(g.ctx, gateway.Sessions.Drain)()
+	// for the shutdown to cut their streams. Join the drain before store closers.
+	g.Loop("AGENT_GATEWAY_DRAIN", func(ctx context.Context) {
+		<-ctx.Done()
+		gateway.Sessions.Drain()
+	})
 	fmt.Println("AGENT_GATEWAY_STARTED")
 	slog.Info("agent_gateway_started", "listen_address", c.AgentGateway.ListenAddress, "origin", origin)
 	age := httpserver.ConnectionAge{

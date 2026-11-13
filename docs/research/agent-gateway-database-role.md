@@ -740,3 +740,17 @@ race, real claims/SQL and installed delivery remain separate required evidence.
 No dependency, model or dataset is added; Go remains BSD-3-Clause with its
 existing commercial redistribution/offline terms and notices. No runtime
 networking or protocol field changes are introduced by joining this callback.
+
+The joined-drain increment is source preparation only: formatting, layout,
+roadmap consistency and diff checks ran, but no compiler, unit/race test, native
+SQL or full gate ran for it. Its focused existing-entry checks, when separately
+allocated, are:
+
+```sh
+go -C services/control test -mod=readonly -p 1 -count=1 ./cmd/server -run '^TestRuntime(NormalCancellationAndReverseOwnerJoin|TimeoutRetainsLeaseUntilActualJoin|UnconfirmedOwnerStopNeverClaimsJoin)$'
+go -C services/control test -mod=readonly -p 1 -count=1 ./internal/platform/agentgateway -run '^TestDrainEndsSessionsAndRefusesNewOnes$'
+```
+
+These primitive checks cannot replace real composed shutdown and file ownership
+acceptance. The database-focused 1,200-second allocation does not also authorize
+these extra profiles, the installed500-agent drill or a whole-repository gate.
