@@ -375,3 +375,48 @@ collector, workspace-scope SQL or GPU result. The frozen be62 acceptance
 inputs remain unchanged. AUD-108 and actual installation acceptance remain
 open for their other owners. Source, native logs, full browser reports,
 patches and image hashes remain in the source-qualified Web evidence.
+
+
+## Public metadata projection handoff
+
+The DEV contract at `2426699bfad4c1a4e4ee6999cfc14f264c4cda12`, unchanged through
+`783567ea4a2e19f3b2f7ca065d47dfe59886633e`, has raw SHA-256
+`7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32`.
+Its existing Admin audit route now documents the actual transaction boundary,
+standard 409 Problem and explicit continuation/recovery semantics. The ordinary
+thirteen required fields, verified assistant pair, action enumeration, category
+filter, audiences, authorization and route set are unchanged.
+
+Use the existing Web generators against those actual owner-supplied bytes.
+[OpenAPI 3.1.1 Reference Objects](https://spec.openapis.org/oas/v3.1.1.html#reference-object)
+allow a description alongside a reference; the existing parameter resolver
+preserves that cursor description. The TypeScript projection gains the documented
+409 response. Admin Help gains the actual status/code index and cursor guidance;
+its downloadable contract preserves the same source metadata. The Chinese source
+and generated locale provide the one new parameter description. Portal must not
+acquire the Admin route. No route, error map or generated file is invented by Web.
+
+The reviewed five-path relay patch is SHA-256
+`a3def1685309d4a7609274852cbc17f0904f9477a8edcaa9d016b4ced085dea9`,
+based on `0b570a8392a3d86f9a7637883355e223c94e76bd`. Its five input paths and
+both generators still match the current main base used for adoption. Preserve the
+owner-qualified explicit consumers, recovery hook, all 41 recovery cases and the
+shared Help restoration correction byte for byte. The older two-consumer prototype
+is superseded and must not be applied.
+
+No dependency, model or dataset is added. Existing openapi-typescript and mdast
+MIT tooling and the established Web dependency notices permit commercial,
+redistributed and offline use. Generator checks, the exact Help error-index set
+comparison, locale coverage and consumer type checks must run against the real
+paired contract. Existing 409/lost-response/timeout/manual-recovery cases remain
+required; metadata generation alone does not qualify the reader or installation.
+
+The current portable bundle contains the actual API source through783 but not
+producer composition `d16d7f11699ef00e1d26fa576be2db76a8d640af`. A portable ref
+containing that composition, or DEV's explicit successor on current main with
+the same verified contract, releases this source boundary. Web's own commit is
+limited to the five locale/generated paths; it is not pushed independently to
+main. DEV composes the original API/SDK/tool and Web commits, passes generation
+and the complete gate, then publishes the coupled result by one fast-forward.
+The 44ab client and qualified asset package remain immutable; a changed generated
+Help input requires accurate-source asset/client qualification after composition.
