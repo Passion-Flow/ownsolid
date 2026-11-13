@@ -313,9 +313,12 @@ def exercise_audit_reads_python(sdk):
 def exercise_audit_reads_go(sdk):
     """Run the actual generated Go operation against loopback protocol fixtures."""
     subprocess.run(
-        ["go", "test", "-race", "-count=1", str(Path(__file__).with_name("audit_read_wire_test.go").resolve())],
+        ["go", "test", "-mod=readonly", "-race", "-count=1",
+         str(Path(__file__).with_name("audit_read_wire_test.go").resolve()),
+         str(Path(__file__).with_name("audit_read_legacy_test.go").resolve())],
         cwd=sdk / "gen" / "go",
-        env={**os.environ, "GOWORK": "off", "GOPROXY": "off", "GOSUMDB": "off"},
+        env={**os.environ, "GOWORK": "off", "GOPROXY": "off", "GOSUMDB": "off",
+             "GOTOOLCHAIN": "local", "GOVCS": "*:off"},
         check=True, timeout=120,
     )
 

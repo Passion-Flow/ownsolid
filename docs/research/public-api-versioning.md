@@ -343,3 +343,39 @@ The comparison against 9e32b023 returns 1 with the same sole 409 finding and
 the unchanged f018d11ec45f5543229676f69688992e0ed4a984131c55165cfc7ca525f88aaa
 report digest. The added native accessor/header assertions have not run.
 This is not fresh generation of all 28 SDK domains or a native/full-gate result.
+
+### Compile the same legacy caller against both SDKs
+
+The original 9e32b023 generator has no audit-read transport helper and its
+default-only contract produces no dedicated 409 accessor. The retained 122-file
+identity archive already has an explicit 409 decoder; it is not that older SDK.
+Generate the actual 9e32b023 source separately for this comparison. Keep its
+original generator and five templates; do not synthesize an old client by
+removing fields from new generated code. The final candidate still has 36
+generation inputs: 29 raw contracts, six templates and the generator. Only
+the generator changes from 37cbb09c to e4bd3138; existing raw contracts and
+templates remain identical. Original joint 2e64ab4c output remains a separate
+comparison requirement, not a substitute for the default-only baseline.
+
+A self-contained Go legacy-caller test must assign the public Default body and
+header fields, read the existing getter and use the actual generated operation.
+Compile that exact source against both 9e32b023 and the new SDK, then compile
+the explicit-409 tests against the new SDK. Run the legacy source against the
+old SDK again for the client rollback path. These are real SDK compilation
+and loopback HTTP checks, not actual installed-server upgrade qualification.
+
+Use the reviewed no-retry HTTP/1 transport profile in the legacy fixture:
+disable connection reuse and redirects, keep the standard client and transport,
+and make one call at a time. This supplies explicit caller configuration to
+the unguarded older SDK; it does not claim every historical client prevents
+transparent GET replay. For standard and assistant representations, require
+one request after 409, stable body/header correlation and no page; a deliberate
+second call has a distinct server ID. Close the actual first HTTP connection
+to test a lost reply and require no transparent replay. An undeclared status
+must still decode through Default without initiating a second request.
+
+These fixtures add no dependency, model or dataset; existing Go BSD-3-Clause
+and generator/runtime licence terms apply. Native execution, baseline/new SDK
+generation and installed-server/database upgrade/rollback remain NOTRUN until
+the coordinated execution window. Python source transformation checks alone
+cannot qualify any of these Go paths.

@@ -71,15 +71,16 @@ func requireAuditReadProblem(t *testing.T, result *identity.ListAuditEventsHTTPR
 	if string(result.GetApplicationproblemJSON409().Code) != "STORAGE_COMMIT_OUTCOME_UNKNOWN" {
 		t.Fatal("audit Problem code changed")
 	}
-	problem := result.GetApplicationproblemJSON409()
+	var problem *identity.Problem = result.GetApplicationproblemJSON409()
 	if result.GetApplicationproblemJSONDefault() != problem || result.ApplicationproblemJSONDefault != problem {
 		t.Fatal("the v1 default accessor lost the explicit 409 Problem")
 	}
-	headers, legacyHeaders := result.Headers409, result.HeadersDefault
+	var headers *identity.ListAuditEventsHTTPResponse409Headers = result.Headers409
+	legacyHeaders := result.HeadersDefault
 	if headers == nil || legacyHeaders == nil || headers.XRequestID == nil || legacyHeaders.XRequestID == nil {
 		t.Fatal("the v1 default headers lost the 409 request identity")
 	}
-	if *headers.XRequestID != *legacyHeaders.XRequestID || headers.XRequestID.String() != problem.RequestId.String() || headers.RetryAfter != nil || legacyHeaders.RetryAfter != nil {
+	if problem.Status != http.StatusConflict || *headers.XRequestID != *legacyHeaders.XRequestID || headers.XRequestID.String() != problem.RequestId.String() || headers.RetryAfter != nil || legacyHeaders.RetryAfter != nil {
 		t.Fatal("the v1 default headers lost the 409 request identity or gained a retry hint")
 	}
 }

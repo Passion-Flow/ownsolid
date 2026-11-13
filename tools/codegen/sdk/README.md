@@ -143,6 +143,27 @@ Keep that qualification boundary separate from the pure Python transformation
 tests. For client upgrade and rollback steps, see the
 [public API migration guide](../../../api/openapi/README.md#audit-read-409-migration-in-v1).
 
+The standalone audit_read_legacy_test.go uses only the older Default API,
+including direct public-field assignment. Generate the default-only SDK from
+9e32b023 with its original inputs, then compile and run the identical legacy
+caller against both SDKs. With SOURCE pointing to this checkout and OLD_SDK
+and NEW_SDK pointing to separately generated outputs, run these commands in
+the coordinated native-test window:
+
+```sh
+(cd "$OLD_SDK/gen/go" && GOWORK=off GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local go test -mod=readonly -race -count=1 "$SOURCE/tools/codegen/sdk/tests/audit_read_legacy_test.go")
+(cd "$NEW_SDK/gen/go" && GOWORK=off GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local go test -mod=readonly -race -count=1 "$SOURCE/tools/codegen/sdk/tests/audit_read_legacy_test.go")
+(cd "$NEW_SDK/gen/go" && GOWORK=off GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local go test -mod=readonly -race -count=1 "$SOURCE/tools/codegen/sdk/tests/audit_read_wire_test.go")
+```
+
+Rerun the first command for client rollback. The legacy fixture explicitly
+disables connection reuse and redirects for the older unguarded SDK. Real
+loopback requests cover 409, both representations, lost replies, distinct
+manual retries and an undeclared status. These commands have not run for the
+new migration. The retained 122-file identity archive already declares 409
+and must not be substituted for the default-only SDK. Actual installed-server,
+database and supported-release upgrade/rollback checks remain separate.
+
 ## Stream and download responses
 
 For model gateway chat with `stream=True`, use the raw response adapter. It
