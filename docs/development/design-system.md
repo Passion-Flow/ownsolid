@@ -98,6 +98,11 @@ required to refresh a cached recent period; returning to the tab does not move i
 A list's drawer is the quick look; a resource's own page holds its history ([research](../research/resource-detail-pages.md)).
 The page has a way back to the list, the name and state, the actions, then `Tabs` for views that exist today.
 The chosen tab lives in the address. The drawer links to the page, and both use the same actions.
+A detail header keeps one frequent command beside More actions; secondary and destructive commands
+retain their original undo or confirmation paths in that menu. On Activity, header commands are
+secondary so Read activity is the sole primary. At narrow widths the name and state precede the
+command row. Unavailable menu commands remain visible with their reason and disabled styling.
+Closing a command dialog returns focus to the menu trigger.
 
 ## Forms
 

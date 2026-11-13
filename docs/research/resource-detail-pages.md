@@ -350,3 +350,69 @@ flows must open the menu before the same mutation assertions; add EN/ZH desktop
 and narrow keyboard/menu coverage and screenshots. Check menu-to-dialog focus,
 Escape return, disabled explanations, all original audit paging/recovery assertions,
 and the seven existing activity states. Candidate qualification remains pending.
+
+### Directed action and cursor qualification
+
+The executed candidate is `1a2344ca`, including the unchanged cursor transport
+correction and the new detail action hierarchy. API unit tests passed 43 cases
+(including both cursor regressions), affected Console tests passed 30, and the two
+i18n files passed 22. API and i18n typechecks passed. The Console typecheck/build
+passed and produced a new 697-file asset set. Its source-bound asset manifest has
+SHA-256 `6c2f186f379ceaed64ecfa118ec9232e8e5fcc0aa978721dfb9b58afcd90b569`.
+This is a new candidate build, not the earlier 696-file runtime.
+
+The combined focused lint process exhausted its unchanged 512 MiB heap and exited
+with signal 6. Serial grouping retained every requested path and every rule:
+Console source and browser inputs passed; API lint found two unused parameters
+in the new test mocks. The correction at `25e33516` makes those mocks assert the
+requested audit path. No changed lint rules, excluded failures or new skips were
+used. The corrected mocks have not run again.
+
+Actual browser results, all with one worker and zero retries or skips:
+
+| File or partition | Passed | Failed |
+| --- | ---: | ---: |
+| Resource activity | 21 | 0 |
+| Original recovery, English | 19 | 0 |
+| Original recovery, Simplified Chinese | 19 | 0 |
+| Original recovery boundaries | 3 | 0 |
+| Resource and node pages | 19 | 0 |
+| Affected accessibility inventory | 20 | 0 |
+| Affected keyboard inventory | 10 | 0 |
+| Existing service flows | 23 | 0 |
+| New bilingual desktop/narrow action cases | 0 | 4 |
+
+All 134 original/affected cases passed. Each of the four new action cases reached
+its final assertion: Escape closed Rename but did not return focus to More
+actions. `25e33516` restores focus after native dialog cleanup and stacks narrow
+detail headers so names no longer compete with commands for width. The original
+assertions remain intact. A later executor refused the already-expired work
+cutoff before starting any Node, build or browser command; these corrections are
+therefore unverified. `4c4928b9` additionally applies the existing disabled cursor
+and opacity styles to unavailable menu items; it is also unverified.
+
+All 61 actual screenshots were extracted, hashed, opened and visually read:
+29 resource-window images, 12 original recovery/Help images and 20 action images.
+Both formerly missing partial images now show retained rows, the cached window,
+the cause and explicit recovery. A second scrolled filtered-empty image shows
+the Chinese Clear dates remedy. Recent and selected-period empty messages differ.
+The intended Detail structure and one Activity primary are visible. No latest-fix
+screenshots exist. Remaining visual qualification includes the narrow heading
+correction, disabled menu styling and the selected English Activity tab initially
+lying outside the visible portion of the horizontal tab strip.
+
+The single admitted operation retained its original absolute deadline and carrier.
+Its parent exited 1 after 540.310 seconds, with the work cutoff and a deadline-
+handling PermissionError preserved, followed by confirmed owned cleanup. The
+additional directed process group ran while the original guard held its descriptor;
+its kernel checks verified that exact parent descriptor before/after each command.
+It did not inherit that descriptor, which is recorded separately in the private
+evidence. This is component execution evidence, not a successful full guard gate.
+Post-exit checks found no known worker PID or owned preview listener. The four
+unchanged old-runtime negative failures remain earlier evidence and were not rerun.
+
+Keep UX-127 and POR-112 open. Freeze and validate the latest fixes, including API
+lint/unit assertions, detail-header types/build, original node/service mutation
+flows, menu/dialog focus and EN/ZH desktop/narrow screenshots. Recheck any affected
+inventory and active-tab visibility. The full make gates and real installed
+SQL/authority/offline/SSO consumer acceptance remain unqualified.
