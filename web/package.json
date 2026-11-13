@@ -11,7 +11,7 @@
     "generate": "node ../tools/codegen/web-api.mjs && node ../tools/codegen/web-help.mjs",
     "generate:check": "node ../tools/codegen/web-api.mjs --check && node ../tools/codegen/web-help.mjs --check",
     "typecheck": "pnpm --recursive run typecheck",
-    "lint": "eslint --config packages/config/eslint.config.js --max-warnings 0 .",
+    "lint": "node packages/config/lint.js",
     "format": "prettier --ignore-path ../.gitignore --write . '!pnpm-lock.yaml' '!**/gen/**'",
     "format:check": "prettier --ignore-path ../.gitignore --check . '!pnpm-lock.yaml' '!**/gen/**'",
     "test": "pnpm --recursive run test",

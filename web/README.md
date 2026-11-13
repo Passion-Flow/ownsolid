@@ -29,6 +29,15 @@ pnpm test:browser    # Playwright: builds each application and runs its e2e/ spe
 pnpm build           # apps/*/dist, which the control image serves
 ```
 
+`pnpm lint` checks the complete tree from `web/` with the one ESLint configuration
+and zero permitted warnings. It runs each workspace in a separate process, serially,
+so TypeScript project graphs are released between packages. Root files, container
+files, configuration, e2e and shared testing files remain included; ESLint's existing
+ignores still decide which files are eligible. No cache or reduced rule set is used.
+`pnpm lint --print-plan` prints the current partitions without linting;
+`pnpm lint --format json` emits the complete ESLint result list for comparison.
+Node heap limits from `NODE_OPTIONS` are inherited by every process.
+
 Browser tests need Chromium once per machine:
 `cd apps/console && pnpm exec playwright install chromium`. They run against a scripted
 control plane (`packages/shell/testing`) and `vite preview` with the control plane's

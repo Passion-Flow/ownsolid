@@ -183,6 +183,16 @@ acquisition or background queue is authorized during source preparation. This
 tooling change cannot qualify POR-112, UX-127, full check/build/test or installed
 offline/SQL/SSO paths without their own exact-source runs.
 
+The implementation is prepared on `codex/web-serial-lint`, after the frozen
+`82c602d3` joint candidate. Static `--print-plan` returns 12 partitions: the root
+glob, both container globs, both applications, six shared packages and the ignored
+dependency directory. Both new JavaScript files pass `node --check`; formatting
+of the five changed Web files completed with a 128 MiB maximum Node old-space
+limit. The seven real-CLI fixture tests, complete lint, coverage/config comparison,
+deliberate typed/plugin errors and peak-RSS benchmark have not run. No resource
+lock or heavy lint process was started for this preparation. It is not yet an
+accepted replacement or a reduced-memory qualification.
+
 ### Licences
 
 No dependency, model, dataset or external runtime request is added. Existing

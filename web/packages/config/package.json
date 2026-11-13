@@ -20,7 +20,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "node --test --test-concurrency=1 lint.test.js && vitest run"
   },
   "devDependencies": {
     "@types/node": "catalog:"
