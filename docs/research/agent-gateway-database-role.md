@@ -1219,3 +1219,67 @@ within the original bound, followed by fresh original resource/carrier admission
 and matching catalog-pin source. A healthy banner/authentication alone does not
 prove that prerequisite. No new dial, native retry or source B was produced by
 this correction.
+
+### Exact source delivery through a verified read-only cache
+
+The original 12,840,960-byte input requires 285,354.67 bytes/s for a full
+45-second receiver window, before source verification. The retained SSH trace
+contains an initial 2,097,152-byte channel credit and 1,390,592 bytes of later
+credit adjustments. RFC 4254 [section 5.2](https://www.rfc-editor.org/rfc/rfc4254#section-5.2)
+defines these as flow-control credits. Their sum is not an application receive
+counter, a timed throughput sample or a future bandwidth guarantee. Neither the
+earlier healthy handshake nor the local pipe test proves remote input delivery.
+Repeating the full package without a measured receive receipt is rejected.
+
+A private prototype keeps target source `3513ab2b`, tree `c65b8e3f`, all three
+native binaries, 61 migrations, 16 exact SQL inputs and the original schema60
+pins unchanged. It uses a Git binary patch from retained source `149a9501`
+to reconstruct a newly owned tree. The existing remote cache is read only:
+all 5,015 basis file inputs require their exact length, SHA-256, Git blob ID,
+regular-file mode, owner and single-link identity. Symlinks are refused using
+directory-relative no-follow opens. The patch is applied only to the new copy;
+all 5,102 resulting paths, bytes, Git blob IDs and modes must match the original
+target manifest. Missing, changed or incompatible cache inputs fail without a
+fallback transfer, native retry or modification of the cache.
+
+Git's [apply contract](https://git-scm.com/docs/git-apply) permits use outside
+a repository and supports binary patches. A child-only umask of 0022 produces
+the exact Git 0644/0755 file modes; credentials, logs and outer directories keep
+0077. The retained original source archive uses exact 0664/0775 tar modes;
+that archive's hash remains a local reference and is explicitly **not** claimed
+as remotely transferred or reconstructed. The remote proof is the complete
+target source manifest, not equality of a differently encoded archive.
+
+The envelope uses standard Python [LZMA/XZ](https://docs.python.org/3/library/lzma.html)
+with preset 6 and a SHA-256 check. The frozen wire frame is 720,340 bytes,
+SHA-256 `7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb`.
+The decoded tar is exactly 5,304,320 bytes,
+SHA-256 `f55b36054aef4e6277c5b1164b07877a9e8ce7fced00dc23c8b8f4f4a451c910`.
+Both boundaries, every whitelisted member, the original manifest and all SQL
+inputs must verify. Decoding has a 64 MiB memory limit and an exact output bound;
+incomplete or extra compressed streams fail. No SQL input is regenerated or
+normalized. The original 45-second admission cutoff includes reception,
+decoding and source verification and remains unchanged.
+
+The complete actual frame, not a short surrogate, passed one real local OS
+pipe using the frozen sender and receiver. Both measured 720,340 bytes and the
+same SHA-256; the receiver observed EOF, the sender closed its own descriptor
+and its writer thread joined. Local receiver duration was 0.000554875 seconds.
+Reconstruction of the complete 42,132,271-byte target tree took 1.386644959
+seconds. All 61 migrations and 16 original SQL inputs matched. Wrong cache
+hash, absent file and a symlink were refused. These are local equivalence and
+I/O results only. Required wire throughput is 16,007.56 bytes/s even before
+verification overhead; the channel trace provides no guaranteed lower bound
+for the next connection. One separately allocated observed opportunity may
+measure delivery, but must fail on the original deadline and record actual
+local writes separately from remote bytes, digest, EOF and first failure stage.
+
+Private artifacts are under `lane-arc-diagnostics/arc111-native-delta-preflight`.
+No compiler, network, SQL or native binary was run by the prototype. The tools
+are already installed and are not added to the product or distributed:
+Python uses [PSF-2.0](https://docs.python.org/3/license.html), Git uses
+[GPL-2.0](https://raw.githubusercontent.com/git/git/master/COPYING), and
+liblzma's upstream [license](https://raw.githubusercontent.com/tukaani-project/xz/master/COPYING)
+is 0BSD (older releases used public-domain terms). Commercial and offline
+execution is allowed; redistribution must retain each applicable license and
+Git's corresponding-source obligations. No model or dataset is introduced.
