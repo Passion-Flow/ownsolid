@@ -110,9 +110,13 @@ failed only the old bare-URL assertion. The corrected Console/Portal English and
 Chinese cases passed without skip, retry or flaky result. This is the Web owner's
 focused evidence; it does not replace M's two complete failures. The corrected
 helper preserves saved-filter restoration and tests explicit links, clearing and
-reload. A fresh complete gate on M's integrated source remains required. Prepare
-that exact source and entry while OBS finishes its scheduled short window; do not
-start a competing lock wait or infer a release from an old resource snapshot.
+reload. M subsequently ran the [complete corrected gate](training-dataset-lineage.md#corrected-native-full-gate)
+on exact source `2783a46f`: check, build and test passed with zero exits. Console
+passed 1,191 and Portal 410, retaining 28/10 existing conditional skips and zero
+retries. Its single kernel wait and actual execution took 662.728/511.522 seconds;
+FD, child group and owned scratch were released, and the carrier was preserved.
+Keep that exact source qualification and both earlier failures distinct. Formal
+schema/roles/catalog, real history dispatch and S-202 remain pending their owners.
 
 Follow the current resource handoff order. The carrier at
 `/private/tmp/ownsolid-workstation-full-gate.lock` is a persistent regular

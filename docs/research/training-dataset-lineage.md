@@ -675,6 +675,37 @@ M's next complete check/build/test. Preserve both earlier failed complete runs
 and the original source/platform of the PostgreSQL and native unit evidence.
 Formal schema/role/catalog admission, HTTP dispatch and S-202 remain separate.
 
+### Corrected native full gate
+
+Source `2783a46fa8990daa0792f11ee764c46a7795ef36`, tree
+`fd479f8e54563061274ec898923d9b16dcdccc0a`, on base `f11aa11f`
+passed complete `make check`, `make build` and `make test`, each with exit zero,
+on Darwin arm64 with Go 1.27.3, Python 3.12, Node 26.13.0/pnpm 12.16.1 and
+Rust 1.99.1. The original Makefile completed its browser prerequisite and every
+Go, Rust and Web unit-test recipe. Console passed 1,191 cases with 28 existing
+installation-dependent skips; Portal passed 410 with 10 such skips. All four
+corrected English/Chinese Help cases passed inside these complete suites.
+The retry configuration stayed zero and no skip or assertion was removed.
+
+The single blocking kernel wait took 662.728 seconds; execution independently
+took 511.522 seconds. The original permanent carrier and inherited FD were retained
+through fresh resource checks and the complete gate. The short APFS scratch began
+with 99.7 percent available, preserving the object-store threshold. Both entrances
+were freshly built from this exact source; all 1,230 output files were hashed and
+rechecked. The asset manifest SHA-256 is
+`f42290cb1cc5298f017f97a2f86a1822e3611e9a6441c1396eafea8f87a4b6c5`.
+The bounded parent result SHA-256 is
+`0da3d19840ef3c06ccea36b80a510a8af0a53e803237c07789d9090ffbdb8f3a`.
+The owned process group exited, FD closed, carrier identity and source remained
+unchanged, scratch was detached and removed, and both preview ports were free.
+
+Both earlier failed complete runs remain retained. This new gate qualifies its
+recorded native source only; it does not relabel earlier PostgreSQL sources or
+establish a new SQL, installed, hardware or S-202 result. The family DDL remains
+an unnumbered candidate and the history reads remain unregistered. MOD-103 stays
+open until ARC schema/role/catalog, IAM dispatch, DEV public contracts and Web
+integration are actually admitted and verified.
+
 To replay, configure the private PostgreSQL DSN and fresh owned schema as described
 by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
 Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
