@@ -148,8 +148,12 @@ export function useNodeActions(
   const { t } = useI18n();
   const toast = useToast();
   const queryClient = useQueryClient();
-  const { dialog, setDialog, trigger: menuTrigger, close: closeDialog } =
-    useCommandDialog<'rename' | 'remove'>();
+  const {
+    dialog,
+    setDialog,
+    trigger: menuTrigger,
+    close: closeDialog,
+  } = useCommandDialog<'rename' | 'remove'>();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['nodes'] });
   const change = useMutation({
     mutationFn: (input: { target: Node; name?: string; status?: Node['status']; reason: string }) =>

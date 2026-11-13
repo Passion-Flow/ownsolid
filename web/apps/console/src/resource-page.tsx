@@ -76,7 +76,9 @@ export function ResourceHeader({
   return (
     <>
       <BackLink to={backTo} search={backSearch} label={backLabel} />
-      <div className={cn('mb-6 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap', className)}>
+      <div
+        className={cn('mb-6 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap', className)}
+      >
         <div className="min-w-0 flex-1">
           <h1 className="m-0 mb-1 text-[27px] leading-[1.2] font-[750] tracking-[-0.03em] [overflow-wrap:anywhere]">
             {title}

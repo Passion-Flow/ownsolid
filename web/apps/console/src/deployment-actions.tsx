@@ -218,8 +218,12 @@ export function DeploymentActions({
 }) {
   const { t } = useI18n();
   const toast = useToast();
-  const { dialog, setDialog, trigger: menuTrigger, close: closeDialog } =
-    useCommandDialog<NonNullable<Dialog>>();
+  const {
+    dialog,
+    setDialog,
+    trigger: menuTrigger,
+    close: closeDialog,
+  } = useCommandDialog<NonNullable<Dialog>>();
   const act = useAction(deployment);
   const now = (action: DeploymentAction) => {
     act.mutate(

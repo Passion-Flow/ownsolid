@@ -370,17 +370,17 @@ used. The corrected mocks have not run again.
 
 Actual browser results, all with one worker and zero retries or skips:
 
-| File or partition | Passed | Failed |
-| --- | ---: | ---: |
-| Resource activity | 21 | 0 |
-| Original recovery, English | 19 | 0 |
-| Original recovery, Simplified Chinese | 19 | 0 |
-| Original recovery boundaries | 3 | 0 |
-| Resource and node pages | 19 | 0 |
-| Affected accessibility inventory | 20 | 0 |
-| Affected keyboard inventory | 10 | 0 |
-| Existing service flows | 23 | 0 |
-| New bilingual desktop/narrow action cases | 0 | 4 |
+| File or partition                         | Passed | Failed |
+| ----------------------------------------- | -----: | -----: |
+| Resource activity                         |     21 |      0 |
+| Original recovery, English                |     19 |      0 |
+| Original recovery, Simplified Chinese     |     19 |      0 |
+| Original recovery boundaries              |      3 |      0 |
+| Resource and node pages                   |     19 |      0 |
+| Affected accessibility inventory          |     20 |      0 |
+| Affected keyboard inventory               |     10 |      0 |
+| Existing service flows                    |     23 |      0 |
+| New bilingual desktop/narrow action cases |      0 |      4 |
 
 All 134 original/affected cases passed. Each of the four new action cases reached
 its final assertion: Escape closed Rename but did not return focus to More
