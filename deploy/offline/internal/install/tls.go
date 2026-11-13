@@ -46,71 +46,100 @@ func (c Config) materializeCA(l Layout, certificateFile, keyFile, commonName str
 	return writeFile(certificate, caCertificate, c, true)
 }
 
-func (c Config) materializeTLS(l Layout) error {
-	// The agent CA signs node certificates (ADR 0050) and the model gateway CA signs the
-	// serving certificates of the gateways agents run (ADR 0052). Both are separate from the
-	// serving CA, which a site that brings its own certificate does not give us.
-	if e := c.materializeCA(l, agentCAFile, agentCAKeyFile, "ownsolid agent CA"); e != nil {
-		return e
-	}
-	if e := c.materializeCA(l, gatewayCAFile, gatewayCAKeyFile, "ownsolid model gateway CA"); e != nil {
-		return e
-	}
-	certificate := filepath.Join(l.Config, "certificate.pem")
-	privateKey := filepath.Join(l.Config, "private-key.pem")
-	authority := filepath.Join(l.Config, "ca.pem")
+// servingTLSMaterial is selected once before admission. It is never logged or
+// encoded into public intent. A nonempty authorityKey creates the serving CA.
+type servingTLSMaterial struct {
+	certificate, privateKey, authority, authorityKey []byte
+}
+
+func (c Config) resolveServingTLS(l Layout) (*servingTLSMaterial, error) {
+	material := &servingTLSMaterial{}
 	if c.TLS.Source == "files" {
-		for source, target := range map[string]string{c.TLS.CertificateFile: certificate, c.TLS.PrivateKeyFile: privateKey, c.TLS.CAFile: authority} {
-			raw, e := os.ReadFile(source)
-			if e != nil {
-				return fmt.Errorf("INSTALL_INPUT_UNREADABLE: %s", source)
+		for _, file := range []struct {
+			source string
+			target *[]byte
+		}{
+			{c.TLS.CertificateFile, &material.certificate},
+			{c.TLS.PrivateKeyFile, &material.privateKey},
+			{c.TLS.CAFile, &material.authority},
+		} {
+			raw, err := os.ReadFile(file.source)
+			if err != nil {
+				return nil, fmt.Errorf("INSTALL_INPUT_UNREADABLE: %s", file.source)
 			}
-			if e = writeFile(target, raw, c, true); e != nil {
-				return e
-			}
+			*file.target = raw
 		}
-		return nil
+		return material, nil
 	}
-	hosts, e := c.originHosts()
-	if e != nil {
-		return e
+	hosts, err := c.originHosts()
+	if err != nil {
+		return nil, err
 	}
-	caKeyPath := filepath.Join(l.Secrets, "ca-key.pem")
-	if !exists(authority) || !exists(caKeyPath) {
-		caCertificate, caKey, e := generateCA("ownsolid installation CA")
-		if e != nil {
-			return e
-		}
-		if e = writeFile(caKeyPath, caKey, c, false); e != nil {
-			return e
-		}
-		if e = writeFile(authority, caCertificate, c, true); e != nil {
-			return e
-		}
+	authorityPath, authorityKeyPath := filepath.Join(l.Config, "ca.pem"), filepath.Join(l.Secrets, "ca-key.pem")
+	if !exists(authorityPath) || !exists(authorityKeyPath) {
+		material.authority, material.authorityKey, err = generateCA("ownsolid installation CA")
+	} else {
+		material.authority, err = os.ReadFile(authorityPath)
 	}
-	caCertificate, e := os.ReadFile(authority)
-	if e != nil {
-		return errTLSGeneration
+	if err != nil {
+		return nil, errTLSGeneration
 	}
-	if current, e := os.ReadFile(certificate); e == nil && serverCertificateCurrent(current, caCertificate, hosts) {
-		if key, e := os.ReadFile(privateKey); e == nil {
-			if _, e = tls.X509KeyPair(current, key); e == nil {
-				return nil
+	if certificate, err := os.ReadFile(filepath.Join(l.Config, "certificate.pem")); err == nil && serverCertificateCurrent(certificate, material.authority, hosts) {
+		if key, err := os.ReadFile(filepath.Join(l.Config, "private-key.pem")); err == nil {
+			if _, err := tls.X509KeyPair(certificate, key); err == nil {
+				material.certificate, material.privateKey = certificate, key
+				return material, nil
 			}
 		}
 	}
-	caKey, e := os.ReadFile(caKeyPath)
-	if e != nil {
-		return errTLSGeneration
+	authorityKey := material.authorityKey
+	if len(authorityKey) == 0 {
+		authorityKey, err = os.ReadFile(authorityKeyPath)
+		if err != nil {
+			return nil, errTLSGeneration
+		}
 	}
-	serverCertificate, serverKey, e := issueServerCertificate(caCertificate, caKey, hosts)
-	if e != nil {
-		return e
+	material.certificate, material.privateKey, err = issueServerCertificate(material.authority, authorityKey, hosts)
+	if err != nil {
+		return nil, err
 	}
-	if e = writeFile(privateKey, serverKey, c, true); e != nil {
-		return e
+	return material, nil
+}
+
+func (c Config) materializeTLS(l Layout, admitted *servingTLSMaterial) error {
+	// Agent (ADR 0050) and gateway (ADR 0052) issuers remain separate from
+	// the browser serving CA, including when the site provides its own pair.
+	if err := c.materializeCA(l, agentCAFile, agentCAKeyFile, "ownsolid agent CA"); err != nil {
+		return err
 	}
-	return writeFile(certificate, serverCertificate, c, true)
+	if err := c.materializeCA(l, gatewayCAFile, gatewayCAKeyFile, "ownsolid model gateway CA"); err != nil {
+		return err
+	}
+	material := admitted
+	if material == nil {
+		var err error
+		material, err = c.resolveServingTLS(l)
+		if err != nil {
+			return err
+		}
+	}
+	if len(material.authorityKey) != 0 {
+		if err := writeFile(filepath.Join(l.Secrets, "ca-key.pem"), material.authorityKey, c, false); err != nil {
+			return err
+		}
+	}
+	// Publish the exact admitted bytes, even if referenced inputs changed meanwhile.
+	for _, file := range []struct {
+		name string
+		raw  []byte
+	}{
+		{"ca.pem", material.authority}, {"private-key.pem", material.privateKey}, {"certificate.pem", material.certificate},
+	} {
+		if err := writeFile(filepath.Join(l.Config, file.name), file.raw, c, true); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c Config) originHosts() ([]string, error) {

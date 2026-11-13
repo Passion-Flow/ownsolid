@@ -62,7 +62,11 @@ the shared-hostname identity policy. Both sockets use the existing browser TLS
 pair, which must cover both advertised identities.
 
 Apply checks the current image against a private desired snapshot before
-replacing an existing installation's configuration. Upgrade an older shared
+replacing an existing installation's configuration. This check reads the
+selected browser certificate and key from private temporary files, including
+an explicitly supplied replacement or a generated repair. Refusal keeps the
+installed pair and configuration. After admission, Apply writes those exact
+selected bytes; a changed external input cannot replace the checked pair. Upgrade an older shared
 release first, then select Portal on that release. Keep both existing advertised
 origins unchanged, including their ports; selecting a socket does not migrate
 SSO callbacks or sessions. A fresh installation can select both publications
@@ -79,8 +83,8 @@ regenerates the original Compose bytes and omits the Portal bind from both
 Control snapshots. Repeats retain existing keys. Rollback to an older image
 requires compatible listener intent; return to shared serving on the current
 release before selecting an image that lacks the optional listener. Address,
-session and SSO migration remains DEL-115. Native Compose, historical-image and
-installed split-listener qualification are still required for DEL-114.
+session and SSO migration remains DEL-115. Historical-image and installed
+split-listener qualification remain required for DEL-114.
 
 ## Configure license import capacity
 
