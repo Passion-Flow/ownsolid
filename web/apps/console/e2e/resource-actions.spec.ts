@@ -38,6 +38,15 @@ for (const [locale, messages] of [
         await expect(page.getByRole('main').locator('.bg-accent-strong')).toHaveText(
           messages['resource.activity.read'],
         );
+        await expect.poll(async () => {
+          const selected = await page.getByRole('tab', { name: messages['resource.tab.activity'], exact: true }).boundingBox();
+          const strip = await page.getByRole('tablist').boundingBox();
+          return !!selected && !!strip && selected.x >= strip.x - 1 && selected.x + selected.width <= strip.x + strip.width + 1;
+        }).toBe(true);
+        if (kind === 'node') {
+          const heading = await page.getByRole('heading', { level: 1 }).boundingBox();
+          expect(heading?.height).toBeLessThan(40);
+        }
         await capture(kind ?? 'resource');
       }
       await more().focus();
@@ -47,6 +56,7 @@ for (const [locale, messages] of [
         exact: true,
       });
       await expect(scale).toHaveAttribute('aria-disabled', 'true');
+      await expect(scale).toHaveCSS('opacity', '0.55');
       await expect(scale).toHaveAccessibleDescription(messages['services.scale.notReady']);
       await scale.focus();
       await page.keyboard.press('Enter');
@@ -55,6 +65,15 @@ for (const [locale, messages] of [
       await capture('deployment-menu');
       await page.keyboard.press('Escape');
       await expect(more()).toBeFocused();
+      await more().click();
+      await page.getByRole('menuitem', { name: messages['services.stop.open'], exact: true }).click();
+      const stop = page.getByRole('dialog');
+      await expect(stop).toBeVisible();
+      await expect(stop.getByRole('button', { name: messages['services.stop.submit'], exact: true })).toBeDisabled();
+      await page.keyboard.press('Escape');
+      await expect(stop).toHaveCount(0);
+      await expect(more()).toBeFocused();
+      expect(control.actions).toEqual([]);
       await page.goto(`/nodes/${node.id}?tab=activity`);
       await more().focus();
       await page.keyboard.press('Enter');

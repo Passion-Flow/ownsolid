@@ -28,6 +28,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Activity, BadgeCheck, Ellipsis, Play, Scaling, Square, Trash2, Undo2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { canStart, canStop, deploymentKeys, deploymentsKey } from './deployment-state.ts';
+import { useCommandDialog } from './use-command-dialog.ts';
 
 /** The gateway names that send traffic to a deployment, and the keys that call them. */
 async function readCallers(
@@ -217,7 +218,8 @@ export function DeploymentActions({
 }) {
   const { t } = useI18n();
   const toast = useToast();
-  const [dialog, setDialog] = useState<Dialog>(null);
+  const { dialog, setDialog, trigger: menuTrigger, close: closeDialog } =
+    useCommandDialog<NonNullable<Dialog>>();
   const act = useAction(deployment);
   const now = (action: DeploymentAction) => {
     act.mutate(
@@ -246,7 +248,7 @@ export function DeploymentActions({
         </Button>
         <Menu
           trigger={
-            <Button>
+            <Button ref={menuTrigger}>
               <Ellipsis aria-hidden />
               {t('resource.actions')}
             </Button>
@@ -329,10 +331,10 @@ export function DeploymentActions({
           name={name}
           kind={dialog}
           onClose={() => {
-            setDialog(null);
+            closeDialog();
           }}
           onDone={() => {
-            setDialog(null);
+            closeDialog();
             if (dialog === 'remove') onRemoved?.();
           }}
         />

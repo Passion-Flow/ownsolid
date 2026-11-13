@@ -1,4 +1,4 @@
-import { useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useId, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { cn } from '../cn.ts';
 
 /** One tab of {@link Tabs}. */
@@ -25,6 +25,26 @@ export interface TabsProps<T extends string> {
 export function Tabs<T extends string>({ label, value, tabs, onChange, children }: TabsProps<T>) {
   const id = useId();
   const list = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const viewport = list.current;
+    const selected = viewport?.querySelector('[aria-selected="true"]');
+    if (!viewport || !selected) return;
+    const reveal = () => {
+      const visible = viewport.getBoundingClientRect();
+      const active = selected.getBoundingClientRect();
+      // Only move the tab strip; revealing a deep link must not move the whole page.
+      if (active.left < visible.left) viewport.scrollLeft += active.left - visible.left;
+      else if (active.right > visible.right) viewport.scrollLeft += active.right - visible.right;
+    };
+    reveal();
+    if (typeof ResizeObserver === 'undefined') return;
+    const resize = new ResizeObserver(reveal);
+    resize.observe(viewport);
+    resize.observe(selected);
+    return () => {
+      resize.disconnect();
+    };
+  }, [value]);
   const move = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const targets: Partial<Record<string, number>> = {
       ArrowRight: (index + 1) % tabs.length,

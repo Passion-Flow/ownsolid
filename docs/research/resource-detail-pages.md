@@ -416,3 +416,27 @@ lint/unit assertions, detail-header types/build, original node/service mutation
 flows, menu/dialog focus and EN/ZH desktop/narrow screenshots. Recheck any affected
 inventory and active-tab visibility. The full make gates and real installed
 SQL/authority/offline/SSO consumer acceptance remain unqualified.
+
+### Focus and narrow-layout correction boundary
+
+[WAI-ARIA tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) retains one active
+tab and keyboard access. The observed narrow screenshots showed that the selected
+Activity tab could start outside its horizontal viewport. Use existing element
+geometry and [CSSOM horizontal scrolling](https://www.w3.org/TR/cssom-view-1/#dom-element-scrollleft)
+to reveal it without scrolling the page vertically or changing selection/focus.
+[React layout effects](https://react.dev/reference/react/useLayoutEffect) support
+this small measurement before paint. Reject scrolling all ancestors into view,
+removing tabs, shrinking labels and hiding resource commands. Reuse the native
+DOM; no dependency, licence, model or dataset changes.
+
+Share the menu-dialog focus restoration between nodes and deployments. A native
+dialog must close before restoring the menu trigger, since its old menu item no
+longer exists. Keep every existing mutation, undo, permission and typed-name
+confirmation. Extend the original four bilingual desktop/narrow cases with actual
+selected-tab bounds, one-line short node names, disabled command styling and
+Cancel/Escape return from deployment confirmations. Keep the original four failed
+focus assertions. Validate the affected UI units, two API transport tests, types,
+project-grouped lint, rebuilt assets, resource activity states and paging,
+resource/node and service mutations, plus accessibility and keyboard inventories.
+The unchanged 41 request-recovery cases and the earlier remaining units retain
+only their exact-input evidence; do not count a new run that did not happen.

@@ -15,7 +15,8 @@ import {
 } from '@ownsolid/ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ban, Check, Ellipsis, Pencil, RefreshCw, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode, type SubmitEvent } from 'react';
+import { useRef, useState, type ReactNode, type SubmitEvent } from 'react';
+import { useCommandDialog } from './use-command-dialog.ts';
 
 function RenameDialog({
   node,
@@ -147,19 +148,8 @@ export function useNodeActions(
   const { t } = useI18n();
   const toast = useToast();
   const queryClient = useQueryClient();
-  const [dialog, setDialog] = useState<'rename' | 'remove' | null>(null);
-  const menuTrigger = useRef<HTMLButtonElement>(null);
-  const restoreMenuFocus = useRef(false);
-  const closeDialog = () => {
-    restoreMenuFocus.current = detail;
-    setDialog(null);
-  };
-  useEffect(() => {
-    if (dialog === null && restoreMenuFocus.current) {
-      restoreMenuFocus.current = false;
-      menuTrigger.current?.focus();
-    }
-  }, [dialog]);
+  const { dialog, setDialog, trigger: menuTrigger, close: closeDialog } =
+    useCommandDialog<'rename' | 'remove'>();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['nodes'] });
   const change = useMutation({
     mutationFn: (input: { target: Node; name?: string; status?: Node['status']; reason: string }) =>
