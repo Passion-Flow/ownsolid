@@ -1017,3 +1017,88 @@ single SSH/resource admission succeeds. Matching source/pin binaries and the
 protected original fixture inputs remain prerequisites for subsequent SQL
 acceptance. The previously observed successful diagnostic SSH connection
 establishes only its own observation, not continued access for this entry.
+
+### Offline refusal analysis and private launcher corrections
+
+The two failed attempts' retained command sources and bytes were compared with
+the original resource-inspector observation, not with a new connection. The
+successful observation is the inspector's item
+`exec-387761bd-9a23-4247-804b-000b1940a688`: its derived debug markers show
+the expected userspace proxy/socket, banner, KEX, known-host match,
+authentication and `true && uname -srm`, with SSH/remote exit 0. Its original
+full debug stderr was not retained, so those markers cannot supply missing
+debug bytes for the failed attempts.
+
+| Existing observation | ConnectTimeout / outer wait | Stdin | Actual SSH / outer exit |
+| --- | --- | --- | --- |
+| First failure, 8.616071125 s | 10 s / 25 s | Inherited, no payload pipe | 255 / 0 |
+| Renewed failure, 19.858641375 s | 10 s / 1,100 s | PIPE, 12,840,960-byte payload | 255 / 0 |
+| Successful diagnostic, 9.165 s | 8 s / 15 s | Inherited, no explicit payload pipe | 0 / 0 |
+
+All used one connection attempt. Success used `-vv` and BatchMode=yes; failures
+had no verbosity/BatchMode override and used ServerAliveInterval=5 with count 1
+or count 2. The retained failure argv was recovered without executing it: the
+first from the untruncated tool source and the second from its unchanged driver,
+remote-program hash and input JSON. The first ran from the ARC worktree, the
+second from its private evidence directory, and success from the main checkout.
+Each invoked an unqualified `ssh`; historical resolved executable paths and
+necessary inherited environment were not recorded and cannot be reconstructed
+from current values. The renewed child PID 59504 was recorded as ssh and returned
+255 naturally. Neither failed attempt entered its outer timeout branch. The
+first observed error is the same saved `Connection to UNKNOWN port 65535 timed
+out`; the first capture normalized newlines, while the second retained CRLF.
+
+Current non-dialing `/usr/bin/ssh -G` parses every profile to the same root user,
+100.100.110.24:22 and absolute Tailscale CLI/userspace socket. The user config
+has no Include or Match directive. The current installed client is
+OpenSSH_10.3p1; its `ssh_config(5)` describes ConnectTimeout as connection plus
+initial handshake/KEX, and ProxyCommand as a stdin/stdout transport. The
+UNKNOWN/65535 display is consistent with missing socket peer information on
+that proxy path; it is not evidence that the configured destination port is
+65535. This is an inference, not a failed-attempt packet trace. No failed
+debug marker proves whether the proxy, daemon/relay, banner, KEX or
+authentication completed. The error occurring both with and without a payload
+pipe does not establish stdin/EOF as its cause. There is no confirmed remote
+bootstrap error or basis for attributing a server outage, bad credential or
+wrong daemon. The earlier admission classification is not a finer stage proof.
+
+Two separate private-control defects were proved and corrected in a frozen,
+unactivated candidate. The old outer driver implicitly exited 0 even after
+SSH 255 or an unrelated successful observation without a native receipt. The
+candidate forwards SSH 255, returns 124 for its own timeout and refuses incomplete
+native evidence. Also, a relative 1,100-second wait plus a post-hoc 1,200-second
+check did not enforce an absolute 120-second cleanup reserve. The candidate caps
+work at absolute 1,080 seconds, clips cleanup waits to the end, caps the remote
+budget at 1,000 seconds including its 120-second reserve and bounds cleanup itself.
+These defects do not explain the observed earlier connection timeout.
+
+The candidate fixes `/usr/bin/ssh`, records executable/config hashes, UID/cwd,
+exact argv and stdin ownership, uses `-vv` and noninteractive BatchMode=yes,
+and preserves ConnectTimeout=10, one attempt, payload stdin and existing host-key
+policy. It does not use `-n`, extend timeouts or alter SSH/Tailscale configuration.
+Raw bytes stay private; presented observations contain necessary errors and
+nullable stage markers, not credentials or an assertion that an unlogged stage
+was never entered. Distributed cleanup remains a live qualification obligation.
+
+Six offline replays with subprocess doubles passed: both saved failed transcripts reproduce the
+old false outer exit 0 and the corrected 255; the unrelated successful inspector record
+reproduces old outer0 and corrected exit 1. Twelve pure policy checks cover
+deadline boundaries, cleanup bounds and unknown-stage handling. Four current
+`ssh -G` profiles were parsed without dialing. This establishes private launcher
+logic only, not restored connectivity or SQL acceptance. No SSH connection,
+heavy carrier, compiler, service, database or browser was started. Original raw
+bytes, the source/manifest, all three native binaries and original owner files
+remain unchanged; all actual launch entries remain closed. No new dependency
+or license obligation is introduced.
+
+The frozen artifact directory is `lane-arc-diagnostics/arc111-ssh-offline.9vgaoj6h`.
+Corrected outer source SHA-256 is
+`a43481a9ae1fff7d08c46f9068f4d01aec335927485deee041f5bd62d9c35344`,
+remote source SHA-256 is
+`4fe8acf210f41a7554b46e01a79b1ed235c212096fcf80f47ab6e6534aec8b51`,
+and offline replay result SHA-256 is
+`73209413ae4f15b5113284423d681da71c8e8e7a0a2071a9b054c75bb49c93c8`.
+The next external release condition is one separately authorized diagnostic
+under the frozen actual launch profile that captures proxy/banner/KEX/auth
+stages and confirms access. No waiting process, automatic retry or native
+qualification is implied by this offline correction.
