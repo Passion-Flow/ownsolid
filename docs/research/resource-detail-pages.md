@@ -219,3 +219,33 @@ node and resource-page flows, inspect
 their screenshots, then complete `make check`, `make build` and `make test` on the
 combined source. Installed acceptance must use a newly qualified asset/client
 package, not a renamed earlier audit or Help archive.
+
+### Source-bound browser prerequisite
+
+At `43eaa0cb`, actual Playwright discovery found 21 resource-window cases, all
+41 original recovery cases in disjoint 19/19/3 partitions, 9 resource-page cases,
+10 node-page cases and 30 affected accessibility/keyboard inventory cases. The
+accurate Console build passed and contained both the date parameters and cached
+window metadata. Its 696-file asset map has SHA-256
+`31ecbbae60314b2cc5a6ae229cc1efeafc802734df85ac1e29d9993842fee9e0`.
+
+The bounded operation then failed during collection of the external old-runtime
+negative probe: its directory had no package manifest, so Playwright loaded the
+entry as CommonJS and refused `import.meta` in the shared fixture imports. This
+is a harness collection failure, not the expected old-runtime policy refusal.
+The actual guard exit was 1 after 15.756 seconds, with cleanup confirmed. Zero
+negative or positive browser cases ran and zero screenshots were generated or
+inspected. These discovery/build results do not qualify the UI or its installed
+consumer.
+
+External probes must declare the same explicit ESM boundary as the Console.
+[Node's package rules](https://nodejs.org/api/packages.html#type) and
+[TypeScript module selection](https://nodejs.org/api/typescript.html#determining-module-system)
+describe that boundary. The pinned Playwright 1.64.1 `fileIsModule` helper returned
+false for the original external entry and true for both the Console entry and a
+new probe copy with `package.json` declaring `type: module`. The test and fixture
+bytes remain unchanged. That isolated classification check passed; collection
+and browser execution of the corrected probe remain unrun. Keep the original
+failed operation intact, discover the corrected negative selection before a
+future build, and require its four actual policy failures before treating the
+negative control as accepted.
