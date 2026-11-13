@@ -40,7 +40,10 @@ export function listAuditEvents(
     ...options,
     query: {
       limit,
-      ...(cursor ? { cursor } : { ...(from ? { from } : {}), ...(to ? { to } : {}) }),
+      ...(cursor ? { cursor } : {}),
+      // Explicit bounds are part of the server's cursor query fingerprint.
+      ...(from ? { from } : {}),
+      ...(to ? { to } : {}),
       ...(category ? { category } : {}),
       ...(outcome ? { outcome } : {}),
       ...(actorUserId ? { actor_user_id: actorUserId } : {}),
