@@ -754,3 +754,52 @@ go -C services/control test -mod=readonly -p 1 -count=1 ./internal/platform/agen
 These primitive checks cannot replace real composed shutdown and file ownership
 acceptance. The database-focused 1,200-second allocation does not also authorize
 these extra profiles, the installed500-agent drill or a whole-repository gate.
+
+## Original TRN input and complete request ownership
+
+The integration tree merges original e639db9035b0b2c0229c90175493c605f328e295
+with baa584c3. All21 owning dataset/training module paths, including README/test
+inputs, compare byte-for-byte to the original author; both research records are
+preserved. The owner's reported native v3 qualification is two packages/two roots
+and required independent-reader cases, zero skips/failures in138.486532s. That
+is author evidence for e639db90, not a run of this combined schema/process tree.
+No reader graph binding is inferred from importing its source.
+
+The pinned gRPC-Go v1.85.0 source shows why HTTP-handler counting alone is
+insufficient. Server.ServeHTTP starts RPC work through serveStreams; its handler
+transport can return after request cancellation while the application RPC callback
+is still unwinding. See [Server](https://github.com/grpc/grpc-go/blob/v1.85.0/server.go)
+and [handler transport](https://github.com/grpc/grpc-go/blob/v1.85.0/internal/transport/handler_server.go).
+Track the entire original Gateway.connect callback, from before peer/backend
+admission until all its scoped defers finish. Drain seals registration under the
+same mutex, and the last callback signals completion. Keep Drain nonblocking for
+existing callers; add a context-bounded DrainAndWait for process ownership. No
+wire/version change or old-agent upgrade is needed.
+
+The actual dedicated HTTP handler additionally needs a zero-value usable request
+owner. Admission and shutdown sealing use one mutex, so no request can register
+after a successful join. A sealed handler returns the existing SERVICE_NOT_READY
+without consulting a file or SQL owner. Register this join and the real RPC join
+with the existing runtime lifecycle before serving, and seal/drain on its tracked
+cancellation loop. Move the already opened database pool into that lifecycle as
+its first closer, so it closes last and is retained on an unconfirmed request
+join. Startup failures still close it through the same lifecycle. Reader closers
+can later share this ordering when IAM supplies its real graph binding.
+
+Use channels rather than a goroutine per waiting caller. A canceled join reports
+its original context error and does not declare completion; a later explicit
+join can observe actual completion. Cover active HTTP work, an RPC callback still
+running after its HTTP transport ends, refusal after seal, concurrent drain/join,
+panic/deferred release and startup/timeout owner retention. Keep real protocol
+and file/SQL composition acceptance separate from isolated lifetime tests.
+The source may implement these existing boundaries without constructing a second
+reader graph, opening an unbound reader and returning success, or calling an IAM
+interface that does not yet exist. Same-host reader paths remain the existing
+Dataset/Training artifact_root values and the tenant from installedTenant on the
+original selected store; initialization/Close must remain owner APIs.
+
+No dependency is added. gRPC-Go remains Apache-2.0 and Go remains BSD-3-Clause;
+commercial/offline redistribution retains their original notices. Runtime
+filesystem and network scope do not grow. This preparation is not a native,
+compiler or product qualification; all original checks and resource allocation
+requirements remain in force.
