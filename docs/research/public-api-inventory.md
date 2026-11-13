@@ -1106,3 +1106,35 @@ inherited heap-percentage/total-heap policies fail clearly instead of being
 silently overridden. This is a prepared capacity proposal, not a measured
 4096 MiB pass or authorization to rerun. The next source also contains published
 ARC runtime changes and needs its own full checks; the 9be result cannot qualify it.
+
+### Exact higher-memory admission boundary
+
+The assigned exact 2e64ab4c6c16bd84ae5c101b9de5444550760ff2 source, tree
+3bdf79d7d76f096c989884190c32e4c08de20356, passed live source, clean-tree,
+entry, manifest and asset fingerprint checks before its single invocation.
+The actual admission sample was MemFree 3871 MiB, MemAvailable 19812 MiB,
+free disk 788948389888 bytes and full I/O avg10 0.00. MemFree did not meet
+the unchanged 6144 MiB floor. The f08c440f entry exited 75 after 0.030 seconds,
+before opening either shared carrier. No resource sample from another lane
+or earlier source was used. The one-time marker and raw exclusive log remain.
+
+All four original Make targets were NOTRUN. Check, build, test and browser
+case counts are zero; no compiler, Node runtime, PostgreSQL or browser was
+started by this attempt. Only the final Git source-clean check created an
+owned process group, which exited with no inherited lock holders. The source
+remained clean. The 4096 MiB Node capacity proposal is still unmeasured.
+No wait, retry, threshold reduction, cleanup of another lane or publication
+was performed. The release condition is a newly assigned complete segment
+whose fresh live sample meets all of Free 6 GiB, Available 12 GiB, disk 30 GiB
+and full I/O avg10 at most 5; the consumed source/log cannot be replayed.
+
+The pinned Go, Node, Cargo, rustc and both Chromium asset bytes were verified
+without executing those tools. The old 9be 89.572-second OOM, the 783 native
+scope, the 20e thirty-one test result and the actual 430-operation audit
+exit 1 remain separate evidence. No qualified identity moves to this whole
+source. Exact entry SHA-256 is
+`f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a`,
+manifest SHA-256 is
+`60db5ee075c6b24e06d16a0453e851d140ffa44b88b2207310f911901b73f47c`,
+and the raw refusal result SHA-256 is
+`9beadce004f2217e249efbb79187feaa3a2683196a3e8d138e3183df4932d2ec`.
