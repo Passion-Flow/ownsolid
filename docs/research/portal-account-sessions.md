@@ -385,3 +385,95 @@ sample satisfying both memory and disk floors. DEV must first publish its own ex
 the frontend lane then combines actual published main and reviews the true affected changes
 before publication. Even a passing joint full gate would leave real peer revocation,
 independent SQL audit, disconnected installation and real SSO UI acceptance open for POR-112.
+
+### Original joint full gate and loopback failure
+
+The independently admitted A-only attempt used exact frozen source
+`82c602d32b2d957459b3a742499de96867da27a9`, tree
+`fbbf65a10a349d43726a355e60fdb171837c97d5`, and Web tree
+`8ce0c9946a8403a5d4502b54e4337a754de38bfc`. It is the original-author composition
+above plus its resource-refusal documentation, not the serial-lint candidate or
+the later strict-JSON generator. All 5099 tracked input hashes matched before
+and after execution; original operational inputs were unchanged.
+
+Fresh local raw Free was 6,530,170,880 bytes and disk free was 165,614,211,072
+bytes. One nonblocking acquisition used epoch `ownsolid-2-20261113-e1`, device
+16777231/inode 53377467, preserving the parent open description through original
+commands and owned cleanup. The manifest retained SHA-256
+`7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983`.
+The original 1800-second absolute budget included a final 120-second cleanup
+reserve. Effective limits were Node old-space 4096 MiB, Go package parallelism
+one/GOMAXPROCS two, Cargo jobs one and serial workspace/browser/test workers.
+Tool caches were offline; this was not OS network isolation or installed
+disconnected acceptance. No fixture overlay, rule reduction, new conditional
+skip, sampling assertion, B fallback or automatic retry was added.
+
+| Original command | Actual exit | Seconds |
+| --- | --- | --- |
+| `make web-install` | 0 | 2.661 |
+| `make check` | 0 | 35.730 |
+| `make build` | 0 | 101.047 |
+| `make test` | 2 | 1048.468 |
+
+Check completed the original unsplit ESLint command, formatting, types, 29-contract
+generated-output comparison, layout/roadmap checks and 13/76 tooling tests.
+Build completed every configured Go module, the Rust gateway and both Web apps.
+Those are actual results on this source, not transferred partial qualifications.
+
+The Console Chromium run completed all 1250 selected cases: 1141 passed, 81
+failed and 28 existing conditional cases skipped. Retries remained zero; no
+flaky/retry success is claimed. The first failure was
+`models.spec.ts:701`, the English pending-expiry/recovery scenario: the final
+`page.reload()` at line 744 returned `net::ERR_TIMED_OUT`. Eighty later failures
+returned `net::ERR_SOCKET_NOT_CONNECTED` while navigating the local preview
+origin. All 81 saved error contexts and trace error events agree on those
+navigation failures. No application assertion failure or server OS error in the
+retained output establishes their root cause. Later scenarios passed again, but
+that recovery does not erase the failures. A later loopback readback cannot
+prove the historical cause, so no proxy, socket-limit or product fix is inferred.
+
+The original recursive command stopped after Console's failure. Portal browser,
+Go tests, Rust tests and Web unit tests were NOTRUN in this attempt. Do not join
+older passes to these partial results or describe the whole gate as passing.
+The original 430-operation compatibility audit's explicit 409 review/exit 1 also
+remains unresolved for its DEV owner; passing generation checks does not clear
+that independent publication condition. No source was published.
+
+Console's eleven Account-session cases passed within this failed complete run.
+They produced 28 raw screenshots; ten representative images were actually read:
+EN/ZH settings, both narrow dark confirmations, current-only and empty live
+lists, loading, partial pages, access denied and service not ready. The other
+eighteen new images are preserved without a new read claim. The earlier 56-image
+two-entrance visual qualification remains separately source-bound.
+
+The observed page is the Settings archetype: independent sections, each saved
+where it is edited. The page-level main action is changing the password; ending
+a session is the session section's destructive action, with typed identity
+confirmation and an explicit consequence. Loading, first-use/current-only
+emptiness, partial results, actionable errors, denied and not-ready behavior are
+defined. Filtered-empty is explicitly inapplicable because this API has no
+filter control. The current-only explanation and an unexpectedly empty live
+list have distinct text and recovery. The narrow dialogs wrap the identity and
+keep input/actions within the viewport; unavailable actions remain visible with
+reasons, and status has text. This scoped visual review does not qualify Portal
+on the joint source or the failed full suite.
+
+The parent actually exited 1 after 1190.977 seconds with cleanup confirmed. The
+owned scratch volume was detached and removed, the generated audit binary was
+removed by the reviewed cleanup, no workspace sum was left, owned groups and
+preview listeners were empty, and parent/runner and carrier FDs were absent at
+readback. Carrier identity/manifest and 89 closed legacy entries were unchanged.
+The tracked source was clean before the evidence-only documentation change.
+No negative fixture was created and no retry or queued work followed.
+
+The private evidence packet `epoch-e1-web-a-full-4wr_z7rr` retains original logs,
+stage exits, input/control manifests, all 81 traces and exact-source production
+assets. Its verified 1424-file archive contains 1233 build assets and 191 test
+result files, SHA-256
+`4ed1e4cda02cc2b771b0087024b3f9a000f5afffa22a2816e77d189952fac5f9`.
+It is a failed-full-gate archive, not an installable qualified release. The next
+gate requires diagnosis and correction of the local preview navigation failure
+followed by a separately admitted original complete run; the consumed entry must
+not be retried automatically. POR-112 stays unticked pending complete gates,
+original-owner publication conditions and the installed authority/SQL/offline/SSO
+evidence described above.
