@@ -352,3 +352,79 @@ The owned RAM disk and audit binary were removed; no service/worker was started.
 The c527fb68 event branch remains unchanged. Its prepared native replay driver
 pins c527fb68, so select that preserved source before invoking the event runner;
 it must not silently execute the reader candidate instead.
+
+## Prepared native authority/writer cases and parent-boundary review
+
+The additive test-only source is e639db9035b0b2c0229c90175493c605f328e295,
+based on preserved 5b73fa05. Production code is unchanged. Dataset coverage now
+keeps its real writer open, checks its exclusion before/after reader Close,
+performs authenticated snapshot plus actual file I/O and then refuses the real
+logged-out session's final read. Training's existing corruption/repair, adapter/
+experiment export, uncertain-outcome propagation and actual logout before the
+final authority transaction now all use Store=nil with the concrete real reader.
+Its independent writer is checked while the reader is open and after Close.
+Original assertions, SQL locks, error codes and source/physical envelopes remain.
+
+| Prepared test source | SHA-256 |
+| --- | --- |
+| datasets/published_reader_repository_integration_test.go | 28872e65701f152917e3ddb205af78399285d8c41d7d4751796bc817ee6bdf5d |
+| training/accepted_adapter_repository_integration_test.go | e835a9565c6ee8f0851fc4457a4f2cf5f2e9d57aec9dc875dd71f8c1c20404ce |
+
+Formatting, layout and roadmap checks passed. The workstation compilation
+attempts were refused before startup by its permanent guard (raw code 75); no
+new tagged compilation/body result is claimed for e639db90. The unchanged
+production candidate's earlier qualifications remain scoped to their sources.
+No unchanged complete make test was rerun; that gate remains open, and the
+shared Help issue remains with WEB.
+
+The existing native event parent SHA-256 is
+dc3f6f5eb9d35dc421e06101a7ce1cdab1adfe329b283901948a0c949b6dc3a1.
+It waits for both carriers and permits a 420-second child; the native shell's
+five-minute test timeout also excludes setup/cleanup. These bounds do not meet
+the assigned single opportunity: one first-lock kernel wait up to 60 seconds,
+second lock nonblocking with immediate first release, and an absolute 300-second
+parent lifetime including cleanup. The fixed c527fb68 driver is not repurposed.
+Following the instruction to prepare exact inputs/source/plan when an existing
+runner lacks those reviewed bounds, no new heavy execution framework was run.
+There were zero Linux lock attempts and zero new native Go/SQL test bodies.
+The single native opportunity has not been consumed; this is not a resource
+refusal or a native test failure.
+
+The exact plan is retained at
+/root/lane-trn-tools/reader-native-qualification-plan.json, SHA-256
+7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874.
+Its source binding is reader-native-plan-source-binding.json, SHA-256
+f858093a1ee7b4f065dcdea76c9a7bcc885f8798bc5d62d779baf00024e2d3ab.
+The additive source bundle is trn-reader-native-test-source.bundle. The existing
+owned shell fixture base is training/testdata/replay_accepted_experiment.sh,
+SHA-256 8293475c3bdbeed24733c81d0a96e8ad9b5b4dffe8c0ff998753c1a54091656b.
+The plan requires review of bounded deltas to that existing fixture/parent; it
+is not an executable or an approved new native framework.
+
+The original admission remains Free >= 3 GiB, Available >= 12 GiB, disk >= 15 GiB,
+full I/O avg10 and avg60 <= 5 and no competing heavy process. Same regular-file
+carriers remain device/inode 29/82 and 64512/7508772, UID 0, without replacement,
+truncation or unlink. The plan reserves the last 30 seconds for owned cleanup
+and records, limits the Go child to at most 170 seconds within the absolute work
+cutoff, and retains at most two CPUs/1 GiB PostgreSQL, one Go package at a time,
+GOMAXPROCS=2 and offline dependencies. It permits only the two exact owner roots,
+requires the existing independent-reader subcase, and refuses skips or missing
+roots. Its fixture has no host port/network route, no processor/GPU/fleet, a
+private DSN shared by both fixture families, exact owned labels/names and bounded
+process-group/container/volume cleanup. Busy/refused/timeout outcomes retain raw
+codes and never trigger an in-round retry.
+
+Retained CPU inputs were streamed and hashed without modifying them:
+
+| Retained input | Bytes | SHA-256 |
+| --- | --- | --- |
+| result.json | 7405 | 42f0790680294637f8248a37a405cec920ee6d1d6c3b678248946b769781796f |
+| adapter/adapter_model.safetensors | 4602248 | a46897f648b94c94a3fe55dff81c15a082e1a427126f958e3075a8feee2bf06b |
+| adapter/adapter_config.json | 1092 | 4ed67247993152de870045c4551f54de48a5fb0b65d61118bf95acb2c15dfe67 |
+| adapter/README.md | 248 | a6e9d9c398894029e948df596fe712e77bdd25f3e1a53f3dc51344b2f7d7a341 |
+
+Their full private paths, unchanged preflight/policy hashes and cached Linux
+amd64 PostgreSQL image ID are bound by the plan. Metadata inspection started no
+fixture, container, child worker or service. No permanent carrier was acquired,
+and no owned runtime resource remains. Standalone gateway/role/Model/Node
+contracts, all product boxes and the original fleet budgets remain open.
