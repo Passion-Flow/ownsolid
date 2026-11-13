@@ -959,7 +959,7 @@ gateway database role remain ARC-111 work.
 The owned outer container, nested database/workloads and installation staging
 were removed. Its exact fixture image is retained only as an input to the next
 owned ARC-106 measurement; shared images, source snapshots and foreign resources
-remain untouched. Raw native logs, simulator JSON, socket observations, routing,
+remain untouched. Raw native logs, simulator JSON, socket observations, route-read diagnostics,
 egress and image evidence are retained outside Git.
 
 Full check/build/test log SHA-256 values are
