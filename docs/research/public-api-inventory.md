@@ -978,6 +978,9 @@ roadmap checks passed. No committed bytes changed. All 79 projection inputs,
 with the owner's intended locale postimage, and all 122 SDK files were verified.
 The SDK generator, templates, contract and native fixture remain byte-identical
 to the retained 783567ea qualification; no new native SDK test is claimed.
+The complete tooling target on 2c20c8cc also passed all 13 layout and 67
+SDK/tooling cases. These bounded checks start no compiler, browser or container
+and are distinct from the still-unrun whole-repository gate.
 
 The actual joint-source comparison against main 6ed5c627 still inventories 430
 operations with no declaration conflicts and exactly one compatibility finding,
