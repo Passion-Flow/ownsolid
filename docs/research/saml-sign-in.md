@@ -147,6 +147,23 @@ Resolve and inspect their combined graph before compiling. Preserve all SAML,
 MIT/BSD/Apache and PostgreSQL/image notices; no model or dataset is involved.
 This is a proposed representation pending SQL evidence and formal admission.
 
+The combined source-inspection graph in `iam104-storage-20261113.edr2wpvk`
+resolved 26 modules and 36 legal files. Exact versions/checksums and retained
+notices matched the previously inspected SAML/OP inventories except for the
+three Go submodules below. Their LICENSE and PATENTS bytes each matched the
+official pinned source and were retained with the combined inventory.
+
+| Additional selected version | Primary license |
+| --- | --- |
+| `golang.org/x/mod v0.38.0` | [BSD-3-Clause](https://github.com/golang/mod/blob/v0.38.0/LICENSE) |
+| `golang.org/x/sync v0.22.0` | [BSD-3-Clause](https://github.com/golang/sync/blob/v0.22.0/LICENSE) |
+| `golang.org/x/tools v0.48.0` | [BSD-3-Clause](https://github.com/golang/tools/blob/v0.48.0/LICENSE) |
+
+All three permit commercial/offline use and redistribution with their notices.
+These graph entries do not enable a tool or service at runtime. This inspection
+has not compiled or run the combined protocol/storage candidate and changes no
+product module, schema or route.
+
 ## Candidate dependency and license inventory
 
 The selected research candidate is
