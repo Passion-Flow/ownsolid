@@ -11,7 +11,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
 
 - [ ] MOD-101 Import any Hugging Face format model from local media or an internal mirror, with checksums and resumable upload (P1) - Catalog: F062
 - [ ] MOD-102 Model catalog with type (chat, embedding, rerank, vision, speech, image), size, context, license and capabilities (P1) - Catalog: F063
-- [ ] MOD-103 Versions, artifacts and lineage: weights, adapters, tokenizer, template, training run, evaluation (P1) - Catalog: F064, F099, [staged family and retained history domain](../../research/training-dataset-lineage.md#postgresql-family-domain-acceptance)
+- [ ] MOD-103 Versions, artifacts and lineage: weights, adapters, tokenizer, template, training run, evaluation (P1) - Catalog: F064, F099, [staged family and retained history domain](../../research/training-dataset-lineage.md#postgresql-family-domain-acceptance), [corrected native full gate](../../research/training-dataset-lineage.md#corrected-native-full-gate)
 - [ ] MOD-104 Per-model serving defaults such as chat-template options (for example disabling thinking mode) (P1)
 - [ ] MOD-105 LoRA merge and format conversion with recorded inputs and outputs (P1) - Catalog: F065
 - [ ] MOD-106 Quantization jobs producing serving variants (P1) - Catalog: F066, F175
