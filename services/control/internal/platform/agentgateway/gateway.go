@@ -68,6 +68,7 @@ type Gateway struct {
 	sessions               map[string]*session
 	connectionHints        atomic.Uint64
 	connectionHintFailures atomic.Uint64
+	idleTimeout            time.Duration
 	// draining ends when Drain is called, and every session with it.
 	draining context.Context
 	drain    context.CancelFunc
@@ -85,8 +86,7 @@ var errReplaced = errors.New("AGENT_SESSION_REPLACED")
 // errDraining ends the sessions of a gateway that is stopping; agents move to another one.
 var errDraining = errors.New("SERVICE_NOT_READY")
 
-// idleTimeout closes a session that sends nothing; tests shorten it.
-var idleTimeout = time.Duration(wire.SessionIdleSeconds) * time.Second
+const defaultIdleTimeout = time.Duration(wire.SessionIdleSeconds) * time.Second
 
 // The session codec is selected by the "application/grpc+json" content type. A stream in
 // any other encoding fails to decode its first message.
@@ -95,10 +95,14 @@ func init() { encoding.RegisterCodec(wire.SessionCodec{}) }
 // New builds a gateway. The gRPC server is never bound to a socket; ServeHTTP hands it
 // streams from the control HTTPS listener.
 func New(backend Backend, policy Policy, problem Problem) (*Gateway, error) {
-	if backend == nil || problem == nil || policy.MaxSessions < 1 || policy.ExchangeSeconds < 1 {
+	return newGateway(backend, policy, problem, defaultIdleTimeout)
+}
+
+func newGateway(backend Backend, policy Policy, problem Problem, idle time.Duration) (*Gateway, error) {
+	if backend == nil || problem == nil || policy.MaxSessions < 1 || policy.ExchangeSeconds < 1 || idle <= 0 {
 		return nil, errors.New("AGENT_GATEWAY_CONFIGURATION_INVALID")
 	}
-	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}}
+	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}, idleTimeout: idle}
 	g.draining, g.drain = context.WithCancel(context.Background())
 	g.server = grpc.NewServer(
 		grpc.MaxRecvMsgSize(wire.MaxSessionMessageBytes),
@@ -234,7 +238,7 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 		}
 	}()
 	// A session may stay silent for as long as its pacing allows (ADR 0013).
-	idleAfter := idleTimeout
+	idleAfter := g.idleTimeout
 	idle := time.NewTimer(idleAfter)
 	defer idle.Stop()
 	var aged <-chan time.Time
@@ -307,7 +311,7 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 			return nil
 		}
 		if reply.Disposition != nil && reply.Disposition.Pacing != nil {
-			idleAfter = max(idleTimeout, time.Duration(reply.Disposition.Pacing.IdleSeconds())*time.Second)
+			idleAfter = max(g.idleTimeout, time.Duration(reply.Disposition.Pacing.IdleSeconds())*time.Second)
 		}
 		// Silence counts from the reply: a held claim is control's time, not the agent's.
 		idle.Reset(idleAfter)
