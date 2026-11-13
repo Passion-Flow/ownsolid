@@ -406,3 +406,19 @@ and are not a binary test-list or cursor qualification. The original plan and
 three compiled binary hashes remain preserved; the correction is not activated.
 The matching binary list and every root/subcase still need actual execution
 after authorized connectivity/resource admission and a matching admitted source.
+
+## Observed entry without catalog execution
+
+The later observed source 3513ab2b entry completed proxy/banner/KEX/authentication,
+fresh resource checks and both exact NB carriers, but lost transport after
+entry. Cleanup-only readback recovered PAYLOAD_REFUSAL before source extraction
+and fixture creation; image inspection alone ran. This is an entered, failed
+input-admission opportunity, not an unconfirmed connection or a passed SQL run.
+No database, catalog JSON, fingerprint, restricted-role case, binary root or
+source B was produced. The original schema60 pins and all original owner bytes
+remain unchanged. See the
+[actual trace and scoped cleanup](agent-gateway-database-role.md#observed-remote-entry-and-source-admission-failure)
+and [bounded input correction](agent-gateway-database-role.md#bounded-input-reception-and-entry-aware-failure-classification).
+The private corrected receiver and expanded MODEL selector still require a new
+authorized transfer/run; their local checks do not qualify the seven SQL roots,
+cursor dimensions, migrations, restore paths or grants.

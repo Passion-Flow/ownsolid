@@ -1176,3 +1176,46 @@ and independent remote cleanup readback SHA-256 is
 The one actual diagnostic and one necessary cleanup connection ended. Every
 entry is closed; no new connection or automatic retry is active. Original owner
 source, schema60 pins, agent v1 and prior 11-root race qualification remain intact.
+
+### Bounded input reception and entry-aware failure classification
+
+The actual remote result exposes a private admission defect: blocking
+`stdin.buffer.read(expected_bytes+1)` was outside any timed subprocess and the
+45-second phase check ran only after it returned. With only 0.093 seconds in
+image inspection, the guard still reached 122.164 seconds before input refusal
+and cleanup. The phase deadline therefore did not bound that read. The raw
+receipt retains its original PAYLOAD_REFUSAL and missing receive counters;
+no controlled test reconstructs the actual received bytes or digest.
+
+A frozen, unactivated correction uses the existing monotonic admission/work
+deadline for nonblocking reads and readiness waits, records byte count/digest,
+EOF and receive duration on success or failure, and restores the original FD
+blocking mode. Both exact length and SHA-256 remain required and the original
+integrity assertion is retained; extra bytes, missing bytes, wrong digest and
+missing EOF fail. No timeout, source requirement, SQL assertion, role grant,
+fixture skip or retry is relaxed. A separate parent correction classifies
+confirmed entry plus transport loss as failed after entry, preserving unknown
+SQL/cleanup state until its authoritative receipt is available. Missing final
+output alone no longer produces a whole-opportunity NOTRUN label.
+
+Six controlled local payload cases pass, including the exact retained input,
+short/extra input, wrong digest, missing EOF and an expired deadline. Two real
+local OS-pipe cases pass: EOF completion and a still-open writer timing out;
+both restore FD mode and close their own descriptors. Five existing-record
+classification checks retain the distinction between the earlier unconfirmed
+entries, this confirmed entry and its cleanup-recovered failure. These are
+private I/O/policy checks with no network, child process, compiler or SQL, not
+a successful transfer or database qualification. Actual entry files stay closed.
+
+The correction is frozen under the same evidence directory's `post-entry-fix/`.
+Remote source SHA-256 is
+`6d54f58cbf83b61dc189b279742f37a29e821eebdbd6b7101549e6b9d7df2838`;
+parent source SHA-256 is
+`4a94e6edda5fc4297ee5b79accc4b5eae36f3bbcb466559f37ceb11a7ad48a30`.
+The OS-pipe verification receipt SHA-256 is
+`fec29c52e37f95332cd99a96a6c2049af780427a6c58045b48ac7b0c333f26b0`.
+The next native prerequisite is verified delivery of the exact input and EOF
+within the original bound, followed by fresh original resource/carrier admission
+and matching catalog-pin source. A healthy banner/authentication alone does not
+prove that prerequisite. No new dial, native retry or source B was produced by
+this correction.
