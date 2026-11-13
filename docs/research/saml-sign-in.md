@@ -83,8 +83,8 @@ unexpected explicit Origin values remain separately reviewable signals, never
 substitutes for the SAML proof. This is a specification reference, with no
 runtime dependency, copied implementation, model or dataset.
 
-The next browser experiment will stage a verified response at the ACS and
-redirect to a fixed first-party completion endpoint before changing an account
+The target product flow stages a verified response at the ACS and
+redirects to a fixed first-party completion endpoint before changing an account
 binding or session. The ordinary Lax session cookie can then be checked again
 against the initiating cookie digest and actor. Rechecking only the captured
 server session on the IdP POST cannot detect that the browser now carries a
@@ -160,9 +160,9 @@ No automatic resend follows COMMIT uncertainty, and a claim error releases no
 worker proof or session. Binding, source session and audit remain one completion
 transaction; the identity lookup prototype alone proves none of them.
 
-### Next isolated claim experiment
+### Isolated claim boundary
 
-The next experiment is limited to authenticated account-link request claims.
+The isolated claim experiment is limited to authenticated account-link request claims.
 Use a separate unnumbered test table, anchored to the actual scoped connector,
 user and session, and the existing Identity password-confirmation/current-actor
 owners. Store only request identity, browser/RelayState digests, immutable
@@ -679,7 +679,7 @@ SourceGuard in these tests protects existing Gitea-sourced sessions. It does
 not admit SAML as a serving provider. Structured telemetry for a future product
 path is also unqualified. IAM-104 remains open.
 
-## Next signed-result/request composition experiment
+## Signed-result/request composition approach
 
 Compose the already qualified strict verifier and persistent identity resolver
 with the actual-Identity claim overlay in a new external fork. Use an alternate
