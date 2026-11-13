@@ -815,10 +815,13 @@ flows still require IAM/DEV/Web and their original qualification.
 To replay, configure the private PostgreSQL DSN and fresh owned schema as described
 by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
 Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
-non-weight files for the derived-registration fixture. The tests embed and apply
-the unnumbered DDL only inside their disposable schemas.
+non-weight files for the derived-registration fixture. The tests use the formal
+migration in their disposable schemas. They require ARC's actual 61 catalog
+registration; the retained unnumbered SQL is a review input, not fixture setup.
+After joint native allocation, the intended owner selection is:
 
 ```sh
-go -C services/control test -p=1 -tags repository_integration ./internal/modules/models \
-  -run '^TestActualModelFamily' -count=1 -v
+go -C services/control test -mod=readonly -p=1 -tags repository_integration \
+  -run '^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$' \
+  -count=1 -timeout=15m -v ./internal/modules/models
 ```
