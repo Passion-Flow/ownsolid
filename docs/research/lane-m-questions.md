@@ -101,10 +101,18 @@ its saved `q` filter on mount when a link supplies no list parameter. The failed
 trace shows article navigation returning to `/help/api?q=changePassword`, matching
 that restoration. The bare-URL assertion can observe the preceding navigation
 before restoration, which explains the focused pass; this timing explanation is
-an inference from the source and the two traces. The Web owner must reconcile
-the assertion with the intended filter-restoration behavior and verify both
-locales. Preserve the complete traces and keep M's candidate unpublished while
-the mandatory whole gate remains failed.
+an inference from the source and the two traces. Preserve the complete traces
+and keep M's candidate unpublished until the mandatory whole gate passes.
+
+The Web owner published the assertion correction in `44ab5229`. Its two Portal
+negative controls first established the saved query and settled input, then
+failed only the old bare-URL assertion. The corrected Console/Portal English and
+Chinese cases passed without skip, retry or flaky result. This is the Web owner's
+focused evidence; it does not replace M's two complete failures. The corrected
+helper preserves saved-filter restoration and tests explicit links, clearing and
+reload. A fresh complete gate on M's integrated source remains required. Prepare
+that exact source and entry while OBS finishes its scheduled short window; do not
+start a competing lock wait or infer a release from an old resource snapshot.
 
 Follow the current resource handoff order. The carrier at
 `/private/tmp/ownsolid-workstation-full-gate.lock` is a persistent regular
