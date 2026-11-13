@@ -275,6 +275,10 @@ process, the others follow within five seconds.
 
 ### Repeated heartbeats
 
+See [fleet load measurements](fleet-capacity.md) for the accepted 2,000-agent
+workload, task latency, recovery times and logical database row-modification rate.
+Use its measured topology and workload when comparing an installation.
+
 Control answers a heartbeat that repeats the last one from memory, without reading the database.
 When a node, workspace or tenant changes, control forgets what it held within
 `runtime.nodes.outbox_poll_milliseconds`, 200 ms by default, and a held claim ends at once. If
