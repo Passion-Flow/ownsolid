@@ -706,6 +706,55 @@ an unnumbered candidate and the history reads remain unregistered. MOD-103 stays
 open until ARC schema/role/catalog, IAM dispatch, DEV public contracts and Web
 integration are actually admitted and verified.
 
+### Formal lineage and restricted Control adaptation
+
+Review input is ARC's unpublished `0f47a66bcb84c585b00bb1a92bf30f455017c1c9`,
+not a released schema. It appends platform site/cell defaults and composite keys
+to the reviewed domain SQL in migration 61; the original candidate inputs remain
+unchanged. The domain's initial-version/member cycle stays deferred, membership
+stays immutable, and populated downgrade still refuses before any object drops.
+The added foreign keys ensure related rows agree; they do not restrict a read to
+the server's local cell. New historical reads, explicit selection and retirement
+must also enforce that local scope. Bind navigation to the resolved local site
+and cell as well as the existing actor/anchor/filter dimensions. Neither identity
+comes from request input. No public DTO changes are required.
+
+Follow PostgreSQL's [composite and deferred constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)
+and [named constraint timing](https://www.postgresql.org/docs/18/sql-set-constraints.html).
+Run normal family tests on the actual `Migrate` lineage, never apply testdata over
+an already-migrated schema. Use the existing explicit predecessor-60 fixture for
+backfill and migration rollback, retaining its exact prefix/version fence. A
+pgx [nested transaction](https://pkg.go.dev/github.com/jackc/pgx/v5@v5.11.0#Tx)
+provides a real savepoint inside an owned rollback test; normal upgrade calls
+still use the real pool and exact catalog admission. Read the numbered downward
+asset only for explicit downgrade refusal, not as a replacement migration path.
+
+For service acceptance, create a fresh runtime through ARC's existing
+`LoadRuntime`/`Prepare`/`Check` operations, then connect separately as that actual
+Control login. Do not duplicate GRANT catalogs, use `SET ROLE` as a substitute
+login, or expose credentials in diagnostics. Privileged fixture corruption uses
+the retained operator pool explicitly; all business calls use the restricted
+pool. ARC remains responsible for predecessor-principal grant resume and its OID,
+authenticator, exact-catalog, DDL and journal fences. Consistently foreign
+family/member/version records must not produce history or permit retirement;
+mismatched scope must fail the real composite keys without partial state.
+
+Prepare coverage for nonempty 60-to-61 backfill with unchanged exact IDs and
+deployment references, local scope on all three rows, explicit/default publication
+rollback, orphan/audit/concurrent outcomes, current-authority keysets, retired
+read versus execution refusal, derived retained graphs and populated downgrade.
+The untouched platform catalog pins currently describe 60: ARC must collect and
+register actual 61 fingerprints before these positive tests can pass. Never relax
+that check or manufacture a digest. No compile, SQL, native or full-gate result
+is claimed by this source adaptation; the earlier 2783/dba acceptance stays exact.
+
+No dependency, model or dataset is added. This uses the existing Go/UUID BSD-3-Clause,
+pgx MIT and PostgreSQL licenses above. The pinned go-yaml 3.0.5 fixture serializer
+retains its upstream [MIT and Apache notices](https://github.com/yaml/go-yaml/blob/v3.0.5/LICENSE).
+All permit commercial/offline use and redistribution with their notices. Records
+and credentials are synthetic and disposable; original migration/role ownership,
+formal HTTP/API and S-202 qualification remain separate.
+
 To replay, configure the private PostgreSQL DSN and fresh owned schema as described
 by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
 Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
