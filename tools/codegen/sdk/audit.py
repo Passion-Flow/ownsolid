@@ -5,6 +5,7 @@ from collections import defaultdict
 import json
 from pathlib import Path
 import re
+from urllib.parse import unquote
 
 from generate import CONTRACTS, METHODS, public_audiences, public_sources, read_contract
 
@@ -27,15 +28,34 @@ def response_object_shape(schema):
 def response_surface(document, operation):
     """Collect named models and object shapes for each local response schema."""
     def resolve(reference):
-        if not isinstance(reference, str) or not reference.startswith("#/"):
+        if not isinstance(reference, str) or not reference.startswith("#"):
+            raise ValueError("response references must use local JSON pointers")
+        if re.search(r"%(?![0-9a-fA-F]{2})", reference):
+            raise ValueError("response reference contains an invalid percent escape")
+        try:
+            pointer = unquote(reference[1:], errors="strict")
+        except UnicodeError as exc:
+            raise ValueError("response reference contains invalid UTF-8") from exc
+        if not pointer.startswith("/"):
             raise ValueError("response references must use local JSON pointers")
         value = document
         try:
-            for segment in reference[2:].split("/"):
-                value = value[segment.replace("~1", "/").replace("~0", "~")]
-        except (KeyError, TypeError) as exc:
+            for segment in pointer[1:].split("/"):
+                if re.search(r"~(?:[^01]|$)", segment):
+                    raise ValueError("response reference contains an invalid tilde escape")
+                token = segment.replace("~1", "/").replace("~0", "~")
+                if isinstance(value, list):
+                    if not re.fullmatch(r"0|[1-9][0-9]*", token):
+                        raise ValueError("response reference contains an invalid array index")
+                    # An out-of-range token need not enter Python's bounded integer parser.
+                    if len(token) > len(str(len(value))):
+                        raise IndexError
+                    value = value[int(token)]
+                else:
+                    value = value[token]
+        except (KeyError, IndexError, TypeError) as exc:
             raise ValueError("response reference does not resolve in the local contract") from exc
-        return value
+        return value, pointer
 
     models, shapes = {}, {}
     responses = operation.get("responses", {})
@@ -48,7 +68,7 @@ def response_surface(document, operation):
             if reference in seen_responses:
                 raise ValueError("cyclic response object reference")
             seen_responses.add(reference)
-            response = resolve(reference)
+            response, _ = resolve(reference)
         if not isinstance(response, dict):
             raise ValueError("response must be an object")
         content_types = response.get("content", {})
@@ -71,11 +91,12 @@ def response_surface(document, operation):
                         reference = value["$ref"]
                         if not isinstance(reference, str):
                             raise ValueError("response reference must be a string")
-                        if reference.startswith("#/components/schemas/"):
+                        target, pointer = resolve(reference)
+                        if pointer.startswith("/components/schemas/"):
                             references.add(reference)
                         if reference not in seen:
                             seen.add(reference)
-                            visit(resolve(reference), reference)
+                            visit(target, reference)
                     # Annotation payloads such as examples can contain literal
                     # "$ref" fields. Only schema-bearing keywords form type edges.
                     for keyword in ("allOf", "anyOf", "oneOf", "prefixItems"):

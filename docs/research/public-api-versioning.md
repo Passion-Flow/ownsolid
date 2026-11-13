@@ -128,3 +128,41 @@ case or expected result changed. A fresh worktree needs those Web dependencies
 before its Help projection cases; the first full-check attempt stopped at that
 missing prerequisite and its failed log is retained. Whole repository
 checks/build/test remain a separate publication boundary for this candidate.
+
+## Document-local response pointer evaluation
+
+The existing response audit refuses a valid reference into an allOf array and
+an encoded component name, while accepting an invalid tilde escape when a
+matching literal key exists. [RFC 6901 sections 3, 4 and 6](https://www.rfc-editor.org/rfc/rfc6901)
+define token escapes, array indices and UTF-8 URI fragments. The
+[OpenAPI Reference Object](https://spec.openapis.org/oas/v3.1.1.html#reference-object)
+uses URI references. Decode a local fragment once, apply tilde escapes once,
+and distinguish object names from canonical zero-based array indices.
+
+Keep the existing nonempty document-root pointer scope. Reject malformed
+percent/UTF-8/tilde encodings, invalid indices, missing values and external
+resources with a clear ValueError. Preserve raw named-reference bindings and
+the visited set so this correction does not redefine compatibility findings.
+Anchors, external retrieval and nested resource base-URI resolution remain
+outside this bounded audit. A second resolver dependency or a broader Schema
+compatibility engine is unnecessary. Python's existing urllib.parse and
+standard-library code use the PSF licence already recorded above; commercial,
+redistribution and offline use remain permitted under its notices. No model,
+dataset, third-party implementation or standards text is incorporated.
+
+Tests must reproduce array-element response shapes and review their changes,
+encoded names including UTF-8 and a literal percent, one-pass tilde/percent
+decoding, recursive references and shared Response Objects. Malformed indices
+must fail even if Python would otherwise accept them; numeric object keys stay
+valid. Invalid encodings and missing/external targets fail without opening a
+socket. Unchanged public contracts must retain the same inventory and findings.
+These tests do not qualify runtime compatibility or complete DEV-204.
+
+The focused response/inventory regression set passed all thirty-one cases,
+including nine new pointer cases. The actual 430-operation inventory is byte
+identical before and after this resolver correction. Comparing against main
+9e32b023 still produces exactly the existing explicit audit-read 409 model
+binding review and exit 1, with no declaration findings. No rule or failure exit
+was weakened. The separate exact 9be Linux full attempt remains failed at Web
+ESLint's 2048 MiB heap limit; this Python correction does not qualify or rerun
+that gate. Release and runtime deprecation work remain open.
