@@ -878,6 +878,161 @@ real AuthnRequest, approved Keycloak TLS exchange and provider POST to the earli
 browser boundary. Generated signed XML fixtures and the prior cookie probe
 remain distinct evidence until that composition actually runs.
 
+## Completion owner and cross-lane admission contract
+
+The review source now calls actual Identity from the SSO domain owner. It is an
+unregistered, uncommitted candidate, not a serving capability. The immutable
+source artifact is
+`/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/review-source-v3.tar`.
+Its SHA-256 is
+`b3319794244ce84fa8a3e37015458cd777d648b59158e2c5b63f52131520755b`;
+`review-source-v3-hashes.json` has SHA-256
+`74db54a16f2a20a9451aff308174b418380e1658a01bf0d97a08af719097dee4`.
+The review Git tree is `88af72c92b00c7c77206f9bee8b705b559861ef4`, based on
+`711cdd40d46349f72e6562091562fb343d8c600e`. Its explicit twelve-path
+`product-owner-v3.patch` has SHA-256
+`d2eec65db1b9bbf12c7f47735a2873d44c5ac9db7bfeef3846539a03798503f9`.
+The artifact contains those owners, the external producer/protocol tests,
+unnumbered cumulative SQL, alternate module locks, seven dependency/eight legal
+files and exact no-database command/output/source hashes. It contains no provider
+credential, runtime key, database, binary or vendored implementation.
+
+Five focused product test roots/thirteen subtests passed for the source in this
+artifact. The combined repository-tagged fixture compiled with no test selected;
+it executed **zero** database cases. Its thirty-two authored roots include nine
+new completion roots, but none of those SQL cases has run. Keep the earlier
+signed-result qualification and these new checks separate. No current full
+`make check`, `make build`, `make test`, real-provider completion or browser/UI
+qualification is claimed. The first compile-only command omitted `GOWORK=off`
+and was refused by Go; its retained output and the corrected command are outside
+Git. Do not count that environment refusal as a product test failure or omit it.
+
+### Domain and source composition
+
+The proposed product files are `sso/saml_completion.go`,
+`sso/saml_completion_owner.go`, `sso/saml_source.go`, their unit tests, and
+`identity/session_deadline.go` with its tests, all below
+`services/control/internal/modules/`. Existing Gitea catalog, connector adapter,
+startup-secret inventory and source reads explicitly select `provider='gitea'`.
+Shared connector fences still include all protocols. These changes keep a real
+SAML connector's absent OAuth credentials out of the Gitea adapter.
+
+The exact construction API is
+`NewSAMLCompletion(context.Context, *sso.Service) (*sso.SAMLCompletion, error)`.
+It validates the selected PostgreSQL projection, existing typed SSO policy and
+Identity owner. It does not register routes, contact a provider, accept a caller
+verifier or replace `Identity.Sources`. ARC selects the returned SourceGuard
+once, after admitting the complete producer/schema/source contract, and joins
+its actual maintenance/shutdown owners. Partial schema is refused. The existing
+Gitea constructor remains the default. No new production Go dependency is in
+this patch; admission of the reviewed strict protocol SDK remains separate.
+
+`Complete(ctx, SAMLCompleteInput, requestID)` accepts only server-resolved
+connector/entrance/flow and protected continuation/ordinary cookie values. The
+input has no JSON fields and redacts diagnostics. The candidate supports explicit
+Portal account linking only; it refuses Admin until actual MFA composition.
+It rechecks the original current actor, credential and exact result, locks the
+verified external identity, binds/reactivates it and issues a session through
+`Identity.IssueSessionUntilWithin`. That method retains the real account,
+source, rotation, MFA and audit owners, caps the configured lifetime by the
+persisted source end, confirms the exact postimage and never commits itself.
+Database timestamp reads are normalized to UTC microseconds. Unknown COMMIT
+returns an empty DTO; a repeat never reconstructs the opaque token.
+
+The combined SourceGuard dispatches from the common connector's immutable
+provider. Gitea reads and issuance do not depend on SAML tables. SAML requires the
+exact active local binding/version, completed result/request, current
+connector/profile/trust and source end; failure never falls back to another
+protocol. Local sessions keep their existing owner. The source guard rechecks
+time after waiting for source locks. Its current candidate remains PostgreSQL
+only; other engines have no implicit translator or fallback.
+
+### Formal schema and lifecycle obligations
+
+ARC owns the next contiguous migration number, both migration directions,
+`SchemaVersion`, `TableCount` (four new public tables), catalog fingerprints,
+runtime grants, legacy upgrades and backup/restore inventories. The artifact's
+`candidate.sql` is a cumulative **unqualified external fixture**, not an approved
+migration. Its four final table names and required relationships are:
+
+- `sso_saml_profiles`: immutable tenant/connector/context and exact IdP/SP scope,
+  metadata digest, revision, enabled state, approved trust end and typed local
+  session maximum. Material policy changes advance the revision.
+- `sso_saml_identities`: exact bounded persistent NameID under that context;
+  immutable identity/scope and once-assigned local user; explicit active flag and
+  monotonically increasing binding version. Email is never a binding key.
+- `sso_saml_requests`: immutable captured browser, current actor/credential,
+  callback, request/context/revisions, reason and expiry; exclusive claim;
+  verified-to-succeeded transition with exact authenticated user and at most one
+  issued-session identifier.
+- `sso_saml_results`: exact request/context/identity foreign keys, scoped assertion
+  ID uniqueness, continuation digest, assertion/result acceptance end and a
+  separate session-source end; only one completion binding version. No raw XML,
+  attribute set, cookie, session token or signing key is retained.
+
+The existing all-or-none session-source columns and unique source flow remain.
+Their legacy binding/flow foreign keys cannot merely be removed: the candidate
+replaces their authority with exact protocol-dispatched issuance checks, source
+parent locks and retained-parent deletion checks, while preserving the Gitea
+one-issuance path. Both directions of concurrent parent deletion/issuance still
+need real PostgreSQL proof. Formal rollback must refuse to discard any retained
+SAML authority, restore the exact legacy foreign keys/provider credential rules
+and issuance owner, and remove only empty candidate objects. No formal Down
+migration or existing migration is changed by this handoff.
+
+Cleanup must use the existing typed retention, batch and timeout policy, delete
+results before terminal requests and preserve every parent referenced by any
+session, including revoked/expired sessions until their own retention permits
+removal. Bound identities/profile scope remain retained. Replay reservation
+cannot disappear before the whole assertion acceptance window, including the
+approved skew. Restore must advance common connector authority and terminalize
+pending SAML intent without reactivating old sources. Cleanup/restore registration,
+actual cancellation/drain and restore-round-trip tests remain to be implemented.
+
+### Minimal HTTP and UI handoff
+
+DEV owns public OpenAPI/Problem/generated admission; WEB owns the rendered
+configuration/account/sign-in surfaces. The following route shapes are a proposal,
+not installed endpoints. The current candidate computes the exact callback
+`/api/v1/sso/saml/connectors/{id}/acs`; changing it invalidates captured requests.
+
+- First-party start POST creates a flow for one server-resolved connector and
+  entrance. Explicit linking needs the current local actor, password confirmation
+  and reason. The start needs a bounded idempotency key/fingerprint in the same
+  request lifecycle; that producer/idempotency path is not implemented yet.
+- The exact ACS POST accepts only bounded SAML form fields and durable
+  flow-cookie/RelayState/request proof plus strict signature verification. Its
+  narrowly selected protocol boundary must handle the reviewed null Origin
+  case; it cannot weaken ordinary mutation Origin/CSRF checks. It grants no
+  local session. It redirects with 303 to one fixed first-party landing and
+  transfers only a protected, host-only HttpOnly continuation cookie.
+- A flow-status GET returns minimized state only for the same protected browser
+  and current actor. It discloses no NameID, provider attributes or token and
+  performs no binding/session mutation.
+- The landing obtains normal CSRF through `GET /api/v1/auth/csrf`. Completion
+  POST requires the ordinary exact Origin, same-origin Fetch Metadata, one valid
+  CSRF token, exact ordinary cookie and continuation. Its strict empty body
+  rejects tenant/user/claim substitutions. It consumes one flow and never
+  repeats a token-bearing success after an unknown result.
+
+The cross-site 303 landing GET can still have cross-site Fetch Metadata and lack
+the Strict CSRF cookie, as the actual browser probe showed. It must not mutate an
+account. The normal subsequent first-party CSRF request and explicit POST close
+that gap without an invariant switch. Session values appear only in the existing
+secure Set-Cookie path; completion rotates the ordinary session, clears temporary
+proof and refreshes CSRF. Failures expose fixed stable codes and actionable fresh
+sign-in recovery, never provider XML/error objects. Unknown COMMIT must not be
+automatically retried.
+
+Structured logs/metrics/traces must use bounded protocol/action/outcome labels
+and the server request ID, excluding XML, attributes, NameID, passwords, cookies,
+continuations and reason text. The candidate uses the actual transactional audit
+owner (`sso.saml_binding_linked` and `auth.sso_login_succeeded`); DEV must admit
+its action/error metadata and Web must supply both locales. Anonymous sign-in,
+Admin MFA, production cleanup/restore, real provider-to-ACS/browser completion,
+formal install/offline UI and the complete repository gates remain open. This
+handoff does not complete IAM-104.
+
 ## Alternatives, prototype and finished-item acceptance
 
 Reject a hand-written XML signature implementation, email-only linking,
