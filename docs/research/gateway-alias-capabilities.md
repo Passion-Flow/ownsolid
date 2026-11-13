@@ -702,7 +702,68 @@ publication or automatic second run.
 Production publication stays disabled. Complete current check/build/test
 and clippy qualification, then the same-source producer/typed-root
 integration and matching contract/client/Help release, remain separate
-requirements before installed catalogue acceptance. The known shared
-Help assertions must be resolved and rerun on the assembled source;
-historical browser PASS at an older source cannot supply that result.
+requirements before installed catalogue acceptance. The former shared
+Help blocker was subsequently corrected by its owner, as recorded in
+the current-source preparation below. GW still requires its own complete
+assembled-source gate; another owner's PASS cannot supply that result.
 GW-104 remains open.
+
+## Current-source integration preparation
+
+The existing isolated read worktree replayed its six unpublished commits
+onto the supplied actual main
+4c8a8289cf1b8ae8bc72b9f5b6faa4a422cf8931, whose tree is
+06d093f4d1bc0133dd86487f9c8e75380b1456be. The original c5f797d5
+chain was retained under refs/codex/gw104-before-main4c8; source 219af27e,
+both failed fixture inputs and proof bd485359 remain unchanged.
+This is source integration, not a new compilation, test or publication.
+
+All 81 Go files under distribution, including the four original root
+sources, are byte-identical to 219af27e after integration. The Rust
+gateway, full migration/database trees, identity fixture, deployments,
+workspaces, agent/gateway/model-lifecycle contracts and distribution
+OpenAPI tree also retain their original tree identities. Distribution
+policy fields, producer metadata and target-readiness implementations
+used by the four roots did not change; shared production configuration
+and server composition still require their own current-source gate.
+Do not rerun those unchanged roots just to label old evidence with a new
+SHA; the native result remains scoped to 219af27e and its recorded
+platform/operator fixture.
+
+Shared changes were inspected separately:
+
+- The identity HTTP factory remains the same concrete shared owner; its
+  changed dispatch line supplies a request ID only to the audit-list route.
+- New model-family/history functions are separate retained-history paths.
+  The model error adapter admits their new error codes; existing ready
+  and derived admission implementations are unchanged.
+- The HTTP fixture adds idle-transport cleanup to WithCertificate, which
+  the four selected human-read roots do not call.
+- Optional split browser listeners and connection ageing change server
+  composition and require current full compilation/tests. The controlled
+  read fixture still uses its unchanged httptest TLS construction and
+  omitted optional listener fields; no new installed-listener conclusion
+  is inferred from it.
+- Audit, scheduling, training, dataset and Web changes remain upstream
+  inputs to the full repository gate, not GW-owned changes or borrowed
+  acceptance results.
+
+WEB 44ab5229 corrected the four double-entrance/bilingual Help cases.
+The published MODEL record dba2eaf6 reports a complete corrected gate
+on source 2783a46f/tree fd479f8e, with Console 1191 and Portal 410,
+existing conditional skips 28/10 and zero retries. That clears the
+former blocker to preparing GW's full gate. It does not prove
+GW's integrated source passes. Keep the earlier failed gate records and
+that other source's success independent.
+
+The prepared full entry is the original make check, make build and make
+test, followed by cargo clippy --locked -- -D warnings in services/gateway.
+Make test retains its browser prerequisite and all Go, Rust and Web test
+recipes. It must run only in a later assigned Mac window under the
+original permanent-file parent guard, original strict resource checks,
+local/offline caches and an owned suitable scratch filesystem. The
+object-store test's 30-percent reserve remains intact. Preparation starts
+no kernel waiter, build, database, browser server or Linux runtime job.
+The production capability flag remains false; ARC owns typed/config
+startup integration, and the contract/client/installed-UI owners keep
+their existing boundaries. No roadmap checkbox changes.
