@@ -141,7 +141,7 @@ describe('explicit audit reads', () => {
             signal.addEventListener(
               'abort',
               () => {
-                reject(signal.reason);
+                reject(new DOMException('Aborted fixture read', 'AbortError'));
               },
               { once: true },
             );
