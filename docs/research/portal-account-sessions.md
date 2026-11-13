@@ -186,8 +186,10 @@ different explanations; neither invents a row or a filter.
 
 ### Product implementation
 
-Candidate `2efbdfaa` is isolated on `codex/portal-account-sessions`, based on published
-`6f785818`; its Web tree is `c86857e40124d0dd28658abc83a4787b0620130b`. The previous UX-127
+The implementation is isolated on `codex/portal-account-sessions`, based on published
+`6f785818`. Source `763169e3` passed the scoped frontend checks below, with Web tree
+`7bab205eb4942575843dfb628f13538ff5265178`. Post-review candidate `6d3d6b8c` has Web tree
+`b656b51b998d4e2a23fa9b3b6f2062b60669f282` and needs its own qualification. The previous UX-127
 source remains on `codex/web-resource-history-ui` at `ce177336` with its own asset and check
 records. Neither branch's qualification is transferred to the other.
 
@@ -208,11 +210,11 @@ changes invent a new credential generation. Late password and revoke callbacks c
 that started them; they cannot replace a later view's identity. A permission refusal is latched
 until a successful first-page read, so a failed recovery cannot reveal old authorized rows.
 
-Shared scripted browser fixtures and both entrances' account-sessions specs are prepared. They
+Shared scripted browser fixtures and both entrances' account-sessions specs now run. They
 include bilingual screenshots of the settings section, one confirmation, current-only and
 empty-live lists, delayed loading, partial pagination, refusal, unavailable service and narrow
-dark layout. A lost reply and 404/unknown commit never replay DELETE. These are test definitions,
-not executed browser evidence.
+dark layout. A lost reply and 404/unknown commit never replay DELETE. Scripted-browser outcomes
+are frontend protocol evidence, not installed server authority or durable revocation evidence.
 
 ### Actual focused checks and limits
 
@@ -229,13 +231,54 @@ On 2026-11-13 the existing bounded workstation admission ran these checks serial
   package/application groups; formatter checks passed. The initial combined lint exceeded the
   512 MiB heap. Splitting retained the same rules, cap and all changed TypeScript paths.
 
-The later candidate adds the real SignInPage callback test, a late-password-after-relogin test,
-and a null-recovery regression test. That candidate's final attempt was refused by resource
+The real SignInPage callback test, late-password-after-relogin test and null-recovery regression
+first reached an admission refused by resource
 preflight at 46,555 free 16 KiB pages (about 728 MiB), below the 2 GiB floor. No formatter,
-typecheck, test or browser work child started in that attempt. Those additions and the small
-generic-retry suppression fix still need the final focused rerun; earlier passing counts are
-not relabelled as final-source qualification. Raw successes, failures, OOM and preflight evidence
-are retained in the local portal-account-sessions qualification packets.
+typecheck, test or browser work child started in that attempt. That refusal remains separate
+from the later successful admission; it is never backfilled with a later resource sample.
+
+### Scoped frontend qualification and actual screenshot review
+
+The separately authorized `portal-account-sessions-window-l0wkhyg3` admission measured
+407,739 free 16 KiB pages and held the original permanent carrier once. The reviewed absolute
+deadline/cleanup parent retained its 600-second total and 30-second cleanup reserve; only the
+owned Portal preview cwd binding changed. It finished in 184.011 seconds, exit 0, with process
+groups, previews on 31036/31037, wake guard and carrier FD confirmed gone. The permanent regular
+carrier remained inode 50313339; no retry admission or resource waiter was created.
+
+The final scoped run passed grouped affected-file lint, Shell types and formatting, 33
+Shell/session/Account tests and 34 UI tests. Those include the three formerly unverified
+regressions and the generic-retry suppression fix. Both application builds succeeded and
+their own asset maps are bound to `763169e3`. Collection selected 11 cases per entrance:
+the original nine plus actual same-account re-login and password-form rotation. Both final
+selections passed 11/11, with zero skips, retries or flaky outcomes. The first round retained
+10/11 passes at each entrance: the new login test navigated away before CSRF completed. Its
+trace contained a cancelled CSRF request and no login write. Waiting for the real sign-in
+redirect corrected the test; none of its assertions was removed.
+
+The window generated 70 raw PNGs across both rounds. After cleanup, all 36 final-round images
+were opened individually; the 34 first-round images remain raw comparisons and were not counted
+as read. Actual inspection found:
+
+- **Archetype:** Account is visibly a settings page with independently saved profile/password,
+  language, shortcuts and providers, followed by the Sessions section. The loaded desktop rows
+  show method, three labeled times, a textual Current session marker and the separate End action.
+- **Seven states:** current-only and empty-live copy are visibly different; denied removes rows,
+  not-ready leaves a disabled action with a reason, partial keeps earlier rows beside a recovery
+  notice, and the one confirmation identifies the irreversible target. Filtered-empty remains
+  explicitly inapplicable. The loading and narrow captures missed the session section, so they
+  do not qualify its visual states despite the passing DOM/axe assertions.
+- **Primary:** Change password remains the Account page's principal action. Ending another
+  session is the section-specific secondary action; its single confirmation has one End submit.
+
+The screenshot failure matters: main scrolls independently of the document. Changing viewport
+left the page at an unrelated setting, so the 390px/360px and re-login captures did not show the
+session target; some full-page empty/partial images also clipped its lower edge. The shortcut
+heading was squeezed beside a long explanation: three English lines and a vertical Chinese
+column. Candidate `6d3d6b8c` moves that explanation below the heading and captures the actual
+session section, with separate page context, 1440px, shortcut and narrow-dialog views. This
+candidate has not been rebuilt, checked or photographed. Earlier green tests are not transferred
+to it, and visual acceptance remains open.
 
 Both entrances need EN/ZH, keyboard, axe, desktop and narrow-width screenshots that are
 actually opened. An installed flow must create two real same-account sessions,
@@ -245,8 +288,8 @@ cross-account, cross-entrance, no-workspace and license-blocked acceptance. Use 
 real SSO session for the sourced-session case; the backend HTTP fixture alone is
 not rendered-browser acceptance.
 
-The product implementation is present; its final focused rerun, rendered-browser/visual checks,
-`make check && make build && make test`, disconnected-network acceptance and the installed flow
-remain unqualified. Screenshots generated/read: zero/zero for this slice. No previous UX-127,
-Help or audit asset is relabelled as this implementation. POR-112 remains open, and no new
-browser/full/native/installed opportunity was consumed or queued.
+The post-review candidate still needs focused checks and same-source browser/visual acceptance.
+`make check && make build && make test`, disconnected-network installation and the installed
+authority/audit/real-SSO flow remain unqualified. No previous UX-127, Help or audit asset is
+relabelled as this implementation. POR-112 remains open. The one scoped frontend opportunity
+is consumed and cleaned up; no full/native/installed opportunity was used or queued.
