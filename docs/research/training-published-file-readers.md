@@ -325,3 +325,21 @@ fe6da1ecc0d2595754bd79ed8dc7f3b93f07706efb5380fcc6999a7b095b3a1a.
 It requires the existing 5a9b40d7 main ancestor and preserves both research
 commits, concrete readers and the export follow-up. The event candidate c527fb68
 remains separate and unchanged; the new reader evidence measures no fleet cost.
+
+## Bounded native owner qualification plan
+
+Preserve 5b73fa05 and the original evidence. Prepare an additive test-only source
+that keeps the independent writer open while reader-only services exercise both
+owners against real PostgreSQL. The training experiment's corruption/repair,
+export, uncertain-outcome propagation and actual final-session logout must run
+through its real PublishedReader. The dataset case adds authenticated snapshot
+readback and final authority refusal after real file I/O, plus explicit writer
+exclusion before and after reader Close. All existing SQL locks/assertions stay.
+
+The previously prepared event parent is not eligible for the new native window:
+it waits for both locks and allows a 420-second child; its shell test timeout is
+five minutes before setup/cleanup. That does not meet the assigned 300-second
+parent lifetime and nonblocking second-lock contract. Do not repurpose the fixed
+c527fb68 event driver. Prepare the exact test source, input hashes and bounded
+runner-delta plan before any new heavy native framework is run. No lock attempt
+or native SQL outcome is implied by this preparation.
