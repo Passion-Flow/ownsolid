@@ -14,8 +14,8 @@ snapshot as well as handler and SDK tests.
 Compare the audit's per-domain, per-audience operations against a
 local baseline. Detect removed operation identities, audience removal
 and operation ID changes, while accepting additional operations.
-Keep the analysis bounded to operation identities and the named response
-model references below. Full schema compatibility
+Keep the analysis bounded to operation identities, named response model
+references and closed response object shapes below. Full schema compatibility
 needs direction-aware JSON Schema checks, and behavior needs real server
 tests. A general diff such as [oasdiff](https://www.oasdiff.com/docs/breaking-changes)
 can support deeper review, but introducing it solely for this check adds
@@ -72,3 +72,59 @@ references. Run the audit offline against the actual GW-104 candidate and
 its local published baseline. Keep DEV-204 open: release-baseline selection,
 general directional schema compatibility and runtime deprecation signaling
 still require their owning release and server paths.
+
+## Closed response object shape review
+
+The MOD-103 family-history prototype exposed a gap in the named-model check:
+adding family_id to the existing closed AdminModelDetail keeps its component
+name but gives old strict-schema consumers a field their schema rejects.
+The [JSON Schema object reference](https://json-schema.org/understanding-json-schema/reference/object#additionalproperties)
+defines additionalProperties=false, and the [required keyword](https://json-schema.org/understanding-json-schema/reference/object#required)
+distinguishes an optional field from an always-present field. The existing
+AIP-180 distinction between source, wire and semantic compatibility still
+applies; generated SDK source can change even when some decoders tolerate a
+wire change.
+
+Extend the existing offline response traversal with a small shape inventory:
+property names, required names and whether each reachable object is closed.
+Keep stable document-local reference locations and escaped inline JSON pointers,
+with the existing visited-reference guard. Compare an existing operation only
+when domain, method, path, audience and operation ID match. A changed or removed
+shape involving a previously or currently closed object requires review.
+Keep the named-model signal independently: changing a reference and changing
+the fields of the same reference are separate cases.
+
+This is a review signal, not a directional Schema-subset proof. A narrower
+response can still change a generated source type. Numeric/string constraints,
+property value schemas, requests, effective composition and runtime behavior
+remain outside this shape comparison. In particular, unchanged shape names do
+not establish compatibility. Do not solve arbitrary JSON Schema implication
+or add a second diff dependency for this focused regression.
+
+Tests must cover a newly optional field on a closed response, field removal,
+required-name changes, opening/closing an object, inline array items, recursive
+and escaped references, status/media separation and both audiences. Annotation
+and key/required ordering must be inert. Unchanged objects and new operations
+must not acquire findings. Retain invalid/local-reference refusal and existing
+named-model checks, and compare the actual isolated model-history revisions:
+revision A changes old closed metadata, while revision B leaves it unchanged.
+No dependency, model, dataset or third-party source is added. The existing
+Python PSF licence permits commercial and offline use and redistribution under
+its terms. DEV-204 remains open for release baselines, complete directional
+Schema review and runtime deprecation signaling.
+
+The targeted Linux tests passed in a network namespace without an external
+interface: nine shape cases, six named-model cases and seven inventory cases.
+The actual revision-A prototype produced one old AdminModelDetail field-shape
+finding while retaining its named response binding. Revision B produced no
+shape or named-model findings for its existing same-identity reads. The current
+430-operation inventory had no declaration conflicts, and self-comparison was
+empty. These results do not qualify the prototypes' new routes or missing
+non-prototype operations. Layout, roadmap and diff checks also passed. The
+complete offline make test-tools target also passed on Linux: 13 layout tests
+and all 57 SDK/tooling cases. It reused prepared pinned Node parser dependencies
+through a read-only cache path in an isolated network namespace. No assertion,
+case or expected result changed. A fresh worktree needs those Web dependencies
+before its Help projection cases; the first full-check attempt stopped at that
+missing prerequisite and its failed log is retained. Whole repository
+checks/build/test remain a separate publication boundary for this candidate.

@@ -146,6 +146,25 @@ def serialize_python_uuid_headers(source):
                 lines[index] = (line[:start] + b"str(" + line[start:end] + b")" + line[end:]).decode("utf-8")
     return "".join(lines)
 
+def guard_go_audit_read(source):
+    """Replace only the pinned audit-read dispatch, refusing an unreviewed generator shape."""
+    matches = list(re.finditer(r"^func \(c \*Client\) ListAuditEvents\(", source, re.MULTILINE))
+    if len(matches) != 1:
+        raise ValueError("expected one generated ListAuditEvents method; review the pinned Go generator")
+    start = matches[0].start()
+    end = source.find("\n}", start)
+    if end < 0:
+        raise ValueError("generated ListAuditEvents method is incomplete")
+    end += 2
+    method = source[start:end]
+    ordinary, guarded = "\treturn c.Client.Do(req)\n", "\treturn c.doAuditedRead(req)\n"
+    if method.count(guarded) == 1 and ordinary not in method:
+        return source
+    if method.count(ordinary) != 1 or guarded in method:
+        raise ValueError("generated ListAuditEvents dispatch changed; review audit-read transport protection")
+    return source[:start] + method.replace(ordinary, guarded) + source[end:]
+
+
 def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
     """Generate both clients from the same projected contract."""
     domain = source.parent.name.replace("-", "_")
@@ -155,6 +174,16 @@ def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
     contract = project_contract(document)
     if not contract["paths"]:
         return False
+    audited_read = contract["paths"].get("/api/v1/admin/audit-events", {}).get("get")
+    named_reads = [(path, method) for path, item in contract["paths"].items()
+                   for method, operation in item.items() if method in METHODS
+                   and operation.get("operationId") == "listAuditEvents"]
+    if (audited_read is not None or named_reads) and (
+        domain != "identity" or audited_read is None
+        or audited_read.get("operationId") != "listAuditEvents"
+        or named_reads != [("/api/v1/admin/audit-events", "get")]
+    ):
+        raise ValueError("the published audit read moved or was renamed; review its SDK transport protection")
     local_contract = temp / f"{domain}.json"
     local_contract.write_text(json.dumps(contract, sort_keys=True), encoding="utf-8")
 
@@ -169,6 +198,10 @@ def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
     with (go_out / "client.gen.go").open("wb") as output:
         subprocess.run([go_tool, "-config", str(go_config), str(local_contract)],
                        check=True, stdout=output)
+    if audited_read is not None:
+        client = go_out / "client.gen.go"
+        client.write_text(guard_go_audit_read(client.read_text(encoding="utf-8")), encoding="utf-8")
+        shutil.copyfile(TEMPLATES / "audit_read.go.template", go_out / "audit_read.gen.go")
     python_out = python_root / domain
     subprocess.run([
         python_tool, "generate", "--path", str(local_contract), "--meta", "none",

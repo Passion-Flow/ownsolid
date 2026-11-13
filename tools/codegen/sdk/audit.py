@@ -9,9 +9,23 @@ import re
 from generate import CONTRACTS, METHODS, public_audiences, public_sources, read_contract
 
 
+def response_object_shape(schema):
+    """Return the declared object names and closure, independently of value constraints."""
+    object_keys = ("properties", "required", "additionalProperties")
+    if not any(key in schema for key in object_keys) and schema.get("type") != "object":
+        return None
+    properties, required = schema.get("properties", {}), schema.get("required", [])
+    if (not isinstance(properties, dict) or not isinstance(required, list)
+            or any(not isinstance(name, str) for name in required)):
+        raise ValueError("response object properties and required names must be valid")
+    return {
+        "properties": sorted(properties), "required": sorted(set(required)),
+        "closed": schema.get("additionalProperties") is False,
+    }
 
-def response_models(document, operation):
-    """Collect local named schema references for each typed response body."""
+
+def response_surface(document, operation):
+    """Collect named models and object shapes for each local response schema."""
     def resolve(reference):
         if not isinstance(reference, str) or not reference.startswith("#/"):
             raise ValueError("response references must use local JSON pointers")
@@ -23,7 +37,7 @@ def response_models(document, operation):
             raise ValueError("response reference does not resolve in the local contract") from exc
         return value
 
-    result = {}
+    models, shapes = {}, {}
     responses = operation.get("responses", {})
     if not isinstance(responses, dict):
         raise ValueError("responses must be an object")
@@ -43,13 +57,16 @@ def response_models(document, operation):
         for media_type, content in sorted(content_types.items()):
             if not isinstance(content, dict):
                 raise ValueError("response media type must be an object")
-            references, seen = set(), set()
+            references, seen, objects = set(), set(), {}
 
-            def visit(value):
+            def visit(value, location):
                 if isinstance(value, list):
-                    for item in value:
-                        visit(item)
+                    for index, item in enumerate(value):
+                        visit(item, f"{location}/{index}")
                 elif isinstance(value, dict):
+                    shape = response_object_shape(value)
+                    if shape is not None:
+                        objects[location] = shape
                     if "$ref" in value:
                         reference = value["$ref"]
                         if not isinstance(reference, str):
@@ -58,27 +75,35 @@ def response_models(document, operation):
                             references.add(reference)
                         if reference not in seen:
                             seen.add(reference)
-                            visit(resolve(reference))
+                            visit(resolve(reference), reference)
                     # Annotation payloads such as examples can contain literal
                     # "$ref" fields. Only schema-bearing keywords form type edges.
                     for keyword in ("allOf", "anyOf", "oneOf", "prefixItems"):
-                        visit(value.get(keyword))
+                        visit(value.get(keyword), f"{location}/{keyword}")
                     for keyword in ("items", "contains", "not", "if", "then", "else",
                                     "additionalProperties", "unevaluatedProperties",
                                     "additionalItems", "unevaluatedItems", "propertyNames",
                                     "contentSchema"):
-                        visit(value.get(keyword))
+                        visit(value.get(keyword), f"{location}/{keyword}")
                     for keyword in ("properties", "patternProperties", "dependentSchemas",
                                     "dependencies"):
                         children = value.get(keyword, {})
                         if isinstance(children, dict):
-                            for child in children.values():
-                                visit(child)
+                            for name, child in sorted(children.items()):
+                                escaped = name.replace("~", "~0").replace("/", "~1")
+                                visit(child, f"{location}/{keyword}/{escaped}")
 
-            visit(content.get("schema"))
+            visit(content.get("schema"), "#")
             if references:
-                result[f"{status} {media_type}"] = sorted(references)
-    return result
+                models[f"{status} {media_type}"] = sorted(references)
+            if objects:
+                shapes[f"{status} {media_type}"] = dict(sorted(objects.items()))
+    return models, shapes
+
+
+def response_models(document, operation):
+    """Collect local named schema references for each typed response body."""
+    return response_surface(document, operation)[0]
 
 
 def inventory(contracts):
@@ -98,12 +123,13 @@ def inventory(contracts):
                     operation_ids[(domain, operation_id)].append((method.upper(), path, audiences))
                 if not audiences:
                     continue
+                models, shapes = response_surface(document, operation)
                 row = {
                     "domain": domain, "method": method.upper(), "path": path, "audiences": audiences,
                     "operation_id": operation_id, "summary": bool(operation.get("summary")),
                     "description": bool(operation.get("description")),
                     "deprecated": operation.get("deprecated", False) is True,
-                    "response_models": response_models(document, operation),
+                    "response_models": models, "response_objects": shapes,
                 }
                 operations.append(row)
                 if not isinstance(operation_id, str) or not operation_id.strip():
@@ -177,6 +203,37 @@ def compare_response_models(baseline, current):
     return findings
 
 
+def compare_response_objects(baseline, current):
+    """Flag closed response object shape changes without claiming wire safety."""
+    current_operations = {
+        (op["domain"], op["method"], op["path"], audience): op
+        for op in current["operations"] for audience in op["audiences"]
+    }
+    findings = []
+    for previous in baseline["operations"]:
+        for audience in previous["audiences"]:
+            key = previous["domain"], previous["method"], previous["path"], audience
+            candidate = current_operations.get(key)
+            if candidate is None or candidate["operation_id"] != previous["operation_id"]:
+                continue
+            before = previous.get("response_objects", {})
+            after = candidate.get("response_objects", {})
+            for body in sorted(before):
+                for location, old_shape in sorted(before[body].items()):
+                    new_shape = after.get(body, {}).get(location)
+                    was_or_is_closed = old_shape["closed"] or new_shape is not None and new_shape["closed"]
+                    if old_shape != new_shape and was_or_is_closed:
+                        findings.append({
+                            "code": "PUBLIC_RESPONSE_OBJECT_SHAPE_CHANGED",
+                            "domain": previous["domain"], "method": previous["method"],
+                            "path": previous["path"], "audience": audience,
+                            "operation_id": previous["operation_id"],
+                            "response": body, "schema_location": location,
+                            "previous_shape": old_shape, "current_shape": new_shape,
+                        })
+    return findings
+
+
 def main():
     """Print a deterministic report and fail when the audit finds conflicts."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -191,6 +248,7 @@ def main():
             previous = inventory(args.baseline)
             report["compatibility_findings"] = (
                 compare_operations(previous, report) + compare_response_models(previous, report)
+                + compare_response_objects(previous, report)
             )
     except (ValueError, KeyError, TypeError, OSError) as exc:
         parser.exit(2, f"OpenAPI audit failed: {exc}\n")
