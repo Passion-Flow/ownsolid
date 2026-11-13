@@ -449,7 +449,7 @@ design only. No public operation or roadmap item is completed by this note.
 ## Durable family domain contract
 
 Reviewed 2026-11-13 for the model-owner implementation. Follow
-[ADR 0077](../decisions/0077-retain-explicit-model-family-membership.md).
+[ADR 0081](../decisions/0081-retain-explicit-model-family-membership.md).
 The MLflow distinction between registry identities and immutable versions above
 is useful; its name-based registration is deliberately not ownsolid's grouping
 rule. Each legacy version gets its own random persisted family UUID, without
