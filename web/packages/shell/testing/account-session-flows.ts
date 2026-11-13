@@ -108,6 +108,7 @@ export function accountSessionFlows(audience: ControlPlane['audience']): void {
       await page.getByLabel('Email').fill(account.email);
       await page.getByLabel('Password', { exact: true }).fill(account.password);
       await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+      await expect(page).not.toHaveURL(/\/sign-in/);
       await page.goto('/account');
       const current = section.getByRole('listitem').filter({ hasText: 'Current session' });
       await expect(current).toHaveCount(1);
