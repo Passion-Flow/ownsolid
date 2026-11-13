@@ -1102,3 +1102,77 @@ The next external release condition is one separately authorized diagnostic
 under the frozen actual launch profile that captures proxy/banner/KEX/auth
 stages and confirms access. No waiting process, automatic retry or native
 qualification is implied by this offline correction.
+
+### Observed remote entry and source-admission failure
+
+A separately authorized observed entry used exact source `3513ab2b`, tree
+`c65b8e3fde9833369c253c8303b70c3f13cae5d8`, with all three retained native
+binary hashes unchanged. It used the actual failed invocation's cwd, inherited
+environment, `/usr/bin/ssh`, configured userspace ProxyCommand/socket, PIPE
+payload, effective BatchMode=no, ConnectTimeout=10, one attempt and keepalive
+settings. Only `-vv` was added to the SSH options; the offline candidate's
+BatchMode=yes override was removed to preserve the actual authentication
+profile. The new entry was separate from every closed legacy stub. Raw logs
+were actual 0600 files in its private directory.
+
+| Parent-observed stage | Seconds after entry start |
+| --- | --- |
+| Proxy command/local version | 0.0292 |
+| Server banner | 3.1126 |
+| KEXINIT | 3.4469 |
+| Known-host match | 4.0340 |
+| Authentication | 6.4714 |
+| Remote command sent | 7.6436 |
+| Remote preflight and dual-carrier admission markers | 8.3970 |
+| SSH/outer exit 255 (overall elapsed) | 99.0435 |
+
+These are parent observation times with 20 ms polling and exact stream byte
+offsets, not packet timestamps. The first necessary error was
+`Timeout, server 100.100.110.24 not responding.` The natural client exit and
+outer exit were both 255, confirming actual error propagation. Neither the
+1,080-second work cutoff nor the final cleanup deadline was reached. Earlier
+banner-timeout attempts retain their original evidence; this later successful
+handshake does not establish their cause.
+
+The real resource preflight observed Free 3,306,266,624 bytes,
+Available 20,793,270,272 bytes, disk 788,917,272,576 bytes, full I/O PSI 0.91
+and no competing heavy process. Both original exact carrier identities passed
+one NB each. The cached image ID/platform matched the pinned Linux/amd64 input.
+No PostgreSQL server or vector extension query was started.
+
+After transport loss, one bounded connection performed cleanup/readback only;
+it did not resume upload, retry a native profile or reacquire either carrier.
+It returned 0 and recovered the original guard's actual result:
+FAILED_OR_INCOMPLETE, PAYLOAD_REFUSAL, 122.163887662 seconds including
+0.055226806 seconds of cleanup. The sole command stage was image-inspect,
+exit 0 in 0.093082848 seconds. The input length/digest check failed before source
+extraction/verification and fixture creation. Received length/digest were not
+recorded, so neither truncation nor corruption can be assigned retrospectively.
+There are zero actual catalog records, native binary executions, SQL roots or
+restricted-role cases, and no source B or actual pin patch.
+
+The cleanup-only audit found the original runner PID 358460 absent/reaped,
+no remaining owned group, both exact lock FDs closed and both carrier paths
+unchanged. No fixture UUID, container, volume or network creation path was
+reached; credential paths were absent. The cleanup audit took 0.000413430 seconds
+and required no signals or resource-removal action. Local diagnostic/cleanup
+SSH groups and wrappers were absent; the log observer joined. Cleanup confirmation
+was retrieved at approximately 436.18 seconds of the original 1,200-second window.
+This is an owned-scope proof, not a global foreign-FD or service assertion.
+
+The initial local JSON's default NOTRUN label was too coarse after confirmed
+remote entry. Preserve that raw result, but classify the whole opportunity as
+entered, transport failed and input admission incomplete. The authoritative
+remote receipt proves the SQL/fixture stages did not run. No cleanup success
+is inferred merely from SSH exit or an empty local listener list.
+
+The private evidence directory is
+`lane-arc-diagnostics/arc111-native-observed.eldemtbg`. Curated trace SHA-256 is
+`7fd7627c01cb736c9591891a0134e45ea0fcf617313629480b1e0ca54aec47b0`;
+the original remote result SHA-256 is
+`c6280bcc225fcb89efbab8ec316311e4ee87551e9044a9cf3521a7fa74e2371b`,
+and independent remote cleanup readback SHA-256 is
+`79e64db0ba30612a7e8950db0e24eac1408fa621c060eae5f28edd275b5cacad`.
+The one actual diagnostic and one necessary cleanup connection ended. Every
+entry is closed; no new connection or automatic retry is active. Original owner
+source, schema60 pins, agent v1 and prior 11-root race qualification remain intact.
