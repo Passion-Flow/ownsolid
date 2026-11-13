@@ -251,9 +251,11 @@ selects the supported TAP reporter and checks all six counters. Its syntax was
 checked; it was not executed and no second admission was attempted.
 
 The fixture command's `/usr/bin/time -l` maximum RSS was 94,142,464 bytes; the
-250 ms sampled owner-tree peak including the guard and runner was 262,094,848
-bytes. These measure only the small fixture suite, not original/new complete
-lint, and establish no reduced-memory performance claim. Node old-space was
+250 ms sampler reported 262,094,848 bytes including the guard and runner. That
+sampler was later found to be limited to the original process group; the next
+section records the resulting scope limitation. These measure only the small
+fixture suite, not original/new complete lint, and establish no reduced-memory
+performance claim. Node old-space was
 capped at 2048 MiB, commands were serial and core dumps were disabled.
 
 The original entry exited 1 after 4.229 seconds and confirmed cleanup. Parent and
@@ -268,6 +270,96 @@ negative controls and comparative peak measurements remain NOTRUN. The seven
 fixture passes do not qualify the full tooling replacement, a complete gate or
 POR-112. The remaining benchmark work needs another explicit job opportunity;
 the reporter repair and the completed fixture evidence must stay source-bound.
+
+### Source-bound full lint and real negative qualification
+
+A separate explicitly authorized B-only continuation used the same exact
+`56a19799` source/tree/Web tree and all 5101 source hashes. It first parsed the
+previous frozen actual Node output successfully and rejected nine offline
+derived missing, duplicate, failed, skipped, empty or abnormal-output controls.
+The candidate runtime, fixture tests, configuration, pinned inputs and original
+CLI arguments were byte-identical. The original seven actual pass results and
+raw output hashes were therefore retained without rerunning those cases. The
+previous parent's reporter failure and exit 1 were not reset or overwritten.
+
+The fresh entry measured 5,296,308,224 bytes raw Free and 166,389,809,152 bytes
+disk free. It took one NB lock on the exact new-epoch carrier and retained that
+same open description through the runner and cleanup. The 600-second total,
+60-second cleanup reserve, 2048 MiB maximum old-space, serial commands and zero
+core-dump limit applied. A's four original make targets stayed NOTRUN.
+
+The actual pre-parse discovery and public calculated-config comparison passed
+for all 372 original ESLint files. Their disjoint partition union is identical,
+all 372 effective configurations match, and five generated/dependency/build/test
+ignore probes remain ignored. The breakdown was Console 127, Portal 34, API 31,
+Config 14, Help 5, i18n 14, Shell 107 and UI 40. Root/container globs and the
+ignored dependency directory correctly selected zero current files; the real
+fixture and negative runs separately exercised newly introduced root/dot files
+and hidden/future directories. No configured input was removed.
+
+| Actual command | Exit | Seconds | `/usr/bin/time -l` maximum RSS, bytes |
+| --- | --- | --- | --- |
+| Complete original `eslint .`, same configuration and 2048 MiB heap | SIGABRT (-6), explicit heap OOM | 15.766 | 2,566,897,664 |
+| Complete new `pnpm --silent lint --format json` | 0, zero errors and warnings over 372 files | 28.147 | 2,075,901,952 |
+| Complete new lint with seven real negative controls | 1, expected rejection | 28.117 | 2,056,159,232 |
+
+The original OOM is retained as a bounded-wrapper outcome, not a product defect,
+old lint success or proof of complete positive diagnostic equality. That command
+did not finish. The new command did finish and its exact result file list matches
+the independent original inventory. The observed command times do not establish
+a throughput comparison with the unfinished original command.
+
+Seven exclusively created controls exercised root and dotfile undefined names,
+conditional React Hooks, untranslated product JSX, unsafe typed member access,
+missing image alternative text and unhandled Promises in e2e, shared testing and
+Config TS. Each original stdin check exited 1; the complete new negative lint
+also exited 1. All expected rules fired, and messages, suppressed messages,
+error/warning/fatal counts matched for every control. Its exact 379-file set was
+the original 372 plus those seven files, not merely an equal count. Original
+typed/plugin rules, ignores and zero-warning threshold were preserved.
+
+### Memory evidence limit and clean continuation boundary
+
+The reported `/usr/bin/time -l` maximum-RSS field decreased by 19.128% between
+the unfinished original and successful new commands. These raw observations
+support a complete lint succeeding within the 2048 MiB heap; they do not measure
+the maximum simultaneous RSS of the entire owner process tree.
+
+Post-run review found a private instrumentation defect: the sampler selected
+only the runner's original PGID and guard PID, without following descendant
+PPIDs across process groups. Its new-command sampled value, 73,629,696 bytes,
+omits large descendants and must not be presented as a complete owner-tree peak.
+The raw `peakActuallyLower` flag was derived from that incomplete sample and is
+not accepted as a tree-peak conclusion. All raw samples and flags remain intact;
+no missing historical process topology was invented. The separate `time -l`
+outputs above retain their own measurement scope.
+
+A data-only private repair follows transitive PPID descendants, records start
+identity and retains previously observed reparented descendants while rejecting
+reused PIDs and unrelated processes sharing a PGID. Seven offline topology
+assertions passed. No actual memory measurement using that repair has run. The
+remaining metric qualification is a focused owner-tree comparison in a new
+explicit opportunity; unchanged coverage, fixture and negative cases need not
+be rerun to inflate counts.
+
+The B continuation actually exited 0 in 82.484 seconds, with cleanup confirmed.
+All seven owned negative files were removed by exact recorded identity; the
+tracked source was clean, guard/runner and attributed cross-PGID descendants
+were gone, previews were empty and no carrier FD remained at readback. The
+carrier retained its device/inode/UID/mode/link count/zero size and the epoch
+manifest hash was unchanged. No new frontend asset, browser, build, service,
+native test or installed verification was involved. There was no second NB,
+automatic retry, queue or activation of old closed entries.
+
+Complete-file/config coverage, real negative behavior and the candidate's whole
+lint are qualified on the exact source above, together with the unchanged prior
+seven-case evidence and their explicit cross-attempt boundary. Full owner-tree
+peak qualification remains open. These are not original A check/build/test,
+installed or POR-112 acceptance. The full 6 GiB floor remains unchanged, and
+neither this candidate nor the unqualified strict-JSON generator is merged into
+the frozen `9e7404f6`/`82c602d3` full-gate source. The concrete lint observation is
+28.147 seconds and the reported 2,075,901,952-byte maximum-RSS field; neither is
+a guaranteed future wall-time or total-tree memory cap.
 
 ### Licences
 
