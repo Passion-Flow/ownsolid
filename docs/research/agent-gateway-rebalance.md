@@ -778,3 +778,33 @@ not a successful inventory or a failure of the compiled transport; retain its
 log SHA-256 `81dcfe45e9636b445d171d21e8c224cc196af9042177c936cb51f77429296109`.
 No package version was changed or downloaded to bypass it. Product source still
 requires complete repository gates and the unchanged native installed drill.
+
+
+## Implementation regression qualification
+
+The initial age-first ordering could indefinitely postpone a recovered preferred
+gateway: every heartbeat after an old retirement finished could choose another
+same-gateway age handoff before checking preference. The new permanent regression
+`TestConnectionHandoffDoesNotStarveRecoveredPreferredGateway` reproduced the exact
+simultaneously-due case and failed without changing its assertions; negative log
+SHA-256 `b972b51ad0aa3363e0d4c60782f6f05dc1bfeeca91db9eff6a8e21df70a9a3de`.
+Give an eligible preference probe priority over same-gateway age refresh. Apply
+the same positive-drain-window budget to either kind of candidate. With a valid
+age binding, a successful preference move also retires its unused old channel
+naturally; legacy preference moves retain their prior close behavior. At most one
+retirement remains live, and both callers still defer probes while it is pending.
+
+The corrected product code passed race checks for the complete Agent contract,
+Agent client, outgoing transport, gateway, HTTP transport, simulator link and report
+packages, followed by the complete affected vet profiles including simulator fleet.
+Agent client/transport took 6.569/1.510 seconds; gateway/HTTP took 5.213/7.059 seconds;
+simulator link/report took 1.598/1.416 seconds. Permanent tests cover valid and
+legacy headers, authority ordering, bounded hint metrics, no ACK replay, cursor
+preservation, capacity refusal, one retirement, shutdown join, shared channels and
+the recovered preference regression. The Agent, control and simulator race logs
+have SHA-256 values `20bf03147db7aa23a93e0acaa43a6393580d11ec69906490d1dc87fa1f2f4d75`,
+`def85f8e676699eaee2f0c554ec46545b1bc1054c381d196c59bc610b66f2115` and
+`d7cd033a731c3297785d7c58abb26fc3eb531ce522a93e2cdf7e1d2f6063be91`.
+The sorted Go-source/module-input fingerprint is `12727b32504ae011e1fb46e357c74b17c6453ab3c3c1a0c22de7dff0e57712df`.
+Full check/build/test and the unchanged installed native 500-agent drill remain
+required. Do not infer acceptance or a new capacity claim from these focused runs.

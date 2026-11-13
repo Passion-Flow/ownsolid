@@ -9,8 +9,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
@@ -57,13 +59,15 @@ type Policy struct {
 type Problem func(error) (string, int)
 
 type Gateway struct {
-	backend  Backend
-	policy   Policy
-	problem  Problem
-	server   *grpc.Server
-	slots    chan struct{}
-	mu       sync.Mutex
-	sessions map[string]*session
+	backend                Backend
+	policy                 Policy
+	problem                Problem
+	server                 *grpc.Server
+	slots                  chan struct{}
+	mu                     sync.Mutex
+	sessions               map[string]*session
+	connectionHints        atomic.Uint64
+	connectionHintFailures atomic.Uint64
 	// draining ends when Drain is called, and every session with it.
 	draining context.Context
 	drain    context.CancelFunc
@@ -281,7 +285,22 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
 			}
 			g.sessions[node] = current
 			g.mu.Unlock()
+
 			registered = true
+			if !age.IsZero() && reply.Disposition.AcceptsSessionRebalance() {
+				now := time.Now()
+				drain := age.Sub(now)
+				closing := httpserver.ConnectionCloseAt(ctx).Sub(now)
+				if drain > 0 && closing >= drain {
+					if err := stream.SetHeader(metadata.Pairs(wire.SessionDrainHeader, strconv.FormatInt(int64(drain), 10), wire.SessionCloseHeader, strconv.FormatInt(int64(closing), 10))); err != nil {
+						g.connectionHintFailures.Add(1)
+						slog.Warn("agent_session_connection_hint_failed", "node_id", node, "connection_id", httpserver.ConnectionID(ctx))
+						return nil
+					}
+					g.connectionHints.Add(1)
+				}
+			}
+
 			slog.Info("agent_session_opened", "node_id", node, "connection_id", httpserver.ConnectionID(ctx))
 		}
 		if e := stream.SendMsg(&reply); e != nil {
@@ -354,5 +373,9 @@ func (g *Gateway) exchange(ctx context.Context, address, node, credential string
 
 // Samples reports the open sessions and held claims for the metrics store.
 func (g *Gateway) Samples() []telemetrystore.Sample {
-	return []telemetrystore.Sample{{Name: "ownsolid_agent_gateway_sessions", Value: float64(g.Sessions())}}
+	return []telemetrystore.Sample{
+		{Name: "ownsolid_agent_gateway_sessions", Value: float64(g.Sessions())},
+		{Name: "ownsolid_agent_gateway_connection_hints_total", Value: float64(g.connectionHints.Load()), Labels: []telemetrystore.Label{{Name: "outcome", Value: "queued"}}},
+		{Name: "ownsolid_agent_gateway_connection_hints_total", Value: float64(g.connectionHintFailures.Load()), Labels: []telemetrystore.Label{{Name: "outcome", Value: "failed"}}},
+	}
 }
