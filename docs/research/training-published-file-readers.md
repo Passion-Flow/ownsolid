@@ -518,12 +518,12 @@ qualification or fleet budget changed.
 
 ## Authorized single native attempt: first carrier refusal
 
-The sole authorized invocation used the exact reviewed bounded-v2 entry, source
+The first opportunity used the exact reviewed bounded-v2 entry, source
 e639db9035b0b2c0229c90175493c605f328e295 and frozen plan/binding above. The
 outer raw exit code was 73, FIRST_LOCK_BUSY. Its one blocking first-carrier
 acquisition reached its 60-second deadline before ownership. The second
 carrier was never opened or attempted. There was no in-round retry and this
-one native opportunity is consumed; it is not available for an automatic
+first opportunity was consumed; it did not authorize an automatic
 second attempt. No parent, source, test, admission threshold or timeout was
 changed after the refusal.
 
@@ -575,3 +575,65 @@ SQL, restricted-role or installed-gateway acceptance. Actual ARC constructor,
 startup rollback/drain/Close, read-only namespace delivery, Model/Node and
 protected-function/grant contracts and the original fleet budgets remain open.
 All product boxes remain unchanged.
+
+
+## Authorized new opportunity after carrier release
+
+A new explicit opportunity followed actual release of the permanent carriers.
+It used the same reviewed bounded-v2 entry and clean frozen e639db90, unchanged
+plan/binding, inputs, thresholds and timeouts. It did not relabel or overwrite
+the original FIRST_LOCK_BUSY receipt/result. Both carriers were acquired, but
+the original admission failed on free memory before any PostgreSQL or Go work.
+The entry returned RESOURCE_REFUSED (driver/outer raw 78), with original
+admission child raw 1. Its complete wall time was 0.359098 seconds and parent
+elapsed at final record was 0.273 seconds. This new opportunity is consumed;
+there was no in-round retry or wait for memory to recover.
+
+| Actual admission field | Observation | Original requirement |
+| --- | --- | --- |
+| MemFree | 1,759,084,544 bytes | >=3,221,225,472 bytes; refused |
+| MemAvailable | 16,132,050,944 bytes | >=12,884,901,888 bytes |
+| Disk free | 790,032,785,408 bytes | >=16,106,127,360 bytes |
+| Full PSI avg10 / avg60 | 0.01 / 0.08 | Both <=5 |
+| Competing heavy process count | 0 | 0 |
+
+The raw assertion was shared-host free memory below admission threshold. No
+threshold was lowered, cache flushed, other process stopped or fixture
+changed. source_head/source_status exited 0 and original_admission exited 1;
+all three were reaped and their groups were absent on audit. No compile,
+native owner root/subtest/package, SQL, processor, GPU or fleet body started.
+There were zero test actions, including skips; this is no native test result.
+No schema or DSN was created and the Go fixture environment was not applied.
+The actual parent ran Linux x86_64, Python 3.12.3.
+
+Both owned carrier descriptors were released with no recorded release error.
+The read-only audit found no live exact entry/wrapper process and no container
+with the exact run name lane-trn-reader-dfbcb03d811645eda2500510611230f9. No
+container or anonymous volume creation was attempted; the private evidence
+directory contains only admission.log and result.json. Both permanent regular
+carriers remain 29/82/0 and 64512/7508772/0 (device/inode/UID), mode 0644 and
+zero bytes. The audit acquired neither carrier and performed no cleanup
+mutation or foreign-resource operation. All heavy leases had already ended
+before the subsequent evidence/document work.
+
+| New opportunity evidence | SHA-256 |
+| --- | --- |
+| /root/lane-trn-reader-native-outer.j49w8wib/receipt.json | 2a2f375737ca697d66aceb549712b1d7732db4fe541dc5805312985ff50e8dfa |
+| /root/lane-trn-reader-native.f6vcj2uw/result.json | df9f2e6a4385484a67506722a5962d02da1f1034646b6629b3ce499e5aafe09f |
+| admission.log in the result directory | f984c56f75fbef62f6ffc38031238c8e6ec340bdf347ffd475e9fc1ce9d53b3a |
+| outer.log in the receipt directory | 0837f96c65f9515f5511087ca7ae34713203eec29d538a1b2cda50f62c551c93 |
+| owned-cleanup-audit.json in the receipt directory | dc701e64adf36e374ec23236b659d35414faef94354a56068b4fe11270000e0d |
+
+The new archive /root/lane-trn-tools/reader-native-release-attempt-e639db90.tgz
+has 21 entries and 33,508 bytes, SHA-256
+18b850bc392e18942ff243f2f6875787972020690a1cd90688d19ff25286e613.
+Its evidence-manifest.json in the receipt directory hashes to
+95ac911b3b4f345945b32a6d7e55bfe7cc0f1765f0c27cbe0dfcfd0e1ac890a7.
+It includes the exact reviewed inputs and new admission/result/receipt/audit.
+
+The prior receipt/result retain their original hashes. The reader producer
+source stays private and unmerged; actual owner SQL, ARC construction/startup
+rollback/drain/Close, read-only namespace delivery, Model/Node/protected SQL
+and original fleet-budget acceptance remain independent open work. No new
+Mac wait or whole-suite run was added. Product boxes and original support
+scopes remain unchanged.
