@@ -552,9 +552,9 @@ corrected with a package alias before this qualification.
 No product source, dependency, key, formal schema, API or UI changed. Synthetic
 authority rows and a fixture password form do not implement actual ownsolid
 Portal consent, catalog registration, scoped grants or revocation composition.
-IAM-106 remains open and its complete external qualification continues.
+IAM-106 remains open for actual serving, Portal and Catalog composition.
 
-The next fault run pins the RP's OAuth authentication style explicitly to the
+The fault run pins the RP's OAuth authentication style explicitly to the
 registered Basic method. The selected [OAuth client](https://github.com/golang/oauth2/blob/v0.38.0/internal/token.go)
 otherwise probes header authentication and can automatically retry with body
 credentials after an error while its style is unknown. That behavior must not
@@ -565,14 +565,76 @@ Retain private child-process logs and inspect them against generated sensitive
 test values; no key, credential, code, bearer, state or verifier belongs in the
 published logs or research note.
 
-The external prototype must use separate real RP and OP HTTPS servers, verified
-private CA trust and actual PostgreSQL persistence. Prove discovery through code
-exchange, signed ID-token verification and matching UserInfo subject; then
-restart the OP and repeat with retained client and subject identity. Verify
-wrong client/secret, redirect, issuer, PKCE, nonce, source browser, expired code,
-simultaneous redemption, lost COMMIT reply, signing-key rotation and bounded
-request bodies. Token and authorization pages use `no-store`; logs and metrics
-contain no code, token, secret, cookie, raw claim set or credential-bearing URL.
+### Atomic fault and boundary qualification
+
+The extended standalone prototype passed 28 non-worker roots, 132 independent
+leaves and 148 named tests in each topology: native Go race detection against
+owned loopback PostgreSQL, then the same cases inside a Linux arm64
+`--network none` container. The native Mac client is not egress-isolated.
+Both used real RP/OP HTTPS, verified private CA/name checks and the nine
+synthetic PostgreSQL tables. The worker-only root skipped in the parent and
+ran explicitly in 64 actual OP child processes, all of which exited normally.
+
+Removing the owned signing file and refusing the redemption audit insert each
+returned no token and rolled back token, code consumption and event together;
+explicit repair/retry succeeded. Actual competing code-row waits produced one
+successful exchange and one refusal. Cancellation after an observed SQL wait
+drained the worker and left the code reusable. A wrong secret was refused
+before reaching that held row. Both real client-disable lock orders passed:
+an earlier disable prevented issuance; an earlier fenced issuance committed,
+then the later disable immediately fenced its UserInfo access.
+
+The published PostgreSQL forwarding helper exercised COMMIT suppression before
+forwarding and after the real server acknowledged commit. Each actual RP
+callback made exactly one token HTTP request and the OP sent exactly one COMMIT.
+Independent database reads established zero versus one committed issuance,
+with code/token/event atomic in both cases. Neither uncertain result signed
+the RP in or released credentials. Explicit fresh authorization succeeded.
+
+Missing, hostile and duplicate Origin, CSRF, foreign browser/source-session
+cookies, RP state and duplicate callback parameters were refused, followed by
+corrected retries. A real foreign-tenant request row reused the browser/CSRF
+material and still could not be read or approved. Wrong CA/name,
+header-only UserInfo placement, issuer/audience/nonce/signature, actual database
+code expiry and oversized HTTP forms passed their refusal checks.
+
+Actual revocation preserved another client's token and refused a foreign-tenant
+client. Invalid/ID tokens, unknown or empty hints and repeated revocation
+followed the opaque RFC 7009 response contract. Audit refusal rolled back
+revocation; explicit retry revoked the owned token, ended UserInfo access and
+produced exactly one event. A fresh sign-in remained usable. Signing rotation
+used real process replacement: a fresh RP fetched the retained old public key,
+verified the still-valid token, then rejected it after its actual signed
+expiration. Retiring that old public key preserved fresh issuance. Missing or
+mismatched active public/private key pairs were refused by the actual signing
+file reader, including an active public file replaced with another key.
+
+Evidence is `iam106-provider-faults-20261113.39q0m_in`, run
+`qualification-nbttbz67`, qualified input `4c8a8289cf1b`. Source-hash manifest
+SHA-256 is
+`704f23a2fcdc63526fa5533ecb63b95ba9c4c61f17a55fca7ffb7fde2dad8f01`.
+The frozen/current source and both passing test-name sets matched. All 83
+retained logs passed generated-sensitive-value and compact-credential checks;
+six synthetic positive/negative scanner controls also passed. Private fixture
+vocabularies, source, logs and process records stay outside Git. Both owned
+containers, anonymous storage and the native bridge were removed. Module/sum
+files and the 45-module/57-notice license graph are unchanged.
+
+Earlier retained attempts exposed fixture/reporting errors: a missing shared
+forwarder helper, expecting JSON in the SDK's valid empty revocation response,
+classifying a no-test helper package as a skipped test, and a Linux unit-fixture
+directory inheriting a permissive umask. The helper was copied unchanged from
+its owner; response classification was corrected and the fixture explicitly
+uses mode 0700. Private-file validation was not weakened. The final complete
+pair passed after those corrections.
+
+### Remaining product acceptance
+
+These results cover retained stdout/stderr and PostgreSQL logs, not the
+product's configured metrics/trace pipeline. They do not qualify a rendered
+browser, actual Portal source/MFA assurance, lost-key Control startup/repair,
+the complete concurrent uninstall/membership matrix or blocked HTTP-body I/O.
+No product source, dependency, route, formal migration, key or UI changed.
 
 Product acceptance additionally needs a real installed catalog application:
 an authorized operator registers it, a Portal user signs in without re-entering
