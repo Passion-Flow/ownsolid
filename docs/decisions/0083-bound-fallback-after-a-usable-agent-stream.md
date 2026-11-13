@@ -1,6 +1,6 @@
 # Bound fallback after a usable Agent stream
 
-Status: proposed for external ARC-106 prototype; no runtime change accepted yet.
+Status: accepted for ARC-106 implementation after the external verified-TLS prototype; native installed and load acceptance remain open.
 
 ## Context
 
@@ -9,12 +9,12 @@ The unchanged 2,000-agent test failed its three-minute stream recovery deadline:
 restarted. The session had already demonstrated a valid gRPC path, but the
 fallback detector treated later paired failures as an unknown unsupported path.
 
-## Proposed decision
+## Decision
 
 Retain the existing two probes and 300-second fallback for initial unknown or
 unsupported paths. After a valid active/disabled stream heartbeat, remember that
 fact only in memory for the current Agent session. Bound subsequent fallback by
-min(300 seconds, the last valid maximum reconnect backoff advertised by control).
+min(300 seconds, the currently adopted valid maximum reconnect backoff advertised by control).
 Use the same pure rule in the Agent and simulator; existing pacing and the cycle
 remain the only retry owner. Do not replay an application exchange or create a
 background worker. A new process forgets this fact; old agents retain their old

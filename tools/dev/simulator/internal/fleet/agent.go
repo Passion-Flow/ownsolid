@@ -38,6 +38,7 @@ type agent struct {
 	fallbackUntil     time.Time
 	probeHTTPS        bool
 	probes            int
+	previouslyUsable  bool
 
 	// wake ends the wait between cycles early, for a restart.
 	wake chan struct{}
@@ -156,6 +157,7 @@ func (a *agent) applyFaults() {
 		// A new process: no stream, no fallback, default pacing, no backoff. The cursor is
 		// on disk and survives.
 		a.dropStream()
+		a.previouslyUsable = false
 		a.fallbackUntil, a.probeHTTPS, a.probes, a.failures, a.pacing = time.Time{}, false, 0, 0, wire.DefaultPacing()
 	}
 	if loseCursor {
@@ -224,7 +226,7 @@ func (a *agent) heartbeat(ctx context.Context, h wire.Handshake) (wire.Dispositi
 			}
 			if a.probes++; a.probes >= wire.SessionFallbackProbes {
 				a.probes = 0
-				a.fallbackUntil = time.Now().Add(time.Duration(wire.SessionFallbackRetrySeconds) * time.Second)
+				a.fallbackUntil = time.Now().Add(wire.SessionFallbackDelay(a.pacing, a.previouslyUsable))
 			}
 			return out, nil
 		}
@@ -245,6 +247,7 @@ func (a *agent) heartbeat(ctx context.Context, h wire.Handshake) (wire.Dispositi
 	if e != nil {
 		return wire.Disposition{}, e
 	}
+	a.previouslyUsable = true
 	return *reply.Disposition, nil
 }
 
@@ -294,6 +297,7 @@ func (a *agent) openWithHeartbeat(ctx context.Context, h wire.Handshake) (wire.D
 	if e != nil {
 		return wire.Disposition{}, e
 	}
+	a.previouslyUsable = true
 	return *reply.Disposition, nil
 }
 
