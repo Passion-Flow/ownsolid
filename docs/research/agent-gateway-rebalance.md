@@ -1,10 +1,11 @@
 # Agent gateway rebalancing
 
 Current acceptance: the dedicated gateway path passed the unchanged native
-500-agent lifecycle test on source `821227ea5b94a8357f695c290e78af3b81c54f22`,
+500-agent lifecycle test on sources `821227ea5b94a8357f695c290e78af3b81c54f22`
+and `3ae6bfebb67b47d684de4651cc597c26f104d725`,
 including strict terminal 500/500 streams and final persisted cursors. Complete
-repository check/build/test also passed that source. The earlier 497/500 run
-remains a failed historical input; see [current measured acceptance](#authenticated-handoff-installed-acceptance).
+repository check/build/test also passed both sources. The earlier 497/500 run
+remains a failed historical input; see [current measured acceptance](#bounded-fallback-integration-qualification).
 Earlier results below apply only to their stated input and fixture scope.
 
 Research for ARC-107. An agent keeps the session that survived an outage, so rolling a
@@ -1030,6 +1031,15 @@ the image ID is `sha256:704f35c660d6a90fb4bf4d8756289c1045deaabd0f31bb4246537e14
 The documentation-only integration at 9ca0a470 preserved all 4,734 non-document
 paths byte-for-byte and mode-for-mode and passed a fresh make check. Its log
 SHA-256 is `e8029e0edbcd186e33fd194880ba048a2a9bfb741f48151494dd98a3aef70e85`.
-This qualification does not accept the still-open 2,000-agent ARC-106 baseline,
-whose earlier failed recovery windows remain in the
-[fleet measurement research](fleet-load-test.md#current-native-baseline-attempt).
+The lifecycle qualification alone does not accept a 2,000-agent baseline.
+The independent [ARC-106 acceptance](fleet-load-test.md#accepted-native-kpi-baseline)
+and its retained earlier failed recovery windows are recorded separately.
+
+The published integration `20069022c889c22ed9dc804bfcb443534f6f9b85` also passed
+the complete check/build/test gate with the same browser totals and unchanged
+environment skips. Its non-document bytes and modes match the native qualified
+3ae6bfeb input. The check/build/test log SHA-256 values are
+`49ee74eae23cd599a1f3f5f905964dad7617dda3dbaa56be9d897da4abd83730`,
+`31036011b9aaa10b9fd376d804784ba761713ebc4cccde7a25f5755c16c0eb01` and
+`7db54d132ca209b2cc869a8ea50b3efe07ab60d511e86201f8b799d351f9eff6`.
+The owned scratch image was verified detached and removed.
