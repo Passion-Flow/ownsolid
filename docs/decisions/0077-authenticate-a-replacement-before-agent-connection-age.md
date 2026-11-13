@@ -1,6 +1,6 @@
 # Authenticate a replacement before Agent connection age
 
-Status: accepted for ARC-107 implementation; native installed acceptance remains open.
+Status: accepted; dedicated gateway native installed acceptance passed on 821227ea.
 
 ## Context
 
