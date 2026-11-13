@@ -397,7 +397,17 @@ flow must survive OP restart with retained client, issuer, subject and keys.
 Tests must prove wrong/foreign client, secret, redirect, PKCE and browser refusal;
 duplicate redemption; signing failure and retry; revocation/removal propagation;
 wrong CA/name, response/request budgets and actual blocked-I/O cancellation.
-Signing rotation retains old public keys through issued-token expiry. Disabled
+Signing rotation retains old public keys through issued-token expiry.
+[OIDC Core section 10.1](https://openid.net/specs/openid-connect-core-1_0.html#Signing)
+requires the signing private key to correspond to a published verification key.
+Check the configured active key ID and actual public/private pair before
+constructing the provider and whenever a file-backed signing key is read for
+issuance. A missing or mismatched active public key must fail closed, including
+after an operator replaces a file. Test missing active IDs, wrong public keys
+and a matching pair; a second retained public key must not mask a mismatched
+active key. Keep the previous public key through actual signed-token expiry
+and demonstrate a fresh RP verifier fetching it after process restart.
+Disabled
 grants and SDK routes remain explicitly closed rather than receiving success
 implementations. Native wire-loss tests reuse the repository's actual
 PostgreSQL forwarding helper outside the product, not simulated SQL responses.
