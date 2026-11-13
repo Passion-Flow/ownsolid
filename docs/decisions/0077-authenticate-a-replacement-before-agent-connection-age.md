@@ -30,7 +30,10 @@ Bind the committed stream's real peer addresses to gRPC's transport lifecycle.
 After adoption, leave the unused old channel quiescent until its physical end or
 existing hard-close deadline. A separate bounded worker closes it outside gRPC's
 connection callback; explicit shutdown joins that worker. Keep at most one
-retiring channel and defer preference probes while it is still live.
+retiring channel and defer preference probes while it is still live. When both
+checks are eligible, prefer a recovered higher-ranked gateway before refreshing
+the same gateway, so repeated aging cannot starve failback. Use the same remaining
+window budget and natural retirement for a preference move with a valid age hint.
 
 Put this outgoing transport owner in `services/agent/sessiontransport`, within the
 existing Agent module. The simulator imports the same implementation. This one
