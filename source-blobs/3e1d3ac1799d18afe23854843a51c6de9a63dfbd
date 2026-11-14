@@ -1,0 +1,497 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ownsolid workspace quota status (review candidate)",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/v1/admin/scheduling/quota": {
+      "get": {
+        "operationId": "ReadAdminWorkspaceQuotaStatus",
+        "description": "Read only the currently authorized workspace quota and real held reservations. No physical capacity, sibling usage, job readiness or historical wait-code projection. Unknown and duplicate selectors and request bodies are refused.",
+        "x-audiences": [
+          "admin"
+        ],
+        "security": [
+          {
+            "AdminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "description": "Canonical lowercase nonzero UUID.",
+              "not": {
+                "enum": [
+                  "00000000-0000-0000-0000-000000000000"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Confirmed authorized quota accounting.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceQuotaStatusResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Existing redacted identity or storage problem; no quota payload.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "429": [
+            "RATE_LIMITED",
+            "AUTH_CAPACITY_EXCEEDED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "STORAGE_CANCELLED",
+            "STORAGE_TIMEOUT",
+            "STORAGE_LOCK_TIMEOUT",
+            "STORAGE_DEADLOCK",
+            "STORAGE_COMMIT_ROLLED_BACK"
+          ]
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace}/scheduling/quota": {
+      "get": {
+        "operationId": "ReadPortalWorkspaceQuotaStatus",
+        "description": "Read only the currently authorized workspace quota and real held reservations. No physical capacity, sibling usage, job readiness or historical wait-code projection. Unknown and duplicate selectors and request bodies are refused.",
+        "x-audiences": [
+          "portal"
+        ],
+        "security": [
+          {
+            "PortalSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+              "description": "Canonical lowercase nonzero UUID.",
+              "not": {
+                "enum": [
+                  "00000000-0000-0000-0000-000000000000"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Confirmed authorized quota accounting.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceQuotaStatusResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Existing redacted identity or storage problem; no quota payload.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-error-codes": {
+          "400": [
+            "VALIDATION_FAILED"
+          ],
+          "401": [
+            "AUTH_REQUIRED",
+            "AUTH_SESSION_EXPIRED"
+          ],
+          "403": [
+            "ACCESS_DENIED"
+          ],
+          "404": [
+            "RESOURCE_NOT_FOUND"
+          ],
+          "409": [
+            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+          ],
+          "421": [
+            "MISDIRECTED_REQUEST"
+          ],
+          "429": [
+            "RATE_LIMITED",
+            "AUTH_CAPACITY_EXCEEDED"
+          ],
+          "503": [
+            "STORAGE_UNAVAILABLE",
+            "SERVICE_NOT_READY",
+            "STORAGE_CANCELLED",
+            "STORAGE_TIMEOUT",
+            "STORAGE_LOCK_TIMEOUT",
+            "STORAGE_DEADLOCK",
+            "STORAGE_COMMIT_ROLLED_BACK"
+          ]
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "PortalSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-portal_session"
+      },
+      "AdminSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-admin_session"
+      }
+    },
+    "schemas": {
+      "WorkspaceQuotaResource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "resource",
+          "guaranteed",
+          "hard_limit",
+          "reserved",
+          "unreserved_quota"
+        ],
+        "properties": {
+          "resource": {
+            "type": "string",
+            "minLength": 1
+          },
+          "guaranteed": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,18})$",
+            "description": "Exact nonnegative int64 quantity in native integer resource units."
+          },
+          "hard_limit": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,18})$",
+            "description": "Exact nonnegative int64 quantity in native integer resource units."
+          },
+          "reserved": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,18})$",
+            "description": "Exact nonnegative int64 quantity in native integer resource units."
+          },
+          "unreserved_quota": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,18})$",
+            "description": "Exact nonnegative int64 quantity in native integer resource units."
+          }
+        }
+      },
+      "WorkspaceQuotaStatus": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "workspace_id",
+              "policy_revision",
+              "state",
+              "reason"
+            ],
+            "properties": {
+              "workspace_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                "description": "Canonical lowercase nonzero UUID.",
+                "not": {
+                  "enum": [
+                    "00000000-0000-0000-0000-000000000000"
+                  ]
+                }
+              },
+              "policy_revision": {
+                "type": "integer",
+                "const": 0
+              },
+              "state": {
+                "type": "string",
+                "const": "unconfigured"
+              },
+              "reason": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "code",
+                  "action"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "const": "SCHEDULING_QUOTA_UNCONFIGURED"
+                  },
+                  "action": {
+                    "type": "string",
+                    "const": "configure_quota_policy"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "workspace_id",
+              "policy_revision",
+              "state",
+              "reason"
+            ],
+            "properties": {
+              "workspace_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                "description": "Canonical lowercase nonzero UUID.",
+                "not": {
+                  "enum": [
+                    "00000000-0000-0000-0000-000000000000"
+                  ]
+                }
+              },
+              "policy_revision": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 1
+              },
+              "state": {
+                "type": "string",
+                "const": "unallocated"
+              },
+              "reason": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "code",
+                  "action"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "const": "SCHEDULING_QUOTA_UNALLOCATED"
+                  },
+                  "action": {
+                    "type": "string",
+                    "const": "configure_workspace_quota"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "workspace_id",
+              "policy_revision",
+              "state"
+            ],
+            "properties": {
+              "workspace_id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                "description": "Canonical lowercase nonzero UUID.",
+                "not": {
+                  "enum": [
+                    "00000000-0000-0000-0000-000000000000"
+                  ]
+                }
+              },
+              "policy_revision": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 1
+              },
+              "state": {
+                "type": "string",
+                "const": "configured"
+              },
+              "resources": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WorkspaceQuotaResource"
+                },
+                "description": "Sorted workspace allocation rows; omitted for an allocation with no positive resource ceiling. Unreserved quota is not physical availability or an admission decision."
+              }
+            }
+          }
+        ]
+      },
+      "WorkspaceQuotaStatusResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WorkspaceQuotaStatus"
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "ACCESS_DENIED",
+              "AUTH_CAPACITY_EXCEEDED",
+              "AUTH_REQUIRED",
+              "AUTH_SESSION_EXPIRED",
+              "INTERNAL_ERROR",
+              "MISDIRECTED_REQUEST",
+              "RATE_LIMITED",
+              "RESOURCE_NOT_FOUND",
+              "SERVICE_NOT_READY",
+              "STORAGE_CANCELLED",
+              "STORAGE_COMMIT_OUTCOME_UNKNOWN",
+              "STORAGE_COMMIT_ROLLED_BACK",
+              "STORAGE_DEADLOCK",
+              "STORAGE_LOCK_TIMEOUT",
+              "STORAGE_TIMEOUT",
+              "STORAGE_UNAVAILABLE",
+              "VALIDATION_FAILED"
+            ]
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+            "description": "Canonical lowercase nonzero UUID.",
+            "not": {
+              "enum": [
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            }
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "fields": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "code": {
+                  "type": "string",
+                  "maxLength": 64
+                }
+              },
+              "required": [
+                "field",
+                "code"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "request_id"
+        ]
+      }
+    }
+  }
+}

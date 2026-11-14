@@ -1,0 +1,4 @@
+CREATE TRIGGER model_holdout_source_immutable_delete BEFORE DELETE ON model_holdout_sources FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='MODEL_HOLDOUT_IMMUTABLE';
+END;

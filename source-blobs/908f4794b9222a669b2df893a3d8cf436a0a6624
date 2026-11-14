@@ -1,0 +1,11 @@
+FROM docker.io/library/python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1
+LABEL org.opencontainers.image.revision="149a95013db6c6d1ca9dbadd09b05fff9b4c98de" ownsolid.fixture="arc107-installed"
+COPY control /usr/local/bin/control
+COPY password-blocklist.txt /opt/projectone/security/password-blocklist.txt
+COPY data-processing/ /opt/projectone/data-processing/
+COPY portal/ /opt/projectone/portal/
+COPY console/ /opt/projectone/admin/
+USER 10001:10001
+ENTRYPOINT ["/usr/local/bin/control"]
+CMD ["serve", "--config", "/run/projectone/control.yaml"]

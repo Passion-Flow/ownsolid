@@ -1,0 +1,10 @@
+{
+  "memory_kib": {
+    "MemFree": 4763640,
+    "MemAvailable": 19890404
+  },
+  "full_io_psi_avg10": 0.0,
+  "disk_free_bytes": 800428998656,
+  "source": "149a95013db6c6d1ca9dbadd09b05fff9b4c98de",
+  "scope": "verified test-only delta; reuse unchanged qualified production binaries, compile current e2e, then pure race/vet in loopback-only namespace; no database/container"
+}

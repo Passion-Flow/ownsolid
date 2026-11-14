@@ -1,0 +1,62 @@
+"""Admission for one signed cell and Registry fixture. No fleet load."""
+import json
+import os
+from pathlib import Path
+import sys
+from subprocess import SubprocessError
+
+from host_admit import GIB, command, host, memory_chain
+
+root, stage, *names = sys.argv[1:]
+sample = host(Path(root))
+refused = []
+if any(sample["del"].values()):
+    refused.append("DEL recovery active")
+processes = []
+for pid in Path("/proc").glob("[0-9]*"):
+    try:
+        comm = (pid / "comm").read_text().strip()
+        if comm not in {"go", "compile", "link", "cargo", "rustc", "e2e.test",
+                         "install.test", "release-factory", "syft", "pgbench", "fio", "simulator"}:
+            continue
+        cwd = os.readlink(pid / "cwd")
+        if not cwd.startswith(root):
+            processes.append({"pid": int(pid.name), "command": comm})
+    except (FileNotFoundError, PermissionError, ProcessLookupError):
+        continue
+sample["other_heavy_processes"] = processes
+if processes:
+    refused.append("another heavy test or build is active")
+if stage == "start":
+    if sample["memory"]["MemAvailable"] < 18 * GIB:
+        refused.append("MemAvailable below 18 GiB for the 6+5+5 GiB capped fixture and 2 GiB reserve")
+    if sample["memory"]["MemFree"] < 2 * GIB:
+        refused.append("MemFree below 2 GiB")
+    if sample["disk_free_bytes"] < 35 * GIB:
+        refused.append("free disk below 35 GiB")
+    if sample["io_pressure"]["full"]["avg10"] > 5:
+        refused.append("full I/O PSI avg10 above 5%")
+else:
+    if sample["memory"]["MemAvailable"] < 2 * GIB:
+        refused.append("MemAvailable below 2 GiB runtime reserve")
+    sample["cgroups"] = {}
+    for name, budget in zip(names, (6, 5, 5), strict=True):
+        try:
+            container_id, raw_pid, configured = command("docker", "inspect", "-f",
+                "{{.Id}} {{.State.Pid}} {{.HostConfig.Memory}}", name).split()
+            relative = Path(f"/proc/{int(raw_pid)}/cgroup").read_text().split("0::/", 1)[1].strip()
+            parts = Path(relative).parts
+            scope_index = parts.index(f"docker-{container_id}.scope")
+            scope = Path("/sys/fs/cgroup", *parts[:scope_index+1])
+            groups = memory_chain(scope)
+            leaf = groups[0]
+            sample["cgroups"][name] = groups
+            if int(configured) != budget * GIB or leaf["max"] != budget * GIB:
+                refused.append(f"{name} cgroup cap changed")
+            if any(leaf["events"][key] for key in ("oom", "oom_kill")):
+                refused.append(f"{name} reported a cgroup OOM")
+        except (OSError, ValueError, IndexError, SubprocessError) as err:
+            refused.append(f"{name} no live cgroup ({type(err).__name__})")
+sample["refusals"] = refused
+print(json.dumps(sample, sort_keys=True))
+sys.exit(75 if refused else 0)

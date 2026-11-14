@@ -1,0 +1,69 @@
+import os,re,json,time,secrets,socket,subprocess,shutil,hashlib
+from pathlib import Path
+p=Path(__file__).resolve().parent
+s=p/'src'
+os.umask(0o077)
+free=shutil.disk_usage(p).free
+vm=subprocess.check_output(['vm_stat'],text=True)
+page=int(re.search(r'page size of (\d+)',vm).group(1))
+pages={m.group(1):int(m.group(2)) for m in re.finditer(r'^([^:\n]+):\s+(\d+)\.',vm,re.M)}
+memfree=(pages.get('Pages free',0)+pages.get('Pages speculative',0))*page
+available=memfree+(pages.get('Pages inactive',0)+pages.get('Pages purgeable',0))*page
+print(json.dumps({'disk_free_bytes':free,'free_memory_bytes':memfree,'available_memory_estimate':available}),flush=True)
+assert free>=30*1024**3 and memfree>=2*1024**3 and available>=8*1024**3,'RESOURCE_GATE_RETRY_LATER'
+env=dict(os.environ,GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=2',TMPDIR=str(p/'tmp'),GOTMPDIR=str(p/'tmp'))
+(p/'tmp').mkdir(exist_ok=True)
+assert subprocess.check_output(['go','env','GOOS'],text=True).strip()=='darwin'
+assert subprocess.check_output(['go','env','GOARCH'],text=True).strip()=='arm64'
+image='sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47'
+assert subprocess.check_output(['docker','image','inspect','--format','{{.Os}}/{{.Architecture}}',image],text=True).strip()=='linux/arm64'
+print(subprocess.check_output(['go','version'],text=True).strip(),flush=True)
+subprocess.run(['sandbox-exec','-f',str(p/'offline.sb'),'python3','-c','import socket,errno; s=socket.socket(); s.settimeout(1); r=s.connect_ex(("203.0.113.1",9)); assert r in (errno.EPERM,errno.EACCES),r; print("non-loopback outbound denied by sandbox")'],check=True,timeout=10)
+with (p/'compile.log').open('w') as log:
+ subprocess.run(['go','-C',str(s/'services/control'),'test','-overlay',str(p/'overlay.json'),'-c','-o',str(p/'distribution.test'),'./internal/modules/distribution'],env=env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=900)
+print('native darwin/arm64 test compilation passed',flush=True)
+suffix=p.name.split('.')[-1].replace('_','-')
+network='lane-gw-native-'+suffix
+container='lane-gw-native-pg-'+suffix
+network_created=False
+cid=''
+port=None
+try:
+ subprocess.run(['docker','network','create','--internal','--label','io.ownsolid.owner=gateway',network],check=True,stdout=subprocess.DEVNULL,timeout=30)
+ network_created=True
+ (p/'postgres-password').write_text(secrets.token_hex(24)+'\n')
+ args=['docker','run','-d','--pull','never','--cidfile',str(p/'container-id'),'--name',container,'--network',network,'--publish','127.0.0.1::5432','--memory','1536m','--cpus','1','--shm-size','128m','--tmpfs','/var/lib/postgresql:rw,size=768m','--mount','type=bind,src='+str(p/'postgres-password')+',dst=/run/ownsolid-test-password,readonly','-e','POSTGRES_PASSWORD_FILE=/run/ownsolid-test-password','-e','POSTGRES_DB=gw_read_test',image]
+ cid=subprocess.check_output(args,text=True,timeout=60).strip()
+ for i in range(90):
+  if subprocess.run(['docker','exec',cid,'pg_isready','-q','-h','127.0.0.1','-p','5432','-d','gw_read_test'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0:break
+  time.sleep(1)
+ else:raise RuntimeError('owned PostgreSQL did not become ready')
+ subprocess.run(['docker','exec',cid,'psql','-X','-v','ON_ERROR_STOP=1','-U','postgres','-d','gw_read_test','-c',"CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;"],check=True,stdout=subprocess.DEVNULL)
+ obj=json.loads(subprocess.check_output(['docker','inspect',cid],text=True))[0]
+ binding=obj['NetworkSettings']['Ports']['5432/tcp'][0]
+ assert binding['HostIp']=='127.0.0.1'
+ port=int(binding['HostPort'])
+ (p/'network.json').write_text(json.dumps({'container':cid,'image_platform':'linux/arm64','network_internal':True,'host_ip':'127.0.0.1','port':port,'go_platform':'darwin/arm64','runtime_network':'sandbox denies non-loopback outbound'},indent=2)+'\n')
+ pw=(p/'postgres-password').read_text().strip()
+ (p/'postgres-dsn').write_text('postgres://postgres:'+pw+'@127.0.0.1:'+str(port)+'/gw_read_test?sslmode=disable\n')
+ del pw
+ env.update(PROJECT_ONE_TEST_DSN_FILE=str(p/'postgres-dsn'),PROJECT_ONE_EVIDENCE_ROOT=str(p/'evidence'))
+ (p/'evidence').mkdir(exist_ok=True)
+ roots=['TestPostgresAliasReadCapabilitiesAtRegisteredEntrances','TestPostgresAliasCapabilityPublicContractBoundary','TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget','TestAliasContextCeilingRequiresRecognizedSource']
+ pattern='^('+ '|'.join(roots)+')$'
+ print('running four roots with PostgreSQL on loopback port '+str(port),flush=True)
+ with (p/'distribution.log').open('w') as log:
+  subprocess.run(['sandbox-exec','-f',str(p/'offline.sb'),str(p/'distribution.test'),'-test.v','-test.timeout=4m','-test.run',pattern],cwd=s/'services/control/internal/modules/distribution',env=env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=270)
+ text=(p/'distribution.log').read_text()
+ assert not re.search(r'^\s*--- (FAIL|SKIP):',text,re.M)
+ for root in roots:assert re.search(r'^--- PASS: '+root+r' \(',text,re.M),root
+ (p/'result.json').write_text(json.dumps({'source':'219af27e3d9f73c78acc1b8ab8324e086a6a2f62','schema':'60 / 120 tables','go_platform':'darwin/arm64','postgres_platform':'linux/arm64 in Docker Desktop','contract':'7705c5a3 / 0.12.0 exact draft','roots':roots,'result':'passed without skips','scope':'registered human TLS and real PostgreSQL with synthetic deployment observations; no actual model/GPU or production activation'},indent=2)+'\n')
+ print('four required roots passed without skips',flush=True)
+finally:
+ if not cid and (p/'container-id').exists():cid=(p/'container-id').read_text().strip()
+ if re.fullmatch('[a-f0-9]{64}',cid):subprocess.run(['docker','rm','-f',cid],check=True,stdout=subprocess.DEVNULL,timeout=30)
+ if network_created:subprocess.run(['docker','network','rm',network],check=True,stdout=subprocess.DEVNULL,timeout=30)
+ for name in ['postgres-password','postgres-dsn']:
+  f=p/name
+  if f.exists():f.unlink()
+ print('owned container/network/credentials removed; loopback port '+str(port)+' released',flush=True)

@@ -1,0 +1,54 @@
+import copy
+import tempfile
+import unittest
+from pathlib import Path
+
+from admit import GIB, assess, memory_chain
+
+
+class TestAdmission(unittest.TestCase):
+    def setUp(self):
+        self.sample = {
+            "memory": {"MemAvailable": 24 * GIB, "MemFree": 4 * GIB},
+            "disk_free_bytes": 40 * GIB, "io_pressure": {"full": {"avg10": 0.0}},
+            "del": {"processes": [], "containers": []},
+            "cgroups": {role: {"headroom": 3 * GIB, "chain": [
+                {"path": f"/{role}", "events": {"max": 0, "oom": 0, "oom_kill": 0}}
+            ]} for role in ("plane", "server", "worker")}
+        }
+
+    def test_host_admission_requires_independent_budgets(self):
+        self.assertEqual(assess(self.sample, "host"), [])
+        self.sample["memory"] = {"MemAvailable": 21 * GIB, "MemFree": GIB}
+        self.sample["disk_free_bytes"] = 29 * GIB
+        self.sample["io_pressure"]["full"]["avg10"] = 54
+        self.sample["del"]["processes"] = [{"pid": 1, "command": "e2e.test"}]
+        self.assertEqual(len(assess(self.sample, "host")), 5)
+
+    def test_arm_and_runtime_pressure(self):
+        self.assertEqual(assess(self.sample, "arm"), [])
+        self.sample["cgroups"]["plane"]["headroom"] = GIB
+        self.assertTrue(assess(self.sample, "arm"))
+        before = copy.deepcopy(self.sample)
+        self.sample["cgroups"]["worker"]["chain"][0]["events"]["oom_kill"] = 1
+        self.assertEqual(assess(self.sample, "sample", before),
+                         ["worker new cgroup memory.oom_kill event at /worker"])
+
+    def test_memory_chain_reads_finite_ancestor(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            parent = root / "parent"
+            leaf = parent / "leaf"
+            leaf.mkdir(parents=True)
+            for path, limit in ((parent, 20), (leaf, 10)):
+                (path / "memory.current").write_text("3")
+                (path / "memory.max").write_text(str(limit))
+                (path / "memory.high").write_text("max")
+                (path / "memory.events").write_text("max 0\noom 0\noom_kill 0\n")
+            chain = memory_chain(leaf, root)
+            self.assertEqual([x["max"] for x in chain], [10, 20])
+            self.assertEqual([x["high"] for x in chain], [None, None])
+
+
+if __name__ == "__main__":
+    unittest.main()

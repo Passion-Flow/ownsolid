@@ -1,0 +1,1 @@
+{"admin_origin":"https://admin.ownsolid.test:8443","candidate":"4463bbe628f60486bbdb92c15f72311fb53d076a","control_image":"sha256:e9afd5e427254b77d71bed5c4f6edceb30b8fb994b6bf924f49d6d81e29be791","history_root":"/srv/fleet-history","installation_root":"/srv/ownsolid","portal_origin":"https://portal.ownsolid.test:8443","public_tables":"138","schema":"58"}

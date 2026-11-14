@@ -1,0 +1,113 @@
+{
+  "scope": "Remove only the 20 verified owned chunks and original partial; retain full ELF/gzip and all actual refusal evidence",
+  "removed": [
+    {
+      "name": "chunks/chunk-000",
+      "bytes": 524288,
+      "sha256": "f4f194fb7b13395e441fd7075d3508be03d1864393b20e12096c616c9ffc3cd7"
+    },
+    {
+      "name": "chunks/chunk-001",
+      "bytes": 524288,
+      "sha256": "ad955bd18bda65fc34f6d93c1882343a050bcaff92f2ca02a5b8b6fc1da2b66f"
+    },
+    {
+      "name": "chunks/chunk-002",
+      "bytes": 524288,
+      "sha256": "bf9faee32db03c3d0fcd9318a510c15790d82487ae2be9a21dc276cb1b0c2805"
+    },
+    {
+      "name": "chunks/chunk-003",
+      "bytes": 524288,
+      "sha256": "d1e31a6b856e1fe3eab9776f78b8c828a3f7df7303f3416b64baab5fdf345bc4"
+    },
+    {
+      "name": "chunks/chunk-004",
+      "bytes": 524288,
+      "sha256": "e182fe37626d578f8d7f267735f7a0ba386fb57a5288393faf8a5f396a3853df"
+    },
+    {
+      "name": "chunks/chunk-005",
+      "bytes": 524288,
+      "sha256": "2e0ffa4508bae36f823f5a2ee27df2fbe57e6755635acea1f259f1aea8eace3e"
+    },
+    {
+      "name": "chunks/chunk-006",
+      "bytes": 524288,
+      "sha256": "e25f766a198e72d0747f9b7e900dd2cc6915bc31650eaf566735a49159d6e49d"
+    },
+    {
+      "name": "chunks/chunk-007",
+      "bytes": 524288,
+      "sha256": "4334c7e5b6a7e5af44d5a9e91c6cc3d0d8e185620d2200ff26e601f42659d5e1"
+    },
+    {
+      "name": "chunks/chunk-008",
+      "bytes": 524288,
+      "sha256": "082da6fae1017fa2d68711b081a713911b58ae760a0b6afc41b4d230d4bea403"
+    },
+    {
+      "name": "chunks/chunk-009",
+      "bytes": 524288,
+      "sha256": "92a552b715f5e246d8eba9976ed9c20b5d8283efd24599bbac89832a34822e9f"
+    },
+    {
+      "name": "chunks/chunk-010",
+      "bytes": 524288,
+      "sha256": "6b03ce9366f5f19ca915526a83e3465e6d8dd7fb78af8489f1ac3abe0628ee65"
+    },
+    {
+      "name": "chunks/chunk-011",
+      "bytes": 524288,
+      "sha256": "fc634d8cf6c66594732059914ee124902d4b553daaf2b2c2457075f313a4f75b"
+    },
+    {
+      "name": "chunks/chunk-012",
+      "bytes": 524288,
+      "sha256": "d80ea4eab9d9c77633a033185d5f43ed2d822ef7429f5ab880265f423ebadae1"
+    },
+    {
+      "name": "chunks/chunk-013",
+      "bytes": 524288,
+      "sha256": "ac4896a62a15573b25c89fca929d8cb851332000c88a85d6d82ff3be84ddb5fa"
+    },
+    {
+      "name": "chunks/chunk-014",
+      "bytes": 524288,
+      "sha256": "6526d6c2c5659ef2841e6dbc5a1cbfa0143414563ac08d9b90af0bd3f9f5c1af"
+    },
+    {
+      "name": "chunks/chunk-015",
+      "bytes": 524288,
+      "sha256": "6403064bfde6a83b89abc2f1e57eb1e01a4db1630965ea275b44b062296e707e"
+    },
+    {
+      "name": "chunks/chunk-016",
+      "bytes": 524288,
+      "sha256": "6844db0fb2cc19f59035602ef9081706d83e8dde1f817b140e01cfa70f9ae13c"
+    },
+    {
+      "name": "chunks/chunk-017",
+      "bytes": 524288,
+      "sha256": "fb8798fed2e008e064bbd578cd49ddaa888857ea44c545e30971f0de880aa697"
+    },
+    {
+      "name": "chunks/chunk-018",
+      "bytes": 524288,
+      "sha256": "dbe64d50fc3bb23fa2994803a460d768029b89f733e69858a3d7089b27bbdf1d"
+    },
+    {
+      "name": "chunks/chunk-019",
+      "bytes": 368214,
+      "sha256": "2d016758f5e7fe048c92698b13b143966f4c529a74bbbadaf73a903a8f1b15bf"
+    },
+    {
+      "name": "installer.test.gz.partial-1048576",
+      "bytes": 1048576,
+      "sha256": "64b8a755163e16f926589f87f65358035fcdff6ca32db9c97bf0b1fdea319c5c"
+    }
+  ],
+  "removed_bytes": 11378262,
+  "elf_retained": true,
+  "complete_gzip_retained": true
+}

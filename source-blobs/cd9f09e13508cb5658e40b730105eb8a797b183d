@@ -1,0 +1,85 @@
+#!/bin/bash
+# Runs only on ownsolid-cpu with the two prior lane-owned artifact sets.
+set -euo pipefail
+umask 077
+runner=$(cd -- "$(dirname -- "$0")" && pwd -P)
+mode=${1:---check}
+if [[ $mode != --check && $mode != --run ]]; then printf '%s\n' 'usage: launch.sh [--check|--run]' >&2; exit 2; fi
+exec 8>"$runner/launch.lock"
+flock -n 8 || exit 75
+python3 "$runner/admit.py" host --root "$runner" | tee "$runner/prelaunch.json"
+if [[ $mode == --check ]]; then exit 0; fi
+
+input=/root/lane-arc-managed.JFUrp5
+kwok=/root/lane-arc-kwok.0DKaGD/kwok
+run=$(mktemp -d "$runner/run.XXXXXX")
+suffix=$(basename "$run" | cut -d. -f2 | tr '[:upper:]' '[:lower:]')
+net="arc105-managed-$suffix"
+printf '%s\n' "$run"
+cleanup() {
+    local rc=$?
+    trap - EXIT
+    set +e
+    if docker inspect "$net-plane" >/dev/null 2>&1; then
+        if test "$(docker inspect -f '{{.State.Running}}' "$net-plane")" = true; then
+            printf 'fixture stopped its own test host after launcher status %s\n' "$rc" > "$run/plane-teardown.txt"
+            docker stop --time 15 "$net-plane" || rc=1
+        fi
+        docker logs "$net-plane" > "$run/plane.log" 2>&1
+        docker inspect --format '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}' "$net-plane" > "$run/plane-exit.txt"
+    fi
+    for role in plane server worker dns; do
+        if docker inspect "$net-$role" >/dev/null 2>&1; then
+            docker rm -f "$net-$role" || rc=1
+        fi
+    done
+    if docker network inspect "$net" >/dev/null 2>&1; then docker network rm "$net" || rc=1; fi
+    for mount in source-mount media-mount; do
+        if mountpoint -q "$run/$mount"; then umount "$run/$mount" || rc=1; fi
+    done
+    # Preserve reports, approved test media and raw captures. Delete only our
+    # per-run enrollment and process state after the mounts are gone.
+    for entry in exchange server-state worker-state docker-data server-data worker-data; do
+        local path="$run/$entry"
+        if [[ -d $path ]]; then
+            if findmnt -rn -o TARGET | awk -v p="$path" '$0 == p || index($0, p "/") == 1 { found=1 } END { exit !found }'; then
+                printf 'fixture mount remains under %s\n' "$path" >&2
+                rc=1
+            else
+                find "$path" -depth -delete || rc=1
+            fi
+        fi
+    done
+    printf 'ARC-105 launcher status=%s; evidence=%s\n' "$rc" "$run"
+    exit "$rc"
+}
+trap cleanup EXIT
+cp "$runner/prelaunch.json" "$run/"
+install -d -m 0700 "$run/media-mount" "$run/source-mount"
+test -f "$input/media.ext4"
+truncate -s 12G "$run/media.ext4"
+mkfs.ext4 -q -F -m 0 "$run/media.ext4"
+mount -o ro,loop,nosuid,nodev "$input/media.ext4" "$run/source-mount"
+mount -o loop,nosuid,nodev "$run/media.ext4" "$run/media-mount"
+chmod 0700 "$run/media-mount"
+install -d -m 0700 "$run/media-mount/stage"
+for file in ownsolid.tar.gz release-trust.json; do
+    install -m 0600 "$run/source-mount/stage/$file" "$run/media-mount/stage/$file"
+done
+umount "$run/source-mount"
+(
+    cd "$run/media-mount/stage"
+    printf '%s  %s\n' 3b02a9934f2adec70cdc614b2a9764ddb111a226609ec1e92c0aac2284d9bb90 ownsolid.tar.gz | sha256sum -c -
+)
+(cd "$kwok"; sha256sum -c SHA256SUMS -c fixture-SHA256SUMS)
+for file in kwok-disconnected.yaml kwok-linux-amd64.oci.tar stage-fast.yaml; do
+    install -m 0600 "$kwok/$file" "$run/$file"
+done
+for file in agent egress-recorder ownsolid-install site-dns; do
+    install -m 0700 "$input/$file" "$run/$file"
+done
+install -m 0600 "$input/sha256sum-amd64.txt" "$run/"
+for file in admit.py kwok.py control-inside.sh setup-node.sh run-managed.sh managed-load.test simulator; do
+    install -m 0700 "$runner/$file" "$run/$file"
+done
+bash "$run/run-managed.sh" "$run" "$net" 2>&1 | tee "$run/launcher.log"

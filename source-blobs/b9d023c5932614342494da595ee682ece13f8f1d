@@ -1,0 +1,9 @@
+# Control owner: optional private serve --env-file basename. String matching chart filename grammar.
+# Default empty selects YAML/defaults; this file must exist in the provisioned Secret and secrets.files.
+# No secret literal. Mapped to configuration.privateMountPath/private/<basename>; rollout/restart required.
+configuration:
+  policyEnvironmentFile: database-policy.env
+# Secret projection owner: replacement list; retain all other required files for the declared profile.
+# String basenames only; provision private values out of band. Operator Jobs do not consume serve overrides.
+secrets:
+  files: [database-dsn, auth-hmac, mail-keyring.json, certificate.pem, private-key.pem, license-trust.json, database-policy.env]

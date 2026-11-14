@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+# Lane B test helper: signs a license for this deployment with the test key and imports it.
+import json, ssl, subprocess, sys, urllib.request, http.cookiejar
+root = sys.argv[1]
+base = "https://admin.lane-b.test:18443"
+ctx = ssl.create_default_context(cafile=root + "/config/ca.pem")
+import socket
+real = socket.getaddrinfo
+socket.getaddrinfo = lambda h, *a, **k: real("127.0.0.1" if h.endswith("lane-b.test") else h, *a, **k)
+jar = http.cookiejar.CookieJar()
+op = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx), urllib.request.HTTPCookieProcessor(jar))
+def call(method, path, body=None, csrf=None):
+    h = {"Origin": base, "Accept": "application/json"}
+    if body is not None: h["Content-Type"] = "application/json"
+    if csrf: h["X-CSRF-Token"] = csrf
+    r = urllib.request.Request(base + path, method=method, headers=h, data=None if body is None else json.dumps(body).encode())
+    try:
+        with op.open(r) as x: return x.status, json.loads(x.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")
+cred = json.load(open(root + "/operator/admin-credential"))
+tok = call("GET", "/api/v1/auth/csrf")[1]["data"]["token"]
+print("login", call("POST", "/api/v1/auth/login", {"email": "admin@lane-b.test", "password": cred["password"]}, tok)[0])
+status, state = call("GET", "/api/v1/admin/license")
+print("license read", status, list(state.get("data", {}).keys()))
+json.dump(state, open("/root/lane-b/license-state.json", "w"))

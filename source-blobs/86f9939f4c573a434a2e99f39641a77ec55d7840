@@ -1,0 +1,11 @@
+### Exact refusal control on the same published inputs
+
+The real CPU result stays the original three unverified observations.
+Use the archived, authorized validation version unchanged and supply
+three literal refusal markers as a separate controlled capture with
+its own identity. This exercises the existing scorer on the same
+prompts, expected categories and policy. Preserve the model capture,
+its report and the unverified samples. Compare the distinct profile
+and independently validate response digests and outcome counts.
+The CC0 corpus and existing offline scorer need no model or new
+dependency for this control.

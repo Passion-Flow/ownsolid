@@ -1,0 +1,42 @@
+{
+  "branch": "codex/lane-sci-evl105-authorized-pair",
+  "build_command": "python3 /root/lane-sci-tools/aud108-scoped/build_bounded.py /root/lane-sci-tools/aud108-scoped/unit-cgroup.di9wq2md",
+  "final_main_evidence": "/root/lane-sci-tools/aud108-scoped/final-main.v4f2y7ao",
+  "first_pg_failure": "/root/lane-sci-tools/aud108-scoped/pg-cgroup.rsj04nk6",
+  "head": "4aa7bfbe359f1ee0f4507130e4839add7d65c64d",
+  "integration_manifest_sha256": "a0dae386454dd47f1763bc4076b5510f6283f79879aeda32f1a597adab33cd2e",
+  "ownership": "Only audit Go sources, its README and owned research/roadmap/status documents changed. Do not modify identity, web, deployment or other lane processes. IAM owns the actual consumer pairing. AUD-108 remains unticked.",
+  "pending": "Only the docs closeout 4aa7bfbe is unpublished because the permanent Mac publication flock is busy. The inventory b9475767 and implementation 8531226d are already on main. Reuse the unchanged qualification; after acquiring the same permanent flock, run publish-scoped-closeout.py on the Mac. Do not repeat native tests or manipulate the lock carrier. IAM owns actual consumer pairing; AUD-108 remains unticked.",
+  "pg_command": "python3 /root/lane-sci-tools/aud108-scoped/run_bounded_pg.py <new successful build-cgroup directory>",
+  "pg_qualified": "/root/lane-sci-tools/aud108-scoped/pg-cgroup.hwo7jsaw",
+  "publication": {
+    "candidate": "8531226d8f16cf27de2d577b5ed99bfa34cdeb25",
+    "gate_mode": "fresh layout/roadmap/diff and Control build; immutable tool, Web, non-Control builds and complete test gates explicitly retained",
+    "own_commits": [
+      "8531226d8f16cf27de2d577b5ed99bfa34cdeb25 AUD-108: Append exact workspace audit events in caller transactions",
+      "b9475767d095fd49206476d375a7896eb4b9b2e6 AUD-108: Identify real diagnostic access consumers and integration gaps"
+    ],
+    "paths": [
+      "docs/product/roadmap/audit-and-compliance.md",
+      "docs/product/status.md",
+      "docs/research/audit-diagnostic-access.md",
+      "docs/research/lane-sci-decisions.md",
+      "services/control/internal/modules/audit/README.md",
+      "services/control/internal/modules/audit/scoped.go",
+      "services/control/internal/modules/audit/scoped_integration_test.go",
+      "services/control/internal/modules/audit/scoped_test.go"
+    ],
+    "published_ancestor_of": "8531226d8f16cf27de2d577b5ed99bfa34cdeb25",
+    "shared_gate": "c2d1d4c494457b329b410df18960a2d77be647db"
+  },
+  "second_pg_failure": "/root/lane-sci-tools/aud108-scoped/pg-cgroup.hoj5jwks",
+  "shared_gate_reference": "c2d1d4c4 records check/build qualification on 0df420bf. Shared Web/OpenAPI/tooling inputs match current dfaf5e88; new Go audit inputs need validation. Recheck after any rebase.",
+  "source_manifest": "1ca8259b60df5cd22c78e1647d807e46c0b7147925be312ad67d6356b425563d",
+  "source_sha256": {
+    "services/control/internal/modules/audit/scoped.go": "54290abf21a827d59074bcd4bc1fc5299a741f24b785e3d1c5d2496adddc49cb",
+    "services/control/internal/modules/audit/scoped_integration_test.go": "d2cc465df4f477c3b3a14496bea8ad4ecf6ae2e7d3d781749c1963d3bf61db6a",
+    "services/control/internal/modules/audit/scoped_test.go": "7d2a21b696edc0c88d8d4ea82f89a0c914d4b0578d6121feaa9b172b260768f2"
+  },
+  "unit_qualified": "/root/lane-sci-tools/aud108-scoped/unit-cgroup.di9wq2md",
+  "worktree": "/root/lane-sci"
+}

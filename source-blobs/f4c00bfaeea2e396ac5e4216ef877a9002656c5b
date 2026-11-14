@@ -1,0 +1,81 @@
+{
+  "source": "4b1e5c99bdc2e9349eabc40378c6c8743e62b82f",
+  "base": "9975d76902a777abd4fa75c04c265b7194d04214",
+  "host": "darwin/arm64",
+  "whole_repository_gate": false,
+  "native_go_rerun": false,
+  "commands": [
+    {
+      "argv": [
+        "/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/codegen/sdk/tests",
+        "-p",
+        "test_audit_read_contract.py",
+        "-v"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/codegen/sdk/tests",
+        "-p",
+        "test_audit_read_codegen.py",
+        "-v"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/codegen/sdk/tests",
+        "-p",
+        "test_response_object_audit.py",
+        "-v"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/codegen/sdk/tests",
+        "-p",
+        "test_response_audit.py",
+        "-v"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/codegen/sdk/tests",
+        "-p",
+        "test_audit.py",
+        "-v"
+      ],
+      "exit": 0
+    }
+  ],
+  "passed": true,
+  "log_sha256": "fcc12a681637d7354eabcccbcdea8797bafdafed1c79bbf18d99ddfc6ecab0de"
+}

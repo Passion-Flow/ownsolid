@@ -1,0 +1,17 @@
+{
+  "prepared_source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "production_source": "5b73fa05305c2c5d8178a256683ede8b4e9ef99f",
+  "production_code_unchanged": true,
+  "plan_sha256": "7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874",
+  "fixture_base": {
+    "path": "services/control/internal/modules/training/testdata/replay_accepted_experiment.sh",
+    "sha256": "8293475c3bdbeed24733c81d0a96e8ad9b5b4dffe8c0ff998753c1a54091656b"
+  },
+  "native_lock_attempts": 0,
+  "native_go_or_sql_test_bodies_executed": 0,
+  "new_tagged_compilation": "not_started_workstation_guard_busy",
+  "mac_guard_raw_exit_code": 75,
+  "new_processor_gpu_or_fleet_started": false,
+  "native_window_consumed": false,
+  "next_step": "review the precise bounded delta to the existing native fixture/parent before execution; no new heavy framework run"
+}

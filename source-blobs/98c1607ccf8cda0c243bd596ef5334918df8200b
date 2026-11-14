@@ -1,0 +1,10 @@
+{
+  "gw120_commit": "36f66734fd465fa542c4f2099fd810ddb15a308e",
+  "all_docs_commit": "2a327420a3fc03c1ad6bbe4bb32f312abf818fca",
+  "base": "8123466c5a64b6424047f126815ae63100383bc6",
+  "checks": "diff, layout and roadmap passed after both rebases",
+  "no_runtime_source_change": true,
+  "GW120_source": "4f76102c, native Linux amd64 6+1 only",
+  "GW123": "static gates confirmed unchanged on 8123466c",
+  "publication": "pending permanent workstation flock; no new full gate claim"
+}

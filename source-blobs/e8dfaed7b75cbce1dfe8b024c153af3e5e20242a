@@ -1,0 +1,29 @@
+format_version: 1
+topology: {size: single-node}
+install_root: /root/lane-b/install-iam117
+compose_file: /root/lane-b/compose.yaml
+project: lane-b
+images:
+  control: ownsolid/control:lane-b
+  postgres: pgvector/pgvector:0.8.7-pg18-bookworm
+  metrics: victoriametrics/victoria-metrics:v1.155.0
+  logs: victoriametrics/victoria-logs:v1.53.0
+network: {bind_address: 127.0.0.1, https_port: 18443, state_subnet: 172.31.250.0/26}
+origins: {portal: "https://portal.lane-b.test:18443", admin: "https://admin.lane-b.test:18443"}
+license: {trust_file: /root/lane-b/license-trust-ux120.json}
+smtp: {host: smtp.lane-b.test, port: 465, tls_mode: implicit_tls, ca_file: /root/lane-b/smtp-ca.pem, from_address: platform@lane-b.test}
+administrator:
+  email: admin@lane-b.test
+  display_name: Lane B Administrator
+  installation_name: Lane B
+  workspace_name: Default Workspace
+control_settings:
+  sso:
+    enabled: true
+    keyring_file: /run/projectone/sso-keyring.json
+    providers:
+      - origin: https://git.lane-b.test:18444
+        issuer: https://git.lane-b.test:18444
+        dial_addresses: [172.31.250.30]
+        ca_file: /run/projectone/gitea-ca.pem
+resources: {control_memory: 6g, control_cpus: "2", postgres_memory: 2g, postgres_cpus: "2", postgres_max_connections: 50, metrics_memory: 2g, metrics_cpus: "2", logs_memory: 1g, logs_cpus: "1"}

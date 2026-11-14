@@ -1,0 +1,12 @@
+{
+  "source": "5e764ea567b3613e96679cc3c0ea4d651707826c",
+  "tree": "97bbe87fb95824dde35a4345378f242d891aaa3c",
+  "prerequisites": [
+    "d6fdfaed6cd3d59a4928ceda2bfbde09eccbaf6d",
+    "1a41d97981798440b7f02061d3a73853726b03bc"
+  ],
+  "bundle": "/Users/passion./Documents/Codex/2026-11-12/ownsolid-del-recovery/combination/current-main-5e764ea.bundle",
+  "sha256": "4ce16d63a651da7105fc80682b7fdd79078e4b1e9e38188009cb51c349e34cc2",
+  "bytes": 138768,
+  "scope": "Original DAG synchronization only; no runtime build or acceptance"
+}

@@ -1,0 +1,11 @@
+{
+  "expected_source": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+  "expected_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+  "receiving_file_sha256": "b068c9f4f1a29a9a476cb21f8583e28c160eabcb8615b0ab234cd29f9be55a25",
+  "receiving_file_executable": false,
+  "verified_parts": 2,
+  "total_parts": 26,
+  "native_startup_run": false,
+  "installed_acceptance": false,
+  "reason": "Development SSH bulk, incremental and bounded-chunk transfers failed; receiving data is unqualified. The retained frozen clients are independent."
+}

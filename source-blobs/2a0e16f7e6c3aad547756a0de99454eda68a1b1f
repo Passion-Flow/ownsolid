@@ -1,0 +1,84 @@
+# SCH-101/SCH-103 minimal owner integration package
+
+## Exact source and authors
+
+Base: ca9027af. Candidate: 4708ffc3c987ad46daf8b280e22cbf683fc1bffa.
+Apply patches in numerical order with git am to preserve their original authors.
+The five original commit IDs, in order:
+43670ebf, c90df6cd, 748ea2b8, 9709ee19, 4708ffc3.
+The fourth commit is topology research only; it changes no runtime path.
+No training file, production migration, runtime grant or startup hook is changed.
+
+The compiled and tested code tree is 9709ee193ca70c0e252aa7284b762e80193bd001.
+4708ffc3 changes only docs/product/status.md to record that acceptance.
+
+## ARC: DDL and catalog prerequisites
+
+Apply ddl/quota.sql then ddl/reservations.sql as one contiguous formal
+migration. They create two tables and depend on installed workspaces plus
+local_site_id()/local_cell_id() and the site/cell registries.
+Current published baseline is schema 58 / 118 public tables. If nothing
+lands ahead, this would be migration 59 and 120 tables. ARC must assign the
+actual next number after its accepted migration queue; never renumber 58.
+Recompute fresh and restored fingerprints on that exact baseline, add the
+global quota policy table to scope enumeration, and admit runtime grants.
+Do not reuse the historical schema-57 fingerprints as schema-58 evidence.
+
+Borrowing is optional and disabled unless explicitly configured. Its
+separate testdata/borrowing.sql is not part of this minimal package.
+Activation of borrowing needs that follow-on migration and its own acceptance.
+Do not seed a synthetic quota allocation or infer cell capacity at startup.
+Keep pre-cutover physical holds drained or explicitly reconciled before activation.
+
+## TRN: exact transaction hooks
+
+scheduling.ReserveQueuedWithin(ctx, q, attempt, intent, domain, reader)
+returns (bool, error). q is the existing borrowed PostgreSQL READ COMMITTED
+owner transaction; no second commit owner is created.
+
+Implement schedulingWorkspacesWithin and schedulingEntriesWithin in the
+training owner, plus initial nextFairCandidateWithin on the selected
+read-only REPEATABLE READ PostgreSQL snapshot. Resolve current installed
+tenant, local cell, active Workspace and requester authority. Read the
+complete eligible domain, not the display pagination. Priority remains
+zero until an authorized persisted class mapping exists.
+
+In reserveDispatchWithin retain the savepoint and physical GPU acquisition;
+call ReserveQueuedWithin before Nodes.QueueTrainingWithin. The complete
+reader runs after scheduling locks and uses its provided executor.
+Commit the hold, dequeue, physical lease, task, attempt and audit together.
+Use the schema-58 audit owner path and serving principal; the fixture is
+not proof that old direct audit SQL works under the new production trigger.
+
+False/nil means exact held replay: reread owner state and enqueue no task.
+Unknown commit publishes no success; retry from persisted owner state.
+Queue/quota waits roll back the savepoint before persisting wait state.
+Scope, malformed state, stale identity and storage errors roll back the
+whole transaction without changing owner revisions.
+
+Queued cancellation creates no hold. Preparing/running cancellation retains
+its hold until the exact positive stop proof is accepted. Call ReleaseWithin
+beside physical release in RecordStop, and only in ReconcileNext's proven
+NeverDelivered branch. Missing post-cutover holds are integrity failures.
+Foreign site/cell rows must be rejected before any owner wait/failure update.
+
+## Acceptance and precise limits
+
+Evidence: /root/lane-sch-tools/queued.y4IylQ0B.
+check.log, build.log and modules.log passed on Linux amd64.
+scheduling-offline.log contains nine explicit TestPostgresQueuedReservation
+PASS results with -race and repository_integration on PostgreSQL 18.6 /
+pgvector 0.8.7 in a loopback-only namespace without routes.
+The wire proxy suppressed a real committed dequeue acknowledgement.
+Database credentials and the private fixture container were removed.
+
+These are persistent owner fixture rows, not actual TRN dispatch.
+The owner must extend TestActualPairedTrainingDispatch, stop/cancel and
+never-delivered tests using the admitted production catalog and real role.
+Cover initial fair selection, duplicate/concurrent dispatch, cancellation,
+late task/audit failure, unknown commit, exact stop release, stale scope and
+no mutation of foreign-cell owner rows.
+Current contract: docs/research/scheduling-queue-policy.md
+#training-owner-patch-contract; identity/demand:
+docs/research/scheduling-training-reservations.md#training-owner-handoff.
+SCH-101 and SCH-103 stay open until the installed authenticated flow passes.

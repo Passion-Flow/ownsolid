@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /root/lane-obs-cardinality
+mode=${1:-unit}
+expected=${2:-3cebfcef9f321364862a11d8b773c714facb6f68}
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+case "$mode" in unit|native) ;; *) exit 2 ;; esac
+receipt=$(mktemp -d /root/lane-obs-tools/obs110-service.XXXXXX)
+exec > >(tee "$receipt/check.log") 2>&1
+trap 'code=$?; printf "EXIT_CODE=%s\nRECEIPT=%s\n" "$code" "$receipt"' EXIT
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -n 8 || { printf "ADMISSION_BLOCKED=global-heavy-lock\n"; exit 75; }
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || { printf "ADMISSION_BLOCKED=sci-heavy-lock\n"; exit 75; }
+df -h /
+free -m
+ss -lntp
+cat /proc/pressure/io
+test "$(df --output=avail -B1 / | tail -1)" -ge 16106127360 || exit 75
+test "$(free -m | awk '$1=="Mem:" {print $4}')" -ge 2048 || exit 75
+python3 - <<'PY_IO'
+from pathlib import Path
+for line in Path('/proc/pressure/io').read_text().splitlines():
+    if float(line.split('avg10=')[1].split()[0]) > 5:
+        raise SystemExit(75)
+PY_IO
+printf 'CANDIDATE_SOURCE_COMMIT=%s\n' "$expected"
+git status --short
+git diff --check
+find services/control/internal/modules/monitoring -type f \( -name '*.go' -o -name 'check-fleet-history.sh' \) -print0 | sort -z | xargs -0 sha256sum > "$receipt/source-inputs.sha256"
+export PATH=/root/lane-obs-tools/go/bin:$PATH
+export GOMAXPROCS=2 GOFLAGS='-p=2 -race' GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local
+if [[ $mode = unit ]]; then
+    unshare --net bash -ec 'ip link set lo up; go -C services/control test -race -p 2 -count=1 ./internal/modules/monitoring/... ./internal/platform/monitoringmetrics'
+else
+    export OWNSOLID_TEST_POSTGRES_IMAGE=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+    export OWNSOLID_TEST_VICTORIA_METRICS=/root/lane-obs-tools/victoria-metrics-prod
+    export OWNSOLID_TEST_VMALERT=/root/lane-obs-tools/vmalert-prod
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh cardinality
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-tls
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-retention
+fi
+sha256sum --check --quiet "$receipt/source-inputs.sha256"
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+printf 'CANDIDATE_%s_PASSED\n' "$mode"

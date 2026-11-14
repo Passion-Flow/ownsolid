@@ -1,0 +1,104 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+df -h /
+free -m
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+scratch=$(mktemp -d ~/lane-rel-tools/gw111-contract.XXXXXXXX)
+printf '%s\n' "$scratch"
+git rev-parse HEAD > "$scratch/base"
+python3 - "$scratch" <<'PY'
+from pathlib import Path
+import json
+import sys
+
+scratch = Path(sys.argv[1])
+folder = Path("services/control/internal/modules/distribution").resolve()
+http_path = folder / "cutovers_http_test.go"
+full_path = folder / "cutovers_test.go"
+http = http_path.read_text()
+http = http.replace('"context"', '"context"\n\t"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"')
+start = 'preview := base + "/cutovers/preview"'
+http = http.replace(start, start + '''
+	anonymous := httpfixture.New(t, server, "admin", schemas)
+	if problem := anonymous.Call("POST", preview, body, 403, "Problem"); problem["code"] != "CSRF_INVALID" {
+		t.Fatal("anonymous preview skipped CSRF validation")
+	}
+	if problem := anonymous.Write("POST", preview, body, 401, "Problem"); problem["code"] != "AUTH_REQUIRED" {
+		t.Fatal("preview did not require the Admin session")
+	}
+	admin.CSRF = admin.Call("GET", "/api/v1/auth/csrf", nil, 200, "")["token"].(string)
+	admin.Headers = map[string]string{"Content-Type": "text/plain"}
+	if problem := admin.Call("POST", preview, body, 415, "Problem"); problem["code"] != "UNSUPPORTED_MEDIA_TYPE" {
+		t.Fatal("preview accepted an unsupported media type")
+	}
+	admin.Headers = nil
+	if problem := admin.Call("POST", preview, make([]byte, httpserver.MaxJSONBytes+1), 413, "Problem"); problem["code"] != "PAYLOAD_TOO_LARGE" {
+		t.Fatal("preview accepted an oversized request")
+	}
+''')
+assert http.count("admin.Write(\"POST\", preview, body, 200, \"\")") == 1
+http = http.replace('admin.Write("POST", preview, body, 200, "")', '''
+	result := admin.Write("POST", preview, body, 200, "AliasCutoverPreviewResponse")
+	if result["before"].(map[string]any)["paused"] != false || result["after"].(map[string]any)["paused"] != true {
+		t.Fatal("pause preview did not carry both pause states")
+	}
+''')
+full = full_path.read_text()
+full = full.replace('admin := httpfixture.New(t, server, "admin", nil)',
+    '''schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
+	admin := httpfixture.New(t, server, "admin", schemas)''', 1)
+full = full.replace('http.MethodPost, previewPath, in, http.StatusOK, ""',
+                    'http.MethodPost, previewPath, in, http.StatusOK, "AliasCutoverPreviewResponse"')
+full = full.replace('http.MethodPost, previewPath, pause, http.StatusConflict, ""',
+                    'http.MethodPost, previewPath, pause, http.StatusConflict, "Problem"')
+full = full.replace('http.MethodPost, previewPath, resume, http.StatusConflict, ""',
+                    'http.MethodPost, previewPath, resume, http.StatusConflict, "Problem"')
+full = full.replace('foreignAdmin := httpfixture.New(t, foreignServer, "admin", nil)',
+                    'foreignAdmin := httpfixture.New(t, foreignServer, "admin", schemas)')
+full = full.replace('http.MethodPost, previewPath, pause, http.StatusNotFound, ""',
+                    'http.MethodPost, previewPath, pause, http.StatusNotFound, "Problem"')
+for path, source in ((http_path, http), (full_path, full)):
+    (scratch / path.name).write_text(source)
+(scratch / "overlay.json").write_text(json.dumps({"Replace": {
+    str(path): str(scratch / path.name) for path in (http_path, full_path)
+}}))
+PY
+image=pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+container=$(docker run -d --rm --pull never --network none --memory 640m --cpus 2 \
+  --tmpfs /tmp:rw,size=256m --name lane-rel-gw111-contract --label ownsolid.lane=lane-rel \
+  --entrypoint sh "$image" -ec '
+    data=$(mktemp -d)
+    chown postgres "$data"
+    gosu postgres initdb -D "$data" --auth=trust --locale=C --encoding=UTF8 >/dev/null
+    exec gosu postgres postgres -D "$data" -h 127.0.0.1
+  ')
+trap 'docker stop --time 5 "$container" >/dev/null 2>&1 || true' EXIT
+ready=no
+for attempt in $(seq 1 25); do
+    if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+        ready=yes
+        break
+    fi
+    sleep 1
+done
+test "$ready" = yes
+docker exec "$container" createdb -h 127.0.0.1 -U postgres lane_rel_gw111_contract_test
+docker exec "$container" psql -h 127.0.0.1 -U postgres -d lane_rel_gw111_contract_test -v ON_ERROR_STOP=1 \
+    -c 'CREATE EXTENSION vector WITH SCHEMA public VERSION $$0.8.7$$; REVOKE CREATE ON SCHEMA public FROM PUBLIC' >/dev/null
+export LANE_REL_GW111_OVERLAY=$scratch/overlay.json
+pid=$(docker inspect -f '{{.State.Pid}}' "$container")
+export PROJECT_ONE_TEST_DSN=postgresql://postgres@127.0.0.1/lane_rel_gw111_contract_test?sslmode=disable
+ionice -c2 -n7 nice -n10 nsenter -t "$pid" -n sh -ec '
+    test "$(wc -l < /proc/net/route)" -eq 1
+    go -C services/control test -overlay "$LANE_REL_GW111_OVERLAY" ./internal/modules/distribution -run "^TestActualAliasCutover" -v -count=1
+' > "$scratch/fixture.log" 2>&1 || { tail -65 "$scratch/fixture.log"; exit 1; }
+grep -E '^(=== RUN   [^/]+$|--- (PASS|SKIP|FAIL)|    --- (PASS|FAIL)|PASS|FAIL)' "$scratch/fixture.log"
+for name in TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutableHistory TestActualAliasCutoverTLSNullableContractCSRFHistoryAndExactReplay; do
+    grep -q "^--- PASS: $name " "$scratch/fixture.log"
+done

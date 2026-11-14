@@ -1,0 +1,31 @@
+{
+  "kind": "static source and contract alignment; no test/build was executed",
+  "retained_gateway": "9fceebc9817e767a3cc31991eb004f4c59b81d1e",
+  "original_read_source": "5fb92e1d",
+  "DEV_contract": "7705c5a341458cb1be8ead80844198378d98c4e3",
+  "contract_sha256": "66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d",
+  "read_operations": [
+    "adminGetModelAlias",
+    "adminListModelAlias",
+    "portalGetModelAlias",
+    "portalListModelAlias"
+  ],
+  "all_non_read_operations_unchanged": true,
+  "mutation_components_unchanged": true,
+  "machine_contracts_unchanged": true,
+  "read_fields_match_released_alias_plus_optional_capabilities": true,
+  "owner_source_and_test_paths_unchanged": [
+    "services/control/internal/modules/distribution/alias_capabilities.go",
+    "services/control/internal/modules/distribution/alias_reads.go",
+    "services/control/internal/modules/distribution/history.go",
+    "services/control/internal/modules/distribution/http/human.go",
+    "services/control/internal/modules/distribution/model.go",
+    "services/control/internal/modules/distribution/alias_capabilities_test.go",
+    "services/control/internal/modules/distribution/alias_capability_recipe_test.go",
+    "services/control/internal/modules/distribution/alias_capability_http_test.go",
+    "services/control/internal/modules/distribution/alias_read_http_test.go"
+  ],
+  "activation": "still disabled; wait for actual backend/composition activation and same-source DEV publication after DEL/ARC ordering",
+  "reproduction": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb",
+  "remaining_validation": "the exact published combined source; do not repeat unchanged predecessor spool/CA fixtures"
+}

@@ -1,0 +1,14 @@
+{
+  "research_source": "38aad60337d3e696cd3536bab932b100c9013a45",
+  "research_published_main": true,
+  "current_draft_revision": 3,
+  "current_draft_source": "6a2dd96fb392444de755db1cf5bfb771867064b0",
+  "producer_source": "2b4aaae5f8c690df9943b7dd7a7e4b5004aa421b",
+  "domain_source": "343cdd9d9a69572b77021baec5383b8acb4bfe64",
+  "current_draft_handoff": "/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/domain-draft/handoff.json",
+  "legacy_revision_b_evidence": "/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/revision-b-proof/handoff.json",
+  "public_contract_changed": false,
+  "public_route_registered": false,
+  "mod103_ticked": false,
+  "dev101_ticked": false
+}

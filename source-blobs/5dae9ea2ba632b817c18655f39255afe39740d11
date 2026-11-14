@@ -1,0 +1,19 @@
+{
+  "candidate": "1a41d97981798440b7f02061d3a73853726b03bc",
+  "child": "/root/lane-rel-tools/compose-parser-inputs.uRofpIWk/parser_child_routes.py",
+  "child_sha256": "dbebfc6cefb15e27155830b4a49be0beb45aada17f7f5a765367e8af76ee8769",
+  "cleanup_seconds": 10,
+  "compose_sha256": "d87a11e944c990dc9f2186115b1136c1cbffffc870845caff0cbdcce0780f41d",
+  "cpu_seconds": 5,
+  "docker_sha256": "7ed12b00293d64742419a6601ae97960a367a0ce97c88b06e3278cc0a409557b",
+  "fixture_parent": "/tmp",
+  "go_memory_bytes": 134217728,
+  "hard_seconds": 30,
+  "inputs": "/root/lane-rel-tools/compose-parser-inputs.uRofpIWk/inputs",
+  "manifest_sha256": "bd0b6a78cbd04eb00551d8d6b59e9613fa19a888d2a6b6a354e67226d5c6f7cd",
+  "maximum_output_bytes": 4194304,
+  "operation_seconds": 4,
+  "output_parent": "/root/lane-rel-tools",
+  "source": "/root/lane-del-entrance-projection",
+  "tree": "398d104c91ce834bec81b9231e28d2a2f6733548"
+}

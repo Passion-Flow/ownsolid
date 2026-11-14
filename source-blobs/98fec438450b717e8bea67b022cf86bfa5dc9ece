@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /root/lane-obs
+expected=${1:?Pass the reviewed exact source commit}
+mode=${2:-full}
+case "$mode" in full|focused|native|retention) ;; *) exit 2 ;; esac
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -w 45 8 || exit 75
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+cat /proc/pressure/io
+python3 - <<'PY_IO'
+from pathlib import Path
+for line in Path("/proc/pressure/io").read_text().splitlines():
+    if float(line.split("avg10=")[1].split()[0]) > 5:
+        raise SystemExit(75)
+PY_IO
+export PATH="/root/lane-obs-tools/go/bin:/root/lane-obs-tools/node/node_modules/.bin:/root/lane-obs-tools/cargo/bin:$PATH"
+export CARGO_HOME=/root/lane-obs-tools/cargo
+export RUSTUP_HOME=/root/lane-obs-tools/rustup
+export GOMAXPROCS=2
+export GOFLAGS=-p=2
+export CARGO_BUILD_JOBS=2
+export GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local
+export CI=true
+df -h /
+free -m
+ss -lntp
+test "$(free -m | awk '$1=="Mem:" {print $4}')" -ge 2048
+printf 'SOURCE_COMMIT=%s\n' "$expected"
+unshare --net bash -ec '
+    ip link set lo up
+    test "$(ip -o link show | wc -l)" -eq 1
+    test -z "$(ip route show default)"
+    test -z "$(ip -6 route show default)"
+    if [[ $1 = full ]]; then
+        make check
+        echo MAKE_CHECK_PASSED
+        make build
+        echo MAKE_BUILD_PASSED
+        if [[ -f tools/audit-verify/audit-verify ]]; then
+            test "$(git status --porcelain -- tools/audit-verify/audit-verify)" = "?? tools/audit-verify/audit-verify"
+            file -b tools/audit-verify/audit-verify | grep -q "^ELF "
+            rm -- tools/audit-verify/audit-verify
+        fi
+    fi
+    if [[ $1 != native && $1 != retention ]]; then
+        go -C services/control test -race -p 2 -count=1 ./internal/modules/monitoring/... ./internal/modules/artifactstores/... ./internal/modules/imageregistry/... ./internal/platform/monitoringmetrics
+        echo OWNED_MODULE_TESTS_PASSED
+    fi
+' bash "$mode"
+export OWNSOLID_TEST_POSTGRES_IMAGE=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+export OWNSOLID_TEST_VICTORIA_METRICS=/root/lane-obs-tools/victoria-metrics-prod
+export OWNSOLID_TEST_VMALERT=/root/lane-obs-tools/vmalert-prod
+if [[ $mode = retention ]]; then
+    GOFLAGS='-p=2 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-retention
+    echo RETENTION_HISTORY_PASSED
+else
+GOFLAGS='-p=2 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http
+echo AUTHENTICATED_HISTORY_HTTP_PASSED
+GOFLAGS='-p=2 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-tls
+echo PRIVATE_HISTORY_TLS_PASSED
+if [[ $mode = full ]]; then
+    GOFLAGS='-p=2 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-retention
+    echo RETENTION_HISTORY_PASSED
+fi
+fi
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+test -z "$(docker ps --format '{{.Names}}' --filter name=lane-obs-history-)"
+echo OWNED_SERVICES_STOPPED
+echo EXACT_SOURCE_ACCEPTANCE_PASSED

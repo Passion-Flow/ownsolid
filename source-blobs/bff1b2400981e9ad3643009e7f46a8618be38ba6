@@ -1,0 +1,90 @@
+{
+  "admission": {
+    "maximum_io_full_average_percent": 5,
+    "minimum_available_memory_bytes": 12884901888,
+    "minimum_free_disk_bytes": 16106127360,
+    "minimum_free_memory_bytes": 3221225472
+  },
+  "base_image": "sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+  "base_image_inventory_sha256": "0886a5d8fa99b3a12595ae1cb07cd0cb246191713c9c71545bca518eee38d8cc",
+  "input_files": {
+    "base-image-descriptor.json": "976b1044fbfb6c40f87db8169296defbb4a7af2546f39bab94300624f47161ba",
+    "dataset/manifest.json": "134bedd3dd44e53bf1ed10f1eae0ac5638ebb3395218cc586604b8eb695a936d",
+    "dataset/train.jsonl": "3eeeb12fe713677b1394fdd1aed5c52a721f2be74c52abd34feae63b4a5a8089",
+    "dataset/validation.jsonl": "a35d91989ab8a6defa821375306c7dcaaefb1397eb8355d606395f3f6e307d05",
+    "request-template.json": "1373f1c5b24f2943783902d43adc19db0ec112adb80e600f75deb7c3e81dcb30",
+    "wheel-sources.json": "c33a892a8916161aa7c31daf66276ad6a9cc5b881e71ab0d77682f53a97c9821"
+  },
+  "install": {
+    "cpu_threads": 2,
+    "memory_bytes": 4294967296,
+    "pids_limit": 128,
+    "timeout_seconds": 1800
+  },
+  "metadata_archive": {
+    "maximum_uncompressed_bytes": 16777216
+  },
+  "original_runtime_sha256": "101169391cd530d9f85c7c369346dc3b4f6b3a240fcbcfde8a34b50507e701da",
+  "prototype_runtime_sha256": "47e701c882efac48aa5380d379ebfbfc3b364165370f7635f166721314684e34",
+  "schema_version": 1,
+  "scope": "private CPU verification prototype, not production admission",
+  "source_commit": "096c50b818429fc089398112c21fd5bf624facae",
+  "source_directory_mode": "0700",
+  "source_file_mode": "0600",
+  "source_files": {
+    "api/agent/v1/model-catalog.json": "1828d79a898ae556e07d7d9fd0f1fa1e1841f06c380562d5ed9626762eb9f822",
+    "runtimes/data-processing/README.md": "ccfe04bea21db6a7d9402a8569f3e984ce8689a5a9445eac64562be2d744789c",
+    "runtimes/data-processing/import_parquet.py": "e6b6a2d888e77d31213f1fbccf641f75ea557c35e5cfab69eebc905689309b52",
+    "runtimes/data-processing/process.py": "00202cf8cbb7c7df143d876398eeb52c346b0155169c7b805a50d026cd8c4974",
+    "runtimes/data-processing/projectone_data/README.md": "ae8c8ee0e13a6bf08421d1111dc332a2d1a1856a86dece1f71c73735194a06cc",
+    "runtimes/data-processing/projectone_data/__init__.py": "cd6d48115cee872b26bb64e28b81e55826755694365e686092789aae62302d07",
+    "runtimes/data-processing/projectone_data/boundary.py": "7d212f09c2361fabaaba8de9305a12baa57fb3f9cae1a21ca150d8ff1c6f0949",
+    "runtimes/data-processing/projectone_data/limits_generated.py": "df15fd9d3d876c727ef113e0754c687f052a917b13049e2cc7244c170aaf397e",
+    "runtimes/data-processing/projectone_data/publication.py": "22645f90d90fb0cd64e67304f4725b187c0ab8927772ebb2716091cc9e8a9036",
+    "runtimes/data-processing/projectone_data/validation.py": "014a4f638675dff17e9622ce872c183620534e8ff91f5c4656307a31a10b52c0",
+    "runtimes/data-processing/pyproject.toml": "9a9abafd43a3f826e33182291d6e941aeb67cacceed5eb1a56d9af8fb8b18166",
+    "runtimes/data-processing/requirements/linux-amd64-parquet.lock": "a5ea20e99bf445feae6ad62d3aca859cea13bda27e632a9aad35b9ac64eb16d3",
+    "runtimes/training/README.md": "6a6a27d9664c924a3977970b3c495f6ac85a371b43ed15c1a0523574d3ddfed5",
+    "runtimes/training/projectone_training/README.md": "f72d40daa1967990c9e993b61aae76cb18ea64f3be988e0d0445372cedf9a62a",
+    "runtimes/training/projectone_training/__init__.py": "1ac2998cec845a048bb13e55f66d31fa5d812043fb810dbf396423c49621f91b",
+    "runtimes/training/projectone_training/boundary.py": "33fa4694a3d035a39795d542f582315769059b1ab5cfa46e79ca7ebecd3da1a1",
+    "runtimes/training/projectone_training/catalog.py": "94dde960dec08d9cf1b9b79eee8d3fa6f58edc20b6b7b948ab314de20a70f25d",
+    "runtimes/training/projectone_training/checkpoints.py": "a759cf309eff2ea7c312b039bc6962cdbb5d8eb7f148ce6188e164c50681f613",
+    "runtimes/training/projectone_training/configuration.py": "ac1aa739e70bfac9f1e599167288af12f3f4665034172729e09872111d0812e8",
+    "runtimes/training/projectone_training/configuration_generated.py": "cc24b2a7bc8cf564d1374b56f2301f77eb1826f20647c4939acb4fe1e4e62baa",
+    "runtimes/training/projectone_training/data.py": "b3f041db42733195cf747b4b4dcd95caa88ce12a906a1e645005be39b8831570",
+    "runtimes/training/projectone_training/engine.py": "a8d81a9c7084b33f942ca732f89264838b36a5965b8b1abfa50516920cb0aa74",
+    "runtimes/training/projectone_training/preview.py": "8e542887145449ed18e663a4fc8bac0a6daa0dbfc4af31903a1c5ef710b71813",
+    "runtimes/training/projectone_training/processor_generated.py": "92701994ab5c33235377a0a082504ea438a64f92500905c81560d255ed4ce329",
+    "runtimes/training/pyproject.toml": "19080ebfd548a9a6fcdfba00c5a7760ffaf25e50e1d73590210c1500eebaf3ba",
+    "runtimes/training/requirements/linux-amd64-cpu-prototype.lock": "378a1b342f065f2256bcc225c25b08ea803ea6e2efc6a8b7fbbbf3615bca01c5",
+    "runtimes/training/requirements/linux-amd64-cuda.lock": "250fee15d9e7eb9ec71793c743b02f62870094bb494a57a0c463c5ce29399946",
+    "runtimes/training/requirements/native-macos-arm64.lock": "03d3fab0f311aa4837190ab2e90e30a9c16c51c098fc6e6c41626630c6aa0175",
+    "runtimes/training/runtime.json": "47e701c882efac48aa5380d379ebfbfc3b364165370f7635f166721314684e34",
+    "runtimes/training/tests/test_boundary.py": "cba708a56732a50b65b259aa191510f3c56eedd76614896cabcab4a6c2febae8",
+    "runtimes/training/tests/test_checkpoints.py": "bd5d4c5b9250e702f254ffbde5c16a13aabf892d3277803365136805bcfc28a4",
+    "runtimes/training/tests/test_tokenizer_preview.py": "88f83dc703195d84eb0c8eb9a831105781bddf37174a7e36c102bd43731539f0",
+    "runtimes/training/train.py": "78c0f6a5043e64b78572666179eeb23cbd04609a7cd8ab58aa1da6ea17a8bb60"
+  },
+  "verification_scripts": {
+    "cpu-prototype-inputs/check_install_refusals.py": "be6c5580e54bdfb94431bd0fab0b1f47b91d65327ac79d8ee2a399e38470538c",
+    "cpu-prototype-inputs/compare_cpu_resume.py": "650e8427a925654b504575c51643337394c3ed158993df629711e1f40c3b35e0",
+    "cpu-prototype-inputs/verify_installed.py": "b01b5c61cde7e5024cca446c8d5c6a9a344887a87d1abea95344893f22779111",
+    "execute_cpu_prototype.sh": "c644d0a95dd263f97adeb1993edf1649ea96096c17e33e3339c081f1038ff063",
+    "explain_metadata_only.py": "7937dc679a3ffdc204fced1daed04a74c57f69339e38d1799a299c263de34a42",
+    "install_cpu_prototype.sh": "3079797d121204bd1c833379500ef9a6b8bf7600b7551aeedc49fc942f8c519b",
+    "package_cpu_evidence.py": "10f4fbc74cf0392a993e1a4e93fdd6b8fc84e75eec9b048f9b5cc0db12b7c6b8",
+    "portable_cpu_inputs.py": "ab57bf7acbf77fb1303aed11c0d1d1d8aae2d379152b6e53ca1dd6ed67b41e22",
+    "preflight_cpu_prototype.py": "f8d97b23012702d4c466bf0d95500dd3a4e8d7d5c31c97dba1e3eca0b73171b3",
+    "run_cpu_resume.py": "ee149d8211d459a97a744caaef137ac7237ccd3312565e2485ad8c8fc7ec08cb",
+    "test_portable_cpu_inputs.py": "162b7c328cc68b727e0861696991147a752d025f59377c60f5049a2801127641"
+  },
+  "wheel_inventory_sha256": "57cc07d9ab616399b3ff5f7e09437292ac5ee0e811282c686d6b658594a110dc",
+  "worker": {
+    "maximum_log_bytes": 1048576,
+    "maximum_rss_bytes": 6442450944,
+    "poll_milliseconds": 100,
+    "stop_seconds": 5,
+    "wall_seconds": 300
+  }
+}

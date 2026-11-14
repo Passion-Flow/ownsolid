@@ -1,0 +1,98 @@
+{
+  "scope": "OBS110 lock attempt diagnostics only",
+  "label": "global",
+  "raw_return_code": 0,
+  "executable_resolution": "/usr/bin/flock",
+  "command_kind": "file",
+  "argv": [
+    "-n",
+    "8"
+  ],
+  "lock_path": "/run/lock/ownsolid-heavy.lock",
+  "caller_pid": 2398847,
+  "source": "3cebfcef9f321364862a11d8b773c714facb6f68",
+  "snapshot_started_at": "2026-11-12T16:50:09.514587+00:00",
+  "inherited_fd_fstat": {
+    "device": 29,
+    "major": 0,
+    "minor": 29,
+    "inode": 82,
+    "mode": 33188,
+    "links": 1
+  },
+  "caller_fd_stat": {
+    "device": 29,
+    "major": 0,
+    "minor": 29,
+    "inode": 82,
+    "mode": 33188,
+    "links": 1
+  },
+  "path_stat": {
+    "device": 29,
+    "major": 0,
+    "minor": 29,
+    "inode": 82,
+    "mode": 33188,
+    "links": 1
+  },
+  "caller_fdinfo": "pos:\t0\nflags:\t0100001\nmnt_id:\t34\nino:\t82\nlock:\t1: FLOCK  ADVISORY  WRITE 2398863 00:1d:82 0 EOF\n",
+  "resolved_executable": "/usr/bin/flock",
+  "executable_sha256": "e619344dc3eec4023498465679262f9ca27d1e8cef9cfc4c1ae72b428577b806",
+  "stderr_file": "/root/lane-obs-tools/obs110-unit-diagnostic.5ac9cL/global-flock.stderr",
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "ancestry": [
+    {
+      "pid": 2398847,
+      "ppid": 2398834,
+      "comm": "bash"
+    },
+    {
+      "pid": 2398834,
+      "ppid": 2398662,
+      "comm": "timeout"
+    },
+    {
+      "pid": 2398662,
+      "ppid": 17681,
+      "comm": "sshd"
+    },
+    {
+      "pid": 17681,
+      "ppid": 1,
+      "comm": "sshd"
+    },
+    {
+      "pid": 1,
+      "ppid": 0,
+      "comm": "systemd"
+    }
+  ],
+  "matching_kernel_locks": [
+    "1: FLOCK  ADVISORY  WRITE 2398863 00:1d:82 0 EOF"
+  ],
+  "matching_live_fds": [
+    {
+      "pid": 2398847,
+      "fd": 8,
+      "comm": "bash",
+      "in_caller_ancestry": true,
+      "lock_lines": [
+        "lock:\t1: FLOCK  ADVISORY  WRITE 2398863 00:1d:82 0 EOF"
+      ]
+    },
+    {
+      "pid": 2398864,
+      "fd": 8,
+      "comm": "python3",
+      "in_caller_ancestry": false,
+      "lock_lines": [
+        "lock:\t1: FLOCK  ADVISORY  WRITE 2398863 00:1d:82 0 EOF"
+      ]
+    }
+  ],
+  "scan_incomplete": false,
+  "unreadable_or_vanished_entries": 1,
+  "snapshot_ended_at": "2026-11-12T16:50:09.563879+00:00"
+}

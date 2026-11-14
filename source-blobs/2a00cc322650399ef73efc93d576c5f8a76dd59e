@@ -1,0 +1,30 @@
+{
+  "candidate": "8f4dd72cb9c6c58c0860bb9125289986cfc180d1",
+  "base": "1aad4eed3b735c012be2ddfe8b5ab2746d9ffee9",
+  "worktree": "/root/lane-rel-cloud",
+  "branch": "codex/lane-rel-workspace-cli",
+  "published": false,
+  "bundle": "/root/lane-rel-tools/workspace-cli-candidate.bundle",
+  "bundle_sha256": "3d038cd611f3f2cca53f5f93ae0053ce2e6654e62f536856c2a7e9f264d303c0",
+  "verified": [
+    "Loopback-only Linux CLI race suite",
+    "Final workspace and command-help race cases",
+    "Layout check",
+    "Roadmap consistency: 589 items",
+    "Clean working tree and explicit staged-path review"
+  ],
+  "unrun": [
+    "Real Admin TLS/PostgreSQL workspace fixture",
+    "Full make check and make build for this candidate"
+  ],
+  "native_preflight": {
+    "directory": "/root/lane-rel-tools/workspace-cli-native.CpU4xj3F",
+    "exit": 75,
+    "container_started": false,
+    "reason": "Shared heavy-test lock refused admission; later raw MemFree remained below the required 2048 MiB floor."
+  },
+  "acceptance_runner": "tools/cli/testdata/run-workspaces-tls.sh",
+  "published_audit_commit": "1aad4eed3b735c012be2ddfe8b5ab2746d9ffee9",
+  "retained_gw104_contract": "/root/lane-rel-tools/gw104-contract.qgEXzK0n/handoff",
+  "remaining": "Keep DEV-102 open. Native fixture, full gates, fresh-main integration and publication remain required."
+}

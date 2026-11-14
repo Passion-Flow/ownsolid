@@ -1,0 +1,13 @@
+{
+  "artifact_preparation_only": true,
+  "installed": false,
+  "started_server": false,
+  "returncode": 0,
+  "wheel_files": 90,
+  "total_bytes": 48147832,
+  "target_python_version": "3.12",
+  "preparation_python": "Python 3.12.3",
+  "pip_wheel_sha256": "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e",
+  "target_maximum_glibc": "2.36",
+  "memory_address_space_limit_bytes": 268435456
+}

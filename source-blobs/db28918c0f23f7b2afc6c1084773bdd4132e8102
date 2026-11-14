@@ -1,0 +1,414 @@
+diff --git a/services/control/internal/modules/monitoring/fleet_history_integration_test.go b/services/control/internal/modules/monitoring/fleet_history_integration_test.go
+index 1a3dfea3..0ef65b67 100644
+--- a/services/control/internal/modules/monitoring/fleet_history_integration_test.go
++++ b/services/control/internal/modules/monitoring/fleet_history_integration_test.go
+@@ -5,6 +5,7 @@ package monitoring_test
+ import (
+ 	"bytes"
+ 	"context"
++	"crypto/sha256"
+ 	"encoding/json"
+ 	"fmt"
+ 	"io"
+@@ -16,6 +17,7 @@ import (
+ 	"os"
+ 	"os/exec"
+ 	"path/filepath"
++	"slices"
+ 	"strconv"
+ 	"strings"
+ 	"sync"
+@@ -277,12 +279,18 @@ func startHistoryVM(t *testing.T, ctx context.Context, retention string, flags .
+ func startHistoryVMAt(t *testing.T, ctx context.Context, retention, scheme string, flags ...string) (string, func() int64, func()) {
+ 	t.Helper()
+ 	dir := filepath.Join(t.TempDir(), "data")
++	process, disk := startHistoryVMIn(t, ctx, dir, retention, scheme, flags...)
++	return process.origin, disk, process.stop
++}
++
++func startHistoryVMIn(t *testing.T, ctx context.Context, dir, retention, scheme string, flags ...string) (monitoringFixtureProcess, func() int64) {
++	t.Helper()
+ 	flags = append(flags, "-storageDataPath="+dir, "-retentionPeriod="+retention, "-memory.allowedBytes=192MB", "-search.disableCache")
+-	origin, stop := startMonitoringFixtureProcessAt(t, ctx, scheme, "VictoriaMetrics "+retention, "OWNSOLID_TEST_VICTORIA_METRICS", flags...)
+-	return origin, func() int64 {
+-		stop()
++	process := launchMonitoringFixtureProcessAt(t, ctx, scheme, "VictoriaMetrics "+retention, "OWNSOLID_TEST_VICTORIA_METRICS", flags...)
++	return process, func() int64 {
++		process.stop()
+ 		return historyAllocatedBytes(t, dir)
+-	}, stop
++	}
+ }
+ 
+ func historyAllocatedBytes(t *testing.T, dir string) int64 {
+@@ -305,6 +313,18 @@ func startMonitoringFixtureProcess(t *testing.T, ctx context.Context, name, envi
+ }
+ 
+ func startMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme, name, environment string, flags ...string) (string, func()) {
++	t.Helper()
++	process := launchMonitoringFixtureProcessAt(t, ctx, scheme, name, environment, flags...)
++	return process.origin, process.stop
++}
++
++type monitoringFixtureProcess struct {
++	origin, binarySHA256 string
++	argv                 []string
++	stop                 func()
++}
++
++func launchMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme, name, environment string, flags ...string) monitoringFixtureProcess {
+ 	t.Helper()
+ 	binary := os.Getenv(environment)
+ 	if !filepath.IsAbs(binary) {
+@@ -346,6 +366,26 @@ func startMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme,
+ 		t.Logf("stopped %s on %s", name, address)
+ 	})
+ 	t.Cleanup(stop)
++	// Bind fixture qualification to the executed child, rather than a caller's
++	// assertion about its intended flags or a flag's upstream default.
++	commandLine, e := os.ReadFile(fmt.Sprintf("/proc/%d/cmdline", cmd.Process.Pid))
++	if e != nil || len(commandLine) == 0 || commandLine[len(commandLine)-1] != 0 {
++		t.Fatalf("%s actual command line unavailable: %v", name, e)
++	}
++	argv := strings.Split(string(commandLine[:len(commandLine)-1]), "\x00")
++	if !slices.Equal(argv, cmd.Args) {
++		t.Fatalf("%s actual command line differs from the executed arguments", name)
++	}
++	executable, e := os.Open(fmt.Sprintf("/proc/%d/exe", cmd.Process.Pid))
++	if e != nil {
++		t.Fatal(e)
++	}
++	digest := sha256.New()
++	_, readErr := io.Copy(digest, executable)
++	closeErr := executable.Close()
++	if readErr != nil || closeErr != nil {
++		t.Fatalf("%s executable identity: %v / %v", name, readErr, closeErr)
++	}
+ 	origin := scheme + "://" + address
+ 	deadline, cancel := context.WithTimeout(ctx, 15*time.Second)
+ 	defer cancel()
+@@ -356,14 +396,14 @@ func startMonitoringFixtureProcessAt(t *testing.T, ctx context.Context, scheme,
+ 			resp.Body.Close()
+ 			if resp.StatusCode == http.StatusOK {
+ 				t.Logf("started %s on %s", name, address)
+-				return origin, stop
++				return monitoringFixtureProcess{origin: origin, binarySHA256: fmt.Sprintf("%x", digest.Sum(nil)), argv: argv, stop: stop}
+ 			}
+ 		}
+ 		time.Sleep(50 * time.Millisecond)
+ 	}
+ 	logText, _ := os.ReadFile(log)
+ 	t.Fatalf("%s startup:\n%s", name, logText)
+-	return "", nil
++	return monitoringFixtureProcess{}
+ }
+ 
+ func fixtureRequest(t *testing.T, ctx context.Context, method, path string, body io.Reader) {
+diff --git a/services/control/internal/modules/monitoring/series_cardinality_fixture_test.go b/services/control/internal/modules/monitoring/series_cardinality_fixture_test.go
+new file mode 100644
+index 00000000..59117b82
+--- /dev/null
++++ b/services/control/internal/modules/monitoring/series_cardinality_fixture_test.go
+@@ -0,0 +1,121 @@
++package monitoring_test
++
++import (
++	"fmt"
++	"strings"
++	"testing"
++	"time"
++)
++
++// These helpers qualify test processes only. Installed product admission must
++// bind the equivalent profile to a verified installation/source identity.
++func admitDailyCardinalityFixture(argv []string) error {
++	if len(argv) < 2 {
++		return fmt.Errorf("missing actual cardinality fixture command")
++	}
++	required := map[string]string{
++		"disablePerDayIndex":              "false",
++		"search.maxTSDBStatusSeries":      "10000",
++		"search.maxStatusRequestDuration": "5s",
++		"search.maxTSDBStatusTopNSeries":  "3",
++		"retentionPeriod":                 "7d",
++		"memory.allowedBytes":             "192MB",
++	}
++	seen := make(map[string]bool, len(required))
++	for _, arg := range argv[1:] {
++		name, _, _ := strings.Cut(strings.TrimLeft(arg, "-"), "=")
++		want, bounded := required[name]
++		if !bounded {
++			continue
++		}
++		if seen[name] || arg != "-"+name+"="+want {
++			return fmt.Errorf("unqualified cardinality fixture flag %s", name)
++		}
++		seen[name] = true
++	}
++	for name := range required {
++		if !seen[name] {
++			return fmt.Errorf("missing cardinality fixture flag %s", name)
++		}
++	}
++	return nil
++}
++
++// Use completed UTC days in one monthly partition, even on the first two days
++// of a month. An empty day in that partition distinguishes global counts too.
++func cardinalityFixtureDays(now time.Time) (first, second, empty time.Time) {
++	second = now.UTC().Truncate(24*time.Hour).AddDate(0, 0, -1)
++	if second.Day() == 1 {
++		second = second.AddDate(0, 0, -1)
++	}
++	first = second.AddDate(0, 0, -1)
++	empty = first.AddDate(0, 0, -1)
++	if first.Day() == 1 {
++		empty = second.AddDate(0, 0, 1)
++	}
++	return
++}
++
++func TestDailyCardinalityFixtureAdmission(t *testing.T) {
++	for _, args := range [][]string{nil, {}, {"/fixture/victoria-metrics"}} {
++		if err := admitDailyCardinalityFixture(args); err == nil {
++			t.Fatal("admitted a missing actual command")
++		}
++	}
++	qualified := []string{"/fixture/victoria-metrics", "-disablePerDayIndex=false", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3", "-retentionPeriod=7d", "-memory.allowedBytes=192MB", "-search.disableCache", "-httpListenAddr=127.0.0.1:12345"}
++	if err := admitDailyCardinalityFixture(qualified); err != nil {
++		t.Fatal(err)
++	}
++	for _, replacement := range []string{"", "-disablePerDayIndex", "-disablePerDayIndex=true", "--disablePerDayIndex=false", "-disablePerDayIndex=0", "-disablePerDayIndex=False"} {
++		t.Run("index/"+replacement, func(t *testing.T) {
++			args := append([]string(nil), qualified...)
++			args[1] = replacement
++			if err := admitDailyCardinalityFixture(args); err == nil {
++				t.Fatal("admitted an absent, disabled or noncanonical actual index flag")
++			}
++		})
++	}
++	for _, extra := range []string{"-disablePerDayIndex=false", "-disablePerDayIndex=true", "--disablePerDayIndex=true", "-search.maxTSDBStatusSeries=20000", "-search.maxStatusRequestDuration=1h", "-search.maxTSDBStatusTopNSeries=100", "-retentionPeriod=90d", "-memory.allowedBytes=1GB"} {
++		t.Run("override/"+extra, func(t *testing.T) {
++			if err := admitDailyCardinalityFixture(append(append([]string(nil), qualified...), extra)); err == nil {
++				t.Fatal("admitted an ambiguous or changed actual profile")
++			}
++		})
++	}
++	for index := 1; index <= 6; index++ {
++		args := append([]string(nil), qualified...)
++		args = append(args[:index], args[index+1:]...)
++		if err := admitDailyCardinalityFixture(args); err == nil {
++			t.Fatalf("admitted missing profile input %s", qualified[index])
++		}
++	}
++}
++
++func TestCardinalityFixtureUTCPartitionDays(t *testing.T) {
++	for _, test := range []struct{ now, first, second, empty string }{
++		{"2026-11-13T00:00:00Z", "2026-11-11", "2026-11-12", "2026-11-10"},
++		{"2026-11-13T23:59:59Z", "2026-11-11", "2026-11-12", "2026-11-10"},
++		{"2027-01-01T00:00:00Z", "2026-12-30", "2026-12-31", "2026-12-29"},
++		{"2027-01-02T00:00:00Z", "2026-12-30", "2026-12-31", "2026-12-29"},
++		{"2027-01-03T00:00:00Z", "2027-01-01", "2027-01-02", "2027-01-03"},
++		{"2028-03-01T00:00:00Z", "2028-02-28", "2028-02-29", "2028-02-27"},
++		{"2027-03-01T00:00:00Z", "2027-02-27", "2027-02-28", "2027-02-26"},
++		{"2027-01-03T00:30:00+08:00", "2026-12-30", "2026-12-31", "2026-12-29"},
++	} {
++		t.Run(test.now, func(t *testing.T) {
++			now, err := time.Parse(time.RFC3339, test.now)
++			if err != nil {
++				t.Fatal(err)
++			}
++			first, second, empty := cardinalityFixtureDays(now)
++			if first.Format("2006-01-02") != test.first || second.Format("2006-01-02") != test.second || empty.Format("2006-01-02") != test.empty {
++				t.Fatalf("unexpected UTC days: %s, %s, %s", first, second, empty)
++			}
++			for _, day := range []time.Time{first, second, empty} {
++				if day.Location() != time.UTC || day.Format("2006-01") != first.Format("2006-01") || day.Before(now.UTC().Truncate(24*time.Hour).AddDate(0, 0, -6)) || day.After(now.UTC().Truncate(24*time.Hour)) {
++					t.Fatalf("day outside the same UTC partition/raw horizon: %s", day)
++				}
++			}
++		})
++	}
++}
+diff --git a/services/control/internal/modules/monitoring/series_cardinality_integration_test.go b/services/control/internal/modules/monitoring/series_cardinality_integration_test.go
+index e0d4f367..9112e78d 100644
+--- a/services/control/internal/modules/monitoring/series_cardinality_integration_test.go
++++ b/services/control/internal/modules/monitoring/series_cardinality_integration_test.go
+@@ -14,6 +14,8 @@ import (
+ 	"net/http/httputil"
+ 	"net/url"
+ 	"os"
++	"path/filepath"
++	"reflect"
+ 	"strconv"
+ 	"sync/atomic"
+ 	"testing"
+@@ -30,7 +32,7 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
+ 		t.Fatal("cardinality qualification requires real isolated PostgreSQL")
+ 	}
+ 	g := setup(t, false)
+-	source, diskBytes, stop := startHistoryVM(t, g.ctx, "7d", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3")
++	source, diskBytes, stop := startHistoryVM(t, g.ctx, "7d", "-disablePerDayIndex=false", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3")
+ 	target, _ := url.Parse(source)
+ 	proxy := httputil.NewSingleHostReverseProxy(target)
+ 	var reads atomic.Int32
+@@ -80,17 +82,7 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
+ 
+ 	var samples bytes.Buffer
+ 	emit := func(metric, tenant, workspace, node string) {
+-		labels := map[string]string{"__name__": metric, "workspace_id": workspace}
+-		if tenant != "" {
+-			labels["tenant_id"] = tenant
+-		}
+-		if node != "" {
+-			labels["node_id"] = node
+-		}
+-		value := map[string]any{"metric": labels, "values": []int{1}, "timestamps": []int64{stamp.UnixMilli()}}
+-		if err := json.NewEncoder(&samples).Encode(value); err != nil {
+-			t.Fatal(err)
+-		}
++		writeCardinalityFixtureSample(t, &samples, stamp, metric, tenant, workspace, node)
+ 	}
+ 	for index := range 10000 {
+ 		emit(exact.Metric, g.f.Tenant, g.f.Workspace, uuid.NewSHA1(uuid.NameSpaceOID, []byte(fmt.Sprintf("ownsolid-cardinality-%d", index))).String())
+@@ -208,6 +200,126 @@ func TestScopedSeriesCardinalityOffline(t *testing.T) {
+ 	}
+ 	stop()
+ 	t.Logf("native index allocated bytes after graceful shutdown: %d; fixture is one UTC day, not the seventeen-million-series load", diskBytes())
++	t.Run("daily-index-profile", func(t *testing.T) {
++		qualifyDailyCardinalityFixture(t, g, other, foreignTenant, foreign)
++	})
++}
++
++func writeCardinalityFixtureSample(t *testing.T, samples *bytes.Buffer, stamp time.Time, metric, tenant, workspace, node string) {
++	t.Helper()
++	labels := map[string]string{"__name__": metric, "workspace_id": workspace}
++	if tenant != "" {
++		labels["tenant_id"] = tenant
++	}
++	if node != "" {
++		labels["node_id"] = node
++	}
++	value := map[string]any{"metric": labels, "values": []int{1}, "timestamps": []int64{stamp.UnixMilli()}}
++	if err := json.NewEncoder(samples).Encode(value); err != nil {
++		t.Fatal(err)
++	}
++}
++
++func qualifyDailyCardinalityFixture(t *testing.T, g *story, other, foreignTenant, foreign string) {
++	t.Helper()
++	first, second, empty := cardinalityFixtureDays(time.Now())
++	cpu, app := "ownsolid_daily_cpu", "ownsolid_daily_app"
++	nodeA, shared, nodeB := uuid.NewString(), uuid.NewString(), uuid.NewString()
++	var samples bytes.Buffer
++	emit := func(day time.Time, metric, tenant, workspace, node string) {
++		writeCardinalityFixtureSample(t, &samples, day.Add(12*time.Hour), metric, tenant, workspace, node)
++	}
++	emit(first, cpu, g.f.Tenant, g.f.Workspace, nodeA)
++	emit(first, cpu, g.f.Tenant, g.f.Workspace, shared)
++	emit(second, cpu, g.f.Tenant, g.f.Workspace, nodeB)
++	emit(second, app, g.f.Tenant, g.f.Workspace, shared)
++	emit(second, app, g.f.Tenant, g.f.Workspace, "")
++	for _, day := range []time.Time{first, second} {
++		emit(day, cpu, g.f.Tenant, other, uuid.NewString())
++		emit(day, cpu, foreignTenant, foreign, uuid.NewString())
++		emit(day, cpu, foreignTenant, g.f.Workspace, uuid.NewString())
++		emit(day, cpu, "", g.f.Workspace, uuid.NewString())
++	}
++	emit(second, cpu, g.f.Tenant, other, uuid.NewString())
++	flags := []string{"-disablePerDayIndex=false", "-search.maxTSDBStatusSeries=10000", "-search.maxStatusRequestDuration=5s", "-search.maxTSDBStatusTopNSeries=3"}
++	dir := filepath.Join(t.TempDir(), "daily")
++	original := g.config.SeriesCardinality
++	defer func() { g.config.SeriesCardinality = original; g.rebuild() }()
++	for _, stage := range []string{"ingested", "restarted"} {
++		process, disk := startHistoryVMIn(t, g.ctx, dir, "7d", "http", flags...)
++		if err := admitDailyCardinalityFixture(process.argv); err != nil {
++			t.Fatal("actual daily source profile refused before product binding", err)
++		}
++		t.Logf("%s daily fixture admitted from actual child argv: binary SHA-256 %s; disablePerDayIndex=false; UTC days %s / %s; empty %s", stage, process.binarySHA256, first.Format("2006-01-02"), second.Format("2006-01-02"), empty.Format("2006-01-02"))
++		if stage == "ingested" {
++			fixtureRequest(t, g.ctx, http.MethodPost, process.origin+"/api/v1/import", bytes.NewReader(samples.Bytes()))
++			fixtureRequest(t, g.ctx, http.MethodGet, process.origin+"/internal/force_flush", nil)
++		}
++		for _, day := range []time.Time{first, second} {
++			count, otherCount, appCount := uint64(2), uint64(1), uint64(0)
++			if day.Equal(second) {
++				count, otherCount, appCount = 1, 2, 2
++			}
++			waitForCardinalityFixture(t, g.ctx, process.origin, day, []cardinalityFixtureScope{
++				{cpu, g.f.Tenant, g.f.Workspace, count}, {app, g.f.Tenant, g.f.Workspace, appCount}, {cpu, g.f.Tenant, other, otherCount},
++				{cpu, foreignTenant, foreign, 1}, {cpu, foreignTenant, g.f.Workspace, 1}, {cpu, "", g.f.Workspace, 1},
++			})
++		}
++		g.config.SeriesCardinality.RawOrigin = process.origin
++		g.rebuild()
++		checks := []struct {
++			day               time.Time
++			workspace, metric string
++			total             uint64
++			metrics, nodes    map[string]uint64
++		}{
++			{first, g.f.Workspace, "", 2, map[string]uint64{cpu: 2}, map[string]uint64{nodeA: 1, shared: 1}},
++			{second, g.f.Workspace, "", 3, map[string]uint64{cpu: 1, app: 2}, map[string]uint64{nodeB: 1, shared: 1}},
++			{first, g.f.Workspace, cpu, 2, map[string]uint64{cpu: 2}, map[string]uint64{nodeA: 1, shared: 1}},
++			{second, g.f.Workspace, cpu, 1, map[string]uint64{cpu: 1}, map[string]uint64{nodeB: 1}},
++			{first, g.f.Workspace, app, 0, map[string]uint64{}, map[string]uint64{}},
++			{second, g.f.Workspace, app, 2, map[string]uint64{app: 2}, map[string]uint64{shared: 1}},
++			{empty, g.f.Workspace, "", 0, map[string]uint64{}, map[string]uint64{}},
++		}
++		for _, check := range checks {
++			requestID := uuid.NewString()
++			out, err := g.s.GetSeriesCardinality(g.ctx, g.admin, check.workspace, monitoring.SeriesCardinalityQuery{Date: check.day, Metric: check.metric}, requestID)
++			metrics, nodes := map[string]uint64{}, map[string]uint64{}
++			for _, rank := range out.Metrics {
++				metrics[rank.MetricName] = rank.SeriesCount
++			}
++			for _, rank := range out.Nodes {
++				nodes[rank.NodeID] = rank.SeriesCount
++			}
++			if err != nil || out.TotalSeries != check.total || out.Date != check.day.Format("2006-01-02") || out.WorkspaceID != check.workspace || out.RankLimit != 3 || out.Metrics == nil || out.Nodes == nil || len(metrics) != len(out.Metrics) || len(nodes) != len(out.Nodes) || !reflect.DeepEqual(metrics, check.metrics) || !reflect.DeepEqual(nodes, check.nodes) {
++				t.Fatalf("%s daily product projection for %s/%q: %+v %v", stage, check.day.Format("2006-01-02"), check.metric, out, err)
++			}
++			if g.count("SELECT count(*) FROM audit_events WHERE action='monitoring.snapshot' AND request_id=$1 AND target_id=$2", requestID, check.workspace) != 1 {
++				t.Fatal("daily product projection lacks its committed scope audit")
++			}
++		}
++		process.stop()
++		t.Logf("%s two-day fixture allocated bytes after graceful stop: %d; five selected series, not fleet sizing", stage, disk())
++	}
++	// Deliberately start the unsupported native mode in a separate data directory.
++	// The fixture admission must refuse its observed argv before product binding.
++	flags[0] = "-disablePerDayIndex=true"
++	control, disk := startHistoryVMIn(t, g.ctx, filepath.Join(t.TempDir(), "global"), "7d", "http", flags...)
++	if err := admitDailyCardinalityFixture(control.argv); err == nil {
++		t.Fatal("disabled actual source profile was admitted")
++	}
++	t.Logf("disabled-index control refused by fixture admission: actual binary SHA-256 %s; disablePerDayIndex=true; not an installed-product admission result", control.binarySHA256)
++	fixtureRequest(t, g.ctx, http.MethodPost, control.origin+"/api/v1/import", bytes.NewReader(samples.Bytes()))
++	fixtureRequest(t, g.ctx, http.MethodGet, control.origin+"/internal/force_flush", nil)
++	for _, day := range []time.Time{first, second, empty} {
++		waitForCardinalityFixture(t, g.ctx, control.origin, day, []cardinalityFixtureScope{
++			{cpu, g.f.Tenant, g.f.Workspace, 3}, {app, g.f.Tenant, g.f.Workspace, 2},
++			{cpu, g.f.Tenant, other, 3}, {cpu, foreignTenant, foreign, 2},
++			{cpu, foreignTenant, g.f.Workspace, 2}, {cpu, "", g.f.Workspace, 2},
++		})
++	}
++	control.stop()
++	t.Logf("disabled-index control allocated bytes after graceful stop: %d; native global counts are not daily counts", disk())
+ }
+ 
+ // The wrapper observes a real final audit insert. It provokes a real constraint
+diff --git a/services/control/internal/modules/monitoring/testdata/check-fleet-history.sh b/services/control/internal/modules/monitoring/testdata/check-fleet-history.sh
+index b451acc7..7146539c 100644
+--- a/services/control/internal/modules/monitoring/testdata/check-fleet-history.sh
++++ b/services/control/internal/modules/monitoring/testdata/check-fleet-history.sh
+@@ -55,7 +55,7 @@ export PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE="$work/dsn"
+ export PROJECT_ONE_TEST_DSN_FILE="$work/dsn"
+ export PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA="m20_repository_$(tr -d '-' </proc/sys/kernel/random/uuid)"
+ cd services/control/internal/modules/monitoring
+-nsenter --target "$pid" --net unshare --pid --fork --kill-child bash -ec '
++nsenter --target "$pid" --net unshare --pid --fork --kill-child --mount-proc bash -ec '
+     ip link set lo up
+     test "$(ip -o link show | wc -l)" -eq 1
+     ip -brief address

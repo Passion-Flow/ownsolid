@@ -1,0 +1,27 @@
+# Current safe scheduling checkpoint
+
+Read queue-executor-resume.md for retained environments, lock protocol and
+prior qualified quota-status evidence. Its original new-API compile status
+is superseded by sch103-b9705abc-qualification.md.
+
+The new API runtime source b9705abccd4361ee08efb7ed445fefddbc22ab34 compiled
+and passed its one new native Linux boundary race test. Evidence:
+queue-executor-unit.TWyk54lD. Current HEAD is its status-only follow-up;
+use git log/status to confirm it. The worktree is clean.
+
+Both PG requests exited 75 before locks/fixture/tests, on free memory below
+3072 MiB. The Mac fallback was locked out before extraction/build.
+No own test, background retry, PG container or service remains.
+Do not rebuild any retained environment or repeat the passed pure check
+for the status-only change.
+
+Next: resource-qualified queue-executor-target.sh (seven actual PG flows),
+then queue-executor-remaining-gate.sh check, build, modules.
+The earlier quota-status source 934a2ec5 separately passed its six real PG
+flows and all three required gates. Do not confuse these two qualifications.
+
+The original public packet and all authored patches/checksums remain
+immutable. Its separate companion records complete old quota-status gates.
+The additive b9705abc patch/handoff remains separate and unqualified for PG.
+Nothing has been pushed or ticked; IAM/DEV/Web/ARC/TRN integrations remain
+under their owners and no capacity/topology or installed E2E claim is made.

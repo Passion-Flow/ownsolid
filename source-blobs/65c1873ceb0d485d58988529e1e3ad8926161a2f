@@ -1,0 +1,120 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+umask 077
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 900 9
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+
+test "$(git rev-parse --short HEAD)" = f83a9fde
+make check-layout check-roadmap
+scratch=$(mktemp -d ~/lane-rel-tools/trn-cursor-fixture.XXXXXXXX)
+export LANE_REL_TRAINING_CURSOR_OVERLAY=$scratch/overlay.json
+python3 - "$scratch" <<'PY'
+from pathlib import Path
+import json
+import sys
+scratch = Path(sys.argv[1])
+target = Path("services/control/internal/modules/training/human_http_test.go").resolve()
+source = target.read_text().replace('"context"\n', '"context"\n\t"crypto/sha256"\n\t"encoding/base64"\n\t"encoding/hex"\n', 1)
+anchor = '\tmetricsPath := jobPath + "/metrics?attempt_id=" + l.Training.AttemptID + "&limit=1"\n'
+assert source.count(anchor) == 1
+source = source.replace(anchor, '''	const scoped = "/api/v1/sites/default/cells/default"
+	boundaryCursor := func(payload []byte, maxLength, extraRawBytes int) string {
+		t.Helper()
+		rawLength := maxLength/4*3 + extraRawBytes
+		if len(payload) >= rawLength { t.Fatal("fixture cursor payload exceeded padding target") }
+		padded := append(append([]byte{}, payload...), strings.Repeat(" ", rawLength-len(payload))...)
+		cursor := base64.RawURLEncoding.EncodeToString(padded)
+		if extraRawBytes == 0 && len(cursor) != maxLength || extraRawBytes > 0 && len(cursor) <= maxLength {
+			t.Fatal("fixture cursor did not exercise the intended bound")
+		}
+		return cursor
+	}
+	for _, entrance := range []struct {
+		name, user, path string
+		client *httpfixture.Client
+		query url.Values
+	}{
+		{"admin", f.admin.Me.User.ID, scoped + "/admin/training", admin, url.Values{"workspace_id": {f.input.WorkspaceID}}},
+		{"portal", f.portal.Me.User.ID, scoped + "/workspaces/" + f.input.WorkspaceID + "/training", portal, make(url.Values)},
+	} {
+		for _, collection := range []struct { name, route, schema, key string }{
+			{"jobs", "/jobs", "TrainingJobPageResponse", ""},
+			{"attempts", "/jobs/" + id + "/attempts", "TrainingAttemptPageResponse", id},
+			{"checkpoints", "/jobs/" + id + "/checkpoints", "TrainingCheckpointPageResponse", id},
+			{"recoveries", "/jobs/" + id + "/recoveries", "TrainingRecoveryPageResponse", id},
+		} {
+			scope := sha256.Sum256([]byte("training:" + collection.name + ":" + entrance.name + ":" + entrance.user + ":" + f.input.WorkspaceID + ":" + collection.key))
+			data, err := json.Marshal(map[string]string{"time": "9999-01-01T00:00:00Z", "id": id, "scope": hex.EncodeToString(scope[:])})
+			if err != nil { t.Fatal(err) }
+			entrance.query.Set("cursor", boundaryCursor(data, 512, 0))
+			entrance.client.Call("GET", entrance.path + collection.route + "?" + entrance.query.Encode(), nil, 200, collection.schema)
+			entrance.query.Set("cursor", boundaryCursor(data, 512, 1))
+			problem := entrance.client.Call("GET", entrance.path + collection.route + "?" + entrance.query.Encode(), nil, 400, "Problem")
+			if problem["code"] != "INVALID_CURSOR" { t.Fatal("wrong collection cursor problem", entrance.name, collection.name, problem["code"]) }
+			entrance.query.Del("cursor")
+		}
+		entrance.query.Set("attempt_id", l.Training.AttemptID)
+		entrance.query.Set("limit", "1")
+		route := entrance.path + "/jobs/" + id + "/metrics"
+		page := entrance.client.Call("GET", route + "?" + entrance.query.Encode(), nil, 200, "TrainingMetricRecordPageResponse")
+		cursor, ok := page["next_cursor"].(string)
+		if !ok { t.Fatal("metrics did not issue a real continuation", entrance.name) }
+		payload, err := base64.RawURLEncoding.DecodeString(cursor)
+		if err != nil { t.Fatal(err) }
+		entrance.query.Set("cursor", boundaryCursor(payload, 2048, 0))
+		page = entrance.client.Call("GET", route + "?" + entrance.query.Encode(), nil, 200, "TrainingMetricRecordPageResponse")
+		if page["items"].([]any)[0].(map[string]any)["global_step"] != float64(2) { t.Fatal("wrong second metric") }
+		entrance.query.Set("cursor", boundaryCursor(payload, 2048, 1))
+		problem := entrance.client.Call("GET", route + "?" + entrance.query.Encode(), nil, 400, "Problem")
+		if problem["code"] != "INVALID_CURSOR" { t.Fatal("wrong metric cursor problem", entrance.name, problem["code"]) }
+	}
+	t.Log("verified all ten scoped cursor bounds in Admin and Portal")
+''' + anchor, 1)
+replacement = scratch / target.name
+replacement.write_text(source)
+(scratch / "overlay.json").write_text(json.dumps({"Replace": {str(target): str(replacement)}}))
+PY
+export PROJECT_ONE_DATA_PYTHON=$(readlink -f /usr/bin/python3.12)
+image=pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+container=$(docker run -d --rm --pull never --network none --memory 896m --cpus 2 \
+  --tmpfs /tmp:rw,size=384m --name lane-rel-trn-cursor-iam --label ownsolid.lane=lane-rel \
+  --entrypoint sh "$image" -ec '
+    data=$(mktemp -d)
+    chown postgres "$data"
+    gosu postgres initdb -D "$data" --auth=trust --locale=C --encoding=UTF8 >/dev/null
+    exec gosu postgres postgres -D "$data" -h 127.0.0.1
+  ')
+trap 'docker stop --time 5 "$container" >/dev/null 2>&1 || true' EXIT
+ready=no
+for attempt in $(seq 1 25); do
+    if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+        ready=yes
+        break
+    fi
+    sleep 1
+done
+test "$ready" = yes
+docker exec "$container" createdb -h 127.0.0.1 -U postgres lane_rel_trn_cursor_iam_test
+docker exec "$container" psql -h 127.0.0.1 -U postgres -d lane_rel_trn_cursor_iam_test -v ON_ERROR_STOP=1 \
+    -c 'CREATE EXTENSION vector WITH SCHEMA public VERSION $$0.8.7$$; REVOKE CREATE ON SCHEMA public FROM PUBLIC' >/dev/null
+pid=$(docker inspect -f '{{.State.Pid}}' "$container")
+export PROJECT_ONE_TEST_DSN=postgresql://postgres@127.0.0.1/lane_rel_trn_cursor_iam_test?sslmode=disable
+
+
+ionice -c2 -n7 nice -n10 nsenter -t "$pid" -n sh -ec '
+    test "$(wc -l < /proc/net/route)" -eq 1
+    go -C services/control test -overlay "$LANE_REL_TRAINING_CURSOR_OVERLAY" ./internal/modules/training \
+        -run "^TestActualTLSDualEntranceTrainingIntentHistoryMetricsRecoveryAndCurrentRoles$" -v -count=1
+' > "$scratch/result.log" 2>&1 || { tail -38 "$scratch/result.log"; exit 1; }
+grep -E 'verified all ten scoped cursor bounds|^--- PASS: TestActualTLS' "$scratch/result.log"
+grep -q 'verified all ten scoped cursor bounds' "$scratch/result.log"

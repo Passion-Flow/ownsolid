@@ -1,0 +1,45 @@
+{
+  "observed_utc": "2026-11-13T00:08:21.055224+00:00",
+  "read_only": true,
+  "admission_attempted": false,
+  "test_or_compile_started": false,
+  "memfree_mib": 14728,
+  "memavailable_mib": 21544,
+  "disk_free_bytes": 793032458240,
+  "io_full_avg10": 6.52,
+  "thresholds": {
+    "memfree_mib": 2048,
+    "memavailable_mib": 8192,
+    "disk_free_gib": 30,
+    "io_full_avg10_max": 5
+  },
+  "carriers": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "regular": true,
+      "uid": 0,
+      "dev": 29,
+      "inode": 82,
+      "opened_or_modified": false
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "regular": true,
+      "uid": 0,
+      "dev": 64512,
+      "inode": 7508772,
+      "opened_or_modified": false
+    },
+    {
+      "path": "/root/lane-rel-tools/heavy-test.lock",
+      "regular": true,
+      "uid": 0,
+      "dev": 64512,
+      "inode": 7509425,
+      "opened_or_modified": false
+    }
+  ],
+  "numeric_profile_met": false,
+  "execution_authorized": false,
+  "boundary": "The previous native segment is consumed; these fresh resource facts do not authorize a second admission or qualify history codecs."
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "name": "source-part-0.gzpart",
+    "sha256": "148c36666feee19deb136a3ea1e796abc82f965ff1c70a0aef6c300d044db9d4",
+    "bytes": 131072
+  },
+  {
+    "name": "source-part-1.gzpart",
+    "sha256": "60b88ce4800abc8854b17afb242e5cbc0447a4efb75b610f2e96a1b380907f71",
+    "bytes": 99402
+  }
+]

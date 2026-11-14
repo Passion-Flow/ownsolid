@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+# Lane B GW-114 live fixture, not product code, for live-agent-gateway.spec.ts:
+#   deploy <name>          joins a protocol-1.6 scripted node whose gateway leases run the agent's
+#                          gateway code, readies a verified deployment on it; prints "<id> <origin>"
+#   chat <alias> <secret>  calls the real model through that node's gateway; prints the answer
+import json, subprocess, sys
+src = open("/root/lane-b/gw114/live/run-live.py").read().rsplit("\n{\"agent\"", 1)[0]
+g = {}
+exec(compile(src, "run-live", "exec"), g)
+f = g["f"]
+origin = json.load(open("/root/lane-b/gw114/live/scripted-gateway.json"))["origin"]
+
+def deploy(name):
+    call = f.admin(g["root"])
+    ws, model = f.served_workspace(call)
+    minted = f.must(call("POST", f.cell + "/admin/node-join-tokens", {"workspace_id": ws, "node_name": name, "execution_profile": "docker_inference"}), "join token")
+    subprocess.run(["sh", "/root/lane-b/gw114/live/join-scripted-gateway-node.sh", name], input=minted["token"].encode(), check=True)
+    def placed():
+        p = f.must(call("GET", f.cell + "/admin/deployments/placement?model_id=" + model["id"]), "placement")
+        r = p.get("recommended")
+        return r if r and any(c["node_id"] == r["node_id"] and c["name"] == name for c in p["candidates"]) else None
+    target = f.wait("a GPU on " + name, placed, 180)
+    d = f.must(call("POST", f.cell + "/admin/deployments", {"node_id": target["node_id"], "model_id": model["id"], "gpu_uuid": target["gpu_uuid"], "reason": "Live agent gateway run"}), "deploy")
+    d = f.wait("a verified deployment", lambda: (lambda x: x if x.get("observed_state") == "running" and (x.get("observation") or {}).get("verification") else None)(f.must(call("GET", f.cell + "/admin/deployments/" + d["id"]), "deployment")), 180)
+    print(d["id"], origin)
+
+def chat(alias, secret):
+    host = origin.split("//")[1]
+    body = json.dumps({"model": alias, "messages": [{"role": "user", "content": "Reply with one word: hello"}], "max_tokens": 8})
+    r = subprocess.run(["curl", "-sS", "--fail-with-body", "--cacert", g["gwca"], "--resolve", host + ":127.0.0.1", "-H", "Authorization: Bearer " + secret, "-H", "Content-Type: application/json", "-d", body, origin + "/v1/chat/completions"], capture_output=True, text=True)
+    if r.returncode != 0: sys.exit("chat failed: " + r.stdout[:300] + r.stderr[:300])
+    print(json.loads(r.stdout)["choices"][0]["message"]["content"])
+
+{"deploy": lambda: deploy(sys.argv[2]), "chat": lambda: chat(sys.argv[2], sys.argv[3])}[sys.argv[1]]()

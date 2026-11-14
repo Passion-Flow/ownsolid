@@ -1,0 +1,57 @@
+set -euo pipefail
+umask 077
+cd /root/lane-rel-cloud
+out=/root/lane-rel-tools/workspace-cli-native.CpU4xj3F
+source /root/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 CARGO_BUILD_JOBS=1 CARGO_NET_OFFLINE=true
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -w 45 8 || exit 75
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+exec 7>/root/lane-rel-tools/heavy-test.lock
+flock -n 7 || exit 75
+df -h /
+free -m
+ss -lntp
+test "$(df -Pm / | awk 'NR==2 {print $4}')" -ge 15360 || exit 75
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048 || exit 75
+sha256sum tools/cli/workspaces.go tools/cli/workspaces_test.go tools/cli/command.go tools/cli/cli_test.go tools/cli/testdata/workspaces_tls_test.go tools/cli/testdata/workflow_tls_test.go tools/cli/testdata/run-workspaces-tls.sh >"$out/source.sha256"
+container=
+cleanup() {
+  if test -n "$container"; then
+    docker stop --time 10 "$container" >/dev/null
+    docker rm "$container" >/dev/null
+    echo STOPPED_OWN_WORKSPACE_POSTGRESQL
+  fi
+  rm -f -- "$out/dsn"
+}
+trap cleanup EXIT
+container=$(docker run --detach --pull never --network none --memory 384m \
+  --name "lane-rel-workspaces-$(basename "$out")" --tmpfs /var/lib/postgresql:rw,nosuid,nodev,size=256m \
+  -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_USER=fixture -e POSTGRES_DB=ownsolid_workspaces_test \
+  sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47 \
+  -c listen_addresses=127.0.0.1 -c shared_buffers=16MB -c max_connections=16)
+pid=$(docker inspect --format '{{.State.Pid}}' "$container")
+printf 'postgresql://fixture@127.0.0.1:5432/ownsolid_workspaces_test?sslmode=disable\n' >"$out/dsn"
+export PROJECT_ONE_TEST_DSN_FILE="$out/dsn"
+export PROJECT_ONE_REPOSITORY_ENGINE=postgresql
+export PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE="$out/dsn"
+nsenter --target "$pid" --net unshare --pid --fork --kill-child bash -ec '
+  ip link set lo up
+  test "$(ip -o link show | wc -l)" -eq 1
+  test -z "$(ip route show default)"
+  test -z "$(ip -6 route show default)"
+  for attempt in $(seq 1 80); do
+    if (exec 3<>/dev/tcp/127.0.0.1/5432) 2>/dev/null; then
+      docker exec "$1" psql -X -U fixture -d ownsolid_workspaces_test -v ON_ERROR_STOP=1 -c "$2"
+      go -C tools/cli test -race ./...
+      sh tools/cli/testdata/run-workspaces-tls.sh
+      exit
+    fi
+    sleep 0.25
+  done
+  exit 1
+' bash "$container" "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;"
+sha256sum -c "$out/source.sha256"
+git diff --exit-code 1aad4eed -- services/control api/agent deploy web
+echo WORKSPACE_CLI_DISCONNECTED_NATIVE_PASSED

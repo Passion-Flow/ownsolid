@@ -1,0 +1,408 @@
+"""Pure local review checks. No Docker, Go, SQL or permanent-carrier access."""
+import copy
+import io
+import json
+import os
+from pathlib import Path
+import signal
+import stat
+import subprocess
+import tempfile
+from types import SimpleNamespace
+import unittest
+from unittest.mock import patch
+
+import reader_native_bounded as w
+
+HERE = Path(__file__).parent
+PLAN = json.loads((HERE.parent / 'reader-native-qualification-plan.json').read_text())
+BINDING = json.loads((HERE.parent / 'reader-native-plan-source-binding.json').read_text())
+CONFIG = json.loads((HERE / 'config.json').read_text())
+
+
+class Clock:
+    def __init__(self):
+        self.now = 1000.0
+
+    def __call__(self):
+        return self.now
+
+
+class FakeProcess:
+    pid = 987654
+
+    def __init__(self, rc=0, timeout=False):
+        self.returncode = rc
+        self.timeout = timeout
+        self.waits = []
+
+    def wait(self, timeout):
+        self.waits.append(timeout)
+        if self.timeout:
+            self.timeout = False
+            self.returncode = -signal.SIGTERM
+            raise subprocess.TimeoutExpired('mock', timeout)
+        return self.returncode
+
+    def poll(self):
+        return self.returncode
+
+
+def go_log():
+    events = [
+        {'Action': 'pass', 'Package': w.PACKAGES[0], 'Test': w.DATASET_ROOT},
+        {'Action': 'pass', 'Package': w.PACKAGES[1], 'Test': w.TRAINING_ROOT},
+        {'Action': 'pass', 'Package': w.PACKAGES[1], 'Test': w.SUBCASE},
+        *[{'Action': 'pass', 'Package': package} for package in w.PACKAGES],
+    ]
+    return b''.join(json.dumps(event).encode() + b'\n' for event in events)
+
+
+class LocalReview(unittest.TestCase):
+    def refusal(self, kind, call):
+        with self.assertRaises(w.Refusal) as raised:
+            call()
+        self.assertEqual(raised.exception.kind, kind)
+        return raised.exception
+
+    def test_fixed_budget_reserves_cleanup_and_caps_go(self):
+        clock = Clock()
+        budget = w.Budget(clock)
+        self.assertEqual((budget.hard, budget.work), (1300, 1270))
+        self.assertEqual(budget.child_end(170), 1170)
+        clock.now = 1250
+        self.assertEqual(budget.child_end(170), 1270)
+        clock.now = 1270
+        self.refusal('WORK_DEADLINE', lambda: budget.child_end(1))
+        budget.enter_cleanup()
+        self.assertEqual(budget.cleanup_end, 1295)
+        self.assertEqual(budget.child_end(170), 1295)
+        clock.now = 1295
+        self.refusal('CLEANUP_DEADLINE', lambda: budget.child_end(1))
+
+    def test_early_cleanup_has_no_new_work_or_extended_parent(self):
+        clock = Clock()
+        budget = w.Budget(clock)
+        clock.now += 10
+        budget.enter_cleanup()
+        self.assertEqual(budget.child_end(170), 1035)
+        clock.now = 1290
+        budget.enter_cleanup()
+        self.assertEqual(budget.cleanup_end, 1295)
+
+    def test_config_caps_and_original_binding_are_exact(self):
+        w.validate_config(CONFIG, PLAN, BINDING)
+        for key, value in [('parent_seconds', 301), ('cleanup_seconds', 29),
+                           ('first_lock_seconds', 61), ('go_seconds', 171),
+                           ('package_seconds', 76), ('go_seconds', True), ('schema', True),
+                           ('docker_endpoint', 'tcp://elsewhere:2375'),
+                           ('repository', 'relative')]:
+            changed = {**CONFIG, key: value}
+            self.refusal('CONFIG_INVALID', lambda: w.validate_config(changed, PLAN, BINDING))
+        self.refusal('CONFIG_INVALID', lambda: w.validate_config({**CONFIG, 'extra': 1}, PLAN, BINDING))
+        changed = {**BINDING, 'prepared_source': 'bad'}
+        self.refusal('SOURCE_INVALID', lambda: w.validate_config(CONFIG, PLAN, changed))
+
+    def test_fixed_carrier_identity_and_test_roots(self):
+        for component in ('device', 'inode', 'uid', 'path'):
+            changed = copy.deepcopy(PLAN)
+            changed['carriers'][1][component] = 'changed' if component == 'path' else 999
+            self.refusal('CONFIG_INVALID', lambda: w.validate_config(CONFIG, changed, BINDING))
+        changed = copy.deepcopy(PLAN)
+        changed['expected_tests']['allowed_skips'] = 1
+        self.refusal('CONFIG_INVALID', lambda: w.validate_config(CONFIG, changed, BINDING))
+
+    def test_json_duplicate_keys_are_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            p = Path(temporary) / 'json'
+            p.write_text('{"schema":1,"schema":2}')
+            self.refusal('INPUT_INVALID', lambda: w.read_json(p))
+            p.write_bytes(b' ' * 32769)
+            self.refusal('INPUT_INVALID', lambda: w.read_json(p))
+
+    def test_full_pressure_is_unique_finite_complete_and_bounded(self):
+        valid = 'some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=1.20 avg60=5.00 avg300=0.00 total=23\n'
+        self.assertEqual(w.parse_full_pressure(valid)['avg60'], 5)
+        for invalid in ['', valid + valid, valid.replace('full ', ' full '),
+                        valid.replace('avg10=1.20', 'avg10=nan'),
+                        valid.replace('avg10=1.20', 'avg10=inf'),
+                        valid.replace('avg10=1.20', 'avg10=101.0'),
+                        valid.replace('avg60=5.00 ', ''),
+                        valid.replace('total=23', 'total=-1'),
+                        valid.replace('avg300=0.00', 'avg60=0.00')]:
+            self.refusal('PRESSURE_INVALID', lambda: w.parse_full_pressure(invalid))
+
+    def test_changed_plan_is_refused_before_any_acquisition(self):
+        with patch.object(w, 'file_hash', return_value='changed'), patch.object(w, 'acquire_carriers') as acquire:
+            self.refusal('INPUT_CHANGED', lambda: w.inspect_inputs(CONFIG))
+            acquire.assert_not_called()
+
+    def test_source_head_and_dirty_tree_are_refused(self):
+        budget = w.Budget(Clock())
+        with patch.object(w, 'require_command', side_effect=[b'wrong\n', b'']):
+            self.refusal('SOURCE_INVALID', lambda: w.assert_source(CONFIG, BINDING, budget))
+        with patch.object(w, 'require_command', side_effect=[(BINDING['prepared_source'] + '\n').encode(), b' M owned']):
+            self.refusal('SOURCE_INVALID', lambda: w.assert_source(CONFIG, BINDING, budget))
+
+    def carriers(self):
+        return [{'path': '/mock/one', 'device': 29, 'inode': 82, 'uid': os.geteuid()},
+                {'path': '/mock/two', 'device': 64512, 'inode': 7508772, 'uid': os.geteuid()}]
+
+    def metadata(self, index):
+        carrier = self.carriers()[index]
+        return SimpleNamespace(st_mode=stat.S_IFREG | 0o644, st_dev=carrier['device'],
+                               st_ino=carrier['inode'], st_uid=carrier['uid'])
+
+    def acquire(self, flock):
+        carriers = self.carriers()
+        with patch.object(w.os, 'open', side_effect=[11, 12]) as opened, \
+             patch.object(w.os, 'fstat', side_effect=[self.metadata(0), self.metadata(1)]), \
+             patch.object(w.os, 'stat', side_effect=[self.metadata(0), self.metadata(1)]), \
+             patch.object(w.fcntl, 'flock', side_effect=flock), \
+             patch.object(w.os, 'close') as closed, \
+             patch.object(w.signal, 'signal'), patch.object(w.signal, 'setitimer') as timer:
+            try:
+                result = w.acquire_carriers(carriers, w.Budget(Clock()))
+                return result, opened.call_args_list, closed.call_args_list, timer.call_args_list
+            except w.Refusal as error:
+                return error, opened.call_args_list, closed.call_args_list, timer.call_args_list
+
+    def test_first_kernel_once_second_nonblocking_and_no_truncation(self):
+        operations = []
+        result, opened, _, timers = self.acquire(lambda fd, flags: operations.append((fd, flags)))
+        self.assertEqual(result, [11, 12])
+        self.assertEqual(operations, [(11, w.fcntl.LOCK_EX), (12, w.fcntl.LOCK_EX | w.fcntl.LOCK_NB)])
+        for args in opened:
+            flags = args.args[1]
+            self.assertTrue(flags & os.O_NOFOLLOW)
+            self.assertTrue(flags & os.O_CLOEXEC)
+            self.assertFalse(flags & (os.O_CREAT | os.O_TRUNC))
+        self.assertEqual(timers[0].args[1], 60)
+
+    def test_second_busy_releases_both_before_return(self):
+        operations = []
+        def flock(fd, flags):
+            operations.append((fd, flags))
+            if fd == 12 and flags & w.fcntl.LOCK_NB:
+                raise BlockingIOError()
+        result, _, closed, _ = self.acquire(flock)
+        self.assertEqual((result.kind, result.raw), ('SECOND_LOCK_BUSY', 74))
+        self.assertEqual(operations[-2:], [(12, w.fcntl.LOCK_UN), (11, w.fcntl.LOCK_UN)])
+        self.assertEqual([args.args[0] for args in closed], [12, 11])
+
+    def test_first_busy_is_not_retried_and_closed(self):
+        operations = []
+        def flock(fd, flags):
+            operations.append((fd, flags))
+            if flags == w.fcntl.LOCK_EX:
+                raise w.Refusal('FIRST_LOCK_BUSY', 73)
+        result, opened, closed, _ = self.acquire(flock)
+        self.assertEqual((result.kind, result.raw), ('FIRST_LOCK_BUSY', 73))
+        self.assertEqual(len(opened), 1)
+        self.assertEqual(operations, [(11, w.fcntl.LOCK_EX), (11, w.fcntl.LOCK_UN)])
+        self.assertEqual(len(closed), 1)
+
+    def test_release_continues_after_unlock_failure(self):
+        fds = [11, 12]
+        with patch.object(w.fcntl, 'flock', side_effect=OSError('mock')), patch.object(w.os, 'close') as closed:
+            self.assertEqual(len(w.release_carriers(fds)), 2)
+            self.assertEqual(fds, [])
+            self.assertEqual([args.args[0] for args in closed.call_args_list], [12, 11])
+
+    def test_dsn_is_exclusive_private_and_same_for_both_families(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'dsn'
+            w.write_private(path, b'private-fixture-only')
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+            with self.assertRaises(FileExistsError):
+                w.write_private(path, b'not-overwritten')
+            env = w.go_environment(CONFIG, PLAN, path, 'a' * 32)
+            self.assertEqual(env['PROJECT_ONE_TEST_DSN_FILE'], str(path))
+            self.assertEqual(env['PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE'], str(path))
+
+    def test_inherited_authority_and_processing_env_are_cleared(self):
+        with patch.dict(os.environ, {'PROJECT_ONE_TEST_DSN': 'discard', 'PROJECT_ONE_TEST_REPOSITORY_SETUP_FILE': 'discard',
+                                    'PROJECT_ONE_REPOSITORY_UNEXPECTED': 'discard', 'PROJECT_ONE_DATA_PYTHON': 'discard'}):
+            env = w.go_environment(CONFIG, PLAN, Path('/mock/dsn'), 'b' * 32)
+        for key in ('PROJECT_ONE_TEST_DSN', 'PROJECT_ONE_TEST_REPOSITORY_SETUP_FILE', 'PROJECT_ONE_REPOSITORY_UNEXPECTED', 'PROJECT_ONE_DATA_PYTHON'):
+            self.assertNotIn(key, env)
+        self.assertEqual([env[k] for k in ('GOMAXPROCS', 'GOPROXY', 'GOSUMDB', 'GOTOOLCHAIN')], ['2', 'off', 'off', 'local'])
+
+    def test_required_tests_packages_and_zero_skips(self):
+        result = w.parse_go_result(io.BytesIO(go_log()))
+        self.assertEqual(result['test_pass_actions'], 3)
+        for bad in [go_log().replace(w.SUBCASE.encode(), b'other'),
+                    go_log().replace(b'"pass"', b'"skip"', 1),
+                    go_log().replace(b'"pass"', b'"fail"', 1), b'',
+                    b'[]\n', b'x' * 1048577]:
+            self.refusal('TEST_RESULT_INVALID', lambda: w.parse_go_result(io.BytesIO(bad)))
+
+    def test_child_exit_75_is_child_failure_not_lock_busy(self):
+        budget = w.Budget(Clock())
+        process = FakeProcess(75)
+        with patch.object(w.subprocess, 'Popen', return_value=process), patch.object(w.os, 'killpg', side_effect=ProcessLookupError):
+            error = self.refusal('CHILD_FAILED', lambda: w.require_command(['mock'], 'mock_go', budget, cap=170))
+        self.assertEqual(error.raw, 75)
+        self.assertEqual(budget.commands[0]['raw_exit_code'], 75)
+        self.assertTrue(budget.commands[0]['reaped'])
+        self.assertLessEqual(max(process.waits), 165)
+
+    def test_child_timeout_kills_only_owned_group_and_retains_partial_log(self):
+        budget = w.Budget(Clock())
+        process = FakeProcess(timeout=True)
+        with tempfile.TemporaryDirectory() as temporary:
+            log = Path(temporary) / 'partial.log'
+            def spawn(*args, **kwargs):
+                kwargs['stdout'].write(b'partial fixture output\n')
+                return process
+            with patch.object(w.subprocess, 'Popen', side_effect=spawn), patch.object(w.os, 'killpg', side_effect=[None, None, ProcessLookupError()]) as killed:
+                error = self.refusal('CHILD_TIMEOUT', lambda: w.command(['mock'], 'mock_go', budget, cap=170, log_path=log))
+            self.assertEqual(error.raw, -signal.SIGTERM)
+            self.assertEqual(log.read_bytes(), b'partial fixture output\n')
+            self.assertEqual(killed.call_args_list[0].args, (process.pid, signal.SIGTERM))
+            self.assertEqual(killed.call_args_list[1].args, (process.pid, signal.SIGKILL))
+            self.assertTrue(budget.commands[0]['reaped'])
+
+    def test_child_command_refuses_after_work_deadline(self):
+        clock = Clock()
+        budget = w.Budget(clock)
+        clock.now = budget.work
+        with patch.object(w.subprocess, 'Popen') as spawn:
+            self.refusal('WORK_DEADLINE', lambda: w.command(['mock'], 'go', budget))
+            spawn.assert_not_called()
+
+    def test_foreign_container_or_changed_limits_cannot_pass_cleanup_scope(self):
+        info = {'Name': '/lane-trn-reader-test', 'Image': CONFIG['image_id'],
+                'Config': {'Labels': {'ownsolid.fixture.owner': 'lane-trn', 'ownsolid.fixture.run': 'test'}},
+                'HostConfig': {'NetworkMode': 'none', 'Memory': 1073741824, 'NanoCpus': 2000000000, 'PortBindings': {}}}
+        self.assertTrue(w.container_scope(info, CONFIG, 'lane-trn-reader-test', 'test'))
+        for key, value in [('Name', '/lane-b-foreign'), ('Image', 'wrong')]:
+            self.assertFalse(w.container_scope({**info, key: value}, CONFIG, 'lane-trn-reader-test', 'test'))
+        changed = copy.deepcopy(info)
+        changed['Config']['Labels']['ownsolid.fixture.run'] = 'foreign'
+        self.assertFalse(w.container_scope(changed, CONFIG, 'lane-trn-reader-test', 'test'))
+        for key, value in [('NetworkMode', 'bridge'), ('Memory', 0), ('NanoCpus', 0), ('PortBindings', {'5432': []})]:
+            changed = copy.deepcopy(info)
+            changed['HostConfig'][key] = value
+            self.assertFalse(w.container_scope(changed, CONFIG, 'lane-trn-reader-test', 'test'))
+
+    def simulated_parent(self, busy=None, foreign_cleanup=False, go_failure=False):
+        """Exercise the full Python path with every external operation replaced."""
+        calls = []
+        name = 'lane-trn-reader-' + 'a' * 32
+        container = 'b' * 64
+        info = {'Id': container, 'Name': '/' + name, 'Image': CONFIG['image_id'],
+                'Config': {'Labels': {'ownsolid.fixture.owner': 'lane-trn', 'ownsolid.fixture.run': 'a' * 32}},
+                'HostConfig': {'NetworkMode': 'none', 'Memory': 1073741824, 'NanoCpus': 2000000000, 'PortBindings': {}},
+                'State': {'Pid': 900}, 'Mounts': [{'Type': 'volume', 'Name': 'mock-owned-volume'}]}
+        def command(argv, phase, budget, **kwargs):
+            calls.append((phase, argv, kwargs))
+            if 'log_path' in kwargs:
+                kwargs['log_path'].write_bytes(go_log() if phase == 'go_reader_owners' else b'mock-only')
+            if phase == 'go_reader_owners' and go_failure:
+                raise w.Refusal('CHILD_TIMEOUT', -signal.SIGKILL, phase)
+            output = {
+                'original_admission': b'{}',
+                'docker_context': json.dumps([{'Endpoints': {'docker': {'Host': CONFIG['docker_endpoint']}}}]).encode(),
+                'cached_image': json.dumps([{'Id': CONFIG['image_id'], 'Os': 'linux', 'Architecture': 'amd64'}]).encode(),
+                'pg_create': container.encode(), 'pg_identity': json.dumps([info]).encode(),
+                'cleanup_presence': container.encode(), 'cleanup_identity': json.dumps([info]).encode(),
+            }.get(phase, b'')
+            if phase == 'cleanup_identity' and foreign_cleanup:
+                changed = copy.deepcopy(info)
+                changed['Config']['Labels']['ownsolid.fixture.owner'] = 'foreign'
+                output = json.dumps([changed]).encode()
+            return 0, output
+        with tempfile.TemporaryDirectory() as temporary:
+            config = {**CONFIG, 'evidence_parent': temporary}
+            acquire_effect = w.Refusal(busy, 73 if busy == 'FIRST_LOCK_BUSY' else 74) if busy else None
+            with patch.object(w, 'assert_source'), \
+                 patch.object(w, 'acquire_carriers', side_effect=acquire_effect, return_value=[11, 12]), \
+                 patch.object(w, 'release_carriers', return_value=[]) as released, \
+                 patch.object(w, 'command', side_effect=command), \
+                 patch.object(w.Path, 'read_text', return_value='full avg10=0.00 avg60=0.00 avg300=0.00 total=0'), \
+                 patch.object(w.signal, 'signal'), patch.object(w.signal, 'setitimer'), \
+                 patch.object(w.uuid, 'uuid4', return_value=SimpleNamespace(hex='a' * 32)), \
+                 patch('sys.stdout', new=io.StringIO()):
+                code = w.execute(config, PLAN, BINDING, {'maximum_io_full_average_percent': 5}, w.Budget(Clock()))
+            evidence = next(Path(temporary).glob('lane-trn-reader-native.*'))
+            with (evidence / 'result.json').open() as stream:
+                result = json.load(stream)
+            self.assertFalse((evidence / 'dsn').exists())
+            released.assert_called_once()
+            return code, result, calls
+
+    def test_simulated_parent_first_busy_never_starts_fixture(self):
+        code, result, calls = self.simulated_parent(busy='FIRST_LOCK_BUSY')
+        self.assertEqual(code, 73)
+        self.assertFalse(result['native_started'])
+        self.assertFalse(result['locks_acquired'])
+        self.assertEqual(calls, [])
+
+    def test_simulated_parent_second_busy_never_starts_fixture(self):
+        code, result, calls = self.simulated_parent(busy='SECOND_LOCK_BUSY')
+        self.assertEqual(code, 74)
+        self.assertFalse(result['native_started'])
+        self.assertFalse(result['qualification'])
+        self.assertEqual(calls, [])
+
+    def test_simulated_parent_success_checks_exact_roots_and_removal(self):
+        code, result, calls = self.simulated_parent()
+        self.assertEqual(code, 0)
+        self.assertTrue(result['qualification'])
+        self.assertTrue(result['owned_container_and_volumes_removed'])
+        phases = [phase for phase, _, _ in calls]
+        self.assertIn('cleanup_container_readback', phases)
+        self.assertIn('cleanup_volume_readback', phases)
+        go = next(args for phase, args, _ in calls if phase == 'go_reader_owners')
+        self.assertEqual(go[-1], '^(' + w.DATASET_ROOT + '|' + w.TRAINING_ROOT + ')$')
+        self.assertIn('-timeout=75s', go)
+        self.assertEqual(go[go.index('-p') + 1], '1')
+
+    def test_simulated_foreign_cleanup_is_never_mutated(self):
+        code, result, calls = self.simulated_parent(foreign_cleanup=True)
+        self.assertEqual(code, 1)
+        self.assertFalse(result['qualification'])
+        self.assertEqual(result['cleanup_kind'], 'CLEANUP_FOREIGN_SCOPE')
+        self.assertFalse({'cleanup_stop', 'cleanup_remove'} & {phase for phase, _, _ in calls})
+
+    def test_simulated_go_timeout_retains_raw_status_and_cleans_owned_fixture(self):
+        code, result, _ = self.simulated_parent(go_failure=True)
+        self.assertEqual(code, 1)
+        self.assertEqual((result['kind'], result['raw_code']), ('CHILD_TIMEOUT', -signal.SIGKILL))
+        self.assertTrue(result['native_started'])  # Mock observation only, not real native bodies.
+        self.assertFalse(result['qualification'])
+        self.assertTrue(result['owned_container_and_volumes_removed'])
+        self.assertIn('native.log_sha256', result)
+
+    def test_main_late_evidence_failure_preserves_started_state(self):
+        def late_failure(_config, _plan, _binding, _policy, _budget, progress):
+            progress['record'] = {'native_started': True, 'qualification': True, 'container_id': 'mock-owned', 'driver_exit_code': 0}
+            progress['evidence'] = '/mock/private-evidence'
+            raise OSError('mock final record write failure')
+        output = io.StringIO()
+        with patch.object(w.sys, 'argv', ['reader_native_bounded.py', '--config', 'mock', '--execute']), \
+             patch.object(w, 'read_json', return_value=CONFIG), \
+             patch.object(w, 'inspect_inputs', return_value=(PLAN, BINDING, {})), \
+             patch.object(w, 'execute', side_effect=late_failure), \
+             patch.object(w.signal, 'signal'), patch.object(w.signal, 'setitimer'), \
+             patch('sys.stdout', new=output):
+            code = w.main()
+        result = json.loads(output.getvalue())
+        self.assertEqual(code, 1)
+        self.assertTrue(result['native_started'])
+        self.assertFalse(result['qualification'])
+        self.assertEqual(result['kind'], 'PARENT_FAILED')
+        self.assertEqual(result['driver_exit_code'], 1)
+        self.assertEqual(result['evidence'], '/mock/private-evidence')
+
+    def test_entry_has_outer_absolute_bound_and_no_wait_queue(self):
+        entry = (HERE / 'entry.sh').read_text()
+        self.assertIn('--signal=TERM --kill-after=5s 295s', entry)
+        self.assertNotIn('--foreground', entry)
+        self.assertNotIn('sleep', entry)
+        self.assertIn('--check-config', entry)
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

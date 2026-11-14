@@ -1,0 +1,46 @@
+{
+  "configurations": [
+    {
+      "name": "default_gpu",
+      "configuration": {
+        "device": "nvidia_bfloat16",
+        "maximum_steps": 100,
+        "maximum_tokens": 256,
+        "batch_size": 1,
+        "gradient_accumulation_steps": 1,
+        "learning_rate": "0.0002",
+        "rank": 8,
+        "alpha": 16,
+        "dropout": "0",
+        "checkpoint_steps": 10,
+        "seed": 42,
+        "threads": 2
+      },
+      "sha256": "69fa4e22aca85e3f36e9eb52e915a8e5206f3ab3963dcd91ccf20dbabb2c8117"
+    },
+    {
+      "name": "native_cpu",
+      "configuration": {
+        "device": "cpu_verification",
+        "maximum_steps": 4,
+        "maximum_tokens": 64,
+        "batch_size": 1,
+        "gradient_accumulation_steps": 1,
+        "learning_rate": "0.0002",
+        "rank": 4,
+        "alpha": 16,
+        "dropout": "0",
+        "checkpoint_steps": 1,
+        "seed": 42,
+        "threads": 2
+      },
+      "sha256": "d933797062f10fe0c2df1372f8860855679f6493f031ef046df3d571883ee1fe"
+    }
+  ],
+  "worker_source_files": {
+    "training/train.py": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "data-processing/projectone_data/validation.py": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "worker_source_sha256": "641fbe1d006daa6d6ac3d6ba6ab93335b1e0e438bd64d2f8be3a89e00839c39b",
+  "approved_model_catalog_sha256": "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc"
+}

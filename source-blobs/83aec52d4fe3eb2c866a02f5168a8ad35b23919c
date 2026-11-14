@@ -1,0 +1,10 @@
+{
+  "memory_kib": {
+    "MemFree": 20075120,
+    "MemAvailable": 22365280
+  },
+  "full_io_psi_avg10": 1.78,
+  "disk_free_bytes": 794417537024,
+  "baseline_source": "274d771c8d3a97e3163d3dcb3b21630fccfac57f",
+  "scope": "external actual training claim composition diagnostic with normal control principal; source unchanged; no restricted-role permission or successful gateway-claim acceptance"
+}

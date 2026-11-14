@@ -1,0 +1,14 @@
+{
+  "source": "6a2dd96fb392444de755db1cf5bfb771867064b0",
+  "producer": "2b4aaae5f8c690df9943b7dd7a7e4b5004aa421b",
+  "draft_sha256": "112fd38ebe1fc00427bdebcb93686892d43ff8a14d079150b7c65007af5a258b",
+  "go_files": {
+    "gen/go/go.mod": "b47670b95a80813ca6674e8186ba8ff8721404d8d08932f0c3c2af5e42ef6fda",
+    "gen/go/go.sum": "6d652a6316a6298d6f933a3bdecf9de7199a97cb51c876ee4a1da8d863ee11ba",
+    "gen/go/models/client.gen.go": "d56b102657f0882567f1ae087b00197ab46aec39d477a12fa4878344d9e91645"
+  },
+  "go_fixture_sha256": "66caf521ccef7b2aa1483f72465fe4d6b587459a818229f2b608164789cc3270",
+  "complete_sdk_copied": false,
+  "mac_go_subset_verified": true,
+  "compiled": false
+}

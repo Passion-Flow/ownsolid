@@ -1,0 +1,25 @@
+{
+  "listen_address": "10.42.1.20:8445",
+  "certificate_file": "/etc/ownsolid/relay/relay-cert.pem",
+  "private_key_file": "/etc/ownsolid/relay/relay-key.pem",
+  "feishu_origin": "https://10.42.1.22:8448",
+  "feishu_ca_file": "/etc/ownsolid/relay/feishu-ca.pem",
+  "delivery_seconds": 5,
+  "max_concurrent": 8,
+  "tenants": [
+    {
+      "id": "tenant-a",
+      "receiver": "tenant-a-feishu",
+      "webhook_token_file": "/etc/ownsolid/relay/tenant-a-webhook",
+      "feishu_hook_file": "/etc/ownsolid/relay/tenant-a-feishu-hook",
+      "feishu_signing_secret_file": "/etc/ownsolid/relay/tenant-a-feishu-signing"
+    },
+    {
+      "id": "tenant-b",
+      "receiver": "tenant-b-feishu",
+      "webhook_token_file": "/etc/ownsolid/relay/tenant-b-webhook",
+      "feishu_hook_file": "/etc/ownsolid/relay/tenant-b-feishu-hook",
+      "feishu_signing_secret_file": "/etc/ownsolid/relay/tenant-b-feishu-signing"
+    }
+  ]
+}

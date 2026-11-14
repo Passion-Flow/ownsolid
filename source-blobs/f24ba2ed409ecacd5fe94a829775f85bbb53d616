@@ -1,0 +1,160 @@
+From 6b05a4ebc1df689228f658471b392fd28db11296 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 09:04:31 +0000
+Subject: [PATCH 6/9] SCH-108: Explain missing quota policy from the current
+ admission
+
+Project the real ErrQuotaUnconfigured decision to a fixed configure_quota_policy action with no inferred capacity. Keep wrapped error identity and reject equal-text historical errors as fresh evidence.
+
+Verified the typed and wrapped decision unit cases with -race. Disconnected PostgreSQL 18.6 verified absent policy without queue reads or holds, actual policy installation and a same-job retry with no stale guidance. The two targeted cases passed in waitreason.KmztTZiN. Production training consumers and the public flow remain open; no training file or production DDL changed.
+---
+ docs/product/status.md                        |  2 +-
+ docs/research/scheduling-wait-reasons.md      | 20 ++++++++++++
+ .../internal/modules/scheduling/README.md     |  6 ++--
+ .../scheduling/queued_reservation_test.go     | 31 +++++++++++++++++++
+ .../modules/scheduling/wait_reasons.go        |  4 +++
+ .../modules/scheduling/wait_reasons_test.go   | 12 +++++++
+ 6 files changed, 72 insertions(+), 3 deletions(-)
+
+diff --git a/docs/product/status.md b/docs/product/status.md
+index e7610a2c..d13943c4 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -68,7 +68,7 @@ today and what is known to fail.
+ | Live workspace queue ranking (SCH-103, open) | Tenant-scoped ordering from current quota and reservation shares in one read-only snapshot | Isolated Linux PostgreSQL 18.6 verified priority, snapshot stability, changed rank after holds and quota edits, FIFO after release, one reservation query for multiple workspaces and zero reservation reads on foreign or missing scope. A foreign site/cell in the selected active records refused the entire rank and preserved the records | No | Durable queue membership, authority over priority classes and the workload owner dispatch remain open. See [live workspace shares](../research/scheduling-queue-policy.md#live-workspace-shares) |
+ | Owner-transaction queue admission (SCH-103, open) | Candidate fair-share admission and exact replay through the workload owner's PostgreSQL write transaction | Disconnected Linux PostgreSQL 18.6 race tests with persistent owner fixture rows verified nine queue cases: current shares, dequeue after a lock wait, scope and reader refusal, cancellation, concurrent replay, owner rollback, atomic cancellation/release and a real committed dequeue whose wire acknowledgement was lost. Linux amd64 passed make check, make build and the Control module tests | No | Production migration and authenticated training readers and dispatch remain open. See the [training patch contract](../research/scheduling-queue-policy.md#training-owner-patch-contract) |
+ | Whole-job reservation and gang release (SCH-104, open) | One transactional hold for all replica groups and full exact slot evidence before release | Isolated Linux PostgreSQL 18.6 verified rollback of three provisional owner holds after quota refusal and a rejected COMMIT, replay after lost COMMIT acknowledgement, and refusal of partial, duplicate and stale stop evidence | No | Production migration, verified physical receipts, installed scheduler and the authenticated workload flow remain open. See [gang reservation and release](../research/scheduling-admission.md#atomic-gang-reservation-and-release) |
+-| Placement wait reasons (SCH-108, open) | Actionable guidance from the current queue, quota, reservation and reclaim decisions | Isolated Linux PostgreSQL 18.6 verified refreshed shortfalls after quota edits and release, exact reclaim evidence, replay and identical denial for foreign and missing scopes. Disconnected TLS returned guidance for the bound Workload UID and withheld it for stale conditions, replacement and forbidden reads | No | The authenticated caller needs the workload owner's durable controller UID binding. Live cell validation requires signed offline controller assets and scoped credentials. See the [installed workload handoff](../research/scheduling-wait-reasons.md#installed-workload-handoff) |
++| Placement wait reasons (SCH-108, open) | Actionable guidance from the current queue, quota, reservation and reclaim decisions | Isolated Linux PostgreSQL 18.6 verified refreshed shortfalls after quota edits and release, exact reclaim evidence, replay and identical denial for foreign and missing scopes. Disconnected TLS returned guidance for the bound Workload UID and withheld it for stale conditions, replacement and forbidden reads. Disconnected PostgreSQL verified missing-policy guidance without a queue read or hold, then a successful retry without stale guidance after installing the policy | No | The authenticated caller needs the workload owner's durable controller UID binding. Live cell validation requires signed offline controller assets and scoped credentials. See the [installed workload handoff](../research/scheduling-wait-reasons.md#installed-workload-handoff) |
+ | Borrowed quota and reclaim (SCH-109, open) | Exact per-attempt loans between sibling workspaces and ordered reclaim on a candidate PostgreSQL schema | Isolated Linux PostgreSQL 18.6 covered competing borrowers, the hard quota ceiling, waiting for exact release records, rollback, cancellation and lost commit acknowledgements. Foreign holds and claims were refused, a foreign victim release kept reclaim pending, and a foreign active hold preserved the quota-policy revision | No | Production schema, runtime stop delivery and audit, and the authenticated user flow remain open. See [borrowed quota research](../research/scheduling-quota-borrowing.md) |
+ | Live submission preflight (SCH-110, open) | Whole-job demand and safe workspace, borrowing and cell guidance from a read-only policy and reservation snapshot | Isolated Linux PostgreSQL 18.6 verified stable estimates within a snapshot, refreshed quota and release evidence in a new snapshot, scope denial and no premature hold or claim. The installed Workspace authority and fixture samples verified whole-job fit and refusal of expired, future, foreign or incomplete capacity | No | The TLS Workload/Job reader has no cell capacity producer. Registered cluster identity, common measurement time, complete totals/occupancy and the authorized offline submission flow remain open. See [production source boundary](../research/scheduling-admission.md#production-capacity-source-boundary) |
+ | Usage ledger transactions (TEN-106, open) | Append and cell-scoped totals on an unnumbered PostgreSQL migration candidate | PostgreSQL 18.6 with no external route recorded one event under 16 concurrent deliveries, retried a terminated backend transaction, replayed a committed transaction with its acknowledgement dropped and retained a valid event after timestamp rollback. Native and logically restored schema 55 upgrades preserved prior data and checksums. Foreign-cell receipt, local cell change and nonempty downgrade were refused. The installed SCRAM Control role passed append, report and bypass refusal under current and minimum ledger grants. The optional GW Report TLS patch passed with that role and candidate SQL | No | Formal migration, ledger grant and readiness policy, producer activation and operator access remain open. See [ledger research](../research/usage-ledger.md#serving-principal-and-ledger-grants) |
+diff --git a/docs/research/scheduling-wait-reasons.md b/docs/research/scheduling-wait-reasons.md
+index c9701f92..3e0c916c 100644
+--- a/docs/research/scheduling-wait-reasons.md
++++ b/docs/research/scheduling-wait-reasons.md
+@@ -128,3 +128,23 @@ authorized workload waiting for reservation and pods, refusal of an
+ inaccessible namespace and replacement UID, and clean cancellation
+ through the existing owner path. The current lane can qualify TLS and
+ condition projection independently while these inputs are pending.
++
++## Missing installed quota policy
++
++The real reservation path returns the typed `ErrQuotaUnconfigured` when
++its policy row is absent. Project that current decision to the fixed
++`configure_quota_policy` action for the platform operator. It contains
++no requested, available, ancestor or cell quantity. Retain the original
++error identity and transaction rollback; guidance grants no admission.
++
++A persisted wait-code string is historical state. Do not reconstruct an
++error from that string and present it as current evidence. The producer
++must project its fresh typed decision. Verify wrapped typed errors and
++refuse equal-text errors without that identity. On real PostgreSQL,
++exercise an absent policy without invoking the queue reader or creating
++a hold, install the actual policy, then retry the same queued attempt.
++Successful admission must have no lingering configuration reason.
++
++This uses the same upstream decision/projection boundary and the
++existing licensed Go/PostgreSQL stack above. No dependency, capacity
++sample, model, dataset or production owner hook is added.
+diff --git a/services/control/internal/modules/scheduling/README.md b/services/control/internal/modules/scheduling/README.md
+index ebac4aa0..5e9aa2a8 100644
+--- a/services/control/internal/modules/scheduling/README.md
++++ b/services/control/internal/modules/scheduling/README.md
+@@ -34,8 +34,10 @@ describes the optional candidate schema and its isolated test.
+ 
+ [Wait reasons](../../../../../docs/research/scheduling-wait-reasons.md) describes
+ how to project an authorized decision without leaking other workloads' details.
+-Use `WaitReasons` on the current reservation or reclaim error,
+-`PreflightResult.WaitReasons` on the estimate and `QueueTurnReason` when rank
++Use `WaitReasons` on the current reservation or reclaim error. An absent
++quota policy asks the platform operator to configure it. Project the fresh
++typed error rather than reconstructing one from a persisted wait-code string.
++Use `PreflightResult.WaitReasons` on the estimate and `QueueTurnReason` when rank
+ actually deferred the current entry. Use `ObserveCellWaitReasons` with the
+ client for the authorized attempt's bound cell and its persisted workload
+ reference. The adapter verifies the UID before projecting any blocker. Current
+diff --git a/services/control/internal/modules/scheduling/queued_reservation_test.go b/services/control/internal/modules/scheduling/queued_reservation_test.go
+index 528eddff..46ba5a30 100644
+--- a/services/control/internal/modules/scheduling/queued_reservation_test.go
++++ b/services/control/internal/modules/scheduling/queued_reservation_test.go
+@@ -418,3 +418,34 @@ UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1
+ 	}
+ 	f.assertState(t, f.first, "cancelled", 4, 0)
+ }
++
++func TestPostgresQueueWaitReasonTracksQuotaConfiguration(t *testing.T) {
++	f := newQueuedFixture(t)
++	if _, err := f.pool.Exec(t.Context(), "DELETE FROM scheduling_quota_policy"); err != nil {
++		t.Fatal(err)
++	}
++	noRead := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
++		t.Fatal("unconfigured admission read the owner queue")
++		return nil, nil
++	}
++	changed, err := f.admit(t.Context(), f.first, noRead, nil)
++	want := []WaitReason{{Code: ErrQuotaUnconfigured.Error(), Action: ConfigureQuotaPolicy}}
++	if changed || !errors.Is(err, ErrQuotaUnconfigured) || !slices.Equal(WaitReasons(err), want) {
++		t.Fatalf("missing policy: changed=%v reasons=%+v error=%v", changed, WaitReasons(err), err)
++	}
++	f.assertState(t, f.first, "queued", 1, 0)
++	if err := pgx.BeginFunc(t.Context(), f.pool, func(tx pgx.Tx) error {
++		_, changed, err := ReplaceQuotaWithin(t.Context(), tx, 0, f.policy)
++		if err == nil && !changed {
++			return errors.New("policy installation did not change state")
++		}
++		return err
++	}); err != nil {
++		t.Fatal(err)
++	}
++	changed, err = f.admit(t.Context(), f.first, f.read, nil)
++	if err != nil || !changed || len(WaitReasons(err)) != 0 {
++		t.Fatalf("configured retry: changed=%v reasons=%+v error=%v", changed, WaitReasons(err), err)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
+diff --git a/services/control/internal/modules/scheduling/wait_reasons.go b/services/control/internal/modules/scheduling/wait_reasons.go
+index 0d8c10ea..097205bb 100644
+--- a/services/control/internal/modules/scheduling/wait_reasons.go
++++ b/services/control/internal/modules/scheduling/wait_reasons.go
+@@ -12,6 +12,8 @@ import (
+ type WaitAction string
+ 
+ const (
++	// ConfigureQuotaPolicy asks the platform operator to install the admission quota policy.
++	ConfigureQuotaPolicy WaitAction = "configure_quota_policy"
+ 	// ChangeRequestOrQuota applies when the request exceeds its quota ceiling.
+ 	ChangeRequestOrQuota WaitAction = "change_request_or_quota"
+ 	// ChangeRequestOrCell applies when the cell cannot meet the whole request.
+@@ -73,6 +75,8 @@ var errReclaimReleasePending = fmt.Errorf("%w: waiting for selected releases", E
+ func WaitReasons(err error) []WaitReason {
+ 	var quota *reservationQuotaError
+ 	switch {
++	case errors.Is(err, ErrQuotaUnconfigured):
++		return []WaitReason{{Code: ErrQuotaUnconfigured.Error(), Action: ConfigureQuotaPolicy}}
+ 	case errors.Is(err, ErrQueueTurnPending):
+ 		return []WaitReason{{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}}
+ 	case errors.Is(err, ErrQuotaScopeNotFound):
+diff --git a/services/control/internal/modules/scheduling/wait_reasons_test.go b/services/control/internal/modules/scheduling/wait_reasons_test.go
+index 535064a0..ee3c4b2b 100644
+--- a/services/control/internal/modules/scheduling/wait_reasons_test.go
++++ b/services/control/internal/modules/scheduling/wait_reasons_test.go
+@@ -252,3 +252,15 @@ func TestObserveCellWaitReasonsRequiresCurrentBoundUID(t *testing.T) {
+ 		})
+ 	}
+ }
++
++func TestWaitReasonsMissingQuotaConfigurationRequiresTypedDecision(t *testing.T) {
++	want := []WaitReason{{Code: "SCHEDULING_QUOTA_UNCONFIGURED", Action: "configure_quota_policy"}}
++	for _, err := range []error{ErrQuotaUnconfigured, fmt.Errorf("owner admission: %w", ErrQuotaUnconfigured)} {
++		if got := WaitReasons(err); !reflect.DeepEqual(got, want) {
++			t.Fatalf("configuration guidance: %+v, want %+v", got, want)
++		}
++	}
++	if got := WaitReasons(errors.New(ErrQuotaUnconfigured.Error())); len(got) != 0 {
++		t.Fatalf("historical text became a fresh decision: %+v", got)
++	}
++}
+-- 
+2.43.0
+

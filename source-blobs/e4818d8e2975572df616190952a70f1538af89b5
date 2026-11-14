@@ -1,0 +1,62 @@
+{
+  "entry_sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c",
+  "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "scope": "Actual entry safety functions only; synthetic subprocess fixtures, no make/Go/browser/shared lock, not a product or full-gate qualification",
+  "cases": [
+    "normal leader exit leaves no owned group",
+    "exited leader orphan is reaped and inherited descriptor closes",
+    "detached owned orphan is reaped and inherited descriptor closes",
+    "metadata deadline terminates and reaps TERM-resistant group",
+    "expired remaining budget starts no metadata process",
+    "inherited stricter CPU and Node heap limits are retained"
+  ],
+  "groups": [
+    {
+      "pgid": 3731463,
+      "phase": "normal-exit",
+      "inherited_lock_fd_count": 0,
+      "group_cleared": true,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 0
+    },
+    {
+      "pgid": 3731464,
+      "phase": "orphan-inherited-fd",
+      "inherited_lock_fd_count": 1,
+      "group_cleared": true,
+      "cleanup_deadline": 806931.393173881,
+      "term_sent": true,
+      "term_deadline": 806928.393391376,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 0
+    },
+    {
+      "pgid": 3731466,
+      "phase": "detached-orphan-inherited-fd",
+      "inherited_lock_fd_count": 1,
+      "group_cleared": true,
+      "cleanup_deadline": 806931.4765794,
+      "term_sent": true,
+      "term_deadline": 806928.476653228,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 0
+    },
+    {
+      "pgid": 3731468,
+      "phase": "metadata-timeout",
+      "inherited_lock_fd_count": 0,
+      "group_cleared": true,
+      "cleanup_deadline": 806931.728575966,
+      "term_sent": true,
+      "term_deadline": 806928.728761953,
+      "kill_sent": true,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": -9
+    }
+  ],
+  "passed": true
+}

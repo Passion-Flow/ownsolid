@@ -1,0 +1,113 @@
+{
+  "qualified_source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "production_source": "5b73fa05305c2c5d8178a256683ede8b4e9ef99f",
+  "prerequisite": "97a563ba047869fc95acf50c0017ef3cdea13139",
+  "bundle_sha256": "3d971307f5a90b333c5a92f0ebf81f13bfe79fe53b790d44c272be545405cb32",
+  "bundle_verified": true,
+  "owned_paths": {
+    "services/control/internal/modules/datasets/README.md": {
+      "bytes": 19321,
+      "sha256": "e35e965c97e14659dfc39cb8736f837510c1d2fac3795060153981bccf569ef4"
+    },
+    "services/control/internal/modules/datasets/publication_storage.go": {
+      "bytes": 11017,
+      "sha256": "87cc8dcbefceae46b61285db248c41d1fe334882f9caa6805a4c06645f2a70f8"
+    },
+    "services/control/internal/modules/datasets/published_reader.go": {
+      "bytes": 4993,
+      "sha256": "bef9075ec4ef536d58d4c1ffad7ce4a05971df7fb99433ca7ca5155b84a232f5"
+    },
+    "services/control/internal/modules/datasets/published_reader_repository_integration_test.go": {
+      "bytes": 4370,
+      "sha256": "28872e65701f152917e3ddb205af78399285d8c41d7d4751796bc817ee6bdf5d"
+    },
+    "services/control/internal/modules/datasets/published_reader_test.go": {
+      "bytes": 9352,
+      "sha256": "8697a4576f8030682a485d3725b7fc6a900c96f775b6ad14b505cc5bd3c6e0b8"
+    },
+    "services/control/internal/modules/datasets/published_source_repository.go": {
+      "bytes": 4005,
+      "sha256": "2c6a33711cdcf8fa3ed188a1fcb2b64671bf47abfae1e698cc76dcfcb51b70a4"
+    },
+    "services/control/internal/modules/datasets/service.go": {
+      "bytes": 9875,
+      "sha256": "ffe8ab21a2ce332a4bb145228455b2c0ee8e3a92072042f1c70922860b6262bd"
+    },
+    "services/control/internal/modules/datasets/storage.go": {
+      "bytes": 12192,
+      "sha256": "24700701e24142767a0163f5ed8ecfce3e6711f94eab240f7b92820854614b43"
+    },
+    "services/control/internal/modules/datasets/training_input_repository.go": {
+      "bytes": 2913,
+      "sha256": "7276be648d3b9190421ca3f3a5ebccfb1f6077ae84838059b027e6a03e122e49"
+    },
+    "services/control/internal/modules/datasets/training_inputs.go": {
+      "bytes": 2493,
+      "sha256": "eeb79ae0ec24a45b16e2e1b9ccec1947a5edaac2220fb052b25974cf79018ba9"
+    },
+    "services/control/internal/modules/training/README.md": {
+      "bytes": 7062,
+      "sha256": "3bc17139e2a395565c8d6e34702f79f4799031cb5bd1906750220e20bcf52c20"
+    },
+    "services/control/internal/modules/training/accepted_adapter.go": {
+      "bytes": 3071,
+      "sha256": "0c9e78e8910ed31556672585806ce3f3663d3041502d4cfa661b078586bf3e5a"
+    },
+    "services/control/internal/modules/training/accepted_adapter_repository.go": {
+      "bytes": 9418,
+      "sha256": "4a223409975e5ac2079bae6e6fa3494be375152647781d8d8743aa09ca124775"
+    },
+    "services/control/internal/modules/training/accepted_adapter_repository_integration_test.go": {
+      "bytes": 31721,
+      "sha256": "e835a9565c6ee8f0851fc4457a4f2cf5f2e9d57aec9dc875dd71f8c1c20404ce"
+    },
+    "services/control/internal/modules/training/checkpoints.go": {
+      "bytes": 5556,
+      "sha256": "4ed820402b9f765b167e851850b251f08eff61ab4360244d17a65ad074bcf10c"
+    },
+    "services/control/internal/modules/training/export.go": {
+      "bytes": 6374,
+      "sha256": "3c304f374d1256557129c3bb673b68633585c62e574533592d34789f985fa5f9"
+    },
+    "services/control/internal/modules/training/publication_storage.go": {
+      "bytes": 8355,
+      "sha256": "8eab7f961e6c03dc87cddcb8f17a8add06b565fea7b26f11334ebc3c6024d34f"
+    },
+    "services/control/internal/modules/training/published_reader.go": {
+      "bytes": 3792,
+      "sha256": "34c6a9569532413bf7bc9d9bce62041bdbd81ddbd5fc06734deb099e66587f87"
+    },
+    "services/control/internal/modules/training/published_reader_test.go": {
+      "bytes": 6344,
+      "sha256": "097a21067a94b247507722a0a945c8069d89afef5346c9f88382826c81bbe5e6"
+    },
+    "services/control/internal/modules/training/service.go": {
+      "bytes": 4210,
+      "sha256": "1425bc8290ece8e353b90a2205e73a34c2cd5e36695075f4b8306b014de6ee70"
+    },
+    "services/control/internal/modules/training/storage.go": {
+      "bytes": 13556,
+      "sha256": "29c3e63172d75a70c5e89af9de7bc61c5ad6d251f68c91f0259566dc7435af5f"
+    }
+  },
+  "nonruntime_research_path": "docs/research/training-published-file-readers.md",
+  "integration_instruction": "Import the bundle. Preserve current research notes; take the original owner runtime/readme files and strengthened tagged tests. Qualification remains bound to e639db90; a current-main ARC composition is a new source graph and needs its own gates.",
+  "dataset_constructor": "datasets.OpenPublishedReader(configuredPath, trustedInstalledTenant) (*datasets.PublishedReader, error)",
+  "training_constructor": "training.OpenPublishedReader(configuredPath, trustedInstalledTenant) (*training.PublishedReader, error)",
+  "consumer_fields": "Set concrete PublishedReader and Store=nil in each consumer; setting both is refused. No arbitrary callbacks.",
+  "startup_ownership": "ARC opens readers from exact installed existing read-only namespaces; close every successfully opened reader if subsequent initialization fails. Constructors create no state and start no worker.",
+  "shutdown_ownership": "Stop admission and drain/join handlers first; close readers next. Already returned file descriptors remain caller-owned and must be closed by the caller. Close never closes another writer.",
+  "authority_ownership": "Repeat real current SQL authorization after file I/O. Readers do not authorize clients or grant SQL privileges. Preserve accepted attempt/receipt/seal and writer exclusion.",
+  "still_arc_or_shared_owner": "Actual newAgentPath/NewAgentGateway/runAgentGateway construction, init rollback/drain, installed namespace delivery, Model/Node/protected lock functions/grants and original fleet budgets.",
+  "scope": "Two real owner PostgreSQL roots and required independent-reader subcase; full fixture principal and actual retained CPU files. Not restricted-role, actual gateway startup, GPU or fleet acceptance.",
+  "configured_actual_schema": "m20_repository_fe0210a21b7f4554a475a1d3fbbd9c2e",
+  "schema_evidence": "Qualified fixture source selects exactly this admitted environment variable, creates it and sets search_path; real tests passed. PostgreSQL logs did not separately print the schema name.",
+  "migration_source_constants": [
+    "const SchemaVersion = 60",
+    "const TableCount = 120"
+  ],
+  "fixture_source_sha256": "fdac4abe59f2274835131e5baf971ce85167329f252c419748dfd4eb616280ea",
+  "result_sha256": "e83e8265b8d64f7d3c8a442da6d3f39f03cd9e6a5adb44ad8807b5d98a40d4f8",
+  "receipt_sha256": "646782f5b2b2d41c729a0d87844c96ead12db617ef011017b6d2cd0344627d30",
+  "audit_sha256": "f00c8f7b8036e335b48bf52d28ba908c340e6653a0d00e2818f3cb4f578d0e9c"
+}

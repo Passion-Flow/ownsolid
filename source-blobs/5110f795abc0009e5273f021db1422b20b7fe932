@@ -1,0 +1,62 @@
+{
+  "joint-source-2e64ab4c.bundle": {
+    "bytes": 126002,
+    "sha256": "c5e4f1cbb7812b841de739c1524e6f3700d1e3aadfd5ddc5a2852784cda74a52"
+  },
+  "full_native_gate.prepared.py": {
+    "bytes": 13337,
+    "sha256": "f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a"
+  },
+  "joint-full-gate-2e64ab4c-manifest.json": {
+    "bytes": 5018,
+    "sha256": "60db5ee075c6b24e06d16a0453e851d140ffa44b88b2207310f911901b73f47c"
+  },
+  "preparation-handoff.json": {
+    "bytes": 5169,
+    "sha256": "60038e96180edc6e2a5ea7db9102806247efc3191999fe75d26bd6c474702800"
+  },
+  "composition-proof.json": {
+    "bytes": 6269,
+    "sha256": "68ff5087344668aeafde44f612eac3d5c4a91f2f88c686d16e59abfdc677c319"
+  },
+  "projection-input-sha256.json": {
+    "bytes": 9397,
+    "sha256": "295993dda549af2a47ddf6db82ff2eb218557ce32f0c0be1896eac7ac79c2b83"
+  },
+  "prepared-policy-verification.json": {
+    "bytes": 711,
+    "sha256": "79f0b3c80619cffda374ac90a09bdca1fbce56f76f77a0eaa8de5fc2938ff19c"
+  },
+  "prepared-entry-vs-executed.diff": {
+    "bytes": 6069,
+    "sha256": "bc24b7b5b0309d299ec59420c0e7f3f7121b974ba8a37f12be780bcf45a5dea2"
+  },
+  "joint-owned-19.patch": {
+    "bytes": 231272,
+    "sha256": "60975f6aa3c83d989c81d35403b2d61b12afaa2a0415d345365cc5085b114365"
+  },
+  "static-lint-diagnosis.json": {
+    "bytes": 1455,
+    "sha256": "b1b9b3044b5864ccbe0d4656b6e7e64ebab4ea079f9fb5cf2f59d28f5f1bec42"
+  },
+  "pointer20-verification.json": {
+    "bytes": 2615,
+    "sha256": "aa3df220b67038d66d1392a15f01cf1f4aa062ec47bc815929b437ff7ff16e91"
+  },
+  "pointer20-regression-tests.log": {
+    "bytes": 5568,
+    "sha256": "f0505ff4dbe96b4a394311826a1671af505bdcf6c742689f94754c655d48d2b1"
+  },
+  "pointer20-430-audit.json": {
+    "bytes": 1817867,
+    "sha256": "910a412a5bef5071ac9a0409adc5388b7507001cf4bef306fc4f8803df240422"
+  },
+  "pointer20-before-fix.json": {
+    "bytes": 274,
+    "sha256": "f5111b1b128e7fd5f30410e91a48b4ea22e7f05335dbadd007bd153767981d95"
+  },
+  "pointer20-read-only-receipt.json": {
+    "bytes": 904,
+    "sha256": "ec7a979917e46e5e164c72b2d5d65b2528b5a11060747d690b9c5353d1a232cb"
+  }
+}

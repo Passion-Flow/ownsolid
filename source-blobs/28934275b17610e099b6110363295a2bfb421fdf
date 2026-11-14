@@ -1,0 +1,20 @@
+{
+  "alias_id": "20ae0b31-e64c-41a8-9319-dd811117287f",
+  "api_key_id": "10ae452b-6818-4001-8aec-6064a06b4b20",
+  "audit_count": 1,
+  "canonical_sha256": "33a4607cde7e6ccf7d3f1be16552d23fef4149cab15ee832d420ede223d6229d",
+  "case": "photosynthesis",
+  "deployment_id": "c45ae02c-3e8c-45ef-b9db-be367af154df",
+  "deployment_revision": 1,
+  "gateway_id": "e5e89e48-343a-4fe6-afe0-0b58fbd716c9",
+  "node_id": "11a181ee-86e5-41e8-988d-7bcf628e5a74",
+  "output_sha256": "9ddd5f1e593698d7b626b2283ec8875e65b2cfa10563064e11c662caf4804b66",
+  "request_id": "9e2bc389-99cb-487d-b8c8-8c3d997338a7",
+  "tenant_id": "e9922948-3115-410e-87b6-7628c4fa07be",
+  "usage": {
+    "prompt_tokens": 21,
+    "completion_tokens": 24,
+    "total_tokens": 45
+  },
+  "workspace_id": "0c67d635-90ec-46bd-9de3-75976ebe9def"
+}

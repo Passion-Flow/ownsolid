@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+scratch="$(cd -- "$(dirname -- "$0")" && pwd)"
+root="$HOME/lane-sci"
+tools="$HOME/lane-sci-tools"
+export PATH="$tools/go/bin:$PATH" GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off
+export GOCACHE="$tools/go-cache" GOMODCACHE="$tools/go-mod" GOFLAGS=-p=1
+exec 9>"$tools/heavy-test.lock"
+flock 9
+while [ "$(free -m | awk '/^Mem:/ {print $4}')" -lt 2048 ] || pgrep -x 'cargo|rustc|compile|link' >/dev/null; do
+  sleep 8
+done
+df -h /
+free -m
+test "$(df --output=avail -BG / | tail -1 | tr -dc '0-9')" -ge 15
+python3 "$scratch/prepare-overlay.py"
+cd "$root"
+unshare --net go -C services/control list -overlay="$scratch/overlay.json" -f '{{range .EmbedFiles}}{{println .}}{{end}}' ./migrations \
+  | grep -Fx 'postgresql/000058_audit_chain_head_scope.up.sql'
+ionice -c3 nice -n 15 unshare --net go -C services/control test -overlay="$scratch/overlay.json" \
+  -c -o "$scratch/database.test" ./internal/platform/database
+ionice -c3 nice -n 15 unshare --net sh -c "ip link set dev lo up; exec go -C tools/audit-verify test ./... -count=1"
+ss -lntp '( sport = :5432 )'
+name=lane-sci-aud-058-integrated
+image=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+id="$(docker run --pull never -d --rm --name "$name" --network none --shm-size 128m \
+  --tmpfs /var/lib/postgresql/data:size=512m \
+  -e PGDATA=/var/lib/postgresql/data/pgdata -e POSTGRES_PASSWORD_FILE=/fixture/pg-password \
+  --mount "type=bind,source=$root,target=/repo,readonly" \
+  --mount "type=bind,source=$scratch,target=/fixture" "$image")"
+trap 'docker stop "$id" >/dev/null' EXIT
+for ((i=0;i<60;i++)); do
+  if docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null
+docker exec "$id" createdb -U postgres audit_scope_test
+docker exec "$id" psql -Xq -U postgres -d audit_scope_test -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector'
+docker exec "$id" createdb -U postgres integrated_fresh_test
+docker exec "$id" psql -Xq -U postgres -d integrated_fresh_test -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector'
+for version in 55 56 57 58; do
+  docker exec "$id" createdb -U postgres "integrated_${version}_test"
+  docker exec "$id" pg_restore -U postgres --exit-on-error \
+    --dbname "integrated_${version}_test" "/fixture/schema${version}.dump"
+done
+docker exec -e PROJECT_ONE_TEST_DSN_FILE=/fixture/test-dsn \
+  -w /repo/services/control/internal/platform/database "$id" /fixture/database.test -test.v \
+  -test.run '^(TestAuditCandidateProductionMigratorAfterRestore|TestEveryCellOwnedTableCarriesScope|TestNewRowsTakeTheLocalCell|TestCheckRefusesAnotherCellIdentity)$' \
+  2>&1 | tee "$scratch/integrated-tests.log"
+docker exec -e PROJECT_ONE_TEST_DSN_FILE=/fixture/test-dsn -e OWNSOLID_TEST_AUDIT_VERIFY=/fixture/audit-verify \
+  -w /repo/services/control/internal/modules/audit "$id" /fixture/audit.test -test.v \
+  2>&1 | tee "$scratch/full-audit-tests.log"

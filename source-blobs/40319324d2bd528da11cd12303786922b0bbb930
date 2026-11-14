@@ -1,0 +1,15 @@
+{
+  "memory_kib": {
+    "MemFree": 5352296,
+    "MemAvailable": 20259496
+  },
+  "full_io_psi_avg10": 0.03,
+  "disk_free_bytes": 789129207808,
+  "source": "3ae6bfebb67b47d684de4651cc597c26f104d725",
+  "agents": 2000,
+  "outer_cpu_limit": 4,
+  "outer_memory_bytes": 6442450944,
+  "host_ports": [],
+  "network": "none; only recorder default routes inside isolated DinD",
+  "scope": "2000-agent TestFleetLoad baseline at five-second pacing; actual measured single-node scope only"
+}

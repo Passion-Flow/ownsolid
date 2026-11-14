@@ -1,0 +1,29 @@
+{
+  "ui64_tracked_diff_empty": true,
+  "cases": [
+    {
+      "case": "clean",
+      "old_accepts": true,
+      "new_accepts": true,
+      "diff_empty": true
+    },
+    {
+      "case": "unstaged",
+      "old_accepts": false,
+      "new_accepts": false,
+      "diff_empty": false
+    },
+    {
+      "case": "staged",
+      "old_accepts": true,
+      "new_accepts": false,
+      "diff_empty": false
+    },
+    {
+      "case": "untracked",
+      "old_accepts": false,
+      "new_accepts": false,
+      "diff_empty": true
+    }
+  ]
+}

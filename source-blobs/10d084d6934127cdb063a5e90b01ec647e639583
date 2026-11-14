@@ -1,0 +1,7 @@
+{
+  "scope": "Inert test ELF upload only; not executed",
+  "expected_gzip_bytes": 10329686,
+  "expected_gzip_sha256": "ecffed38dbe74e2dff5ff28259d789974f1c1082b3f98c00027eb33ed8894385",
+  "status": "incomplete",
+  "elapsed_seconds": 150.0002547140466
+}

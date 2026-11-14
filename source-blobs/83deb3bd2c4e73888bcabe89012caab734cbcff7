@@ -1,0 +1,26 @@
+set -euo pipefail
+ip link set lo up
+test "$(wc -l < /proc/net/route)" -eq 1
+make check && make build
+pnpm -C web/packages/help exec vitest run src/help.test.ts --maxWorkers=1
+repo=$PWD
+pid=
+trap 'if test -n "$pid"; then kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; fi' EXIT
+for entry in console:19312 portal:19313; do
+    IFS=: read -r app port <<< "$entry"
+    origin=http://127.0.0.1:$port
+    (cd "$repo/web/apps/$app" && exec node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port "$port" --strictPort) \
+        > "$LANE_REL_HELP_SCRATCH/$app-preview.log" 2>&1 &
+    pid=$!
+    ready=no
+    for attempt in $(seq 1 35); do
+        if curl --noproxy '*' -fsS "$origin/help/api" >/dev/null 2>&1; then ready=yes; break; fi
+        if ! kill -0 "$pid" 2>/dev/null; then break; fi
+        sleep 1
+    done
+    test "$ready" = yes || { cat "$LANE_REL_HELP_SCRATCH/$app-preview.log"; exit 1; }
+    node "$LANE_REL_HELP_SCRATCH/check.mjs" "$repo" "$app" "$origin"
+    kill "$pid"
+    wait "$pid" 2>/dev/null || true
+    pid=
+done

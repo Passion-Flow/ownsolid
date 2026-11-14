@@ -1,0 +1,304 @@
+//go:build repository_integration
+
+package datasets_test
+
+import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"io"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/google/uuid"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	preparation "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
+)
+
+const (
+	qualificationResultSHA  = "5b244e7c87060e0afab4c4dcd57387f46964d4e37506ad96827df82a0b5ecf47"
+	qualificationRequestSHA = "6d3cf80e42a8066b196f39d07fb9976f7971b0d4ebbfff734b1630d6f783155e"
+	qualificationReviewSHA  = "0fd36fecf2b79bfd5e23a09cf0c66d395304824d5ae18ca4be8d01a23f9b09af"
+)
+
+func qualificationHash(data []byte) string {
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:])
+}
+
+func qualificationFile(t *testing.T, path string) []byte {
+	t.Helper()
+	file, err := os.Open(path)
+	if err != nil {
+		t.Fatal("qualification input unavailable")
+	}
+	defer file.Close()
+	raw, err := io.ReadAll(io.LimitReader(file, 1<<20))
+	if err != nil || len(raw) == 0 || len(raw) == 1<<20 {
+		t.Fatal("invalid qualification input size")
+	}
+	return raw
+}
+
+func qualifyTraceRows(g datasetRuntimeStory, actor identity.Auth, expectation preparation.ResultExpectation, report, review []byte, reviewSHA string) ([]byte, error) {
+	if actor.Me.Audience != "portal" {
+		return nil, errors.New("ACCESS_DENIED")
+	}
+	request := expectation.Request
+	err := g.f.Store.Within(g.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+		if err := g.account.RecheckOrderedWithin(ctx, q, actor); err != nil {
+			return err
+		}
+		scope, err := g.s.Workspaces.RecheckScopeWithin(ctx, q, actor, request.WorkspaceID)
+		if err != nil {
+			return err
+		}
+		if scope.ID != request.WorkspaceID || scope.TenantID != request.TenantID || scope.Status != "active" || scope.Role == nil || *scope.Role != "owner" {
+			return errors.New("ACCESS_DENIED")
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if reviewSHA != qualificationReviewSHA || request.HeldoutSHA256 != reviewSHA || qualificationHash(review) != reviewSHA {
+		return nil, errors.New("EVALUATION_TRACE_REVIEW_INVALID")
+	}
+	if qualificationHash(report) != qualificationResultSHA || qualificationHash(expectation.RequestBytes) != qualificationRequestSHA {
+		return nil, errors.New("EVALUATION_TRACE_DIGEST_MISMATCH")
+	}
+	var input []wire.Record
+	for _, line := range bytes.Split(bytes.TrimSuffix(review, []byte("\n")), []byte("\n")) {
+		row, err := wire.DecodeRecord(line, request.DataLimits)
+		if err != nil {
+			return nil, err
+		}
+		input = append(input, row)
+		expectation.Cases = append(expectation.Cases, preparation.ExpectedCase{
+			SourceID: row.SourceID, PromptSHA256: qualificationHash([]byte(row.Prompt)), Label: row.Completion,
+		})
+	}
+	if _, err := preparation.DecodePreparedResult(report, expectation); err != nil {
+		return nil, err
+	}
+	var encoded bytes.Buffer
+	writer := json.NewEncoder(&encoded)
+	writer.SetEscapeHTML(false)
+	for _, row := range input {
+		identityBytes, err := json.Marshal([]string{qualificationResultSHA, row.SourceID, qualificationHash([]byte(row.Prompt)), reviewSHA})
+		if err != nil {
+			return nil, err
+		}
+		row.SourceID = "evl104-" + qualificationHash(identityBytes)
+		if err := writer.Encode(row); err != nil {
+			return nil, err
+		}
+	}
+	return encoded.Bytes(), nil
+}
+
+func qualificationSetup(t *testing.T, request preparation.ProcessorRequest) (datasetRuntimeStory, identity.Auth, identity.Auth) {
+	t.Helper()
+	f := repositoryfixture.NewUnbootstrapped(t)
+	if f.PostgreSQL == nil {
+		t.Fatal("PostgreSQL qualification fixture required")
+	}
+	f.Tenant, f.Workspace = request.TenantID, request.WorkspaceID
+	ctx, cancel := context.WithTimeout(t.Context(), 90*time.Second)
+	t.Cleanup(cancel)
+	account := &identity.Service{DB: f.PostgreSQL}
+	root := filepath.Join(t.TempDir(), "datasets")
+	if err := os.Mkdir(root, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := datasets.InitializeStore(root, f.Tenant, os.Geteuid(), os.Getegid()); err != nil {
+		t.Fatal(err)
+	}
+	store, err := datasets.OpenStore(root, f.Tenant, 4096)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := store.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	account.Config.Datasets = config.DatasetConfiguration{
+		ArtifactRoot: root, PythonExecutable: os.Getenv("PROJECT_ONE_DATA_PYTHON"),
+		ProcessorFile: os.Getenv("PROJECT_ONE_DATA_PROCESSOR_FILE"),
+	}
+	processor, err := datasets.NewProcessor(account.Config.Datasets, account.Config.Policy().Datasets)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := &datasets.Service{DB: f.PostgreSQL, Identity: account, Workspaces: &workspaces.Service{DB: f.PostgreSQL, Identity: account}, Store: store, Processor: processor}
+	g := datasetRuntimeStory{f: f, ctx: ctx, account: account, s: s, root: root}
+	viewer, siblingOwner, sibling := uuid.NewString(), uuid.NewString(), uuid.NewString()
+	g.exec(t, "INSERT INTO tenants(id,name,status) VALUES($1,'Trace fixture','active')", "", f.Tenant)
+	g.exec(t, "INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Retained source workspace','active'),($3,$2,'Sibling workspace','active')", "", f.Workspace, f.Tenant, sibling)
+	for _, actor := range []struct {
+		id, email, workspace, role string
+		admin                      bool
+	}{
+		{f.User, "owner@example.invalid", f.Workspace, "owner", true},
+		{viewer, "viewer@example.invalid", f.Workspace, "viewer", false},
+		{siblingOwner, "sibling@example.invalid", sibling, "owner", false},
+	} {
+		g.exec(t, "INSERT INTO users(id,email_canonical,email_display,display_name,locale,status,is_platform_admin) VALUES($1,$2,$2,'Trace fixture','en','active',$3)", "", actor.id, actor.email, actor.admin)
+		g.exec(t, "INSERT INTO workspace_memberships(tenant_id,workspace_id,user_id,role) VALUES($1,$2,$3,$4)", "", f.Tenant, actor.workspace, actor.id, actor.role)
+	}
+	g.exec(t, "UPDATE installation_state SET bootstrap_complete=true,tenant_id=$1,default_workspace_id=$2,primary_admin_user_id=$3,bootstrapped_at=clock_timestamp() WHERE id=1", "", f.Tenant, f.Workspace, f.User)
+	g.portal = g.auth(t, "portal")
+	viewerStory, siblingStory := g, g
+	viewerStory.f.User, siblingStory.f.User = viewer, siblingOwner
+	return g, viewerStory.auth(t, "portal"), siblingStory.auth(t, "portal")
+}
+
+func TestRetainedCPUTraceScopedRegressionPublication(t *testing.T) {
+	dir := os.Getenv("OWNSOLID_TEST_EVALUATION_TRACE_DIR")
+	if dir == "" {
+		t.Fatal("retained CPU fixture required")
+	}
+	requestBytes := qualificationFile(t, filepath.Join(dir, "request.json"))
+	if qualificationHash(requestBytes) != qualificationRequestSHA {
+		t.Fatal("retained request digest")
+	}
+	request, err := preparation.DecodeProcessorRequest(requestBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := qualificationFile(t, filepath.Join(dir, "result.json"))
+	review := qualificationFile(t, filepath.Join(dir, "heldout.jsonl"))
+	tokenizerBytes := qualificationFile(t, filepath.Join(dir, "tokenizer_config.json"))
+	var catalog struct{ Files []wire.Asset }
+	if err := json.Unmarshal(qualificationFile(t, os.Getenv("OWNSOLID_TEST_EVALUATION_CATALOG")), &catalog); err != nil {
+		t.Fatal(err)
+	}
+	templateVerified := false
+	for _, asset := range catalog.Files {
+		if asset.Path == "tokenizer_config.json" {
+			templateVerified = asset.SHA256 == qualificationHash(tokenizerBytes)
+		}
+	}
+	var tokenizer struct {
+		ChatTemplate string `json:"chat_template"`
+	}
+	if !templateVerified || json.Unmarshal(tokenizerBytes, &tokenizer) != nil || tokenizer.ChatTemplate == "" {
+		t.Fatal("pinned tokenizer template")
+	}
+	expectation := preparation.ResultExpectation{Request: request, RequestBytes: requestBytes, BaseFiles: catalog.Files, ChatTemplateSHA256: qualificationHash([]byte(tokenizer.ChatTemplate))}
+	g, viewer, foreign := qualificationSetup(t, request)
+	for _, denied := range []struct {
+		name           string
+		actor          identity.Auth
+		report, review []byte
+		digest, code   string
+	}{
+		{"viewer", viewer, report, review, qualificationReviewSHA, "ACCESS_DENIED"},
+		{"foreign_workspace", foreign, report, review, qualificationReviewSHA, "RESOURCE_NOT_FOUND"},
+		{"missing_review", g.portal, report, review, "", "EVALUATION_TRACE_REVIEW_INVALID"},
+		{"altered_review", g.portal, report, append(bytes.Clone(review), ' '), qualificationReviewSHA, "EVALUATION_TRACE_REVIEW_INVALID"},
+		{"altered_report", g.portal, append(bytes.Clone(report), ' '), review, qualificationReviewSHA, "EVALUATION_TRACE_DIGEST_MISMATCH"},
+	} {
+		t.Run(denied.name, func(t *testing.T) {
+			audits := g.count(t, "audit_events")
+			rows, err := qualifyTraceRows(g, denied.actor, expectation, denied.report, denied.review, denied.digest)
+			runtimeError(t, err, denied.code)
+			if rows != nil || g.count(t, "datasets") != 0 || g.count(t, "dataset_versions") != 0 || g.count(t, "audit_events") != audits {
+				t.Fatal("refusal produced rows or a state mutation")
+			}
+		})
+	}
+	rows, err := qualifyTraceRows(g, g.portal, expectation, report, review, qualificationReviewSHA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	replay, err := qualifyTraceRows(g, g.portal, expectation, report, review, qualificationReviewSHA)
+	if err != nil || !bytes.Equal(rows, replay) || bytes.Count(rows, []byte("\n")) != 3 {
+		t.Fatal("conversion replay differed", err)
+	}
+	origin := "Retained native CPU trace SHA-256 " + qualificationResultSHA
+	input := datasets.CreateRequest{WorkspaceID: g.f.Workspace, Name: "Retained trace regression", Origin: origin, License: "CC0", RightsAsserted: true, Reason: "Publish reviewed synthetic capture cases"}
+	key := uuid.NewString()
+	d, err := g.s.Create(g.ctx, g.portal, input, key, uuid.NewString())
+	if err != nil || d.Origin != origin {
+		t.Fatal("dataset provenance", err)
+	}
+	again, err := g.s.Create(g.ctx, g.portal, input, key, uuid.NewString())
+	if err != nil || again.ID != d.ID {
+		t.Fatal("creation replay", err)
+	}
+	draft, err := g.s.CreateDraft(g.ctx, g.portal, g.f.Workspace, d.ID, datasets.DraftRequest{SourceName: "retained-trace.jsonl", SourceSHA256: qualificationHash(rows), ExpectedBytes: int64(len(rows)), Reason: "Attach reviewed regression rows"}, uuid.NewString(), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	draft, err = g.s.Upload(g.ctx, g.portal, g.f.Workspace, d.ID, draft.ID, draft.SourceSHA256, draft.ExpectedBytes, bytes.NewReader(rows), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.process(t)
+	draft = g.draft(t, d.ID, draft.ID)
+	publish := datasets.PublicationRequest{ExpectedRevision: draft.Revision, Seed: "00112233445566778899aabbccddeeff", ValidationBasisPoints: 2000, Reason: "Freeze reviewed regression rows"}
+	audits := g.count(t, "audit_events")
+	_, err = g.s.Publish(g.ctx, viewer, g.f.Workspace, d.ID, draft.ID, publish, uuid.NewString(), uuid.NewString())
+	runtimeError(t, err, "ACCESS_DENIED")
+	if g.count(t, "dataset_versions") != 0 || g.count(t, "audit_events") != audits {
+		t.Fatal("refused publication mutated state")
+	}
+	pubKey := uuid.NewString()
+	job, err := g.s.Publish(g.ctx, g.portal, g.f.Workspace, d.ID, draft.ID, publish, pubKey, uuid.NewString())
+	if err != nil || job.VersionID == nil {
+		t.Fatal("queue publication", err)
+	}
+	g.process(t)
+	againJob, err := g.s.Publish(g.ctx, g.portal, g.f.Workspace, d.ID, draft.ID, publish, pubKey, uuid.NewString())
+	if err != nil || againJob.ID != job.ID || againJob.State != "succeeded" || g.count(t, "datasets") != 1 || g.count(t, "dataset_versions") != 1 {
+		t.Fatal("publication replay", err)
+	}
+	version, err := g.s.PublishedSourceSnapshot(g.ctx, g.portal, g.f.Workspace, d.ID, *job.VersionID, false)
+	if err != nil || !wire.ValidDigest(version.ManifestSHA256) || version.RawSourceSHA256 != qualificationHash(rows) {
+		t.Fatal("immutable version", err)
+	}
+	published, _, err := g.s.OpenPublishedSource(g.ctx, version, 1<<20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer published.Close()
+	publishedRows, err := io.ReadAll(io.LimitReader(published, 1<<20))
+	if err != nil {
+		t.Fatal(err)
+	}
+	decodeRows := func(raw []byte) map[string]wire.Record {
+		result := make(map[string]wire.Record)
+		for _, line := range bytes.Split(bytes.TrimSuffix(raw, []byte("\n")), []byte("\n")) {
+			row, err := wire.DecodeRecord(line, request.DataLimits)
+			if err != nil || !strings.HasPrefix(row.SourceID, "evl104-") {
+				t.Fatal("invalid frozen case", err)
+			}
+			result[row.SourceID] = row
+		}
+		return result
+	}
+	if !reflect.DeepEqual(decodeRows(rows), decodeRows(publishedRows)) {
+		t.Fatal("immutable source rows changed")
+	}
+	var audited int
+	if err := g.f.PostgreSQL.QueryRow(g.ctx, "SELECT count(*) FROM audit_events WHERE tenant_id=$1 AND workspace_id=$2 AND actor_user_id=$3 AND action='dataset.version_published'", g.f.Tenant, g.f.Workspace, g.f.User).Scan(&audited); err != nil || audited != 1 {
+		t.Fatal("missing scoped publication audit", audited, err)
+	}
+	t.Logf("verified retained trace with 3 reviewed rows; corpus SHA-256 %s; immutable manifest SHA-256 %s", qualificationHash(rows), version.ManifestSHA256)
+}

@@ -1,0 +1,61 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "base": "8123466c5a64b6424047f126815ae63100383bc6",
+  "repo": "/root/lane-gw104-read",
+  "branch": "codex/gw104-read",
+  "original_GW_source": "5fb92e1d",
+  "DEV_contract": "7705c5a341458cb1be8ead80844198378d98c4e3",
+  "DEV_version": "0.12.0",
+  "production_default": false,
+  "factory": {
+    "signature": "func New(s *identity.Service) *Handler",
+    "path": "services/control/internal/modules/identity/http/handler.go",
+    "instance": "distributionService := &distribution.Service{DB: s.DB, Identity: s, Workspaces: w, Nodes: n, Deployments: d}",
+    "handler": "Distribution: &distributionhttp.Handler{Service: distributionService}"
+  },
+  "producer": [
+    "services/agent/internal/inference/verification.go: verifier.Generate -> wire.GenerationVerification",
+    "services/control/internal/modules/deployments/gateway_repository.go: ReadyGatewayTargetWithin",
+    "services/control/internal/modules/distribution/cutovers.go: recordAliasTarget",
+    "services/control/internal/modules/distribution/alias_capabilities.go: aliasCapabilitiesWithin / aliasContextCeiling"
+  ],
+  "typed_startup_owner": "ARC; validate full PostgreSQL schema/runtime and owner construction; freeze trusted flag before serving; no application_profile or customer policy selector",
+  "empty_startup": "producer/read prerequisites are checked without manufacturing a model or requiring a populated catalogue",
+  "read_path": [
+    "Service.ReadAlias",
+    "Service.ReadAliasPage",
+    "AliasReadView embeds Alias and optional capabilities"
+  ],
+  "behavior": {
+    "exact_verified_active_target": "two-field true/positive context object",
+    "legacy_missing_or_mismatched_snapshot": "omit object",
+    "unknown_catalogue_or_recipe": "omit object",
+    "stale_or_unavailable": "omit object",
+    "paused_admin": "visible without object",
+    "paused_portal": "hidden/not-found",
+    "foreign_scope": "existing server-context authorization/not-found",
+    "enabled_query_failure": "503 STORAGE_UNAVAILABLE",
+    "disabled_query_unavailable": "released 0.11.0 shape; no optional evidence query"
+  },
+  "order": [
+    "GW minimal backend, default off",
+    "ARC typed startup/root wiring with released response shape guarded",
+    "GW exact assembled-SHA native owner/producer/read qualification using exact DEV draft",
+    "DEV same-source OpenAPI/SDK/Web/Help publication; production activation only with matching compiled contract"
+  ],
+  "new_coverage": "schema59 description edit, clear and historical replay preserve route revision, one immutable target snapshot and both actual Admin/Portal capability reads",
+  "planned_roots": [
+    "TestPostgresAliasReadCapabilitiesAtRegisteredEntrances",
+    "TestPostgresAliasCapabilityPublicContractBoundary",
+    "TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget",
+    "TestAliasContextCeilingRequiresRecognizedSource"
+  ],
+  "manual_entry": "bash /root/lane-gw-acceptance/gw104-schema60-handoff.hp2zlc1c/run.sh",
+  "qualification_status": "prepared only; bash syntax validated; no compiler, PostgreSQL, protocol test, full gate or publication started",
+  "full_gate": "make check && make build and applicable tests remain pending for this isolated candidate",
+  "runtime_evidence_boundary": "prior original-source synthetic PostgreSQL/TLS tests remain historical; the new description interaction and strict 0.12.0 schema validation need this new execution",
+  "ownership": "identity/root/API/generators/Web/agent unchanged; no metering/key DDL/migration included",
+  "current_schema": "60 / 120 tables; GW120 descriptions introduced at 59",
+  "prior_retained_source": "54d4ac266ed8ce7fca9b4ac8776f3bc7e1565fad",
+  "rebase_review": "all nine owned Go source/test inputs byte-identical; schema/migrator input advanced to 60, so this planned execution is a new combination"
+}

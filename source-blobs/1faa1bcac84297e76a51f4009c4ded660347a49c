@@ -1,0 +1,10 @@
+{
+  "evidence": "/root/lane-sci-tools/aud108-scoped/final-main.v4f2y7ao",
+  "files": {
+    "build-exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "container.txt": "cf95fe9d0596b96ff32e191580c12f3ac07e4f7126269e1cb70557834a76fc99",
+    "control-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "preflight.json": "1d055b9fa03c6c42286c5f2f206d4983720f0991e0d45977eef176842f3363fc",
+    "qualification.json": "9294437cd8a61159833edaa07ce8523077338354db019523e94533cf429e3906"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "tag": "ownsolid/control:arc107-handoff-821227ea-08099413",
+  "id": "sha256:0c57f136cefe12a877997a1477846ffe173912a715b3a8e0b42b6dcfdfde0b46",
+  "source": "821227ea5b94a8357f695c290e78af3b81c54f22",
+  "base": "sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+  "control": {
+    "bytes": 49762464,
+    "sha256": "9147131da211b22006605bc39bf1fc660dbbed71331f459a7eacfd0c69fad9a9"
+  },
+  "web_asset_archive_sha256": "a35e896fa5ae9b92e22a98760ba3545802c33ec0318853f647888359fb8532c9",
+  "web_build_source": "821227ea5b94a8357f695c290e78af3b81c54f22",
+  "web_build_matches_current_source": true,
+  "qualified_input_root": "/root/lane-arc107-handoff.821227ea.08099413",
+  "scope": "fixture assembled from fresh native binary and the current Mac make-build web outputs; standard release-image factory is not exercised"
+}

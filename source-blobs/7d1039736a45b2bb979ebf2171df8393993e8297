@@ -1,0 +1,25 @@
+{
+  "listen_address": "10.42.1.20:8445",
+  "certificate_file": "/etc/ownsolid/relay/relay-cert.pem",
+  "private_key_file": "/etc/ownsolid/relay/relay-key.pem",
+  "dingtalk_origin": "https://10.42.1.22:8448",
+  "dingtalk_ca_file": "/etc/ownsolid/relay/dingtalk-ca.pem",
+  "delivery_seconds": 5,
+  "max_concurrent": 8,
+  "tenants": [
+    {
+      "id": "tenant-a",
+      "receiver": "tenant-a-dingtalk",
+      "webhook_token_file": "/etc/ownsolid/relay/tenant-a-webhook",
+      "dingtalk_access_token_file": "/etc/ownsolid/relay/tenant-a-dingtalk-access",
+      "dingtalk_signing_secret_file": "/etc/ownsolid/relay/tenant-a-dingtalk-signing"
+    },
+    {
+      "id": "tenant-b",
+      "receiver": "tenant-b-dingtalk",
+      "webhook_token_file": "/etc/ownsolid/relay/tenant-b-webhook",
+      "dingtalk_access_token_file": "/etc/ownsolid/relay/tenant-b-dingtalk-access",
+      "dingtalk_signing_secret_file": "/etc/ownsolid/relay/tenant-b-dingtalk-signing"
+    }
+  ]
+}

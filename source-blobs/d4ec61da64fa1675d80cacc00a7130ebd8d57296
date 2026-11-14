@@ -1,0 +1,39 @@
+# Formal PostgreSQL prerequisites
+
+Accepted origin/main here is 4f76102ca99328e0b9063eb05b0352e62501e154:
+schema 59 / 119 public tables. It has no scheduling tables.
+
+Apply ddl/quota.sql followed by ddl/reservations.sql in one new contiguous
+ARC-owned formal migration after the accepted GW-120, DAT-101 and metering
+migration queue. This packet adds exactly two tables. ARC assigns the actual
+next migration number and table count on its exact base. Never renumber or
+edit an already accepted migration and never reuse schema-57/58 fingerprints.
+
+scheduling_quota_policy is global: singleton, positive bigint revision and
+allocation JSON. scheduling_reservations is cell-owned: exact attempt/job,
+server tenant/workspace, local site/cell, normalized intent/demand, quota
+revision and reserve/release times. It depends on installed workspaces with
+the (tenant_id,id) key, sites/cells and local_site_id()/local_cell_id().
+The exact DDL bytes and indexes are included. Add the global quota policy
+table to scope enumeration and the cell-owned reservation to catalog checks.
+
+ARC owns exact fresh and restored fingerprints, migration/readiness
+admission, runtime grants and upgrade/downstream backup qualification.
+The read needs SELECT on both tables; its FOR SHARE policy fence also needs
+UPDATE privilege on at least one policy column under PostgreSQL SELECT rules:
+https://www.postgresql.org/docs/18/sql-select.html
+Preserve the Workspace/identity owner's existing row-lock privileges and the
+Control role's permitted advisory lock/function calls. Grant no arbitrary
+browser/database access. The same Control principal must also support the
+separately authorized reserve/release and policy owner writes.
+
+The new tests use an isolated superuser-owned fixture. They are not proof
+of native serving-role grants or production migration/catalog readiness.
+A missing table/grant is a storage failure, never an unconfigured/zero-capacity
+success. Do not activate the public route before those prerequisites.
+
+Borrowing DDL is separate and disabled by default. It is not needed to read
+nominal hard ceilings and held reservations. Do not enable a borrowing policy
+without its separate admitted schema and workload-owner integration. Do not
+seed capacity or infer topology. Reconcile pre-cutover physical holds through
+their owner before admission activation.

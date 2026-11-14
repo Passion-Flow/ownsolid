@@ -1,0 +1,10 @@
+{
+  "source": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+  "binary_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+  "binary_bytes": 12101750,
+  "built_and_verified": true,
+  "native_build": true,
+  "installed_acceptance": false,
+  "file": "/root/lane-rel-tools/user-reads/native-client-410ed356/ownsolid: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, Go BuildID=--C50t1_74FfKHKb-6ty/Lx9r6TkIihe9M8IlWXqd/4gGnvmYyo3OPYPjeLg3G/SPJt2WG3iWdbt9H0s2C0, BuildID[sha1]=412db4ab5430c09ac3096b908066442236aa12a6, with debug_info, not stripped",
+  "utc": "2026-11-12T15:44:47.689921+00:00"
+}

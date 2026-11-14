@@ -1,0 +1,392 @@
+#!/usr/bin/env python3
+"""Qualify a frozen CLI against the existing DEL-installed public HTTPS API."""
+
+import argparse
+import hashlib
+import http.cookiejar
+import ipaddress
+import json
+import os
+from pathlib import Path
+import re
+import ssl
+import stat
+import subprocess
+import sys
+import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
+import uuid
+
+
+class Refused(Exception):
+    """A missing input or failed acceptance case, without sensitive diagnostics."""
+
+
+def require(condition, message):
+    if not condition:
+        raise Refused(message)
+
+
+def digest(path):
+    h = hashlib.sha256()
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as source:
+        info = os.fstat(source.fileno())
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+                and stat.S_IMODE(info.st_mode) & 0o022 == 0,
+                "INPUT_BINARY_FILE_REQUIRED: use the protected installed or client binary")
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def private_bytes(path):
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as source:
+        info = os.fstat(source.fileno())
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+                and stat.S_IMODE(info.st_mode) == 0o600 and info.st_size <= 1024 * 1024,
+                "INPUT_PRIVATE_FILE_REQUIRED: use the original protected installation input")
+        return source.read()
+
+
+def private_json(path):
+    return json.loads(private_bytes(path))
+
+
+def directory(path):
+    info = path.lstat()
+    require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.geteuid()
+            and stat.S_IMODE(info.st_mode) == 0o700,
+            "INPUT_PRIVATE_DIRECTORY_REQUIRED: use the original protected evidence directory")
+
+
+def origin(value):
+    parts = urllib.parse.urlsplit(value)
+    require(parts.scheme == "https" and parts.hostname and not parts.username and not parts.password
+            and not parts.path and not parts.query and not parts.fragment and parts.port,
+            "INPUT_HTTPS_ORIGIN_REQUIRED: use the installed advertised origin")
+    require(re.fullmatch(r"[A-Za-z0-9.-]+", parts.hostname) is not None and not re.fullmatch(r"[0-9.]+", parts.hostname),
+            "INPUT_ORIGIN_HOST_REQUIRED: provide the installed DNS hostname")
+    return value
+
+
+def source_binding(ready, control, client, expected):
+    require(re.fullmatch(r"[0-9a-f]{40}", expected) is not None,
+            "INPUT_CONTROL_SOURCE_REQUIRED: select the frozen installed Control source")
+    require(ready["candidate"] == control["target_source_sha"] == control["build_revision"]
+            == control["actual_source_label"] == expected and control["build_modified"] == "false",
+            "INPUT_CONTROL_SOURCE_MISMATCH: refresh the actual installed provenance")
+    require(re.fullmatch(r"sha256:[0-9a-f]{64}", control["actual_image"]) is not None
+            and ready["control_image"] == control["actual_image"],
+            "INPUT_CONTROL_IMAGE_MISMATCH: use evidence from the installed image")
+    require(client["format_version"] == 1 and client["source_modified"] is False
+            and re.fullmatch(r"[0-9a-f]{40}", client["source_revision"])
+            and re.fullmatch(r"[0-9a-f]{64}", client["binary_sha256"])
+            and client["os"] == "linux" and client["arch"] == "amd64",
+            "INPUT_CLIENT_BUILD_REQUIRED: build the clean offline Linux client")
+
+
+def load(args):
+    directory(args.evidence)
+    ready = private_json(args.evidence / "installed-ready.json")
+    control = private_json(args.evidence / "installed-provenance.json")
+    client = private_json(args.client_manifest)
+    source_binding(ready, control, client, args.expected_control_source)
+    require(digest(args.client) == client["binary_sha256"],
+            "INPUT_CLIENT_HASH_MISMATCH: rebuild or restore the exact client")
+    require(digest(args.evidence / "installed-control.bin") == control["installed_control_sha256"],
+            "INPUT_CONTROL_HASH_MISMATCH: recopy the actual installed Control binary")
+    admin_origin, portal_origin = origin(ready["admin_origin"]), origin(ready["portal_origin"])
+    require(admin_origin != portal_origin, "INPUT_ENTRANCES_REQUIRED: use the two installed origins")
+    credential = private_json(args.evidence / "admin-credential")
+    people = private_json(args.evidence / "person.json")
+    state = private_json(args.evidence / "scope-state.json")
+    members = people["people"]
+    require(len(members) == 2 and len(state["members"]) == 2
+            and members[1]["workspace"]["id"] == people["second"]["id"]
+            and members[0]["workspace"]["id"] != people["second"]["id"]
+            and people["foreign"]["workspace"] == state["foreign_workspace"],
+            "INPUT_SCOPE_REQUIRED: wait for the installed scope preparation")
+    for item in [members[0]["workspace"]["id"], members[1]["workspace"]["id"],
+                 state["foreign_workspace"], state["foreign_tenant"]]:
+        require(str(uuid.UUID(item)) == item and uuid.UUID(item).int != 0,
+                "INPUT_SCOPE_ID_INVALID: regenerate the installed scope input")
+    email = credential["request"]["administrator_email"]
+    passwords = [credential["password"]] + [person["password"] for person in members]
+    require(email and all(isinstance(p, str) and p for p in passwords),
+            "INPUT_CREDENTIAL_REQUIRED: use the generated protected credentials")
+    ca = args.evidence / "installation-ca.pem"
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.load_verify_locations(cadata=private_bytes(ca).decode("ascii"))
+    return ready, control, client, credential, people, state, context, passwords
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+class Portal:
+    def __init__(self, target, context, timeout, record):
+        self.target, self.timeout, self.record = target, timeout, record
+        self.opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}), NoRedirect(),
+            urllib.request.HTTPSHandler(context=context),
+            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+        self.active = False
+
+    def request(self, case, method, path, payload=None, token=None, status=200, code=None):
+        headers = {"Accept": "application/json"}
+        body = None
+        if payload is not None:
+            body = json.dumps(payload).encode()
+            headers["Content-Type"] = "application/json"
+        if method != "GET":
+            headers.update({"Origin": self.target, "X-CSRF-Token": token})
+        request = urllib.request.Request(self.target + path, body, headers, method=method)
+        try:
+            response = self.opener.open(request, timeout=self.timeout)
+        except urllib.error.HTTPError as error:
+            response = error
+        with response:
+            raw = response.read(1024 * 1024 + 1)
+            require(len(raw) <= 1024 * 1024, case + ": response exceeds its acceptance bound")
+            value = json.loads(raw) if raw else None
+            require(response.status == status, case + ": unexpected HTTP status; check installed scope and retry")
+            if code is not None:
+                require(value["code"] == code, case + ": wrong Problem code")
+            request_id = response.headers.get("X-Request-ID")
+            require(request_id and str(uuid.UUID(request_id)) == request_id,
+                    case + ": missing server request identity")
+            self.record.append({"case": case, "protocol": "Portal HTTPS", "status": status,
+                                "code": code, "request_id": request_id})
+            return value["data"] if status == 200 else value
+
+    def csrf(self):
+        return self.request("portal-csrf", "GET", "/api/v1/auth/csrf")["token"]
+
+    def login(self, person):
+        self.request("portal-member-login", "POST", "/api/v1/auth/login",
+                     {"email": person["email"], "password": person["password"]}, self.csrf())
+        self.active = True
+
+    def close(self):
+        if self.active:
+            self.request("portal-member-logout", "POST", "/api/v1/auth/logout",
+                         token=self.csrf(), status=204)
+            self.active = False
+
+
+def cli(args, cfg, case, command, passwords, records, code=None, text=None):
+    env = dict(os.environ, OWNSOLID_CONFIG_DIR=str(cfg), OWNSOLID_SERVER="")
+    completed = subprocess.run([str(args.client), *command], env=env, capture_output=True,
+                               timeout=args.timeout, check=False)
+    raw = completed.stdout + completed.stderr
+    require(not any(secret.encode() in raw for secret in passwords),
+            case + ": credential output refused")
+    if code or text:
+        require(completed.returncode != 0 and not completed.stdout
+                and (code is None or code.encode() in completed.stderr)
+                and (text is None or text.encode() in completed.stderr),
+                case + ": expected refusal missing; inspect scope and CLI/server compatibility")
+    else:
+        require(completed.returncode == 0 and not completed.stderr,
+                case + ": command failed; check origin, namespace, CA and current session, then retry")
+    request_id = None
+    if code:
+        found = re.search(rb"\(request ([0-9a-f-]{36})\)", completed.stderr)
+        require(found and uuid.UUID(found[1].decode()).int != 0,
+                case + ": missing server request identity")
+        request_id = found[1].decode()
+    records.append({"case": case, "protocol": "Admin CLI",
+                    "exit_code": completed.returncode, "code": code,
+                    "request_id": request_id, "recovery_checked": text is not None})
+    return completed.stdout
+
+
+def write_private(path, contents):
+    with open(path, "xb") as target:
+        os.chmod(path, 0o600)
+        target.write(contents)
+
+
+def qualify(args, inputs, output):
+    ready, control, client, credential, people, state, context, passwords = inputs
+    records = output["cases"]
+    with tempfile.TemporaryDirectory(prefix="private-", dir=args.result) as temporary:
+        cfg = Path(temporary)
+        config = {"server": ready["admin_origin"], "ca_file": str(args.evidence / "installation-ca.pem"),
+                  "workspace_id": state["foreign_workspace"], "request_timeout": str(args.timeout) + "s"}
+        write_private(cfg / "config.json", json.dumps(config).encode())
+        write_private(cfg / "admin-password", credential["password"].encode())
+        active = False
+
+        def run(case, *command, **expected):
+            return cli(args, cfg, case, list(command), passwords, records, **expected)
+
+        def login():
+            nonlocal active
+            run("admin-login", "login", "--email", credential["request"]["administrator_email"],
+                "--password-file", str(cfg / "admin-password"))
+            active = True
+
+        try:
+            version = json.loads(run("client-build-identity", "version", "-o", "json"))
+            require(version["revision"] == client["source_revision"],
+                    "client-build-identity: embedded revision differs from the client manifest")
+            run("anonymous-cli-refusal", "workspace", "list", text="no saved Admin session")
+            login()
+            known = [p["workspace"]["id"] for p in people["people"]]
+            tenant = None
+            for identifier in known:
+                value = json.loads(run("workspace-detail", "workspace", "get", identifier, "-o", "json"))
+                require(value["id"] == identifier, "workspace-detail: wrong resource identity")
+                tenant = tenant or value["tenant_id"]
+                require(value["tenant_id"] == tenant and tenant != state["foreign_tenant"],
+                        "workspace-detail: different tenant")
+            cursor, seen, ids, first_cursor = None, set(), set(), None
+            for page_index in range(args.maximum_pages):
+                command = ["workspace", "list", "--limit", "1", "-o", "json"]
+                if cursor:
+                    command += ["--cursor", cursor]
+                raw = run("workspace-page", *command)
+                page = json.loads(raw)
+                for item in page["items"]:
+                    require(item["tenant_id"] == tenant and item["id"] not in ids
+                            and item["id"] != state["foreign_workspace"],
+                            "workspace-page: overlap or foreign-tenant disclosure")
+                    ids.add(item["id"])
+                next_cursor = page["next_cursor"]
+                if page_index == 0:
+                    first_cursor = next_cursor
+                if page_index == 1:
+                    require(run("workspace-page-retry", *command) == raw,
+                            "workspace-page-retry: changed retained page")
+                if next_cursor is None:
+                    break
+                require(next_cursor not in seen, "workspace-page: repeated continuation")
+                seen.add(next_cursor)
+                cursor = next_cursor
+            else:
+                raise Refused("workspace-page: configured page bound reached; increase it in the same test window")
+            require(set(known) <= ids and first_cursor, "workspace-page: seeded scope or continuation missing")
+            run("foreign-tenant-refusal", "workspace", "get", state["foreign_workspace"],
+                code="RESOURCE_NOT_FOUND")
+            run("search-bound-cursor", "workspace", "list", "--cursor", first_cursor,
+                "--query", people["people"][0]["workspace"]["name"], code="INVALID_CURSOR")
+            absent = "cli-absent-" + uuid.uuid4().hex
+            empty = json.loads(run("empty-name-search", "workspace", "list", "--query", absent, "-o", "json"))
+            require(empty == {"items": [], "next_cursor": None}, "empty-name-search: not an empty final page")
+            run("invalid-query-recovery", "workspace", "list", "--query", "\n", text="control characters")
+            run("workspace-table", "workspace", "list")
+            run("workspace-yaml", "workspace", "get", known[0], "-o", "yaml")
+
+            member_cfg = cfg / "member"
+            member_cfg.mkdir(mode=0o700)
+            write_private(member_cfg / "config.json", json.dumps(config).encode())
+            write_private(member_cfg / "password", people["people"][1]["password"].encode())
+            cli(args, member_cfg, "nonadministrator-admin-login", [
+                "login", "--email", people["people"][1]["email"],
+                "--password-file", str(member_cfg / "password")],
+                passwords, records, code="AUTH_INVALID_CREDENTIALS", text="confirm it has Admin access")
+
+            session = cfg / ("session-" + hashlib.sha256(ready["admin_origin"].encode()).hexdigest())
+            prior = private_bytes(session)
+            run("admin-logout", "logout")
+            active = False
+            write_private(session, prior)
+            run("revoked-session-list", "workspace", "list", code="AUTH_SESSION_EXPIRED", text="run ownsolid login")
+            run("revoked-session-detail", "workspace", "get", known[0], code="AUTH_SESSION_EXPIRED", text="run ownsolid login")
+            session.unlink()
+            login()
+            run("fresh-session-recovery", "workspace", "get", known[1], "-o", "json")
+        finally:
+            if active:
+                run("admin-session-cleanup", "logout")
+
+        portal = Portal(ready["portal_origin"], context, args.timeout, records)
+        try:
+            portal.login(people["people"][1])
+            who = portal.request("portal-member-identity", "GET", "/api/v1/me")
+            require(who["user"]["id"] == state["members"][1] and who["user"]["is_platform_admin"] is False,
+                    "portal-member-identity: the restricted fixture actor changed")
+            allowed = portal.request("portal-owned-workspace", "GET", "/api/v1/workspaces/" + known[1])
+            require(allowed["id"] == known[1], "portal-owned-workspace: wrong identity")
+            for case, identifier in [("portal-cross-workspace-refusal", known[0]),
+                                     ("portal-foreign-tenant-refusal", state["foreign_workspace"])]:
+                portal.request(case, "GET", "/api/v1/workspaces/" + identifier,
+                               status=404, code="RESOURCE_NOT_FOUND")
+        finally:
+            portal.close()
+
+
+def main():
+    os.umask(0o077)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--client", type=Path, required=True)
+    parser.add_argument("--client-manifest", type=Path, required=True)
+    parser.add_argument("--evidence", type=Path, required=True)
+    parser.add_argument("--result", type=Path, required=True)
+    parser.add_argument("--expected-control-source", required=True)
+    parser.add_argument("--network-pid", type=int, required=True)
+    parser.add_argument("--connect-address", required=True)
+    parser.add_argument("--timeout", type=int, default=30)
+    parser.add_argument("--maximum-pages", type=int, default=100)
+    parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
+    args = parser.parse_args()
+    output = {"state": "input-refused", "cases": [], "installed_acceptance": False}
+    try:
+        require(args.timeout > 0 and args.maximum_pages > 1 and args.network_pid > 1,
+                "INPUT_LIMITS_REQUIRED: use positive timeouts, page bounds and the actual installation PID")
+        require(all(p.is_absolute() for p in [args.client, args.client_manifest, args.evidence, args.result]),
+                "INPUT_ABSOLUTE_PATHS_REQUIRED")
+        address = ipaddress.ip_address(args.connect_address)
+        require(address.is_loopback, "INPUT_LOOPBACK_ADDRESS_REQUIRED: join the actual installation namespace")
+        inputs = load(args)
+        target = os.readlink("/proc/" + str(args.network_pid) + "/ns/net")
+        if not args.inside:
+            require(not args.result.exists(), "INPUT_NEW_RESULT_REQUIRED: use a new private result directory")
+            args.result.mkdir(mode=0o700)
+            hosts = args.result / "hosts"
+            names = [urllib.parse.urlsplit(inputs[0][k]).hostname for k in ["admin_origin", "portal_origin"]]
+            lines = [line for line in Path("/etc/hosts").read_text().splitlines()
+                     if not set(line.split("#", 1)[0].split()[1:]) & set(names)]
+            write_private(hosts, ("\n".join(lines) + "\n" + str(address) + " " + " ".join(names) + "\n").encode())
+            command = ["nsenter", "--target", str(args.network_pid), "--net",
+                       "unshare", "--mount", "--propagation", "private", "sh", "-ec",
+                       'mount --bind "$1" /etc/hosts; shift; exec "$@"', "workspace-hosts",
+                       str(hosts), sys.executable, str(Path(__file__).absolute()), *sys.argv[1:], "--inside"]
+            return subprocess.run(command, check=False).returncode
+        directory(args.result)
+        require(os.readlink("/proc/self/ns/net") == target, "INPUT_INSTALLATION_NAMESPACE_REQUIRED")
+        output.update({
+            "state": "running", "client_source": inputs[2]["source_revision"],
+            "client_sha256": inputs[2]["binary_sha256"],
+            "control_source": inputs[1]["build_revision"],
+            "control_sha256": inputs[1]["installed_control_sha256"],
+            "control_image": inputs[1]["actual_image"],
+            "control_provenance_authority": "DEL installed image, extracted binary and build-info proof",
+            "ca_sha256": digest(args.evidence / "installation-ca.pem"),
+            "schema": inputs[0]["schema"], "public_tables": inputs[0]["public_tables"],
+            "offline_capture": "owned by the existing DEL installation window",
+            "scope": "Admin CLI plus separately labelled Portal HTTPS membership checks",
+        })
+        qualify(args, inputs, output)
+        output.update({"state": "passed", "installed_acceptance": True})
+        return 0
+    except (Refused, OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired,
+            urllib.error.URLError, ssl.SSLError) as error:
+        output["state"] = "failed" if output["cases"] else "input-refused"
+        output["error"] = str(error) if isinstance(error, Refused) else "ACCEPTANCE_INPUT_OR_TRANSPORT_FAILED: verify protected inputs, namespace, CA and server readiness, then retry"
+        print(output["error"], file=sys.stderr)
+        return 1 if output["cases"] else 2
+    finally:
+        if args.inside and args.result.is_dir():
+            write_private(args.result / "result.json", (json.dumps(output, indent=2) + "\n").encode())
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

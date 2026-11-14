@@ -1,0 +1,94 @@
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+from hashlib import sha256
+from io import BytesIO
+from pathlib import Path, PurePosixPath
+import json
+import re
+import tarfile
+import tomllib
+from urllib.request import urlopen
+
+here = Path(__file__).resolve().parent
+destination = here / 'handoff'
+archives = here / 'crates'
+limit = 16 << 20
+notice = re.compile(r'^(?:licen[cs]e|notice|copying|copyright|unlicense|licensing|public[-_ ]domain|third[-_ ]party)(?:$|[-_. ])', re.I)
+lock = tomllib.loads((here / 'Cargo.lock').read_text())
+locked = {(c['name'], c['version']): c for c in lock['package']}
+sbom = json.loads((here / 'wheel-sbom.json').read_bytes())
+wheel = 'tokenizers-0.23.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
+wheel_digest = '376851d22bcf9d650a5c3090bb83e6cf9e895fbf0595369fa4cd43c1f69b5f87'
+commit = '301277072263fb3830eb66eec7e47adadf76f1dc'
+
+def copy(relative, raw):
+    target = destination / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open('xb') as f:
+        f.write(raw)
+    return {'path': relative.as_posix(), 'sha256': sha256(raw).hexdigest(), 'bytes': len(raw)}
+
+def fetch_locked(component):
+    name, version = component['name'], component['version']
+    assert re.fullmatch(r'[A-Za-z0-9_-]+', name) and re.fullmatch(r'[0-9A-Za-z.+-]+', version)
+    artifact = f'{name}-{version}'
+    value = locked[name, version]
+    if 'checksum' not in value:
+        assert (name, version) == ('tokenizers', '0.23.2')
+        return {'name': name, 'version': version, 'source': f'https://github.com/huggingface/tokenizers/tree/{commit}/tokenizers',
+                'declared': component['licenses'], 'notices': [root_notice]}
+    assert value['source'] == 'registry+https://github.com/rust-lang/crates.io-index'
+    url = f'https://static.crates.io/crates/{name}/{artifact}.crate'
+    saved = archives / (artifact + '.crate')
+    if not saved.exists():
+        with urlopen(url, timeout=18) as response:
+            raw = response.read(limit + 1)
+        assert len(raw) <= limit and sha256(raw).hexdigest() == value['checksum'], artifact
+        saved.write_bytes(raw)
+    raw = saved.read_bytes()
+    assert sha256(raw).hexdigest() == value['checksum'], artifact
+    found = []
+    embedded = []
+    with tarfile.open(fileobj=BytesIO(raw), mode='r:gz') as archive:
+        manifest = archive.extractfile(artifact + '/Cargo.toml')
+        assert manifest is not None
+        package = tomllib.loads(manifest.read().decode())['package']
+        assert package['name'] == name and package['version'] == version, artifact
+        license_file = package.get('license-file')
+        for member in archive:
+            path = PurePosixPath(member.name)
+            assert not path.is_absolute() and '..' not in path.parts and path.parts[0] == artifact, artifact
+            local = PurePosixPath(*path.parts[1:])
+            selected = license_file and local.as_posix() == license_file.removeprefix('./')
+            if not member.isfile() or not (selected or (notice.match(local.name) and local.suffix not in {'.rs', '.py', '.c', '.h', '.cpp'})):
+                if member.isfile() and (name == 'esaxx-rs' or name == 'onig_sys') and local.suffix in {'.h','.c','.cpp'}:
+                    text = archive.extractfile(member).read(min(member.size, 8192)).decode(errors='replace')
+                    if re.search(r'copyright|permission is hereby granted|redistribution and use', text, re.I):
+                        embedded.append(local.as_posix())
+                continue
+            assert member.size <= 2 << 20, member.name
+            data = archive.extractfile(member).read()
+            assert len(data) == member.size and data, member.name
+            found.append(copy(PurePosixPath('crates', artifact) / local, data))
+    return {'name': name, 'version': version, 'source': url, 'source_sha256': value['checksum'],
+            'declared': component['licenses'], 'cargo_license': package.get('license'), 'cargo_license_file': license_file,
+            'notices': sorted(found, key=lambda x: x['path']), 'vendored_source_headers': sorted(embedded)}
+
+destination.mkdir(exist_ok=True)
+archives.mkdir(exist_ok=True)
+root_notice = copy(PurePosixPath('upstream', 'LICENSE'), (here / 'LICENSE').read_bytes())
+evidence = [copy(PurePosixPath('upstream', name), (here / name).read_bytes())
+            for name in ('Cargo.lock', 'wheel-sbom.json', 'provenance.json')]
+with ThreadPoolExecutor(max_workers=4) as executor:
+    records = list(executor.map(fetch_locked, sbom['components']))
+result = {
+    'schema_version': 1, 'wheel': wheel, 'wheel_sha256': wheel_digest,
+    'source_commit': commit, 'upstream_license': root_notice,
+    'evidence': evidence, 'components': sorted(records, key=lambda r: (r['name'], r['version'])),
+}
+(destination / 'inventory.json').write_text(json.dumps(result, sort_keys=True, indent=2) + '\n')
+print('components', len(records), 'with notice files', sum(bool(r['notices']) for r in records),
+      'notice references', sum(len(r['notices']) for r in records))
+print('missing',[(r['name'],r['version'],r.get('cargo_license'),r.get('cargo_license_file')) for r in records if not r['notices']])
+print('vendored headers',[(r['name'],len(r.get('vendored_source_headers',[]))) for r in records if r.get('vendored_source_headers')])
+print('expressions',dict(Counter(r.get('cargo_license') for r in records)))

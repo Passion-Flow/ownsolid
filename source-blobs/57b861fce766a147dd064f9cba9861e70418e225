@@ -1,0 +1,10 @@
+#!/bin/sh
+# Lane B test helper: creates or updates an OAuth2 application in the test Gitea.
+set -eu
+G=/root/lane-b/gitea
+api() { curl -sf --cacert $G/tls/ca.pem --resolve git.lane-b.test:18444:127.0.0.1 -u "giteaadmin:$(cat $G/giteaadmin.password)" -H "Content-Type: application/json" "$@"; }
+uris() { python3 -c "import json,sys;print(json.dumps({\"name\":\"ownsolid-live-\"+sys.argv[1],\"redirect_uris\":sys.argv[2:],\"confidential_client\":True}))" "$@"; }
+case "$1" in
+create) shift; api -d "$(uris "$(date +%s%N)" "$@")" https://git.lane-b.test:18444/api/v1/user/applications/oauth2 ;;
+update) id=$2; shift 2; api -X PATCH -d "$(uris "$id" "$@")" https://git.lane-b.test:18444/api/v1/user/applications/oauth2/$id ;;
+esac

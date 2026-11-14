@@ -1,0 +1,43 @@
+import fcntl,hashlib,json,os,stat,subprocess,sys,time
+from pathlib import Path
+root=Path('/private/tmp/ownsolid-trn-qualification.knvee3h8');repo=root/'src'
+fd=os.open('/private/tmp/ownsolid-workstation-full-gate.lock',os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC)
+a=os.fstat(fd);b=os.stat('/private/tmp/ownsolid-workstation-full-gate.lock',follow_symlinks=False)
+assert stat.S_ISREG(a.st_mode) and a.st_uid==os.getuid() and a.st_ino==50313339 and (a.st_dev,a.st_ino)==(b.st_dev,b.st_ino)
+deadline=time.monotonic()+45
+while True:
+ try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB);break
+ except BlockingIOError:
+  if time.monotonic()>=deadline:os.close(fd);print('reader_units_not_started_guard_busy');sys.exit(75)
+  time.sleep(0.25)
+try:
+ print(subprocess.check_output(['/usr/bin/memory_pressure','-Q'],text=True),flush=True)
+ subprocess.run(['df','-h',str(root)],check=True)
+ env=os.environ.copy();env.update({'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOFLAGS':'-p=2','GOMAXPROCS':'2','GOMEMLIMIT':'1073741824B','TMPDIR':str(root/'apfs-temp')+'/','PYTHONDONTWRITEBYTECODE':'1'})
+ phase=sys.argv[1]
+ record_name=sys.argv[2] if len(sys.argv)>2 else phase
+ for key in list(env):
+  if key.startswith(('PROJECT_ONE_TEST_','PROJECT_ONE_REPOSITORY_')):env.pop(key)
+ assert phase in ('first','race','storage','owners','tagged','modules')
+ argv=['go','-C','services/control','test','-p','1','-count=1','-timeout','2m','-json','./internal/modules/datasets','-run','^TestDatasetPublishedReader']
+ if phase=='race':argv.insert(4,'-race')
+ if phase=='storage':
+  argv=['go','-C','services/control','test','-p','1','-count=1','-timeout','2m','-json','./internal/modules/datasets','./internal/modules/training','-run','^Test(Dataset(StoreInitialization|SourceImmutable|AttemptPrivate)|TrainingPrivate)']
+ if phase in ('owners','race','tagged','modules'):
+  argv=['go','-C','services/control','test','-p','1','-count=1','-timeout','2m','-json','./internal/modules/datasets','./internal/modules/training','-run','^Test(DatasetPublishedReader|TrainingPublishedReader)']
+  if phase=='race':argv.insert(4,'-race')
+  if phase=='tagged':argv.insert(4,'-tags=repository_integration');argv[-1]='^$'
+  if phase=='modules':argv[-1]='.'
+ log=root/('reader-'+record_name+'.log');start=time.monotonic()
+ files=[*subprocess.check_output(['git','diff','--name-only','HEAD'],cwd=repo,text=True).splitlines(),*subprocess.check_output(['git','ls-files','--others','--exclude-standard'],cwd=repo,text=True).splitlines()]
+ source_files={n:hashlib.sha256((repo/n).read_bytes()).hexdigest() for n in files if n.endswith('.go')}
+ with log.open('x') as out:r=subprocess.run(argv,cwd=repo,env=env,stdout=out,stderr=subprocess.STDOUT,timeout=180)
+ events=[]
+ for line in log.read_text().splitlines():
+  try:events.append(json.loads(line))
+  except ValueError:pass
+ assert all(hashlib.sha256((repo/n).read_bytes()).hexdigest()==v for n,v in source_files.items())
+ record={'source_files':source_files,'base':subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip(),'returncode':r.returncode,'platform':'darwin/arm64','phase':phase,'seconds':round(time.monotonic()-start,3),'actions':{k:sum(e.get('Action')==k and 'Test'in e for e in events) for k in ('pass','skip','fail')},'log_sha256':hashlib.sha256(log.read_bytes()).hexdigest()}
+ (root/('reader-'+record_name+'.json')).write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record),flush=True)
+ raise SystemExit(r.returncode)
+finally:fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

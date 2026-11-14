@@ -1,0 +1,19 @@
+{
+  "parent_pid": 19003,
+  "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "wait_seconds_limit": 900.0,
+  "execution_seconds_limit": 285.0,
+  "acquired": false,
+  "child_started": false,
+  "started_utc": "2026-11-12T22:47:19.617312+00:00",
+  "fd": 3,
+  "device": 16777234,
+  "inode": 50313339,
+  "uid": 501,
+  "waiting_utc": "2026-11-12T22:47:19.617521+00:00",
+  "failure": "Refused: Kernel lock wait expired; no command started.",
+  "child_exited_before_close": true,
+  "fd_closed": true,
+  "released_utc": "2026-11-12T23:02:19.636513+00:00",
+  "carrier_preserved": true
+}

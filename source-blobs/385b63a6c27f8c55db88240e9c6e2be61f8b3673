@@ -1,0 +1,129 @@
+{
+  "format_version": 1,
+  "purpose": "dev102-session-cli",
+  "package_root": "/root/lane-rel-tools/session-installed-0d262a8a",
+  "client": {
+    "format_version": 1,
+    "source_revision": "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+    "source_modified": false,
+    "binary_sha256": "c6504aad053bd76a4c1fe159b49cfe3e778d526b7c33e6ca6a50f0143cdb943d",
+    "os": "linux",
+    "arch": "amd64",
+    "go_version": "go version go1.27.3 linux/amd64",
+    "toolchain_binary_sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b",
+    "cli_product_tree": "e9efdd830bba615b8a5d039382b75c405829e402",
+    "pinned_inputs": {
+      "go.work": "d2da06271b98cf27596a65743b8f6f39504cc5557c95b8842c1c97c861b593b8",
+      "tools/cli/go.mod": "3dd74502d148f32625f3c4a203ec8662e437fc88f1a982cc372b024866349fc2",
+      "tools/cli/go.sum": "21f06fc568cf3afbdc705df533c8970301c2af23b72de34478be1a92119f735b"
+    },
+    "flags": [
+      "-buildvcs=true",
+      "-trimpath",
+      "CGO_ENABLED=0",
+      "GOOS=linux",
+      "GOARCH=amd64",
+      "GOFLAGS=-p=1"
+    ],
+    "network": "isolated namespace; loopback only; no IPv4 or IPv6 default route",
+    "build_scope": "Session CLI startup/help only. Control source and installed acceptance are separate."
+  },
+  "control_input_subset": {
+    "client_source": "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+    "client_sha256": "c6504aad053bd76a4c1fe159b49cfe3e778d526b7c33e6ca6a50f0143cdb943d",
+    "control_source": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+    "control_sha256": "7043016165d47c9b5d8ea3d2bab3a2b7efe111a4dd27acd45db2895ca878ddb2",
+    "control_image": "sha256:e9afd5e427254b77d71bed5c4f6edceb30b8fb994b6bf924f49d6d81e29be791",
+    "schema": "58",
+    "public_tables": "138",
+    "proof_scope": "Source and extracted-binary input checks only; no dedicated account authentication or installed session acceptance",
+    "installed_acceptance_run": false
+  },
+  "entries": {
+    "driver": "/root/lane-rel-tools/session-installed-0d262a8a/installed_sessions.py",
+    "readme": "/root/lane-rel-tools/session-installed-0d262a8a/README.md",
+    "queued_full_gate": "/root/lane-rel-tools/session-installed-0d262a8a/full-gate.sh"
+  },
+  "source_bundle": {
+    "path": "/root/lane-rel-tools/session-cli-candidate.bundle",
+    "sha256": "6b324ed506165a99ba3b17461f26485d3846466c4e8a576c456c6e8c2637e9f9",
+    "ref": "refs/lane-rel/session-cli-candidate"
+  },
+  "verification": {
+    "cli_race": "passed, source-bound complete CLI suite 1.839s",
+    "cli_vet": "passed",
+    "guard_tests": 12,
+    "offline_static_build": "passed",
+    "full_repository_check_build": {
+      "started": false,
+      "exit_code": 75,
+      "reason": "Original DEL installation window active"
+    },
+    "installed_session_acceptance": {
+      "started": false,
+      "passed": false,
+      "reason": "Await complete owner-qualified readiness, dedicated exclusive disposable actors and admitted original-owner substep"
+    },
+    "roadmap_completed": false
+  },
+  "required_inputs": [
+    "Original DEL runtime-evidence installed-ready.json, installed-provenance.json, installed-control.bin, installation-ca.pem and admin-credential (email deny fence only)",
+    "Private dedicated session fixture as specified in README.md: distinct owner and foreign disposable platform administrators, private password-file references, actual shared-account/session denylist",
+    "Existing installation network PID and configured loopback listener address",
+    "Owner admission in existing global/SCI locked installation window after complete readiness qualification"
+  ],
+  "command_argv": [
+    "python3",
+    "/root/lane-rel-tools/session-installed-0d262a8a/installed_sessions.py",
+    "--client",
+    "/root/lane-rel-tools/session-installed-0d262a8a/client/ownsolid",
+    "--client-manifest",
+    "/root/lane-rel-tools/session-installed-0d262a8a/client/client-manifest.json",
+    "--evidence",
+    "/root/lane-rel-tools/lane-del-combination-4463bbe6/runtime-evidence",
+    "--fixture",
+    "REQUIRED_PRIVATE_DEDICATED_FIXTURE_FILE",
+    "--expected-cli-source",
+    "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+    "--expected-control-source",
+    "4463bbe628f60486bbdb92c15f72311fb53d076a",
+    "--network-pid",
+    "REQUIRED_EXISTING_INSTALLATION_PID",
+    "--connect-address",
+    "REQUIRED_CONFIGURED_LOOPBACK_ADDRESS",
+    "--result",
+    "REQUIRED_NEW_PRIVATE_RESULT_DIRECTORY"
+  ],
+  "boundaries": [
+    "No shared administrator password is used for login",
+    "Only newly created dedicated sessions can be targets or cleanup candidates",
+    "Source/hash input checks are not installed acceptance or complete readiness",
+    "Storage/transport uncertain outcomes covered by committed CLI tests, not shared DB fault injection",
+    "No GW-104 activation dependency or deployment change",
+    "No new service, container, database, account, role or environment is created by the driver"
+  ],
+  "frozen_workspace_package": {
+    "source": "8f4dd72cb9c6c58c0860bb9125289986cfc180d1",
+    "binary_sha256": "2f16b65de0753601aea7088c24afec774111cd85c7d027952309e8d231d0ca2d",
+    "handoff_sha256": "473b9a44c3b16531566259a918b3e87d578ee3103531465e04d825b6d663f4e8",
+    "modified": false
+  },
+  "file_sha256": {
+    "README.md": "9335af9f79fa5f575b1c22a100cf5e9ea1b930a72229ebebeac827ff78bc3cb5",
+    "RESEARCH.md": "b8894d5eb102e22a16f4485f9791aa68ea4f6accf3b3ddd01e224b1a294a1312",
+    "build-client.sh": "2a950559f5d61abfcd88c2a2d0bd4c6d545be4f939f1f2883dcc34a823f8e73f",
+    "build.log": "c9326b9fe6b15689e78600e9ceff2bf6ef9005e04ca00bee7009c33457924800",
+    "build.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "client/client-manifest.json": "be73b60e5e6a7d5bb9dc8ef8b88cab47710c5a96e1a771a31b0ff33479c6b839",
+    "cli-check-source": "de8dbdc3d5dfa46fdd3a8862929378b9a9f174fa5711673ffe0bf26f1f9b16c1",
+    "cli-race-vet.log": "4d72fbc0ad69e19ecd917a4e20a80367631c55cf05721164141784cc3dc9a846",
+    "guards.py": "74d2b4b880c1754460318eb8babdfdef7169fdc54cb9ff7d97f7e8e1219a1d73",
+    "installed_sessions.py": "ca5ff8a87dc4592f5618b213c0d5e74514bf8daabd8fa704cddc1b7e31c89687",
+    "test_guards.py": "96f956dfee559b0159ffbd17690c78d669153cb86f0130a3ed7e6c83a63fed14",
+    "guard-tests.log": "e328ab5f5952c8e9347a413f7e940c585a6ef54abd07dc8c40525715f6c5a124",
+    "installed-input-check.json": "43d8a5ed0e7de99ec812ddb5d3fd869cdda0cc1057e6825dfe64e16e29bbe177",
+    "full-gate.sh": "1ec590ac239ab0ac3be65a3d7355dc488dbf5f29b9e6933a79984574056df49a",
+    "full-gate.log": "19d8d2fc4acb5eeb0bd865a40ed3a5332bfe281fdd984621b47d8937de460bb9",
+    "full-gate.exit": "84b9bb077be0d8a29d0d01ef350d718b77c2ec5f40c3ab90502b1b4b5016c550"
+  }
+}

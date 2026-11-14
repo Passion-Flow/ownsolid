@@ -1,0 +1,16 @@
+{
+  "source": "/root/lane-del-entrance-projection",
+  "stage": "/root/lane-rel-tools/portal-native-unit-inputs.szhs0gfc",
+  "operation_seconds": 20,
+  "cleanup_seconds": 5,
+  "hard_seconds": 25,
+  "join_seconds": 2,
+  "cpu_seconds": 10,
+  "test_seconds": 15,
+  "tmpfs_bytes": 67108864,
+  "go_memory_bytes": 134217728,
+  "uid": 65534,
+  "gid": 65534,
+  "root_count": 15,
+  "unit_work_root": "/tmp/unit"
+}

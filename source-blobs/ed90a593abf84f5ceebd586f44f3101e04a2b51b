@@ -1,0 +1,15 @@
+{
+  "source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+  "canonical_fixture": "tools/codegen/sdk/tests/audit_read_wire_test.go",
+  "prepared_top_level_tests": 10,
+  "compiled": false,
+  "run": false,
+  "new_admission_attempted": false,
+  "reason": "Heavy admission explicitly withheld for this turn; canonical replay entry prepared without invocation",
+  "previous_admission_proof": "go-wire-proof.json",
+  "previous_admission_source": "2426699bfad4c1a4e4ee6999cfc14f264c4cda12",
+  "transport_source": "1e8f1fadf8caff8d7b9ac771cd91641ba19d4287",
+  "fixture_sha256": "6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821",
+  "explicit_consecutive_loss_and_cancellation_cases_prepared": true,
+  "mac_entry": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/run_go_wire_mac.py"
+}

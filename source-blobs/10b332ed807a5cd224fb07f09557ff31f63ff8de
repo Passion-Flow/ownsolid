@@ -1,0 +1,56 @@
+package main
+
+import "testing"
+
+func TestLostImportAcknowledgementUsesTheRecordedKey(t *testing.T) {
+	f, api := fixture(t)
+	f.set(func() { f.loseImportReply = true })
+	if err := phase(t, api, "init"); err != nil {
+		t.Fatal(err)
+	}
+	if err := phase(t, api, "verify"); err == nil {
+		t.Fatal("lost acknowledgement accepted")
+	}
+	if err := phase(t, api, "logout"); err == nil {
+		t.Fatal("discarded unresolved import identity")
+	}
+	if err := phase(t, api, "verify"); err != nil {
+		t.Fatal(err)
+	}
+	f.mu.Lock()
+	keys := append([]string(nil), f.importKeys...)
+	f.mu.Unlock()
+	if len(keys) != 3 || keys[0] != keys[1] || keys[1] != keys[2] {
+		t.Fatal("unknown import outcome used a new mutation key")
+	}
+	for _, mode := range []string{"cleanup", "logout"} {
+		if err := phase(t, api, mode); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestUncertainRemovalRequiresANewExplicitReconcileIntent(t *testing.T) {
+	f, api := fixture(t)
+	for _, mode := range []string{"init", "verify"} {
+		if err := phase(t, api, mode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	f.set(func() { f.current.State = "deleting"; f.failReconcile = true })
+	if err := phase(t, api, "cleanup"); err == nil {
+		t.Fatal("uncertain reconcile accepted")
+	}
+	if err := phase(t, api, "cleanup"); err != nil {
+		t.Fatal(err)
+	}
+	f.mu.Lock()
+	keys := append([]string(nil), f.reconcileKeys...)
+	f.mu.Unlock()
+	if len(keys) != 2 || keys[0] == keys[1] {
+		t.Fatal("explicit observed recovery reused the failed reconcile intent")
+	}
+	if err := phase(t, api, "logout"); err != nil {
+		t.Fatal(err)
+	}
+}

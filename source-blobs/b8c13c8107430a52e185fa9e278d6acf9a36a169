@@ -1,0 +1,47 @@
+{
+  "scope": "Only three filesystem roots on actual Linux amd64; cross-built actual package; no Docker, database, image, ports or installed qualification",
+  "parent_pid": 2960121,
+  "source": {
+    "base": "a182bf9a29d283b30695b156058fd92e91367363",
+    "files": {
+      "internal/install/backup.go": "32b91550e8c0c8607acc083441b4070b18a20233c37dc01c932129af39468368",
+      "internal/install/backup_test.go": "c82c58990d7a72f390628afc6537b15cdc54cdd8ffc82b294f7adfd6a0fd65aa"
+    },
+    "scope": "Actual install package plus shared output-path correction and filesystem regressions",
+    "binaries": {
+      "before.test": "e7ee871e21c5fb30e43985dd65e7407ae1a5c8e8888d648bf5a6a01e58241a26",
+      "after.test": "a67eed605e264839ae94cb93ef9b4decd1c511c5a267ad608e7fa878a92bf2a9"
+    }
+  },
+  "started_at": "2026-11-12T22:23:07.985936+00:00",
+  "heavy_leases": "Not requested for this lightweight filesystem-only run",
+  "steps": [
+    {
+      "binary": "before.test",
+      "binary_sha256": "e7ee871e21c5fb30e43985dd65e7407ae1a5c8e8888d648bf5a6a01e58241a26",
+      "pid": 2960125,
+      "exit": 1,
+      "expected_exit": 1,
+      "seconds": 0.06546357600018382
+    },
+    {
+      "binary": "after.test",
+      "binary_sha256": "a67eed605e264839ae94cb93ef9b4decd1c511c5a267ad608e7fa878a92bf2a9",
+      "pid": 2960132,
+      "exit": 0,
+      "expected_exit": 0,
+      "seconds": 0.06601496506482363
+    }
+  ],
+  "resources": {
+    "meminfo": "MemTotal:       32818728 kB\nMemFree:        19656500 kB\nMemAvailable:   22381532 kB\nBuffers:          174312 kB\nCached:         11375868 kB\nSwapCached:        17844 kB\nActive:          6628588 kB\nInactive:        5317592 kB\nActive(anon):    5152916 kB\nInactive(anon):  3959084 kB\nActive(file):    1475672 kB\nInactive(file):  1358508 kB\nUnevictable:       27708 kB\nMlocked:           27708 kB\nSwapTotal:       8388604 kB\nSwapFree:            188 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:              1072 kB\nWriteback:             0 kB\nAnonPages:        406112 kB\nMapped:           269036 kB\nShmem:           8707240 kB\nKReclaimable:     356192 kB\nSlab:             710328 kB\nSReclaimable:     356192 kB\nSUnreclaim:       354136 kB\nKernelStack:       12480 kB\nPageTables:        10828 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    24797968 kB\nCommitted_AS:   20190600 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:       41944 kB\nVmallocChunk:          0 kB\nPercpu:           286208 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      589216 kB\nDirectMap2M:    16187392 kB\nDirectMap1G:    18874368 kB\n",
+    "io": "some avg10=0.11 avg60=1.52 avg300=1.28 total=31094893193\nfull avg10=0.10 avg60=1.44 avg300=1.24 total=29290170256\n",
+    "disk_free": 794009284608
+  },
+  "script_sha256": "4e9a7166ad3c79558f7c7eca572478f25f733f959e189260ec8bea76de2a3785",
+  "config_sha256": "9f8afcc13d817e3fb13ef26d0fe4cf7f1d183afebcfc7379c5dff21c84e1ed12",
+  "passed": true,
+  "owned_fixture_removed": true,
+  "children_joined": true,
+  "packet_capture": "Not used; no new zero-egress detector qualification claimed"
+}

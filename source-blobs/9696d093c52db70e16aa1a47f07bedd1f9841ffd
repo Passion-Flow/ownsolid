@@ -1,0 +1,97 @@
+{
+  "tested_source": "c90744abe25129181d21e8287d9403677090f299",
+  "current_rebased_source": "f49e23de0398235824a8cd177c4c1249ee3297c9",
+  "current_source_execution": "not_started_shared_heavy_guards_busy",
+  "native_linux_amd64_event_execution": false,
+  "fleet_cost_measured": false,
+  "files": {
+    "run-cost-protocol.py": {
+      "sha256": "c12535e7dd80f6a0cbc840a9f511b78df7e9aefad772d741c6185cb25a09472c",
+      "bytes": 7865
+    },
+    "run-cost-final-horizon.py": {
+      "sha256": "91611ac52429521e0386177cc46fa42d931a7507ec4c63517259afdadfa3320b",
+      "bytes": 7512
+    },
+    "run-cost-current-f49e.py": {
+      "sha256": "1d852b7b1eb01281948e6bc2df962c026d8c2715cdf6be9db86134585320f968",
+      "bytes": 8047
+    },
+    "run-event-repository-gates.py": {
+      "sha256": "a3eb0d86d456604280e90fe03046ca561257b759c7e26fe3c50c36c93e0ce3bf",
+      "bytes": 4972
+    },
+    "run-native-event.py": {
+      "sha256": "0ccb1847195e256b54e9816361e2c5cc56dba3729f556143de4b877fcdd7c717",
+      "bytes": 4905
+    },
+    "cost-tag-compile.json": {
+      "sha256": "4080212fe375161e6a883a9aa0f0ef96618a02838523c125fa16202d8d098ace",
+      "bytes": 392
+    },
+    "cost-tag-compile.log": {
+      "sha256": "45165e5fba20e36825b48f835a63191aeb0b89259fa6b22fcdb82eb8845ae95b",
+      "bytes": 970
+    },
+    "cost-protocol-result.json": {
+      "sha256": "4f9e0b0e4784109f474841e66ae0b7770af7904aa95829d5009f08bd3c764485",
+      "bytes": 2314
+    },
+    "cost-protocol-go.log": {
+      "sha256": "2404e9ea16b2d5baea2350a8b082d588c6cbaa59dd64989a2ffd82ce8654710a",
+      "bytes": 24709
+    },
+    "cost-protocol-pg.log": {
+      "sha256": "1b936cad36a56afd932cbe8bc8a396e480aa200c380a97d1e81349df6e995c84",
+      "bytes": 3897
+    },
+    "cost-protocol-owned-volume-cleanup.json": {
+      "sha256": "4d40d581d1dc77eb141bad11f387c7f2ab7e973214d87ce2d2d677b583476f05",
+      "bytes": 388
+    },
+    "cost-final-horizon-result.json": {
+      "sha256": "1874b74bcc9a5203a02f5830872de1c2af51ad0539b90a481b68dadc5e981b11",
+      "bytes": 1315
+    },
+    "cost-final-horizon-go.log": {
+      "sha256": "bc3121410cab45f97be50217aea8e20465af95bd1c384007a4be1dc58035f129",
+      "bytes": 8634
+    },
+    "cost-final-horizon-pg.log": {
+      "sha256": "ff2f1f610b9dcb7d211a389ebc7ac28276f4386e9b6941b9af4ee289fa147363",
+      "bytes": 6171
+    },
+    "event-repository-gates.json": {
+      "sha256": "4d82fa53dfd40b2400374900b958226d7610e52fbeb5f2aa86b28680df4f4973",
+      "bytes": 1443
+    },
+    "event-check.log": {
+      "sha256": "af77a105f825e93878d79269422b088dd0c910745f539e7e3cdd4e349d64ddf1",
+      "bytes": 1517
+    },
+    "event-build.log": {
+      "sha256": "293f76744d6498e0464228d3bf94b6beb3a3e1eb5994dec8da58a51c4b537da3",
+      "bytes": 55666
+    },
+    "event-offline-web-install.log": {
+      "sha256": "e7b6141cc6f5ae7ec4d91bbb629e6e1d3fbc6ff96745671219f94d41246b8609",
+      "bytes": 673
+    },
+    "event-linux-cross-compile.json": {
+      "sha256": "27e55defe571b1f028cee88588696bea31388d4f350f0ac21ea395e9f7e20007",
+      "bytes": 464
+    },
+    "event-linux-cross-compile.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "trn-event-prepared-c907.bundle": {
+      "sha256": "72f64066b13bdee9df93c39911eab13643f9b8de7e9f8420cb8aaa3ae243f890",
+      "bytes": 15390
+    },
+    "trn-event-current-f49e.bundle": {
+      "sha256": "6516d30d8efa597100e9f3c01dc6565f3388ffb0c49178fdcd5ad746108ed504",
+      "bytes": 11909
+    }
+  }
+}

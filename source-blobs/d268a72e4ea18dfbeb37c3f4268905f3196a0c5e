@@ -1,0 +1,114 @@
+{
+  "source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "production_source": "5b73fa05305c2c5d8178a256683ede8b4e9ef99f",
+  "actual_v2_to_v3_diff": "--- v2/reader_native_bounded.py\n+++ v3/reader_native_bounded.py\n@@ -450,7 +450,7 @@\n             rc, _ = command(docker + ['exec', container, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres', '-d', 'ownsolid_training_reader_test'], 'pg_ready', budget, cap=2)\n             if rc == 0:\n                 break\n-            if rc != 1:\n+            if rc not in (1, 2):\n                 raise Refusal('CHILD_FAILED', rc, 'pg_ready')\n             time.sleep(min(0.2, max(0, ready_end - budget.clock())))\n         else:\n",
+  "actual_diff_sha256": "376b9de42527638fe91108a34d4917673b9574b1cc7b3ad34420c35f2cdac6f1",
+  "core_sha256": {
+    "reader_native_bounded.py": "463b216824c437ccad5cd09444ed8c7594bcc3a33bca04b30ae87d6e16d77284",
+    "config.json": "efac4a20bd4be8941a008a19fa52d5015120c3c6243e5467eb63f440719d534e",
+    "entry.sh": "6fa7a2aa825dbd3e27209319c7653394540126ff7e30cf0149bdd0965dcb4343"
+  },
+  "plan_sha256": "7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874",
+  "binding_sha256": "f858093a1ee7b4f065dcdea76c9a7bcc885f8798bc5d62d779baf00024e2d3ab",
+  "review_manifest_sha256": "12a3d7f59af7b28c99f8e3fd90fe6feef3108617349322b8dc8b636b56bce5dc",
+  "new_review_files_created_exclusively": [
+    "accepted-fixture.diff",
+    "event-fixture.diff",
+    "local-review.log",
+    "original-accepted-fixture.sh",
+    "original-fixture.sh",
+    "original-parent.py",
+    "parent.diff",
+    "prior-v2-input-check.log",
+    "review.md",
+    "test_reader_native_bounded.py",
+    "v2-to-v3.diff",
+    "validation.json",
+    "manifest.json"
+  ],
+  "existing_review_files_verified_without_writing": [
+    "config.json",
+    "entry.sh",
+    "reader_native_bounded.py"
+  ],
+  "source_files": {
+    "docs/research/training-published-file-readers.md": {
+      "sha256": "9e4632bd65746e19cc888c2338823f232c562be1f470bf828ff522db8c52923f",
+      "bytes": 22580
+    },
+    "services/control/internal/modules/datasets/published_reader_repository_integration_test.go": {
+      "sha256": "28872e65701f152917e3ddb205af78399285d8c41d7d4751796bc817ee6bdf5d",
+      "bytes": 4370
+    },
+    "services/control/internal/modules/training/accepted_adapter_repository_integration_test.go": {
+      "sha256": "e835a9565c6ee8f0851fc4457a4f2cf5f2e9d57aec9dc875dd71f8c1c20404ce",
+      "bytes": 31721
+    }
+  },
+  "retained_inputs": {
+    "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/result.json": {
+      "bytes": 7405,
+      "sha256": "42f0790680294637f8248a37a405cec920ee6d1d6c3b678248946b769781796f"
+    },
+    "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/adapter_model.safetensors": {
+      "bytes": 4602248,
+      "sha256": "a46897f648b94c94a3fe55dff81c15a082e1a427126f958e3075a8feee2bf06b"
+    },
+    "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/adapter_config.json": {
+      "bytes": 1092,
+      "sha256": "4ed67247993152de870045c4551f54de48a5fb0b65d61118bf95acb2c15dfe67"
+    },
+    "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/README.md": {
+      "bytes": 248,
+      "sha256": "a6e9d9c398894029e948df596fe712e77bdd25f3e1a53f3dc51344b2f7d7a341"
+    }
+  },
+  "prior_receipts": {
+    "/root/lane-trn-reader-native-outer.jdncpuqh/receipt.json": "02143c12cee6538123d3d5b9aae20c59c64e038c62289f3298d798f66603ab45",
+    "/root/lane-trn-reader-native-outer.j49w8wib/receipt.json": "2a2f375737ca697d66aceb549712b1d7732db4fe541dc5805312985ff50e8dfa",
+    "/root/lane-trn-reader-native-outer.ifbikxy_/receipt.json": "6de5dbfc7a5160fa2cb5e892ea43cbda63bfb895cf958a4e3e136f70019f92da"
+  },
+  "expected_tests": {
+    "datasets": "TestActualPublishedReaderTrainingSnapshotAndRetirement",
+    "training": "TestActualAcceptedExperimentRead",
+    "required_training_subcase": "independent_published_reader_with_real_accepted_bytes",
+    "allowed_skips": 0
+  },
+  "fixture": {
+    "docker_context": "default",
+    "endpoint": "unix:///var/run/docker.sock",
+    "cached_image_id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "os_architecture": "linux/amd64",
+    "pull": "never",
+    "network": "none; nsenter loopback only",
+    "host_ports": [],
+    "cpu_limit": 2,
+    "memory_limit_bytes": 1073741824,
+    "database_name": "ownsolid_training_reader_test",
+    "identity_and_repository_dsn": "the same private 0600 file; unset inherited fixture DSNs",
+    "processing_gpu_and_fleet": false
+  },
+  "budgets": {
+    "parent_seconds": 300,
+    "cleanup_seconds": 30,
+    "first_lock_seconds": 60,
+    "go_seconds": 170,
+    "package_seconds": 75
+  },
+  "carrier_policy": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "device": 29,
+      "inode": 82,
+      "uid": 0,
+      "first_wait": "one kernel wait, at most 60 seconds"
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "device": 64512,
+      "inode": 7508772,
+      "uid": 0,
+      "second_wait": "nonblocking only; release first immediately when busy"
+    }
+  ]
+}

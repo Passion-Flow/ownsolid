@@ -1,0 +1,9 @@
+{
+  "base_commit": "a3b3747ddb31577529a0bd0907adfc70f49e72ee",
+  "target_commit": "6e82e87f8980de7498d0973918258cbae7100e25",
+  "base_archive_sha256": "8873be327a001f78940577afe1f17c3624d3a670d4ad6ea84a7677696d145aab",
+  "delta_sha256": "a68ea4e6a928d420bb536980e5e49be7ad2d96b725a7352ecb2e85b211b493dc",
+  "go_tool": "/root/lane-rel-tools/go/bin/go",
+  "target_baseline": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "native_gate_source": "e71987812e10a55fc0018cfcb79082653e2de778"
+}

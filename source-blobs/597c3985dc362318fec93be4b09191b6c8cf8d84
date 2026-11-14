@@ -1,0 +1,108 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "draft": "7705c5a341458cb1be8ead80844198378d98c4e3",
+  "draft_sha256": "66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d",
+  "fixture_manifest_sha256": "0d868f161da74908fb71f9b973f6949431dd85e3f827b71bddc75c72831212b4",
+  "gate_proof_sha256": "bd48535902d0aa4bd2f7cfe8e561a6d25ddf7d62facc77ba427d03ea4384b511",
+  "parent_pid": 2443,
+  "child_group": 4250,
+  "wait_seconds": 413.892,
+  "execution_seconds": 10.438,
+  "wire": {
+    "authenticated": true,
+    "database": "gw_read_test",
+    "driver": "pgx 5.11.0",
+    "phase": "passed",
+    "server_address": "127.0.0.1",
+    "server_address_raw": "127.0.0.1/32",
+    "server_port": 5432,
+    "server_version_num": 180006,
+    "wrong_password_rejected": "28P01"
+  },
+  "roots": {
+    "TestPostgresAliasReadCapabilitiesAtRegisteredEntrances": {
+      "invocations": 1,
+      "passes": 1
+    },
+    "TestPostgresAliasCapabilityPublicContractBoundary": {
+      "invocations": 1,
+      "passes": 1
+    },
+    "TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget": {
+      "invocations": 1,
+      "passes": 1
+    },
+    "TestAliasContextCeilingRequiresRecognizedSource": {
+      "invocations": 1,
+      "passes": 1
+    }
+  },
+  "failed_or_skipped": 0,
+  "owned_schema_names": [
+    "m01_6dfd12f49b25479bb7a2ac1c0460c8b0",
+    "m01_4b71073138d84fbd92964289807ff25b",
+    "m01_c10c925d5591445cbfdc9edaa3c6ee23"
+  ],
+  "observed_disposal_counts": [
+    "120",
+    "120",
+    "120"
+  ],
+  "scope": "normal full source migration fixture; not an independent restricted-runtime principal, restore/rollback, actual model/GPU, installed UI or full repository gate",
+  "cleanup": {
+    "loopback_port": 60120,
+    "closed": true,
+    "credential_files_absent": true,
+    "child_group_exited": true,
+    "parent_fd_closed": true,
+    "carrier_identity_unchanged": true
+  },
+  "per_root": {
+    "TestPostgresAliasReadCapabilitiesAtRegisteredEntrances": {
+      "invocations": 1,
+      "result": "PASS",
+      "schema": "m01_c10c925d5591445cbfdc9edaa3c6ee23",
+      "disposal_tables": 120,
+      "duration": "1.92s"
+    },
+    "TestPostgresAliasCapabilityPublicContractBoundary": {
+      "invocations": 1,
+      "result": "PASS",
+      "schema": "m01_4b71073138d84fbd92964289807ff25b",
+      "disposal_tables": 120,
+      "duration": "1.16s"
+    },
+    "TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget": {
+      "invocations": 1,
+      "result": "PASS",
+      "schema": "m01_6dfd12f49b25479bb7a2ac1c0460c8b0",
+      "disposal_tables": 120,
+      "duration": "1.34s"
+    },
+    "TestAliasContextCeilingRequiresRecognizedSource": {
+      "invocations": 1,
+      "result": "PASS",
+      "schema": null,
+      "disposal_tables": null,
+      "duration": "0.00s"
+    }
+  },
+  "catalog_basis": "Each PostgreSQL root used fixture.New -> database.Migrate -> CheckWithin on the exact source-60 full lineage/catalog; all three recorded 120-table owned disposal. Operator fixture admission is not restricted serving-role qualification.",
+  "documented_by_commit": "c5f797d57d6567a16235ccc3a0993bb987805576",
+  "production_flag": false,
+  "public_contract_state": "exact DEV draft is test-only; production remains on its matching released shape",
+  "owner_sequence": [
+    "GW minimal backend default off after full gates",
+    "ARC typed startup/root owned by ARC with complete catalogue/runtime dependencies",
+    "GW same assembled-source producer/read qualification",
+    "DEV matching contract, clients, types and Help",
+    "WEB installed catalogue acceptance"
+  ],
+  "current_scope": "219af27e normal full operator fixture; the four native roots passed, not current assembled full gate or ARC typed startup",
+  "remaining": [
+    "current check/build/test and clippy in a later assigned window",
+    "known shared Help assertion failure resolved and rerun; do not reuse older browser PASS",
+    "ARC trusted typed startup and restricted runtime admission",
+    "matching published contract/clients and installed catalogue UI"
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "source": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "source_catalog_sha256": "56795c36a7a0115478e17ee9af9ea98f27c1922c201cfec0b874d8d72b713d1d",
+  "actual_catalog_sha256": "56795c36a7a0115478e17ee9af9ea98f27c1922c201cfec0b874d8d72b713d1d",
+  "table_count": 118,
+  "non_partition_table_names": [
+    "agent_pacing",
+    "api_keys",
+    "artifact_object_grants",
+    "artifact_object_ingestions",
+    "artifact_object_parts",
+    "artifact_objects",
+    "audit_chain_head",
+    "audit_events",
+    "aws_discovered_resources",
+    "aws_import_receipts",
+    "cell_cluster_members",
+    "cell_clusters",
+    "cells",
+    "control_outbox",
+    "dataset_drafts",
+    "dataset_job_attempts",
+    "dataset_jobs",
+    "dataset_row_history",
+    "dataset_rows",
+    "dataset_versions",
+    "datasets",
+    "deployments",
+    "gateway_instances",
+    "gateway_recoveries",
+    "gateway_requests",
+    "gpu_leases",
+    "idempotency_records",
+    "image_registry_blobs",
+    "image_registry_deployment_refs",
+    "image_registry_grants",
+    "image_registry_imports",
+    "image_registry_mutations",
+    "image_registry_offline_refs",
+    "image_registry_pins",
+    "inference_nodes",
+    "installation_state",
+    "invitations",
+    "knowledge_attempts",
+    "knowledge_bases",
+    "knowledge_chunks",
+    "knowledge_documents",
+    "knowledge_generations",
+    "knowledge_mutation_intents",
+    "knowledge_source_versions",
+    "mail_deliveries",
+    "managed_components",
+    "managed_nodes",
+    "middleware_instances",
+    "middleware_operations",
+    "model_alias_cutover_intents",
+    "model_alias_history",
+    "model_alias_target_versions",
+    "model_aliases",
+    "model_derivations",
+    "model_holdout_prompts",
+    "model_holdout_sources",
+    "model_holdouts",
+    "model_import_chunks",
+    "model_imports",
+    "model_preparation_artifacts",
+    "model_preparation_attempts",
+    "model_preparation_events",
+    "model_preparation_recoveries",
+    "model_preparation_reviews",
+    "model_preparation_upload_chunks",
+    "model_preparation_uploads",
+    "model_preparations",
+    "model_versions",
+    "mongodb_dataset_imports",
+    "node_join_tokens",
+    "node_task_history",
+    "node_task_progress",
+    "node_tasks",
+    "password_credentials",
+    "password_reset_tokens",
+    "platform_license_artifacts",
+    "platform_license_state",
+    "plugin_grants",
+    "plugin_mutation_intents",
+    "plugin_versions",
+    "private_cluster_connections",
+    "private_cluster_intents",
+    "private_cluster_runs",
+    "rate_limit_buckets",
+    "saved_views",
+    "schema_migrations",
+    "sessions",
+    "sites",
+    "sso_bindings",
+    "sso_connectors",
+    "sso_flows",
+    "sso_mutation_intents",
+    "task_event_dead_letters",
+    "task_event_outbox",
+    "task_event_receipts",
+    "tenant_node_counts",
+    "tenants",
+    "terminal_notifications",
+    "training_artifacts",
+    "training_attempts",
+    "training_checkpoints",
+    "training_events",
+    "training_jobs",
+    "training_recoveries",
+    "training_upload_chunks",
+    "training_uploads",
+    "user_preferences",
+    "users",
+    "workflow_conversations",
+    "workflow_mutation_intents",
+    "workflow_node_traces",
+    "workflow_plugin_references",
+    "workflow_runs",
+    "workflow_versions",
+    "workflows",
+    "workspace_memberships",
+    "workspace_notes",
+    "workspaces"
+  ],
+  "physical_public_table_count": 138,
+  "partition_children": [
+    {
+      "name": "audit_events_p000000",
+      "parent": "audit_events"
+    },
+    {
+      "name": "audit_events_p202612",
+      "parent": "audit_events"
+    },
+    {
+      "name": "audit_events_p202701",
+      "parent": "audit_events"
+    },
+    {
+      "name": "audit_events_p202702",
+      "parent": "audit_events"
+    },
+    {
+      "name": "model_preparation_events_p000000",
+      "parent": "model_preparation_events"
+    },
+    {
+      "name": "model_preparation_events_p202612",
+      "parent": "model_preparation_events"
+    },
+    {
+      "name": "model_preparation_events_p202701",
+      "parent": "model_preparation_events"
+    },
+    {
+      "name": "model_preparation_events_p202702",
+      "parent": "model_preparation_events"
+    },
+    {
+      "name": "node_task_history_p000000",
+      "parent": "node_task_history"
+    },
+    {
+      "name": "node_task_history_p202612",
+      "parent": "node_task_history"
+    },
+    {
+      "name": "node_task_history_p202701",
+      "parent": "node_task_history"
+    },
+    {
+      "name": "node_task_history_p202702",
+      "parent": "node_task_history"
+    },
+    {
+      "name": "node_task_progress_p000000",
+      "parent": "node_task_progress"
+    },
+    {
+      "name": "node_task_progress_p202612",
+      "parent": "node_task_progress"
+    },
+    {
+      "name": "node_task_progress_p202701",
+      "parent": "node_task_progress"
+    },
+    {
+      "name": "node_task_progress_p202702",
+      "parent": "node_task_progress"
+    },
+    {
+      "name": "training_events_p000000",
+      "parent": "training_events"
+    },
+    {
+      "name": "training_events_p202612",
+      "parent": "training_events"
+    },
+    {
+      "name": "training_events_p202701",
+      "parent": "training_events"
+    },
+    {
+      "name": "training_events_p202702",
+      "parent": "training_events"
+    }
+  ],
+  "exact_non_partition_set_verified": true,
+  "original_ready_assertion": "retained: counted public base tables including partition children, compared with logical TableCount118",
+  "schema_version": 58,
+  "exact_migration_ledger_verified": true,
+  "partition_rule_sources": [
+    "000041_partitioned_audit.up.sql",
+    "000042_partitioned_events.up.sql",
+    "000043_node_task_history.up.sql",
+    "000044_node_task_progress.up.sql"
+  ],
+  "exact_partition_children_verified": true,
+  "partition_parent_migration_ownership": {
+    "audit_events": "000041_partitioned_audit.up.sql",
+    "model_preparation_events": "000042_partitioned_events.up.sql",
+    "training_events": "000042_partitioned_events.up.sql",
+    "node_task_history": "000043_node_task_history.up.sql",
+    "node_task_progress": "000044_node_task_progress.up.sql"
+  },
+  "partition_name_rule": "Initial p000000 plus three next-month partitions from installation UTC month, matching manage_time_partitions(...,3,0)",
+  "installation_started_at": "2026-11-12T11:58:44.203424918Z"
+}

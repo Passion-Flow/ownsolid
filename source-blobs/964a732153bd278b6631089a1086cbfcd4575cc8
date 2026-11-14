@@ -1,0 +1,28 @@
+package monitoring
+
+import (
+    "encoding/json"
+    "testing"
+    "time"
+
+    "github.com/google/uuid"
+)
+
+func TestCanonicalHistoryRequestAndUnsignedCounts(t *testing.T) {
+    from, to := "2026-11-12T00:00:00Z", "2026-11-12T00:01:00Z"
+    workspace := uuid.MustParse("e4ec68f4-3d6a-4d66-9ba5-b6831c190054")
+    request, err := NewAdminFleetHistoryRequest("https://admin.example.invalid", "default", "default", &AdminFleetHistoryParams{
+        WorkspaceId: workspace, From: from, To: to,
+    })
+    if err != nil { t.Fatal(err) }
+    query := request.URL.Query()
+    if len(query) != 3 || query.Get("from") != from || query.Get("to") != to || query.Get("workspace_id") != workspace.String() {
+        t.Fatalf("the generated request changed the canonical query: %v", query)
+    }
+    point := FleetHistoryPoint{At: time.Unix(0, 0).UTC(), Observed: ^uint64(0), Reachable: 0}
+    wire, err := json.Marshal(point)
+    if err != nil { t.Fatal(err) }
+    var restored FleetHistoryPoint
+    if err = json.Unmarshal(wire, &restored); err != nil { t.Fatal(err) }
+    if restored != point { t.Fatal("the generated model changed an unsigned count or measured zero") }
+}

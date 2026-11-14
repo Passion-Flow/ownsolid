@@ -1,0 +1,25 @@
+set -euo pipefail
+cd ~/lane-rel
+git diff --quiet
+git diff --cached --quiet
+git switch --detach refs/lane-rel/training-cursor-landing-iam
+test "$(git rev-parse --short HEAD)" = f83a9fde
+git diff --check 4348f6ff..HEAD
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 npm_config_offline=true CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=1
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 900 9
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+ionice -c2 -n7 nice -n10 unshare -n bash -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    make check && make build
+'
+git diff --exit-code

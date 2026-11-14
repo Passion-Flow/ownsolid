@@ -1,0 +1,57 @@
+# Current queue admission: immutable review candidate
+
+Candidate 7b7fc3974e35ccd57a7064a47423ab0616b4132a, based on 8531226d.
+Qualified runtime source 5ee946b6abd7d9add9396bbf61c39d14acc64abd.
+The candidate differs only in four documentation/status paths; no program input
+changed. This packet is review-only: the candidate is not on GitHub main.
+The origin mirror is not a fresh remote-head verification.
+
+## Public entry
+
+ReserveQueuedWithin(ctx context.Context, q transaction.Executor, a Attempt,
+    intent JobIntent, workspaces []string, read QueueReader) (bool, error)
+QueueReader func(context.Context, transaction.Executor) ([]QueueEntry, error)
+ErrQueueTurnPending = SCHEDULING_QUEUE_TURN_PENDING
+
+Use the selected owner's existing READ COMMITTED write transaction, before
+other scheduling writes. Retain current actor/Workspace/node/selected-job and
+physical fences. Supply a complete server-authorized domain and a complete
+bounded current eligible batch through the same executor; priority and sequence
+come from persisted owner authority. Never filter the returned batch by an
+earlier domain. The callback takes no other job locks, changes no state, opens
+no other transaction and calls no external service.
+
+A current head reuses existing ReserveWithin, including borrowing/reclaim.
+True means a provisional hold; commit dequeue, tasks, attempts, physical holds
+and audit together before acknowledging. False/nil is exact held replay, skips
+the now-dequeued entry read and must not create another task. Roll back on any
+error. CommitUnknown exposes no success and retries the same exact identity.
+
+## Tenant fence protocol
+
+Policy shared -> tenant -> selected workspace -> optional cohort.
+Ordinary reserve/release/reclaim take the tenant shared side; current queue
+admission takes exclusive. No shared-to-exclusive upgrade in one transaction.
+All Control writers must adopt this protocol before queue admission activates.
+There is no mixed-version atomic admission claim. Other tenants remain separate;
+hash collisions serialize. No private pool, new production DDL or route exists.
+
+## Actual qualification
+
+Linux amd64 Go 1.27.3: 45 real PostgreSQL 18.6 cases, 66 top-level component
+tests with race instrumentation, route-free network namespace and private
+network-none database; no skipped component tests. The separate catalog
+fresh/dump/restore harness is explicitly excluded. Exact configured 10,000-
+workspace domain holds two advisory lock tags, not a fleet latency claim.
+Full Control modules and make check passed on Linux. Linux build was not
+admitted under shared-host I/O pressure and is not a completed run.
+MacOS arm64 Go 1.27.3: full Control modules, make check and make build passed.
+Existing offline pinned dependencies and Python 3.12 were used.
+The fixture database container and private credential files were cleaned up.
+
+The fixtures use a privileged principal and do not prove native serving-role
+grants. ARC retains schema/grants/readiness, including required advisory builtin
+EXECUTE in a hardened installation. The workload owner retains real eligible
+selection, priority authority, exact physical proof, dispatch, audit and commit.
+IAM/API/Web/Help and installed offline flow are not activated. SCH-103 remains
+unticked. Source/API boundaries are in the owned README, research and ADR 0071.

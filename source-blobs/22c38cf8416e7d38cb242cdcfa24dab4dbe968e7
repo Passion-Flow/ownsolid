@@ -1,0 +1,14 @@
+{
+  "scope": "Frozen input preparation only; no Linux native invocation",
+  "source": "d2ca13940b9d224fb35ed6ac295dbe56ba08b17f",
+  "tree": "f063ce8ef5338dd559a0b7e24d64eb722f2376cd",
+  "files": {
+    "native_tls_unit_parent.py": "05e423a4979664df08ab126f4c261b3c3c67e7d7c7e88e503cd5d1aeced42b5e",
+    "native_tls_unit_child.py": "95364631b0dec6cd8b0ec4f77be3f33f8300d5d42db0a6e81b68e00a85c6c837",
+    "native-unit-runtime.json": "a32b5a153af633780d7b1dec13128f05b8b4c5c9d83991524efb9aa332909524",
+    "source.json": "517030ab4aab1f4748717bc566ff078061ec858b038edfdf0e6d7093c0d0187d",
+    "canonical-compose.yaml": "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca",
+    "installer.test.gz": "ecffed38dbe74e2dff5ff28259d789974f1c1082b3f98c00027eb33ed8894385"
+  },
+  "compressed_bytes": 10329686
+}

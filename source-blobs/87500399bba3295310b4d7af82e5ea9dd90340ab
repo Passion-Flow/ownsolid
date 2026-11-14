@@ -1,0 +1,18 @@
+{
+  "scope": "client self-tests only; not installed Control acceptance",
+  "go": "go1.27.3 linux/amd64",
+  "tests": "five top-level tests; -race; passed in 1.190s",
+  "vet": "passed",
+  "build": "passed; dynamic Linux ELF, static follow-up not yet admitted",
+  "network": "unshare --net, loopback only; all mock listeners stopped with namespace exit",
+  "receipt": "/root/lane-obs-tools/installed-history-driver-check.EjPFCs",
+  "files": {
+    "/root/lane-obs-tools/installed-history-driver/main.go": "f0f994c6aa1bf399643f483699bd99cc0a880d6cbdf37bae43170f9318746626",
+    "/root/lane-obs-tools/installed-history-driver/main_test.go": "61499b624ddeca6338ec765ffa4ca22ceeb87eee3495040502f543febe473c23",
+    "/root/lane-obs-tools/installed-history-driver/installed-history": "3c87df0fbe2af89202f2df3eb5a52b15fc86500ef5e15b0ef9d4724aee503557",
+    "/root/lane-obs-tools/installed-history-driver-check.EjPFCs/check.log": "83bd8ea283685c4979f1ccf56ddeb0fb2870ba94c0e905816a7a5b0505caa20d",
+    "/root/lane-obs-tools/installed-history-driver-check.EjPFCs/test.jsonl": "d76bb98ccf9d3aea6ace7475bf2311c554c0d9bb8e48b0ee7147e9e4fa42591e"
+  },
+  "target_installed_source_expectation": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "actual_installed_source_binding": "pending DEL image/manifest/BuildInfo"
+}

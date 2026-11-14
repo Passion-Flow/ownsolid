@@ -1,0 +1,9 @@
+{
+  "source_contract_sha256": "b9fd1312c4c813b394e9eb292f22ad20125ea7d380100c31bccc0aff89dffc92",
+  "exit": 0,
+  "elapsed_seconds": 0.212,
+  "test_count": 7,
+  "http_transport": "httpx.MockTransport",
+  "actual_service_or_auth_run": false,
+  "log_sha256": "50ad2b82f694805ab1124ce89165cb5adf400d4980eedcdf48a6fe1dc4dd91e7"
+}

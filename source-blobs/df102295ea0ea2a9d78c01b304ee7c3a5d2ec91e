@@ -1,0 +1,57 @@
+{
+  "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "entry_sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c",
+  "manifest_sha256": "9a5e296cd3612ae6f9bdd36294148a83dfc4110e4319e837552f76975d096843",
+  "raw_proof": "/root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb-proof.json",
+  "raw_proof_sha256": "ea63d0f4d26a25744f322da5402381397c7fd14768c7afb8ab9b4c8509aaa5fe",
+  "raw_log": "/root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb.log",
+  "raw_log_sha256": "fbcc353ee78c27155e318b3c71fd4ec57fea98bf551080391dd094736c1044c3",
+  "entry_safety_cases": 6,
+  "entry_safety_passed": true,
+  "admitted": true,
+  "parent_exit": 1,
+  "web_install_exit": 0,
+  "check_exit": 2,
+  "build_exit": null,
+  "test_exit": null,
+  "elapsed_seconds": 89.572,
+  "failure": "Web typed ESLint exhausted its2048MiB Node heap, process exit134; not an admission refusal or failed SDK assertion.",
+  "tooling_cases_passed": {
+    "layout": 13,
+    "sdk_tooling": 67
+  },
+  "all_owned_groups_cleared": true,
+  "both_shared_fds_closed_and_carriers_preserved": true,
+  "source_clean_after": true,
+  "retry_queued": false,
+  "resource_snapshots": [
+    {
+      "elapsed_seconds": 0.001,
+      "raw_memfree_mib": 4692,
+      "memavailable_mib": 19811,
+      "disk_free_bytes": 789124411392,
+      "io_full_avg10": 0.0
+    },
+    {
+      "elapsed_seconds": 0.026,
+      "raw_memfree_mib": 4691,
+      "memavailable_mib": 19811,
+      "disk_free_bytes": 789124411392,
+      "io_full_avg10": 0.0
+    },
+    {
+      "elapsed_seconds": 0.036,
+      "raw_memfree_mib": 4691,
+      "memavailable_mib": 19811,
+      "disk_free_bytes": 789124407296,
+      "io_full_avg10": 0.0
+    },
+    {
+      "elapsed_seconds": 0.253,
+      "raw_memfree_mib": 4670,
+      "memavailable_mib": 19789,
+      "disk_free_bytes": 789124403200,
+      "io_full_avg10": 0.0
+    }
+  ]
+}

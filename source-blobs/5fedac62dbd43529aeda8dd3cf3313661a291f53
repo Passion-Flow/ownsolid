@@ -1,0 +1,42 @@
+--- support-native-f317-original.py
++++ support-native-first-wait-60.py
+@@ -26,6 +26,21 @@
+         stream.write('\n')
+         stream.flush()
+         os.fsync(stream.fileno())
++
++def bounded_first_flock(fd, seconds):
++    """Make one blocking flock call with a signal-bounded first-lock wait."""
++    def expired(signum, frame):
++        raise BlockingIOError('First host lease wait expired')
++    if seconds <= 0:
++        raise BlockingIOError('No first-lock wait budget remains')
++    assert signal.getitimer(signal.ITIMER_REAL) == (0.0, 0.0)
++    previous = signal.signal(signal.SIGALRM, expired)
++    try:
++        signal.setitimer(signal.ITIMER_REAL, seconds)
++        fcntl.flock(fd, fcntl.LOCK_EX)
++    finally:
++        signal.setitimer(signal.ITIMER_REAL, 0)
++        signal.signal(signal.SIGALRM, previous)
+ 
+ def run(config, config_path):
+     os.umask(0o077)
+@@ -105,7 +120,16 @@
+             assert os.path.samestat(info,Path(path).lstat())
+             item={'path':path,'fd':fd,'device':info.st_dev,'inode':info.st_ino,'acquired':False}
+             state['leases'].append(item)
+-            try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
++            try:
++                if len(state['leases']) == 1:
++                    wait_started = time.monotonic()
++                    item['wait_limit_seconds'] = min(60, max(0, deadline - wait_started - config['cleanup_seconds']))
++                    try:
++                        bounded_first_flock(fd, item['wait_limit_seconds'])
++                    finally:
++                        item['wait_elapsed_seconds'] = time.monotonic() - wait_started
++                else:
++                    fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+             except BlockingIOError:
+                 key=':%d'%info.st_ino
+                 item['kernel_matches']=[line for line in Path('/proc/locks').read_text().splitlines() if key in line]

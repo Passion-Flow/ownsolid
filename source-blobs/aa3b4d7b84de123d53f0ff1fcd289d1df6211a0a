@@ -1,0 +1,70 @@
+import fcntl,hashlib,json,os,re,shutil,stat,subprocess,sys,time
+from pathlib import Path
+task=Path("/private/tmp/ownsolid-trn-qualification.knvee3h8");src=task/"src"
+lock="/private/tmp/ownsolid-workstation-full-gate.lock"
+fd=os.open(lock,os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC)
+s=os.fstat(fd);p=os.stat(lock,follow_symlinks=False)
+assert stat.S_ISREG(s.st_mode) and s.st_uid==os.getuid() and s.st_ino==50313339 and (s.st_dev,s.st_ino)==(p.st_dev,p.st_ino)
+deadline=time.monotonic()+45
+while True:
+ try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB);break
+ except BlockingIOError:
+  if time.monotonic()>=deadline:
+   print(json.dumps({"gate":"not_started","reason":"workstation_guard_busy","inode":s.st_ino}),flush=True);os.close(fd);sys.exit(75)
+  time.sleep(0.25)
+device=None
+record={"source":"5b73fa05305c2c5d8178a256683ede8b4e9ef99f","platform":"darwin/arm64","offline_dependency_resolution":True,"network_namespace_isolation":False,"phases":{}}
+try:
+ assert subprocess.check_output(["git","rev-parse","HEAD"],cwd=src,text=True).strip()==record["source"]
+ assert not subprocess.check_output(["git","status","--porcelain"],cwd=src,text=True)
+ assert shutil.disk_usage(task).free>=15*1024**3
+ pressure=subprocess.check_output(["/usr/bin/memory_pressure","-Q"],text=True);record["memory_pressure_before"]=pressure
+ print(json.dumps({"gate":"held","pid":os.getpid(),"inode":s.st_ino,"memory_pressure":pressure}),flush=True)
+ device=subprocess.check_output(["hdiutil","attach","-nomount","ram://4194304"],text=True).strip()
+ assert re.fullmatch(r"/dev/disk[0-9]+",device),device
+ volume="ownsolid-trn-"+task.name.rsplit(".",1)[-1]
+ subprocess.run(["diskutil","erasevolume","HFS+",volume,device],check=True,stdout=subprocess.DEVNULL)
+ temp=Path("/Volumes")/volume/"private";temp.mkdir(mode=0o700)
+ assert temp.resolve()==temp and shutil.disk_usage(temp).free>1024**3
+ python=Path(sys.executable).resolve()
+ env=os.environ.copy()
+ env.update({"PATH":str(python.parent)+os.pathsep+env["PATH"],"TMPDIR":str(temp)+"/","GOPROXY":"off","GOSUMDB":"off","GOTOOLCHAIN":"local","GOMAXPROCS":"2","GOFLAGS":"-p=2","CARGO_NET_OFFLINE":"true","CARGO_BUILD_JOBS":"2","CARGO_TARGET_DIR":str(task/"cargo-target"),"npm_config_offline":"true","COREPACK_ENABLE_NETWORK":"0","PYTHONDONTWRITEBYTECODE":"1"})
+ for name in list(env):
+  if name.startswith(("PROJECT_ONE_TEST_","PROJECT_ONE_REPOSITORY_")):env.pop(name)
+ audit=src/"tools/audit-verify/audit-verify";assert not audit.exists()
+ apfs=task/"apfs-temp";apfs.mkdir(mode=0o700,exist_ok=True)
+ assert apfs.stat().st_uid==os.getuid() and apfs.stat().st_gid==os.getgid() and stat.S_IMODE(apfs.stat().st_mode)==0o700
+ assert apfs.resolve()==apfs
+ def ctime_probe(directory):
+  file=directory/"owned-ctime-probe";file.write_bytes(b"before");before=file.stat();time.sleep(0.01);file.write_bytes(b"after!");os.utime(file,ns=(before.st_atime_ns,before.st_mtime_ns));after=file.stat();file.unlink();return {"ctime_before_ns":before.st_ctime_ns,"ctime_after_ns":after.st_ctime_ns,"changed":before.st_ctime_ns!=after.st_ctime_ns,"mtime_restored":before.st_mtime_ns==after.st_mtime_ns}
+ record["metadata_clock_probe"]={"hfs_ram":ctime_probe(temp),"apfs":ctime_probe(apfs)}
+ print(json.dumps({"metadata_clock_probe":record["metadata_clock_probe"]}),flush=True)
+ phases=[("reader-main-modules",["go","-C","services/control","test","-p","1","-count=1","-timeout","3m","-json","./internal/modules/datasets","./internal/modules/training"]),("reader-main-tag-compile",["go","-C","services/control","test","-tags","repository_integration","-p","1","-count=1","-run","^$","./internal/modules/datasets","./internal/modules/training"]),("reader-main-check",["make","check","PYTHON="+str(python)]),("reader-main-build",["make","build"])]
+ for phase,argv in phases:
+  assert subprocess.check_output(["git","rev-parse","HEAD"],cwd=src,text=True).strip()==record["source"]
+  log=task/(phase+".log");start=time.monotonic()
+  print(json.dumps({"phase":phase,"log":str(log)}),flush=True)
+  phase_env=env.copy()
+  if phase in {"config-apfs-owned-group","reader-main-modules"}:phase_env["TMPDIR"]=str(apfs)+"/"
+  with log.open("x") as out:r=subprocess.run(argv,cwd=src,env=phase_env,stdout=out,stderr=subprocess.STDOUT)
+  entry={"returncode":r.returncode,"seconds":round(time.monotonic()-start,3),"log":str(log),"sha256":hashlib.sha256(log.read_bytes()).hexdigest()}
+  if phase in {"rebased-modules","config-apfs-owned-group","reader-main-modules"}:
+   counts={"pass":0,"skip":0,"fail":0};packages={}
+   for line in log.read_text().splitlines():
+    try:e=json.loads(line)
+    except ValueError:continue
+    if "Test" in e and e.get("Action") in counts:counts[e["Action"]]+=1
+    if "Test" not in e and e.get("Action") in {"pass","skip","fail"}:packages[e["Package"]]=e["Action"]
+   entry["test_actions"]=counts;entry["packages"]=packages
+  record["phases"][phase]=entry
+  (task/"reader-main-repository-gates.json").write_text(json.dumps(record,indent=2)+"\n")
+  print(json.dumps({"phase":phase,**entry}),flush=True)
+  if r.returncode:raise SystemExit(r.returncode)
+finally:
+ audit=src/"tools/audit-verify/audit-verify"
+ if audit.is_file():audit.unlink()
+ try:
+  if device is not None:subprocess.run(["hdiutil","detach",device],check=True,stdout=subprocess.DEVNULL)
+ finally:
+  fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)
+  print("workstation_guard_released_carrier_preserved",flush=True)

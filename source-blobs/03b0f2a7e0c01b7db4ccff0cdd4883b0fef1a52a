@@ -1,0 +1,27 @@
+{
+  "retired_entry_exit": 78,
+  "retired_entry_stderr": "Retired audit entry: no lock or test was requested. The original bytes are preserved in run_go_wire.legacy-three-carrier.py. The one authorized native segment is consumed; a new source-qualified window is required.\n",
+  "lock_or_compiler_started": false,
+  "corrected_entries_executed": false,
+  "third_carrier_file_removed_or_modified": false,
+  "archives": {
+    "identity-audit-contract/run_go_wire.legacy-three-carrier.py": "3dd821258a58db62fae5edf3f678aab4c9989fb8b8d2ce6649564f5616468c17",
+    "identity-audit-contract/run_go_wire_native.executed.py": "75b607b355497b987e1b7ab7061df7aad06c5f3b7070070d110a6bd5688d7fa0",
+    "api-compat/full_native_gate.legacy-three-carrier.py": "d1c4378fe2aa719803dda8043dc39fe66cba4e44a3bd72be7e150995fb0d6877"
+  },
+  "corrected_entries": {
+    "identity-audit-contract/run_go_wire.py": "964debd88571d0be80374732403bca5d9edf41a3e6649b091e29f75121582545",
+    "identity-audit-contract/run_go_wire_native.py": "47480e455308fbcb5497050be6c578aaa83f65ba65817b9aefbbbbd51d1b1faa",
+    "api-compat/full_native_gate.py": "54011cb536dbb92fdd3a1eeb6180fcb3379954fe37ff3b33a4af23bd6eef7e7a"
+  },
+  "changes": [
+    "Retire the historical audit entry without acquisition; preserve exact original bytes",
+    "Remove only the obsolete lane-local carrier from the historical full-gate entry; keep both shared carriers and leave every physical carrier untouched",
+    "Classify contention only at actual flock calls; errors after admission and failed preconditions remain failures",
+    "Retain strict2GiB free/8GiB available/30GiB disk/IO full avg10 maximum5 and close recorded descriptors"
+  ],
+  "composition_gate_source": "d16d7f11699ef00e1d26fa576be2db76a8d640af",
+  "composition_gate_base": "0b570a8392a3d86f9a7637883355e223c94e76bd",
+  "composition_gate_includes_full_make_test": true,
+  "server_checkout_required": true
+}

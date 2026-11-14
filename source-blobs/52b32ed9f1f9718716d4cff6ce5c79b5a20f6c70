@@ -1,0 +1,5 @@
+#!/bin/sh
+# Lane B test helper: starts the scripted node; the token arrives on stdin, $1 is the node's name.
+token=$(cat)
+pkill -f /root/lane-b/scripted-node.py 2>/dev/null
+printf '%s' "$token" | nohup python3 /root/lane-b/scripted-node.py https://admin.lane-b.test:18443 /root/lane-b/install-iam117/config/ca.pem "$1" > /root/lane-b/scripted-node.log 2>&1 &

@@ -1,0 +1,1209 @@
+diff --git a/deploy/offline/README.md b/deploy/offline/README.md
+index 3c199298..5211556b 100644
+--- a/deploy/offline/README.md
++++ b/deploy/offline/README.md
+@@ -419,6 +419,20 @@ the current writer and database fence. An unreadable or unknown intent
+ produces a fixed collection issue. The installer excludes operation details, container output, raw configuration files, environment values,
+ addresses, credentials and database records.
+ 
++Before collecting, the installer durably records a diagnostic attempt in the
++installation's protected operator/operations.log. It uses the executing
++process's real and effective numeric user IDs. A completed record includes the
++archive's SHA-256 and byte length. A failed or incomplete attempt remains in the
++log; an explicit retry creates a new attempt. Keep this log with the installation
++and do not truncate it to bypass a recording error. It contains local operator
++records and has not been imported into the Control audit trail.
++
++The operator directory must belong to the executing user at mode 0700, and
++operations.log must be an owned regular file at mode 0600. An unsafe or
++unwritable log stops collection. If the terminal record cannot be confirmed,
++the installer withdraws its new archive and returns an error. Preserve the
++operator log and inspect the selected output path if cleanup is unconfirmed.
++
+ ### Collect managed cluster information
+ 
+ On a workstation with access to the private management endpoints, use
+@@ -447,7 +461,9 @@ one or both sources and a total collection budget of 1 to 60 seconds.
+ ```
+ 
+ Run as the owner of the files and keep the JSON and referenced files at
+-mode 0600. Use private HTTPS origins with their own trusted CA files. The
++mode 0600. The JSON input's directory also holds this collector's
++operations.log; it must belong to the executing user and must not be writable
++by other users. The same durable admission and archive-result rules apply. Use private HTTPS origins with their own trusted CA files. The
+ management credential is the value of an active platform Admin session.
+ You can point `credential_file` directly at the protected session file from
+ [the operator CLI](../../tools/cli/README.md#configure-and-sign-in).
+diff --git a/deploy/offline/internal/install/support.go b/deploy/offline/internal/install/support.go
+index c567d2b9..565561b0 100644
+--- a/deploy/offline/internal/install/support.go
++++ b/deploy/offline/internal/install/support.go
+@@ -5,6 +5,8 @@ import (
+ 	"compress/gzip"
+ 	"context"
+ 	"crypto/rand"
++	"crypto/sha256"
++	"encoding/hex"
+ 	"encoding/json"
+ 	"errors"
+ 	"fmt"
+@@ -83,16 +85,21 @@ type supportService struct {
+ 
+ // SupportBundle saves a redacted snapshot on the installation host, even when control is down.
+ func SupportBundle(ctx context.Context, c Config, runner Runner, output string, out io.Writer) error {
+-	return publishSupportBundle(ctx, output, time.Duration(c.StepSeconds)*time.Second, out, func(collection context.Context) (any, int) {
+-		report := collectSupport(collection, c, runner)
+-		if errors.Is(collection.Err(), context.DeadlineExceeded) {
+-			report.Issues = append(report.Issues, "COLLECTION_TIMEOUT")
+-		}
+-		return report, len(report.Issues)
+-	})
++	return publishSupportBundle(ctx, output, time.Duration(c.StepSeconds)*time.Second, out,
++		func(admission context.Context) (*supportAccess, error) {
++			return installationSupportAccess(admission, c)
++		},
++		func(collection context.Context, access *supportAccess) (any, int) {
++			report := collectSupport(collection, c, runner, access.priorSize)
++			if errors.Is(collection.Err(), context.DeadlineExceeded) {
++				report.Issues = append(report.Issues, "COLLECTION_TIMEOUT")
++			}
++			return report, len(report.Issues)
++		})
+ }
+ 
+-func publishSupportBundle(ctx context.Context, output string, timeout time.Duration, out io.Writer, collect func(context.Context) (any, int)) error {
++func publishSupportBundle(ctx context.Context, output string, timeout time.Duration, out io.Writer,
++	admit func(context.Context) (*supportAccess, error), collect func(context.Context, *supportAccess) (any, int)) (result error) {
+ 	if !canonicalPath(output) || !strings.HasSuffix(output, ".tar.gz") {
+ 		return errors.New("INSTALL_SUPPORT_OUTPUT_INVALID: supply an absolute path ending in .tar.gz")
+ 	}
+@@ -111,24 +118,50 @@ func publishSupportBundle(ctx context.Context, output string, timeout time.Durat
+ 	}
+ 	collection, cancel := context.WithTimeout(ctx, timeout)
+ 	defer cancel()
+-	report, issues := collect(collection)
++	access, err := admit(collection)
++	if err != nil {
++		return err
++	}
++	defer access.close()
++	terminalAttempted := false
++	defer func() {
++		if result == nil || terminalAttempted {
++			return
++		}
++		failure := "INSTALL_SUPPORT_COLLECTION_FAILED"
++		if errors.Is(ctx.Err(), context.Canceled) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
++			failure = "INSTALL_SUPPORT_CANCELLED"
++		}
++		completion, cancel := context.WithTimeout(context.WithoutCancel(ctx), timeout)
++		defer cancel()
++		result = errors.Join(result, access.append(completion, "failed", supportArchive{}, failure))
++	}()
++	report, issues := collect(collection, access)
+ 	if err := ctx.Err(); err != nil {
+ 		return fmt.Errorf("INSTALL_SUPPORT_CANCELLED: %w", err)
+ 	}
+-	if err := writeSupport(parent, name, report); err != nil {
+-		return err
++	archive, err := writeSupport(parent, name, report)
++	if err != nil {
++		return errors.Join(err, removeSupportArchive(parent, name, archive))
++	}
++	// Never retry an uncertain terminal append or release a successful payload.
++	terminalAttempted = true
++	completion, stop := context.WithTimeout(context.WithoutCancel(ctx), timeout)
++	defer stop()
++	if err := access.append(completion, "complete", archive, ""); err != nil {
++		return errors.Join(err, removeSupportArchive(parent, name, archive))
+ 	}
+ 	_, err = fmt.Fprintf(out, "INSTALL_SUPPORT_COMPLETE collection_issues=%d\n", issues)
+ 	return err
+ }
+ 
+-func collectSupport(ctx context.Context, c Config, runner Runner) supportReport {
++func collectSupport(ctx context.Context, c Config, runner Runner, operationEnd int64) supportReport {
+ 	report := supportReport{
+ 		FormatVersion: 1, CollectedAt: time.Now().UTC(), Topology: c.Topology.Size,
+ 		Host:          supportHost{OS: runtime.GOOS, Architecture: runtime.GOARCH},
+ 		Configuration: supportConfig(c), Issues: []string{},
+ 	}
+-	operations, err := collectSupportOperations(c)
++	operations, err := collectSupportOperationsBefore(c, operationEnd)
+ 	report.Operations = operations
+ 	if err != nil {
+ 		report.Issues = append(report.Issues, "OPERATION_LOG_UNAVAILABLE")
+@@ -240,37 +273,43 @@ func readSupportServices(raw string, services []supportService) error {
+ 	return nil
+ }
+ 
+-func writeSupport(parent *os.Root, name string, report any) error {
++func writeSupport(parent *os.Root, name string, report any) (published supportArchive, result error) {
+ 	raw, err := json.MarshalIndent(report, "", "  ")
+ 	if err != nil {
+-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot encode the support report")
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot encode the support report")
+ 	}
+ 	raw = append(raw, '\n')
+ 	temporary := ".ownsolid-support-" + rand.Text()
+ 	file, err := parent.OpenFile(temporary, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+ 	if err != nil {
+-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: check the output directory's permissions and free space")
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: check the output directory's permissions and free space")
+ 	}
+ 	defer parent.Remove(temporary)
+-	compressed := gzip.NewWriter(file)
++	digest := sha256.New()
++	compressed := gzip.NewWriter(io.MultiWriter(file, digest))
+ 	archive := tar.NewWriter(compressed)
+ 	if err = archive.WriteHeader(&tar.Header{Name: "support.json", Mode: 0o600, Size: int64(len(raw))}); err == nil {
+ 		_, err = archive.Write(raw)
+ 	}
+ 	if err = errors.Join(err, archive.Close(), compressed.Close(), file.Sync(), file.Close()); err != nil {
+-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot finish the archive; check free space and retry")
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot finish the archive; check free space and retry")
+ 	}
+ 	if err := parent.Link(temporary, name); errors.Is(err, os.ErrExist) {
+-		return errors.New("INSTALL_SUPPORT_OUTPUT_EXISTS: use an unused output path")
++		return published, errors.New("INSTALL_SUPPORT_OUTPUT_EXISTS: use an unused output path")
+ 	} else if err != nil {
+-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot publish the archive in this directory")
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot publish the archive in this directory")
+ 	}
++	info, err := parent.Lstat(name)
++	if err != nil {
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot identify the published private archive")
++	}
++	published = supportArchive{sha256: hex.EncodeToString(digest.Sum(nil)), bytes: info.Size(), info: info}
+ 	directory, err := parent.Open(".")
+ 	if err != nil {
+-		return errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
++		return published, errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
+ 	}
+ 	if err := errors.Join(directory.Sync(), directory.Close()); err != nil {
+-		return errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
++		return published, errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
+ 	}
+-	return nil
++	return published, nil
+ }
+diff --git a/deploy/offline/internal/install/support_access.go b/deploy/offline/internal/install/support_access.go
+new file mode 100644
+index 00000000..3d68043f
+--- /dev/null
++++ b/deploy/offline/internal/install/support_access.go
+@@ -0,0 +1,253 @@
++package install
++
++import (
++	"context"
++	"crypto/rand"
++	"crypto/sha256"
++	"encoding/hex"
++	"encoding/json"
++	"errors"
++	"io"
++	"os"
++	"path/filepath"
++	"strconv"
++	"syscall"
++	"time"
++)
++
++// supportAccess uses the existing operator log. It is not a server audit actor.
++type supportAccess struct {
++	root      *os.Root
++	file      *os.File
++	event     supportAccessEvent
++	priorSize int64
++}
++
++type supportAccessEvent struct {
++	Version         int       `json:"format_version"`
++	PriorIncomplete bool      `json:"prior_tail_incomplete,omitempty"`
++	Time            time.Time `json:"time"`
++	Action          string    `json:"action"`
++	Outcome         string    `json:"outcome"`
++	Attempt         string    `json:"attempt_id"`
++	Kind            string    `json:"collector"`
++	UID             int       `json:"uid"`
++	EffectiveUID    int       `json:"effective_uid"`
++	InputSHA256     string    `json:"input_sha256"`
++	ArchiveSHA256   string    `json:"archive_sha256,omitempty"`
++	ArchiveBytes    int64     `json:"archive_bytes,omitempty"`
++	Failure         string    `json:"failure_code,omitempty"`
++}
++
++type supportArchive struct {
++	sha256 string
++	bytes  int64
++	info   os.FileInfo
++}
++
++func supportAccessError() error { return supportAccessErrorAt("admission") }
++
++func supportAccessErrorAt(stage string) error {
++	return errors.New("INSTALL_SUPPORT_ACCESS_UNAVAILABLE: cannot durably record diagnostic access (" + stage + "); preserve the operator log and check ownership, permissions and free space before retrying")
++}
++
++func supportOwned(info os.FileInfo) bool {
++	stat, ok := info.Sys().(*syscall.Stat_t)
++	return ok && int(stat.Uid) == os.Geteuid()
++}
++
++func installationSupportAccess(ctx context.Context, c Config) (*supportAccess, error) {
++	raw, err := json.Marshal(c)
++	if err != nil {
++		return nil, supportAccessErrorAt("encode input")
++	}
++	if !canonicalPath(c.InstallRoot) || c.InstallRoot == "/" {
++		return nil, supportAccessErrorAt("installation root selection")
++	}
++	if err := os.MkdirAll(c.InstallRoot, 0o700); err != nil {
++		return nil, supportAccessErrorAt("create installation root")
++	}
++	root, err := os.OpenRoot(c.InstallRoot)
++	if err != nil {
++		return nil, supportAccessErrorAt("open installation root")
++	}
++	defer root.Close()
++	info, err := root.Stat(".")
++	if err != nil || !supportOwned(info) || info.Mode().Perm()&0o022 != 0 {
++		return nil, supportAccessErrorAt("installation directory owner or mode")
++	}
++	if err := root.Mkdir(operatorDirectoryName, 0o700); err != nil && !errors.Is(err, os.ErrExist) {
++		return nil, supportAccessErrorAt("create operator directory")
++	}
++	info, err = root.Lstat(operatorDirectoryName)
++	if err != nil || !info.IsDir() || !supportOwned(info) || info.Mode().Perm() != 0o700 {
++		return nil, supportAccessErrorAt("operator directory owner or mode")
++	}
++	// Persist a newly created operator directory before admitting any read.
++	directory, err := root.Open(".")
++	if err != nil {
++		return nil, supportAccessErrorAt("open installation directory")
++	}
++	if err := errors.Join(directory.Sync(), directory.Close()); err != nil {
++		return nil, supportAccessErrorAt("sync installation directory")
++	}
++	operator, err := root.OpenRoot(operatorDirectoryName)
++	if err != nil {
++		return nil, supportAccessErrorAt("open operator directory")
++	}
++	return beginSupportAccess(ctx, operator, "local", raw)
++}
++
++func clusterSupportAccess(ctx context.Context, input string, raw []byte) (*supportAccess, error) {
++	root, err := os.OpenRoot(filepath.Dir(input))
++	if err != nil {
++		return nil, supportAccessError()
++	}
++	return beginSupportAccess(ctx, root, "managed_cluster", raw)
++}
++
++// beginSupportAccess owns root, including on failure.
++func beginSupportAccess(ctx context.Context, root *os.Root, kind string, input []byte) (*supportAccess, error) {
++	a := &supportAccess{root: root}
++	info, err := root.Stat(".")
++	if err == nil && (!info.IsDir() || !supportOwned(info) || info.Mode().Perm()&0o022 != 0) {
++		err = supportAccessError()
++	}
++	if err == nil {
++		flags := os.O_APPEND | os.O_RDWR | syscall.O_NOFOLLOW | syscall.O_NONBLOCK
++		a.file, err = root.OpenFile(operationLogName, os.O_CREATE|os.O_EXCL|flags, 0o600)
++		if errors.Is(err, os.ErrExist) {
++			info, err = root.Lstat(operationLogName)
++			if err == nil && (!info.Mode().IsRegular() || !supportOwned(info) || info.Mode().Perm() != 0o600) {
++				err = supportAccessErrorAt("existing log identity or mode")
++			}
++			if err == nil {
++				// Do not recreate a carrier that disappears after an observed EEXIST.
++				a.file, err = root.OpenFile(operationLogName, flags, 0)
++			}
++		}
++	}
++	if err != nil {
++		a.close()
++		var errno syscall.Errno
++		if errors.As(err, &errno) {
++			var detail *os.PathError
++			operation := "open"
++			if errors.As(err, &detail) {
++				operation = detail.Op
++			}
++			return nil, supportAccessErrorAt("operator log " + operation + " errno " + strconv.Itoa(int(errno)))
++		}
++		return nil, supportAccessErrorAt("open operator log")
++	}
++	sum := sha256.Sum256(input)
++	a.event = supportAccessEvent{Version: 1, Action: "diagnostics", Attempt: rand.Text(), Kind: kind,
++		UID: os.Getuid(), EffectiveUID: os.Geteuid(), InputSHA256: hex.EncodeToString(sum[:])}
++	if err := a.append(ctx, "admitted", supportArchive{}, ""); err != nil {
++		a.close()
++		return nil, err
++	}
++	return a, nil
++}
++
++func (a *supportAccess) close() {
++	if a.file != nil {
++		a.file.Close()
++	}
++	if a.root != nil {
++		a.root.Close()
++	}
++}
++
++// append serializes one bounded append and durable sync, without replacing the carrier.
++func (a *supportAccess) append(ctx context.Context, outcome string, archive supportArchive, failure string) error {
++	for {
++		if ctx.Err() != nil {
++			return supportAccessErrorAt("lock")
++		}
++		err := syscall.Flock(int(a.file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
++		if err == nil {
++			break
++		}
++		if !errors.Is(err, syscall.EWOULDBLOCK) {
++			return supportAccessErrorAt("lock")
++		}
++		// Poll a nonblocking file lock so caller cancellation still bounds admission.
++		timer := time.NewTimer(10 * time.Millisecond)
++		select {
++		case <-ctx.Done():
++			timer.Stop()
++			return supportAccessErrorAt("cancelled")
++		case <-timer.C:
++		}
++	}
++	defer syscall.Flock(int(a.file.Fd()), syscall.LOCK_UN)
++	info, err := a.file.Stat()
++	current, pathErr := a.root.Lstat(operationLogName)
++	if err != nil || pathErr != nil || !info.Mode().IsRegular() || !supportOwned(info) ||
++		info.Mode().Perm() != 0o600 || !os.SameFile(info, current) ||
++		info.Sys().(*syscall.Stat_t).Nlink != 1 {
++		return supportAccessErrorAt("log identity or mode")
++	}
++	priorIncomplete := false
++	if info.Size() > 0 {
++		var last [1]byte
++		if _, err := a.file.ReadAt(last[:], info.Size()-1); err != nil {
++			return supportAccessErrorAt("log tail")
++		}
++		priorIncomplete = last[0] != '\n'
++	}
++	if outcome == "admitted" {
++		a.priorSize = info.Size()
++	}
++	event := a.event
++	event.PriorIncomplete = priorIncomplete
++	event.Time, event.Outcome = time.Now().UTC(), outcome
++	event.ArchiveSHA256, event.ArchiveBytes, event.Failure = archive.sha256, archive.bytes, failure
++	raw, err := json.Marshal(event)
++	if err != nil || ctx.Err() != nil {
++		return supportAccessErrorAt("encoding or cancellation")
++	}
++	raw = append(raw, '\n')
++	if priorIncomplete {
++		// Preserve every legacy byte and separate this new attempt without adopting the old one.
++		raw = append([]byte{'\n'}, raw...)
++	}
++	n, err := a.file.Write(raw)
++	if err == nil && n != len(raw) {
++		err = io.ErrShortWrite
++	}
++	if err != nil {
++		return supportAccessErrorAt("log write")
++	}
++	directory, err := a.root.Open(".")
++	if err != nil {
++		return supportAccessErrorAt("directory handle")
++	}
++	if err := errors.Join(a.file.Sync(), directory.Sync(), directory.Close()); err != nil {
++		return supportAccessErrorAt("durability sync")
++	}
++	return nil
++}
++
++// removeSupportArchive removes only the exact inode published by this attempt.
++func removeSupportArchive(parent *os.Root, name string, archive supportArchive) error {
++	if archive.info == nil {
++		return nil
++	}
++	info, err := parent.Lstat(name)
++	if err != nil || !os.SameFile(info, archive.info) {
++		return errors.New("INSTALL_SUPPORT_CLEANUP_REQUIRED: preserve the operator log and inspect the uncertain output path")
++	}
++	if err := parent.Remove(name); err != nil {
++		return errors.New("INSTALL_SUPPORT_CLEANUP_REQUIRED: the private archive could not be withdrawn after an unconfirmed outcome")
++	}
++	directory, err := parent.Open(".")
++	if err != nil {
++		return errors.New("INSTALL_SUPPORT_CLEANUP_REQUIRED: archive withdrawal requires directory synchronization")
++	}
++	if err := errors.Join(directory.Sync(), directory.Close()); err != nil {
++		return errors.New("INSTALL_SUPPORT_CLEANUP_REQUIRED: archive withdrawal synchronization is unconfirmed")
++	}
++	return nil
++}
+diff --git a/deploy/offline/internal/install/support_access_cli_test.go b/deploy/offline/internal/install/support_access_cli_test.go
+new file mode 100644
+index 00000000..0512fc99
+--- /dev/null
++++ b/deploy/offline/internal/install/support_access_cli_test.go
+@@ -0,0 +1,175 @@
++package install
++
++import (
++	"bytes"
++	"encoding/json"
++	"errors"
++	"io"
++	"net/http"
++	"net/http/httptest"
++	"os"
++	"os/exec"
++	"path/filepath"
++	"strings"
++	"sync/atomic"
++	"testing"
++	"time"
++)
++
++// This black-box flow is selected only with the exact native installer prepared outside Git.
++func TestSupportAccessCLI(t *testing.T) {
++	binary := os.Getenv("OWNSOLID_SUPPORT_INSTALLER")
++	if binary == "" {
++		t.Skip("Set OWNSOLID_SUPPORT_INSTALLER to the admitted native installer")
++	}
++	for _, kind := range []string{"local", "managed_cluster"} {
++		t.Run(kind, func(t *testing.T) {
++			directory := shortTempDir(t)
++			var source []byte
++			var input, operator string
++			var requests atomic.Int64
++			var server *httptest.Server
++			if kind == "local" {
++				input = filepath.Join(directory, "install.yaml")
++				source = []byte(validYAML(t, filepath.Join(directory, "installation")))
++				c, err := Decode(source)
++				if err != nil {
++					t.Fatal(err)
++				}
++				operator = c.Layout().Operator
++			} else {
++				operator = directory
++				input = filepath.Join(directory, "cluster.json")
++				server = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++					requests.Add(1)
++					events := supportAccessEvents(t, operator)
++					if len(events) == 0 || events[len(events)-1].Outcome != "admitted" {
++						t.Error("CLI performed HTTPS read without durable admission")
++					}
++					if r.Header.Get("Authorization") != "Bearer "+supportTestBearer {
++						t.Error("CLI omitted source authorization")
++					}
++					w.WriteHeader(http.StatusForbidden)
++				}))
++				defer server.Close()
++				c := clusterSupportInput{Version: 1, TimeoutSeconds: 2,
++					Helm: &helmSupportInput{writeClusterSupportEndpoint(t, server, supportTestBearer), supportTestNamespace, supportTestRelease}}
++				var err error
++				source, err = json.Marshal(c)
++				if err != nil {
++					t.Fatal(err)
++				}
++			}
++			if err := os.WriteFile(input, source, 0o600); err != nil {
++				t.Fatal(err)
++			}
++			run := func(output string) (string, error) {
++				flag := "--config"
++				if kind == "managed_cluster" {
++					flag = "--cluster-config"
++				}
++				command := exec.CommandContext(t.Context(), binary, "support-bundle", flag, input, "--output", output)
++				command.Env = append(os.Environ(), "DOCKER_HOST=unix://"+filepath.Join(directory, "missing.sock"))
++				raw, err := command.CombinedOutput()
++				return string(raw), err
++			}
++			output := filepath.Join(directory, "first.tar.gz")
++			if raw, err := run(output); err != nil {
++				t.Fatalf("native support collection failed: %v %s", err, raw)
++			}
++			first := checkSupportCompletion(t, operator, output, kind)
++			path := filepath.Join(operator, operationLogName)
++			if err := os.Chmod(path, 0o400); err != nil {
++				t.Fatal(err)
++			}
++			before := requests.Load()
++			refused := filepath.Join(directory, "refused.tar.gz")
++			raw, err := run(refused)
++			if err == nil || !strings.Contains(raw, "INSTALL_SUPPORT_ACCESS_UNAVAILABLE") ||
++				strings.Contains(raw, "INSTALL_SUPPORT_COMPLETE") {
++				t.Fatal("native CLI did not refuse an unwritable receipt")
++			}
++			if _, err := os.Lstat(refused); !errors.Is(err, os.ErrNotExist) {
++				t.Fatal("refused CLI attempt published an archive")
++			}
++			if requests.Load() != before {
++				t.Fatal("refused CLI attempt reached HTTPS")
++			}
++			if err := os.Chmod(path, 0o600); err != nil {
++				t.Fatal(err)
++			}
++			retry := filepath.Join(directory, "retry.tar.gz")
++			if raw, err := run(retry); err != nil {
++				t.Fatalf("native explicit retry failed: %v %s", err, raw)
++			}
++			events := supportAccessEvents(t, operator)
++			if len(events) != 4 || events[2].Attempt == first[0].Attempt ||
++				events[2].Outcome != "admitted" || events[3].Outcome != "complete" {
++				t.Fatal("native restart/retry did not preserve distinct attempts")
++			}
++			_, report := readSupportArchive(t, retry)
++			for _, sentinel := range []string{directory, supportTestBearer} {
++				if bytes.Contains(report, []byte(sentinel)) {
++					t.Fatal("native report leaked private values")
++				}
++			}
++		})
++	}
++}
++
++func TestSupportAccessKilledCLILeavesOriginalAdmission(t *testing.T) {
++	binary := os.Getenv("OWNSOLID_SUPPORT_INSTALLER")
++	if binary == "" {
++		t.Skip("Set OWNSOLID_SUPPORT_INSTALLER to the admitted native installer")
++	}
++	directory := shortTempDir(t)
++	started := make(chan struct{}, 2)
++	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		started <- struct{}{}
++		<-r.Context().Done()
++	}))
++	defer server.Close()
++	c := clusterSupportInput{Version: 1, TimeoutSeconds: 10,
++		Helm: &helmSupportInput{writeClusterSupportEndpoint(t, server, supportTestBearer), supportTestNamespace, supportTestRelease}}
++	source, err := json.Marshal(c)
++	if err != nil {
++		t.Fatal(err)
++	}
++	input, output := filepath.Join(directory, "cluster.json"), filepath.Join(directory, "killed.tar.gz")
++	if err := os.WriteFile(input, source, 0o600); err != nil {
++		t.Fatal(err)
++	}
++	command := exec.CommandContext(t.Context(), binary, "support-bundle", "--cluster-config", input, "--output", output)
++	command.Stdout, command.Stderr = io.Discard, io.Discard
++	if err := command.Start(); err != nil {
++		t.Fatal(err)
++	}
++	defer func() {
++		if command.ProcessState == nil {
++			command.Process.Kill()
++			command.Wait()
++		}
++	}()
++	select {
++	case <-started:
++	case <-time.After(5 * time.Second):
++		t.Fatal("native collector did not reach its selected private source")
++	}
++	events := supportAccessEvents(t, directory)
++	if len(events) != 1 || events[0].Outcome != "admitted" {
++		t.Fatal("native protected read lacked durable admission")
++	}
++	if err := command.Process.Kill(); err != nil {
++		t.Fatal(err)
++	}
++	if err := command.Wait(); err == nil {
++		t.Fatal("killed native CLI returned success")
++	}
++	after := supportAccessEvents(t, directory)
++	if len(after) != 1 || after[0].Attempt != events[0].Attempt {
++		t.Fatal("killed CLI fabricated a terminal outcome")
++	}
++	if _, err := os.Lstat(output); !errors.Is(err, os.ErrNotExist) {
++		t.Fatal("killed CLI published an archive")
++	}
++}
+diff --git a/deploy/offline/internal/install/support_access_test.go b/deploy/offline/internal/install/support_access_test.go
+new file mode 100644
+index 00000000..1542c475
+--- /dev/null
++++ b/deploy/offline/internal/install/support_access_test.go
+@@ -0,0 +1,385 @@
++package install
++
++import (
++	"bytes"
++	"context"
++	"crypto/sha256"
++	"encoding/hex"
++	"encoding/json"
++	"errors"
++	"io"
++	"net/http"
++	"net/http/httptest"
++	"os"
++	"path/filepath"
++	"strings"
++	"sync"
++	"syscall"
++	"testing"
++	"time"
++)
++
++func supportAccessEvents(t *testing.T, directory string) []supportAccessEvent {
++	t.Helper()
++	file, err := os.Open(filepath.Join(directory, operationLogName))
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer file.Close()
++	decoder := json.NewDecoder(file)
++	var events []supportAccessEvent
++	for {
++		var event supportAccessEvent
++		if err := decoder.Decode(&event); errors.Is(err, io.EOF) {
++			break
++		} else if err != nil {
++			t.Fatal(err)
++		}
++		if event.Action == "diagnostics" {
++			events = append(events, event)
++		}
++	}
++	return events
++}
++
++func checkSupportCompletion(t *testing.T, directory, archive, kind string) []supportAccessEvent {
++	t.Helper()
++	events := supportAccessEvents(t, directory)
++	if len(events) != 2 || events[0].Outcome != "admitted" || events[1].Outcome != "complete" ||
++		events[0].Attempt == "" || events[0].Attempt != events[1].Attempt {
++		t.Fatalf("wrong diagnostic lifecycle: %+v", events)
++	}
++	raw, err := os.ReadFile(archive)
++	if err != nil {
++		t.Fatal(err)
++	}
++	digest := sha256.Sum256(raw)
++	for _, event := range events {
++		if event.Version != 1 || event.UID != os.Getuid() || event.EffectiveUID != os.Geteuid() || event.Kind != kind ||
++			len(event.InputSHA256) != 64 || event.Time.IsZero() {
++			t.Fatalf("wrong actual operator binding: %+v", event)
++		}
++	}
++	if events[1].ArchiveSHA256 != hex.EncodeToString(digest[:]) || events[1].ArchiveBytes != int64(len(raw)) {
++		t.Fatal("terminal record did not bind the published archive bytes")
++	}
++	return events
++}
++
++func TestSupportAccessPrecedesLocalCollectorAndPersistsAcrossRetry(t *testing.T) {
++	c := validConfig(t)
++	t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
++	t.Setenv("USER", "untrusted-environment-actor")
++	t.Setenv("SUDO_UID", "999999")
++	directory := c.Layout().Operator
++	for n := range 2 {
++		runner := &fakeRunner{answer: func(string) (string, error) {
++			events := supportAccessEvents(t, directory)
++			if len(events) != n*2+1 || events[len(events)-1].Outcome != "admitted" {
++				t.Fatal("collector ran without its durable admission")
++			}
++			return "", errors.New("daemon unavailable")
++		}}
++		path := filepath.Join(shortTempDir(t), "support.tar.gz")
++		if err := SupportBundle(t.Context(), c, runner, path, io.Discard); err != nil {
++			t.Fatal(err)
++		}
++		if n == 0 {
++			checkSupportCompletion(t, directory, path, "local")
++		}
++	}
++	events := supportAccessEvents(t, directory)
++	if len(events) != 4 || events[0].Attempt == events[2].Attempt {
++		t.Fatal("explicit retry did not preserve two distinct attempts")
++	}
++	raw, err := os.ReadFile(filepath.Join(directory, operationLogName))
++	if err != nil {
++		t.Fatal(err)
++	}
++	if bytes.Contains(raw, []byte(c.InstallRoot)) || bytes.Contains(raw, []byte("untrusted-environment")) {
++		t.Fatal("operator log contained raw paths or claimed environment identity")
++	}
++}
++
++func TestSupportAccessPrecedesManagedHTTPSAndPreservesSourceAuthorization(t *testing.T) {
++	directory := shortTempDir(t)
++	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		events := supportAccessEvents(t, directory)
++		if len(events) != 1 || events[0].Outcome != "admitted" {
++			t.Error("managed read preceded durable admission")
++		}
++		if r.Header.Get("Authorization") != "Bearer "+supportTestBearer {
++			t.Error("source authorization was omitted")
++		}
++		w.WriteHeader(http.StatusForbidden)
++	}))
++	defer server.Close()
++	c := clusterSupportInput{Version: 1, TimeoutSeconds: 2,
++		Helm: &helmSupportInput{writeClusterSupportEndpoint(t, server, supportTestBearer), supportTestNamespace, supportTestRelease}}
++	raw, err := json.Marshal(c)
++	if err != nil {
++		t.Fatal(err)
++	}
++	input, output := filepath.Join(directory, "cluster.json"), filepath.Join(directory, "support.tar.gz")
++	if err := os.WriteFile(input, raw, 0o600); err != nil {
++		t.Fatal(err)
++	}
++	if err := ClusterSupportBundle(t.Context(), input, output, io.Discard); err != nil {
++		t.Fatal(err)
++	}
++	checkSupportCompletion(t, directory, output, "managed_cluster")
++	_, archive := readSupportArchive(t, output)
++	for _, sentinel := range []string{supportTestBearer, server.URL, directory} {
++		if bytes.Contains(archive, []byte(sentinel)) {
++			t.Fatal("managed archive leaked a protected value")
++		}
++	}
++}
++
++func TestSupportAccessUnsafeLogStopsBothCollectors(t *testing.T) {
++	for _, kind := range []string{"local", "managed_cluster"} {
++		for _, fault := range []string{"symlink", "directory", "read-only", "unsafe-mode", "fifo", "hardlink"} {
++			t.Run(kind+"/"+fault, func(t *testing.T) {
++				c := validConfig(t)
++				directory := c.Layout().Operator
++				if kind == "managed_cluster" {
++					directory = shortTempDir(t)
++				}
++				if err := os.MkdirAll(directory, 0o700); err != nil {
++					t.Fatal(err)
++				}
++				path := filepath.Join(directory, operationLogName)
++				switch fault {
++				case "symlink":
++					if err := os.Symlink(filepath.Join(directory, "absent"), path); err != nil {
++						t.Fatal(err)
++					}
++				case "directory":
++					if err := os.Mkdir(path, 0o700); err != nil {
++						t.Fatal(err)
++					}
++				case "fifo":
++					if err := syscall.Mkfifo(path, 0o600); err != nil {
++						t.Fatal(err)
++					}
++				default:
++					value := []byte("{}\n")
++					if err := os.WriteFile(path, value, 0o600); err != nil {
++						t.Fatal(err)
++					}
++					if fault == "read-only" {
++						if err := os.Chmod(path, 0o400); err != nil {
++							t.Fatal(err)
++						}
++					}
++					if fault == "unsafe-mode" {
++						if err := os.Chmod(path, 0o644); err != nil {
++							t.Fatal(err)
++						}
++					}
++					if fault == "hardlink" {
++						if err := os.Link(path, path+".other"); err != nil {
++							t.Fatal(err)
++						}
++					}
++				}
++				output := filepath.Join(shortTempDir(t), "support.tar.gz")
++				runner := &fakeRunner{answer: func(string) (string, error) {
++					t.Error("unsafe log reached a local collector")
++					return "", nil
++				}}
++				var err error
++				if kind == "local" {
++					err = SupportBundle(t.Context(), c, runner, output, io.Discard)
++				} else {
++					server := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { t.Error("unsafe log reached HTTPS") }))
++					defer server.Close()
++					config := clusterSupportInput{Version: 1, TimeoutSeconds: 1,
++						Helm: &helmSupportInput{writeClusterSupportEndpoint(t, server, supportTestBearer), supportTestNamespace, supportTestRelease}}
++					raw, _ := json.Marshal(config)
++					input := filepath.Join(directory, "cluster.json")
++					if err := os.WriteFile(input, raw, 0o600); err != nil {
++						t.Fatal(err)
++					}
++					err = ClusterSupportBundle(t.Context(), input, output, io.Discard)
++				}
++				if err == nil || !strings.Contains(err.Error(), "INSTALL_SUPPORT_ACCESS_UNAVAILABLE") {
++					t.Fatalf("unsafe receipt was accepted: %v", err)
++				}
++				if _, err := os.Lstat(output); !errors.Is(err, os.ErrNotExist) {
++					t.Fatal("unsafe admission produced an archive")
++				}
++			})
++		}
++	}
++}
++
++func TestSupportAccessTerminalFailureWithdrawsArchive(t *testing.T) {
++	c := validConfig(t)
++	t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
++	output := filepath.Join(shortTempDir(t), "support.tar.gz")
++	path := filepath.Join(c.Layout().Operator, operationLogName)
++	runner := &fakeRunner{answer: func(string) (string, error) {
++		if err := os.Chmod(path, 0o644); err != nil {
++			t.Fatal(err)
++		}
++		return "", errors.New("daemon unavailable")
++	}}
++	var out bytes.Buffer
++	err := SupportBundle(t.Context(), c, runner, output, &out)
++	if err == nil || !strings.Contains(err.Error(), "INSTALL_SUPPORT_ACCESS_UNAVAILABLE") ||
++		strings.Contains(out.String(), "INSTALL_SUPPORT_COMPLETE") {
++		t.Fatalf("uncertain terminal access released success: %v", err)
++	}
++	if _, err := os.Lstat(output); !errors.Is(err, os.ErrNotExist) {
++		t.Fatal("uncertain terminal access released archive")
++	}
++	events := supportAccessEvents(t, c.Layout().Operator)
++	if len(events) != 1 || events[0].Outcome != "admitted" {
++		t.Fatal("uncertain outcome was retried or fabricated")
++	}
++}
++
++func TestSupportAccessCancellationAndPublicationFailureAreRecorded(t *testing.T) {
++	for _, fault := range []string{"cancelled", "publication"} {
++		t.Run(fault, func(t *testing.T) {
++			c := validConfig(t)
++			t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
++			output := filepath.Join(shortTempDir(t), "support.tar.gz")
++			ctx, cancel := context.WithCancel(t.Context())
++			defer cancel()
++			runner := &fakeRunner{answer: func(string) (string, error) {
++				if fault == "cancelled" {
++					cancel()
++				} else if err := os.Mkdir(output, 0o700); err != nil {
++					t.Fatal(err)
++				}
++				return "", errors.New("daemon unavailable")
++			}}
++			if err := SupportBundle(ctx, c, runner, output, io.Discard); err == nil {
++				t.Fatal("failed collection returned success")
++			}
++			events := supportAccessEvents(t, c.Layout().Operator)
++			if len(events) != 2 || events[1].Outcome != "failed" || events[1].Failure == "" || events[1].ArchiveSHA256 != "" {
++				t.Fatalf("wrong failed attempt: %+v", events)
++			}
++		})
++	}
++}
++
++func TestSupportAccessConcurrentReadsKeepDistinctDurableAttempts(t *testing.T) {
++	c := validConfig(t)
++	t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
++	directory := shortTempDir(t)
++	var wg sync.WaitGroup
++	for n := range 8 {
++		wg.Go(func() {
++			runner := &fakeRunner{answer: func(string) (string, error) { return "", errors.New("daemon unavailable") }}
++			output := filepath.Join(directory, "support-"+itoa(n)+".tar.gz")
++			if err := SupportBundle(t.Context(), c, runner, output, io.Discard); err != nil {
++				t.Error(err)
++			}
++		})
++	}
++	wg.Wait()
++	events := supportAccessEvents(t, c.Layout().Operator)
++	attempts := map[string][]string{}
++	for _, event := range events {
++		attempts[event.Attempt] = append(attempts[event.Attempt], event.Outcome)
++	}
++	if len(attempts) != 8 {
++		t.Fatalf("wrong concurrent attempts: %d", len(attempts))
++	}
++	for _, outcomes := range attempts {
++		if strings.Join(outcomes, ",") != "admitted,complete" {
++			t.Fatalf("wrong event order: %v", outcomes)
++		}
++	}
++}
++
++func TestSupportAccessHeldLogLockHonorsCancellation(t *testing.T) {
++	rootPath := shortTempDir(t)
++	path := filepath.Join(rootPath, operationLogName)
++	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer file.Close()
++	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
++		t.Fatal(err)
++	}
++	defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
++	root, err := os.OpenRoot(rootPath)
++	if err != nil {
++		t.Fatal(err)
++	}
++	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Millisecond)
++	defer cancel()
++	if _, err := beginSupportAccess(ctx, root, "local", []byte("fixture")); err == nil {
++		t.Fatal("held log lock ignored cancellation")
++	}
++	if info, err := file.Stat(); err != nil || info.Size() != 0 {
++		t.Fatal("cancelled admission changed the log")
++	}
++}
++
++func TestSupportAccessSeparatesAnIncompleteLegacyTailWithoutAdoptingIt(t *testing.T) {
++	c := validConfig(t)
++	t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
++	legacy := "{\"time\":\"2026-11-09T02:00:00Z\",\"action\":\"backup\",\"outcome\":\"complete\"}"
++	writeSupportLog(t, c, legacy)
++	output := filepath.Join(shortTempDir(t), "support.tar.gz")
++	runner := &fakeRunner{answer: func(string) (string, error) { return "", errors.New("daemon unavailable") }}
++	if err := SupportBundle(t.Context(), c, runner, output, io.Discard); err != nil {
++		t.Fatal(err)
++	}
++	events := supportAccessEvents(t, c.Layout().Operator)
++	if len(events) != 2 || !events[0].PriorIncomplete || events[1].PriorIncomplete {
++		t.Fatalf("legacy incompleteness was not retained: %+v", events)
++	}
++	raw, err := os.ReadFile(filepath.Join(c.Layout().Operator, operationLogName))
++	if err != nil || !bytes.HasPrefix(raw, []byte(legacy+"\n")) {
++		t.Fatal("the original legacy bytes were changed")
++	}
++	report, _ := readSupportArchive(t, output)
++	if len(report.Operations) != 0 {
++		t.Fatal("an incomplete pre-admission record was promoted into the current snapshot")
++	}
++}
++
++func TestSupportAccessReplacedLogCannotReceiveCompletion(t *testing.T) {
++	c := validConfig(t)
++	t.Setenv("DOCKER_HOST", "unix:///var/run/docker.sock")
++	path := filepath.Join(c.Layout().Operator, operationLogName)
++	retained := path + ".retained"
++	const sentinel = "foreign-replacement-content"
++	runner := &fakeRunner{answer: func(string) (string, error) {
++		if err := os.Rename(path, retained); err != nil {
++			t.Fatal(err)
++		}
++		if err := os.WriteFile(path, []byte(sentinel), 0o600); err != nil {
++			t.Fatal(err)
++		}
++		return "", errors.New("daemon unavailable")
++	}}
++	output := filepath.Join(shortTempDir(t), "support.tar.gz")
++	err := SupportBundle(t.Context(), c, runner, output, io.Discard)
++	if err == nil || !strings.Contains(err.Error(), "INSTALL_SUPPORT_ACCESS_UNAVAILABLE") {
++		t.Fatal("replacement log was accepted")
++	}
++	after, err := os.ReadFile(path)
++	if err != nil || string(after) != sentinel {
++		t.Fatal("replacement log was modified")
++	}
++	raw, err := os.ReadFile(retained)
++	if err != nil {
++		t.Fatal(err)
++	}
++	var admission supportAccessEvent
++	if json.Unmarshal(bytes.TrimSpace(raw), &admission) != nil || admission.Outcome != "admitted" {
++		t.Fatal("original admission was changed")
++	}
++	if _, err := os.Lstat(output); !errors.Is(err, os.ErrNotExist) {
++		t.Fatal("replaced log released an archive")
++	}
++}
+diff --git a/deploy/offline/internal/install/support_cluster.go b/deploy/offline/internal/install/support_cluster.go
+index b8b1ffdb..b89ed11f 100644
+--- a/deploy/offline/internal/install/support_cluster.go
++++ b/deploy/offline/internal/install/support_cluster.go
+@@ -75,10 +75,14 @@ func ClusterSupportBundle(ctx context.Context, input, output string, out io.Writ
+ 	if h := c.Helm; h != nil && (!h.valid() || !clusterLabel(h.Namespace, 63) || !clusterLabel(h.Release, 53)) {
+ 		return errors.New("INSTALL_CLUSTER_SUPPORT_HELM_INVALID: set the Kubernetes HTTPS origin, namespace, release and protected files")
+ 	}
+-	return publishSupportBundle(ctx, output, time.Duration(c.TimeoutSeconds)*time.Second, out, func(collection context.Context) (any, int) {
+-		report := collectClusterSupport(collection, c)
+-		return report, len(report.Issues)
+-	})
++	return publishSupportBundle(ctx, output, time.Duration(c.TimeoutSeconds)*time.Second, out,
++		func(admission context.Context) (*supportAccess, error) {
++			return clusterSupportAccess(admission, input, raw)
++		},
++		func(collection context.Context, _ *supportAccess) (any, int) {
++			report := collectClusterSupport(collection, c)
++			return report, len(report.Issues)
++		})
+ }
+ 
+ type clusterSupportReport struct {
+diff --git a/deploy/offline/internal/install/support_operations.go b/deploy/offline/internal/install/support_operations.go
+index 72c0cc1f..fd2efd1b 100644
+--- a/deploy/offline/internal/install/support_operations.go
++++ b/deploy/offline/internal/install/support_operations.go
+@@ -23,6 +23,11 @@ type supportOperation struct {
+ }
+ 
+ func collectSupportOperations(c Config) ([]supportOperation, error) {
++	return collectSupportOperationsBefore(c, -1)
++}
++
++// collectSupportOperationsBefore projects history at admission, before this read's new records.
++func collectSupportOperationsBefore(c Config, end int64) ([]supportOperation, error) {
+ 	events := []supportOperation{}
+ 	root, err := os.OpenRoot(c.InstallRoot)
+ 	if errors.Is(err, fs.ErrNotExist) {
+@@ -49,8 +54,12 @@ func collectSupportOperations(c Config) ([]supportOperation, error) {
+ 	if !info.Mode().IsRegular() {
+ 		return events, errors.New("operation log is not a regular file")
+ 	}
+-	start := max(0, info.Size()-supportOperationLogBytes)
+-	raw := make([]byte, info.Size()-start)
++	size := info.Size()
++	if end >= 0 {
++		size = min(size, end)
++	}
++	start := max(0, size-supportOperationLogBytes)
++	raw := make([]byte, size-start)
+ 	if len(raw) > 0 {
+ 		if _, err := f.ReadAt(raw, start); err != nil {
+ 			return events, err
+diff --git a/docs/decisions/0071-record-diagnostic-reads-before-local-collection.md b/docs/decisions/0071-record-diagnostic-reads-before-local-collection.md
+new file mode 100644
+index 00000000..4f66e125
+--- /dev/null
++++ b/docs/decisions/0071-record-diagnostic-reads-before-local-collection.md
+@@ -0,0 +1,49 @@
++# Record diagnostic reads before local collection
++
++Status: Accepted
++
++## Context
++
++The installer collects diagnostics while Control and Docker may be unavailable.
++Both local and managed collectors already project a bounded report and keep
++credentials and raw source values outside the archive. They did not account for
++the diagnostic access before reading its sources. Existing backup/restore log
++appends warn after an operation and cannot enforce a pre-read requirement.
++
++## Decision
++
++Both real support consumers use the existing protected operations.log. Admit
++and synchronize an attempt before invoking any collector. Bind the attempt to
++the kernel real/effective UID, fixed collector kind and input digest. Append a
++terminal outcome with the exact archive digest and length before returning
++success. Use the installation operator directory for local collection and the
++protected cluster-input directory for standalone managed collection.
++
++Create the log exclusively; reopen an existing owned regular entry without
++creation, then recheck its pinned identity. Keep the descriptor pinned, serialize
++bounded appends, synchronize the file and
++directory, and refuse an unsafe or replaced file or an incomplete trailing
++record. Never truncate or replace the operator log. Preserve the ordinary
++backup/restore records and archive redaction. If admission fails, collect
++nothing. If terminal recording fails, withdraw only this attempt's archive;
++return an actionable cleanup error when withdrawal cannot be confirmed.
++Do not retry an uncertain terminal append. A process interruption leaves its
++original attempt for inspection. An explicit retry is a separate attempt.
++
++These are local operator records. They neither authorize the remote read nor
++identify a browser actor. Existing Admin/Kubernetes source authorization still
++applies. There is no implemented server consumer for these retained support
++attempts. Do not fabricate SQL audit events or claim automatic reconciliation.
++The future real consumer must authorize the installation and preserve attempt
++identity, exact digests and idempotency under an unknown commit.
++
++## Consequences
++
++Recording failures can prevent diagnostics even while other sources are down.
++Operators must preserve and repair the protected log rather than discard an
++incomplete attempt. The existing control-down collector remains usable when
++its local durable operator log is available. No additional ledger, dependency,
++model or dataset is introduced. AUD-108 remains open until the actual server
++consumer and end-to-end reconciliation are implemented and verified.
++
++See [diagnostic research](../research/support-diagnostics.md#durable-local-operator-access-before-diagnostic-collection).
+diff --git a/docs/research/support-diagnostics.md b/docs/research/support-diagnostics.md
+index 38992299..4fe16fc3 100644
+--- a/docs/research/support-diagnostics.md
++++ b/docs/research/support-diagnostics.md
+@@ -180,3 +180,75 @@ mode 0600 archives contained the fixed unconfirmed state for a valid
+ record and the fixed collection issue for an unknown version. The raw
+ record remained byte-identical and its source identifiers were absent.
+ The recorder saw only the three IPv4, IPv6 and DNS probes.
++
++
++## Durable local operator access before diagnostic collection
++
++[OWASP event data sources and exclusions](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
++place access capture with the consumer that knows the action and actor and exclude
++credentials and payloads. The two real installer consumers are `SupportBundle`
++and `ClusterSupportBundle`. Neither a credential file nor an offline log is a
++browser identity or a server-authorized audit event. Preserve collection while
++Control and Docker are down.
++
++Reuse `operations.log`, with failure-propagating admission before the collector
++can run and a terminal record tied to the exact private archive bytes. Record
++only an opaque attempt ID, kernel real/effective UID, fixed collector kind,
++input digest, UTC time, outcome and archive digest/length. Do not trust SUDO_UID,
++USER, arbitrary reasons, remote identities or raw collector errors. A managed
++collector uses the protected input file's directory as its operator directory;
++a local installation uses its existing operator directory. Both directories
++and the log must belong to the executing effective UID and refuse unsafe modes,
++symlinks and special files. Every explicit retry is a new attempt.
++
++[Go File.Sync](https://pkg.go.dev/os#File.Sync) flushes file contents; synchronize
++the containing directory as well for a newly created log.
++[Linux flock](https://man7.org/linux/man-pages/man2/flock.2.html) attaches the lock
++to the open file description. Keep that descriptor for an attempt, serialize
++bounded append/sync operations, and refuse a replaced carrier. A missing legacy newline is separated without
++changing its bytes; record its incompleteness and snapshot history only up to
++the pre-admission byte boundary. Never adopt an older attempt.
++Do not truncate, rotate or replace the existing operation log. Preserve prior
++backup/restore events and existing diagnostic redaction projections. A failed
++admission must run no collector. Failed archive publication records failure;
++a failed terminal record must release neither a success message nor a newly
++published archive. A killed collector leaves an admitted, incomplete attempt.
++
++The existing operator append is warning-only after mutation and cannot provide
++this admission. A second access ledger, fake SQL append and automatic retry of
++an uncertain remote audit commit were rejected. Server reconciliation requires
++an actual authorized, installation-bound, idempotent consumer for retained local
++attempts. No such support receipt consumer is present in the inspected contracts.
++Keep receipts local and unreconciled until that owner contract exists; do not
++claim AUD-108 complete or claim that a future database import occurred. Recovery
++must preserve attempt IDs, exact input/archive digests and duplicate semantics;
++explicit retry collects a new attempt without overwriting an uncertain one.
++
++No dependency, model or dataset is added. The existing Go standard library's
++BSD-3-Clause terms permit commercial, redistributed and offline use with notices.
++OWASP and man-pages are references and are not embedded product content.
++
++Test both actual collector entry points: durable admission before any protected
++read, actual numeric operator identity, concurrent attempts, retry and restart
++readback, Control/Docker unavailable, sentinel redaction, unsafe/unwritable or
++replaced log, cancellation, failed archive publication and terminal recording.
++Run the native CLI and protocol fixtures on disconnected Linux amd64 with the
++existing egress recorder; a unit pass alone does not qualify an offline flow.
++
++### Concurrent operator-log creation
++
++The [open contract](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/open.2.html)
++defines exclusive creation with O_CREAT and O_EXCL, followed by an existing-file
++open when creation reports EEXIST. [Go's rooted open implementation](https://go.dev/src/os/root_unix.go)
++also guarantees that create-exclusive will not follow a final symlink.
++Use this create-or-open sequence instead of concurrent non-exclusive creation.
++Before opening an existing entry, validate its owned regular-file identity and
++private mode; recheck its identity under the append lock before any write.
++Never recreate a log that disappears during an existing-file open.
++
++A small Mac syscall prototype outside the product reproduced ENOENT with
++concurrent non-exclusive creation using both ordinary and no-follow flags.
++The create-exclusive/existing-open variant completed 80 attempts without an
++error. This selected the approach; the Go concurrent-consumer regression and
++native Linux entry-point acceptance still provide the product evidence.
++No additional dependency or licence is introduced.

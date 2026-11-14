@@ -1,0 +1,93 @@
+package distribution_test
+
+import (
+	"testing"
+
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
+	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
+)
+
+func TestGatewayKeyPurposeUpgradeClassifiesOnlyAfterAuthenticatedAdmission(t *testing.T) {
+	c := setupAccount(t, fixture.NewAtVersion(t, database.SchemaVersion-1))
+	ctx := t.Context()
+	workspace, tenant := c.a.Me.Workspace.ID, c.a.Me.Workspace.TenantID
+	deployment := c.readyDeployment(t)
+	gateway, err := c.s.Provision(ctx, c.a, c.input(), uuid.NewString(), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	alias, err := c.s.Publish(ctx, c.a, distribution.PublishRequest{
+		WorkspaceID: workspace, GatewayID: gateway.Gateway.ID, Name: "legacy-key-model",
+		DeploymentID: deployment.ID, DeploymentRevision: deployment.Revision, Reason: "Synthetic legacy key upgrade",
+	}, uuid.NewString(), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	type legacyKey struct {
+		id, raw   string
+		operation bool
+	}
+	seed := func(purpose string, operation bool) legacyKey {
+		t.Helper()
+		id, token := uuid.NewString(), security.Token()
+		// Write the predecessor schema's exact MAC domain and columns.
+		hash := security.MAC(c.s.Identity.HMACKey, purpose, "v1", id, token)
+		row, err := c.s.DB.Exec(ctx, `INSERT INTO api_keys(id,tenant_id,workspace_id,alias_id,label,secret_hash,created_by,requested_epoch,idempotency_key,fingerprint,expires_at,membership_authority)
+			SELECT $1,$2,$3,$4,'Legacy fixture',$5,$6,$7,$8,$9,clock_timestamp()+interval '1 hour',authority_id
+			FROM workspace_memberships WHERE tenant_id=$2 AND workspace_id=$3 AND user_id=$6`,
+			id, tenant, workspace, alias.ID, hash, c.p.Me.User.ID, c.p.Epoch, uuid.NewString(), make([]byte, 32))
+		if err != nil || row.RowsAffected() != 1 {
+			t.Fatal("seed predecessor key row", err)
+		}
+		return legacyKey{id: id, raw: "pk1." + id + "." + token, operation: operation}
+	}
+	legacy := []legacyKey{seed("m07-api-key", false), seed("m07-accepted-operation-key", true)}
+	if err = database.Migrate(ctx, c.s.DB); err != nil {
+		t.Fatal("upgrade predecessor key rows", err)
+	}
+	for _, key := range legacy {
+		rotate := func() error {
+			_, err := c.s.RotateKey(ctx, c.p, workspace, key.id,
+				distribution.RotateRequest{Reason: "Synthetic key rotation after upgrade"}, uuid.NewString(), uuid.NewString())
+			return err
+		}
+		check(t, rotate(), "API_KEY_NOT_ACTIVE")
+		admission := wire.AdmissionRequest{RequestID: uuid.NewString(), APIKey: key.raw, Model: "wrong-alias", MaximumOutputTokens: 16}
+		_, err = c.s.Admit(ctx, gateway.Gateway.ID, *gateway.Secret, admission, uuid.NewString())
+		check(t, err, "MODEL_ALIAS_NOT_FOUND")
+		readPurpose := func() *bool {
+			t.Helper()
+			var purpose *bool
+			if err := c.s.DB.QueryRow(ctx, "SELECT operation_only FROM api_keys WHERE id=$1", key.id).Scan(&purpose); err != nil {
+				t.Fatal(err)
+			}
+			return purpose
+		}
+		if readPurpose() != nil {
+			t.Fatal("declined admission classified a legacy key")
+		}
+
+		admission.Model = alias.Name
+		if _, err = c.s.Admit(ctx, gateway.Gateway.ID, *gateway.Secret, admission, uuid.NewString()); err != nil {
+			t.Fatal("legacy key lost its existing admission authority", err)
+		}
+		if purpose := readPurpose(); purpose == nil || *purpose != key.operation {
+			t.Fatal("admission did not record the authenticated legacy purpose")
+		}
+		if _, err = c.s.Report(ctx, gateway.Gateway.ID, *gateway.Secret, success(admission.RequestID), uuid.NewString()); err != nil {
+			t.Fatal(err)
+		}
+		if key.operation {
+			check(t, rotate(), "API_KEY_NOT_ACTIVE")
+			admission.RequestID = uuid.NewString()
+			_, err = c.s.Admit(ctx, gateway.Gateway.ID, *gateway.Secret, admission, uuid.NewString())
+			check(t, err, "API_KEY_INVALID")
+		} else if err = rotate(); err != nil {
+			t.Fatal("proved ordinary legacy key could not rotate", err)
+		}
+	}
+}

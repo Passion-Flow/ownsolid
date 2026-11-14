@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -uo pipefail
+n=lane-c-obs-eval; e=/root/lane-c/e2e; d=/root/lane-c/obs
+docker rm -f $n >/dev/null 2>&1
+docker run -d --name $n --privileged --network none --cpus 8 --memory 20g -e DOCKER_TLS_CERTDIR= -v $d:/obs:ro -v $e:/bundle:ro docker:29.1.3-dind >/dev/null
+for _ in $(seq 1 60); do docker exec $n docker info >/dev/null 2>&1 && break; sleep 1; done
+docker exec -d $n /bundle/egress-recorder -interface egress0 -log /var/log/egress.jsonl
+sleep 1
+docker exec $n sh -euc "ip link set egress0 up; ip addr add 198.18.0.1/32 dev egress0; ip -6 addr add 2001:db8:e9e5::1/128 dev egress0; ip route add default dev egress0; ip -6 route add default dev egress0"
+docker exec $n docker load -q -i /obs/vm-images.tar >/dev/null
+hard="--read-only --cap-drop ALL --security-opt no-new-privileges:true --user 10001:10001 --pull never"
+docker exec $n sh -c "mkdir -p /srv/vm /srv/vl && chown 10001:10001 /srv/vm /srv/vl"
+docker exec $n docker run -d --name vm $hard --cpus 6 --memory 16g -p 127.0.0.1:8428:8428 -v /srv/vm:/data victoriametrics/victoria-metrics:v1.155.0 -storageDataPath=/data -retentionPeriod=30d >/dev/null
+docker exec $n docker run -d --name vl $hard --cpus 1 --memory 1g -p 127.0.0.1:9428:9428 -v /srv/vl:/data victoriametrics/victoria-logs:v1.53.0 -storageDataPath=/data >/dev/null
+sleep 3
+echo "== vl namespace positive control"
+docker exec $n sh -c 'docker run --rm --pull never --network container:vl --entrypoint wget victoriametrics/victoria-metrics:v1.155.0 -T 3 -q -O- http://192.0.2.12/ 2>&1 | head -1'
+echo "== load 17M"
+docker exec $n /obs/obsgen -series 17000000 -rounds 5 -lines 0 -workers 4
+sleep 30
+echo "== results"
+docker exec $n sh -c '
+m() { wget -q -O- http://127.0.0.1:8428/metrics | grep -E "^vm_cache_entries\{type=\"storage/hour_metric_ids\"|^process_resident_memory_bytes|^vm_rows_inserted_total\{type=\"prometheus|^vm_slow_row_inserts_total|^vm_new_timeseries_created_total|^vm_rows_ignored_total|^vm_timeseries_repopulated"; }
+m; du -sh /srv/vm
+wget -q -O- "http://127.0.0.1:8428/api/v1/query?query=sum(gpu_metric%7Bnode%3D%22n42%22%7D)"; echo
+wget -q -O- "http://127.0.0.1:8428/api/v1/query?query=sum(gpu_metric%7Bcell%3D%22c3%22%2Cmetric%3D%22m5%22%7D)"; echo
+docker stats --no-stream --format "{{.Name}} {{.MemUsage}}" vm
+docker inspect --format "oom={{.State.OOMKilled}} restarts={{.RestartCount}} status={{.State.Status}}" vm
+'
+echo "== restart"
+docker exec $n sh -c 't=$(date +%s); docker restart vm >/dev/null; for i in $(seq 1 180); do wget -q -O- http://127.0.0.1:8428/health >/dev/null 2>&1 && break; sleep 1; done; echo ready_after=$(( $(date +%s)-t ))s; wget -q -O- "http://127.0.0.1:8428/api/v1/query?query=sum(gpu_metric%7Bnode%3D%22n42%22%7D)"; echo; wget -q -O- http://127.0.0.1:8428/metrics | grep -E "^process_resident_memory_bytes"'
+echo "== egress"
+docker exec $n sh -c 'wc -l < /var/log/egress.jsonl; cut -c1-140 /var/log/egress.jsonl | head; docker logs vm 2>&1 | grep -ciE "panic|FATAL"'
+docker rm -f $n >/dev/null

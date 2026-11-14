@@ -1,0 +1,5150 @@
+{
+  "operations": [
+    {
+      "domain": "applications",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/application-conversations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "ListApplicationConversations",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "applications",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/applications",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "ListApplications",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget_objects",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost_objects",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/configuration",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget_configuration",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/expire",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost_expire",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "DELETE",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/staging",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "admindelete_staging",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/staging",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget_staging",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget__object_id_",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/abort",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__abort",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/complete",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__complete",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/content",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget__object_id__content",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/dataset-import",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__dataset_import",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/delete",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__delete",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget__object_id__grants",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__grants",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "DELETE",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/grants/{grant_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "admindelete__object_id__grants__grant_id_",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget__object_id__ingestions",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget__object_id__ingestions__ingestion_id_",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__ingestions__ingestion_id__cancel",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__ingestions__ingestion_id__reconcile",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/model-import",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__model_import",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/parts",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget__object_id__parts",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "PUT",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/parts/{part_number}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminput__object_id__parts__part_number_",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/reconcile",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminpost__object_id__reconcile",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/artifact-objects/{object_id}/snapshot",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminget__object_id__snapshot",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalget_objects",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost_objects",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/configuration",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalget_configuration",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/expire",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost_expire",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalget__object_id_",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/abort",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__abort",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/complete",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__complete",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/content",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalget__object_id__content",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/dataset-import",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__dataset_import",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/delete",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__delete",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalget__object_id__grants",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__grants",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "DELETE",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants/{grant_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portaldelete__object_id__grants__grant_id_",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalget__object_id__ingestions",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalget__object_id__ingestions__ingestion_id_",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__ingestions__ingestion_id__cancel",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__ingestions__ingestion_id__reconcile",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/model-import",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__model_import",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalget__object_id__parts",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "PUT",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts/{part_number}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalput__object_id__parts__part_number_",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "artifactstores",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/reconcile",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalpost__object_id__reconcile",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "capabilities",
+      "method": "GET",
+      "path": "/api/v1/capabilities",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "listCapabilities",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cell-clusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/cell-clusters",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listCellClusters",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cell-clusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/cell-clusters",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "createCellCluster",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cell-clusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/cell-clusters/{cluster_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getCellCluster",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cell-clusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/cell-clusters/{cluster_id}/members",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listCellClusterMembers",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cell-clusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/cell-clusters/{cluster_id}/members",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "addCellClusterWorkers",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cell-clusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/cell-clusters/{cluster_id}/members/{node_id}/retry",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "retryCellClusterMember",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cell-clusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/cell-clusters/{cluster_id}/observations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "observeCellCluster",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cloud-inventory",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAws",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cloud-inventory",
+      "method": "POST",
+      "path": "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws/imports",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "postSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImports",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cloud-inventory",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws/imports/{key}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getSitesSiteIdCellsCellIdAdminWorkspacesWorkspaceAwsImportsKey",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cloud-inventory",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace}/aws",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAws",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cloud-inventory",
+      "method": "POST",
+      "path": "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace}/aws/imports",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "postSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImports",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "cloud-inventory",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace}/aws/imports/{key}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getSitesSiteIdCellsCellIdWorkspacesWorkspaceAwsImportsKey",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "components",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminComponent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "components",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/actions",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "requestComponentAction",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "components",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getLatestAdminComponentLogs",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "components",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/components/node-exporter",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getPortalComponent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDatasetPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCreateDataset",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/configuration",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDatasetConfiguration",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetDataset",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDatasetDraftPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCreateDatasetDraft",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetDatasetDraft",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/cancel",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCancelDatasetDraft",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/publications",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPublishDataset",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDatasetRowPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminAppendDatasetRow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "DELETE",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDeleteDatasetRow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "PATCH",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminReplaceDatasetRow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/drafts/{draft_id}/source",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminUploadDatasetSource",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetDatasetJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}/cancel",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCancelDatasetJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/jobs/{job_id}/retry",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRetryDatasetJob",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/retire",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRetireDataset",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDatasetVersionPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetDatasetVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/drafts",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCloneDatasetVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/files/{asset}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDatasetVersionFile",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/datasets/{dataset_id}/versions/{version_id}/retire",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRetireDatasetVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDatasetPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCreateDataset",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/configuration",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDatasetConfiguration",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetDataset",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDatasetDraftPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCreateDatasetDraft",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetDatasetDraft",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/cancel",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCancelDatasetDraft",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/publications",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPublishDataset",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/rows",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDatasetRowPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/rows",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalAppendDatasetRow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "DELETE",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDeleteDatasetRow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "PATCH",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/rows/{row_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalReplaceDatasetRow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/drafts/{draft_id}/source",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalUploadDatasetSource",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetDatasetJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}/cancel",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCancelDatasetJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/jobs/{job_id}/retry",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalRetryDatasetJob",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/retire",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalRetireDataset",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDatasetVersionPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetDatasetVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/drafts",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCloneDatasetVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/files/{asset}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDatasetVersionFile",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "datasets",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/datasets/{dataset_id}/versions/{version_id}/retire",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalRetireDatasetVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/deployments",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listAdminDeployments",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/deployments",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "createDeployment",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/deployments/placement",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getDeploymentPlacement",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/deployments/{deployment_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminDeployment",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/deployments/{deployment_id}/actions",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "requestDeploymentAction",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/inference",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getInferenceNodeState",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/inference/observations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "observeInferenceNode",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/deployments",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "listPortalDeployments",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "deployments",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/deployments/{deployment_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getPortalDeployment",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListModelAlias",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPublishAlias",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetModelAlias",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/ca",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDownloadGatewayAliasCA",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/cutovers",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCutoverAlias",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/cutovers/preview",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPreviewAliasCutover",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/disable",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "admindisableModelAlias",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}/targets",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminAliasTargets",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListGatewayInstance",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminProvisionGateway",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetGatewayInstance",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/gateways/{resource_id}/revoke",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminrevokeGatewayInstance",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListDistributionKey",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminMintDistributionKey",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetDistributionKey",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/revoke",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminrevokeDistributionKey",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/keys/{resource_id}/rotate",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRotateDistributionKey",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListGatewayRequest",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/export",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminExportGatewayUsageCSV",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCreateGatewayRecovery",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetGatewayRecovery",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/confirm",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminConfirmGatewayRecovery",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{request_id}/recoveries/{recovery_id}/fence",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminAcceptGatewayFence",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/requests/{resource_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetGatewayRequest",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListModelAlias",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetModelAlias",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}/ca",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDownloadGatewayAliasCA",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListDistributionKey",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalMintDistributionKey",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetDistributionKey",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}/revoke",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalrevokeDistributionKey",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/keys/{resource_id}/rotate",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalRotateDistributionKey",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListGatewayRequest",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests/export",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalExportGatewayUsageCSV",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "distribution",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/requests/{resource_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetGatewayRequest",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/audit-events",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listAuditEvents",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/invitations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listInvitations",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/admin/invitations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "createInvitation",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/admin/invitations/{invitation_id}/resends",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "resendInvitation",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/admin/invitations/{invitation_id}/revocations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "revokeInvitation",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/mail-deliveries",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listMailDeliveries",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/admin/mail-deliveries/{mail_delivery_id}/resends",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "resendMailDelivery",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/users",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listUsers",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/users/{user_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getUser",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "PATCH",
+      "path": "/api/v1/admin/users/{user_id}/status",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "setUserStatus",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/auth/csrf",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "getCsrf",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/auth/invitation-validations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "validateInvitation",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "login",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/auth/logout",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "logout",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/auth/password-reset-requests",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "requestPasswordReset",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/auth/password-resets",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "resetPassword",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "register",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/me",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "getMe",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "PATCH",
+      "path": "/api/v1/me",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "updateMe",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "POST",
+      "path": "/api/v1/me/password-changes",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "changePassword",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/me/session",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "getSessionStatus",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/me/sessions",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "listBrowserSessions",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "DELETE",
+      "path": "/api/v1/me/sessions/{session_id}",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "revokeBrowserSession",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/health/live",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "getLiveness",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "identity",
+      "method": "GET",
+      "path": "/health/ready",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "getReadiness",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "licensing",
+      "method": "GET",
+      "path": "/api/v1/admin/license",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "GetPlatformLicense",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "licensing",
+      "method": "POST",
+      "path": "/api/v1/admin/license",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "ImportPlatformLicense",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "licensing",
+      "method": "GET",
+      "path": "/api/v1/admin/license/diagnostics",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "DownloadLicenseDiagnostics",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "licensing",
+      "method": "POST",
+      "path": "/api/v1/admin/license/inspections",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "InspectLicenseFile",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "licensing",
+      "method": "GET",
+      "path": "/api/v1/license/status",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "GetPortalLicenseStatus",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "localization",
+      "method": "GET",
+      "path": "/api/v1/localization/assets/{sha256}",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "GetLocalizationAsset",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "localization",
+      "method": "GET",
+      "path": "/api/v1/localization/catalog",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "GetLocalizationCatalog",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "localization",
+      "method": "GET",
+      "path": "/api/v1/localization/fonts/{sha256}",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "GetLocalizationFont",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "localization",
+      "method": "GET",
+      "path": "/api/v1/localization/packages/{sha256}",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "GetLocalizationPackage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRegisterMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminMiddlewareOperationIntent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/operations/{operation_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminMiddlewareOperation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/profiles",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminMiddlewareProfiles",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminMiddlewareRegistrationIntent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminReadMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "PATCH",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminChangeMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminMiddlewareHistory",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace_id}/middleware/{instance_id}/operations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminEnqueueMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalRegisterMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operation-intents/{intent_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalMiddlewareOperationIntent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/operations/{operation_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalMiddlewareOperation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/profiles",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalMiddlewareProfiles",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/registration-intents/{intent_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalMiddlewareRegistrationIntent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalReadMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "PATCH",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalChangeMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}/operations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalMiddlewareHistory",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "middleware",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/middleware/{instance_id}/operations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalEnqueueMiddleware",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-gateway",
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "audiences": [
+        "model-gateway"
+      ],
+      "operation_id": "createScopedChatCompletion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-gateway",
+      "method": "GET",
+      "path": "/v1/models",
+      "audiences": [
+        "model-gateway"
+      ],
+      "operation_id": "listAuthorizedModels",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListHoldouts",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminReserveHoldout",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts/capabilities",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetHoldoutCapabilities",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-holdouts/{holdout_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetHoldout",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListPreparations",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCreatePreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/capabilities",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPreparationCapabilities",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/nodes/{node_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPreparationTarget",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetPreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/attempts",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPreparationAttempts",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/attempts/{attempt_id}/events",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPreparationEvents",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/cancellations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCancelPreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/recoveries",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRecoverPreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/report",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPreparationReport",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-preparations/{preparation_id}/reviews",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminReviewPreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListHoldouts",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalReserveHoldout",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts/capabilities",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetHoldoutCapabilities",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-holdouts/{holdout_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetHoldout",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListPreparations",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCreatePreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/capabilities",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPreparationCapabilities",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/nodes/{node_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPreparationTarget",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetPreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/attempts",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPreparationAttempts",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/attempts/{attempt_id}/events",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPreparationEvents",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/cancellations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCancelPreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/recoveries",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalRecoverPreparation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "model-lifecycle",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/model-preparations/{preparation_id}/report",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPreparationReport",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listModelImports",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "startModelImport",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/resolve",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "resolveModelImportIntent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getModelImport",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/cancel",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "cancelModelImport",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/chunks",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "uploadModelImportChunk",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/model-imports/{import_id}/complete",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "queueModelImport",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listAdminModels",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/catalog",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getApprovedModelCatalog",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminModel",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}/retire",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "retireModelVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "listPortalModels",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/models/{model_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getPortalModel",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "monitoring",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/monitoring",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminMonitoring",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-pacing",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAgentPacing",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "PUT",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-pacing",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "updateAgentPacing",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-shed",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAgentShed",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "PUT",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/agent-shed",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "updateAgentShed",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listNodeJoinTokens",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "createNodeJoinToken",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/node-join-tokens/{token_id}/revocations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "revokeNodeJoinToken",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listAdminNodes",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/summary",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "readAdminNodeCounts",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminNode",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "PATCH",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "updateNode",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminComponent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/actions",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "requestComponentAction",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/components/node-exporter/logs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getLatestAdminComponentLogs",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/tasks",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listAdminNodeTasks",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/tasks",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "createNodeTask",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listAdminTasks",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks/{task_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminTask",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/tasks/{task_id}/log",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminTaskLog",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "listPortalNodes",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getPortalNode",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/components/node-exporter",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getPortalComponent",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "nodes",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/tasks",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "listPortalNodeTasks",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "notifications",
+      "method": "GET",
+      "path": "/api/v1/notifications",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "ListNotifications",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "notifications",
+      "method": "GET",
+      "path": "/api/v1/notifications/configuration",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "NotificationConfiguration",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "notifications",
+      "method": "POST",
+      "path": "/api/v1/notifications/{notification_id}/read",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "ReadNotification",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPluginVersionPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/configuration",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPluginConfiguration",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/imports",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminImportPlugin",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/versions/{version_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetPluginVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/versions/{version_id}/installations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminInstallPluginVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/versions/{version_id}/references",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPluginReferences",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/versions/{version_id}/uninstallations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminUninstallPluginVersion",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/workspaces/{workspace_id}/grants",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPluginGrantPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/workspaces/{workspace_id}/grants",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGrantPlugin",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "PATCH",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/plugins/workspaces/{workspace_id}/grants/{grant_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminUpdatePluginGrant",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "plugins",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/plugins",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalAvailablePluginPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "preferences",
+      "method": "GET",
+      "path": "/api/v1/admin/tenant-settings",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "GetTenantSettings",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "preferences",
+      "method": "PATCH",
+      "path": "/api/v1/admin/tenant-settings",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "UpdateTenantSettings",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "preferences",
+      "method": "GET",
+      "path": "/api/v1/preferences",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "GetPreference",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "preferences",
+      "method": "PATCH",
+      "path": "/api/v1/preferences",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "UpdatePreference",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "preferences",
+      "method": "GET",
+      "path": "/api/v1/saved-views",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "ListSavedViews",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "preferences",
+      "method": "DELETE",
+      "path": "/api/v1/saved-views/{view_id}",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "DeleteSavedView",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "preferences",
+      "method": "PUT",
+      "path": "/api/v1/saved-views/{view_id}",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "PutSavedView",
+      "summary": true,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterConnections",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterBind",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterConnection",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/disable",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterDisable",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/observe",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterObserve",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/rebind",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterRebind",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterRuns",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterStart",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterRun",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/cancel",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterCancel",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/cleanup",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterCleanup",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/continue",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterContinue",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/proof",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterProof",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/connections/{connection_id}/runs/{run_id}/reconcile",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterReconcile",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/private-clusters/profiles",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPrivateClusterProfiles",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterConnections",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterConnection",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterRuns",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterStart",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterRun",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/cancel",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterCancel",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/cleanup",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterCleanup",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/continue",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterContinue",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/proof",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterProof",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "privateclusters",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/private-clusters/connections/{connection_id}/runs/{run_id}/reconcile",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPrivateClusterReconcile",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "releases",
+      "method": "GET",
+      "path": "/api/v1/admin/releases/current",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "readReleaseCurrent",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "releases",
+      "method": "GET",
+      "path": "/api/v1/admin/releases/history",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "readReleaseHistory",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "GET",
+      "path": "/api/v1/account/sso/bindings",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "listSSOBindings",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "POST",
+      "path": "/api/v1/account/sso/bindings/{binding_id}/unlink",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "unlinkSSOBinding",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "GET",
+      "path": "/api/v1/admin/sso/configuration",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getSSOConfiguration",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "GET",
+      "path": "/api/v1/admin/sso/connectors",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listSSOConnectors",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "POST",
+      "path": "/api/v1/admin/sso/connectors",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "createSSOConnector",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "PATCH",
+      "path": "/api/v1/admin/sso/connectors/{connector_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "updateSSOConnector",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "POST",
+      "path": "/api/v1/admin/sso/connectors/{connector_id}/tests",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "testSSOConnector",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "GET",
+      "path": "/api/v1/auth/sso/connectors",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "listPublicSSOConnectors",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "GET",
+      "path": "/api/v1/auth/sso/{connector_id}/callback",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "completeSSO",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "sso",
+      "method": "POST",
+      "path": "/api/v1/auth/sso/{connector_id}/starts",
+      "audiences": [
+        "admin",
+        "portal"
+      ],
+      "operation_id": "startSSO",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "taskdeliveries",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListTaskDeliveries",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "taskdeliveries",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminReadTaskDelivery",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "taskdeliveries",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}/dead-letters",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminReadTaskDeadLetters",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "taskdeliveries",
+      "method": "POST",
+      "path": "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}/retry",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRetryTaskDelivery",
+      "summary": false,
+      "description": true,
+      "deprecated": false
+    },
+    {
+      "domain": "taskdeliveries",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/admin/task-delivery-quarantine",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminReadTaskDeliveryQuarantine",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "taskdeliveries",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListTaskDeliveries",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "taskdeliveries",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries/{event_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalReadTaskDelivery",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "taskdeliveries",
+      "method": "GET",
+      "path": "/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/nodes/{node_id}/task-deliveries/{event_id}/dead-letters",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalReadTaskDeadLetters",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/capabilities",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetCapabilities",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListJobs",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCreateJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/attempts",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListAttempts",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/cancellations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCancelJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/checkpoints",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListCheckpoints",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/files/{asset}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminExportAcceptedAdapter",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/metrics",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListMetrics",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/recoveries",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminListRecoveries",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/jobs/{job_id}/recoveries",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRecoverJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/training/nodes/{node_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetTrainingTarget",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/capabilities",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetCapabilities",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListJobs",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCreateJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/attempts",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListAttempts",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/cancellations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCancelJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/checkpoints",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListCheckpoints",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/files/{asset}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalExportAcceptedAdapter",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/metrics",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListMetrics",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/recoveries",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalListRecoveries",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/jobs/{job_id}/recoveries",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalRecoverJob",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "training",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/training/nodes/{node_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetTrainingTarget",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminWorkflowPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCreateWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/configuration",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminWorkflowConfiguration",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "PATCH",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminUpdateWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminWorkflowConversationPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCreateWorkflowConversation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "DELETE",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDeleteWorkflowConversation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetWorkflowConversation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}/runs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminWorkflowConversationRunPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/conversations/{conversation_id}/runs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminRunWorkflowConversation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/debug-runs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminDebugWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/publications",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminPublishWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminWorkflowRunPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs/{run_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminGetWorkflowRun",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/runs/{run_id}/cancellations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminCancelWorkflowRun",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/validations",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminValidateWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/workflows/{workflow_id}/versions",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "adminWorkflowVersionPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalWorkflowPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCreateWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/configuration",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalWorkflowConfiguration",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "PATCH",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalUpdateWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalWorkflowConversationPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCreateWorkflowConversation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "DELETE",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations/{conversation_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDeleteWorkflowConversation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations/{conversation_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetWorkflowConversation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations/{conversation_id}/runs",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalWorkflowConversationRunPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/conversations/{conversation_id}/runs",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalRunWorkflowConversation",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/debug-runs",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalDebugWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/publications",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalPublishWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/runs",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalWorkflowRunPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/runs/{run_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalGetWorkflowRun",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/runs/{run_id}/cancellations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalCancelWorkflowRun",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "POST",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/validations",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalValidateWorkflow",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workflows",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/workflows/{workflow_id}/versions",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "portalWorkflowVersionPage",
+      "summary": false,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/admin/workspaces",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listAdminWorkspaces",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "POST",
+      "path": "/api/v1/admin/workspaces",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "createWorkspace",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/admin/workspaces/operations/{request_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminWorkspaceOperation",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/admin/workspaces/{workspace_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "getAdminWorkspace",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "PATCH",
+      "path": "/api/v1/admin/workspaces/{workspace_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "updateAdminWorkspace",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/admin/workspaces/{workspace_id}/members",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "listAdminMembers",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "POST",
+      "path": "/api/v1/admin/workspaces/{workspace_id}/members",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "addAdminMember",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "DELETE",
+      "path": "/api/v1/admin/workspaces/{workspace_id}/members/{user_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "removeAdminMember",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "PATCH",
+      "path": "/api/v1/admin/workspaces/{workspace_id}/members/{user_id}",
+      "audiences": [
+        "admin"
+      ],
+      "operation_id": "updateAdminMember",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/workspaces",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "listPortalWorkspaces",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/workspaces/operations/{request_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getPortalWorkspaceOperation",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getPortalWorkspace",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "PATCH",
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "updatePortalWorkspace",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/members",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "listPortalMembers",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/members",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "addPortalMember",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "DELETE",
+      "path": "/api/v1/workspaces/{workspace_id}/members/{user_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "removePortalMember",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "PATCH",
+      "path": "/api/v1/workspaces/{workspace_id}/members/{user_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "updatePortalMember",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/notes",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "listNotes",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/notes",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "createNote",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "DELETE",
+      "path": "/api/v1/workspaces/{workspace_id}/notes/{note_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "deleteNote",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/notes/{note_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "getNote",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "PATCH",
+      "path": "/api/v1/workspaces/{workspace_id}/notes/{note_id}",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "updateNote",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    },
+    {
+      "domain": "workspaces",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/notes/{note_id}/export",
+      "audiences": [
+        "portal"
+      ],
+      "operation_id": "exportNote",
+      "summary": true,
+      "description": false,
+      "deprecated": false
+    }
+  ],
+  "findings": [],
+  "compatibility_findings": []
+}

@@ -1,0 +1,12 @@
+{
+  "base": "a182bf9a29d283b30695b156058fd92e91367363",
+  "files": {
+    "internal/install/backup.go": "32b91550e8c0c8607acc083441b4070b18a20233c37dc01c932129af39468368",
+    "internal/install/backup_test.go": "c82c58990d7a72f390628afc6537b15cdc54cdd8ffc82b294f7adfd6a0fd65aa"
+  },
+  "scope": "Actual install package plus shared output-path correction and filesystem regressions",
+  "binaries": {
+    "before.test": "e7ee871e21c5fb30e43985dd65e7407ae1a5c8e8888d648bf5a6a01e58241a26",
+    "after.test": "a67eed605e264839ae94cb93ef9b4decd1c511c5a267ad608e7fa878a92bf2a9"
+  }
+}

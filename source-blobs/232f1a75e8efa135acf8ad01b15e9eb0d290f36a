@@ -1,0 +1,52 @@
+{
+  "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "tree": "b8aea641ecd1b79be71270ad80ab03c1e131df31",
+  "staging_assertions_passed_before_version_probe_error": true,
+  "linux_checkout": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "clean_after_checkout": true,
+  "old_native_ref": "refs/lane-rel/native-audit-qualified-783567ea",
+  "old_native_proof_sha256_unchanged": "cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1",
+  "preparation_failure": {
+    "phase": "direct pnpm executable version invocation",
+    "error": "OSError errno8 Exec format error",
+    "binary_architecture_verified": false,
+    "diagnosis": "The upstream pinned pnpm12 wrapper permits a shebangless placeholder; this must be distinguished from a wrong-platform executable before repair",
+    "large_suite_or_gate_failure": false
+  },
+  "subsequent_transport_failures": [
+    {
+      "exit": 255,
+      "message": "Proxy502 Bad Gateway dial failure before the remote diagnostic executed"
+    },
+    {
+      "exit": 255,
+      "message": "SSH banner exchange timed out before the remote diagnostic executed"
+    }
+  ],
+  "toolchain_inventory_complete": true,
+  "offline_caches_complete": false,
+  "gate_invoked": false,
+  "admission_attempted": false,
+  "queue_created": false,
+  "build_test_or_browser_started": false,
+  "offline_caches_complete_for_preparation": true,
+  "source_clean_after_cleanup": true,
+  "preparation_failure_resolved": true,
+  "resolution": "The pinned pnpm12 wrapper is the upstream shebangless placeholder, which works through the existing shell wrapper with its installed Linux x64 native binary. The original direct-Popen version-probe errno8 is retained as a preparation invocation error. Go metadata generated go.work.sum was archived and removed. The default browser cache was absent; the existing pinned1248 cache and complete own shared-library cache have both binaries with no missing ldd dependencies.",
+  "actual_offline_pnpm_install": {
+    "exit": 0,
+    "reused": 413,
+    "downloaded": 0,
+    "ignore_scripts": true
+  },
+  "proofs": {
+    "linux-source-toolchain-preparation.json": {
+      "path": "/root/lane-rel-tools/identity-audit-contract/linux-source-toolchain-preparation.json",
+      "sha256": "55cdffa3640d3ee59499fb0ceece897050769e7d613ff33cb7cd077d6aff8954"
+    },
+    "linux-browser-cache-preparation.json": {
+      "path": "/root/lane-rel-tools/identity-audit-contract/linux-browser-cache-preparation.json",
+      "sha256": "87e3d512e18337bf2813ee434df40f8007c663c3c4718b1df32d0b6fb2487905"
+    }
+  }
+}

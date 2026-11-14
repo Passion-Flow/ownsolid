@@ -1,0 +1,167 @@
+{
+  "source": "74fc7be8ec37693d8edb9d76f57bbaaf4eb613a9",
+  "base": "db7ee24ad88561fe6d76b9c7c9ab500a5ef22570",
+  "platform": "darwin/arm64",
+  "python": "3.12.14",
+  "owner_results": {
+    "source": "74fc7be8ec37693d8edb9d76f57bbaaf4eb613a9",
+    "platform": "darwin/arm64",
+    "offline_dependency_resolution": true,
+    "network_namespace_isolation": false,
+    "phases": {
+      "rebased-modules": {
+        "returncode": 0,
+        "seconds": 20.281,
+        "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/rebased-modules.log",
+        "sha256": "188983c4e9eb44405ea6dc85791207b8f374325ddf0b8a938292bbccdfdeb242",
+        "test_actions": {
+          "pass": 636,
+          "skip": 172,
+          "fail": 0
+        },
+        "packages": {
+          "github.com/Passion-Flow/ownsolid/services/control/internal/modules/training": "pass",
+          "github.com/Passion-Flow/ownsolid/services/control/internal/modules/mongodatasets": "pass",
+          "github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets": "pass",
+          "github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations": "pass",
+          "github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentgateway": "pass",
+          "github.com/Passion-Flow/ownsolid/services/control/internal/modules/scheduling": "pass",
+          "github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver": "pass",
+          "github.com/Passion-Flow/ownsolid/services/control/internal/modules/audit": "pass",
+          "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity": "pass"
+        }
+      },
+      "config-apfs-owned-group": {
+        "returncode": 0,
+        "seconds": 3.928,
+        "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/config-apfs-owned-group.log",
+        "sha256": "eb360a24fb8a6c9f90aa96554c139fe5251f82068e4f164516925637175059f6",
+        "test_actions": {
+          "pass": 862,
+          "skip": 0,
+          "fail": 0
+        },
+        "packages": {
+          "github.com/Passion-Flow/ownsolid/services/control/internal/platform/config": "pass"
+        }
+      },
+      "check": {
+        "returncode": 2,
+        "seconds": 1.349,
+        "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/check.log",
+        "sha256": "68eeca989d9842d4a3f04f9deee84f373d63b2971740d5adf7cf693ed3a763c4"
+      }
+    },
+    "memory_pressure_before": "The system has 38654705664 (2359296 pages with a page size of 16384).\nSystem-wide memory free percentage: 80%\n",
+    "metadata_clock_probe": {
+      "hfs_ram": {
+        "ctime_before_ns": 1794516176000000000,
+        "ctime_after_ns": 1794516176000000000,
+        "changed": false,
+        "mtime_restored": true
+      },
+      "apfs": {
+        "ctime_before_ns": 1794516176507880080,
+        "ctime_after_ns": 1794516176523852653,
+        "changed": true,
+        "mtime_restored": true
+      }
+    }
+  },
+  "check_build_results": {
+    "source": "74fc7be8ec37693d8edb9d76f57bbaaf4eb613a9",
+    "platform": "darwin/arm64",
+    "offline_dependency_resolution": true,
+    "network_namespace_isolation": false,
+    "phases": {
+      "offline-web-install": {
+        "returncode": 0,
+        "seconds": 0.81,
+        "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/offline-web-install.log",
+        "sha256": "6f5ec24ee6dbc612f2b44c5c274439119265ff0146fb3760780ee3333bd1192a"
+      },
+      "check-after-offline-install": {
+        "returncode": 0,
+        "seconds": 31.904,
+        "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/check-after-offline-install.log",
+        "sha256": "032875dab7a6a1922c71511099c443ff608d647430b9abdbfb158d2591835c0c"
+      },
+      "build": {
+        "returncode": 0,
+        "seconds": 43.851,
+        "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/build.log",
+        "sha256": "3aebf6da9530301b20afb97341241e663031e538fc44de1985bdf2fe8bb51fe2"
+      }
+    },
+    "memory_pressure_before": "The system has 38654705664 (2359296 pages with a page size of 16384).\nSystem-wide memory free percentage: 80%\n",
+    "metadata_clock_probe": {
+      "hfs_ram": {
+        "ctime_before_ns": 1794516257000000000,
+        "ctime_after_ns": 1794516257000000000,
+        "changed": false,
+        "mtime_restored": true
+      },
+      "apfs": {
+        "ctime_before_ns": 1794516257585630608,
+        "ctime_after_ns": 1794516257600128592,
+        "changed": true,
+        "mtime_restored": true
+      }
+    }
+  },
+  "logs": {
+    "modules.log": {
+      "path": "/private/tmp/ownsolid-trn-qualification.knvee3h8/modules.log",
+      "sha256": "ee0d98df8ac24c416a347c04f933c82c574de3c8d04c3b7f1fcba7451d4f7891",
+      "bytes": 1903175
+    },
+    "config-apfs.log": {
+      "path": "/private/tmp/ownsolid-trn-qualification.knvee3h8/config-apfs.log",
+      "sha256": "46f9f8ac4fc3e9ce93877a0f653d5c050d7ebb88e4170ad2f9ba29508898a737",
+      "bytes": 1012051
+    },
+    "check.log": {
+      "path": "/private/tmp/ownsolid-trn-qualification.knvee3h8/check.log",
+      "sha256": "68eeca989d9842d4a3f04f9deee84f373d63b2971740d5adf7cf693ed3a763c4",
+      "bytes": 7306
+    },
+    "rebased-modules.log": {
+      "path": "/private/tmp/ownsolid-trn-qualification.knvee3h8/rebased-modules.log",
+      "sha256": "188983c4e9eb44405ea6dc85791207b8f374325ddf0b8a938292bbccdfdeb242",
+      "bytes": 979718
+    },
+    "config-apfs-owned-group.log": {
+      "path": "/private/tmp/ownsolid-trn-qualification.knvee3h8/config-apfs-owned-group.log",
+      "sha256": "eb360a24fb8a6c9f90aa96554c139fe5251f82068e4f164516925637175059f6",
+      "bytes": 1011307
+    },
+    "offline-web-install.log": {
+      "path": "/private/tmp/ownsolid-trn-qualification.knvee3h8/offline-web-install.log",
+      "sha256": "6f5ec24ee6dbc612f2b44c5c274439119265ff0146fb3760780ee3333bd1192a",
+      "bytes": 673
+    },
+    "check-after-offline-install.log": {
+      "path": "/private/tmp/ownsolid-trn-qualification.knvee3h8/check-after-offline-install.log",
+      "sha256": "032875dab7a6a1922c71511099c443ff608d647430b9abdbfb158d2591835c0c",
+      "bytes": 1517
+    },
+    "build.log": {
+      "path": "/private/tmp/ownsolid-trn-qualification.knvee3h8/build.log",
+      "sha256": "3aebf6da9530301b20afb97341241e663031e538fc44de1985bdf2fe8bb51fe2",
+      "bytes": 59887
+    }
+  },
+  "native_qualification_source": "f61bea6b995a3b9980b65be93f74047b736ea45c",
+  "native_groups": {
+    "training": 10,
+    "datasets": 5
+  },
+  "prior_cpu_units": {
+    "source": "e24d9abd4b50ac656f39f5c2e309cf13f95cffc3",
+    "passed": 20,
+    "skipped": 0
+  },
+  "full_make_test_run": false,
+  "new_event_cost_source_qualified": false,
+  "roadmap_items_ticked": 0
+}

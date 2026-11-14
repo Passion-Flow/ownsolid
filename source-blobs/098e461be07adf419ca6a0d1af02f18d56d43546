@@ -1,0 +1,40 @@
+"""Copy only exact OCI inputs already authenticated by the fixture archive hash."""
+import hashlib
+import json
+from pathlib import Path
+import sys
+import tarfile
+
+archive, target = map(Path, sys.argv[1:])
+names = {"control-image", "postgres-image", "metrics-image", "logs-image",
+         "compose", "operator-docs", "test-notice"}
+assets = None
+copied = set()
+with tarfile.open(archive, "r|gz") as bundle:
+    for entry in bundle:
+        if entry.name == "manifest.json":
+            if not entry.isfile() or entry.size > 1 << 20:
+                raise SystemExit("Invalid signed fixture manifest entry")
+            raw = bundle.extractfile(entry).read()
+            if hashlib.sha256(raw).hexdigest() != "b4127041ce56f7517aa8492306387c87f10a9eecaf5e617418d1f3d64a29823f":
+                raise SystemExit("Prior fixture manifest digest changed")
+            assets = {item["path"]:item for item in json.loads(raw)["assets"]}
+        if entry.name in names:
+            if assets is None or entry.name in copied or not entry.isfile():
+                raise SystemExit("Unexpected fixture asset structure")
+            spec = assets[entry.name]
+            if spec["size_bytes"] != entry.size:
+                raise SystemExit("Prior fixture asset size changed")
+            digest = hashlib.sha256()
+            with bundle.extractfile(entry) as src, (target/entry.name).open("xb") as dst:
+                while block := src.read(1 << 20):
+                    digest.update(block)
+                    dst.write(block)
+            if digest.hexdigest() != spec["sha256"]:
+                raise SystemExit("Prior fixture asset digest changed")
+            copied.add(entry.name)
+        if copied == names:
+            break
+if copied != names:
+    raise SystemExit(f"Missing prior fixture assets {sorted(names-copied)}")
+print("Copied seven exact digest-checked assets from the prior signed cell fixture")

@@ -1,0 +1,3093 @@
+diff --git a/api/openapi/README.md b/api/openapi/README.md
+index bb3e3120..39858ee7 100644
+--- a/api/openapi/README.md
++++ b/api/openapi/README.md
+@@ -17,6 +17,8 @@ python3 tools/codegen/sdk/audit.py --baseline "$RELEASE_SOURCE/api/openapi/v1"
+ ```
+ 
+ The report separates current declaration findings from compatibility findings.
++Named response model changes are review findings: regenerated clients can
++change return types even when old clients still decode the wire reply.
+ Review request and response schemas, status and error codes, security
+ requirements, pagination, idempotency, defaults and semantics separately.
+ Exercise old SDKs against the new server and confirm upgrade and rollback
+diff --git a/api/release/v1/mvp-postgresql-cpu-v1-lineage.json b/api/release/v1/mvp-postgresql-cpu-v1-lineage.json
+index ac2bc13c..c3163abd 100644
+--- a/api/release/v1/mvp-postgresql-cpu-v1-lineage.json
++++ b/api/release/v1/mvp-postgresql-cpu-v1-lineage.json
+@@ -2,8 +2,8 @@
+   "format_version": 1,
+   "kind": "projectone-postgresql-lineage-v1",
+   "application_profile": "mvp-postgresql-cpu-v1",
+-  "schema_version": 58,
+-  "table_count_including_ledger": 118,
++  "schema_version": 59,
++  "table_count_including_ledger": 119,
+   "prefix_lineage": "account22",
+   "prefix_schema_version": 22,
+   "entries": [
+@@ -296,6 +296,11 @@
+       "version": 58,
+       "source_path": "services/control/migrations/postgresql/000058_audit_chain_head_scope.up.sql",
+       "sha256": "c4d228212ca9a4107dc5e4a78468f9f7a35dfba818564d406a0a8861cdca1413"
++    },
++    {
++      "version": 59,
++      "source_path": "services/control/migrations/postgresql/000059_model_alias_description.up.sql",
++      "sha256": "399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab"
+     }
+   ]
+ }
+diff --git a/api/release/v1/postgres_application.go b/api/release/v1/postgres_application.go
+index 9c40584d..18812d4b 100644
+--- a/api/release/v1/postgres_application.go
++++ b/api/release/v1/postgres_application.go
+@@ -4,8 +4,8 @@ import "encoding/json"
+ 
+ const PostgreSQLLegacyApplicationProfile = "releases"
+ const MVPPostgreSQLCPUApplicationProfile = "mvp-postgresql-cpu-v1"
+-const MVPPostgreSQLCPUV1SchemaVersion = 58
+-const MVPPostgreSQLCPUV1TableCount = 118
++const MVPPostgreSQLCPUV1SchemaVersion = 59
++const MVPPostgreSQLCPUV1TableCount = 119
+ 
+ func effectivePostgreSQLApplicationProfile(profile string) string {
+ 	switch profile {
+diff --git a/docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md b/docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md
+index 7dda776d..bb399f2c 100644
+--- a/docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md
++++ b/docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md
+@@ -42,6 +42,12 @@ Its DDL remains an isolated fixture input until the persistence owner adds
+ a forward migration and restore catalogue. The gateway adapter must prove
+ its maximum charge before admission. Human confirmation, effect permissions
+ and success auditing remain the action owner's responsibilities. Loop
+-limits, production binding, telemetry, controls and browser flows remain
++limits use persistent per-run claims, an immutable initial ceiling and a
++monotonic admitted-step count. A pending or completed replay cannot dispatch
++again. Stop and policy loss suppress an in-flight result; no database
++transaction spans the command execution. Zero-token deterministic completion
++uses a local status digest, which provides no model-usage evidence.
++
++Production binding, telemetry, controls and browser flows remain
+ open in AGT-112. See the
+ [research and verification contract](../research/product-assistant-execution-budgets.md).
+diff --git a/docs/product/status.md b/docs/product/status.md
+index ae9c93cc..ff834f49 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -57,7 +57,7 @@ today and what is known to fail.
+ | Accepted training experiment and adapter handoff (TRN-105 and TRN-107, open) | The scoped read reconciles frozen inputs, protected result, accepted physical-stop envelope and adapter identity; file snapshots preserve the same immutable source | Disconnected PostgreSQL 18.6 verified the retained 24-step native CPU files after export, import and reopening a fresh private store. Record and preparation identity matched; unknown workspace and same-length tensor changes returned no record, and exact repair restored the read. All six retained-input replay tests passed together on repeat. [Scope and evidence](../research/training-experiment-records.md#accepted-experiment-after-a-private-store-handoff) | No | The command, node and stop use their declared synthetic production envelope. An earlier neighboring fixture initialization returned SCHEMA_UNAVAILABLE; its cause was not established and the unchanged repeat passed. Production image/lock and observed hardware binding, public UI and real train-to-serving comparison remain open |
+ | Model gateway on serving nodes (GW-114): the agent of a `docker_inference` node at protocol 1.6 starts the Rust gateway when a deployment's gateway is registered, with a credential and TLS key generated on the node and activated under the task's lease; control keeps the credential's digest and signs a serving certificate for the origin the node declares with a model gateway CA the installer creates; the gateway runs locked down on the host network beside the engine and is stopped, with its secrets removed, when revoked; the console publishes without an address or a credential and explains a failed start | Yes, PostgreSQL only; nodes enrolled before protocol 1.6 and the AI and model lifecycle profiles keep an administrator-placed gateway (GW-123); certificates last a year and are renewed by publishing again (GW-124); authorized alias CA downloads are implemented and the UI links are pending (GW-125); the image is loaded with `docker load` until the signed bundle (DEL-101) | Live on an installation, 2026-11-09: a real agent started, served and stopped the real gateway image; from the browser a deployment was published through its node's own gateway and a key issued from the card reached vLLM's CPU build serving Qwen3-0.6B, plain and streamed, each call in the key's log with the engine's token counts, a wrong key refused. The deployment's node was scripted, its gateway tasks run by the agent's own gateway code; no GPU. Two Docker timeouts on the shared host surfaced as `GATEWAY_DOCKER_UNAVAILABLE` and `GATEWAY_STOP_FAILED` on the page | n/a | One address for every model is GW-121 |
+ | Model gateway trust download (GW-125, open) | Admin and Portal download the loaded public CA for an active agent-managed alias. Agent activation and downloads use certificate-only encoding | Disconnected PostgreSQL and TLS verified the signed endpoint, name mismatch, tenant refusal, manual and revoked gateways, and mixed PEM refusal. [Evidence](../research/gateway-delivery.md#downloading-caller-trust-gw-125) | No | Public contract and generated clients are published. Console and Portal links are pending |
+-| Product assistant execution policy and budgets (AGT-112, open) | Fail-closed installation admission and a staged PostgreSQL reservation component for installation and global-user execution and token ceilings | Disconnected Linux arm64 PostgreSQL 18.6 passed thirteen reservation cases through two independent pools, including separate token ceilings, duplicate races, real rollback, an injected lost reply after commit, cancellation, recovery and scope denial. The paired staged HTTPS dispatcher, command service, real audit export and standalone verifier also passed. See [budget acceptance](../research/product-assistant-execution-budgets.md#isolated-acceptance) | No | Production configuration, schema and restore catalogue, trusted user policy and gateway usage binding, loop limits, operator controls, telemetry and both browser entrances remain open |
++| Product assistant execution policy and budgets (AGT-112, open) | Fail-closed installation admission, staged shared execution/token reservations and durable deterministic run/step limits with cancellation and result fences | Disconnected Linux arm64 PostgreSQL 18.6 passed thirteen reservation and nineteen run cases through independent pools. The original command and HTTPS roots, guarded Admin/Portal HTTPS, real audit export and standalone verifier passed together on schema 58. Complete repository check/build/test, both browser suites without retries, assistant/audit race tests and vet passed. See [loop guard acceptance](../research/product-assistant-loop-guard.md#isolated-acceptance) | No | Native Linux amd64 execution is pending. Production configuration, schema/cell classification and restore catalogue, trusted user policy and gateway usage binding, run/operator controls, telemetry and both browser entrances remain open |
+ | Gateway Responses and Messages (GW-103, open) | The Rust gateway serves foreground text over JSON and SSE with shared authorization and usage accounting. Responses accepts strings and stateless text message items. Tool requests remain disabled | Loopback-only Linux TLS tests with a synthetic backend reject complete tool declarations and forged result histories, and preserve quota and single dispatch after an unsolicited tool delta or cancellation. The native Rust, Go and PostgreSQL fixture rejected a key that was valid in a second test installation. The isolated source and template probe verified the closed-schema candidate and scope-bound IDs outside the product | No | The pinned vLLM 0.31.0 launch lacks a parser and does not produce a native named-call envelope. Tool, public OpenAPI and actual engine acceptance remain open. See [tool round-trip research](../research/gateway-tool-roundtrip.md) |
+ | Gateway Chat text parts (GW-101, open) | Chat Completions accepts plain strings and ordered text parts for the existing roles | Disconnected native Rust TLS verified normalization, malformed part rejection and durable JSON and SSE usage against synthetic inference. [Acceptance](../research/gateway-chat-streaming.md) | No | Current production backend and UI qualification are pending |
+ | Authorized gateway usage history (GW-107, open) | Admin and Portal download bounded CSV attachments from their scoped request histories. Both formats verify canonical receipts | Disconnected PostgreSQL and production TLS dispatch verified attachment headers, JSON-cursor continuation, known and unknown usage, read-only retries and refusal without a partial file. Native Go/Rust verified the underlying reports. [Acceptance](../research/gateway-usage-history.md) | No | Public contract uses JSON cursors. Production continuation link and UI are pending |
+@@ -153,12 +153,14 @@ data-processing Python and component assets are not installed there. The ARC-004
+ was checked against that baseline and adds no failure. ARC-005 was checked the same way
+ on the packages it touches (nodes, identity HTTP, machine composition, agent tests).
+ 
+-At schema 57, TestEveryCellOwnedTableCarriesScope fails because audit_chain_head lacks
+-both required scope columns. The 58 candidate passed the six SQL catalog paths,
+-production Go migrator and Audit module on disconnected Linux amd64 PostgreSQL 18.6.
+-The standalone verifier retained the earlier checkpoints. Repository admission of
+-58 still requires the full gate on the integration tree. See the
+-[audit scope replay gate](../research/audit-chain-head-cell-scope.md#shared-linux-replay-gate).
++Schema 57 lacks the two required scope columns on audit_chain_head. Migration 58
++fixes that admission failure without rewriting retained audit positions or hashes.
++The six SQL catalog histories passed on disconnected Linux amd64 PostgreSQL 18.6.
++The joint IAM and Audit input also passed fresh install, logical restore from 55
++and 58, repeated production migration, scope refusal and the complete Audit module,
++with 118 tables and the original independently verified checkpoints. The full
++repository check, build and test passed, including both complete browser suites.
++See the [exact integration admission](../research/audit-chain-head-cell-scope.md#exact-integration-admission).
+ 
+ `deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
+ removal by the owner: no image build copies it.
+diff --git a/docs/research/app-lane-questions.md b/docs/research/app-lane-questions.md
+index 06e13ebf..2596cc66 100644
+--- a/docs/research/app-lane-questions.md
++++ b/docs/research/app-lane-questions.md
+@@ -274,8 +274,12 @@ The paired constructor and audit fixture passed disconnected PostgreSQL
+ checks and SCI input review. On 2026-11-12 the rebased assistant and audit
+ source passed the native `make check`, `make build` and `make test` gate,
+ with both complete browser suites run sequentially at one worker and no
+-automatic retries. The assistant and audit race tests and vet, five
+-qualification unit tests, real audit export with its independent verifier,
++automatic retries. After the monitoring contract integration, the full
++gate passed again with two workers per entrance and no retries. Later
++standalone CLI changes passed repository checks, a complete build, full
++CLI tests, race tests and vet; comparison verified that the other runtime,
++contract and fixture files were unchanged. The assistant and audit race
++tests and vet, five qualification unit tests, real audit export with its independent verifier,
+ current-session commands and both-entrance HTTPS policy checks also passed.
+ 
+ The [durable budget component](product-assistant-execution-budgets.md)
+@@ -283,8 +287,14 @@ passed thirteen isolated PostgreSQL cases using two independently opened
+ pools. Its candidate schema is not registered in production and current
+ command routes do not bind it. Supply a trusted user policy and bounded
+ gateway usage adapter together with the production migration and restore
+-catalogue. Run-loop limits, operator controls, telemetry and both browser
+-flows remain open. Neither this reservation nor a model result replaces
++catalogue. The staged [persistent loop guard](product-assistant-loop-guard.md)
++and `productagenthttp.NewGuarded` passed real disconnected PostgreSQL and
++both-entrance HTTPS checks. Production run controls, operator controls,
++telemetry and both browser flows remain open. Its exact factories, typed
++configuration requirements, unnumbered five-table DDL, cell classification
++boundary, minimum grants and non-destructive rollback are in that handoff.
++Queue persistence explicitly behind the current ARC work; no migration
++number or schema activation is assumed. Neither this reservation nor a model result replaces
+ the signed plan and human confirmation required for a write.
+ 
+ ## Shared browser gate boundary
+@@ -301,7 +311,7 @@ Portal keyboard visibility failure at
+ drawer's `Download CSV` button with its focus indication, while the sampled
+ rectangle was outside the viewport. The exact case is
+ `a key's drawer with its sample calls: every control is reachable and shows focus`.
+-Ten focused serial diagnostic runs and the final complete serial suite
+-passed. Those results do not establish a fix for the earlier failure.
++Ten focused serial diagnostic runs and later complete one- and two-worker
++suites passed. Those results do not establish a fix for the earlier failure.
+ The unchanged Web source remains outside APP ownership. Its owner needs
+ the exact case and original trace for diagnosis. No assertion was changed.
+diff --git a/docs/research/audit-chain-head-cell-scope.md b/docs/research/audit-chain-head-cell-scope.md
+index 57fbb29c..cd79f7f7 100644
+--- a/docs/research/audit-chain-head-cell-scope.md
++++ b/docs/research/audit-chain-head-cell-scope.md
+@@ -224,7 +224,7 @@ The SQL replay accepted eight concurrent appends each after logical
+ restore from 55 and 58. The Audit module also passed scope refusal,
+ concurrent appends and mutation detection.
+ 
+-The clean archive remains the replay input after rebasing on
++The clean archive was reused for the integration rebased on
+ `273929ee`. The Linux amd64 package list for the production database
+ and Audit tests and the standalone verifier selected 758 Go and
+ embed inputs across 48 repository package directories. None changed
+@@ -244,16 +244,54 @@ promoting 58.
+ 
+ ## Exact integration admission
+ 
+-The preserved replay archive and the 758-input comparison remain unchanged.
+-A comparison against the integration based on `203109c7` selected the same
+-966 repository Go, test, embed and assembly paths as the archive. All 986
+-selected source, module, migration and release-lineage inputs matched
+-byte for byte. The 57 published up migrations remain identical to main,
+-and all 58 source checksums match the release descriptor.
+-
+-The earlier full repository gate passed check, build and test on
+-`7170ef90`. Subsequent Web and runtime changes require the new integrated
+-candidate to pass the same gate before promotion. Workstation runs use
+-the shared `ownsolid-workstation-full-gate.lock` and a private temporary
+-volume with sufficient free space. The unchanged Linux replay inputs
+-reuse the completed amd64 migrator, scope, checkpoint and Audit tests.
++The joint IAM and Audit gate froze source commit
++`0f02cf937479aeae9dcbdea8da4ee8ef27f551a5` on the accepted APP baseline
++`279382f2`. Its equivalent code revision is `8c04ab6f`, rebased over the
++subsequent three-file APP documentation update. Every non-Markdown file is
++identical between those two inputs. The 57 published up migrations and
++their release entries remain byte-identical, and all 58 source checksums
++match the release descriptor. No NET-102 source-selection work is included.
++
++The expanded Linux package comparison selected 971 repository Go, test,
++embed and assembly inputs across 53 directories, compared with the
++original archive's 966. Eighteen files changed in the model, assistant and
++HTTP dependencies and test variants. Module manifests, migration SQL,
++catalog admission and release lineage did not change. Rebuild the affected
++Linux tests instead of attributing the earlier archive's run to this input.
++The joint tracked-source archive SHA-256 is
++`88b4a8b698e50bb95c9c56cc3e42f208baa2183fde693342eb7bd024f8cf3780`.
++
++The supplemental Linux amd64 run held both original locks with full I/O
++PSI avg10 of 1.78%, 8,245,684 KiB free memory and 763 GiB available disk.
++Compilation used the pinned Go toolchain with networking disabled. The
++PostgreSQL 18.6 and pgvector 0.8.7 fixture used `network=none`. Fresh install
++and logical restores from 55 and 58 passed the production migrator, its
++idempotent replay and admission. All three catalogs matched the accepted
++schema-58 fingerprints with 118 tables. Both restored exports preserved
++the original checkpoint byte-for-byte and passed the standalone verifier.
++The complete Audit module passed, including mixed V1/V2 retention,
++32 concurrent appends, foreign-scope and serving-role refusal, mutation
++detection, retention and assistant disclosure. All 16 top-level checks
++passed with no skips. The combined log SHA-256 is
++`57af522c61ced035193816506be6c137ab45d230e223bf83af2df6a5b334cbe8`.
++The owned PostgreSQL container, volume and credential files were removed.
++The earlier six-history SQL qualification remains the original evidence
++for the unchanged migration bytes.
++
++IAM independently qualified the same frozen source: 12 HTTPS cases each
++ran three times, all 54 SSO cases passed, real Gitea recovery and callback
++replay passed, and three TOTP unit cases each ran three times. All four
++stage exit codes were zero with no skips; the source archive, binaries and
++raw log digests were checked independently. Those probes ran on Linux
++arm64 and macOS arm64. Production startup still calls `sso.New`, so
++IAM-119 remains open for its production wiring and UI acceptance.
++
++The frozen joint input passed `make check`, `make build` and `make test`.
++Both browser suites ran in sequence without automatic retries: Console
++passed 1,075 cases with 28 existing live-test skips, and Portal passed 389
++with nine existing live-test skips. Go, Rust and Web tests all passed.
++The workstation gate used the shared lock, bounded concurrency and a
++short-path private APFS temporary volume. Sleep prevention lasted only
++for the gate process, and the owned volume was detached afterwards.
++Documentation-only integration updates require the source-input
++equivalence check and `make check` before fast-forward publication.
+diff --git a/docs/research/gateway-model-description.md b/docs/research/gateway-model-description.md
+index 8c0b8d79..b64c2756 100644
+--- a/docs/research/gateway-model-description.md
++++ b/docs/research/gateway-model-description.md
+@@ -1,6 +1,6 @@
+ # Published model descriptions (GW-120)
+ 
+-Reviewed 2026-11-09.
++Reviewed 2026-11-12.
+ 
+ [Hugging Face model cards](https://huggingface.co/docs/hub/model-cards)
+ record intended uses and limitations with the imported model. The
+@@ -160,8 +160,8 @@ revision and returned the current description. A forced audit failure
+ rolled back the update and its intent, and the same idempotency key
+ could then be used for a different request. Clearing text while paused
+ left the routing revision, deployment binding and target history
+-intact, and the existing API key remained valid after resume. The
+-candidate down SQL restored the predecessor HTTP response shape.
++intact, and the existing API key remained valid after resume. The current down SQL refuses retained content, revisions and replay
++intents; a pristine downgrade preserves the predecessor response shape.
+ 
+ The unnumbered, test-only up and down scripts live in
+ `services/control/internal/modules/distribution/testdata/`. The fixture
+@@ -303,3 +303,160 @@ the fresh and restored-at-55 paths after running the down SQL.
+ These are overlay measurements. Recompute the signatures, release
+ lineage and expected table count from the actual committed tail when
+ the migration is ordered. The candidate adds one table.
++
++
++## Schema-58 migration handoff
++
++The committed baseline 106ca52d includes the GW-120 production source
++from 8d359f49 and its scoped correction c9654657, plus the published
++OpenAPI contract. No additional production Go patch is needed to
++activate descriptions. ARC must append the exact unnumbered up SQL
++from distribution testdata at the actual shared tail, preserve all
++previous migration bytes, and recalculate the complete catalogue and
++runtime access checks. This gateway lane does not assign the number.
++The candidate adds one public table and raises the baseline count from
++118 to 119 before any subsequent migration.
++
++The new table is model_alias_description_intents: tenant, workspace,
++site, cell, actor, UUID intent key, alias, applied description revision,
++32-byte request fingerprint and creation time. Its composite primary
++key retains actor-scoped idempotency; its composite alias foreign key
++fences tenant, workspace, site and cell together. Both cell columns
++are non-null and default from the local registry. The existing
++protect_alias_cutover_record trigger rejects updates and deletes.
++model_aliases receives the plain text and independent revision, plus
++the composite unique key needed by the new foreign key. No role,
++sequence, extension, model, dataset or dependency is introduced.
++
++Apply migration DDL with the existing operator and installation lock,
++then extend the installed restricted runtime principal through the
++existing runtime-access step before starting control. The current
++grant policy requires SELECT, INSERT, UPDATE and DELETE on business
++tables, with no ownership, DDL, TRUNCATE, REFERENCES, TRIGGER or grant
++option; the immutable trigger still refuses intent updates/deletes.
++The new table is not an exception to that existing policy. Do not
++grant the runtime role access to audit_chain_head or writes to the
++migration ledger. ARC must verify effective runtime privileges against
++the actual new TableCount; the gateway candidate does not weaken the
++platform admission predicate.
++
++### Safe rollback
++
++Run the down script in one operator transaction while serving is
++stopped. Acquire ACCESS EXCLUSIVE locks on aliases and description
++intents before checking retained state. Refuse with SQLSTATE 55000 and
++MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE if any description
++is nonempty, any independent revision differs from 1, or any edit
++intent exists. Clearing the visible text does not make its revision
++and replay history disposable. A verified pre-upgrade backup and the
++normal restore procedure are required once the feature has been used;
++the down script never clears content or deletes intents to force a
++rollback. A pristine, unused upgrade can remove the new columns,
++reference constraint and table and retain the original alias routing
++state. The [PostgreSQL lock modes](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-TABLES)
++and [exception semantics](https://www.postgresql.org/docs/18/plpgsql-errors-and-messages.html)
++provide the same-transaction check and refusal. Existing licence
++terms above apply.
++
++Keep the predecessor HTTPS upgrade fixture pinned to schema 58 so it
++continues to prove omitted fields, SERVICE_NOT_READY and legacy
++publication replay after the production migration lands. A separate
++installed-schema fixture must use normal database migration/checking
++and run the same Admin/Portal flow without applying candidate DDL.
++Until ARC installs the shared migration, that fixture remains pending.
++Test pristine rollback, every retained-state predicate, rollback after
++clearing, and a writer committed while downgrade waits for its lock.
++Neither the feature nor S-304 is complete until the installed schema,
++restricted runtime and actual Portal consumer are qualified.
++
++
++### Committed schema-58 qualification
++
++The exact production schema-58 files from 106ca52d reproduced the three
++baseline catalogue signatures before applying the candidate. Fresh
++schema, a schema-58 logical restore followed by candidate application,
++a current candidate dump/reparse, and restore at 55 followed by upgrade
++through 58 all passed on PostgreSQL 18.6 and pgvector 0.8.7 with no
++external network. The latter two current restore paths agreed on the
++same digest. Pristine down returned the exact fresh and restored-at-55
++baseline catalogues. The three resulting signatures remain the values
++in the scoped table above. These are candidate measurements against
++the committed predecessor, not the formally numbered production tail.
++
++The unnumbered up SQL SHA-256 is
++399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
++The safe down SQL SHA-256 is
++4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
++Changing only the down refusal does not change the candidate catalogue.
++ARC must retain these exact raw bytes when assigning the actual tail
++and verify the complete release lineage and runtime principal.
++
++The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
++concurrent revision refusal, exact replay, scope checks and retry after
++audit rollback. TestAliasDescriptionRollbackPreservesRetainedState
++passed pristine rollback and independent text, revision and intent
++refusals. TestAliasDescriptionRollbackWaitsForCommittedWriter observed
++the table-lock wait, committed the writer, and then received the
++retained-state refusal without losing the write. Clearing through the
++HTTP route still prevented downgrade and retained a successful replay.
++The installed-schema test was explicitly skipped on schema 58.
++
++The Linux handoff and logs are retained in
++/root/lane-gw-acceptance/gw120-schema58._65ygj2r. run-tests.sh runs the
++focused PostgreSQL/HTTPS checks; catalog.sh reproduces fresh, current
++restore and old restore in one disposable container. Both acquire the
++shared Linux heavy-test and SCI replay locks and enforce the resource
++preflight. The schema fixture uses only its own namespace and no host
++listener. No model or GPU ran. For an already prepared private fixture,
++run the native tests from the repository root:
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription(PostgreSQLUpgradeAndHTTPS|InstalledSchemaAndHTTPS|RollbackPreservesRetainedState|RollbackWaitsForCommittedWriter)$' -count=1
++```
++
++After formal migration, require InstalledSchemaAndHTTPS to pass using
++the normal production migrator and catalog checks, without applying the
++candidate SQL. ARC owns the exact numbered files, catalogue constants,
++TableCount and restricted runtime verification; GW owns this backend
++read/write regression; WEB and DEL own the installed S-304 consumer
++qualification. Neither the candidate run nor a skipped installed test
++is a completed production description flow.
++
++
++The pristine predecessor rollback assertion compares the exact captured
++schema-58 catalogue before and after the candidate, rather than calling
++the check for the installed current tail. This keeps the predecessor
++regression valid when ARC adds the production migration. The focused
++PostgreSQL/HTTPS and concurrent rollback tests passed with this assertion.
++
++
++## Formal migration admission plan
++
++The integration baseline is 1aad4eed, which retains schema 58 and 118
++public tables. The handoff from ba815623 was checked locally against
++its complete SHA-256 manifest, including the eight unchanged production
++source files. Assign only the next contiguous version, 59, to the exact
++up and safe-down bytes. Preserve every earlier SQL asset and release
++lineage entry. This changes no agent protocol or agent version policy.
++No new dependency, model, dataset or network runtime is introduced.
++
++The PostgreSQL 18 locking and exception references above were reviewed
++again on 2026-11-12. ACCESS EXCLUSIVE conflicts with both reads and
++writes and remains held through the transaction; a raised exception
++aborts the transaction. Use the operator's existing bounded transaction
++and stopped-serving installation procedure. Reject destructive rollback
++rather than silently discarding retained content. Reject dropping only
++the intent table or checking state before taking locks, because either
++would bypass the retained-state or concurrent-writer guarantee.
++
++Acceptance requires independently reproducing the three catalogue
++forms on PostgreSQL 18.6 with pgvector 0.8.7, using production migrations
++and the historical 55 through 58 restore inputs plus a current dump.
++Require repeated normal migration/readiness, unchanged predecessor
++checksums and retained audit checkpoints. Exercise missing-grant refusal,
++existing-role grant resume without OID or password changes, runtime
++intent mutation refusal and journal/private-head denial. Run the handed-off
++predecessor, installed-schema, retained-state and waiting-writer tests
++against the same formal source commit, then complete the repository gates.
++These are admission requirements, not new run results. UI qualification
++and the GW-120 roadmap tick remain with the Gateway and Web owners.
+diff --git a/docs/research/lane-d-decisions.md b/docs/research/lane-d-decisions.md
+index aaa2d36d..f5cf19ca 100644
+--- a/docs/research/lane-d-decisions.md
++++ b/docs/research/lane-d-decisions.md
+@@ -151,7 +151,7 @@ run with the archive delivery in FLT-109.
+ | GPU-206 | Capacity degradation and spare planning need retained fleet observations and capacity history. |
+ | GPU-207 | Real Ascend qualification requires the named driver, hardware model and count. Keep it separate from collector parser tests. |
+ | GPU-209 | Intra-node topology and failure attribution require GPU-101 telemetry and real PCIe and NVLink/NVSwitch configurations to establish attribution. |
+-| DEV-204 | The versioning guide and local comparison cover published operation identities. A release baseline, schema and behavioral compatibility checks, and runtime deprecation signaling need their owning release and API paths. |
++| DEV-204 | The versioning guide and local comparison cover published operation identities and named response model references. A release baseline, full directional schema and behavioral compatibility checks, and runtime deprecation signaling need their owning release and API paths. |
+ 
+ ## Training intent CLI (DEV-102, TRN-101)
+ 
+diff --git a/docs/research/postgresql-catalog-upgrade-gate.md b/docs/research/postgresql-catalog-upgrade-gate.md
+index 4c7f309d..d176cfcc 100644
+--- a/docs/research/postgresql-catalog-upgrade-gate.md
++++ b/docs/research/postgresql-catalog-upgrade-gate.md
+@@ -115,7 +115,7 @@ with the local defaults and references the exact alias tenant, workspace,
+ site and cell through a composite foreign key. Its up checksum is
+ `399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab`.
+ The down checksum is
+-`dff9447544bdb8b3fdb78f82356fbab997518250ca3c88049b454ebd33e63a32`.
++`4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2`.
+ The Gateway fixture measured three successor catalogs after applying
+ the Audit scope overlay. Keep these as comparison values. Assign the
+ next contiguous migration only after the Audit migration lands on main.
+diff --git a/docs/research/product-assistant-execution-budgets.md b/docs/research/product-assistant-execution-budgets.md
+index 630fd269..5dcf45f8 100644
+--- a/docs/research/product-assistant-execution-budgets.md
++++ b/docs/research/product-assistant-execution-budgets.md
+@@ -116,10 +116,15 @@ candidate schema must fail closed. The candidate DDL is fixture-owned until
+ the persistence owner registers a forward migration and restore catalogue.
+ 
+ The public endpoint, production migration, trusted policy source, gateway
+-usage binding, run-loop bounds, operator controls and both browser entrances
++usage binding, production run controls and both browser entrances
+ are separate integration requirements. AGT-112 remains unchecked until
+ those complete the main flow and offline acceptance.
+ 
++The staged [persistent run guard](product-assistant-loop-guard.md) now binds
++deterministic commands to monotonic step counts and policy/cancellation
++fences. Its guarded HTTPS factory uses this reservation component and does
++not register a production route or schema.
++
+ ## Integration surface
+ 
+ `productagent.NewExecutionBudgets(commands, policySource)` borrows the
+@@ -162,10 +167,17 @@ session commands and both-entrance HTTPS policy cases also passed against
+ disconnected PostgreSQL. These are component and staged-dispatcher results;
+ they do not establish a production migration, policy source or browser flow.
+ 
+-The same component passed the native full repository gate, including both
+-complete browser suites at one worker, followed by focused race tests and
+-vet. The [shared browser gate boundary](app-lane-questions.md#shared-browser-gate-boundary)
+-retains the earlier failure separately. A subsequent upstream integration
+-changed only Markdown documentation. All non-Markdown repository files
+-were byte-identical to the measured source before the final documentation
+-checks.
++The same component passed a complete native repository gate with both
++browser suites at one worker. After integrating the monitoring contract,
++it passed the full gate again at `3b49f6ae`, with two workers per entrance,
++no automatic retries, and focused race tests and vet. The
++[shared browser gate boundary](app-lane-questions.md#shared-browser-gate-boundary)
++retains the earlier failure separately.
++
++Later upstream changes added standalone CLI code and Markdown documentation.
++Comparison with the measured source verified that every non-CLI,
++non-Markdown repository file remained byte-identical. Only the CLI command
++imports its module. Repository checks and the complete build, CLI tests,
++CLI race tests and vet passed after that rebase before fast-forward
++publication at `279382f2`. This preserves the unchanged completed stages
++and records the affected module's separate acceptance.
+diff --git a/docs/research/product-assistant-loop-guard.md b/docs/research/product-assistant-loop-guard.md
+new file mode 100644
+index 00000000..24ee2cbd
+--- /dev/null
++++ b/docs/research/product-assistant-loop-guard.md
+@@ -0,0 +1,211 @@
++# Durable assistant loop guard (AGT-112)
++
++Reviewed: 2026-11-12. This boundary extends the staged execution budget;
++it does not activate a production schema, route or model.
++
++## Sources and dependencies
++
++[LangGraph's recursion limit](https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT)
++bounds graph steps before a stop condition. Its
++[persistent checkpoints](https://docs.langchain.com/oss/python/langgraph/persistence)
++support interruption and recovery. A loop counter kept only in a worker's
++memory cannot enforce the same bound after restart. The
++[Temporal execution model](https://docs.temporal.io/workflow-execution)
++separates execution identity, event history and cancellation. Cancellation
++must be distinguished from proving that an already admitted effect did not
++happen. PostgreSQL's
++[transaction-held row locks](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-ROWS)
++provide the shared serialization boundary for one active step per run.
++
++Reuse the budget's Go standard library (BSD-style), pgx v5.11.0 (MIT),
++google/uuid v1.6.0 (BSD-3-Clause), PostgreSQL and pgvector 0.8.7
++(PostgreSQL License). Their primary licence links and commercial,
++redistribution and offline-use terms are recorded in the
++[budget research](product-assistant-execution-budgets.md#sources-and-licences).
++No dependency, model or dataset is added. LangGraph and Temporal are
++comparisons, not shipped components. Test records are synthetic.
++
++## Chosen path
++
++Add persistent runs and steps beside the candidate reservation schema.
++Borrow the existing identity-owned transaction and policy source. The
++policy supplies finite installation and user step limits; their minimum
++is the current ceiling. Zero allows no run. Capture the initial ceiling
++on creation and never increase it for that run. Admitted steps consume a
++monotonic counter, including failed or withheld steps. A window change
++does not reset that counter.
++
++Derive tenant, user, workspace and entrance from the rechecked server
++authority. Bind a server-issued run UUID to its intent digest and scope.
++Bind each server-issued execution UUID to one registered command and its
++canonical arguments. Lock the run, then the reservation and its counters.
++Only a newly committed claim may dispatch. Permit one active step per run.
++A duplicate or uncertain claim cannot dispatch again, including after a
++new process opens the database. Store no prompt, cursor, command arguments
++or result body in these checkpoints.
++
++Start with deterministic navigation and typed reads through the existing
++command service. Compute the step fingerprint on the server from command
++ID and cursor. The existing risk admission rejects sensitive reads and
++writes; no callback or shell interface is added. No model is needed.
++Future writes still require their signed plan, human confirmation and
++the action owner's transactional authorization and audit.
++
++Read installation and user policy before claim, immediately before
++dispatch and before returning data. Missing or failed policy is unavailable,
++never enabled. A durable cancel prevents new claims. An in-flight read
++may finish, but cancel or a failed final check suppresses its result.
++An explicit stop is irreversible for that run. Recovery uses a new run
++and a new authorized request; it never silently resumes a stopped run.
++Request cancellation still reaches the existing bounded command context.
++There is no claim that a cross-process stop instantly cancels a backend.
++
++Finish a known command outcome in a new owner transaction. A cancelled or
++unavailable completion transaction leaves the claim pending; no automatic
++takeover or refund follows. Preserve unknown commit outcomes. Known failed
++steps may be retried under a new execution UUID within the remaining limit.
++Replaying an existing step returns a conflict with no result and no second
++action. Scoped inspection exposes only run counters and state.
++
++Deterministic steps reserve zero model tokens. Their local completion
++digest identifies the exact run, execution and outcome, without result
++data. Reuse the existing settlement field to close that zero-token hold;
++it is not a gateway usage receipt. Positive model-token settlement continues
++to require trusted authenticated gateway usage. Execution units are never
++refunded. Cancelling a run does not release an uncertain reservation.
++
++## Rejected alternatives
++
++- A process-local counter or cancellation map loses authority on restart.
++- A caller-supplied ordinal, limit or actor scope can bypass the bound.
++- Holding a database transaction open across a model call or approval
++  prevents prompt cancellation and consumes a connection for the pause.
++- Automatically taking over a pending step can repeat an effect after a
++  lost commit reply. Expiring its reservation can refund completed work.
++- A generic operation callback would create an unreviewed action surface.
++- Sharing the workflow engine's configuration or a new assistant parser
++  would introduce a second policy authority.
++
++## Acceptance
++
++Use disconnected PostgreSQL with two independent pools and actual audited
++commands. Cover installation and user step ceilings separately, initial
++ceiling preservation, concurrent claims, duplicate and changed bindings,
++restart-style reopening, and known failure retry. Verify cancellation and
++policy loss before and after dispatch, no result after denial, and no new
++action or success audit for refused claims. Preserve a real committed
++claim when a simulated reply is lost and refuse automatic execution on
++replay. Cover cancelled/failed finalization, revoked sessions and membership,
++other users, workspaces and tenants, missing policy/schema and recovery.
++
++Keep AGT-112 unchecked. Production startup policy and file references,
++forward migration, grants and restore inventory, API contract, operator
++controls, telemetry, model transport and browser flows need owner binding.
++Provide an unnumbered DDL and exact factories; do not assume a migration
++queue position or reuse the qualified two-case CPU transport as safety
++qualification for the three retained assistant safety cases.
++
++## Exact integration handoff
++
++The startup and persistence owners must queue this candidate explicitly after
++their current GW-120, DAT-101 and metering work. There is no assigned migration
++number and no assumption that these tables exist in schema 58. Do not apply the
++fixture DDL to a running installation or patch its catalogue fingerprint.
++
++The additive factory signatures are:
++
++```go
++productagent.NewExecutionBudgets(commands *productagent.Service,
++    policy productagent.ExecutionBudgetPolicySource) (*productagent.ExecutionBudgets, error)
++productagent.NewExecutionRuns(budgets *productagent.ExecutionBudgets) (*productagent.ExecutionRuns, error)
++productagenthttp.NewGuarded(apps *applications.Service,
++    installation productagent.ExecutionPolicy,
++    policy productagent.ExecutionBudgetPolicySource) (*productagenthttp.Handler, error)
++```
++
++`ExecutionPolicy` is `func(context.Context) (bool, error)`.
++`ExecutionBudgetPolicySource` is
++`func(context.Context, transaction.Executor, productagent.BudgetSubject) (productagent.ExecutionBudgetPolicy, error)`.
++The supplied executor is the current owner's transaction; do not open another
++connection to read policy. `BudgetSubject` contains rechecked tenant, user,
++workspace and entrance. Neither scope nor policy may come from model or browser
++fields. Source reads must honor cancellation and return an error for an absent
++decision. Explicit user disable is `BudgetAccessDisabled`; absence is not disable
++and must remain unavailable. No default allow, cached allow or fallback allowance.
++
++The typed configuration owner must provide an explicit installation enable,
++stable UTC window definition, finite installation/global-user execution and
++token ceilings, explicit per-user access and both finite run-step ceilings.
++Reject unknown fields, negative values and ambiguous booleans at startup; zero
++means no capacity. Preserve the same window boundaries across replicas and
++policy revisions. Installation kill must be reread for every admission and
++result fence. Any policy artifact or future gateway credential is supplied by
++a protected file reference, never inline secret text, command-line content or
++browser configuration. This candidate adds no secret and requires no model.
++
++The unnumbered forward input is
++[`testdata/execution-budget.sql`](../../services/control/internal/modules/productagent/testdata/execution-budget.sql):
++five tables, no policy table, sequence, trigger or function. Installation and
++global-user counters are global authorities. Reservation/run/step placement
++must be classified by ARC under ADR 0006 before registration: the isolated
++fixture has tenant/user/workspace/entrance binding but no site/cell columns.
++Production cell-owned classification requires trusted local defaults, scoped
++foreign keys and reads, plus foreign-cell denial tests; do not silently treat
++these fixture tables as registered global tables. Current startup restricts
++the database to the default cell. This is an explicit integration boundary.
++
++Minimum runtime privileges are `SELECT, INSERT, UPDATE` on those five tables;
++the command owners retain their existing session, workspace and audit rights.
++No assistant grant of `DELETE`, `TRUNCATE`, schema creation, general SQL or a
++policy-edit permission is needed. Bind these grants to the deployment owner's
++existing runtime role, without inventing a second credential or role name.
++The migration owner must register table count, catalogue fingerprints, cell
++classification, restore inventory and least-privilege tests together. Never
++run the fixture's owner-privileged test connection as the production role.
++
++Restore must preserve counters, reservations, run counts, stop state, step
++bindings and pending claims in one consistent snapshot. A rollback first
++disables and unmounts this handler. Dropping its tables is unsafe when claims
++exist because it loses the replay and quota authorities. Keep the additive
++schema and data across application rollback; any destructive downgrade needs
++the persistence owner's explicit supported backup/restore procedure. No timer
++deletes or refunds a pending claim. Retention and privileged reconciliation
++need a separate authorized and audited contract.
++
++Native test entry points are `TestDurableExecutionBudgets`,
++`TestDurableExecutionRuns`, `TestAuthenticatedAssistantHTTP` and
++`TestAuthenticatedGuardedAssistantHTTP`, using the README's protected fixture
++inputs. The last two require the real dispatcher registration overlay until
++the shared owner mounts the handler. The HTTP candidate preserves the existing
++versioned command body. Public run inspection/cancel, confirmed actions and
++browser controls require separate owner contracts; they are not exposed here.
++
++## Isolated acceptance
++
++The schema-58 candidate passed nineteen real PostgreSQL run scenarios on
++Linux arm64, using two independently opened pools and network mode `none`.
++Separate installation and user ceilings, concurrent claims, duplicate and
++changed replays, immutable initial limits, known failure retry, pre/post
++policy failure, installation kill, cross-instance stop, cancelled context,
++lost claim and completion replies, actual finalization rollback, changed
++intent, cross-workspace/tenant and revoked membership/session all passed.
++Registered sensitive-read and write risk were refused before charging.
++
++In one fresh disconnected PostgreSQL 18.6/pgvector 0.8.7 fixture, all thirteen
++reservation scenarios, those nineteen run scenarios, the existing scoped
++command root, both real HTTPS dispatcher roots, and the real assistant audit
++export with the standalone verifier passed together. The guarded HTTP root
++covered Admin and Portal, typed reads without a model, explicit disable,
++missing/failed policy, zero run and execution capacity, CSRF, unknown fields
++and recovery. Denied initial requests left neither an empty run nor a success
++audit. Cancellation after dispatch suppressed data while preserving the actual
++read's correlated audit.
++
++The candidate passed the complete `make check`, `make build` and `make test`
++gate on macOS. Browser suites ran sequentially with two workers and no
++automatic retries: Console 1,075 passed/28 live-environment skips; Portal
++389 passed/9 live-environment skips. Assistant and audit race tests and vet,
++and the five qualifier unit tests, passed. Linux amd64 binaries have been
++cross-compiled but native execution is not yet recorded; test-server transfer
++is still pending. Neither that compilation nor the separate two-case model
++transport qualifies the three retained assistant safety cases.
+diff --git a/docs/research/product-assistant-model-qualification.md b/docs/research/product-assistant-model-qualification.md
+index 57a28ed0..9deb5cef 100644
+--- a/docs/research/product-assistant-model-qualification.md
++++ b/docs/research/product-assistant-model-qualification.md
+@@ -101,12 +101,14 @@ Keep the raw text out of the result and mark the evidence as retained
+ native output replay. A controlled replay without the native archive
+ keeps its existing mode.
+ 
+-The [SCI gateway compatibility check](evaluation-performance-benchmark.md)
+-found that the retained direct requests carry fields rejected by the
+-current gateway. Adapting the body removes seed forwarding, so it
+-cannot establish an equivalent production profile. A separately
+-qualified gateway request, session-scoped admission, and positive
+-capability evidence are needed before assigning a production tier.
++The [SCI gateway comparison](evaluation-performance-benchmark.md#authorized-cpu-gateway-pair)
++initially found direct request fields rejected by the gateway. Its later
++two-case greedy CPU pair matched the original completion digests and
++token counts, with authenticated HTTPS usage acknowledgments and scoped
++canonical receipts. That result qualifies the tested transport profile;
++it does not replay these three safety cases through a user-session-bound
++assistant route or establish positive assistant task capability. Those
++bindings and evidence remain required before assigning a production tier.
+ The APP runner uses the existing bounded file reader and strict JSON
+ decoding helpers. It adds no dependency, model or dataset.
+ 
+diff --git a/docs/research/public-api-versioning.md b/docs/research/public-api-versioning.md
+index af3dcea4..96cc5cdb 100644
+--- a/docs/research/public-api-versioning.md
++++ b/docs/research/public-api-versioning.md
+@@ -14,7 +14,8 @@ snapshot as well as handler and SDK tests.
+ Compare the audit's per-domain, per-audience operations against a
+ local baseline. Detect removed operation identities, audience removal
+ and operation ID changes, while accepting additional operations.
+-Keep the analysis bounded to operation identities. Full schema compatibility
++Keep the analysis bounded to operation identities and the named response
++model references below. Full schema compatibility
+ needs direction-aware JSON Schema checks, and behavior needs real server
+ tests. A general diff such as [oasdiff](https://www.oasdiff.com/docs/breaking-changes)
+ can support deeper review, but introducing it solely for this check adds
+@@ -36,3 +37,38 @@ and paths moved between SDK domains. Re-run against an actual released
+ contract directory with the network disconnected. The full item requires
+ the release owners to select and retain those baselines, wire the release
+ check and test the runtime deprecation behavior across supported versions.
++
++## Named response models in generated clients
++
++The GW-104 read preparation demonstrates a separate source-compatibility
++case: operation IDs can remain stable while a detail response or a page
++item starts using a different named model. The pinned generators derive
++these models from the contract's component references. Old generated
++operation decoders can accept the new wire reply while regeneration still
++changes the declared return types.
++
++Extend the local audit to retain the named schema references reachable
++from each response status and media type. Compare those sets only for an
++existing operation with the same domain, method, URL, audience and operation
++ID. Emit a review finding when the bindings change. Follow document-local
++references with a visited set so recursive models terminate. Reject
++unresolved or nonlocal response references without making a network call.
++
++This is a source-review signal, not a proof of wire incompatibility.
++Descriptions, property order and duplicate references do not change the
++set. An inline field change, constraint change or a reference moved between
++two fields can still need review even when the reachable names stay the
++same. Request schemas and runtime behavior remain outside this check.
++Comparing entire JSON documents would confuse annotations with behavior;
++introducing a second general schema-diff tool remains unnecessary for this
++narrow case. The OpenAPI and generator sources above, the
++[Go generator's named models](https://github.com/oapi-codegen/oapi-codegen/blob/v2.8.2/README.md)
++and the existing PSF licence apply. No dependency, model or dataset is added.
++
++Test direct and nested model replacements, recursive and escaped local
++references, unchanged bindings after annotation/order changes, audience
++and operation-identity boundaries, and rejection of missing or external
++references. Run the audit offline against the actual GW-104 candidate and
++its local published baseline. Keep DEV-204 open: release-baseline selection,
++general directional schema compatibility and runtime deprecation signaling
++still require their owning release and server paths.
+diff --git a/services/control/internal/modules/distribution/README.md b/services/control/internal/modules/distribution/README.md
+index 4e9ace7f..bae26ef7 100644
+--- a/services/control/internal/modules/distribution/README.md
++++ b/services/control/internal/modules/distribution/README.md
+@@ -74,9 +74,19 @@ conflict requires reading the alias again before editing. Portal sees
+ the description on its authorized alias list and detail. Description
+ edits preserve the published target, route revision and existing keys.
+ 
+-The current PostgreSQL lineage still returns predecessor alias responses.
+-The candidate DDL, offline fixture and shared integration order are
+-recorded in the [description qualification](../../../../../docs/research/gateway-model-description.md).
++PostgreSQL migration 000059 installs these fields and the immutable edit
++intent table. Apply the normal schema upgrade and extend the existing
++restricted runtime principal before starting control. Predecessor schema
++58 keeps its original alias response and refuses description writes with
++`SERVICE_NOT_READY`. The [description qualification](../../../../../docs/research/gateway-model-description.md)
++records the exact migration and verification requirements.
++
++A pristine downgrade can remove the unused feature in one operator
++transaction with serving stopped. Any retained text, changed description
++revision or edit intent refuses downgrade with
++`MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE`. Clearing text retains
++its revision and replay history; restore a verified pre-upgrade backup
++through the normal recovery procedure to recover the predecessor instead.
+ 
+ ## Development checks
+ 
+diff --git a/services/control/internal/modules/distribution/alias_description_migration_test.go b/services/control/internal/modules/distribution/alias_description_migration_test.go
+new file mode 100644
+index 00000000..33d03827
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_description_migration_test.go
+@@ -0,0 +1,171 @@
++package distribution_test
++
++import (
++	"context"
++	"errors"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
++	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5/pgconn"
++)
++
++func applyAliasDescriptionRollback(t *testing.T, c scenario) error {
++	t.Helper()
++	ctx := t.Context()
++	tx, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		return err
++	}
++	defer tx.Rollback(ctx)
++	if _, err := tx.Exec(ctx, aliasDescriptionCandidateDown); err != nil {
++		return err
++	}
++	return tx.Commit(ctx)
++}
++
++func aliasDescriptionRetainedState(t *testing.T, c scenario) string {
++	t.Helper()
++	var state string
++	if err := c.s.DB.QueryRow(t.Context(), `SELECT jsonb_build_object(
++        'aliases',(SELECT jsonb_agg(to_jsonb(a) ORDER BY id) FROM model_aliases a),
++        'intents',(SELECT jsonb_agg(to_jsonb(i) ORDER BY tenant_id,workspace_id,actor_user_id,idempotency_key)
++          FROM model_alias_description_intents i))::text`).Scan(&state); err != nil {
++		t.Fatal(err)
++	}
++	return state
++}
++
++func assertAliasDescriptionRollbackError(t *testing.T, err error) {
++	t.Helper()
++	var pgErr *pgconn.PgError
++	if !errors.As(err, &pgErr) || pgErr.Code != "55000" || pgErr.Message != "MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE" {
++		t.Fatalf("expected retained description downgrade refusal, got %v", err)
++	}
++}
++
++func assertAliasDescriptionRollbackRefused(t *testing.T, c scenario) {
++	t.Helper()
++	before := aliasDescriptionRetainedState(t, c)
++	for range 2 {
++		assertAliasDescriptionRollbackError(t, applyAliasDescriptionRollback(t, c))
++		if after := aliasDescriptionRetainedState(t, c); after != before {
++			t.Fatal("refused downgrade changed descriptions or retained replay intents")
++		}
++	}
++}
++
++func TestAliasDescriptionRollbackPreservesRetainedState(t *testing.T) {
++	for _, mode := range []string{"pristine", "published_text", "cleared_revision", "retained_intent"} {
++		t.Run(mode, func(t *testing.T) {
++			c := setupAccount(t, fixture.NewAtVersion(t, 58))
++			ctx := t.Context()
++			alias := c.published(t)
++			var predecessorCatalog string
++			if err := c.s.DB.QueryRow(ctx, database.CatalogSQL).Scan(&predecessorCatalog); err != nil {
++				t.Fatal(err)
++			}
++			if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++				t.Fatal(err)
++			}
++			switch mode {
++			case "published_text":
++				// Explicit fixture state isolates the publication text predicate at revision 1.
++				if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET description='Retain published intent' WHERE id=$1", alias.ID); err != nil {
++					t.Fatal(err)
++				}
++			case "cleared_revision":
++				// Empty visible text still carries an independent concurrency revision.
++				if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET description_revision=2 WHERE id=$1", alias.ID); err != nil {
++					t.Fatal(err)
++				}
++			case "retained_intent":
++				// The valid scoped intent must independently prevent destruction.
++				if _, err := c.s.DB.Exec(ctx, `INSERT INTO model_alias_description_intents
++                    (tenant_id,workspace_id,actor_user_id,idempotency_key,alias_id,result_revision,fingerprint)
++                    VALUES($1,$2,$3,$4,$5,1,$6)`, c.a.Me.Workspace.TenantID, alias.WorkspaceID,
++					c.a.Me.User.ID, uuid.NewString(), alias.ID, make([]byte, 32)); err != nil {
++					t.Fatal(err)
++				}
++			}
++			if mode != "pristine" {
++				assertAliasDescriptionRollbackRefused(t, c)
++				return
++			}
++			if err := applyAliasDescriptionRollback(t, c); err != nil {
++				t.Fatal(err)
++			}
++			var restoredCatalog string
++			if err := c.s.DB.QueryRow(ctx, database.CatalogSQL).Scan(&restoredCatalog); err != nil || restoredCatalog != predecessorCatalog {
++				t.Fatal("pristine downgrade did not restore the exact predecessor catalog", err)
++			}
++			got, err := c.s.Alias(ctx, c.a, alias.WorkspaceID, alias.ID)
++			if err != nil || got.ID != alias.ID || got.Revision != alias.Revision || got.DeploymentID != alias.DeploymentID ||
++				got.DeploymentRevision != alias.DeploymentRevision || got.Description != nil || got.DescriptionRevision != nil {
++				t.Fatal("pristine downgrade changed the retained alias", err)
++			}
++		})
++	}
++}
++
++func TestAliasDescriptionRollbackWaitsForCommittedWriter(t *testing.T) {
++	c := setupAccount(t, fixture.NewAtVersion(t, 58))
++	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
++	defer cancel()
++	alias := c.published(t)
++	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++		t.Fatal(err)
++	}
++	writer, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer writer.Rollback(ctx)
++	if _, err := writer.Exec(ctx, "UPDATE model_aliases SET description='Committed while downgrade waits' WHERE id=$1", alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	downgrade, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer downgrade.Rollback(ctx)
++	pid := downgrade.Conn().PgConn().PID()
++	result := make(chan error, 1)
++	go func() {
++		_, err := downgrade.Exec(ctx, aliasDescriptionCandidateDown)
++		if err == nil {
++			err = downgrade.Commit(ctx)
++		} else {
++			_ = downgrade.Rollback(ctx)
++		}
++		result <- err
++	}()
++	ticker := time.NewTicker(10 * time.Millisecond)
++	defer ticker.Stop()
++	for {
++		var waiting bool
++		if err := c.s.DB.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE pid=$1 AND wait_event_type='Lock')", pid).Scan(&waiting); err != nil {
++			t.Fatal(err)
++		}
++		if waiting {
++			break
++		}
++		select {
++		case err := <-result:
++			t.Fatalf("downgrade did not wait for the active writer: %v", err)
++		case <-ctx.Done():
++			t.Fatal("downgrade did not reach its table lock", ctx.Err())
++		case <-ticker.C:
++		}
++	}
++	if err := writer.Commit(ctx); err != nil {
++		t.Fatal(err)
++	}
++	assertAliasDescriptionRollbackError(t, <-result)
++	var description string
++	if err := c.s.DB.QueryRow(ctx, "SELECT description FROM model_aliases WHERE id=$1", alias.ID).Scan(&description); err != nil || description != "Committed while downgrade waits" {
++		t.Fatal("downgrade lost the writer committed before its lock", err)
++	}
++}
+diff --git a/services/control/internal/modules/distribution/alias_description_test.go b/services/control/internal/modules/distribution/alias_description_test.go
+index 4f5ca839..962933f8 100644
+--- a/services/control/internal/modules/distribution/alias_description_test.go
++++ b/services/control/internal/modules/distribution/alias_description_test.go
+@@ -15,6 +15,7 @@ import (
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
+ 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+ 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+@@ -31,7 +32,20 @@ var aliasDescriptionCandidateUp string
+ var aliasDescriptionCandidateDown string
+ 
+ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
++	c := setupAccount(t, fixture.NewAtVersion(t, 58))
++	exerciseAliasDescriptionHTTPS(t, c, false)
++}
++
++func TestAliasDescriptionInstalledSchemaAndHTTPS(t *testing.T) {
++	if database.SchemaVersion == 58 {
++		t.Skip("requires the production description migration after schema 58")
++	}
+ 	c := setup(t)
++	exerciseAliasDescriptionHTTPS(t, c, true)
++}
++
++func exerciseAliasDescriptionHTTPS(t *testing.T, c scenario, installed bool) {
++	t.Helper()
+ 	ctx := t.Context()
+ 	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
+ 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
+@@ -61,11 +75,15 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 	legacyID := legacy["id"].(string)
+ 	portal.Call("GET", portalPath+"/"+legacyID, nil, 200, "ModelAliasResponse")
+ 	portal.Call("GET", portalPath, nil, 200, "ModelAliasPageResponse")
+-	if _, exists := legacy["description"]; exists {
+-		t.Fatal("predecessor response gained a field")
+-	}
+-	if _, exists := legacy["description_revision"]; exists {
+-		t.Fatal("predecessor response gained a description revision")
++	if !installed {
++		if _, exists := legacy["description"]; exists {
++			t.Fatal("predecessor response gained a field")
++		}
++		if _, exists := legacy["description_revision"]; exists {
++			t.Fatal("predecessor response gained a description revision")
++		}
++	} else if legacy["description"] != "" || legacy["description_revision"] != float64(1) {
++		t.Fatal("normal migrated publication did not include description defaults")
+ 	}
+ 	problem := func(client *httpfixture.Client, path string, body any, status int, code string) {
+ 		t.Helper()
+@@ -77,34 +95,37 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 	edit := distribution.AliasDescriptionEdit{Description: "Initial edit", ExpectedDescriptionRevision: 1, Reason: "Synthetic catalogue edit"}
+ 	admin.Headers["Idempotency-Key"] = uuid.NewString()
+ 	predecessorEditPath := adminPath + "/" + legacyID + "/description"
+-	problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
+-	anonymous := httpfixture.New(t, server, "admin", schemas)
+-	if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
+-		t.Fatal("unauthenticated edit did not return the standard problem")
+-	}
+-	problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
+-	predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
+-	predecessorResponse, err := server.Client().Do(predecessorRequest)
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	var predecessorProblem map[string]any
+-	decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
+-	predecessorResponse.Body.Close()
+-	if decodeError != nil || predecessorResponse.StatusCode != 503 ||
+-		predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
+-		predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
+-		predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
+-		predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
+-		t.Fatal("invalid predecessor response or retry metadata", decodeError)
+-	}
+-	publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
+-	admin.Headers["Idempotency-Key"] = describedKey
+-	problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
++	if !installed {
++		problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
++		anonymous := httpfixture.New(t, server, "admin", schemas)
++		if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
++			t.Fatal("unauthenticated edit did not return the standard problem")
++		}
++		problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
++		predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
++		predecessorResponse, err := server.Client().Do(predecessorRequest)
++		if err != nil {
++			t.Fatal(err)
++		}
++		var predecessorProblem map[string]any
++		decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
++		predecessorResponse.Body.Close()
++		if decodeError != nil || predecessorResponse.StatusCode != 503 ||
++			predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
++			predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
++			predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
++			predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
++			t.Fatal("invalid predecessor response or retry metadata", decodeError)
++		}
++		publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
++		admin.Headers["Idempotency-Key"] = describedKey
++		problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
+ 
+-	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
+-		t.Fatal(err)
++		if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++			t.Fatal(err)
++		}
+ 	}
++
+ 	assertDescription := func(value map[string]any, description string, revision int) {
+ 		t.Helper()
+ 		if value["description"] != description || value["description_revision"] != float64(revision) {
+@@ -352,10 +373,13 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 		t.Fatal("edit intents and audit events disagree", intents, audits, err)
+ 	}
+ 
+-	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateDown); err != nil {
+-		t.Fatal(err)
++	assertAliasDescriptionRollbackRefused(t, c)
++	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse"), "", 4)
++	admin.Headers["Idempotency-Key"] = rollbackKey
++	if replay := admin.Write("POST", editPath, clear, 200, "AliasDescriptionResultResponse"); replay["replayed"] != true || replay["applied_description_revision"] != float64(4) {
++		t.Fatal("refused downgrade lost the retained edit replay")
+ 	}
+-	member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse")
++	assertRoute(3, 3)
+ }
+ 
+ func verifyAliasDescriptionScope(t *testing.T, c scenario, aliasID string) {
+diff --git a/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql b/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
+index 5362f5e9..6108a2e0 100644
+--- a/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
++++ b/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
+@@ -1,3 +1,12 @@
++-- Run in one operator transaction with serving stopped.
++LOCK TABLE model_aliases, model_alias_description_intents IN ACCESS EXCLUSIVE MODE;
++DO $$
++BEGIN
++ IF EXISTS(SELECT 1 FROM model_aliases WHERE description <> '' OR description_revision <> 1)
++   OR EXISTS(SELECT 1 FROM model_alias_description_intents) THEN
++  RAISE EXCEPTION 'MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE' USING ERRCODE='55000';
++ END IF;
++END $$;
+ DROP TABLE model_alias_description_intents;
+ ALTER TABLE model_aliases
+  DROP CONSTRAINT model_alias_description_scope_key,
+diff --git a/services/control/internal/modules/productagent/README.md b/services/control/internal/modules/productagent/README.md
+index 7331a7bc..59f93e78 100644
+--- a/services/control/internal/modules/productagent/README.md
++++ b/services/control/internal/modules/productagent/README.md
+@@ -73,10 +73,28 @@ The [candidate DDL](testdata/execution-budget.sql) is installed only by the
+ isolated repository test. It is not a production migration. Current command
+ routes do not bind this budget candidate. A production migration and restore
+ catalogue, authoritative typed policy source, bounded gateway adapter,
+-run-loop guard, telemetry and both browser flows must be integrated before
++production run controls, telemetry and both browser flows must be integrated before
+ AGT-112 can ship. Do not accept a browser's or model's maximum token estimate.
+ See the [contract and acceptance](../../../../../docs/research/product-assistant-execution-budgets.md).
+ 
++`NewExecutionRuns` adds persistent step limits to that boundary. `Start`
++binds a server-issued UUID to its intent and current authority. `RunCommand`
++admits one fixed navigation or typed read at a time. The initial step ceiling
++never increases, and a new budget window does not reset the count. Completed,
++pending and uncertain steps cannot dispatch again. `Inspect` and `Cancel`
++recheck the current owner even when execution policy is unavailable. Stop is
++permanent; a read already in progress may finish, but its result is withheld.
++No prompt, cursor or result body is persisted in the run checkpoint.
++
++`http.NewGuarded(apps, installationPolicy, budgetPolicySource)` binds the staged
++HTTP handler to these controls. The trusted dispatcher supplies the request
++UUID; the JSON contract still accepts only `command` and `cursor`. Both policy
++sources must be explicitly bound by startup. The user policy supplies finite
++`RunSteps.Installation` and `RunSteps.User`; zero permits no run. A missing or
++failed source never permits execution. Deterministic commands consume an
++execution unit and zero model tokens. Their local completion digest is not a
++model usage receipt. See the [loop guard and owner handoff](../../../../../docs/research/product-assistant-loop-guard.md).
++
+ Select `PROJECT_ONE_REPOSITORY_ENGINE=postgresql`, set
+ `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE` to the protected fixture DSN file,
+ and select an unused `PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA` of the form
+@@ -90,6 +108,10 @@ GOPROXY=off GOSUMDB=off go -C services/control test -p=1 \
+   ./internal/modules/productagent -count=1
+ ```
+ 
++Select `^TestDurableExecutionRuns$` with the same fixture inputs for the
++persistent guard. Select `^TestAuthenticatedGuardedAssistantHTTP$` in the
++HTTP overlay command below for real TLS, CSRF and policy admission tests.
++
+ ## Tests
+ 
+ ```sh
+diff --git a/services/control/internal/modules/productagent/execution_budget.go b/services/control/internal/modules/productagent/execution_budget.go
+index 1d38d270..267ca9f1 100644
+--- a/services/control/internal/modules/productagent/execution_budget.go
++++ b/services/control/internal/modules/productagent/execution_budget.go
+@@ -27,6 +27,12 @@ type BudgetCeiling struct {
+ 	Tokens     int64
+ }
+ 
++// ExecutionRunLimits bounds admitted steps of one run. Zero permits no run.
++type ExecutionRunLimits struct {
++	Installation int64
++	User         int64
++}
++
+ // ExecutionBudgetPolicy comes from the installation's trusted policy owner.
+ // Window boundaries must remain stable across replicas and policy revisions.
+ type ExecutionBudgetPolicy struct {
+@@ -35,6 +41,7 @@ type ExecutionBudgetPolicy struct {
+ 	WindowEnd    time.Time
+ 	Installation BudgetCeiling
+ 	User         BudgetCeiling
++	RunSteps     ExecutionRunLimits
+ }
+ 
+ // BudgetSubject is resolved from current server authority before policy is read.
+@@ -74,6 +81,8 @@ type BudgetReservation struct {
+ 
+ // BudgetSettlement carries usage from an authenticated, trusted gateway receipt.
+ // It must not be populated directly from browser input or model-generated text.
++// The deterministic run guard closes only zero-token holds with a local status
++// digest; that digest is not evidence of model usage.
+ type BudgetSettlement struct {
+ 	ID            string
+ 	ActualTokens  int64
+@@ -112,21 +121,9 @@ func (b *ExecutionBudgets) Reserve(ctx context.Context, actor identity.Auth, exe
+ 	}
+ 	var result BudgetReservation
+ 	err := b.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
+-		if err := b.commands.admitExecution(ctx); err != nil {
+-			return err
+-		}
+-		if b.policy == nil {
+-			return errExecutionPolicyUnavailable
+-		}
+-		policy, err := b.policy(ctx, tx, subject)
++		policy, err := b.readPolicy(ctx, tx, subject)
+ 		if err != nil {
+-			return errExecutionPolicyUnavailable
+-		}
+-		if policy.UserAccess == BudgetAccessDisabled {
+-			return ErrCommandDenied
+-		}
+-		if !validBudgetPolicy(policy) {
+-			return errExecutionPolicyUnavailable
++			return err
+ 		}
+ 		result, err = reserveBudgetWithin(ctx, tx, subject, execution, policy)
+ 		return err
+@@ -137,6 +134,26 @@ func (b *ExecutionBudgets) Reserve(ctx context.Context, actor identity.Auth, exe
+ 	return result, nil
+ }
+ 
++func (b *ExecutionBudgets) readPolicy(ctx context.Context, tx transaction.Executor, subject BudgetSubject) (ExecutionBudgetPolicy, error) {
++	if err := b.commands.admitExecution(ctx); err != nil {
++		return ExecutionBudgetPolicy{}, err
++	}
++	if b.policy == nil {
++		return ExecutionBudgetPolicy{}, errExecutionPolicyUnavailable
++	}
++	policy, err := b.policy(ctx, tx, subject)
++	if err != nil {
++		return ExecutionBudgetPolicy{}, errExecutionPolicyUnavailable
++	}
++	if policy.UserAccess == BudgetAccessDisabled {
++		return ExecutionBudgetPolicy{}, ErrCommandDenied
++	}
++	if !validBudgetPolicy(policy) {
++		return ExecutionBudgetPolicy{}, errExecutionPolicyUnavailable
++	}
++	return policy, nil
++}
++
+ // Settle returns unused held tokens exactly once while keeping the execution
+ // unit charged. Disablement does not prevent settlement of known usage. Missing
+ // usage, cancellation and process restart never release a hold automatically.
+@@ -176,7 +193,8 @@ func (b *ExecutionBudgets) withSubject(ctx context.Context, actor identity.Auth,
+ func validBudgetPolicy(p ExecutionBudgetPolicy) bool {
+ 	return p.UserAccess == BudgetAccessEnabled && !p.WindowStart.IsZero() && p.WindowStart.Before(p.WindowEnd) &&
+ 		p.WindowStart.Equal(p.WindowStart.Truncate(time.Microsecond)) && p.WindowEnd.Equal(p.WindowEnd.Truncate(time.Microsecond)) &&
+-		p.Installation.Executions >= 0 && p.Installation.Tokens >= 0 && p.User.Executions >= 0 && p.User.Tokens >= 0
++		p.Installation.Executions >= 0 && p.Installation.Tokens >= 0 && p.User.Executions >= 0 && p.User.Tokens >= 0 &&
++		p.RunSteps.Installation >= 0 && p.RunSteps.User >= 0
+ }
+ 
+ func budgetDigest(s string) bool {
+diff --git a/services/control/internal/modules/productagent/execution_budget_repository.go b/services/control/internal/modules/productagent/execution_budget_repository.go
+index c1ca1fb2..4339b681 100644
+--- a/services/control/internal/modules/productagent/execution_budget_repository.go
++++ b/services/control/internal/modules/productagent/execution_budget_repository.go
+@@ -82,6 +82,10 @@ func settleBudgetWithin(ctx context.Context, tx transaction.Executor, subject Bu
+ 	if err != nil {
+ 		return BudgetReservation{}, err
+ 	}
++	return settleStoredBudgetWithin(ctx, tx, subject, stored, settlement)
++}
++
++func settleStoredBudgetWithin(ctx context.Context, tx transaction.Executor, subject BudgetSubject, stored storedBudgetReservation, settlement BudgetSettlement) (BudgetReservation, error) {
+ 	if settlement.ActualTokens > stored.execution.MaximumTokens {
+ 		return BudgetReservation{}, errors.New("VALIDATION_FAILED")
+ 	}
+diff --git a/services/control/internal/modules/productagent/execution_budget_repository_integration_test.go b/services/control/internal/modules/productagent/execution_budget_repository_integration_test.go
+index 2905b609..b8a55ed4 100644
+--- a/services/control/internal/modules/productagent/execution_budget_repository_integration_test.go
++++ b/services/control/internal/modules/productagent/execution_budget_repository_integration_test.go
+@@ -117,7 +117,7 @@ func (g *budgetRepositoryFixture) exec(query string, args ...any) {
+ func (g *budgetRepositoryFixture) reset(t *testing.T) {
+ 	g.t = t
+ 	g.t.Helper()
+-	g.exec(`TRUNCATE product_agent_budget_reservations,product_agent_budget_users,product_agent_budget_installations`)
++	g.exec(`TRUNCATE product_agent_steps,product_agent_runs,product_agent_budget_reservations,product_agent_budget_users,product_agent_budget_installations`)
+ 	start := time.Now().UTC().Truncate(time.Hour).Add(-time.Hour)
+ 	g.policy.Store(&ExecutionBudgetPolicy{
+ 		UserAccess: BudgetAccessEnabled, WindowStart: start, WindowEnd: start.Add(3 * time.Hour),
+diff --git a/services/control/internal/modules/productagent/execution_budget_test.go b/services/control/internal/modules/productagent/execution_budget_test.go
+index 0e03f9cf..f55afbf3 100644
+--- a/services/control/internal/modules/productagent/execution_budget_test.go
++++ b/services/control/internal/modules/productagent/execution_budget_test.go
+@@ -56,6 +56,8 @@ func TestExecutionBudgetPolicyRequiresCompleteExplicitWindow(t *testing.T) {
+ 		func(p *ExecutionBudgetPolicy) { p.Installation.Tokens = -1 },
+ 		func(p *ExecutionBudgetPolicy) { p.User.Executions = -1 },
+ 		func(p *ExecutionBudgetPolicy) { p.User.Tokens = -1 },
++		func(p *ExecutionBudgetPolicy) { p.RunSteps.Installation = -1 },
++		func(p *ExecutionBudgetPolicy) { p.RunSteps.User = -1 },
+ 	} {
+ 		p := valid
+ 		mutate(&p)
+diff --git a/services/control/internal/modules/productagent/execution_run.go b/services/control/internal/modules/productagent/execution_run.go
+new file mode 100644
+index 00000000..4e2e1077
+--- /dev/null
++++ b/services/control/internal/modules/productagent/execution_run.go
+@@ -0,0 +1,216 @@
++package productagent
++
++import (
++	"context"
++	"crypto/sha256"
++	"encoding/hex"
++	"encoding/json"
++	"errors"
++	"unicode/utf8"
++
++	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// ExecutionRunState is durable control state, independent of a worker process.
++type ExecutionRunState string
++
++const (
++	// ExecutionRunActive admits bounded steps when current policy permits them.
++	ExecutionRunActive ExecutionRunState = "active"
++	// ExecutionRunStopped permanently refuses further steps of this run.
++	ExecutionRunStopped ExecutionRunState = "stopped"
++)
++
++// ExecutionRun contains scoped control metadata, never a command or result body.
++type ExecutionRun struct {
++	ID                string
++	State             ExecutionRunState
++	MaximumSteps      int64
++	AdmittedSteps     int64
++	ActiveExecutionID string
++}
++
++// ExecutionRuns guards deterministic commands with durable run and step claims.
++// It performs no model calls and exposes no general operation callback.
++type ExecutionRuns struct{ budgets *ExecutionBudgets }
++
++var errRunConflict = errors.New("VERSION_CONFLICT")
++
++// NewExecutionRuns reuses the budget's authority, policy and borrowed storage.
++// RunSteps in that trusted policy must explicitly provide capacity before Start.
++func NewExecutionRuns(budgets *ExecutionBudgets) (*ExecutionRuns, error) {
++	if budgets == nil || budgets.commands == nil {
++		return nil, errExecutionPolicyUnavailable
++	}
++	return &ExecutionRuns{budgets: budgets}, nil
++}
++
++// Start binds a server-issued run ID to a trusted intent digest and current scope.
++// A repeated identity never resets its initial ceiling, counter or stop state.
++func (r *ExecutionRuns) Start(ctx context.Context, actor identity.Auth, id, intentSHA256 string) (ExecutionRun, error) {
++	if !wire.ValidID(id) || !budgetDigest(intentSHA256) {
++		return ExecutionRun{}, errors.New("VALIDATION_FAILED")
++	}
++	var result ExecutionRun
++	err := r.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
++		policy, err := r.budgets.readPolicy(ctx, tx, subject)
++		if err != nil {
++			return err
++		}
++		result, err = startExecutionRunWithin(ctx, tx, subject, id, intentSHA256, policy)
++		return err
++	})
++	if err != nil {
++		return ExecutionRun{}, err
++	}
++	return result, nil
++}
++
++// Inspect rechecks current authority before returning control metadata. It works
++// while execution policy is unavailable so an owner can inspect and cancel a run.
++func (r *ExecutionRuns) Inspect(ctx context.Context, actor identity.Auth, id string) (ExecutionRun, error) {
++	return r.control(ctx, actor, id, false)
++}
++
++// Cancel durably stops the owner's run without releasing any reservation.
++// An already admitted read may finish; its result is suppressed by the final fence.
++// Cancellation never performs a product write or bypasses human confirmation.
++func (r *ExecutionRuns) Cancel(ctx context.Context, actor identity.Auth, id string) (ExecutionRun, error) {
++	return r.control(ctx, actor, id, true)
++}
++
++func (r *ExecutionRuns) control(ctx context.Context, actor identity.Auth, id string, stop bool) (ExecutionRun, error) {
++	if !wire.ValidID(id) {
++		return ExecutionRun{}, errors.New("VALIDATION_FAILED")
++	}
++	var result ExecutionRun
++	err := r.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
++		stored, err := readExecutionRun(ctx, tx, subject, id)
++		if err != nil {
++			return err
++		}
++		result = stored.run
++		if stop {
++			if err := stopExecutionRun(ctx, tx, id); err != nil {
++				return err
++			}
++			result.State = ExecutionRunStopped
++		}
++		return nil
++	})
++	if err != nil {
++		return ExecutionRun{}, err
++	}
++	return result, nil
++}
++
++// RunCommand claims and executes one fixed navigation or typed read command.
++// The server supplies both IDs. A replay returns a conflict without executing or
++// returning cached data. Writes still fail the command service's risk admission.
++func (r *ExecutionRuns) RunCommand(ctx context.Context, actor identity.Auth, runID, executionID, input, cursor string) (Result, error) {
++	if !wire.ValidID(runID) || !wire.ValidID(executionID) || !utf8.ValidString(input) || !utf8.ValidString(cursor) {
++		return Result{}, errors.New("VALIDATION_FAILED")
++	}
++	if r == nil || r.budgets == nil || ctx == nil {
++		return Result{}, ErrCommandDenied
++	}
++	commands := r.budgets.commands
++	ctx, cancel := context.WithTimeout(ctx, config.Seconds(commands.identity.Config.Policy().HTTP.RequestSeconds))
++	defer cancel()
++	cmd, err := commands.admitRunCommand(actor, input, cursor)
++	if err != nil {
++		return Result{}, err
++	}
++	execution := BudgetExecution{ID: executionID, ExecutionSHA256: commandFingerprint(cmd.id, cursor)}
++	if err := r.claim(ctx, actor, runID, execution, cmd.id); err != nil {
++		return Result{}, err
++	}
++	return r.dispatchClaimed(ctx, actor, runID, executionID, input, cursor)
++}
++
++func (r *ExecutionRuns) dispatchClaimed(ctx context.Context, actor identity.Auth, runID, executionID, input, cursor string) (Result, error) {
++	if err := r.beforeDispatch(ctx, actor, runID, executionID); err != nil {
++		return Result{}, err
++	}
++	result, operationErr := r.budgets.commands.RunForRequest(ctx, actor, input, cursor, executionID)
++	if outcome, ok := transaction.CommitOutcome(operationErr); ok && outcome != transaction.CommitRolledBack {
++		// The command audit may have committed. A new process cannot infer that
++		// the operation did not happen from the missing reply.
++		return Result{}, operationErr
++	}
++	if err := r.finish(ctx, actor, runID, executionID, operationErr == nil); err != nil {
++		return Result{}, err
++	}
++	if operationErr != nil {
++		return Result{}, operationErr
++	}
++	return result, nil
++}
++
++// RunCommandForRequest guards one deterministic HTTP command without accepting
++// a caller's run identity or limits. The dispatcher supplies its request UUID.
++// Replaying that UUID never dispatches a completed or uncertain step again.
++func (r *ExecutionRuns) RunCommandForRequest(ctx context.Context, actor identity.Auth, input, cursor, requestID string) (Result, error) {
++	if !wire.ValidID(requestID) {
++		return Result{}, ErrInvalidRequestID
++	}
++	if r == nil || r.budgets == nil || ctx == nil {
++		return Result{}, ErrCommandDenied
++	}
++	if !utf8.ValidString(input) || !utf8.ValidString(cursor) {
++		return Result{}, ErrInvalidCommand
++	}
++	commands := r.budgets.commands
++	cmd, err := commands.admitRunCommand(actor, input, cursor)
++	if err != nil {
++		return Result{}, err
++	}
++	ctx, cancel := context.WithTimeout(ctx, config.Seconds(commands.identity.Config.Policy().HTTP.RequestSeconds))
++	defer cancel()
++	fingerprint := commandFingerprint(cmd.id, cursor)
++	err = r.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
++		policy, err := r.budgets.readPolicy(ctx, tx, subject)
++		if err != nil {
++			return err
++		}
++		if _, err := startExecutionRunWithin(ctx, tx, subject, requestID, fingerprint, policy); err != nil {
++			return err
++		}
++		return r.claimWithin(ctx, tx, subject, requestID, BudgetExecution{ID: requestID, ExecutionSHA256: fingerprint}, cmd.id)
++	})
++	if err != nil {
++		return Result{}, err
++	}
++	return r.dispatchClaimed(ctx, actor, requestID, requestID, input, cursor)
++}
++
++func (r *ExecutionRuns) withSubject(ctx context.Context, actor identity.Auth, fn func(context.Context, transaction.Executor, BudgetSubject) error) error {
++	if r == nil || r.budgets == nil {
++		return ErrCommandDenied
++	}
++	return r.budgets.withSubject(ctx, actor, fn)
++}
++
++func commandFingerprint(command, cursor string) string {
++	return executionDigest("command_v1", command, cursor)
++}
++
++func executionDigest(fields ...string) string {
++	encoded, _ := json.Marshal(fields)
++	digest := sha256.Sum256(encoded)
++	return hex.EncodeToString(digest[:])
++}
++
++func (s *Service) admitRunCommand(actor identity.Auth, input, cursor string) (command, error) {
++	cmd, ok := s.catalog.aliases[normalize(input)]
++	if !ok {
++		return command{}, ErrUnknownCommand
++	}
++	if _, err := s.admit(cmd, actor, cursor); err != nil {
++		return command{}, err
++	}
++	return cmd, nil
++}
+diff --git a/services/control/internal/modules/productagent/execution_run_repository.go b/services/control/internal/modules/productagent/execution_run_repository.go
+new file mode 100644
+index 00000000..2a415d5c
+--- /dev/null
++++ b/services/control/internal/modules/productagent/execution_run_repository.go
+@@ -0,0 +1,190 @@
++package productagent
++
++import (
++	"context"
++	"database/sql"
++	"errors"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++type storedExecutionRun struct {
++	run          ExecutionRun
++	intentSHA256 string
++}
++
++func startExecutionRunWithin(ctx context.Context, tx transaction.Executor, subject BudgetSubject, id, intentSHA256 string, policy ExecutionBudgetPolicy) (ExecutionRun, error) {
++	limit := min(policy.RunSteps.Installation, policy.RunSteps.User)
++	if limit == 0 {
++		return ExecutionRun{}, ErrBudgetExceeded
++	}
++	if _, err := tx.Exec(ctx, budgetSQL(`INSERT INTO product_agent_runs(id,tenant_id,user_id,workspace_id,audience,intent_sha256,maximum_steps)
++		VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING`, id, subject.TenantID, subject.UserID,
++		subject.WorkspaceID, subject.Audience, intentSHA256, limit)); err != nil {
++		return ExecutionRun{}, err
++	}
++	stored, err := readExecutionRun(ctx, tx, subject, id)
++	if err != nil {
++		return ExecutionRun{}, err
++	}
++	if stored.intentSHA256 != intentSHA256 {
++		return ExecutionRun{}, errors.New("IDEMPOTENCY_CONFLICT")
++	}
++	return stored.run, nil
++}
++
++func readExecutionRun(ctx context.Context, tx transaction.Executor, subject BudgetSubject, id string) (storedExecutionRun, error) {
++	var stored storedExecutionRun
++	var active sql.NullString
++	stored.run.ID = id
++	err := tx.QueryRow(ctx, budgetSQL(`SELECT state,maximum_steps,admitted_steps,active_execution_id::text,intent_sha256
++		FROM product_agent_runs WHERE id=$1 AND tenant_id=$2 AND user_id=$3 AND workspace_id=$4 AND audience=$5 FOR UPDATE`,
++		id, subject.TenantID, subject.UserID, subject.WorkspaceID, subject.Audience)).Scan(
++		&stored.run.State, &stored.run.MaximumSteps, &stored.run.AdmittedSteps, &active, &stored.intentSHA256)
++	if errors.Is(err, sql.ErrNoRows) {
++		return storedExecutionRun{}, errors.New("RESOURCE_NOT_FOUND")
++	}
++	stored.run.ActiveExecutionID = active.String
++	return stored, err
++}
++
++func stopExecutionRun(ctx context.Context, tx transaction.Executor, id string) error {
++	_, err := tx.Exec(ctx, budgetSQL(`UPDATE product_agent_runs SET state='stopped' WHERE id=$1`, id))
++	return err
++}
++
++func (r *ExecutionRuns) claim(ctx context.Context, actor identity.Auth, runID string, execution BudgetExecution, command string) error {
++	return r.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
++		return r.claimWithin(ctx, tx, subject, runID, execution, command)
++	})
++}
++
++func (r *ExecutionRuns) claimWithin(ctx context.Context, tx transaction.Executor, subject BudgetSubject, runID string, execution BudgetExecution, command string) error {
++	stored, err := readExecutionRun(ctx, tx, subject, runID)
++	if err != nil {
++		return err
++	}
++	policy, err := r.budgets.readPolicy(ctx, tx, subject)
++	if err != nil {
++		return err
++	}
++	var oldFingerprint string
++	err = tx.QueryRow(ctx, budgetSQL(`SELECT execution_sha256 FROM product_agent_steps WHERE id=$1 AND run_id=$2`, execution.ID, runID)).Scan(&oldFingerprint)
++	if err == nil {
++		if oldFingerprint != execution.ExecutionSHA256 {
++			return errors.New("IDEMPOTENCY_CONFLICT")
++		}
++		return errRunConflict
++	}
++	if !errors.Is(err, sql.ErrNoRows) {
++		return err
++	}
++	if stored.run.State != ExecutionRunActive || stored.run.ActiveExecutionID != "" {
++		return errRunConflict
++	}
++	limit := min(stored.run.MaximumSteps, policy.RunSteps.Installation, policy.RunSteps.User)
++	if stored.run.AdmittedSteps >= limit {
++		return ErrBudgetExceeded
++	}
++	reservation, err := reserveBudgetWithin(ctx, tx, subject, execution, policy)
++	if err != nil {
++		return err
++	}
++	if reservation.State != BudgetNew {
++		return errRunConflict
++	}
++	if _, err := tx.Exec(ctx, budgetSQL(`INSERT INTO product_agent_steps(id,run_id,ordinal,command_id,execution_sha256)
++		VALUES($1,$2,$3,$4,$5)`, execution.ID, runID, stored.run.AdmittedSteps+1, command, execution.ExecutionSHA256)); err != nil {
++		return err
++	}
++	_, err = tx.Exec(ctx, budgetSQL(`UPDATE product_agent_runs SET admitted_steps=admitted_steps+1,active_execution_id=$2 WHERE id=$1`, runID, execution.ID))
++	return err
++}
++
++func (r *ExecutionRuns) beforeDispatch(ctx context.Context, actor identity.Auth, runID, executionID string) error {
++	var denied error
++	err := r.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
++		stored, err := readExecutionRun(ctx, tx, subject, runID)
++		if err != nil {
++			return err
++		}
++		if stored.run.ActiveExecutionID != executionID {
++			return errRunConflict
++		}
++		policy, policyErr := r.budgets.readPolicy(ctx, tx, subject)
++		if stored.run.State != ExecutionRunActive {
++			denied = errRunConflict
++		} else if policyErr != nil {
++			denied = policyErr
++		} else if stored.run.AdmittedSteps > min(stored.run.MaximumSteps, policy.RunSteps.Installation, policy.RunSteps.User) {
++			denied = ErrBudgetExceeded
++		}
++		if denied != nil {
++			// Persist stop independently of returning an admission error.
++			return stopExecutionRun(ctx, tx, runID)
++		}
++		return nil
++	})
++	if err != nil {
++		return err
++	}
++	return denied
++}
++
++func (r *ExecutionRuns) finish(ctx context.Context, actor identity.Auth, runID, executionID string, succeeded bool) error {
++	var denied error
++	err := r.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
++		stored, err := readExecutionRun(ctx, tx, subject, runID)
++		if err != nil {
++			return err
++		}
++		if stored.run.ActiveExecutionID != executionID {
++			return errRunConflict
++		}
++		state := "completed"
++		if !succeeded {
++			state = "failed"
++		}
++		policy, policyErr := r.budgets.readPolicy(ctx, tx, subject)
++		if stored.run.State != ExecutionRunActive {
++			denied = errRunConflict
++		} else if policyErr != nil {
++			denied = policyErr
++		} else if stored.run.AdmittedSteps > min(stored.run.MaximumSteps, policy.RunSteps.Installation, policy.RunSteps.User) {
++			denied = ErrBudgetExceeded
++		}
++		if denied != nil {
++			state = "suppressed"
++			if err := stopExecutionRun(ctx, tx, runID); err != nil {
++				return err
++			}
++		}
++		reservation, err := readBudgetReservation(ctx, tx, subject, executionID)
++		if err != nil {
++			return err
++		}
++		if reservation.execution.MaximumTokens != 0 {
++			return errExecutionPolicyUnavailable
++		}
++		// This local status digest closes only a zero-token command. It is not
++		// evidence of model usage and cannot refund an execution unit.
++		receipt := executionDigest("command_completion_v1", runID, executionID, state)
++		if _, err := settleStoredBudgetWithin(ctx, tx, subject, reservation, BudgetSettlement{ID: executionID, ReceiptSHA256: receipt}); err != nil {
++			return err
++		}
++		n, err := tx.Exec(ctx, budgetSQL(`UPDATE product_agent_steps SET state=$3 WHERE id=$1 AND run_id=$2 AND state='pending'`, executionID, runID, state))
++		if err != nil {
++			return err
++		}
++		if n != 1 {
++			return errRunConflict
++		}
++		_, err = tx.Exec(ctx, budgetSQL(`UPDATE product_agent_runs SET active_execution_id=NULL WHERE id=$1`, runID))
++		return err
++	})
++	if err != nil {
++		return err
++	}
++	return denied
++}
+diff --git a/services/control/internal/modules/productagent/execution_run_repository_integration_test.go b/services/control/internal/modules/productagent/execution_run_repository_integration_test.go
+new file mode 100644
+index 00000000..ce99ef9e
+--- /dev/null
++++ b/services/control/internal/modules/productagent/execution_run_repository_integration_test.go
+@@ -0,0 +1,495 @@
++//go:build repository_integration
++
++package productagent
++
++import (
++	"context"
++	"errors"
++	"strings"
++	"sync/atomic"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++)
++
++type executionRunFixture struct {
++	*budgetRepositoryFixture
++	runs [2]*ExecutionRuns
++}
++
++func newExecutionRunFixture(t *testing.T) *executionRunFixture {
++	t.Helper()
++	g := &executionRunFixture{budgetRepositoryFixture: newBudgetRepositoryFixture(t)}
++	p := *g.policy.Load()
++	p.RunSteps = ExecutionRunLimits{Installation: 8, User: 5}
++	g.policy.Store(&p)
++	for i, budget := range g.gates {
++		apps := budget.commands.applications
++		apps.Identity.Config.Workflows.Enabled = true
++		apps.Workflows = &workflows.Service{Identity: apps.Identity, Workspaces: apps.Workspaces}
++		var err error
++		g.runs[i], err = NewExecutionRuns(budget)
++		if err != nil {
++			t.Fatal(err)
++		}
++	}
++	return g
++}
++
++func (g *executionRunFixture) start(t *testing.T) string {
++	t.Helper()
++	id := uuid.NewString()
++	if run, err := g.runs[0].Start(g.ctx, g.actors[1], id, strings.Repeat("a", 64)); err != nil || run.ID != id || run.MaximumSteps != min(g.policy.Load().RunSteps.Installation, g.policy.Load().RunSteps.User) {
++		t.Fatalf("start: %+v, %v", run, err)
++	}
++	return id
++}
++
++func (g *executionRunFixture) audit(t *testing.T, id string, want int) {
++	t.Helper()
++	var count int
++	if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT count(*) FROM audit_events WHERE request_id=$1 AND action LIKE 'product_assistant.%'`, id).Scan(&count); err != nil || count != want {
++		t.Fatalf("action audit: %d, want %d: %v", count, want, err)
++	}
++}
++
++func (g *executionRunFixture) step(t *testing.T, id, state string) {
++	t.Helper()
++	var got string
++	if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT state FROM product_agent_steps WHERE id=$1`, id).Scan(&got); err != nil || got != state {
++		t.Fatalf("step state: %s, want %s: %v", got, state, err)
++	}
++}
++
++func (g *executionRunFixture) noClaims(t *testing.T) {
++	t.Helper()
++	var count int
++	if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT (SELECT count(*) FROM product_agent_steps) + (SELECT count(*) FROM product_agent_budget_reservations) + (SELECT count(*) FROM product_agent_budget_installations) + (SELECT count(*) FROM product_agent_budget_users)`).Scan(&count); err != nil || count != 0 {
++		t.Fatalf("refused command left durable claims: %d, %v", count, err)
++	}
++}
++
++func TestDurableExecutionRuns(t *testing.T) {
++	for _, limits := range []ExecutionRunLimits{{Installation: 2, User: 5}, {Installation: 5, User: 2}} {
++		name := "installation ceiling"
++		if limits.User < limits.Installation {
++			name = "user ceiling"
++		}
++		t.Run(name, func(t *testing.T) {
++			g := newExecutionRunFixture(t)
++			p := *g.policy.Load()
++			p.RunSteps = limits
++			g.policy.Store(&p)
++			initial := p
++			runID := g.start(t)
++			for i := range 2 {
++				id := uuid.NewString()
++				result, err := g.runs[i].RunCommand(g.ctx, g.actors[1], runID, id, "open home", "")
++				if err != nil || result.Path != "/" {
++					t.Fatalf("bounded navigation: %+v, %v", result, err)
++				}
++				g.audit(t, id, 1)
++				g.step(t, id, "completed")
++			}
++			id := uuid.NewString()
++			if result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err != ErrBudgetExceeded {
++				t.Fatalf("exhaustion: %+v, %v", result, err)
++			}
++			g.audit(t, id, 0)
++			// A new window and higher policy cannot reset or raise this run.
++			p.RunSteps = ExecutionRunLimits{Installation: 10, User: 10}
++			p.WindowStart = p.WindowStart.AddDate(0, 0, -1)
++			g.policy.Store(&p)
++			if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, uuid.NewString(), "open home", ""); result != (Result{}) || err != ErrBudgetExceeded {
++				t.Fatalf("policy/window reset the run: %+v, %v", result, err)
++			}
++			g.policy.Store(&initial)
++			g.counters("", BudgetCeiling{2, 0}, 2)
++		})
++	}
++
++	t.Run("concurrent claims and changed replay", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		p := *g.policy.Load()
++		p.RunSteps = ExecutionRunLimits{Installation: 1, User: 1}
++		g.policy.Store(&p)
++		runID := g.start(t)
++		ids := make([]string, 16)
++		for i := range ids {
++			ids[i] = uuid.NewString()
++		}
++		var admitted atomic.Int64
++		outcomes := concurrentBudgetCalls(16, func(i int) (BudgetReservation, error) {
++			result, err := g.runs[i%2].RunCommand(g.ctx, g.actors[1], runID, ids[i], "open home", "")
++			if err == nil && result.Path == "/" {
++				admitted.Add(1)
++				return BudgetReservation{ID: ids[i], State: BudgetNew}, nil
++			}
++			if result != (Result{}) {
++				return BudgetReservation{}, errors.New("UNEXPECTED_RESULT")
++			}
++			return BudgetReservation{}, err
++		})
++		if admitted.Load() != 1 {
++			t.Fatalf("concurrent step count %d", admitted.Load())
++		}
++		for _, outcome := range outcomes {
++			if outcome.err != nil && outcome.err != errRunConflict && outcome.err != ErrBudgetExceeded {
++				t.Fatal(outcome.err)
++			}
++			if outcome.reservation.State == BudgetNew {
++				id := outcome.reservation.ID
++				if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err != errRunConflict {
++					t.Fatalf("reopened replay: %+v, %v", result, err)
++				}
++				if result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, "open keys", ""); result != (Result{}) || err == nil || err.Error() != "IDEMPOTENCY_CONFLICT" {
++					t.Fatalf("changed replay: %+v, %v", result, err)
++				}
++				g.audit(t, id, 1)
++			}
++		}
++		g.counters("", BudgetCeiling{1, 0}, 1)
++	})
++
++	t.Run("typed read and known failure retry", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		runID := g.start(t)
++		failed := uuid.NewString()
++		if result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, failed, "show applications", "not-a-cursor"); result != (Result{}) || err == nil {
++			t.Fatalf("invalid continuation: %+v, %v", result, err)
++		}
++		g.step(t, failed, "failed")
++		g.audit(t, failed, 0)
++		id := uuid.NewString()
++		if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, id, "show applications", ""); err != nil || result.Applications == nil {
++			t.Fatalf("fresh read retry: %+v, %v", result, err)
++		}
++		g.audit(t, id, 1)
++		g.counters("", BudgetCeiling{2, 0}, 2)
++	})
++
++	for _, phase := range []int64{3, 4} {
++		phaseName := "before dispatch"
++		if phase == 4 {
++			phaseName = "after dispatch"
++		}
++		for _, unavailable := range []bool{false, true} {
++			name := "disabled"
++			if unavailable {
++				name = "unavailable"
++			}
++			t.Run(name+" policy "+phaseName, func(t *testing.T) {
++				g := newExecutionRunFixture(t)
++				var calls atomic.Int64
++				source := g.gates[0].policy
++				g.gates[0].policy = func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) (ExecutionBudgetPolicy, error) {
++					p, err := source(ctx, tx, subject)
++					if calls.Add(1) == phase {
++						if unavailable {
++							return p, errors.New("private policy diagnostic")
++						}
++						p.UserAccess = BudgetAccessDisabled
++					}
++					return p, err
++				}
++				runID := g.start(t)
++				id := uuid.NewString()
++				result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, "open home", "")
++				want := ErrCommandDenied
++				if unavailable {
++					want = errExecutionPolicyUnavailable
++				}
++				if result != (Result{}) || err != want {
++					t.Fatalf("policy fence: %+v, %v", result, err)
++				}
++				audits := 0
++				if phase == 4 {
++					audits = 1
++					g.step(t, id, "suppressed")
++				}
++				g.audit(t, id, audits)
++				state, err := g.runs[1].Inspect(g.ctx, g.actors[1], runID)
++				if err != nil || state.State != ExecutionRunStopped || state.AdmittedSteps != 1 {
++					t.Fatalf("durable policy stop: %+v, %v", state, err)
++				}
++				if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, uuid.NewString(), "open home", ""); result != (Result{}) || err != errRunConflict {
++					t.Fatalf("stopped run resumed: %+v, %v", result, err)
++				}
++			})
++		}
++	}
++
++	t.Run("cross-instance cancel suppresses an in-flight read", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		entered, release := make(chan struct{}), make(chan struct{})
++		var calls atomic.Int64
++		g.gates[0].commands.executionPolicy = func(ctx context.Context) (bool, error) {
++			if calls.Add(1) == 4 {
++				close(entered)
++				select {
++				case <-release:
++				case <-ctx.Done():
++					return false, ctx.Err()
++				}
++			}
++			return true, nil
++		}
++		runID := g.start(t)
++		id := uuid.NewString()
++		finished := make(chan budgetTestOutcome, 1)
++		go func() {
++			result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, "open home", "")
++			if result != (Result{}) {
++				err = errors.New("RESULT_ESCAPED_CANCEL")
++			}
++			finished <- budgetTestOutcome{err: err}
++		}()
++		select {
++		case <-entered:
++		case <-g.ctx.Done():
++			t.Fatal("command never entered its bounded dispatch")
++		}
++		state, err := g.runs[1].Cancel(g.ctx, g.actors[1], runID)
++		close(release)
++		outcome := <-finished
++		if err != nil || state.State != ExecutionRunStopped || outcome.err != errRunConflict {
++			t.Fatalf("cancel: %+v, %v, command %v", state, err, outcome.err)
++		}
++		g.audit(t, id, 1)
++		g.step(t, id, "suppressed")
++		g.counters("", BudgetCeiling{1, 0}, 1)
++	})
++
++	for _, phase := range []int64{3, 5} {
++		name := "installation kill before dispatch"
++		if phase == 5 {
++			name = "installation kill after dispatch"
++		}
++		t.Run(name, func(t *testing.T) {
++			g := newExecutionRunFixture(t)
++			var calls atomic.Int64
++			g.gates[0].commands.executionPolicy = func(context.Context) (bool, error) {
++				return calls.Add(1) < phase, nil
++			}
++			runID := g.start(t)
++			id := uuid.NewString()
++			if result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err != ErrCommandDenied {
++				t.Fatalf("installation fence: %+v, %v", result, err)
++			}
++			audits := 0
++			if phase == 5 {
++				audits = 1
++			}
++			g.audit(t, id, audits)
++			if state, err := g.runs[1].Inspect(g.ctx, g.actors[1], runID); err != nil || state.State != ExecutionRunStopped {
++				t.Fatalf("installation stop: %+v, %v", state, err)
++			}
++		})
++	}
++
++	t.Run("unknown final commit never returns data or repeats a command", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		outcome := &runFinalOutcomeStore{Store: g.f.Store}
++		controller, err := NewExecutionRuns(g.gate(outcome))
++		if err != nil {
++			t.Fatal(err)
++		}
++		runID := uuid.NewString()
++		if _, err := controller.Start(g.ctx, g.actors[1], runID, strings.Repeat("a", 64)); err != nil {
++			t.Fatal(err)
++		}
++		id := uuid.NewString()
++		if result, err := controller.RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err == nil || err.Error() != "STORAGE_COMMIT_OUTCOME_UNKNOWN" {
++			t.Fatalf("lost completion: %+v, %v", result, err)
++		}
++		g.audit(t, id, 1)
++		g.step(t, id, "completed")
++		if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err != errRunConflict {
++			t.Fatalf("completed replay: %+v, %v", result, err)
++		}
++		g.counters("", BudgetCeiling{1, 0}, 1)
++	})
++
++	t.Run("rolled back finalization retains the claim", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		controller, err := NewExecutionRuns(g.gate(&runFinalOutcomeStore{Store: g.f.Store, rollback: true}))
++		if err != nil {
++			t.Fatal(err)
++		}
++		runID, id := uuid.NewString(), uuid.NewString()
++		if _, err := controller.Start(g.ctx, g.actors[1], runID, strings.Repeat("a", 64)); err != nil {
++			t.Fatal(err)
++		}
++		if result, err := controller.RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err == nil || err.Error() != "FINALIZATION_REFUSED" {
++			t.Fatalf("completion rollback: %+v, %v", result, err)
++		}
++		g.audit(t, id, 1)
++		g.step(t, id, "pending")
++		if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err != errRunConflict {
++			t.Fatalf("rolled back completion replay: %+v, %v", result, err)
++		}
++		g.counters("", BudgetCeiling{1, 0}, 1)
++	})
++
++	t.Run("start identity and policy cannot reset a stopped run", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		runID := g.start(t)
++		if run, err := g.runs[1].Start(g.ctx, g.actors[1], runID, strings.Repeat("b", 64)); run != (ExecutionRun{}) || err == nil || err.Error() != "IDEMPOTENCY_CONFLICT" {
++			t.Fatalf("changed intent: %+v, %v", run, err)
++		}
++		if _, err := g.runs[1].Cancel(g.ctx, g.actors[1], runID); err != nil {
++			t.Fatal(err)
++		}
++		if run, err := g.runs[0].Start(g.ctx, g.actors[1], runID, strings.Repeat("a", 64)); err != nil || run.State != ExecutionRunStopped || run.AdmittedSteps != 0 {
++			t.Fatalf("start reopened a stop: %+v, %v", run, err)
++		}
++		g.gates[0].policy = nil
++		if run, err := g.runs[0].Start(g.ctx, g.actors[1], uuid.NewString(), strings.Repeat("a", 64)); run != (ExecutionRun{}) || err != errExecutionPolicyUnavailable {
++			t.Fatalf("absent policy: %+v, %v", run, err)
++		}
++		// A broken execution policy must not prevent inspection or stopping.
++		if run, err := g.runs[0].Cancel(g.ctx, g.actors[1], runID); err != nil || run.State != ExecutionRunStopped {
++			t.Fatalf("stop depended on execution policy: %+v, %v", run, err)
++		}
++	})
++
++	t.Run("workspace tenant and membership fences", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		runID := g.start(t)
++		workspace, tenant, foreignWorkspace := uuid.NewString(), uuid.NewString(), uuid.NewString()
++		g.exec(`INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Run second workspace','active')`, workspace, g.f.Tenant)
++		g.exec(`INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role,authority_id) VALUES($1,$2,$3,'owner',$4)`, g.f.User, g.f.Tenant, workspace, uuid.NewString())
++		g.exec(`INSERT INTO tenants(id,name,status) VALUES($1,'Run foreign tenant','active')`, tenant)
++		g.exec(`INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Run foreign workspace','active')`, foreignWorkspace, tenant)
++		for _, scope := range []identity.Workspace{{ID: workspace, TenantID: g.f.Tenant}, {ID: foreignWorkspace, TenantID: tenant}} {
++			actor := g.actors[1]
++			actor.Me.Workspace = &scope
++			if run, err := g.runs[1].Inspect(g.ctx, actor, runID); run != (ExecutionRun{}) || err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++				t.Fatalf("foreign scope inspection: %+v, %v", run, err)
++			}
++			if result, err := g.runs[1].RunCommand(g.ctx, actor, runID, uuid.NewString(), "open home", ""); result != (Result{}) || err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++				t.Fatalf("foreign scope command: %+v, %v", result, err)
++			}
++		}
++		g.exec(`DELETE FROM workspace_memberships WHERE user_id=$1 AND workspace_id=$2`, g.f.User, g.f.Workspace)
++		if run, err := g.runs[1].Cancel(g.ctx, g.actors[1], runID); run != (ExecutionRun{}) || err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++			t.Fatalf("revoked membership: %+v, %v", run, err)
++		}
++		g.noClaims(t)
++	})
++
++	t.Run("registered write risk is denied before a claim", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		runID := g.start(t)
++		for _, risk := range []riskTier{riskSensitiveRead, riskReversibleWrite} {
++			g.gates[0].commands.catalog.aliases["open home"] = command{id: "open_home", risk: risk, portal: "/"}
++			id := uuid.NewString()
++			if result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err != ErrCommandDenied {
++				t.Fatalf("unsafe registered risk: %+v, %v", result, err)
++			}
++			g.audit(t, id, 0)
++		}
++		g.noClaims(t)
++	})
++
++	t.Run("cancelled command context retains an uncertain claim", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		ctx, cancel := context.WithCancel(g.ctx)
++		defer cancel()
++		var calls atomic.Int64
++		g.gates[0].commands.executionPolicy = func(context.Context) (bool, error) {
++			if calls.Add(1) == 4 {
++				cancel()
++				return false, context.Canceled
++			}
++			return true, nil
++		}
++		runID := g.start(t)
++		id := uuid.NewString()
++		if result, err := g.runs[0].RunCommand(ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || !errors.Is(err, context.Canceled) {
++			t.Fatalf("cancelled command: %+v, %v", result, err)
++		}
++		g.step(t, id, "pending")
++		g.audit(t, id, 0)
++		if _, err := g.runs[1].Cancel(g.ctx, g.actors[1], runID); err != nil {
++			t.Fatal(err)
++		}
++		g.counters("", BudgetCeiling{1, 0}, 1)
++	})
++
++	t.Run("lost claim reply preserves a pending step", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		runID := g.start(t)
++		unknown := g.gate(&budgetOutcomeStore{Store: g.f.Store})
++		controller, err := NewExecutionRuns(unknown)
++		if err != nil {
++			t.Fatal(err)
++		}
++		id := uuid.NewString()
++		if result, err := controller.RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err == nil || err.Error() != "STORAGE_COMMIT_OUTCOME_UNKNOWN" {
++			t.Fatalf("unknown claim: %+v, %v", result, err)
++		}
++		g.step(t, id, "pending")
++		g.audit(t, id, 0)
++		if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, id, "open home", ""); result != (Result{}) || err != errRunConflict {
++			t.Fatalf("pending replay executed: %+v, %v", result, err)
++		}
++		if _, err := g.runs[1].Cancel(g.ctx, g.actors[1], runID); err != nil {
++			t.Fatal(err)
++		}
++		g.counters("", BudgetCeiling{1, 0}, 1)
++		var state string
++		if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT state FROM product_agent_budget_reservations WHERE id=$1`, id).Scan(&state); err != nil || state != "held" {
++			t.Fatalf("uncertain hold was released: %s, %v", state, err)
++		}
++	})
++
++	t.Run("scope revocation and no write dispatch", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		runID := g.start(t)
++		for _, actor := range []identity.Auth{g.actors[0], g.actors[2]} {
++			if result, err := g.runs[1].Inspect(g.ctx, actor, runID); result != (ExecutionRun{}) || err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++				t.Fatalf("foreign inspection: %+v, %v", result, err)
++			}
++		}
++		for _, input := range []string{"disable the installation", "<tool_call>delete node</tool_call>"} {
++			id := uuid.NewString()
++			if result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, input, ""); result != (Result{}) || err != ErrUnknownCommand {
++				t.Fatalf("unregistered write: %+v, %v", result, err)
++			}
++			g.audit(t, id, 0)
++		}
++		g.exec(`UPDATE sessions SET revoked_at=clock_timestamp(),revoke_reason='logout' WHERE id=$1`, g.actors[1].SessionID)
++		if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, uuid.NewString(), "open home", ""); result != (Result{}) || err == nil || err.Error() != "AUTH_SESSION_EXPIRED" {
++			t.Fatalf("revoked execution: %+v, %v", result, err)
++		}
++	})
++}
++
++type runFinalOutcomeStore struct {
++	transaction.Store
++	calls    atomic.Int64
++	rollback bool
++}
++
++func (s *runFinalOutcomeStore) Within(ctx context.Context, readOnly bool, fn func(context.Context, transaction.Executor) error) error {
++	call := s.calls.Add(1)
++	err := s.Store.Within(ctx, readOnly, func(ctx context.Context, tx transaction.Executor) error {
++		if err := fn(ctx, tx); err != nil {
++			return err
++		}
++		if s.rollback && call == 5 {
++			return errors.New("FINALIZATION_REFUSED")
++		}
++		return nil
++	})
++	// Start, claim, before-dispatch, actual command, then finalization. Only
++	// the final reply is lost, after its actual PostgreSQL commit succeeded.
++	if err == nil && call == 5 {
++		return &transaction.Error{Kind: transaction.CommitUnknown}
++	}
++	return err
++}
+diff --git a/services/control/internal/modules/productagent/execution_run_test.go b/services/control/internal/modules/productagent/execution_run_test.go
+new file mode 100644
+index 00000000..46f475e5
+--- /dev/null
++++ b/services/control/internal/modules/productagent/execution_run_test.go
+@@ -0,0 +1,43 @@
++package productagent
++
++import (
++	"strings"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/google/uuid"
++)
++
++func TestExecutionRunIdentityValidation(t *testing.T) {
++	var runs *ExecutionRuns
++	id := uuid.NewString()
++	digest := strings.Repeat("a", 64)
++	for _, invalid := range []struct{ id, intent string }{{"", digest}, {id, ""}, {id, strings.Repeat("A", 64)}} {
++		if result, err := runs.Start(t.Context(), identity.Auth{}, invalid.id, invalid.intent); result != (ExecutionRun{}) || err == nil || err.Error() != "VALIDATION_FAILED" {
++			t.Fatalf("invalid start: %+v, %v", result, err)
++		}
++	}
++	if result, err := runs.Start(t.Context(), identity.Auth{}, id, digest); result != (ExecutionRun{}) || err != ErrCommandDenied {
++		t.Fatalf("missing authority: %+v, %v", result, err)
++	}
++	if _, err := NewExecutionRuns(nil); err == nil {
++		t.Fatal("constructed runs without a budget authority")
++	}
++	if result, err := runs.RunCommand(t.Context(), identity.Auth{}, id, uuid.NewString(), "open home", string([]byte{0xff})); result != (Result{}) || err == nil || err.Error() != "VALIDATION_FAILED" {
++		t.Fatalf("invalid UTF-8 cursor: %+v, %v", result, err)
++	}
++}
++
++func TestExecutionDigestsSeparateArgumentsAndOutcome(t *testing.T) {
++	command := commandFingerprint("open_home", "")
++	for _, other := range []string{
++		commandFingerprint("open_home", "cursor"),
++		commandFingerprint("open_keys", ""),
++		executionDigest("command_completion_v1", "run", "execution", "completed"),
++		executionDigest("command_completion_v1", "run", "execution", "failed"),
++	} {
++		if !budgetDigest(other) || other == command {
++			t.Fatal("a different typed action or outcome shared the command fingerprint")
++		}
++	}
++}
+diff --git a/services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go b/services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go
+index 3da05843..fa3cc810 100644
+--- a/services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go
++++ b/services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go
+@@ -113,26 +113,9 @@ SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_
+ 		t.Fatal(err)
+ 	}
+ 	client := func(t *testing.T, transport *http.Client, audience, origin, token string) assistantClient {
+-		t.Helper()
+-		c := assistantClient{http: transport, origin: origin, session: &http.Cookie{
+-			Name: policyCookies.Name(audience, httpserver.SessionCookie), Value: token,
+-		}}
+-		response := c.call(t, http.MethodGet, "/api/v1/auth/csrf", "", nil)
+-		var data struct{ Token string }
+-		if response.status != http.StatusOK || json.Unmarshal(response.data, &data) != nil || data.Token == "" {
+-			t.Fatalf("could not obtain %s CSRF token: %d %s", audience, response.status, response.code)
+-		}
+-		c.csrf = data.Token
+-		for _, cookie := range response.cookies {
+-			if cookie.Name == policyCookies.Name(audience, httpserver.CSRFContextCookie) {
+-				c.csrfContext = cookie
+-			}
+-		}
+-		if c.csrfContext == nil {
+-			t.Fatal("dispatcher did not issue a CSRF context cookie")
+-		}
+-		return c
++		return newAssistantClient(t, transport, audience, origin, token, policyCookies)
+ 	}
++
+ 	admin := client(t, server.Client(), "admin", httpfixture.AdminOrigin, adminToken)
+ 	portal := client(t, server.Client(), "portal", httpfixture.PortalOrigin, portalToken)
+ 
+@@ -464,3 +447,25 @@ func (r assistantResponse) problem(t *testing.T, status int, code string) {
+ 		t.Fatalf("expected HTTP %d %s with no data, got HTTP %d %s, data %t", status, code, r.status, r.code, r.data != nil)
+ 	}
+ }
++
++func newAssistantClient(t *testing.T, transport *http.Client, audience, origin, token string, policyCookies httpserver.CookiePolicy) assistantClient {
++	t.Helper()
++	c := assistantClient{http: transport, origin: origin, session: &http.Cookie{
++		Name: policyCookies.Name(audience, httpserver.SessionCookie), Value: token,
++	}}
++	response := c.call(t, http.MethodGet, "/api/v1/auth/csrf", "", nil)
++	var data struct{ Token string }
++	if response.status != http.StatusOK || json.Unmarshal(response.data, &data) != nil || data.Token == "" {
++		t.Fatalf("could not obtain %s CSRF token: %d %s", audience, response.status, response.code)
++	}
++	c.csrf = data.Token
++	for _, cookie := range response.cookies {
++		if cookie.Name == policyCookies.Name(audience, httpserver.CSRFContextCookie) {
++			c.csrfContext = cookie
++		}
++	}
++	if c.csrfContext == nil {
++		t.Fatal("dispatcher did not issue a CSRF context cookie")
++	}
++	return c
++}
+diff --git a/services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go b/services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go
+new file mode 100644
+index 00000000..62fec264
+--- /dev/null
++++ b/services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go
+@@ -0,0 +1,142 @@
++//go:build repository_integration && assistant_http_dispatch
++
++package http_test
++
++import (
++	"context"
++	"errors"
++	"net/http"
++	"os"
++	"strings"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent"
++	productagenthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++)
++
++func TestAuthenticatedGuardedAssistantHTTP(t *testing.T) {
++	owner := identityfixture.New(t)
++	password := identityfixture.Bootstrap(t, owner)
++	owner.Config.Workflows.Enabled = true
++	ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
++	defer cancel()
++	ddl, err := os.ReadFile("../testdata/execution-budget.sql")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if _, err := owner.DB.Exec(ctx, string(ddl)); err != nil {
++		t.Fatal(err)
++	}
++	dispatcher := identityhttp.New(owner)
++	var enabled atomic.Bool
++	enabled.Store(true)
++	var mode atomic.Int32
++	start := time.Now().UTC().Truncate(time.Hour).Add(-time.Hour)
++	policy := productagent.ExecutionBudgetPolicy{
++		UserAccess: productagent.BudgetAccessEnabled, WindowStart: start, WindowEnd: start.Add(3 * time.Hour),
++		Installation: productagent.BudgetCeiling{Executions: 100, Tokens: 100},
++		User:         productagent.BudgetCeiling{Executions: 100, Tokens: 100},
++		RunSteps:     productagent.ExecutionRunLimits{Installation: 8, User: 5},
++	}
++	source := func(ctx context.Context, _ transaction.Executor, _ productagent.BudgetSubject) (productagent.ExecutionBudgetPolicy, error) {
++		p := policy
++		switch mode.Load() {
++		case 1:
++			p.UserAccess = productagent.BudgetAccessDisabled
++		case 2:
++			return p, errors.New("fixture private policy diagnostic")
++		case 3:
++			p.RunSteps = productagent.ExecutionRunLimits{}
++		case 4:
++			p.User.Executions = 0
++		}
++		return p, ctx.Err()
++	}
++	bind := func(source productagent.ExecutionBudgetPolicySource) {
++		t.Helper()
++		adapter, err := productagenthttp.NewGuarded(dispatcher.Applications.Service, func(ctx context.Context) (bool, error) {
++			return enabled.Load(), ctx.Err()
++		}, source)
++		if err != nil {
++			t.Fatal(err)
++		}
++		dispatcher.ProductAssistant = adapter
++	}
++	bind(source)
++	server := httpfixture.NewTLSServer(t, dispatcher)
++	cookies, err := httpserver.NewCookiePolicy(owner.Config.Server.EffectiveTransportMode())
++	if err != nil {
++		t.Fatal(err)
++	}
++	for _, audience := range []string{"admin", "portal"} {
++		t.Run(audience, func(t *testing.T) {
++			_, token, _, err := owner.Login(ctx, "admin@example.invalid", password, audience, "", uuid.NewString())
++			if err != nil {
++				t.Fatal(err)
++			}
++			origin := httpfixture.AdminOrigin
++			if audience == "portal" {
++				origin = httpfixture.PortalOrigin
++			}
++			client := newAssistantClient(t, server.Client(), audience, origin, token, cookies)
++			response := client.call(t, http.MethodPost, commandPath, `{"command":"open home"}`, nil)
++			if result := response.result(t); result.Path != "/" {
++				t.Fatalf("guarded navigation: %+v", result)
++			}
++			var count int
++			if err := owner.DB.QueryRow(ctx, `SELECT count(*) FROM product_agent_runs r
++				JOIN product_agent_steps s ON s.run_id=r.id AND s.id=r.id
++				JOIN product_agent_budget_reservations b ON b.id=s.id
++				JOIN audit_events a ON a.request_id=s.id
++				WHERE r.id=$1 AND r.admitted_steps=1 AND s.state='completed' AND b.state='settled'
++				AND b.maximum_tokens=0 AND b.actual_tokens=0 AND a.audience=$2 AND a.outcome='success'`, response.id, audience).Scan(&count); err != nil || count != 1 {
++				t.Fatalf("correlated durable command: %d, %v", count, err)
++			}
++			assertDenied := func(body string, status int, code string, change func(*http.Request)) {
++				t.Helper()
++				reply := client.call(t, http.MethodPost, commandPath, body, change)
++				reply.problem(t, status, code)
++				if strings.Contains(reply.raw, "fixture private policy diagnostic") {
++					t.Fatal("policy diagnostic escaped its server boundary")
++				}
++				if err := owner.DB.QueryRow(ctx, `SELECT (SELECT count(*) FROM product_agent_runs WHERE id=$1)+(SELECT count(*) FROM audit_events WHERE request_id=$1)`, reply.id).Scan(&count); err != nil || count != 0 {
++					t.Fatalf("refused request produced state or success: %d, %v", count, err)
++				}
++			}
++			enabled.Store(false)
++			assertDenied(`{"command":"open home"}`, 403, "ACCESS_DENIED", nil)
++			enabled.Store(true)
++			mode.Store(1)
++			assertDenied(`{"command":"open home"}`, 403, "ACCESS_DENIED", nil)
++			mode.Store(2)
++			assertDenied(`{"command":"open home"}`, 503, "SERVICE_NOT_READY", nil)
++			mode.Store(3)
++			assertDenied(`{"command":"open home"}`, 429, "RATE_LIMITED", nil)
++			mode.Store(4)
++			assertDenied(`{"command":"open home"}`, 429, "RATE_LIMITED", nil)
++			mode.Store(0)
++			assertDenied(`{"command":"open home","run_id":"caller choice"}`, 400, "VALIDATION_FAILED", nil)
++			assertDenied(`{"command":"disable the installation"}`, 400, "VALIDATION_FAILED", nil)
++			assertDenied(`{"command":"open home"}`, 403, "CSRF_INVALID", func(request *http.Request) { request.Header.Del("X-CSRF-Token") })
++			bind(nil)
++			assertDenied(`{"command":"open home"}`, 503, "SERVICE_NOT_READY", nil)
++			bind(source)
++			if result := client.call(t, http.MethodPost, commandPath, `{"command":"open home"}`, nil).result(t); result.Path != "/" {
++				t.Fatal("guarded request did not recover")
++			}
++			if audience == "portal" {
++				if result := client.call(t, http.MethodPost, commandPath, `{"command":"show applications"}`, nil).result(t); result.Applications == nil {
++					t.Fatal("guarded typed read did not run without a model")
++				}
++			}
++		})
++	}
++}
+diff --git a/services/control/internal/modules/productagent/http/handler.go b/services/control/internal/modules/productagent/http/handler.go
+index 27e8a449..1ca71918 100644
+--- a/services/control/internal/modules/productagent/http/handler.go
++++ b/services/control/internal/modules/productagent/http/handler.go
+@@ -5,6 +5,7 @@ import (
+ 	"errors"
+ 	"net/http"
+ 
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+@@ -22,7 +23,29 @@ type commandRequest struct {
+ }
+ 
+ // Handler runs assistant commands using the authenticated identity dispatcher.
+-type Handler struct{ Service *productagent.Service }
++type Handler struct {
++	Service *productagent.Service
++	runs    *productagent.ExecutionRuns
++}
++
++// NewGuarded binds the staged command adapter to trusted installation and user
++// policy. Missing policy never enables execution. The dispatcher still owns
++// session authentication, CSRF, license admission and route registration.
++func NewGuarded(apps *applications.Service, installation productagent.ExecutionPolicy, policy productagent.ExecutionBudgetPolicySource) (*Handler, error) {
++	commands, err := productagent.New(apps, installation)
++	if err != nil {
++		return nil, err
++	}
++	budgets, err := productagent.NewExecutionBudgets(commands, policy)
++	if err != nil {
++		return nil, err
++	}
++	runs, err := productagent.NewExecutionRuns(budgets)
++	if err != nil {
++		return nil, err
++	}
++	return &Handler{Service: commands, runs: runs}, nil
++}
+ 
+ // Owns reports whether the normalized API path belongs to the assistant adapter.
+ func Owns(path string) bool { return path == commandPath }
+@@ -46,7 +69,13 @@ func (h *Handler) Handle(r *http.Request, actor identity.Auth, requestID string)
+ 	if err := httpserver.DecodePatchObject(r, &command, maxCommandBody); err != nil {
+ 		return nil, 0, err
+ 	}
+-	result, err := h.Service.RunForRequest(r.Context(), actor, command.Command, command.Cursor, requestID)
++	var result productagent.Result
++	var err error
++	if h.runs != nil {
++		result, err = h.runs.RunCommandForRequest(r.Context(), actor, command.Command, command.Cursor, requestID)
++	} else {
++		result, err = h.Service.RunForRequest(r.Context(), actor, command.Command, command.Cursor, requestID)
++	}
+ 	if err != nil {
+ 		switch {
+ 		case errors.Is(err, productagent.ErrInvalidCommand), errors.Is(err, productagent.ErrUnknownCommand):
+diff --git a/services/control/internal/modules/productagent/testdata/execution-budget.sql b/services/control/internal/modules/productagent/testdata/execution-budget.sql
+index 943d9feb..36cb8f39 100644
+--- a/services/control/internal/modules/productagent/testdata/execution-budget.sql
++++ b/services/control/internal/modules/productagent/testdata/execution-budget.sql
+@@ -41,3 +41,26 @@ CREATE TABLE product_agent_budget_reservations (
+             AND receipt_sha256 ~ '^[a-f0-9]{64}$')
+     )
+ );
++
++CREATE TABLE product_agent_runs (
++    id uuid PRIMARY KEY,
++    tenant_id uuid NOT NULL,
++    user_id uuid NOT NULL,
++    workspace_id uuid NOT NULL,
++    audience text NOT NULL CHECK (audience IN ('admin', 'portal')),
++    intent_sha256 text NOT NULL CHECK (intent_sha256 ~ '^[a-f0-9]{64}$'),
++    maximum_steps bigint NOT NULL CHECK (maximum_steps > 0),
++    admitted_steps bigint NOT NULL DEFAULT 0 CHECK (admitted_steps >= 0 AND admitted_steps <= maximum_steps),
++    state text NOT NULL DEFAULT 'active' CHECK (state IN ('active', 'stopped')),
++    active_execution_id uuid
++);
++
++CREATE TABLE product_agent_steps (
++    id uuid PRIMARY KEY REFERENCES product_agent_budget_reservations(id),
++    run_id uuid NOT NULL REFERENCES product_agent_runs(id),
++    ordinal bigint NOT NULL CHECK (ordinal > 0),
++    command_id text NOT NULL CHECK (command_id ~ '^[a-z][a-z0-9_]{0,119}$'),
++    execution_sha256 text NOT NULL CHECK (execution_sha256 ~ '^[a-f0-9]{64}$'),
++    state text NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'completed', 'failed', 'suppressed')),
++    UNIQUE(run_id, ordinal)
++);
+diff --git a/services/control/internal/operations/databaseaccess/alias_description_upgrade_test.go b/services/control/internal/operations/databaseaccess/alias_description_upgrade_test.go
+new file mode 100644
+index 00000000..13a67312
+--- /dev/null
++++ b/services/control/internal/operations/databaseaccess/alias_description_upgrade_test.go
+@@ -0,0 +1,85 @@
++package databaseaccess
++
++import (
++	"errors"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5/pgconn"
++	"github.com/jackc/pgx/v5/pgxpool"
++)
++
++func TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal(t *testing.T) {
++	f := upgradeFixture(t, 58)
++	ctx := t.Context()
++	before, err := readRuntimePrincipal(ctx, f.lease, f.input)
++	if err != nil {
++		t.Fatal(err)
++	}
++	var oldLedger string
++	if err := f.lease.QueryRow(ctx, "SELECT jsonb_agg(to_jsonb(m) ORDER BY version)::text FROM schema_migrations m").Scan(&oldLedger); err != nil {
++		t.Fatal(err)
++	}
++	if err := database.Migrate(ctx, f.lease); err != nil {
++		t.Fatal(err)
++	}
++	if state, err := InspectUpgrade(ctx, f.service.DB, f.lease, f.input); err != nil || state != UpgradeGrantsPending {
++		t.Fatal("new table must require grant resume", state, err)
++	}
++	runtime, err := pgxpool.NewWithConfig(ctx, f.input.connection.Copy())
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer runtime.Close()
++	store, err := transaction.FromPostgreSQL(runtime)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := database.CheckRuntimeWithin(ctx, store); err == nil || err.Error() != "DATABASE_RUNTIME_PRIVILEGES_INCOMPATIBLE" {
++		t.Fatal("missing runtime grant did not receive the exact serving refusal", err)
++	}
++	_, missingGrant := runtime.Exec(ctx, "SELECT * FROM model_alias_description_intents")
++	var missingGrantError *pgconn.PgError
++	if !errors.As(missingGrant, &missingGrantError) || missingGrantError.Code != "42501" {
++		t.Fatal("new table did not refuse the predecessor runtime grant", missingGrant)
++	}
++	for range 2 {
++		if state, err := Upgrade(ctx, f.service.DB, f.lease, f.input); err != nil || state != UpgradeComplete {
++			t.Fatal("grant resume", state, err)
++		}
++		if after, err := readRuntimePrincipal(ctx, f.lease, f.input); err != nil || after != before {
++			t.Fatal("grant resume changed runtime identity", err)
++		}
++		var retainedLedger string
++		if err := f.lease.QueryRow(ctx, "SELECT jsonb_agg(to_jsonb(m) ORDER BY version)::text FROM schema_migrations m WHERE version<=58").Scan(&retainedLedger); err != nil || retainedLedger != oldLedger {
++			t.Fatal("grant resume changed the predecessor ledger", err)
++		}
++		if err := database.CheckRuntimeWithin(ctx, store); err != nil {
++			t.Fatal("runtime admission after grant resume", err)
++		}
++	}
++	// The normal scoped constraints remain active for the serving principal.
++	// No matching alias exists, so INSERT must pass its ACL and fail its FK.
++	_, err = runtime.Exec(ctx, `INSERT INTO model_alias_description_intents
++		(tenant_id,workspace_id,actor_user_id,idempotency_key,alias_id,result_revision,fingerprint)
++		SELECT tenant_id,workspace_id,user_id,$1,$2,1,$3 FROM workspace_memberships LIMIT 1`,
++		uuid.NewString(), uuid.NewString(), make([]byte, 32))
++	var foreignKey *pgconn.PgError
++	if !errors.As(err, &foreignKey) || foreignKey.Code != "23503" {
++		t.Fatal("runtime insert did not reach the scoped foreign key", err)
++	}
++	for _, statement := range []string{
++		"SELECT * FROM audit_chain_head",
++		"UPDATE schema_migrations SET checksum=checksum WHERE version=1",
++		"TRUNCATE model_alias_description_intents",
++		"ALTER TABLE model_alias_description_intents DISABLE TRIGGER ALL",
++	} {
++		_, err := runtime.Exec(ctx, statement)
++		var denied *pgconn.PgError
++		if !errors.As(err, &denied) || denied.Code != "42501" {
++			t.Fatal("runtime exceeded its grants", statement, err)
++		}
++	}
++}
+diff --git a/services/control/internal/operations/databaseaccess/postgres_catalog.go b/services/control/internal/operations/databaseaccess/postgres_catalog.go
+index a44a3c0e..b1a682b3 100644
+--- a/services/control/internal/operations/databaseaccess/postgres_catalog.go
++++ b/services/control/internal/operations/databaseaccess/postgres_catalog.go
+@@ -17,7 +17,7 @@ var postgreSQLVariantTables = [...]string{
+ func postgreSQLTables() []string {
+ 	names := append([]string{}, applicationTables[:]...)
+ 	names = append(names, postgreSQLVariantTables[:]...)
+-	names = append(names, "agent_pacing", "cell_cluster_members", "cell_clusters", "cells", "control_outbox", "node_task_history", "node_task_progress", "saved_views", "sites", "tenant_node_counts")
++	names = append(names, "agent_pacing", "cell_cluster_members", "cell_clusters", "cells", "control_outbox", "model_alias_description_intents", "node_task_history", "node_task_progress", "saved_views", "sites", "tenant_node_counts")
+ 	sort.Strings(names)
+ 	return names
+ }
+diff --git a/services/control/internal/operations/databaseaccess/upgrade_test.go b/services/control/internal/operations/databaseaccess/upgrade_test.go
+index 907a18d5..4da8bd4c 100644
+--- a/services/control/internal/operations/databaseaccess/upgrade_test.go
++++ b/services/control/internal/operations/databaseaccess/upgrade_test.go
+@@ -39,7 +39,7 @@ func upgradeFixture(t *testing.T, version int) actualFixture {
+ 		t.Fatal(e)
+ 	}
+ 	statements := []string{"GRANT USAGE ON SCHEMA " + pgx.Identifier{schema}.Sanitize() + " TO " + role, "GRANT SELECT ON TABLE " + pgx.Identifier{schema, "schema_migrations"}.Sanitize() + " TO " + role}
+-	rows, e := f.lease.Query(ctx, "SELECT tablename FROM pg_tables WHERE schemaname=current_schema() AND tablename<>'schema_migrations' ORDER BY 1")
++	rows, e := f.lease.Query(ctx, "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relkind IN ('r','p') AND NOT c.relispartition AND c.relname NOT IN ('schema_migrations','audit_chain_head') ORDER BY 1")
+ 	if e != nil {
+ 		t.Fatal(e)
+ 	}
+diff --git a/services/control/internal/platform/database/catalog.go b/services/control/internal/platform/database/catalog.go
+index bc64aa48..1634009a 100644
+--- a/services/control/internal/platform/database/catalog.go
++++ b/services/control/internal/platform/database/catalog.go
+@@ -33,12 +33,12 @@ SELECT jsonb_build_object('table_count',(SELECT count(*) FROM owned WHERE relkin
+   (SELECT jsonb_agg(jsonb_build_array(t.tgname,t.tgtype,t.tgenabled,p.proname,encode(t.tgargs,'hex'),pg_get_expr(t.tgqual,t.tgrelid),p.prosrc,p.provolatile,p.prosecdef,p.proconfig) ORDER BY t.tgname)
+    FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE t.tgrelid=o.oid AND NOT t.tgisinternal)) ORDER BY o.relname) FROM owned o))::text`
+ 
+-// Exact schema 58 catalogs from pinned PostgreSQL 18.6. A restore at 55
+-// reparses earlier expressions while migrations 56 through 58 run from source.
++// Exact schema 59 catalogs from pinned PostgreSQL 18.6. A restore at 55
++// reparses earlier expressions while migrations 56 through 59 run from source.
+ const (
+-	catalogFreshSHA256        = "56795c36a7a0115478e17ee9af9ea98f27c1922c201cfec0b874d8d72b713d1d"
+-	catalogRestoredSHA256     = "ded94bd6eeb9c84949fd7647bd1b200e612b03fd4aedf8462280f5dacd87ce5d"
+-	catalogRestoredAt55SHA256 = "9e464ca9f6708f89731980adc8def9096e05b7f11f842ee09faa7836a12d0e42"
++	catalogFreshSHA256        = "72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782"
++	catalogRestoredSHA256     = "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc"
++	catalogRestoredAt55SHA256 = "8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069"
+ )
+ 
+ func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
+diff --git a/services/control/internal/platform/database/catalog_upgrade_test.go b/services/control/internal/platform/database/catalog_upgrade_test.go
+index 9e950013..fa42098f 100644
+--- a/services/control/internal/platform/database/catalog_upgrade_test.go
++++ b/services/control/internal/platform/database/catalog_upgrade_test.go
+@@ -14,7 +14,7 @@ func TestCatalogAdmissionAfterLogicalRestore(t *testing.T) {
+ 	if os.Getenv("PROJECT_ONE_TEST_DSN_FILE") == "" && os.Getenv("PROJECT_ONE_TEST_DSN") == "" {
+ 		t.Skip("requires an owned PostgreSQL restore fixture")
+ 	}
+-	for _, version := range []int{55, 56, 57, database.SchemaVersion} {
++	for _, version := range []int{55, 56, 57, 58, database.SchemaVersion} {
+ 		t.Run(fmt.Sprintf("restore_at_%d", version), func(t *testing.T) {
+ 			ctx := t.Context()
+ 			fixture.PreflightOwnedPostgres(t)
+diff --git a/services/control/internal/platform/database/database.go b/services/control/internal/platform/database/database.go
+index a91bbc59..9600edb8 100644
+--- a/services/control/internal/platform/database/database.go
++++ b/services/control/internal/platform/database/database.go
+@@ -99,10 +99,10 @@ func CheckPrefixWithin(ctx context.Context, q transaction.Executor) (int, error)
+ }
+ 
+ // SchemaVersion is the number of migrations in the one PostgreSQL lineage.
+-const SchemaVersion = 58
++const SchemaVersion = 59
+ 
+ // TableCount is the number of public tables the complete lineage creates.
+-const TableCount = 118
++const TableCount = 119
+ 
+ // ordered reads the one migration lineage. File names carry a contiguous
+ // version prefix; the checksum covers the exact file bytes.
+diff --git a/services/control/migrations/postgresql/000059_model_alias_description.down.sql b/services/control/migrations/postgresql/000059_model_alias_description.down.sql
+new file mode 100644
+index 00000000..6108a2e0
+--- /dev/null
++++ b/services/control/migrations/postgresql/000059_model_alias_description.down.sql
+@@ -0,0 +1,14 @@
++-- Run in one operator transaction with serving stopped.
++LOCK TABLE model_aliases, model_alias_description_intents IN ACCESS EXCLUSIVE MODE;
++DO $$
++BEGIN
++ IF EXISTS(SELECT 1 FROM model_aliases WHERE description <> '' OR description_revision <> 1)
++   OR EXISTS(SELECT 1 FROM model_alias_description_intents) THEN
++  RAISE EXCEPTION 'MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE' USING ERRCODE='55000';
++ END IF;
++END $$;
++DROP TABLE model_alias_description_intents;
++ALTER TABLE model_aliases
++ DROP CONSTRAINT model_alias_description_scope_key,
++ DROP COLUMN description_revision,
++ DROP COLUMN description;
+diff --git a/services/control/migrations/postgresql/000059_model_alias_description.up.sql b/services/control/migrations/postgresql/000059_model_alias_description.up.sql
+new file mode 100644
+index 00000000..498ed28c
+--- /dev/null
++++ b/services/control/migrations/postgresql/000059_model_alias_description.up.sql
+@@ -0,0 +1,24 @@
++ALTER TABLE model_aliases
++ ADD COLUMN description varchar(500) NOT NULL DEFAULT '',
++ ADD COLUMN description_revision bigint NOT NULL DEFAULT 1
++  CHECK(description_revision BETWEEN 1 AND 9007199254740991),
++ ADD CONSTRAINT model_alias_description_scope_key UNIQUE(tenant_id,workspace_id,id,site_id,cell_id);
++CREATE TABLE model_alias_description_intents (
++ tenant_id uuid NOT NULL,
++ workspace_id uuid NOT NULL,
++ site_id varchar(32) NOT NULL DEFAULT local_site_id(),
++ cell_id varchar(32) NOT NULL DEFAULT local_cell_id(),
++ actor_user_id uuid NOT NULL REFERENCES users(id),
++ idempotency_key uuid NOT NULL,
++ alias_id uuid NOT NULL,
++ result_revision bigint NOT NULL CHECK(result_revision BETWEEN 1 AND 9007199254740991),
++ fingerprint bytea NOT NULL CHECK(octet_length(fingerprint)=32),
++ created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
++ PRIMARY KEY(tenant_id,workspace_id,actor_user_id,idempotency_key),
++ CONSTRAINT model_alias_description_scope_fk
++  FOREIGN KEY(tenant_id,workspace_id,alias_id,site_id,cell_id)
++  REFERENCES model_aliases(tenant_id,workspace_id,id,site_id,cell_id)
++);
++CREATE TRIGGER model_alias_description_intent_immutable
++ BEFORE UPDATE OR DELETE ON model_alias_description_intents
++ FOR EACH ROW EXECUTE FUNCTION protect_alias_cutover_record();
+diff --git a/tools/codegen/sdk/README.md b/tools/codegen/sdk/README.md
+index dfde2bc8..4a48568b 100644
+--- a/tools/codegen/sdk/README.md
++++ b/tools/codegen/sdk/README.md
+@@ -129,5 +129,9 @@ report lists public operations and flags missing operation IDs, duplicate
+ IDs within a document, and duplicate method and path declarations in the
+ same audience. Exit 1 reports findings and exit 2 indicates unreadable or
+ invalid input. The audit runs from local files and uses the same audience
+-rules as SDK generation. It measures the published contracts. Verification
++rules as SDK generation. With `--baseline`, it also reports named response
++model reference changes for source review. These findings can describe a
++wire-compatible change that still changes generated return types. The
++comparison does not establish general schema or behavior compatibility.
++It measures the published contracts. Verification
+ against running handlers remains the responsibility of each API owner.
+diff --git a/tools/codegen/sdk/audit.py b/tools/codegen/sdk/audit.py
+index 81d6eda1..15c1e91a 100644
+--- a/tools/codegen/sdk/audit.py
++++ b/tools/codegen/sdk/audit.py
+@@ -9,6 +9,78 @@ import re
+ from generate import CONTRACTS, METHODS, public_audiences, public_sources, read_contract
+ 
+ 
++
++def response_models(document, operation):
++    """Collect local named schema references for each typed response body."""
++    def resolve(reference):
++        if not isinstance(reference, str) or not reference.startswith("#/"):
++            raise ValueError("response references must use local JSON pointers")
++        value = document
++        try:
++            for segment in reference[2:].split("/"):
++                value = value[segment.replace("~1", "/").replace("~0", "~")]
++        except (KeyError, TypeError) as exc:
++            raise ValueError("response reference does not resolve in the local contract") from exc
++        return value
++
++    result = {}
++    responses = operation.get("responses", {})
++    if not isinstance(responses, dict):
++        raise ValueError("responses must be an object")
++    for status, response in sorted(responses.items()):
++        seen_responses = set()
++        while isinstance(response, dict) and "$ref" in response:
++            reference = response["$ref"]
++            if reference in seen_responses:
++                raise ValueError("cyclic response object reference")
++            seen_responses.add(reference)
++            response = resolve(reference)
++        if not isinstance(response, dict):
++            raise ValueError("response must be an object")
++        content_types = response.get("content", {})
++        if not isinstance(content_types, dict):
++            raise ValueError("response content must be an object")
++        for media_type, content in sorted(content_types.items()):
++            if not isinstance(content, dict):
++                raise ValueError("response media type must be an object")
++            references, seen = set(), set()
++
++            def visit(value):
++                if isinstance(value, list):
++                    for item in value:
++                        visit(item)
++                elif isinstance(value, dict):
++                    if "$ref" in value:
++                        reference = value["$ref"]
++                        if not isinstance(reference, str):
++                            raise ValueError("response reference must be a string")
++                        if reference.startswith("#/components/schemas/"):
++                            references.add(reference)
++                        if reference not in seen:
++                            seen.add(reference)
++                            visit(resolve(reference))
++                    # Annotation payloads such as examples can contain literal
++                    # "$ref" fields. Only schema-bearing keywords form type edges.
++                    for keyword in ("allOf", "anyOf", "oneOf", "prefixItems"):
++                        visit(value.get(keyword))
++                    for keyword in ("items", "contains", "not", "if", "then", "else",
++                                    "additionalProperties", "unevaluatedProperties",
++                                    "additionalItems", "unevaluatedItems", "propertyNames",
++                                    "contentSchema"):
++                        visit(value.get(keyword))
++                    for keyword in ("properties", "patternProperties", "dependentSchemas",
++                                    "dependencies"):
++                        children = value.get(keyword, {})
++                        if isinstance(children, dict):
++                            for child in children.values():
++                                visit(child)
++
++            visit(content.get("schema"))
++            if references:
++                result[f"{status} {media_type}"] = sorted(references)
++    return result
++
++
+ def inventory(contracts):
+     """List public operations and the naming and route conflicts in their declarations."""
+     operations, findings = [], []
+@@ -31,6 +103,7 @@ def inventory(contracts):
+                     "operation_id": operation_id, "summary": bool(operation.get("summary")),
+                     "description": bool(operation.get("description")),
+                     "deprecated": operation.get("deprecated", False) is True,
++                    "response_models": response_models(document, operation),
+                 }
+                 operations.append(row)
+                 if not isinstance(operation_id, str) or not operation_id.strip():
+@@ -78,6 +151,32 @@ def compare_operations(baseline, current):
+     return findings
+ 
+ 
++
++def compare_response_models(baseline, current):
++    """Flag named response model changes for review without classifying wire safety."""
++    current_operations = {
++        (op["domain"], op["method"], op["path"], audience): op
++        for op in current["operations"] for audience in op["audiences"]
++    }
++    findings = []
++    for previous in baseline["operations"]:
++        for audience in previous["audiences"]:
++            key = previous["domain"], previous["method"], previous["path"], audience
++            candidate = current_operations.get(key)
++            if candidate is None or candidate["operation_id"] != previous["operation_id"]:
++                continue
++            before, after = previous.get("response_models", {}), candidate.get("response_models", {})
++            if before != after:
++                findings.append({
++                    "code": "PUBLIC_RESPONSE_MODELS_CHANGED",
++                    "domain": previous["domain"], "method": previous["method"],
++                    "path": previous["path"], "audience": audience,
++                    "operation_id": previous["operation_id"],
++                    "previous_response_models": before, "current_response_models": after,
++                })
++    return findings
++
++
+ def main():
+     """Print a deterministic report and fail when the audit finds conflicts."""
+     parser = argparse.ArgumentParser(description=__doc__)
+@@ -89,7 +188,10 @@ def main():
+     try:
+         report = inventory(args.contracts)
+         if args.baseline is not None:
+-            report["compatibility_findings"] = compare_operations(inventory(args.baseline), report)
++            previous = inventory(args.baseline)
++            report["compatibility_findings"] = (
++                compare_operations(previous, report) + compare_response_models(previous, report)
++            )
+     except (ValueError, KeyError, TypeError, OSError) as exc:
+         parser.exit(2, f"OpenAPI audit failed: {exc}\n")
+     print(json.dumps(report, indent=2))
+diff --git a/tools/codegen/sdk/tests/test_response_audit.py b/tools/codegen/sdk/tests/test_response_audit.py
+new file mode 100644
+index 00000000..bcb4fec0
+--- /dev/null
++++ b/tools/codegen/sdk/tests/test_response_audit.py
+@@ -0,0 +1,131 @@
++"""Review response model references independently of wire compatibility."""
++
++import copy
++import json
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import unittest
++
++SDK = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(SDK))
++from audit import compare_operations, compare_response_models, inventory, response_models
++
++
++def document(model="Alias", nested=False):
++    alias = {"type": "object", "properties": {"id": {"type": "string"}}}
++    schemas = {model: alias}
++    if nested:
++        schemas["Page"] = {"type": "object", "properties": {
++            "items": {"type": "array", "items": {"$ref": "#/components/schemas/" + model}},
++        }}
++    return {
++        "paths": {"/aliases": {"get": {
++            "operationId": "readAliases", "x-audiences": ["admin", "portal"],
++            "responses": {"200": {"description": "Aliases", "content": {
++                "application/json": {"schema": {"$ref": "#/components/schemas/" + ("Page" if nested else model)}},
++            }}},
++        }}},
++        "components": {"schemas": schemas},
++    }
++
++
++def write(root, value):
++    domain = root / "distribution"
++    domain.mkdir(parents=True)
++    (domain / "openapi.json").write_text(json.dumps(value))
++
++
++class ResponseModelAuditTests(unittest.TestCase):
++    def test_direct_and_nested_replacements_require_review_for_each_audience(self):
++        for nested in (False, True):
++            with self.subTest(nested=nested), tempfile.TemporaryDirectory() as scratch:
++                root = Path(scratch)
++                before, after = root / "baseline", root / "candidate"
++                write(before, document(nested=nested))
++                write(after, document("AliasRead", nested=nested))
++                baseline, candidate = inventory(before), inventory(after)
++                self.assertEqual(compare_operations(baseline, candidate), [])
++                findings = compare_response_models(baseline, candidate)
++                self.assertEqual([item["audience"] for item in findings], ["admin", "portal"])
++                self.assertEqual({item["code"] for item in findings}, {"PUBLIC_RESPONSE_MODELS_CHANGED"})
++                previous = ["#/components/schemas/Alias"]
++                current = ["#/components/schemas/AliasRead"]
++                if nested:
++                    previous.append("#/components/schemas/Page")
++                    current.append("#/components/schemas/Page")
++                self.assertEqual(findings[0]["previous_response_models"], {"200 application/json": previous})
++                self.assertEqual(findings[0]["current_response_models"], {"200 application/json": current})
++                result = subprocess.run(
++                    [sys.executable, str(SDK / "audit.py"), "--contracts", str(after), "--baseline", str(before)],
++                    capture_output=True, text=True, check=False,
++                )
++                self.assertEqual(result.returncode, 1, result.stderr)
++                self.assertEqual(json.loads(result.stdout)["compatibility_findings"], findings)
++
++    def test_annotations_order_duplicates_and_request_models_are_not_response_changes(self):
++        before = document(nested=True)
++        after = copy.deepcopy(before)
++        model = after["components"]["schemas"]["Alias"]
++        model["description"] = "Updated documentation"
++        model["examples"] = [{"$ref": "https://example.invalid/literal-data"}]
++        model["properties"]["$ref"] = {"type": "string"}
++        after["components"]["schemas"]["Page"]["allOf"] = [
++            {"$ref": "#/components/schemas/Alias"},
++            {"$ref": "#/components/schemas/Alias"},
++        ]
++        after["paths"]["/aliases"]["get"]["requestBody"] = {
++            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Request"}}},
++        }
++        after["components"]["schemas"]["Request"] = {"type": "object"}
++        old = response_models(before, before["paths"]["/aliases"]["get"])
++        new = response_models(after, after["paths"]["/aliases"]["get"])
++        self.assertEqual(new, old)
++
++    def test_recursive_and_escaped_models_with_reusable_response_objects(self):
++        value = document("Alias/Read~")
++        reference = "#/components/schemas/Alias~1Read~0"
++        value["components"]["schemas"]["Alias/Read~"]["properties"]["next"] = {"$ref": reference}
++        response = value["paths"]["/aliases"]["get"]["responses"]["200"]
++        response["content"]["application/json"]["schema"]["$ref"] = reference
++        value["components"]["responses"] = {"Read": response}
++        value["paths"]["/aliases"]["get"]["responses"]["200"] = {"$ref": "#/components/responses/Read"}
++        self.assertEqual(response_models(value, value["paths"]["/aliases"]["get"]),
++                         {"200 application/json": [reference]})
++
++    def test_removed_and_renamed_operations_keep_the_primary_identity_finding(self):
++        with tempfile.TemporaryDirectory() as scratch:
++            root = Path(scratch)
++            before, after = root / "baseline", root / "candidate"
++            write(before, document())
++            changed = document("AliasRead")
++            operation = changed["paths"]["/aliases"]["get"]
++            operation["operationId"] = "newName"
++            operation["x-audiences"] = ["admin"]
++            write(after, changed)
++            baseline, candidate = inventory(before), inventory(after)
++            self.assertEqual(compare_response_models(baseline, candidate), [])
++            self.assertEqual([finding["code"] for finding in compare_operations(baseline, candidate)],
++                             ["PUBLIC_OPERATION_ID_CHANGED", "PUBLIC_OPERATION_REMOVED"])
++
++    def test_external_and_missing_response_references_fail_without_fetching(self):
++        for reference in ("https://example.invalid/model.json", "#/components/schemas/Missing"):
++            with self.subTest(reference=reference), tempfile.TemporaryDirectory() as scratch:
++                root = Path(scratch)
++                value = document()
++                value["paths"]["/aliases"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"] = reference
++                write(root, value)
++                result = subprocess.run(
++                    [sys.executable, str(SDK / "audit.py"), "--contracts", str(root)],
++                    capture_output=True, text=True, check=False,
++                )
++                self.assertEqual(result.returncode, 2)
++                self.assertIn("response reference", result.stderr)
++
++    def test_response_object_cycles_are_rejected(self):
++        value = document()
++        value["components"]["responses"] = {"Loop": {"$ref": "#/components/responses/Loop"}}
++        value["paths"]["/aliases"]["get"]["responses"]["200"] = {"$ref": "#/components/responses/Loop"}
++        with self.assertRaisesRegex(ValueError, "cyclic response object"):
++            response_models(value, value["paths"]["/aliases"]["get"])

@@ -1,0 +1,156 @@
+"""Run real, private CPU worker attempts without altering product sources."""
+import argparse
+from dataclasses import asdict
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import time
+import uuid
+
+parser=argparse.ArgumentParser()
+parser.add_argument('proof',type=Path)
+parser.add_argument('model',type=Path)
+parser.add_argument('publication',type=Path)
+parser.add_argument('template',type=Path)
+parser.add_argument('--case',choices=['baseline','interrupted','resumed','optimizer-changed','horizon-changed'],required=True)
+args=parser.parse_args();os.umask(0o077);sys.dont_write_bytecode=True
+proof=args.proof.resolve(strict=True); source=proof/'cpu-prototype-source';workspace=proof/'cpu-prototype-install'
+assert json.loads((workspace/'installed.json').read_bytes())['python']=='3.12.15'
+prototype=json.loads((proof/'cpu-prototype-inputs/prototype.json').read_bytes())
+assert hashlib.sha256((source/'runtimes/training/runtime.json').read_bytes()).hexdigest()==prototype['prototype_runtime_sha256']
+for relative,digest in prototype['source_files'].items():
+ path=source/relative
+ assert not path.stat().st_mode & 0o022,'prototype source file permissions invalid'
+ assert hashlib.sha256(path.read_bytes()).hexdigest()==digest,'prototype source bytes changed'
+sys.path[:0]=[str(source/'runtimes/training'),str(source/'runtimes/data-processing')]
+from projectone_training.boundary import worker_source_digest
+from projectone_training.configuration import Configuration
+from projectone_training.configuration_generated import CONTRACT
+from projectone_training.catalog import catalog_digest
+from projectone_training.processor_generated import PROCESSOR_CONTRACT
+from projectone_training.checkpoints import CheckpointReference,verify_checkpoint,file_digest
+
+index_path=workspace/'resume-index.json'
+if index_path.exists():index=json.loads(index_path.read_bytes())
+else:
+ index={'scope':'private exact CPU verification prototype; no control or Agent acceptance','tenant_id':str(uuid.uuid4()),'workspace_id':str(uuid.uuid4()),'job_id':str(uuid.uuid4()),'cases':{}}
+assert args.case not in index['cases'],'preserve existing attempts; use a fresh prototype workspace for a new experiment'
+request=json.loads(args.template.read_bytes())
+attempt=str(uuid.uuid4());host_scope=workspace/'runs'/index['job_id']/attempt
+(host_scope/'inputs').mkdir(mode=0o700,parents=True);(host_scope/'output').mkdir(mode=0o700)
+scope=Path('/workspace/runs')/index['job_id']/attempt
+for key in ['tenant_id','workspace_id','job_id']:request[key]=index[key]
+request.update(attempt_id=attempt,scope_directory=str(scope),model_directory='/model',
+ train_file=str(scope/'inputs/train.jsonl'),validation_file=str(scope/'inputs/validation.jsonl'),output_directory=str(scope/'output'),resume_checkpoint=None)
+request['configuration'].update(maximum_steps=2,checkpoint_steps=1)
+request['execution_identity']={'profile':'native_cpu_verification','python':'3.12.15','worker_source_sha256':worker_source_digest(source/'runtimes/training')}
+request['fixture_catalog_file']=None
+
+runtime=json.loads((source/'runtimes/training/runtime.json').read_bytes())
+catalog=json.loads((source/'api/agent/v1/model-catalog.json').read_bytes())
+assert catalog_digest(catalog)==request['model_catalog_sha256']
+inputs={'runtime_sha256':prototype['prototype_runtime_sha256'],'worker_source_sha256':request['execution_identity']['worker_source_sha256'],'wheel_inventory_sha256':prototype['wheel_inventory_sha256'],'installed_sha256':file_digest(workspace/'installed.json'),'base_image':prototype['base_image'],'dataset_version_id':request['dataset_version_id'],'dataset_manifest_sha256':request['dataset_manifest_sha256']}
+if 'experiment_inputs' in index:assert index['experiment_inputs']==inputs,'experimental runtime or dataset inputs changed'
+else:index['experiment_inputs']=inputs
+configuration=Configuration(**request['configuration'])
+expected_bindings={'configuration_sha256':configuration.digest(),'configuration':asdict(configuration),'execution_identity':request['execution_identity'],'scope':{k:request[k] for k in ['tenant_id','workspace_id','job_id']},'model_repository':catalog['repository'],'model_catalog_sha256':catalog_digest(catalog),'train_sha256':request['train_sha256'],'validation_sha256':request['validation_sha256'],'recipe_version':CONTRACT['recipe']['version'],'packages':runtime['packages']}
+
+for name,key in [('train.jsonl','train_sha256'),('validation.jsonl','validation_sha256')]:
+ raw=(args.publication/name).read_bytes();assert hashlib.sha256(raw).hexdigest()==request[key]
+ (host_scope/'inputs'/name).write_bytes(raw)
+assert hashlib.sha256((args.publication/'manifest.json').read_bytes()).hexdigest()==request['dataset_manifest_sha256']
+if args.case in ['resumed','optimizer-changed','horizon-changed']:
+ original=workspace/index['cases']['interrupted']['relative_scope']/'output/checkpoints/checkpoint-1'
+ reference=json.loads((original/'projectone-checkpoint.json').read_bytes())
+ receipt=file_digest(original/'projectone-checkpoint.json')
+ cfg=Configuration(**request['configuration'])
+ verified,_=verify_checkpoint(CheckpointReference(original,receipt),expected_bindings,cfg,request['resources']['maximum_output_bytes'],request['resources']['maximum_output_files'])
+ assert verified['global_step']==1
+ shutil.copytree(original,host_scope/'inputs/checkpoint')
+ request['resume_checkpoint']={'directory':str(scope/'inputs/checkpoint'),'receipt_sha256':receipt}
+ if args.case=='optimizer-changed':
+  p=host_scope/'inputs/checkpoint/optimizer.pt'
+  with p.open('r+b') as f:b=f.read(1);f.seek(0);f.write(bytes([b[0]^1]))
+ if args.case=='horizon-changed':request['configuration']['maximum_steps']=4
+marker={key:request[key] for key in ['schema_version','tenant_id','workspace_id','job_id','attempt_id','dataset_version_id']}
+(host_scope/PROCESSOR_CONTRACT['marker_name']).write_text(json.dumps(marker,separators=(',',':')))
+(host_scope/'request.json').write_text(json.dumps(request,sort_keys=True,indent=2)+'\n')
+for p in (host_scope/'inputs').rglob('*'):
+ if p.is_file():p.chmod(0o600)
+(host_scope/'request.json').chmod(0o600)
+resources=request['resources'];cfg=request['configuration'];policy=prototype['install']
+name='lane-trn-cpu-'+attempt
+command=['docker','create','--pull','never','--name',name,'--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges',
+ '--memory',str(resources['memory_bytes']),'--cpus',str(cfg['threads']),'--pids-limit',str(policy['pids_limit'])]
+environment={'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1','HF_HUB_DISABLE_TELEMETRY':'1','HF_DATASETS_OFFLINE':'1','DO_NOT_TRACK':'1','TOKENIZERS_PARALLELISM':'false','PYTHONDONTWRITEBYTECODE':'1','PYTHONHASHSEED':'0','OMP_NUM_THREADS':str(cfg['threads']),'MKL_NUM_THREADS':str(cfg['threads']),'HF_HOME':'/workspace/hf','TMPDIR':'/workspace/tmp'}
+for k,v in environment.items():command+=['--env',k+'='+v]
+for host,target in [(source,'/source'),(workspace,'/workspace'),(args.model.resolve(strict=True),'/model')]:
+ command+=['--mount',f'type=bind,source={host},target={target}'+('' if target=='/workspace' else ',readonly')]
+command+=[prototype['base_image'],'/workspace/venv/bin/python','-B','/source/runtimes/training/train.py','--verification-cpu','--request-file',str(scope/'request.json')]
+container=subprocess.check_output(command,text=True).strip()
+record={'experiment_inputs':inputs,'case':args.case,'relative_scope':str(host_scope.relative_to(workspace)),'container_id':container,'request_sha256':file_digest(host_scope/'request.json'),'environment':environment,'image':prototype['base_image'],'peak_rss_bytes':0,'killed_after_checkpoint_one':False}
+try:
+ info=json.loads(subprocess.check_output(['docker','inspect',container],text=True))[0]
+ assert info['HostConfig']['NetworkMode']=='none' and info['HostConfig']['ReadonlyRootfs']
+ assert info['HostConfig']['Memory']==resources['memory_bytes'] and info['HostConfig']['NanoCpus']==cfg['threads']*1000000000
+ subprocess.run(['docker','start',container],check=True,stdout=subprocess.DEVNULL)
+ start=time.monotonic()
+ while True:
+  state=json.loads(subprocess.check_output(['docker','inspect','--format','{{json .State}}',container],text=True))
+  if not state['Running']:break
+  try:
+   status=Path(f'/proc/{state["Pid"]}/status').read_text()
+   peak=max(int(line.split()[1])*1024 for line in status.splitlines() if line.startswith(('VmRSS:','VmHWM:')))
+   record['peak_rss_bytes']=max(record['peak_rss_bytes'],peak)
+  except (FileNotFoundError,ValueError):pass
+  assert record['peak_rss_bytes']<=prototype['worker']['maximum_rss_bytes'],'CPU prototype RSS limit exceeded'
+  assert time.monotonic()-start<=resources['wall_seconds'],'CPU prototype wall limit exceeded'
+  events=host_scope/'events.jsonl'
+  if args.case=='interrupted' and events.exists():
+   values=[json.loads(line) for line in events.read_bytes().split(b'\n')[:-1] if line]
+   checkpoint=next((v for v in values if v.get('kind')=='checkpoint' and v.get('global_step')==1),None)
+   if checkpoint:
+    receipt=host_scope/'output/checkpoints/checkpoint-1/projectone-checkpoint.json'
+    assert file_digest(receipt)==checkpoint['receipt_sha256']
+    subprocess.run(['docker','kill','--signal','KILL',container],check=True,stdout=subprocess.DEVNULL)
+    record['killed_after_checkpoint_one']=True
+  time.sleep(prototype['worker']['poll_milliseconds']/1000)
+ record.update(exit_code=state['ExitCode'],oom_killed=state['OOMKilled'],wall_seconds=time.monotonic()-start)
+ log=subprocess.check_output(['docker','logs',container],stderr=subprocess.STDOUT)
+ assert len(log)<=prototype['worker']['maximum_log_bytes']
+ (host_scope/'worker.log').write_bytes(log)
+ assert not state['OOMKilled']
+ result_path=host_scope/'output/result.json'
+ if args.case=='interrupted':
+  assert record['killed_after_checkpoint_one'] and state['ExitCode']==137 and not result_path.exists(),record
+  record['checkpoint_receipt_sha256']=file_digest(host_scope/'output/checkpoints/checkpoint-1/projectone-checkpoint.json')
+ else:
+  result=json.loads(result_path.read_bytes());record['result_sha256']=file_digest(result_path);record['result_status']=result['status']
+  if args.case in ['optimizer-changed','horizon-changed']:
+   expected='TRAINING_CHECKPOINT_CHANGED' if args.case=='optimizer-changed' else 'TRAINING_CHECKPOINT_INCOMPATIBLE'
+   assert state['ExitCode']==1 and result['status']=='failed' and result['error_code']==expected,result
+   assert 'loading_model' not in (host_scope/'events.jsonl').read_text()
+   record['error_code']=expected
+  else:
+   assert state['ExitCode']==0 and result['status']=='trained' and result['global_step']==2,result
+   assert result['resume_from_step']==(1 if args.case=='resumed' else 0),result
+   record.update(global_step=2,resume_from_step=result['resume_from_step'],training_loss=result['training_loss'])
+ assert record['peak_rss_bytes']>0,'worker RSS was not observed'
+ (host_scope/'observation.json').write_text(json.dumps(record,sort_keys=True,indent=2)+'\n')
+ index['cases'][args.case]=record
+ index_path.write_text(json.dumps(index,sort_keys=True,indent=2)+'\n')
+ print(json.dumps(record,sort_keys=True),flush=True)
+except BaseException as error:
+ record['failure_type']=type(error).__name__
+ record['failure']=str(error)
+ (host_scope/'observation-failed.json').write_text(json.dumps(record,sort_keys=True,indent=2)+'\n')
+ index.setdefault('failures',[]).append(record)
+ index_path.write_text(json.dumps(index,sort_keys=True,indent=2)+'\n')
+ print(json.dumps(record,sort_keys=True),flush=True)
+ raise
+finally:
+ subprocess.run(['docker','rm','--force',container],check=True,stdout=subprocess.DEVNULL)

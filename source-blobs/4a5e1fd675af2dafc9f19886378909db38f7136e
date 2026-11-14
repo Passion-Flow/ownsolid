@@ -1,0 +1,110 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { loadRuntimeConfig, parseRuntimeConfig } from './runtime-config.ts';
+
+const valid = {
+  data: {
+    topology: { size: 'single-node' },
+    transport: { mode: 'direct_https', plaintext: false },
+    request_timeout_milliseconds: 30_000,
+    default_locale: 'auto',
+    ui: {
+      poll_milliseconds: 5_000,
+      search_debounce_milliseconds: 150,
+      page_size: 20,
+      lookup_page_size: 100,
+    },
+    gateway_keys: { default_ttl_seconds: 86_400, maximum_ttl_seconds: 7_776_000 },
+    agent_gateways: true,
+    workspaces: { maximum_count: 10 },
+  },
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('parseRuntimeConfig', () => {
+  it('keeps the fields the interface uses', () => {
+    expect(parseRuntimeConfig(valid)).toEqual({
+      topologySize: 'single-node',
+      plaintext: false,
+      requestTimeoutMilliseconds: 30_000,
+      defaultLocale: 'auto',
+      ui: {
+        pollMilliseconds: 5_000,
+        searchDebounceMilliseconds: 150,
+        pageSize: 20,
+        lookupPageSize: 100,
+      },
+      gatewayKeys: { defaultTtlSeconds: 86_400, maximumTtlSeconds: 7_776_000 },
+      agentGateways: true,
+    });
+  });
+
+  it('refuses a document that does not say who runs gateways', () => {
+    const rest: Record<string, unknown> = { ...valid.data };
+    delete rest.agent_gateways;
+    expect(() => parseRuntimeConfig({ data: rest })).toThrow('RESPONSE_INVALID');
+    expect(() => parseRuntimeConfig({ data: { ...valid.data, agent_gateways: 'yes' } })).toThrow(
+      'RESPONSE_INVALID',
+    );
+  });
+
+  it.each([
+    ['no envelope', { topology: {} }],
+    ['no topology size', { data: { ...valid.data, topology: {} } }],
+    ['a non-boolean plaintext flag', { data: { ...valid.data, transport: { plaintext: 'no' } } }],
+    ['a timeout below the minimum', { data: { ...valid.data, request_timeout_milliseconds: 10 } }],
+    [
+      'a fractional page size',
+      { data: { ...valid.data, ui: { ...valid.data.ui, page_size: 2.5 } } },
+    ],
+    [
+      'a page size above the maximum',
+      { data: { ...valid.data, ui: { ...valid.data.ui, page_size: 500 } } },
+    ],
+    ['no gateway key policy', { data: { ...valid.data, gateway_keys: undefined } }],
+    [
+      'a default key lifetime above the maximum',
+      {
+        data: {
+          ...valid.data,
+          gateway_keys: { default_ttl_seconds: 86_401, maximum_ttl_seconds: 86_400 },
+        },
+      },
+    ],
+  ])('rejects %s', (_name, document) => {
+    expect(() => parseRuntimeConfig(document)).toThrow('RESPONSE_INVALID');
+  });
+});
+
+describe('loadRuntimeConfig', () => {
+  it('fetches the document from the same origin', async () => {
+    const fetch = vi.fn(() => Promise.resolve(new Response(JSON.stringify(valid))));
+    vi.stubGlobal('fetch', fetch);
+    await expect(loadRuntimeConfig()).resolves.toMatchObject({ topologySize: 'single-node' });
+    expect(fetch).toHaveBeenCalledWith(
+      '/runtime-config.json',
+      expect.objectContaining({ cache: 'no-store' }),
+    );
+  });
+
+  it('reports a server that is not ready', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve(new Response('', { status: 503 }))),
+    );
+    await expect(loadRuntimeConfig()).rejects.toMatchObject({
+      code: 'SERVICE_NOT_READY',
+      status: 503,
+    });
+  });
+
+  it('reports an unreachable server', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('offline'))),
+    );
+    await expect(loadRuntimeConfig()).rejects.toMatchObject({ code: 'NETWORK_UNAVAILABLE' });
+  });
+});

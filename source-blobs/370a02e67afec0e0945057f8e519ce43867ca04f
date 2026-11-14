@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+nodes=$1
+rounds=$2
+df -h /
+free -m
+ss -lntp
+test -z "$(ss -Hlnt 'sport = :58428')"
+if (( nodes == 10000 )); then
+  test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048 || { echo "Under 2 GiB free RAM; full scale run postponed."; exit 1; }
+fi
+store=lane-obs-scale
+work=$(mktemp -d "$HOME/lane-obs-scale.XXXXXX")
+mkdir "$work/data"
+chown 65534:65534 "$work/data"
+cleanup() {
+  if [[ -n ${cid:-} ]]; then
+    docker stop --time 60 "$cid" >/dev/null
+  fi
+  printf 'VictoriaMetrics data directory allocated bytes after shutdown: '
+  du -s -B 1 "$work/data" | cut -f 1
+  find "$work/data" -type f -delete
+  find "$work" -depth -type d -empty -delete
+  test -z "$(docker ps -q --filter "name=^/${store}$")"
+  printf '%s stopped\n' "$store"
+}
+trap cleanup EXIT
+cid=$(docker run -d --rm --pull never --name "$store" --network none --cpus 6 --memory 12g   --user 65534:65534 --read-only --cap-drop ALL --security-opt no-new-privileges   -v "$work/data:/data" victoriametrics/victoria-metrics:v1.155.0   -storageDataPath=/data -httpListenAddr=127.0.0.1:58428)
+pid=$(docker inspect -f '{{.State.Pid}}' "$cid")
+for _ in $(seq 1 30); do
+  if nsenter -t "$pid" -n curl -fsS http://127.0.0.1:58428/health >/dev/null 2>&1; then break; fi
+  sleep 1
+done
+nsenter -t "$pid" -n ip -brief address
+nsenter -t "$pid" -n sh -eu -c 'test -z "$(ip route show default)"; test -z "$(ip -6 route show default)"'
+nsenter -t "$pid" -n env GOMAXPROCS=6 OWNSOLID_SCALE_METRICS_ADDRESS=http://127.0.0.1:58428   OWNSOLID_SCALE_NODES="$nodes" OWNSOLID_SCALE_ROUNDS="$rounds" "$HOME/lane-obs-tools/telemetry-scale.test"   -test.v -test.run '^TestVictoriaMetricsFleetScale$' -test.timeout 20m

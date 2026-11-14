@@ -1,0 +1,21 @@
+package main
+
+import (
+ "fmt"
+ "io"
+ "net"
+ "os"
+ "time"
+)
+
+func main() {
+ conn, err := net.DialTimeout("tcp", "127.0.0.1:5432", 5*time.Second)
+ if err != nil { fmt.Fprintln(os.Stderr, "owned PostgreSQL loopback dial failed"); os.Exit(1) }
+ defer conn.Close()
+ if err := conn.SetDeadline(time.Now().Add(5*time.Minute)); err != nil { os.Exit(1) }
+ go func() {
+  _, _ = io.Copy(conn, os.Stdin)
+  if tcp, ok := conn.(*net.TCPConn); ok { _ = tcp.CloseWrite() }
+ }()
+ if _, err := io.Copy(os.Stdout, conn); err != nil { fmt.Fprintln(os.Stderr, "owned PostgreSQL output closed"); os.Exit(1) }
+}

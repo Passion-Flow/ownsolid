@@ -1,0 +1,14 @@
+{
+  "producer_source": "2b4aaae5f8c690df9943b7dd7a7e4b5004aa421b",
+  "draft_sha256": "112fd38ebe1fc00427bdebcb93686892d43ff8a14d079150b7c65007af5a258b",
+  "tests_passed": 9,
+  "reported_test_seconds": 0.017,
+  "log_sha256": "33f0c2c0ed7ef8e2ceb64e64c7a8926b9b4e493a2269959cc96abdc3fee3403e",
+  "transport": "httpx.MockTransport",
+  "httpx": "0.28.1",
+  "python": "3.12.3",
+  "external_network_available": false,
+  "actual_dispatcher_auth_or_postgresql": false,
+  "native_go_compiled": false,
+  "shared_help_browser_failure_qualified": false
+}

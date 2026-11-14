@@ -1,0 +1,64 @@
+{
+  "base": "106ca52dd867bcb38f142948a52a1f4af41d1d8e",
+  "gateway_tree": "b7059e5bfed366607819a7428d6cd067fb424760",
+  "source_paths": [
+    "services/control/internal/modules/distribution/alias_capabilities.go",
+    "services/control/internal/modules/distribution/alias_reads.go",
+    "services/control/internal/modules/distribution/history.go",
+    "services/control/internal/modules/distribution/http/human.go",
+    "services/control/internal/modules/distribution/model.go"
+  ],
+  "test_paths": [
+    "services/control/internal/modules/distribution/alias_capabilities_test.go",
+    "services/control/internal/modules/distribution/alias_capability_recipe_test.go",
+    "services/control/internal/modules/distribution/alias_capability_http_test.go",
+    "services/control/internal/modules/distribution/alias_read_http_test.go"
+  ],
+  "minimal_patch_applies": true,
+  "excluded_dependencies": [
+    "ProjectGatewayReceipts",
+    "outcome metering",
+    "key purpose DDL",
+    "shared migrations",
+    "public OpenAPI and generators"
+  ],
+  "operations": [
+    "adminListModelAlias",
+    "adminGetModelAlias",
+    "portalListModelAlias",
+    "portalGetModelAlias"
+  ],
+  "read_type": "distribution.AliasReadView",
+  "flag": "handler.Distribution.Service.PublishAliasCapabilities",
+  "production_default": false,
+  "capabilities": {
+    "optional": true,
+    "nullable": false,
+    "additionalProperties": false,
+    "required": [
+      "text_generation_verified",
+      "context_token_ceiling"
+    ],
+    "text_generation_verified": {
+      "type": "boolean",
+      "const": true
+    },
+    "context_token_ceiling": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "absence": [
+    "no exact snapshot",
+    "stale or mismatched target",
+    "unavailable deployment",
+    "paused Admin alias",
+    "inactive workspace",
+    "unrecognized catalog or recipe"
+  ],
+  "scope_refusal": "existing authorization and not-found behavior",
+  "failure": "503 STORAGE_UNAVAILABLE, never silently omitted proof",
+  "activation": "Publish the four read-only OpenAPI/SDK/Help bindings, then enable only the verified full platform PostgreSQL composition with target-history tables; keep earlier cumulative profiles off. Machine and mutation shapes stay unchanged.",
+  "existing_offline_reproduction": "/root/lane-gw-acceptance/gw104-read.hbg4ljbe",
+  "minimal_patch_execution": "not separately executed; actual handler/PG tests previously passed on the retained gateway stack; release combination must run against its exact assembled source"
+}

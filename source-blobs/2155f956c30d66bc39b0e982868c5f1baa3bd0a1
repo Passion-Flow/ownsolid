@@ -1,0 +1,62 @@
+{
+  "source_sha": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "admin": {
+    "origin": "https://admin.ownsolid.test:8443",
+    "ca_file": "/evidence/installation-ca.pem",
+    "dial_address": "127.0.0.1:8443"
+  },
+  "raw": {
+    "origin": "https://10.77.0.1:18428",
+    "ca_file": "/evidence/history-inputs/raw-ca.pem"
+  },
+  "long": {
+    "origin": "https://10.77.0.1:28428",
+    "ca_file": "/evidence/history-inputs/long-ca.pem"
+  },
+  "email": "admin@ownsolid.test",
+  "password_file": "/evidence/admin-password",
+  "session_file": "/evidence/obs-history-session.json",
+  "site_id": "default",
+  "cell_id": "default",
+  "workspace_id": "a0bb19a4-1de5-44b7-b453-1284c1aec44e",
+  "timeout_seconds": 30,
+  "raw_window": {
+    "from": "2026-11-12T11:50:00Z",
+    "to": "2026-11-12T11:58:00Z",
+    "cells": [
+      {
+        "site_id": "default",
+        "cell_id": "default",
+        "observed": 2,
+        "reachable": 0
+      }
+    ],
+    "require_sparse": true,
+    "require_zero": true
+  },
+  "rollup_window": {
+    "from": "2026-11-12T10:00:00Z",
+    "to": "2026-11-12T10:08:00Z",
+    "cells": [
+      {
+        "site_id": "default",
+        "cell_id": "default",
+        "observed": 2,
+        "reachable": 0
+      }
+    ],
+    "require_sparse": true,
+    "require_zero": true
+  },
+  "required_commands": [
+    "read",
+    "long-unavailable",
+    "long-restored",
+    "long-tls-refused",
+    "long-tls-restored",
+    "workspace-disabled",
+    "workspace-restored",
+    "logout-replay"
+  ],
+  "foreign_workspace_id": "fcd75829-0532-4da0-bcc3-51ca261adbc8"
+}

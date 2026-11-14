@@ -1,0 +1,29 @@
+"""Exercise pip's real offline hash and missing-input refusals in fresh targets."""
+from pathlib import Path
+import json
+import subprocess
+import sys
+import tempfile
+
+inputs=Path('/inputs');workspace=Path('/workspace')
+expected=json.loads((inputs/'inventory.json').read_bytes())['packages']['mpmath']
+policy=json.loads((inputs/'prototype.json').read_bytes())['install']
+results={}
+with tempfile.TemporaryDirectory(prefix='pip-refusal-',dir=workspace) as directory:
+ root=Path(directory)
+ for case in ['changed-wheel','missing-wheel']:
+  target=root/case;wheels=target/'wheels';wheels.mkdir(parents=True,mode=0o700)
+  requirement=target/'requirements.lock';requirement.write_text(f'mpmath=={expected["version"]} --hash=sha256:{expected["sha256"]}\n')
+  if case=='changed-wheel':
+   raw=bytearray((inputs/'wheelhouse'/expected['filename']).read_bytes());raw[len(raw)//2]^=1
+   (wheels/expected['filename']).write_bytes(raw)
+  result=subprocess.run([sys.executable,'-m','pip','install','--no-index','--only-binary=:all:','--ignore-installed','--no-deps','--require-hashes','--find-links='+str(wheels),'--target='+str(target/'site'),'-r',str(requirement)],capture_output=True,timeout=policy['timeout_seconds'])
+  output=result.stdout+result.stderr
+  assert result.returncode!=0
+  expected_error=b'DO NOT MATCH THE HASHES' if case=='changed-wheel' else b'No matching distribution found'
+  assert expected_error in output,output.decode()
+  (workspace/(case+'.log')).write_bytes(output)
+  assert not (target/'site').exists() or not any((target/'site').iterdir())
+  results[case]={'exit_code':result.returncode,'installed_files':0}
+(workspace/'install-refusals.json').write_text(json.dumps(results,sort_keys=True,indent=2)+'\n')
+print(json.dumps(results,sort_keys=True))

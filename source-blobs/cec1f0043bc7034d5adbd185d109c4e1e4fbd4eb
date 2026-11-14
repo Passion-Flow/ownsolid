@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+run=$1
+trap 'echo "stage-exit=$?"' EXIT
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+export CARGO_BUILD_JOBS=2 GOMAXPROCS=2 GOFLAGS=-p=2 CARGO_NET_OFFLINE=true
+df -h /root /dev/shm
+free -m
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+ss -lntp
+scratch=$(mktemp -d /dev/shm/lane-gw-messages-rust.XXXXXXXX)
+cleanup() {
+    status=$?
+    find "$scratch" -depth -delete
+    echo "stage-exit=$status"
+}
+trap cleanup EXIT
+export TMPDIR="$scratch" RUST_TEST_THREADS=2
+cargo fmt --manifest-path services/gateway/Cargo.toml -- --check
+unshare --net sh -c 'ip link set lo up && ip -br addr && cargo test --locked --offline --manifest-path services/gateway/Cargo.toml --all-targets'
+cargo clippy --locked --offline --manifest-path services/gateway/Cargo.toml --all-targets -- -D warnings
+cargo build --locked --offline --manifest-path services/gateway/Cargo.toml

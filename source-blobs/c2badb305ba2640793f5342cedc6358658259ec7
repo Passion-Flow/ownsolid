@@ -1,0 +1,8 @@
+#!/bin/bash
+cd /root/lane-a-e2e
+images="ownsolid/control:lane-a-e2e ownsolid-e2e/postgres:18.6-pgvector-0.8.7 victoriametrics/victoria-metrics:v1.155.0 victoriametrics/victoria-logs:v1.53.0 docker:29.1.3-dind"
+OWNSOLID_E2E_SCRATCH=/dev/shm OWNSOLID_E2E_DOCKER_TMPFS=12g ./run-single-node.sh /root/lane-a-e2e $images </dev/null > install-arc101.log 2>&1
+c=$?; echo "install exit=$c"; grep -E "^(--- |    --- FAIL|PASS|FAIL)" install-arc101.log | cut -c1-140 | tail -8
+OWNSOLID_E2E_LOAD=1 OWNSOLID_E2E_RUN=TestFleetLoad OWNSOLID_E2E_TIMEOUT=50m OWNSOLID_E2E_SCRATCH=/dev/shm OWNSOLID_E2E_DOCKER_TMPFS=12g ./run-single-node.sh /root/lane-a-e2e $images </dev/null > load-arc101.log 2>&1
+d=$?; echo "load exit=$d"; grep -E "^(--- |PASS|FAIL)|threshold [0-9]|steady stretch|dispatch of|zero egress" load-arc101.log | cut -c1-200 | tail -12
+[ $c -eq 0 ] && [ $d -eq 0 ]; exit $?

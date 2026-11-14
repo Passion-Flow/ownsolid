@@ -1,0 +1,96 @@
+{
+  "active_stage": "source_reconstruction",
+  "admitted": true,
+  "cleanup_reserve_seconds": 120,
+  "cleanup_seconds": 0.047743458999320865,
+  "credential_paths_absent": true,
+  "decoded_frame": {
+    "bytes": 5304320,
+    "sha256": "f55b36054aef4e6277c5b1164b07877a9e8ce7fced00dc23c8b8f4f4a451c910"
+  },
+  "elapsed_seconds": 3.7444952559890226,
+  "error": "{\"code\": \"COMPLETE_BASIS_INPUT_MAP_REFUSED\", \"rejected\": [{\"error\": \"{\\\"canonical_mode\\\": \\\"0o644\\\", \\\"code\\\": \\\"CACHE_TRANSPORT_MODE_MISMATCH\\\", \\\"git_mode\\\": \\\"100644\\\", \\\"git_tar_mode\\\": \\\"0o664\\\", \\\"observed_mode\\\": \\\"0o600\\\", \\\"relative_path\\\": \\\"api/openapi/README.md\\\"}\", \"path\": \"api/openapi/README.md\"}, {\"error\": \"{\\\"canonical_mode\\\": \\\"0o644\\\", \\\"code\\\": \\\"CACHE_TRANSPORT_MODE_MISMATCH\\\", \\\"git_mode\\\": \\\"100644\\\", \\\"git_tar_mode\\\": \\\"0o664\\\", \\\"observed_mode\\\": \\\"0o600\\\", \\\"relative_path\\\": \\\"api/release/v1/mvp-postgresql-cpu-v1-lineage.json\\\"}\", \"path\": \"api/release/v1/mvp-postgresql-cpu-v1-lineage.json\"}, {\"error\": \"{\\\"canonical_mode\\\": \\\"0o644\\\", \\\"code\\\": \\\"CACHE_TRANSPORT_MODE_MISMATCH\\\", \\\"git_mode\\\": \\\"100644\\\", \\\"git_tar_mode\\\": \\\"0o664\\\", \\\"observed_mode\\\": \\\"0o600\\\", \\\"relative_path\\\": \\\"api/release/v1/postgres_application.go\\\"}\", \"path\": \"api/release/v1/postgres_application.go\"}, {\"error\": \"{\\\"canonical_mode\\\": \\\"0o644\\\", \\\"code\\\": \\\"CACHE_TRANSPORT_MODE_MISMATCH\\\", \\\"git_mode\\\": \\\"100644\\\", \\\"git_tar_mode\\\": \\\"0o664\\\", \\\"observed_mode\\\": \\\"0o600\\\", \\\"relative_path\\\": \\\"docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md\\\"}\", \"path\": \"docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md\"}, {\"error\": \"{\\\"canonical_mode\\\": \\\"0o644\\\", \\\"code\\\": \\\"CACHE_TRANSPORT_MODE_MISMATCH\\\", \\\"git_mode\\\": \\\"100644\\\", \\\"git_tar_mode\\\": \\\"0o664\\\", \\\"observed_mode\\\": \\\"0o600\\\", \\\"relative_path\\\": \\\"docs/decisions/0070-isolate-connector-sign-in-tests-from-session-authority.md\\\"}\", \"path\": \"docs/decisions/0070-isolate-connector-sign-in-tests-from-session-authority.md\"}, {\"error\": \"{\\\"canonical_mode\\\": \\\"0o644\\\", \\\"code\\\": \\\"CACHE_TRANSPORT_MODE_MISMATCH\\\", \\\"git_mode\\\": \\\"100644\\\", \\\"git_tar_mode\\\": \\\"0o664\\\", \\\"observed_mode\\\": \\\"0o600\\\", \\\"relative_path\\\": \\\"docs/product/roadmap/evaluation.md\\\"}\", \"path\": \"docs/product/roadmap/evaluation.md\"}, {\"error\": \"{\\\"canonical_mode\\\": \\\"0o644\\\", \\\"code\\\": \\\"CACHE_TRANSPORT_MODE_MISM",
+  "error_type": "AssertionError",
+  "first_failure_stage": "source_reconstruction",
+  "go_compilers_started": 0,
+  "image": {
+    "architecture": "amd64",
+    "id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "os": "linux",
+    "volume_target": "/var/lib/postgresql"
+  },
+  "lock_fd_closure": [
+    {
+      "closed": true,
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    },
+    {
+      "closed": true,
+      "path": "/run/lock/ownsolid-heavy.lock"
+    }
+  ],
+  "lock_identities_retained": true,
+  "lock_nb_attempts": [
+    {
+      "identity": {
+        "dev": 29,
+        "ino": 82,
+        "mode": 420,
+        "nlink": 1,
+        "regular": true,
+        "size": 0,
+        "uid": 0
+      },
+      "path": "/run/lock/ownsolid-heavy.lock"
+    },
+    {
+      "identity": {
+        "dev": 64512,
+        "ino": 7508772,
+        "mode": 420,
+        "nlink": 1,
+        "regular": true,
+        "size": 0,
+        "uid": 0
+      },
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    }
+  ],
+  "metadata": [],
+  "payload_receive": {
+    "elapsed_seconds": 1.2223726059310138,
+    "eof_observed": true,
+    "expected_bytes": 720340,
+    "expected_sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb",
+    "received_bytes": 720340,
+    "received_sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb"
+  },
+  "preflight": {
+    "disk_free_bytes": 788905066496,
+    "foreign_heavy": [],
+    "full_io_psi_avg10": 0.0,
+    "memory_bytes": {
+      "MemAvailable": 20751151104,
+      "MemFree": 3142078464
+    }
+  },
+  "remaining_owned_groups": [],
+  "remote_budget_seconds": 1000,
+  "remote_root": "/root/lane-arc111-formal61-e1.y9ca0mz9",
+  "runner_pid": 535149,
+  "runtime_profiles_executed": [],
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "stages": [
+    {
+      "elapsed_seconds": 0.08939839492086321,
+      "exit": 0,
+      "name": "image-inspect",
+      "pid": 535152,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "b7801d4afafa4ae1450ae7b260bdb4bff3b0f67ff121ae8e9fbbd1f4aa109dd0"
+    }
+  ],
+  "state": "FAILED_OR_INCOMPLETE",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "within_remote_budget": true
+}

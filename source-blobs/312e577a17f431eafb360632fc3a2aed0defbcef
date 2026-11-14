@@ -1,0 +1,33 @@
+#!/bin/bash
+set -euo pipefail
+gate=$LANE_REL_RELEASE_GATE
+cd "$LANE_REL_RELEASE_ROOT"
+git rev-parse HEAD > "$gate/revision"
+df -h /
+free -m
+for attempt in $(seq 1 80); do
+  if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+  sleep 5
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+rc=0
+bash "$gate/fixture.sh" > "$gate/fixture.log" 2>&1 || rc=$?
+echo "$rc" > "$gate/fixture.exit"
+test "$rc" = 0
+for name in TestGatewayUsageHistoryAuditExport TestModelGatewayCAForPublishedAliasOverTLS TestLaneDGatewayHistoryTLS TestActualAliasCutoverTLSNullableContractCSRFHistoryAndExactReplay; do
+  grep -q "^--- PASS: $name " "$gate/fixture.log"
+done
+rc=0
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  make check-layout check-roadmap test-tools &&
+  pnpm -C web generate:check &&
+  go -C services/control build ./... &&
+  go -C services/control test ./internal/modules/distribution ./internal/modules/datasets
+' > "$gate/run.log" 2>&1 || rc=$?
+echo "$rc" > "$gate/exit"
+test "$rc" = 0
+git diff --check HEAD~7..HEAD
+test -z "$(git status --porcelain)"
+git update-ref refs/codex/handoff/lane-rel-cli-gateway-final-land HEAD

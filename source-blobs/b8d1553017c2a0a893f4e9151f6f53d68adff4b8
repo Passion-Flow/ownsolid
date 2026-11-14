@@ -1,0 +1,30 @@
+set -euo pipefail
+cd ~/lane-rel
+test "$(cat ~/lane-rel-tools/dat107-rebased-gate.0TTHln2a/exit)" = 0
+test "$(git rev-parse --short HEAD)" = 9b82d939
+git diff --quiet
+git diff --cached --quiet
+git rebase --onto refs/lane-rel/dat107-base-newer 5ce35af0
+git diff --check HEAD^
+git diff --exit-code 9b82d939..HEAD -- api/openapi tools/codegen web services/control/internal/modules/datasets services/control/internal/modules/identity/http
+git update-ref refs/lane-rel/dat107-landing-candidate HEAD
+git log -2 --oneline
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 300 9
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+unshare -n bash -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    make check-layout check-roadmap
+    go -C services/control build ./...
+    go -C services/control test ./internal/modules/distribution
+'

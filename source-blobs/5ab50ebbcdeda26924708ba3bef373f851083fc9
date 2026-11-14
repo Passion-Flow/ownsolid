@@ -1,0 +1,53 @@
+#!/bin/bash
+set -euo pipefail
+fixture=/root/lane-arc-managed.JFUrp5
+network=arc104-managed-jfurp5
+role=${1:?node role}
+node="$network-$role"
+if ! docker network inspect "$network" >/dev/null 2>&1; then
+  docker network create --internal "$network" >/dev/null
+fi
+test "$(docker network inspect -f '{{.Internal}}' "$network")" = true
+image=$(docker image ls --no-trunc --format '{{.ID}}' ownsolid-proto/lane-a-node:24.04)
+test -n "$image"
+install -d -m 0700 "$fixture/$role-data" "$fixture/$role-state" "$fixture/$role-capture"
+docker run -d --name "$node" --hostname "$role" --network "$network" --ip "${ARC_NODE_IP:?}" --add-host "admin.ownsolid.test:${ARC_CONTROL_IP:?}" \
+  --privileged --cgroupns private --memory 6g --cpus 3 --tmpfs /run --tmpfs /run/lock \
+  --mount "type=bind,src=$fixture/node-inputs,dst=/fixture-artifacts,readonly" \
+  --mount "type=bind,src=$fixture/exchange/$role,dst=/fixture-enrollment,readonly" \
+  --mount "type=bind,src=$fixture/$role-state,dst=/fixture-state" \
+  --mount "type=bind,src=$fixture/$role-data,dst=/var/lib/rancher/rke2" \
+  --mount "type=bind,src=$fixture/$role-capture,dst=/fixture-capture" \
+  "$image" /sbin/init >/dev/null
+for tries in $(seq 1 25); do
+  if docker exec "$node" test -d /run/systemd/system; then break; fi
+  sleep 1
+done
+docker exec "$node" test -d /run/systemd/system
+docker exec "$node" sh -ceu 'mkdir -p /dev/net; test -c /dev/net/tun || mknod /dev/net/tun c 10 200'
+docker exec -d "$node" /fixture-artifacts/egress-recorder -interface egress0 -log /fixture-capture/egress.jsonl
+docker exec -e "ARC_SITE_DNS=${ARC_SITE_DNS:-198.51.100.53}" "$node" sh -ceu '
+  for tries in $(seq 1 20); do
+    if ip link show egress0 >/dev/null 2>&1; then break; fi
+    sleep 1
+  done
+  ip addr add 198.18.0.1/32 dev egress0
+  ip -6 addr add 2001:db8:100::1/128 dev egress0 nodad
+  ip link set egress0 up
+  ip route replace default dev egress0
+  ip -6 route replace default dev egress0
+  printf "nameserver %s\noptions timeout:1 attempts:1\n" "$ARC_SITE_DNS" >/etc/resolv.conf
+  ip -4 route show default
+  ip -6 route show default
+'
+docker exec "$node" bash -c 'printf arc104-capture >/dev/udp/192.0.2.13/9704' || true
+docker exec "$node" bash -c 'printf arc104-capture >/dev/udp/2001:db8:101::13/9704' || true
+log="$fixture/$role-capture/egress.jsonl"
+for tries in $(seq 1 12); do
+  if grep -q '192.0.2.13' "$log" && grep -q '2001:db8:101::13' "$log"; then break; fi
+  sleep 1
+done
+grep -m1 '192.0.2.13' "$log"
+grep -m1 '2001:db8:101::13' "$log"
+: > "$log"
+docker inspect -f '{{with index .NetworkSettings.Networks "arc104-managed-jfurp5"}}{{.IPAddress}}{{end}}' "$node"

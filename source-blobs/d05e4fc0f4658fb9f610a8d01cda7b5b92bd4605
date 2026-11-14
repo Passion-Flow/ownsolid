@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+root=/root/lane-rel-tools/workspace-installed-8f4dd72c
+repo=/root/lane-rel-cloud
+sha=8f4dd72cb9c6c58c0860bb9125289986cfc180d1
+source /root/lane-rel-tools/env
+export GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOFLAGS=-p=1 CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -n -E 75 8
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 9
+exec 7>/root/lane-rel-tools/heavy-test.lock
+flock -n -E 75 7
+df -h /
+free -m
+test "$(df -Pm / | awk 'NR==2 {print $4}')" -ge 15360 || exit 75
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048 || exit 75
+cd "$repo"
+test "$(git rev-parse HEAD)" = "$sha"
+test -z "$(git status --porcelain)"
+test ! -e "$root/client"
+mkdir -m 700 "$root/client"
+unshare -n bash -ec '
+ ip link set lo up
+ test "$(ip -o link show | wc -l)" -eq 1
+ test -z "$(ip route show default)"
+ test -z "$(ip -6 route show default)"
+ go build -buildvcs=true -trimpath -o "$1/client/ownsolid" ./tools/cli/cmd/ownsolid
+ go version -m "$1/client/ownsolid" > "$1/client/build-info.txt"
+ "$1/client/ownsolid" version --output json > "$1/client/version.json"
+ "$1/client/ownsolid" workspace list --help > "$1/client/list-help.txt"
+ "$1/client/ownsolid" workspace get --help > "$1/client/get-help.txt"
+' bash "$root"
+python3 - "$root" "$sha" <<'PY'
+import hashlib
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+root=Path(sys.argv[1])/"client"
+sha=sys.argv[2]
+info=(root/"build-info.txt").read_text()
+settings=dict(re.findall(r"^\s*build\s+([^=]+)=(.*)$",info,re.MULTILINE))
+version=json.loads((root/"version.json").read_text())
+assert version["revision"]==sha
+assert settings["vcs.revision"]==sha and settings["vcs.modified"]=="false"
+assert settings["GOOS"]=="linux" and settings["GOARCH"]=="amd64" and settings["CGO_ENABLED"]=="0"
+binary=root/"ownsolid"
+manifest={
+ "format_version":1,"source_revision":sha,"source_modified":False,
+ "binary_sha256":hashlib.sha256(binary.read_bytes()).hexdigest(),
+ "os":"linux","arch":"amd64","go_version":info.splitlines()[0].split()[-1],
+ "cli_product_tree":subprocess.check_output(["git","-C","/root/lane-rel-cloud","rev-parse",sha+":tools/cli"],text=True).strip(),
+ "build_scope":"CLI only; offline loopback namespace; no Control build or installed acceptance",
+}
+(root/"client-manifest.json").write_text(json.dumps(manifest,indent=2)+"\n")
+print(json.dumps(manifest,indent=2))
+PY
+test "$(git rev-parse HEAD)" = "$sha"
+test -z "$(git status --porcelain)"
+echo OFFLINE_NATIVE_WORKSPACE_CLIENT_READY

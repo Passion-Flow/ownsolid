@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+expected_source=${1:?Pass the reviewed main.go SHA256}
+expected_test=${2:?Pass the reviewed main_test.go SHA256}
+base=/root/lane-obs-tools/installed-history-driver
+receipt=$(mktemp -d /root/lane-obs-tools/installed-history-client-del.XXXXXX)
+printf 'CLIENT_RECEIPT=%s\n' "$receipt"
+exec 3>&1
+exec >"$receipt/check.log" 2>&1
+trap 'status=$?; printf "EXIT_CODE=%s\n" "$status"; tail -12 "$receipt/check.log" >&3; printf "CLIENT_RECEIPT=%s\n" "$receipt" >&3' EXIT
+python3 - <<'PY_LEASE'
+from pathlib import Path
+import os
+expected={'/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock'}
+seen=set()
+for fd in [8,9]:
+    target=os.readlink('/proc/self/fd/'+str(fd))
+    info=Path('/proc/self/fdinfo/'+str(fd)).read_text()
+    assert 'FLOCK' in info and 'WRITE' in info, 'Parent DEL resource lease is not held'
+    seen.add(target)
+assert seen==expected,'Run only inside the existing held DEL dual-lock window'
+print('INHERITED_DEL_DUAL_LOCK_LEASE_CONFIRMED')
+PY_LEASE
+df -h /
+free -m
+ss -lntp
+cat /proc/pressure/io
+test "$(df --output=avail -B1 / | tail -1)" -ge 16106127360 || exit 75
+test "$(free -m | awk '$1=="Mem:" {print $4}')" -ge 2048 || exit 75
+python3 - <<'PY_IO'
+from pathlib import Path
+for line in Path('/proc/pressure/io').read_text().splitlines():
+    if float(line.split('avg10=')[1].split()[0]) > 5:
+        raise SystemExit(75)
+PY_IO
+test "$(sha256sum "$base/main.go" | cut -d ' ' -f 1)" = "$expected_source"
+test "$(sha256sum "$base/main_test.go" | cut -d ' ' -f 1)" = "$expected_test"
+sha256sum "$base/main.go" "$base/main_test.go" > "$receipt/inputs.sha256"
+export PATH=/root/lane-obs-tools/go/bin:$PATH
+export GOMAXPROCS=2 GOFLAGS=-p=2 GO111MODULE=off GOWORK=off GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local
+unshare --net bash -ec '
+    set -o pipefail
+    ip link set lo up
+    test "$(ip -o link show | wc -l)" -eq 1
+    test -z "$(ip route show default)"
+    test -z "$(ip -6 route show default)"
+    cd "$1"
+    go test -json -race -count=1 -timeout=60s > "$2/tests.jsonl"
+    go vet ./...
+    CGO_ENABLED=0 go build -trimpath -o installed-history main.go
+' bash "$base" "$receipt"
+python3 - "$receipt/tests.jsonl" <<'PY_TEST'
+import json,sys
+expected={'TestVerifyMeasuredZeroAndSparseAbsence','TestPublicTLSCookieAuditAndStaleSessionLifecycle','TestNullAuditItemsCannotProveNoAudit','TestCreateSessionStateDoesNotOverwrite','TestOpaqueUnixRelayPreservesTLSIdentity','TestNativeCachedMetricsSnapshotIsRefreshed','TestCounterFreshnessRejectsEpochChangeAndTimeout'}
+passed={}
+for line in open(sys.argv[1]):
+    d=json.loads(line)
+    if d.get('Action')=='pass' and d.get('Test') in expected:passed[d['Test']]=d.get('Elapsed')
+assert set(passed)==expected,passed
+print('ALL_SEVEN_CLIENT_SELF_TESTS_PASSED',passed)
+PY_TEST
+sha256sum --check --quiet "$receipt/inputs.sha256"
+sha256sum "$base/installed-history"
+file "$base/installed-history"

@@ -1,0 +1,18 @@
+import sys,json,tempfile,shutil,hashlib
+from pathlib import Path
+w=Path('/root/lane-rel-api-compat');sys.path.insert(0,str(w/'tools/codegen/sdk'))
+from audit import inventory,compare_response_models,compare_response_objects,compare_operations
+r=Path('/root/lane-rel-tools/api-compat');prototype=Path('/root/lane-rel-tools/model-history-prototype')
+with tempfile.TemporaryDirectory(prefix='comparison-',dir=r) as scratch:
+ root=Path(scratch)
+ for name,source in [('baseline',w/'api/openapi/v1/models/openapi.json'),('draft-a',prototype/'draft-a-wire-066e8828/v1/models/openapi.json'),('draft-b',prototype/'v1/models/openapi.json')]:
+  domain=root/name/'models';domain.mkdir(parents=True);shutil.copyfile(source,domain/'openapi.json')
+ baseline=inventory(root/'baseline');a=inventory(root/'draft-a');b=inventory(root/'draft-b')
+ old_field=[f for f in compare_response_objects(baseline,a) if f['schema_location']=='#/components/schemas/AdminModelDetail']
+ assert old_field and all('family_id' not in f['previous_shape']['properties'] and 'family_id' in f['current_shape']['properties'] for f in old_field)
+ assert compare_response_models(baseline,a)==[]
+ assert compare_response_objects(baseline,b)==[] and compare_response_models(baseline,b)==[]
+ current=inventory(w/'api/openapi/v1')
+ assert not current['findings'] and not compare_operations(current,current) and not compare_response_objects(current,current)
+ proof={'audit_source_sha256':hashlib.sha256((w/'tools/codegen/sdk/audit.py').read_bytes()).hexdigest(),'draft_a_old_closed_model_findings':old_field,'draft_b_common_operation_shape_findings':[],'draft_b_common_operation_named_model_findings':[],'current_public_operations':len(current['operations']),'current_inventory_findings':current['findings'],'comparison_scope':'Existing same-identity read operations only; missing non-prototype operations are not qualified','network_namespace':'No external networking; no services started','runtime_authorization_or_full_schema_proof':False}
+ (r/'model-history-comparison.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof,indent=2))

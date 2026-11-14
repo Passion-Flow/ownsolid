@@ -1,0 +1,540 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The "
+    },
+    {
+     "type": "link",
+     "url": "/library",
+     "children": [
+      {
+       "type": "text",
+       "value": "Model library"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " holds the models of the workspace chosen in the switcher, and shows\nhow they arrive. A model arrives as a bundle, so importing one needs no network."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Importing a model"
+    }
+   ],
+   "data": {
+    "id": "importing-a-model"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "On a connected machine, fetch the model's files at the revision shown under "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Catalogue"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Open "
+        },
+        {
+         "type": "link",
+         "url": "/library/import",
+         "children": [
+          {
+           "type": "text",
+           "value": "Import a bundle"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " and expand "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "How to make a bundle"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ". Copy the command\nfor your tool and run it in the folder with the files for that revision."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Bring the resulting "
+        },
+        {
+         "type": "inlineCode",
+         "value": "bundle.tar"
+        },
+        {
+         "type": "text",
+         "value": " to a computer that can reach the console and choose the file."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Give a reason, accept the model's licence and choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Start import"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The upload continues while you use the rest of the console. Closing the tab stops it: open the\nimport from "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Imports"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ", choose the same file, and it continues from where the server stopped. A\ndifferent file is refused before any of it is stored."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The server checks every file against its published hash before publishing the model. When the import\nis ready, choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Open the model"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " to see the published record."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Making a bundle"
+    }
+   ],
+   "data": {
+    "id": "making-a-bundle"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Use an installed tool on the machine that holds the model files. The commands on the import page\nlist the exact filenames for the approved revision."
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Python 3"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " writes an uncompressed archive using "
+        },
+        {
+         "type": "inlineCode",
+         "value": "tarfile.USTAR_FORMAT"
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "GNU tar on macOS"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " uses the "
+        },
+        {
+         "type": "inlineCode",
+         "value": "gtar"
+        },
+        {
+         "type": "text",
+         "value": " command if GNU tar is installed there."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "GNU tar as "
+          },
+          {
+           "type": "inlineCode",
+           "value": "tar"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " applies only when "
+        },
+        {
+         "type": "inlineCode",
+         "value": "tar --version"
+        },
+        {
+         "type": "text",
+         "value": " reports GNU tar."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The built-in macOS tar writes headers the importer rejects, even with "
+    },
+    {
+     "type": "inlineCode",
+     "value": "--format=ustar"
+    },
+    {
+     "type": "text",
+     "value": ". Each\ncommand packs only the listed files. Upload "
+    },
+    {
+     "type": "inlineCode",
+     "value": "bundle.tar"
+    },
+    {
+     "type": "text",
+     "value": " as written, with no compression or extra\nentries."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "If an import fails"
+    }
+   ],
+   "data": {
+    "id": "if-an-import-fails"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A failed import says why. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Verify again"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " retries it a limited number of times. "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Discard"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " deletes\nwhat was uploaded. A workspace takes one import at a time, so a failed import must be finished or\ndiscarded before the next can start."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Retiring a model"
+    }
+   ],
+   "data": {
+    "id": "retiring-a-model"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Deploy a model"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " on a model's page opens "
+    },
+    {
+     "type": "link",
+     "url": "help:model-services",
+     "children": [
+      {
+       "type": "text",
+       "value": "Model services"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " with the model chosen."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Retire"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " on a model's page takes it out of the list and stops new deployments of it. A model still\nin use cannot be retired: stop what depends on it first. Its files stay in the store and its history\nstays in the audit trail."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "The model store"
+    }
+   ],
+   "data": {
+    "id": "the-model-store"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Models live in "
+    },
+    {
+     "type": "inlineCode",
+     "value": "data/models"
+    },
+    {
+     "type": "text",
+     "value": " under the installation's root. During import, allow space for both the\nuploaded bundle and the unpacked model. The form estimates the total from the selected bundle\nand the model's published file sizes."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "After publication, the server removes the bundle and temporary verification files in the\nbackground and retries if needed. The import history and published model files remain available.\nThe import page shows publication status. If storage stays in use, an administrator can look for\n"
+    },
+    {
+     "type": "inlineCode",
+     "value": "model_import_cleanup_failed"
+    },
+    {
+     "type": "text",
+     "value": " and the import ID in the control service logs.\n"
+    },
+    {
+     "type": "link",
+     "url": "help:getting-started",
+     "children": [
+      {
+       "type": "text",
+       "value": "Backups"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " carry published models."
+    }
+   ]
+  }
+ ]
+}

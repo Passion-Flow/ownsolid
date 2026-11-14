@@ -1,0 +1,18 @@
+#!/bin/sh
+# Lane B test helper: a real agent, in a container on this host, joined with the configuration the
+# console's Add a node dialog wrote. The token arrives on stdin; $1 is that configuration.
+# No NET_ADMIN and no GPU: the agent reports what it really finds, and cannot touch the host firewall.
+set -e
+config=$1
+token=$(cat)
+docker rm -f lane-b-serving-host >/dev/null 2>&1 || true
+docker run -d --name lane-b-serving-host --network host --add-host admin.lane-b.test:127.0.0.1 \
+  -v /run/docker.sock:/run/docker.sock -v /etc/os-release:/etc/os-release:ro \
+  -v /root/lane-b/agent-srv111:/usr/local/bin/agent:ro \
+  -v /root/lane-b/install-iam117/config/ca.pem:/opt/ca.pem:ro \
+  debian:bookworm-slim sleep infinity >/dev/null
+docker exec lane-b-serving-host sh -c 'install -d -m 0700 /etc/ownsolid-agent /var/lib/ownsolid-agent /var/lib/ownsolid-inference; cp /opt/ca.pem /etc/ownsolid-agent/ca.pem'
+printf '%s' "$config" | docker exec -i lane-b-serving-host sh -c 'umask 077; cat > /etc/ownsolid-agent/agent.json'
+printf '%s' "$token" | docker exec -i lane-b-serving-host sh -c 'umask 077; cat > /etc/ownsolid-agent/join-token'
+docker exec lane-b-serving-host agent enroll --config /etc/ownsolid-agent/agent.json
+docker exec -d lane-b-serving-host agent run --config /etc/ownsolid-agent/agent.json

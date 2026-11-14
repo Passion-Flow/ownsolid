@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+from pathlib import Path
+import sys
+
+todo = Path(sys.argv[1])
+lines = todo.read_text().splitlines()
+job = next(i for i, line in enumerate(lines) if line.startswith("pick ") and "SCH-101: Model and test exact workload demand" in line)
+quota = next(i for i, line in enumerate(lines) if line.startswith("pick ") and "SCH-102: Enforce and test hierarchical" in line)
+if job > quota:
+    lines.insert(quota, lines.pop(job))
+todo.write_text("\n".join(lines) + "\n")

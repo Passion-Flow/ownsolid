@@ -1,0 +1,33 @@
+{
+  "format_version": 1,
+  "candidate_source": "7055df31f10d23a3a237601c6e781eceaaa8397b",
+  "parent": "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+  "worktree": "/root/lane-rel-members",
+  "command": "ownsolid workspace member list <workspace-id> --limit 20 --output json",
+  "ownership": "CLI, CLI research and its existing status row only; published APIs and backends unchanged",
+  "verification": {
+    "focused_offline_tls_tests": "passed 0.222s",
+    "focused_race_tests": "passed 1.711s",
+    "cli_vet": "passed",
+    "layout": "passed",
+    "roadmap": "589 items, consistent",
+    "full_repository_gate_started": false,
+    "installed_acceptance_run": false,
+    "published_to_main": false,
+    "roadmap_ticked": false
+  },
+  "queued_gate": "/root/lane-rel-tools/workspace-members/full-gate.sh",
+  "gate_admission": "Run only after original DEL window releases, raw MemFree >=2048 MiB, disk >=15360 MiB and global/SCI/lane locks admit; script checks these guards. No gate invocation for this candidate yet.",
+  "installed_boundary": "Use current platform-admin scope through real HTTPS/PostgreSQL in the original admitted window; mocked 401/403/404/cursor replies prove client handling only, not server tenant isolation. Do not mix source or binary with frozen workspace 8f or session 0d packages.",
+  "source_bundle": {
+    "path": "/root/lane-rel-tools/workspace-members-candidate.bundle",
+    "ref": "refs/lane-rel/workspace-members-candidate",
+    "sha256": "51c442b4c1955cbab90d97982598e1f4def5109a5f582dc033a1465fc84d40b9"
+  },
+  "file_sha256": {
+    "targeted-tests.log": "d53e5bd172fa8aeb2e24f273eee18bb3089503e16970cd9b3fd356f8488fbf94",
+    "targeted-race-vet.log": "7dc122ff385b7bfe48dfa3bfe88ea2e9287713ca3f5ade7804c4f73d743e83e6",
+    "candidate-source": "e650bf95bc7f0876d6115ffd0d5d4741d16d88f74630cb196b044906560af8bc",
+    "full-gate.sh": "cd36f9daf3adcdc9d1d9bd0d06699488e7a0032d0c23b48d5750096971cb94a8"
+  }
+}

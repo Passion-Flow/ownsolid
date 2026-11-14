@@ -1,0 +1,13 @@
+{
+  "source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+  "raw_memfree_mib": 4224,
+  "scope": "Lightweight tooling tests only; no service build, browser or installed environment",
+  "whole_make_check": false,
+  "whole_make_build": false,
+  "whole_make_test": false,
+  "cli_b967d7c8_qualified": false,
+  "exit": 0,
+  "started": true,
+  "source_clean": true,
+  "log_sha256": "51d2779763d78b7d407b71e002e622bd8c10e54359fdc93ec7f2d83cf291d7ab"
+}

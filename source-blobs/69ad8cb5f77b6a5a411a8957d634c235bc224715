@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+"""Hold the shared owned-file flock across one complete local gate command."""
+import errno
+import fcntl
+import os
+from pathlib import Path
+import signal
+import stat
+import subprocess
+import sys
+
+GATE = Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+
+class GateUnavailable(RuntimeError):
+    pass
+
+def acquire_gate(path):
+    """Open without replacing/truncating the carrier and atomically lock its inode."""
+    flags = os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC
+    try:
+        descriptor = os.open(path, flags, 0o600)
+    except OSError as error:
+        raise GateUnavailable('shared gate carrier cannot be opened safely: ' + str(error.errno)) from error
+    try:
+        opened = os.fstat(descriptor)
+        current = os.lstat(path)
+        if (not stat.S_ISREG(opened.st_mode) or not stat.S_ISREG(current.st_mode)
+                or opened.st_uid != os.getuid() or current.st_uid != os.getuid()
+                or (opened.st_dev, opened.st_ino) != (current.st_dev, current.st_ino)):
+            raise GateUnavailable('shared gate carrier must be a stable regular file owned by this uid')
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            if error.errno in (errno.EACCES, errno.EAGAIN):
+                raise GateUnavailable('shared gate is busy; no command was started') from error
+            raise
+        current = os.lstat(path)
+        if (not stat.S_ISREG(current.st_mode) or current.st_uid != os.getuid()
+                or (opened.st_dev, opened.st_ino) != (current.st_dev, current.st_ino)):
+            raise GateUnavailable('shared gate carrier changed during admission')
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+def run_command(command, descriptor):
+    """Keep the same open description in the wrapper and its foreground child."""
+    child = subprocess.Popen(command, pass_fds=(descriptor,), start_new_session=True)
+    previous = {}
+    def forward(number, _frame):
+        if child.poll() is None:
+            try:
+                os.killpg(child.pid, number)
+            except ProcessLookupError:
+                pass
+    try:
+        for number in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+            previous[number] = signal.signal(number, forward)
+        return child.wait()
+    finally:
+        if child.poll() is None:
+            forward(signal.SIGTERM, None)
+            child.wait()
+        for number, handler in previous.items():
+            signal.signal(number, handler)
+
+def main(arguments):
+    if len(arguments) < 2 or arguments[0] != '--':
+        print('Usage: python3 mac-gate.py -- <complete gate/client-build/publication command>', file=sys.stderr)
+        return 2
+    try:
+        descriptor = acquire_gate(GATE)
+    except GateUnavailable as error:
+        print(str(error), file=sys.stderr)
+        return 75
+    try:
+        status = run_command(arguments[1:], descriptor)
+        return status if status >= 0 else 128 - status
+    finally:
+        # Closing only preserves a descendant's inherited lock until it also exits.
+        # The shared carrier is never unlinked, replaced, truncated or rewritten.
+        os.close(descriptor)
+
+if __name__ == '__main__':
+    raise SystemExit(main(sys.argv[1:]))

@@ -1,0 +1,7 @@
+{
+  "context": "desktop-linux",
+  "endpoint_scheme": "unix",
+  "server_platform": "Docker Desktop 4.94.0 (241994)",
+  "server_os": "linux",
+  "server_arch": "arm64"
+}

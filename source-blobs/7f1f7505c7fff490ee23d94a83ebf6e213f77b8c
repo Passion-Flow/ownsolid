@@ -1,0 +1,8 @@
+#!/bin/bash
+cd /root/lane-a-e2e
+for n in 1 2; do
+  ./crash.sh /root/lane-a-e2e/crash-2000-$n.log 2000 | tail -14 | cut -c1-170
+  echo "drill $n exit=${PIPESTATUS[0]}"
+done
+./models-real.sh
+echo "models exit=$?"

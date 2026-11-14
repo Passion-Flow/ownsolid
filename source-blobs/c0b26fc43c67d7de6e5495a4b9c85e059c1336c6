@@ -1,0 +1,31 @@
+format_version: 1
+topology: {size: single-node}
+install_root: /srv/ownsolid
+compose_file: /bundle/compose.yaml
+images:
+  archive_file: /bundle/images.tar
+  control: sha256:e9afd5e427254b77d71bed5c4f6edceb30b8fb994b6bf924f49d6d81e29be791
+  postgres: sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+  metrics: sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84
+  logs: sha256:45dc9bef07c0c404255790e41f2c22c62ff55a690a1d556e0f9cb6f6e2556f1b
+origins: {portal: https://portal.ownsolid.test:8443, admin: https://admin.ownsolid.test:8443}
+license: {trust_file: /evidence/install-inputs/license-trust.json}
+smtp: {host: smtp.ownsolid.test, from_address: platform@ownsolid.test}
+administrator:
+  email: admin@ownsolid.test
+  display_name: Installation Administrator
+  installation_name: End To End
+  workspace_name: Default Workspace
+project: lane-del-installed
+network: {bind_address: 127.0.0.1, https_port: 8443, state_subnet: 172.31.254.0/26}
+telemetry: {metrics_retention: 2d, logs_retention: 2d, fleet_history_control_directory: /srv/fleet-history/inputs/19127b0a99c7ac75360ac1b338326bb01fab067c47a044fa8d167dd7752e7a9a/control}
+resources:
+  control_memory: 1g
+  control_cpus: "2"
+  postgres_memory: 768m
+  postgres_cpus: "2"
+  postgres_max_connections: 50
+  metrics_memory: 256m
+  metrics_cpus: "1"
+  logs_memory: 256m
+  logs_cpus: "1"

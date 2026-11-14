@@ -1,0 +1,120 @@
+diff --git a/deploy/offline/README.md b/deploy/offline/README.md
+index a7f800f4..241da57b 100644
+--- a/deploy/offline/README.md
++++ b/deploy/offline/README.md
+@@ -293,8 +293,11 @@ See the [operator procedure](../../docs/operations/backup-and-restore.md#encrypt
+ ## Take a coordinated local backup
+ 
+ Use the shipped single-node Linux Compose configuration and a root-owned
+-private output directory outside `install_root`. This maintenance command
+-keeps control offline until it has copied and verified the backup. It closes
++private output directory outside `install_root`. The shared directory check
++also rejects an output that resolves inside the installation through an ancestor
++or installation-root symlink. A different path spelling does not make it external.
++This maintenance command keeps control offline until it has copied and verified
++the backup. It closes
+ PostgreSQL to ordinary database connections and checks that the copied published model files and
+ installation keys belong to the same interval as the verified SQL dump.
+ 
+diff --git a/deploy/offline/internal/install/backup.go b/deploy/offline/internal/install/backup.go
+index 2411750c..1c076dd6 100644
+--- a/deploy/offline/internal/install/backup.go
++++ b/deploy/offline/internal/install/backup.go
+@@ -252,8 +252,8 @@ func (o *operation) schemaVersion(ctx context.Context, database string) (int, er
+ 	return version, nil
+ }
+ 
+-// admitBackupOutput returns the directory to create, and refuses a location inside the
+-// installation: losing the installation must not lose its backups.
++// admitBackupOutput refuses a location inside the installation, including resolved
++// symlink aliases: losing the installation must not lose its backups.
+ func admitBackupOutput(c Config, output string) error {
+ 	if !filepath.IsAbs(output) || filepath.Clean(output) != output {
+ 		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: %s must be a clean absolute path", output)
+@@ -265,6 +265,21 @@ func admitBackupOutput(c Config, output string) error {
+ 	if output == c.InstallRoot || strings.HasPrefix(output, c.InstallRoot+string(filepath.Separator)) {
+ 		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: %s is inside install_root", output)
+ 	}
++	resolvedOutput, e := filepath.EvalSymlinks(output)
++	if e != nil {
++		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: cannot resolve output directory; verify its path and retry: %w", e)
++	}
++	root, e := filepath.EvalSymlinks(c.InstallRoot)
++	if errors.Is(e, os.ErrNotExist) {
++		// An existing output cannot be inside a root that does not exist.
++		return nil
++	}
++	if e != nil {
++		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: cannot resolve install_root; verify its path and retry: %w", e)
++	}
++	if resolvedOutput == root || strings.HasPrefix(resolvedOutput, root+string(filepath.Separator)) {
++		return fmt.Errorf("INSTALL_BACKUP_OUTPUT_INVALID: %s resolves inside install_root; choose an external backup directory", output)
++	}
+ 	return nil
+ }
+ 
+diff --git a/deploy/offline/internal/install/backup_test.go b/deploy/offline/internal/install/backup_test.go
+index af69cebe..a39ce864 100644
+--- a/deploy/offline/internal/install/backup_test.go
++++ b/deploy/offline/internal/install/backup_test.go
+@@ -369,6 +369,60 @@ func TestBackupOutputMustBeOutsideTheInstallation(t *testing.T) {
+ 	}
+ }
+ 
++func TestBackupOutputRejectsResolvedInstallationAliases(t *testing.T) {
++	site := t.TempDir()
++	inside := filepath.Join(site, "models", "backups")
++	if err := os.MkdirAll(inside, 0o700); err != nil {
++		t.Fatal(err)
++	}
++	resolved, err := filepath.EvalSymlinks(site)
++	if err != nil {
++		t.Fatal(err)
++	}
++	aliasRoot := t.TempDir()
++	rootAlias, modelAlias := filepath.Join(aliasRoot, "site"), filepath.Join(aliasRoot, "models")
++	for name, target := range map[string]string{rootAlias: site, modelAlias: filepath.Join(site, "models")} {
++		if err := os.Symlink(target, name); err != nil {
++			t.Fatal(err)
++		}
++	}
++	for _, test := range []struct{ name, root, output string }{
++		{"output ancestor", site, filepath.Join(rootAlias, "models", "backups")},
++		{"nested output ancestor", site, filepath.Join(modelAlias, "backups")},
++		{"installation ancestor", rootAlias, filepath.Join(resolved, "models", "backups")},
++		{"same directory", rootAlias, resolved},
++	} {
++		t.Run(test.name, func(t *testing.T) {
++			err := admitBackupOutput(Config{InstallRoot: test.root}, test.output)
++			if err == nil || !strings.Contains(err.Error(), "INSTALL_BACKUP_OUTPUT_INVALID") {
++				t.Fatalf("resolved internal output was admitted: %v", err)
++			}
++		})
++	}
++	outside := t.TempDir()
++	if err := os.Mkdir(filepath.Join(outside, "backups"), 0o700); err != nil {
++		t.Fatal(err)
++	}
++	outsideAlias := filepath.Join(aliasRoot, "external")
++	if err := os.Symlink(outside, outsideAlias); err != nil {
++		t.Fatal(err)
++	}
++	if err := admitBackupOutput(Config{InstallRoot: rootAlias}, filepath.Join(outsideAlias, "backups")); err != nil {
++		t.Fatalf("resolved external output was refused: %v", err)
++	}
++}
++
++func TestBackupOutputRefusesAnUnresolvableInstallationRoot(t *testing.T) {
++	root := filepath.Join(t.TempDir(), "loop")
++	if err := os.Symlink(root, root); err != nil {
++		t.Fatal(err)
++	}
++	if err := admitBackupOutput(Config{InstallRoot: root}, t.TempDir()); err == nil ||
++		!strings.Contains(err.Error(), "INSTALL_BACKUP_OUTPUT_INVALID") {
++		t.Fatalf("unresolvable installation root was admitted: %v", err)
++	}
++}
++
+ func TestOnlyOneOperationAtATime(t *testing.T) {
+ 	c := validConfig(t)
+ 	unlock, e := lockOperation(c)

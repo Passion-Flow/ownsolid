@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+run=$1
+trap 'echo "stage-exit=$?"' EXIT
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+export CARGO_BUILD_JOBS=2 GOMAXPROCS=2 GOFLAGS=-p=2 CARGO_NET_OFFLINE=true npm_config_cache=/root/lane-gw-toolchain/npm-cache
+df -h /root
+free -m
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+make check >"$run/make-check.log" 2>&1
+echo 'make check passed'
+make build >"$run/make-build.log" 2>&1
+echo 'make build passed'

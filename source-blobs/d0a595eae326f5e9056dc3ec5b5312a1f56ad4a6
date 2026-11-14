@@ -1,0 +1,259 @@
+--- legacy/run_go_wire.py
++++ current/run_go_wire_native.py
+@@ -1,53 +1,204 @@
++"""Run the two frozen Go fixtures once under the current Linux host dual lock."""
++
+ from pathlib import Path
+-import os,fcntl,stat,subprocess,hashlib,json,signal,time,sys,re
+-r=Path('/root/lane-rel-tools/identity-audit-contract');w=Path('/root/lane-rel-identity-audit-contract');fds=[];child=None;seen=set()
+-proof={'contract_sha256':'7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32','source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=w,text=True).strip(),'codec_input_source':'2426699bfad4c1a4e4ee6999cfc14f264c4cda12','run':False,'passed':False,'actual_backend_or_installed_run':False,'cli_b967d7c8_qualified':False,'locks':[]};exit_code=75
+-
+-def resources():
+- m=int(next(x.split()[1] for x in Path('/proc/meminfo').read_text().splitlines() if x.startswith('MemFree:')))//1024;proof['raw_memfree_mib']=m;v=os.statvfs('/root')
+- if m<2048 or v.f_bavail*v.f_frsize<15*1024**3:raise RuntimeError('Resource threshold not met')
+-def stop():
+- global child
+- if child is None:return
+- try:os.killpg(child.pid,signal.SIGTERM)
+- except ProcessLookupError:pass
+- try:child.wait(timeout=5)
+- except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=5)
+- child=None
+-def interrupted(signum,frame):raise KeyboardInterrupt('Interrupted')
+-signal.signal(signal.SIGTERM,interrupted);signal.signal(signal.SIGINT,interrupted)
+-try:
+- resources()
+- for n in ['/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock','/root/lane-rel-tools/heavy-test.lock']:
+-  p=Path(n);fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW|os.O_NONBLOCK);fds.append(fd);s=os.fstat(fd);assert stat.S_ISREG(s.st_mode) and s.st_uid==os.geteuid();assert(s.st_dev,s.st_ino)==(p.stat().st_dev,p.stat().st_ino)
+-  assert (s.st_dev,s.st_ino) not in seen;seen.add((s.st_dev,s.st_ino))
+-  proof['attempted_lock']=n;fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB);proof['locks'].append(n)
+- resources();proof['admitted']=True
+- assert proof['source']==json.loads((r/'handoff.json').read_text())['source']
+- assert not subprocess.check_output(['git','status','--porcelain'],cwd=w,text=True).strip()
+- assert hashlib.sha256((w/'api/openapi/v1/identity/openapi.json').read_bytes()).hexdigest()==proof['contract_sha256']
+- generated=json.loads((r/'generation.json').read_text());assert generated['input_contract_sha256']==proof['contract_sha256']
+- assert hashlib.sha256((w/'tools/codegen/sdk/generate.py').read_bytes()).hexdigest()==generated['generator_sha256']
+- assert (r/'sdk/gen/go/identity/audit_read.gen.go').read_bytes()==(w/'tools/codegen/sdk/templates/audit_read.go.template').read_bytes()
+- for n,expected in generated['file_sha256'].items():assert hashlib.sha256((r/'sdk'/n).read_bytes()).hexdigest()==expected
+- env=os.environ.copy();env.update(GOPROXY='off',GOSUMDB='off',GOTOOLCHAIN='local',GOWORK='off',GOMAXPROCS='2',GOFLAGS='-p=1 -mod=readonly',CGO_ENABLED='1')
+- proof['go_version']=subprocess.check_output(['go','version'],env=env,text=True).strip();fixture=w/'tools/codegen/sdk/tests/audit_read_wire_test.go';proof['wire_source_sha256']=hashlib.sha256(fixture.read_bytes()).hexdigest();expected=set(re.findall(r'^func (Test\w+)\(',fixture.read_text(),re.MULTILINE));assert len(expected)==10
+- with (r/'go-wire.log').open('w') as log:
+-  child=subprocess.Popen(['unshare','--net','bash','--noprofile','--norc','-euc','ip link set lo up\nexec go test -json -race -count=1 '+str(fixture)],cwd=r/'sdk/gen/go',env=env,stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,pass_fds=tuple(fds),start_new_session=True)
+-  code=child.wait(timeout=120);child=None
+- proof['run']=True;proof['test_exit']=code
+- events=[]
+- for line in (r/'go-wire.log').read_text().splitlines():
+-  try:events.append(json.loads(line))
+-  except ValueError:pass
+- roots=[x['Test'] for x in events if x.get('Action')=='pass' and x.get('Test') and '/' not in x['Test']]
+- proof['passed_top_level_tests']=roots;proof['skipped_tests']=[x.get('Test') for x in events if x.get('Action')=='skip'];proof['log_sha256']=hashlib.sha256((r/'go-wire.log').read_bytes()).hexdigest();proof['passed']=code==0 and set(roots)==expected and not proof['skipped_tests'];exit_code=0 if proof['passed'] else 1
+-except BlockingIOError:proof['failure']='Shared file lock busy before compilation'
+-except BaseException as error:
+- proof['failure']=type(error).__name__+': '+str(error)
+- if proof.get('admitted'):exit_code=1
+-finally:
+- stop()
+- for fd in reversed(fds):os.close(fd)
+- proof['exit']=exit_code;(r/'go-wire-proof.json').write_text(json.dumps(proof,indent=2)+'\n');(r/'go-wire.exit').write_text(str(exit_code)+'\n')
+-print(json.dumps(proof,indent=2));sys.exit(exit_code)
++import datetime
++import fcntl
++import hashlib
++import json
++import os
++import re
++import signal
++import stat
++import subprocess
++import sys
++import tempfile
++import time
++
++ROOT = Path('/root/lane-rel-tools/identity-audit-contract')
++AUDIT = Path('/root/lane-rel-identity-audit-contract')
++MODEL = Path('/root/lane-rel-tools/model-history-prototype/domain-draft')
++CARRIERS = ['/run/lock/ownsolid-heavy.lock', '/root/lane-sci-tools/heavy-test.lock']
++
++
++def digest(path):
++    return hashlib.sha256(path.read_bytes()).hexdigest()
++
++
++def main():
++    os.umask(0o077)
++    started = time.monotonic()
++    deadline = started + 300
++    fds, child, temporary = [], None, None
++    proof = {'parent_pid': os.getpid(), 'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
++             'platform': 'linux/amd64', 'admitted': False, 'groups': [], 'carriers': [],
++             'global_wait_seconds_limit': 60, 'total_seconds_limit': 300,
++             'mac_wait_outcome_reused': False, 'installed_or_repository_qualification': False,
++             'legacy_entry_preserved': str(ROOT / 'run_go_wire.py'),
++             'legacy_third_carrier': '/root/lane-rel-tools/heavy-test.lock',
++             'legacy_third_reason': 'Former lane-local heavy-job serialization, not a distinct physical/service resource; current host dual lock replaces that protocol.'}
++    code = 75
++
++    def resources(phase):
++        values = {line.split(':', 1)[0]: int(line.split()[1]) for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith(('MemFree:', 'MemAvailable:'))}
++        pressure = Path('/proc/pressure/io').read_text()
++        match = re.search(r'^full\s+avg10=([0-9.]+)', pressure, re.MULTILINE)
++        assert match, 'Full IO pressure metric unavailable'
++        disk = os.statvfs('/root')
++        record = {'phase': phase, 'memfree_mib': values['MemFree']//1024,
++                  'memavailable_mib': values['MemAvailable']//1024,
++                  'disk_free_bytes': disk.f_bavail*disk.f_frsize, 'io_full_avg10': float(match[1])}
++        proof.setdefault('resources', []).append(record)
++        if values['MemFree'] < 2048*1024 or values['MemAvailable'] < 8192*1024 or record['disk_free_bytes'] < 30*1024**3 or record['io_full_avg10'] > 5:
++            raise RuntimeError('Strict native resource profile refused')
++
++    def stop():
++        nonlocal child
++        if child is None:
++            return
++        try:
++            os.killpg(child.pid, signal.SIGTERM)
++        except ProcessLookupError:
++            pass
++        try:
++            child.wait(timeout=3)
++        except subprocess.TimeoutExpired:
++            try:
++                os.killpg(child.pid, signal.SIGKILL)
++            except ProcessLookupError:
++                pass
++            child.wait(timeout=2)
++        child = None
++
++    def interrupted(signum, _frame):
++        raise KeyboardInterrupt('Interrupted by signal '+str(signum))
++
++    def wait_expired(_signum, _frame):
++        raise BlockingIOError('Single global kernel wait expired')
++
++    signal.signal(signal.SIGTERM, interrupted)
++    signal.signal(signal.SIGINT, interrupted)
++    try:
++        resources('before_locks')
++        seen = set()
++        for index, name in enumerate(CARRIERS):
++            fd = os.open(name, os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK)
++            fds.append(fd)
++            info, current = os.fstat(fd), os.lstat(name)
++            assert stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
++            assert (info.st_dev, info.st_ino) == (current.st_dev, current.st_ino)
++            assert (info.st_dev, info.st_ino) not in seen
++            seen.add((info.st_dev, info.st_ino))
++            record = {'path': name, 'fd': fd, 'device': info.st_dev, 'inode': info.st_ino,
++                      'uid': info.st_uid, 'acquired': False}
++            proof['carriers'].append(record)
++            if index == 0:
++                signal.signal(signal.SIGALRM, wait_expired)
++                signal.setitimer(signal.ITIMER_REAL, min(60, deadline-time.monotonic()))
++                try:
++                    fcntl.flock(fd, fcntl.LOCK_EX)
++                finally:
++                    signal.setitimer(signal.ITIMER_REAL, 0)
++            else:
++                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
++            current = os.lstat(name)
++            assert stat.S_ISREG(current.st_mode) and (info.st_dev, info.st_ino) == (current.st_dev, current.st_ino)
++            record.update(acquired=True, acquired_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
++        resources('after_dual_lock')
++        proof['admitted'] = True
++        assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=AUDIT, text=True).strip() == '783567ea4a2e19f3b2f7ca065d47dfe59886633e'
++        assert not subprocess.check_output(['git', 'status', '--porcelain'], cwd=AUDIT, text=True).strip()
++        for root in (ROOT, MODEL):
++            generated = json.loads((root / 'generation.json').read_text())
++            for name, expected in generated['file_sha256'].items():
++                assert digest(root / 'sdk' / name) == expected, name
++        audit_generation = json.loads((ROOT / 'generation.json').read_text())
++        assert digest(AUDIT/'tools/codegen/sdk/generate.py') == audit_generation['generator_sha256']
++        assert (AUDIT/'tools/codegen/sdk/templates/audit_read.go.template').read_bytes() == (ROOT/'sdk/gen/go/identity/audit_read.gen.go').read_bytes()
++        assert digest(AUDIT/'api/openapi/v1/identity/openapi.json') == audit_generation['input_contract_sha256']
++        model_generation = json.loads((MODEL/'generation.json').read_text())
++        assert digest(MODEL/'v1/models/openapi.json') == model_generation['draft_sha256']
++        assert subprocess.check_output(['git', 'show', '6a2dd96f:tools/codegen/sdk/tests/testdata/model-history-domain/v1/models/openapi.json'], cwd=AUDIT) == (MODEL/'v1/models/openapi.json').read_bytes()
++        plan = json.loads((ROOT/'linux-native-replay.json').read_text())
++        go = '/root/lane-rel-tools/go/bin/go'
++        assert digest(Path(go)) == plan['go_binary_sha256']
++        assert subprocess.check_output([go, 'version'], text=True).strip() == 'go version go1.27.3 linux/amd64'
++        assert os.uname().sysname == 'Linux' and os.uname().machine == 'x86_64'
++        temporary = tempfile.TemporaryDirectory(prefix='go-native-', dir=ROOT)
++        for group in plan['groups_in_order']:
++            remaining = deadline-time.monotonic()-5
++            if remaining <= 0:
++                raise TimeoutError('Native segment deadline reached')
++            resources('before_'+group['name'])
++            assert digest(Path(group['fixture'])) == group['fixture_sha256']
++            env = {**os.environ, **group['environment'], 'GOTMPDIR': temporary.name, 'TMPDIR': temporary.name+'/', 'GOFLAGS': '-p=2 -mod=readonly'}
++            command = list(group['command_argv'])
++            command[-1] = command[-1].replace(' -p=1 ', ' -p=2 ')
++            result = {'name': group['name'], 'source': group['source'], 'platform': 'linux/amd64',
++                      'fixture_sha256': group['fixture_sha256'], 'cwd': group['cwd'], 'command': command,
++                      'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
++                      'inherited_fds': list(fds), 'run': False, 'passed': False}
++            proof['groups'].append(result)
++            with Path(group['log_path']).open('w') as log:
++                child = subprocess.Popen(command, cwd=group['cwd'], env=env, stdin=subprocess.DEVNULL,
++                                         stdout=log, stderr=subprocess.STDOUT, pass_fds=tuple(fds), start_new_session=True)
++                result.update(pid=child.pid, pgid=child.pid, run=True)
++                result['exit'] = child.wait(timeout=min(remaining, 180))
++                child = None
++            events = []
++            for line in Path(group['log_path']).read_text().splitlines():
++                try:
++                    events.append(json.loads(line))
++                except ValueError:
++                    pass
++            passed = {event['Test'] for event in events if event.get('Action') == 'pass' and event.get('Test')}
++            result.update(actual_roots=sorted({event['Test'] for event in events if event.get('Action') == 'run' and event.get('Test') and '/' not in event['Test']}),
++                          passed_roots=sorted(name for name in passed if '/' not in name),
++                          passed_subtests=sorted(name for name in passed if '/' in name),
++                          skipped=[event.get('Test') for event in events if event.get('Action') == 'skip'],
++                          log=group['log_path'], log_sha256=digest(Path(group['log_path'])),
++                          ended_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
++            result['passed'] = result['exit'] == 0 and set(result['passed_roots']) == set(group['expected_roots']) and not result['skipped'] and set(group.get('required_subtests', [])) <= passed
++            print(json.dumps(result), flush=True)
++        for root in (ROOT, MODEL):
++            for name, expected in json.loads((root/'generation.json').read_text())['file_sha256'].items():
++                assert digest(root/'sdk'/name) == expected
++        proof['frozen_sdk_hashes_unchanged_after'] = True
++        code = 0 if len(proof['groups']) == 2 and all(group['passed'] for group in proof['groups']) else 1
++    except BlockingIOError as error:
++        proof['failure'] = 'Admission refused: '+str(error)
++    except BaseException as error:
++        proof['failure'] = type(error).__name__+': '+str(error)
++        if proof['admitted']:
++            code = 1
++    finally:
++        stop()
++        if temporary is not None:
++            try:
++                temporary.cleanup()
++                proof['owned_temp_removed'] = True
++            except OSError as error:
++                proof['cleanup_failure'] = type(error).__name__+': '+str(error)
++                code = 1
++        for fd in reversed(fds):
++            os.close(fd)
++            record = next((item for item in proof['carriers'] if item['fd'] == fd), None)
++            if record is None:
++                continue
++            record['fd_closed'] = True
++            record['closed_utc'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
++            try:
++                after = os.lstat(record['path'])
++                record['carrier_preserved'] = (after.st_dev, after.st_ino) == (record['device'], record['inode'])
++            except OSError:
++                record['carrier_preserved'] = False
++            if not record['carrier_preserved']:
++                code = 1
++        proof.update(exit=code, passed=code == 0, elapsed_seconds=round(time.monotonic()-started, 3),
++                     ended_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
++        (ROOT/'go-native-linux-proof.json').write_text(json.dumps(proof, indent=2)+'\n')
++    print(json.dumps(proof, indent=2), flush=True)
++    return code
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())

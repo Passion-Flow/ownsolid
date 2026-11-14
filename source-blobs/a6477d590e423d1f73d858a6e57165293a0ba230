@@ -1,0 +1,131 @@
+{
+  "status": "prepared-not-executed",
+  "source": {
+    "worktree": "/root/lane-obs-native-profile",
+    "branch": "codex/obs-110-native-profile",
+    "commit": "5f83cfbf9c1c24b8efae927f76a69912d52c7c68",
+    "tree": "170ad1a59b80cd361ec65cbf74364ad400d8a426",
+    "base": "261a6fd2fbdf535ae7a9fbb2ecc5fa9a967b457e",
+    "schema": "59 migrations / 119 logical tables; not current main schema 60 / 120",
+    "http_d8_candidate_included": false
+  },
+  "command": [
+    "timeout",
+    "--signal=TERM",
+    "--kill-after=10s",
+    "300s",
+    "bash",
+    "/root/lane-obs-tools/run-obs110-daily-native.sh"
+  ],
+  "execution_authorized_now": false,
+  "launcher": {
+    "path": "/root/lane-obs-tools/run-obs110-daily-native.sh",
+    "sha256": "e3941f89f2f12b130fdf84430b0c4c7d9f93417b80baf7698d30336dfdbaccfe",
+    "static_bash_syntax": "passed; not invoked"
+  },
+  "cached_inputs": {
+    "manifest": "/root/lane-obs-tools/obs110-daily-native-inputs.sha256",
+    "manifest_sha256": "78667b9b8fcd91644d638ec1e268944fcdcf6148f9885a1752b444b12fdeff9c",
+    "victoria_metrics": {
+      "path": "/root/lane-obs-tools/victoria-metrics-prod",
+      "version": "1.155.0",
+      "sha256": "aca3c49816db88c0e48012772fcf2a94eb66aaccd925b35d397b8b6f7f40fb43"
+    },
+    "vmalert": {
+      "path": "/root/lane-obs-tools/vmalert-prod",
+      "version": "1.155.0",
+      "sha256": "d1d1a8d2b04c2f9f32c37934b498ae1e5f031cb55fdf89ffb94eeaef57742171"
+    },
+    "postgresql_image": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "image_inspection": "amd64/linux; cached; no pull"
+  },
+  "entries": [
+    {
+      "mode": "cardinality",
+      "test": "TestScopedSeriesCardinalityOffline",
+      "timeout_seconds": 110
+    },
+    {
+      "mode": "history-http",
+      "test": "TestFleetHistoryAuthenticatedHTTPOffline",
+      "timeout_seconds": 110
+    },
+    {
+      "mode": "history-tls",
+      "test": "TestFleetHistoryPrivateTLS",
+      "timeout_seconds": 110
+    },
+    {
+      "mode": "history-retention",
+      "test": "TestFleetHistoryNinetyDayAggregates",
+      "timeout_seconds": 180
+    }
+  ],
+  "admission": {
+    "locks_in_order": [
+      "/run/lock/ownsolid-heavy.lock",
+      "/root/lane-sci-tools/heavy-test.lock"
+    ],
+    "descriptors": [
+      8,
+      9
+    ],
+    "flock": "nonblocking real flock; original diagnostic function reused; held through child exit",
+    "free_memory_mib_minimum": 2048,
+    "free_disk_bytes_minimum": 16106127360,
+    "io_pressure_some_and_full_avg10_maximum": 5,
+    "no_threshold_override": true,
+    "no_admission_attempt_made": true
+  },
+  "resources": {
+    "GOMAXPROCS": 2,
+    "GOFLAGS": "-p=2 -race",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOTOOLCHAIN": "local",
+    "postgresql_memory": "384m",
+    "postgresql_tmpfs": "256m",
+    "victoria_metrics_memory_per_process": "192MB",
+    "cardinality_store_processes": "one at a time; initial large fixture, then daily initial/restart and separate disabled control",
+    "network": "only loopback in dedicated net/PID/mount namespaces; own procfs; no default route",
+    "story_timeout_seconds": 90
+  },
+  "cardinality": {
+    "actual_argv": "read from /proc/<child>/cmdline and compared with exec.Cmd.Args; running /proc/<child>/exe fingerprinted",
+    "supported_fixture_flags": [
+      "-disablePerDayIndex=false",
+      "-search.maxTSDBStatusSeries=10000",
+      "-search.maxStatusRequestDuration=5s",
+      "-search.maxTSDBStatusTopNSeries=3",
+      "-retentionPeriod=7d",
+      "-memory.allowedBytes=192MB",
+      "-search.disableCache"
+    ],
+    "negative_control": "same flags except actual -disablePerDayIndex=true; fixture refuses before product binding, then direct native counts only",
+    "data": "two completed UTC days in one monthly partition; 2/1 exact CPU and 2/3 overview counts; distinct nodes, missing node, foreign tenant/workspace/missing-tenant distractors, empty day; same-profile restart",
+    "product_source_admission": "still open; fixture admission is not installed-product admission"
+  },
+  "cleanup": {
+    "native": "graceful SIGTERM, wait at most 10s, kill and fail on missed deadline; unshare --kill-child also confines descendants",
+    "postgresql": "stop/remove only the fixture container created by each entry; TERM/INT exit through its existing cleanup trap",
+    "temporary": "remove owned test binary and DSN; Go test TempDir cleans data",
+    "locks": "close actual owned descriptors after child completion; never unlink or replace carriers",
+    "post_run": "verify each created container name from the receipt is removed; verify native stop records and empty owned process groups; leave other lanes untouched"
+  },
+  "evidence": {
+    "new_source_mac_units": "2 top-level tests / 24 pass events, race; no failed/skipped tests",
+    "new_source_linux_cross_compile": "passed with CGO_ENABLED=0, integration tags, four compiled entry symbols checked; ELF never executed, then removed",
+    "proof": "/private/tmp/obs110-native-qualified-f8v4l9j9/native-preparation-proof.json",
+    "proof_sha256": "c32c02f71af6b4830682d28dd76a9e140e0dd4e4487bc36bb6e9d012da330cae",
+    "native_run": false,
+    "make_check_and_build": false,
+    "created_services_this_preparation": []
+  },
+  "retained_baseline": {
+    "commit": "3cebfcef9f321364862a11d8b773c714facb6f68",
+    "worktree": "/root/lane-obs-cardinality",
+    "linux_race_unit_result": "four tested packages passed; native profile not run",
+    "proof": "/root/lane-obs-tools/obs110-unit-diagnostic.5ac9cL/unit-proof.json",
+    "proof_sha256": "43e8fda00f8f4b2293caf7076fe0fd1ff27b35867851870f1ed27bce3f0e7658"
+  }
+}

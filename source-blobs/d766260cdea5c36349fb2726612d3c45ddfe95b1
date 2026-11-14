@@ -1,0 +1,56 @@
+"""Verify the actual installed CPU prototype against exact retained wheel inputs."""
+from pathlib import Path
+import hashlib
+import importlib.metadata as metadata
+import json
+import platform
+import socket
+import sys
+
+inputs=Path('/inputs'); output=Path('/workspace')
+prototype=json.loads((inputs/'prototype.json').read_bytes())
+assert hashlib.sha256((inputs/'inventory.json').read_bytes()).hexdigest()==prototype['wheel_inventory_sha256']
+expected=json.loads((inputs/'inventory.json').read_bytes())
+assert platform.python_version()=='3.12.15'
+assert platform.system()=='Linux' and platform.machine()=='x86_64'
+assert platform.libc_ver()[0]=='glibc' and tuple(map(int,platform.libc_ver()[1].split('.'))) >= (2,28)
+assert [name for _,name in socket.if_nameindex()]==['lo']
+base=json.loads((inputs/'base-image-evidence/inventory.json').read_bytes())
+for path,digest in base['binaries'].items():
+ with Path(path).open('rb') as stream:assert hashlib.file_digest(stream,'sha256').hexdigest()==digest
+versions={name:metadata.version(name) for name in expected['packages']}
+assert versions=={name:item['version'] for name,item in expected['packages'].items()}
+assert metadata.version('pip')==expected['installer']['version']=='26.2.1'
+import re
+installed_names={re.sub('[-_.]+','-',dist.metadata['Name'].lower()) for dist in metadata.distributions()}
+assert installed_names==set(expected['packages'])|{'pip'},installed_names
+report=json.loads((output/'pip-install-report.json').read_bytes())
+assert report['environment']['python_full_version']=='3.12.15'
+resolved={item['metadata']['name'].lower().replace('_','-'):item for item in report['install']}
+assert set(resolved)==set(expected['packages'])
+for name,item in expected['packages'].items():
+ assert resolved[name]['download_info']['archive_info']['hashes']['sha256']==item['sha256']
+notices=0
+for name,item in [*expected['packages'].items(),('pip',expected['installer'])]:
+ dist=metadata.distribution(name)
+ for file in item['files']:
+  path=Path(dist.locate_file(file['path']))
+  assert path.resolve().is_relative_to(Path(sys.prefix).resolve()),str(path)
+  data=path.read_bytes()
+  assert len(data)==file['size'] and hashlib.sha256(data).hexdigest()==file['sha256'],str(path)
+  notices+=file['notice']
+import torch
+import transformers
+import peft
+import accelerate
+import tokenizers
+import safetensors
+import numpy
+assert torch.__version__=='2.14.1+cpu' and torch.version.cuda is None and not torch.cuda.is_available()
+result={'scope':prototype['scope'],'python':platform.python_version(),'image':prototype['base_image'],
+ 'prototype_runtime_sha256':prototype['prototype_runtime_sha256'],'packages':versions,
+ 'pip':metadata.version('pip'),'interfaces':socket.if_nameindex(),'installed_notice_files':notices,
+ 'pip_install_report_sha256':hashlib.sha256((output/'pip-install-report.json').read_bytes()).hexdigest(),
+ 'torch_config':torch.__config__.show()}
+raw=(json.dumps(result,sort_keys=True,indent=2)+'\n').encode();(output/'installed.json').write_bytes(raw)
+print(json.dumps({'python':result['python'],'packages':len(versions),'installed_notice_files':notices,'torch':torch.__version__,'installed_sha256':hashlib.sha256(raw).hexdigest()}))

@@ -1,0 +1,40 @@
+{
+  "case": "baseline",
+  "container_id": "2fdbd7b3e4f7710c12bceb525d31ff2f5d578491f7f4943464e8fdb406ac5bc4",
+  "environment": {
+    "DO_NOT_TRACK": "1",
+    "HF_DATASETS_OFFLINE": "1",
+    "HF_HOME": "/workspace/hf",
+    "HF_HUB_DISABLE_TELEMETRY": "1",
+    "HF_HUB_OFFLINE": "1",
+    "MKL_NUM_THREADS": "2",
+    "OMP_NUM_THREADS": "2",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "TMPDIR": "/workspace/tmp",
+    "TOKENIZERS_PARALLELISM": "false",
+    "TRANSFORMERS_OFFLINE": "1"
+  },
+  "exit_code": 0,
+  "experiment_inputs": {
+    "base_image": "sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+    "dataset_manifest_sha256": "134bedd3dd44e53bf1ed10f1eae0ac5638ebb3395218cc586604b8eb695a936d",
+    "dataset_version_id": "6b7a10c5-59ef-40e4-85cc-3751c4bd71e4",
+    "installed_sha256": "937748cafe566fabc099e4c1ae66730a9799b4878cf1a77ca149c4702fd86b03",
+    "runtime_sha256": "47e701c882efac48aa5380d379ebfbfc3b364165370f7635f166721314684e34",
+    "wheel_inventory_sha256": "57cc07d9ab616399b3ff5f7e09437292ac5ee0e811282c686d6b658594a110dc",
+    "worker_source_sha256": "a518edc41f8e9621c84a43e97df079b5dcc00c7f5f7ca061341a5d919e6f20d7"
+  },
+  "global_step": 2,
+  "image": "sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+  "killed_after_checkpoint_one": false,
+  "oom_killed": false,
+  "peak_rss_bytes": 4993789952,
+  "relative_scope": "runs/045b3e03-a79e-4ed9-acee-d0078423d958/5bf20df3-be7e-404e-a33e-3f222a486ff6",
+  "request_sha256": "468ff7123b2f86e8cb55c2521b96787e1f045d9bf438cda1d0ac0d4de4b03fc6",
+  "result_sha256": "24e26bbfca3eaef3a93690f591ae6689b6ebba64c15699581b6afa966201eb71",
+  "result_status": "trained",
+  "resume_from_step": 0,
+  "training_loss": 3.1314287781715393,
+  "wall_seconds": 67.89013465901371
+}

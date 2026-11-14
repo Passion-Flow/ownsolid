@@ -1,0 +1,14 @@
+[
+  {
+    "reference": "#/components/schemas/Envelope/allOf/0",
+    "old_outcome": "refused"
+  },
+  {
+    "reference": "#/components/schemas/GPU%20usage",
+    "old_outcome": "refused"
+  },
+  {
+    "reference": "#/components/schemas/A~2",
+    "old_outcome": "accepted"
+  }
+]

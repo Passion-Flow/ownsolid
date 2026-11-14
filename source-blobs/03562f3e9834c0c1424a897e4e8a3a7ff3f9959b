@@ -1,0 +1,534 @@
+[
+  {
+    "L": "GPL-2.0-only",
+    "P": "alpine-baselayout",
+    "U": "https://git.alpinelinux.org/cgit/aports/tree/main/alpine-baselayout",
+    "V": "3.7.1-r8",
+    "o": "alpine-baselayout"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "alpine-baselayout-data",
+    "U": "https://git.alpinelinux.org/cgit/aports/tree/main/alpine-baselayout",
+    "V": "3.7.1-r8",
+    "o": "alpine-baselayout"
+  },
+  {
+    "L": "MIT",
+    "P": "alpine-keys",
+    "U": "https://alpinelinux.org",
+    "V": "2.6-r0",
+    "o": "alpine-keys"
+  },
+  {
+    "L": "MIT",
+    "P": "alpine-release",
+    "U": "https://alpinelinux.org",
+    "V": "3.23.2-r0",
+    "o": "alpine-base"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "apk-tools",
+    "U": "https://gitlab.alpinelinux.org/alpine/apk-tools",
+    "V": "3.0.3-r1",
+    "o": "apk-tools"
+  },
+  {
+    "L": "MIT",
+    "P": "brotli-libs",
+    "U": "https://github.com/google/brotli",
+    "V": "1.2.0-r0",
+    "o": "brotli"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "btrfs-progs",
+    "U": "https://btrfs.wiki.kernel.org",
+    "V": "6.17.1-r0",
+    "o": "btrfs-progs"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "busybox",
+    "U": "https://busybox.net/",
+    "V": "1.37.0-r30",
+    "o": "busybox"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "busybox-binsh",
+    "U": "https://busybox.net/",
+    "V": "1.37.0-r30",
+    "o": "busybox"
+  },
+  {
+    "L": "MIT",
+    "P": "c-ares",
+    "U": "https://c-ares.org/",
+    "V": "1.34.6-r0",
+    "o": "c-ares"
+  },
+  {
+    "L": "MPL-2.0 AND MIT",
+    "P": "ca-certificates",
+    "U": "https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/",
+    "V": "20251003-r0",
+    "o": "ca-certificates"
+  },
+  {
+    "L": "MPL-2.0 AND MIT",
+    "P": "ca-certificates-bundle",
+    "U": "https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/",
+    "V": "20251003-r0",
+    "o": "ca-certificates"
+  },
+  {
+    "L": "GPL-2.0-or-later AND LGPL-2.0-or-later AND BSD-3-Clause AND MIT",
+    "P": "e2fsprogs",
+    "U": "https://e2fsprogs.sourceforge.net/",
+    "V": "1.47.3-r0",
+    "o": "e2fsprogs"
+  },
+  {
+    "L": "GPL-2.0-or-later AND LGPL-2.0-or-later AND BSD-3-Clause AND MIT",
+    "P": "e2fsprogs-extra",
+    "U": "https://e2fsprogs.sourceforge.net/",
+    "V": "1.47.3-r0",
+    "o": "e2fsprogs"
+  },
+  {
+    "L": "GPL-2.0-or-later AND LGPL-2.0-or-later AND BSD-3-Clause AND MIT",
+    "P": "e2fsprogs-libs",
+    "U": "https://e2fsprogs.sourceforge.net/",
+    "V": "1.47.3-r0",
+    "o": "e2fsprogs"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "eudev-libs",
+    "U": "https://github.com/eudev-project/eudev",
+    "V": "3.2.14-r6",
+    "o": "eudev"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "git",
+    "U": "https://www.git-scm.com/",
+    "V": "2.52.0-r0",
+    "o": "git"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "git-init-template",
+    "U": "https://www.git-scm.com/",
+    "V": "2.52.0-r0",
+    "o": "git"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "inih",
+    "U": "https://github.com/benhoyt/inih",
+    "V": "62-r0",
+    "o": "inih"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "iptables",
+    "U": "https://www.netfilter.org/projects/iptables/index.html",
+    "V": "1.8.11-r1",
+    "o": "iptables"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "iptables-legacy",
+    "U": "https://www.netfilter.org/projects/iptables/index.html",
+    "V": "1.8.11-r1",
+    "o": "iptables"
+  },
+  {
+    "L": "GPL-2.0-or-later AND LGPL-2.0-or-later",
+    "P": "keyutils-libs",
+    "U": "https://people.redhat.com/~dhowells/keyutils/",
+    "V": "1.6.3-r4",
+    "o": "keyutils"
+  },
+  {
+    "L": "MIT",
+    "P": "krb5-conf",
+    "U": "https://web.mit.edu/kerberos/www/",
+    "V": "1.0-r2",
+    "o": "krb5-conf"
+  },
+  {
+    "L": "MIT",
+    "P": "krb5-libs",
+    "U": "https://web.mit.edu/kerberos/www/",
+    "V": "1.22.1-r0",
+    "o": "krb5"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "libapk",
+    "U": "https://gitlab.alpinelinux.org/alpine/apk-tools",
+    "V": "3.0.3-r1",
+    "o": "apk-tools"
+  },
+  {
+    "L": "LGPL-2.1-or-later",
+    "P": "libblkid",
+    "U": "https://git.kernel.org/cgit/utils/util-linux/util-linux.git",
+    "V": "2.41.2-r0",
+    "o": "util-linux"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "libbsd",
+    "U": "https://libbsd.freedesktop.org/",
+    "V": "0.12.2-r0",
+    "o": "libbsd"
+  },
+  {
+    "L": "GPL-2.0-or-later AND LGPL-2.0-or-later AND BSD-3-Clause AND MIT",
+    "P": "libcom_err",
+    "U": "https://e2fsprogs.sourceforge.net/",
+    "V": "1.47.3-r0",
+    "o": "e2fsprogs"
+  },
+  {
+    "L": "Apache-2.0",
+    "P": "libcrypto3",
+    "U": "https://www.openssl.org/",
+    "V": "3.5.4-r0",
+    "o": "openssl"
+  },
+  {
+    "L": "curl",
+    "P": "libcurl",
+    "U": "https://curl.se/",
+    "V": "8.17.0-r1",
+    "o": "curl"
+  },
+  {
+    "L": "MIT",
+    "P": "libeconf",
+    "U": "https://github.com/openSUSE/libeconf",
+    "V": "0.8.0-r0",
+    "o": "libeconf"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "libedit",
+    "U": "https://www.thrysoee.dk/editline",
+    "V": "20251016.3.1-r0",
+    "o": "libedit"
+  },
+  {
+    "L": "MIT",
+    "P": "libexpat",
+    "U": "https://libexpat.github.io/",
+    "V": "2.7.3-r0",
+    "o": "expat"
+  },
+  {
+    "L": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+    "P": "libidn2",
+    "U": "https://www.gnu.org/software/libidn#libidn2",
+    "V": "2.3.8-r0",
+    "o": "libidn2"
+  },
+  {
+    "L": "LGPL-2.1-or-later",
+    "P": "libintl",
+    "U": "https://www.gnu.org/software/gettext/gettext.html",
+    "V": "0.24.1-r1",
+    "o": "gettext"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "libip4tc",
+    "U": "https://www.netfilter.org/projects/iptables/index.html",
+    "V": "1.8.11-r1",
+    "o": "iptables"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "libip6tc",
+    "U": "https://www.netfilter.org/projects/iptables/index.html",
+    "V": "1.8.11-r1",
+    "o": "iptables"
+  },
+  {
+    "L": "BSD-3-Clause AND BSD-2-Clause AND ISC AND Beerware AND Public Domain",
+    "P": "libmd",
+    "U": "https://www.hadrons.org/software/libmd/",
+    "V": "1.1.0-r0",
+    "o": "libmd"
+  },
+  {
+    "L": "LGPL-2.1-or-later",
+    "P": "libmnl",
+    "U": "https://www.netfilter.org/projects/libmnl/",
+    "V": "1.0.5-r2",
+    "o": "libmnl"
+  },
+  {
+    "L": "X11",
+    "P": "libncursesw",
+    "U": "https://invisible-island.net/ncurses/",
+    "V": "6.5_p20251123-r0",
+    "o": "ncurses"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "libnftnl",
+    "U": "https://netfilter.org/projects/libnftnl",
+    "V": "1.3.0-r0",
+    "o": "libnftnl"
+  },
+  {
+    "L": "MIT",
+    "P": "libpsl",
+    "U": "https://rockdaboot.github.io/libpsl",
+    "V": "0.21.5-r3",
+    "o": "libpsl"
+  },
+  {
+    "L": "Apache-2.0",
+    "P": "libssl3",
+    "U": "https://www.openssl.org/",
+    "V": "3.5.4-r0",
+    "o": "openssl"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "libtirpc",
+    "U": "https://sourceforge.net/projects/libtirpc/",
+    "V": "1.3.5-r1",
+    "o": "libtirpc"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "libtirpc-conf",
+    "U": "https://sourceforge.net/projects/libtirpc/",
+    "V": "1.3.5-r1",
+    "o": "libtirpc"
+  },
+  {
+    "L": "GPL-2.0-or-later OR LGPL-3.0-or-later",
+    "P": "libunistring",
+    "U": "https://www.gnu.org/software/libunistring/",
+    "V": "1.4.1-r0",
+    "o": "libunistring"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "libuuid",
+    "U": "https://git.kernel.org/cgit/utils/util-linux/util-linux.git",
+    "V": "2.41.2-r0",
+    "o": "util-linux"
+  },
+  {
+    "L": "MIT",
+    "P": "libverto",
+    "U": "https://github.com/latchset/libverto",
+    "V": "0.3.2-r2",
+    "o": "libverto"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "libxtables",
+    "U": "https://www.netfilter.org/projects/iptables/index.html",
+    "V": "1.8.11-r1",
+    "o": "iptables"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "linux-pam",
+    "U": "https://www.kernel.org/pub/linux/libs/pam",
+    "V": "1.7.1-r1",
+    "o": "linux-pam"
+  },
+  {
+    "L": "GPL-2.0-or-later",
+    "P": "lzo",
+    "U": "https://www.oberhumer.com/opensource/lzo",
+    "V": "2.10-r5",
+    "o": "lzo"
+  },
+  {
+    "L": "MIT",
+    "P": "musl",
+    "U": "https://musl.libc.org/",
+    "V": "1.2.5-r21",
+    "o": "musl"
+  },
+  {
+    "L": "MIT AND BSD-2-Clause AND GPL-2.0-or-later",
+    "P": "musl-utils",
+    "U": "https://musl.libc.org/",
+    "V": "1.2.5-r21",
+    "o": "musl"
+  },
+  {
+    "L": "X11",
+    "P": "ncurses-terminfo-base",
+    "U": "https://invisible-island.net/ncurses/",
+    "V": "6.5_p20251123-r0",
+    "o": "ncurses"
+  },
+  {
+    "L": "MIT",
+    "P": "nghttp2-libs",
+    "U": "https://nghttp2.org",
+    "V": "1.68.0-r0",
+    "o": "nghttp2"
+  },
+  {
+    "L": "MIT",
+    "P": "nghttp3",
+    "U": "https://github.com/ngtcp2/nghttp3",
+    "V": "1.13.1-r0",
+    "o": "nghttp3"
+  },
+  {
+    "L": "SSH-OpenSSH",
+    "P": "openssh-client-common",
+    "U": "https://www.openssh.com/portable.html",
+    "V": "10.2_p1-r0",
+    "o": "openssh"
+  },
+  {
+    "L": "SSH-OpenSSH",
+    "P": "openssh-client-default",
+    "U": "https://www.openssh.com/portable.html",
+    "V": "10.2_p1-r0",
+    "o": "openssh"
+  },
+  {
+    "L": "SSH-OpenSSH",
+    "P": "openssh-keygen",
+    "U": "https://www.openssh.com/portable.html",
+    "V": "10.2_p1-r0",
+    "o": "openssh"
+  },
+  {
+    "L": "Apache-2.0",
+    "P": "openssl",
+    "U": "https://www.openssl.org/",
+    "V": "3.5.4-r0",
+    "o": "openssl"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "pcre2",
+    "U": "https://pcre.org/",
+    "V": "10.47-r0",
+    "o": "pcre2"
+  },
+  {
+    "L": "Zlib",
+    "P": "pigz",
+    "U": "https://zlib.net/pigz/",
+    "V": "2.8-r1",
+    "o": "pigz"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "scanelf",
+    "U": "https://wiki.gentoo.org/wiki/Hardened/PaX_Utilities",
+    "V": "1.3.8-r2",
+    "o": "pax-utils"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "shadow-libs",
+    "U": "https://github.com/shadow-maint/shadow",
+    "V": "4.18.0-r0",
+    "o": "shadow"
+  },
+  {
+    "L": "BSD-3-Clause",
+    "P": "shadow-subids",
+    "U": "https://github.com/shadow-maint/shadow",
+    "V": "4.18.0-r0",
+    "o": "shadow"
+  },
+  {
+    "L": "ISC",
+    "P": "skalibs-libs",
+    "U": "https://skarnet.org/software/skalibs/",
+    "V": "2.14.4.0-r0",
+    "o": "skalibs"
+  },
+  {
+    "L": "GPL-2.0-only",
+    "P": "ssl_client",
+    "U": "https://busybox.net/",
+    "V": "1.37.0-r30",
+    "o": "busybox"
+  },
+  {
+    "L": "LGPL-2.1-or-later",
+    "P": "userspace-rcu",
+    "U": "https://liburcu.org/",
+    "V": "0.15.3-r0",
+    "o": "userspace-rcu"
+  },
+  {
+    "L": "ISC",
+    "P": "utmps-libs",
+    "U": "https://skarnet.org/software/utmps/",
+    "V": "0.1.3.1-r0",
+    "o": "utmps"
+  },
+  {
+    "L": "LGPL-2.1-or-later",
+    "P": "xfsprogs",
+    "U": "https://xfs.org/index.php/Main_Page",
+    "V": "6.17.0-r0",
+    "o": "xfsprogs"
+  },
+  {
+    "L": "GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later",
+    "P": "xz",
+    "U": "https://tukaani.org/xz/",
+    "V": "5.8.1-r0",
+    "o": "xz"
+  },
+  {
+    "L": "GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later",
+    "P": "xz-libs",
+    "U": "https://tukaani.org/xz/",
+    "V": "5.8.1-r0",
+    "o": "xz"
+  },
+  {
+    "L": "CDDL-1.0",
+    "P": "zfs",
+    "U": "https://openzfs.org",
+    "V": "2.4.0_rc5-r0",
+    "o": "zfs"
+  },
+  {
+    "L": "CDDL-1.0",
+    "P": "zfs-libs",
+    "U": "https://openzfs.org",
+    "V": "2.4.0_rc5-r0",
+    "o": "zfs"
+  },
+  {
+    "L": "Zlib",
+    "P": "zlib",
+    "U": "https://zlib.net/",
+    "V": "1.3.1-r2",
+    "o": "zlib"
+  },
+  {
+    "L": "BSD-3-Clause OR GPL-2.0-or-later",
+    "P": "zstd-libs",
+    "U": "https://facebook.github.io/zstd/",
+    "V": "1.5.7-r2",
+    "o": "zstd"
+  }
+]

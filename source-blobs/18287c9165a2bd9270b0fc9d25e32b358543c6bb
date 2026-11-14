@@ -1,0 +1,131 @@
+from dataclasses import replace
+from hashlib import file_digest as digest_stream
+from pathlib import Path, PurePosixPath
+import json
+import sys
+from zipfile import ZipFile
+
+repo, proof = (Path(item).resolve(strict=True) for item in sys.argv[1:])
+sys.path[:0] = [str(repo / 'runtimes/training'), str(repo / 'runtimes/data-processing')]
+from projectone_training.catalog import catalog_digest
+from projectone_training.checkpoints import CheckpointReference, file_digest, verify_checkpoint
+from projectone_training.configuration import Configuration
+from projectone_training.configuration_generated import CONTRACT
+from projectone_training.data import TrainingError
+
+catalog = json.loads((repo / 'api/agent/v1/model-catalog.json').read_bytes())
+runtime = json.loads((repo / "runtimes/training/runtime.json").read_bytes())
+lock = file_digest(repo / 'runtimes/training/requirements/native-macos-arm64.lock')
+assert lock == runtime['locks']['native-macos-arm64.lock']
+state_files = ('adapter_model.safetensors', 'optimizer.pt', 'scheduler.pt', 'rng_state.pth')
+
+def file_hash(path):
+    return {'bytes': path.stat().st_size, 'sha256': file_digest(path)}
+
+def zip_members(path):
+    with ZipFile(path) as archive:
+        result = {}
+        for entry in archive.infolist():
+            name = PurePosixPath(entry.filename)
+            assert not name.is_absolute() and '..' not in name.parts
+            relative = PurePosixPath(*name.parts[1:]).as_posix()
+            assert relative not in result
+            with archive.open(entry) as stream:
+                result[relative] = digest_stream(stream, 'sha256').hexdigest()
+        return result
+
+def inspect(directory):
+    request = json.loads((directory / 'request.json').read_bytes())
+    result = json.loads((directory / 'output/result.json').read_bytes())
+    configuration = Configuration(**request['configuration'])
+    for partition in ('train', 'validation'):
+        assert file_digest(directory / 'inputs' / (partition + '.jsonl')) == request[partition + '_sha256']
+    assert request['model_catalog_sha256'] == catalog_digest(catalog)
+    expected = {
+        'configuration': request['configuration'],
+        'configuration_sha256': configuration.digest(),
+        'execution_identity': request['execution_identity'],
+        'scope': {key: request[key] for key in ('tenant_id', 'workspace_id', 'job_id')},
+        'model_repository': catalog['repository'],
+        'model_catalog_sha256': request['model_catalog_sha256'],
+        'train_sha256': request['train_sha256'],
+        'validation_sha256': request['validation_sha256'],
+        'recipe_version': CONTRACT['recipe']['version'],
+        'packages': runtime['packages'],
+    }
+    assert result['bindings'] == expected
+    assert result['status'] == 'trained' and result['device_profile'] == 'cpu_verification'
+    assert result['resume_from_step'] == 0 and result['parent_checkpoint_receipt_sha256'] is None
+    for key in ('job_id', 'attempt_id', 'dataset_version_id', 'dataset_manifest_sha256'):
+        assert result[key] == request[key]
+    assert len(result['checkpoints']) == 1
+    checkpoint = result['checkpoints'][0]
+    step = configuration.maximum_steps
+    assert checkpoint['global_step'] == result['global_step'] == step == 24
+    assert checkpoint['path'] == 'checkpoint-24'
+    output = directory / 'output'
+    retained = output / 'checkpoints' / checkpoint['path']
+    reference = CheckpointReference(retained, checkpoint['receipt_sha256'])
+    limits = (request['resources']['maximum_output_bytes'], request['resources']['maximum_output_files'])
+    seal, trainer = verify_checkpoint(reference, expected, configuration, *limits)
+    assert seal['global_step'] == trainer['global_step'] == step
+    assert trainer['max_steps'] == step
+
+    extended = replace(configuration, maximum_steps=48)
+    altered = {**expected, 'configuration': {**expected['configuration'], 'maximum_steps': extended.maximum_steps},
+               'configuration_sha256': extended.digest()}
+    try:
+        verify_checkpoint(reference, altered, extended, *limits)
+    except TrainingError as error:
+        assert error.code == 'TRAINING_CHECKPOINT_INCOMPATIBLE', error
+        refusal = error.code
+    else:
+        raise AssertionError('extended configuration passed the old seal')
+
+    for asset in result['files']:
+        path = PurePosixPath(asset['path'])
+        assert not path.is_absolute() and '..' not in path.parts
+        file = output / path
+        assert file.stat().st_size == asset['size_bytes'] and file_digest(file) == asset['sha256']
+    events = [json.loads(raw) for raw in (directory / 'events.jsonl').read_bytes().splitlines()]
+    assert len(events) == result['event_count']
+    for sequence, event in enumerate(events, 1):
+        assert event['sequence'] == sequence and event['attempt_id'] == request['attempt_id'] and event['job_id'] == request['job_id']
+    metrics = [{'global_step': event['global_step'], 'values': event['values']}
+               for event in events if event['kind'] == 'metric']
+    assert metrics and metrics[-1]['global_step'] == step
+    return {
+        'checkpoint': checkpoint, 'request_sha256': file_digest(directory / 'request.json'),
+        'result_sha256': file_digest(output / 'result.json'),
+        'events_sha256': file_digest(directory / 'events.jsonl'),
+        'dataset_manifest_sha256': request['dataset_manifest_sha256'],
+        'dataset_version_id': request['dataset_version_id'],
+        'frozen_bindings': {key: value for key, value in expected.items() if key != 'scope'},
+        'sealed_state': {name: file_hash(retained / name) for name in state_files},
+        'exported_adapter': {file.name: file_hash(file) for file in sorted((output / 'adapter').iterdir())},
+        'metrics': metrics, 'training_loss': result['training_loss'],
+        'extended_horizon_refusal': refusal,
+        'state_archives': {name: zip_members(retained / name) for name in state_files if name.endswith(('.pt', '.pth'))},
+    }
+
+initial = inspect(proof / 'initial')
+published = inspect(proof / 'published')
+assert initial['frozen_bindings'] == published['frozen_bindings']
+assert initial['dataset_manifest_sha256'] != published['dataset_manifest_sha256']
+fields = ('sealed_state', 'exported_adapter', 'metrics', 'training_loss', 'state_archives')
+out = {
+    'kind': 'two_retained_uninterrupted_cpu_attempts', 'native_lock_sha256': lock,
+    'initial': initial, 'published': published, 'matches': {key: initial[key] == published[key] for key in fields},
+    'matching_sealed_files': [name for name in state_files if initial['sealed_state'][name] == published['sealed_state'][name]],
+}
+with (proof / 'comparison.json').open('x') as stream:
+    json.dump(out, stream, indent=2, sort_keys=True)
+    stream.write('\n')
+print('matches:', out['matches'])
+print('matching sealed files:', out['matching_sealed_files'])
+print('actual retained sealed state:', published['sealed_state'])
+print('old horizons:', initial['checkpoint']['global_step'], published['checkpoint']['global_step'],
+      'extension refused:', published['extended_horizon_refusal'])
+print('frozen manifests:', initial['dataset_manifest_sha256'], published['dataset_manifest_sha256'])
+print('metric count:', len(initial['metrics']), len(published['metrics']))
+print('raw result digests:', initial['result_sha256'], published['result_sha256'])

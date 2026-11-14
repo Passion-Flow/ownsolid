@@ -1,0 +1,17 @@
+from pathlib import Path
+import random,subprocess,time
+root=Path(__file__).resolve().parent
+for attempt in range(120):
+ if not(root/'build-exit').exists():
+  if(root/'prepare-driver-exit').exists() and (root/'prepare-driver-exit').read_text().strip()!='0':
+   code=1;break
+  time.sleep(random.uniform(7,13));continue
+ assert(root/'build-exit').read_text().strip()=='0'
+ with(root/'installed-driver.log').open('ab')as log:
+  code=subprocess.run(['python3','-I',str(root/'installed-handoff-runner.py'),str(root)],stdout=log,stderr=subprocess.STDOUT).returncode
+ if code!=75:break
+ with(root/'installed-lease.log').open('a')as log:log.write(str(time.time())+' resource lease busy\n')
+ time.sleep(random.uniform(7,13))
+else:code=75
+(root/'installed-driver-exit').write_text(str(code)+'\n')
+raise SystemExit(code)

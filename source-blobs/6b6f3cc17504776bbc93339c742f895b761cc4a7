@@ -1,0 +1,15 @@
+{
+  "assertions": [
+    "models/completion/SSE preserve scoped aliases",
+    "canonical usage receipt matches across Go/Rust",
+    "fresh Go revocation reaches Rust",
+    "actual Go server outage denies new generations",
+    "already admitted stream completes after durable local metadata",
+    "unknown Go capacity and private pending metadata remain"
+  ],
+  "generations": 3,
+  "pending_metadata_during_outage": 1,
+  "reported_before_outage": 2,
+  "scope": "Actual native gateway binary/private TLS/Go/PostgreSQL. Model/tokenizer HTTP replies are explicitly synthetic; no GPU or vLLM API execution.",
+  "status": "passed_real_go_rust_postgresql_chain"
+}

@@ -1,0 +1,122 @@
+"""Stage exact CPU prototype inputs outside the product; never resolve dependencies."""
+import base64
+import csv
+from email.parser import BytesParser
+import hashlib
+import io
+import json
+import os
+from pathlib import Path, PurePosixPath
+import re
+import shutil
+from urllib.request import urlopen
+import zipfile
+
+root = Path(__file__).resolve().parent
+report = json.loads((root / 'metadata-audit.json').read_bytes())
+assert hashlib.sha256((root/'metadata-audit.json').read_bytes()).hexdigest() == 'bf6f13282733976703893fd18ecde60e1b2a181fe00eb233d7efd521b36be631'
+cache = Path('/root/lane-rel-tools/dat107-runtime.sFD1lDN2/wheelhouse')
+wheelhouse = root/'cpu-prototype-inputs/wheelhouse'
+wheelhouse.mkdir(mode=0o700,parents=True,exist_ok=True)
+
+def sha(path):
+    with path.open('rb') as f:
+        return hashlib.file_digest(f,'sha256').hexdigest()
+
+def stage(item, source=None):
+    target = wheelhouse/item['filename']
+    if target.exists():
+        assert sha(target) == item['sha256'], item['filename']
+        return target
+    temporary = target.with_suffix(target.suffix+'.partial')
+    assert not temporary.exists(), str(temporary)
+    if source is not None:
+        assert sha(source) == item['sha256'], str(source)
+        with source.open('rb') as src, temporary.open('xb') as dst:
+            shutil.copyfileobj(src,dst,1024*1024)
+    else:
+        assert item['url'].startswith('https://files.pythonhosted.org/'), item['url']
+        with urlopen(item['url'],timeout=30) as src, temporary.open('xb') as dst:
+            remaining = item['size_bytes']
+            while remaining:
+                chunk=src.read(min(1024*1024,remaining))
+                assert chunk, item['filename']
+                dst.write(chunk); remaining-=len(chunk)
+            assert not src.read(1)
+    temporary.chmod(0o600)
+    assert sha(temporary)==item['sha256'], item['filename']
+    if item.get('size_bytes'):
+        assert temporary.stat().st_size==item['size_bytes']
+    temporary.rename(target)
+    return target
+
+def audit(item, wheel):
+    with zipfile.ZipFile(wheel) as archive:
+        names=archive.namelist()
+        assert len(names)==len(set(names))
+        for n in names:
+            assert not PurePosixPath(n).is_absolute() and '..' not in PurePosixPath(n).parts
+        metadata_path=next(n for n in names if n.endswith('.dist-info/METADATA'))
+        distinfo=metadata_path.rsplit('/',1)[0]
+        raw=archive.read(metadata_path)
+        if 'metadata_sha256' in item:
+            assert hashlib.sha256(raw).hexdigest()==item['metadata_sha256']
+        metadata=BytesParser().parsebytes(raw)
+        assert metadata['Version']==item['version']
+        record={}
+        for path,digest,size in csv.reader(io.StringIO(archive.read(distinfo+'/RECORD').decode())):
+            assert path not in record
+            record[path]=(digest,size)
+        selected={metadata_path,distinfo+'/WHEEL'}
+        declared=metadata.get_all('License-File',[])
+        for name in declared:
+            candidates=[distinfo+'/licenses/'+name,distinfo+'/'+name]
+            found=[n for n in candidates if n in names]
+            assert found, (item['filename'],name)
+            selected.update(found)
+        notices={n for n in names if not n.endswith('/') and (
+            '/licenses/' in n.lower() or re.match(r'^(license|copying|notice|copyright|authors)([.\-_]|$)',PurePosixPath(n).name.lower()))}
+        selected.update(notices)
+        inventory=[]
+        for path in sorted(selected):
+            payload=archive.read(path)
+            original_digest,size=record[path]
+            algorithm,digest=original_digest.split('=',1)
+            assert algorithm in {'sha256','sha384','sha512'}
+            calculated=hashlib.new(algorithm,payload).digest()
+            assert base64.urlsafe_b64encode(calculated).decode().rstrip('=')==digest
+            assert str(len(payload))==size
+            destination=root/'cpu-prototype-inputs/notices'/metadata['Name'].lower()/path
+            destination.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+            destination.write_bytes(payload);destination.chmod(0o600)
+            inventory.append({'path':path,'size':len(payload),'sha256':hashlib.sha256(payload).hexdigest(),'notice':path in notices})
+        return {'filename':item['filename'],'version':metadata['Version'],'sha256':sha(wheel),'size':wheel.stat().st_size,
+            'license_expression':metadata['License-Expression'],'license':metadata['License'],
+            'license_classifiers':[x for x in metadata.get_all('Classifier',[]) if x.startswith('License ::')],
+            'declared_license_files':declared,'files':inventory}
+
+result={'schema_version':1,'scope':'private Linux amd64 CPU verification prototype, not an admitted production runtime',
+        'source_linux_lock_sha256':report['linux_lock_sha256'],'packages':{}}
+for name in report['profiles']['official_cpu']['packages']:
+    item=dict(report['torch_cpu'] if name=='torch' else report['wheel_metadata'][name])
+    source=root/item['filename'] if name=='torch' else cache/item['filename']
+    wheel=stage(item,source if source.exists() else None)
+    result['packages'][name]=audit(item,wheel)
+    print(name,item['version'],'notices',sum(x['notice'] for x in result['packages'][name]['files']),flush=True)
+installer={'filename':'pip-26.2.1-py3-none-any.whl','version':'26.2.1','sha256':'71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e','size_bytes':1816632}
+result['installer']=audit(installer,stage(installer,Path('/root/lane-trn-tools/retained-inputs')/installer['filename']))
+inputs=root/'cpu-prototype-inputs'
+lock=''.join(f'{name}=={item["version"]} --hash=sha256:{item["sha256"]}\n' for name,item in sorted(result['packages'].items()))
+(inputs/'linux-amd64-cpu-prototype.lock').write_text(lock)
+(inputs/'installer.lock').write_text(f'pip==26.2.1 --hash=sha256:{installer["sha256"]}\n')
+result['requirements_sha256']=hashlib.sha256(lock.encode()).hexdigest()
+result['external_notices']=[]
+for filename,digest in [('tokenizers-0.23.3-linux-amd64-notices.tar.gz','2eb423cd61dec1cf9a2e0c0349d954d2daa15341e86db6b064e7408069d93204'),('tokenizers-0.23.3-linux-amd64-rust-std-notices.tar.gz','39b279fc31fb3bbf743cf0569d7605dd92125aa0fe305e99b5675aae44a0d787')]:
+    source=Path('/root/lane-trn-tools/retained-inputs')/filename
+    assert sha(source)==digest
+    destination=inputs/filename
+    if not destination.exists():shutil.copyfile(source,destination)
+    assert sha(destination)==digest
+    result['external_notices'].append({'filename':filename,'sha256':digest,'size':source.stat().st_size})
+output=inputs/'inventory.json'; output.write_text(json.dumps(result,sort_keys=True,indent=2)+'\n')
+print('inventory_sha256',sha(output),'lock_sha256',result['requirements_sha256'],flush=True)

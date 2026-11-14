@@ -1,0 +1,101 @@
+{
+  "candidate": "fa82645ca49811521872df90450dad858816b71f",
+  "comparison_base": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "ordered_commits": [
+    "242ee3f5cc69ce3abc2245886b4e0a27d33e419e",
+    "409db07d4832224a3981ed2e47f0bdac9d86eab2",
+    "fa82645ca49811521872df90450dad858816b71f"
+  ],
+  "files": [
+    {
+      "path": "services/control/internal/modules/datasets/draft_source_candidate.go",
+      "bytes": 17180,
+      "sha256": "37467e541d60aa21849d824cac9b85d6b5f48257eb6b80bba125ac2a1219a247",
+      "blob": "13dcf329b5e1c8c20c73f733eb0ea79c2d379b74"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/draft_source_restore_integration_test.go",
+      "bytes": 19491,
+      "sha256": "0f6b5ce7f76c14262e9e212807bcb12cb2e179f1c69a63fe5ceed3a23f835ad6",
+      "blob": "481b4e80bef6fd46c32af35817a6f9a4cc5b6b9d"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/drafts.go",
+      "bytes": 9342,
+      "sha256": "08dfe1c709f03c0e64796d7b8dd5a65b9809b60bd4e664c38eabf1470ea4c309",
+      "blob": "ce9415aaa81de89b811fd730e95af29d476d63ca"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/http/handler.go",
+      "bytes": 15950,
+      "sha256": "b5b1dc3002474b7a88b0873a24593135f93bf5135a82d3185cef51d8ac8de951",
+      "blob": "0baea95d0987d779007baa9f938c1ab64fff5a34"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/http_draft_source_integration_test.go",
+      "bytes": 14926,
+      "sha256": "e5f02d0f189c819cc5eb401cb4cdd80641b1fbcdc49e7a6e955d5c7eafc5d159",
+      "blob": "7be6bd3dc9577dffe89a2bafb07deae739b0f52a"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/http_integration_test.go",
+      "bytes": 21383,
+      "sha256": "5477d2be90ad348da49b47b1977c35b77361739c370197201b35053db672a8f4",
+      "blob": "b4f2f78a3aaabcd3cc27f0ef43b4ee420e692bde"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/source_import.go",
+      "bytes": 18526,
+      "sha256": "6a6d45649fa93fb9e309b00535afae21e6ac7e39118b8d2f3b9c55eed3d97ea8",
+      "blob": "b0c421e90ed359c0cb126fb4fa7bbbdca978b400"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/source_import_object_test.go",
+      "bytes": 8341,
+      "sha256": "d9af837d42483874c399ac518a65b09d4c701b61485826a0db99fdf33cb009c2",
+      "blob": "e28a697c854a92dfe9ceb36818e0431f6cc2f808"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/source_import_parquet.go",
+      "bytes": 4239,
+      "sha256": "eb3842d20d3764f17a0bdda0eb1c9d2249b611d01d98728314c0cfcb540992ae",
+      "blob": "4e7eeaef73aeb12f30242d0eb53243474408fd99"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/testdata/draft_import_candidate.down.sql",
+      "bytes": 119,
+      "sha256": "8ed40d3afaafa83fb4d119e90a01323fa09967f839831e1fa2159b3f8a6c06fb",
+      "blob": "38faa8e38313329cb016acfec770fe7dcc60367c"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/testdata/draft_import_candidate.up.sql",
+      "bytes": 879,
+      "sha256": "d7e8eb61bd8afa4c1a3a1363d092685d13c55ca35d6965257457247336066868",
+      "blob": "8b1923043783818166a537192a74eb6dd6cd4f7b"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/testdata/draft_source_fixture.py",
+      "bytes": 328,
+      "sha256": "9c23d1f1faa4e61d480b0ca6144ba25f7386508eff8a8e429431b4ab2766163a",
+      "blob": "7d3beb00ff3e77b1681a435fb3b72c8433011b96"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/testdata/replay_draft_import.sh",
+      "bytes": 2790,
+      "sha256": "a5d2ab2d0f275a1bdcf22af2e8808d0148beb4c6396abf736a32e4d3747400d4",
+      "blob": "d8ba638651e7c2d8ed3430f3a24072b12d02e5c8"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/upload.go",
+      "bytes": 11594,
+      "sha256": "c17768e11c29d6b9f0189ac25c07592f079020149049f056d523986511373f2d",
+      "blob": "15a2108f626c579a8a67ee960fc7d00a6b33fe85"
+    },
+    {
+      "path": "docs/research/dataset-import.md",
+      "bytes": 34091,
+      "sha256": "4d3af5e224b774a42991dd1251473826ef3920fe0b7d1d60d87634965985588b",
+      "blob": "c019d0c16706cea92de78c9086cc6edf8914a4b1"
+    }
+  ]
+}

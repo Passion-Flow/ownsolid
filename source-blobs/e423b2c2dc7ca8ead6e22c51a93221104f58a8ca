@@ -1,0 +1,9 @@
+{
+  "memory_kib": {
+    "MemFree": 3266888,
+    "MemAvailable": 17342696
+  },
+  "full_io_psi_avg10": 0.0,
+  "disk_free_bytes": 803562246144,
+  "scope": "two package native Go race suites, network namespace with loopback only, no container or database"
+}

@@ -1,0 +1,152 @@
+package httpserver
+
+import (
+	"context"
+	"crypto/tls"
+	"errors"
+	"net"
+	"net/http"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+)
+
+func TestAgedListenerReportsUnconfirmedProcessShutdown(t *testing.T) {
+	for _, cooperate := range []bool{true, false} {
+		name := "handler_joins"
+		if !cooperate {
+			name = "handler_exceeds_budget"
+		}
+		t.Run(name, func(t *testing.T) {
+			certificate, roots := transportCertificate(t)
+			listener, err := net.Listen("tcp", "127.0.0.1:0")
+			if err != nil {
+				t.Fatal(err)
+			}
+			release := make(chan struct{})
+			var releaseOnce sync.Once
+			finish := func() { releaseOnce.Do(func() { close(release) }) }
+			handlerDone := make(chan struct{})
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				defer close(handlerDone)
+				w.WriteHeader(http.StatusOK)
+				if err := http.NewResponseController(w).Flush(); err != nil {
+					return
+				}
+				if !cooperate {
+					<-release
+					return
+				}
+				select {
+				case <-r.Context().Done():
+				case <-release:
+				}
+			})
+			ctx, stop := context.WithCancel(t.Context())
+			policy := config.DefaultHTTPPolicy()
+			policy.ShutdownSeconds = 1
+			done := make(chan error, 1)
+			go func() {
+				done <- ServeListener(ctx, listener, &tls.Config{Certificates: []tls.Certificate{certificate},
+					MinVersion: tls.VersionTLS12, NextProtos: []string{"h2"}}, handler, policy,
+					ConnectionAge{Maximum: time.Minute, Grace: time.Second})
+			}()
+			transport := &http.Transport{ForceAttemptHTTP2: true,
+				TLSClientConfig: &tls.Config{RootCAs: roots, ServerName: "localhost", MinVersion: tls.VersionTLS12}}
+			client := &http.Client{Transport: transport, Timeout: 5 * time.Second}
+			t.Cleanup(func() {
+				stop()
+				finish()
+				transport.CloseIdleConnections()
+			})
+			response, err := client.Get("https://" + listener.Addr().String() + "/held")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer response.Body.Close()
+			if response.ProtoMajor != 2 || response.StatusCode != http.StatusOK {
+				t.Fatalf("held HTTP/2 response not established: %s %d", response.Proto, response.StatusCode)
+			}
+			stop()
+			select {
+			case err := <-done:
+				if cooperate && err != nil {
+					t.Fatalf("cooperative shutdown failed: %v", err)
+				}
+				if !cooperate && !errors.Is(err, context.DeadlineExceeded) {
+					t.Fatalf("unconfirmed shutdown reported success: %v", err)
+				}
+			case <-time.After(4 * time.Second):
+				t.Fatal("connection owner exceeded process shutdown bound")
+			}
+			finish()
+			select {
+			case <-handlerDone:
+			case <-time.After(time.Second):
+				t.Fatal("released handler did not join")
+			}
+		})
+	}
+}
+
+func TestAgedListenerReleasesConnectionCapacityAfterPeerClose(t *testing.T) {
+	certificate, roots := transportCertificate(t)
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, stop := context.WithCancel(t.Context())
+	policy := config.DefaultHTTPPolicy()
+	policy.MaxConnections = 1
+	policy.MaxActiveRequests = 1
+	done := make(chan error, 1)
+	go func() {
+		done <- ServeListener(ctx, listener, &tls.Config{Certificates: []tls.Certificate{certificate},
+			MinVersion: tls.VersionTLS12, NextProtos: []string{"h2"}}, http.NotFoundHandler(), policy,
+			ConnectionAge{Maximum: time.Minute, Grace: time.Second})
+	}()
+	t.Cleanup(func() {
+		stop()
+		select {
+		case err := <-done:
+			if err != nil {
+				t.Error(err)
+			}
+		case <-time.After(5 * time.Second):
+			t.Error("connection-capacity listener did not join")
+		}
+	})
+	dial := func() (*tls.Conn, error) {
+		return tls.DialWithDialer(&net.Dialer{Timeout: time.Second}, "tcp", listener.Addr().String(),
+			&tls.Config{RootCAs: roots, ServerName: "localhost", MinVersion: tls.VersionTLS12, NextProtos: []string{"h2"}})
+	}
+	first, err := dial()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = first.Close() })
+	if extra, err := dial(); err == nil {
+		_ = extra.Close()
+		t.Fatal("listener exceeded its single connection slot")
+	}
+	if err := first.Close(); err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		next, err := dial()
+		if err == nil {
+			if next.ConnectionState().NegotiatedProtocol != "h2" {
+				t.Error("replacement did not negotiate verified HTTP/2")
+			}
+			_ = next.Close()
+			return
+		}
+		if !time.Now().Before(deadline) {
+			t.Fatalf("peer closure did not release connection capacity: %v", err)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+}

@@ -1,0 +1,35 @@
+{
+  "budget_seconds": 1200,
+  "cleanup_reserve_seconds": 120,
+  "input_paths": {
+    "metadata-inputs/catalog.sql": "33407087a5476eeb465b08f1674743a97f203f0a1608f64e4e024696a848ade2",
+    "metadata-inputs/ledger.sql": "6c83b9af397227fe818002fb17fd1579cf328666d8abbb1f7336d0b8d951648c",
+    "metadata-inputs/prefix-55.sql": "9f47eb0d2f62e830a61d3624ae764042bbc25543de7bfd96fba6b69f028eb642",
+    "metadata-inputs/prefix-56.sql": "104593a39ec51a36d18acbdc9e82bfcf5845fee7b4445a4299601bf10331dfe5",
+    "metadata-inputs/prefix-57.sql": "d07d6910f4425ddb8871765137da5d9f1c16612d436d718ab656041ab502cfa5",
+    "metadata-inputs/prefix-58.sql": "ecc3b6f33d5cad79a751dd834b0bc2fa8ab7da67a081c9ef23bc0469c09c801c",
+    "metadata-inputs/prefix-59.sql": "8b0c99744a7b1208c0018b2fc5b860cb2c7fd134144a599f30dcfb651c43d786",
+    "metadata-inputs/prefix-60.sql": "bf36c863d9237af1e0e5fa045dbff7fa03540f1bd835207c73549a3872e224de",
+    "metadata-inputs/prefix-61.sql": "7345a437a8d15c7eeec1e3d89631bb206e89592225062b69c538521dab5850bb",
+    "metadata-inputs/upgrade-from-55.sql": "0c208f50006bb1e5227980bb43a1ffa6625842c4b7d6f415a307b273f991cb50",
+    "metadata-inputs/upgrade-from-56.sql": "969ae2907a1384c36e28dbb51ac385a75247f282fb9d136ac37625391950cbd6",
+    "metadata-inputs/upgrade-from-57.sql": "e15aacabeccc080ca2ab4e587a694472945fb9458815a6695c4db2eee1868879",
+    "metadata-inputs/upgrade-from-58.sql": "827ef6dffe814f42bfbf4b5b7b441627296d9d6d7cfaa5fccc6c18d3e7ec876e",
+    "metadata-inputs/upgrade-from-59.sql": "032d5d0477336538b9a3c75a677f622a717a7f236ef1e1228099815488500c77",
+    "metadata-inputs/upgrade-from-60.sql": "1d1e3b1be172d1c9e58bfbd04f53ca08ab97729e330e6b7e0cbede6c08b423b4",
+    "metadata-inputs/upgrade-from-61.sql": "6bc83ef76fb47cbf7decc29ed54d85e3e79c86f581752432089117133bfd7002"
+  },
+  "metadata_only_derivation": true,
+  "native_binaries_locally_verified": {
+    "database-linux-amd64.test": "2bc2623083210a5265dd215647f4762a9959ada8a3d1be13f102820e05da0124",
+    "databaseaccess-linux-amd64.test": "293ab7afe7db552a9c450634394a013fc5bbc856ff19915c199a12707b3a7be5",
+    "models-linux-amd64.test": "6ff49492f7a535dd1a1d67880aa3d6b330ac9538eb6a2376456ba4d90dc80947"
+  },
+  "native_binaries_transferred": false,
+  "no_production_Migrate_or_runtime_role_pass_claimed": true,
+  "remote_budget_seconds": 1100,
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "source_archive_sha256": "15027f9f5b3145eba29d7850f4ba5aa5eb1a7da0babaee9e875ab0600ee73848",
+  "source_manifest_sha256": "9de6cb0f1e829a6fa92a2b41b2cb9d84fbc41669805680cd7b7f0e8960ba59c9",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8"
+}

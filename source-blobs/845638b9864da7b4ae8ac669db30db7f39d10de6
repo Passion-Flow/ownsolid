@@ -1,0 +1,9 @@
+from pathlib import Path
+import re,sys,zipfile
+prefix=sys.argv[1]
+assert re.fullmatch(r'[0-9a-f]{8}',prefix)
+target=Path('/root/lane-sch-tools/queued-mac-evidence')/('queued-final-'+prefix)
+target.mkdir(parents=True,exist_ok=True)
+with zipfile.ZipFile('/root/lane-sch-tools/queued-current-mac-evidence.zip') as archive:
+    assert all('/' not in n and '\\' not in n for n in archive.namelist())
+    archive.extractall(target)

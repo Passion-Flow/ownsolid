@@ -1,0 +1,250 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+cd "$1"
+root=$PWD
+net=$2
+plane="$net-plane"
+dns="$net-dns"
+server="$net-server"
+worker="$net-worker"
+export ARC_FIXTURE_ROOT="$root" ARC_PROJECT="$net"
+python3 "$root/admit.py" host --root "$root" | tee "$root/launch-admission.json"
+mountpoint -q "$root/media-mount"
+test -s "$root/media-mount/stage/ownsolid.tar.gz"
+install -d -m 0700 "$root/control-inputs" "$root/node-inputs" "$root/exchange" "$root/exchange/server" "$root/exchange/worker" "$root/capture" "$root/docker-data"
+install -m 0700 "$root/managed-load.test" "$root/simulator" "$root/ownsolid-install" "$root/egress-recorder" "$root/control-inside.sh" "$root/control-inputs/"
+install -m 0700 "$root/agent" "$root/egress-recorder" "$root/node-inputs/"
+for file in kwok-disconnected.yaml kwok-linux-amd64.oci.tar stage-fast.yaml; do
+    install -m 0600 "$root/$file" "$root/node-inputs/"
+done
+docker network create --internal "$net" >/dev/null
+test "$(docker network inspect -f '{{.Internal}}' "$net")" = true
+subnet=$(docker network inspect -f '{{(index .IPAM.Config 0).Subnet}}' "$net")
+read -r ARC_SITE_DNS ARC_CONTROL_IP ARC_SERVER_IP ARC_WORKER_IP < <(python3 - "$subnet" <<'PY'
+from ipaddress import ip_network
+import sys
+network=ip_network(sys.argv[1])
+print(*(network[x] for x in (2,10,11,12)))
+PY
+)
+export ARC_SITE_DNS ARC_CONTROL_IP ARC_SERVER_IP ARC_WORKER_IP
+base=$(docker image ls --no-trunc --format '{{.ID}}' ownsolid-proto/lane-a-node:24.04)
+dind=$(docker image ls --no-trunc --format '{{.ID}}' docker:29.1.3-dind)
+docker run -d --name "$dns" --network "$net" --ip "$ARC_SITE_DNS" --read-only \
+    --mount "type=bind,src=$root/site-dns,dst=/site-dns,readonly" --entrypoint /site-dns "$base" >/dev/null
+for role in server worker; do
+    ip=$ARC_SERVER_IP
+    if test "$role" = worker; then ip=$ARC_WORKER_IP; fi
+    ARC_NODE_IP="$ip" bash setup-node.sh "$role"
+    docker exec "$net-$role" sh -ceu '
+        test ! -e /usr/local/bin/rke2
+        test ! -e /etc/rancher/rke2/config.yaml
+        test ! -e /var/lib/rancher/rke2/server/manifests/rke2-canal.yaml.skip
+        test ! -e /fixture-state/kubernetes.json
+    '
+    for q in registry-1.docker.io usage.projectcalico.org; do
+        docker exec "$net-$role" getent ahostsv4 "$q" || true
+        docker logs "$dns" | tail -n 1 | grep -F "\"name\":\"$q.\""
+    done
+done
+first=$(( $(docker logs "$dns" | wc -l) + 1 ))
+docker logs "$dns" > capture/site-dns-positive-controls.jsonl
+save_captures() {
+    docker logs "$dns" | tail -n "+$first" > capture/site-dns.jsonl
+    for role in server worker; do
+        cp "$root/$role-capture/egress.jsonl" "capture/$role-egress.jsonl"
+    done
+}
+trap save_captures EXIT
+docker run -d --name "$plane" --privileged --network "$net" --ip "$ARC_CONTROL_IP" \
+    --cgroupns private --memory 8g --cpus 4 \
+    --env ARC_SITE_DNS --env ARC_CONTROL_IP --env ARC_SERVER_IP --env ARC_WORKER_IP --env "ARC_PROJECT=$net" \
+    --mount "type=bind,src=$root/docker-data,dst=/var/lib/docker" \
+    --mount "type=bind,src=$root/media-mount,dst=/release" \
+    --mount "type=bind,src=$root/exchange,dst=/exchange" \
+    --mount "type=bind,src=$root/capture,dst=/capture" \
+    --mount "type=bind,src=$root/control-inputs,dst=/bundle,readonly" \
+    --entrypoint /bin/sh "$dind" /bundle/control-inside.sh >/dev/null
+docker logs -f "$plane" &
+observer=$!
+sampler=
+finish() {
+    if test -n "$sampler"; then kill "$sampler" 2>/dev/null || true; wait "$sampler" 2>/dev/null || true; fi
+    kill "$observer" 2>/dev/null || true
+    if test "$(docker inspect -f '{{.State.Running}}' "$plane" 2>/dev/null)" = false && ! test -e capture/test-process-exit; then
+        docker inspect -f '{{.State.ExitCode}}' "$plane" > capture/test-process-exit
+    fi
+    save_captures
+}
+trap finish EXIT
+still_running() {
+    if test -s exchange/admission-failed; then
+        cat exchange/admission-failed >&2
+        return 75
+    fi
+    test "$(docker inspect -f '{{.State.Running}}' "$plane")" = true
+}
+wait_for_file() {
+    local path=$1 seconds=$2
+    local until=$((SECONDS+seconds))
+    while ! test -s "$path"; do
+        still_running
+        if (( SECONDS >= until )); then echo "Timed out waiting for $path" >&2; return 1; fi
+        sleep 2
+    done
+}
+for role in server worker; do
+    for i in $(seq 1 240); do
+        if test -f "exchange/$role/enroll"; then break; fi
+        still_running
+        sleep 2
+    done
+    test -f "exchange/$role/enroll"
+    docker exec "$net-$role" /fixture-artifacts/agent enroll --config /fixture-enrollment/agent.json
+    docker exec -d "$net-$role" sh -c 'exec /fixture-artifacts/agent run --config /fixture-enrollment/agent.json > /fixture-capture/agent.log 2>&1'
+done
+for i in $(seq 1 480); do
+    if test -s exchange/api-ready.json; then break; fi
+    still_running
+    sleep 2
+done
+test -s exchange/api-ready.json
+read -r server_id worker_id version ca < <(python3 - <<'PY'
+import json
+p=json.load(open("exchange/api-ready.json"))
+print(p["server"],p["worker"],p["version"],p["ca_sha256"])
+PY
+)
+k() { docker exec "$server" /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml --request-timeout=25s "$@"; }
+test "$version" = v1.36.6+rke2r1
+actual_ca=$(docker exec "$server" sha256sum /var/lib/rancher/rke2/server/tls/server-ca.crt | cut -d' ' -f1)
+test "$actual_ca" = "$ca"
+for pair in "server:$server_id" "worker:$worker_id"; do
+    role=${pair%%:*}
+    id=${pair#*:}
+    k wait --for=condition=Ready --timeout=45s "node/$id"
+    test "$(k get "node/$id" -o jsonpath='{.status.nodeInfo.kubeletVersion}')" = "$version"
+    test "$(k get "node/$id" -o jsonpath='{.status.nodeInfo.architecture}')" = amd64
+    test "$(docker exec "$net-$role" /usr/local/bin/rke2 --version | head -1 | awk '{print $3}')" = "$version"
+    image_dir="$root/$role-data/agent/images"
+    (
+      cd "$image_dir"
+      sed -n '/  rke2-images-core.linux-amd64.tar.zst$/p; /  rke2-images-canal.linux-amd64.tar.zst$/p' "$root/sha256sum-amd64.txt" > "$root/capture/$role-image-checksums.txt"
+      test "$(wc -l < "$root/capture/$role-image-checksums.txt")" = 2
+      sha256sum -c "$root/capture/$role-image-checksums.txt"
+      test "$(find . -maxdepth 1 -type f -name '*.tar.zst' | wc -l)" = 2
+    )
+done
+k get nodes -o wide
+test "$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.spec.usageReportingEnabled}')" = false
+felix_created=$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.metadata.creationTimestamp}')
+canal_created=$(k -n kube-system get ds/rke2-canal -o jsonpath='{.metadata.creationTimestamp}')
+test "$(date -d "$felix_created" +%s)" -lt "$(date -d "$canal_created" +%s)"
+printf 'Felix was configured before Canal: %s < %s\n' "$felix_created" "$canal_created"
+k -n kube-system rollout status ds/rke2-canal --timeout=90s
+k run arc104-managed-workload --restart=Never --image-pull-policy=Never \
+    --image=docker.io/rancher/mirrored-pause:3.10.2 \
+    --overrides="{\"spec\":{\"nodeSelector\":{\"kubernetes.io/hostname\":\"$worker_id\"}}}"
+k wait --for=condition=Ready --timeout=90s pod/arc104-managed-workload
+test "$(k get pod arc104-managed-workload -o jsonpath='{.spec.nodeName}')" = "$worker_id"
+test "$(k get pod arc104-managed-workload -o 'jsonpath={.status.conditions[?(@.type=="PodScheduled")].status}' )" = True
+k get pod arc104-managed-workload -o wide
+test "$(k -n kube-system get ds/rke2-canal -o jsonpath='{.status.numberReady}')" = 2
+wait_for_file exchange/fleet-request.json 600
+req=exchange/fleet-request.json
+managed=exchange/api-ready.json
+python3 "$root/kwok.py" generate capture --request "$req" --managed "$managed"
+pinned=registry.k8s.io/kwok/kwok@sha256:28ee38abba19bd0b89600b1b367c32480da45f1d954c80d14db5fc74feee83f2
+ctr() { docker exec "$server" /var/lib/rancher/rke2/bin/ctr --address /run/k3s/containerd/containerd.sock -n k8s.io "$@"; }
+ki() { docker exec -i "$server" /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml --request-timeout=90s "$@"; }
+ctr images import --digests --platform linux/amd64 /fixture-artifacts/kwok-linux-amd64.oci.tar
+ctr images tag registry.k8s.io/kwok/kwok:v0.8.0 "$pinned"
+docker exec "$server" /var/lib/rancher/rke2/bin/crictl --runtime-endpoint unix:///run/k3s/containerd/containerd.sock inspecti "$pinned" |
+python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["status"]["id"]=="sha256:8b980198bbeeb7351c22f0a8ea4d4acd615911d101793c10355b8aafeaa29a13"'
+ki apply -f - < "$root/kwok-disconnected.yaml"
+k wait --timeout=40s --for=condition=Established crd/stages.kwok.x-k8s.io
+ki apply -f - < "$root/stage-fast.yaml"
+k -n kube-system rollout status deployment/kwok-controller --timeout=150s
+test "$(k -n kube-system get deploy kwok-controller -o jsonpath='{.spec.template.spec.containers[0].image}')" = "$pinned"
+test "$(k -n kube-system get deploy kwok-controller -o jsonpath='{.spec.template.spec.containers[0].imagePullPolicy}')" = Never
+ki create -f - < capture/kwok-nodes.json > capture/kwok-node-create.log
+ki wait --timeout=180s --for=condition=Ready node -l ownsolid.test/fixture=arc105
+ki get node -l ownsolid.test/fixture=arc105 -o json > capture/observed-nodes.json
+python3 "$root/kwok.py" nodes capture --request "$req" --managed "$managed" > exchange/kwok-nodes-ready.tmp
+mv exchange/kwok-nodes-ready.tmp exchange/kwok-nodes-ready
+if ! python3 "$root/admit.py" arm --root "$root" --project "$net" > capture/arm-admission.json; then
+    cp capture/arm-admission.json exchange/admission-failed
+    cat capture/arm-admission.json >&2
+    exit 75
+fi
+(
+    while test "$(docker inspect -f '{{.State.Running}}' "$plane")" = true; do
+        if ! python3 "$root/admit.py" sample --root "$root" --project "$net" --baseline capture/arm-admission.json > capture/resource-sample.tmp; then
+            cat capture/resource-sample.tmp >> capture/resource-samples.jsonl
+            mv capture/resource-sample.tmp exchange/admission-failed
+            exit 75
+        fi
+        cat capture/resource-sample.tmp >> capture/resource-samples.jsonl
+        sleep 5
+    done
+) &
+sampler=$!
+cp capture/arm-admission.json exchange/fleet-arm.tmp
+mv exchange/fleet-arm.tmp exchange/fleet-arm
+wait_for_file exchange/fleet-starting 90
+k create namespace arc105-fleet
+ki create -f - < capture/kwok-pods.json > capture/kwok-pod-create.log
+ki -n arc105-fleet wait --timeout=160s --for=condition=Ready pod -l ownsolid.test/fixture=arc105
+capture_kwok() {
+    ki get node -l ownsolid.test/fixture=arc105 -o json > capture/observed-nodes.json
+    ki -n arc105-fleet get pod -l ownsolid.test/fixture=arc105 -o json > capture/observed-pods.json
+    python3 "$root/kwok.py" pods capture --request "$req" --managed "$managed"
+}
+capture_kwok > exchange/kwok-pods-ready.tmp
+mv exchange/kwok-pods-ready.tmp exchange/kwok-pods-ready.json
+echo "All 1,000 actual scheduler bindings and KWOK readiness states match simulator UUIDs"
+wait_for_file exchange/fleet-finished 2100
+capture_kwok > capture/final-kwok-proof.json
+for id in "$server_id" "$worker_id"; do
+    k wait --for=condition=Ready --timeout=45s "node/$id"
+    k get "node/$id" -o json | python3 -c 'import json,sys; assert json.load(sys.stdin)["metadata"].get("annotations",{}).get("kwok.x-k8s.io/node") != "fake"'
+done
+test "$(k -n kube-system get ds/rke2-canal -o jsonpath='{.status.numberReady}')" = 2
+test "$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.spec.usageReportingEnabled}')" = false
+# Let the Go TestMain evaluate its raw Control log and preserve its true status.
+touch exchange/node-proof
+plane_exit=$(docker wait "$plane")
+printf '%s\n' "$plane_exit" | tee capture/test-process-exit
+if test -n "$sampler"; then kill "$sampler" 2>/dev/null || true; wait "$sampler" 2>/dev/null || true; sampler=; fi
+docker stop --time 15 "$server" "$worker" "$dns"
+save_captures
+python3 - <<'PY'
+import collections,json,re
+from pathlib import Path
+
+capture = Path("capture")
+for role in ("server","worker"):
+    assert not (capture/f"{role}-egress.jsonl").read_text(), f"{role} emitted external packets"
+expected = collections.Counter(("192.0.2.15:9705","[2001:db8:105::15]:9705"))
+control = collections.Counter()
+for line in (capture/"control-egress.jsonl").read_text().splitlines():
+    packet=json.loads(line)
+    assert packet["protocol"]=="udp"
+    control[packet["destination"]]+=1
+assert control==expected, control
+dns = collections.Counter()
+for line in (capture/"site-dns.jsonl").read_text().splitlines():
+    q=json.loads(line)
+    name,kind=q["name"],q["type"]
+    if kind==13 and re.fullmatch(r"[0-9]+\.[0-9]+\.",name):
+        dns["CoreDNS HINFO"]+=1
+    elif kind==2 and name==".":
+        dns["CoreDNS root NS"]+=1
+    else:
+        raise SystemExit(f"public or unexpected site DNS: {name} {kind}")
+assert dns,dns
+print("Raw packet and site DNS gate passed",dict(dns))
+PY
+test "$plane_exit" = 0
+test ! -s exchange/admission-failed

@@ -1,0 +1,13 @@
+{
+  "head": "8a6c7c13d71c1e72635c948b3a2177b7705ac025",
+  "base": "1280ea79",
+  "patch_sha256": "bdc3e2f915bdd680e9a02e608814f066491ccdfcb1b8342ba8688d2bc32ed15c",
+  "sdk_image": "sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9",
+  "postgres_image": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+  "architecture": "amd64",
+  "network": "none",
+  "passed": [
+    "repository",
+    "http"
+  ]
+}

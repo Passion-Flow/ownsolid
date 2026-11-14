@@ -1,0 +1,12 @@
+{
+  "returncode": 0,
+  "platform": "darwin/arm64",
+  "phase": "first",
+  "seconds": 4.024,
+  "actions": {
+    "pass": 5,
+    "skip": 0,
+    "fail": 0
+  },
+  "log_sha256": "e80ea2ed4db2d682774e5e82a51c4051a0c6c323f44e64bb8393d092371da7ce"
+}

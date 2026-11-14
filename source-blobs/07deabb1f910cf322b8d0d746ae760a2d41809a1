@@ -1,0 +1,161 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+run=$1
+cd /root/lane-gw
+df -h /root /dev/shm
+free -m
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+ss -lntp
+container=lane-gw-description-history-pg
+test -z "$(docker ps -aq --filter "name=^/$container$")"
+scratch=$(mktemp -d /dev/shm/lane-gw-description-catalog.XXXXXXXX)
+container_id=
+cleanup() {
+    rc=$?
+    if test -n "$container_id"; then docker rm -f "$container_id" >/dev/null; fi
+    find "$scratch" -depth -delete
+    echo "stage-exit=$rc"
+}
+trap cleanup EXIT
+openssl rand -hex 24 > "$scratch/postgres-password"
+container_id=$(docker run -d --pull never --name "$container" --network none --memory 1536m --cpus 1 --shm-size 128m \
+    --tmpfs /var/lib/postgresql:rw,size=768m \
+    --mount "type=bind,src=$scratch/postgres-password,dst=/run/ownsolid-test-password,readonly" \
+    -e POSTGRES_PASSWORD_FILE=/run/ownsolid-test-password -e POSTGRES_DB=gw_catalog_test \
+    sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47)
+for n in $(seq 1 90); do
+    if docker exec "$container" pg_isready -q -h 127.0.0.1 -p 5432 -d gw_catalog_test; then break; fi
+    sleep 1
+done
+docker exec "$container" pg_isready -h 127.0.0.1 -p 5432 -d gw_catalog_test
+docker exec "$container" psql -X -U postgres -d gw_catalog_test -At -c 'SHOW server_version'
+docker exec "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_test -c "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;"
+docker exec "$container" createdb -U postgres gw_catalog_restore_test
+docker exec "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_restore_test -c "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;"
+python3 - "$scratch" <<'PY'
+from pathlib import Path
+import sys
+target = Path(sys.argv[1])
+source = Path("services/control/internal/platform/database/catalog.go").read_text()
+catalog = source.split("const CatalogSQL = "+chr(96),1)[1].split(chr(96),1)[0]
+(target/"catalog.sql").write_text("SET search_path=catalog_acceptance;\n"+catalog+";\n")
+PY
+migrations=services/control/migrations/postgresql
+git log -1 --format='qualification-commit=%H'
+printf 'predecessor-tail=%s\n' "$(find "$migrations" -maxdepth 1 -name '*.up.sql' -printf '%f\n' | sort | tail -1)"
+candidate="$run/candidate.up.sql"
+test -f "$candidate"
+{
+    printf '%s\n' 'BEGIN;' 'CREATE SCHEMA catalog_acceptance;' 'SET search_path=catalog_acceptance;' 'CREATE TABLE schema_migrations(version integer PRIMARY KEY,checksum text NOT NULL,applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP);'
+    for file in "$migrations"/*.up.sql; do
+        cat "$file"
+        printf '\n'
+    done
+    printf '%s\n' 'COMMIT;'
+} | docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_test
+digest() {
+    docker exec -i "$container" psql -X -Atq -v ON_ERROR_STOP=1 -U postgres -d "$1" < "$scratch/catalog.sql" |
+        python3 -c 'import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read().removesuffix(b"\n")).hexdigest())'
+}
+restore() {
+    docker exec "$container" pg_dump -U postgres -d gw_catalog_test --schema=catalog_acceptance --schema-only --no-owner --no-privileges |
+        docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_restore_test
+}
+old_fresh=$(digest gw_catalog_test)
+restore
+old_restored=$(digest gw_catalog_restore_test)
+echo "baseline-fresh=$old_fresh"
+echo "baseline-restored=$old_restored"
+expected() {
+    awk -v name="$1" '$1 == name && $2 == "=" { gsub(/"/, "", $3); print $3 }' services/control/internal/platform/database/catalog.go
+}
+test "$old_fresh" = "$(expected catalogFreshSHA256)"
+test "$old_restored" = "$(expected catalogRestoredSHA256)"
+docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_test <<'SQL'
+SET search_path=catalog_acceptance;
+BEGIN;
+SET LOCAL session_replication_role = replica;
+INSERT INTO model_aliases(id,tenant_id,workspace_id,node_id,gateway_id,name,deployment_id,deployment_revision,revision,created_by,idempotency_key,fingerprint)
+VALUES('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002',
+ '00000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000004',
+ '00000000-0000-4000-8000-000000000005','pre-upgrade','00000000-0000-4000-8000-000000000006',
+ 7,5,'00000000-0000-4000-8000-000000000007','00000000-0000-4000-8000-000000000008',decode(repeat('42',32),'hex'));
+COMMIT;
+SQL
+{
+    printf '%s\n' 'SET search_path=catalog_acceptance;'
+    cat "$candidate"
+} | docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_test
+docker exec "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_restore_test -c 'DROP SCHEMA catalog_acceptance CASCADE' 2>"$run/restore-disposal.log"
+new_fresh=$(digest gw_catalog_test)
+restore
+new_restored=$(digest gw_catalog_restore_test)
+printf 'fresh=%s\nrestored=%s\n' "$new_fresh" "$new_restored" | tee "$run/catalog-signatures"
+docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_test <<'SQL'
+SET search_path=catalog_acceptance;
+DO $verify$
+BEGIN
+ IF NOT EXISTS (SELECT 1 FROM model_aliases WHERE name='pre-upgrade'
+   AND description='' AND description_revision=1 AND revision=5 AND deployment_revision=7) THEN
+  RAISE EXCEPTION 'pre-upgrade alias lost its routing state or default description';
+ END IF;
+ UPDATE model_aliases SET description='Compare synthetic results',description_revision=2 WHERE name='pre-upgrade';
+ IF NOT EXISTS (SELECT 1 FROM model_aliases WHERE name='pre-upgrade'
+   AND description='Compare synthetic results' AND description_revision=2 AND revision=5 AND deployment_revision=7) THEN
+  RAISE EXCEPTION 'description edit changed routing state';
+ END IF;
+END;
+$verify$;
+SQL
+{
+    printf '%s
+' 'SET search_path=catalog_acceptance;'
+    cat "$run/candidate.down.sql"
+} | docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_test
+test "$(digest gw_catalog_test)" = "$old_fresh"
+echo 'pre-upgrade row, independent revision and catalog rollback passed'
+
+
+docker exec "$container" createdb -U postgres gw_catalog_history_source
+docker exec "$container" createdb -U postgres gw_catalog_history_target
+for db in gw_catalog_history_source gw_catalog_history_target; do
+    docker exec "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d "$db" -c "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;"
+done
+{
+    printf '%s\n' 'BEGIN;' 'CREATE SCHEMA catalog_acceptance;' 'SET search_path=catalog_acceptance;' 'CREATE TABLE schema_migrations(version integer PRIMARY KEY,checksum text NOT NULL,applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP);'
+    for file in "$migrations"/*.up.sql; do
+        number=${file##*/}
+        if [[ ${number%%_*} > 000055 ]]; then break; fi
+        cat "$file"
+        printf '\n'
+    done
+    printf '%s\n' 'COMMIT;'
+} | docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_history_source
+docker exec "$container" pg_dump -U postgres -d gw_catalog_history_source --schema=catalog_acceptance --schema-only --no-owner --no-privileges |
+    docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_history_target
+{
+    printf '%s\n' 'BEGIN;' 'SET search_path=catalog_acceptance;'
+    for file in "$migrations"/*.up.sql; do
+        number=${file##*/}
+        if [[ ${number%%_*} > 000055 ]]; then
+            cat "$file"
+            printf '\n'
+        fi
+    done
+    printf '%s\n' 'COMMIT;'
+} | docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_history_target
+old_at55=$(digest gw_catalog_history_target)
+printf 'baseline-restored-at-55=%s\n' "$old_at55"
+test "$old_at55" = "$(expected catalogRestoredAt55SHA256)"
+{
+    printf '%s\n' 'SET search_path=catalog_acceptance;'
+    cat "$run/candidate.up.sql"
+} | docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_history_target
+new_at55=$(digest gw_catalog_history_target)
+printf 'restored-at-55=%s\n' "$new_at55" | tee -a "$run/catalog-signatures"
+{
+    printf '%s\n' 'SET search_path=catalog_acceptance;'
+    cat "$run/candidate.down.sql"
+} | docker exec -i "$container" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d gw_catalog_history_target
+test "$(digest gw_catalog_history_target)" = "$old_at55"

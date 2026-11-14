@@ -1,0 +1,95 @@
+import os,re,json,time,secrets,socket,subprocess,shutil,hashlib
+from pathlib import Path
+p=Path(__file__).resolve().parent
+s=Path('/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/src')
+os.umask(0o077)
+free=shutil.disk_usage(p).free
+vm=subprocess.check_output(['vm_stat'],text=True)
+page=int(re.search(r'page size of (\d+)',vm).group(1))
+pages={m.group(1):int(m.group(2)) for m in re.finditer(r'^([^:\n]+):\s+(\d+)\.',vm,re.M)}
+memfree=(pages.get('Pages free',0)+pages.get('Pages speculative',0))*page
+available=memfree+(pages.get('Pages inactive',0)+pages.get('Pages purgeable',0))*page
+print(json.dumps({'disk_free_bytes':free,'free_memory_bytes':memfree,'available_memory_estimate':available}),flush=True)
+assert free>=30*1024**3 and memfree>=2*1024**3 and available>=8*1024**3,'RESOURCE_GATE_RETRY_LATER'
+env=dict(os.environ,GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=2',TMPDIR=str(p/'tmp'),GOTMPDIR=str(p/'tmp'))
+(p/'tmp').mkdir(exist_ok=True)
+assert subprocess.check_output(['go','env','GOOS'],text=True).strip()=='darwin'
+assert subprocess.check_output(['go','env','GOARCH'],text=True).strip()=='arm64'
+image='sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47'
+assert subprocess.check_output(['docker','image','inspect','--format','{{.Os}}/{{.Architecture}}',image],text=True).strip()=='linux/arm64'
+print(subprocess.check_output(['go','version'],text=True).strip(),flush=True)
+subprocess.run(['sandbox-exec','-f','/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/offline.sb','python3','-c','import socket,errno; s=socket.socket(); s.settimeout(1); r=s.connect_ex(("203.0.113.1",9)); assert r in (errno.EPERM,errno.EACCES),r; print("non-loopback outbound denied by sandbox")'],check=True,timeout=10)
+with (p/'compile.log').open('w') as log:
+ subprocess.run(['go','-C',str(s/'services/control'),'test','-overlay','/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/overlay.json','-c','-o',str(p/'distribution.test'),'./internal/modules/distribution'],env=env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=900)
+print('native darwin/arm64 test compilation passed',flush=True)
+helper_env=dict(env,GOOS='linux',GOARCH='arm64',CGO_ENABLED='0',GO111MODULE='off',GOTOOLCHAIN='local')
+with (p/'helper-compile.log').open('w') as log:
+ subprocess.run(['go','build','-o',str(p/'postgres-stdio'),str(p/'postgres-stdio.go')],env=helper_env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=180)
+from pg_proxy import PGProxy
+import signal,struct
+proxy=None
+def interrupted(_number,_frame):raise KeyboardInterrupt()
+for sig in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP):signal.signal(sig,interrupted)
+suffix=p.name.split('.')[-1].replace('_','-')
+network='lane-gw-native-'+suffix
+container='lane-gw-native-pg-'+suffix
+network_created=False
+cid=''
+port=None
+try:
+ (p/'postgres-password').write_text(secrets.token_hex(24)+'\n')
+ args=['docker','run','-d','--pull','never','--cidfile',str(p/'container-id'),'--name',container,'--network','none','--memory','1536m','--cpus','1','--shm-size','128m','--tmpfs','/var/lib/postgresql:rw,size=768m','--mount','type=bind,src='+str(p/'postgres-password')+',dst=/run/ownsolid-test-password,readonly','-e','POSTGRES_PASSWORD_FILE=/run/ownsolid-test-password','-e','POSTGRES_DB=gw_read_test',image]
+ cid=subprocess.check_output(args,text=True,timeout=60).strip()
+ for i in range(90):
+  if subprocess.run(['docker','exec',cid,'pg_isready','-q','-h','127.0.0.1','-p','5432','-d','gw_read_test'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0:break
+  time.sleep(1)
+ else:raise RuntimeError('owned PostgreSQL did not become ready')
+ subprocess.run(['docker','exec',cid,'psql','-X','-v','ON_ERROR_STOP=1','-U','postgres','-d','gw_read_test','-c',"CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;"],check=True,stdout=subprocess.DEVNULL)
+ obj=json.loads(subprocess.check_output(['docker','inspect',cid],text=True))[0]
+ assert obj['HostConfig']['NetworkMode']=='none'
+ assert not obj['HostConfig'].get('PortBindings')
+ assert set(obj['NetworkSettings']['Networks'])=={'none'}
+ with (p/'postgres-stdio').open('rb') as binary:
+  subprocess.run(['docker','exec','-i',cid,'sh','-c','umask 077; cat > /tmp/ownsolid-pg-stdio; chmod 0700 /tmp/ownsolid-pg-stdio'],stdin=binary,check=True,timeout=30)
+ proxy=PGProxy(p,cid)
+ proxy.start()
+ port=proxy.port
+ with socket.create_connection(('127.0.0.1',port),timeout=5) as connection:
+  connection.sendall(struct.pack('!II',8,80877103))
+  assert connection.recv(1)==b'N','POSTGRES_WIRE_PREFLIGHT_FAILED'
+ print('network-none PostgreSQL wire preflight passed on owned loopback port '+str(port),flush=True)
+ (p/'network.json').write_text(json.dumps({'container':cid,'image_platform':'linux/arm64','container_network':'none','docker_published_ports':False,'host_ip':'127.0.0.1','port':port,'transport':'owned stdio Go bridge over Docker exec; host loopback proxy','go_platform':'darwin/arm64','runtime_network':'sandbox denies non-loopback outbound'},indent=2)+'\n')
+ pw=(p/'postgres-password').read_text().strip()
+ (p/'postgres-dsn').write_text('postgres://postgres:'+pw+'@127.0.0.1:'+str(port)+'/gw_read_test?sslmode=disable\n')
+ del pw
+ env.update(PROJECT_ONE_TEST_DSN_FILE=str(p/'postgres-dsn'),PROJECT_ONE_EVIDENCE_ROOT=str(p/'evidence'))
+ (p/'evidence').mkdir(exist_ok=True)
+ roots=['TestPostgresAliasReadCapabilitiesAtRegisteredEntrances','TestPostgresAliasCapabilityPublicContractBoundary','TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget','TestAliasContextCeilingRequiresRecognizedSource']
+ pattern='^('+ '|'.join(roots)+')$'
+ print('running four roots with PostgreSQL on loopback port '+str(port),flush=True)
+ with (p/'distribution.log').open('w') as log:
+  subprocess.run(['sandbox-exec','-f','/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/offline.sb',str(p/'distribution.test'),'-test.v','-test.timeout=4m','-test.run',pattern],cwd=s/'services/control/internal/modules/distribution',env=env,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=270)
+ text=(p/'distribution.log').read_text()
+ assert not re.search(r'^\s*--- (FAIL|SKIP):',text,re.M)
+ for root in roots:assert re.search(r'^--- PASS: '+root+r' \(',text,re.M),root
+ (p/'result.json').write_text(json.dumps({'source':'219af27e3d9f73c78acc1b8ab8324e086a6a2f62','schema':'60 / 120 tables','go_platform':'darwin/arm64','postgres_platform':'linux/arm64 in Docker Desktop','contract':'7705c5a3 / 0.12.0 exact draft','roots':roots,'result':'passed without skips','scope':'registered human TLS and real PostgreSQL through network-none stdio transport with synthetic deployment observations; no actual model/GPU or production activation'},indent=2)+'\n')
+ print('four required roots passed without skips',flush=True)
+finally:
+ cleanup_errors=[]
+ if proxy is not None:
+  try:proxy.close()
+  except BaseException as error:cleanup_errors.append(type(error).__name__+' closing owned proxy')
+ if not cid and (p/'container-id').exists():cid=(p/'container-id').read_text().strip()
+ if re.fullmatch('[a-f0-9]{64}',cid):
+  try:subprocess.run(['docker','rm','-f',cid],check=True,stdout=subprocess.DEVNULL,timeout=30)
+  except BaseException as error:cleanup_errors.append(type(error).__name__+' removing owned container')
+ for name in ['postgres-password','postgres-dsn']:
+  f=p/name
+  if f.exists():f.unlink()
+ if port is not None:
+  probe=socket.socket()
+  probe.settimeout(1)
+  try:assert probe.connect_ex(('127.0.0.1',port))!=0,'OWNED_PROXY_PORT_STILL_OPEN'
+  finally:probe.close()
+ if cleanup_errors:raise RuntimeError('; '.join(cleanup_errors))
+ print('owned proxy/container/credentials removed; loopback port '+str(port)+' released',flush=True)

@@ -1,0 +1,29 @@
+# Independent quota-status integration packet
+
+This packet replaces the installation instructions in the broader immutable
+sch108-public.d1Boy6XA packet; that original packet and checksums remain intact.
+The prior Executor/fair-queue candidate stays on lane-sch at 7b29f0f6.
+Do not apply that branch to consume this quota component.
+
+The independent slice has only the 12 paths listed in slice-paths:
+the quota reader and HTTP component/tests, two shared-lock extraction helpers,
+per-row aggregate validation, two fixed guidance actions and owned docs.
+There is no queued-admission, selected-Executor ranking, topology, production
+identity/API/Web, formal DDL or roadmap change.
+
+- public-entry.md gives the direct &schedulinghttp.Handler{Workspaces: existingAuthority}
+  construction and exact Handle/ReadWorkspaceQuotaStatus signatures, actor,
+  audience and scope requirements, routes and DTO. There is no hidden factory.
+- errors.md lists the eleven real owned failures; IAM retains pre-dispatch errors.
+- openapi.review.json is the exact string-revision/quantity DTO review draft for
+  DEV's final OpenAPI/SDK/Help work. It is not published or generated here.
+- iam-composition.review.patch is a context-checked minimal assembly aid for IAM;
+  it is not applied. IAM owns route composition; Web owns UI/translations.
+- ddl-and-roles.md explicitly separates the already-existing unnumbered two-table
+  DDL from ARC's formal migration, catalog and role responsibilities.
+- tested-candidate-head and accepted-base-head pin the new isolated combination.
+  qualification.md and main-head are added only from actual completed gates and
+  confirmed fast-forward publication. No old pass is silently relabelled.
+
+Verified main commit: b87f338892f5dff2f7fa33232be5b51a742292e8.
+Read publication.md, qualification.md and SHA256SUMS before integration.

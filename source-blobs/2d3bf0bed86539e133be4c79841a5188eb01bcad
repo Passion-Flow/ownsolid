@@ -1,0 +1,25 @@
+# SCH-108 minimal public-entry owner packet
+
+This is a local-only, unqualified candidate packet for root review.
+source-head pins the exact implementation. base-head pins accepted schema 59.
+The worktree is /root/lane-sch on ownsolid-cpu; product source remains offline.
+
+- public-entry.md gives the actual constructor, signatures, trusted actor/
+  audience/scope contract, routes and exact DTO.
+- errors.md enumerates all eleven real module failures and separates IAM's
+  pre-dispatch responsibilities.
+- openapi.review.json is a review draft for DEV. It is not published, generated
+  or a claim that production endpoints exist.
+- ddl/ and ddl-dependencies.md give the exact two-table prerequisite, formal
+  migration/catalog and native grant boundaries.
+- authored-order and patches/ preserve every original author. Apply numerical
+  patches with git am after inspecting the exact accepted base. The first six
+  are retained scheduling prerequisites; the final three implement the
+  quota-status reader, true owner error set and exact revision string.
+- verification.md records pending commands and the precise lack of native
+  qualification. It does not carry old test passes forward as new evidence.
+
+IAM remains the trusted route owner, DEV the OpenAPI/SDK/Help owner and Web
+the UI owner. ARC owns production DDL/catalog/grants and TRN owns its consumer.
+This packet changes none of their production paths. No capacity/topology is
+invented, and no roadmap item is ticked.

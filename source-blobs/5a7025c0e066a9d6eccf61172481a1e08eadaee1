@@ -1,0 +1,23 @@
+#!/bin/sh
+# Lane B GW-114 live run: a real agent with the docker_inference profile and a gateway section,
+# in a container on this host with the host's network and Docker socket. $1 is the node name.
+set -e
+name=$1
+workspace=$2
+root=/root/lane-b/install-iam117
+token=$(python3 /root/lane-b/gw114/live/join-inference.py "$root" "$name" "$workspace" 2>/dev/null)
+image=$(docker image inspect --format '{{.Id}}' ownsolid/gateway:lane-b)
+docker rm -f lane-b-gateway-host >/dev/null 2>&1 || true
+docker run -d --name lane-b-gateway-host --network host --add-host admin.lane-b.test:127.0.0.1 \
+  -v /run/docker.sock:/run/docker.sock -v /etc/os-release:/etc/os-release:ro \
+  -v /root/lane-b/gw114/live/agent:/usr/local/bin/agent:ro \
+  -v /root/lane-b/gw114/live/gateways:/root/lane-b/gw114/live/gateways \
+  -v $root/config/ca.pem:/opt/ca.pem:ro \
+  debian:bookworm-slim sleep infinity >/dev/null
+docker exec lane-b-gateway-host sh -c 'install -d -m 0700 /etc/ownsolid-agent /var/lib/ownsolid-agent /var/lib/ownsolid-inference; cp /opt/ca.pem /etc/ownsolid-agent/ca.pem; chmod 0700 /root /root/lane-b /root/lane-b/gw114 /root/lane-b/gw114/live'
+cat <<J | docker exec -i lane-b-gateway-host sh -c 'umask 077; cat > /etc/ownsolid-agent/agent.json'
+{"control_origin":"https://admin.lane-b.test:18443","ca_file":"/etc/ownsolid-agent/ca.pem","state_directory":"/var/lib/ownsolid-agent","disk_path":"/","join_token_file":"/etc/ownsolid-agent/join-token","execution_profile":"docker_inference","inference":{"root_directory":"/var/lib/ownsolid-inference","docker_socket":"/run/docker.sock"},"gateway":{"listen_address":"127.0.0.1:18543","origin":"https://gw.lane-b.test:18543","image":"$image","root_directory":"/root/lane-b/gw114/live/gateways","memory_bytes":536870912}}
+J
+printf '%s' "$token" | docker exec -i lane-b-gateway-host sh -c 'umask 077; cat > /etc/ownsolid-agent/join-token'
+docker exec lane-b-gateway-host agent enroll --config /etc/ownsolid-agent/agent.json
+docker exec -d lane-b-gateway-host sh -c 'agent run --config /etc/ownsolid-agent/agent.json >/var/lib/ownsolid-agent/run.log 2>&1'

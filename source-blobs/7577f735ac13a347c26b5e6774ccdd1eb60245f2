@@ -1,0 +1,1720 @@
+diff --git a/docs/decisions/0076-bound-tenant-admission-locking.md b/docs/decisions/0076-bound-tenant-admission-locking.md
+new file mode 100644
+index 00000000..4d04a3a3
+--- /dev/null
++++ b/docs/decisions/0076-bound-tenant-admission-locking.md
+@@ -0,0 +1,54 @@
++# 0076: Bound tenant admission locking
++
++Status: Accepted
++Date: 2026-11-13
++
++## Context
++
++SCH-103 needs a current fair queue decision and its logical reservation in one
++workload-owner transaction. The retained candidate locks every workspace in the
++supplied tenant domain. The configured Workspace maximum permits 10,000 entries;
++one advisory lock and round trip per entry would tie admission cost and the
++PostgreSQL shared lock pool to that policy maximum.
++
++## Decision
++
++Use one transaction-level tenant read/write advisory fence. Ordinary reservation,
++release and reclaim mutations take the shared side. ReserveQueuedWithin takes
++the exclusive side before its current owner/usage read, then reuses ReserveWithin
++to admit the selected head. The lock order is policy, tenant, requesting workspace,
++cohort. Existing policy and workspace fences remain. A cohort never locks another
++workspace. Queue admission must be the first scheduling write in the transaction.
++
++The owner supplies a complete, bounded, server-authorized domain and eligible
++batch. It retains actor/workspace/node/job/physical-resource fences, task/dequeue/
++audit writes, current authority and commit ownership. The callback does not take
++other jobs' row locks or perform writes/network I/O. Snapshot ranking remains a
++separate hint; final admission uses current READ COMMITTED statements.
++
++## Consequences
++
++Scheduling admission uses a constant number of advisory locks for a tenant,
++rather than one per configured workspace. Ordinary writers in distinct workspaces
++continue concurrently, while a queued decision excludes their mutations until
++commit. Unrelated tenants have separate keys; hash collisions only serialize.
++A caller must not upgrade a previously acquired shared scheduling fence as a
++later operation. It rolls back on cancellation, deadlock, malformed scope or owner
++failure and retries with the documented ordering.
++
++This is an internal scheduling protocol, not a replacement for Kueue or Volcano.
++It introduces no persistent table or new dependency. Before production activation,
++all Control writers must use the new protocol; mixed-version direct writers are
++not an atomic queue cutover. ARC/IAM retain grants/readiness, and the workload owner
++retains real dispatch/UI acceptance. The previous broad lane candidate is preserved.
++
++## Evidence required
++
++Qualify real PostgreSQL shared/exclusive and cross-tenant behavior, bounded
++10,000-workspace lock count, queue and owner rollback/replay, cancellation, lost
++commit acknowledgement, borrowing/reclaim/positive release and existing read APIs.
++The source documents transaction advisory locks and their lifetime in
++[PostgreSQL 18](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)
++and the shared/exclusive functions in its
++[administration reference](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS).
++Implementation and acceptance remain separate from this decision.
+diff --git a/docs/product/status.md b/docs/product/status.md
+index c7444f3e..b6378df3 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -73,7 +73,10 @@ today and what is known to fail.
+ | Transactional training scheduling seam (SCH-101, open) | PostgreSQL reservation and exact release on the workload owner's transaction, with candidate schema | Linux PostgreSQL 18.6 covered contention, owner rollback and live quota edits. A logical dump/restore of the v57 catalog with candidate tables preserved a held and a released attempt and their admission decisions. Disconnected local replay and release refused foreign site/cell records for single and gang attempts | No | Production migration and fingerprints, the authenticated training caller and installed offline flow remain open. See [training and database handoff](../research/scheduling-training-reservations.md) |
+ | Live workspace queue ranking (SCH-103, open) | Tenant-scoped ordering from current quota and reservation shares in one read-only snapshot | Isolated Linux PostgreSQL 18.6 verified priority, snapshot stability, changed rank after holds and quota edits, FIFO after release, one reservation query for multiple workspaces and zero reservation reads on foreign or missing scope. A foreign site/cell in the selected active records refused the entire rank and preserved the records | No | Durable queue membership, authority over priority classes and the workload owner dispatch remain open. See [live workspace shares](../research/scheduling-queue-policy.md#live-workspace-shares) |
+ | Selected-repository queue ranking (SCH-103, open) | Additive Executor entry; the pgx entry and submission preflight share snapshot validation | Source b8d3efa0 passed seven route-free PostgreSQL 18.6 race flows and the four boundary checks on Linux amd64: retained and refreshed owner/usage snapshots, wrong transaction modes, foreign/missing scopes, one aggregate query and legacy preflight/ranking contracts. The same source passed the complete Control module suite, make check and make build on macOS arm64 Go 1.27.3 with Python 3.12 and offline locked dependencies | No | Production eligible-batch selection, priority authority, current write admission and the authenticated UI flow remain owner integrations. No queued-admission implementation, production schema or route is activated. See [selected-repository ranking](../research/scheduling-queue-policy.md#selected-repository-snapshot-ranking) |
++| Current queue admission (SCH-103, open) | Current fair-queue decision and exact reservation in one owner transaction, with bounded tenant fences | Source d61d6879 passed 45 route-free PostgreSQL 18.6 race cases, 66 component tests, full Control modules, make check, make build and platform configuration/HTTP tests on Linux amd64. The configured 10,000-workspace domain held two advisory lock tags. Integration bbc18ba8 on base 5a1f787c retained exact-source evidence after the documentation delta, layout and roadmap checks | No | Native serving-role grants, the real bounded eligible batch and priority authority, all-writer cutover, authenticated dispatch and the installed UI remain open. See [component qualification](../research/scheduling-queue-policy.md#component-qualification) |
+ | Whole-job reservation and gang release (SCH-104, open) | One transactional hold for all replica groups and full exact slot evidence before release | Isolated Linux PostgreSQL 18.6 verified rollback of three provisional owner holds after quota refusal and a rejected COMMIT, replay after lost COMMIT acknowledgement, and refusal of partial, duplicate and stale stop evidence | No | Production migration, verified physical receipts, installed scheduler and the authenticated workload flow remain open. See [gang reservation and release](../research/scheduling-admission.md#atomic-gang-reservation-and-release) |
++| Preemption with checkpoint grace (SCH-105, open) | Research only; no preemption runtime or shadow job store is installed | Not run; no runtime support or completed preemption is claimed | No | The workload owner must supply durable business-preemption lineage, checkpoint capability and receipts, exact stop delivery and positive release, a bounded requeue policy and current authority. Controller eviction or hook completion alone cannot free quota. See [preemption research](../research/scheduling-preemption.md) |
++| Topology inventory and placement (SCH-106, open) | Research only; no device/fabric inventory or topology placement flow is installed | Not run; no GPU topology or physical placement is claimed | No | Existing Agent Facts and cell Observation do not supply the required trusted topology. Collector/registered-cell authority, validated persisted inventory, exact adapter constraints and physical holds, permissions and the offline UI flow remain open. See [topology research](../research/scheduling-topology.md) |
+ | Placement wait reasons (SCH-108, open) | Actionable guidance from the current queue, quota, reservation and reclaim decisions | Isolated Linux PostgreSQL 18.6 verified refreshed shortfalls after quota edits and release, exact reclaim evidence, replay and identical denial for foreign and missing scopes. Disconnected TLS returned guidance for the bound Workload UID and withheld it for stale conditions, replacement and forbidden reads | No | The authenticated caller needs the workload owner's durable controller UID binding. Live cell validation requires signed offline controller assets and scoped credentials. See the [installed workload handoff](../research/scheduling-wait-reasons.md#installed-workload-handoff) |
+ | Authorized workspace quota status (SCH-108, open) | Independent reader and HTTP component; current Workspace authority, quota policy and held usage share one selected PostgreSQL transaction | Source 0e7d5a9e on accepted base 3b087618 (schema 60) passed six route-free PostgreSQL 18.6 race flows on Linux amd64: current authority, exact quota/revision accounting, lock-wait readback, HTTP failure projection and affected reservation/share/borrowing regressions. Linux Go 1.27.3 also passed the complete Control module suite, make check and make build on that exact source | No | Production IAM dispatch, public OpenAPI generation and UI are not installed. Native serving-role/catalog and installed-flow acceptance remain open; these component tests do not qualify the complete feature. See the [scope contract](../research/scheduling-wait-reasons.md#authorized-workspace-quota-status) |
+ | Borrowed quota and reclaim (SCH-109, open) | Exact per-attempt loans between sibling workspaces and ordered reclaim on a candidate PostgreSQL schema | Isolated Linux PostgreSQL 18.6 covered competing borrowers, the hard quota ceiling, waiting for exact release records, rollback, cancellation and lost commit acknowledgements. Foreign holds and claims were refused, a foreign victim release kept reclaim pending, and a foreign active hold preserved the quota-policy revision | No | Production schema, runtime stop delivery and audit, and the authenticated user flow remain open. See [borrowed quota research](../research/scheduling-quota-borrowing.md) |
+diff --git a/docs/research/lane-sch-questions.md b/docs/research/lane-sch-questions.md
+index 235c1bc7..08283e60 100644
+--- a/docs/research/lane-sch-questions.md
++++ b/docs/research/lane-sch-questions.md
+@@ -63,15 +63,22 @@ database owner to land or authorize the exact fresh and restored fingerprints.
+   stop and requeue semantics. The owner must supply a durable, scoped
+   preemption lineage to distinguish requeues from ordinary attempt retries,
+   plus a checkpoint and exact positive stop result before capacity is freed.
++  The [preemption research](scheduling-preemption.md) records current upstream
++  retry/grace semantics, the rejected shadow runtime and exact acceptance cases.
+ - SCH-106 requires trustworthy device and network topology observations. The
+   current agent facts contract lacks the full PCIe, NUMA, NVLink and fabric
+   inventory. [NVIDIA DCGM topology](https://docs.nvidia.com/datacenter/dcgm/latest/learn/core-services/topology-and-links.html)
+   and the [Kubernetes Topology Manager](https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/)
+   distinguish local hardware affinity from scheduler labels. Avoid inventing
+   topology from node names or assuming every link is healthy.
++  The [topology research](scheduling-topology.md) separates physical graphs,
++  derived scheduler domain trees and current link observations, and records the
++  exact missing producer contract and hard/preferred acceptance conditions.
+ - SCH-107 has observation readers. The signed offline install assets and
+   RKE2 deployment, workload creation, RBAC provisioning and runtime reconciliation
+-  remain part of the item.
++  remain part of the item. The [offline installation boundary](scheduling-cell-adapters.md#offline-controller-installation-and-upgrade-boundary)
++  records release-artifact rendering, node image delivery, scoped webhooks and
++  non-destructive upgrade acceptance; source-chart defaults are not offline payloads.
+ - SCH-109 has candidate PostgreSQL loan attribution and ordered reclaim
+   within enabled departments. [Borrowing and reclaim](scheduling-quota-borrowing.md)
+   records the owner transaction, follow-on schema and positive release
+diff --git a/docs/research/scheduling-cell-adapters.md b/docs/research/scheduling-cell-adapters.md
+index 6940752c..2f808bc8 100644
+--- a/docs/research/scheduling-cell-adapters.md
++++ b/docs/research/scheduling-cell-adapters.md
+@@ -73,3 +73,63 @@ file, so direct kubelet projected symlinks need a separately verified
+ installation path. client-go is an Apache-2.0 design reference. The
+ implementation uses the existing standard library and bundle reader,
+ with no new dependency or license obligations.
++
++## Offline controller installation and upgrade boundary
++
++The [Kueue 0.20 installation guide](https://kueue.sigs.k8s.io/v0.20/docs/getting-started/installation/)
++currently names release 0.20.5 and recommends Kubernetes 1.34 or newer. It uses
++server-side apply and waits for controller availability. Its internal webhook
++certificate management avoids requiring an additional certificate controller.
++The guide warns that unscoped management of Jobs can intercept distribution
++maintenance Jobs. Select only ownsolid workload namespaces and supported
++frameworks; leave RKE2 and other system workloads outside both scheduler owners.
++
++[Volcano installation](https://volcano.sh/docs/gettingstarted/installation/)
++includes YAML and Helm paths, but its generic Kubernetes minimum does not prove
++compatibility with the selected RKE2 release. The immutable
++[1.16.0 chart](https://github.com/volcano-sh/volcano/blob/v1.16.0/installer/helm/chart/volcano/Chart.yaml)
++contains a local jobflow subchart. Its
++[values](https://github.com/volcano-sh/volcano/blob/v1.16.0/installer/helm/chart/volcano/values.yaml)
++select a public registry and Always pull policy. The source-tag
++[Kueue chart values](https://github.com/kubernetes-sigs/kueue/blob/v0.20.5/charts/kueue/values.yaml)
++also contain development image defaults. Neither unrendered source chart is an
++approved offline payload. These are candidate references, not installed or
++qualified ownsolid controller versions.
++
++Prepare exact release artifacts outside the installation, render them against
++the selected Kubernetes version and inventory every image, init container, hook,
++CRD and chart dependency. Pin image digests and verify all bytes through the
++existing signed offline delivery mechanism. Resolve images only from preloaded
++node content or an explicitly configured intranet registry. Installation must
++not fetch manifests, charts, dependencies, public registry layers or certificates.
++[RKE2 air-gap guidance](https://docs.rke2.io/install/airgap) distinguishes image
++preloading from private registry delivery; scheduler images must reach the cell's
++containerd, not merely the development host's Docker cache.
++
++Kueue [0.20.5](https://github.com/kubernetes-sigs/kueue/blob/v0.20.5/LICENSE) and
++Volcano [1.16.0](https://github.com/volcano-sh/volcano/blob/v1.16.0/LICENSE) use
++Apache-2.0, allowing commercial modification and offline redistribution with its
++license, notice and modification obligations. That does not establish every
++image layer or subchart's license. The exact delivered inventory needs its own
++license/notices review. This research adds no dependency, model or dataset and
++copies no upstream code.
++
++Reuse the registered cell cluster and its authenticated lifecycle owner. Keep
++installation authority separate from namespaced observation credentials. Persist
++an idempotent desired installation revision and each applied object's identity;
++retain unknown outcomes for reconciliation. CRD acceptance, webhook readiness,
++controller rollout and effective RBAC are separate checks. A Deployment becoming
++available does not prove workload admission or an offline image restart. Do not
++uninstall CRDs or delete existing workloads as automatic rollback. Upgrades need
++release-note review, served/stored API compatibility and a recovery path before
++changing persisted controller objects.
++
++Acceptance must use the selected RKE2 version with both controllers installed:
++admit and cancel one real workload through each owner; refuse unauthorized and
++foreign namespace access; reconcile a replaced UID; restart controllers with no
++external route and an empty Pod image cache; retry a partial installation and
++an uncertain apply; verify webhooks do not intercept maintenance workloads.
++Exercise incompatible CRDs, missing images, certificate rotation and failed
++upgrades without dropping active workloads or releasing logical holds.
++Production installation tasks, registered-cluster credentials and these offline
++runs remain open. The observation reader and this research do not close SCH-107.
+diff --git a/docs/research/scheduling-preemption.md b/docs/research/scheduling-preemption.md
+new file mode 100644
+index 00000000..91c173be
+--- /dev/null
++++ b/docs/research/scheduling-preemption.md
+@@ -0,0 +1,96 @@
++# Preemption, checkpoint grace and bounded requeue
++
++SCH-105 lets an authorized higher-priority workload reclaim execution capacity
++without silently losing a running workload's progress or repeatedly restarting it.
++This topic builds on exact reservations, gang release and durable reclaim plans.
++It does not replace the chosen Kueue/Volcano cell boundary.
++
++## Primary references
++
++[Kueue preemption](https://kueue.sigs.k8s.io/docs/concepts/preemption/) separates
++eviction policy from workload execution and records eviction/preemption
++conditions. These conditions alone do not prove physical GPU release.
++[Kueue readiness requeue](https://kueue.sigs.k8s.io/docs/tasks/manage/setup_wait_for_pods_ready/#requeuing-strategy)
++has an explicit retry ceiling and capped exponential delay. Omitting its retry
++ceiling can requeue a readiness timeout indefinitely. Readiness requeue is not a
++universal counter for every business preemption.
++
++[Volcano Job](https://volcano.sh/docs/concepts/volcanojob/) provides lifecycle
++policies and maxRetry. Its
++[Job specification](https://github.com/volcano-sh/apis/blob/master/pkg/apis/batch/v1alpha1/job.go)
++makes the retry bound a job field. Recreating a controller object must not reset
++ownsolid's separate business lineage.
++
++[Slurm preemption](https://slurm.schedmd.com/preempt.html) distinguishes cancel,
++requeue and suspend. GraceTime gives selected modes a stop grace interval;
++suspension has different resource implications. A generic preempted flag cannot
++be interpreted as freed resources or a completed checkpoint.
++
++[Kubernetes lifecycle hooks](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/)
++share a termination grace budget with normal shutdown and may be delivered more
++than once. A hook invocation is not an exactly-once durable checkpoint receipt.
++
++These current upstream references establish semantics, not a controller version
++upgrade. Installed adapter acceptance must use the signed, pinned offline assets
++and their exact API version. No latest-tag image or runtime download is selected.
++
++## Chosen owner boundary
++
++Persist a scoped preemption operation and immutable affected-attempt identity in
++the workload owner's transaction, with its audit and stop/checkpoint outbox.
++Deliver outside the transaction using one stable operation identity. Replay a
++duplicate delivery or uncertain acknowledgement against that identity. The
++workload owner verifies that checkpointing and restart are supported for the
++particular runtime; ownsolid does not infer support from a signal handler.
++
++Keep the logical hold until positive stop or non-delivery proof exists for every
++reserved slot. Expiry of a grace deadline permits the configured stop escalation;
++it never releases quota by itself. The owner must distinguish successful
++checkpoint persistence from merely starting or finishing a process hook.
++Unsupported or failed checkpointing has an explicit policy outcome and actionable
++state; no success stub or unverified resume artifact is accepted.
++
++Persist a business-preemption count and capped retry policy in the existing job
++lineage. Do not count ordinary transport retries as preemptions, or reset the
++counter on process restart, new attempt number or controller replacement.
++Current priority authority and quota admission apply again before requeue.
++Cancellation must suppress any pending requeue and retain exact replay evidence.
++
++Reject an in-memory retry counter, arbitrary client-supplied hook commands/URLs,
++freeing on controller eviction alone, and treating suspension as release.
++A second private job store would duplicate the workload owner's authority and
++terminal transitions. Shared production interfaces are not changed to invent
++the missing lineage.
++
++## Dependencies and offline use
++
++This design adds no dependency, model or data set. Kueue and Volcano remain
++references under their
++[Apache-2.0](https://github.com/kubernetes-sigs/kueue/blob/main/LICENSE)
++[licenses](https://github.com/volcano-sh/apis/blob/master/LICENSE); any later
++offline distribution must include the exact assets' license and notice inventory.
++Slurm and Kubernetes documentation are references; no source is copied.
++Existing Go, pgx and PostgreSQL licenses are recorded in
++[the reservation research](scheduling-training-reservations.md). Runtime checkpoint formats and dependencies
++must be checked for the selected actual backend before claiming support.
++
++## Acceptance and present boundary
++
++Test owner rollback, duplicate and concurrent delivery, crash before/after
++acknowledgement, unknown commit, stale attempt and controller UID, partial gang
++stop, checkpoint failure/timeout, cancellation during checkpoint, revoked
++authority, cross-tenant requests, restart and controller replacement at the retry
++ceiling. A clock change must not reset the persisted count or create a release.
++Verify clear wait/error states and a bounded automatic retry path.
++
++The completed product flow lets an authorized operator request preemption,
++inspect checkpoint/grace/stop/requeue results, retry a recoverable failure and
++observe the next admission through the UI with audit and both languages, offline.
++Use the real runtime and installed cell once, then repeat with network
++disconnected. Unit state transitions alone cannot close SCH-105.
++
++The current scheduling reclaim rows identify victims and positive releases, but
++do not contain the business-preemption lineage, checkpoint authority, runtime
++delivery or UI. The workload owner supplies those durable inputs. Until then,
++retain SCH-105 open and do not add a shadow runtime/controller or claim that the
++queued-admission component implements preemption.
+diff --git a/docs/research/scheduling-queue-policy.md b/docs/research/scheduling-queue-policy.md
+index 563a18a0..7cfe813b 100644
+--- a/docs/research/scheduling-queue-policy.md
++++ b/docs/research/scheduling-queue-policy.md
+@@ -178,3 +178,96 @@ flows alongside those five existing regressions. The interface is accepted only
+ when all seven real flows and the required repository/module gates pass.
+ Production eligible-batch authority, durable priority configuration, current
+ write admission and the authenticated UI flow remain owner integrations.
++
++
++## Atomic queue admission and bounded tenant fencing
++
++The published read interface does not make the final write decision atomic.
++ReserveQueuedWithin must read the current eligible batch after excluding
++competing reservation mutations, rank it from current shares and reserve the
++selected head in the owner's existing READ COMMITTED transaction. Exact held
++replays return false without reading an owner row that may already be dequeued.
++The owner commits physical holds, dequeue, attempts and audit with that hold.
++
++The inherited candidate locked every supplied workspace before reading the
++queue. The current typed Workspace policy permits up to 10,000 workspaces.
++That makes lock allocation and SQL round trips grow with the configured domain.
++PostgreSQL documents its finite
++[shared advisory-lock pool](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS).
++Use one tenant transaction-level read/write fence instead. Existing reservation,
++release and reclaim writers acquire its shared side; queued admission acquires
++its exclusive side. Different tenants retain independent fences. Hash collisions
++can only serialize unrelated tenants, never grant capacity or authority.
++
++PostgreSQL's
++[transaction advisory functions](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS)
++provide shared/exclusive conflict semantics, reentrancy and automatic release at
++transaction end. Keep the order policy, tenant, requesting workspace, cohort.
++The cohort never takes another workspace fence. Current quota-status reads
++retain their existing policy/workspace readback fences; snapshot ranking remains
++read-only and acquires no admission fence.
++
++Validate and normalize the complete server-owned workspace domain before the
++owner callback. It must include the requested workspace even for a held replay.
++The callback derives tenant/local scope, eligibility, priority and positive
++sequence from persisted owner authority, uses only the supplied executor, takes
++no other job row locks, and performs no write or network call. It returns all
++currently eligible rows or fails on the owning typed policy's bounds. Never
++filter it by the earlier domain: a newly eligible out-of-domain workspace must
++force a retry rather than disappear. Unknown/cancelled/foreign attempts publish
++no success. A non-head returns SCHEDULING_QUEUE_TURN_PENDING with fixed guidance.
++
++Reuse ReserveWithin after a head is selected. It already enforces hard quota,
++exact attempts, enabled borrowing, pending reclaim, durable commit and loan
++attribution. Duplicating those decisions in the wrapper could lose funding
++or admit before positive victim release. The old O(workspaces) lock protocol,
++global policy-exclusive locking, separate ranking transactions and owner-side
++usage counters are rejected. See [ADR 0076](../decisions/0076-bound-tenant-admission-locking.md).
++
++Acceptance uses real isolated PostgreSQL: non-head refusal; head/dequeue in one
++commit; owner/audit rollback; complete-domain refusal; concurrent same-attempt
++replay; cancellation; exact release with owner terminal state; lost COMMIT
++acknowledgement; and retained foreign scope. New cases prove that ordinary writers
++block behind an exclusive tenant fence, another tenant proceeds, rollback releases
++it, and 10,000 configured workspaces do not require 10,000 advisory locks. Enabled
++borrowing must retain exact loans, signal reclaim and wait for committed release
++before nominal admission. These are component fixtures, not actual training/UI
++acceptance. The production owner still owns authority, task delivery and cutover.
++
++The existing Go/UUID BSD-3-Clause, pgx MIT and PostgreSQL licenses permit commercial
++redistribution with notices and offline operation. Kueue remains an Apache-2.0
++reference, including its separate nominal, borrowing and lending limits. This
++change adds no dependency, model, data set, production table or runtime download.
++
++
++### Component qualification
++
++Source d61d6879 on base a27fe64b passed 45 real PostgreSQL cases and 66
++top-level component tests with Go race instrumentation, PostgreSQL 18.6 and
++pgvector 0.8.7 on Linux amd64. That exact source also passed full Control
++modules, make check, make build and the platform configuration and HTTP server
++tests with Go 1.27.3 and offline dependencies. No browser tests ran.
++The component network namespace had no default route; the private database
++had no container network or host port.
++
++Tests verified current usage after ordinary and queued waits, shared-writer
++concurrency, tenant isolation, owner rollback and commit, replay, cancellation,
++positive release, borrowing/reclaim and a suppressed real COMMIT acknowledgement.
++The configured 10,000-workspace domain held exactly two advisory lock tags.
++This is not SCH-111 fleet admission latency evidence.
++
++Integration source bbc18ba8 on base 5a1f787c retains that exact-source native
++qualification. Its delta from the tested source was checked to contain only
++documentation; layout and roadmap checks were rerun. Earlier macOS and Linux
++runs retain their actual source identities and are not relabeled.
++
++With both protected fixture DSN variables configured, the native component
++command is:
++
++    go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -skip '^TestPostgresReservationCatalogRoundTrip$' -count=1 -timeout 8m -v
++
++The separate fresh/dump/restore catalog harness was explicitly excluded; this
++admission change has no production DDL. Privileged fixtures do not qualify native
++serving-role grants. Production eligible-batch and priority authority, all-writer
++protocol cutover, authenticated dispatch and the installed offline UI flow remain
++open. SCH-103 stays unticked.
+diff --git a/docs/research/scheduling-quota-borrowing.md b/docs/research/scheduling-quota-borrowing.md
+index 4ea22430..3634ea6a 100644
+--- a/docs/research/scheduling-quota-borrowing.md
++++ b/docs/research/scheduling-quota-borrowing.md
+@@ -29,7 +29,8 @@ cancelled. The exact waiting attempt cannot reserve until all planned victims
+ have a committed release. Cancelling a plan leaves every victim hold intact.
+ 
+ Borrowing and reclaim use the existing PostgreSQL READ COMMITTED owner
+-transaction. The lock order is policy, requesting workspace and then cohort.
++transaction. The lock order is policy, shared tenant fence, requesting workspace
++and then cohort.
+ A cohort never locks another workspace. A physical release only decreases
+ usage, and a subsequent statement must observe its committed row before using
+ the capacity. Policy changes affecting an enabled cohort require it to be
+@@ -125,3 +126,21 @@ rollback and acknowledgement-loss tests. A separate policy test must
+ retain its original revision on a foreign hold and succeed after fixture
+ correction. These tests qualify the transaction boundary. The physical
+ stop source, runtime owner and production migration remain required.
++
++
++## Queue-admission compatibility
++
++The queue wrapper must delegate a selected head to ReserveWithin. That operation
++already calls borrowingForReservation and recordBorrowingWithin, including pending
++reclaim and positive local-release barriers. Queue ranking is not an alternative
++loan allocator. Test a queued borrower and a nominal lender together, including
++rollback and exact held replay, so a queue integration cannot silently bypass
++loan attribution or reclaim.
++
++The planned bounded admission fence in [ADR 0071](../decisions/0071-bound-tenant-admission-locking.md)
++extends the write order to policy, tenant, requesting workspace, cohort. Ordinary
++reservation/release/reclaim writers take the tenant shared fence; current queued
++admission takes its exclusive side. Cohort reads still lock no other workspace.
++Production activation requires all Control writers to use that protocol and the
++serving principal to execute both transaction advisory-lock functions. The
++existing reservation, loan and reclaim candidate DDL is unchanged.
+diff --git a/docs/research/scheduling-topology.md b/docs/research/scheduling-topology.md
+new file mode 100644
+index 00000000..6098150f
+--- /dev/null
++++ b/docs/research/scheduling-topology.md
+@@ -0,0 +1,96 @@
++# Topology inventory and placement constraints
++
++SCH-106 owns a trustworthy topology inventory and its admission constraints.
++The fixed architecture keeps Kueue/Volcano behind cell adapters. Logical quota
++is not proof of a physically compatible placement.
++
++## Primary sources and their boundaries
++
++[Kueue topology-aware scheduling](https://kueue.sigs.k8s.io/docs/concepts/topology_aware_scheduling/)
++represents network domains through ordered node labels. A rack label need not be
++globally unique: its parent path distinguishes the domain. Required and preferred
++constraints have different admission semantics. A node label does not describe
++device-local PCIe or NVLink connectivity.
++
++[Volcano network topology](https://volcano.sh/docs/keyfeatures/networktopologyaware/)
++uses a HyperNode domain tree and hard/soft job constraints. Its domain tree must
++not contain cycles or multiple parents. Discovery can consume authoritative
++fabric information rather than guessing from node names. A logical domain tree
++is not an inventory of every physical network path.
++
++[Kubernetes Topology Manager](https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/)
++coordinates NUMA hints on one node. Policy can reject a Pod even after scheduling;
++a strict single-NUMA requirement cannot silently become best effort. This local
++admission boundary differs from cross-node fabric placement.
++
++[NVIDIA DCGM topology and links](https://docs.nvidia.com/datacenter/dcgm/latest/learn/core-services/topology-and-links.html)
++separates known CPU/PCIe/NVLink relationships, current port state and active
++diagnostics. Topology does not reserve hardware, certify bandwidth or prove link
++health. The [topology API](https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-api/dcgm-api-topology.html)
++also requires callers to exclude devices already in use when selecting a group.
++
++These references establish the inventory/adapter separation. They do not select
++a new controller, driver or collector version. Exact controller features must be
++qualified against the signed, pinned offline assets before installation.
++
++## Chosen approach and rejected alternatives
++
++Retain a versioned inventory bound to authenticated site/cell/node identity and
++the registered cluster. Separate device-local relationships and physical fabric
++links from derived scheduler domain trees. Use stable device identity and explicit
++parent/endpoint references, not GPU array indices as global IDs. Preserve CPU
++NUMA affinity, PCIe paths, NVLink relationships, rail membership and leaf/spine
++connections with source, observation time, freshness and known/unknown status.
++
++An inventory collector supplies hardware facts; a fabric source or authorized
++operator supplies network domains. Administrative import must be validated,
++versioned, permission checked and audited. Scope comes from server authority.
++Collectors need bounded calls, verified TLS and protected credential files.
++
++Translate only representable constraints into the installed adapter. Retain the
++full physical graph: a multi-rail physical network can have valid alternate paths,
++while the derived HyperNode tree must be acyclic. Reject an invalid projection
++instead of deleting physical edges to invent a tree. Required constraints wait
++with fixed guidance when data is missing, stale, unsupported or incompatible.
++Preferred constraints may relax only as explicitly authorized by policy.
++
++The workload owner revalidates the inventory/policy versions and actual physical
++holds at dispatch. An observation or successful quota reservation does not assign
++devices. Do not infer topology from hostnames, GPU model strings or total counts;
++treat unknown links as healthy; equate link count with usable bandwidth; or mix
++independent observations into an apparently atomic capacity sample. Arbitrary
++client labels cannot replace an authorized inventory.
++
++## Existing contracts and dependency boundary
++
++The current agent Facts in api/agent/v1/protocol.go carries host totals and an
++observation time, not the required per-device and fabric graph. The scheduling
++celladapter Observation contains object version, state and blocker only. Neither
++is a current topology inventory producer. This lane does not edit the Agent or
++silently expand a shared protocol. The owning collectors and registered-cell
++authority must provide the facts before a production inventory reader is built.
++
++This research adds no dependency, model or dataset. Kueue and Volcano remain
++[Apache-2.0](https://github.com/kubernetes-sigs/kueue/blob/main/LICENSE)
++[references](https://github.com/volcano-sh/apis/blob/master/LICENSE).
++[DCGM core](https://github.com/NVIDIA/DCGM/blob/master/LICENSE) is Apache-2.0;
++that does not establish redistribution rights for a complete driver or binary
++bundle. Verify each selected asset's exact license/notices, commercial
++redistribution and air-gapped use before including it. No remote collector,
++online lookup or automatic runtime download is introduced.
++
++## Failure coverage and finished behavior
++
++Test repeated local rack names under different parents, missing endpoints,
++duplicate device IDs, invalid logical-tree cycles/multiple parents, valid physical
++alternate paths, unsupported or down links, stale/future samples, node replacement,
++foreign site/cell, concurrent inventory edits, revoked authority and hard versus
++preferred constraints. Test every replica group's complete physical fit and owner
++rollback; a partial gang placement must not publish success or release a hold.
++
++The finished UI lets an authorized operator inspect/import current topology,
++see the source and freshness, correct a rejected inventory and retry. A workload
++user submits a topology constraint and receives the actual placed domain or fixed
++waiting guidance without another tenant's inventory. State, audit, permissions,
++English/Chinese, failure/retry and the installed offline cell flow are required.
++Simulated graph tests and a controller condition alone cannot close SCH-106.
+diff --git a/services/control/internal/modules/scheduling/README.md b/services/control/internal/modules/scheduling/README.md
+index 8403b8a9..4fca4ec0 100644
+--- a/services/control/internal/modules/scheduling/README.md
++++ b/services/control/internal/modules/scheduling/README.md
+@@ -90,8 +90,8 @@ Priority and durable enqueue sequence come from persisted server authority.
+ Ranking does not admit work. The workload owner rechecks current authority
+ and admission in a fresh write transaction. Production batch selection,
+ priority configuration and actual dispatch remain owner integrations.
+-The separately retained queued-admission candidate is not required by this
+-interface. See [selected-repository ranking](../../../../../docs/research/scheduling-queue-policy.md#selected-repository-snapshot-ranking).
++This read interface can be used without the current queue-admission entry below.
++See [selected-repository ranking](../../../../../docs/research/scheduling-queue-policy.md#selected-repository-snapshot-ranking).
+ 
+ ## Authorized workspace quota status
+ 
+@@ -136,3 +136,42 @@ With the protected loopback `PROJECT_ONE_TEST_DSN_FILE` configured:
+ ```sh
+ go -C services/control test -p 1 -race ./internal/modules/scheduling/... -run '^(TestWorkspaceQuotaStatus|TestQuotaReadRejects|TestPostgresWorkspaceQuotaStatus|TestPostgresHTTPWorkspaceQuotaStatus)' -count=1 -v
+ ```
++
++## Current queue admission
++
++ReserveQueuedWithin borrows the workload owner's PostgreSQL READ COMMITTED
++transaction. Call it before other scheduling writes, after retaining the owner's
++current actor, Workspace, node, job and physical-resource fences. It holds the
++policy shared lock, validates the complete domain and takes the exclusive tenant
++transaction fence, then reads the owner's complete eligible batch through its
++QueueReader. A current head is reserved through ReserveWithin, including enabled
++loans and pending reclaim. A held replay returns false without another queue read.
++
++Ordinary reservation, release and reclaim writes take the tenant shared fence.
++The order is policy, tenant, requesting workspace, cohort. This uses a bounded
++number of advisory locks rather than one per configured workspace. The owner
++supplies its typed-policy-bounded domain and complete eligible scan. An eligible
++entry outside that domain or a malformed or foreign workspace fails the transaction.
++The callback takes no other job row locks,
++writes no state and performs no network I/O.
++
++The owner commits dequeue, tasks, attempts, physical holds and audit with the
++logical hold. Roll back on any error and publish no success before confirmed
++commit. ErrQueueTurnPending has fixed wait_for_queue_turn guidance. Exact positive
++release remains the owner's responsibility. This library does not install a
++training selector, runtime controller, production schema or UI. Upgrade every
++Control writer to the tenant-fence protocol before activating queue admission.
++See [ADR 0076](../../../../../docs/decisions/0076-bound-tenant-admission-locking.md).
++
++To qualify the component flows, configure both protected fixture DSN files above
++for one disposable PostgreSQL 18.6 endpoint, then run:
++
++```sh
++go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -count=1
++```
++
++The tests use a persistent disposable owner queue. They cover current ordering,
++owner rollback, ordinary/shared and queued/exclusive contention, replay,
++cancellation, borrowing and committed reclaim release. The configured
++10,000-workspace test checks constant advisory-lock allocation; it does not
++qualify the SCH-111 node/job admission load target.
+diff --git a/services/control/internal/modules/scheduling/owner_queue_fixture_test.go b/services/control/internal/modules/scheduling/owner_queue_fixture_test.go
+new file mode 100644
+index 00000000..9e1f0e97
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/owner_queue_fixture_test.go
+@@ -0,0 +1,55 @@
++package scheduling
++
++import (
++	"context"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// The persistent queue is a disposable owner model, not the training schema.
++// Read and write admission fixtures share its tenant/local scope and revisions.
++func createOwnerQueueEntries(t *testing.T, f reservationFixture, entries []QueueEntry) {
++	t.Helper()
++	if _, err := f.pool.Exec(t.Context(), `CREATE TABLE owner_fixture_queue (
++ job_id uuid PRIMARY KEY,
++ tenant_id uuid NOT NULL,
++ workspace_id uuid NOT NULL,
++ site_id varchar NOT NULL DEFAULT local_site_id(),
++ cell_id varchar NOT NULL DEFAULT local_cell_id(),
++ priority integer NOT NULL,
++ sequence bigint NOT NULL UNIQUE CHECK(sequence > 0),
++ state text NOT NULL DEFAULT 'queued',
++ revision bigint NOT NULL DEFAULT 1,
++ FOREIGN KEY(tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id)
++)`); err != nil {
++		t.Fatal(err)
++	}
++	for _, entry := range entries {
++		if _, err := f.pool.Exec(t.Context(), `INSERT INTO owner_fixture_queue
++ (job_id,tenant_id,workspace_id,priority,sequence) VALUES($1,$2,$3,$4,$5)`,
++			entry.JobID, f.first.TenantID, entry.QueueID, entry.Priority, entry.Sequence); err != nil {
++			t.Fatal(err)
++		}
++	}
++}
++
++func readOwnerQueueEntries(ctx context.Context, q transaction.Executor, tenant string) ([]QueueEntry, error) {
++	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
++		`SELECT job_id::text,workspace_id::text,priority,sequence FROM owner_fixture_queue
++ WHERE tenant_id=$1 AND site_id=local_site_id() AND cell_id=local_cell_id()
++ AND state='queued' ORDER BY sequence`, tenant))
++	if err != nil {
++		return nil, err
++	}
++	defer rows.Close()
++	var entries []QueueEntry
++	for rows.Next() {
++		var entry QueueEntry
++		if err := rows.Scan(&entry.JobID, &entry.QueueID, &entry.Priority, &entry.Sequence); err != nil {
++			return nil, err
++		}
++		entries = append(entries, entry)
++	}
++	return entries, rows.Err()
++}
+diff --git a/services/control/internal/modules/scheduling/queued_reservation.go b/services/control/internal/modules/scheduling/queued_reservation.go
+new file mode 100644
+index 00000000..0ae0f7d6
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/queued_reservation.go
+@@ -0,0 +1,98 @@
++package scheduling
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"slices"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// ErrQueueTurnPending means another eligible entry currently precedes this attempt.
++var ErrQueueTurnPending = errors.New("SCHEDULING_QUEUE_TURN_PENDING")
++
++// QueueReader reads the owner's complete, currently eligible queue through the
++// supplied transaction after the tenant admission fence is held. It derives
++// scope, priority and order from persisted authority and must not write, acquire
++// other jobs' row locks, open another transaction or perform network I/O.
++type QueueReader func(context.Context, transaction.Executor) ([]QueueEntry, error)
++
++// ReserveQueuedWithin reserves a current queue head in the workload owner's
++// READ COMMITTED transaction. The owner supplies its authorized workspace domain,
++// validates the selected job and commits dequeue, physical holds and audit in this
++// same transaction. Invoke it before other scheduling writes in the transaction.
++// False with no error is an exact held replay and must not enqueue another task.
++// The caller must roll back on error and publish no result until commit.
++func ReserveQueuedWithin(ctx context.Context, q transaction.Executor, a Attempt, intent JobIntent, workspaces []string, read QueueReader) (bool, error) {
++	body, demand, err := reservationPayload(a, intent)
++	if err != nil {
++		return false, err
++	}
++	if read == nil {
++		return false, ErrInvalidQueue
++	}
++	domain := slices.Clone(workspaces)
++	slices.Sort(domain)
++	domain = slices.Compact(domain)
++	if _, found := slices.BinarySearch(domain, a.WorkspaceID); !found {
++		return false, ErrQuotaScopeNotFound
++	}
++	for _, id := range domain {
++		if !canonicalReservationID(id) {
++			return false, ErrQuotaScopeNotFound
++		}
++	}
++	if _, err := lockReservationPolicy(ctx, q); err != nil {
++		return false, err
++	}
++	_, tree, err := readQuotaPolicyWithin(ctx, q)
++	if err != nil {
++		return false, err
++	}
++	if tree == nil {
++		return false, ErrQuotaUnconfigured
++	}
++	for _, id := range domain {
++		if _, err := tree.workspace(a.TenantID, id); err != nil {
++			return false, err
++		}
++	}
++	if err := lockReservationTenant(ctx, q, a.TenantID, true); err != nil {
++		return false, err
++	}
++	if err := lockReservationWorkspace(ctx, q, a.TenantID, a.WorkspaceID); err != nil {
++		return false, err
++	}
++	requested, err := json.Marshal(demand)
++	if err != nil {
++		return false, ErrInvalidResources
++	}
++	replayed, err := reservationReplayWithin(ctx, q, a, body, requested)
++	if err != nil || replayed {
++		return false, err
++	}
++	entries, err := read(ctx, q)
++	if err != nil {
++		return false, err
++	}
++	for _, entry := range entries {
++		if _, found := slices.BinarySearch(domain, entry.QueueID); !found {
++			return false, ErrQuotaScopeNotFound
++		}
++	}
++	ranked, err := rankWorkspaceQueueWithin(ctx, q, a.TenantID, tree, entries)
++	if err != nil {
++		return false, err
++	}
++	position := slices.IndexFunc(ranked, func(entry QueueEntry) bool {
++		return entry.JobID == a.SourceID && entry.QueueID == a.WorkspaceID
++	})
++	if position < 0 {
++		return false, ErrInvalidQueue
++	}
++	if position > 0 {
++		return false, ErrQueueTurnPending
++	}
++	return ReserveWithin(ctx, q, a, intent)
++}
+diff --git a/services/control/internal/modules/scheduling/queued_reservation_fence_test.go b/services/control/internal/modules/scheduling/queued_reservation_fence_test.go
+new file mode 100644
+index 00000000..9b0a5aa0
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/queued_reservation_fence_test.go
+@@ -0,0 +1,190 @@
++package scheduling
++
++import (
++	"context"
++	"errors"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5"
++	"github.com/jackc/pgx/v5/pgxpool"
++)
++
++func waitForSchedulingBlocker(t *testing.T, ctx context.Context, pool *pgxpool.Pool, waiting, holding uint32, result <-chan error) {
++	t.Helper()
++	ticker := time.NewTicker(10 * time.Millisecond)
++	defer ticker.Stop()
++	for {
++		var blocked bool
++		if err := pool.QueryRow(ctx, "SELECT $2::integer=ANY(pg_blocking_pids($1::integer))", int64(waiting), int64(holding)).Scan(&blocked); err != nil {
++			t.Fatal(err)
++		}
++		if blocked {
++			return
++		}
++		select {
++		case err := <-result:
++			t.Fatalf("writer bypassed the tenant admission fence: %v", err)
++		case <-ctx.Done():
++			t.Fatal(ctx.Err())
++		case <-ticker.C:
++		}
++	}
++}
++
++func TestPostgresTenantAdmissionFenceWaitsForOwnerCompletion(t *testing.T) {
++	for _, commit := range []bool{false, true} {
++		name := "rollback"
++		if commit {
++			name = "commit"
++		}
++		t.Run(name, func(t *testing.T) {
++			f := newQueuedFixture(t)
++			ctx, cancel := context.WithTimeout(t.Context(), 15*time.Second)
++			defer cancel()
++			first, err := f.pool.Begin(ctx)
++			if err != nil {
++				t.Fatal(err)
++			}
++			defer first.Rollback(ctx)
++			q := transaction.PostgreSQLTransaction(first)
++			changed, err := ReserveQueuedWithin(ctx, q, f.first, borrowingIntent(f.first, 2), f.domain, f.read)
++			if err != nil || !changed {
++				t.Fatalf("queued head: %v, %v", changed, err)
++			}
++			if err := dequeueQueuedFixture(ctx, q, f.first); err != nil {
++				t.Fatal(err)
++			}
++
++			pids := make(chan uint32, 1)
++			result := make(chan error, 1)
++			go func() {
++				result <- pgx.BeginFunc(ctx, f.pool, func(tx pgx.Tx) error {
++					pids <- tx.Conn().PgConn().PID()
++					changed, err := ReserveWithin(ctx, transaction.PostgreSQLTransaction(tx), f.second, borrowingIntent(f.second, 2))
++					if err == nil && !changed {
++						return errors.New("ordinary writer did not reserve")
++					}
++					return err
++				})
++			}()
++			var pid uint32
++			select {
++			case pid = <-pids:
++			case <-ctx.Done():
++				t.Fatal(ctx.Err())
++			}
++			waitForSchedulingBlocker(t, ctx, f.pool, pid, first.Conn().PgConn().PID(), result)
++			// A separate tenant must remain able to acquire both fence modes
++			// while this tenant's queued head and ordinary writer are blocked.
++			otherCtx, otherCancel := context.WithTimeout(ctx, 2*time.Second)
++			defer otherCancel()
++			if err := pgx.BeginFunc(otherCtx, f.pool, func(tx pgx.Tx) error {
++				q := transaction.PostgreSQLTransaction(tx)
++				otherTenant := uuid.NewString()
++				if err := lockReservationTenant(otherCtx, q, otherTenant, true); err != nil {
++					return err
++				}
++				return lockReservationTenant(otherCtx, q, otherTenant, false)
++			}); err != nil {
++				t.Fatalf("unrelated tenant was blocked: %v", err)
++			}
++			if commit {
++				err = first.Commit(ctx)
++			} else {
++				err = first.Rollback(ctx)
++			}
++			if err != nil {
++				t.Fatal(err)
++			}
++			select {
++			case err := <-result:
++				if err != nil {
++					t.Fatal(err)
++				}
++			case <-ctx.Done():
++				t.Fatal(ctx.Err())
++			}
++			if commit {
++				f.assertState(t, f.first, "preparing", 2, 2)
++			} else {
++				f.assertState(t, f.first, "queued", 1, 1)
++			}
++		})
++	}
++}
++
++func TestPostgresTenantSharedFencesPermitIndependentWorkspaceWriters(t *testing.T) {
++	f := newQueuedFixture(t)
++	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
++	defer cancel()
++	first, err := f.pool.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer first.Rollback(ctx)
++	if changed, err := ReserveWithin(ctx, transaction.PostgreSQLTransaction(first), f.first, borrowingIntent(f.first, 1)); err != nil || !changed {
++		t.Fatalf("first ordinary hold: %v, %v", changed, err)
++	}
++	// The first transaction remains open. An exclusive tenant lock would block
++	// the different-workspace writer until the bounded context expires.
++	if changed, err := reserveInTransaction(ctx, f.store, f.second, borrowingIntent(f.second, 1)); err != nil || !changed {
++		t.Fatalf("shared writer could not finish independently: %v, %v", changed, err)
++	}
++	if err := first.Rollback(ctx); err != nil {
++		t.Fatal(err)
++	}
++	f.assertState(t, f.first, "queued", 1, 1)
++}
++
++func TestPostgresQueuedReservationBoundsLocksAtWorkspacePolicyMaximum(t *testing.T) {
++	f := newQueuedFixture(t)
++	policy := config.DefaultWorkspacePolicy()
++	policy.MaximumCount = 10000
++	if err := policy.Validate(); err != nil {
++		t.Fatal(err)
++	}
++	domain := append([]string(nil), f.domain...)
++	for len(domain) < policy.MaximumCount {
++		id := uuid.NewString()
++		domain = append(domain, id)
++		f.policy = append(f.policy, QuotaNode{ID: id, TenantID: f.first.TenantID, ParentID: f.policy[2].ID, Level: WorkspaceQuota})
++	}
++	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
++	defer cancel()
++	if _, err := f.pool.Exec(ctx, "INSERT INTO workspaces SELECT $1::uuid,id::uuid FROM unnest($2::text[]) AS id ON CONFLICT DO NOTHING", f.first.TenantID, domain); err != nil {
++		t.Fatal(err)
++	}
++	if err := pgx.BeginFunc(ctx, f.pool, func(tx pgx.Tx) error {
++		_, _, err := ReplaceQuotaWithin(ctx, tx, 1, f.policy)
++		return err
++	}); err != nil {
++		t.Fatal(err)
++	}
++	err := ownerTransaction(ctx, f.store, func(ctx context.Context, q transaction.Executor) error {
++		changed, err := ReserveQueuedWithin(ctx, q, f.first, borrowingIntent(f.first, 2), domain, f.read)
++		if err != nil {
++			return err
++		}
++		if !changed {
++			return errors.New("maximum-domain head was not reserved")
++		}
++		var tags int
++		if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
++SELECT count(DISTINCT (classid,objid,objsubid)) FROM pg_locks
++ WHERE pid=pg_backend_pid() AND locktype='advisory' AND granted`)).Scan(&tags); err != nil {
++			return err
++		}
++		if tags != 2 {
++			t.Fatalf("advisory lock tags=%d for %d workspaces, want tenant plus selected workspace", tags, len(domain))
++		}
++		return dequeueQueuedFixture(ctx, q, f.first)
++	})
++	if err != nil {
++		t.Fatal(err)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
+diff --git a/services/control/internal/modules/scheduling/queued_reservation_test.go b/services/control/internal/modules/scheduling/queued_reservation_test.go
+new file mode 100644
+index 00000000..16636218
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/queued_reservation_test.go
+@@ -0,0 +1,543 @@
++package scheduling
++
++import (
++	"context"
++	"errors"
++	"slices"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5"
++)
++
++type queuedFixture struct {
++	reservationFixture
++	first, second Attempt
++	domain        []string
++}
++
++func newQueuedFixture(t *testing.T) queuedFixture {
++	t.Helper()
++	return queuedFixtureFromReservation(t, newReservationFixture(t))
++}
++
++func queuedFixtureFromReservation(t *testing.T, f reservationFixture) queuedFixture {
++	t.Helper()
++	first := newBorrowingAttempt(f.first, f.first.WorkspaceID)
++	second := newBorrowingAttempt(f.first, f.other)
++	createOwnerQueueEntries(t, f, []QueueEntry{
++		{JobID: first.SourceID, QueueID: first.WorkspaceID, Sequence: 1},
++		{JobID: second.SourceID, QueueID: second.WorkspaceID, Sequence: 2},
++	})
++	return queuedFixture{f, first, second, []string{first.WorkspaceID, second.WorkspaceID}}
++}
++
++func (f queuedFixture) read(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++	return readOwnerQueueEntries(ctx, q, f.first.TenantID)
++}
++
++func dequeueQueuedFixture(ctx context.Context, q transaction.Executor, a Attempt) error {
++	count, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `
++UPDATE owner_fixture_queue SET state='preparing',revision=revision+1
++ WHERE tenant_id=$1 AND workspace_id=$2 AND job_id=$3 AND state='queued'
++ AND site_id=local_site_id() AND cell_id=local_cell_id()`, a.TenantID, a.WorkspaceID, a.SourceID))
++	if err != nil {
++		return err
++	}
++	if count != 1 {
++		return ErrInvalidQueue
++	}
++	return nil
++}
++
++func (f queuedFixture) admit(ctx context.Context, a Attempt, read QueueReader, after error) (bool, error) {
++	var changed bool
++	err := ownerTransaction(ctx, f.store, func(ctx context.Context, q transaction.Executor) error {
++		var err error
++		changed, err = ReserveQueuedWithin(ctx, q, a, borrowingIntent(a, 2), f.domain, read)
++		if err != nil || !changed {
++			return err
++		}
++		if err := dequeueQueuedFixture(ctx, q, a); err != nil {
++			return err
++		}
++		return after
++	})
++	return changed && err == nil, err
++}
++
++func (f queuedFixture) assertState(t *testing.T, a Attempt, state string, revision, holds int) {
++	t.Helper()
++	var gotState string
++	var gotRevision, gotHolds int
++	if err := f.pool.QueryRow(t.Context(), "SELECT state,revision FROM owner_fixture_queue WHERE job_id=$1", a.SourceID).
++		Scan(&gotState, &gotRevision); err != nil {
++		t.Fatal(err)
++	}
++	if err := f.pool.QueryRow(t.Context(), "SELECT count(*) FROM scheduling_reservations WHERE released_at IS NULL").Scan(&gotHolds); err != nil {
++		t.Fatal(err)
++	}
++	if gotState != state || gotRevision != revision || gotHolds != holds {
++		t.Fatalf("owner state=%s revision=%d holds=%d, want %s/%d/%d", gotState, gotRevision, gotHolds, state, revision, holds)
++	}
++}
++
++func TestPostgresQueuedReservationUsesCurrentSharesAndOwnerCommit(t *testing.T) {
++	f := newQueuedFixture(t)
++	reserveBorrowing(t, f.store, f.reservationFixture.first, 2)
++	if changed, err := f.admit(t.Context(), f.first, f.read, nil); changed || !errors.Is(err, ErrQueueTurnPending) ||
++		!slices.Equal(WaitReasons(err), []WaitReason{{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}}) {
++		t.Fatalf("non-head admission: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "queued", 1, 1)
++	fail := errors.New("owner audit failed")
++	if changed, err := f.admit(t.Context(), f.second, f.read, fail); changed || !errors.Is(err, fail) {
++		t.Fatalf("owner failure: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "queued", 1, 1)
++	if changed, err := f.admit(t.Context(), f.second, f.read, nil); err != nil || !changed {
++		t.Fatalf("fair head admission: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "preparing", 2, 2)
++	noRead := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
++		t.Fatal("held replay read the dequeued owner entry again")
++		return nil, nil
++	}
++	if changed, err := f.admit(t.Context(), f.second, noRead, nil); err != nil || changed {
++		t.Fatalf("held replay: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "preparing", 2, 2)
++	changedAttempt := f.second
++	changedAttempt.ID = uuid.NewString()
++	if changed, err := f.admit(t.Context(), changedAttempt, noRead, nil); changed || !errors.Is(err, ErrReservationConflict) {
++		t.Fatalf("changed attempt replay: %v, %v", changed, err)
++	}
++	if changed, err := releaseInTransaction(t.Context(), f.store, f.second); err != nil || !changed {
++		t.Fatalf("verified owner release: %v, %v", changed, err)
++	}
++	if changed, err := f.admit(t.Context(), f.second, noRead, nil); changed || !errors.Is(err, ErrReservationReleased) {
++		t.Fatalf("released attempt reused: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "preparing", 2, 1)
++}
++
++func TestPostgresQueuedReservationReadsAfterConcurrentDequeue(t *testing.T) {
++	f := newQueuedFixture(t)
++	ctx, cancel := context.WithTimeout(t.Context(), 15*time.Second)
++	defer cancel()
++	first, err := f.pool.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer first.Rollback(ctx)
++	q := transaction.PostgreSQLTransaction(first)
++	if changed, err := ReserveQueuedWithin(ctx, q, f.first, borrowingIntent(f.first, 2), f.domain, f.read); err != nil || !changed {
++		t.Fatalf("first reserve: %v, %v", changed, err)
++	}
++	if err := dequeueQueuedFixture(ctx, q, f.first); err != nil {
++		t.Fatal(err)
++	}
++	writers := make(chan uint32, 1)
++	result := make(chan error, 1)
++	var reads atomic.Int32
++	go func() {
++		result <- pgx.BeginFunc(ctx, f.pool, func(tx pgx.Tx) error {
++			writers <- tx.Conn().PgConn().PID()
++			read := func(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++				reads.Add(1)
++				return f.read(ctx, q)
++			}
++			q := transaction.PostgreSQLTransaction(tx)
++			domain := slices.Clone(f.domain)
++			slices.Reverse(domain)
++			changed, err := ReserveQueuedWithin(ctx, q, f.second, borrowingIntent(f.second, 2), domain, read)
++			if err != nil {
++				return err
++			}
++			if !changed {
++				return errors.New("second candidate did not reserve")
++			}
++			return dequeueQueuedFixture(ctx, q, f.second)
++		})
++	}()
++	var pid uint32
++	select {
++	case pid = <-writers:
++	case err := <-result:
++		t.Fatalf("consumer ended before acquiring connection: %v", err)
++	case <-ctx.Done():
++		t.Fatal(ctx.Err())
++	}
++	waitForSchedulingBlocker(t, ctx, f.pool, pid, first.Conn().PgConn().PID(), result)
++	if reads.Load() != 0 {
++		t.Fatal("queue reader ran before the preceding dequeue committed")
++	}
++	if err := first.Commit(ctx); err != nil {
++		t.Fatal(err)
++	}
++	select {
++	case err := <-result:
++		if err != nil {
++			t.Fatal(err)
++		}
++	case <-ctx.Done():
++		t.Fatal(ctx.Err())
++	}
++	if reads.Load() != 1 {
++		t.Fatalf("queue reads=%d", reads.Load())
++	}
++	f.assertState(t, f.first, "preparing", 2, 2)
++	f.assertState(t, f.second, "preparing", 2, 2)
++}
++
++func TestPostgresQueuedReservationRefusesChangedOwnerScope(t *testing.T) {
++	f := newQueuedFixture(t)
++	var reads atomic.Int32
++	read := func(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++		reads.Add(1)
++		return f.read(ctx, q)
++	}
++	err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
++		_, err := ReserveQueuedWithin(ctx, q, f.first, borrowingIntent(f.first, 2), []string{f.first.WorkspaceID, uuid.NewString()}, read)
++		return err
++	})
++	if !errors.Is(err, ErrQuotaScopeNotFound) || reads.Load() != 0 {
++		t.Fatalf("invalid domain: %v, reads=%d", err, reads.Load())
++	}
++	for _, field := range []string{"site_id", "cell_id"} {
++		if _, err := f.pool.Exec(t.Context(), "UPDATE owner_fixture_queue SET "+field+"='foreign' WHERE job_id=$1", f.first.SourceID); err != nil {
++			t.Fatal(err)
++		}
++		if changed, err := f.admit(t.Context(), f.first, read, nil); changed || !errors.Is(err, ErrInvalidQueue) {
++			t.Fatalf("foreign owner entry: %v, %v", changed, err)
++		}
++		f.assertState(t, f.first, "queued", 1, 0)
++		if _, err := f.pool.Exec(t.Context(), "UPDATE owner_fixture_queue SET site_id=local_site_id(),cell_id=local_cell_id() WHERE job_id=$1", f.first.SourceID); err != nil {
++			t.Fatal(err)
++		}
++	}
++	if _, err := f.pool.Exec(t.Context(), "UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1 WHERE job_id=$1", f.first.SourceID); err != nil {
++		t.Fatal(err)
++	}
++	if changed, err := f.admit(t.Context(), f.first, read, nil); changed || !errors.Is(err, ErrInvalidQueue) {
++		t.Fatalf("cancelled entry admitted: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "cancelled", 2, 0)
++	if changed, err := f.admit(t.Context(), f.second, read, nil); err != nil || !changed {
++		t.Fatalf("next durable candidate after cancellation: %v, %v", changed, err)
++	}
++}
++
++func TestPostgresQueuedReservationRejectsForeignHeldUsage(t *testing.T) {
++	f := newQueuedFixture(t)
++	reserveBorrowing(t, f.store, f.reservationFixture.first, 2)
++	if _, err := f.pool.Exec(t.Context(), "INSERT INTO cells VALUES ('foreign'); UPDATE scheduling_reservations SET cell_id='foreign'"); err != nil {
++		t.Fatal(err)
++	}
++	if changed, err := f.admit(t.Context(), f.second, f.read, nil); changed || !errors.Is(err, ErrQuotaPolicyUnavailable) {
++		t.Fatalf("foreign held usage advanced dispatch: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "queued", 1, 1)
++	var revision int64
++	if err := f.pool.QueryRow(t.Context(), "SELECT revision FROM scheduling_quota_policy").Scan(&revision); err != nil || revision != 1 {
++		t.Fatalf("foreign held usage changed policy: %d, %v", revision, err)
++	}
++}
++
++func TestPostgresQueuedReservationRollsBackAfterConcurrentCancellation(t *testing.T) {
++	f := newQueuedFixture(t)
++	read := func(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++		entries, err := f.read(ctx, q)
++		if err != nil {
++			return nil, err
++		}
++		// Commit a separate owner cancellation after the queue read. The final
++		// owner state transition must reject this stale entry and roll back its hold.
++		_, err = f.pool.Exec(ctx, "UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1 WHERE job_id=$1", f.first.SourceID)
++		return entries, err
++	}
++	if changed, err := f.admit(t.Context(), f.first, read, nil); changed || !errors.Is(err, ErrInvalidQueue) {
++		t.Fatalf("cancelled owner entry dispatched: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "cancelled", 2, 0)
++}
++
++func TestPostgresQueuedReservationConcurrentReplayDequeuesOnce(t *testing.T) {
++	f := newQueuedFixture(t)
++	type outcome struct {
++		changed bool
++		err     error
++	}
++	start := make(chan struct{})
++	results := make(chan outcome, 2)
++	for range 2 {
++		go func() {
++			<-start
++			changed, err := f.admit(t.Context(), f.first, f.read, nil)
++			results <- outcome{changed, err}
++		}()
++	}
++	close(start)
++	var admitted int
++	for range 2 {
++		result := <-results
++		if result.err != nil {
++			t.Fatal(result.err)
++		}
++		if result.changed {
++			admitted++
++		}
++	}
++	if admitted != 1 {
++		t.Fatalf("successful dequeues=%d", admitted)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
++
++func TestPostgresQueuedReservationRefusesReaderFailureAndOutOfDomainEntries(t *testing.T) {
++	f := newQueuedFixture(t)
++	failedRead := errors.New("owner queue unavailable")
++	read := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
++		return nil, failedRead
++	}
++	if changed, err := f.admit(t.Context(), f.first, read, nil); changed || !errors.Is(err, failedRead) {
++		t.Fatalf("failed queue read: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "queued", 1, 0)
++
++	err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
++		_, err := ReserveQueuedWithin(ctx, q, f.first, borrowingIntent(f.first, 2), []string{f.first.WorkspaceID}, f.read)
++		return err
++	})
++	if !errors.Is(err, ErrQuotaScopeNotFound) {
++		t.Fatalf("reader returned an entry outside the authorized domain: %v", err)
++	}
++	f.assertState(t, f.first, "queued", 1, 0)
++	if changed, err := f.admit(t.Context(), f.first, nil, nil); changed || !errors.Is(err, ErrInvalidQueue) {
++		t.Fatalf("missing queue reader: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "queued", 1, 0)
++	if changed, err := f.admit(t.Context(), f.first, f.read, nil); err != nil || !changed {
++		t.Fatalf("retry after reader failure: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
++
++func TestPostgresQueuedReservationReleaseSharesOwnerCancellationCommit(t *testing.T) {
++	f := newQueuedFixture(t)
++	if changed, err := f.admit(t.Context(), f.first, f.read, nil); err != nil || !changed {
++		t.Fatalf("initial admission: %v, %v", changed, err)
++	}
++	if _, err := f.pool.Exec(t.Context(), "UPDATE owner_fixture_queue SET state='cancelling',revision=revision+1 WHERE job_id=$1", f.first.SourceID); err != nil {
++		t.Fatal(err)
++	}
++	f.assertState(t, f.first, "cancelling", 3, 1)
++
++	// The real owner must validate positive stop evidence before this point.
++	// This fixture qualifies only the atomic owner transition and release.
++	stop := func(after error) (bool, error) {
++		var released bool
++		err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
++			var err error
++			released, err = ReleaseWithin(ctx, q, f.first)
++			if err != nil || !released {
++				return err
++			}
++			count, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `
++UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1
++ WHERE tenant_id=$1 AND workspace_id=$2 AND job_id=$3 AND state='cancelling'
++ AND site_id=local_site_id() AND cell_id=local_cell_id()`, f.first.TenantID, f.first.WorkspaceID, f.first.SourceID))
++			if err != nil {
++				return err
++			}
++			if count != 1 {
++				return ErrInvalidQueue
++			}
++			return after
++		})
++		return released && err == nil, err
++	}
++	failedAudit := errors.New("owner stop audit failed")
++	if changed, err := stop(failedAudit); changed || !errors.Is(err, failedAudit) {
++		t.Fatalf("failed owner stop: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "cancelling", 3, 1)
++	if changed, err := stop(nil); err != nil || !changed {
++		t.Fatalf("confirmed owner stop: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "cancelled", 4, 0)
++	if changed, err := stop(nil); err != nil || changed {
++		t.Fatalf("owner stop replay: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "cancelled", 4, 0)
++	if changed, err := f.admit(t.Context(), f.first, f.read, nil); changed || !errors.Is(err, ErrReservationReleased) {
++		t.Fatalf("cancelled attempt readmitted: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "cancelled", 4, 0)
++}
++
++func TestPostgresQueueWaitReasonTracksQuotaConfiguration(t *testing.T) {
++	f := newQueuedFixture(t)
++	if _, err := f.pool.Exec(t.Context(), "DELETE FROM scheduling_quota_policy"); err != nil {
++		t.Fatal(err)
++	}
++	noRead := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
++		t.Fatal("unconfigured admission read the owner queue")
++		return nil, nil
++	}
++	changed, err := f.admit(t.Context(), f.first, noRead, nil)
++	want := []WaitReason{{Code: ErrQuotaUnconfigured.Error(), Action: ConfigureQuotaPolicy}}
++	if changed || !errors.Is(err, ErrQuotaUnconfigured) || !slices.Equal(WaitReasons(err), want) {
++		t.Fatalf("missing policy: changed=%v reasons=%+v error=%v", changed, WaitReasons(err), err)
++	}
++	f.assertState(t, f.first, "queued", 1, 0)
++	if err := pgx.BeginFunc(t.Context(), f.pool, func(tx pgx.Tx) error {
++		_, changed, err := ReplaceQuotaWithin(t.Context(), tx, 0, f.policy)
++		if err == nil && !changed {
++			return errors.New("policy installation did not change state")
++		}
++		return err
++	}); err != nil {
++		t.Fatal(err)
++	}
++	changed, err = f.admit(t.Context(), f.first, f.read, nil)
++	if err != nil || !changed || len(WaitReasons(err)) != 0 {
++		t.Fatalf("configured retry: changed=%v reasons=%+v error=%v", changed, WaitReasons(err), err)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
++
++func TestPostgresQueuedReservationPreservesBorrowingAndPositiveReclaimRelease(t *testing.T) {
++	b := newBorrowingFixture(t)
++	f := queuedFixtureFromReservation(t, b.reservationFixture)
++	f.domain = append(f.domain, b.partner.WorkspaceID)
++	admit := func(a Attempt, gpu int64) (bool, error) {
++		var changed bool
++		err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
++			var err error
++			changed, err = ReserveQueuedWithin(ctx, q, a, borrowingIntent(a, gpu), f.domain, f.read)
++			if err != nil || !changed {
++				return err
++			}
++			return dequeueQueuedFixture(ctx, q, a)
++		})
++		return changed && err == nil, err
++	}
++	if changed, err := admit(f.first, 1); err != nil || !changed {
++		t.Fatalf("queued borrower: %v, %v", changed, err)
++	}
++	assertLoan(t, b, f.first.ID, f.second.WorkspaceID, 1)
++	if changed, err := admit(f.second, 2); changed || !errors.Is(err, ErrReclaimRequired) {
++		t.Fatalf("claimant bypassed reclaim: %v, %v", changed, err)
++	}
++	plan, err := requestReclaimInTransaction(t.Context(), f.store, f.second, borrowingIntent(f.second, 2))
++	if err != nil || plan.State != ReclaimPending || !slices.Equal(plan.Victims, []string{f.first.ID}) {
++		t.Fatalf("queued claimant plan: %+v, %v", plan, err)
++	}
++	if changed, err := admit(f.second, 2); changed || !errors.Is(err, ErrReclaimPending) {
++		t.Fatalf("plan freed a live borrower: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "queued", 1, 1)
++	failedAudit := errors.New("verified release audit failed")
++	stop := func(after error) error {
++		return ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
++			released, err := ReleaseWithin(ctx, q, f.first)
++			if err != nil {
++				return err
++			}
++			if !released {
++				return errors.New("borrower release was not new")
++			}
++			count, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `
++UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1
++ WHERE job_id=$1 AND tenant_id=$2 AND workspace_id=$3
++ AND site_id=local_site_id() AND cell_id=local_cell_id() AND state='preparing'`, f.first.SourceID, f.first.TenantID, f.first.WorkspaceID))
++			if err != nil {
++				return err
++			}
++			if count != 1 {
++				return ErrInvalidQueue
++			}
++			return after
++		})
++	}
++	if err := stop(failedAudit); !errors.Is(err, failedAudit) {
++		t.Fatal(err)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++	if changed, err := admit(f.second, 2); changed || !errors.Is(err, ErrReclaimPending) {
++		t.Fatalf("rolled-back release credited claimant: %v, %v", changed, err)
++	}
++	// The owner reaches this call only after validating a positive stop. The
++	// fixture verifies its terminal transition and quota release share a commit.
++	if err := stop(nil); err != nil {
++		t.Fatal(err)
++	}
++	f.assertState(t, f.first, "cancelled", 3, 0)
++	if changed, err := admit(f.second, 2); err != nil || !changed {
++		t.Fatalf("released claimant: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "preparing", 2, 1)
++	if changed, err := admit(f.second, 2); err != nil || changed {
++		t.Fatalf("claimant replay: %v, %v", changed, err)
++	}
++}
++
++func TestPostgresQueuedReservationWaitsForOrdinaryUsageCommit(t *testing.T) {
++	f := newQueuedFixture(t)
++	ctx, cancel := context.WithTimeout(t.Context(), 15*time.Second)
++	defer cancel()
++	ordinary, err := f.pool.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer ordinary.Rollback(ctx)
++	if changed, err := ReserveWithin(ctx, transaction.PostgreSQLTransaction(ordinary), f.reservationFixture.first, borrowingIntent(f.reservationFixture.first, 2)); err != nil || !changed {
++		t.Fatalf("uncommitted ordinary hold: %v, %v", changed, err)
++	}
++	var reads atomic.Int32
++	pids := make(chan uint32, 1)
++	result := make(chan error, 1)
++	go func() {
++		result <- pgx.BeginFunc(ctx, f.pool, func(tx pgx.Tx) error {
++			pids <- tx.Conn().PgConn().PID()
++			read := func(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++				reads.Add(1)
++				return f.read(ctx, q)
++			}
++			_, err := ReserveQueuedWithin(ctx, transaction.PostgreSQLTransaction(tx), f.first, borrowingIntent(f.first, 2), f.domain, read)
++			return err
++		})
++	}()
++	var pid uint32
++	select {
++	case pid = <-pids:
++	case <-ctx.Done():
++		t.Fatal(ctx.Err())
++	}
++	waitForSchedulingBlocker(t, ctx, f.pool, pid, ordinary.Conn().PgConn().PID(), result)
++	if reads.Load() != 0 {
++		t.Fatal("queue was read before ordinary usage committed")
++	}
++	if err := ordinary.Commit(ctx); err != nil {
++		t.Fatal(err)
++	}
++	select {
++	case err := <-result:
++		if !errors.Is(err, ErrQueueTurnPending) {
++			t.Fatalf("admission ignored new committed usage: %v", err)
++		}
++	case <-ctx.Done():
++		t.Fatal(ctx.Err())
++	}
++	if reads.Load() != 1 {
++		t.Fatalf("queue reads=%d", reads.Load())
++	}
++	f.assertState(t, f.first, "queued", 1, 1)
++	if changed, err := f.admit(ctx, f.second, f.read, nil); err != nil || !changed {
++		t.Fatalf("new fair head: %v, %v", changed, err)
++	}
++}
+diff --git a/services/control/internal/modules/scheduling/reservation.go b/services/control/internal/modules/scheduling/reservation.go
+index 2f6dbb00..ec5d2b3b 100644
+--- a/services/control/internal/modules/scheduling/reservation.go
++++ b/services/control/internal/modules/scheduling/reservation.go
+@@ -74,13 +74,16 @@ func requireReservationTransaction(ctx context.Context, q transaction.Executor)
+ 	return nil
+ }
+ 
+-// lockReservationScope orders locks policy first, then workspace. Advisory hash
+-// collisions serialize unrelated scopes and cannot grant extra capacity.
++// lockReservationScope orders ordinary writes policy, shared tenant, workspace.
++// Advisory hash collisions serialize unrelated scopes and cannot grant capacity.
+ func lockReservationScope(ctx context.Context, q transaction.Executor, a Attempt) (int64, error) {
+ 	revision, err := lockReservationPolicy(ctx, q)
+ 	if err != nil {
+ 		return 0, err
+ 	}
++	if err := lockReservationTenant(ctx, q, a.TenantID, false); err != nil {
++		return 0, err
++	}
+ 	return revision, lockReservationWorkspace(ctx, q, a.TenantID, a.WorkspaceID)
+ }
+ 
+@@ -99,6 +102,19 @@ func lockReservationPolicy(ctx context.Context, q transaction.Executor) (int64,
+ 	return revision, nil
+ }
+ 
++// lockReservationTenant bounds current queue exclusion independently of domain
++// size. Queue admission takes exclusive access before any scheduling write;
++// ordinary mutations share access until their owner transaction completes.
++func lockReservationTenant(ctx context.Context, q transaction.Executor, tenant string, exclusive bool) error {
++	const tenantLockNamespace = 713090005
++	query := "SELECT pg_advisory_xact_lock_shared($1,hashtext($2))"
++	if exclusive {
++		query = "SELECT pg_advisory_xact_lock($1,hashtext($2))"
++	}
++	_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, query, tenantLockNamespace, tenant))
++	return err
++}
++
+ func lockReservationWorkspace(ctx context.Context, q transaction.Executor, tenant, workspace string) error {
+ 	const workspaceLockNamespace = 713090003
+ 	_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
+@@ -139,20 +155,8 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
+ 	}
+ 
+ 	args := append(a.scopeArgs(), a.ID, body, requested)
+-	var same, released bool
+-	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+-		`SELECT attempt_id=$6 AND intent=$7::jsonb AND demand=$8::jsonb
+-  AND site_id=local_site_id() AND cell_id=local_cell_id(),released_at IS NOT NULL
+- FROM scheduling_reservations WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5`,
+-		args...)).Scan(&same, &released)
+-	switch {
+-	case err == nil && !same:
+-		return false, ErrReservationConflict
+-	case err == nil && released:
+-		return false, ErrReservationReleased
+-	case err == nil:
+-		return false, nil
+-	case !errors.Is(err, sql.ErrNoRows):
++	replayed, err := reservationReplayWithin(ctx, q, a, body, requested)
++	if err != nil || replayed {
+ 		return false, err
+ 	}
+ 
+@@ -196,6 +200,27 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
+ 	return true, nil
+ }
+ 
++func reservationReplayWithin(ctx context.Context, q transaction.Executor, a Attempt, body, requested []byte) (bool, error) {
++	var same, released bool
++	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
++		`SELECT attempt_id=$6 AND intent=$7::jsonb AND demand=$8::jsonb
++  AND site_id=local_site_id() AND cell_id=local_cell_id(),released_at IS NOT NULL
++ FROM scheduling_reservations WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5`,
++		append(a.scopeArgs(), a.ID, body, requested)...)).Scan(&same, &released)
++	switch {
++	case errors.Is(err, sql.ErrNoRows):
++		return false, nil
++	case err != nil:
++		return false, err
++	case !same:
++		return false, ErrReservationConflict
++	case released:
++		return false, ErrReservationReleased
++	default:
++		return true, nil
++	}
++}
++
+ // ReleaseWithin ends a single-replica attempt in the owner's transaction
+ // after the owner has verified that it stopped or was never delivered.
+ // An already released exact attempt replays with false and no error.
+diff --git a/services/control/internal/modules/scheduling/reservation_commit_ack_test.go b/services/control/internal/modules/scheduling/reservation_commit_ack_test.go
+index cfa4fe4c..6b65bc63 100644
+--- a/services/control/internal/modules/scheduling/reservation_commit_ack_test.go
++++ b/services/control/internal/modules/scheduling/reservation_commit_ack_test.go
+@@ -137,3 +137,27 @@ func TestPostgresBorrowingAndReclaimCommitAcknowledgementLoss(t *testing.T) {
+ 	}
+ 	reserveBorrowing(t, f.store, lender, 2)
+ }
++
++func TestPostgresQueuedReservationCommitAcknowledgementLoss(t *testing.T) {
++	f := newQueuedFixture(t)
++	store, proxy := reservationFaultStore(t, f.pool)
++	fault := f
++	fault.store = store
++	if err := proxy.Arm(commitfault.DropCommitAcknowledgement); err != nil {
++		t.Fatal(err)
++	}
++	changed, err := fault.admit(t.Context(), f.first, f.read, nil)
++	if changed {
++		t.Fatal("queued dispatch exposed an unacknowledged commit")
++	}
++	assertLostReservationCommit(t, proxy, "queued dispatch", err)
++	f.assertState(t, f.first, "preparing", 2, 1)
++	noRead := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
++		t.Fatal("unknown commit replay read the already-dequeued entry")
++		return nil, nil
++	}
++	if changed, err := f.admit(t.Context(), f.first, noRead, nil); err != nil || changed {
++		t.Fatalf("queued dispatch replay after unknown commit: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
+diff --git a/services/control/internal/modules/scheduling/wait_reasons.go b/services/control/internal/modules/scheduling/wait_reasons.go
+index 416ba651..fcbef5d7 100644
+--- a/services/control/internal/modules/scheduling/wait_reasons.go
++++ b/services/control/internal/modules/scheduling/wait_reasons.go
+@@ -77,6 +77,10 @@ var errReclaimReleasePending = fmt.Errorf("%w: waiting for selected releases", E
+ func WaitReasons(err error) []WaitReason {
+ 	var quota *reservationQuotaError
+ 	switch {
++	case errors.Is(err, ErrQuotaUnconfigured):
++		return []WaitReason{{Code: ErrQuotaUnconfigured.Error(), Action: ConfigureQuotaPolicy}}
++	case errors.Is(err, ErrQueueTurnPending):
++		return []WaitReason{{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}}
+ 	case errors.Is(err, ErrQuotaScopeNotFound):
+ 		return []WaitReason{{Code: ErrQuotaScopeNotFound.Error(), Action: VerifyWorkspaceAccess}}
+ 	case errors.As(err, &quota):
+diff --git a/services/control/internal/modules/scheduling/workspace_queue.go b/services/control/internal/modules/scheduling/workspace_queue.go
+index 871ef60d..cd988a6e 100644
+--- a/services/control/internal/modules/scheduling/workspace_queue.go
++++ b/services/control/internal/modules/scheduling/workspace_queue.go
+@@ -44,6 +44,10 @@ func RankWorkspaceQueueExecutorWithin(ctx context.Context, q transaction.Executo
+ 		return nil, ErrQuotaUnconfigured
+ 	}
+ 
++	return rankWorkspaceQueueWithin(ctx, q, tenant, tree, entries)
++}
++
++func rankWorkspaceQueueWithin(ctx context.Context, q transaction.Executor, tenant string, tree *QuotaTree, entries []QueueEntry) ([]QueueEntry, error) {
+ 	queues := make(map[string]QueueShare)
+ 	var workspaces []string
+ 	for _, entry := range entries {
+diff --git a/services/control/internal/modules/scheduling/workspace_queue_executor_test.go b/services/control/internal/modules/scheduling/workspace_queue_executor_test.go
+index 3d3de21c..1b9c5a8d 100644
+--- a/services/control/internal/modules/scheduling/workspace_queue_executor_test.go
++++ b/services/control/internal/modules/scheduling/workspace_queue_executor_test.go
+@@ -48,11 +48,11 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
+ 	first := QueueEntry{JobID: f.first.SourceID, QueueID: f.first.WorkspaceID, Sequence: 1}
+ 	second := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 2}
+ 	third := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 3}
+-	createQueueExecutorOwnerEntries(t, f, []QueueEntry{first, second})
++	createOwnerQueueEntries(t, f, []QueueEntry{first, second})
+ 	competing := newBorrowingAttempt(f.first, f.first.WorkspaceID)
+ 	rank := func(ctx context.Context, q transaction.Executor, want []QueueEntry) error {
+ 		t.Helper()
+-		entries, err := readQueueExecutorOwnerEntries(ctx, q, f.first.TenantID)
++		entries, err := readOwnerQueueEntries(ctx, q, f.first.TenantID)
+ 		if err != nil {
+ 			return err
+ 		}
+@@ -70,7 +70,7 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
+ 			return err
+ 		}
+ 		reserveBorrowing(t, f.store, competing, 2)
+-		if _, err := f.pool.Exec(ctx, `INSERT INTO queue_executor_owner
++		if _, err := f.pool.Exec(ctx, `INSERT INTO owner_fixture_queue
+  (job_id,tenant_id,workspace_id,priority,sequence,state)
+  VALUES($1,$2,$3,0,3,'queued')`, third.JobID, f.first.TenantID, third.QueueID); err != nil {
+ 			return err
+@@ -90,7 +90,7 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
+ 	for _, entry := range []QueueEntry{first, second, third} {
+ 		var state string
+ 		var revision int64
+-		if err := f.pool.QueryRow(ctx, "SELECT state,revision FROM queue_executor_owner WHERE job_id=$1", entry.JobID).
++		if err := f.pool.QueryRow(ctx, "SELECT state,revision FROM owner_fixture_queue WHERE job_id=$1", entry.JobID).
+ 			Scan(&state, &revision); err != nil || state != "queued" || revision != 1 {
+ 			t.Fatalf("ranking changed persisted owner state: %q, %d, %v", state, revision, err)
+ 		}
+@@ -154,47 +154,3 @@ func TestPostgresQueueExecutorRejectsWrongModeAndScope(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ }
+-
+-// Persistent owner rows and committed reservations must use the same snapshot;
+-// this fixture deliberately has no dependency on the pending admission API.
+-func createQueueExecutorOwnerEntries(t *testing.T, f reservationFixture, entries []QueueEntry) {
+-	t.Helper()
+-	if _, err := f.pool.Exec(t.Context(), `CREATE TABLE queue_executor_owner (
+- job_id uuid PRIMARY KEY,
+- tenant_id uuid NOT NULL,
+- workspace_id uuid NOT NULL,
+- priority integer NOT NULL,
+- sequence bigint NOT NULL UNIQUE CHECK(sequence > 0),
+- state text NOT NULL DEFAULT 'queued',
+- revision bigint NOT NULL DEFAULT 1,
+- FOREIGN KEY(tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id)
+-)`); err != nil {
+-		t.Fatal(err)
+-	}
+-	for _, entry := range entries {
+-		if _, err := f.pool.Exec(t.Context(), `INSERT INTO queue_executor_owner
+- (job_id,tenant_id,workspace_id,priority,sequence) VALUES($1,$2,$3,$4,$5)`,
+-			entry.JobID, f.first.TenantID, entry.QueueID, entry.Priority, entry.Sequence); err != nil {
+-			t.Fatal(err)
+-		}
+-	}
+-}
+-
+-func readQueueExecutorOwnerEntries(ctx context.Context, q transaction.Executor, tenant string) ([]QueueEntry, error) {
+-	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
+-		`SELECT job_id::text,workspace_id::text,priority,sequence FROM queue_executor_owner
+- WHERE tenant_id=$1 AND state='queued' ORDER BY sequence`, tenant))
+-	if err != nil {
+-		return nil, err
+-	}
+-	defer rows.Close()
+-	var entries []QueueEntry
+-	for rows.Next() {
+-		var entry QueueEntry
+-		if err := rows.Scan(&entry.JobID, &entry.QueueID, &entry.Priority, &entry.Sequence); err != nil {
+-			return nil, err
+-		}
+-		entries = append(entries, entry)
+-	}
+-	return entries, rows.Err()
+-}

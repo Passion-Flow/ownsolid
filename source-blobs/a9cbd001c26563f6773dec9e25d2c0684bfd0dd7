@@ -1,0 +1,123 @@
+"""Pure lifecycle fact decoding only; never run a native process or lock gate."""
+from pathlib import Path
+import copy
+import importlib.util
+import json
+import subprocess
+import sys
+import unittest
+
+spec = importlib.util.spec_from_file_location("expiry_runner", Path(__file__).with_name("run-alertmanager-expiry-v2.py"))
+runner = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(runner)
+
+def stopped_before_readiness():
+    return dict(completed=False, native_started=True, native_ready=False,
+                native_stopped=True, receiver_stopped=True, native_pid=42)
+
+def completed():
+    out = stopped_before_readiness()
+    out.update(completed=True, native_ready=True)
+    return out
+
+class LifecycleFactsTest(unittest.TestCase):
+    def test_optimized_guard_refuses_before_help_or_any_lock(self):
+        result = subprocess.run([sys.executable, "-O", str(Path(__file__).with_name("run-alertmanager-expiry-v2.py")), "--help"], capture_output=True, text=True, timeout=5)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Assertions must remain enabled", result.stderr)
+
+    def test_version_output_does_not_establish_service_start(self):
+        body = dict(version="alertmanager, version 0.34.2", completed=False,
+                    native_started=False, native_ready=False, native_stopped=False,
+                    receiver_stopped=True, failure_type="OSError")
+        out = runner.observation_facts(body)
+        self.assertIs(out["native_started"], False)
+        self.assertIs(out["native_ready"], False)
+        self.assertIs(out["observation_completed"], False)
+        self.assertIs(out["receiver_stopped"], True)
+
+    def test_created_process_is_distinct_from_readiness_and_completion(self):
+        out = runner.observation_facts(stopped_before_readiness())
+        self.assertIs(out["native_started"], True)
+        self.assertIs(out["native_ready"], False)
+        self.assertIs(out["native_stopped"], True)
+        self.assertIs(out["observation_completed"], False)
+
+    def test_complete_observation_requires_all_explicit_facts(self):
+        out = runner.observation_facts(completed())
+        self.assertEqual(out, dict(observation_completed=True, native_started=True,
+                                   native_ready=True, native_stopped=True, receiver_stopped=True))
+        for name in ["native_started", "native_ready", "native_stopped", "receiver_stopped"]:
+            with self.subTest(missing_fact=name):
+                body = completed()
+                body[name] = False
+                with self.assertRaises(ValueError):
+                    runner.observation_facts(body)
+
+    def test_missing_or_coerced_boolean_facts_are_rejected(self):
+        for name in ["completed", "native_started", "native_ready", "native_stopped", "receiver_stopped"]:
+            with self.subTest(missing=name):
+                body = completed()
+                del body[name]
+                with self.assertRaises(ValueError):
+                    runner.observation_facts(body)
+            for value in [None, 0, 1, "true", []]:
+                with self.subTest(field=name, value=value):
+                    body = completed()
+                    body[name] = value
+                    with self.assertRaises(ValueError):
+                        runner.observation_facts(body)
+
+    def test_actual_positive_integer_pid_is_required_only_after_start(self):
+        for pid in [None, 0, -1, True, 42.0, "42"]:
+            with self.subTest(pid=pid):
+                body = stopped_before_readiness()
+                body["native_pid"] = pid
+                with self.assertRaises(ValueError):
+                    runner.observation_facts(body)
+        body = dict(completed=False, native_started=False, native_ready=False,
+                    native_stopped=False, receiver_stopped=True, native_pid=42)
+        with self.assertRaises(ValueError):
+            runner.observation_facts(body)
+
+    def test_native_readiness_and_stop_cannot_precede_creation(self):
+        for name in ["native_ready", "native_stopped"]:
+            with self.subTest(field=name):
+                body = dict(completed=False, native_started=False, native_ready=False,
+                            native_stopped=False, receiver_stopped=True)
+                body[name] = True
+                with self.assertRaises(ValueError):
+                    runner.observation_facts(body)
+
+    def test_malformed_legacy_or_contradictory_observations_are_rejected(self):
+        for body in [None, [], "", {"version": "alertmanager, version 0.34.2"}]:
+            with self.subTest(body=body):
+                with self.assertRaises(ValueError):
+                    runner.observation_facts(body)
+        for key in ["failure", "failure_type"]:
+            with self.subTest(field=key):
+                body = completed()
+                body[key] = ""
+                with self.assertRaises(ValueError):
+                    runner.observation_facts(body)
+
+    def test_decoding_does_not_mutate_or_infer_from_other_fields(self):
+        body = stopped_before_readiness()
+        body.update(version="unexpected diagnostic text", events=[{"status": "firing"}])
+        original = copy.deepcopy(body)
+        first = runner.observation_facts(body)
+        first["native_started"] = False
+        self.assertEqual(body, original)
+        self.assertIs(runner.observation_facts(body)["native_started"], True)
+
+if __name__ == "__main__":
+    destination = Path(sys.argv[1])
+    if not destination.is_absolute() or destination.exists():
+        raise SystemExit("Use a fresh absolute unit result path")
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(LifecycleFactsTest)
+    expected = suite.countTestCases()
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    destination.write_text(json.dumps(dict(scope=__doc__, tests_run=result.testsRun,
+        expected_tests=expected, failures=len(result.failures), errors=len(result.errors),
+        skipped=len(result.skipped), passed=result.wasSuccessful()), indent=2)+"\n")
+    raise SystemExit(0 if result.wasSuccessful() else 1)

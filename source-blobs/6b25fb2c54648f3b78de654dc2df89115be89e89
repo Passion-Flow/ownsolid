@@ -1,0 +1,43 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=2
+df -h /
+free -m
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+scratch=$(mktemp -d ~/lane-rel-tools/gw107-contract-fixture.XXXXXXXX)
+printf '%s\n' "$scratch"
+git rev-parse HEAD > "$scratch/base"
+image=pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+container=$(docker run -d --rm --pull never --network none --memory 640m --cpus 2 \
+  --tmpfs /tmp:rw,size=256m --name lane-rel-gw107-contract --label ownsolid.lane=lane-rel \
+  --entrypoint sh "$image" -ec '
+    data=$(mktemp -d)
+    chown postgres "$data"
+    gosu postgres initdb -D "$data" --auth=trust --locale=C --encoding=UTF8 >/dev/null
+    exec gosu postgres postgres -D "$data" -h 127.0.0.1
+  ')
+trap 'docker stop --time 5 "$container" >/dev/null 2>&1 || true' EXIT
+ready=no
+for attempt in $(seq 1 25); do
+    if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+        ready=yes
+        break
+    fi
+    sleep 1
+done
+test "$ready" = yes
+docker exec "$container" createdb -h 127.0.0.1 -U postgres lane_rel_gw107_contract_test
+docker exec "$container" psql -h 127.0.0.1 -U postgres -d lane_rel_gw107_contract_test -v ON_ERROR_STOP=1 \
+    -c 'CREATE EXTENSION vector WITH SCHEMA public VERSION $$0.8.7$$; REVOKE CREATE ON SCHEMA public FROM PUBLIC' >/dev/null
+export LANE_REL_GW107_OVERLAY=$(cat ~/lane-rel-tools/current-gw107-contract-overlay)
+pid=$(docker inspect -f '{{.State.Pid}}' "$container")
+export PROJECT_ONE_TEST_DSN=postgresql://postgres@127.0.0.1/lane_rel_gw107_contract_test?sslmode=disable
+ionice -c2 -n7 nice -n10 nsenter -t "$pid" -n sh -ec '
+    test "$(wc -l < /proc/net/route)" -eq 1
+    go -C services/control test -overlay "$LANE_REL_GW107_OVERLAY/overlay.json" ./internal/modules/distribution -run "^(TestGatewayUsageHistoryAuditExport|TestModelGatewayCAForPublishedAliasOverTLS)$" -v -count=1
+    ./tools/cli/testdata/run-gateway-history-tls.sh
+' > "$scratch/fixture.log" 2>&1 || { tail -65 "$scratch/fixture.log"; exit 1; }
+grep -E '^(=== RUN   [^/]+$|--- (PASS|SKIP|FAIL)|    --- (PASS|FAIL)|PASS|FAIL)' "$scratch/fixture.log"
+grep -q '^--- PASS: TestGatewayUsageHistoryAuditExport ' "$scratch/fixture.log"
+

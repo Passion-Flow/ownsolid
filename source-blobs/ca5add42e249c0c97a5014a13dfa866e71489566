@@ -1,0 +1,926 @@
+From 15fc7aa16afe36b4b0636e81fecf8290567014c1 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 04:28:47 +0000
+Subject: [PATCH 1/9] SCH-103: Add owner-transaction queue admission candidate
+
+Serialize the authorized workspace domain before reading the owner's durable eligible queue and current reservation shares. Reuse exact reservation replay and the existing quota and release checks; commit dequeue and holds through the owner's borrowed transaction.
+
+Add PostgreSQL concurrency, rollback, cancellation, scope and lost-commit-acknowledgement regressions. Document the exact missing training readers, hook sites, release transitions and owner acceptance tests without changing training or the production catalog.
+
+Verified gofmt, git diff --check, repository layout and roadmap checks. The new path is not yet compiled or run: the shared Linux heavy-test sequence and I/O pressure gate have not been available. Keep SCH-103 open and do not promote this candidate before the required runtime gates pass.
+---
+ ...-queue-turns-with-the-owner-transaction.md |  31 ++
+ docs/product/status.md                        |   1 +
+ docs/research/scheduling-queue-policy.md      | 144 +++++++
+ .../scheduling-training-reservations.md       |   6 +
+ .../internal/modules/scheduling/README.md     |  26 ++
+ .../internal/modules/scheduling/queue.go      |   4 +-
+ .../modules/scheduling/queued_reservation.go  |  97 +++++
+ .../scheduling/queued_reservation_test.go     | 367 ++++++++++++++++++
+ .../modules/scheduling/reservation.go         |  53 ++-
+ .../scheduling/reservation_commit_ack_test.go |  24 ++
+ .../modules/scheduling/wait_reasons.go        |   2 +
+ .../modules/scheduling/workspace_queue.go     |   4 +
+ 12 files changed, 741 insertions(+), 18 deletions(-)
+ create mode 100644 docs/decisions/0069-admit-fair-queue-turns-with-the-owner-transaction.md
+ create mode 100644 services/control/internal/modules/scheduling/queued_reservation.go
+ create mode 100644 services/control/internal/modules/scheduling/queued_reservation_test.go
+
+diff --git a/docs/decisions/0069-admit-fair-queue-turns-with-the-owner-transaction.md b/docs/decisions/0069-admit-fair-queue-turns-with-the-owner-transaction.md
+new file mode 100644
+index 00000000..62cffbb1
+--- /dev/null
++++ b/docs/decisions/0069-admit-fair-queue-turns-with-the-owner-transaction.md
+@@ -0,0 +1,31 @@
++# Admit fair queue turns with the owner transaction
++
++Queue order must still hold when the workload owner creates a task. A
++read-only fair-share snapshot followed by an independent reservation can
++admit two consumers using the same old share or a dequeued entry.
++
++Keep the workload owner's PostgreSQL READ COMMITTED transaction as the
++single commit owner. Scheduling takes the existing shared quota-policy
++lock, validates the complete authorized workspace domain and takes its
++existing workspace advisory locks in canonical ID order. Only then does
++it call the owner's read-only eligible-queue reader through that same
++executor. It ranks current holds, checks the selected head and uses the
++existing reservation path. Exact held attempts replay without requiring
++the already-dequeued entry. Owner dequeue, physical holds, task and audit
++commit with the scheduling hold.
++
++The owner retains authority checks and actor, node, job and physical GPU
++fences. It must call this operation before other scheduling writes. The
++reader cannot lock other jobs, write, open another transaction or use
++network I/O. A missing candidate, reader failure, changed replay or
++storage failure cannot create a task. A queue-turn wait uses the owner's
++savepoint rollback before persisting its wait state. A cancellation
++request cannot release a running attempt without the existing positive
++stop or non-delivery proof.
++
++This reuses the quota and cell boundary and does not add a scheduler-owned
++durable queue or a global exclusive admission lock. Unrelated domains can
++continue independently. The production training readers, dispatch hooks
++and catalog migration remain separate owner integrations. Persistent
++owner fixture tests qualify transaction behavior, not that production
++flow. See the [queue integration contract](../research/scheduling-queue-policy.md#training-owner-patch-contract).
+diff --git a/docs/product/status.md b/docs/product/status.md
+index f889b744..2bb5b776 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -66,6 +66,7 @@ today and what is known to fail.
+ | Scheduling policy and cell observation (SCH-101 to SCH-104, SCH-107, SCH-108, SCH-110, open) | Job demand, quota policy, queue order, quota preflight and scheduler observation libraries | Linux Go race tests covered exact demand, tenant scope and child ceilings. Disconnected TLS verified cell identity, protected token rotation, refusal before network I/O and the exact Kueue Workload blocker. Scheduling tests rejected stale blockers and verified fixed guidance without controller messages. PostgreSQL 18.6 verified that two concurrent policy edits could not both consume the same parent allocation | No | Production schema and workload composition, offline cell installation, reservation and product entrances remain open. See [integration boundaries](../research/lane-sch-questions.md) |
+ | Transactional training scheduling seam (SCH-101, open) | PostgreSQL reservation and exact release on the workload owner's transaction, with candidate schema | Linux PostgreSQL 18.6 covered contention, owner rollback and live quota edits. A logical dump/restore of the v57 catalog with candidate tables preserved a held and a released attempt and their admission decisions. Disconnected local replay and release refused foreign site/cell records for single and gang attempts | No | Production migration and fingerprints, the authenticated training caller and installed offline flow remain open. See [training and database handoff](../research/scheduling-training-reservations.md) |
+ | Live workspace queue ranking (SCH-103, open) | Tenant-scoped ordering from current quota and reservation shares in one read-only snapshot | Isolated Linux PostgreSQL 18.6 verified priority, snapshot stability, changed rank after holds and quota edits, FIFO after release, one reservation query for multiple workspaces and zero reservation reads on foreign or missing scope. A foreign site/cell in the selected active records refused the entire rank and preserved the records | No | Durable queue membership, authority over priority classes and the workload owner dispatch remain open. See [live workspace shares](../research/scheduling-queue-policy.md#live-workspace-shares) |
++| Owner-transaction queue admission (SCH-103, open) | Candidate fair-share admission and exact replay through the workload owner's PostgreSQL write transaction | Not run: the new queue admission path has passed formatting, repository layout and roadmap checks only. The shared Linux heavy-test window and I/O pressure gate have not been available | No | Compilation, PostgreSQL fault and concurrency runs, the required full gates, production migration and authenticated training readers and dispatch remain open. See the [training patch contract](../research/scheduling-queue-policy.md#training-owner-patch-contract) |
+ | Whole-job reservation and gang release (SCH-104, open) | One transactional hold for all replica groups and full exact slot evidence before release | Isolated Linux PostgreSQL 18.6 verified rollback of three provisional owner holds after quota refusal and a rejected COMMIT, replay after lost COMMIT acknowledgement, and refusal of partial, duplicate and stale stop evidence | No | Production migration, verified physical receipts, installed scheduler and the authenticated workload flow remain open. See [gang reservation and release](../research/scheduling-admission.md#atomic-gang-reservation-and-release) |
+ | Placement wait reasons (SCH-108, open) | Actionable guidance from the current queue, quota, reservation and reclaim decisions | Isolated Linux PostgreSQL 18.6 verified refreshed shortfalls after quota edits and release, exact reclaim evidence, replay and identical denial for foreign and missing scopes. Disconnected TLS returned guidance for the bound Workload UID and withheld it for stale conditions, replacement and forbidden reads | No | The authenticated caller needs the workload owner's durable controller UID binding. Live cell validation requires signed offline controller assets and scoped credentials. See the [installed workload handoff](../research/scheduling-wait-reasons.md#installed-workload-handoff) |
+ | Borrowed quota and reclaim (SCH-109, open) | Exact per-attempt loans between sibling workspaces and ordered reclaim on a candidate PostgreSQL schema | Isolated Linux PostgreSQL 18.6 covered competing borrowers, the hard quota ceiling, waiting for exact release records, rollback, cancellation and lost commit acknowledgements. Foreign holds and claims were refused, a foreign victim release kept reclaim pending, and a foreign active hold preserved the quota-policy revision | No | Production schema, runtime stop delivery and audit, and the authenticated user flow remain open. See [borrowed quota research](../research/scheduling-quota-borrowing.md) |
+diff --git a/docs/research/scheduling-queue-policy.md b/docs/research/scheduling-queue-policy.md
+index cb32cbca..4657f2a7 100644
+--- a/docs/research/scheduling-queue-policy.md
++++ b/docs/research/scheduling-queue-policy.md
+@@ -117,3 +117,147 @@ that correcting the fixture record restores the original rank. The normal
+ module regression also checks preflight, contention, replay and release.
+ This qualifies persisted scheduling reads. Production queue membership,
+ priority resolution and the actual dispatcher integration remain open.
++
++## Queue turn and reservation in the owner transaction
++
++The installed owner's write transaction is PostgreSQL READ COMMITTED.
++The existing read-only ranking operation cannot be used inside it.
++Add `ReserveQueuedWithin` to the scheduling package. It takes the
++already-authorized exact attempt and intent, the complete workspace
++domain, and a `QueueReader` callback which reads current eligible owner
++rows through the supplied executor. It returns the normal reservation
++changed/replay result. It returns `SCHEDULING_QUEUE_TURN_PENDING` for a
++present candidate deferred by the current rank, without another job's
++identity or usage. A missing selected entry is an invalid queue snapshot.
++
++Use the existing policy shared lock, then acquire the existing workspace
++advisory locks in canonical ID order for the whole supplied domain.
++Validate every workspace under the installed tenant policy before calling
++the reader. Invoke the reader after acquiring those locks, so a waiter
++observes the preceding dispatch's committed queue state. Read current
++quota shares and holds and reserve the selected head through the existing
++`ReserveWithin` in the same transaction. Preserve exact held replays even
++after the owner's queued row has transitioned. No new persistent queue or
++admission counter is needed.
++
++[PostgreSQL transaction advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html#ADVISORY-LOCKS)
++are reentrant within one transaction and end with it.
++[READ COMMITTED](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED)
++provides a new statement snapshot after a lock wait. Sharing the existing
++workspace locks also excludes ordinary reservation/release writes for
++those workspaces while ranking and admission run. Policy replacement waits
++for the existing shared policy lock. A separate ranking transaction would
++leave a race before admission. A global exclusive policy lock would
++serialize unrelated tenants. Lock only the authorized domain and retain
++the original quota, borrowing and positive-release checks.
++
++Call this operation before other scheduling writes in the transaction.
++The owner first retains its normal selected actor, node, job and physical
++GPU fences. The queue reader must only read, must not acquire other jobs'
++row locks, and must not open a second transaction, commit or use network
++I/O. It returns the complete currently eligible set or fails explicitly.
++The reader derives scope and priority from persisted server authority.
++Its unique sequence represents the order of its durable enqueue keys
++within this batch. It cannot use HTTP array order or a browser timestamp.
++
++Exercise real PostgreSQL records for owner queue state and scheduling
++holds in one borrowed transaction. Verify a fair head, a non-head with no
++write, same-attempt replay after dequeue, owner failure rollback,
++concurrent consumers, a reader invoked only after preceding dequeue
++commits, a real committed dequeue with its wire acknowledgement suppressed,
++cancellation before admission and positive release after
++admission. Foreign tenant/workspace or reservation scope must leave
++queue state, owner revisions, policy revision and holds unchanged.
++These fixtures establish transaction behavior. The actual training
++reader and dispatcher call sites remain owner integrations.
++
++The implementation uses the existing Go, pgx, UUID and PostgreSQL stack
++and the licenses recorded above. Kueue remains an Apache-2.0 design
++reference. No dependency, model, dataset or runtime download is added.
++
++## Training owner patch contract
++
++The following methods are integration requirements for the training owner.
++They are absent from the installed training service. The scheduling lane
++implements only the admission operation and its borrowed-transaction tests.
++
++```go
++// Exported by package scheduling.
++type QueueReader func(context.Context, transaction.Executor) ([]QueueEntry, error)
++
++func ReserveQueuedWithin(
++    ctx context.Context, q transaction.Executor,
++    attempt Attempt, intent JobIntent,
++    workspaces []string, read QueueReader,
++) (bool, error)
++```
++
++The training owner must implement these service methods.
++
++```go
++func (s *Service) schedulingWorkspacesWithin(
++    ctx context.Context, q transaction.Executor, tenant string,
++) ([]string, error)
++
++func (s *Service) schedulingEntriesWithin(
++    ctx context.Context, q transaction.Executor, tenant string,
++) ([]scheduling.QueueEntry, error)
++```
++
++In `training/authority.go`, retain the existing due-job selection and
++`DispatchNext` file verification until the owner supplies an initial
++fair selection read. The final admission still rechecks current rank.
++Both new owner readers must use the installation tenant, local site/cell,
++active Workspace and current persisted requester authority. The workspace
++reader supplies the complete dispatch domain. The entry reader runs
++through the executor passed by scheduling and selects only due queued
++rows. It must preserve the existing durable
++`next_dispatch_at,created_at,id` order in its unique positive sequences.
++A complete ordered batch can assign ordinals from those keys. A truncated
++page cannot. Preserve current default priority zero until the owner
++provides a persisted, authorized priority-class mapping. Bound the
++complete scan with the owning policy's job limits and fail on overflow
++instead of silently omitting competing work.
++
++The owner must also put local scope predicates on its selected persisted
++job read before any wait, failure or revision update. `nextCandidate`
++currently lacks that predicate. `loadDelegatedWithin` uses the selected
++job lookup before `dispatchSnapshotWithin`; that lookup must refuse
++foreign site/cell rows. The scheduling operation cannot authorize a
++previous owner mutation after the fact.
++
++In `training/dispatch.go:reserveDispatchWithin`, keep the existing
++`training_dispatch_reservation` savepoint and physical GPU acquisition.
++Before `Nodes.QueueTrainingWithin`, derive `Attempt` and `JobIntent`
++from `w`, `j` and `snapshot.command` as in the existing
++[reservation handoff](scheduling-training-reservations.md#training-owner-handoff).
++Read the workspace domain, then invoke `ReserveQueuedWithin` with the
++reader closure bound to `w.TenantID`. A local queue-turn or quota wait
++rolls back the savepoint before recording the existing queued wait state.
++Foreign scope, malformed data, storage failure and stale identity return
++an error and roll back the owner transaction. They may not update a
++revision, task, attempt, physical hold or scheduling hold. An exact held
++replay returns false and must trigger an owner state reread, never a
++second task insertion. A confirmed admission stores the task, attempt,
++job transition and audit with the scheduling hold in that one commit.
++Unknown commits publish no success; retry through current owner state.
++
++Keep `Cancel`'s queued-to-cancelled transition free of a hold. A
++preparing/running cancellation remains cancelling until positive physical
++stop evidence. In `RecordStop`, add the existing `ReleaseWithin`
++beside the exact physical release after validating the frozen command,
++attempt, node and stop receipt. Add the same call only to
++`ReconcileNext`'s proven never-delivered branch. A missing post-cutover
++reservation is an integrity error. Existing holds require a deliberate
++cutover reconciliation before activating the production hooks.
++
++The owner replay must extend `TestActualPairedTrainingDispatch` in
++`dispatch_repository_integration_test.go` and the existing stop/cancel
++regressions. It must use the admitted production catalog and current
++runtime grants. Verify fair selection from actual queued training rows;
++duplicate and concurrent dispatch; cancellation before and during
++admission; task or audit failure after reservation; unknown commit replay;
++exact physical stop and never-delivered release. Verify that a foreign
++selected job or held record changes no owner revision or dispatch state.
++The scheduling fixtures persist owner queue state for rollback and
++concurrency tests. They do not replace this real training acceptance run.
+diff --git a/docs/research/scheduling-training-reservations.md b/docs/research/scheduling-training-reservations.md
+index 5bb7d3f8..6860bc75 100644
+--- a/docs/research/scheduling-training-reservations.md
++++ b/docs/research/scheduling-training-reservations.md
+@@ -99,6 +99,12 @@ continues to create a queued training job without taking capacity.
+ In `reserveDispatchWithin`, call `scheduling.ReserveWithin` after
+ `reserveTrainingGPUWithin` succeeds and before `QueueTrainingWithin`.
+ Both calls sit within the existing `training_dispatch_reservation` savepoint.
++For SCH-103, use `ReserveQueuedWithin` at this same point instead of the
++standalone reservation shown below. Supply the authorized workspace domain
++and complete eligible owner reader described in the
++[training queue patch contract](scheduling-queue-policy.md#training-owner-patch-contract).
++The basic snippet describes reservation identity and demand; by itself it
++does not enforce queue order.
+ Keep the physical GPU lock before the scheduling locks on both acquisition and
+ release. The hook derives the identity and intent from the locked owner values.
+ 
+diff --git a/services/control/internal/modules/scheduling/README.md b/services/control/internal/modules/scheduling/README.md
+index 67ef7359..ebac4aa0 100644
+--- a/services/control/internal/modules/scheduling/README.md
++++ b/services/control/internal/modules/scheduling/README.md
+@@ -73,3 +73,29 @@ If an active record in that set has foreign site/cell coordinates, it returns
+ `SCHEDULING_QUOTA_POLICY_UNAVAILABLE` so the owner can reconcile the records.
+ Pass a read-only REPEATABLE READ transaction
+ and the owner's durable queue entries. See [live workspace shares](../../../../../docs/research/scheduling-queue-policy.md#live-workspace-shares).
++
++`ReserveQueuedWithin` performs queue-turn selection and reservation in the
++owner's existing READ COMMITTED write transaction. Pass the authorized
++workspace domain and a `QueueReader` that reads complete current eligible
++owner rows through the supplied executor. The operation locks the domain
++in canonical workspace order, then rereads the queue and current shares.
++A non-head returns `SCHEDULING_QUEUE_TURN_PENDING`. The owner commits
++dequeue, physical holds, task and audit with the scheduling reservation,
++and rolls all of them back on failure. An exact held replay returns false
++without reading the already-dequeued entry or enqueuing another task.
++
++The [training patch contract](../../../../../docs/research/scheduling-queue-policy.md#training-owner-patch-contract)
++names the missing production readers, scope checks, call sites and
++acceptance tests. The module's PostgreSQL queue tests use persistent
++owner fixture rows to qualify transaction behavior.
++
++With the protected disposable loopback DSN file configured as above, the
++queue admission and real lost-acknowledgement cases run with:
++
++```sh
++go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling -run '^TestPostgresQueuedReservation' -count=1 -v
++```
++
++The wire fault test requires an isolated plaintext loopback endpoint and
++skips a Unix-only or TLS endpoint. Check its explicit PASS when qualifying
++unknown-commit replay.
+diff --git a/services/control/internal/modules/scheduling/queue.go b/services/control/internal/modules/scheduling/queue.go
+index ffdc7a6f..f5901a81 100644
+--- a/services/control/internal/modules/scheduling/queue.go
++++ b/services/control/internal/modules/scheduling/queue.go
+@@ -18,7 +18,7 @@ type QueueShare struct {
+ }
+ 
+ // QueueEntry is a pending job after authority has resolved its queue and
+-// priority. Sequence is a unique durable enqueue order within the policy domain.
++// priority. Sequence is the unique order of durable enqueue keys in this batch.
+ type QueueEntry struct {
+ 	JobID    string
+ 	QueueID  string
+@@ -110,5 +110,5 @@ func QueueTurnReason(ranked []QueueEntry, deferred QueueEntry) (WaitReason, bool
+ 	if slices.Index(ranked, deferred) <= 0 {
+ 		return WaitReason{}, false
+ 	}
+-	return WaitReason{Code: "SCHEDULING_QUEUE_TURN_PENDING", Action: WaitForQueueTurn}, true
++	return WaitReason{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}, true
+ }
+diff --git a/services/control/internal/modules/scheduling/queued_reservation.go b/services/control/internal/modules/scheduling/queued_reservation.go
+new file mode 100644
+index 00000000..ff1837fb
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/queued_reservation.go
+@@ -0,0 +1,97 @@
++package scheduling
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"slices"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// ErrQueueTurnPending means another eligible entry currently precedes this attempt.
++var ErrQueueTurnPending = errors.New("SCHEDULING_QUEUE_TURN_PENDING")
++
++// QueueReader reads the owner's complete, currently eligible queue through the
++// supplied transaction after the scheduling workspace locks are held. It derives
++// scope, priority and order from persisted authority and must not write, acquire
++// other jobs' row locks, open another transaction or perform network I/O.
++type QueueReader func(context.Context, transaction.Executor) ([]QueueEntry, error)
++
++// ReserveQueuedWithin reserves a current queue head in the workload owner's
++// READ COMMITTED transaction. The owner supplies its authorized workspace domain,
++// validates the selected job and commits dequeue, physical holds and audit in this
++// same transaction. Invoke it before other scheduling writes in the transaction.
++// False with no error is an exact held replay and must not enqueue another task.
++// The caller must roll back on error and publish no result until commit.
++func ReserveQueuedWithin(ctx context.Context, q transaction.Executor, a Attempt, intent JobIntent, workspaces []string, read QueueReader) (bool, error) {
++	body, demand, err := reservationPayload(a, intent)
++	if err != nil {
++		return false, err
++	}
++	if read == nil {
++		return false, ErrInvalidQueue
++	}
++	domain := slices.Clone(workspaces)
++	slices.Sort(domain)
++	domain = slices.Compact(domain)
++	if _, found := slices.BinarySearch(domain, a.WorkspaceID); !found {
++		return false, ErrQuotaScopeNotFound
++	}
++	for _, id := range domain {
++		if !canonicalReservationID(id) {
++			return false, ErrQuotaScopeNotFound
++		}
++	}
++	if _, err := lockReservationPolicy(ctx, q); err != nil {
++		return false, err
++	}
++	_, tree, err := readQuotaPolicyWithin(ctx, q)
++	if err != nil {
++		return false, err
++	}
++	if tree == nil {
++		return false, ErrQuotaUnconfigured
++	}
++	for _, id := range domain {
++		if _, err := tree.workspace(a.TenantID, id); err != nil {
++			return false, err
++		}
++	}
++	for _, id := range domain {
++		if err := lockReservationWorkspace(ctx, q, a.TenantID, id); err != nil {
++			return false, err
++		}
++	}
++	requested, err := json.Marshal(demand)
++	if err != nil {
++		return false, ErrInvalidResources
++	}
++	replayed, err := reservationReplayWithin(ctx, q, a, body, requested)
++	if err != nil || replayed {
++		return false, err
++	}
++	entries, err := read(ctx, q)
++	if err != nil {
++		return false, err
++	}
++	for _, entry := range entries {
++		if _, found := slices.BinarySearch(domain, entry.QueueID); !found {
++			return false, ErrQuotaScopeNotFound
++		}
++	}
++	ranked, err := rankWorkspaceQueueWithin(ctx, q, a.TenantID, tree, entries)
++	if err != nil {
++		return false, err
++	}
++	position := slices.IndexFunc(ranked, func(entry QueueEntry) bool {
++		return entry.JobID == a.SourceID && entry.QueueID == a.WorkspaceID
++	})
++	if position < 0 {
++		return false, ErrInvalidQueue
++	}
++	if position > 0 {
++		return false, ErrQueueTurnPending
++	}
++	return ReserveWithin(ctx, q, a, intent)
++}
+diff --git a/services/control/internal/modules/scheduling/queued_reservation_test.go b/services/control/internal/modules/scheduling/queued_reservation_test.go
+new file mode 100644
+index 00000000..070d48cf
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/queued_reservation_test.go
+@@ -0,0 +1,367 @@
++package scheduling
++
++import (
++	"context"
++	"errors"
++	"slices"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5"
++)
++
++type queuedFixture struct {
++	reservationFixture
++	first, second Attempt
++	domain        []string
++}
++
++func newQueuedFixture(t *testing.T) queuedFixture {
++	t.Helper()
++	f := newReservationFixture(t)
++	first := newBorrowingAttempt(f.first, f.first.WorkspaceID)
++	second := newBorrowingAttempt(f.first, f.other)
++	if _, err := f.pool.Exec(t.Context(), `
++CREATE TABLE owner_fixture_queue (
++ job_id uuid PRIMARY KEY, tenant_id uuid NOT NULL, workspace_id uuid NOT NULL,
++ site_id varchar NOT NULL DEFAULT local_site_id(),cell_id varchar NOT NULL DEFAULT local_cell_id(),
++ priority integer NOT NULL,sequence bigint NOT NULL UNIQUE,
++ state text NOT NULL,revision integer NOT NULL DEFAULT 1
++)`); err != nil {
++		t.Fatal(err)
++	}
++	if _, err := f.pool.Exec(t.Context(), `INSERT INTO owner_fixture_queue
++ (job_id,tenant_id,workspace_id,priority,sequence,state)
++ VALUES($1,$2,$3,0,1,'queued'),($4,$2,$5,0,2,'queued')`,
++		first.SourceID, first.TenantID, first.WorkspaceID, second.SourceID, second.WorkspaceID); err != nil {
++		t.Fatal(err)
++	}
++	return queuedFixture{f, first, second, []string{first.WorkspaceID, second.WorkspaceID}}
++}
++
++func (f queuedFixture) read(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL, `
++SELECT job_id::text,workspace_id::text,priority,sequence
++ FROM owner_fixture_queue WHERE tenant_id=$1 AND site_id=local_site_id()
++ AND cell_id=local_cell_id() AND state='queued' ORDER BY sequence`, f.first.TenantID))
++	if err != nil {
++		return nil, err
++	}
++	defer rows.Close()
++	var entries []QueueEntry
++	for rows.Next() {
++		var entry QueueEntry
++		if err := rows.Scan(&entry.JobID, &entry.QueueID, &entry.Priority, &entry.Sequence); err != nil {
++			return nil, err
++		}
++		entries = append(entries, entry)
++	}
++	return entries, rows.Err()
++}
++
++func dequeueQueuedFixture(ctx context.Context, q transaction.Executor, a Attempt) error {
++	count, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `
++UPDATE owner_fixture_queue SET state='preparing',revision=revision+1
++ WHERE tenant_id=$1 AND workspace_id=$2 AND job_id=$3 AND state='queued'
++ AND site_id=local_site_id() AND cell_id=local_cell_id()`, a.TenantID, a.WorkspaceID, a.SourceID))
++	if err != nil {
++		return err
++	}
++	if count != 1 {
++		return ErrInvalidQueue
++	}
++	return nil
++}
++
++func (f queuedFixture) admit(ctx context.Context, a Attempt, read QueueReader, after error) (bool, error) {
++	var changed bool
++	err := ownerTransaction(ctx, f.store, func(ctx context.Context, q transaction.Executor) error {
++		var err error
++		changed, err = ReserveQueuedWithin(ctx, q, a, borrowingIntent(a, 2), f.domain, read)
++		if err != nil || !changed {
++			return err
++		}
++		if err := dequeueQueuedFixture(ctx, q, a); err != nil {
++			return err
++		}
++		return after
++	})
++	return changed && err == nil, err
++}
++
++func (f queuedFixture) assertState(t *testing.T, a Attempt, state string, revision, holds int) {
++	t.Helper()
++	var gotState string
++	var gotRevision, gotHolds int
++	if err := f.pool.QueryRow(t.Context(), "SELECT state,revision FROM owner_fixture_queue WHERE job_id=$1", a.SourceID).
++		Scan(&gotState, &gotRevision); err != nil {
++		t.Fatal(err)
++	}
++	if err := f.pool.QueryRow(t.Context(), "SELECT count(*) FROM scheduling_reservations WHERE released_at IS NULL").Scan(&gotHolds); err != nil {
++		t.Fatal(err)
++	}
++	if gotState != state || gotRevision != revision || gotHolds != holds {
++		t.Fatalf("owner state=%s revision=%d holds=%d, want %s/%d/%d", gotState, gotRevision, gotHolds, state, revision, holds)
++	}
++}
++
++func TestPostgresQueuedReservationUsesCurrentSharesAndOwnerCommit(t *testing.T) {
++	f := newQueuedFixture(t)
++	reserveBorrowing(t, f.store, f.reservationFixture.first, 2)
++	if changed, err := f.admit(t.Context(), f.first, f.read, nil); changed || !errors.Is(err, ErrQueueTurnPending) ||
++		!slices.Equal(WaitReasons(err), []WaitReason{{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}}) {
++		t.Fatalf("non-head admission: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "queued", 1, 1)
++	fail := errors.New("owner audit failed")
++	if changed, err := f.admit(t.Context(), f.second, f.read, fail); changed || !errors.Is(err, fail) {
++		t.Fatalf("owner failure: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "queued", 1, 1)
++	if changed, err := f.admit(t.Context(), f.second, f.read, nil); err != nil || !changed {
++		t.Fatalf("fair head admission: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "preparing", 2, 2)
++	noRead := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
++		t.Fatal("held replay read the dequeued owner entry again")
++		return nil, nil
++	}
++	if changed, err := f.admit(t.Context(), f.second, noRead, nil); err != nil || changed {
++		t.Fatalf("held replay: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "preparing", 2, 2)
++	changedAttempt := f.second
++	changedAttempt.ID = uuid.NewString()
++	if changed, err := f.admit(t.Context(), changedAttempt, noRead, nil); changed || !errors.Is(err, ErrReservationConflict) {
++		t.Fatalf("changed attempt replay: %v, %v", changed, err)
++	}
++	if changed, err := releaseInTransaction(t.Context(), f.store, f.second); err != nil || !changed {
++		t.Fatalf("verified owner release: %v, %v", changed, err)
++	}
++	if changed, err := f.admit(t.Context(), f.second, noRead, nil); changed || !errors.Is(err, ErrReservationReleased) {
++		t.Fatalf("released attempt reused: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "preparing", 2, 1)
++}
++
++func TestPostgresQueuedReservationReadsAfterConcurrentDequeue(t *testing.T) {
++	f := newQueuedFixture(t)
++	ctx, cancel := context.WithTimeout(t.Context(), 15*time.Second)
++	defer cancel()
++	first, err := f.pool.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer first.Rollback(ctx)
++	q := transaction.PostgreSQLTransaction(first)
++	if changed, err := ReserveQueuedWithin(ctx, q, f.first, borrowingIntent(f.first, 2), f.domain, f.read); err != nil || !changed {
++		t.Fatalf("first reserve: %v, %v", changed, err)
++	}
++	if err := dequeueQueuedFixture(ctx, q, f.first); err != nil {
++		t.Fatal(err)
++	}
++	writers := make(chan uint32, 1)
++	result := make(chan error, 1)
++	var reads atomic.Int32
++	go func() {
++		result <- pgx.BeginFunc(ctx, f.pool, func(tx pgx.Tx) error {
++			writers <- tx.Conn().PgConn().PID()
++			read := func(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++				reads.Add(1)
++				return f.read(ctx, q)
++			}
++			q := transaction.PostgreSQLTransaction(tx)
++			domain := slices.Clone(f.domain)
++			slices.Reverse(domain)
++			changed, err := ReserveQueuedWithin(ctx, q, f.second, borrowingIntent(f.second, 2), domain, read)
++			if err != nil {
++				return err
++			}
++			if !changed {
++				return errors.New("second candidate did not reserve")
++			}
++			return dequeueQueuedFixture(ctx, q, f.second)
++		})
++	}()
++	var pid uint32
++	select {
++	case pid = <-writers:
++	case err := <-result:
++		t.Fatalf("consumer ended before acquiring connection: %v", err)
++	case <-ctx.Done():
++		t.Fatal(ctx.Err())
++	}
++	ticker := time.NewTicker(10 * time.Millisecond)
++	defer ticker.Stop()
++	for {
++		var blockers int
++		if err := f.pool.QueryRow(ctx, "SELECT cardinality(pg_blocking_pids($1::integer))", int64(pid)).Scan(&blockers); err != nil {
++			t.Fatal(err)
++		}
++		if blockers != 0 {
++			break
++		}
++		select {
++		case err := <-result:
++			t.Fatalf("consumer bypassed queued dispatch locks: %v", err)
++		case <-ctx.Done():
++			t.Fatal(ctx.Err())
++		case <-ticker.C:
++		}
++	}
++	if reads.Load() != 0 {
++		t.Fatal("queue reader ran before the preceding dequeue committed")
++	}
++	if err := first.Commit(ctx); err != nil {
++		t.Fatal(err)
++	}
++	select {
++	case err := <-result:
++		if err != nil {
++			t.Fatal(err)
++		}
++	case <-ctx.Done():
++		t.Fatal(ctx.Err())
++	}
++	if reads.Load() != 1 {
++		t.Fatalf("queue reads=%d", reads.Load())
++	}
++	f.assertState(t, f.first, "preparing", 2, 2)
++	f.assertState(t, f.second, "preparing", 2, 2)
++}
++
++func TestPostgresQueuedReservationRefusesChangedOwnerScope(t *testing.T) {
++	f := newQueuedFixture(t)
++	var reads atomic.Int32
++	read := func(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++		reads.Add(1)
++		return f.read(ctx, q)
++	}
++	err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
++		_, err := ReserveQueuedWithin(ctx, q, f.first, borrowingIntent(f.first, 2), []string{f.first.WorkspaceID, uuid.NewString()}, read)
++		return err
++	})
++	if !errors.Is(err, ErrQuotaScopeNotFound) || reads.Load() != 0 {
++		t.Fatalf("invalid domain: %v, reads=%d", err, reads.Load())
++	}
++	for _, field := range []string{"site_id", "cell_id"} {
++		if _, err := f.pool.Exec(t.Context(), "UPDATE owner_fixture_queue SET "+field+"='foreign' WHERE job_id=$1", f.first.SourceID); err != nil {
++			t.Fatal(err)
++		}
++		if changed, err := f.admit(t.Context(), f.first, read, nil); changed || !errors.Is(err, ErrInvalidQueue) {
++			t.Fatalf("foreign owner entry: %v, %v", changed, err)
++		}
++		f.assertState(t, f.first, "queued", 1, 0)
++		if _, err := f.pool.Exec(t.Context(), "UPDATE owner_fixture_queue SET site_id=local_site_id(),cell_id=local_cell_id() WHERE job_id=$1", f.first.SourceID); err != nil {
++			t.Fatal(err)
++		}
++	}
++	if _, err := f.pool.Exec(t.Context(), "UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1 WHERE job_id=$1", f.first.SourceID); err != nil {
++		t.Fatal(err)
++	}
++	if changed, err := f.admit(t.Context(), f.first, read, nil); changed || !errors.Is(err, ErrInvalidQueue) {
++		t.Fatalf("cancelled entry admitted: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "cancelled", 2, 0)
++	if changed, err := f.admit(t.Context(), f.second, read, nil); err != nil || !changed {
++		t.Fatalf("next durable candidate after cancellation: %v, %v", changed, err)
++	}
++}
++
++func TestPostgresQueuedReservationRejectsForeignHeldUsage(t *testing.T) {
++	f := newQueuedFixture(t)
++	reserveBorrowing(t, f.store, f.reservationFixture.first, 2)
++	if _, err := f.pool.Exec(t.Context(), "INSERT INTO cells VALUES ('foreign'); UPDATE scheduling_reservations SET cell_id='foreign'"); err != nil {
++		t.Fatal(err)
++	}
++	if changed, err := f.admit(t.Context(), f.second, f.read, nil); changed || !errors.Is(err, ErrQuotaPolicyUnavailable) {
++		t.Fatalf("foreign held usage advanced dispatch: %v, %v", changed, err)
++	}
++	f.assertState(t, f.second, "queued", 1, 1)
++	var revision int64
++	if err := f.pool.QueryRow(t.Context(), "SELECT revision FROM scheduling_quota_policy").Scan(&revision); err != nil || revision != 1 {
++		t.Fatalf("foreign held usage changed policy: %d, %v", revision, err)
++	}
++}
++
++func TestPostgresQueuedReservationRollsBackAfterConcurrentCancellation(t *testing.T) {
++	f := newQueuedFixture(t)
++	read := func(ctx context.Context, q transaction.Executor) ([]QueueEntry, error) {
++		entries, err := f.read(ctx, q)
++		if err != nil {
++			return nil, err
++		}
++		// Commit a separate owner cancellation after the queue read. The final
++		// owner state transition must reject this stale entry and roll back its hold.
++		_, err = f.pool.Exec(ctx, "UPDATE owner_fixture_queue SET state='cancelled',revision=revision+1 WHERE job_id=$1", f.first.SourceID)
++		return entries, err
++	}
++	if changed, err := f.admit(t.Context(), f.first, read, nil); changed || !errors.Is(err, ErrInvalidQueue) {
++		t.Fatalf("cancelled owner entry dispatched: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "cancelled", 2, 0)
++}
++
++func TestPostgresQueuedReservationConcurrentReplayDequeuesOnce(t *testing.T) {
++	f := newQueuedFixture(t)
++	type outcome struct {
++		changed bool
++		err     error
++	}
++	start := make(chan struct{})
++	results := make(chan outcome, 2)
++	for range 2 {
++		go func() {
++			<-start
++			changed, err := f.admit(t.Context(), f.first, f.read, nil)
++			results <- outcome{changed, err}
++		}()
++	}
++	close(start)
++	var admitted int
++	for range 2 {
++		result := <-results
++		if result.err != nil {
++			t.Fatal(result.err)
++		}
++		if result.changed {
++			admitted++
++		}
++	}
++	if admitted != 1 {
++		t.Fatalf("successful dequeues=%d", admitted)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
++
++func TestPostgresQueuedReservationRefusesReaderFailureAndOutOfDomainEntries(t *testing.T) {
++	f := newQueuedFixture(t)
++	failedRead := errors.New("owner queue unavailable")
++	read := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
++		return nil, failedRead
++	}
++	if changed, err := f.admit(t.Context(), f.first, read, nil); changed || !errors.Is(err, failedRead) {
++		t.Fatalf("failed queue read: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "queued", 1, 0)
++
++	err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
++		_, err := ReserveQueuedWithin(ctx, q, f.first, borrowingIntent(f.first, 2), []string{f.first.WorkspaceID}, f.read)
++		return err
++	})
++	if !errors.Is(err, ErrQuotaScopeNotFound) {
++		t.Fatalf("reader returned an entry outside the authorized domain: %v", err)
++	}
++	f.assertState(t, f.first, "queued", 1, 0)
++	if changed, err := f.admit(t.Context(), f.first, nil, nil); changed || !errors.Is(err, ErrInvalidQueue) {
++		t.Fatalf("missing queue reader: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "queued", 1, 0)
++	if changed, err := f.admit(t.Context(), f.first, f.read, nil); err != nil || !changed {
++		t.Fatalf("retry after reader failure: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
+diff --git a/services/control/internal/modules/scheduling/reservation.go b/services/control/internal/modules/scheduling/reservation.go
+index b99e04cc..6b944e4c 100644
+--- a/services/control/internal/modules/scheduling/reservation.go
++++ b/services/control/internal/modules/scheduling/reservation.go
+@@ -77,6 +77,14 @@ func requireReservationTransaction(ctx context.Context, q transaction.Executor)
+ // lockReservationScope orders locks policy first, then workspace. Advisory hash
+ // collisions serialize unrelated scopes and cannot grant extra capacity.
+ func lockReservationScope(ctx context.Context, q transaction.Executor, a Attempt) (int64, error) {
++	revision, err := lockReservationPolicy(ctx, q)
++	if err != nil {
++		return 0, err
++	}
++	return revision, lockReservationWorkspace(ctx, q, a.TenantID, a.WorkspaceID)
++}
++
++func lockReservationPolicy(ctx context.Context, q transaction.Executor) (int64, error) {
+ 	if err := requireReservationTransaction(ctx, q); err != nil {
+ 		return 0, err
+ 	}
+@@ -88,10 +96,14 @@ func lockReservationScope(ctx context.Context, q transaction.Executor, a Attempt
+ 		}
+ 		return 0, err
+ 	}
++	return revision, nil
++}
++
++func lockReservationWorkspace(ctx context.Context, q transaction.Executor, tenant, workspace string) error {
+ 	const workspaceLockNamespace = 713090003
+ 	_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL,
+-		"SELECT pg_advisory_xact_lock($1,hashtext($2))", workspaceLockNamespace, a.TenantID+"/"+a.WorkspaceID))
+-	return revision, err
++		"SELECT pg_advisory_xact_lock($1,hashtext($2))", workspaceLockNamespace, tenant+"/"+workspace))
++	return err
+ }
+ 
+ func reservationPayload(a Attempt, intent JobIntent) ([]byte, Resources, error) {
+@@ -127,20 +139,8 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
+ 	}
+ 
+ 	args := append(a.scopeArgs(), a.ID, body, requested)
+-	var same, released bool
+-	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+-		`SELECT attempt_id=$6 AND intent=$7::jsonb AND demand=$8::jsonb
+-  AND site_id=local_site_id() AND cell_id=local_cell_id(),released_at IS NOT NULL
+- FROM scheduling_reservations WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5`,
+-		args...)).Scan(&same, &released)
+-	switch {
+-	case err == nil && !same:
+-		return false, ErrReservationConflict
+-	case err == nil && released:
+-		return false, ErrReservationReleased
+-	case err == nil:
+-		return false, nil
+-	case !errors.Is(err, sql.ErrNoRows):
++	replayed, err := reservationReplayWithin(ctx, q, a, body, requested)
++	if err != nil || replayed {
+ 		return false, err
+ 	}
+ 
+@@ -184,6 +184,27 @@ func ReserveWithin(ctx context.Context, q transaction.Executor, a Attempt, inten
+ 	return true, nil
+ }
+ 
++func reservationReplayWithin(ctx context.Context, q transaction.Executor, a Attempt, body, requested []byte) (bool, error) {
++	var same, released bool
++	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
++		`SELECT attempt_id=$6 AND intent=$7::jsonb AND demand=$8::jsonb
++  AND site_id=local_site_id() AND cell_id=local_cell_id(),released_at IS NOT NULL
++ FROM scheduling_reservations WHERE tenant_id=$1 AND workspace_id=$2 AND kind=$3 AND source_id=$4 AND attempt_number=$5`,
++		append(a.scopeArgs(), a.ID, body, requested)...)).Scan(&same, &released)
++	switch {
++	case errors.Is(err, sql.ErrNoRows):
++		return false, nil
++	case err != nil:
++		return false, err
++	case !same:
++		return false, ErrReservationConflict
++	case released:
++		return false, ErrReservationReleased
++	default:
++		return true, nil
++	}
++}
++
+ // ReleaseWithin ends a single-replica attempt in the owner's transaction
+ // after the owner has verified that it stopped or was never delivered.
+ // An already released exact attempt replays with false and no error.
+diff --git a/services/control/internal/modules/scheduling/reservation_commit_ack_test.go b/services/control/internal/modules/scheduling/reservation_commit_ack_test.go
+index cfa4fe4c..6b65bc63 100644
+--- a/services/control/internal/modules/scheduling/reservation_commit_ack_test.go
++++ b/services/control/internal/modules/scheduling/reservation_commit_ack_test.go
+@@ -137,3 +137,27 @@ func TestPostgresBorrowingAndReclaimCommitAcknowledgementLoss(t *testing.T) {
+ 	}
+ 	reserveBorrowing(t, f.store, lender, 2)
+ }
++
++func TestPostgresQueuedReservationCommitAcknowledgementLoss(t *testing.T) {
++	f := newQueuedFixture(t)
++	store, proxy := reservationFaultStore(t, f.pool)
++	fault := f
++	fault.store = store
++	if err := proxy.Arm(commitfault.DropCommitAcknowledgement); err != nil {
++		t.Fatal(err)
++	}
++	changed, err := fault.admit(t.Context(), f.first, f.read, nil)
++	if changed {
++		t.Fatal("queued dispatch exposed an unacknowledged commit")
++	}
++	assertLostReservationCommit(t, proxy, "queued dispatch", err)
++	f.assertState(t, f.first, "preparing", 2, 1)
++	noRead := func(context.Context, transaction.Executor) ([]QueueEntry, error) {
++		t.Fatal("unknown commit replay read the already-dequeued entry")
++		return nil, nil
++	}
++	if changed, err := f.admit(t.Context(), f.first, noRead, nil); err != nil || changed {
++		t.Fatalf("queued dispatch replay after unknown commit: %v, %v", changed, err)
++	}
++	f.assertState(t, f.first, "preparing", 2, 1)
++}
+diff --git a/services/control/internal/modules/scheduling/wait_reasons.go b/services/control/internal/modules/scheduling/wait_reasons.go
+index ca61b894..0d8c10ea 100644
+--- a/services/control/internal/modules/scheduling/wait_reasons.go
++++ b/services/control/internal/modules/scheduling/wait_reasons.go
+@@ -73,6 +73,8 @@ var errReclaimReleasePending = fmt.Errorf("%w: waiting for selected releases", E
+ func WaitReasons(err error) []WaitReason {
+ 	var quota *reservationQuotaError
+ 	switch {
++	case errors.Is(err, ErrQueueTurnPending):
++		return []WaitReason{{Code: ErrQueueTurnPending.Error(), Action: WaitForQueueTurn}}
+ 	case errors.Is(err, ErrQuotaScopeNotFound):
+ 		return []WaitReason{{Code: ErrQuotaScopeNotFound.Error(), Action: VerifyWorkspaceAccess}}
+ 	case errors.As(err, &quota):
+diff --git a/services/control/internal/modules/scheduling/workspace_queue.go b/services/control/internal/modules/scheduling/workspace_queue.go
+index cfc081d6..839abd07 100644
+--- a/services/control/internal/modules/scheduling/workspace_queue.go
++++ b/services/control/internal/modules/scheduling/workspace_queue.go
+@@ -34,6 +34,10 @@ func RankWorkspaceQueueWithin(ctx context.Context, tx pgx.Tx, tenant string, ent
+ 		return nil, ErrQuotaUnconfigured
+ 	}
+ 
++	return rankWorkspaceQueueWithin(ctx, q, tenant, tree, entries)
++}
++
++func rankWorkspaceQueueWithin(ctx context.Context, q transaction.Executor, tenant string, tree *QuotaTree, entries []QueueEntry) ([]QueueEntry, error) {
+ 	queues := make(map[string]QueueShare)
+ 	var workspaces []string
+ 	for _, entry := range entries {
+-- 
+2.43.0
+

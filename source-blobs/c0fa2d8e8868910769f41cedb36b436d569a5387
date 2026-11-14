@@ -1,0 +1,89 @@
+from pathlib import Path
+import hashlib,json,re,subprocess
+out=Path(__file__).resolve().parent
+repo='/root/lane-gw'
+source='229b5c687b80cfc0ee80b9e69cb80ec0399b53ae'
+prior='a51c39455843b116b250465ad201c6c0181304ef'
+contract='7705c5a341458cb1be8ead80844198378d98c4e3'
+api='api/openapi/v1/distribution/openapi.json'
+def git(*args): return subprocess.check_output(['git','-C',repo,*args])
+def at(sha,path): return git('show',sha+':'+path)
+raw=at(contract,api)
+assert hashlib.sha256(raw).hexdigest()=='66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d'
+d=json.loads(raw); before=json.loads(at(contract+'^',api))
+schemas=d['components']['schemas']; old=before['components']['schemas']
+caps=schemas['ModelAliasReadCapabilities']
+assert caps['type']=='object' and caps['additionalProperties'] is False
+assert set(caps['required'])==set(caps['properties'])=={'text_generation_verified','context_token_ceiling'}
+assert caps['properties']['text_generation_verified']['const'] is True
+limit=caps['properties']['context_token_ceiling']
+assert limit['type']=='integer' and limit['minimum']==1 and limit['maximum']==9007199254740991
+assert schemas['ModelAlias']==old['ModelAlias'] and schemas['ModelAliasResponse']==old['ModelAliasResponse']
+read=schemas['ModelAliasRead']
+plain=json.loads(json.dumps(read))
+del plain['properties']['capabilities']
+assert plain==schemas['ModelAlias']
+def reaches(node,seen=frozenset()):
+ if isinstance(node,list): return any(reaches(v,seen) for v in node)
+ if not isinstance(node,dict): return False
+ ref=node.get('$ref')
+ if ref=='#/components/schemas/ModelAliasRead': return True
+ if isinstance(ref,str) and ref.startswith('#/') and ref not in seen:
+  target=d
+  for part in ref[2:].split('/'): target=target[part]
+  if reaches(target,seen|{ref}): return True
+ return any(reaches(v,seen) for key,v in node.items() if key!='$ref')
+wanted={'adminListModelAlias','adminGetModelAlias','portalListModelAlias','portalGetModelAlias'}
+reads={}
+assert set(d['paths'])==set(before['paths'])
+for path,methods in d['paths'].items():
+ for method,operation in methods.items():
+  if not isinstance(operation,dict) or 'operationId' not in operation: continue
+  name=operation['operationId']
+  if any(reaches(response) for code,response in operation.get('responses',{}).items() if str(code).startswith('2')):
+   reads[name]={'method':method,'path':path}
+  if name not in wanted: assert operation==before['paths'][path][method],name
+assert set(reads)==wanted and all(v['method']=='get' for v in reads.values())
+alignment=json.loads(Path('/root/lane-gw-acceptance/gw104-retained-pair.ht2cqeo_/alignment.json').read_text())
+paths=alignment['owner_source_and_test_paths_unchanged']
+hashes={}
+for name in paths:
+ current=at(source,name)
+ assert current==at(prior,name),name
+ hashes[name]=hashlib.sha256(current).hexdigest()
+model=at(source,'services/control/internal/modules/distribution/model.go').decode()
+dto=at(source,'services/control/internal/modules/distribution/alias_reads.go').decode()
+body=re.search(r'type Alias struct \{([^}]*)\}',model,re.S).group(1)
+fields=set(re.findall(r'json:"([^",]+)',body))
+assert fields==set(schemas['ModelAlias']['properties'])
+assert 'Capabilities *AliasReadCapabilities `json:"capabilities,omitempty"`' in dto
+assert 'type AliasReadView struct {\n\tAlias\n' in dto
+factory='services/control/internal/modules/identity/http/handler.go'
+constructor=at(source,factory).decode()
+literal=next(line.strip() for line in constructor.splitlines() if 'distributionService := &distribution.Service{' in line)
+assert 'PublishAliasCapabilities' not in literal
+production=[]
+for line in git('grep','-n','PublishAliasCapabilities',source,'--','services/control').decode().splitlines():
+ path=line.split(':',2)[1]
+ if path.endswith('.go') and not path.endswith('_test.go'): production.append(path)
+assert set(production)=={'services/control/internal/modules/distribution/model.go','services/control/internal/modules/distribution/alias_reads.go'}
+projection=at(source,'services/control/internal/modules/distribution/alias_capabilities.go').decode()
+assert 'VerifiedTextGeneration: true' in projection
+test=at(source,'services/control/internal/modules/distribution/alias_read_http_test.go').decode()
+assert 'problem["code"] != "STORAGE_UNAVAILABLE"' in test and 'http.StatusServiceUnavailable' in test
+result={
+ 'status':'static composition/DTO/schema review passed; no new compilation or protocol execution',
+ 'gateway_source':source,'unchanged_read_source_from':prior,'original_read_source':'5fb92e1d',
+ 'published_schema59_baseline':'4f76102ca99328e0b9063eb05b0352e62501e154',
+ 'DEV_contract':contract,'contract_version':d['info']['version'],
+ 'contract_sha256':hashlib.sha256(raw).hexdigest(),
+ 'operations':reads,'source_and_test_sha256':hashes,
+ 'constructor':{'path':factory,'literal':literal,'PublishAliasCapabilities':False,'customer_configuration_selector':None},
+ 'DTO':'AliasReadView embeds the existing Alias, including paired schema59 description fields, with one optional non-null capabilities object; mutations and machine DTOs unchanged',
+ 'evidence_behavior':{'missing_or_stale':'omit object','paused_admin':'omit object','paused_portal':'existing hidden/not-found behavior','SQL_lookup_failure':'existing HTTP 503 / STORAGE_UNAVAILABLE'},
+ 'runtime_evidence':'retained predecessor registered-handler/PG execution; schema59 six description roots and one runtime-grant root qualified separately on 4f76102c',
+ 'remaining':'execute the exact installed combined read source and DEV schema/SDK/Help before enabling production composition; full combined Gateway check/build gate and UI remain open'
+}
+(out/'review.json').write_text(json.dumps(result,indent=2)+'\n')
+(out/'distribution-openapi.json').write_bytes(raw)
+print('0.12.0 read composition matched all four operations, exact Alias fields, closed capability object and unchanged nine-file owner source. Publication remains false.')

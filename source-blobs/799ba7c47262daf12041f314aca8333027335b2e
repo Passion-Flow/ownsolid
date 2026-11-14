@@ -1,0 +1,17 @@
+{
+  "equal_after_target_modules_ordering": true,
+  "raw_file_sha256": {
+    "initial": "8a68945fb5d71cf20d15bdaeeb32e33f99f095dcd8b2c65277c75291e0c0eb2f",
+    "published": "4ed67247993152de870045c4551f54de48a5fb0b65d61118bf95acb2c15dfe67"
+  },
+  "raw_target_modules": {
+    "initial": [
+      "q_proj",
+      "v_proj"
+    ],
+    "published": [
+      "v_proj",
+      "q_proj"
+    ]
+  }
+}

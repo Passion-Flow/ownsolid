@@ -1,0 +1,21 @@
+#!/bin/bash
+# The full install test once, then three fleet load runs. Every run happens whatever the last
+# one did, so a miss still leaves the others' evidence.
+cd /root/lane-a-e2e
+images="ownsolid/control:lane-a-e2e ownsolid-e2e/postgres:18.6-pgvector-0.8.7 victoriametrics/victoria-metrics:v1.155.0 victoriametrics/victoria-logs:v1.53.0 docker:29.1.3-dind"
+echo "=== install e2e $(date -u +%H:%M:%S)"
+OWNSOLID_E2E_SCRATCH=/dev/shm OWNSOLID_E2E_DOCKER_TMPFS=12g ./run-single-node.sh /root/lane-a-e2e $images </dev/null > install-weight.log 2>&1
+install=$?
+echo "install exit=$install $(date -u +%H:%M:%S)"
+grep -E "^(--- |PASS|FAIL|ok )|zero egress" install-weight.log | tail -5
+failed=0
+for n in 1 2 3; do
+  echo "=== load $n $(date -u +%H:%M:%S) load: $(cut -d' ' -f1-3 /proc/loadavg)"
+  OWNSOLID_E2E_LOAD=1 OWNSOLID_E2E_RUN=TestFleetLoad OWNSOLID_E2E_TIMEOUT=50m OWNSOLID_E2E_SCRATCH=/dev/shm OWNSOLID_E2E_DOCKER_TMPFS=12g \
+    ./run-single-node.sh /root/lane-a-e2e $images </dev/null > load-probe-$n.log 2>&1
+  c=$?
+  echo "load $n exit=$c $(date -u +%H:%M:%S)"
+  grep -E "^(--- |PASS|FAIL)|threshold [0-9]|zero egress" load-probe-$n.log | cut -c1-200 | tail -8
+  [ $c -eq 0 ] || failed=1
+done
+[ $install -eq 0 ] && [ $failed -eq 0 ]

@@ -1,0 +1,58 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 CARGO_BUILD_JOBS=1 CARGO_NET_OFFLINE=true
+umask 077
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -w 45 8 || exit 75
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+exec 7>~/lane-rel-tools/heavy-test.lock
+flock -n 7 || exit 75
+df -h /
+free -m
+test "$(df -Pm / | awk 'NR == 2 {print $4}')" -ge 15360
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+scratch=$(mktemp -d ~/lane-rel-tools/monitoring-problems-release.XXXXXXXX)
+echo "$scratch"
+export LANE_REL_MONITORING_PROBLEMS=$scratch
+unshare -n bash -ec '
+ip link set lo up
+test "$(ip -o link show | wc -l)" -eq 1
+make check
+echo MAKE_CHECK_PASSED
+make build
+echo MAKE_BUILD_PASSED
+(cd web && pnpm --filter @ownsolid/help --filter @ownsolid/i18n test)
+prepared=$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp
+"$prepared/python/bin/python" tools/codegen/sdk/generate.py --out "$LANE_REL_MONITORING_PROBLEMS/sdk" --go-generator "$prepared/bin/oapi-codegen" --python-generator "$prepared/python/bin/openapi-python-client"
+GOWORK=off go -C "$LANE_REL_MONITORING_PROBLEMS/sdk/gen/go" test ./...
+"$prepared/python/bin/python" tools/codegen/sdk/tests/wire_smoke.py "$LANE_REL_MONITORING_PROBLEMS/sdk"
+PYTHONPATH="$LANE_REL_MONITORING_PROBLEMS/sdk/gen/python" "$prepared/python/bin/python" - <<'PY'
+from uuid import uuid4
+import httpx
+from ownsolid_sdk.monitoring import AuthenticatedClient
+from ownsolid_sdk.monitoring.api.default import admin_monitoring
+
+origin = "https://admin.example.invalid"
+workspace = uuid4()
+for code in ("STORAGE_TIMEOUT", "STORAGE_CANCELLED", "STORAGE_COMMIT_ROLLED_BACK", "STORAGE_DEADLOCK", "STORAGE_LOCK_TIMEOUT"):
+    def respond(request):
+        assert request.method == "GET"
+        assert request.url.path == "/api/v1/sites/default/cells/default/admin/monitoring"
+        assert dict(request.url.params) == {"workspace_id": str(workspace)}
+        return httpx.Response(503, headers={"Content-Type": "application/problem+json"}, json={
+            "type": "about:blank", "title": "Synthetic transaction refusal",
+            "status": 503, "code": code, "request_id": str(uuid4()),
+        })
+    with httpx.Client(base_url=origin, transport=httpx.MockTransport(respond), trust_env=False, follow_redirects=False) as transport:
+        client = AuthenticatedClient(base_url=origin, token="").set_httpx_client(transport)
+        result = admin_monitoring.sync_detailed("default", "default", client=client, workspace_id=workspace)
+        assert result.status_code == 503 and result.parsed.code == code
+print("Published monitoring read decoded all five native transaction refusals")
+PY
+'
+test ! -e tools/audit-verify/audit-verify || rm -- tools/audit-verify/audit-verify
+git diff --check
+echo MONITORING_PROBLEMS_RELEASE_PASSED
+

@@ -1,0 +1,88 @@
+# Exact-source qualification
+
+Qualified base: b87f338892f5dff2f7fa33232be5b51a742292e8.
+Tested source: b8d3efa0df33312e3e1ef1c1c4f5bd876c6666d9.
+Documentation-only follow-up: 16aa3af5a336df81a18a870997b3c3c29c3bb508.
+qualification-only-paths proves that only docs/product/status.md changed after
+the actual runs. The changed document passed layout and roadmap checks.
+The tested commit is retained at the ref named in qualified-source-ref.
+
+## Linux amd64 real protocol
+
+Go 1.27.3 and PostgreSQL 18.6. Evidence:
+  /root/lane-sch-tools/selectedqueue.dDEO57fm
+
+An isolated network-none PG container, a private socket relay and a route-free
+network namespace ran -race -tags repository_integration and passed these seven:
+
+- TestPostgresPreflightUsesOneSnapshotAndRefreshes
+- TestPostgresPreflightRequiresReadOnlyScopedSnapshot
+- TestPostgresQueueExecutorUsesSelectedOwnerSnapshot
+- TestPostgresQueueExecutorRejectsWrongModeAndScope
+- TestPostgresWorkspaceQueueUsesLiveCommittedShares
+- TestPostgresWorkspaceQueueRejectsForeignAndMissingScope
+- TestPostgresWorkspaceQueueRefusesForeignReservationCoordinates
+
+The same invocation passed TestQueueExecutorSnapshotRejectsUnborrowedInputs
+and all four subcases. The selected test persisted queue rows, committed a
+different job's hold and a new enqueue concurrently, retained the original
+snapshot order, refreshed both in a new snapshot and preserved owner rows,
+revisions and the exact sole competing hold. The legacy tests retained their
+constant aggregate-query and foreign-scope refusal assertions.
+
+source-head matches the tested SHA, source.diff is empty and the manifest
+verifies. The PG DSN/password and owned container were removed; no port was
+exposed and no own service remains. Earlier exit-75 attempts were resource
+preflights before any fixture/test, not failed PG results.
+The native runner keeps 3072 MiB free/12288 MiB available, 15 GiB disk,
+full I/O avg10/avg60 at most 5%, serial global/lane locks and a bounded
+30-second foreground lock wait. It has no background retry queue.
+
+## macOS arm64 complete gates
+
+Native Go 1.27.3 at the exact same b8d3efa0 passed:
+  go -C services/control test -p 1 ./internal/modules/...
+  make check
+  make build
+The separate boundary -race case also passed. Evidence:
+  /private/tmp/ownsolid-sch-quota-modules.SBNyMX1R/selected-b8d3efa0
+Completed logs/heads/pass markers/empty diffs are copied under mac-evidence/.
+
+The first check used system Python 3.9 and an unprepared web workspace; its
+environment failures are preserved in check.initial-environment-failure.log.
+The failed phase was rerun with the installed Python 3.12 and locked dependencies
+installed offline. Check and build then passed with no product-code change.
+The passed module phase was not rerun. GOPROXY=off, GOTOOLCHAIN=local,
+GOTELEMETRY=off, offline pnpm/Cargo, one build package and a resolved TMPDIR
+were used. The permanent same-UID regular workstation carrier was held by
+one atomic flock FD throughout each actual job and released on completion.
+These are Darwin gates, not relabelled Linux module/build runs.
+
+Production eligible-batch/priority/authority, current write admission, formal
+catalog/serving role and UI/end-to-end acceptance remain open. No roadmap
+box or capability declaration is changed. main-head requires actual verified
+publication; there is no implied activation from an integration review artifact.
+
+
+## Current-base requalification
+
+Main advanced to 38aad60337d3e696cd3536bab932b100c9013a45. The candidate is
+rebased at 8b17a2954260e517b434906e95740a39ecdd4a9a.
+rebase-input-paths lists every incoming change. The scheduling source, tests,
+testdata, topic note, PostgreSQL store and dependency pins are unchanged,
+with empty pg-input-unchanged.diff and pg-store-unchanged.diff and the verified
+native scheduling manifest. The seven PG flows and boundary case remain their
+actual b8d3efa0 evidence; they are not relabelled as a new run.
+
+Incoming node tests and a shared HTTP test-client cleanup affect module checks;
+incoming web/Help and Makefile inputs affect check/build. The corresponding
+current-base Mac gates run separately at
+/private/tmp/ownsolid-sch-quota-modules.SBNyMX1R/selected-final-8b17a295.
+Only their actual completed markers may qualify publication.
+
+
+All three current-base gates completed successfully at exact 8b17a295; their
+heads, complete logs, PASS markers and empty diffs are under mac-current-evidence/.
+The candidate source was not changed after those runs. Native PG evidence remains
+the actual b8d3efa0 run with the verified unchanged inputs described above.
+publication.md and main-head record the actual confirmed main merge.

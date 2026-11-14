@@ -1,0 +1,1 @@
+{"available_mib": 19556, "combined_memory_limit_mib": 1536, "cpu_limit": 1, "disk_gib": 747, "free_mib": 5575, "io_avg10": 0.98, "io_avg60": 1.41, "phase": "scoped-PG-only"}

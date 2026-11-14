@@ -1,0 +1,18 @@
+{
+  "parent_pid": 3030346,
+  "entry_exit_code": 0,
+  "fds": {
+    "8": {
+      "open": true,
+      "device": 29,
+      "inode": 82,
+      "parent_fdinfo": "pos:\t0\nflags:\t0500002\nmnt_id:\t34\nino:\t82\nlock:\t1: FLOCK  ADVISORY  WRITE 3030363 00:1d:82 0 EOF\n"
+    },
+    "9": {
+      "open": true,
+      "device": 64512,
+      "inode": 7508772,
+      "parent_fdinfo": "pos:\t0\nflags:\t0500002\nmnt_id:\t31\nino:\t7508772\nlock:\t1: FLOCK  ADVISORY  WRITE 3030367 fc:00:7508772 0 EOF\n"
+    }
+  }
+}

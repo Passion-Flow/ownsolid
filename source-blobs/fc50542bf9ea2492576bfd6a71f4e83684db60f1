@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$HOME/lane-sch"
+. "$HOME/lane-sch-tools/env"
+export GOMAXPROCS=2 GOFLAGS="-p=1 -buildvcs=false" CARGO_BUILD_JOBS=1 GOTOOLCHAIN=local
+export GOPROXY=off CARGO_NET_OFFLINE=true
+unset PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_DSN_FILE PROJECT_ONE_TEST_NATIVE_POSTGRES_INPUT
+phase="${1:-check}"
+sch_min_free_mib=3072
+case "$phase" in check|build) sch_min_free_mib=2048;; esac
+preflight() {
+ df -h /
+ free -m
+ cat /proc/pressure/io
+ test "$(df -Pk / | awk 'END {print $4}')" -ge 15728640 || { printf "WAIT disk\n" >&2; return 75; }
+ test "$(free -m | awk '/^Mem:/ {print $4}')" -ge "$sch_min_free_mib" || { printf "WAIT free memory\n" >&2; return 75; }
+ test "$(free -m | awk '/^Mem:/ {print $7}')" -ge 12288 || { printf "WAIT available memory\n" >&2; return 75; }
+ awk '/^full / {for(i=2;i<=NF;i++){split($i,a,"="); if((a[1]=="avg10"||a[1]=="avg60") && a[2]>5) exit 1}}' /proc/pressure/io || { printf "WAIT I/O PSI\n" >&2; return 75; }
+ if ps -eo comm=,args= | awk '$1 ~ /^(cargo|rustc|compile|link|chrome-headless)$/ || /[v]llm serve/ {print; found=1} END {exit !found}'; then
+  printf 'Another heavy process is active; no work started.\n' >&2
+  return 75
+ fi
+}
+ready=false
+for second in $(seq 1 45); do
+ if preflight >/root/lane-sch-tools/queued-current-base-resource.log 2>&1; then ready=true; break; fi
+ sleep 1
+done
+if [ "$ready" != true ]; then cat /root/lane-sch-tools/queued-current-base-resource.log; exit 75; fi
+cat /root/lane-sch-tools/queued-current-base-resource.log
+exec 8>>/run/lock/ownsolid-heavy.lock
+if ! flock -w 30 8; then printf "WAIT shared lock\n" >&2; exit 75; fi
+exec 9>>"$HOME/lane-sch-tools/heavy-test.lock"
+if ! flock -n 9; then printf "WAIT lane lock\n" >&2; exit 75; fi
+preflight
+test "$(git rev-parse HEAD)" = 62c9dd0947f967291e2fa805b39742e23e02944b
+if [ -f "$HOME/lane-sch-tools/queued-current-base-fixture" ]; then
+ fixture="$(cat "$HOME/lane-sch-tools/queued-current-base-fixture")"
+else
+ fixture="$(mktemp -d "$HOME/lane-sch-tools/queued-current-base.XXXXXXXX")"
+ printf "%s\n" "$fixture" >"$HOME/lane-sch-tools/queued-current-base-fixture"
+fi
+git diff --exit-code 5ee946b6 HEAD -- services/control/internal/modules/scheduling ':!services/control/internal/modules/scheduling/README.md' >"$fixture/scheduling-source-equivalence.diff"
+git diff --name-only 8531226d 726f2149 >"$fixture/current-base-delta.log"
+git rev-parse HEAD >"$fixture/source-head"
+git ls-files -- services/control/internal/modules/scheduling services/control/go.mod services/control/go.sum | sort | xargs sha256sum >"$fixture/source-files.sha256"
+git diff --check
+test -z "$(git status --porcelain --untracked-files=all)"
+test ! -e tools/audit-verify/audit-verify
+cleanup() {
+ local code=$?
+ trap - EXIT
+ if [ "$(git ls-files --others --exclude-standard -- tools/audit-verify/audit-verify)" = tools/audit-verify/audit-verify ]; then
+  rm -f -- tools/audit-verify/audit-verify
+ fi
+ exit "$code"
+}
+trap cleanup EXIT
+phase="${1:-check}"
+case "$phase" in
+ check) command=(make check);;
+ build) command=(make build);;
+ modules) command=(go -C services/control test -p 1 ./internal/modules/...);;
+ *) printf 'Unsupported phase.\n' >&2; exit 2;;
+esac
+git rev-parse HEAD >"$fixture/$phase-head"
+git diff --binary >"$fixture/$phase-source.diff"
+if ! "${command[@]}" 8>&- 9>&- >"$fixture/$phase.log" 2>&1; then
+ tail -100 "$fixture/$phase.log"
+ exit 1
+fi
+test "$(git rev-parse HEAD)" = "$(cat "$fixture/$phase-head")"
+git diff --exit-code HEAD
+sha256sum --check --status "$fixture/source-files.sha256"
+printf 'PASS %s\n' "$phase"
+printf 'PASS\n' >"$fixture/$phase.passed"
+git diff --check
+

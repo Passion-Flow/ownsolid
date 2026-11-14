@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/configuration/control-serving-expectation/v1",
+  "title": "Explicit public control serving transport expectation",
+  "description": "Public deployment intent compared against the effective typed configuration. This structural schema supplies no defaults; canonical origins, binds, paths and CIDRs are validated by the existing Go transport owner.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format_version", "transport_mode", "listen_address", "portal_origin", "admin_origin", "tls_certificate_file", "tls_private_key_file", "trusted_proxy_cidrs"],
+  "properties": {
+    "format_version": {"type": "integer", "const": 1},
+    "transport_mode": {"type": "string", "enum": ["http", "direct_https", "trusted_proxy_https"]},
+    "listen_address": {"type": "string", "minLength": 1},
+    "portal_origin": {"type": "string", "minLength": 1},
+    "admin_origin": {"type": "string", "minLength": 1},
+    "tls_certificate_file": {"type": "string"},
+    "tls_private_key_file": {"type": "string"},
+    "trusted_proxy_cidrs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"transport_mode": {"const": "direct_https"}}},
+      "then": {"properties": {"tls_certificate_file": {"minLength": 1}, "tls_private_key_file": {"minLength": 1}, "trusted_proxy_cidrs": {"maxItems": 0}}},
+      "else": {"properties": {"tls_certificate_file": {"const": ""}, "tls_private_key_file": {"const": ""}}}
+    },
+    {
+      "if": {"properties": {"transport_mode": {"const": "trusted_proxy_https"}}},
+      "then": {"properties": {"trusted_proxy_cidrs": {"minItems": 1}}},
+      "else": {"properties": {"trusted_proxy_cidrs": {"maxItems": 0}}}
+    }
+  ]
+}

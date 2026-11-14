@@ -1,0 +1,29 @@
+# Current queue admission review
+
+The exact source d61d6879 passed 45 real PostgreSQL 18.6 cases and 66 top-level
+component tests with race instrumentation on Linux amd64. Its full Control
+modules, make check, make build and configuration/HTTP platform tests passed.
+The same source passed those four broad phases on macOS arm64. Both use Go1.27.3
+and offline dependencies. No browser test ran.
+
+The component namespace had no default IPv4/IPv6 route and the PostgreSQL
+container had no network or published port. The separate fresh/dump/restore
+catalog harness was explicitly excluded; this change introduces no production
+DDL. Temporary database, secret files and relay were cleaned up.
+
+The macOS platform's first run could not retain setgid bits because the private
+scratch directory inherited group wheel. Assigning only that owned scratch
+directory to the invoking user's group preserved mode2600. The same unmodified
+tests passed on retry. Both original failure and successful retry logs are kept.
+
+The native source remains pinned at refs/codex/sch-current-qualified/d61d6879.
+An integration head may differ only in documentation before publication.
+The candidate patch, ancestry and actual accepted main must be refreshed and
+recorded before the packet is sealed. UNPUBLISHED means no publication claim.
+
+The configured 10,000-workspace fixture held exactly two advisory lock tags;
+it is not the SCH111 node/job admission load test. No production schema, native
+serving-role grant, real eligible-batch/priority owner, all-writer cutover,
+authenticated dispatcher, installed controller or UI flow is qualified here.
+SCH103 and other product boxes remain open. The new research records preemption,
+topology and offline installation acceptance without inventing missing authority.

@@ -1,0 +1,14 @@
+{
+  "Replace": {
+    "/root/lane-rel-history/services/control/internal/modules/distribution/alias_capabilities.go": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb/source/services/control/internal/modules/distribution/alias_capabilities.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/alias_capabilities_test.go": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb/source/services/control/internal/modules/distribution/alias_capabilities_test.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/alias_capability_http_test.go": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb/source/services/control/internal/modules/distribution/alias_capability_http_test.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/alias_capability_recipe_test.go": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb/source/services/control/internal/modules/distribution/alias_capability_recipe_test.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/alias_read_http_test.go": "/root/lane-rel-tools/gw104-contract.qgEXzK0n/native-overlay/alias_read_http_test.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/alias_reads.go": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb/source/services/control/internal/modules/distribution/alias_reads.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/history.go": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb/source/services/control/internal/modules/distribution/history.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/http/human.go": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb/source/services/control/internal/modules/distribution/http/human.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/model.go": "/root/lane-gw-acceptance/gw104-main106-handoff.76uoxxyb/source/services/control/internal/modules/distribution/model.go",
+    "/root/lane-rel-history/services/control/internal/modules/distribution/lane_rel_alias_schema_test.go": "/root/lane-rel-history/tools/codegen/sdk/tests/testdata/alias_capability_schema_test.go"
+  }
+}

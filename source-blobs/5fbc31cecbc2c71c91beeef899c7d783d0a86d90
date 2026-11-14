@@ -1,0 +1,9 @@
+{
+  "scope": "Pure lifecycle fact decoding only; never run a native process or lock gate.",
+  "tests_run": 9,
+  "expected_tests": 9,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "passed": true
+}

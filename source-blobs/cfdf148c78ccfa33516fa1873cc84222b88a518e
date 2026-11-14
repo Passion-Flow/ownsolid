@@ -1,0 +1,270 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+umask 077
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 300 9
+df -h /
+free -m
+cat /proc/pressure/io
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+scratch=$(mktemp -d ~/lane-rel-tools/dat107-contract.XXXXXXXX)
+printf '%s\n' "$scratch"
+git rev-parse HEAD > "$scratch/base"
+python3 - "$scratch" <<'PY'
+import json
+from pathlib import Path
+import sys
+
+scratch = Path(sys.argv[1])
+folder = Path("services/control/internal/modules/datasets").resolve()
+http_path = folder / "http_integration_test.go"
+preview_path = folder / "http_tokenizer_preview_integration_test.go"
+http = http_path.read_text()
+old = 'verifyTokenizerPreviewHTTPS(t, handler.Datasets.Service, auth, portal, admin, path, adminPath, previewFixture)\n\t}'
+new = '''verifyTokenizerPreviewHTTPS(t, handler, auth, portal, admin, path, adminPath, previewFixture)
+	} else {
+		body := map[string]any{"model_id": uuid.NewString(), "sample_limit": 1, "maximum_tokens": 32}
+		for _, disabled := range []struct {
+			client *httpfixture.Client
+			path string
+		}{{portal, draftPath}, {admin, adminPath + "/drafts/" + draftID}} {
+			disabled.client.Headers = nil
+			if p := disabled.client.Write("POST", disabled.path+"/tokenizer-preview", body, 404, "Problem"); p["code"] != "RESOURCE_NOT_FOUND" || p["data"] != nil {
+				t.Fatal("disabled tokenizer route exposed a response")
+			}
+		}
+		t.Log("both authorized entrances refused tokenizer preview without the injected runtime")
+	}'''
+assert http.count(old) == 1
+http = http.replace(old, new)
+
+preview = preview_path.read_text()
+preview = preview.replace('"encoding/json"\n', '"encoding/json"\n\t"fmt"\n\t"mime"\n\t"net/http"\n\t"net/http/cookiejar"\n')
+preview = preview.replace('\n\t"reflect"', '\n\t"strconv"')
+preview = preview.replace('"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"\n',
+    '"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"\n\tidentityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"\n')
+preview = preview.replace('"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"\n',
+    '"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"\n\t"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"\n')
+preview = preview.replace('func verifyTokenizerPreviewHTTPS(t *testing.T, service *datasets.Service,', 
+    'func verifyTokenizerPreviewHTTPS(t *testing.T, handler *identityhttp.Handler,')
+preview = preview.replace('\tapprovedSource :=', '\tservice := handler.Datasets.Service\n\tapprovedSource :=', 1)
+preview = preview.replace(', input, 200, "")', ', input, 200, "DatasetTokenizerPreviewResponse")')
+anchor = '\tinput := map[string]any{"model_id": model, "sample_limit": 1, "maximum_tokens": 32}\n'
+assert preview.count(anchor) == 1
+preview = preview.replace(anchor, anchor + '''
+	portal.Headers, admin.Headers = make(map[string]string), make(map[string]string)
+	problem := func(client *httpfixture.Client, path string, body any, status int, code string) {
+		t.Helper()
+		value := client.Call("POST", path, body, status, "Problem")
+		if value["code"] != code || value["data"] != nil {
+			t.Fatalf("preview got %s instead of %s", value["code"], code)
+		}
+	}
+	csrf := portal.CSRF
+	portal.CSRF = ""
+	problem(portal, previewPath, input, 403, "CSRF_INVALID")
+	portal.CSRF = csrf
+	admin.Headers = map[string]string{"Origin": httpfixture.PortalOrigin}
+	problem(admin, adminPath, input, 403, "ORIGIN_REJECTED")
+	admin.Headers = make(map[string]string)
+	portal.Headers = map[string]string{"Content-Type": "text/plain"}
+	problem(portal, previewPath, input, 415, "UNSUPPORTED_MEDIA_TYPE")
+	portal.Headers = make(map[string]string)
+	problem(portal, previewPath+"?sample_limit=1", input, 400, "VALIDATION_FAILED")
+	problem(portal, path+"/drafts/"+uuid.NewString()+"/tokenizer-preview", input, 404, "DATASET_NOT_FOUND")
+	problem(admin, strings.Replace(adminPath, draftID, uuid.NewString(), 1), input, 404, "DATASET_NOT_FOUND")
+	problem(portal, previewPath, []byte("{\\\"model_id\\\":null,\\\"sample_limit\\\":1,\\\"maximum_tokens\\\":32}"), 400, "VALIDATION_FAILED")
+	// Invalid permissions on this fixture-owned scratch directory leave the route registered.
+	if e = os.Chmod(process.configuration.ScratchRoot, 0755); e != nil { t.Fatal(e) }
+	problem(portal, previewPath, input, 503, "DATASET_STORAGE_UNAVAILABLE")
+	if e = os.Chmod(process.configuration.ScratchRoot, 0700); e != nil { t.Fatal(e) }
+''', 1)
+old = '\tportal.Call("POST", previewPath, map[string]any{"model_id": foreignModel, "sample_limit": 1, "maximum_tokens": 32}, 404, "Problem")'
+assert preview.count(old) == 1
+preview = preview.replace(old, '\tproblem(portal, previewPath, map[string]any{"model_id": foreignModel, "sample_limit": 1, "maximum_tokens": 32}, 404, "RESOURCE_NOT_FOUND")\n' +
+    '\tproblem(admin, adminPath, map[string]any{"model_id": foreignModel, "sample_limit": 1, "maximum_tokens": 32}, 404, "RESOURCE_NOT_FOUND")')
+preview = preview.replace('verifyPreviewRevocation(t, service, process, workspace, draft["dataset_id"].(string), draftID, model)',
+    'verifyPreviewRevocation(t, handler, process, workspace, draft["dataset_id"].(string), draftID, model)')
+old = '''func verifyPreviewRevocation(t *testing.T, service *datasets.Service, process tokenizerPreviewProcessFixture, workspace, dataset, draft, model string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 35*time.Second)
+	defer cancel()
+	_, token, _, err := service.Identity.Login(ctx, "admin@example.invalid", process.password, "portal", "", uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	actor, err := service.Identity.Authenticate(ctx, token, "portal")
+	if err != nil {
+		t.Fatal(err)
+	}
+'''
+assert preview.count(old) == 1
+preview = preview.replace(old, '''func verifyPreviewRevocation(t *testing.T, handler *identityhttp.Handler, process tokenizerPreviewProcessFixture, workspace, dataset, draft, model string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 35*time.Second)
+	defer cancel()
+	service := handler.Datasets.Service
+	var err error
+''')
+old = '''	input := datasets.TokenizerPreviewRequest{ModelID: model, SampleLimit: 1, MaximumTokens: 32}
+	type attempt struct {
+		out datasets.TokenizerPreviewResult
+		err error
+	}
+	completed := make(chan attempt, 1)
+	var request sync.WaitGroup
+	request.Go(func() {
+		out, err := service.PreviewDraftTokenizer(ctx, actor, workspace, dataset, draft, input, worker)
+		completed <- attempt{out, err}
+	})'''
+assert preview.count(old) == 1
+preview = preview.replace(old, '''	// Mount the gated worker on a separate instance of the real dispatcher.
+	copyHandler, copyDatasets := *handler, *handler.Datasets
+	copyDatasets.TokenizerPreview = worker
+	copyHandler.Datasets = &copyDatasets
+	server := httpfixture.NewTLSServer(t, &copyHandler)
+	defer server.Close()
+	client := *server.Client()
+	client.Jar, err = cookiejar.New(nil)
+	if err != nil { t.Fatal(err) }
+
+	type attempt struct {
+		status int
+		header http.Header
+		body map[string]any
+		err error
+	}
+	call := func(method, path string, payload any, token string) attempt {
+		raw, err := json.Marshal(payload)
+		if err != nil { return attempt{err: err} }
+		url := httpfixture.PortalOrigin + cellroute.Public(path, agentwire.LocalScope())
+		req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewReader(raw))
+		if err != nil { return attempt{err: err} }
+		req.Header.Set("Origin", httpfixture.PortalOrigin)
+		req.Header.Set("X-CSRF-Token", token)
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil { return attempt{err: err} }
+		defer resp.Body.Close()
+		body := make(map[string]any)
+		if resp.StatusCode != http.StatusNoContent {
+			err = json.NewDecoder(resp.Body).Decode(&body)
+		}
+		return attempt{resp.StatusCode, resp.Header, body, err}
+	}
+	token := func() string {
+		t.Helper()
+		got := call("GET", "/api/v1/auth/csrf", nil, "")
+		if got.err != nil || got.status != 200 { t.Fatal("read CSRF", got.status, got.err) }
+		return got.body["data"].(map[string]any)["token"].(string)
+	}
+	login := call("POST", "/api/v1/auth/login", map[string]string{
+		"email": "admin@example.invalid", "password": process.password,
+	}, token())
+	if login.err != nil || login.status != 200 { t.Fatal("log in to gated dispatcher", login.status, login.err) }
+	csrf := token()
+	path := fmt.Sprintf("/api/v1/workspaces/%s/datasets/%s/drafts/%s/tokenizer-preview", workspace, dataset, draft)
+	input := datasets.TokenizerPreviewRequest{ModelID: model, SampleLimit: 1, MaximumTokens: 32}
+	problemSchemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/datasets/openapi.json")
+	assertProblem := func(result attempt, status int, code string) {
+		t.Helper()
+		media, _, _ := mime.ParseMediaType(result.header.Get("Content-Type"))
+		if result.err != nil || result.status != status || result.body["code"] != code ||
+			result.body["data"] != nil || media != "application/problem+json" ||
+			result.header.Get("Cache-Control") != "no-store" ||
+			result.body["request_id"] != result.header.Get("X-Request-ID") {
+			t.Fatalf("preview problem mismatch: status %d, code %v, error %v", result.status, result.body["code"], result.err)
+		}
+		if e := problemSchemas["Problem"].Validate(result.body); e != nil { t.Fatal(e) }
+	}
+	completed := make(chan attempt, 1)
+	var request sync.WaitGroup
+	request.Go(func() { completed <- call("POST", path, input, csrf) })''')
+old = '''	out, err := service.PreviewDraftTokenizer(ctx, actor, workspace, dataset, draft, input, worker)
+	if err == nil || err.Error() != "RATE_LIMITED" || !reflect.DeepEqual(out, datasets.TokenizerPreviewResult{}) {
+		t.Fatal("one live tokenizer did not consume the preview slot", err)
+	}
+	if err = service.Identity.Logout(ctx, token, "portal", uuid.NewString()); err != nil {
+		t.Fatal(err)
+	}
+	release()
+	select {
+	case denied := <-completed:
+		if denied.err == nil || !strings.HasPrefix(denied.err.Error(), "AUTH_") ||
+			!reflect.DeepEqual(denied.out, datasets.TokenizerPreviewResult{}) {
+			t.Fatal("a revoked session received prepared samples", denied.err)
+		}
+	case <-ctx.Done():
+		t.Fatal("revoked preview did not terminate")
+	}
+	t.Log("revocation after real tokenization and single preview slot verified")'''
+assert preview.count(old) == 1
+preview = preview.replace(old, '''	busy := call("POST", path, input, csrf)
+	assertProblem(busy, 429, "RATE_LIMITED")
+	if seconds, err := strconv.Atoi(busy.header.Get("Retry-After")); err != nil || seconds < 1 {
+		t.Fatal("the occupied slot did not return a retry hint")
+	}
+	logout := call("POST", "/api/v1/auth/logout", nil, csrf)
+	if logout.err != nil || (logout.status != 200 && logout.status != 204) {
+		t.Fatal("revoke the in-flight Portal session", logout.status, logout.err)
+	}
+	release()
+	select {
+	case denied := <-completed:
+		assertProblem(denied, 401, "AUTH_SESSION_EXPIRED")
+	case <-ctx.Done():
+		t.Fatal("revoked preview did not terminate")
+	}
+	t.Log("real HTTPS 429 and revoked in-flight 401 verified without sample payload")''')
+for path, source in ((http_path, http), (preview_path, preview)):
+    (scratch / path.name).write_text(source)
+(scratch / "overlay.json").write_text(json.dumps({"Replace": {
+    str(path): str(scratch / path.name) for path in (http_path, preview_path)
+}}))
+
+PY
+runtime=$(cat ~/lane-rel-tools/current-dat107-runtime)
+export PROJECT_ONE_DATA_PYTHON=$(readlink -f /usr/bin/python3.12)
+export OWNSOLID_TEST_PREVIEW_PYTHON=$runtime/preview/bin/python3.12
+export OWNSOLID_TEST_QWEN_TOKENIZER_DIRECTORY=$runtime/approved-tokenizer
+export LANE_REL_DAT107_OVERLAY=$scratch/overlay.json
+test -x "$PROJECT_ONE_DATA_PYTHON" && test -x "$OWNSOLID_TEST_PREVIEW_PYTHON"
+image=pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+container=$(docker run -d --rm --pull never --network none --memory 896m --cpus 2 \
+  --tmpfs /tmp:rw,size=384m --name lane-rel-dat107-contract --label ownsolid.lane=lane-rel \
+  --entrypoint sh "$image" -ec '
+    data=$(mktemp -d)
+    chown postgres "$data"
+    gosu postgres initdb -D "$data" --auth=trust --locale=C --encoding=UTF8 >/dev/null
+    exec gosu postgres postgres -D "$data" -h 127.0.0.1
+  ')
+trap 'docker stop --time 5 "$container" >/dev/null 2>&1 || true' EXIT
+ready=no
+for attempt in $(seq 1 25); do
+    if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+        ready=yes
+        break
+    fi
+    sleep 1
+done
+test "$ready" = yes
+docker exec "$container" createdb -h 127.0.0.1 -U postgres lane_rel_dat107_contract_test
+docker exec "$container" psql -h 127.0.0.1 -U postgres -d lane_rel_dat107_contract_test -v ON_ERROR_STOP=1 \
+    -c 'CREATE EXTENSION vector WITH SCHEMA public VERSION $$0.8.7$$; REVOKE CREATE ON SCHEMA public FROM PUBLIC' >/dev/null
+pid=$(docker inspect -f '{{.State.Pid}}' "$container")
+export PROJECT_ONE_TEST_DSN=postgresql://postgres@127.0.0.1/lane_rel_dat107_contract_test?sslmode=disable
+for mode in disabled enabled; do
+  flags=()
+  if test "$mode" = disabled; then flags=(-u OWNSOLID_TEST_PREVIEW_PYTHON); fi
+  ionice -c2 -n7 nice -n10 nsenter -t "$pid" -n env "${flags[@]}" sh -ec '
+    test "$(wc -l < /proc/net/route)" -eq 1
+    go -C services/control test -tags dataset_processor_integration -overlay "$LANE_REL_DAT107_OVERLAY" \
+      ./internal/modules/datasets -run "^TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness$" -v -count=1
+  ' > "$scratch/$mode.log" 2>&1 || { tail -48 "$scratch/$mode.log"; exit 1; }
+  grep -E 'both authorized entrances|real HTTPS 429|scoped HTTPS|--- (PASS|FAIL)' "$scratch/$mode.log"
+  grep -q '^--- PASS: TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness ' "$scratch/$mode.log"
+done
+grep -q "both authorized entrances refused" "$scratch/disabled.log"
+grep -q "real HTTPS 429 and revoked in-flight 401" "$scratch/enabled.log"

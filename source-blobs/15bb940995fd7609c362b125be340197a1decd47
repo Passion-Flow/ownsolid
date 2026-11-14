@@ -1,0 +1,28 @@
+{
+  "commit": "4526bca68a8d40dcba32300b0071c7a63b58f6f9",
+  "parent": "402d604e271653d7ca546e1245877a256a88b031",
+  "worktree": "/root/lane-gw120-evidence",
+  "branch": "codex/gw120-evidence",
+  "paths": [
+    "docs/product/roadmap/gateway.md",
+    "docs/product/status.md",
+    "docs/research/gateway-model-description.md"
+  ],
+  "runtime_source_changed": false,
+  "checks": {
+    "git diff --check": "passed",
+    "make check-layout": "passed",
+    "make check-roadmap": "passed: 589 items"
+  },
+  "full_repository_gate": "not executed for this documentation-only package; no combined Gateway full-gate claim",
+  "native_evidence_source": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "native_scope": "6 description roots + 1 existing-principal runtime-grant root, native Linux amd64; no skips",
+  "native_evidence": "/root/lane-gw-acceptance/gw120-after-activation.6tb2_bbv/run.AZo0rxVT",
+  "arm64_evidence": "separate a446ec58 admission: seven restore/migration histories, four audit checkpoints, 14 distribution/runtime roots",
+  "original_failed_admission": "/root/lane-gw-acceptance/schema58-repository-gate.v7l2ox8w; retained, not relabeled",
+  "parent_document": "all original research text retained apart from the explicitly superseded legacy down-hash paragraph",
+  "handoff_section": "docs/research/gateway-model-description.md#console-and-portal-integration-contract",
+  "installed_ui": "Console editing and Portal S-304 remain open with WEB",
+  "retained_gateway_candidate": "229b5c687b80cfc0ee80b9e69cb80ec0399b53ae; unchanged in /root/lane-gw",
+  "publication": "two bounded permanent-carrier flock attempts returned busy; no fetch or push command started"
+}

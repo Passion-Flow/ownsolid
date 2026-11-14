@@ -1,0 +1,11 @@
+{
+  "source": "5e764ea567b3613e96679cc3c0ea4d651707826c",
+  "tree": "97bbe87fb95824dde35a4345378f242d891aaa3c",
+  "path": "/root/lane-del-current-main-preparation",
+  "clean": true,
+  "verified_input_files": 19,
+  "asset_sha256": "642226cd65bab85f67a8c571bd582540ed57e60fdf3cbc13fd0735f343b01380",
+  "client_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+  "frozen_parser_source_unchanged": "1a41d97981798440b7f02061d3a73853726b03bc",
+  "scope": "Source and inert input synchronization only; no build, image execution, browser, server, SQL, or acceptance"
+}

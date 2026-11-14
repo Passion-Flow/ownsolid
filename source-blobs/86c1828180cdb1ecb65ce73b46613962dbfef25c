@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "source_revision": "5055d774ec6941df008f21f7e69abd48bad3fab0",
+  "source_modified": false,
+  "binary_sha256": "676106019d2d0a044ce6f39a976c7f7fb4aba1ed7107dad19795b446a818d6e6",
+  "binary_bytes": 12112783,
+  "os": "linux",
+  "arch": "amd64",
+  "build_host": "linux/amd64",
+  "go_version": "go version go1.27.3 linux/amd64",
+  "flags": [
+    "-buildvcs=true",
+    "-trimpath",
+    "CGO_ENABLED=0",
+    "GOFLAGS=-p=1"
+  ],
+  "network_scope": "unshare --net with GOPROXY/GOSUMDB off",
+  "native_linux_startup_run": false,
+  "installed_acceptance": false
+}

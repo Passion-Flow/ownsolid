@@ -1,0 +1,39 @@
+{
+  "source": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "client_source_before_fix": "f0f994c6aa1bf399643f483699bd99cc0a880d6cbdf37bae43170f9318746626",
+  "events": [
+    {
+      "owner": "OBS",
+      "mode": "init",
+      "log": "/root/lane-obs-tools/obs-installed-4463-init.log",
+      "mtime_utc": "2026-11-12T12:16:54.721729231Z",
+      "result": "exit0"
+    },
+    {
+      "owner": "DEL",
+      "mode": "init",
+      "log": "runtime-evidence/obs-init.log",
+      "mtime_utc": "2026-11-12T12:17:39.713571009Z",
+      "result": "O_EXCL refusal; original state not overwritten; new-cookie logout only"
+    },
+    {
+      "owner": "DEL",
+      "mode": "read",
+      "log": "runtime-evidence/obs-read.log",
+      "mtime_utc": "2026-11-12T12:17:39.837570565Z",
+      "request_id": "c11c5b01-5bb5-4366-832e-baf8082bb455",
+      "result": "HTTP200; counter result inconclusive due one-second metrics snapshot cache"
+    },
+    {
+      "owner": "OBS",
+      "mode": "read",
+      "log": "/root/lane-obs-tools/obs-installed-4463-read.log",
+      "mtime_utc": "2026-11-12T12:18:14.928442945Z",
+      "request_id": "6bee7c2f-ed8a-4e1c-af32-558191a66f5b",
+      "result": "HTTP200; counter result inconclusive due one-second metrics snapshot cache"
+    }
+  ],
+  "session_validity_boundary": "Original session loaded by both read calls; no logout in failed read path. Confirmed valid at final HTTP200, not probed after barrier. Session contents excluded.",
+  "concurrency_boundary": "Only end/mtime known; exact overlap or non-overlap not proven.",
+  "execution_barrier": "OBS is sole real driver executor after explicit coordinator GO; DEL hooks only after phase handoff."
+}

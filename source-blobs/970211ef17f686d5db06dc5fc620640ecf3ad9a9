@@ -1,0 +1,68 @@
+from pathlib import Path
+import ast,hashlib,json,math,os,re,stat,tempfile,unittest,sys
+entry=Path('/root/lane-obs-tools/run-obs110-daily-native-v2.sh')
+source=entry.read_text()
+def function(marker,name):
+    body=source.split("<<'"+marker+"'",1)[1].split('\n'+marker,1)[0]
+    tree=ast.parse(body)
+    definition=next(node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name==name)
+    namespace=dict(os=os,stat=stat,math=math,re=re)
+    exec(compile(ast.Module(body=[definition],type_ignores=[]),str(entry), 'exec'),namespace)
+    return namespace[name]
+parse=function('PY_IO','parse_full_avg10')
+open_carrier=function('PY_OPEN','open_carrier')
+class EntryTest(unittest.TestCase):
+    def test_full_semantics_and_boundary(self):
+        for value in ['0','0.12','5','5.01','100']:
+            with self.subTest(value=value):
+                text='some avg10=99.99 avg60=0.00 avg300=0.00 total=1\nfull avg10='+value+' avg60=0.00 avg300=0.00 total=0\n'
+                self.assertEqual(parse(text),float(value))
+    def test_invalid_full_documents(self):
+        cases=['','some avg10=0\n','full avg60=0\n','full avg10=1\nfull avg10=2\n',
+               'full avg10=1 avg10=2\n','full avg10=NaN\n','full avg10=Infinity\n',
+               'full avg10=-1\n','full avg10=100.01\n','full avg10=abc\n','full avg10=\n',
+               'full avg10=0 malformed\n','full avg10=1_0\n','full avg10=1 avg10\n']
+        for text in cases:
+            with self.subTest(text=text):
+                with self.assertRaises(ValueError):parse(text)
+    def make_carrier(self,folder):
+        p=Path(folder)/'carrier';p.write_bytes(b'owned sentinel remains unchanged\n');p.chmod(0o600)
+        s=p.stat();return p,(s.st_dev,s.st_ino)
+    def test_nontruncating_open(self):
+        with tempfile.TemporaryDirectory(prefix='obs110-carrier-check-') as folder:
+            p,identity=self.make_carrier(folder);before=p.read_bytes()
+            try:
+                open_carrier(str(p),20,identity)
+                self.assertTrue(os.get_inheritable(20))
+                info=os.fstat(20);self.assertEqual((info.st_dev,info.st_ino),identity)
+                self.assertEqual(p.read_bytes(),before)
+            finally:os.close(20)
+    def test_wrong_identity_refuses(self):
+        with tempfile.TemporaryDirectory(prefix='obs110-carrier-check-') as folder:
+            p,identity=self.make_carrier(folder)
+            with self.assertRaises(RuntimeError):open_carrier(str(p),20,(identity[0],identity[1]+1))
+            self.assertTrue(p.read_bytes())
+    def test_link_and_directory_refusals(self):
+        with tempfile.TemporaryDirectory(prefix='obs110-carrier-check-') as folder:
+            p,identity=self.make_carrier(folder)
+            link=Path(folder)/'symbolic';link.symlink_to(p)
+            with self.assertRaises(OSError):open_carrier(str(link),20,identity)
+            with self.assertRaises(OSError):open_carrier(folder,20,(Path(folder).stat().st_dev,Path(folder).stat().st_ino))
+            hard=Path(folder)/'hard';os.link(p,hard)
+            with self.assertRaises(RuntimeError):open_carrier(str(p),20,identity)
+    def test_existing_descriptor_refuses(self):
+        with tempfile.TemporaryDirectory(prefix='obs110-carrier-check-') as folder:
+            p,identity=self.make_carrier(folder)
+            original=os.open(p,os.O_RDONLY)
+            try:
+                os.dup2(original,20)
+                with self.assertRaises(RuntimeError):open_carrier(str(p),20,identity)
+                self.assertEqual(os.fstat(20).st_ino,identity[1])
+            finally:os.close(20);os.close(original)
+suite=unittest.defaultTestLoader.loadTestsFromTestCase(EntryTest)
+result=unittest.TextTestRunner(verbosity=2).run(suite)
+out=dict(scope='pure extracted PSI and nontruncating carrier open only; no real carrier or flock touched',
+         entry_sha256=hashlib.sha256(entry.read_bytes()).hexdigest(),tests_run=result.testsRun,
+         failures=len(result.failures),errors=len(result.errors),skipped=len(result.skipped),passed=result.wasSuccessful())
+Path('/root/lane-obs-tools/obs110-native-entry-v2-validation.json').write_text(json.dumps(out,indent=2)+'\n')
+raise SystemExit(0 if result.wasSuccessful() else 1)

@@ -1,0 +1,76 @@
+--- original-fixture.sh
++++ entry.sh
+@@ -1,64 +1,12 @@
+ #!/usr/bin/env bash
+-# Runs current-authority event batches against a private disconnected PostgreSQL fixture.
++# Preparation artifact. Execution requires a reviewed native opportunity.
+ set -euo pipefail
+-
+-repo=${OWNSOLID_TRAINING_REPLAY_REPOSITORY:?Set the exact private repository worktree}
+-cd "$repo"
+-
+-: "${PROJECT_ONE_DATA_PYTHON:?Set the protected Python 3.12 data interpreter}"
+-unset PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_NATIVE_POSTGRES_INPUT
+-df -h .
+-free -m
+-ss -lnt
+-docker_context=$(docker context show)
+-image=$(docker --context "$docker_context" image inspect pgvector/pgvector:0.8.7-pg18-bookworm --format '{{.Id}}')
+-umask 077
+-scratch=$(mktemp -d "${TMPDIR:-/tmp}/ownsolid-training-experiment.XXXXXXXX")
+-container=
+-cleanup() {
+-    local stopped=0
+-    if [[ -n "$container" ]]; then
+-        docker --context "$docker_context" stop "$container" >/dev/null || stopped=$?
+-    fi
+-    if [[ -f "$scratch/dsn" ]]; then
+-        unlink "$scratch/dsn"
+-    fi
+-    rmdir "$scratch"
+-    return "$stopped"
+-}
+-trap cleanup EXIT
+-
+-database=ownsolid_training_experiment_test
+-printf '%s\n' "postgres://postgres@127.0.0.1:5432/$database?sslmode=disable" > "$scratch/dsn"
+-export PROJECT_ONE_TEST_DSN_FILE="$scratch/dsn"
+-export PROJECT_ONE_REPOSITORY_ENGINE=postgresql PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE="$scratch/dsn"
+-export PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA="m20_repository_$(tr -d '-' < /proc/sys/kernel/random/uuid)"
+-export GOPROXY=off
+-container=$(docker --context "$docker_context" run --rm --detach --pull never --network none --memory 1g --cpus 2 \
+-    --name "lane-trn-experiment-${scratch##*.}" --env POSTGRES_HOST_AUTH_METHOD=trust \
+-    --env "POSTGRES_DB=$database" "$image")
+-ready=false
+-for ((attempt=0; attempt<35; attempt++)); do
+-    if docker --context "$docker_context" exec "$container" pg_isready -h 127.0.0.1 -U postgres -d "$database" >/dev/null; then
+-        ready=true
+-        break
+-    fi
+-    sleep 1
+-done
+-if [[ "$ready" != true ]]; then
+-    echo 'The disposable PostgreSQL server did not become ready.' >&2
+-    exit 1
++here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
++[[ $# == 1 && ( $1 == --check-config || $1 == --execute ) ]] || exit 64
++if [[ $1 == --check-config ]]; then
++    exec /usr/bin/python3 -B "$here/reader_native_bounded.py" --config "$here/config.json" --check-config
+ fi
+-docker --context "$docker_context" exec "$container" psql -h 127.0.0.1 -U postgres -d "$database" \
+-    -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector WITH SCHEMA public'
+-pid=$(docker --context "$docker_context" inspect --format '{{.State.Pid}}' "$container")
+-nsenter -t "$pid" -n ip -br address
+-test_pattern='^(TestActualTrainingAtomicOrderedEventBatchConcurrentReplayAndRevocation|TestActualTrainingInvalidBatchAndAuditFailureRollbackEveryEventAndPhase|TestActualTLSOrderedTrainingEventBatchContractAndCancellation|TestActualTrainingMixedEventBatchPersistsFinalCursorAndExactReplay|TestActualTrainingFinalCursorFailureRollsBackEventsPhaseAndAudits|TestActualTrainingLateBatchOrderFailureRollsBackEveryMember|TestActualTrainingConcurrentWholeEventBatchHasOnePersistedOutcome|TestActualTrainingEventBatchUnknownCommitAndExplicitReplay)$'
+-printf "training_test_pattern=%s\n" "$test_pattern"
+-test_status=0
+-nsenter -t "$pid" -n go -C services/control test \
+-    -tags repository_integration \
+-    -p 1 -count=1 -timeout 5m -json ./internal/modules/training \
+-    -run "$test_pattern" || test_status=$?
+-( set -C; docker --context "$docker_context" logs --timestamps "$container" > "${OWNSOLID_TRAINING_PG_LOG:?private log required}" 2>&1 )
+-exit "$test_status"
++# 295 s TERM + at most 5 s to KILL; inner work ends at 270 s.
++# No foreground flag: timeout retains control of the parent process group.
++exec /usr/bin/timeout --signal=TERM --kill-after=5s 295s \
++    /usr/bin/python3 -B "$here/reader_native_bounded.py" --config "$here/config.json" --execute

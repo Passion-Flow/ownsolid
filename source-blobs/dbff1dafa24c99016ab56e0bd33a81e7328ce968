@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+todo=$1
+awk '/^pick / { picks++; if ($0 ~ / TRN-104: /) { checkpoint = $0; next } print }
+     END { if (picks != 3 || checkpoint == "") exit 1; print checkpoint }' "$todo" > "$todo.lane-trn"
+mv "$todo.lane-trn" "$todo"

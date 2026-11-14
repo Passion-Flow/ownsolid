@@ -1,0 +1,63 @@
+{
+  "operation_identity_findings": [],
+  "closed_response_object_findings": [],
+  "named_response_findings": [
+    {
+      "code": "PUBLIC_RESPONSE_MODELS_CHANGED",
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/audit-events",
+      "audience": "admin",
+      "operation_id": "listAuditEvents",
+      "previous_response_models": {
+        "200 application/json": [
+          "#/components/schemas/AuditEvent",
+          "#/components/schemas/AuditListResponse"
+        ],
+        "400 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "401 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "403 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "503 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "default application/problem+json": [
+          "#/components/schemas/Problem"
+        ]
+      },
+      "current_response_models": {
+        "200 application/json": [
+          "#/components/schemas/AuditEvent",
+          "#/components/schemas/AuditListResponse"
+        ],
+        "400 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "401 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "403 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "409 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "503 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "default application/problem+json": [
+          "#/components/schemas/Problem"
+        ]
+      }
+    }
+  ],
+  "all_components_unchanged": true,
+  "thirteen_field_projection_unchanged": true,
+  "source_review": "Go consumers use the explicit 409 Problem accessor after regeneration; Python retains Problem",
+  "private_web_patch": "/root/lane-rel-tools/identity-audit-contract/relay/web-owner.patch"
+}

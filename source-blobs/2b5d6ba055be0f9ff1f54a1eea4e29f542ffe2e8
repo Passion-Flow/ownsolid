@@ -1,0 +1,37 @@
+CREATE TABLE mail_deliveries (
+    id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+    purpose VARCHAR(24) NOT NULL CHECK(purpose IN('invitation','password_reset','password_changed')),
+    recipient_email VARCHAR(254) NOT NULL,
+    locale VARCHAR(16) NOT NULL CHECK(locale IN('en','zh-CN')),
+    invitation_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+    invitation_generation INT,
+    reset_token_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+    user_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+    state VARCHAR(16) NOT NULL CHECK(state IN('queued','sending','sent','failed','cancelled')),
+    payload_key_id VARCHAR(64),
+    payload_nonce VARBINARY(12),
+    payload_ciphertext BLOB,
+    payload_schema_version INT NOT NULL DEFAULT 1 CHECK(payload_schema_version=1),
+    attempt_count INT NOT NULL DEFAULT 0 CHECK(attempt_count BETWEEN 0 AND 5),
+    next_attempt_at DATETIME(6) NOT NULL,
+    lease_token CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+    locked_until DATETIME(6),
+    error_category VARCHAR(64),
+    message_id VARCHAR(254) NOT NULL UNIQUE,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    completed_at DATETIME(6),
+    KEY mail_claim_idx(state,next_attempt_at),
+    KEY mail_list_idx(created_at DESC,id DESC),
+    FOREIGN KEY(invitation_id) REFERENCES invitations(id),
+    FOREIGN KEY(user_id) REFERENCES users(id),
+    FOREIGN KEY(reset_token_id,user_id) REFERENCES password_reset_tokens(id,user_id),
+    CHECK((purpose='invitation' AND invitation_id IS NOT NULL AND invitation_generation IS NOT NULL AND reset_token_id IS NULL AND user_id IS NULL)
+       OR (purpose='password_reset' AND reset_token_id IS NOT NULL AND invitation_id IS NULL AND invitation_generation IS NULL AND user_id IS NOT NULL)
+       OR (purpose='password_changed' AND user_id IS NOT NULL AND invitation_id IS NULL AND invitation_generation IS NULL AND reset_token_id IS NULL)),
+    CHECK((state IN('queued','sending') AND payload_key_id IS NOT NULL AND payload_nonce IS NOT NULL AND OCTET_LENGTH(payload_nonce)=12 AND payload_ciphertext IS NOT NULL AND completed_at IS NULL)
+       OR (state IN('sent','failed','cancelled') AND payload_key_id IS NULL AND payload_nonce IS NULL AND payload_ciphertext IS NULL AND completed_at IS NOT NULL)),
+    CHECK((state='sending' AND lease_token IS NOT NULL AND locked_until IS NOT NULL) OR(state<>'sending' AND lease_token IS NULL AND locked_until IS NULL)),
+    CONSTRAINT mail_deliveries_id_canonical CHECK(REGEXP_LIKE(id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT mail_lease_canonical CHECK(lease_token IS NULL OR REGEXP_LIKE(lease_token,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

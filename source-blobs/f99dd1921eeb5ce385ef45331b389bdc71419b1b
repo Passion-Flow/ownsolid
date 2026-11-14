@@ -1,0 +1,51 @@
+set -euo pipefail
+cd /root/lane-rel
+expected=096c50b818429fc089398112c21fd5bf624facae
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+git diff --exit-code 93f9ed8bf5f69d5032f446eed9f0cdac0b1fefda HEAD -- services/control/internal/modules/monitoring
+git diff --exit-code d35733a6 HEAD -- api/openapi tools/codegen/sdk/generate.py tools/codegen/sdk/tests/wire_smoke.py
+source /root/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 CARGO_BUILD_JOBS=1 CARGO_NET_OFFLINE=true
+umask 077
+exec 8>/run/lock/ownsolid-heavy.lock
+until flock -w 45 8; do echo SHARED_HEAVY_LOCK_PENDING; done
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+exec 7>/root/lane-rel-tools/heavy-test.lock
+flock -n 7 || exit 75
+df -h /
+free -m
+ss -lntp
+test "$(df -Pm / | awk 'NR == 2 {print $4}')" -ge 15360
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+echo "SOURCE_COMMIT=$(git rev-parse HEAD)"
+unshare -n bash -ec '
+ip link set lo up
+test "$(ip -o link show | wc -l)" -eq 1
+test -z "$(ip route show default)"
+test -z "$(ip -6 route show default)"
+make check
+echo MAKE_CHECK_PASSED
+make build
+echo MAKE_BUILD_PASSED
+pnpm --dir web --filter @ownsolid/help --filter @ownsolid/i18n test
+echo ACTUAL_HELP_I18N_TESTS_PASSED
+go -C services/control test -race -count=1 ./internal/modules/monitoring/... ./internal/platform/httpserver
+echo OWNED_UNIT_TESTS_PASSED
+GOWORK=off go -C /root/lane-rel-tools/obs109-sdk-release.KJM5T7ED/sdk/gen/go test ./...
+/root/lane-rel-tools/obs109-contract.Psjaj7Gp/python/bin/python tools/codegen/sdk/tests/wire_smoke.py /root/lane-rel-tools/obs109-sdk-release.KJM5T7ED/sdk
+echo MATCHING_SDK_AND_WIRE_TESTS_PASSED
+'
+export OWNSOLID_TEST_POSTGRES_IMAGE=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+export OWNSOLID_TEST_VICTORIA_METRICS=/root/lane-obs-tools/victoria-metrics-prod
+export OWNSOLID_TEST_VMALERT=/root/lane-obs-tools/vmalert-prod
+GOFLAGS='-p=1 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http
+echo AUTHENTICATED_HISTORY_HTTP_PASSED
+GOFLAGS='-p=1 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-tls
+echo PRIVATE_HISTORY_TLS_PASSED
+test ! -e tools/audit-verify/audit-verify || rm -- tools/audit-verify/audit-verify
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+echo EXACT_SOURCE_ACCEPTANCE_PASSED
+

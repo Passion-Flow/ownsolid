@@ -1,0 +1,263 @@
+{
+  "started_at": "2026-11-08T21:45:19.024163367Z",
+  "ended_at": "2026-11-08T21:46:52.979705292Z",
+  "agents": 8,
+  "connected_at_end": 8,
+  "on_stream_at_end": 8,
+  "gateways_at_end": {
+    "127.0.0.1:19443": 3,
+    "127.0.0.1:19444": 5
+  },
+  "revoked": 0,
+  "calls": {
+    "acknowledge": {
+      "succeeded": 4,
+      "failed": {},
+      "latency_milliseconds": {
+        "p50": 4.8,
+        "p90": 9.6,
+        "p99": 9.6,
+        "max": 9.6
+      }
+    },
+    "claim": {
+      "succeeded": 69,
+      "failed": {
+        "CONTROL_CONNECTION_FAILED": 2
+      },
+      "latency_milliseconds": {
+        "p50": 9002.3,
+        "p90": 9002.3,
+        "p99": 9002.3,
+        "max": 9002.3
+      }
+    },
+    "events": {
+      "succeeded": 4,
+      "failed": {},
+      "latency_milliseconds": {
+        "p50": 10.2,
+        "p90": 10.2,
+        "p99": 10.2,
+        "max": 10.2
+      }
+    },
+    "gateway_rebalance": {
+      "succeeded": 3,
+      "failed": {},
+      "latency_milliseconds": {
+        "p50": 14.6,
+        "p90": 17.7,
+        "p99": 17.7,
+        "max": 17.7
+      }
+    },
+    "heartbeat": {
+      "succeeded": 76,
+      "failed": {
+        "CONTROL_CONNECTION_FAILED": 1
+      },
+      "latency_milliseconds": {
+        "p50": 2,
+        "p90": 9.3,
+        "p99": 17.7,
+        "max": 17.7
+      }
+    },
+    "result": {
+      "succeeded": 4,
+      "failed": {},
+      "latency_milliseconds": {
+        "p50": 11.6,
+        "p90": 17,
+        "p99": 17,
+        "max": 17
+      }
+    },
+    "stream_open": {
+      "succeeded": 11,
+      "failed": {
+        "CONTROL_CONNECTION_FAILED": 3
+      },
+      "latency_milliseconds": {
+        "p50": 11.6,
+        "p90": 18.2,
+        "p99": 18.6,
+        "max": 18.6
+      }
+    }
+  },
+  "tasks": {
+    "leases": 4,
+    "acknowledged": 4,
+    "succeeded": 4,
+    "resyncs": 0,
+    "lost_replies": 0
+  },
+  "faults": [],
+  "windows": [
+    {
+      "end_seconds": 15,
+      "connected": 8,
+      "on_stream": 8,
+      "calls": {
+        "claim": {
+          "succeeded": 5,
+          "failed": 0,
+          "p99_milliseconds": 9002.2
+        },
+        "heartbeat": {
+          "succeeded": 12,
+          "failed": 0,
+          "p99_milliseconds": 14.9
+        },
+        "stream_open": {
+          "succeeded": 8,
+          "failed": 0,
+          "p99_milliseconds": 18.6
+        }
+      },
+      "generator_lag_max_milliseconds": 2.4
+    },
+    {
+      "end_seconds": 30,
+      "connected": 8,
+      "on_stream": 8,
+      "calls": {
+        "claim": {
+          "succeeded": 12,
+          "failed": 0,
+          "p99_milliseconds": 9002
+        },
+        "heartbeat": {
+          "succeeded": 12,
+          "failed": 0,
+          "p99_milliseconds": 10.2
+        }
+      },
+      "generator_lag_max_milliseconds": 1.9
+    },
+    {
+      "end_seconds": 45,
+      "connected": 8,
+      "on_stream": 8,
+      "calls": {
+        "claim": {
+          "succeeded": 12,
+          "failed": 0,
+          "p99_milliseconds": 9001.9
+        },
+        "heartbeat": {
+          "succeeded": 12,
+          "failed": 0,
+          "p99_milliseconds": 1.9
+        }
+      },
+      "generator_lag_max_milliseconds": 3.4
+    },
+    {
+      "end_seconds": 60,
+      "connected": 7,
+      "on_stream": 7,
+      "calls": {
+        "acknowledge": {
+          "succeeded": 1,
+          "failed": 0,
+          "p99_milliseconds": 4.7
+        },
+        "claim": {
+          "succeeded": 10,
+          "failed": 2,
+          "p99_milliseconds": 9001.8
+        },
+        "events": {
+          "succeeded": 1,
+          "failed": 0,
+          "p99_milliseconds": 10.2
+        },
+        "heartbeat": {
+          "succeeded": 12,
+          "failed": 1,
+          "p99_milliseconds": 5.1
+        },
+        "result": {
+          "succeeded": 1,
+          "failed": 0,
+          "p99_milliseconds": 10.3
+        },
+        "stream_open": {
+          "succeeded": 2,
+          "failed": 2,
+          "p99_milliseconds": 8.4
+        }
+      },
+      "generator_lag_max_milliseconds": 2.5
+    },
+    {
+      "end_seconds": 75,
+      "connected": 8,
+      "on_stream": 8,
+      "calls": {
+        "acknowledge": {
+          "succeeded": 3,
+          "failed": 0,
+          "p99_milliseconds": 9.6
+        },
+        "claim": {
+          "succeeded": 14,
+          "failed": 0,
+          "p99_milliseconds": 9001.8
+        },
+        "events": {
+          "succeeded": 3,
+          "failed": 0,
+          "p99_milliseconds": 10
+        },
+        "gateway_rebalance": {
+          "succeeded": 2,
+          "failed": 0,
+          "p99_milliseconds": 17.7
+        },
+        "heartbeat": {
+          "succeeded": 15,
+          "failed": 0,
+          "p99_milliseconds": 17.7
+        },
+        "result": {
+          "succeeded": 3,
+          "failed": 0,
+          "p99_milliseconds": 17
+        },
+        "stream_open": {
+          "succeeded": 1,
+          "failed": 1,
+          "p99_milliseconds": 10
+        }
+      },
+      "generator_lag_max_milliseconds": 2.5
+    },
+    {
+      "end_seconds": 90,
+      "connected": 8,
+      "on_stream": 8,
+      "calls": {
+        "claim": {
+          "succeeded": 11,
+          "failed": 0,
+          "p99_milliseconds": 9002.3
+        },
+        "gateway_rebalance": {
+          "succeeded": 1,
+          "failed": 0,
+          "p99_milliseconds": 9.4
+        },
+        "heartbeat": {
+          "succeeded": 9,
+          "failed": 0,
+          "p99_milliseconds": 9.4
+        }
+      },
+      "generator_lag_max_milliseconds": 3.6
+    }
+  ]
+}

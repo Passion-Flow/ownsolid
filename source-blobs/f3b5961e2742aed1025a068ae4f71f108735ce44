@@ -1,0 +1,359 @@
+#!/usr/bin/env python3
+"""Run session acceptance only with dedicated disposable actors in an existing installation."""
+import argparse
+import base64
+import hashlib
+import http.cookiejar
+import ipaddress
+import json
+import os
+from pathlib import Path
+import re
+import ssl
+import subprocess
+import sys
+import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
+
+from guards import (Refused, Registry, digest, fixture_policy, origin, private_bytes,
+                    private_directory, private_json, require, uid, verify_sources)
+
+
+def write(path, data):
+    with open(path, "xb") as target:
+        os.chmod(path, 0o600)
+        target.write(data)
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+class HTTPS:
+    def __init__(self, target, context, timeout, records, audience, token=None):
+        self.target, self.timeout, self.records, self.audience = target, timeout, records, audience
+        self.jar = http.cookiejar.CookieJar()
+        self.opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}), NoRedirect(),
+            urllib.request.HTTPSHandler(context=context), urllib.request.HTTPCookieProcessor(self.jar))
+        self.token = token
+
+    def request(self, case, method, path, payload=None, csrf=None, status=200):
+        headers = {"Accept": "application/json"}
+        if self.token is not None:
+            headers["Cookie"] = "__Host-admin_session=" + self.token
+        body = None if payload is None else json.dumps(payload).encode()
+        if body is not None:
+            headers["Content-Type"] = "application/json"
+        if method != "GET":
+            headers.update(Origin=self.target)
+            headers["X-CSRF-Token"] = csrf
+        request = urllib.request.Request(self.target + path, body, headers, method=method)
+        try:
+            response = self.opener.open(request, timeout=self.timeout)
+        except urllib.error.HTTPError as error:
+            response = error
+        with response:
+            raw = response.read(1024 * 1024 + 1)
+            require(len(raw) <= 1024 * 1024 and response.status == status,
+                    case + ": unexpected response; check canary inputs and installed readiness")
+            request_id = response.headers.get("X-Request-ID")
+            require(uid(request_id), case + ": server request identity missing")
+            value = json.loads(raw) if raw else None
+            self.records.append({"case": case, "protocol": self.audience + " HTTPS",
+                                 "status": status, "request_id": request_id})
+            return value["data"] if status == 200 else value
+
+    def csrf(self):
+        return self.request("canary-csrf", "GET", "/api/v1/auth/csrf")["token"]
+
+
+def execute(args, directory, case, command, secrets, records, code=None, recovery=None):
+    env = dict(os.environ, OWNSOLID_CONFIG_DIR=str(directory), OWNSOLID_SERVER="")
+    reply = subprocess.run([str(args.client), *command], env=env, capture_output=True,
+                           timeout=args.timeout, check=False)
+    raw = reply.stdout + reply.stderr
+    require(not any(secret in raw for secret in secrets.values()), case + ": sensitive output refused")
+    request_id = None
+    if code or recovery:
+        require(reply.returncode != 0 and not reply.stdout and
+                (code is None or code.encode() in reply.stderr) and
+                (recovery is None or recovery.encode() in reply.stderr),
+                case + ": expected actionable refusal missing")
+        if code:
+            found = re.search(rb"\(request ([0-9a-f-]{36})\)", reply.stderr)
+            require(found and uid(found[1].decode()), case + ": server request identity missing")
+            request_id = found[1].decode()
+    else:
+        require(reply.returncode == 0 and not reply.stderr,
+                case + ": command failed; check canary input, CA, origin and session, then retry")
+    records.append({"case": case, "protocol": "Admin CLI", "exit_code": reply.returncode,
+                    "code": code, "request_id": request_id, "recovery_checked": recovery is not None})
+    return reply.stdout
+
+
+def load(args):
+    private_directory(args.evidence)
+    private_directory(args.fixture.parent)
+    ready = private_json(args.evidence / "installed-ready.json")
+    control = private_json(args.evidence / "installed-provenance.json")
+    client = private_json(args.client_manifest)
+    verify_sources(ready, control, client, args.expected_cli_source, args.expected_control_source)
+    require(digest(args.client) == client["binary_sha256"], "CLIENT_HASH_MISMATCH")
+    require(digest(args.evidence / "installed-control.bin") == control["installed_control_sha256"],
+            "INSTALLED_CONTROL_HASH_MISMATCH")
+    origin(ready["admin_origin"])
+    origin(ready["portal_origin"])
+    require(ready["admin_origin"] != ready["portal_origin"], "DISTINCT_INSTALLED_ENTRANCES_REQUIRED")
+    # The shared credential is used only for its deny-fence email, never authentication.
+    shared = private_json(args.evidence / "admin-credential")
+    bootstrap_email = shared["request"]["administrator_email"]
+    shared.clear()
+    fixture = private_json(args.fixture)
+    policy = fixture_policy(fixture, bootstrap_email, args.expected_control_source)
+    secrets = {}
+    for role, actor in fixture["accounts"].items():
+        path = Path(actor["password_file"])
+        require(path.is_absolute() and args.fixture.parent in path.parents,
+                "DEDICATED_CREDENTIAL_LOCATION_REQUIRED")
+        private_directory(path.parent)
+        for name in ["admin-credential", "admin-password"]:
+            shared_path = args.evidence / name
+            require(not shared_path.exists() or not os.path.samefile(path, shared_path),
+                    "SHARED_CREDENTIAL_REFUSED")
+        secret = private_bytes(path, 4098)
+        if secret.endswith(b"\n"):
+            secret = secret[:-1].removesuffix(b"\r")
+        require(0 < len(secret) <= 4096, "DEDICATED_PASSWORD_FILE_REQUIRED")
+        secrets[role] = secret
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.load_verify_locations(cadata=private_bytes(args.evidence / "installation-ca.pem").decode("ascii"))
+    return ready, control, client, fixture, Registry(policy), context, secrets
+
+
+class Profile:
+    def __init__(self, args, root, name, actor, data, records):
+        self.args, self.actor, self.data, self.records = args, actor, data, records
+        self.path = root / name
+        self.path.mkdir(mode=0o700)
+        self.session_id = None
+        self.eligible = False
+        write(self.path / "config.json", json.dumps({
+            "server": data[0]["admin_origin"], "ca_file": str(args.evidence / "installation-ca.pem"),
+            "request_timeout": str(args.timeout) + "s"}).encode())
+
+    def run(self, case, *command, **expect):
+        return execute(self.args, self.path, case, list(command), self.data[6], self.records, **expect)
+
+    def token_file(self):
+        candidates = [p for p in self.path.glob("session-*") if re.fullmatch(r"session-[0-9a-f]{64}", p.name)]
+        require(len(candidates) == 1, "ONE_FRESH_PRIVATE_CLI_CREDENTIAL_REQUIRED")
+        return candidates[0]
+
+    def pages(self):
+        cursor, seen, result = None, set(), []
+        for _ in range(self.args.maximum_pages):
+            command = ["session", "list", "--limit", "1", "-o", "json"]
+            if cursor:
+                command += ["--cursor", cursor]
+            page = json.loads(self.run("canary-session-list", *command))
+            require(isinstance(page["items"], list), "SESSION_PAGE_REQUIRED")
+            result += page["items"]
+            cursor = page["next_cursor"]
+            if cursor is None:
+                return result
+            require(cursor not in seen, "REPEATED_SESSION_CURSOR")
+            seen.add(cursor)
+        raise Refused("SESSION_PAGE_BOUND_REACHED: increase the explicit bound in the same window")
+
+    def login(self):
+        require(not any(re.fullmatch(r"session-[0-9a-f]{64}", p.name) for p in self.path.iterdir()),
+                "FRESH_CANARY_PROFILE_REQUIRED")
+        self.session_id, self.eligible = None, False
+        self.run("canary-admin-login", "login", "--email", self.actor["email"],
+                 "--password-file", self.actor["password_file"])
+        token = private_bytes(self.token_file()).decode("ascii")
+        require(re.fullmatch(r"[A-Za-z0-9_-]{43}", token) and
+                len(base64.urlsafe_b64decode(token + "=")) == 32, "VALID_CREATED_SESSION_REQUIRED")
+        browser = HTTPS(self.data[0]["admin_origin"], self.data[5], self.args.timeout,
+                        self.records, "Admin", token)
+        self.data[4].identity(self.actor, browser.request("canary-live-identity", "GET", "/api/v1/me"), "admin")
+        current = [row["id"] for row in self.pages() if row["current"] is True]
+        require(len(current) == 1, "ONE_CURRENT_CANARY_SESSION_REQUIRED")
+        self.data[4].record(current[0], self.actor, "admin")
+        self.session_id, self.eligible = current[0], True
+
+    def revoke(self, target, refusal=False):
+        self.data[4].target(self.actor, target, refusal=refusal)
+        if refusal:
+            self.run("foreign-canary-session-refusal", "session", "revoke", target, "--confirm",
+                     code="RESOURCE_NOT_FOUND", recovery="check the resource ID")
+            return
+        value = json.loads(self.run("owned-canary-session-revoke", "session", "revoke", target, "--confirm", "-o", "json"))
+        require(value == {"id": target, "revoked": True, "current_session_ended": target == self.session_id},
+                "REVOCATION_ACKNOWLEDGEMENT_MISMATCH")
+        self.data[4].ended.add(target)
+
+    def cleanup(self):
+        if self.eligible and self.session_id not in self.data[4].ended:
+            self.run("canary-session-cleanup", "logout")
+            self.data[4].ended.add(self.session_id)
+
+
+def audit(witness, actor, target, expected):
+    value = json.loads(witness.run("canary-audit-read", "audit", "list",
+        "--action", "auth.logout", "--actor-user-id", actor["user_id"], "--target-id", target,
+        "--outcome", "success", "--limit", "100", "-o", "json"))
+    require(value["next_cursor"] is None and len(value["items"]) == expected, "SESSION_AUDIT_COUNT_MISMATCH")
+    for row in value["items"]:
+        require(row["actor_user_id"] == actor["user_id"] and row["target_id"] == target and
+                row["target_type"] == "session" and row["action"] == "auth.logout" and
+                row["audience"] == "admin" and row["outcome"] == "success" and uid(row["request_id"]),
+                "SESSION_AUDIT_SCOPE_MISMATCH")
+    return [row["request_id"] for row in value["items"]]
+
+
+def qualify(args, data, report):
+    ready, _, client, fixture, registry, context, secrets = data
+    profiles, portal, portal_id = [], None, None
+    records = report["cases"]
+    with tempfile.TemporaryDirectory(prefix="private-canaries-", dir=args.result) as temporary:
+        root = Path(temporary)
+        owner, foreign_actor = fixture["accounts"]["owner"], fixture["accounts"]["foreign"]
+        def make(name, actor):
+            profile = Profile(args, root, name, actor, data, records)
+            profiles.append(profile)
+            profile.login()
+            return profile
+        try:
+            main = make("owner-main", owner)
+            require(json.loads(main.run("frozen-client-identity", "version", "-o", "json"))["revision"]
+                    == client["source_revision"], "EMBEDDED_CLIENT_REVISION_MISMATCH")
+            target = make("owner-target", owner)
+            foreign = make("foreign-target", foreign_actor)
+            main.run("invalid-target-recovery", "session", "revoke",
+                     "00000000-0000-0000-0000-000000000000", "--confirm",
+                     recovery="nonzero UUID")
+            audit(main, owner, target.session_id, 0)
+            main.revoke(target.session_id)
+            first = audit(main, owner, target.session_id, 1)
+            main.revoke(target.session_id)
+            require(audit(main, owner, target.session_id, 1) == first, "RETRY_DUPLICATED_AUDIT")
+            target.run("revoked-other-profile", "session", "list",
+                       code="AUTH_SESSION_EXPIRED", recovery="run ownsolid login")
+            require(target.session_id not in {row["id"] for row in main.pages()}, "REVOKED_SESSION_STILL_LISTED")
+            main.revoke(foreign.session_id, refusal=True)
+            require(foreign.session_id in {row["id"] for row in foreign.pages()}, "FOREIGN_TARGET_WAS_ENDED")
+            audit(main, owner, foreign.session_id, 0)
+
+            portal = HTTPS(ready["portal_origin"], context, args.timeout, records, "Portal")
+            portal.request("canary-portal-login", "POST", "/api/v1/auth/login",
+                           {"email": owner["email"], "password": secrets["owner"].decode("utf-8")}, portal.csrf())
+            registry.identity(owner, portal.request("canary-portal-identity", "GET", "/api/v1/me"), "portal")
+            value = portal.request("canary-portal-session-list", "GET", "/api/v1/me/sessions?limit=100")
+            current = [item["id"] for item in value["items"] if item["current"] is True]
+            require(value["next_cursor"] is None and len(current) == 1, "BOUNDED_PORTAL_CANARY_SESSION_REQUIRED")
+            registry.record(current[0], owner, "portal")
+            portal_id = current[0]
+            main.revoke(portal_id, refusal=True)
+            registry.identity(owner, portal.request("portal-target-survived", "GET", "/api/v1/me"), "portal")
+            audit(main, owner, portal_id, 0)
+
+            witness = make("owner-audit-witness", owner)
+            ended_main = main.session_id
+            main.revoke(ended_main)
+            main.run("local-current-credential-removed", "session", "list", recovery="no saved Admin session")
+            audit(witness, owner, ended_main, 1)
+            main.eligible = False
+            main.login()
+            require(main.session_id != ended_main, "FRESH_LOGIN_REUSED_ENDED_SESSION")
+            report["audit_request_ids"] = first + audit(witness, owner, ended_main, 1)
+            report["created_canary_session_ids"] = sorted(registry.created)
+        finally:
+            failed = False
+            if portal_id is not None:
+                try:
+                    portal.request("canary-portal-cleanup", "POST", "/api/v1/auth/logout",
+                                   csrf=portal.csrf(), status=204)
+                    registry.ended.add(portal_id)
+                except Exception:
+                    failed = True
+            for profile in reversed(profiles):
+                try:
+                    profile.cleanup()
+                except Exception:
+                    failed = True
+            require(not failed, "CANARY_CLEANUP_FAILED: no shared session was selected")
+            require(all(p.eligible or p.session_id in registry.ended for p in profiles),
+                    "UNQUALIFIED_LOGIN_REQUIRES_FIXTURE_OWNER_REVIEW")
+            report["cleanup"] = "Only verified run-created dedicated sessions were ended"
+
+
+def main():
+    os.umask(0o077)
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ["client", "client-manifest", "evidence", "fixture", "result"]:
+        parser.add_argument("--" + name, type=Path, required=True)
+    parser.add_argument("--expected-cli-source", required=True)
+    parser.add_argument("--expected-control-source", required=True)
+    parser.add_argument("--network-pid", type=int, required=True)
+    parser.add_argument("--connect-address", required=True)
+    parser.add_argument("--timeout", type=int, default=30)
+    parser.add_argument("--maximum-pages", type=int, default=100)
+    parser.add_argument("--check-inputs", action="store_true")
+    parser.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
+    args = parser.parse_args()
+    report = {"state": "input-refused", "installed_acceptance": False, "cases": []}
+    try:
+        require(args.expected_cli_source == "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c" and args.expected_control_source == "4463bbe628f60486bbdb92c15f72311fb53d076a", "FROZEN_SESSION_PACKAGE_SOURCES_REQUIRED")
+        require(args.timeout > 0 and args.maximum_pages > 1 and args.network_pid > 1,
+                "EXPLICIT_LIMITS_AND_INSTALLATION_PID_REQUIRED")
+        require(all(p.is_absolute() for p in [args.client, args.client_manifest, args.evidence, args.fixture, args.result]),
+                "ABSOLUTE_PATHS_REQUIRED")
+        address = ipaddress.ip_address(args.connect_address)
+        require(address.is_loopback, "CONFIGURED_LOOPBACK_LISTENER_REQUIRED")
+        data = load(args)
+        if args.check_inputs:
+            print("INPUTS_VALIDATED_NO_AUTHENTICATION_OR_INSTALLED_ACCEPTANCE")
+            return 0
+        namespace = os.readlink("/proc/" + str(args.network_pid) + "/ns/net")
+        if not args.inside:
+            require(not args.result.exists(), "NEW_PRIVATE_RESULT_DIRECTORY_REQUIRED")
+            args.result.mkdir(mode=0o700)
+            names = [urllib.parse.urlsplit(data[0][k]).hostname for k in ["admin_origin", "portal_origin"]]
+            lines = [line for line in Path("/etc/hosts").read_text().splitlines()
+                     if not set(line.split("#", 1)[0].split()[1:]) & set(names)]
+            hosts = args.result / "hosts"
+            write(hosts, ("\n".join(lines) + "\n" + str(address) + " " + " ".join(names) + "\n").encode())
+            command = ["nsenter", "--target", str(args.network_pid), "--net", "unshare", "--mount",
+                       "--propagation", "private", "sh", "-ec",
+                       'mount --bind "$1" /etc/hosts; shift; exec "$@"', "canary-hosts",
+                       str(hosts), sys.executable, str(Path(__file__).absolute()), *sys.argv[1:], "--inside"]
+            return subprocess.run(command, check=False).returncode
+        private_directory(args.result)
+        require(os.readlink("/proc/self/ns/net") == namespace, "EXISTING_INSTALLATION_NAMESPACE_REQUIRED")
+        report.update({"state": "running", "client_source": data[2]["source_revision"],
+            "client_sha256": data[2]["binary_sha256"], "control_source": data[1]["build_revision"],
+            "control_sha256": data[1]["installed_control_sha256"], "control_image": data[1]["actual_image"],
+            "fixture_id": data[3]["fixture_id"], "schema": data[0]["schema"],
+            "offline_capture": "The original DEL window owns the recorder and full offline conclusion",
+            "uncertainty_scope": "Storage/transport uncertainty uses committed protocol/race tests; no installed fault injection"})
+        qualify(args, data, report)
+        report.update(state="passed", installed_acceptance=True)
+        return 0
+    except (Refused, OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired,
+            urllib.error.URLError, ssl.SSLError, AttributeError, IndexError) as error:
+        report["state"] = "failed" if report["cases"] else "input-refused"
+        report["error"] = str(error) if isinstance(error, Refused) else "INPUT_OR_TRANSPORT_REFUSED: verify protected canary inputs, namespace, CA and installed readiness"
+        print(report["error"], file=sys.stderr)
+        return 1 if report["cases"] else 2
+    finally:
+        if args.inside and args.result.is_dir():
+            write(args.result / "result.json", (json.dumps(report, indent=2) + "\n").encode())
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

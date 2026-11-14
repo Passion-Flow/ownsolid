@@ -1,0 +1,92 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,shutil,signal,stat,subprocess,sys,tarfile,time
+root=Path(sys.argv[1]);os.umask(0o022)
+assert root.name.startswith('lane-arc107-handoff.3ae6bfeb.') and not root.is_symlink()
+assert not (root/'build-exit').exists(),'Inspect the retained result before repeating'
+archive=root/'native-handoff-source.tar.gz'
+assert archive.stat().st_size==545461 and hashlib.sha256(archive.read_bytes()).hexdigest()=='c9bd5ffbbbbae19f08afd6c466762b5f7358616a78d6155a541e6c880a510e8a'
+with tarfile.open(archive) as bundle:
+ assert set(bundle.getnames())=={'source.patch','manifest.json'}
+ manifest=json.loads(bundle.extractfile('manifest.json').read());patch=bundle.extractfile('source.patch').read()
+assert manifest['source']=='3ae6bfebb67b47d684de4651cc597c26f104d725' and hashlib.sha256(patch).hexdigest()==manifest['patch_sha256']
+locks=[];child=None
+try:
+ for name in ('/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock'):
+  path=Path(name);fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW);info=os.fstat(fd);assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:os.close(fd);raise SystemExit(75)
+  assert(info.st_dev,info.st_ino)==(path.lstat().st_dev,path.lstat().st_ino);locks.append(fd)
+ memory={}
+ for line in Path('/proc/meminfo').read_text().splitlines():
+  key,_,value=line.partition(':')
+  if key in ('MemFree','MemAvailable'):memory[key]=int(value.split()[0])
+ psi=float(Path('/proc/pressure/io').read_text().split('full avg10=')[1].split()[0]);disk=shutil.disk_usage(root)
+ record={'memory_kib':memory,'full_io_psi_avg10':psi,'disk_free_bytes':disk.free,'source':manifest['source'],'scope':'native current binaries and affected race/vet profiles; no database or container'}
+ (root/'build-preflight.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record),flush=True)
+ if memory['MemFree']<2097152 or memory['MemAvailable']<8388608 or psi>5 or disk.free<30*1024**3:raise SystemExit(75)
+ commands=subprocess.check_output(['ps','-e','-o','comm='],text=True).splitlines()
+ if any(Path(command.strip()).name in {'go','compile','link','gcc','cc1','rustc','cargo','make'} for command in commands):raise SystemExit(75)
+ go='/root/lane-sci-tools/go/bin/go';assert subprocess.check_output([go,'version'],text=True).strip()=='go version go1.27.3 linux/amd64'
+ def verify(source,expected):
+  actual={str(path.relative_to(source)) for path in source.rglob('*') if path.is_file() or path.is_symlink()};assert actual==set(expected),(len(actual),len(expected))
+  for name,item in expected.items():
+   path=source/name
+   if item['mode']=='120000':assert path.is_symlink();raw=os.readlink(path).encode()
+   else:
+    assert path.is_file() and not path.is_symlink();assert bool(path.stat().st_mode&0o111)==(item['mode']=='100755'),name;raw=path.read_bytes()
+   assert hashlib.sha256(raw).hexdigest()==item['sha256'],name
+ base=Path(manifest['base_snapshot']);assert manifest['base_source']=='821227ea5b94a8357f695c290e78af3b81c54f22'
+ verify(base,manifest['base'])
+ source=root/'source';assert not source.exists();subprocess.run(['cp','-a','--reflink=auto',str(base),str(source)],check=True)
+ patchfile=root/'source.patch';patchfile.write_bytes(patch)
+ subprocess.run(['git','-C',str(source),'apply','--check',str(patchfile)],check=True)
+ subprocess.run(['git','-C',str(source),'apply',str(patchfile)],check=True)
+ for path in source.rglob('*'):
+  if path.is_symlink():continue
+  os.chmod(path,0o755 if path.is_dir() or path.stat().st_mode&0o111 else 0o644)
+ os.chmod(source,0o755);verify(source,manifest['current'])
+ (root/'installed-source-verified.json').write_text(json.dumps({'source':manifest['source'],'tree':manifest['tree'],'paths':len(manifest['current']),'every_source_byte_and_mode_verified':True,'base_source':manifest['base_source'],'owned_regular_modes':'0644/0755; directories 0755'},indent=2)+'\n')
+ tmp=root/'build-tmp';tmp.mkdir(mode=0o700);binaries=root/'binaries';binaries.mkdir(mode=0o755)
+ env=os.environ.copy();env.update(GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=1 -mod=readonly',GOMEMLIMIT='512MiB',CGO_ENABLED='0',GOENV='off',GOCACHE='/root/lane-sci-tools/go-cache',GOMODCACHE='/root/lane-sci-tools/go-mod',TMPDIR=str(tmp))
+ for key in list(env):
+  if key.startswith(('PROJECT_ONE_','OWNSOLID_')):env.pop(key)
+ cpus=','.join(str(cpu) for cpu in sorted(os.sched_getaffinity(0))[:2]);assert len(cpus.split(','))==2
+ def stop(sig,frame):raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop);signal.signal(signal.SIGHUP,stop)
+ def execute(command,name,budget,environment=env):
+  global child
+  with(root/name).open('wb') as log:
+   child=subprocess.Popen(command,env=environment,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+   try:code=child.wait(timeout=budget)
+   except subprocess.TimeoutExpired:
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=15)
+    except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+    code=124
+  assert code==0,(name,code)
+ (root/'build-start').write_text(str(time.time())+'\n')
+ builds=[('services/agent','agent',['build','-trimpath'],'./cmd/agent'),('services/agent','inference-egress.test',['test','-c','-trimpath','-tags','docker_integration egress_integration'],'./internal/inference'),('deploy/offline','ownsolid-install',['build','-trimpath'],'./cmd/install'),('tests/e2e','egress-recorder',['build','-trimpath'],'./cmd/egress-recorder'),('tools/dev/simulator','simulator',['build','-trimpath'],'.'),('tests/e2e','e2e.test',['test','-c'],'.'),('services/control','control',['build','-trimpath','-ldflags=-s -w'],'./cmd/server')]
+ for module,name,arguments,package in builds:
+  (root/'build-stage').write_text(name+'\n');start=time.time()
+  execute(['taskset','-c',cpus,go,'-C',str(source/module),*arguments,'-o',str(binaries/name),package],'compile-'+name+'.log',420)
+  print(name+' compiled in '+str(round(time.time()-start,3))+' seconds',flush=True)
+ shutil.copyfile(source/'deploy/compose/compose.yaml',binaries/'compose.yaml')
+ raceenv=env.copy();raceenv['CGO_ENABLED']='1'
+ tests=[('services/agent','./internal/client','client'),('services/agent','./sessiontransport','sessiontransport'),('services/control','./internal/platform/agentgateway','agentgateway'),('services/control','./internal/platform/httpserver','httpserver'),('api','./agent/v1','agent-contract'),('tools/dev/simulator','./internal/fleet','simulator-fleet')]
+ for module,package,name in tests:
+  (root/'build-stage').write_text('race-'+name+'\n');binary=root/(name+'-race.test')
+  execute(['taskset','-c',cpus,go,'-C',str(source/module),'test','-c','-race','-o',str(binary),package],'compile-race-'+name+'.log',420,raceenv)
+  timeout=180 if name=='simulator-fleet' else 90
+  script='set -euo pipefail; ip link set lo up; cd "$3"; exec taskset -c "$1" "$2" -test.v -test.timeout='+str(timeout)+'s'
+  execute(['unshare','--net','bash','-c',script,'arc107-native',cpus,str(binary),str(source/module/package.removeprefix('./'))],name+'-race.log',timeout+15,raceenv)
+  output=(root/(name+'-race.log')).read_text();assert '\nPASS\n' in output and '--- SKIP:' not in output and '--- FAIL:' not in output
+  execute(['taskset','-c',cpus,go,'-C',str(source/module),'vet',package],name+'-vet.log',300,raceenv)
+ verify(source,manifest['current'])
+ evidence={path.name:{'bytes':path.stat().st_size,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()} for path in binaries.iterdir()}
+ (root/'binary-evidence.json').write_text(json.dumps(evidence,indent=2)+'\n');(root/'build-exit').write_text('0\n');(root/'build-finish').write_text(str(time.time())+'\n');(root/'build-stage').write_text('complete\n');print('Native current binaries and affected race/vet profiles passed',flush=True)
+finally:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ for fd in reversed(locks):fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

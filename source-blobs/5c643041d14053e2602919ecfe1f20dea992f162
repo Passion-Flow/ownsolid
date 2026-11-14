@@ -1,0 +1,308 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"mime"
+	"net"
+	"net/http"
+	"net/http/cookiejar"
+	"net/url"
+	"regexp"
+	"slices"
+	"strings"
+	"time"
+)
+
+const registryRoot = "/api/v1/admin/image-registry"
+
+var problemPattern = regexp.MustCompile(`^[A-Z][A-Z0-9_]{0,95}$`)
+
+type pin struct {
+	ID             string    `json:"id"`
+	WorkspaceID    string    `json:"workspace_id"`
+	AssetID        string    `json:"asset_id"`
+	State          string    `json:"state"`
+	ManifestDigest *string   `json:"manifest_digest"`
+	ConfigDigest   *string   `json:"config_digest"`
+	ArchiveSHA256  *string   `json:"archive_sha256"`
+	ArchiveBytes   *int64    `json:"archive_bytes"`
+	Revision       int64     `json:"revision"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+type observation struct {
+	Method              string `json:"method"`
+	Path                string `json:"path"`
+	Status              int    `json:"status"`
+	RequestID           string `json:"request_id"`
+	ElapsedMilliseconds int64  `json:"elapsed_milliseconds"`
+}
+type apiClient struct {
+	config   configuration
+	origin   *url.URL
+	http     *http.Client
+	requests []observation
+}
+
+func newAPIClient(c configuration) (*apiClient, error) {
+	if e := c.validate(); e != nil {
+		return nil, e
+	}
+	c.Asset.Licenses = append([]string(nil), c.Asset.Licenses...)
+	ca, e := protectedRead(c.Admin.CAFile, maximumReply, false)
+	if e != nil {
+		return nil, errors.New("site CA input is unavailable")
+	}
+	roots := x509.NewCertPool()
+	if !roots.AppendCertsFromPEM(ca) {
+		return nil, errors.New("site CA input contains no certificate")
+	}
+	u, _ := url.Parse(c.Admin.Origin)
+	port := u.Port()
+	if port == "" {
+		port = "443"
+	}
+	authority := net.JoinHostPort(u.Hostname(), port)
+	dialer := &net.Dialer{Timeout: 5 * time.Second}
+	transport := &http.Transport{
+		Proxy: nil, DisableCompression: true, MaxConnsPerHost: 2,
+		TLSHandshakeTimeout: 5 * time.Second, ResponseHeaderTimeout: time.Duration(c.RequestSeconds) * time.Second,
+		TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: roots, ServerName: u.Hostname()},
+		DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+			if address != authority {
+				return nil, errors.New("unexpected target authority")
+			}
+			return dialer.DialContext(ctx, network, c.Admin.DialAddress)
+		},
+	}
+	jar, _ := cookiejar.New(nil)
+	client := &http.Client{Transport: transport, Jar: jar, Timeout: time.Duration(c.RequestSeconds) * time.Second,
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return errors.New("redirect refused") }}
+	return &apiClient{config: c, origin: u, http: client}, nil
+}
+func (c *apiClient) close() { c.http.CloseIdleConnections() }
+func (c *apiClient) request(ctx context.Context, method, path string, body []byte, csrf, key string, want int) ([]byte, error) {
+	if !strings.HasPrefix(path, "/api/v1/") || strings.HasPrefix(path, "//") || strings.ContainsAny(path, "\r\n#") {
+		return nil, errors.New("invalid public request path")
+	}
+	req, e := http.NewRequestWithContext(ctx, method, c.origin.String()+path, bytes.NewReader(body))
+	if e != nil {
+		return nil, errors.New("invalid public request")
+	}
+	req.Header.Set("Origin", c.origin.String())
+	// Keep mutation replay explicit in the driver, with its recorded key.
+	if method != http.MethodGet {
+		req.GetBody = nil
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if csrf != "" {
+		req.Header.Set("X-CSRF-Token", csrf)
+	}
+	if key != "" {
+		req.Header.Set("Idempotency-Key", key)
+	}
+	began := time.Now()
+	response, e := c.http.Do(req)
+	if e != nil {
+		return nil, errors.New("public HTTPS request failed; verify trust, private address and readiness")
+	}
+	raw, readErr := io.ReadAll(io.LimitReader(response.Body, maximumReply+1))
+	closeErr := response.Body.Close()
+	id := response.Header.Get("X-Request-ID")
+	c.requests = append(c.requests, observation{method, strings.SplitN(path, "?", 2)[0], response.StatusCode, id, time.Since(began).Milliseconds()})
+	if readErr != nil || closeErr != nil || len(raw) > maximumReply {
+		return nil, errors.New("public response is incomplete or oversized")
+	}
+	if response.TLS == nil || len(response.TLS.VerifiedChains) == 0 || !uuidPattern.MatchString(id) ||
+		response.Header.Get("Cache-Control") != "no-store" || response.Header.Get("X-Content-Type-Options") != "nosniff" {
+		return nil, errors.New("public TLS or response policy did not match")
+	}
+	if response.StatusCode != want {
+		// Report only the bounded stable code. Never print response bodies, credentials or cookies.
+		var problem struct {
+			Code      string `json:"code"`
+			RequestID string `json:"request_id"`
+		}
+		code := "UNEXPECTED_RESPONSE"
+		media, _, _ := mime.ParseMediaType(response.Header.Get("Content-Type"))
+		if media == "application/problem+json" && rejectDuplicateJSON(raw) == nil && json.Unmarshal(raw, &problem) == nil &&
+			problemPattern.MatchString(problem.Code) && problem.RequestID == id {
+			code = problem.Code
+		}
+		return nil, fmt.Errorf("public API refusal: HTTP %d %s", response.StatusCode, code)
+	}
+	if want == http.StatusNoContent {
+		if len(raw) != 0 {
+			return nil, errors.New("unexpected logout response body")
+		}
+		return nil, nil
+	}
+	media, _, e := mime.ParseMediaType(response.Header.Get("Content-Type"))
+	if e != nil || media != "application/json" || rejectDuplicateJSON(raw) != nil {
+		return nil, errors.New("public JSON response policy did not match")
+	}
+	var envelope map[string]json.RawMessage
+	if json.Unmarshal(raw, &envelope) != nil || len(envelope["data"]) == 0 || bytes.Equal(bytes.TrimSpace(envelope["data"]), []byte("null")) ||
+		envelope["error"] != nil || envelope["code"] != nil {
+		return nil, errors.New("public response lacks successful data")
+	}
+	return envelope["data"], nil
+}
+func (c *apiClient) csrf(ctx context.Context) (string, error) {
+	raw, e := c.request(ctx, http.MethodGet, "/api/v1/auth/csrf", nil, "", "", 200)
+	if e != nil {
+		return "", e
+	}
+	var out struct {
+		Token string `json:"token"`
+	}
+	if strictDecode(raw, &out) != nil || out.Token == "" || len(out.Token) > 256 || strings.ContainsAny(out.Token, "\r\n\x00") {
+		return "", errors.New("CSRF bootstrap failed")
+	}
+	return out.Token, nil
+}
+func (c *apiClient) post(ctx context.Context, path string, value any, key string, want int) ([]byte, error) {
+	token, e := c.csrf(ctx)
+	if e != nil {
+		return nil, e
+	}
+	var body []byte
+	if value != nil {
+		body, e = json.Marshal(value)
+		if e != nil {
+			return nil, errors.New("request encoding failed")
+		}
+	}
+	return c.request(ctx, http.MethodPost, path, body, token, key, want)
+}
+func decodeAdmin(raw []byte) (string, error) {
+	var out struct {
+		User struct {
+			ID    string `json:"id"`
+			Admin bool   `json:"is_platform_admin"`
+		} `json:"user"`
+		Audience string `json:"audience"`
+	}
+	if json.Unmarshal(raw, &out) != nil || !uuidPattern.MatchString(out.User.ID) || !out.User.Admin || out.Audience != "admin" {
+		return "", errors.New("current installed Admin identity is required")
+	}
+	return out.User.ID, nil
+}
+func (c *apiClient) currentAdmin(ctx context.Context) (string, error) {
+	raw, e := c.request(ctx, http.MethodGet, "/api/v1/me", nil, "", "", 200)
+	if e != nil {
+		return "", e
+	}
+	return decodeAdmin(raw)
+}
+func (c *apiClient) scoped(path string) string {
+	return registryRoot + path + "?" + url.Values{"workspace_id": {c.config.WorkspaceID}}.Encode()
+}
+func (c *apiClient) catalog(ctx context.Context) error {
+	raw, e := c.request(ctx, http.MethodGet, c.scoped("/release-images"), nil, "", "", 200)
+	if e != nil {
+		return e
+	}
+	var images []struct {
+		ID       string   `json:"id"`
+		Manifest string   `json:"manifest_digest"`
+		Config   string   `json:"config_digest"`
+		Bytes    int64    `json:"archive_bytes"`
+		Licenses []string `json:"licenses"`
+	}
+	if strictDecode(raw, &images) != nil || images == nil {
+		return errors.New("invalid signed release catalog")
+	}
+	found := 0
+	for _, image := range images {
+		if image.ID != c.config.Asset.ID {
+			continue
+		}
+		found++
+		actual, want := append([]string(nil), image.Licenses...), append([]string(nil), c.config.Asset.Licenses...)
+		slices.Sort(actual)
+		slices.Sort(want)
+		if image.Manifest != c.config.Asset.ManifestDigest || image.Config != c.config.Asset.ConfigDigest ||
+			image.Bytes != c.config.Asset.SourceArchiveBytes || !slices.Equal(actual, want) {
+			return errors.New("catalog differs from the release owner's approved asset")
+		}
+	}
+	if found != 1 {
+		return errors.New("approved release asset is absent or ambiguous")
+	}
+	return nil
+}
+func (c *apiClient) requireEmptyWorkspace(ctx context.Context) error {
+	raw, e := c.request(ctx, http.MethodGet, c.scoped("/pins"), nil, "", "", 200)
+	if e != nil {
+		return e
+	}
+	var page struct {
+		Items []json.RawMessage `json:"items"`
+		Next  *string           `json:"next_cursor"`
+	}
+	var fields map[string]json.RawMessage
+	_ = json.Unmarshal(raw, &fields)
+	if strictDecode(raw, &page) != nil || fields["next_cursor"] == nil || page.Items == nil || len(page.Items) != 0 || page.Next != nil {
+		return errors.New("acceptance requires an empty disposable Workspace pin list")
+	}
+	return nil
+}
+func (c *apiClient) decodePin(raw []byte, expectedID string) (pin, error) {
+	var p pin
+	if exactKeys(raw, "id", "workspace_id", "asset_id", "state", "manifest_digest", "config_digest", "archive_sha256", "archive_bytes", "revision", "created_at", "updated_at") != nil ||
+		strictDecode(raw, &p) != nil || !uuidPattern.MatchString(p.ID) || (expectedID != "" && p.ID != expectedID) ||
+		p.WorkspaceID != c.config.WorkspaceID || p.AssetID != c.config.Asset.ID || p.ManifestDigest == nil || *p.ManifestDigest != c.config.Asset.ManifestDigest ||
+		p.ConfigDigest == nil || *p.ConfigDigest != c.config.Asset.ConfigDigest || p.ArchiveSHA256 == nil || *p.ArchiveSHA256 != c.config.Asset.TransportArchiveSHA256 ||
+		p.ArchiveBytes == nil || *p.ArchiveBytes != c.config.Asset.TransportArchiveBytes || p.Revision < 1 || p.CreatedAt.IsZero() || p.UpdatedAt.IsZero() {
+		return pin{}, errors.New("pin readback differs from the owned scope or approved artifact")
+	}
+	return p, nil
+}
+func (c *apiClient) getPin(ctx context.Context, id string) (pin, error) {
+	if !uuidPattern.MatchString(id) {
+		return pin{}, errors.New("invalid owned pin identity")
+	}
+	raw, e := c.request(ctx, http.MethodGet, c.scoped("/pins/"+id), nil, "", "", 200)
+	if e != nil {
+		return pin{}, e
+	}
+	return c.decodePin(raw, id)
+}
+func (c *apiClient) importPin(ctx context.Context, key string) (pin, error) {
+	raw, e := c.post(ctx, c.scoped("/pins"), map[string]any{"acknowledge_licenses": true, "asset_id": c.config.Asset.ID, "reason": "Verify the approved installed release image through the normal Admin flow"}, key, 201)
+	if e != nil {
+		return pin{}, e
+	}
+	p, e := c.decodePin(raw, "")
+	if e != nil {
+		return pin{}, e
+	}
+	if p.State != "ready" {
+		return pin{}, errors.New("import did not commit a ready pin")
+	}
+	return p, nil
+}
+func (c *apiClient) requireUnused(ctx context.Context, id string) error {
+	raw, e := c.request(ctx, http.MethodGet, c.scoped("/pins/"+id+"/references"), nil, "", "", 200)
+	if e != nil {
+		return e
+	}
+	var refs struct {
+		Deployments []json.RawMessage `json:"deployments"`
+		Offline     []json.RawMessage `json:"offline"`
+	}
+	if strictDecode(raw, &refs) != nil || refs.Deployments == nil || refs.Offline == nil || len(refs.Deployments) != 0 || len(refs.Offline) != 0 {
+		return errors.New("owned pin is referenced; leave it for its current owner")
+	}
+	return nil
+}

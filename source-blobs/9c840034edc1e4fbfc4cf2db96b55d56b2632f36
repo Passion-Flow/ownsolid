@@ -1,0 +1,28 @@
+"""Take both Linux locks and admit one bounded scoped-audit verification."""
+# SCI_OLD_ADMISSION_CLOSED_2026_11_13
+__import__('sys').stderr.write('NOTRUN: SCI old admission is closed pending coordinator epoch activation.\n')
+raise SystemExit(78)
+import fcntl,json,os,stat,subprocess,sys
+from pathlib import Path
+fds=[]
+try:
+    for path in ['/run/lock/ownsolid-heavy.lock',str(Path.home()/'lane-sci-tools/heavy-test.lock')]:
+        fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW);fds.append(fd)
+        info=os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.getuid(): raise SystemExit('unsafe Linux lock carrier')
+        try: fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:
+            print('Linux verification slot busy; no queue started',flush=True);raise SystemExit(75)
+    memory={line.split(':',1)[0]:int(line.split()[1]) for line in Path('/proc/meminfo').read_text().splitlines() if len(line.split())>=2}
+    pressure=next(line for line in Path('/proc/pressure/io').read_text().splitlines() if line.startswith('full '))
+    psi={key:float(value) for key,value in (item.split('=') for item in pressure.split()[1:])}
+    disk=os.statvfs(str(Path.home()))
+    state={'free_mib':memory['MemFree']//1024,'available_mib':memory['MemAvailable']//1024,'disk_gib':disk.f_bavail*disk.f_frsize//(1<<30),'io_avg10':psi['avg10'],'io_avg60':psi['avg60']}
+    print(json.dumps(state),flush=True)
+    if state['free_mib']<3072 or state['available_mib']<12288 or state['disk_gib']<15 or psi['avg10']>5 or psi['avg60']>5:
+        print('Resource admission refused; no queue started',flush=True);raise SystemExit(75)
+    if subprocess.run(['pgrep','-x','cargo|rustc|compile|link|chrome-headless'],stdout=subprocess.DEVNULL).returncode==0:
+        print('Competing build detected; no queue started',flush=True);raise SystemExit(75)
+    raise SystemExit(subprocess.call(['bash',str(Path.home()/'lane-sci-tools/aud108-scoped/run.sh')],pass_fds=tuple(fds)))
+finally:
+    for fd in reversed(fds):os.close(fd)

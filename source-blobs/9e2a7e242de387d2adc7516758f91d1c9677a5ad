@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+proof=${1:?private proof root required}
+expected=${2:?exact candidate HEAD required}
+shift 2
+cd "$HOME/lane-trn"
+if [[ $# == 0 ]]; then set -- pg check build modules runtime; fi
+for phase in "$@"; do
+  [[ $(git rev-parse HEAD) == "$expected" ]]
+  [[ -z $(git status --porcelain) ]]
+  printf 'candidate=%s phase=%s\n' "$expected" "$phase"
+  case "$phase" in
+    pg)
+      python3 -B "$proof/preflight_cpu_prototype.py" "$proof"
+      bash "$HOME/lane-trn-tools/run-training-cell-regression.sh"
+      ;;
+    check|build|modules|runtime)
+      bash "$HOME/lane-trn-tools/run-cpu-admission-gates.sh" "$proof" "$phase"
+      ;;
+    *) echo 'Invalid training acceptance phase' >&2; exit 2;;
+  esac
+  printf 'passed_candidate=%s phase=%s\n' "$expected" "$phase"
+done

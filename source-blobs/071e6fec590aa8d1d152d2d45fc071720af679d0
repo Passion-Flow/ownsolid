@@ -1,0 +1,390 @@
+package main
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"time"
+	"unicode/utf8"
+)
+
+type sessionState struct {
+	Format               string         `json:"format"`
+	SourceCommit         string         `json:"source_commit"`
+	Origin               string         `json:"origin"`
+	ActorID              string         `json:"actor_id"`
+	ConfigurationSHA256  string         `json:"configuration_sha256"`
+	Cookies              []*http.Cookie `json:"cookies"`
+	PinID                string         `json:"pin_id"`
+	ImportKey            string         `json:"import_key"`
+	RemoveKey            string         `json:"remove_key"`
+	ReconcileKey         string         `json:"reconcile_key"`
+	CleanupComplete      bool           `json:"cleanup_complete"`
+	ImportIntentRecorded bool           `json:"import_intent_recorded"`
+}
+type driver struct {
+	api     *apiClient
+	state   sessionState
+	diskSHA string
+}
+
+func privateSessionDirectory(path string) error {
+	parent, err := os.OpenFile(filepath.Dir(path), os.O_RDONLY|syscall.O_NOFOLLOW, 0)
+	if err != nil {
+		return errors.New("session parent must be an existing private directory")
+	}
+	defer parent.Close()
+	info, err := parent.Stat()
+	if err != nil || !info.IsDir() || info.Mode().Perm()&0077 != 0 {
+		return errors.New("session parent must be private to its owner")
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || st.Uid != uint32(os.Geteuid()) {
+		return errors.New("session parent has a different owner")
+	}
+	return nil
+}
+
+func newID() (string, error) {
+	var raw [16]byte
+	if _, e := rand.Read(raw[:]); e != nil {
+		return "", errors.New("could not allocate mutation identity")
+	}
+	raw[6] = (raw[6] & 15) | 64
+	raw[8] = (raw[8] & 63) | 128
+	value := hex.EncodeToString(raw[:])
+	return value[:8] + "-" + value[8:12] + "-" + value[12:16] + "-" + value[16:20] + "-" + value[20:], nil
+}
+func (c configuration) fingerprint() string { raw, _ := json.Marshal(c); return sha(raw) }
+func (d *driver) load() error {
+	if err := privateSessionDirectory(d.api.config.SessionFile); err != nil {
+		return err
+	}
+	raw, e := protectedRead(d.api.config.SessionFile, 65536, true)
+	if e != nil {
+		return e
+	}
+	if strictDecode(raw, &d.state) != nil || d.state.Format != stateFormat || d.state.SourceCommit != d.api.config.SourceCommit ||
+		d.state.Origin != d.api.origin.String() || d.state.ConfigurationSHA256 != d.api.config.fingerprint() ||
+		!uuidPattern.MatchString(d.state.ActorID) || !uuidPattern.MatchString(d.state.ImportKey) || !uuidPattern.MatchString(d.state.RemoveKey) ||
+		(d.state.ReconcileKey != "" && !uuidPattern.MatchString(d.state.ReconcileKey)) || (d.state.PinID != "" && !uuidPattern.MatchString(d.state.PinID)) ||
+		(d.state.PinID != "" && !d.state.ImportIntentRecorded) || (d.state.CleanupComplete && d.state.PinID == "") ||
+		len(d.state.Cookies) == 0 || len(d.state.Cookies) > 16 {
+		return errors.New("session is outside this registry driver, source, origin or input")
+	}
+	for _, cookie := range d.state.Cookies {
+		if cookie == nil || cookie.Valid() != nil || cookie.Name == "" || len(cookie.Value) > 16384 {
+			return errors.New("invalid protected session cookie")
+		}
+		// Go Jar.Cookies serializes only the outbound name/value projection.
+		cookie.Path = "/"
+		cookie.Secure = true
+		cookie.Domain = ""
+	}
+	d.api.http.Jar.SetCookies(d.api.origin, d.state.Cookies)
+	d.diskSHA = sha(raw)
+	return nil
+}
+func (d *driver) save(create bool) error {
+	path := d.api.config.SessionFile
+	if err := privateSessionDirectory(path); err != nil {
+		return err
+	}
+	d.state.Cookies = d.api.http.Jar.Cookies(d.api.origin)
+	raw, e := json.Marshal(d.state)
+	if e != nil || len(raw) > 65536 {
+		return errors.New("owned session could not be encoded")
+	}
+	if create {
+		file, e := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+		if e != nil {
+			return errors.New("session file must be a new independent path")
+		}
+		_, writeErr := file.Write(raw)
+		syncErr := file.Sync()
+		closeErr := file.Close()
+		if writeErr != nil || syncErr != nil || closeErr != nil {
+			return errors.New("new owned session write did not complete")
+		}
+	} else {
+		before, e := protectedRead(path, 65536, true)
+		if e != nil || sha(before) != d.diskSHA {
+			return errors.New("owned session changed; refuse to overwrite another actor")
+		}
+		file, e := os.CreateTemp(filepath.Dir(path), ".obs-registry-state-")
+		if e != nil {
+			return errors.New("owned session staging failed")
+		}
+		name := file.Name()
+		defer os.Remove(name)
+		_, writeErr := file.Write(raw)
+		syncErr := file.Sync()
+		closeErr := file.Close()
+		if writeErr != nil || syncErr != nil || closeErr != nil {
+			return errors.New("owned session staging did not complete")
+		}
+		// The coordinator grants one actor for this dedicated file and phase.
+		before, e = protectedRead(path, 65536, true)
+		if e != nil || sha(before) != d.diskSHA {
+			return errors.New("owned session changed before publication")
+		}
+		if os.Rename(name, path) != nil {
+			return errors.New("owned session publication failed")
+		}
+	}
+	parent, e := os.Open(filepath.Dir(path))
+	if e != nil {
+		return errors.New("owned session directory is unavailable")
+	}
+	syncErr := parent.Sync()
+	closeErr := parent.Close()
+	if syncErr != nil || closeErr != nil {
+		return errors.New("owned session directory sync failed")
+	}
+	d.diskSHA = sha(raw)
+	return nil
+}
+func (d *driver) authenticate(ctx context.Context) error {
+	actor, e := d.api.currentAdmin(ctx)
+	if e != nil {
+		return e
+	}
+	if actor != d.state.ActorID {
+		return errors.New("current Admin differs from the independent session actor")
+	}
+	return nil
+}
+func (d *driver) logoutRequest(ctx context.Context) error {
+	_, e := d.api.post(ctx, "/api/v1/auth/logout", nil, "", 204)
+	return e
+}
+func (d *driver) initialize(ctx context.Context) error {
+	if err := privateSessionDirectory(d.api.config.SessionFile); err != nil {
+		return err
+	}
+	if _, e := os.Lstat(d.api.config.SessionFile); !os.IsNotExist(e) {
+		return errors.New("init requires a fresh independent session file; old sessions are forbidden")
+	}
+	secret, e := protectedRead(d.api.config.PasswordFile, 4097, true)
+	if e != nil {
+		return errors.New("new instance password file is unavailable")
+	}
+	password := strings.TrimSuffix(strings.TrimSuffix(string(secret), "\n"), "\r")
+	if password == "" || len(password) > 4096 || !utf8.ValidString(password) {
+		return errors.New("new instance password input is empty or invalid")
+	}
+	persisted := false
+	defer func() {
+		if !persisted {
+			_ = d.logoutRequest(ctx)
+		}
+	}()
+	raw, e := d.api.post(ctx, "/api/v1/auth/login", map[string]string{"email": d.api.config.Email, "password": password}, "", 200)
+	if e != nil {
+		return e
+	}
+	actor, e := decodeAdmin(raw)
+	if e != nil {
+		return e
+	}
+	keys := make([]string, 2)
+	for i := range keys {
+		keys[i], e = newID()
+		if e != nil {
+			return e
+		}
+	}
+	d.state = sessionState{Format: stateFormat, SourceCommit: d.api.config.SourceCommit, Origin: d.api.origin.String(), ActorID: actor,
+		ConfigurationSHA256: d.api.config.fingerprint(), ImportKey: keys[0], RemoveKey: keys[1]}
+	if e = d.save(true); e != nil {
+		return e
+	}
+	persisted = true
+	return nil
+}
+func (d *driver) verify(ctx context.Context) error {
+	if d.state.PinID != "" {
+		return errors.New("verify already owns a pin; use cleanup rather than create another")
+	}
+	if !d.state.ImportIntentRecorded {
+		if e := d.api.catalog(ctx); e != nil {
+			return e
+		}
+		if e := d.api.requireEmptyWorkspace(ctx); e != nil {
+			return e
+		}
+		// This records permission to retry the same key, not evidence of delivery.
+		d.state.ImportIntentRecorded = true
+		if e := d.save(false); e != nil {
+			return e
+		}
+	}
+	p, e := d.api.importPin(ctx, d.state.ImportKey)
+	if e != nil {
+		return e
+	}
+	d.state.PinID = p.ID
+	if e = d.save(false); e != nil {
+		return e
+	}
+	observed, e := d.api.getPin(ctx, p.ID)
+	if e != nil {
+		return e
+	}
+	if observed.State != "ready" {
+		return errors.New("committed pin readback is not ready")
+	}
+	replay, e := d.api.importPin(ctx, d.state.ImportKey)
+	if e != nil {
+		return e
+	}
+	if replay.ID != p.ID {
+		return errors.New("idempotent replay changed the owned pin identity")
+	}
+	return nil
+}
+func (d *driver) cleanup(ctx context.Context) error {
+	if d.state.PinID == "" {
+		return errors.New("no acknowledged owned pin; do not guess or delete another resource")
+	}
+	p, e := d.api.getPin(ctx, d.state.PinID)
+	if e != nil {
+		return e
+	}
+	if p.State == "deleted" {
+		d.state.CleanupComplete = true
+		return nil
+	}
+	if p.State != "ready" && p.State != "deleting" {
+		return errors.New("owned pin needs explicit Registry recovery")
+	}
+	if e = d.api.requireUnused(ctx, p.ID); e != nil {
+		return e
+	}
+	action, key := "remove", d.state.RemoveKey
+	if p.State == "deleting" {
+		action = "reconcile-removal"
+		key, e = newID()
+		if e != nil {
+			return e
+		}
+		d.state.ReconcileKey = key
+		if e = d.save(false); e != nil {
+			return e
+		}
+	}
+	raw, e := d.api.post(ctx, d.api.scoped("/pins/"+p.ID+"/"+action), map[string]string{"reason": "Remove only the pin created by this installed release acceptance"}, key, 200)
+	if e != nil {
+		return e
+	}
+	removed, e := d.api.decodePin(raw, p.ID)
+	if e != nil {
+		return e
+	}
+	if removed.State != "deleted" {
+		return errors.New("owned pin removal is not confirmed")
+	}
+	confirmed, e := d.api.getPin(ctx, p.ID)
+	if e != nil {
+		return e
+	}
+	if confirmed.State != "deleted" {
+		return errors.New("owned pin deletion readback changed")
+	}
+	d.state.CleanupComplete = true
+	return nil
+}
+func (d *driver) logout(ctx context.Context) error {
+	if d.state.ImportIntentRecorded && d.state.PinID == "" {
+		return errors.New("resolve the recorded import key before logout; its outcome is unacknowledged")
+	}
+	if d.state.PinID != "" {
+		p, e := d.api.getPin(ctx, d.state.PinID)
+		if e != nil {
+			return e
+		}
+		if p.State != "deleted" {
+			return errors.New("clean up the exact owned pin before logout")
+		}
+	}
+	if e := d.logoutRequest(ctx); e != nil {
+		return e
+	}
+	raw, e := protectedRead(d.api.config.SessionFile, 65536, true)
+	if e != nil || sha(raw) != d.diskSHA {
+		return errors.New("owned session changed; refuse to remove it")
+	}
+	if os.Remove(d.api.config.SessionFile) != nil {
+		return errors.New("owned session removal failed")
+	}
+	return nil
+}
+func (d *driver) run(ctx context.Context, mode string) (err error) {
+	if mode == "init" {
+		return d.initialize(ctx)
+	}
+	if mode != "verify" && mode != "cleanup" && mode != "logout" {
+		return errors.New("choose init, verify, cleanup or logout")
+	}
+	if err = d.load(); err != nil {
+		return err
+	}
+	if err = d.authenticate(ctx); err != nil {
+		return err
+	}
+	if mode == "logout" {
+		return d.logout(ctx)
+	}
+	defer func() {
+		if saved := d.save(false); saved != nil && err == nil {
+			err = saved
+		}
+	}()
+	if mode == "verify" {
+		return d.verify(ctx)
+	}
+	return d.cleanup(ctx)
+}
+func main() {
+	input := flag.String("config", "", "Protected input file; credentials are file references")
+	mode := flag.String("mode", "", "init, verify, cleanup or logout")
+	flag.Parse()
+	report := map[string]any{"scope": "Normal Admin Registry client only; no native/installed qualification without coordinator source and instance evidence", "mode": *mode, "passed": false}
+	c, e := loadConfiguration(*input)
+	if e == nil {
+		var api *apiClient
+		api, e = newAPIClient(c)
+		if e == nil {
+			defer api.close()
+			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.PhaseSeconds)*time.Second)
+			defer cancel()
+			d := &driver{api: api}
+			e = d.run(ctx, *mode)
+			report["declared_source_commit"] = c.SourceCommit
+			report["declared_release_manifest_sha256"] = c.ReleaseManifestSHA256
+			report["asset_id"] = c.Asset.ID
+			report["owned_pin_id"] = d.state.PinID
+			report["requests"] = api.requests
+			report["cleanup_complete"] = d.state.CleanupComplete
+		}
+	}
+	if e != nil {
+		report["error"] = e.Error()
+	} else {
+		report["passed"] = true
+	}
+	raw, _ := json.MarshalIndent(report, "", "  ")
+	fmt.Println(string(raw))
+	if e != nil {
+		os.Exit(1)
+	}
+}

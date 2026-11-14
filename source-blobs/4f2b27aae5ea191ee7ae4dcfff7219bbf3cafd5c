@@ -1,0 +1,38 @@
+#!/bin/bash
+set -euo pipefail
+gate=$LANE_REL_AUDIT_GATE
+cd "$LANE_REL_TEST_ROOT"
+git rev-parse HEAD > "$gate/revision"
+rc=0
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  make check && make build && go -C tools/cli test ./... -count=1
+' > "$gate/check-build.log" 2>&1 || rc=$?
+printf '%s\n' "$rc" > "$gate/check-build.exit"
+test "$rc" = 0
+python3 - <<'PY'
+from pathlib import Path
+from subprocess import check_output
+for name in ("go.work.sum", "tools/audit-verify/audit-verify"):
+    if not check_output(["git", "ls-files", "--", name]):
+        Path(name).unlink(missing_ok=True)
+PY
+git diff --check HEAD^^..HEAD
+test -z "$(git status --porcelain)"
+git update-ref refs/codex/handoff/lane-rel-audit-stack-build HEAD
+for attempt in $(seq 1 30); do
+  if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+  sleep 5
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+export PATH="$gate:$PATH" GOFLAGS="-p=2 -exec=$gate/run-go-test"
+rc=0
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  umask 022
+  timeout --kill-after=30 22m taskset -c 0-7 make test
+' > "$gate/test.log" 2>&1 || rc=$?
+printf '%s\n' "$rc" > "$gate/test.exit"
+exit "$rc"

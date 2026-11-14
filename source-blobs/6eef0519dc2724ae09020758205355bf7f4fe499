@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "status": "prepared_not_executed",
+  "files": {
+    "accepted-fixture.diff": {
+      "bytes": 3928,
+      "sha256": "f265abe1ca411f79730be73fe9ff66ad48758978df49b4d0aa48c2757cd84548"
+    },
+    "config.json": {
+      "bytes": 917,
+      "sha256": "efac4a20bd4be8941a008a19fa52d5015120c3c6243e5467eb63f440719d534e"
+    },
+    "entry.sh": {
+      "bytes": 681,
+      "sha256": "6fa7a2aa825dbd3e27209319c7653394540126ff7e30cf0149bdd0965dcb4343"
+    },
+    "event-fixture.diff": {
+      "bytes": 3991,
+      "sha256": "f4e9f403f6fadc123262aaab0936cbf19c4ef37d198d104468533c1399b5709e"
+    },
+    "local-review.log": {
+      "bytes": 2602,
+      "sha256": "ea0fb370516180258e9b8112d41683cf235436a476a59d1cf06e5b91c84248f1"
+    },
+    "original-accepted-fixture.sh": {
+      "bytes": 3153,
+      "sha256": "8293475c3bdbeed24733c81d0a96e8ad9b5b4dffe8c0ff998753c1a54091656b"
+    },
+    "original-fixture.sh": {
+      "bytes": 3223,
+      "sha256": "35b4f4381ae5b3c7a052d952d3fd38876db5d2632d9432513895e05357431925"
+    },
+    "original-parent.py": {
+      "bytes": 4905,
+      "sha256": "dc3f6f5eb9d35dc421e06101a7ce1cdab1adfe329b283901948a0c949b6dc3a1"
+    },
+    "parent.diff": {
+      "bytes": 34056,
+      "sha256": "786eec10bae5253a0a907f5657945ec1fa6507c3957e2265405877482f095ef8"
+    },
+    "reader_native_bounded.py": {
+      "bytes": 28608,
+      "sha256": "0304baaa4cd97f4f8870786e7fa34cd2f4751eb4290a38e497f5d5dbb10b636f"
+    },
+    "review.md": {
+      "bytes": 6002,
+      "sha256": "94599dc833c2821e2c0cc6672e7823a761e1d4408d46ef3a270af778d25d8248"
+    },
+    "server-input-check.log": {
+      "bytes": 151,
+      "sha256": "9ccb4cb633dae8db504cebc01fd3c2800367d043ef0b92cc596d9f60c0e8674d"
+    },
+    "test_reader_native_bounded.py": {
+      "bytes": 20531,
+      "sha256": "ecd5bd0a4bdc9cf18161390d63f47e3b257910a1ad83291b6720446d8398e1cc"
+    },
+    "validation.json": {
+      "bytes": 846,
+      "sha256": "40f3e7204303d96c2dda703cb937c7b6a4fb859bcad33280131f3f0fb7b377af"
+    }
+  }
+}

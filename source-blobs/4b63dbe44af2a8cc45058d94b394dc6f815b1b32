@@ -1,0 +1,26 @@
+# SCH-108 quota status candidate
+
+Local authored commit: 5f0195fbb84d095e4517e5b92f6c87ffd4342af1.
+It is not on main and is not a completed roadmap item. Go and real PostgreSQL
+qualification of this commit are pending the shared Linux resource window.
+
+The production identity dispatcher and API/Web contract are unchanged.
+The earlier review packet is at quota-status-handoff.qK1Drwtm beside this file.
+Its source-head is the implementation's parent and its README predates this
+commit; preserve it as an original review packet. Its IAM patch still passes
+git apply --check against the current dispatcher. It has not been compiled,
+installed or exercised through production authentication.
+
+The new module is a real scoped quota accounting reader with an authenticated
+HTTP component. It reports configured limits and held reservations only. It
+does not establish a selected job's current queue/placement explanation.
+Training retains its dispatch and transaction ownership; ARC retains formal
+schema numbering, role grants and fresh/restored catalog admission.
+
+Pending focused runner: quota-status-target.sh. It uses an isolated
+network-none PostgreSQL container and a loopback-only network namespace,
+then runs six new top-level tests and three affected usage-reader regressions.
+Follow with quota-status-remaining-gate.sh for check, build and modules
+only after the focused test passes. Each runner must acquire the shared
+Linux lock and lane lock and pass resource preflight. Preserve DEL/TRN/OBS
+priority; do not queue these runners ahead of their current window.

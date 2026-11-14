@@ -1,0 +1,35 @@
+from pathlib import Path
+import subprocess,shutil,json,os,hashlib,difflib
+w=Path('/root/lane-rel-identity-audit-contract');r=Path('/root/lane-rel-tools/identity-audit-contract');p=r/'projection-work'
+assert not p.exists();p.mkdir()
+for name in ['web-api.mjs','web-help.mjs','openapi-paths.mjs']:
+ dest=p/'tools/codegen'/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(w/'tools/codegen'/name,dest)
+shutil.copytree(w/'api/openapi/v1',p/'api/openapi/v1')
+for package in ['api','help']:
+ dest=p/'web/packages'/package;dest.mkdir(parents=True)
+ shutil.copyfile(w/'web/packages'/package/'package.json',dest/'package.json')
+ cache=Path('/root/lane-rel/web/packages')/package/'node_modules';assert cache.is_dir();(dest/'node_modules').symlink_to(cache)
+help=p/'web/packages/help';shutil.copytree(w/'web/packages/help/locales',help/'locales');shutil.copyfile(w/'web/packages/help/articles.json',help/'articles.json')
+translations=help/'locales/zh-cn/api-descriptions.json';d=json.loads(translations.read_text());addition=json.loads((r/'relay/locales/zh-cn/api-descriptions.json').read_text());assert len(addition)==1 and not set(addition)&set(d);d.update(addition);translations.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+env=os.environ.copy();env['NODE_OPTIONS']='--max-old-space-size=512'
+commands=[]
+for name,arguments in [('web-api.mjs',[]),('web-help.mjs',[]),('web-api.mjs',['--check']),('web-help.mjs',['--check'])]:
+ command=['/root/lane-rel-tools/node/bin/node',str(p/'tools/codegen'/name),*arguments]
+ run=subprocess.run(command,cwd=p,text=True,capture_output=True,env=env,timeout=40);commands.append({'tool':name,'arguments':arguments,'exit':run.returncode,'stdout':run.stdout,'stderr':run.stderr})
+ if run.returncode:(r/'projection-failure.json').write_text(json.dumps(commands,indent=2)+'\n');raise RuntimeError(name+' failed: '+run.stderr[-1800:])
+changed=[];patch=[]
+paths=[Path('web/packages/help/locales/zh-cn/api-descriptions.json')]
+for base in ['web/packages/api/src/gen','web/packages/help/src/gen']:paths.extend(q.relative_to(p) for q in (p/base).rglob('*') if q.is_file())
+for name in sorted(set(paths)):
+ before=w/name;after=p/name
+ assert before.is_file(),name
+ if before.read_bytes()==after.read_bytes():continue
+ changed.append(str(name));patch.extend(difflib.unified_diff(before.read_text().splitlines(keepends=True),after.read_text().splitlines(keepends=True),fromfile='a/'+str(name),tofile='b/'+str(name)))
+expected={'web/packages/api/src/gen/identity.ts','web/packages/help/locales/zh-cn/api-descriptions.json','web/packages/help/src/gen/api/console/identity.json','web/packages/help/src/gen/contracts/console/identity.json','web/packages/help/src/gen/locales/zh-cn/api-descriptions.json'}
+assert set(changed)==expected,changed
+summary=json.loads((p/'web/packages/help/src/gen/api/console/identity.json').read_text());op=next(x for x in summary['operations'] if x['id']=='listAuditEvents')
+assert op['errors']['409']==['STORAGE_COMMIT_OUTCOME_UNKNOWN'];cursor=next(x for x in op['parameters'] if x['name']=='cursor');assert 'only explicitly' in cursor['description']
+portal=json.loads((p/'web/packages/help/src/gen/api/portal/identity.json').read_text());assert not any(x['id']=='listAuditEvents' for x in portal['operations'])
+assert subprocess.check_output(['git','-C',str(w),'diff','--name-only','--','web'],text=True)==''
+relay=r/'relay';(relay/'web-owner.patch').write_text(''.join(patch));proof={'contract_sha256':hashlib.sha256((w/'api/openapi/v1/identity/openapi.json').read_bytes()).hexdigest(),'commands':commands,'changed_web_paths':changed,'patch_sha256':hashlib.sha256((relay/'web-owner.patch').read_bytes()).hexdigest(),'product_web_changed':False,'private_projection_only':True,'admin_409_and_description_verified':True,'portal_exclusion_verified':True,'make_generate_in_product_run':False}
+(r/'projection-proof.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof,indent=2))

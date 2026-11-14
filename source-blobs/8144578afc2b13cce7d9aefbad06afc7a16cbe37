@@ -1,0 +1,28 @@
+{
+  "root": "/root/lane-trn-data-decoder.xgweuk5f",
+  "wheel": "/root/lane-trn-data-decoder.xgweuk5f/wheels/pyarrow-26.0.1-cp312-cp312-manylinux_2_28_x86_64.whl",
+  "sha256": "c718bf97a92a6dea97fd1062c3b9f9e2e83cb9cc926e752289fa4ffff41738f9",
+  "bytes": 55043763,
+  "lock_sha256": "a5ea20e99bf445feae6ad62d3aca859cea13bda27e632a9aad35b9ac64eb16d3",
+  "source_version": "26.0.1",
+  "phase": "verified connected preparation only; no install or test yet",
+  "bootstrap_pip": {
+    "path": "/root/lane-trn-tools/retained-inputs/pip-26.2.1-py3-none-any.whl",
+    "sha256": "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e",
+    "bytes": 1816632,
+    "version": "26.2.1",
+    "installed_into_fixture": false
+  },
+  "installed": {
+    "interpreter": "/root/lane-trn-data-decoder.xgweuk5f/venv/bin/python3.12",
+    "observed": {
+      "python": "3.12.3",
+      "pyarrow": "26.0.1",
+      "notices": [
+        "pyarrow-26.0.1.dist-info/licenses/LICENSE.txt",
+        "pyarrow-26.0.1.dist-info/licenses/NOTICE.txt"
+      ]
+    },
+    "network_namespace": "none"
+  }
+}

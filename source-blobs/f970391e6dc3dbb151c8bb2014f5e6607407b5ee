@@ -1,0 +1,17 @@
+{
+  "scope": "Second independently allocated Linux unit admission; refusal only",
+  "recorded_at": "2026-11-12T16:31:28.673891+00:00",
+  "platform": "Linux/x86_64",
+  "source_commit": "3cebfcef9f321364862a11d8b773c714facb6f68",
+  "source_tree": "0f5c800140e1036a157de62ba4c339b4e2780468",
+  "helper_sha256": "c60fbeba55bf54bdf61fa44d702ecc651a5005b6cad4f775c398668ecab127d6",
+  "exit_code": 75,
+  "reason": "global-heavy-lock busy",
+  "compilation_started": false,
+  "tests_started": false,
+  "native_started": false,
+  "resource_preflight_reached": false,
+  "source_still_clean": true,
+  "log_sha256": "b421e92461e1331f7f051fd5c57fa5aa27089d5c3b2faf4821bd2af691da21be",
+  "record_origin": "Recorded after the completed frozen helper; original check.log unchanged"
+}

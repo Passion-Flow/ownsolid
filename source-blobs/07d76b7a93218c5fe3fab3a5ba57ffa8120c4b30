@@ -1,0 +1,75 @@
+{
+  "status": "controlled-client-qualified-cross-built-not-installed",
+  "installed_input_ready": false,
+  "selected_source_directory": "/root/lane-obs-tools/installed-registry-driver-v5",
+  "source_manifest": "/root/lane-obs-tools/installed-registry-driver-v5/source-inputs.json",
+  "source_manifest_sha256": "800a63ca0f5b56418cac5d6bbacad5826305b130a7ab5a7b10071b89d0df7f84",
+  "source_archive_local": "/private/tmp/obs102-installed-registry-ppgfe6ls/source-v5.tar",
+  "source_archive_sha256": "1a904372e8ca094b6c4f6db84883b17dee3a2bc08cf301221baf1c55b4843358",
+  "source_archive_bytes": 81920,
+  "reviewed_contract_commit": "38aad60337d3e696cd3536bab932b100c9013a45",
+  "native_binary": "/root/lane-obs-tools/obs-short-validation-kk2e5xc6/installed-registry-linux-amd64",
+  "verification": {
+    "gofmt": "passed",
+    "compilation": "Mac Go1.27.3 linux/amd64 CGO0 cross-build passed; binary not executed",
+    "client_units": "Mac darwin/arm64 race p2: 16 top-level, 18 pass events, zero fail/skip",
+    "installed_requests": "none",
+    "linux_admission_attempts": 0,
+    "proof": "/root/lane-obs-tools/obs-short-validation-kk2e5xc6/proof.json",
+    "proof_sha256": "e7311787dc0bc7307b34c21d146440b43e5ec0f13030442b08af2bca7f2b3564"
+  },
+  "required_materials_before_selection": [
+    "new actual installed fixture and control source/binary/instance binding",
+    "actually approved signed release asset and independent trust/license/digest/size evidence",
+    "fresh local Admin credentials and new independent session_file in a private directory",
+    "known disposable empty Workspace pin list",
+    "independent owner verification of the private site source receipt",
+    "selected resource window before history exclusive quiet-count phase"
+  ],
+  "phases": [
+    "init",
+    "verify",
+    "cleanup",
+    "logout"
+  ],
+  "public_routes": {
+    "csrf": "GET /api/v1/auth/csrf",
+    "login": "POST /api/v1/auth/login",
+    "me": "GET /api/v1/me",
+    "catalog": "GET /api/v1/admin/image-registry/release-images",
+    "pins": "GET/POST /api/v1/admin/image-registry/pins",
+    "readback": "GET /api/v1/admin/image-registry/pins/{owned_id}",
+    "references": "GET /api/v1/admin/image-registry/pins/{owned_id}/references",
+    "cleanup": "POST /api/v1/admin/image-registry/pins/{owned_id}/remove or reconcile-removal",
+    "logout": "POST /api/v1/auth/logout"
+  },
+  "custody": {
+    "session_format": "ownsolid-installed-registry-v1",
+    "init": "O_EXCL new path; refuses preexisting files or other driver formats",
+    "unknown_import": "record intent before first request; resolve exact same key without guessing a pin",
+    "cleanup": "only acknowledged scoped pin; refuse held references; deleted metadata alone does not acknowledge local cleanup",
+    "files": "no direct CAS, database or unknown-row deletion; only remove the session file created by this driver"
+  },
+  "schedule": {
+    "optional": true,
+    "must_not_delay": "GW120/Help/Scope/CLI",
+    "all_configuration_pin_writes_and_cleanup": "before history exclusive quiet-count phase",
+    "parallel_with_history": false,
+    "history_actor": "existing sole driver; no second actor; do not reuse old 4463 session"
+  },
+  "qualifications_not_claimed": [
+    "server authentication or permissions from controlled client tests",
+    "PostgreSQL or Registry durability from controlled client replies",
+    "private site source receipt from public Pin fields",
+    "installed release qualification or NET-102 completion",
+    "a current main make check/build result"
+  ],
+  "archive_receipts": {
+    "source": "original approved signed asset SHA-256 and byte count; public catalog exposes its size only",
+    "transport": "independently derived WriteTagless SHA-256 and byte count; public Pin exposes these",
+    "derivation": "use the existing production library on the same actual approved source; no assumed equality or handwritten repacker"
+  },
+  "supersedes_unqualified_draft": "/root/lane-obs-tools/installed-registry-driver-v3",
+  "native_binary_sha256": "6727bd1e310c74f32eb3325a5f395f6e1aa6754a376d1170701de0b02ed8b124",
+  "native_binary_bytes": 10438146
+}

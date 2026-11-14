@@ -1,0 +1,8 @@
+{
+  "kind": "projectone-node-join-target-isolated-v1",
+  "engine": "mysql",
+  "database": "m20_repository_00000000000000000000_test",
+  "username": "synthetic_scope_user",
+  "connection_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "disposable": true
+}

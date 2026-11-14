@@ -1,0 +1,19 @@
+# Unpublished model version history prototype
+
+This isolated OpenAPI 3.1 / v1 candidate changes no product contract or route.
+It reuses the existing immutable model-version ID, catalogs and dataset-lineage
+shapes. Family UUIDs in tests are explicit synthetic owner inputs, never inferred
+from a name, model_key, catalog digest or derivation parent.
+
+The list is a bounded metadata page; the separate historical detail admits ready
+and retired metadata. Existing ready-only ModelVersion and Portal/list shapes remain unchanged.
+The prototype Admin detail adds one optional owner-supplied family_id; old
+responses may omit it and remain valid. Deployment and training continue to select the exact
+immutable version ID and must run their original admission.
+
+The model-owner-decisions.json file lists domain inputs required before a public
+contract or storage/route implementation is finalized. No ordinal version number,
+family backfill, execution permission, second lineage store or route success is
+invented here. The owner must provide durable membership, current scope and
+retained graph reads. Prototype SDK generation and wire receipts are separate
+from real PostgreSQL, dispatcher and S-202 qualification.

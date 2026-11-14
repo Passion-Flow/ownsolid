@@ -1,0 +1,86 @@
+# DAT-101 source-receipt handoff after schema 59
+
+Original candidate: fa82645ca49811521872df90450dad858816b71f.
+Current comparison base: 4f76102ca99328e0b9063eb05b0352e62501e154
+(schema 59, 119 registered tables). This package does not assign a migration
+number, register a release object, change production routes, or claim a new
+schema-59 replay. ARC owns the actual next number and shared integration.
+
+## Exact inputs
+
+The three ordered patches retain their original author and commit message:
+242ee3f5 (streamed source, durable original, scoped draft/report/inspection),
+409db07d (restored original and normalized custody), fa82645c (site/cell scope).
+The last patch alone depends on the previous two. Inspect them against the
+current main tree; do not restore an old tree over unrelated current changes.
+source/ contains every differing dataset-module path against the comparison
+base, plus the topic research note. source-manifest.json binds the original
+Git blob, byte count and SHA-256 for each file. No runtime, model, wheel,
+customer data, signing key or new dependency is included.
+
+sql/ contains byte-for-byte unnumbered up/down SQL from fa82645c. The up
+adds dataset_draft_import_scope_key over the existing dataset_drafts tenant,
+workspace, dataset, draft, site and cell; the receipt FK uses all six fields.
+The table is initially empty. Existing drafts keep their normalized data and
+metadata without fabricated original files or import reports. Down drops
+only this table and the newly added parent key. Keep the first 59 migration
+bytes unchanged and preserve audit-chain / policy checkpoint contracts.
+
+## Transaction and storage dependencies
+
+The PostgreSQL adapter needs an existing dataset Service, selected transaction
+Store, private dataset Store namespace, configured draft processor and typed
+policy. SourceImporter streams input and normalizes under bounded source,
+output, row and deadline policies. Parquet additionally requires an admitted,
+hash-locked offline PyArrow interpreter. The existing JSONL draft path remains.
+
+Use authenticated server tenant/workspace and current membership/delegated
+authority. Lock the selected local dataset before any upload-body read; take
+site/cell from local_site_id()/local_cell_id(), and receipt scope from the
+exact local draft. Refuse foreign drafts before replay/body reads. Recheck
+authority and capacity in the final owner transaction. Draft, inspection job,
+receipt and audit commit together in that transaction. Private original and
+normalized bytes are verified and synced before the SQL reference commits.
+On a lost commit acknowledgement preserve that attempt's files and reconcile
+with the same idempotency key; do not report success from an unknown commit.
+No sidecar database owns the authoritative report.
+
+Read/replay requires current authorization and matching six-field scope, then
+verifies both original and normalized counts and SHA-256 against the persisted
+report and draft. The report endpoint and upload composition are opt-in module
+fixtures, not production routes. Installed runtime grants, coordinated release
+catalog and public API composition remain shared-owner integration work.
+
+## Restore and inventory boundary
+
+The candidate normalized source is discoverable through the existing private
+snapshot/reference inventory. The CSV/Parquet original is a supplemental object
+in the isolated replay. Production backup must include BOTH source paths,
+counts and hashes in snapshotReferences/referenceFiles and restore verification
+before enabling a public import/report route. Include the receipt table in the
+release catalog / scoped runtime grants and restored metadata inventory. Require
+missing/corrupt original, missing/corrupt normalized file, missing/changed report,
+foreign workspace/site/cell and old-session refusals before restored readiness.
+A valid six-field FK in a fixture is not a production backup acceptance result.
+
+## Precisely bounded prior evidence
+
+prior-proof/ preserves original logs, not a new run. The original isolated
+PostgreSQL 18.6 + PyArrow 26.0.1 full tagged dataset suite used predecessor
+f83a9fde plus audit candidate 4380fb94 and alias candidate c9654657 before
+DAT-101. Their concatenated predecessor SQL SHA-256 is
+b8df9e9c7a6f90225f3ffdd8fd6ed7980834974e3451d159656783014ae34c58.
+The focused receipt/restore replay on the 1881ae27 base passed. Read the
+preserved logs and source research for exact run scope; the small object-digest
+note alone explicitly records a decoder-only check, not a database restore run.
+The restored authorized report and legacy JSONL matched; scope FK / explicit
+null refusal, foreign idempotency/body-read refusal, missing and same-length
+corrupted original/normalized refusal were exercised in that isolated fixture.
+
+These old overlays and table counts are not schema-59 catalog fingerprints.
+No fresh schema-59 migration, runtime-grant, coordinated backup/restore or
+installed UI result is asserted. Reuse the retained decoder and fixtures;
+do not rebuild them or rerun unchanged cases merely to replace a timestamp.
+ARC must exercise the changed current production migration/catalog/grant and
+coordinated backup boundary on its exact final source. Preserve scoped failure
+messages and retry behavior. DAT-101's full public path stays open until then.

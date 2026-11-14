@@ -1,0 +1,37 @@
+{
+  "child_sha256": "95364631b0dec6cd8b0ec4f77be3f33f8300d5d42db0a6e81b68e00a85c6c837",
+  "cleanup_errors": [],
+  "commands": [],
+  "config_sha256": "a32b5a153af633780d7b1dec13128f05b8b4c5c9d83991524efb9aa332909524",
+  "elapsed_seconds": 0.10045436408836395,
+  "error": "Refused: Host memory gate failed",
+  "exit": 1,
+  "heavy_leases": "Not opened for lightweight private unit tests",
+  "launcher_joined": true,
+  "parent_pid": 3621127,
+  "private_tmpfs_lifetime": "Private tmpfs is discarded when its namespace PID 1 exits; no host test directory is created",
+  "scope": "Filesystem-only actual installer units; controlled command fixtures, no Docker/Control/image/DB/listener/installed flow/egress capture",
+  "source": {
+    "base": "c6d5d1c1dbedef3774a7f8862f119ce464f3e240",
+    "binary_sha256": "de5d6635221c2b377742a1a70f520b91dce869cc6ab0f38b701c22919d869309",
+    "candidate": "d2ca13940b9d224fb35ed6ac295dbe56ba08b17f",
+    "canonical_sha256": "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca",
+    "files": {
+      "deploy/offline/README.md": "b733bcc8dff7d9667bf67c35869ae98dbf0cc895e1047a2e730e4461d60b6301",
+      "deploy/offline/internal/install/apply.go": "cad52245efbc62010a7a4f595b456c0082261c459581e7e11cb449484f285ec6",
+      "deploy/offline/internal/install/entrance_listeners_test.go": "6e9887a3ba12a82db8ad5832e1eeb8dfd190471c324ac87605eabbc80b0c29c6",
+      "deploy/offline/internal/install/listener_compatibility.go": "b4b90ac821cbd9da1646a56f9dbbfd1798dfed726e6ec8ce6c644b933d21721c",
+      "deploy/offline/internal/install/listener_tls_preview_test.go": "0cf528f0d9faa4df61bba68dfeda5d121b056dc2a3e197347cf3b0eec5c56cfb",
+      "deploy/offline/internal/install/materialize.go": "25f82b001438c897ea5450e276b46418b38bf9edb37e557150b7bc8db2b7372e",
+      "deploy/offline/internal/install/serving_transport.go": "3200288d926652c7864f689d0d5b52260fa8b29aee44fcf29c9baf40c27a3b86",
+      "deploy/offline/internal/install/tls.go": "21d87ebcb603f9d7f46e0893f6e51e6d69e8a4fcbb4df0aad9b615798585152b",
+      "docs/research/installer-entrance-listeners.md": "03c88ae7db60ff2e75fddf9e834f85990ba2a8887112b6fde50dfa9a74e4dab6"
+    },
+    "installer_sha256": "cef8df1e450583dd9c23d6b0f1d237ec7e707b27a722ddcc8913213e72936b32",
+    "scope": "Own installer source only; no changed Control source, image or installed qualification",
+    "tree": "f063ce8ef5338dd559a0b7e24d64eb722f2376cd"
+  },
+  "status": "failed",
+  "work_status": "failed",
+  "wrapper_sha256": "05e423a4979664df08ab126f4c261b3c3c67e7d7c7e88e503cd5d1aeced42b5e"
+}

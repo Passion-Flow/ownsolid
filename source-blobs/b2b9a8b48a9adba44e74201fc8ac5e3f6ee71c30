@@ -1,0 +1,56 @@
+set -euo pipefail
+source ~/lane-rel-tools/env
+scratch=$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp
+export GOWORK=off GOMAXPROCS=2 GOFLAGS=-p=1
+cat > "$scratch/sdk/gen/go/monitoring/history_test.go" <<'GO'
+package monitoring
+
+import (
+    "encoding/json"
+    "testing"
+    "time"
+
+    "github.com/google/uuid"
+)
+
+func TestCanonicalHistoryRequestAndUnsignedCounts(t *testing.T) {
+    from, to := "2026-11-12T00:00:00Z", "2026-11-12T00:01:00Z"
+    workspace := uuid.MustParse("e4ec68f4-3d6a-4d66-9ba5-b6831c190054")
+    request, err := NewAdminFleetHistoryRequest("https://admin.example.invalid", "default", "default", &AdminFleetHistoryParams{
+        WorkspaceId: workspace, From: from, To: to,
+    })
+    if err != nil { t.Fatal(err) }
+    query := request.URL.Query()
+    if len(query) != 3 || query.Get("from") != from || query.Get("to") != to || query.Get("workspace_id") != workspace.String() {
+        t.Fatalf("the generated request changed the canonical query: %v", query)
+    }
+    point := FleetHistoryPoint{At: time.Unix(0, 0).UTC(), Observed: ^uint64(0), Reachable: 0}
+    wire, err := json.Marshal(point)
+    if err != nil { t.Fatal(err) }
+    var restored FleetHistoryPoint
+    if err = json.Unmarshal(wire, &restored); err != nil { t.Fatal(err) }
+    if restored != point { t.Fatal("the generated model changed an unsigned count or measured zero") }
+}
+GO
+timeout 120 env GOPROXY=https://goproxy.cn go -C "$scratch/sdk/gen/go" mod download
+unshare -n bash -ec '
+ip link set lo up
+test "$(wc -l < /proc/net/route)" -eq 1
+export GOPROXY=off
+go -C "$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp/sdk/gen/go" test ./monitoring -count=1 -v
+PYTHONPATH="$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp/sdk/gen/python" "$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp/python/bin/python" - <<'PY'
+from uuid import UUID
+from ownsolid_sdk.monitoring.api.default.admin_fleet_history import _get_kwargs
+from ownsolid_sdk.monitoring.models.fleet_history_point import FleetHistoryPoint
+
+workspace = UUID("e4ec68f4-3d6a-4d66-9ba5-b6831c190054")
+start, end = "2026-11-12T00:00:00Z", "2026-11-12T00:01:00Z"
+request = _get_kwargs("default", "default", workspace_id=workspace, from_=start, to=end)
+assert request["params"] == {"workspace_id": str(workspace), "from": start, "to": end}
+assert request["url"] == "/api/v1/sites/default/cells/default/admin/monitoring/fleet-history"
+point = FleetHistoryPoint.from_dict({"at": start, "observed": 2**64 - 1, "reachable": 0})
+assert point.observed == 2**64 - 1 and point.reachable == 0
+print("Python canonical query, unsigned counts and measured zero passed")
+PY
+'
+

@@ -1,0 +1,12 @@
+{
+  "api_compatibility_source": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+  "sdk_audit_read_source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+  "reviewed_main": "d99dbb25acf24897252717e8f724ded321e7338b",
+  "candidate_merge_tree": "04264f4bf9337e6e2875dd880d589076786db5c6",
+  "main_with_sdk_candidate_tree": "e9cfa9784ebadfc55575c2b1818eb3743fc4256d",
+  "main_with_api_compatibility_tree": "0ca278aa9d457eea13c132a23d1bef1545584803",
+  "merge_conflicts": false,
+  "kind": "Git three-way merge preview only; no branch changed, checkout/build/runtime or publication",
+  "full_repository_gates_passed": false,
+  "web_consumer_behavior_qualified": false
+}

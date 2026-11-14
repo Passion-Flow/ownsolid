@@ -1,0 +1,12 @@
+{
+  "event": "complete",
+  "binary_path": "/root/lane-rel-tools/lane-del-combination-4463bbe6/artifact-preparation-91fc9bc6/installed-history-linux-amd64",
+  "binary_bytes": 10505478,
+  "binary_sha256": "91fc9bc6962a5829613fb0cb8d0913995cef856ff0832bce95f6cc587199b708",
+  "gzip_sha256": "973cbd629b86a9b84e257a3d92a16c27d508d2cc28097ffa9eee990341124e7c",
+  "file": "/root/lane-rel-tools/lane-del-combination-4463bbe6/artifact-preparation-91fc9bc6/installed-history-linux-amd64: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, Go BuildID=lT4M4G93pS5KKLZJhEPi/pcYxA91jHWnDw0fYKO1a/8aq-J-qClLlbydQpU0aI/KBhsFyU4Tauvqz73fTQJ, BuildID[sha1]=33581f80583dbbcb8f6abd8ea486f16df37f8677, with debug_info, not stripped",
+  "source_sha256": "48ed1588c41cd4ffca484849166ef558be632acafb142b40486fb56f479a856b",
+  "source_test_sha256": "f77a6d8e1ae1983be5415a3d1937290b953ca664db18097f26f1305a1c933a2d",
+  "mac_proof_sha256": "8f7c695ec66af39dce486aa49a96f17a0c6ece9dccbd48358851b99e413b7bd7",
+  "boundary": "Artifact reception and ELF validation only; no compiler, services, locks or acceptance phases"
+}

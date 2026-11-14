@@ -1,0 +1,18 @@
+{
+  "published_source": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "schema_version": 59,
+  "table_count": 119,
+  "qualified_default_build_source": "a446ec580cf6dffc63df5d8269518f1ef8175d40",
+  "postgres_runtime": "Linux arm64 PostgreSQL 18.6/pgvector 0.8.7 network none on Darwin arm64",
+  "native_linux_amd64_same_sha_verification": "GW owner pending",
+  "old_prior_snapshot_reproduction_and_all_restore_evidence": "retained",
+  "hashes": {
+    "source.bundle": "fa701318291056b32a010de53a4e0a9da159d2540ea1eb1c3af3dd706371ddaf",
+    "up.sql": "399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab",
+    "down.sql": "61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86",
+    "source-equivalence.json": "640b74280d0096303296f918ebd6f3bab8b7222b9308680e34b4db628902aa46",
+    "final-check.log": "15127c50ce4967f4f9f32d6dbf4d9e9a1913a8ce1ec4062eecabe31b76155451",
+    "admission.json": "4a3e92dbd921d0d971ebcd1395329da32ed8e0dcf9b8b901f592123d667a76b4",
+    "qualification.md": "33735ac02ec5738d1acc6a319668b6a248c69d71fff114def592ba50a5165133"
+  }
+}

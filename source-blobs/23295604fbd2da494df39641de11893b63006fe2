@@ -1,0 +1,12 @@
+{
+  "candidate": "71902626dda10e4a1b3c555a69e09487f49ea243",
+  "tree": "c6bda2572c359438446c31a02143b914261d6e49",
+  "files_sha256": {
+    "sdk-generation-final-handoff.json": "7d13d982e9d18bfd2ba9a00058bca8faeb427b4d159e28607245b871a2a5b707",
+    "strict-json-and-admission-71902626.patch": "20e91904c24e0b9012d5c08f98ce9babc7c7699fbe925f01e1e461a136d0e170",
+    "strict-json-and-admission-71902626.bundle": "ea6214da37da95d1eca56c3515d8b9ab633161f9d9d44b8f2bd36f11c316ebc6"
+  },
+  "executed_37_worktree_unchanged": true,
+  "frozen_2e_worktree_unchanged": true,
+  "new_execution_started": false
+}

@@ -1,0 +1,37 @@
+# Apply potential regression label on issues
+name: issue-regression-label
+on:
+  issues:
+    types: [opened, edited]
+jobs:
+  add-regression-label:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check and manage regression label
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const regressionPattern = /\[x\] Select this option if this issue appears to be a regression\./i;
+            const isRegression = regressionPattern.test(body);
+            const issueNumber = context.payload.issue.number;
+
+            if (isRegression) {
+              await github.rest.issues.addLabels({
+                ...context.repo,
+                issue_number: issueNumber,
+                labels: ['potential-regression'],
+              });
+            } else {
+              try {
+                await github.rest.issues.removeLabel({
+                  ...context.repo,
+                  issue_number: issueNumber,
+                  name: 'potential-regression',
+                });
+              } catch (e) {
+                if (e.status !== 404) throw e;
+              }
+            }

@@ -1,0 +1,10 @@
+--- support-native-first-wait-60.py
++++ support-native-first-wait-60-executable.py
+@@ -160,6 +160,7 @@
+         fixture=Path(tempfile.mkdtemp(prefix='lane-del-support-',dir=config['fixture_parent']))
+         fixture.chmod(0o711)
+         (fixture/'bin').mkdir(mode=0o755)
++        (fixture/'bin').chmod(0o755)
+         (fixture/'tmp').mkdir(mode=0o700)
+         os.chown(fixture/'tmp',config['uid'],config['gid'])
+         for name in ['ownsolid-install','install.test']:

@@ -1,0 +1,741 @@
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_capabilities.go
+@@ -0,0 +1,104 @@
++package distribution
++
++import (
++	"context"
++	"database/sql"
++	"errors"
++
++	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
++	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// AliasCapabilityMetadata is a server-side projection of a verified target.
++// The tokenizer can impose a lower limit than ContextTokenCeiling.
++type AliasCapabilityMetadata struct {
++	AliasID                string
++	AliasRevision          int64
++	DeploymentID           string
++	DeploymentRevision     int64
++	VerifiedTextGeneration bool
++	ContextTokenCeiling    int
++}
++
++// AliasCapabilities returns evidence for the same alias visible to Admin or Portal.
++// A nil result means no verified capability metadata for that visible alias.
++func (s *Service) AliasCapabilities(ctx context.Context, a identity.Auth, workspace, id string) (*AliasCapabilityMetadata, error) {
++	if !wire.ValidID(id) {
++		return nil, fail("VALIDATION_FAILED")
++	}
++	var out *AliasCapabilityMetadata
++	err := s.transaction(ctx, a, workspace, false, nil, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
++		alias, err := visibleAliasWithin(ctx, tx, a, w, id)
++		if err != nil || tx.Dialect() != transaction.PostgreSQL || w.Status != "active" {
++			return err
++		}
++		if err := s.aliasReadiness(ctx, tx, w, &alias); err != nil || !alias.Available {
++			return err
++		}
++		out, err = s.aliasCapabilitiesWithin(ctx, tx, w, alias)
++		return err
++	})
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func aliasContextCeiling(kind, catalog string, recipe *string, policy int) int {
++	switch kind {
++	case "approved_base":
++		if recipe == nil && catalog == agentwire.ModelCatalogDigest() {
++			return min(agentwire.ApprovedModel().MaxContext, agentwire.ApprovedInferenceRecipe().MaximumContext, policy)
++		}
++	case agentwire.DerivedModelKind:
++		if recipe != nil && *recipe == agentwire.DerivedServingRecipeDigest() {
++			// Readiness has verified the exact derived catalogue, whose validator requires this limit.
++			return min(int(lifecycle.MaximumContextTokens), agentwire.ApprovedDerivedServingRecipe().MaximumContext, policy)
++		}
++	}
++	return 0
++}
++
++func (s *Service) aliasCapabilitiesWithin(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, alias Alias) (*AliasCapabilityMetadata, error) {
++	if tx.Dialect() != transaction.PostgreSQL || w.Status != "active" || !alias.Available {
++		return nil, nil
++	}
++	var kind, catalog string
++	var recipe *string
++	err := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
++		SELECT h.model_kind,h.catalog_digest,h.serving_recipe_sha256
++		FROM model_aliases a
++		JOIN model_alias_target_versions h ON h.tenant_id=a.tenant_id AND h.workspace_id=a.workspace_id
++			AND h.site_id=a.site_id AND h.cell_id=a.cell_id AND h.alias_id=a.id AND h.revision=a.revision
++			AND h.deployment_id=a.deployment_id AND h.deployment_revision=a.deployment_revision
++		JOIN deployments d ON d.tenant_id=h.tenant_id AND d.workspace_id=h.workspace_id
++			AND d.site_id=h.site_id AND d.cell_id=h.cell_id AND d.node_id=a.node_id
++			AND d.id=h.deployment_id AND d.revision=h.deployment_revision AND d.model_id=h.model_id
++			AND d.model_kind=h.model_kind AND d.catalog_digest=h.catalog_digest
++			AND d.serving_recipe_sha256 IS NOT DISTINCT FROM h.serving_recipe_sha256
++		JOIN model_versions m ON m.tenant_id=d.tenant_id AND m.workspace_id=d.workspace_id
++			AND m.site_id=d.site_id AND m.cell_id=d.cell_id AND m.id=d.model_id
++			AND m.kind=d.model_kind AND m.catalog_digest=d.catalog_digest AND m.state='ready'
++		WHERE a.tenant_id=$1 AND a.workspace_id=$2 AND a.id=$3 AND a.revision=$4
++			AND a.deployment_id=$5 AND a.deployment_revision=$6 AND a.node_id=$7
++			AND a.site_id=local_site_id() AND a.cell_id=local_cell_id()`,
++		w.TenantID, w.ID, alias.ID, alias.Revision, alias.DeploymentID, alias.DeploymentRevision, alias.NodeID)).Scan(&kind, &catalog, &recipe)
++	if errors.Is(err, sql.ErrNoRows) {
++		return nil, nil
++	}
++	if err != nil {
++		return nil, err
++	}
++	ceiling := aliasContextCeiling(kind, catalog, recipe, s.Identity.Config.Policy().Distribution.ContextTokens)
++	if ceiling > 0 {
++		return &AliasCapabilityMetadata{
++			AliasID: alias.ID, AliasRevision: alias.Revision, DeploymentID: alias.DeploymentID,
++			DeploymentRevision: alias.DeploymentRevision, VerifiedTextGeneration: true, ContextTokenCeiling: ceiling,
++		}, nil
++	}
++	return nil, nil
++}
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_reads.go
+@@ -0,0 +1,76 @@
++package distribution
++
++import (
++	"context"
++	"net/url"
++	"time"
++
++	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// AliasReadCapabilities describes verified generation evidence, not enabled API adapters.
++// The live tokenizer can enforce a smaller context than ContextTokenCeiling.
++type AliasReadCapabilities struct {
++	TextGenerationVerified bool `json:"text_generation_verified"`
++	ContextTokenCeiling    int  `json:"context_token_ceiling"`
++}
++
++// AliasReadView keeps optional read metadata out of machine and mutation responses.
++type AliasReadView struct {
++	Alias
++	Capabilities *AliasReadCapabilities `json:"capabilities,omitempty"`
++}
++
++func scanAliasRead(row transaction.Row) (AliasReadView, error) {
++	alias, err := scanAlias(row)
++	return AliasReadView{Alias: alias}, err
++}
++
++func (s *Service) prepareAliasRead(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, view *AliasReadView) error {
++	if err := s.publicAliasAvailability(ctx, tx, w, &view.Alias); err != nil {
++		return err
++	}
++	if !s.PublishAliasCapabilities {
++		return nil
++	}
++	metadata, err := s.aliasCapabilitiesWithin(ctx, tx, w, view.Alias)
++	if err != nil {
++		return err
++	}
++	if metadata != nil {
++		view.Capabilities = &AliasReadCapabilities{
++			TextGenerationVerified: metadata.VerifiedTextGeneration,
++			ContextTokenCeiling:    metadata.ContextTokenCeiling,
++		}
++	}
++	return nil
++}
++
++// ReadAliasPage returns human alias reads with their exact scoped evidence in one transaction.
++// Capability fields remain omitted until PublishAliasCapabilities is enabled at composition.
++func (s *Service) ReadAliasPage(ctx context.Context, a identity.Auth, workspace string, values url.Values) (Page[AliasReadView], error) {
++	return listPage(ctx, s, a, workspace, values, "", "aliases", "SELECT "+aliasFields+" FROM model_aliases a", "SELECT "+mysqlAliasFields+" FROM model_aliases a", "a", "a.created_at", "a.id", scanAliasRead, func(v AliasReadView) (time.Time, string) { return v.CreatedAt, v.ID }, s.prepareAliasRead)
++}
++
++// ReadAlias returns the visible human alias and optional evidence from one authorized transaction.
++func (s *Service) ReadAlias(ctx context.Context, a identity.Auth, workspace, id string) (AliasReadView, error) {
++	if !wire.ValidID(id) {
++		return AliasReadView{}, fail("VALIDATION_FAILED")
++	}
++	var out AliasReadView
++	err := s.transaction(ctx, a, workspace, false, nil, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
++		alias, err := visibleAliasWithin(ctx, tx, a, w, id)
++		if err != nil {
++			return err
++		}
++		out.Alias = alias
++		return s.prepareAliasRead(ctx, tx, w, &out)
++	})
++	if err != nil {
++		return AliasReadView{}, err
++	}
++	return out, nil
++}
+--- a/services/control/internal/modules/distribution/history.go
++++ b/services/control/internal/modules/distribution/history.go
+@@ -231,7 +231,7 @@
+ 	var out Alias
+ 	e := s.transaction(ctx, a, workspace, false, nil, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+ 		var e error
+-		out, e = scanAlias(tx.QueryRow(ctx, distributionNativeStatement(tx, "SELECT "+nativeAliasFields+" FROM MODEL_ALIASES WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=? AND (?=1 OR DISABLED_AT IS NULL)", []any{w.TenantID, w.ID, id, admin(a)}, "SELECT "+aliasFields+" FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND ($4 OR disabled_at IS NULL)", `SELECT `+mysqlAliasFields+` FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND id=? AND (? OR disabled_at IS NULL)`, []any{w.TenantID, w.ID, id, admin(a)}, []any{w.TenantID, w.ID, id, admin(a)})))
++		out, e = visibleAliasWithin(ctx, tx, a, w, id)
+ 		if e != nil {
+ 			return e
+ 		}
+@@ -242,6 +242,10 @@
+ 	}
+ 	return out, nil
+ }
++func visibleAliasWithin(ctx context.Context, tx transaction.Executor, a identity.Auth, w workspaces.Workspace, id string) (Alias, error) {
++	return scanAlias(tx.QueryRow(ctx, distributionNativeStatement(tx, "SELECT "+nativeAliasFields+" FROM MODEL_ALIASES WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=? AND (?=1 OR DISABLED_AT IS NULL)", []any{w.TenantID, w.ID, id, admin(a)}, "SELECT "+aliasFields+" FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND ($4 OR disabled_at IS NULL)", `SELECT `+mysqlAliasFields+` FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND id=? AND (? OR disabled_at IS NULL)`, []any{w.TenantID, w.ID, id, admin(a)}, []any{w.TenantID, w.ID, id, admin(a)})))
++}
++
+ func (s *Service) Key(ctx context.Context, a identity.Auth, workspace, id string) (APIKey, error) {
+ 	if !wire.ValidID(id) {
+ 		return APIKey{}, fail("VALIDATION_FAILED")
+--- a/services/control/internal/modules/distribution/http/human.go
++++ b/services/control/internal/modules/distribution/http/human.go
+@@ -101,7 +101,7 @@
+ 			v, e := h.Service.GatewayPage(r.Context(), a, workspace, r.URL.Query())
+ 			return v, 200, e
+ 		case "aliases":
+-			v, e := h.Service.AliasPage(r.Context(), a, workspace, r.URL.Query())
++			v, e := h.Service.ReadAliasPage(r.Context(), a, workspace, r.URL.Query())
+ 			return v, 200, e
+ 		case "keys":
+ 			v, e := h.Service.KeyPage(r.Context(), a, workspace, r.URL.Query())
+@@ -233,7 +233,7 @@
+ 			v, e := h.Service.Gateway(r.Context(), a, workspace, id)
+ 			return v, 200, e
+ 		case "aliases":
+-			v, e := h.Service.Alias(r.Context(), a, workspace, id)
++			v, e := h.Service.ReadAlias(r.Context(), a, workspace, id)
+ 			return v, 200, e
+ 		case "keys":
+ 			v, e := h.Service.Key(r.Context(), a, workspace, id)
+--- a/services/control/internal/modules/distribution/model.go
++++ b/services/control/internal/modules/distribution/model.go
+@@ -21,6 +21,9 @@
+ 	// Certificates signs the serving certificates of gateways agents run (ADR 0052). Only
+ 	// the agent path, which activates them, holds it.
+ 	Certificates *agentidentity.Authority
++	// PublishAliasCapabilities exposes the draft human read projection only after
++	// its public schema and generated clients are published. Set it at composition time.
++	PublishAliasCapabilities bool
+ }
+ 
+ type RecoveryChallenge struct {
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_capabilities_test.go
+@@ -0,0 +1,120 @@
++package distribution_test
++
++import (
++	"net/http"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
++	"github.com/google/uuid"
++)
++
++func TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget(t *testing.T) {
++	c := setup(t)
++	ctx := t.Context()
++	policy := c.s.Identity.Config.Policy()
++	policy.Distribution.ContextTokens = 1024
++	c.s.Identity.Config.Runtime = &policy
++	access := c.access(t)
++	alias := access.alias
++	assertKnown := func(actor identity.Auth, expected distribution.Alias) {
++		t.Helper()
++		got, err := c.s.AliasCapabilities(ctx, actor, expected.WorkspaceID, expected.ID)
++		want := distribution.AliasCapabilityMetadata{
++			AliasID: expected.ID, AliasRevision: expected.Revision, DeploymentID: expected.DeploymentID,
++			DeploymentRevision: expected.DeploymentRevision, VerifiedTextGeneration: true, ContextTokenCeiling: policy.Distribution.ContextTokens,
++		}
++		if err != nil || got == nil || *got != want {
++			t.Fatalf("capability did not describe the verified target: got %+v, err %v, want %+v", got, err, want)
++		}
++	}
++	assertUnknown := func(id string) {
++		t.Helper()
++		for _, actor := range []identity.Auth{c.a, access.owner} {
++			got, err := c.s.AliasCapabilities(ctx, actor, alias.WorkspaceID, id)
++			if err != nil || got != nil {
++				t.Fatalf("unverified target exposed metadata: %+v, %v", got, err)
++			}
++		}
++	}
++	assertRefused := func(actor identity.Auth, workspace, id, code string) {
++		t.Helper()
++		got, err := c.s.AliasCapabilities(ctx, actor, workspace, id)
++		if got != nil || err == nil || err.Error() != code {
++			t.Fatalf("alias visibility changed: expected %s, got %+v, %v", code, got, err)
++		}
++	}
++	assertKnown(c.a, alias)
++	assertKnown(access.owner, alias)
++
++	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
++	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
++	portal := httpfixture.New(t, server, "portal", schemas)
++	portal.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, http.StatusOK, "")
++	portal.Call(http.MethodGet, "/api/v1/workspaces/"+alias.WorkspaceID+"/distribution/aliases/"+alias.ID, nil, http.StatusOK, "ModelAliasResponse")
++
++	other, err := c.s.Workspaces.Create(ctx, c.a, "Synthetic separate workspace", c.a.Me.User.ID, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	assertRefused(c.a, other.ID, alias.ID, "MODEL_ALIAS_NOT_FOUND")
++	assertRefused(access.owner, other.ID, alias.ID, "RESOURCE_NOT_FOUND")
++	foreignTenant, foreignWorkspace := uuid.NewString(), uuid.NewString()
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign synthetic tenant','active')", foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Foreign synthetic workspace','active')", foreignWorkspace, foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	assertRefused(c.a, foreignWorkspace, alias.ID, "RESOURCE_NOT_FOUND")
++	assertRefused(access.owner, foreignWorkspace, alias.ID, "RESOURCE_NOT_FOUND")
++
++	legacy := uuid.NewString()
++	if _, err := c.s.DB.Exec(ctx, `INSERT INTO model_aliases
++		(id,tenant_id,workspace_id,node_id,gateway_id,name,deployment_id,deployment_revision,created_by,idempotency_key,fingerprint)
++		SELECT $1,tenant_id,workspace_id,node_id,gateway_id,'legacy-without-snapshot',deployment_id,deployment_revision,created_by,$2,fingerprint
++		FROM model_aliases WHERE id=$3`, legacy, uuid.NewString(), alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	legacyAlias, err := c.s.Alias(ctx, access.owner, alias.WorkspaceID, legacy)
++	if err != nil || !legacyAlias.Available {
++		t.Fatal("legacy fixture needs an otherwise callable alias", err)
++	}
++	assertUnknown(legacy)
++
++	if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET deployment_revision=deployment_revision+1 WHERE id=$1", alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	assertUnknown(alias.ID)
++	if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET deployment_revision=$2 WHERE id=$1", alias.ID, alias.DeploymentRevision); err != nil {
++		t.Fatal(err)
++	}
++
++	cutover := func(in distribution.CutoverRequest) distribution.Alias {
++		t.Helper()
++		in.Reason = "Synthetic capability qualification"
++		out, err := c.s.Cutover(ctx, c.a, alias.WorkspaceID, alias.ID, in, uuid.NewString(), uuid.NewString())
++		if err != nil {
++			t.Fatal(err)
++		}
++		return out.Alias
++	}
++	paused := cutover(distribution.CutoverRequest{Action: "pause", ExpectedRevision: alias.Revision})
++	if got, err := c.s.AliasCapabilities(ctx, c.a, alias.WorkspaceID, alias.ID); err != nil || got != nil {
++		t.Fatalf("paused alias exposed capability metadata: %+v, %v", got, err)
++	}
++	assertRefused(access.owner, alias.WorkspaceID, alias.ID, "MODEL_ALIAS_NOT_FOUND")
++	next := c.replaceBaseDeployment(t, alias.DeploymentID)
++	assertUnknown(legacy)
++	retargeted := cutover(distribution.CutoverRequest{
++		Action: "retarget", ExpectedRevision: paused.Revision, DeploymentID: &next.ID, DeploymentRevision: &next.Revision,
++	})
++	resumed := cutover(distribution.CutoverRequest{Action: "resume", ExpectedRevision: retargeted.Revision})
++	if resumed.DeploymentID != next.ID || resumed.DeploymentID == alias.DeploymentID {
++		t.Fatal("capability fixture did not change targets")
++	}
++	assertKnown(c.a, resumed)
++	assertKnown(access.owner, resumed)
++}
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_capability_recipe_test.go
+@@ -0,0 +1,33 @@
++package distribution
++
++import (
++	"strings"
++	"testing"
++
++	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++)
++
++func TestAliasContextCeilingRequiresRecognizedSource(t *testing.T) {
++	catalog := agentwire.ModelCatalogDigest()
++	derivedRecipe := agentwire.DerivedServingRecipeDigest()
++	unknown := strings.Repeat("a", 64)
++	for _, test := range []struct {
++		name, kind, catalog string
++		recipe              *string
++		want                int
++	}{
++		{"approved base", "approved_base", catalog, nil, 1024},
++		{"unknown base catalogue", "approved_base", unknown, nil, 0},
++		{"unexpected base recipe", "approved_base", catalog, &unknown, 0},
++		{"verified derived recipe", agentwire.DerivedModelKind, unknown, &derivedRecipe, 1024},
++		{"unrecognized derived recipe", agentwire.DerivedModelKind, unknown, &unknown, 0},
++		{"missing derived recipe", agentwire.DerivedModelKind, unknown, nil, 0},
++		{"unrecognized kind", "unrecognized", catalog, nil, 0},
++	} {
++		t.Run(test.name, func(t *testing.T) {
++			if got := aliasContextCeiling(test.kind, test.catalog, test.recipe, 1024); got != test.want {
++				t.Fatalf("got %d, want %d", got, test.want)
++			}
++		})
++	}
++}
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_capability_http_test.go
+@@ -0,0 +1,106 @@
++package distribution_test
++
++import (
++	"net/http"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
++	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
++	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++)
++
++func TestPostgresAliasCapabilityPublicContractBoundary(t *testing.T) {
++	c := setup(t)
++	ctx := t.Context()
++	alias := c.published(t)
++	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
++	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
++	admin := httpfixture.New(t, server, "admin", schemas)
++	portal := httpfixture.New(t, server, "portal", schemas)
++
++	const member = "capability-member@example.invalid"
++	invitation, err := c.s.Identity.Invite(ctx, c.a, "", "createInvitation", uuid.NewString(), member, "en", 0, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	password := fixture.Password()
++	if err := c.s.Identity.Register(ctx, fixture.InvitationToken(t, c.s.Identity, invitation.ID), "Synthetic capability member", password, uuid.NewString()); err != nil {
++		t.Fatal(err)
++	}
++	login := func(client *httpfixture.Client, email, password string) {
++		t.Helper()
++		client.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": email, "password": password}, http.StatusOK, "")
++	}
++	login(admin, "admin@example.invalid", c.password)
++	login(portal, member, password)
++
++	adminPath := func(workspace string) string {
++		return "/api/v1/admin/distribution/workspaces/" + workspace + "/aliases"
++	}
++	portalPath := func(workspace string) string { return "/api/v1/workspaces/" + workspace + "/distribution/aliases" }
++	view := func(client *httpfixture.Client, path string, paused bool) {
++		t.Helper()
++		assertAlias := func(value map[string]any) {
++			t.Helper()
++			_, added := value["capabilities"]
++			if value["id"] != alias.ID || value["deployment_id"] != alias.DeploymentID ||
++				value["deployment_revision"] != float64(alias.DeploymentRevision) || (value["disabled_at"] != nil) != paused || added {
++				t.Fatal("published alias response changed identity, visibility or capability fields")
++			}
++		}
++		assertAlias(client.Call(http.MethodGet, path+"/"+alias.ID, nil, http.StatusOK, "ModelAliasResponse"))
++		items := client.Call(http.MethodGet, path, nil, http.StatusOK, "ModelAliasPageResponse")["items"].([]any)
++		if len(items) != 1 {
++			t.Fatal("alias list returned an unexpected scope")
++		}
++		assertAlias(items[0].(map[string]any))
++	}
++	view(admin, adminPath(alias.WorkspaceID), false)
++	view(portal, portalPath(alias.WorkspaceID), false)
++
++	assertNotFound := func(client *httpfixture.Client, path, code string) {
++		t.Helper()
++		body := client.Call(http.MethodGet, path, nil, http.StatusNotFound, "Problem")
++		if body["code"] != code {
++			t.Fatalf("expected %s for inaccessible alias path, got %v", code, body["code"])
++		}
++	}
++	separate, err := c.s.Workspaces.Create(ctx, c.a, "Synthetic separate workspace", c.a.Me.User.ID, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	assertNotFound(portal, portalPath(separate.ID), "RESOURCE_NOT_FOUND")
++	assertNotFound(portal, portalPath(separate.ID)+"/"+alias.ID, "RESOURCE_NOT_FOUND")
++	assertNotFound(admin, adminPath(separate.ID)+"/"+alias.ID, "MODEL_ALIAS_NOT_FOUND")
++	if items := admin.Call(http.MethodGet, adminPath(separate.ID), nil, http.StatusOK, "ModelAliasPageResponse")["items"].([]any); len(items) != 0 {
++		t.Fatal("Admin alias list returned an alias from a different workspace")
++	}
++
++	foreignTenant, foreignWorkspace := uuid.NewString(), uuid.NewString()
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign synthetic tenant','active')", foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Foreign synthetic workspace','active')", foreignWorkspace, foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	for _, probe := range []struct {
++		client *httpfixture.Client
++		path   string
++	}{{admin, adminPath(foreignWorkspace)}, {portal, portalPath(foreignWorkspace)}} {
++		assertNotFound(probe.client, probe.path, "RESOURCE_NOT_FOUND")
++		assertNotFound(probe.client, probe.path+"/"+alias.ID, "RESOURCE_NOT_FOUND")
++	}
++
++	if _, err := c.s.Cutover(ctx, c.a, alias.WorkspaceID, alias.ID, distribution.CutoverRequest{
++		Action: "pause", ExpectedRevision: alias.Revision, Reason: "Synthetic alias visibility qualification",
++	}, uuid.NewString(), uuid.NewString()); err != nil {
++		t.Fatal(err)
++	}
++	view(admin, adminPath(alias.WorkspaceID), true)
++	assertNotFound(portal, portalPath(alias.WorkspaceID)+"/"+alias.ID, "MODEL_ALIAS_NOT_FOUND")
++	if items := portal.Call(http.MethodGet, portalPath(alias.WorkspaceID), nil, http.StatusOK, "ModelAliasPageResponse")["items"].([]any); len(items) != 0 {
++		t.Fatal("Portal alias list disclosed the paused alias")
++	}
++}
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_read_http_test.go
+@@ -0,0 +1,230 @@
++package distribution_test
++
++import (
++	"encoding/json"
++	"maps"
++	"net/http"
++	"net/url"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
++	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
++	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++)
++
++func TestPostgresAliasReadCapabilitiesAtRegisteredEntrances(t *testing.T) {
++	c := setup(t)
++	ctx := t.Context()
++	policy := c.s.Identity.Config.Policy()
++	policy.Distribution.ContextTokens = 1024
++	c.s.Identity.Config.Runtime = &policy
++	alias := c.published(t)
++	legacy := uuid.NewString()
++	if _, err := c.s.DB.Exec(ctx, `INSERT INTO model_aliases
++        (id,tenant_id,workspace_id,node_id,gateway_id,name,deployment_id,deployment_revision,created_by,idempotency_key,fingerprint)
++        SELECT $1,tenant_id,workspace_id,node_id,gateway_id,'legacy-read-without-snapshot',deployment_id,deployment_revision,created_by,$2,fingerprint
++        FROM model_aliases WHERE id=$3`, legacy, uuid.NewString(), alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	legacyAlias, err := c.s.Alias(ctx, c.a, alias.WorkspaceID, legacy)
++	if err != nil || !legacyAlias.Available {
++		t.Fatal("legacy fixture must remain callable without a snapshot", err)
++	}
++
++	handler := identityhttp.New(c.s.Identity)
++	// Enable the actual registered owner, not the separate fixture authority.
++	handler.Distribution.Service.PublishAliasCapabilities = true
++	server := httpfixture.NewTLSServer(t, handler)
++	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
++	admin := httpfixture.New(t, server, "admin", schemas)
++	portal := httpfixture.New(t, server, "portal", schemas)
++	invitation, err := c.s.Identity.Invite(ctx, c.a, "", "createInvitation", uuid.NewString(), "read-capability-member@example.invalid", "en", 0, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	password := fixture.Password()
++	if err := c.s.Identity.Register(ctx, fixture.InvitationToken(t, c.s.Identity, invitation.ID), "Synthetic read member", password, uuid.NewString()); err != nil {
++		t.Fatal(err)
++	}
++	admin.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, http.StatusOK, "")
++	portal.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": "read-capability-member@example.invalid", "password": password}, http.StatusOK, "")
++	adminPath := func(workspace string) string {
++		return "/api/v1/admin/distribution/workspaces/" + workspace + "/aliases"
++	}
++	portalPath := func(workspace string) string { return "/api/v1/workspaces/" + workspace + "/distribution/aliases" }
++	type expectation struct {
++		alias distribution.Alias
++		known bool
++	}
++	assertView := func(value map[string]any, want expectation) {
++		t.Helper()
++		// The draft adds exactly one optional closed object to the released read.
++		base := maps.Clone(value)
++		delete(base, "capabilities")
++		if err := schemas["ModelAlias"].Validate(base); err != nil {
++			t.Fatal("candidate changed the released alias fields", err)
++		}
++		if value["id"] != want.alias.ID || value["revision"] != float64(want.alias.Revision) ||
++			value["deployment_id"] != want.alias.DeploymentID || value["deployment_revision"] != float64(want.alias.DeploymentRevision) ||
++			(value["disabled_at"] != nil) != (want.alias.DisabledAt != nil) {
++			t.Fatal("capability view changed the exact alias or deployment")
++		}
++		raw, present := value["capabilities"]
++		if present != want.known {
++			t.Fatalf("capability presence: got %t, want %t", present, want.known)
++		}
++		if present {
++			capabilities, ok := raw.(map[string]any)
++			if !ok || len(capabilities) != 2 || capabilities["text_generation_verified"] != true ||
++				capabilities["context_token_ceiling"] != float64(policy.Distribution.ContextTokens) {
++				t.Fatal("capability object does not match DEV's exact draft contract")
++			}
++		}
++	}
++	verifyReads := func(client *httpfixture.Client, path string, wants map[string]expectation) {
++		t.Helper()
++		seen := map[string]bool{}
++		next := path + "?limit=1"
++		for page := 0; next != ""; page++ {
++			if page >= len(wants)+1 {
++				t.Fatal("alias cursor did not terminate")
++			}
++			result := client.Call(http.MethodGet, next, nil, http.StatusOK, "")
++			items := result["items"].([]any)
++			base := maps.Clone(result)
++			baseItems := make([]any, 0, len(items))
++			for _, item := range items {
++				value := item.(map[string]any)
++				id := value["id"].(string)
++				want, ok := wants[id]
++				if !ok || seen[id] {
++					t.Fatal("mixed alias page returned an unexpected or repeated identity")
++				}
++				seen[id] = true
++				assertView(value, want)
++				withoutCapabilities := maps.Clone(value)
++				delete(withoutCapabilities, "capabilities")
++				baseItems = append(baseItems, withoutCapabilities)
++			}
++			base["items"] = baseItems
++			if err := schemas["ModelAliasPageResponse"].Validate(map[string]any{"data": base}); err != nil {
++				t.Fatal("candidate changed the published page envelope", err)
++			}
++			next = ""
++			if result["next_cursor"] != nil {
++				next = path + "?limit=1&cursor=" + url.QueryEscape(result["next_cursor"].(string))
++			}
++		}
++		if len(seen) != len(wants) {
++			t.Fatal("mixed alias pages lost an authorized alias")
++		}
++		for id, want := range wants {
++			assertView(client.Call(http.MethodGet, path+"/"+id, nil, http.StatusOK, ""), want)
++		}
++	}
++	views := func(want distribution.Alias, known bool, portalHidden bool) {
++		t.Helper()
++		expected := map[string]expectation{legacy: {legacyAlias, false}, alias.ID: {want, known}}
++		verifyReads(admin, adminPath(alias.WorkspaceID), expected)
++		if portalHidden {
++			delete(expected, alias.ID)
++		}
++		verifyReads(portal, portalPath(alias.WorkspaceID), expected)
++	}
++	views(alias, true, false)
++
++	separate, err := c.s.Workspaces.Create(ctx, c.a, "Synthetic separate read workspace", c.a.Me.User.ID, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	foreignTenant, foreignWorkspace := uuid.NewString(), uuid.NewString()
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign synthetic tenant','active')", foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Foreign synthetic workspace','active')", foreignWorkspace, foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	for _, path := range []string{portalPath(separate.ID), portalPath(foreignWorkspace), adminPath(foreignWorkspace)} {
++		client := portal
++		if path == adminPath(foreignWorkspace) {
++			client = admin
++		}
++		for _, suffix := range []string{"", "/" + alias.ID} {
++			if body := client.Call(http.MethodGet, path+suffix, nil, http.StatusNotFound, "Problem"); body["code"] != "RESOURCE_NOT_FOUND" {
++				t.Fatal("candidate leaked a foreign scope")
++			}
++		}
++	}
++	verifyReads(admin, adminPath(separate.ID), map[string]expectation{})
++	admin.Call(http.MethodGet, adminPath(separate.ID)+"/"+alias.ID, nil, http.StatusNotFound, "Problem")
++
++	// Stale evidence is omitted without hiding the otherwise visible alias.
++	if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET deployment_revision=deployment_revision+1 WHERE id=$1", alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	stale := alias
++	stale.DeploymentRevision++
++	views(stale, false, false)
++	if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET deployment_revision=$2 WHERE id=$1", alias.ID, alias.DeploymentRevision); err != nil {
++		t.Fatal(err)
++	}
++
++	cutover := func(input distribution.CutoverRequest) distribution.Alias {
++		t.Helper()
++		input.Reason = "Synthetic read capability cutover"
++		admin.Headers = map[string]string{"Idempotency-Key": uuid.NewString()}
++		// Mutation responses retain the released closed alias component.
++		result := admin.Write(http.MethodPost, adminPath(alias.WorkspaceID)+"/"+alias.ID+"/cutovers", input, http.StatusOK, "AliasCutoverResultResponse")
++		raw, err := json.Marshal(result["alias"])
++		if err != nil {
++			t.Fatal(err)
++		}
++		var next distribution.Alias
++		if err := json.Unmarshal(raw, &next); err != nil {
++			t.Fatal(err)
++		}
++		return next
++	}
++	paused := cutover(distribution.CutoverRequest{Action: "pause", ExpectedRevision: alias.Revision})
++	views(paused, false, true)
++	if body := portal.Call(http.MethodGet, portalPath(alias.WorkspaceID)+"/"+alias.ID, nil, http.StatusNotFound, "Problem"); body["code"] != "MODEL_ALIAS_NOT_FOUND" {
++		t.Fatal("paused alias became visible to Portal")
++	}
++	replacement := c.replaceBaseDeployment(t, alias.DeploymentID)
++	retargeted := cutover(distribution.CutoverRequest{Action: "retarget", ExpectedRevision: paused.Revision, DeploymentID: &replacement.ID, DeploymentRevision: &replacement.Revision})
++	resumed := cutover(distribution.CutoverRequest{Action: "resume", ExpectedRevision: retargeted.Revision})
++	if resumed.DeploymentID == alias.DeploymentID {
++		t.Fatal("fixture did not change the target")
++	}
++	views(resumed, true, false)
++
++	// Default composition must not depend on the evidence query or change its contract.
++	if _, err := c.s.DB.Exec(ctx, "ALTER TABLE model_alias_target_versions RENAME TO synthetic_unavailable_capability_evidence"); err != nil {
++		t.Fatal(err)
++	}
++
++	handler.Distribution.Service.PublishAliasCapabilities = false
++	for _, probe := range []struct {
++		client *httpfixture.Client
++		path   string
++	}{{admin, adminPath(alias.WorkspaceID)}, {portal, portalPath(alias.WorkspaceID)}} {
++		probe.client.Call(http.MethodGet, probe.path, nil, http.StatusOK, "ModelAliasPageResponse")
++		probe.client.Call(http.MethodGet, probe.path+"/"+alias.ID, nil, http.StatusOK, "ModelAliasResponse")
++	}
++	handler.Distribution.Service.PublishAliasCapabilities = true
++	for _, probe := range []struct {
++		client *httpfixture.Client
++		path   string
++	}{{admin, adminPath(alias.WorkspaceID)}, {portal, portalPath(alias.WorkspaceID)}} {
++		for _, suffix := range []string{"", "/" + alias.ID} {
++			if problem := probe.client.Call(http.MethodGet, probe.path+suffix, nil, http.StatusServiceUnavailable, "Problem"); problem["code"] != "STORAGE_UNAVAILABLE" {
++				t.Fatal("failed evidence lookup was silently treated as absent")
++			}
++		}
++	}
++	if _, err := c.s.DB.Exec(ctx, "ALTER TABLE synthetic_unavailable_capability_evidence RENAME TO model_alias_target_versions"); err != nil {
++		t.Fatal(err)
++	}
++}

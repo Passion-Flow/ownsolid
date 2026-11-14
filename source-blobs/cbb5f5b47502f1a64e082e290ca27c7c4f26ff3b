@@ -1,0 +1,115 @@
+{
+  "platform": "linux/amd64",
+  "toolchain": "go version go1.27.3 linux/amd64",
+  "go_binary_sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b",
+  "preparation_manifest": "/root/lane-rel-tools/identity-audit-contract/linux-native-preparation.json",
+  "groups_in_order": [
+    {
+      "name": "audit-wire",
+      "source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+      "cwd": "/root/lane-rel-tools/identity-audit-contract/sdk/gen/go",
+      "fixture": "/root/lane-rel-identity-audit-contract/tools/codegen/sdk/tests/audit_read_wire_test.go",
+      "fixture_sha256": "6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821",
+      "expected_roots": [
+        "TestAuditRead409DoesNotRetry",
+        "TestAuditReadExplicitRetryIsANewRequest",
+        "TestStandardSharedGETCanReplayALostReply",
+        "TestAuditReadDoesNotReplayALostReplyOnASharedClient",
+        "TestAuditReadPreservesTLSAndCookies",
+        "TestAuditReadPreservesClientTimeout",
+        "TestAuditReadRefusesRedirects",
+        "TestAuditReadRejectsUninspectableExecutorsBeforeDispatch",
+        "TestOtherIdentityCallsRetainTheConfiguredExecutor",
+        "TestConcurrentAuditReadsRemainOneRequestEach"
+      ],
+      "expected_root_count": 10,
+      "environment": {
+        "GOWORK": "off",
+        "GOPROXY": "off",
+        "GOSUMDB": "off",
+        "GOTOOLCHAIN": "local",
+        "GOMAXPROCS": "2",
+        "GOFLAGS": "",
+        "CGO_ENABLED": "1",
+        "GOOS": "linux",
+        "GOARCH": "amd64",
+        "CC": "/usr/bin/gcc",
+        "GOMODCACHE": "/root/lane-rel-tools/gomod",
+        "GOCACHE": "/root/lane-rel-tools/gocache"
+      },
+      "command_argv": [
+        "/usr/bin/unshare",
+        "--net",
+        "/bin/bash",
+        "--noprofile",
+        "--norc",
+        "-euc",
+        "/usr/sbin/ip link set lo up\nexec /root/lane-rel-tools/go/bin/go test -json -race -count=1 -p=1 -mod=readonly -timeout=90s /root/lane-rel-identity-audit-contract/tools/codegen/sdk/tests/audit_read_wire_test.go"
+      ],
+      "log_path": "/root/lane-rel-tools/identity-audit-contract/go-wire-native-linux.log",
+      "compiled": false,
+      "executed": false,
+      "admission_held_by": "Existing coordinator parent; do not invoke before OBS hands off all four existing admission entries",
+      "qualification_scope": "Real generated audit transport over loopback HTTP/TLS",
+      "required_subtests": [
+        "TestAuditRead409DoesNotRetry/standard",
+        "TestAuditRead409DoesNotRetry/assistant",
+        "TestAuditReadDoesNotReplayALostReplyOnASharedClient/reply_lost_once",
+        "TestAuditReadDoesNotReplayALostReplyOnASharedClient/consecutive_replies_lost",
+        "TestAuditReadPreservesClientTimeout/client_timeout",
+        "TestAuditReadPreservesClientTimeout/caller_cancellation"
+      ]
+    },
+    {
+      "name": "history-codec",
+      "source": "6a2dd96fb392444de755db1cf5bfb771867064b0",
+      "cwd": "/root/lane-rel-tools/model-history-prototype/domain-draft/sdk/gen/go",
+      "fixture": "/root/lane-rel-tools/model-history-prototype/domain-draft/wire/go/history_wire_test.go",
+      "fixture_sha256": "66caf521ccef7b2aa1483f72465fe4d6b587459a818229f2b608164789cc3270",
+      "expected_roots": [
+        "TestHistoryQueryAndExactRows",
+        "TestReadyCompatibilityAndRetiredDetail",
+        "TestExplicitInvalidValuesAndProblemCodec"
+      ],
+      "expected_root_count": 3,
+      "environment": {
+        "GOWORK": "off",
+        "GOPROXY": "off",
+        "GOSUMDB": "off",
+        "GOTOOLCHAIN": "local",
+        "GOMAXPROCS": "2",
+        "GOFLAGS": "",
+        "CGO_ENABLED": "1",
+        "GOOS": "linux",
+        "GOARCH": "amd64",
+        "CC": "/usr/bin/gcc",
+        "GOMODCACHE": "/root/lane-rel-tools/gomod",
+        "GOCACHE": "/root/lane-rel-tools/gocache"
+      },
+      "command_argv": [
+        "/usr/bin/unshare",
+        "--net",
+        "/bin/bash",
+        "--noprofile",
+        "--norc",
+        "-euc",
+        "/usr/sbin/ip link set lo up\nexec /root/lane-rel-tools/go/bin/go test -json -race -count=1 -p=1 -mod=readonly -timeout=90s /root/lane-rel-tools/model-history-prototype/domain-draft/wire/go/history_wire_test.go"
+      ],
+      "log_path": "/root/lane-rel-tools/model-history-prototype/domain-draft/go-codec-native-linux.log",
+      "compiled": false,
+      "executed": false,
+      "admission_held_by": "Existing coordinator parent; do not invoke before OBS hands off all four existing admission entries",
+      "qualification_scope": "Private contract codec only; no dispatcher/auth/PostgreSQL/public API qualification"
+    }
+  ],
+  "host_admission_attempted": false,
+  "compile_or_test_started": false,
+  "mac_wait_outcome_unchanged": "Parent19003/FD3, assigned900-second wait expired, exit75; both Go groups actual0",
+  "must_not_invoke_legacy_self_admission_entry": "/root/lane-rel-tools/identity-audit-contract/run_go_wire.py",
+  "legacy_reason": "This historical entry owns three carriers itself; current four-entry priority and admission remain with the coordinator",
+  "no_new_guard_framework_or_source_package": true,
+  "no_docker_pg_control": true,
+  "secrets_required": false,
+  "requires_current_four_entry_coordinator_admission": true,
+  "current_priority_owner": "OBS; no admission was requested by lane D"
+}

@@ -1,0 +1,43 @@
+{
+  "worktrees": {
+    "/root/lane-gw": {
+      "head": "229b5c687b80cfc0ee80b9e69cb80ec0399b53ae",
+      "clean": true
+    },
+    "/root/lane-gw120-evidence": {
+      "head": "2a327420a3fc03c1ad6bbe4bb32f312abf818fca",
+      "clean": true
+    },
+    "/root/lane-gw104-read": {
+      "head": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+      "clean": true
+    }
+  },
+  "last_successful_workstation_main_fetch": "8123466c5a64b6424047f126815ae63100383bc6",
+  "linux_remote_note": "origin/main may remain older; use a successful fresh workstation fetch plus verified bundle import when Linux HTTPS auth is unavailable",
+  "GW120_independent": "36f66734fd465fa542c4f2099fd810ddb15a308e; direct parent 8123466c; only three documentation paths",
+  "GW120_native": "exact published 4f76102c: six description roots plus one runtime-principal root, Linux amd64, no skips; not the arm64 14-root/seven-history admission",
+  "GW120_web_handoff": "/root/lane-gw-acceptance/gateway-docs-schema60.sgvf5s31/web-handoff.json",
+  "GW120_docs_package": "/root/lane-gw-acceptance/gateway-docs-schema60.sgvf5s31",
+  "GW104_source": "219af27e; rebased to 8123466c; all nine owned Go files identical to 54d4ac26; new schema60 input still unexecuted",
+  "GW104_handoff": "/root/lane-gw-acceptance/gw104-schema60-handoff.hp2zlc1c",
+  "GW104_manual_entry": "bash /root/lane-gw-acceptance/gw104-schema60-handoff.hp2zlc1c/run.sh",
+  "GW104_new_execution": "not started; runner shell syntax validated only; four selected roots planned with exact DEV 7705c5a3/0.12.0 test-only overlay",
+  "GW104_new_coverage": "description edit/clear/historical replay keeps both registered reads, route revision and target snapshot",
+  "GW104_sequence": "GW backend off -> ARC typed startup wiring -> GW same-SHA owner/producer/read qualification -> DEV same-source schema/SDK/Web/Help publication; production enablement only with matching compiled contract",
+  "GW123": "2a327420: documentation only; all five reviewed gate/policy source hashes unchanged on 8123466c; ARC/AGT own actual fixes",
+  "publication": "three total nonblocking permanent Mac flock refusals, including one after schema60 rebase; no fetch/push command dispatched by any of those calls",
+  "Mac_gate_wrapper": "/private/tmp/ownsolid-gw-mac-gate.swf0ar5z/mac-gate.py",
+  "Mac_carrier": "/private/tmp/ownsolid-workstation-full-gate.lock; permanent regular file, same UID, O_NOFOLLOW, flock LOCK_EX|LOCK_NB; hold same FD through full gate/build/publication; close only",
+  "Mac_GW120_fast_publisher": "/private/tmp/ownsolid-gw120-evidence-publish.ohlzuvfa/publish-schema60.py; publishes 36f66734 only if fresh main equals 8123466c, otherwise exits without push",
+  "workstation_owner_archive": "/private/tmp/ownsolid-gw-owner-handoffs.6tvlydr0; verified both bundles/manifests and imported 54d4ac26 into a private Git ref",
+  "priority": "training rerun on new main and failed-subcase/module/runtime completion, then OBS client window; do not start a competing heavy job",
+  "last_resource_read": "751 GiB disk; MemFree 2828 MiB, MemAvailable 16364 MiB; I/O full avg10=6.64 >5 gate",
+  "own_runtime": "no new service/container/test process or host listener; no owned heavy lock; no automatic retry or publication queue",
+  "checks": "gofmt, diff whitespace, layout and roadmap (589 items) passed on prepared inputs; no new full make check/build, cargo, browser or GW104 protocol run",
+  "roadmap": "no new completed item, checkbox or support claim",
+  "schema": "60 / 120 tables",
+  "fresh_evidence": "No new protocol run since exact 4f76102c GW120 seven-root amd64 acceptance; do not relabel that as schema60",
+  "next": "Use the owner handoffs; when the shared window admits new work, run the prepared exact-source GW104 four-root/draft overlay, then required complete gate; publish independent evidence under permanent flock/FF rules",
+  "date": "2026-11-13 Asia/Shanghai"
+}

@@ -1,0 +1,19 @@
+WITH (
+  p = probe_success{job="ownsolid-platform-readiness",site_id!="",endpoint!=""},
+  total(w) = sum by (site_id, endpoint) (count_over_time(p[w])),
+  failed(w) = sum by (site_id, endpoint) (count_eq_over_time(p[w], 0)),
+  binary(w) = sum by (site_id, endpoint) (
+    count_eq_over_time(p[w], 0) + count_eq_over_time(p[w], 1)
+  ),
+  unique(w) = count by (site_id, endpoint) (count_over_time(p[w])) == 1,
+  eligible(w, minimum) = (failed(w) / total(w))
+    and unique(w)
+    and (binary(w) == total(w))
+    and (total(w) >= minimum),
+  fresh = time() - max by (site_id, endpoint) (tlast_over_time(p[90s])) <= 90
+)
+(
+  ((eligible(1h, 108) > 14.4 * 0.001) and (eligible(5m, 9) > 14.4 * 0.001))
+  or
+  ((eligible(6h, 648) > 6 * 0.001) and (eligible(30m, 54) > 6 * 0.001))
+) and fresh

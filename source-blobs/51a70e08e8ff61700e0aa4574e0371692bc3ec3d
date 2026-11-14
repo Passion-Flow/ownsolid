@@ -1,0 +1,12 @@
+{
+  "memory_kib": {
+    "MemFree": 5925900,
+    "MemAvailable": 19956956
+  },
+  "full_io_psi_avg10": 0.0,
+  "disk_free_bytes": 802465148928,
+  "source": "eea738bfc11d74f8505eee41c3a3ce0d9fa5cf7b",
+  "compile_wall_budget_seconds": 240,
+  "test_timeout_seconds": 90,
+  "scope": "two native race binaries in loopback-only network namespace; no database/container"
+}

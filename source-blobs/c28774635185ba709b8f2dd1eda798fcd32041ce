@@ -1,0 +1,35 @@
+{
+  "source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+  "base": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+  "host": "linux/amd64",
+  "check": false,
+  "build": false,
+  "whole_make_test": false,
+  "cli_b967d7c8_qualified": false,
+  "installed_acceptance": false,
+  "locks": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "dev": 29,
+      "inode": 82
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "dev": 64512,
+      "inode": 7508772
+    },
+    {
+      "path": "/root/lane-rel-tools/heavy-test.lock",
+      "dev": 64512,
+      "inode": 7509425
+    }
+  ],
+  "raw_memfree_mib": 4132,
+  "disk_free_bytes": 799273230336,
+  "attempted_lock": "/root/lane-rel-tools/heavy-test.lock",
+  "admitted": true,
+  "elapsed_seconds": 8.376,
+  "check_exit": 2,
+  "passed": false,
+  "failure": "RuntimeError: check exited 2"
+}

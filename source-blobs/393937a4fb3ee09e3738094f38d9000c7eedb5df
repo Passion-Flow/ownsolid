@@ -1,0 +1,47 @@
+# Private exact Linux CPU verification prototype
+
+This is internal engineering verification, not a signed or admitted production release.
+Use Linux amd64 with Docker and the root-owned fixture layout of this experiment.
+Create a NEW private root, use umask 077, and preserve source files 0600/directories 0700.
+Never replace an existing experiment. The materialized source includes unmodified worker
+Python at 096c50b8, the approved catalog and an explicitly separate CPU runtime manifest.
+
+Required binary inputs are kept outside this small source/evidence archive:
+
+- cpu-prototype-inputs/wheelhouse/: 37 training wheels plus pip, exact inventory and locks.
+- cpu-prototype-inputs/python-base-image.tar: exact cached Python 3.12.15 image; its
+  original OS/Python notices, package inventory and archive identity accompany it.
+- Approved Qwen model: all nine catalog files in a caller-selected read-only directory.
+  The retained server input is /root/lane-gw-acceptance/model. The source catalog lists
+  every size/hash and the Apache-2.0 license. No model weight is in this small archive.
+
+Copy the retained wheelhouse and image archive, extract this metadata archive into the
+fresh root, load the exact base locally and confirm its image ID. Then run:
+
+    python3 -B <root>/portable_cpu_inputs.py --media <root>/cpu-prototype-inputs \
+      --inventory-sha256 57cc07d9ab616399b3ff5f7e09437292ac5ee0e811282c686d6b658594a110dc
+
+No download flag is needed. Original notices and both external Tokenizers notice assets
+are included unchanged. Under both existing Linux locks, reconstruct and run:
+
+    bash <root>/install_cpu_prototype.sh <root>
+    bash <root>/execute_cpu_prototype.sh <root> <approved-model> \
+      <root>/cpu-prototype-inputs/dataset <root>/cpu-prototype-inputs/request-template.json
+
+Each phase checks the unchanged shared-host resource thresholds. On admission refusal,
+locks are released and successful cases remain intact. Resume with an explicit fifth
+case argument: interrupted, resumed, optimizer-changed or horizon-changed. Use the same
+computational inputs; resume-index.json and the runner refuse changed runtime/data inputs.
+
+The original raw outputs remain in the retained cpu-prototype-install/ workspace. The
+small archive includes their unmodified requests/reports/receipts and observations,
+not algorithmic tensor/optimizer binaries. A fresh worker really advanced from sealed
+step 1 to 2. resume-comparison.json verifies complete bindings and seals before comparing
+all algorithmic state. The five final files are byte-identical to baseline. The tiny
+explain_metadata_only.py validates the exact output-directory pickle difference without
+executing pickle or importing Torch. Trainer summary loss covers only newly executed steps.
+
+Source and model mounts are read-only. Work containers have no external network, a
+read-only root, dropped capabilities, private output and explicit CPU/memory/pid limits.
+Every container created for these experiments was removed. No signing key was created.
+The production CUDA/macOS manifests and validators remain unchanged.

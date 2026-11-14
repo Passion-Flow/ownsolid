@@ -1,0 +1,5 @@
+[
+  "Verified capabilities of the alias's current target. Omitted when exact evidence is unavailable.",
+  "True only after the exact current deployment has passed generation verification; it does not advertise enabled gateway adapters.",
+  "Upper bound on context tokens from the verified model, serving recipe and gateway policy. The live tokenizer may enforce a smaller limit."
+]

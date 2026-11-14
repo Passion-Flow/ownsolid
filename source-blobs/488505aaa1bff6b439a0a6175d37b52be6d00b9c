@@ -1,0 +1,29 @@
+# Published independent selected-executor checkpoint
+
+The six-path selected-repository queue ranking slice is merged on actual
+GitHub main at 8b17a2954260e517b434906e95740a39ecdd4a9a, confirmed by
+credentialed ls-remote. The server origin/main tracks that exact SHA.
+The worktree is clean on codex/sch-queue-executor.
+
+Exact source b8d3efa0 passed seven route-free PostgreSQL 18.6 race flows and
+the four-case boundary matrix on Linux amd64. Evidence:
+  /root/lane-sch-tools/selectedqueue.dDEO57fm
+It also passed Mac Control modules, check and build. After rebase onto
+38aad603, changed node/HTTP fixture and web inputs were requalified with
+all three current-base Mac gates at exact 8b17a295. The unchanged PG source,
+testdata, store and dependencies were proved by diff/manifests; no old run
+was relabelled. Current logs are in the sealed handoff packet:
+  /root/lane-sch-tools/sch103-selected.WZainF3i
+
+Quota status is separately merged at b87f3388 with immutable packet:
+  /root/lane-sch-tools/sch108-quota-release.nFvy67Md
+The original lane-sch remains unchanged at 7b29f0f6, retaining the older
+b9705abc API and broader queued-admission work. Do not apply that broad branch
+to consume either published read interface.
+
+Next P1 frontier: inspect and isolate the retained ReserveQueuedWithin write
+admission seam on current main, including its replay helper and complete-domain
+locking. Review borrowing/reclaim compatibility and shared test-fixture design
+before copying code. Keep actual training changes under its owner. No roadmap
+box closes until production owner authority, schema, routes/UI and E2E are done.
+No own service, test, background retry or workstation lease remains.

@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+"""Retired Mac gate epoch: operational entry permanently closed."""
+import sys
+print("Legacy GW admission is disabled. Await the coordinator activated new epoch; no lock, job, fallback or queue is opened.", file=sys.stderr)
+raise SystemExit(78)

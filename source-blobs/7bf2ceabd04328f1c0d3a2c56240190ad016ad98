@@ -1,0 +1,52 @@
+package http_test
+
+import (
+	"testing"
+
+	"github.com/google/uuid"
+)
+
+func TestLaneDAuditActionFilters(t *testing.T) {
+	s, _, _, admin, password := setup(t)
+	admin.mutate("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": password}, 200, "LoginResponse")
+
+	admin.refresh()
+	invited := admin.request("POST", "/api/v1/admin/invitations", map[string]any{"email": "audit-filter-mail@example.invalid", "locale": "en"}, 201, "InvitationResponse",
+		map[string]string{"Idempotency-Key": uuid.NewString()})
+	var delivery string
+	if err := s.DB.QueryRow(t.Context(), "SELECT id::text FROM mail_deliveries WHERE invitation_id=$1", invited["id"]).Scan(&delivery); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.DB.Exec(t.Context(), `UPDATE mail_deliveries SET state='failed',error_category='smtp_unavailable',attempt_count=5,
+		payload_key_id=NULL,payload_nonce=NULL,payload_ciphertext=NULL,completed_at=clock_timestamp(),updated_at=clock_timestamp()
+		WHERE id=$1`, delivery); err != nil {
+		t.Fatal(err)
+	}
+	admin.refresh()
+	admin.request("POST", "/api/v1/admin/mail-deliveries/"+delivery+"/resends", map[string]any{}, 200, "MailDeliveryResponse",
+		map[string]string{"Idempotency-Key": uuid.NewString()})
+
+	pacingPath := "/api/v1/admin/agent-pacing"
+	pacing := admin.request("GET", pacingPath, nil, 200, "", nil)
+	admin.mutate("PUT", pacingPath, map[string]any{
+		"heartbeat_seconds": 15, "jitter_percent": 10, "reconnect_base_seconds": 2, "reconnect_max_seconds": 120,
+		"version": pacing["version"], "reason": "Synthetic audit filter pacing",
+	}, 200, "")
+
+	const path = "/api/v1/admin/audit-events"
+	for _, action := range []string{"mail.resent", "node.pacing_updated"} {
+		response := admin.request("GET", path+"?action="+action, nil, 200, "AuditListResponse", nil)
+		items := response["items"].([]any)
+		if len(items) != 1 {
+			t.Fatalf("%s filter returned %d events", action, len(items))
+		}
+		event := items[0].(map[string]any)
+		if event["action"] != action || event["outcome"] != "success" {
+			t.Fatal("audit filter changed the event")
+		}
+	}
+	problem := admin.request("GET", path+"?action=mail.resends", nil, 400, "Problem", nil)
+	if problem["code"] != "VALIDATION_FAILED" {
+		t.Fatal("unregistered action filter was not refused")
+	}
+}

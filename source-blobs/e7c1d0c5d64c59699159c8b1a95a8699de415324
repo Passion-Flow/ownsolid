@@ -1,0 +1,79 @@
+"""Independently join two retained real-model pairs to their canonical receipts."""
+
+from hashlib import sha256
+import json
+from pathlib import Path
+import sys
+from uuid import UUID
+
+root = Path(sys.argv[1])
+archive_raw = (root / 'observations.json').read_bytes()
+assert sha256(archive_raw).hexdigest() == 'ceace0a1253b196142fa739cf8766f930f85086dfe9ed06a0acf704a1d8911bc'
+archive = json.loads(archive_raw)
+assert not (root / 'network-routes.txt').read_bytes()
+assert 'network=none ports={}' in (root / 'postgres-container.txt').read_text()
+assert 'network=container:' in (root / 'vllm-container.txt').read_text()
+assert 'ports={}' in (root / 'vllm-container.txt').read_text()
+engine_args = (root / 'vllm-arguments.txt').read_text().splitlines()
+assert engine_args[engine_args.index('--seed') + 1] == '42'
+assert engine_args[engine_args.index('--generation-config') + 1] == 'vllm'
+assert engine_args[engine_args.index('--served-model-name') + 1:engine_args.index('--served-model-name') + 3] == ['projectone-qwen3-0.6b', archive['model']]
+assert 'Using V2 Model Runner' in (root / 'vllm.log').read_text()
+usage_fields = ('prompt_tokens', 'completion_tokens', 'total_tokens')
+scope_fields = ('tenant_id', 'workspace_id', 'node_id', 'gateway_id', 'api_key_id', 'alias_id', 'deployment_id')
+receipt_fields = ('request_id', 'status', 'error_code', 'usage', 'elapsed_milliseconds', 'output_started')
+shared_scope = None
+seen = set()
+for number in (1, 2):
+    baseline = archive['runs'][0]['samples'][number - 1]
+    baseline_parallel = archive['runs'][1]['samples'][number - 1]
+    stem = f'pair-{number}-'
+    def read(suffix):
+        return json.loads((root / f'{stem}{suffix}.json').read_bytes())
+
+    direct_raw = (root / f'{stem}direct-request.json').read_bytes()
+    assert sha256(direct_raw).hexdigest() == baseline['request_sha256'] == baseline_parallel['request_sha256']
+    direct = json.loads(direct_raw)
+    client, engine = read('gateway-request'), read('backend-request')
+    tokenize = read('tokenize-request')
+    assert direct['seed'] == 42 and direct['temperature'] == 0
+    assert engine == {'model': 'projectone-qwen3-0.6b', 'messages': direct['messages'],
+                      'max_tokens': direct['max_completion_tokens'], 'stream': False, 'n': 1,
+                      'temperature': 0, 'chat_template_kwargs': {'enable_thinking': False}}
+    assert client == {'model': 'public-alias', 'messages': direct['messages'],
+                      'max_completion_tokens': 24, 'temperature': 0, 'stream': False}
+    assert tokenize['messages'] == engine['messages']
+    assert tokenize['model'] == engine['model']
+    assert tokenize['chat_template_kwargs'] == engine['chat_template_kwargs']
+    count = read('tokenize-response')
+    assert count['count'] == len(count['tokens']) == baseline['prompt_tokens']
+    direct_response, gateway_response, engine_response = (read(f'{side}-response') for side in ('direct', 'gateway', 'backend'))
+    assert gateway_response['id'] == engine_response['id'] != direct_response['id']
+    assert gateway_response['model'] == 'public-alias' and engine_response['model'] == engine['model']
+    usage = direct_response['usage']
+    observed = {key: usage[key] for key in usage_fields}
+    assert observed == {'prompt_tokens': baseline['prompt_tokens'], 'completion_tokens': baseline['completion_tokens'],
+                        'total_tokens': baseline['prompt_tokens'] + baseline['completion_tokens']}
+    for response in (direct_response, gateway_response, engine_response):
+        assert len(response['choices']) == 1
+        choice = response['choices'][0]
+        assert choice['finish_reason'] == baseline['finish_reason'] == baseline_parallel['finish_reason']
+        assert sha256(choice['message']['content'].encode()).hexdigest() == baseline['output_sha256'] == baseline_parallel['output_sha256']
+        assert {key: response['usage'][key] for key in usage_fields} == observed
+    summary, receipt, ack = read('summary'), read('receipt'), read('https-ack')['data']
+    canonical = {key: receipt[key] for key in receipt_fields}
+    canonical['usage'] = {key: receipt['usage'][key] for key in usage_fields}
+    digest = sha256(json.dumps(canonical, ensure_ascii=True, separators=(',', ':')).encode()).hexdigest()
+    request_id = summary['request_id']
+    assert request_id not in seen
+    seen.add(request_id)
+    assert str(UUID(request_id)) == request_id == receipt['request_id'] == ack['request_id']
+    assert digest == summary['canonical_sha256'] == ack['canonical_sha256']
+    assert receipt['status'] == 'succeeded' and receipt['error_code'] is None and receipt['usage'] == observed
+    assert summary['audit_count'] == 1 and summary['usage'] == observed
+    assert summary['output_sha256'] == baseline['output_sha256']
+    scope = tuple(str(UUID(summary[key])) for key in scope_fields) + (summary['deployment_revision'],)
+    assert scope[-1] > 0 and (shared_scope is None or scope == shared_scope)
+    shared_scope = scope
+    print(f"{baseline['case']}: request {request_id}, {observed['prompt_tokens']}+{observed['completion_tokens']} tokens, canonical SHA-256 {digest}")
+print('Two distinct real gateway requests matched the direct archive, engine responses, scoped durable receipts and HTTPS acknowledgments')

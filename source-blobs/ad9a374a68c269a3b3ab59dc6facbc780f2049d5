@@ -1,0 +1,19 @@
+{
+  "scope": "owned private tmpfs file flock semantics only; canonical locks untouched",
+  "copy_sha256": "6f70e6fda0c90ec265d51b9231662ec276112cfad9f4dacac7f61d15485d468b",
+  "probe_sha256": "9f30e31ae269334bd7d6ad98b1ec162f91828188413a2444a4d5c9a10dd09d2f",
+  "private_lock_device": 29,
+  "private_lock_inode": 195,
+  "passed": true,
+  "exit_code": 0,
+  "raw_return_codes": [
+    0,
+    1,
+    0
+  ],
+  "native_executable": "/usr/bin/flock",
+  "native_sha256": "e619344dc3eec4023498465679262f9ca27d1e8cef9cfc4c1ae72b428577b806",
+  "constructed_outer_holder_observed": true,
+  "canonical_cause": "not investigated or inferred by this private control",
+  "owned_private_file_removed": true
+}

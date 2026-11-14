@@ -1,0 +1,33 @@
+{
+  "image": "sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5",
+  "probe_sha256": "ef6613b6ce11718abe9490eccf28f8d523abefcd5fb1e94408ef17428ced03a8",
+  "recorder_sha256": "9aad51535e6abf4ec51766e7e0dab8fcbf9fbc40ccffa2099e9e66e32d1f8d42",
+  "results": {
+    "deadline": {
+      "candidate": "capture-selftest",
+      "capture": {
+        "bytes": 662,
+        "reason": "[Errno 2] No such file or directory: '/root/lane-rel-tools/capture-parent.09v9xwhx/evidence/deadline/capture-ended.json'",
+        "run_id": "dc9c881c-90fe-4e4c-b78d-7cbb515ec6eb",
+        "sha256": "6ee49a1df21d41200b9dfa81a8b87b24465773bc9b8c7019925fc987185010a3",
+        "status": "capture-incomplete"
+      },
+      "cleanup_errors": [],
+      "passed": false,
+      "suite_exit": null
+    },
+    "normal": {
+      "candidate": "capture-selftest",
+      "capture": {
+        "bytes": 662,
+        "run_id": "6ca7bd9d-2432-46bb-be68-8f05717da408",
+        "sha256": "2a2d3daabca4fed2e7da1a8a2e6a1a43e8c5e65b17fdca4b849a85fb2f5f3f09",
+        "status": "capture-passed"
+      },
+      "cleanup_errors": [],
+      "passed": true,
+      "suite_exit": 0
+    }
+  },
+  "scope": "Real Docker evidence bind and parent close only; no product or history acceptance"
+}

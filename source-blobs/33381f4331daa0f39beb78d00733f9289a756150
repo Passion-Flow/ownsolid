@@ -1,0 +1,39 @@
+{
+  "base_commit": "ce418068348c32b4c8f712d6b2220c5f647e0b9d",
+  "config": {
+    "cleanup_seconds": 20,
+    "evidence_parent": "/root/lane-rel-tools",
+    "fixture_parent": "/tmp",
+    "gid": 65534,
+    "go": "/root/lane-rel-tools/go/bin/go",
+    "go_memory_bytes": 1073741824,
+    "hard_seconds": 300,
+    "locks": [
+      "/run/lock/ownsolid-heavy.lock",
+      "/root/lane-sci-tools/heavy-test.lock"
+    ],
+    "maximum_full_io_avg10": 20,
+    "minimum_available_memory_bytes": 8589934592,
+    "minimum_disk_bytes": 21474836480,
+    "minimum_free_memory_bytes": 2147483648,
+    "probe": "/root/lane-rel-tools/lane-del-combination-4463bbe6/probe",
+    "recorder": "/root/lane-rel-tools/lane-del-combination-4463bbe6/egress-recorder",
+    "source": "/root/lane-del-acceptance-guard",
+    "uid": 65534,
+    "workers": 2
+  },
+  "files": {
+    "deploy/offline/README.md": "997080e8f2aa502796e98dd55cd998d7a521f5f1d40873c53b3e0929293e0cf5",
+    "deploy/offline/internal/install/support.go": "42faa21bfc55e11e067bc5be5b35868a29a2f2577c82911d71d1a8b68e4bf0fd",
+    "deploy/offline/internal/install/support_access.go": "032e818c5a20e5d35d97b9019cd8019eb730acc3cd773236f88f9708dd9ce012",
+    "deploy/offline/internal/install/support_access_cli_test.go": "7e422c0209d3afce90bf31899d16f9ded5c8693f9bbf631e9add5f20621d29f2",
+    "deploy/offline/internal/install/support_access_test.go": "705a4bfe85be97b4ec6dbd76a36d9e7d2fe3417effcecf362e926d9cd2d1f76d",
+    "deploy/offline/internal/install/support_cluster.go": "b39619a7ccd03d0a55c5b9f10eecc12b3b408d6f443b78f8beb63e69caaa65a3",
+    "deploy/offline/internal/install/support_operations.go": "96883bfd3152e36a87e8c888fddcc4454e4b831f32a00f0f0bc651b8c586199d",
+    "docs/decisions/0071-record-diagnostic-reads-before-local-collection.md": "534ef51f9a2555110c0be833b715b805a73e8a4b25f1a1ba320f3ff084baf627",
+    "docs/research/support-diagnostics.md": "2dcbffa8293a1f201d751f8129d1e39f81f2cb40bb07fd9150f72af7ff7e9d54"
+  },
+  "runner_sha256": "5a0bef69dc254ac62047d9eae1da1eedbc3a6299e53fbbdc7e7d3389419a2032",
+  "tracked_diff_sha256": "3bc4caf2ebaa465c6e0d9ead93a4c667fe82913349fcd37f28e8103285032ec6",
+  "working_tree_modified": true
+}

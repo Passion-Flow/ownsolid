@@ -1,0 +1,72 @@
+{
+  "artifacts": {
+    "install.test": "81e2d8897df23531628413130446ba5c9696a306e6e959b1e089b0d195cf5cd9",
+    "ownsolid-install": "66811fe7047387fdfd3c15b892978ee62110018d68f92f2362f32a72851f3189"
+  },
+  "capture": {
+    "bytes": 662,
+    "run_id": "2a6fa49b-1764-411e-87fc-87ac8e9f9c32",
+    "sha256": "d7203a06e0452997e2aa23459da7d0775cb8560227edbe73321e9f5947c210f3",
+    "status": "capture-passed"
+  },
+  "elapsed_seconds": 53.996091837994754,
+  "error": "disconnected-tests exited 126",
+  "error_type": "RuntimeError",
+  "exit": 1,
+  "leases": [
+    {
+      "acquired": true,
+      "device": 29,
+      "fd": 3,
+      "inode": 82,
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "wait_elapsed_seconds": 0.00012315099593251944,
+      "wait_limit_seconds": 60
+    },
+    {
+      "acquired": true,
+      "device": 64512,
+      "fd": 4,
+      "inode": 7508772,
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    }
+  ],
+  "parent": {
+    "pid": 2917081,
+    "start_ticks": "78479332"
+  },
+  "resources": {
+    "disk_free": 794965688320,
+    "io": "some avg10=0.42 avg60=0.39 avg300=5.70 total=31019720966\nfull avg10=0.42 avg60=0.39 avg300=5.51 total=29215786704\n",
+    "memavailable": 22930501632,
+    "memfree": 21758255104,
+    "swapfree": 184320
+  },
+  "run_id": "2a6fa49b-1764-411e-87fc-87ac8e9f9c32",
+  "scope": "Exact working-tree support unit/CLI protocol only; no product, database, server audit or release qualification",
+  "status": "failed",
+  "steps": [
+    {
+      "exit": 0,
+      "pid": 2917098,
+      "stage": "build-installer",
+      "timeout_seconds": 120
+    },
+    {
+      "exit": 0,
+      "pid": 2918021,
+      "stage": "build-tests",
+      "timeout_seconds": 120
+    },
+    {
+      "exit": 126,
+      "pid": 2919497,
+      "stage": "disconnected-tests",
+      "timeout_seconds": 90
+    }
+  ],
+  "tools": {
+    "probe": "ef6613b6ce11718abe9490eccf28f8d523abefcd5fb1e94408ef17428ced03a8",
+    "recorder": "9aad51535e6abf4ec51766e7e0dab8fcbf9fbc40ccffa2099e9e66e32d1f8d42"
+  }
+}

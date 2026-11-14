@@ -1,0 +1,74 @@
+use serde::{Deserialize, Serialize};
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Limits {
+    pub runtime_threads: usize,
+    pub blocking_threads: usize,
+    pub maximum_connections: u32,
+    pub header_seconds: u64,
+    pub header_bytes: usize,
+    pub request_body_bytes: u64,
+    pub request_memory_budget_bytes: u64,
+    pub active_requests: u32,
+    pub queued_requests: u32,
+    pub queue_milliseconds: u64,
+    pub connect_seconds: u64,
+    pub control_seconds: u64,
+    pub request_seconds: u64,
+    pub idle_seconds: u64,
+    pub shutdown_seconds: u64,
+    pub operator_seconds: u64,
+    pub response_bytes: u64,
+    pub stream_event_bytes: u64,
+    pub stream_total_bytes: u64,
+    pub maximum_messages: usize,
+    pub maximum_output_tokens: u32,
+    pub default_output_tokens: u32,
+    pub default_temperature: f64,
+    pub maximum_context_tokens: u32,
+    pub spool_max_entries: usize,
+    pub spool_max_bytes: u64,
+    pub outcome_retry_seconds: u64,
+    pub control_idle_connections: usize,
+    pub backend_idle_connections: usize,
+    pub minimum_free_disk_bytes: u64,
+}
+
+impl Default for Limits {
+    fn default() -> Self {
+        Self {
+            runtime_threads: 2,
+            blocking_threads: 4,
+            maximum_connections: 64,
+            header_seconds: 5,
+            header_bytes: 16_384,
+            request_body_bytes: 65_536,
+            request_memory_budget_bytes: 67_108_864,
+            active_requests: 4,
+            queued_requests: 8,
+            queue_milliseconds: 2_000,
+            connect_seconds: 2,
+            control_seconds: 5,
+            request_seconds: 90,
+            idle_seconds: 15,
+            shutdown_seconds: 5,
+            operator_seconds: 30,
+            response_bytes: 1_048_576,
+            stream_event_bytes: 65_536,
+            stream_total_bytes: 4_194_304,
+            maximum_messages: 32,
+            maximum_output_tokens: 512,
+            default_output_tokens: 128,
+            default_temperature: 0.0,
+            maximum_context_tokens: 2048,
+            spool_max_entries: 1_000,
+            spool_max_bytes: 16_777_216,
+            outcome_retry_seconds: 2,
+            control_idle_connections: 2,
+            backend_idle_connections: 4,
+            minimum_free_disk_bytes: 67_108_864,
+        }
+    }
+}
+
+pub type Result<T> = std::result::Result<T, &'static str>;

@@ -1,0 +1,163 @@
+From 48de6a9ea5c9f8bddbb372df769c2eb30b3defb3 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 13:47:38 +0000
+Subject: [PATCH 9/9] SCH-108: Preserve exact quota policy revisions in status
+ JSON
+
+Encode the policy revision as a decimal string alongside exact resource quantities. Extend the pending authenticated read with values above binary64 precision and MaxInt64, and verify the JSON string contract. Keep the internal admission counter unchanged.
+
+Research RFC 8259 and the Kubernetes metadata convention; verify owner source, gofmt and diff hygiene. Go and PostgreSQL gates remain pending resource windows.
+---
+ docs/research/scheduling-wait-reasons.md       | 18 ++++++++++++++++++
+ .../internal/modules/scheduling/README.md      |  2 +-
+ .../scheduling/http/handler_postgres_test.go   |  2 +-
+ .../scheduling/workspace_quota_status.go       |  6 +++---
+ .../workspace_quota_status_postgres_test.go    | 13 ++++++++++---
+ .../scheduling/workspace_quota_status_test.go  |  5 +++--
+ 6 files changed, 36 insertions(+), 10 deletions(-)
+
+diff --git a/docs/research/scheduling-wait-reasons.md b/docs/research/scheduling-wait-reasons.md
+index 47c7d4c6..53ef080c 100644
+--- a/docs/research/scheduling-wait-reasons.md
++++ b/docs/research/scheduling-wait-reasons.md
+@@ -225,3 +225,21 @@ status with its fixed reason, not an HTTP error.
+ Test the real owner codes, storage and uncertain-outcome projection, and
+ refuse an unregistered equal-text identity label. This contract uses only
+ the existing source interfaces and licensed stack described above.
++
++## Exact revision metadata
++
++[RFC 8259 section 6](https://www.rfc-editor.org/rfc/rfc8259.html#section-6)
++limits exact interoperable JSON integer numbers to the binary64 safe range.
++The stored quota revision can reach PostgreSQL bigint's positive maximum.
++Represent `policy_revision` as a decimal string as well as resource quantities;
++do not silently round it or reject a valid stored revision for the browser.
++Kubernetes also uses strings for
++[resource-version metadata](https://kubernetes.io/docs/reference/using-api/api-concepts/#resource-versions).
++The internal admission counter and its concurrency rules remain int64.
++
++The unconfigured status reports `"0"`; configured and unallocated status
++report the actual positive revision string. Extend the real authenticated
++PostgreSQL read to a revision above binary64 precision and to MaxInt64, then
++restore only that test fixture's original revision. Check the JSON field's
++string representation independently of resource totals. This requires no
++new dependency, model or dataset and retains the licences already recorded.
+diff --git a/services/control/internal/modules/scheduling/README.md b/services/control/internal/modules/scheduling/README.md
+index f317411f..264644fe 100644
+--- a/services/control/internal/modules/scheduling/README.md
++++ b/services/control/internal/modules/scheduling/README.md
+@@ -114,7 +114,7 @@ select the tenant. A failed or uncertain transaction returns an empty result.
+ The status distinguishes `unconfigured`, `unallocated` and `configured`.
+ Only an actual allocation has resource rows. Each row contains the workspace's
+ guarantee, hard limit, held reservations and `unreserved_quota`, encoded as
+-decimal strings. CPU uses millicores, memory bytes and GPUs whole devices.
++decimal strings. The top-level policy revision is also a decimal string. CPU uses millicores, memory bytes and GPUs whole devices.
+ Unreserved quota is accounting; queue turn, borrowing, placement and physical
+ capacity can still prevent a job from starting. No job or sibling identity,
+ ancestor amount, cell capacity or historical wait code is returned.
+diff --git a/services/control/internal/modules/scheduling/http/handler_postgres_test.go b/services/control/internal/modules/scheduling/http/handler_postgres_test.go
+index fe9b5c99..3a9d0e1f 100644
+--- a/services/control/internal/modules/scheduling/http/handler_postgres_test.go
++++ b/services/control/internal/modules/scheduling/http/handler_postgres_test.go
+@@ -70,7 +70,7 @@ func TestPostgresHTTPWorkspaceQuotaStatus(t *testing.T) {
+ 	for i, actor := range actors {
+ 		out := read(actor, paths[i])
+ 		body, err := json.Marshal(out)
+-		if err != nil || out.State != scheduling.WorkspaceQuotaConfigured || out.PolicyRevision != 1 ||
++		if err != nil || out.State != scheduling.WorkspaceQuotaConfigured || out.PolicyRevision != "1" ||
+ 			len(out.Resources) != 2 || !strings.Contains(string(body), `"hard_limit":"2000"`) ||
+ 			strings.Contains(string(body), "tenant_id") || strings.Contains(string(body), "department") ||
+ 			strings.Contains(string(body), "available") || strings.Contains(string(body), "admitted") {
+diff --git a/services/control/internal/modules/scheduling/workspace_quota_status.go b/services/control/internal/modules/scheduling/workspace_quota_status.go
+index d49bb88f..b6eebaa0 100644
+--- a/services/control/internal/modules/scheduling/workspace_quota_status.go
++++ b/services/control/internal/modules/scheduling/workspace_quota_status.go
+@@ -46,7 +46,7 @@ type WorkspaceQuotaResource struct {
+ // and held usage. Missing configuration has no resource rows.
+ type WorkspaceQuotaStatus struct {
+ 	WorkspaceID    string                   `json:"workspace_id"`
+-	PolicyRevision int64                    `json:"policy_revision"`
++	PolicyRevision string                   `json:"policy_revision"`
+ 	State          WorkspaceQuotaState      `json:"state"`
+ 	Resources      []WorkspaceQuotaResource `json:"resources,omitempty"`
+ 	Reason         *WorkspaceQuotaReason    `json:"reason,omitempty"`
+@@ -85,7 +85,7 @@ func ReadWorkspaceQuotaStatus(ctx context.Context, authority *workspaces.Service
+ }
+ 
+ func readWorkspaceQuotaStatusWithin(ctx context.Context, q transaction.Executor, tenant, workspace string) (WorkspaceQuotaStatus, error) {
+-	out := WorkspaceQuotaStatus{WorkspaceID: workspace}
++	out := WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: "0"}
+ 	revision, err := lockReservationPolicy(ctx, q)
+ 	if errors.Is(err, ErrQuotaUnconfigured) {
+ 		out.State = WorkspaceQuotaUnconfigured
+@@ -106,7 +106,7 @@ func readWorkspaceQuotaStatusWithin(ctx context.Context, q transaction.Executor,
+ 	if err != nil {
+ 		return WorkspaceQuotaStatus{}, err
+ 	}
+-	out.PolicyRevision = revision
++	out.PolicyRevision = strconv.FormatInt(revision, 10)
+ 	node, err := tree.workspace(tenant, workspace)
+ 	if errors.Is(err, ErrQuotaScopeNotFound) && len(used) == 0 {
+ 		out.State = WorkspaceQuotaUnallocated
+diff --git a/services/control/internal/modules/scheduling/workspace_quota_status_postgres_test.go b/services/control/internal/modules/scheduling/workspace_quota_status_postgres_test.go
+index 6e6c0345..debf2c9f 100644
+--- a/services/control/internal/modules/scheduling/workspace_quota_status_postgres_test.go
++++ b/services/control/internal/modules/scheduling/workspace_quota_status_postgres_test.go
+@@ -84,7 +84,7 @@ func (f authenticatedQuotaFixture) read(t *testing.T, actor identity.Auth) Works
+ func TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting(t *testing.T) {
+ 	f := newAuthenticatedQuotaFixture(t)
+ 	workspace := f.attempt.WorkspaceID
+-	want := WorkspaceQuotaStatus{WorkspaceID: workspace, State: WorkspaceQuotaUnconfigured,
++	want := WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: "0", State: WorkspaceQuotaUnconfigured,
+ 		Reason: &WorkspaceQuotaReason{Code: "SCHEDULING_QUOTA_UNCONFIGURED", Action: ConfigureQuotaPolicy}}
+ 	for _, actor := range []identity.Auth{f.admin, f.portal} {
+ 		if got := f.read(t, actor); !reflect.DeepEqual(got, want) {
+@@ -93,13 +93,13 @@ func TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting(t *testing.T) {
+ 	}
+ 
+ 	f.replace(t, 0, f.policy[:3])
+-	want.PolicyRevision, want.State = 1, WorkspaceQuotaUnallocated
++	want.PolicyRevision, want.State = "1", WorkspaceQuotaUnallocated
+ 	want.Reason = &WorkspaceQuotaReason{Code: "SCHEDULING_QUOTA_UNALLOCATED", Action: ConfigureWorkspaceQuota}
+ 	if got := f.read(t, f.portal); !reflect.DeepEqual(got, want) {
+ 		t.Fatalf("missing allocation: %+v", got)
+ 	}
+ 	f.replace(t, 1, f.policy)
+-	want = WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: 2, State: WorkspaceQuotaConfigured,
++	want = WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: "2", State: WorkspaceQuotaConfigured,
+ 		Resources: []WorkspaceQuotaResource{
+ 			{Resource: CPU, Guaranteed: "4000", HardLimit: "4000", Reserved: "0", UnreservedQuota: "4000"},
+ 			{Resource: NVIDIAGPU, Guaranteed: "2", HardLimit: "2", Reserved: "0", UnreservedQuota: "2"},
+@@ -109,6 +109,13 @@ func TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting(t *testing.T) {
+ 			t.Fatalf("configured accounting: %+v", got)
+ 		}
+ 	}
++	for _, revision := range []string{"9007199254740993", "9223372036854775807"} {
++		f.exec(t, "UPDATE scheduling_quota_policy SET revision=$1::bigint", revision)
++		if got := f.read(t, f.portal); got.PolicyRevision != revision {
++			t.Fatalf("policy revision lost precision: %q, want %q", got.PolicyRevision, revision)
++		}
++	}
++	f.exec(t, "UPDATE scheduling_quota_policy SET revision=2")
+ 	// Roles come from current membership. Resource allocation is readable by
+ 	// ordinary members without granting them policy mutation authority.
+ 	f.exec(t, "UPDATE workspace_memberships SET role='viewer' WHERE tenant_id=$1 AND workspace_id=$2 AND user_id=$3",
+diff --git a/services/control/internal/modules/scheduling/workspace_quota_status_test.go b/services/control/internal/modules/scheduling/workspace_quota_status_test.go
+index d00f09c1..2cba125f 100644
+--- a/services/control/internal/modules/scheduling/workspace_quota_status_test.go
++++ b/services/control/internal/modules/scheduling/workspace_quota_status_test.go
+@@ -26,8 +26,9 @@ func TestWorkspaceQuotaStatusPreservesQuantitiesAndRejectsInvalidUsage(t *testin
+ 	if err != nil || !reflect.DeepEqual(rows, want) {
+ 		t.Fatalf("exact, sorted quota accounting: %+v, %v", rows, err)
+ 	}
+-	body, err := json.Marshal(rows)
+-	if err != nil || !strings.Contains(string(body), `"reserved":"9007199254740993"`) {
++	body, err := json.Marshal(WorkspaceQuotaStatus{PolicyRevision: "9223372036854775807", Resources: rows})
++	if err != nil || !strings.Contains(string(body), `"reserved":"9007199254740993"`) ||
++		!strings.Contains(string(body), `"policy_revision":"9223372036854775807"`) {
+ 		t.Fatalf("JSON lost integer precision: %s, %v", body, err)
+ 	}
+ 	for _, used := range []Resources{
+-- 
+2.43.0
+

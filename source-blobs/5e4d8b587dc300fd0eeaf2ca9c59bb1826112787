@@ -1,0 +1,21 @@
+{
+  "read_only": true,
+  "server_checkout": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "old_proofs_unchanged": {
+    "783_native": "cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1",
+    "9be_gate": "ea63d0f4d26a25744f322da5402381397c7fd14768c7afb8ab9b4c8509aaa5fe"
+  },
+  "executed_entry_sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c",
+  "executed_manifest_sha256": "9a5e296cd3612ae6f9bdd36294148a83dfc4110e4319e837552f76975d096843",
+  "doc_e3_ref_present": true,
+  "pointer20_ref_present": false,
+  "pointer20_files_present": {
+    "handoff.json": false,
+    "verification.json": false,
+    "response-reference-fix.bundle": false,
+    "audit-regression-tests.log": false,
+    "main9e-compatibility-audit.json": false,
+    "reference-reproduction-before-fix.json": false
+  },
+  "result": "Confirmed not received; no state-unknown transfer was replayed"
+}

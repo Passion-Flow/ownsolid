@@ -1,0 +1,14 @@
+{
+  "time_utc": "2026-11-13T11:39:58.091143+00:00",
+  "status": "prepared-full-gate-entry-unconditionally-refuses",
+  "entry": "/root/lane-gw-acceptance/main-726.5OCald2l/gw-current-source-4c8/mac-prepared/gate-entry.sh",
+  "original_sha256": "15be4d19da210e005d26b26c135fcb4b15e66697029db319e7bdb406c38e2853",
+  "evidence_only_archive": "/root/lane-gw-acceptance/retired-mac-gate-epoch.363m8nfm/original-prepared-entry-evidence-only.tar",
+  "archive_sha256": "d086466859ea3533ab8913f2d96e51424a735cca9d71ecdcfbe34482499667e2",
+  "disabled_entry_sha256": "8b778eb57759395193308cc9f77a43591dc6002ec45b5e7e3bdbda10c65af328",
+  "total_closed_legacy_operational_entries": 6,
+  "lock_operations": 0,
+  "tests_builds_services_started": 0,
+  "prepared_source_status": "NOTRUN; no old guard or entry may be restored or invoked",
+  "historical_manifest_scope": "Original entry bytes are in the evidence-only tar. Existing preparation manifest remains historical and does not hash the disabled operational stub."
+}

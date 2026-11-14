@@ -1,0 +1,35 @@
+from pathlib import Path
+import re
+
+root = Path("services/control/internal/modules/distribution")
+def replace(path, old, new):
+    s=path.read_text()
+    assert s.count(old)==1, old
+    path.write_text(s.replace(old,new,1))
+
+keys=root/"keys.go"
+replace(keys, 'expires_at,membership_authority) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+make_interval(secs=>$11),$12)"', 'expires_at,membership_authority,operation_only) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+make_interval(secs=>$11),$12,$13)"')
+replace(keys, 'expected, ttl, authority}, []any{id, w.TenantID', 'expected, ttl, authority, operation}, []any{id, w.TenantID')
+
+authorization=root/"authorization.go"
+replace(authorization, '"UPDATE api_keys SET last_used_at=clock_timestamp() WHERE id=$1", ' + chr(96) + 'UPDATE api_keys SET last_used_at=UTC_TIMESTAMP(6) WHERE id=?' + chr(96) + ', []any{key.id}, []any{key.id}', '"UPDATE api_keys SET last_used_at=clock_timestamp(),operation_only=COALESCE(operation_only,$2) WHERE id=$1", ' + chr(96) + 'UPDATE api_keys SET last_used_at=UTC_TIMESTAMP(6) WHERE id=?' + chr(96) + ', []any{key.id, key.operation}, []any{key.id}')
+replace(authorization, '\t\tif _, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, ' + chr(96) + 'UPDATE API_KEYS SET LAST_USED_AT', '\t\t// An authenticated admission can classify an older key without a separate write.\n\t\tif _, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, ' + chr(96) + 'UPDATE API_KEYS SET LAST_USED_AT')
+
+rotation=root/"rotation.go"
+replace(rotation, "\tlifetime       int\n", "\tlifetime       int\n\toperationOnly  *bool\n")
+replace(rotation, 'if current.State != "active" {', """// A new successor requires positive proof that the predecessor is ordinary.
+		if current.State != "active" || old.operationOnly == nil || *old.operationOnly {""")
+replace(rotation, 'expires_at,membership_authority,rotated_from) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+make_interval(secs=>$11),$12,$13)"', 'expires_at,membership_authority,rotated_from,operation_only) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+make_interval(secs=>$11),$12,$13,false)"')
+replace(rotation, 's.id::text,s.idempotency_key::text,s.fingerprint FROM api_keys k', 'k.operation_only,s.id::text,s.idempotency_key::text,s.fingerprint FROM api_keys k')
+replace(rotation, '&out.authority, &out.lifetime, &out.successorID', '&out.authority, &out.lifetime, &out.operationOnly, &out.successorID')
+
+p=Path("services/control/internal/platform/database/database.go")
+s=p.read_text()
+previous,=re.findall(r"^const SchemaVersion = (\d+)$",s,re.MULTILINE)
+next_version=int(previous)+1
+migrations=Path("services/control/migrations/postgresql")
+assert max(int(f.name.split("_",1)[0]) for f in migrations.glob("*.up.sql"))==int(previous)
+stem=migrations/f"{next_version:06}_api_key_purpose"
+Path(str(stem)+".up.sql").write_text("ALTER TABLE api_keys ADD COLUMN operation_only boolean;\n")
+Path(str(stem)+".down.sql").write_text("ALTER TABLE api_keys DROP COLUMN operation_only;\n")
+replace(p, f"const SchemaVersion = {previous}",f"const SchemaVersion = {next_version}")

@@ -1,0 +1,34 @@
+package main
+
+import (
+	"os"
+	"testing"
+)
+
+func TestDeletionMetadataAloneDoesNotConfirmCleanup(t *testing.T) {
+	f, api := fixture(t)
+	for _, mode := range []string{"init", "verify"} {
+		if err := phase(t, api, mode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	f.set(func() { f.current.State = "deleted" })
+	if err := phase(t, api, "logout"); err == nil {
+		t.Fatal("tombstone alone released the session before cleanup")
+	}
+	if _, err := os.Stat(f.config.SessionFile); err != nil {
+		t.Fatal("cleanup recovery session was removed")
+	}
+	if err := phase(t, api, "cleanup"); err != nil {
+		t.Fatal(err)
+	}
+	f.mu.Lock()
+	count := len(f.reconcileKeys)
+	f.mu.Unlock()
+	if count != 1 {
+		t.Fatal("unacknowledged local cleanup was not reconciled through the owner API")
+	}
+	if err := phase(t, api, "logout"); err != nil {
+		t.Fatal(err)
+	}
+}

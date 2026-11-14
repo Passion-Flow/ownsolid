@@ -1,0 +1,153 @@
+{
+  "source": "47fa03253b0d2655be26925a7e4492547c3e9a42",
+  "base": "b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32",
+  "inventory_exit": 1,
+  "public_operations": 430,
+  "declaration_findings": [],
+  "compatibility_findings": [
+    {
+      "code": "PUBLIC_RESPONSE_MODELS_CHANGED",
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/audit-events",
+      "audience": "admin",
+      "operation_id": "listAuditEvents",
+      "previous_response_models": {
+        "200 application/json": [
+          "#/components/schemas/AuditEvent",
+          "#/components/schemas/AuditListResponse"
+        ],
+        "400 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "401 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "403 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "503 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "default application/problem+json": [
+          "#/components/schemas/Problem"
+        ]
+      },
+      "current_response_models": {
+        "200 application/json": [
+          "#/components/schemas/AuditEvent",
+          "#/components/schemas/AuditListResponse"
+        ],
+        "400 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "401 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "403 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "409 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "503 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "default application/problem+json": [
+          "#/components/schemas/Problem"
+        ]
+      }
+    }
+  ],
+  "compatibility_finding_is_not_erased": true,
+  "interpretation": "The already implemented audit GET409 now has an explicit shared Problem binding. Go regeneration changes its default Problem accessor to GetApplicationproblemJSON409(); wire fields, operation identity and the admitted exact-action enum do not change. This is a reviewed source-compatibility change, not a general compatibility pass.",
+  "inventory_sha256": "910a412a5bef5071ac9a0409adc5388b7507001cf4bef306fc4f8803df240422",
+  "projection_inputs_verified": {
+    "tools/codegen/web-api.mjs": "4f5d7c2aeff5bdac447fe7afe9e3c3b1b1f217921f6f9de1a73d3039a3c6f044",
+    "tools/codegen/web-help.mjs": "09a869f1aae82fa9c9f3f6075405f9b660112281c6c02b7719f8a28c1a5af9cc",
+    "tools/codegen/openapi-paths.mjs": "cbf60b00921d1016355ad6e1d2d35708e130118e988431c3eafa34c81057b24b",
+    "web/packages/help/articles.json": "2dd1e0eae207af74d3e4d6a976f1393ea3bb9fcfea3ececf967c7ae117f79b18",
+    "web/packages/api/package.json": "691bcc1bb50b5ef02b68473ae186a7d8374d21dea7150b7932334f7727a95ee7",
+    "web/packages/help/package.json": "f1fb3cb6c2c2ae4633c3d3b68b4d123dd3dcc39311b3084867647ff95433bf50",
+    "api/openapi/README.md": "7fb8c975d32b5b60d49e9b80944befd152b49bc79a9e8a3a59b2b358542ec0fe",
+    "api/openapi/v1/applications/openapi.json": "89e152ca0063b70af6cd0b0fd04256e28cd26c83103b258ce3b7838a0c1821c3",
+    "api/openapi/v1/artifactstores/openapi.json": "255dec207dc3b95310d4fd19a95b572d371970396fbc7d1d1661cf7e469aecc2",
+    "api/openapi/v1/artifactstores/problem-statuses.integration.json": "1952170aaaa0cf60024d71020c608f2ccaaf72643337fd2ad3a2edce8f9da691",
+    "api/openapi/v1/capabilities/openapi.json": "c0c15685230a8692441864b81b23dc5f9c5d266e2cfa51ee38e863aaf73f60c7",
+    "api/openapi/v1/cell-clusters/openapi.json": "36a4dc787dbb989939c28d2cc9716e8efe30f4e8848b8e4fc9e43ddf225ed555",
+    "api/openapi/v1/cloud-inventory/openapi.json": "dd85e0facbe7ef58728c32866461464923ebd2b4e6417c72ef9ffb98b21a16d5",
+    "api/openapi/v1/components/openapi.json": "c1678677c74b9b89348e6edd29a815223079d35adb0c3e4020633c66c2308245",
+    "api/openapi/v1/datasets/openapi.json": "89d0fcae1a3400dbed45999edc6c5e44374939bbce15d69f0c4d25b5b4b6f70e",
+    "api/openapi/v1/deployments/openapi.json": "96fe52930877602b346843698aa28128835d0073586912f2158686ee06517d6f",
+    "api/openapi/v1/distribution/openapi.json": "8bae640fb784f3909d31c81f22a4474ac37bf8cd23f3e4df4a243bede0aa664c",
+    "api/openapi/v1/identity/openapi.json": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+    "api/openapi/v1/image-registry/problems.json": "d9aa60583ddf2ff0165fe83f85b3169857e98609a011c591732c85fa51267f7e",
+    "api/openapi/v1/image-registry/runtime-policy.schema.json": "11ce49465d6b8560dd9096345e059a638d25717fea6bf44411ee4ba601781bbc",
+    "api/openapi/v1/knowledge/openapi.json": "38d6aae7ae7a5ad4c1bc2883caa19d23ff84e14099abc57168db5d5b0de3487f",
+    "api/openapi/v1/licensing/openapi.json": "f87a723f3563d9b6fb0503997f33449309b1a645402ec1b1065d614e8a60a098",
+    "api/openapi/v1/localization/openapi.json": "bb4e45dd7e644dc5dd7019768eca1a114c7e42031b978d3def4602e4ba3c9b07",
+    "api/openapi/v1/middleware/openapi.json": "c7cfd0ee95ff706fe1f52f72531a11472c205599f90cd668ab5a9af2b154b7c3",
+    "api/openapi/v1/model-gateway/openapi.json": "8f9b969bb890042044511c1833357c0813c22b8fdbe65eab0c8782bdeabb63ef",
+    "api/openapi/v1/model-lifecycle/openapi.json": "0ea246b2fb7881134c34b8a912f76d1656a1fada6575dc70c95d81d8bb655d77",
+    "api/openapi/v1/models/openapi.json": "7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc",
+    "api/openapi/v1/monitoring/openapi.json": "92a72afd45c90a1c5345c8d2aebad6e72b2ab4eed024d48f0b1c864facd9a834",
+    "api/openapi/v1/monitoring/problem-statuses.json": "71e877d4e4b53a0aa265d1c3c1e95dfbef7324fd2e1b9937dbf750ba97fc64af",
+    "api/openapi/v1/nodes/openapi.json": "4c3c292a1fd509eae1740370a0e24dc2bcd06ed1a275c26439aff666bd47d978",
+    "api/openapi/v1/notifications/openapi.json": "0314a7f482b38104d6e3f2f79d0f03d02ca60ee1556eda041c78088f4666e2cd",
+    "api/openapi/v1/plugins/openapi.json": "23d5334f10000297e7a6a65b5ed641c138af6a863d94d28e03e0fa70017d144b",
+    "api/openapi/v1/preferences/openapi.json": "7002ec5bdbd3292bae56e32db99532f067ccf2dc6116b7d2d9485484b66a622e",
+    "api/openapi/v1/privateclusters/README.md": "d92a4509e5f34e5d9003939ed973772d5d34c0d2907935a162966a5a92df12f6",
+    "api/openapi/v1/privateclusters/openapi.json": "ef48170e4537460b62fe1d6c7eedc8e1d0383af89c40c4c5c7570937a00b5c6b",
+    "api/openapi/v1/privateclusters/problem-statuses.json": "9dd34ae650d4a61c09007408cb2618326e8589fc97799a3781f6211d66dcb32e",
+    "api/openapi/v1/privateclusters/runtime-policy.schema.json": "e6528a2fdf8dab5c6872b90f5f8497e2395141268718cb68cfc2ca08a6aed956",
+    "api/openapi/v1/releases/openapi.json": "3c1693f5db457f5874b94610743baf31bf8e1099e7f893c3322278f7ec6e8358",
+    "api/openapi/v1/sso/openapi.json": "593fbc491f3877b470e34ae0c093565d78f50743c98290f8ae27b9eb82e38fa5",
+    "api/openapi/v1/taskdeliveries/openapi.json": "b69d0fa1268a84c16cb77998d669777106b2f4432b7a8bb9c2c32ce5d6aaacbb",
+    "api/openapi/v1/taskdeliveries/problem-statuses.integration.json": "1f63599c304e9db254a064d9bdc8043d64c73c9de63b069c82de8c4befc33ebe",
+    "api/openapi/v1/training/openapi.json": "0480d6472cade491781bb46e264129fed875f12047b4a06c4af186d08d33da68",
+    "api/openapi/v1/workflows/openapi.json": "c4090a504ba236a3f87f3473e7edf0f6db3a7ff533d1046405c87f32dc2431e6",
+    "api/openapi/v1/workspaces/openapi.json": "39fd8b24294752b5173062161023085400771686e8085db651a52d53127bb5ba",
+    "web/packages/help/locales/en/console/audit-trail.md": "2442bedb0e2d1a6a5d03097a95e0ace0d6962f4bba79e89cf5dd15594dfca1c3",
+    "web/packages/help/locales/en/console/email.md": "a1dec0852f1210b6a6dfa5f78543c0aa32cef200e2fe6bc958bfea125b5db277",
+    "web/packages/help/locales/en/console/gateway-keys.md": "bdd814f9cde41986259ce2fd385edc320605607a3bc95e4739e8d4ab21931e37",
+    "web/packages/help/locales/en/console/getting-started.md": "aac3f28d8b4037610a718f365b1eb9cd5a51e72c3c8963443e40099eedeac772",
+    "web/packages/help/locales/en/console/license.md": "8ff54e0204d7027c6d9a6bcb23847062e698ac0e1229f3e479171fd859ac8da7",
+    "web/packages/help/locales/en/console/model-library.md": "40e8e1d5b38f06d23f755778763ac3d6767a659bd5e0cd4da854cb1bea9e2dd6",
+    "web/packages/help/locales/en/console/model-services.md": "4741b5fcb81915387325a16a39975038332182842cd9e33d499d9a8887ef16fc",
+    "web/packages/help/locales/en/console/nodes.md": "d8bd03deab8677514e57b1814544177f4a8577e5d514cbf12cc97fb4fa961ee1",
+    "web/packages/help/locales/en/console/people-and-workspaces.md": "0b7d829dfeca6f4f343c76cdada0bfe4026cf4d520872ce4f1057726d30693ab",
+    "web/packages/help/locales/en/console/settings.md": "de30b114cdd657713e6785772ea53ccf46ea65a52b6dba40d496f99e9dc0302a",
+    "web/packages/help/locales/en/console/single-sign-on.md": "73e73703b12d075514e853764aff0dec1e9735911eb76938506d4e417b1ddfe3",
+    "web/packages/help/locales/en/console/tasks.md": "1e6b9040c9076a1cd39098870242732e38ac2d87843d0c65f9d6ab320af9c6ed",
+    "web/packages/help/locales/en/portal/api-keys.md": "121958c8caea6d021b1fb59e86811ebf49d92f9a4f4b320b13dd1937e3ed5bf7",
+    "web/packages/help/locales/en/portal/getting-started.md": "e9fb9c42e9e46c1bd35549f3fced49ed8fa750950afbfa1fa20a6c56d833b4e7",
+    "web/packages/help/locales/en/portal/models.md": "7600bd57cd6de7068046ceb684d8520d1540138a97a8230ee3f6c6450167cbfe",
+    "web/packages/help/locales/en/shared/account.md": "e9d52aee74ff3e8774de50bb68fe9af1a9ce5c6454dfe880c8943314633c0ca5",
+    "web/packages/help/locales/en/shared/what-is-supported.md": "349e0b38836af94b68aeb86a2552c356a640e6002eb2eb54e432e09a36dfad2b",
+    "web/packages/help/locales/zh-cn/api-descriptions.json": "4c62aa36338e680744ca3d2ba884f7b3dbfd21e07a683d246a9cc4a390d53b23",
+    "web/packages/help/locales/zh-cn/console/audit-trail.md": "68e8cd5e4f20a5f39e34d867c4af6813851fc36435cedd2b0439315f4d5067c9",
+    "web/packages/help/locales/zh-cn/console/email.md": "3c247eb41421f5b3f46c8867aafaa46247fc8f14e6e254008978787842955ff8",
+    "web/packages/help/locales/zh-cn/console/gateway-keys.md": "f197ddb928fe213f33420147f2cf429dfb5896563d64a141420761764fb921c3",
+    "web/packages/help/locales/zh-cn/console/getting-started.md": "b800fca0eaf96da4bb293ddae611503a42aac40f213cc4adca9df8f3719b1b4b",
+    "web/packages/help/locales/zh-cn/console/license.md": "05e2417dd56d1bb0cb4f79d39c0590739e6f0f2433bd60a6b7e801aaeb930a7d",
+    "web/packages/help/locales/zh-cn/console/model-library.md": "983810be115d6daf89f8f35b1b00940ee1d55915b11c36810c7b0f3859c9f401",
+    "web/packages/help/locales/zh-cn/console/model-services.md": "2b7e50957a4d87c7f099a682df9dd5036083a3335bbf86a2083196ebe11bce44",
+    "web/packages/help/locales/zh-cn/console/nodes.md": "4b0f69eb35553395b8a206306b7fb54ccc877aff6661a3e01dbb5cd64ad50376",
+    "web/packages/help/locales/zh-cn/console/people-and-workspaces.md": "8da3f4bcafac0085f29ea163c5b9f58dd913a7a2c38913e8855a55ad86d5c4bd",
+    "web/packages/help/locales/zh-cn/console/settings.md": "bf65643b6a0f954576f6c656b1603fb58001e10b1bfb448c288837c3f8be975b",
+    "web/packages/help/locales/zh-cn/console/single-sign-on.md": "016dfc41ad2fca7afee7212092d0a2f49d8d3e7779aa42bac26353731e4540b0",
+    "web/packages/help/locales/zh-cn/console/tasks.md": "5e6ac851d79c8caa4b3d655fcfbf48d0c6e33a226e3a05c36565e5a5e916f609",
+    "web/packages/help/locales/zh-cn/portal/api-keys.md": "cb55f4b33c355536572d4ff1fff6e51a73b96dd220b5d6bff5cabbbfeb85b1bd",
+    "web/packages/help/locales/zh-cn/portal/getting-started.md": "2afd8fded1d73c345781eb7937f8ba8e1fff534ed201beae14a9e0755dd7f7dd",
+    "web/packages/help/locales/zh-cn/portal/models.md": "93585610991024ad111e796fdbf22daa3a64075f94895cd51e33124beb5edc28",
+    "web/packages/help/locales/zh-cn/shared/account.md": "090dfb68cc36b9eecb8bb0bd0567995eeeedc4fa71de727f463bac30dd57c203",
+    "web/packages/help/locales/zh-cn/shared/what-is-supported.md": "0adec76de78dc33e9b0b9f05d984ec307f9ba7e2f1d70d6e098cb8ef1c3ab5d4"
+  },
+  "planned_locale_postimage_sha256": "b6615f7c909fb18b6fbaa7087750e2278303e842e38881c448c8d7b17841a502",
+  "projection_outputs_reused_from": "4b1e5c99bdc2e9349eabc40378c6c8743e62b82f",
+  "web_shared_test_helper_fix_inherited": "44ab52293e516128ba2efc0edc2cb2053acc3462",
+  "full_web_tree_equality_claim": false,
+  "new_generation_run": false,
+  "new_native_run": false,
+  "whole_gate_run": false
+}

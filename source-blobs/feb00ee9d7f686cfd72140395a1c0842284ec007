@@ -1,0 +1,144 @@
+import ast
+import hashlib
+import hmac
+import importlib.metadata
+import json
+import re
+import secrets
+import sys
+import uuid
+from pathlib import Path
+from types import SimpleNamespace
+
+from jinja2.sandbox import ImmutableSandboxedEnvironment
+
+run, repo, model = map(Path, sys.argv[1:])
+recipe = json.loads((repo / "api/agent/v1/inference-recipe.json").read_text())
+assert recipe["version"] == "0.31.0"
+launch = (repo / "services/agent/internal/inference/container.go").read_text()
+assert all(flag not in launch for flag in (
+    "--enable-auto-tool-choice", "--tool-call-parser", "--reasoning-parser"
+))
+manager_path = run / "vllm_parser_parser_manager.py"
+serving_path = run / "vllm_entrypoints_openai_chat_completion_serving.py"
+assert hashlib.sha256(manager_path.read_bytes()).hexdigest() == "e60c204767b71f1306f30c257ae802a02685e242de2e253bca8cb285c12db46c"
+assert hashlib.sha256(serving_path.read_bytes()).hexdigest() == "532dadea845c77a5a79011027b9989987c3e32467614e993f439f29c924de002"
+
+def execute(nodes, env):
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), "<vllm-v0.31.0>", "exec"), env)
+
+manager = ast.parse(manager_path.read_text())
+parser_class = next(node for node in manager.body if isinstance(node, ast.ClassDef))
+manager_env = {}
+execute([manager.body[0], parser_class], manager_env)
+assert manager_env["ParserManager"].get_parser(model_name="/model") is None
+
+serving = ast.parse(serving_path.read_text())
+full = next(node for node in ast.walk(serving) if isinstance(node, ast.AsyncFunctionDef)
+            and node.name == "chat_completion_full_generator")
+no_parser = next(node for node in ast.walk(full) if isinstance(node, ast.If)
+                 and ast.unparse(node.test) == "parser is not None"
+                 and any(ast.unparse(item) == "tool_calls = []" for item in node.orelse))
+named = next(node for node in ast.walk(full) if isinstance(node, ast.If)
+             and ast.unparse(node.test) == "is_named_tool_choice or is_required_tool_choice")
+mock_engine_text = '{"key":"synthetic-record"}'
+env = {"output": SimpleNamespace(text=mock_engine_text), "role": "assistant",
+       "self": SimpleNamespace(_create_chat_message=lambda **kwargs: kwargs)}
+execute(no_parser.orelse, env)
+execute(named.body, env)
+assert env["message"]["content"] == mock_engine_text
+assert env["message"]["tool_calls"] == []
+stream = next(node for node in ast.walk(serving) if isinstance(node, ast.AsyncFunctionDef)
+              and node.name == "chat_completion_stream_generator")
+raw_delta = next(node for node in ast.walk(stream) if isinstance(node, ast.Assign)
+                 and ast.unparse(node) == "delta_message = DeltaMessage(content=delta_text)")
+stream_env = {"delta_text": mock_engine_text, "DeltaMessage": lambda **kwargs: kwargs}
+execute([raw_delta], stream_env)
+assert stream_env["delta_message"] == {"content": mock_engine_text}
+print("vLLM 0.31.0 default parser absent; named branch emits raw text and zero tool calls")
+
+schema = {"type": "object", "properties": {"key": {"type": "string"}},
+          "required": ["key"], "additionalProperties": False}
+
+def unique(pairs):
+    value = dict(pairs)
+    if len(value) != len(pairs):
+        raise ValueError("duplicate field")
+    return value
+
+def validate_arguments(raw):
+    parsed = json.loads(raw, object_pairs_hook=unique)
+    if not isinstance(parsed, dict) or set(parsed) != {"key"} or not isinstance(parsed["key"], str):
+        raise ValueError("unsupported arguments")
+    if not 1 <= len(parsed["key"].encode()) <= 64:
+        raise ValueError("invalid key length")
+    return parsed
+
+arguments = validate_arguments(mock_engine_text)
+for malformed in ('{"key":1}', '{"key":"a","extra":"b"}', '{"key":"a","key":"b"}',
+                  '{"key":{"nested":"a"}}', '{"key":""}', '{}'):
+    try:
+        validate_arguments(malformed)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("malformed arguments accepted")
+
+signer = secrets.token_bytes(32)
+nonce = uuid.uuid4().hex
+scope = ["synthetic-tenant", "synthetic-workspace", "synthetic-key-id",
+         "synthetic-alias-id", "synthetic-deployment-id", 1]
+history = [{"role": "user", "content": "Look up the synthetic record."}]
+
+def fingerprint(nonce, scope, name, schema, arguments, history):
+    packed = json.dumps(["gw103-tools-prototype-v1", nonce, scope, name, schema, arguments, history],
+                        sort_keys=True, separators=(",", ":")).encode()
+    return hmac.new(signer, packed, "sha256").hexdigest()
+
+def accepts(call_id, reply_id, scope, name, schema, args, history):
+    if not re.fullmatch(r"call_[0-9a-f]{32}_[0-9a-f]{64}", call_id) or reply_id != call_id:
+        return False
+    _, supplied_nonce, supplied_tag = call_id.split("_")
+    return hmac.compare_digest(supplied_tag, fingerprint(supplied_nonce, scope, name, schema, args, history))
+
+call_id = f"call_{nonce}_{fingerprint(nonce, scope, 'lookup', schema, arguments, history)}"
+assert accepts(call_id, call_id, scope, "lookup", schema, arguments, history)
+assert not accepts(call_id, "call_wrong", scope, "lookup", schema, arguments, history)
+assert not accepts(call_id, call_id, scope, "other", schema, arguments, history)
+assert not accepts(call_id, call_id, scope, "lookup", {}, arguments, history)
+assert not accepts(call_id, call_id, scope, "lookup", schema, {"key": "changed"}, history)
+assert not accepts(call_id, call_id, scope, "lookup", schema, arguments, [])
+for index in range(len(scope)):
+    mutated = scope.copy()
+    mutated[index] = "foreign"
+    assert not accepts(call_id, call_id, mutated, "lookup", schema, arguments, history)
+print("Closed schema, duplicate keys, call ID, arguments, history and foreign scope verified in prototype")
+
+manifest = json.loads((repo / "api/agent/v1/model-catalog.json").read_text())
+config_bytes = (model / "tokenizer_config.json").read_bytes()
+template_pin = next(item for item in manifest["files"] if item["path"] == "tokenizer_config.json")
+assert hashlib.sha256(config_bytes).hexdigest() == template_pin["sha256"]
+env = ImmutableSandboxedEnvironment(trim_blocks=True, lstrip_blocks=True,
+                                    extensions=["jinja2.ext.loopcontrols"])
+template = env.from_string(json.loads(config_bytes)["chat_template"])
+tools = [{"type": "function", "function": {"name": "lookup", "parameters": schema}}]
+roundtrip = history + [
+    {"role": "assistant", "content": "", "tool_calls": [
+        {"id": call_id, "type": "function", "function": {"name": "lookup", "arguments": arguments}}]},
+    {"role": "tool", "tool_call_id": call_id, "content": "synthetic-result"},
+]
+def render(messages):
+    return template.render(messages=messages, tools=tools, add_generation_prompt=True,
+                           enable_thinking=False)
+before = render(history)
+after = render(roundtrip)
+assert '"name": "lookup"' in before
+assert re.search(r"<tool_call>\s*\{[^\n]*synthetic-record[^\n]*\}\s*</tool_call>", after)
+assert re.search(r"<tool_response>\s*synthetic-result\s*</tool_response>", after)
+assert call_id not in after
+roundtrip[1]["tool_calls"][0]["id"] = "call_other"
+roundtrip[2]["tool_call_id"] = "call_other"
+assert render(roundtrip) == after
+print("Pinned Qwen template renders call/result and omits identifiers")
+print("Prototype runtime Jinja", importlib.metadata.version("Jinja2"),
+      "MarkupSafe", importlib.metadata.version("MarkupSafe"))

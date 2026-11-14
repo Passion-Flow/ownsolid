@@ -1,0 +1,47 @@
+{
+  "research_source": "38aad60337d3e696cd3536bab932b100c9013a45",
+  "research_published_main": true,
+  "research_ref": "refs/lane-rel/model-history-contract-research",
+  "research_bundle_sha256": "2dd0eec8449593f0f9cff7da5e5460fa06676ab1c711ccd1cf72808b48e4acb8",
+  "prototype_revision": 2,
+  "prototype_contract_sha256": "b9fd1312c4c813b394e9eb292f22ad20125ea7d380100c31bccc0aff89dffc92",
+  "prototype": "/root/lane-rel-tools/model-history-prototype/v1/models/openapi.json",
+  "owner_inputs": "/root/lane-rel-tools/model-history-prototype/model-owner-decisions.json",
+  "generation": {
+    "source_contract_sha256": "b9fd1312c4c813b394e9eb292f22ad20125ea7d380100c31bccc0aff89dffc92",
+    "generator_source_sha256": "e9bb1a6612c3e407f253bbb6252b22fe546d2ba3c05dfc20d2bc6107f7e5587d",
+    "go_generator": "v2.8.2",
+    "python_generator": "0.29.1",
+    "generated_files": 52,
+    "product_api_modified": false,
+    "public_route_registered": false,
+    "model_storage_changed": false,
+    "wire_tests_run": false,
+    "actual_authorization_qualified": false
+  },
+  "python_wire": {
+    "source_contract_sha256": "b9fd1312c4c813b394e9eb292f22ad20125ea7d380100c31bccc0aff89dffc92",
+    "exit": 0,
+    "elapsed_seconds": 0.212,
+    "test_count": 7,
+    "http_transport": "httpx.MockTransport",
+    "actual_service_or_auth_run": false,
+    "log_sha256": "50ad2b82f694805ab1124ce89165cb5adf400d4980eedcdf48a6fe1dc4dd91e7"
+  },
+  "go_wire": {
+    "source_contract_sha256": "b9fd1312c4c813b394e9eb292f22ad20125ea7d380100c31bccc0aff89dffc92",
+    "exit": 0,
+    "expected_top_level_tests": 3,
+    "admission_busy": false,
+    "log_sha256": "8c9e2134be8ea1541073bf1491d07c47a3fa4b5bd02224267ca9c752e49abe92",
+    "actual_service_or_auth_run": false
+  },
+  "all_existing_response_schemas_unchanged": true,
+  "public_route_registered": false,
+  "public_contract_changed": false,
+  "model_store_changed": false,
+  "original_dispatcher_or_postgresql_qualified": false,
+  "s202_qualified": false,
+  "mod103_ticked": false,
+  "dev101_ticked": false
+}

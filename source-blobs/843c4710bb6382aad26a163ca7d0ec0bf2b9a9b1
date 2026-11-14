@@ -1,0 +1,48 @@
+{
+  "source": "fff5a75af502c8ed9eb9ed595df641d6b6878b8e",
+  "go_platform": "darwin/arm64",
+  "database_platform": "linux/arm64",
+  "native_linux_amd64_acceptance": false,
+  "sql_cost_measured": false,
+  "network_namespace_egress_isolation": false,
+  "host_memory_pressure": "The system has 38654705664 (2359296 pages with a page size of 16384).\nSystem-wide memory free percentage: 78%\n",
+  "docker_memory": {
+    "total": 8318976000,
+    "reported_container_used": 0
+  },
+  "image_id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+  "container_id": "4d527d21c41d7042f64353bc3227345fbbce2c724f4fb5aa2427c9171c0e7a47",
+  "postgresql": "postgres (PostgreSQL) 18.6 (Debian 18.6-1.pgdg12+2)",
+  "expected_roots": [
+    "TestActualTrainingAtomicOrderedEventBatchConcurrentReplayAndRevocation",
+    "TestActualTrainingInvalidBatchAndAuditFailureRollbackEveryEventAndPhase",
+    "TestActualTLSOrderedTrainingEventBatchContractAndCancellation",
+    "TestActualTrainingMixedEventBatchPersistsFinalCursorAndExactReplay",
+    "TestActualTrainingFinalCursorFailureRollsBackEventsPhaseAndAudits",
+    "TestActualTrainingLateBatchOrderFailureRollsBackEveryMember",
+    "TestActualTrainingConcurrentWholeEventBatchHasOnePersistedOutcome",
+    "TestActualTrainingEventBatchUnknownCommitAndExplicitReplay"
+  ],
+  "returncode": 0,
+  "seconds": 14.937,
+  "test_actions": {
+    "pass": 13,
+    "skip": 0,
+    "fail": 0
+  },
+  "passed_roots": [
+    "TestActualTLSOrderedTrainingEventBatchContractAndCancellation",
+    "TestActualTrainingAtomicOrderedEventBatchConcurrentReplayAndRevocation",
+    "TestActualTrainingConcurrentWholeEventBatchHasOnePersistedOutcome",
+    "TestActualTrainingEventBatchUnknownCommitAndExplicitReplay",
+    "TestActualTrainingFinalCursorFailureRollsBackEventsPhaseAndAudits",
+    "TestActualTrainingInvalidBatchAndAuditFailureRollbackEveryEventAndPhase",
+    "TestActualTrainingLateBatchOrderFailureRollsBackEveryMember",
+    "TestActualTrainingMixedEventBatchPersistsFinalCursorAndExactReplay"
+  ],
+  "go_log_sha256": "2404e9ea16b2d5baea2350a8b082d588c6cbaa59dd64989a2ffd82ce8654710a",
+  "pg_log_sha256": "1b936cad36a56afd932cbe8bc8a396e480aa200c380a97d1e81349df6e995c84",
+  "owned_container_removed": true,
+  "owned_ram_removed": true,
+  "qualified_protocol_result": true
+}

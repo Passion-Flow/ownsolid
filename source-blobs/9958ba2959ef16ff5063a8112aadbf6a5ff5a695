@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""Join the simulator UUIDs to exact Kubernetes Node and scheduled Pod sets."""
+import argparse
+import json
+import re
+from pathlib import Path
+
+FLEET = 1000
+NS = "arc105-fleet"
+UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
+TAINT = {"key": "kwok.x-k8s.io/node", "value": "fake", "effect": "NoSchedule"}
+LABELS = {"ownsolid.test/fixture": "arc105", "ownsolid.test/site": "default",
+          "ownsolid.test/cell": "default"}
+CAPACITY = {"cpu": "4", "memory": "8Gi", "pods": "110"}
+
+
+def check(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def scope(request, managed):
+    nodes = request["nodes"]
+    check(request["site"] == request["cell"] == "default", "unexpected Agent scope")
+    check(request["cluster"] == managed["cluster"] and UUID.fullmatch(managed["cluster"]),
+          "simulator request does not match the managed cell")
+    check(len(nodes) == len(set(nodes)) == FLEET and nodes == sorted(nodes),
+          "expected exactly 1,000 distinct sorted simulator UUIDs")
+    check(all(UUID.fullmatch(x) for x in nodes), "invalid simulator UUID")
+    check(not set(nodes).intersection((managed["server"], managed["worker"])),
+          "KWOK request overlaps the actual Kubernetes members")
+    return nodes
+
+
+def generate(nodes):
+    result = {"nodes": [], "pods": []}
+    for node in nodes:
+        labels = LABELS | {"ownsolid.test/node": node}
+        result["nodes"].append({"apiVersion": "v1", "kind": "Node", "metadata": {
+            "name": node, "labels": labels | {"kubernetes.io/hostname": node},
+            "annotations": {"kwok.x-k8s.io/node": "fake"}},
+            "spec": {"taints": [TAINT]},
+            "status": {"capacity": CAPACITY, "allocatable": CAPACITY}})
+        result["pods"].append({"apiVersion": "v1", "kind": "Pod", "metadata": {
+            "name": f"pod-{node}", "namespace": NS, "labels": labels}, "spec": {
+            "nodeSelector": {"ownsolid.test/node": node}, "automountServiceAccountToken": False,
+            "tolerations": [TAINT | {"operator": "Equal"}],
+            "containers": [{"name": "pause", "image": "docker.io/rancher/mirrored-pause:3.10.2",
+                            "imagePullPolicy": "Never", "resources": {"requests": {
+                                "cpu": "10m", "memory": "16Mi"}}}]}})
+    return result
+
+
+def condition(obj, name):
+    return any(c["type"] == name and c["status"] == "True" for c in obj["status"]["conditions"])
+
+
+def check_labels(obj, node):
+    actual = obj["metadata"]["labels"]
+    return all(actual.get(k) == v for k, v in (LABELS | {"ownsolid.test/node": node}).items())
+
+
+def verify(nodes, observed_nodes, observed_pods=None):
+    names = set(nodes)
+    check(len(observed_nodes) == len(names), "synthetic Node count differs from the simulator")
+    for node in observed_nodes:
+        name = node["metadata"]["name"]
+        check(name in names and check_labels(node, name) and condition(node, "Ready")
+              and node["metadata"]["annotations"].get("kwok.x-k8s.io/node") == "fake",
+              "synthetic Node is missing, in the wrong scope, or unready")
+        names.remove(name)
+    check(not names, "synthetic Node set is incomplete")
+    if observed_pods is None:
+        return
+    names = set(nodes)
+    check(len(observed_pods) == len(names), "simulated Pod count differs from the simulator")
+    for pod in observed_pods:
+        node = pod["spec"].get("nodeName")
+        check(node in names and pod["metadata"]["name"] == f"pod-{node}" and check_labels(pod, node)
+              and pod["metadata"]["namespace"] == NS and pod["status"]["phase"] == "Running"
+              and condition(pod, "PodScheduled") and condition(pod, "Ready"),
+              "Pod scheduling or simulated readiness does not match its ownsolid identity")
+        names.remove(node)
+    check(not names, "scheduler placement set is incomplete")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", choices=("generate", "nodes", "pods"))
+    parser.add_argument("directory", type=Path)
+    parser.add_argument("--request", type=Path, required=True)
+    parser.add_argument("--managed", type=Path, required=True)
+    args = parser.parse_args()
+    read = lambda path: json.loads(path.read_text())
+    req = read(args.request)
+    nodes = scope(req, read(args.managed))
+    if args.mode == "generate":
+        for kind, resources in generate(nodes).items():
+            (args.directory / f"kwok-{kind}.json").write_text(json.dumps({
+                "apiVersion": "v1", "kind": "List", "items": resources}))
+    else:
+        observed = lambda kind: read(args.directory / f"observed-{kind}.json")["items"]
+        verify(nodes, observed("nodes"), observed("pods") if args.mode == "pods" else None)
+        print(json.dumps(req))
+
+
+if __name__ == "__main__":
+    main()

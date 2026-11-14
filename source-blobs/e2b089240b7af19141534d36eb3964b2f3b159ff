@@ -1,0 +1,18 @@
+# Independent selected-executor ranking interface
+
+This slice adds the selected-repository read entry without importing the retained
+queued-admission implementation or its test fixture. It has six owned paths.
+It preserves the existing pgx signature and shares the snapshot guard with
+submission preflight. No production schema, dependency, route or controller is added.
+
+The original lane-sch remains 7b29f0f6. The older b9705abc API candidate and its
+broader admission work remain intact; do not apply that broader branch here.
+Quota status is separately merged at b87f3388 with immutable packet
+/root/lane-sch-tools/sch108-quota-release.nFvy67Md, which is not modified.
+
+Read public-entry.md for the actual signature, callback ordering and ownership.
+Read qualification.md for exact source/platform evidence. main-head is added
+only after a verified non-force fast-forward publication.
+
+Verified main commit: 8b17a2954260e517b434906e95740a39ecdd4a9a.
+Read publication.md and verify SHA256SUMS before integration.

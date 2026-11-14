@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+root=/root/lane-rel-tools/session-installed-0d262a8a
+repo=/root/lane-rel
+sha=0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c
+source /root/lane-rel-tools/env
+export GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOFLAGS=-p=1 CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+df -h /
+free -m
+test "$(df -Pm / | awk 'NR==2 {print $4}')" -ge 15360 || exit 75
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048 || exit 75
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -n -E 75 8
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 9
+exec 7>/root/lane-rel-tools/heavy-test.lock
+flock -n -E 75 7
+cd "$repo"
+test "$(git rev-parse HEAD)" = "$sha"
+test -z "$(git status --porcelain)"
+test ! -e "$root/client"
+scratch=$(mktemp -d "$root/build.XXXXXXXX")
+go version > "$scratch/toolchain.txt"
+sha256sum "$(command -v go)" > "$scratch/toolchain.sha256"
+unshare -n bash -ec '
+ ip link set lo up
+ test "$(ip -o link show | wc -l)" -eq 1
+ test -z "$(ip route show default)"
+ test -z "$(ip -6 route show default)"
+ go build -buildvcs=true -trimpath -o "$1/ownsolid" ./tools/cli/cmd/ownsolid
+ go version -m "$1/ownsolid" > "$1/build-info.txt"
+ "$1/ownsolid" version --output json > "$1/version.json"
+ "$1/ownsolid" session list --help > "$1/list-help.txt"
+ "$1/ownsolid" session revoke --help > "$1/revoke-help.txt"
+' bash "$scratch"
+python3 - "$scratch" "$sha" "$repo" <<'PY'
+import hashlib,json,re,subprocess,sys
+from pathlib import Path
+out,sha,repo=Path(sys.argv[1]),sys.argv[2],Path(sys.argv[3])
+info=(out/"build-info.txt").read_text()
+settings=dict(re.findall(r"^\s*build\s+([^=]+)=(.*)$",info,re.MULTILINE))
+assert json.loads((out/"version.json").read_text())["revision"]==sha
+assert settings["vcs.revision"]==sha and settings["vcs.modified"]=="false"
+assert settings["GOOS"]=="linux" and settings["GOARCH"]=="amd64" and settings["CGO_ENABLED"]=="0"
+def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+manifest={
+ "format_version":1,"source_revision":sha,"source_modified":False,
+ "binary_sha256":digest(out/"ownsolid"),"os":"linux","arch":"amd64",
+ "go_version":(out/"toolchain.txt").read_text().strip(),
+ "toolchain_binary_sha256":(out/"toolchain.sha256").read_text().split()[0],
+ "cli_product_tree":subprocess.check_output(["git","-C",str(repo),"rev-parse",sha+":tools/cli"],text=True).strip(),
+ "pinned_inputs":{name:digest(repo/name) for name in ["go.work","tools/cli/go.mod","tools/cli/go.sum"]},
+ "flags":["-buildvcs=true","-trimpath","CGO_ENABLED=0","GOOS=linux","GOARCH=amd64","GOFLAGS=-p=1"],
+ "network":"isolated namespace; loopback only; no IPv4 or IPv6 default route",
+ "build_scope":"Session CLI startup/help only. Control source and installed acceptance are separate.",
+}
+(out/"client-manifest.json").write_text(json.dumps(manifest,indent=2)+"\n")
+print(json.dumps(manifest,indent=2))
+PY
+test "$(git rev-parse HEAD)" = "$sha"
+test -z "$(git status --porcelain)"
+mv "$scratch" "$root/client"
+echo OFFLINE_NATIVE_SESSION_CLIENT_READY

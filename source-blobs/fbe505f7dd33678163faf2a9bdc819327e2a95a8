@@ -1,0 +1,20 @@
+
+## AGT-112 explicit audit fixture policy
+
+The APP candidate `c2b1bb5a` passes a typed
+`productagent.ExecutionPolicy` into `productagent.New`. Missing or failed
+policy returns `SERVICE_NOT_READY`. Explicit disable returns
+`ACCESS_DENIED`. The local APP replay overlay for this test supplies one
+constant enable in the synthetic audit fixture. Carry the same explicit
+reader into the tracked constructor call when the two changes are paired.
+Keep policy selection at the existing constructor boundary and use the
+unchanged production denial and authorized command paths. A fallback
+enable would bypass the trusted installation decision.
+
+Use the existing audit module fixture and standalone verifier on
+disconnected PostgreSQL. Dispatch both commands with the synthetic
+enable, verify the V1/V2 export against its held checkpoint, and retain
+the redaction and tamper refusals. No dependency, model, data or public
+contract is added. The [APP policy qualification](product-assistant-execution-policy.md)
+records the Go, PostgreSQL, pgvector and Python license conditions and
+the default-denial acceptance.

@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+gate=$LANE_REL_FINAL_GATE
+cd "$LANE_REL_FINAL_ROOT"
+git rev-parse HEAD > "$gate/revision"
+old=~/lane-rel-tools/cli-gw107-joint-gate.WDCatjNo
+for attempt in $(seq 1 180); do
+  if test -f "$old/check-build.exit"; then break; fi
+  sleep 5
+done
+test "$(cat "$old/fixture.exit")" = 0
+test "$(cat "$old/check-build.exit")" = 0
+test "$(cat "$old/revision")" = 47de04c274f896fe30ec935f351963e0aac79c69
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 90); do
+  if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+  sleep 5
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+rc=0
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  make check && pnpm -C web build &&
+  go -C services/control test ./internal/modules/distribution &&
+  go -C tools/cli test ./... &&
+  cd services/gateway && cargo build --locked && cargo test --locked
+' > "$gate/run.log" 2>&1 || rc=$?
+echo "$rc" > "$gate/exit"
+test "$rc" = 0
+git diff --check HEAD~6..HEAD
+test -z "$(git status --porcelain)"
+git update-ref refs/codex/handoff/lane-rel-completed-stack HEAD

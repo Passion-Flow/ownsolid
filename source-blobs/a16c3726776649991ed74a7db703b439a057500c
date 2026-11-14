@@ -1,0 +1,35 @@
+# EVL-105 authorized CPU pair
+
+Use the exact approved Qwen3-0.6B files and cached vLLM 0.29.0 CPU image
+from the retained direct run. Keep the original direct request bytes and
+pin the same engine configuration, including engine seed 42, float32,
+no prefix caching and the original greedy requests. The backend is served
+under two names for the same model path. The admitted gateway name is
+first so that the backend response meets the gateway's strict model check.
+
+The vLLM request decoder preserves the caller's seed and temperature. Its
+sampling parameter logic selects greedy before inspecting the seed. The
+CPU runner's V2 sampler calls the Triton Gumbel kernel. Its zero-temperature
+branch selects argmax without generating Gumbel noise. Preserve the vLLM
+source files from the exact cached image and verify both cases against the
+original direct digests. The tracked gateway injects the same disabled
+thinking flag into tokenization and generation. A nonzero temperature,
+changed model or changed template would require a separate qualification.
+
+Use the repository's existing real gateway distribution fixture with the
+signed fixture license, issued test credentials and scoped published alias.
+The fixture retains synthetic deployment and GPU observations for admission.
+A bounded loopback bridge forwards the gateway body unchanged to real vLLM
+and records it. The bridge does not insert a seed or synthesize a reply.
+Use two exact direct calls and two serial gateway calls. Match request
+inputs, the backend and public completion IDs, output text digests, finish
+reason and token usage. Join the server gateway ID to its actual scoped
+PostgreSQL admission and the HTTPS acknowledgment, recompute its canonical
+digest and check released capacity and one report audit. This proves an
+authenticated acknowledgment and not a detached cryptographic signature.
+
+The reused dependency and model licenses are recorded in the EVL-105
+research. The harness adds no dependency, data or product artifact. Use
+only the previously approved cached images and synthetic fixture prompts.
+PostgreSQL owns a network-none namespace. The model and test join only
+that namespace and publish no host ports. Remove only this run's resources.

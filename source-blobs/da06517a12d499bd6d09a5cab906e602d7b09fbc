@@ -1,0 +1,45 @@
+{
+  "children_joined": true,
+  "cleanup_errors": [],
+  "commands": [
+    {
+      "case": "shared",
+      "docker_argv": [
+        "/usr/bin/docker",
+        "compose",
+        "config",
+        "--format",
+        "json"
+      ],
+      "elapsed_seconds": 0.1647054220084101,
+      "exit": 1,
+      "launcher_pid": 3264264,
+      "stderr_sha256": "dfd3091dbbdb3a5f3647fc64836cc1c0a4624af669b5d090bcee613c0b2ed157",
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "elapsed_seconds": 0.8716708839638159,
+  "error": "RuntimeError: Native parser refused case shared",
+  "exit": 1,
+  "heavy_leases": "Not requested or opened for this bounded client parser",
+  "owned_fixture_removed": true,
+  "parent_pid": 3264178,
+  "resources": {
+    "disk_free_bytes": 790239698944,
+    "io": "some avg10=2.77 avg60=1.69 avg300=3.16 total=31640618422\nfull avg10=2.57 avg60=1.55 avg300=3.06 total=29822711459\n",
+    "meminfo": "MemTotal:       32818728 kB\nMemFree:         7496492 kB\nMemAvailable:   19036308 kB\nBuffers:          808728 kB\nCached:         19898840 kB\nSwapCached:        17824 kB\nActive:         12802664 kB\nInactive:       10110088 kB\nActive(anon):    8222132 kB\nInactive(anon):  3945248 kB\nActive(file):    4580532 kB\nInactive(file):  6164840 kB\nUnevictable:       27708 kB\nMlocked:           27708 kB\nSwapTotal:       8388604 kB\nSwapFree:            224 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:               508 kB\nWriteback:             0 kB\nAnonPages:       2210780 kB\nMapped:           941456 kB\nShmem:           9953436 kB\nKReclaimable:    1259784 kB\nSlab:            1756604 kB\nSReclaimable:    1259784 kB\nSUnreclaim:       496820 kB\nKernelStack:       18560 kB\nPageTables:        30788 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    24797968 kB\nCommitted_AS:   25900672 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:       48204 kB\nVmallocChunk:          0 kB\nPercpu:           390656 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:    208896 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      589216 kB\nDirectMap2M:    16187392 kB\nDirectMap1G:    18874368 kB\n"
+  },
+  "scope": "Synthetic client parser only; no Control CLI, image execution, daemon, installed flow or egress-attempt capture",
+  "source": {
+    "candidate": "1a41d97981798440b7f02061d3a73853726b03bc",
+    "child_sha256": "3671f0f12daff5c116552232d88f08460dc5a8cfa25b92b0dde7712ed8c0e8af",
+    "clean": true,
+    "config_sha256": "3fdd7dd7af0b791e2c52a787289eecdba4dcb3e22373cef0ae90b1bf87c93cc8",
+    "manifest_sha256": "bd0b6a78cbd04eb00551d8d6b59e9613fa19a888d2a6b6a354e67226d5c6f7cd",
+    "tree": "398d104c91ce834bec81b9231e28d2a2f6733548",
+    "wrapper_sha256": "f217609ea1617a324cd6e28ad7e758a1c846934b551bd6331d751faa14ee818e"
+  },
+  "status": "failed",
+  "work_status": "failed"
+}

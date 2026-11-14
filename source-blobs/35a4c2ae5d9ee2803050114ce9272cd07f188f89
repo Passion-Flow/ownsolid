@@ -1,0 +1,9 @@
+{
+  "source": "5e764ea567b3613e96679cc3c0ea4d651707826c",
+  "web_tree": "d9da502cbd488c5576a73c909c2717621e677996",
+  "asset_files_verified": 1230,
+  "client_files_original_verified": 23,
+  "code_only_client_files_unchanged_after_binding": 10,
+  "scope": "Source/input preparation only; typecheck and selftests/discovery passed, no browser/server/live SQL/runtime credentials",
+  "gate_log": "support-gate-15c04f824d7646f888ed27f21927dad7.log"
+}

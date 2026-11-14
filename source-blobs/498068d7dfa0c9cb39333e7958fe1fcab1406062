@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work=$(cd "$(dirname "$0")" && pwd -P)
+go=/root/lane-sci-tools/go/bin/go
+export GOENV=off GOFLAGS=-buildvcs=false GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off CGO_ENABLED=0 GOMAXPROCS=2
+export GOCACHE=/root/lane-sci-tools/go-cache GOMODCACHE=/root/lane-sci-tools/go-mod
+test "$("$go" version)" = 'go version go1.27.3 linux/amd64'
+python3 - "$work" <<'PY'
+import json,pathlib,sys
+p=pathlib.Path(sys.argv[1]);name='formal_restore_matrix_test.go'
+(p/'matrix-overlay.json').write_text(json.dumps({'Replace':{str(p/'repo/services/control/internal/platform/database'/name):str(p/name),str(p/'repo/services/control/internal/modules/distribution/stale_snapshot_rollback_test.go'):str(p/'stale_snapshot_rollback_test.go')}}))
+PY
+"$go" -C "$work/repo/services/control" test -p 1 -overlay "$work/matrix-overlay.json" -c -o "$work/database.test" ./internal/platform/database
+"$go" -C "$work/repo/services/control" test -p 1 -overlay "$work/matrix-overlay.json" -c -o "$work/distribution.test" ./internal/modules/distribution
+"$go" -C "$work/repo/services/control" test -p 1 -c -o "$work/databaseaccess.test" ./internal/operations/databaseaccess
+"$go" -C "$work/repo/tools/audit-verify" build -p 1 -o "$work/audit-verify" .
+sha256sum "$work"/*.test "$work/audit-verify"

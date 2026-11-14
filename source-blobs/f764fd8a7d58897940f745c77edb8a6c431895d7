@@ -1,0 +1,111 @@
+import errno
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import resource
+import shutil
+import stat
+import subprocess
+import tempfile
+import time
+
+resource.setrlimit(resource.RLIMIT_AS, (128 * 1024**2, 128 * 1024**2))
+resource.setrlimit(resource.RLIMIT_CPU, (5, 5))
+root = Path(tempfile.mkdtemp(prefix='lane-trn-reader-prototype.', dir='/root'))
+fixture = root / 'fixture'
+fixture.mkdir(mode=0o700)
+marker = b'{"store":"generated-prototype","tenant":"generated-test-tenant"}\n'
+raw = b'{"prompt":"generated","completion":"fixture"}\n'
+digest = hashlib.sha256(raw).hexdigest()
+for name, content in [('namespace.json', marker), ('owner.lock', b''), ('train.jsonl', raw)]:
+    (fixture / name).write_bytes(content)
+    (fixture / name).chmod(0o600)
+writer = os.open(fixture / 'owner.lock', os.O_RDWR | os.O_NOFOLLOW)
+fcntl.flock(writer, fcntl.LOCK_EX | fcntl.LOCK_NB)
+anchor = os.open(fixture, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+carrier = os.open('owner.lock', os.O_RDONLY | os.O_NOFOLLOW, dir_fd=anchor)
+root_info, lock_info = os.fstat(anchor), os.fstat(carrier)
+checks = []
+def same(a, b):
+    return (a.st_dev, a.st_ino) == (b.st_dev, b.st_ino)
+def read():
+    assert same(root_info, os.stat(fixture, follow_symlinks=False))
+    assert same(lock_info, os.stat('owner.lock', dir_fd=anchor, follow_symlinks=False))
+    fd = os.open('namespace.json', os.O_RDONLY | os.O_NOFOLLOW, dir_fd=anchor)
+    try:
+        assert os.read(fd, 4097) == marker
+    finally:
+        os.close(fd)
+    fd = os.open('train.jsonl', os.O_RDONLY | os.O_NOFOLLOW, dir_fd=anchor)
+    try:
+        before = os.fstat(fd)
+        assert stat.S_ISREG(before.st_mode) and before.st_size == len(raw)
+        data = os.read(fd, len(raw) + 1)
+        assert hashlib.sha256(data).hexdigest() == digest
+        assert same(before, os.fstat(fd))
+        assert same(root_info, os.stat(fixture, follow_symlinks=False))
+        return data
+    finally:
+        os.close(fd)
+def refused(fn):
+    try:
+        fn()
+    except (AssertionError, OSError):
+        return
+    raise AssertionError('invalid input was accepted')
+def second_writer_refused():
+    fd = os.open(fixture / 'owner.lock', os.O_RDWR | os.O_NOFOLLOW)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as err:
+            assert err.errno in (errno.EAGAIN, errno.EACCES)
+            return
+        raise AssertionError('writer ownership was lost')
+    finally:
+        os.close(fd)
+start = time.monotonic()
+try:
+    second_writer_refused(); checks.append('second_writer_refused')
+    assert read() == raw; checks.append('reader_while_writer_held')
+    reader_child = "import os,hashlib,sys; p=sys.argv[1]; f=os.open(p,os.O_RDONLY|os.O_NOFOLLOW); d=os.read(f,4096); os.close(f); assert hashlib.sha256(d).hexdigest()==sys.argv[2]"
+    subprocess.run(['python3', '-I', '-c', reader_child, str(fixture / 'train.jsonl'), digest], check=True, timeout=3)
+    checks.append('independent_process_read')
+    refused(lambda: os.write(carrier, b'x')); checks.append('carrier_descriptor_readonly')
+    (fixture / 'train.jsonl').write_bytes(b'x' * len(raw)); refused(read)
+    (fixture / 'train.jsonl').write_bytes(raw); assert read() == raw
+    checks.append('same_length_change_and_repair')
+    original = fixture / 'retained.jsonl'
+    (fixture / 'train.jsonl').rename(original)
+    refused(read)
+    (fixture / 'train.jsonl').symlink_to(original)
+    refused(read)
+    (fixture / 'train.jsonl').unlink(); original.rename(fixture / 'train.jsonl')
+    assert read() == raw; checks.append('missing_and_symlink_refused')
+    (fixture / 'namespace.json').write_bytes(b'changed\n'); refused(read)
+    (fixture / 'namespace.json').write_bytes(marker); assert read() == raw
+    checks.append('namespace_change_and_repair')
+    moved = root / 'moved'
+    fixture.rename(moved); fixture.mkdir(mode=0o700)
+    refused(read)
+    fixture.rmdir(); moved.rename(fixture); assert read() == raw
+    checks.append('root_replacement_refused')
+    os.close(carrier); carrier = None
+    os.close(anchor); anchor = None
+    second_writer_refused(); checks.append('reader_close_preserves_writer_lock')
+    fcntl.flock(writer, fcntl.LOCK_UN)
+    os.close(writer); writer = None
+    fd = os.open(fixture / 'owner.lock', os.O_RDWR | os.O_NOFOLLOW)
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    os.close(fd); checks.append('writer_release_allows_next_owner')
+    record = {'platform': 'linux/amd64', 'test_data': 'generated_only', 'source_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'checks': checks, 'passed': len(checks), 'seconds': round(time.monotonic() - start, 4), 'maximum_rss_kib': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, 'postgresql_or_processor_started': False, 'scope': 'kernel descriptor/ownership mechanism only; not Go product or mount qualification'}
+finally:
+    for fd in (carrier, anchor, writer):
+        if fd is not None:
+            os.close(fd)
+    shutil.rmtree(fixture)
+(root / 'result.json').write_text(json.dumps(record, indent=2) + '\n')
+shutil.copyfile(__file__, root / 'prototype.py')
+print(json.dumps({'evidence': str(root), **record}))

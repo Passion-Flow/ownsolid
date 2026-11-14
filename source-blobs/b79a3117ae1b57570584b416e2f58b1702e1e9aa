@@ -1,0 +1,77 @@
+"""Run only the new scoped PostgreSQL root in one memory-bounded offline fixture."""
+# SCI_OLD_ADMISSION_CLOSED_2026_11_13
+__import__('sys').stderr.write('NOTRUN: SCI old admission is closed pending coordinator epoch activation.\n')
+raise SystemExit(78)
+import fcntl,hashlib,json,os,shutil,stat,subprocess,sys,tempfile,time
+from pathlib import Path
+import signal
+def interrupted(signum, frame):
+    raise KeyboardInterrupt
+for interruption in (signal.SIGTERM, signal.SIGHUP):
+    signal.signal(interruption, interrupted)
+
+def command(args,**kwargs):
+    return subprocess.run(args,check=True,timeout=kwargs.pop('timeout',40),**kwargs)
+
+home=Path.home();tools=home/'lane-sci-tools';source=home/'lane-sci';scratch=tools/'aud108-scoped'
+unit=Path(sys.argv[1]).resolve()
+assert unit.parent==scratch and unit.name.startswith(('unit-cgroup.','build-cgroup.'))
+assert (unit/'audit.test').is_file()
+if (unit/'build-exit.txt').exists():assert (unit/'build-exit.txt').read_text().strip()=='0'
+for item in (source/'services/control/internal/modules/audit').glob('scoped*.go'):
+    assert item.read_bytes()==(unit/item.name).read_bytes(), 'changed source requires a new binary'
+fds=[];pg=None;private=None;run=None
+try:
+    for path in ['/run/lock/ownsolid-heavy.lock',str(tools/'heavy-test.lock')]:
+        fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW);fds.append(fd);info=os.fstat(fd)
+        assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+        try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:print('Bounded PostgreSQL slot busy; no queue',flush=True);raise SystemExit(75)
+    memory={line.split(':',1)[0]:int(line.split()[1]) for line in Path('/proc/meminfo').read_text().splitlines() if len(line.split())>=2}
+    pressure=dict(item.split('=') for item in next(line for line in Path('/proc/pressure/io').read_text().splitlines() if line.startswith('full ')).split()[1:])
+    disk=os.statvfs(home)
+    state={'phase':'scoped-PG-only','free_mib':memory['MemFree']//1024,'available_mib':memory['MemAvailable']//1024,'io_avg10':float(pressure['avg10']),'io_avg60':float(pressure['avg60']),'disk_gib':disk.f_bavail*disk.f_frsize//(1<<30),'combined_memory_limit_mib':1536,'cpu_limit':1}
+    print(json.dumps(state),flush=True)
+    if state['available_mib']<12288 or state['disk_gib']<15 or state['io_avg10']>5 or state['io_avg60']>5:raise SystemExit(75)
+    if subprocess.run(['pgrep','-x','cargo|rustc|compile|link|chrome-headless'],stdout=subprocess.DEVNULL).returncode==0:raise SystemExit(75)
+    run=Path(tempfile.mkdtemp(prefix='pg-cgroup.',dir=scratch));run.chmod(0o700)
+    print('Evidence directory: '+str(run),flush=True)
+    (run/'preflight.json').write_text(json.dumps(state,sort_keys=True)+'\n')
+    (run/'base-commit.txt').write_text(subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True))
+    shutil.copy2(__file__,run/'run_bounded_pg.py')
+    for item in (source/'services/control/internal/modules/audit').glob('scoped*.go'):shutil.copy2(item,run/item.name)
+    (run/'binary.sha256').write_text(hashlib.file_digest((unit/'audit.test').open('rb'),'sha256').hexdigest()+'\n')
+    import secrets
+    private=Path(tempfile.mkdtemp(prefix='private.',dir=scratch));private.chmod(0o700)
+    password=secrets.token_hex(24)
+    (private/'password').write_text(password+'\n');(private/'password').chmod(0o600)
+    (private/'dsn').write_text('postgresql://postgres:'+password+'@127.0.0.1:5432/aud108_scoped_test?sslmode=disable\n');(private/'dsn').chmod(0o600)
+    args=['docker','run','--pull','never','-d','--cidfile',str(run/'container-id'),'--name','lane-sci-scoped-pg-'+run.name.split('.')[-1],'--network','none','--cpus','1','--memory','1536m','--shm-size','128m','--tmpfs','/var/lib/postgresql/data:rw,size=768m','-e','PGDATA=/var/lib/postgresql/data/pgdata','-e','POSTGRES_PASSWORD_FILE=/run/scoped-pg-password','-e','POSTGRES_DB=aud108_scoped_test']
+    for src,dst in [(private/'password','/run/scoped-pg-password'),(private/'dsn','/run/scoped-pg-dsn'),(unit/'audit.test','/run/scoped-audit.test')]:args+=['--mount',f'type=bind,source={src},target={dst},readonly']
+    args+=['sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47']
+    pg=subprocess.check_output(args,text=True,timeout=30).strip()
+    for _ in range(60):
+        if subprocess.run(['docker','exec',pg,'pg_isready','-q','-h','127.0.0.1','-U','postgres','-d','aud108_scoped_test'],timeout=3).returncode==0:break
+        time.sleep(1)
+    else:raise SystemExit('owned PostgreSQL readiness deadline')
+    with (run/'postgres-version.txt').open('w') as log:command(['docker','exec',pg,'psql','-Xq','-U','postgres','-d','aud108_scoped_test','-v','ON_ERROR_STOP=1','-c',"CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC; SHOW server_version;"],stdout=log)
+    pid=subprocess.check_output(['docker','inspect','--format','{{.State.Pid}}',pg],text=True).strip()
+    routes=subprocess.check_output(['nsenter','-t',pid,'-n','--','ip','route'],text=True)
+    (run/'network-routes.txt').write_text(routes);assert not routes
+    with (run/'scoped-tests.log').open('w') as log:
+        status=subprocess.run(['docker','exec','-e','PROJECT_ONE_TEST_DSN_FILE=/run/scoped-pg-dsn','-e','GOMAXPROCS=2','-e','GOMEMLIMIT=256MiB',pg,'/run/scoped-audit.test','-test.run','^TestScopedAuditPostgreSQL$','-test.count=1','-test.v','-test.timeout=5m'],stdout=log,stderr=subprocess.STDOUT,timeout=330).returncode
+    print((run/'scoped-tests.log').read_text(),flush=True)
+    (run/'test-exit.txt').write_text(str(status)+'\n')
+    raise SystemExit(status)
+finally:
+    if pg is None and run is not None and (run/'container-id').is_file():
+        owned=(run/'container-id').read_text().strip()
+        if len(owned)==64 and all(ch in '0123456789abcdef' for ch in owned):pg=owned
+    if pg is not None:
+        subprocess.run(['docker','stop','--timeout','15',pg],stdout=subprocess.DEVNULL,timeout=25)
+        with (run/'postgres.log').open('w') as log:subprocess.run(['docker','logs',pg],stdout=log,stderr=subprocess.STDOUT,timeout=15)
+        state=subprocess.check_output(['docker','inspect','--format','exit={{.State.ExitCode}} oom={{.State.OOMKilled}} network={{.HostConfig.NetworkMode}} cpus={{.HostConfig.NanoCpus}} memory={{.HostConfig.Memory}} ports={{json .HostConfig.PortBindings}}',pg],text=True)
+        (run/'container.txt').write_text(state)
+        subprocess.run(['docker','rm',pg],stdout=subprocess.DEVNULL,timeout=15)
+    if private is not None:shutil.rmtree(private)
+    for fd in reversed(fds):os.close(fd)

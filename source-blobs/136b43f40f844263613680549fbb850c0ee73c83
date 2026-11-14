@@ -1,0 +1,25 @@
+{
+  "source": "2c20c8cccc360f3345126a5c36fc3de3c3363732",
+  "platform": "darwin/arm64",
+  "command": [
+    "make",
+    "test-tools",
+    "PYTHON=/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12"
+  ],
+  "exit": 0,
+  "test_groups": [
+    [
+      "13",
+      "0.000"
+    ],
+    [
+      "67",
+      "0.647"
+    ]
+  ],
+  "log_sha256": "67ee41a072ef515a7d67a4e54114078c86f169620f18aec91dd3a775f1983fd5",
+  "compiler_browser_or_container_started": false,
+  "whole_repository_gate_run": false,
+  "new_heavy_admission": false,
+  "git_status_after": ""
+}

@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+run=$1
+trap 'echo "stage-exit=$?"' EXIT
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+export CARGO_BUILD_JOBS=2 GOMAXPROCS=2 GOFLAGS=-p=2 CARGO_NET_OFFLINE=true
+df -h /root
+free -m
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+go -C services/control test -c -tags gateway_integration -o "$run/distribution.test" ./internal/modules/distribution

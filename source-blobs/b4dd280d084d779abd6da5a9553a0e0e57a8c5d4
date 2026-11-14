@@ -1,0 +1,9 @@
+{
+  "observed_at": "2026-11-12T12:52:31.206062+00:00",
+  "snapshot": {
+    "vm_http_requests_total{path=\"/api/v1/query_range\"}": "25",
+    "process_start_time_seconds": "1794484738",
+    "vm_app_uptime_seconds": "3212"
+  },
+  "boundary": "Single passive metrics snapshot after raw refresh probes; sole driver still requires its own fresh baseline"
+}

@@ -1,0 +1,6 @@
+# Quota-only successor
+
+Use /root/lane-sch-tools/sch108-quota-release.nFvy67Md for independent quota-status
+integration. The original sch108-public.d1Boy6XA packet and its checksums remain
+unchanged. The new packet excludes the unqualified Executor/fair-queue candidate;
+consult its qualification.md and actual main-head before integration.

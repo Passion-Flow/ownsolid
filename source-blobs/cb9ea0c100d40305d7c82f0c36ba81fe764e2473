@@ -1,0 +1,10 @@
+{
+  "memory_kib": {
+    "MemFree": 21389960,
+    "MemAvailable": 22403392
+  },
+  "full_io_psi_avg10": 3.02,
+  "disk_free_bytes": 795087167488,
+  "baseline_source": "149a95013db6c6d1ca9dbadd09b05fff9b4c98de",
+  "scope": "external node SQL overlay and current schema60 fixture; restricted composed observations, liveness, wakes and aggregate role limit; verified TLS and required SCRAM channel binding prototype only; no product activation/server/complete-profile acceptance"
+}

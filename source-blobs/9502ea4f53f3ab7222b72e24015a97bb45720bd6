@@ -1,0 +1,94 @@
+# Borrowing and reclaim within a department
+
+SCH-109 lends idle guaranteed resources between workspaces in an enabled
+department. [Kueue cohorts](https://kueue.sigs.k8s.io/docs/concepts/cohort/)
+share unused nominal quota. [ClusterQueue configuration](https://kueue.sigs.k8s.io/docs/tasks/manage/administer_cluster_quotas/)
+defines nominal quota, borrowing limits and lending limits separately.
+[Kueue preemption](https://kueue.sigs.k8s.io/docs/concepts/preemption/)
+lets a queue reclaim nominal quota from borrowing workloads and orders
+eligible targets by policy. Its [workload API](https://github.com/kubernetes-sigs/kueue/blob/main/apis/kueue/v1beta1/workload_types.go)
+distinguishes eviction from completion.
+
+The first ownsolid path pools direct sibling workspaces under an explicitly
+enabled department in one tenant. The existing workspace burst limit and the
+sum of child ceilings remain hard bounds. A borrower uses its own nominal
+capacity first. Other workspaces lend only their unused, uncommitted guarantees.
+Record exact lender and resource quantities on the admitted attempt. Keep
+that funding until the attempt's existing release path records positive stop
+or never-delivered evidence. This path keeps unused burst limits within
+their own workspace and keeps borrowing inside the tenant and department.
+
+When a whole request fits its workspace guarantee but outstanding loans
+occupy that guarantee, persist one pending reclaim per workspace. Select only
+attempts carrying loans from that workspace, newest loan first using a
+database-assigned order. Traverse until all affected resource deficits are
+covered. This slice defines recency because it has no authenticated
+preemption priority input. A pending reclaim prevents new loans from its
+lender and other admissions in that workspace until it admits or is
+cancelled. The exact waiting attempt cannot reserve until all planned victims
+have a committed release. Cancelling a plan leaves every victim hold intact.
+
+Borrowing and reclaim use the existing PostgreSQL READ COMMITTED owner
+transaction. The lock order is policy, requesting workspace and then cohort.
+A cohort never locks another workspace. A physical release only decreases
+usage, and a subsequent statement must observe its committed row before using
+the capacity. Policy changes affecting an enabled cohort require it to be
+idle so old funding cannot be reassigned to a new policy.
+[PostgreSQL explicit locking](https://www.postgresql.org/docs/18/explicit-locking.html)
+and [READ COMMITTED](https://www.postgresql.org/docs/18/transaction-iso.html)
+supply the lock and visibility semantics.
+
+A read-only plan would let new borrowing consume reclaimed guarantees before
+the claimant retries. Releasing resources at planning time would double
+allocate live work. A cross-tenant pool would require separate authority and
+policy. The first slice persists the plan and leaves stop delivery, grace
+periods, priority eligibility, audit and rollout to the runtime owners.
+
+The existing [Go](https://go.dev/LICENSE) and [UUID](https://github.com/google/uuid/blob/master/LICENSE)
+BSD-3-Clause libraries, [pgx](https://github.com/jackc/pgx/blob/master/LICENSE)
+(MIT) and [PostgreSQL](https://www.postgresql.org/about/licence/) permit
+commercial use, redistribution with their notices and offline use. Kueue
+is an Apache-2.0 reference. This slice adds no dependency, model or dataset.
+
+Use real isolated PostgreSQL to prove exact loan attribution, whole-job
+limits, no double lending under concurrent admission, deterministic reclaim
+order, unchanged held usage while waiting, idempotence across lost commit
+acknowledgements, cancellation and stale release. Candidate DDL stays separate
+from the SCH-101 handoff. Runtime activation and production catalog acceptance
+are required before SCH-109 ticks.
+
+## Owner integration and candidate schema
+
+On the existing reservation path, `ReserveWithin` returns
+`ErrReclaimRequired` when outstanding loans block an otherwise nominal
+request. The workload owner first rolls back any provisional physical hold.
+It can persist the exact waiting attempt through `RequestReclaimWithin`
+in a borrowed transaction with the corresponding wait state and audit.
+After a confirmed commit, the owner reconciles the ordered victim list with
+its exact attempts and existing stop hooks. A repeated pending plan can list
+an already stopped victim, so runtime delivery must be idempotent. Once
+every selected victim has a committed `ReleaseWithin` write, retry the same
+reservation. Admission consumes the plan in the same transaction as the
+new hold. `CancelReclaimWithin` withdraws the exact claim while the owner
+retains authority over the job and any stops it already requested.
+
+Apply [borrowing.sql](../../services/control/internal/modules/scheduling/testdata/borrowing.sql)
+after the two SCH-101 candidate tables in an isolated schema. It adds
+per-attempt loan allocations and a database-assigned order to reservations,
+plus a cell-scoped reclaim table. The two existing SCH-101 candidate files
+retain their original bytes and fingerprints. Enable `QuotaNode.Borrowing`
+on an idle department only after this follow-on DDL is present.
+The database owner still assigns the production migration version, updates
+the table count and grants, and verifies fresh and restored catalog digests.
+The runtime owner still chooses eligible victims and wires stop delivery,
+proof, audit and the wait states.
+
+For the PostgreSQL test, set `OWNSOLID_SCHEDULING_TEST_DSN_FILE` to a protected
+DSN file for a local disposable database ending in `_test` and run
+`go -C services/control test -p 1 -race ./internal/modules/scheduling/... -count=1`.
+The fixture creates isolated schemas and applies the follow-on DDL only to
+the borrowing tests. To exercise the real PostgreSQL acknowledgement-loss
+proxy, use an isolated plaintext loopback endpoint and add
+`-tags repository_integration`.
+
+The SHA-256 of the follow-on candidate SQL is `ea20adf6825b04990f8f8679e1eb86035450fdc2ea4f4a8b484c07beb20be24c`.

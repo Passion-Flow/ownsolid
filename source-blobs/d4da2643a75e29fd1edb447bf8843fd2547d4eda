@@ -1,0 +1,76 @@
+# Qualified independent quota-status slice
+
+Qualified main base: 3b08761863dba5bf81cb637f8b99a80a7448732e (schema 60 / 120 tables).
+Publication base: f78424921d99c284daa42da5f461ecffc9fb8ead, adding only the
+accepted DAT-101 research correction in docs/research/dataset-import.md.
+Exact tested source: 0e7d5a9e1202eecb09b5c976212baf41dddb5ca2.
+Documentation qualification commit before rebase: ec1a0a2a7500aa866d39a6a64476fd3a1562a7a0.
+Release commit after rebase: b87f338892f5dff2f7fa33232be5b51a742292e8.
+The release follow-up changes only docs/product/status.md, as recorded in
+qualification-only-paths. Runtime, tests, contracts, dependencies and tool inputs
+are unchanged. The final rebase changes only the accepted DAT research document
+(rebase-only-paths); tested-source-to-release-paths lists both documentation
+differences, runtime-unchanged.diff is empty and the scheduling manifest still
+verifies. final-doc-layout.log qualifies the final document combination. No
+unchanged runtime check was repeated for the documentation-only rebase.
+
+## Actual Linux amd64 qualification
+
+Evidence: /root/lane-sch-tools/quotarelease.eDcUCZUJ; completed records are copied
+to linux-current-evidence/. Go 1.27.3, PostgreSQL 18.6.
+
+All six selected repository-integration race tests passed against an isolated
+network-none PostgreSQL container, reached by a loopback socket relay in a
+route-free network namespace:
+
+- TestPostgresConcurrentBorrowersCannotDoubleLend
+- TestPostgresReservationAndReleaseReplay
+- TestPostgresWorkspaceQueueUsesLiveCommittedShares
+- TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting
+- TestPostgresWorkspaceQuotaStatusWaitsForReservationCommit
+- TestPostgresHTTPWorkspaceQuotaStatus
+
+The complete Control module suite also passed:
+  go -C services/control test -p 1 ./internal/modules/...
+make check and make build passed on the same exact source.
+
+Each phase head equals the tested source, each .passed records PASS, source
+diffs are empty and source-files.sha256 verifies the actual scheduling inputs.
+The PG fixture passwords/DSN files were removed and its owned container stopped
+and removed. No port was exposed. There is no remaining owned test service.
+
+Native phases held the shared and lane Linux locks serially. PostgreSQL and
+module gates retained the conservative 3072 MiB free-memory threshold. For
+check/build only, the original private 3072 MiB guard was changed to the
+repository's 2048 MiB minimum (briefing section 13), while retaining at least
+12288 MiB available memory, 15 GiB disk, full I/O avg10/avg60 at most 5% and
+no competing compiler/runtime process. Check started with 2943 MiB free,
+17772 MiB available and I/O full avg10 0.00/avg60 0.96. Build started with
+4054 MiB free, 17672 MiB available and full avg10 0.09/avg60 3.27.
+This changed no product input, test threshold or PostgreSQL acceptance result.
+
+Earlier schema-59 and intermediate schema-60 evidence remains separate at
+quotarelease.wPUOhNZn and quotarelease.U8kMVyJZ. The old Darwin arm64 module
+gate remains in schema-59-evidence/. None is relabelled as a current native pass.
+The prepared later Mac fallback never ran because its lock was busy.
+
+## Integration boundary and preserved work
+
+Exactly the 12 owned paths in slice-paths are included. The direct constructor,
+signatures, exact DTO and eleven actual module failures are in public-entry.md,
+errors.md and openapi.review.json. The IAM review patch applies cleanly but was
+not installed. There is no hidden factory, new pool, authentication bypass,
+production route, API generation, UI, migration or runtime-controller activation.
+Both existing-ddl files are byte-identical to the accepted main's unnumbered
+candidates. ARC owns formal lineage, fingerprints, serving grants and readiness.
+Native fixture tests do not prove production serving-role access.
+
+The broader selected-Executor/fair-queue work remains unchanged on lane-sch at
+7b29f0f625735557474907d3d4da50a000a03a00 and is excluded here.
+The old sch108-public.d1Boy6XA packet/checksums remain immutable; its separate
+.quota-release.md companion points here. Do not apply that broader packet.
+The roadmap remains open until the installed permissions, schema, routes, UI
+and end-to-end flow satisfy the product definition of done.
+
+Verified fast-forward publication is recorded in publication.md and main-head.
+The exact tested source is retained at qualified-source-ref.

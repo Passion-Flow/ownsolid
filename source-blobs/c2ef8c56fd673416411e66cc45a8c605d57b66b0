@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -uo pipefail
+n=lane-c-obs-eval; e=/root/lane-c/e2e; d=/root/lane-c/obs
+docker rm -f $n >/dev/null 2>&1
+docker run -d --name $n --privileged --network none --cpus 8 --memory 16g -e DOCKER_TLS_CERTDIR= -v $d:/obs:ro -v $e:/bundle:ro docker:29.1.3-dind >/dev/null
+for _ in $(seq 1 60); do docker exec $n docker info >/dev/null 2>&1 && break; sleep 1; done
+docker exec -d $n /bundle/egress-recorder -interface egress0 -log /var/log/egress.jsonl
+sleep 1
+docker exec $n sh -euc "ip link set egress0 up; ip addr add 198.18.0.1/32 dev egress0; ip -6 addr add 2001:db8:e9e5::1/128 dev egress0; ip route add default dev egress0; ip -6 route add default dev egress0"
+docker exec $n docker load -q -i /obs/vm-images.tar >/dev/null
+hard="--read-only --cap-drop ALL --security-opt no-new-privileges:true --user 10001:10001 --pull never --cpus 4 --memory 6g"
+docker exec $n sh -c "mkdir -p /srv/vm /srv/vl && chown 10001:10001 /srv/vm /srv/vl"
+docker exec $n docker run -d --name vm $hard -p 127.0.0.1:8428:8428 -v /srv/vm:/data victoriametrics/victoria-metrics:v1.155.0 -storageDataPath=/data >/dev/null
+docker exec $n docker run -d --name vl $hard -p 127.0.0.1:9428:9428 -v /srv/vl:/data victoriametrics/victoria-logs:v1.53.0 -storageDataPath=/data >/dev/null
+sleep 3
+echo "== idle 300s"; sleep 300
+echo "attempts after idle: $(docker exec $n sh -c 'wc -l < /var/log/egress.jsonl')"
+echo "== positive control: host and inside each store container"
+docker exec $n sh -c 'wget -T 3 -q -O- http://192.0.2.10/ 2>&1 | head -1'
+docker exec $n sh -c 'docker exec vm wget -T 3 -q -O- http://192.0.2.11/ 2>&1 | head -1; docker exec vl wget -T 3 -q -O- http://192.0.2.12/ 2>&1 | head -1'
+sleep 1
+docker exec $n sh -c 'cut -c1-140 /var/log/egress.jsonl'
+echo "== flags mentioning outbound behaviour"
+for c in vm vl; do echo "-- $c"; docker exec $n sh -c "docker exec $c sh -c 'ls -la / | head -0; ls /'" | tr '\n' ' '; echo; done
+docker exec $n sh -c 'docker exec vm /victoria-metrics-prod -help 2>&1 | grep -iE "^ *-[a-zA-Z.]*(telemetry|update|phone|license|usage)" | head; echo ---; docker exec vl /victoria-logs-prod -help 2>&1 | grep -iE "^ *-[a-zA-Z.]*(telemetry|update|phone|license|usage)" | head'
+echo "== hosts embedded in binaries"
+docker exec $n sh -c 'mkdir -p /tmp/x; docker cp vm:/victoria-metrics-prod /tmp/x/vm; docker cp vl:/victoria-logs-prod /tmp/x/vl; ls -la /tmp/x; for b in vm vl; do echo "-- $b"; grep -aoE "https?://[a-zA-Z0-9.-]+\.[a-z]{2,}" /tmp/x/$b | sort | uniq -c | sort -rn | head -25; done'
+docker rm -f $n >/dev/null

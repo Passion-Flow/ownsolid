@@ -1,0 +1,370 @@
+{
+  "cases": [
+    {
+      "container": "lane-del-image-inventory-e74625ed-f2aa-49ab-a",
+      "copies": {
+        "/etc/alpine-release": {
+          "exit": 0,
+          "sha256": "6edb469729fc9d6c726e124e76ec6eb816493f0416605ce2c4d13fb38ae7417e",
+          "target": "alpine-release"
+        },
+        "/lib/apk/db/installed": {
+          "exit": 0,
+          "sha256": "6963734ac4ecc5bd91278e71fc763a4fef0c3334abe46eb9600a8696e1f270f9",
+          "target": "apk-installed"
+        },
+        "/usr/share/licenses": {
+          "exit": 1,
+          "target": "image-licenses"
+        }
+      },
+      "declared_licenses": [
+        "Apache-2.0",
+        "BSD-3-Clause",
+        "BSD-3-Clause AND BSD-2-Clause AND ISC AND Beerware AND Public Domain",
+        "BSD-3-Clause OR GPL-2.0-or-later",
+        "CDDL-1.0",
+        "GPL-2.0-only",
+        "GPL-2.0-or-later",
+        "GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later",
+        "GPL-2.0-or-later AND LGPL-2.0-or-later",
+        "GPL-2.0-or-later AND LGPL-2.0-or-later AND BSD-3-Clause AND MIT",
+        "GPL-2.0-or-later OR LGPL-3.0-or-later",
+        "ISC",
+        "LGPL-2.1-or-later",
+        "MIT",
+        "MIT AND BSD-2-Clause AND GPL-2.0-or-later",
+        "MPL-2.0 AND MIT",
+        "SSH-OpenSSH",
+        "X11",
+        "Zlib",
+        "curl"
+      ],
+      "kind": "never-started-image-inventory",
+      "package_count": 76,
+      "scope": "Declared package metadata only; notices still need review; no image code was executed"
+    }
+  ],
+  "cleanup_errors": [],
+  "cleanup_readbacks": [
+    {
+      "absent": true,
+      "container": "lane-del-image-inventory-e74625ed-f2aa-49ab-a",
+      "project_networks": [],
+      "volumes": [
+        {
+          "absent": true,
+          "name": "1e9ed487b88ec033c6629b75696e66d0d5c1cace72cdb74cc62a59ee61d967bd"
+        }
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "image",
+        "inspect",
+        "--format",
+        "{\"Id\":{{json .Id}},\"Os\":{{json .Os}},\"Architecture\":{{json .Architecture}}}",
+        "sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5"
+      ],
+      "exit": 0,
+      "log": "command-000.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "version",
+        "--format",
+        "{\"Client\":{\"Version\":{{json .Client.Version}}},\"Server\":{\"Version\":{{json .Server.Version}}}}"
+      ],
+      "exit": 0,
+      "log": "command-001.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "compose",
+        "version",
+        "--short"
+      ],
+      "exit": 0,
+      "log": "command-002.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "container",
+        "inspect",
+        "--format",
+        "[{\"Image\":{{json .Image}},\"State\":{\"Status\":{{json .State.Status}},\"Running\":{{json .State.Running}},\"Pid\":{{json .State.Pid}}},\"Config\":{\"Labels\":{\"io.ownsolid.prototype.run_id\":{{json (index .Config.Labels \"io.ownsolid.prototype.run_id\")}}}},\"HostConfig\":{\"NetworkMode\":{{json .HostConfig.NetworkMode}},\"ReadonlyRootfs\":{{json .HostConfig.ReadonlyRootfs}},\"PortBindings\":{{json .HostConfig.PortBindings}}},\"Mounts\":{{json .Mounts}}}]",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a"
+      ],
+      "exit": 1,
+      "log": "command-003.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "version",
+        "--format",
+        "{{.Server.Version}}"
+      ],
+      "exit": 0,
+      "log": "command-004.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "network",
+        "ls",
+        "--filter",
+        "label=com.docker.compose.project=lane-del-image-inventory-e74625ed-f2aa-49ab-a",
+        "--format",
+        "{{.ID}}"
+      ],
+      "exit": 0,
+      "log": "command-005.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "create",
+        "--pull",
+        "never",
+        "--name",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a",
+        "--network",
+        "none",
+        "--read-only",
+        "--cpus",
+        "0.25",
+        "--memory",
+        "67108864",
+        "--memory-swap",
+        "67108864",
+        "--pids-limit",
+        "64",
+        "--no-healthcheck",
+        "--label",
+        "io.ownsolid.prototype.run_id=e74625ed-f2aa-49ab-a459-3184b3a4c470",
+        "--entrypoint",
+        "/bin/false",
+        "sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5"
+      ],
+      "exit": 0,
+      "log": "command-006.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "container",
+        "inspect",
+        "--format",
+        "[{\"Image\":{{json .Image}},\"State\":{\"Status\":{{json .State.Status}},\"Running\":{{json .State.Running}},\"Pid\":{{json .State.Pid}}},\"Config\":{\"Labels\":{\"io.ownsolid.prototype.run_id\":{{json (index .Config.Labels \"io.ownsolid.prototype.run_id\")}}}},\"HostConfig\":{\"NetworkMode\":{{json .HostConfig.NetworkMode}},\"ReadonlyRootfs\":{{json .HostConfig.ReadonlyRootfs}},\"PortBindings\":{{json .HostConfig.PortBindings}}},\"Mounts\":{{json .Mounts}}}]",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a"
+      ],
+      "exit": 0,
+      "log": "command-007.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "cp",
+        "--quiet",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a:/lib/apk/db/installed",
+        "/root/lane-rel-tools/image-inventory-native.ramhsq0_/apk-installed"
+      ],
+      "exit": 0,
+      "log": "command-008.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "cp",
+        "--quiet",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a:/etc/alpine-release",
+        "/root/lane-rel-tools/image-inventory-native.ramhsq0_/alpine-release"
+      ],
+      "exit": 0,
+      "log": "command-009.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "cp",
+        "--quiet",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a:/usr/share/licenses",
+        "/root/lane-rel-tools/image-inventory-native.ramhsq0_/image-licenses"
+      ],
+      "exit": 1,
+      "log": "command-010.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "container",
+        "inspect",
+        "--format",
+        "[{\"Image\":{{json .Image}},\"State\":{\"Status\":{{json .State.Status}},\"Running\":{{json .State.Running}},\"Pid\":{{json .State.Pid}}},\"Config\":{\"Labels\":{\"io.ownsolid.prototype.run_id\":{{json (index .Config.Labels \"io.ownsolid.prototype.run_id\")}}}},\"HostConfig\":{\"NetworkMode\":{{json .HostConfig.NetworkMode}},\"ReadonlyRootfs\":{{json .HostConfig.ReadonlyRootfs}},\"PortBindings\":{{json .HostConfig.PortBindings}}},\"Mounts\":{{json .Mounts}}}]",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a"
+      ],
+      "exit": 0,
+      "log": "command-011.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "rm",
+        "--force",
+        "--volumes",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a"
+      ],
+      "exit": 0,
+      "log": "command-012.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "container",
+        "inspect",
+        "--format",
+        "[{\"Image\":{{json .Image}},\"State\":{\"Status\":{{json .State.Status}},\"Running\":{{json .State.Running}},\"Pid\":{{json .State.Pid}}},\"Config\":{\"Labels\":{\"io.ownsolid.prototype.run_id\":{{json (index .Config.Labels \"io.ownsolid.prototype.run_id\")}}}},\"HostConfig\":{\"NetworkMode\":{{json .HostConfig.NetworkMode}},\"ReadonlyRootfs\":{{json .HostConfig.ReadonlyRootfs}},\"PortBindings\":{{json .HostConfig.PortBindings}}},\"Mounts\":{{json .Mounts}}}]",
+        "lane-del-image-inventory-e74625ed-f2aa-49ab-a"
+      ],
+      "exit": 1,
+      "log": "command-013.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "version",
+        "--format",
+        "{{.Server.Version}}"
+      ],
+      "exit": 0,
+      "log": "command-014.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "volume",
+        "ls",
+        "--quiet",
+        "--filter",
+        "name=1e9ed487b88ec033c6629b75696e66d0d5c1cace72cdb74cc62a59ee61d967bd"
+      ],
+      "exit": 0,
+      "log": "command-015.log",
+      "timeout_seconds": 4
+    },
+    {
+      "argv": [
+        "/usr/bin/docker",
+        "--host",
+        "unix:///var/run/docker.sock",
+        "network",
+        "ls",
+        "--filter",
+        "label=com.docker.compose.project=lane-del-image-inventory-e74625ed-f2aa-49ab-a",
+        "--format",
+        "{{.ID}}"
+      ],
+      "exit": 0,
+      "log": "command-016.log",
+      "timeout_seconds": 4
+    }
+  ],
+  "elapsed_seconds": 2.7410920379916206,
+  "empty_docker_config_removed": true,
+  "exit": 0,
+  "leases": [
+    {
+      "acquired": true,
+      "device": 29,
+      "fd": 3,
+      "inode": 82,
+      "path": "/run/lock/ownsolid-heavy.lock"
+    },
+    {
+      "acquired": true,
+      "device": 64512,
+      "fd": 4,
+      "inode": 7508772,
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    }
+  ],
+  "parent": {
+    "pid": 3060346,
+    "start_ticks": "79143352"
+  },
+  "resources": {
+    "disk_free_bytes": 793073520640,
+    "io": "some avg10=0.18 avg60=0.20 avg300=2.84 total=31370385505\nfull avg10=0.18 avg60=0.18 avg300=2.80 total=29561760536\n",
+    "io_full_avg10": 0.18,
+    "memavailable_bytes": 22912069632,
+    "memfree_bytes": 17096548352
+  },
+  "run_id": "e74625ed-f2aa-49ab-a459-3184b3a4c470",
+  "scope": "Never-started cached image inspection only; no runtime, license approval, installed flow or zero-egress qualification",
+  "source": {
+    "binary_sha256": "9753bd071014ac5a17c0dfcdf6ab3694229ab49506d9ecb49371e50190b318d2",
+    "candidate": "620f76daef06b0028112022b652281bc61bfdae0",
+    "clean": true,
+    "config_sha256": "4cd1b6ce65a11be7d7a78c48477c8864aa410b9979ed18bc0080461998427609",
+    "script_sha256": "01fbf32699baf8b0bb3caceb5cf9f239a724c963326f655de1eba3621337512d"
+  },
+  "status": "image-inventory-collected",
+  "versions": {
+    "compose": "2.40.3+ds1-0ubuntu1~24.04.1",
+    "docker": "29.1.3"
+  }
+}

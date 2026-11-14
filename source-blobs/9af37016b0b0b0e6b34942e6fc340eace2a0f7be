@@ -1,0 +1,39 @@
+{
+  "source_revision": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "source_checkout": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-4463bbe6",
+  "source_status": "clean, detached at exact revision",
+  "dependencies": "offline frozen-lockfile install; 414 reused, 0 downloaded",
+  "harness_checks": "Help discovery, Scope discovery and TypeScript passed",
+  "installed_acceptance": "not run",
+  "current_mac_gate_owner": "DEL; Web is not holding the lock",
+  "pending_installation_inputs": [
+    "Installed image/source binding",
+    "Available opaque TLS tunnel",
+    "Exact installed SPKI",
+    "Protected owner password file and account email",
+    "Protected scope person.json reference"
+  ],
+  "files": {
+    "parameters.spec.ts": {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/installed-help/parameters.spec.ts",
+      "sha256": "a3aa47d12ed82aea3eb5089ef3928dfaa0497aecc31bbb05e3c2ddd0271a5d8e"
+    },
+    "playwright.config.ts": {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/installed-help/playwright.config.ts",
+      "sha256": "e0787bea09defd380565bed9836b29b271331b6d9b909354ee16d741ea7b01b7"
+    },
+    "scope.config.ts": {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/installed-help/scope.config.ts",
+      "sha256": "1226123281ba250c37e7ffb67d1127d876e41fefcee58baea8904eae49325413"
+    },
+    "source.ts": {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/installed-help/source.ts",
+      "sha256": "4eadc49f3ed736d2fb3911494012fa0aeeed3a58a45df8ad251c2fe4c91523c2"
+    }
+  },
+  "commands": {
+    "help": "./node_modules/.bin/playwright test parameters.spec.ts --workers=1 --reporter=line,json --output <private-audience-output>",
+    "scope": "./node_modules/.bin/playwright test --config scope.config.ts --workers=1 --reporter=line,json --output <private-scope-output>"
+  },
+  "network_policy": "Both harnesses record and abort HTTP(S) outside the active installation entrance origin. Neither sets ignoreHTTPSErrors."
+}

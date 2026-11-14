@@ -1,0 +1,35 @@
+{
+  "operation": "discard clean file cache for this lane's private inactive artifacts only",
+  "before": {
+    "MemFree": 4458049536,
+    "MemAvailable": 20341407744
+  },
+  "roots": [
+    {
+      "path": "/root/lane-trn-tools/go-cache",
+      "files": 40448,
+      "file_bytes_advised": 9455054486
+    },
+    {
+      "path": "/root/lane-trn-cpu-admission.RaaYxrR7/cpu-prototype-inputs/wheelhouse",
+      "files": 38,
+      "file_bytes_advised": 252291600
+    },
+    {
+      "path": "/root/lane-trn-cpu-admission.RaaYxrR7/cpu-prototype-install/venv",
+      "files": 30706,
+      "file_bytes_advised": 1122614138
+    },
+    {
+      "path": "/root/lane-trn-jupyter-metadata.90mpy44y/wheelhouse",
+      "files": 90,
+      "file_bytes_advised": 48147832
+    }
+  ],
+  "deleted_files": 0,
+  "changed_file_bytes": 0,
+  "after": {
+    "MemFree": 4964429824,
+    "MemAvailable": 20333121536
+  }
+}

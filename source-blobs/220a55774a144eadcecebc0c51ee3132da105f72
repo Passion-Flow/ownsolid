@@ -1,0 +1,119 @@
+{
+  "status": "prepared-unrun",
+  "source": "1e4035b1fe60de6a377d5cba8251349a5c16c504",
+  "tree": "0d7d3afde4fb0748f0a834b27924b57d51672af4",
+  "base": "4c8a8289cf1b8ae8bc72b9f5b6faa4a422cf8931",
+  "source_worktree": "/private/tmp/ownsolid-gw104-full-gate-prepared.wv4gssal/src",
+  "commands": [
+    "make check",
+    "make build",
+    "make test",
+    "cd services/gateway && cargo clippy --locked -- -D warnings"
+  ],
+  "cargo_test": "Original make test includes cargo test --locked; no redundant invocation or altered test selection.",
+  "entry": "/private/tmp/ownsolid-gw104-full-gate-prepared.wv4gssal/gate-entry.sh",
+  "entry_syntax_check": "/bin/sh -n passed; entry was not executed",
+  "guard": {
+    "reuse": "/private/tmp/ownsolid-gw-mac-gate.swf0ar5z/mac-gate.py",
+    "sha256": "c848aee643268773b4e40491dea3aae2f05f7fb8ea1060b165c316df1cad2592",
+    "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+    "uid": 501,
+    "device": 16777234,
+    "inode": 50313339,
+    "rules": [
+      "assigned window only",
+      "one original parent and same inherited descriptor",
+      "no nested lock or new waiter",
+      "close only; never replace, truncate or unlink carrier"
+    ]
+  },
+  "resource_prerequisites": [
+    "Coordinator assigns the GW window after DEV47fa + WEBc7 joint delivery; no admission is requested by this package.",
+    "Admitted parent performs the original resource and port checks before execution.",
+    "Parent supplies owned scratch satisfying the unchanged object-store 30-percent free-space floor; no scratch volume has been created.",
+    "Parent supplies separate suitable Go build temporary space if needed, cached locked dependencies and existing local toolchains.",
+    "Any PostgreSQL fixture or browser service needs its own admitted resource/lifecycle setup. This entry creates no fixture and makes no database-coverage claim.",
+    "Record actual full-gate exits, conditional skips, ports and owned cleanup. No retries or assertion/test-selection changes are prepared."
+  ],
+  "historical_evidence": {
+    "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+    "platform": "darwin/arm64 native Go; PostgreSQL 18.6 linux/arm64 cached image",
+    "four_roots": "passed once each under original recorded operator fixture",
+    "scope": "unchanged source-specific evidence; no current full-gate or installed production claim",
+    "proof_sha256": "bd48535902d0aa4bd2f7cfe8e561a6d25ddf7d62facc77ba427d03ea4384b511",
+    "failed_inputs": "both earlier fixture failures retained separately"
+  },
+  "shared_review": [
+    {
+      "paths": [
+        "services/control/internal/modules/identity/http/handler.go",
+        "services/control/internal/modules/identity/lists.go"
+      ],
+      "finding": "Audit-list request-ID dispatch and auditing changed; the shared distribution handler factory and four read routes remain unchanged."
+    },
+    {
+      "paths": [
+        "services/control/internal/modules/models"
+      ],
+      "finding": "Retained model history/family functions and read-error allowlist changed. Existing ready and derived admission implementations remain unchanged."
+    },
+    {
+      "paths": [
+        "services/control/internal/testing/httpfixture/client.go"
+      ],
+      "finding": "WithCertificate adds idle-transport cleanup; the four selected human-read roots do not use this helper."
+    },
+    {
+      "paths": [
+        "services/control/internal/platform/config",
+        "services/control/internal/platform/httpserver",
+        "services/control/internal/modules/agentgateway"
+      ],
+      "finding": "Optional split browser listeners, connection ageing and production lifecycle changed. Current full compilation/tests are required; original httptest reads do not qualify installed listener composition."
+    },
+    {
+      "paths": [
+        "web",
+        "services/control/internal/modules/audit",
+        "services/control/internal/modules/scheduling",
+        "services/control/internal/modules/training",
+        "services/control/internal/modules/datasets"
+      ],
+      "finding": "Upstream full-gate inputs; do not edit or treat their other-source pass records as GW qualification."
+    }
+  ],
+  "production_flag_references": [
+    "HEAD:services/control/internal/modules/distribution/README.md:102:PublishAliasCapabilities defaults to false. Trusted startup may enable",
+    "HEAD:services/control/internal/modules/distribution/alias_read_http_test.go:38:\thandler.Distribution.Service.PublishAliasCapabilities = true",
+    "HEAD:services/control/internal/modules/distribution/alias_read_http_test.go:256:\thandler.Distribution.Service.PublishAliasCapabilities = false",
+    "HEAD:services/control/internal/modules/distribution/alias_read_http_test.go:264:\thandler.Distribution.Service.PublishAliasCapabilities = true",
+    "HEAD:services/control/internal/modules/distribution/alias_reads.go:36:\tif !s.PublishAliasCapabilities {",
+    "HEAD:services/control/internal/modules/distribution/alias_reads.go:53:// Capability fields remain omitted until PublishAliasCapabilities is enabled at composition.",
+    "HEAD:services/control/internal/modules/distribution/model.go:24:\t// PublishAliasCapabilities exposes the draft human read projection only after",
+    "HEAD:services/control/internal/modules/distribution/model.go:26:\tPublishAliasCapabilities bool"
+  ],
+  "production_publication": "disabled",
+  "roadmap_ticks_added": 0,
+  "independent_docs": {
+    "GW-120": "58a81cba68e58ba6309c86801a13a082b4e853e4",
+    "GW-123": "d7a2d7aad5e8d2df6e03f24c0689bd31e66074bd",
+    "runtime_changes": false,
+    "coupled_to_GW104": false
+  },
+  "executed_now": [
+    "git ancestry/tree/blob/ownership checks",
+    "git diff --check",
+    "bundle SHA-256 and prerequisite verification",
+    "detached source materialization",
+    "shell syntax check"
+  ],
+  "not_executed_now": [
+    "kernel admission/wait",
+    "make check/build/test",
+    "cargo compilation/tests/clippy",
+    "PostgreSQL fixture",
+    "browser service",
+    "Linux heavy job",
+    "publication"
+  ]
+}

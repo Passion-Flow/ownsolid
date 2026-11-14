@@ -1,0 +1,23 @@
+#!/bin/bash
+# Lane B GW-114 prototype: provision a gateway instance and alias, configure the real gateway
+# beside the loopback vLLM, mint a key and print the state path.
+set -euo pipefail
+G=/root/lane-b/gw114
+N=gw114-$(date +%s)
+cd /root/lane-b
+S=$(python3 gateway-fixture.py prepare $N)
+python3 - "$S" <<PY
+import json,os,sys
+sys.argv=["x"];exec(open("/root/lane-b/gateway-fixture.py").read().split("if __name__")[0])
+s=json.load(open("$S"))
+c=admin(root_default)
+g=[x for x in c("GET",cell+"/admin/distribution/workspaces/%s/gateways"%s["workspace"])[1]["data"]["items"] if x["id"]==s["gateway"]][0]
+G="$G/gw"
+cfg={"gateway_id":g["id"],"node_id":g["node_id"],"listen_address":"127.0.0.1:18200","backend_address":"127.0.0.1:18100","control_origin":"https://admin.lane-b.test:18443","control_ca_file":G+"/control-ca.pem","gateway_credential_file":G+"/credential","tls_certificate_file":G+"/tls.pem","tls_private_key_file":G+"/tls.key","state_directory":G+"/state"}
+for name,data in (("gateway.json",json.dumps(cfg)),("credential",s["credential"])):
+    fd=os.open(G+"/"+name,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+    with os.fdopen(fd,"w") as f: f.write(data)
+PY
+python3 $G/mint-key.py "$S" $G/gw/api-key >/dev/null
+docker restart lane-b-gw114-gateway >/dev/null
+echo "$S"

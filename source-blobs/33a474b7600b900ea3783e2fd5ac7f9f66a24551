@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "architecture": "<actual-linux-arm64-or-amd64>",
+  "library_directory": "/srv/project-one/dameng/native-libraries",
+  "driver_file": "<actual-driver-file>",
+  "license_file": "<actual-supplied-terms-file>",
+  "driver_version": "<observed-SQL_DRIVER_VER>",
+  "dbms_name": "<observed-SQL_DBMS_NAME>",
+  "dbms_version": "<observed-SQL_DBMS_VER>",
+  "files": [
+    {
+      "name": "<actual-driver-file>",
+      "bytes": 0,
+      "sha256": "<actual-sha256>"
+    },
+    {
+      "name": "<actual-supplied-terms-file>",
+      "bytes": 0,
+      "sha256": "<actual-sha256>"
+    }
+  ]
+}

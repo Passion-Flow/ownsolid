@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+mode=$1
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+export CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2 CARGO_NET_OFFLINE=true
+df -h /root /dev/shm
+free -m
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+ss -lntp
+scratch=$(mktemp -d /dev/shm/lane-gw-alias.XXXXXXXX)
+trap 'result=$?; find "$scratch" -depth -delete; echo "stage-exit=$result"' EXIT
+export TMPDIR="$scratch"
+cd services/gateway
+if [ "$mode" = red ]; then
+    unshare -n -- bash -ec 'ip link set lo up; ip -br addr; cargo test --locked --offline alias_admission -- --nocapture'
+else
+    unshare -n -- bash -ec 'ip link set lo up; ip -br addr; cargo test --locked --offline; cargo clippy --locked --offline -- -D warnings'
+fi

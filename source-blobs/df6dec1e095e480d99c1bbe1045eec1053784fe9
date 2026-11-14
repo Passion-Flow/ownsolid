@@ -1,0 +1,26 @@
+set -euo pipefail
+cd ~/lane-rel
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+umask 077
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -w 45 8 || exit 75
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+exec 7>~/lane-rel-tools/heavy-test.lock
+flock -n 7 || exit 75
+test "$(df -Pm / | awk 'NR == 2 {print $4}')" -ge 15360
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+scratch=$(mktemp -d ~/lane-rel-tools/obs109-sdk-release.XXXXXXXX)
+echo "$scratch"
+export LANE_REL_OBS109_SDK_RELEASE=$scratch
+unshare -n bash -ec '
+ip link set lo up
+test "$(ip -o link show | wc -l)" -eq 1
+prepared=$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp
+"$prepared/python/bin/python" tools/codegen/sdk/generate.py --out "$LANE_REL_OBS109_SDK_RELEASE/sdk" --go-generator "$prepared/bin/oapi-codegen" --python-generator "$prepared/python/bin/openapi-python-client"
+GOWORK=off go -C "$LANE_REL_OBS109_SDK_RELEASE/sdk/gen/go" test ./...
+"$prepared/python/bin/python" tools/codegen/sdk/tests/wire_smoke.py "$LANE_REL_OBS109_SDK_RELEASE/sdk"
+'
+echo SDK_RELEASE_PASSED
+

@@ -1,0 +1,659 @@
+From eeb0e9a6e98fbf05b51409eee5dcff032ade84ef Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 11:10:56 +0000
+Subject: [PATCH 1/2] GW-107: Project gateway receipts atomically when metering
+ is enabled
+
+Verify the disabled predecessor, actual TLS and PostgreSQL rollback after a failed ledger write, and one scoped charge and audit under concurrent replay.
+---
+ docs/product/status.md                        |   2 +-
+ docs/research/gateway-usage-history.md        |  50 ++++++
+ .../internal/modules/distribution/README.md   |   6 +
+ .../internal/modules/distribution/model.go    |   3 +
+ .../distribution/outcome_metering_test.go     | 148 ++++++++++++++++++
+ .../internal/modules/distribution/outcomes.go |  19 ++-
+ 6 files changed, 226 insertions(+), 2 deletions(-)
+ create mode 100644 services/control/internal/modules/distribution/outcome_metering_test.go
+
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 2babc38f..a7e1eef0 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -54,7 +54,7 @@ today and what is known to fail.
+ | Model gateway trust download (GW-125, open) | Admin and Portal download the loaded public CA for an active agent-managed alias. Agent activation and downloads use certificate-only encoding | Disconnected PostgreSQL and TLS verified the signed endpoint, name mismatch, tenant refusal, manual and revoked gateways, and mixed PEM refusal. [Evidence](../research/gateway-delivery.md#downloading-caller-trust-gw-125) | No | Public contract and generated clients are published. Console and Portal links are pending |
+ | Gateway Responses and Messages (GW-103, open) | The Rust gateway serves foreground text over JSON and SSE with shared authorization and usage accounting. Responses accepts strings and stateless text message items. Tool requests remain disabled | Loopback-only Linux TLS tests with a synthetic backend reject complete tool declarations and forged result histories, and preserve quota and single dispatch after an unsolicited tool delta or cancellation. The native Rust, Go and PostgreSQL fixture rejected a key that was valid in a second test installation. The isolated source and template probe verified the closed-schema candidate and scope-bound IDs outside the product | No | The pinned vLLM 0.31.0 launch lacks a parser and does not produce a native named-call envelope. Tool, public OpenAPI and actual engine acceptance remain open. See [tool round-trip research](../research/gateway-tool-roundtrip.md) |
+ | Gateway Chat text parts (GW-101, open) | Chat Completions accepts plain strings and ordered text parts for the existing roles | Disconnected native Rust TLS verified normalization, malformed part rejection and durable JSON and SSE usage against synthetic inference. [Acceptance](../research/gateway-chat-streaming.md) | No | Current production backend and UI qualification are pending |
+-| Authorized gateway usage history (GW-107, open) | Admin and Portal download bounded CSV attachments from their scoped request histories. Both formats verify canonical receipts | Disconnected PostgreSQL and production TLS dispatch verified attachment headers, JSON-cursor continuation, known and unknown usage, read-only retries and refusal without a partial file. Native Go/Rust verified the underlying reports. [Acceptance](../research/gateway-usage-history.md) | No | Public contract uses JSON cursors. Production continuation link and UI are pending |
++| Authorized gateway usage history (GW-107, open) | Admin and Portal download bounded CSV attachments from their scoped request histories. Both formats verify canonical receipts | Disconnected PostgreSQL and production TLS dispatch verified attachment headers, JSON-cursor continuation, known and unknown usage, read-only retries and refusal without a partial file. Native Go/Rust verified the underlying reports. The optional PostgreSQL projection verified atomic rollback and exactly-once replay. [Acceptance](../research/gateway-usage-history.md) | No | Public contract uses JSON cursors. Production continuation link and UI are pending. Metering projection is disabled until the ledger migration |
+ | Published model descriptions (GW-120, open) | Scoped publish, Admin edit and Portal read work on the PostgreSQL candidate. Predecessor responses keep their existing contract | Disconnected HTTPS and PostgreSQL verified legacy replay, concurrent editing, tenant scope, rollback on audit failure, clearing and retained routing. [Evidence](../research/gateway-model-description.md) | No | The public contract is available. Production migration and catalogue signatures after shared database ordering, Console editing and Portal S-304 are pending |
+ | Scheduling policy and cell observation (SCH-101 to SCH-104, SCH-107, SCH-108, SCH-110, open) | Job demand, quota policy, queue order, quota preflight and scheduler observation libraries | Linux Go race tests covered exact demand, tenant scope and child ceilings. Disconnected TLS verified cell identity, protected token rotation and refusal before network I/O. PostgreSQL 18.6 verified that two concurrent policy edits could not both consume the same parent allocation | No | Production schema and workload composition, offline cell installation, reservation and product entrances remain open. See [integration boundaries](../research/lane-sch-questions.md) |
+ | Transactional training scheduling seam (SCH-101, open) | PostgreSQL reservation and exact release on the workload owner's transaction, with candidate schema | Linux PostgreSQL 18.6 covered contention, owner rollback and live quota edits. A logical dump/restore of the v57 catalog with candidate tables preserved a held and a released attempt and their admission decisions | No | Production migration and fingerprints, the authenticated training caller and installed offline flow remain open. See [training and database handoff](../research/scheduling-training-reservations.md) |
+diff --git a/docs/research/gateway-usage-history.md b/docs/research/gateway-usage-history.md
+index 7171cc86..37ac66f8 100644
+--- a/docs/research/gateway-usage-history.md
++++ b/docs/research/gateway-usage-history.md
+@@ -161,3 +161,53 @@ The [published CSV contract](gateway-usage-csv-contract.md) uses
+ JSON-cursor continuation and is ready for Web integration. Adopting the
+ shared type and writer changes needs a corresponding contract update
+ and verification from the usage page.
++
++## Optional transaction projection into metering
++
++The metering owner introduced `AppendGatewayReceiptWithin` in
++`cc2f1c3a`. It rechecks the persisted gateway receipt, scope, admission
++time and token bounds. The [Go transaction guide](https://go.dev/doc/database/execute-transactions)
++describes committing only when all operations succeed. Use the existing
++Report transaction after it stores the canonical outcome and audit, or
++after it verifies an exact replay. Pass the authenticated gateway, tenant
++and workspace and the canonical acknowledgement. The ledger's producer
++and event key make retries idempotent, including a replay of a receipt
++written before the projection was enabled. Changed reports are refused
++before the projection. The acknowledgement follows commit.
++
++Keep the projection disabled in the zero-valued service. Composition
++can opt in only after the owning production PostgreSQL ledger schema is
++available. An independent background write would leave an acknowledged
++outcome without its charge after a crash. A parallel usage calculation
++would drift from the existing token and unmeasured usage rules. No
++dependency, model or dataset is added. Existing Go, pgx and PostgreSQL
++licenses apply for commercial, offline and redistribution use under
++their notice terms.
++
++Use the metering owner's candidate ledger SQL in the isolated PostgreSQL
++test. Verify an ordinary outcome on the default service before the ledger
++exists. Enable projection in the real TLS dispatcher, inject a failing
++ledger insert, and verify that the report, audit and release of capacity
++roll back with no acknowledgement. Remove the failure and race exact
++retries. Require one ledger event with the original scope, admission
++time and token counts, one report audit event, and the matching canonical
++acknowledgement from both retries. Verify the same result when replaying
++an outcome already committed on the predecessor.
++
++The Linux amd64 loopback-only PostgreSQL run passed
++`TestPostgresGatewayOutcomeMeteringAtomicRetry`. An exception after the
++ledger insert returned `503 STORAGE_UNAVAILABLE` without an
++acknowledgement. The outcome, report audit and release of capacity all
++rolled back. Two concurrent retries returned the same acknowledgement
++with one event for nine tokens and one audit row. The predecessor
++receipt replay also created one event, preserving the original
++admission time and scope. A conflicting receipt returned 409. The same
++run passed the default TLS route without the ledger, the native Rust
++lost-acknowledgement recovery, and the scoped alias description upgrade.
++
++Run the test from the root with `PROJECT_ONE_TEST_DSN_FILE` pointing
++to the private loopback fixture DSN, PostgreSQL 18.6 and pgvector 0.8.7.
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution -run '^TestPostgresGatewayOutcomeMeteringAtomicRetry$' -count=1
++```
+diff --git a/services/control/internal/modules/distribution/README.md b/services/control/internal/modules/distribution/README.md
+index 4e9ace7f..d71d94f8 100644
+--- a/services/control/internal/modules/distribution/README.md
++++ b/services/control/internal/modules/distribution/README.md
+@@ -21,6 +21,12 @@ digest, the same check used for report replay. If a stored receipt fails
+ verification, the request returns `STORAGE_UNAVAILABLE` without a partial
+ page. See the [usage history verification](../../../../../docs/research/gateway-usage-history.md).
+ 
++The Report transaction can project an accepted receipt into the PostgreSQL
++usage ledger through `Service.ProjectGatewayReceipts`. The service defaults
++to disabled. Enable it in control composition only after the ledger migration
++is active. A projection failure rolls back the receipt and its report audit
++and leaves the gateway able to retry the same canonical outcome.
++
+ Add `/export` to the cell-scoped Admin or Portal request list path to
+ download one authorized page as `gateway-usage.csv`. The request takes the
+ same `api_key_id`, `limit` and `cursor` query parameters. To continue,
+diff --git a/services/control/internal/modules/distribution/model.go b/services/control/internal/modules/distribution/model.go
+index cbafbb4f..e837bbbc 100644
+--- a/services/control/internal/modules/distribution/model.go
++++ b/services/control/internal/modules/distribution/model.go
+@@ -21,6 +21,9 @@ type Service struct {
+ 	// Certificates signs the serving certificates of gateways agents run (ADR 0052). Only
+ 	// the agent path, which activates them, holds it.
+ 	Certificates *agentidentity.Authority
++	// ProjectGatewayReceipts enables transactional metering after the PostgreSQL ledger is installed.
++	// Set it only at composition time.
++	ProjectGatewayReceipts bool
+ }
+ 
+ type RecoveryChallenge struct {
+diff --git a/services/control/internal/modules/distribution/outcome_metering_test.go b/services/control/internal/modules/distribution/outcome_metering_test.go
+new file mode 100644
+index 00000000..2789cd4e
+--- /dev/null
++++ b/services/control/internal/modules/distribution/outcome_metering_test.go
+@@ -0,0 +1,148 @@
++package distribution_test
++
++import (
++	"bytes"
++	"encoding/json"
++	"net/http"
++	"os"
++	"testing"
++
++	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++	gatewaywire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
++	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
++	"github.com/google/uuid"
++)
++
++func TestPostgresGatewayOutcomeMeteringAtomicRetry(t *testing.T) {
++	c := setup(t)
++	ctx := t.Context()
++	access := c.access(t)
++	gateway, credential := access.gateway.Gateway.ID, *access.gateway.Secret
++	admit := func() gatewaywire.Outcome {
++		t.Helper()
++		input := access.input()
++		if _, err := c.s.Admit(ctx, gateway, credential, input, uuid.NewString()); err != nil {
++			t.Fatal(err)
++		}
++		return success(input.RequestID)
++	}
++	legacy := admit()
++	prior, err := c.s.Report(ctx, gateway, credential, legacy, uuid.NewString())
++	if err != nil || prior.RequestID != legacy.RequestID {
++		t.Fatal("default report requires no ledger", err)
++	}
++	ledger, err := os.ReadFile("../metering/testdata/ledger.sql")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(ctx, string(ledger)); err != nil {
++		t.Fatal(err)
++	}
++	outcome := admit()
++	if _, err := c.s.DB.Exec(ctx, `CREATE FUNCTION refuse_synthetic_gateway_charge() RETURNS trigger
++		LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic metering failure'; END $$;
++		CREATE TRIGGER reject_synthetic_gateway_charge AFTER INSERT ON usage_ledger
++		FOR EACH ROW EXECUTE FUNCTION refuse_synthetic_gateway_charge();`); err != nil {
++		t.Fatal(err)
++	}
++	handler := identityhttp.New(c.s.Identity)
++	handler.Distribution.Service.ProjectGatewayReceipts = true
++	server := httpfixture.NewTLSServer(t, handler)
++	url := httpfixture.AdminOrigin + cellroute.Public("/gateway/v1/instances/"+gateway+"/outcomes", agentwire.LocalScope())
++	type reportReply struct {
++		status int
++		code   string
++		ack    gatewaywire.Acknowledgment
++		err    error
++	}
++	report := func(out gatewaywire.Outcome) reportReply {
++		body, err := out.Canonical()
++		if err != nil {
++			return reportReply{err: err}
++		}
++		request, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
++		if err != nil {
++			return reportReply{err: err}
++		}
++		request.Header.Set("Authorization", "Bearer "+credential)
++		request.Header.Set("Content-Type", "application/json")
++		response, err := server.Client().Do(request)
++		if err != nil {
++			return reportReply{err: err}
++		}
++		defer response.Body.Close()
++		var payload struct {
++			Code string                     `json:"code"`
++			Data gatewaywire.Acknowledgment `json:"data"`
++		}
++		err = json.NewDecoder(response.Body).Decode(&payload)
++		return reportReply{response.StatusCode, payload.Code, payload.Data, err}
++	}
++	failed := report(outcome)
++	if failed.err != nil || failed.status != http.StatusServiceUnavailable || failed.code != "STORAGE_UNAVAILABLE" ||
++		failed.ack != (gatewaywire.Acknowledgment{}) {
++		t.Fatalf("ledger failure did not return a safe refusal: %+v", failed)
++	}
++	var pristine bool
++	if err := c.s.DB.QueryRow(ctx, `SELECT state='admitted' AND capacity_held AND outcome IS NULL
++		AND outcome_sha256 IS NULL AND reported_at IS NULL AND resolved_at IS NULL
++		AND NOT EXISTS(SELECT 1 FROM audit_events WHERE target_id=r.id AND action='gateway.request_reported')
++		AND NOT EXISTS(SELECT 1 FROM usage_ledger)
++		FROM gateway_requests r WHERE id=$1`, outcome.RequestID).Scan(&pristine); err != nil || !pristine {
++		t.Fatal("failed projection left a report, audit event, released capacity or ledger row", err)
++	}
++	if _, err := c.s.DB.Exec(ctx, "DROP TRIGGER reject_synthetic_gateway_charge ON usage_ledger"); err != nil {
++		t.Fatal(err)
++	}
++
++	digest, err := outcome.Digest()
++	if err != nil {
++		t.Fatal(err)
++	}
++	expected := gatewaywire.Acknowledgment{RequestID: outcome.RequestID, CanonicalSHA256: digest}
++	start := make(chan struct{})
++	retries := make(chan reportReply, 2)
++	for range cap(retries) {
++		go func() {
++			<-start
++			retries <- report(outcome)
++		}()
++	}
++	close(start)
++	for range cap(retries) {
++		reply := <-retries
++		if reply.err != nil || reply.status != http.StatusOK || reply.ack != expected {
++			t.Fatalf("exact retry did not acknowledge the original receipt: %+v", reply)
++		}
++	}
++	changed := outcome
++	changed.OutputStarted = false
++	if reply := report(changed); reply.err != nil || reply.status != http.StatusConflict || reply.code != "GATEWAY_OUTCOME_CONFLICT" {
++		t.Fatalf("changed report was not refused: %+v", reply)
++	}
++	for range 2 {
++		if reply := report(legacy); reply.err != nil || reply.status != http.StatusOK || reply.ack != prior {
++			t.Fatalf("predecessor report did not replay: %+v", reply)
++		}
++	}
++
++	for _, id := range []string{outcome.RequestID, legacy.RequestID} {
++		var ledgerRows, auditRows int
++		if err := c.s.DB.QueryRow(ctx, `SELECT
++			(SELECT count(*) FROM usage_ledger l WHERE l.producer='gateway/receipt-v1' AND l.event_id=r.id::text
++				AND l.tenant_id=r.tenant_id AND l.workspace_id=r.workspace_id AND l.occurred_at=r.admitted_at
++				AND l.requests=1 AND l.tokens=9 AND l.unmeasured_token_requests=0),
++			(SELECT count(*) FROM audit_events WHERE target_id=r.id AND action='gateway.request_reported')
++			FROM gateway_requests r WHERE id=$1 AND state='reported' AND NOT capacity_held
++				AND tenant_id=$2 AND workspace_id=$3 AND gateway_id=$4`,
++			id, c.a.Me.Workspace.TenantID, access.alias.WorkspaceID, gateway).Scan(&ledgerRows, &auditRows); err != nil || ledgerRows != 1 || auditRows != 1 {
++			t.Fatal("expected one correctly scoped charge and report audit for the original receipt", err, ledgerRows, auditRows)
++		}
++	}
++	var ledgerRows int
++	if err := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM usage_ledger").Scan(&ledgerRows); err != nil || ledgerRows != 2 {
++		t.Fatal("projection wrote an extra ledger event", err, ledgerRows)
++	}
++}
+diff --git a/services/control/internal/modules/distribution/outcomes.go b/services/control/internal/modules/distribution/outcomes.go
+index 7614669d..212ca97d 100644
+--- a/services/control/internal/modules/distribution/outcomes.go
++++ b/services/control/internal/modules/distribution/outcomes.go
+@@ -8,7 +8,9 @@ import (
+ 	"time"
+ 
+ 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/metering"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
+ )
+ 
+ // storedRequestOutcome checks the canonical receipt for both history and report replay.
+@@ -43,6 +45,7 @@ func (s *Service) Report(ctx context.Context, gateway, credential string, outcom
+ 	if e != nil {
+ 		return wire.Acknowledgment{}, e
+ 	}
++	receipt := wire.Acknowledgment{RequestID: outcome.RequestID, CanonicalSHA256: digest}
+ 	var scope machineScope
+ 	e = s.storageTransaction(ctx, func(ctx context.Context, q transaction.Executor) error {
+ 		var e error
+@@ -102,10 +105,24 @@ func (s *Service) Report(ctx context.Context, gateway, credential string, outcom
+ 				return e
+ 			}
+ 		}
++		if s.ProjectGatewayReceipts {
++			return projectGatewayReceipt(ctx, tx, scope, receipt)
++		}
+ 		return nil
+ 	})
+ 	if e != nil {
+ 		return wire.Acknowledgment{}, e
+ 	}
+-	return wire.Acknowledgment{RequestID: outcome.RequestID, CanonicalSHA256: digest}, nil
++	return receipt, nil
++}
++
++func projectGatewayReceipt(ctx context.Context, tx transaction.Executor, scope machineScope, receipt wire.Acknowledgment) error {
++	tenant, tenantErr := uuid.Parse(scope.tenant)
++	workspace, workspaceErr := uuid.Parse(scope.workspace)
++	gateway, gatewayErr := uuid.Parse(scope.gateway)
++	if tenantErr != nil || workspaceErr != nil || gatewayErr != nil {
++		return fail("STORAGE_UNAVAILABLE")
++	}
++	_, err := metering.AppendGatewayReceiptWithin(ctx, tx, metering.Scope{TenantID: tenant, WorkspaceID: workspace}, gateway, receipt)
++	return err
+ }
+-- 
+2.43.0
+
+
+From a5e157e83032932cf4d75ca6a537a2c1a98c68eb Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 11:18:08 +0000
+Subject: [PATCH 2/2] GW-112: Verify native spool replay after a committed
+ receipt and process kill
+
+Restart the real gateway against the same spool and PostgreSQL dispatcher in a disconnected fixture, verifying unchanged scope, one audit, one metering event and no new inference.
+---
+ docs/product/roadmap/gateway.md               |  2 +-
+ docs/product/status.md                        |  2 +-
+ docs/research/gateway-throughput.md           | 49 +++++++++++
+ .../distribution/gateway_integration_test.go  | 88 ++++++++++++++-----
+ .../gateway_outcome_retry_integration_test.go | 26 +++++-
+ .../distribution/outcome_metering_test.go     | 19 ++--
+ 6 files changed, 156 insertions(+), 30 deletions(-)
+
+diff --git a/docs/product/roadmap/gateway.md b/docs/product/roadmap/gateway.md
+index 1173ac08..d49e56d3 100644
+--- a/docs/product/roadmap/gateway.md
++++ b/docs/product/roadmap/gateway.md
+@@ -31,7 +31,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
+ - [ ] GW-111 Configuration publishing with diff preview and rollback (P1) - Catalog: F083
+   - The Admin preview route checks pause, resume, retarget and rollback with the same current state as apply. [Disconnected TLS and PostgreSQL acceptance](../../research/gateway-cutover-preview.md) covers parity, no writes, CSRF, stale revision and foreign refusal. The public contract and Admin CLI are available. The Console flow and native cutover and rollback between two authorized ready deployments remain open.
+ - [ ] GW-112 Load tested: requests per second and added latency at measured scale, published (P1) - Catalog: F086
+-  - The [component and native-path measurements](../../research/gateway-throughput.md) record synthetic throughput, two removed PostgreSQL aggregates and prompt capacity release after durable outcomes, and native retry after a committed acknowledgement is lost. Sustained installation-scale throughput and added latency remain open.
++  - The [component and native-path measurements](../../research/gateway-throughput.md) record synthetic throughput, two removed PostgreSQL aggregates and prompt capacity release after durable outcomes, and native retry and spool recovery after process restart when a committed acknowledgement is lost. Sustained installation-scale throughput and added latency remain open.
+ - [x] GW-113 Gateway and keys page: issue, rotate and revoke keys, with each key's call log (S-206) (P1) - Evidence: 4c1eb36, b9e6728; live run on an installation, 2026-11-08, twice: keys issued, rotated with an overlap and revoked from the browser against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; no model ran, and aliases are published through the API until GW-117
+ - [x] GW-114 The model gateway runs on each serving node, started by its agent when a deployment is published, with its identity provisioned on the node and no network needed ([ADR 0052](../../decisions/0052-the-model-gateway-runs-beside-the-model.md)) (P1) - Evidence: 90ebbad; live on an installation, 2026-11-09: a real agent (protocol 1.6) started the real gateway image when its gateway was registered, served TLS with the certificate control issued for its declared origin, and stopped it with its secrets removed when revoked; from the browser a deployment was published through its node's own gateway with no address typed and no credential shown, a key issued from the card, and calls with it reached vLLM's CPU build serving Qwen3-0.6B (plain and streamed, wrong key refused, each call in the key's log with the engine's token counts). The deployment's node was scripted, with its gateway tasks run by the agent's own gateway code; no GPU
+ - [x] GW-117 Publish a deployment to the gateway from the console: provision a gateway instance and name the alias a key calls (P1) - Evidence: c6936b9, b45b879; live run on an installation, 2026-11-08: a verified deployment on a scripted node was published from its page, which registered the node's gateway and showed its credential once; a key issued from the same card made two calls admitted over the real gateway protocol with that credential by a stand-in for the gateway process (GW-114), and after Stop publishing the name was refused; no model ran
+diff --git a/docs/product/status.md b/docs/product/status.md
+index a7e1eef0..80629bc8 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -68,7 +68,7 @@ today and what is known to fail.
+ | Workspace budget threshold status (TEN-108, open) | Exact operator-configured warning and limit comparison over the scoped showback snapshot | Isolated Linux PostgreSQL 18.6 verified inclusive and fractional thresholds, unrated usage, retry stability, currency mismatch and tenant isolation. The authenticated workspace read used the same rated totals for budget status. A verified gateway receipt with null usage counted one request and marked the subtotal incomplete, while zero completion tokens preserved known prompt usage | No | Effective policy, complete producer coverage, durable notifications and transactional admission enforcement remain open. See [budget status research](../research/metering-budget-status.md) |
+ | Prepaid balance and offline top-up (TEN-109, open) | Authority and persistence boundaries reviewed against the current catalog | No balance write or debit test | No | Requires a verified grant source, approved scoped credit persistence and exact workload charge evidence. See [prepaid balance authority](../research/metering-prepaid-credits.md) |
+ | Hierarchical gateway quotas (GW-106, open) | The Rust gateway enforces request, concurrency and token limits at tenant, application and key scopes. Gateways can use one authenticated quota authority | Two gateway processes shared a 71-token daily budget through real control authorization, PostgreSQL and disconnected vLLM. Two streams used 64 tokens in total, two requests were rejected and every concurrency lease was released. See [gateway quota verification](../research/gateway-limits.md) A native Rust and Go/PostgreSQL run verified that two real workspace keys share one application's monthly ceiling and another application continues to serve. | No | Control-owned scope assignment, Console policy management and installer provisioning remain open |
+-| Gateway request cost and capacity release (GW-112, open) | Machine lookup and admission omit the management-only held-request aggregate. Durable publication wakes outcome reporting, with bounded retries on failure | Disconnected Go/Rust and PostgreSQL verified the removed queries, prompt hold release, outage, and exact replay after a committed TLS reply was lost. A separate release-mode synthetic comparison measured 70.3 and 80.3 successful requests/s at one and two callers. [Evidence](../research/gateway-throughput.md) | No | Installed-system throughput and latency at declared scale are pending |
++| Gateway request cost and capacity release (GW-112, open) | Machine lookup and admission omit the management-only held-request aggregate. Durable publication wakes outcome reporting, with bounded retries on failure | Disconnected Go/Rust and PostgreSQL verified the removed queries, prompt hold release, outage, and exact replay after a committed TLS reply was lost, including process restart with one scoped ledger event. A separate release-mode synthetic comparison measured 70.3 and 80.3 successful requests/s at one and two callers. [Evidence](../research/gateway-throughput.md) | No | Installed-system throughput and latency at declared scale are pending |
+ | Gateway key purpose at rotation (GW-105, open) | Candidate only | Disconnected PostgreSQL reproduced an ordinary successor from a private operation key. A prototype with exact fresh and restored schema signatures refused it, upgraded legacy keys and passed the existing rotation and native Go/Rust license flow | No | Production rotation still lacks persisted purpose. The [handoff](../research/gateway-key-purpose.md) requires the shared PostgreSQL catalog update. Durable application identity is pending |
+ | My API keys in the portal (POR-106): a person's own keys in the workspace in the switcher, with name, prefix, model, last use and expiry and no owner column; tiles for keys expiring within a week and never used; issuing with the secret shown once, then the key's base URL, model and a sample in cURL, Python and Node.js, with what a private certificate authority needs; rotation with an overlap, revocation by typing the name, and each key's own calls. The console's drawer shows the same usage panel | Yes | Yes, a non-administrator on an installation: issue, rotate, revoke and read calls, admitted over the real gateway protocol by a stand-in for the gateway process; another person's key is not found and another workspace is refused. Samples run against a local HTTPS stub with the real OpenAI SDKs and curl; no model ran | No | The installer starts no model gateway (GW-114), so no call reaches a model on an installed product |
+ | Models in the portal (POR-104, open): the names the gateway serves in the workspace in the switcher, disabled ones left out, each joined through its deployment to its model: where it came from, context length, its base, license, base URL and what it is good for; tiles for can be called and not available, search by name or model, filters in the address; a name stays on screen when its model's facts fail to load, with a retry; price and trying a model shown as not ready with the reason; Issue a key opens the issue dialog | Yes | Yes, a non-administrator on an installation: a deployment published on a scripted node read with its model and context length, the way on to a key, and another workspace's three reads refused; no request left the installation or reached an administrator path | No | No price exists (TEN-107), no administrator's description (GW-120), and the playground waits for the gateway (POR-105, GW-114) |
+diff --git a/docs/research/gateway-throughput.md b/docs/research/gateway-throughput.md
+index 8cb00404..a2b5dfd0 100644
+--- a/docs/research/gateway-throughput.md
++++ b/docs/research/gateway-throughput.md
+@@ -242,3 +242,52 @@ one audit event under the original scope before its TLS connection
+ closed. The second returned the same digest. The native gateway
+ removed its pending record, PostgreSQL preserved the original report
+ timestamp and outcome, and the upstream saw one generation.
++
++## Recovery after the gateway process exits
++
++The existing Rust process test uses synthetic Control replies.
++Exercise the same spool recovery with the real Control dispatcher and
++PostgreSQL, including the optional receipt projection from GW-107.
++Keep the canonical receipt and retry semantics described in
++[RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2).
++The Rust reporter begins a flush at startup. Reuse the same private
++configuration and spool directory across both child processes. Use
++[Go process wait](https://pkg.go.dev/os/exec#Cmd.Wait) to join the killed
++child and verify the SIGKILL exit before starting its replacement.
++
++Drop the first successful TLS reply after the report and ledger commit.
++Use an extended scheduled retry interval for this test so the original
++process exits before it can send a second report. Confirm the spool
++file's bytes are unchanged after exit. Start the replacement with the
++same configuration and no incoming requests. Require an identical
++acknowledgement, then verify deletion of the spool file, the original
++report timestamp and authorization scope, one generation, one report
++audit event and one ledger event at the original admission time.
++A manually replayed POST would miss the startup reporter and lock
++reacquisition. A graceful stop would allow a final flush to hide them.
++
++The fixture enables metering only with its candidate ledger SQL.
++Production composition continues to use the default-disabled service.
++The prepared upstream remains synthetic. No model, dataset or
++dependency is added. The existing Go, Rust test stack, and PostgreSQL
++license and offline-use boundaries remain as documented above.
++
++The disconnected Linux amd64 run passed
++`TestRealGoRustPostgresRestartAfterLostOutcomeReply`. The original
++process exited on SIGKILL after Control committed its outcome, audit
++and nine-token ledger event. The replacement replayed the receipt
++through real TLS before receiving any caller request. Both processes
++used the same spool and credential. After the exact acknowledgement,
++the pending file was removed and the report timestamp and body were
++unchanged. The scoped ledger and report audit each contained one row,
++and the upstream saw one generation. The same run passed the
++same-process lost reply and shared and dedicated Control outage cases,
++the optional metering rollback and retry, and the alias upgrade.
++
++With the private loopback PostgreSQL 18.6 fixture and pgvector 0.8.7,
++set `PROJECT_ONE_TEST_DSN_FILE` and the canonical absolute path to the
++compiled Rust binary in `PROJECT_ONE_GATEWAY_BINARY`. Run from the root.
++
++```sh
++go -C services/control test -p 1 -tags gateway_integration ./internal/modules/distribution   -run '^Test(RealGoRustPostgres(RestartAfterLostOutcomeReply|LostOutcomeReply)|PostgresGatewayOutcomeMeteringAtomicRetry|AliasDescriptionPostgreSQLUpgradeAndHTTPS)$' -count=1
++```
+diff --git a/services/control/internal/modules/distribution/gateway_integration_test.go b/services/control/internal/modules/distribution/gateway_integration_test.go
+index 4242924c..66981cff 100644
+--- a/services/control/internal/modules/distribution/gateway_integration_test.go
++++ b/services/control/internal/modules/distribution/gateway_integration_test.go
+@@ -15,6 +15,7 @@ import (
+ 	"crypto/x509/pkix"
+ 	"encoding/json"
+ 	"encoding/pem"
++	"errors"
+ 	"fmt"
+ 	"io"
+ 	"math/big"
+@@ -52,6 +53,7 @@ const (
+ 	applicationBudget
+ 	promptCapacityRelease
+ 	lostOutcomeReply
++	restartAfterLostOutcomeReply
+ )
+ 
+ // Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
+@@ -160,7 +162,11 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+ 		control.Config.Handler = handler.MachineHandler()
+ 	}
+ 	var lostReply *outcomeReplyLoss
+-	if mode == lostOutcomeReply {
++	if mode == restartAfterLostOutcomeReply {
++		installTestUsageLedger(t, c)
++		handler.Distribution.Service.ProjectGatewayReceipts = true
++	}
++	if mode == lostOutcomeReply || mode == restartAfterLostOutcomeReply {
+ 		lostReply = newOutcomeReplyLoss(access.gateway.Gateway.ID)
+ 		control.Config.Handler = lostReply.wrap(t, control.Config.Handler)
+ 	}
+@@ -274,7 +280,7 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+ 	listener.Close()
+ 	limits := map[string]any{"active_requests": 2, "queued_requests": 2, "backend_idle_connections": 2, "connect_seconds": 1, "control_seconds": 1, "request_seconds": 5, "idle_seconds": 2, "header_seconds": 1, "shutdown_seconds": 2, "outcome_retry_seconds": 1}
+ 	configuration := map[string]any{"gateway_id": access.gateway.Gateway.ID, "node_id": c.node.NodeID, "listen_address": listen, "backend_address": strings.TrimPrefix(backend.URL, "http://"), "control_origin": control.URL, "control_ca_file": filepath.Join(root, "ca.pem"), "gateway_credential_file": filepath.Join(root, "credential"), "tls_certificate_file": filepath.Join(root, "certificate.pem"), "tls_private_key_file": filepath.Join(root, "key.pem"), "state_directory": state, "limits": limits}
+-	if mode == promptCapacityRelease {
++	if mode == promptCapacityRelease || mode == restartAfterLostOutcomeReply {
+ 		limits["outcome_retry_seconds"] = 30
+ 	}
+ 	if lostReply != nil {
+@@ -297,25 +303,21 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+ 		t.Fatal(e)
+ 	}
+ 	defer log.Close()
+-	command := exec.Command(binary, "serve", "--config", configPath)
+-	command.Stdout = log
+-	command.Stderr = log
+-	if e = command.Start(); e != nil {
+-		t.Fatal(e)
++	startGateway := func() *gatewayTestProcess {
++		t.Helper()
++		child := exec.Command(binary, "serve", "--config", configPath)
++		child.Stdout, child.Stderr = log, log
++		if err := child.Start(); err != nil {
++			t.Fatal(err)
++		}
++		done := make(chan error, 1)
++		go func() { done <- child.Wait() }()
++		return &gatewayTestProcess{child: child, done: done}
+ 	}
+-	exited := make(chan error, 1)
+-	go func() { exited <- command.Wait() }()
++	process := startGateway()
+ 	defer func() {
+-		command.Process.Signal(syscall.SIGTERM)
+-		select {
+-		case e := <-exited:
+-			if e != nil {
+-				t.Error("native gateway exit", e)
+-			}
+-		case <-time.After(8 * time.Second):
+-			command.Process.Kill()
+-			<-exited
+-			t.Error("native gateway shutdown timeout")
++		if err := process.stop(syscall.SIGTERM); err != nil {
++			t.Error("native gateway shutdown", err)
+ 		}
+ 		if output := os.Getenv("PROJECT_ONE_EVIDENCE_ROOT"); output != "" {
+ 			data, e := os.ReadFile(logPath)
+@@ -431,7 +433,20 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+ 		return body
+ 	}
+ 	if lostReply != nil {
+-		lostReply.verify(t, c, access, state, request("/v1/chat/completions", *access.key.Secret, chat(false)), &generations)
++		var restart func(verifyStopped func())
++		if mode == restartAfterLostOutcomeReply {
++			restart = func(verifyStopped func()) {
++				t.Helper()
++				old := process
++				process = nil
++				if err := old.stop(syscall.SIGKILL); err != nil {
++					t.Fatal("native gateway did not exit on SIGKILL", err)
++				}
++				verifyStopped()
++				process = startGateway()
++			}
++		}
++		lostReply.verify(t, c, access, state, request("/v1/chat/completions", *access.key.Secret, chat(false)), &generations, restart)
+ 		return
+ 	}
+ 	response := request("/v1/models", *access.key.Secret, nil)
+@@ -834,3 +849,36 @@ func verifyPromptCapacityRelease(t *testing.T, c scenario, access access, reques
+ 		}
+ 	}
+ }
++
++type gatewayTestProcess struct {
++	child *exec.Cmd
++	done  <-chan error
++}
++
++func (p *gatewayTestProcess) stop(signal syscall.Signal) error {
++	if p == nil {
++		return nil
++	}
++	if err := p.child.Process.Signal(signal); err != nil && !errors.Is(err, os.ErrProcessDone) {
++		p.child.Process.Kill()
++		<-p.done
++		return err
++	}
++	select {
++	case err := <-p.done:
++		if signal == syscall.SIGTERM {
++			return err
++		}
++		var exited *exec.ExitError
++		if errors.As(err, &exited) {
++			if status, ok := exited.Sys().(syscall.WaitStatus); ok && status.Signaled() && status.Signal() == signal {
++				return nil
++			}
++		}
++		return fmt.Errorf("expected exit on %s, got %v", signal, err)
++	case <-time.After(8 * time.Second):
++		p.child.Process.Kill()
++		<-p.done
++		return errors.New("native gateway shutdown timeout")
++	}
++}
+diff --git a/services/control/internal/modules/distribution/gateway_outcome_retry_integration_test.go b/services/control/internal/modules/distribution/gateway_outcome_retry_integration_test.go
+index 31ea1533..5cabc622 100644
+--- a/services/control/internal/modules/distribution/gateway_outcome_retry_integration_test.go
++++ b/services/control/internal/modules/distribution/gateway_outcome_retry_integration_test.go
+@@ -24,6 +24,10 @@ func TestRealGoRustPostgresLostOutcomeReply(t *testing.T) {
+ 	realGatewayChain(t, lostOutcomeReply)
+ }
+ 
++func TestRealGoRustPostgresRestartAfterLostOutcomeReply(t *testing.T) {
++	realGatewayChain(t, restartAfterLostOutcomeReply)
++}
++
+ type outcomeReplyLoss struct {
+ 	path        string
+ 	attempts    atomic.Int32
+@@ -90,7 +94,7 @@ func (loss *outcomeReplyLoss) wrap(t *testing.T, next http.Handler) http.Handler
+ 	})
+ }
+ 
+-func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, state string, response *http.Response, generations *atomic.Int32) {
++func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, state string, response *http.Response, generations *atomic.Int32, restart func(verifyStopped func())) {
+ 	t.Helper()
+ 	requestID := response.Header.Get("X-Request-ID")
+ 	var completion struct {
+@@ -136,6 +140,18 @@ func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, st
+ 		if err != nil || auditCount != 1 {
+ 			t.Fatalf("expected one scoped, committed outcome and audit event: %v, count %d", err, auditCount)
+ 		}
++		if restart != nil {
++			var total, matching int
++			err = c.s.DB.QueryRow(t.Context(), `SELECT count(*), count(*) FILTER (
++				WHERE l.producer='gateway/receipt-v1' AND l.event_id=$1 AND l.tenant_id=r.tenant_id
++					AND l.workspace_id=r.workspace_id AND l.occurred_at=r.admitted_at
++					AND l.requests=1 AND l.tokens=$2 AND l.unmeasured_token_requests=0)
++				FROM usage_ledger l CROSS JOIN gateway_requests r WHERE r.id=$1::uuid`,
++				requestID, usage.TotalTokens).Scan(&total, &matching)
++			if err != nil || total != 1 || matching != 1 {
++				t.Fatalf("expected one scoped metering event: %v, total %d, matching %d", err, total, matching)
++			}
++		}
+ 		return body, reportedAt
+ 	}
+ 	initial, reportedAt := readReported()
+@@ -164,6 +180,14 @@ func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, st
+ 		t.Fatal("native spool differs from the committed outcome", err)
+ 	}
+ 
++	if restart != nil {
++		restart(func() {
++			retained, err := os.ReadFile(pending)
++			if err != nil || !bytes.Equal(data, retained) || loss.attempts.Load() != 1 {
++				t.Fatal("the exited gateway changed the spool or attempted replay before restart", err)
++			}
++		})
++	}
+ 	close(loss.allowReplay)
+ 	if replay := await(loss.replay); replay != first {
+ 		t.Fatal("Control replay changed the canonical acknowledgment")
+diff --git a/services/control/internal/modules/distribution/outcome_metering_test.go b/services/control/internal/modules/distribution/outcome_metering_test.go
+index 2789cd4e..738aa046 100644
+--- a/services/control/internal/modules/distribution/outcome_metering_test.go
++++ b/services/control/internal/modules/distribution/outcome_metering_test.go
+@@ -33,13 +33,7 @@ func TestPostgresGatewayOutcomeMeteringAtomicRetry(t *testing.T) {
+ 	if err != nil || prior.RequestID != legacy.RequestID {
+ 		t.Fatal("default report requires no ledger", err)
+ 	}
+-	ledger, err := os.ReadFile("../metering/testdata/ledger.sql")
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	if _, err := c.s.DB.Exec(ctx, string(ledger)); err != nil {
+-		t.Fatal(err)
+-	}
++	installTestUsageLedger(t, c)
+ 	outcome := admit()
+ 	if _, err := c.s.DB.Exec(ctx, `CREATE FUNCTION refuse_synthetic_gateway_charge() RETURNS trigger
+ 		LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic metering failure'; END $$;
+@@ -146,3 +140,14 @@ func TestPostgresGatewayOutcomeMeteringAtomicRetry(t *testing.T) {
+ 		t.Fatal("projection wrote an extra ledger event", err, ledgerRows)
+ 	}
+ }
++
++func installTestUsageLedger(t *testing.T, c scenario) {
++	t.Helper()
++	ledger, err := os.ReadFile("../metering/testdata/ledger.sql")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(t.Context(), string(ledger)); err != nil {
++		t.Fatal(err)
++	}
++}
+-- 
+2.43.0
+

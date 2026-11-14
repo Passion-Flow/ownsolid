@@ -1,0 +1,93 @@
+import datetime,errno,fcntl,hashlib,json,os,signal,stat,subprocess,sys,time
+from pathlib import Path
+p=Path(__file__).resolve().parent
+carrier=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+expected=(16777234,50313339)
+proof={'parent_pid':os.getpid(),'started_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':'219af27e3d9f73c78acc1b8ab8324e086a6a2f62','draft':'7705c5a3 / distribution 0.12.0','fixture_manifest_sha256':hashlib.sha256((p/'manifest.json').read_bytes()).hexdigest(),'wait_limit_seconds':900,'lock_acquired':False,'parent_fd_closed':False,'scope':'one authorized native PostgreSQL wire and four-root segment; no full gate or publication'}
+assert proof['fixture_manifest_sha256']=='d76d9afff7b0f531ad2aa36f6ae27f70f4753c498c5ed471cedd038bacf523f1'
+def save():
+ (p/'gate-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+def now():return datetime.datetime.now(datetime.timezone.utc).isoformat()
+class QueueExpired(Exception):pass
+def expired(_number,_frame):raise QueueExpired()
+def group_exists(group):
+ try:os.killpg(group,0);return True
+ except ProcessLookupError:return False
+fd=None
+child=None
+status=1
+previous={}
+try:
+ fd=os.open(carrier,os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_CLOEXEC,0o600)
+ opened=os.fstat(fd);current=os.lstat(carrier)
+ assert stat.S_ISREG(opened.st_mode) and stat.S_ISREG(current.st_mode)
+ assert opened.st_uid==os.getuid()==current.st_uid
+ assert (opened.st_dev,opened.st_ino)==(current.st_dev,current.st_ino)==expected
+ proof.update(lock_file=str(carrier),lock_fd=fd,lock_device=opened.st_dev,lock_inode=opened.st_ino,phase='waiting',queue_entered_at_utc=now())
+ save()
+ print('PARENT='+str(os.getpid())+' FD='+str(fd)+' QUEUE_ENTER one kernel wait, max 900s',flush=True)
+ started=time.monotonic()
+ old_alarm=signal.signal(signal.SIGALRM,expired)
+ signal.setitimer(signal.ITIMER_REAL,900)
+ try:fcntl.flock(fd,fcntl.LOCK_EX)
+ finally:
+  signal.setitimer(signal.ITIMER_REAL,0)
+  signal.signal(signal.SIGALRM,old_alarm)
+ current=os.lstat(carrier)
+ assert stat.S_ISREG(current.st_mode) and current.st_uid==os.getuid() and (current.st_dev,current.st_ino)==expected
+ proof.update(lock_acquired=True,lock_wait_seconds=round(time.monotonic()-started,3),acquired_at_utc=now(),phase='executing')
+ save()
+ print('LOCK_EX acquired on same FD; launching exact prepared entry',flush=True)
+ with (p/'attempt.log').open('x') as log:
+  child=subprocess.Popen([sys.executable,str(p/'qualify.py')],stdout=log,stderr=subprocess.STDOUT,pass_fds=(fd,),start_new_session=True)
+  proof.update(child_pid=child.pid,child_group=child.pid)
+  save()
+  print('CHILD='+str(child.pid)+' LOG='+str(p/'attempt.log'),flush=True)
+  def forward(number,_frame):
+   if child.poll() is None:
+    try:os.killpg(child.pid,number)
+    except ProcessLookupError:pass
+  for number in (signal.SIGINT,signal.SIGTERM,signal.SIGHUP):previous[number]=signal.signal(number,forward)
+  status=child.wait()
+  proof['child_exit_code']=status
+  if group_exists(child.pid):
+   proof['owned_group_cleanup_required']=True
+   try:os.killpg(child.pid,signal.SIGTERM)
+   except ProcessLookupError:pass
+   deadline=time.monotonic()+5
+   while group_exists(child.pid) and time.monotonic()<deadline:time.sleep(0.1)
+   if group_exists(child.pid):
+    try:os.killpg(child.pid,signal.SIGKILL)
+    except ProcessLookupError:pass
+    deadline=time.monotonic()+5
+    while group_exists(child.pid) and time.monotonic()<deadline:time.sleep(0.1)
+  proof['owned_child_group_exited']=not group_exists(child.pid)
+  if not proof['owned_child_group_exited']:status=1
+ proof['phase']='finished'
+except QueueExpired:
+ status=75
+ proof.update(phase='queue_timed_out',error='one bounded 900-second kernel wait expired; no child dispatched')
+except BaseException as error:
+ status=1
+ proof.update(phase='failed',error=type(error).__name__+': '+str(error))
+finally:
+ for number,handler in previous.items():signal.signal(number,handler)
+ if child is not None and child.poll() is None:
+  try:os.killpg(child.pid,signal.SIGTERM)
+  except ProcessLookupError:pass
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:
+   try:os.killpg(child.pid,signal.SIGKILL)
+   except ProcessLookupError:pass
+   child.wait()
+ if fd is not None:
+  os.close(fd)
+  proof['parent_fd_closed']=True
+ current=os.lstat(carrier)
+ proof.update(carrier_retained=stat.S_ISREG(current.st_mode),carrier_identity_unchanged=(current.st_dev,current.st_ino)==expected,parent_exit_code=status,ended_at_utc=now())
+ for name in ['attempt.log','helper-compile.log','check-compile.log','wire-preflight.json','network.json','distribution.log','result.json']:
+  f=p/name
+  if f.exists():proof.setdefault('artifact_sha256',{})[name]=hashlib.sha256(f.read_bytes()).hexdigest()
+ save()
+ print('EXIT='+str(status)+' FD_CLOSED='+str(proof['parent_fd_closed'])+' CARRIER_UNCHANGED='+str(proof['carrier_identity_unchanged']),flush=True)
+sys.exit(status if status>=0 else 128-status)

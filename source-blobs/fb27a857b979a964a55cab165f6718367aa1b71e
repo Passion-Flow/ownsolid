@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+here=$(cd -- "$(dirname -- "$0")" && pwd -P)
+work=$(cd -- "${1:?ownsolid worktree path}" && pwd -P)
+python3 - "$here" "$work" <<'PY'
+from pathlib import Path
+import json,sys
+here,work=map(Path,sys.argv[1:])
+files={str(work/"tests/e2e"/f"arc105_{name}_test.go"):str(here/f"{name}_test.go") for name in ("managed","scope","load")}
+files[str(work/"tests/e2e/egress_test.go")]=str(here/"egress_test.go")
+(here/"overlay.json").write_text(json.dumps({"Replace":files}))
+PY
+git -C "$work" rev-parse HEAD > "$here/source-head"
+go -C "$work/tests/e2e" test -v -overlay "$here/overlay.json" -run '^TestARC105StrictDualStackCapture$' .
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C "$work/tests/e2e" test -c -trimpath -overlay "$here/overlay.json" -o "$here/managed-load.test" .
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C "$work/tools/dev/simulator" build -trimpath -o "$here/simulator" .

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# SCI_OLD_ADMISSION_CLOSED_2026_11_13
+printf '%s\n' 'NOTRUN: SCI old admission is closed pending coordinator epoch activation.' >&2
+exit 78
+set -euo pipefail
+umask 077
+root="$HOME/lane-sci"
+toolroot="$HOME/lane-sci-tools"
+evidence=$(mktemp -d "$toolroot/aud108-scoped/run.XXXXXXXX")
+private=$(mktemp -d "$toolroot/aud108-scoped/private.XXXXXXXX")
+pg=
+cleanup(){
+  if [ -n "$pg" ]; then
+    docker stop --timeout 15 "$pg" >/dev/null || true
+    docker logs "$pg" > "$evidence/postgres.log" 2>&1 || true
+    docker inspect --format 'exit={{.State.ExitCode}} oom={{.State.OOMKilled}} network={{.HostConfig.NetworkMode}} ports={{json .HostConfig.PortBindings}}' "$pg" > "$evidence/postgres-exit.txt" || true
+    docker rm "$pg" >/dev/null || true
+  fi
+  python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1])' "$private"
+}
+trap cleanup EXIT
+export PATH="$toolroot/go/bin:$PATH"
+export GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOCACHE="$toolroot/go-cache" GOMODCACHE="$toolroot/go-mod" GOFLAGS=-p=1 GOMAXPROCS=2
+cd "$root"
+git rev-parse HEAD > "$evidence/base-commit.txt"
+cp services/control/internal/modules/audit/scoped*.go "$evidence/"
+cp "$toolroot/aud108-scoped/run.sh" "$toolroot/aud108-scoped/admit.py" "$evidence/"
+sha256sum "$evidence"/*.go > "$evidence/source.sha256"
+printf 'Evidence directory: %s\n' "$evidence"
+ionice -c3 nice -n 10 unshare --net go -C services/control test -c -tags repository_integration -o "$evidence/audit.test" ./internal/modules/audit > "$evidence/build.log" 2>&1
+ionice -c3 nice -n 10 unshare --net go -C services/control vet ./internal/modules/audit > "$evidence/vet.log" 2>&1
+python3 - "$private" <<'DATA'
+from pathlib import Path
+import secrets,sys
+private=Path(sys.argv[1]);password=secrets.token_hex(24)
+(private/'pg-password').write_text(password+'\n')
+(private/'pg-dsn').write_text('postgresql://postgres:'+password+'@127.0.0.1:5432/aud108_scoped_test?sslmode=disable\n')
+DATA
+pg=$(docker run --pull never -d --name "lane-sci-aud108-scoped-${evidence##*.}" --network none --cpus 1 --memory 1536m --shm-size 128m \
+  --tmpfs /var/lib/postgresql/data:rw,size=768m -e PGDATA=/var/lib/postgresql/data/pgdata \
+  --mount "type=bind,source=$private/pg-password,target=/run/pg-password,readonly" \
+  -e POSTGRES_PASSWORD_FILE=/run/pg-password -e POSTGRES_DB=aud108_scoped_test \
+  sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47)
+for ((i=0;i<60;i++));do if docker exec "$pg" pg_isready -q -h 127.0.0.1 -U postgres -d aud108_scoped_test;then break;fi;sleep 1;done
+docker exec "$pg" pg_isready -h 127.0.0.1 -U postgres -d aud108_scoped_test
+docker exec "$pg" psql -Xq -U postgres -d aud108_scoped_test -v ON_ERROR_STOP=1 -c "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC; SHOW server_version;" > "$evidence/postgres-version.txt"
+pid=$(docker inspect --format '{{.State.Pid}}' "$pg")
+nsenter -t "$pid" -n -- ip route > "$evidence/network-routes.txt"
+test ! -s "$evidence/network-routes.txt"
+docker inspect --format 'image={{.Image}} network={{.HostConfig.NetworkMode}} ports={{json .HostConfig.PortBindings}}' "$pg" > "$evidence/postgres-container.txt"
+unset PROJECT_ONE_TEST_DSN
+nsenter -t "$pid" -n -- env PROJECT_ONE_TEST_DSN_FILE="$private/pg-dsn" "$evidence/audit.test" -test.run '^TestScopedAudit' -test.count=1 -test.v -test.timeout=5m | tee "$evidence/scoped-tests.log"
+! grep -q -- '--- SKIP:' "$evidence/scoped-tests.log"
+grep -q -- '--- PASS: TestScopedAuditPostgreSQL' "$evidence/scoped-tests.log"

@@ -1,0 +1,12 @@
+{
+  "status": "prepared only; no test/build/container was started",
+  "required_order": "DEL frozen install completes, ARC publishes formal activation, then run this manual entry on the freshly fetched same main SHA",
+  "entry": "bash /root/lane-gw-acceptance/gw120-after-activation.6tb2_bbv/run.sh <published-main-full-sha>",
+  "published_baseline_at_preparation": "d5ad4d98 (schema 58/118)",
+  "qualified_ARC_source": "12520508",
+  "qualified_down_sha256": "61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86",
+  "retained_lane": "/root/lane-gw",
+  "no_automatic_retry_or_publication": true,
+  "tests": "six exact description roots and one exact runtime-principal root; no spool/CA rerun",
+  "source_restoration": "temporarily checks out the exact published source, restores the retained lane-gw branch on normal/failing exit, and preserves any unexpected changes"
+}

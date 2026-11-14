@@ -1,0 +1,10 @@
+{
+  "original_harness_sha256": "328e41784236e6fd1faf352b32456fda9549a15cb01fc57d97496d43d7e9b49c",
+  "capturing_harness_sha256": "94db522c5b651de0ec18355a7a448c96d085fd06ce0ca82b5d4d30367b0ff495",
+  "adjustments": [
+    "capture named fixture logs before owned cleanup",
+    "bound outer fixture to two CPUs and 6 GiB",
+    "send the existing TEST-NET recorder probe before test execution"
+  ],
+  "assertion_changes": false
+}

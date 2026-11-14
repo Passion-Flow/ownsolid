@@ -1,0 +1,108 @@
+{
+  "format_version": 2,
+  "purpose": "Prepared exact current-main/original-author joint review; no execution or window assigned",
+  "source": "2e64ab4c6c16bd84ae5c101b9de5444550760ff2",
+  "tree": "3bdf79d7d76f096c989884190c32e4c08de20356",
+  "main_base": "bf448bcd070285e04ffec2474b3f32dcea998989",
+  "entry_local": "/Users/passion./.local/state/ownsolid/lane-rel/joint-api-review/full_native_gate.prepared.py",
+  "entry_deployment_target": "/root/lane-rel-tools/api-compat/full_native_gate.py",
+  "entry_sha256": "f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a",
+  "worktree": "/root/lane-rel-identity-audit-contract",
+  "server_checkout_last_read_only_verified": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "server_checkout_staged": false,
+  "required_checkout_before_execution": "2e64ab4c6c16bd84ae5c101b9de5444550760ff2",
+  "targets": [
+    "web-install",
+    "check",
+    "build",
+    "test"
+  ],
+  "original_make_commands": [
+    [
+      "make",
+      "web-install"
+    ],
+    [
+      "make",
+      "check"
+    ],
+    [
+      "make",
+      "build"
+    ],
+    [
+      "make",
+      "test"
+    ]
+  ],
+  "carriers": [
+    "/run/lock/ownsolid-heavy.lock",
+    "/root/lane-sci-tools/heavy-test.lock"
+  ],
+  "admission_model": "Entry opens and nonblocking-acquires the two permanent shared carriers once, in order; child targets inherit the same FDs. No external parent may separately hold those locks when invoking this self-admission entry.",
+  "private_third_carrier_used": false,
+  "thresholds": {
+    "memfree_mib_min": 6144,
+    "memavailable_mib_min": 12288,
+    "disk_free_gib_min": 30,
+    "io_full_avg10_max": 5
+  },
+  "node_old_space_mib_max": 4096,
+  "inherited_limits": "Preserve lower absolute Node old-space and CPU caps. Invalid, relative percentage or total-heap policies fail clearly rather than being overridden. Do not dump NODE_OPTIONS.",
+  "go_parallelism": 1,
+  "gomaxprocs_max": 2,
+  "cargo_jobs": 1,
+  "total_seconds_cap": 1200,
+  "cleanup_reserve_seconds": 20,
+  "deadline_scope": "Same absolute budget and owned-process cleanup as the executed1a5 entry; source metadata uses remaining budget; normal/exception descendants reaped before explicit shared-FD release",
+  "network": "Each target runs in an isolated Linux network namespace with only loopback; pinned Go/Cargo/pnpm caches are offline",
+  "browser_environment": {
+    "PLAYWRIGHT_BROWSERS_PATH": "/root/lane-rel-tools/playwright-browsers",
+    "LD_LIBRARY_PATH": "/root/lane-rel-tools/playwright-libs.tUcBz3Xq/sysroot/usr/lib/x86_64-linux-gnu"
+  },
+  "parent_umask": "077",
+  "child_toolchain_umask": "022",
+  "makefile_overlay": false,
+  "rules_or_directories_skipped": [],
+  "targets_skipped": [],
+  "single_run_heuristic_changed": false,
+  "retry_or_wait": false,
+  "raw_log": "/root/lane-rel-tools/api-compat/joint-native-gate-2e64ab4c.log",
+  "raw_log_open_mode": "exclusive create",
+  "result": "/root/lane-rel-tools/api-compat/joint-native-gate-2e64ab4c-proof.json",
+  "execution_authorized": false,
+  "entry_executed": false,
+  "admission_attempted": false,
+  "queue_created": false,
+  "ready_for_execution": false,
+  "capacity_profile_measured": false,
+  "source_preparation_ready": true,
+  "source_bundle_local": "/Users/passion./.local/state/ownsolid/lane-rel/joint-api-review/joint-source-2e64ab4c.bundle",
+  "source_bundle_sha256": "c5e4f1cbb7812b841de739c1524e6f3700d1e3aadfd5ddc5a2852784cda74a52",
+  "source_bundle_prerequisites": [
+    "9be01cbbf0144a2f2537667834539de31e40f58f"
+  ],
+  "local_existing_repository_bundle_verify_passed": true,
+  "independent_bare_import_verified": false,
+  "prerequisites": [
+    "Root observes the actual preceding TRN result/release and assigns a new full resource segment",
+    "Stage and verify this exact clean source/tree plus its changed upstream Go module graph and offline caches; the Linux checkout remains frozen9be now",
+    "Deploy the new entry with compare-and-swap against the retained1a5 input; retain original9be proof/log/manifest without overwrite",
+    "Execute original full web-install/check/build/test under live6/12/30/PSI5 checks and the permanent two-carrier NB admission; no outer lock or queue",
+    "Before publication, reconcile any later actual main input change and rerun affected checks"
+  ],
+  "retained_executed_attempt": {
+    "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+    "entry_sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c",
+    "manifest_sha256": "9a5e296cd3612ae6f9bdd36294148a83dfc4110e4319e837552f76975d096843",
+    "proof_sha256": "ea63d0f4d26a25744f322da5402381397c7fd14768c7afb8ab9b4c8509aaa5fe",
+    "elapsed_seconds": 89.572,
+    "parent_exit": 1,
+    "web_install_exit": 0,
+    "check_exit": 2,
+    "build_exit": null,
+    "test_exit": null
+  },
+  "prepared_policy_check_scope": "25 pure helper checks with synthetic resources, not a real admission or4GiB lint pass",
+  "prepared_policy_proof_sha256": "79f0b3c80619cffda374ac90a09bdca1fbce56f76f77a0eaa8de5fc2938ff19c"
+}

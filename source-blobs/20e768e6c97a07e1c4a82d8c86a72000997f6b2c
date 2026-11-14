@@ -1,0 +1,48 @@
+{
+  "files": {
+    "binary-and-overlay.sha256": {
+      "sha256": "bf96eb9282dcdde4ab2ba7b9c777b9228a07deac19a65b8aa2ab362ce52b6cfc",
+      "size": 268
+    },
+    "native-gateway.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "observations.json": {
+      "sha256": "ceace0a1253b196142fa739cf8766f930f85086dfe9ed06a0acf704a1d8911bc",
+      "size": 7295
+    },
+    "paired.log": {
+      "sha256": "f6c74df02e68de9e4fb206abfdc7a179664c4e8cab5f649ba1c710f7727345ee",
+      "size": 510
+    },
+    "request-1.json": {
+      "sha256": "3f0c32f53486b63b8367450a79043d9226413883e205a67695f70c8a698bf39e",
+      "size": 259
+    },
+    "request-2.json": {
+      "sha256": "dc40a855f8b9206ce4783027c0381e4d2040e8451d612e1c92de47d04625190d",
+      "size": 250
+    },
+    "vllm-arguments.txt": {
+      "sha256": "f2f5e957e6f0132018d3a4822c8954e6a0701a397d6b1ea3b5e31fcc1bcf8dc6",
+      "size": 266
+    },
+    "vllm-container.txt": {
+      "sha256": "e0fb270085c7a601ffcaee72ec7c2e7d898a22429210ee6cbd8f8ea8736a582f",
+      "size": 143
+    },
+    "vllm-environment.txt": {
+      "sha256": "e82577d6cd7469dcfc7f8c7e210c6d1c96208e992f474c343d2d5dbb37ae47c0",
+      "size": 424
+    },
+    "vllm.log": {
+      "sha256": "86dec401f0f94297e7d7f428282f1def59d7d4ab63bd429091df244ca846695f",
+      "size": 14804
+    }
+  },
+  "original_result": "gateway_startup_timeout_before_any_paired_sample",
+  "retained_pair_summaries": 0,
+  "source_commit": "e46f6ba70d8917298370cee64ef0e4d9cf51b1b8",
+  "vllm_exit": "exit=0 oom=false network=container:442e6d18f13967ade16fbdfe441f0d3502c3d99d8092256673137cba536bc90a cpus=4000000000 memory=8589934592 ports={}"
+}

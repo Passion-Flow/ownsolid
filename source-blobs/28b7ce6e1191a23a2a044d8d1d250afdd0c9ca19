@@ -1,0 +1,372 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "概览是登录后的第一个页面。它告诉你哪些事情需要处理、节点的整体状况，以及还有哪些设置没有完成。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "第一步"
+    }
+   ],
+   "data": {
+    "id": "第一步"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "新安装的平台在大家开始使用前需要完成三件事。概览会在 "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "完成设置"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " 下列出它们，直到全部完成："
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "导入许可证。"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 没有许可证时，平台会继续运行已有的工作，但拒绝新的工作。参见"
+        },
+        {
+         "type": "link",
+         "url": "help:license",
+         "children": [
+          {
+           "type": "text",
+           "value": "许可证"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "添加节点。"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 节点是由平台管理其 GPU 和 CPU 的服务器。参见"
+        },
+        {
+         "type": "link",
+         "url": "help:nodes",
+         "children": [
+          {
+           "type": "text",
+           "value": "节点"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "邀请团队成员。"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 成员通过邀请登录；配置单点登录后也可以通过单点登录登录。参见"
+        },
+        {
+         "type": "link",
+         "url": "help:people-and-workspaces",
+         "children": [
+          {
+           "type": "text",
+           "value": "用户和工作空间"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "概览显示什么"
+    }
+   ],
+   "data": {
+    "id": "概览显示什么"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "需要处理"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 列出停止上报的节点、最近一天失败的任务和邮件，以及即将到期的许可证。每一项都链接到处理它的地方。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "节点健康状况"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " 按状态统计节点。选择一个状态会打开按该状态筛选的"
+        },
+        {
+         "type": "link",
+         "url": "/nodes",
+         "children": [
+          {
+           "type": "text",
+           "value": "节点"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "列表。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "某个数据源无法读取时，概览会说明哪一部分未知，并提供 "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "重试"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "；页面其余部分照常显示。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "快速找到页面"
+    }
+   ],
+   "data": {
+    "id": "快速找到页面"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "按 "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Ctrl K"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "（或 "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "⌘ K"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "）打开命令菜单：它可以查找页面、节点、任务、人员和工作空间，也可以执行切换主题等操作。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "在导航中，用页面名称旁的图钉固定你每天使用的页面。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "每个页面顶部的帮助链接会打开介绍该页面的文章。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

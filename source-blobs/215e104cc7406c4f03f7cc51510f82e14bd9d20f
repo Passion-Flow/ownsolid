@@ -1,0 +1,116 @@
+from pathlib import Path
+import fcntl,gzip,hashlib,json,os,shutil,signal,stat,subprocess,sys,tarfile,time
+root=Path(sys.argv[1]);os.umask(0o022)
+archive=root/'installed-source-149a9501.tar.gz'
+assert archive.stat().st_size==35577 and hashlib.sha256(archive.read_bytes()).hexdigest()=='941bbd8186f65428578665580d1463789feee6bc979a803b72c587b9306d3a34'
+with tarfile.open(archive) as bundle:
+ assert set(bundle.getnames())=={'update.patch.gz','update.json.gz'}
+ manifest=json.loads(gzip.decompress(bundle.extractfile('update.json.gz').read()))
+ patch=gzip.decompress(bundle.extractfile('update.patch.gz').read())
+assert manifest['source']=='149a95013db6c6d1ca9dbadd09b05fff9b4c98de'
+assert hashlib.sha256(patch).hexdigest()==manifest['patch_sha256']
+assert not (root/'build-exit').exists(),'Read retained build result before repeating'
+locks=[];child=None
+try:
+ for name in ['/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock']:
+  p=Path(name);fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW);i=os.fstat(fd);assert stat.S_ISREG(i.st_mode) and i.st_uid==os.getuid()
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:os.close(fd);raise SystemExit(75)
+  assert (i.st_dev,i.st_ino)==(p.lstat().st_dev,p.lstat().st_ino);locks.append(fd)
+ memory={}
+ for line in Path('/proc/meminfo').read_text().splitlines():
+  key,_,value=line.partition(':')
+  if key in ['MemFree','MemAvailable']:memory[key]=int(value.split()[0])
+ psi=float(Path('/proc/pressure/io').read_text().split('full avg10=')[1].split()[0]);disk=shutil.disk_usage(root)
+ preflight={'memory_kib':memory,'full_io_psi_avg10':psi,'disk_free_bytes':disk.free,'source':manifest['source'],'scope':'verified test-only delta; reuse unchanged qualified production binaries, compile current e2e, then pure race/vet in loopback-only namespace; no database/container'}
+ (root/'build-preflight.json').write_text(json.dumps(preflight,indent=2)+'\n');print(json.dumps(preflight),flush=True)
+ if memory['MemFree']<2097152 or memory['MemAvailable']<8388608 or psi>5 or disk.free<30*1024**3:raise SystemExit(75)
+ commands=subprocess.check_output(['ps','-e','-o','comm='],text=True).splitlines();assert not any(Path(x.strip()).name in {'go','compile','link','gcc','cc1','rustc','cargo','make'} for x in commands),'Another compiler is active'
+ go='/root/lane-sci-tools/go/bin/go';assert subprocess.check_output([go,'version'],text=True).strip()=='go version go1.27.3 linux/amd64'
+ oldroot=Path('/root/lane-arc107-current.eea738bf.8b4a06a5');qualified=Path('/root/lane-arc107-installed.59c9c86a.363f9c73');old=qualified/'source'
+ cached=Path('/root/lane-arc107-commands-760b80950612/manifest.json');assert hashlib.sha256(cached.read_bytes()).hexdigest()=='3a1cdfedeaa36963c8526f37b2c5ef74a66088dcc5d9efd8631ebf78b81ca392'
+ expected={e['path']:{'sha256':e['sha256'],'mode':'120000' if e['kind']=='symlink' else '100755' if e['executable'] else '100644'} for e in json.loads(cached.read_text())}
+ with tarfile.open(oldroot/'native-current-eea738bf.tar.gz') as t: prior=json.loads(gzip.decompress(t.extractfile('update.json.gz').read()))
+ assert prior['source']=='eea738bfc11d74f8505eee41c3a3ce0d9fa5cf7b'
+ def overlay(m):
+  for e in m['changes']:
+   if e['status']=='D':expected.pop(e['path'])
+   else:expected[e['path']]={k:e[k] for k in ['sha256','mode']}
+  assert set(expected)==set(m['tracked_paths'])
+ def verify(source):
+  actual={str(p.relative_to(source)) for p in source.rglob('*') if p.is_file() or p.is_symlink()};assert actual==set(expected),'Snapshot path set changed'
+  for name,e in expected.items():
+   p=source/name
+   if e['mode']=='120000':assert p.is_symlink();raw=os.readlink(p).encode()
+   else:assert p.is_file() and not p.is_symlink();raw=p.read_bytes();assert bool(p.stat().st_mode&0o111)==(e['mode']=='100755'),name
+   assert hashlib.sha256(raw).hexdigest()==e['sha256'],name
+ overlay(prior)
+ with tarfile.open('/root/lane-arc107-installed.129573ae.a4371d31/installed-source-129573ae.tar.gz') as t: second=json.loads(gzip.decompress(t.extractfile('update.json.gz').read()))
+ overlay(second)
+ with tarfile.open(qualified/'installed-source-59c9c86a.tar.gz') as t: third=json.loads(gzip.decompress(t.extractfile('update.json.gz').read()))
+ assert third['source']==manifest['base_source'] and third['tree']==manifest['base_tree']
+ overlay(third);verify(old)
+ assert {e['path'] for e in manifest['changes']}=={'docs/research/agent-gateway-rebalance.md','tests/e2e/agent_gateway_lifecycle_test.go','tests/e2e/agent_gateway_observation_test.go'}
+ source=root/'source';assert not source.exists();subprocess.run(['cp','-a','--reflink=auto',str(old),str(source)],check=True)
+ (root/'installed-update.patch').write_bytes(patch);subprocess.run(['git','-C',str(source),'apply','--check',str(root/'installed-update.patch')],check=True);subprocess.run(['git','-C',str(source),'apply',str(root/'installed-update.patch')],check=True)
+ overlay(manifest);verify(source)
+ (root/'installed-source-verified.json').write_text(json.dumps({'source':manifest['source'],'tree':manifest['tree'],'paths':len(expected),'every_source_byte_and_mode_verified':True,'base_source':manifest['base_source']},indent=2)+'\n')
+ env=os.environ.copy();env.update({'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1','GOMEMLIMIT':'512MiB','CGO_ENABLED':'0','GOENV':'off','GOCACHE':'/root/lane-sci-tools/go-cache','GOMODCACHE':'/root/lane-sci-tools/go-mod'})
+ tmp=root/'build-tmp';tmp.mkdir(mode=0o700);env['TMPDIR']=str(tmp)
+ for key in list(env):
+  if key.startswith(('PROJECT_ONE_','OWNSOLID_')):env.pop(key)
+ binaries=root/'binaries';binaries.mkdir(mode=0o755)
+ cpus=','.join(str(n) for n in sorted(os.sched_getaffinity(0))[:2]);assert len(cpus.split(','))==2
+ def stop(sig,frame):raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop);signal.signal(signal.SIGHUP,stop)
+ builds=[('services/agent','agent',['build','-trimpath'],'./cmd/agent'),('services/agent','inference-egress.test',['test','-c','-trimpath','-tags','docker_integration egress_integration'],'./internal/inference'),('deploy/offline','ownsolid-install',['build','-trimpath'],'./cmd/install'),('tests/e2e','egress-recorder',['build','-trimpath'],'./cmd/egress-recorder'),('tools/dev/simulator','simulator',['build','-trimpath'],'.'),('tests/e2e','e2e.test',['test','-c'],'.'),('services/control','control',['build','-trimpath','-ldflags=-s -w'],'./cmd/server')]
+ (root/'build-start').write_text(str(time.time())+'\n')
+ retained=json.loads((qualified/'binary-evidence.json').read_text())
+ for module,name,args,package in builds:
+  if name!='e2e.test':
+   previous=qualified/'binaries'/name;assert hashlib.sha256(previous.read_bytes()).hexdigest()==retained[name]['sha256'];shutil.copy2(previous,binaries/name);print(name+' byte-identical qualified binary reused',flush=True);continue
+  (root/'build-stage').write_text(name+'\n');started=time.time()
+  with (root/('compile-'+name+'.log')).open('wb') as out:
+   child=subprocess.Popen(['taskset','-c',cpus,go,'-C',str(source/module),*args,'-o',str(binaries/name),package],env=env,stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+   try:code=child.wait(timeout=300)
+   except subprocess.TimeoutExpired:
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=15)
+    except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+    code=124
+  assert code==0,(name,code)
+  print(name+' compiled in '+str(round(time.time()-started,3))+' seconds',flush=True)
+ # Production inputs are byte-identical; qualify the changed e2e source directly.
+ checked_env=env.copy();checked_env['CGO_ENABLED']='1'
+ def run_check(command,name,budget,expected=0):
+  global child
+  with (root/name).open('wb') as out:
+   child=subprocess.Popen(command,env=checked_env,stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+   try:code=child.wait(timeout=budget)
+   except subprocess.TimeoutExpired:
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=15)
+    except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+    code=124
+  assert code==expected,(name,code,expected)
+ selected='^(TestGatewayConnectionLogOrdering|TestGatewayObservedRetirementTiming|TestGatewayObservationAdmission)$'
+ binary=root/'current-parser-race.test'
+ run_check(['taskset','-c',cpus,go,'-C',str(source/'tests/e2e'),'test','-c','-race','-o',str(binary),'.'],'compile-parser-current.log',300)
+ script='set -euo pipefail; ip link set lo up; cd "$3"; exec taskset -c "$1" "$2" -test.v -test.timeout=90s -test.run="$4"'
+ run_check(['unshare','--net','bash','-c',script,'arc107-busy',cpus,str(binary),str(source/'tests/e2e'),selected],'parser-current.log',105)
+ log=(root/'parser-current.log').read_text();assert '\nPASS\n' in log and '--- FAIL:' not in log and '--- SKIP:' not in log
+ run_check(['taskset','-c',cpus,go,'-C',str(source/'tests/e2e'),'vet','.'],'parser-vet.log',300)
+ (root/'production-binary-reuse.json').write_text(json.dumps({'qualified_source':manifest['base_source'],'source':manifest['source'],'production_paths_unchanged':True,'retained_hashes':retained},indent=2)+'\n')
+ print('Current native e2e race and vet passed; production binaries reused byte for byte',flush=True)
+ shutil.copyfile(source/'deploy/compose/compose.yaml',binaries/'compose.yaml')
+ evidence={p.name:{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in binaries.iterdir()}
+ (root/'binary-evidence.json').write_text(json.dumps(evidence,indent=2)+'\n');(root/'build-exit').write_text('0\n');(root/'build-finish').write_text(str(time.time())+'\n');(root/'build-stage').write_text('complete\n')
+ print('Exact native installed binaries compiled',flush=True)
+except BaseException:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ raise
+finally:
+ for fd in reversed(locks):fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

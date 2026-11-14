@@ -1,0 +1,11 @@
+{
+  "format_version": 1,
+  "source_revision": "8f4dd72cb9c6c58c0860bb9125289986cfc180d1",
+  "source_modified": false,
+  "binary_sha256": "2f16b65de0753601aea7088c24afec774111cd85c7d027952309e8d231d0ca2d",
+  "os": "linux",
+  "arch": "amd64",
+  "go_version": "go1.27.3",
+  "cli_product_tree": "57f8a7356d33a60a89a8f7e754c4d51f0af710dd",
+  "build_scope": "CLI only; offline loopback namespace; no Control build or installed acceptance"
+}

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+root=/root/lane-rel-tools/session-installed-0d262a8a
+cd /root/lane-rel
+sha=0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c
+test "$(git rev-parse HEAD)" = "$sha"
+test -z "$(git status --porcelain)"
+if test -n "$(docker ps --filter name=^lane-del-installed-4463bbe6$ --format '{{.Names}}')"; then
+ echo 'Original DEL installation window active; no repository gate started'
+ exit 75
+fi
+df -h /
+free -m
+test "$(df -Pm / | awk 'NR==2 {print $4}')" -ge 15360 || exit 75
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048 || exit 75
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -n -E 75 8
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n -E 75 9
+exec 7>/root/lane-rel-tools/heavy-test.lock
+flock -n -E 75 7
+source /root/lane-rel-tools/env
+export GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOFLAGS=-p=1 CARGO_BUILD_JOBS=1 CARGO_NET_OFFLINE=true
+cleanup() {
+ test ! -f tools/audit-verify/audit-verify || rm -- tools/audit-verify/audit-verify
+}
+trap cleanup EXIT
+printf 'SOURCE_COMMIT=%s\n' "$sha"
+unshare -n bash -ec '
+ ip link set lo up
+ test "$(ip -o link show | wc -l)" -eq 1
+ test -z "$(ip route show default)"
+ test -z "$(ip -6 route show default)"
+ make web-install
+ make check
+ echo MAKE_CHECK_PASSED
+ make build
+ echo MAKE_BUILD_PASSED
+'
+cleanup
+test "$(git rev-parse HEAD)" = "$sha"
+test -z "$(git status --porcelain)"
+git diff --check 8f4dd72c..HEAD
+echo EXACT_SESSION_CLI_SOURCE_GATE_PASSED

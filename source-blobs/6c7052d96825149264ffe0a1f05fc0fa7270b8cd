@@ -1,0 +1,51 @@
+import collections
+import ipaddress
+import json
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+def rows(name):
+    return [json.loads(line) for line in (root / name).read_text().splitlines()]
+
+def product_packets(records, probes):
+    seen = collections.Counter()
+    for record in records:
+        destination = record["destination"]
+        if destination not in probes or record["protocol"] != "udp":
+            raise ValueError("unexpected external packet")
+        seen[destination] += 1
+    if seen != collections.Counter(probes):
+        raise ValueError("missing or repeated fixture probe")
+
+control = rows("control-egress.jsonl")
+probe_destinations = ("192.0.2.15:9705", "[2001:db8:105::15]:9705")
+product_packets(control, probe_destinations)
+for unexpected in ("203.0.113.20:443", "[2001:db8:105::16]:9705", probe_destinations[0]):
+    try:
+        product_packets(control + [{"destination": unexpected, "protocol": "udp"}], probe_destinations)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an added packet was accepted")
+for role in ("server", "worker"):
+    product_packets(rows(f"{role}-egress.jsonl"), ())
+positives = rows("site-dns-positive-controls.jsonl")
+assert collections.Counter(q["name"] for q in positives) == {
+    "registry-1.docker.io.": 2, "usage.projectcalico.org.": 2,
+}
+known_peers = collections.Counter(str(ipaddress.ip_address(q["peer"].rsplit(":", 1)[0])) for q in positives)
+dns = rows("site-dns.jsonl")
+assert len(dns) == 2 and all(q["type"] == 13 and re.fullmatch(r"[0-9]+\.[0-9]+\.", q["name"]) for q in dns)
+assert collections.Counter(q["peer"].rsplit(":", 1)[0] for q in dns) == {peer: 1 for peer in known_peers}
+assert rows("server-egress.jsonl") == [] and rows("worker-egress.jsonl") == []
+testlog = (root / "managed-test.log").read_text()
+assert "--- PASS: TestARC104ManagedSigned" in testlog
+assert "FAIL: zero egress: 1 outbound attempts recorded:" in testlog
+assert re.search(r"udp \[2001:db8:e9e5::1\]:[0-9]+ -> \[2001:db8:105::15\]:9705", testlog)
+assert "Public DNS questions: 0 after 334s" in (root / "managed-observation.log").read_text()
+assert (root / "first-calico-containers.json").read_bytes() == (root / "final-calico-containers.json").read_bytes()
+print("Unchanged captures passed exact dual-stack probe verification.")
+print("Product packets: 0 on Control host, server and worker. Public DNS questions: 0.")
+print("Added IPv4, IPv6, and repeated probe traffic were rejected.")

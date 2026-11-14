@@ -1,0 +1,23 @@
+{
+  "base": "106ca52dd867bcb38f142948a52a1f4af41d1d8e",
+  "gateway_tree": "b7059e5bfed366607819a7428d6cd067fb424760",
+  "owner_files": {
+    "contract.json": "521bd5fdd75b672625c34fa2c105aabea27224bc8dcb2977db8f8d3d26c39399",
+    "gateway-only.patch": "c57d08a0c9fc7474115b90b0b69413843309eea46712b21d0c451e0bd90d719b",
+    "source/services/control/internal/modules/distribution/alias_capabilities.go": "537cede53ec7bde37b7b31bb175c42acd06d01f06fec442265625adf064c52b1",
+    "source/services/control/internal/modules/distribution/alias_capabilities_test.go": "7ec4e732ebbd9593275be36008b98a9fed71a4ef8190415939e21da91f5cfb48",
+    "source/services/control/internal/modules/distribution/alias_capability_http_test.go": "d79dcd2efed5f481bc88f3071426baf2a35ae1518b59b049d6bfdc2fd1592a85",
+    "source/services/control/internal/modules/distribution/alias_capability_recipe_test.go": "747098b7b9352c404b1ce22fd88569bb2064b49ac5bb4f2d7c0c6c4efbbaad45",
+    "source/services/control/internal/modules/distribution/alias_read_http_test.go": "238259f90edea3f251f45eb4af843b9d5d6c74d43b584fa48aa9e83f09dab2d0",
+    "source/services/control/internal/modules/distribution/alias_reads.go": "5307fd6a5e5d9d647f562dbe61e5b6cd7bf3c0a0de2f2f0facbfc93b1905c6c5",
+    "source/services/control/internal/modules/distribution/history.go": "61ff9d7a462f842fdd9611ed4cfc9a941cd2718bb5cd262faa86b21415481271",
+    "source/services/control/internal/modules/distribution/http/human.go": "60020c298d12f2cda4efdb5d4783c1c87fdef5c6e4fcc96c9f54e212252f87d2",
+    "source/services/control/internal/modules/distribution/model.go": "3110a78d0774ee9d1f7163ca3f8301a85eea6fe28c117f452f53cfb8b63e40ce"
+  },
+  "additional_assertions": [
+    "ModelAliasRead",
+    "ModelAliasPageResponse"
+  ],
+  "augmented_test_sha256": "3533767b4c2054322ef982347b3cfb9d3d05dba282e899fb288316116d04e1ac",
+  "contract_sha256": "66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d"
+}

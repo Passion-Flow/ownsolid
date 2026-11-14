@@ -1,0 +1,19 @@
+# Verified fast-forward publication
+
+Repository: https://github.com/Passion-Flow/ownsolid.git
+Branch: main
+Accepted prior main: f78424921d99c284daa42da5f461ecffc9fb8ead
+Published and independently observed remote main:
+b87f338892f5dff2f7fa33232be5b51a742292e8
+
+The non-force push succeeded from f7842492 to b87f3388. The subsequent
+credentialed ls-remote returned that exact main SHA. The server origin/main
+tracking ref was then fast-forwarded to the same SHA. The permanent same-UID
+regular workstation carrier was held by one flock FD across fetch, review,
+rebase, client push and readback, then released. It was never unlinked,
+replaced or truncated.
+
+The exact tested 0e7d5a9e commit is pinned locally at the ref named in
+qualified-source-ref, independently of reflog expiry. Runtime equivalence
+and the documentation-only follow-up/rebase are recorded in qualification.md.
+No Executor candidate, formal migration, UI or feature tick was published.

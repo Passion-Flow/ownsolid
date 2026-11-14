@@ -1,0 +1,26 @@
+{
+  "probe_sha256": "ef6613b6ce11718abe9490eccf28f8d523abefcd5fb1e94408ef17428ced03a8",
+  "recorder_sha256": "9aad51535e6abf4ec51766e7e0dab8fcbf9fbc40ccffa2099e9e66e32d1f8d42",
+  "results": {
+    "deadline": {
+      "capture": {
+        "bytes": 662,
+        "reason": "[Errno 2] No such file or directory: '/root/lane-rel-tools/capture-lifecycle.8biOHc/evidence/deadline/capture-ended.json'",
+        "run_id": "ab4c54a4-437b-420b-b19c-dd1d5f106919",
+        "sha256": "f7ef4d3ce94564cebdf03e9c4c73c5a5e1fab13cebe4c6de40fa535bf6864529",
+        "status": "capture-incomplete"
+      },
+      "producer_exit": -9
+    },
+    "normal": {
+      "capture": {
+        "bytes": 662,
+        "run_id": "6f36de95-5c21-4cb4-a497-53965193bf7d",
+        "sha256": "4b9e0fe5eca37caf779e7bdf2ff2524db56d03c67fc8897ba1d68ff3ef212c4f",
+        "status": "capture-passed"
+      },
+      "producer_exit": 0
+    }
+  },
+  "scope": "Native TUN recorder lifecycle only; no product install, Docker workload or history acceptance"
+}

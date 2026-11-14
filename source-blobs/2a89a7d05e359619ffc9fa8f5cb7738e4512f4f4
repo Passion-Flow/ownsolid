@@ -1,0 +1,3 @@
+{
+  "Continue from the previous confirmed page. After a failed or lost response, retry the same filters, cursor and representation only explicitly. A retry records a new audited read; it does not confirm whether the earlier access was recorded. No page is returned unless its access audit transaction is confirmed.": "从上一页已确认的结果继续。响应失败或丢失后，仅在明确发起重试时沿用相同的筛选条件、游标和响应表示。重试会记录一次新的审计读取，并不能确认上一次访问是否已被记录。仅在访问审计事务确认提交后才返回页面。"
+}

@@ -1,0 +1,43 @@
+#!/bin/bash
+set -u
+audit_pid=
+model_pid=
+cleanup() {
+ trap - TERM INT
+ if test -n "$audit_pid"; then kill -TERM "$audit_pid" 2>/dev/null || :; wait "$audit_pid" 2>/dev/null || :; fi
+ if test -n "$model_pid"; then kill -TERM "$model_pid" 2>/dev/null || :; wait "$model_pid" 2>/dev/null || :; fi
+}
+trap 'cleanup; exit 124' TERM INT
+/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12 - <<'PY_PREFLIGHT'
+from pathlib import Path
+import hashlib,importlib.util,json,os,re,subprocess
+root=Path('/Users/passion./.local/state/ownsolid/lane-rel');a=root/'identity-audit-contract';m=root/'model-history-contract/domain-draft'
+spec=importlib.util.spec_from_file_location('audit_entry',a/'run_go_wire_mac.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+p=json.loads((a/'go-wire-mac-prepared.json').read_text());module.verify(p);fd=module.inherited_window();assert os.fstat(fd).st_ino==50313339
+assert module.digest(a/'run_go_wire_mac.py')==p['mac_entry_sha256'];assert module.digest(root/'with_mac_window.py')==p['existing_window_wrapper_sha256']
+q=json.loads((m/'go-mac-inputs.json').read_text());assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=m.parent/'work',text=True).strip()==q['source'];assert not subprocess.check_output(['git','status','--porcelain'],cwd=m.parent/'work',text=True).strip()
+for name,expected in q['go_files'].items():assert hashlib.sha256((m/'sdk'/name).read_bytes()).hexdigest()==expected,name
+assert hashlib.sha256((m/'wire/go/history_wire_test.go').read_bytes()).hexdigest()==q['go_fixture_sha256']
+disk=os.statvfs(root);assert disk.f_bavail*disk.f_frsize>=15*1024**3
+pressure=subprocess.check_output(['memory_pressure','-Q'],text=True);match=re.search(r'free percentage:\s*(\d+)%',pressure);assert match and int(match[1])>=40
+(m/'go-mac-temp').mkdir(mode=0o700,exist_ok=True)
+proof={'phase':'locked_preflight','window_parent_pid':int(os.environ['OWNSOLID_MAC_WINDOW_PARENT']),'joint_pid':os.getpid(),'inherited_fd':fd,'inode':os.fstat(fd).st_ino,'audit_source':p['source'],'audit_transport_source':p['transport_source'],'history_source':q['source'],'memory_free_percent':int(match[1]),'disk_free_bytes':disk.f_bavail*disk.f_frsize,'go_binary':p['go_binary']}
+(a/'short-mac-preflight.json').write_text(json.dumps(proof,indent=2)+'\n');print(json.dumps(proof),flush=True)
+PY_PREFLIGHT
+if test "$?" -ne 0; then exit 77; fi
+/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12 /Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/run_go_wire_mac.py &
+audit_pid=$!
+wait "$audit_pid"
+audit_exit=$?
+audit_pid=
+printf '{"phase":"audit_finished","exit":%s}\n' "$audit_exit"
+cd /Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/domain-draft/sdk/gen/go || exit 78
+env GOWORK=off GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local GOMAXPROCS=2 'GOFLAGS=-p=1 -mod=readonly' CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 CC=/usr/bin/clang GOMODCACHE=/Users/passion./go/pkg/mod GOCACHE=/Users/passion./Library/Caches/go-build GOTMPDIR=/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/domain-draft/go-mac-temp TMPDIR=/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/domain-draft/go-mac-temp/ /Users/passion./.local/opt/go/bin/go test -json -race -count=1 -timeout=90s /Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/domain-draft/wire/go/history_wire_test.go > /Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/domain-draft/go-codec-mac.log 2>&1 &
+model_pid=$!
+printf '{"phase":"history_codec_started","pid":%s}\n' "$model_pid"
+wait "$model_pid"
+model_exit=$?
+model_pid=
+printf '{"phase":"history_codec_finished","exit":%s}\n' "$model_exit"
+if test "$audit_exit" -ne 0; then exit "$audit_exit"; fi
+exit "$model_exit"

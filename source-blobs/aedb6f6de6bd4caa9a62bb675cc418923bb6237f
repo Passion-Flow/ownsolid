@@ -1,0 +1,14 @@
+{
+  "format_version": 1,
+  "source": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+  "binary_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+  "binary_path": "/root/lane-rel-tools/user-reads/native-client-410ed356/ownsolid",
+  "host_platform": "linux/amd64",
+  "native_linux_startup_run": true,
+  "offline_namespace": true,
+  "cases_passed": 11,
+  "exit": 0,
+  "installed_acceptance": false,
+  "boundary": "Version/help, local validation and absent-credential refusal only; no authenticated protocol flow",
+  "utc": "2026-11-12T15:44:47.851077+00:00"
+}

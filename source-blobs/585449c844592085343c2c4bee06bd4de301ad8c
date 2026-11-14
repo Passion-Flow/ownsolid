@@ -1,0 +1,111 @@
+# Dedicated session CLI acceptance package
+
+Frozen CLI: 0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c.
+Expected installed Control: 4463bbe628f60486bbdb92c15f72311fb53d076a.
+The 8f4dd72c workspace client and its handoff are independent and unchanged.
+
+## Entries and evidence
+
+- client/ownsolid: Linux amd64 static client, Go 1.27.3, clean VCS revision.
+- client/client-manifest.json: actual binary/toolchain hashes, CLI tree, pinned
+  go.work/go.mod/go.sum and exact offline build flags.
+- build-client.sh: disk/raw-MemFree admission and the original global/SCI/lane locks.
+- cli-check-source and cli-race-vet.log: source-bound CLI race suite and vet.
+- full-gate.sh: the queued whole-repository check/build gate. Exit 75 is a
+  preflight refusal, not a test result. It refuses an active original DEL container.
+- guards.py, installed_sessions.py: disposable-account acceptance driver.
+- test_guards.py and guard-tests.log: twelve guard tests, not an installed result.
+
+The driver needs Linux root, Python 3.12 standard library, nsenter, unshare and
+mount. It creates no server, container, database, account, membership or second
+installation. The installation owner supplies its existing network PID and
+configured loopback listener address during the admitted DEL window. The owner
+retains the Linux locks and egress recorder; the driver takes no nested gate lock.
+
+## Required original installation inputs
+
+The actual DEL runtime-evidence directory supplies installed-ready.json,
+installed-provenance.json, installed-control.bin, installation-ca.pem and
+admin-credential. The bootstrap credential is read only for the protected email
+deny fence; its password is never an authentication input.
+
+Control image, source and extracted-binary hash must agree. The CLI source and
+binary hash are checked independently. HTTPS verifies the original advertised
+origins and actual installation CA. Hostname resolution changes only in the
+driver's new private mount namespace after joining the existing network namespace.
+
+## Dedicated fixture contract
+
+Supply --fixture as an owner-only JSON file in a private directory, issued by
+the installation/identity fixture owner for this exclusive test window:
+
+- format_version: integer 1.
+- purpose: dev102-session-cli.
+- fixture_id: canonical nonzero UUID.
+- control_source: the exact installed frozen Control source.
+- exclusive: literal true.
+- protected_accounts: nonempty objects with user_id and email for DEL/OBS/Web
+  shared identities; include the actual bootstrap administrator.
+- protected_session_ids: nonempty canonical UUIDs for shared/current sessions.
+- accounts: exactly owner and foreign; each has user_id, email, password_file,
+  fixture_id, disposable=true and platform_admin=true.
+
+Each password_file is an absolute mode 0600 file inside that fixture's private
+directory tree. Its parent is mode 0700. No shared credential file, default account,
+default password or session token is accepted. The two dedicated accounts must
+be distinct, disposable, exclusive and outside every protected identity.
+
+Every fresh login is checked through the public Me API before any mutation or
+cleanup. Only current sessions created by this run enter the target registry.
+A failed/shared identity or protected session proof is never followed by logout.
+No existing session from a list is selected for revocation.
+
+## Running in the original owner's window
+
+    python3 installed_sessions.py \
+      --client /absolute/session-client/ownsolid \
+      --client-manifest /absolute/session-client/client-manifest.json \
+      --evidence /absolute/original/runtime-evidence \
+      --fixture /absolute/private/dedicated/session-fixture.json \
+      --expected-cli-source 0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c \
+      --expected-control-source 4463bbe628f60486bbdb92c15f72311fb53d076a \
+      --network-pid ACTUAL_EXISTING_INSTALLATION_PID \
+      --connect-address ACTUAL_CONFIGURED_LOOPBACK_ADDRESS \
+      --result /absolute/new/private/result-directory
+
+Add --check-inputs for local validation only. It does no authentication and never
+reports installed acceptance. Missing original/dedicated inputs fail before login.
+
+Cases cover list and continuation, owned-other-session revoke and idempotent
+retry with exactly one auth.logout audit, revoked-profile refusal, foreign-account
+and cross-entrance refusal with live-target survival and no successful audit,
+self-revocation with local credential removal, fresh-login recovery and audit
+readback. All successful targets are new sessions of the canary account.
+Portal and foreign targets are also new dedicated canary sessions.
+
+Storage/transport uncertain-outcome cases remain the committed CLI TLS/race tests.
+The installed driver does not interrupt the shared database, add a proxy or modify
+the server to manufacture a failure. DEL owns the completed zero-egress conclusion.
+
+The report contains source/hash, canary session IDs, request IDs and case outcomes;
+it contains no credentials or raw CLI/HTTP output. Actual installed acceptance and
+roadmap completion remain false until every case and verified-canary cleanup pass.
+
+## Admission and current qualification
+
+The source/binary subset check in installed-input-check.json observed Control
+4463bbe6 and its actual extracted binary/image. It did not authenticate or run
+session acceptance. Its observed public_tables=138 is the original input's raw
+catalog count; only the installation owner qualifies partition-aware table-set
+readiness against the frozen product source. This package must not replace that
+qualification or declare the whole installation ready from a matching revision.
+
+Run the installed driver only when the original installation owner admits this
+explicit substep in the existing locked window, after complete readiness has
+passed and two exclusive disposable accounts plus the protected denylist exist.
+The current counter investigation and its execution barrier remain independent.
+No session driver has been run and no installation-complete flag is written.
+
+The queued full gate exited 75 before starting check/build because the original
+DEL installation window was active. Keep that result as admission evidence and
+run full-gate.sh only after its window releases, on the exact clean 0d262a8a tree.

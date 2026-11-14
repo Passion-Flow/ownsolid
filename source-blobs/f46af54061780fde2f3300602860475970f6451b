@@ -1,0 +1,55 @@
+"""Run existing owner tests in the retained exact CPU environment without rebuilding it."""
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+import uuid
+
+proof, repository, model = [Path(value).resolve(strict=True) for value in sys.argv[1:]]
+policy = json.loads((proof / 'cpu-prototype-inputs/prototype.json').read_bytes())
+limits = policy['install']
+subprocess.run(['git', '-C', str(repository), 'diff', '--exit-code', '096c50b8', 'HEAD', '--',
+                'runtimes/training', 'runtimes/data-processing', 'api/training',
+                'api/agent/v1/model-catalog.json'], check=True)
+name = 'lane-trn-runtime-unit-' + uuid.uuid4().hex
+container = None
+with tempfile.TemporaryDirectory(prefix='exact-unit-', dir=proof) as temporary:
+    command = ['docker', 'create', '--name', name, '--pull=never', '--network', 'none',
+               '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges',
+               '--memory', str(limits['memory_bytes']), '--cpus', str(limits['cpu_threads']),
+               '--pids-limit', str(limits['pids_limit']),
+               '--mount', f'type=bind,src={proof / "cpu-prototype-install"},dst=/workspace,readonly',
+               '--mount', f'type=bind,src={repository},dst=/source,readonly',
+               '--mount', f'type=bind,src={model},dst=/model,readonly',
+               '--mount', f'type=bind,src={temporary},dst=/unit-tmp', '--workdir', '/source']
+    environment = {'PYTHONPATH': 'runtimes/training:runtimes/data-processing',
+                   'TMPDIR': '/unit-tmp', 'HF_HOME': '/unit-tmp/hf',
+                   'XDG_CACHE_HOME': '/unit-tmp/cache', 'HF_HUB_OFFLINE': '1',
+                   'TRANSFORMERS_OFFLINE': '1', 'HF_DATASETS_OFFLINE': '1',
+                   'TOKENIZERS_PARALLELISM': 'false', 'PYTHONDONTWRITEBYTECODE': '1',
+                   'OMP_NUM_THREADS': str(limits['cpu_threads']),
+                   'MKL_NUM_THREADS': str(limits['cpu_threads']),
+                   'OWNSOLID_TEST_QWEN_TOKENIZER_DIRECTORY': '/model'}
+    for key, value in environment.items():
+        command += ['--env', f'{key}={value}']
+    command += [policy['base_image'], '/workspace/venv/bin/python', '-B', '-m', 'unittest',
+                'discover', '-s', 'runtimes/training/tests', '-v']
+    try:
+        created = subprocess.run(command, capture_output=True, text=True, check=True)
+        identifier = created.stdout.strip()
+        if not re.fullmatch('[0-9a-f]{64}', identifier):
+            raise RuntimeError('unexpected owned container identity')
+        container = identifier
+        result = subprocess.run(['docker', 'start', '--attach', container], timeout=limits['timeout_seconds'])
+        observed = subprocess.check_output(['docker', 'inspect', '--format',
+                                            '{{.State.OOMKilled}} {{.State.ExitCode}}', container], text=True).strip()
+        print(json.dumps({'owned_container_id': container, 'state': observed,
+                          'repository_head': subprocess.check_output(['git', '-C', str(repository),
+                                                                      'rev-parse', 'HEAD'], text=True).strip()}), flush=True)
+        if result.returncode or observed != 'false 0':
+            raise RuntimeError('exact CPU owner unit tests failed')
+    finally:
+        if container is not None:
+            subprocess.run(['docker', 'rm', '--force', container], check=True, stdout=subprocess.DEVNULL)

@@ -1,0 +1,29 @@
+{
+  "source_sha": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "tenant_id": "c5d6b1c8-3074-45ef-9e57-b65efb904426",
+  "workspace_id": "a0bb19a4-1de5-44b7-b453-1284c1aec44e",
+  "site_id": "default",
+  "cell_id": "default",
+  "nodes": [
+    "ac558767-6998-45f4-aee3-d701cfed1331",
+    "68f65947-6449-4f1d-a50f-2ed409f063fd"
+  ],
+  "raw_from": 1794484200,
+  "raw_to": 1794484680,
+  "rollup_from": 1794477600,
+  "rollup_to": 1794478080,
+  "status": "native_replay_verified",
+  "scope": "synthetic up samples; one existing installed cell; no physical-node or five-cell claim",
+  "samples": 84,
+  "raw_input_sha256": "459d73b9e0c0ca0076537748029e0c0c4dbacde1395dd7ff6092bfc5241d274b",
+  "evaluator_command": [
+    "-rule=/run/history/rules.yaml",
+    "-httpListenAddr=:8880",
+    "-external.url=http://127.0.0.1:8880",
+    "-datasource.url=https://172.29.244.2:8428",
+    "-datasource.tlsCAFile=/run/history/raw-ca.pem",
+    "-remoteWrite.url=https://172.29.244.3:8428",
+    "-remoteWrite.tlsCAFile=/run/history/long-ca.pem"
+  ],
+  "replay_observed_points": 6
+}

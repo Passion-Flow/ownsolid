@@ -1,0 +1,26 @@
+{
+  "format_version": 1,
+  "source_revision": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+  "worktree": "/root/lane-rel-users",
+  "parent": "7055df31f10d23a3a237601c6e781eceaaa8397b",
+  "source_bundle": "/root/lane-rel-tools/user-reads-candidate.bundle",
+  "bundle_sha256": "ff67499202ac7055ba24b5c52804228ecb83b644ed63bc1ab75c11446e4aabd7",
+  "ref": "refs/lane-rel/user-reads-candidate",
+  "cli_race": "Complete CLI suite passed offline, 2.655s",
+  "cli_vet": "passed",
+  "race_vet_log": "/root/lane-rel-tools/user-reads/cli-race-vet.log",
+  "race_vet_log_sha256": "ef0355c8350c4f222602b0698ddff9e69669184d2711b68b6ee089720cfb101b",
+  "layout": "passed",
+  "roadmap": "589 items, consistent",
+  "binary_built": false,
+  "binary_sha256": null,
+  "full_repository_check_build_run": false,
+  "installed_acceptance_run": false,
+  "published_to_main": false,
+  "roadmap_ticked": false,
+  "commands": [
+    "ownsolid user list --query research --status active --limit 20 --output json",
+    "ownsolid user get <user-id> --output yaml"
+  ],
+  "qualification_boundary": "Real Admin dispatcher/PostgreSQL qualification and complete check/build remain pending. TLS fixtures do not establish installed account authorization. No account or shared-session mutation."
+}

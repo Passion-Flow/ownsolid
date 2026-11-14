@@ -1,0 +1,8 @@
+{
+  "memory_kib": {
+    "MemFree": 7032108,
+    "MemAvailable": 15578488
+  },
+  "io_full_psi_avg10": 0.0,
+  "scope": "external immutable idle-owner candidate; complete native gateway race and vet"
+}

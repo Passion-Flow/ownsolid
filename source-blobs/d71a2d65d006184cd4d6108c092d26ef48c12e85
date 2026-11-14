@@ -1,0 +1,29 @@
+{
+  "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "tree": "b8aea641ecd1b79be71270ad80ab03c1e131df31",
+  "main_base": "9e32b023a0a3deed6a8653a8878d52c2583fd6cf",
+  "owned_diff_stat": " api/openapi/v1/identity/openapi.json               |  12 +-\n docs/product/status.md                             |   2 +\n docs/research/public-api-inventory.md              | 291 ++++++++++++++\n docs/research/public-api-versioning.md             |  60 ++-\n tools/codegen/sdk/README.md                        |  51 ++-\n tools/codegen/sdk/audit.py                         |  90 ++++-\n tools/codegen/sdk/generate.py                      |  33 ++\n tools/codegen/sdk/templates/audit_read.go.template |  45 +++\n tools/codegen/sdk/tests/audit_read_wire_test.go    | 429 +++++++++++++++++++++\n tools/codegen/sdk/tests/test_audit_read_codegen.py |  98 +++++\n .../codegen/sdk/tests/test_audit_read_contract.py  |  86 +++++\n .../sdk/tests/test_response_object_audit.py        | 163 ++++++++\n tools/codegen/sdk/tests/wire_smoke.py              |  94 ++++-\n web/packages/api/src/gen/identity.ts               |   6 +-\n .../help/locales/zh-cn/api-descriptions.json       |   3 +-\n .../help/src/gen/api/console/identity.json         |   6 +-\n .../help/src/gen/contracts/console/identity.json   |   2 +-\n .../src/gen/locales/zh-cn/api-descriptions.json    |   3 +-\n 18 files changed, 1444 insertions(+), 30 deletions(-)\n",
+  "entry_original_sha256": "dd3fb9294b7477e863f260a6ee35bc2ee22ac9e80294322cf759b3ba0ff12f50",
+  "entry_prepared_sha256": "321c3d948945d1a6b1160ba20f56f0c60787b6d81cb6d79b72adf5b8fc7dda96",
+  "entry_preparation_diff": "--- /Users/passion./.local/state/ownsolid/lane-rel/api-compat/full_native_gate.pre-cache-artifact-9be-dd3fb929.py\t2026-11-13 11:23:27\n+++ /Users/passion./.local/state/ownsolid/lane-rel/api-compat/full_native_gate.py\t2026-11-13 11:23:52\n@@ -9,6 +9,15 @@\n class ResourceRefused(Exception):pass\n proof['entry_scope']='Exact original-author audit/SDK/tool and Web projection joint source; web-install/check/build/test. Prepared only; no resource admission is granted by this entry or manifest.'\n audit=w/'tools/audit-verify/audit-verify';preexisting=audit.exists()\n+work_sum=w/'go.work.sum';work_sum_preexisting=os.path.lexists(work_sum)\n+def cleanup_workspace_sum():\n+ if proof.get('admitted') and not work_sum_preexisting and os.path.lexists(work_sum):\n+  metadata=work_sum.lstat()\n+  assert stat.S_ISREG(metadata.st_mode) and metadata.st_uid==os.geteuid()\n+  content=work_sum.read_bytes();archive=r/'joint-native-gate-9be01cbb-generated-go.work.sum'\n+  with archive.open('xb') as output:output.write(content)\n+  proof['generated_workspace_sum']={'path':'go.work.sum','archived':str(archive),'sha256':hashlib.sha256(content).hexdigest()}\n+  work_sum.unlink();proof['generated_workspace_sum']['removed_from_source_checkout']=True\n def resources():\n  values={line.split(':',1)[0]:int(line.split()[1]) for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith(('MemFree:','MemAvailable:'))}\n  pressure=next(line for line in Path('/proc/pressure/io').read_text().splitlines() if line.startswith('full '));avg10=float(pressure.split('avg10=',1)[1].split()[0])\n@@ -63,7 +72,8 @@\n exec /root/lane-rel-tools/node/bin/pnpm \"$@\"\n \"\"\"\n  (bindir/'pnpm').write_text(wrapper);(bindir/'pnpm').chmod(0o700)\n- env.update(PATH=str(bindir)+':'+env['PATH'],GOPROXY='off',GOSUMDB='off',GOTOOLCHAIN='local',GOMAXPROCS='2',GOFLAGS='-p=1',CARGO_BUILD_JOBS='1',CARGO_NET_OFFLINE='true',CARGO_TARGET_DIR=str(r/'native-rust-target'),NODE_OPTIONS='--max-old-space-size=2048',PYTHONDONTWRITEBYTECODE='1',MAKEFLAGS='-j1')\n+ env.update(PATH=str(bindir)+':'+env['PATH'],GOPROXY='off',GOSUMDB='off',GOTOOLCHAIN='local',GOMAXPROCS='2',GOFLAGS='-p=1',CARGO_BUILD_JOBS='1',CARGO_NET_OFFLINE='true',CARGO_TARGET_DIR=str(r/'native-rust-target'),NODE_OPTIONS='--max-old-space-size=2048',PYTHONDONTWRITEBYTECODE='1',MAKEFLAGS='-j1',PLAYWRIGHT_BROWSERS_PATH='/root/lane-rel-tools/playwright-browsers')\n+ env['LD_LIBRARY_PATH']='/root/lane-rel-tools/playwright-libs.tUcBz3Xq/sysroot/usr/lib/x86_64-linux-gnu'\n  for target in ['web-install','check','build','test']:\n   resources()\n   remaining=1200-(time.monotonic()-started)\n@@ -78,6 +88,7 @@\n   if code:raise RuntimeError(target+' exited '+str(code))\n  if not preexisting and audit.exists():\n   assert stat.S_ISREG(audit.lstat().st_mode) and audit.stat().st_uid==os.geteuid();audit.unlink()\n+ cleanup_workspace_sum()\n  proof['source_clean_after']=subprocess.check_output(['git','status','--porcelain'],cwd=w,text=True)==''\n  assert proof['source_clean_after'];proof['passed']=True;exit_code=0\n \n@@ -95,6 +106,8 @@\n   try:\n    assert stat.S_ISREG(audit.lstat().st_mode) and audit.stat().st_uid==os.geteuid();audit.unlink()\n   except BaseException as error:proof['cleanup_failure']=type(error).__name__+': '+str(error);proof['passed']=False;exit_code=1\n+ try:cleanup_workspace_sum()\n+ except BaseException as error:proof['workspace_sum_cleanup_failure']=type(error).__name__+': '+str(error);proof['passed']=False;exit_code=1\n  proof['source_clean_after']=subprocess.check_output(['git','status','--porcelain'],cwd=w,text=True)==''\n  for fd in reversed(fds):\n   os.close(fd)\n",
+  "original_make_argv_unchanged": [
+    [
+      "make",
+      "web-install"
+    ],
+    [
+      "make",
+      "check"
+    ],
+    [
+      "make",
+      "build"
+    ],
+    [
+      "make",
+      "test"
+    ]
+  ],
+  "new_carrier_overlay_skip_wait_or_retry": false,
+  "actual_gate_executed": false
+}

@@ -1,0 +1,8 @@
+{
+  "original_sha256": "f3174e256c8efe40b6850422d40db24f0c5373064f8aba07a8a7dc02360ccdae",
+  "variant_sha256": "83ec4957d4923182152704ed3e27e0ed659b9b39f8d2f624e1f46f98bf08e7e7",
+  "config_sha256": "0a8ba15dc415db2f3d9ce3754800091e085a11258119afb790cb8f7fc7b7ad66",
+  "first_wait_maximum_seconds": 60,
+  "second_lock": "nonblocking",
+  "hard_seconds_including_wait": 300
+}

@@ -1,0 +1,129 @@
+from concurrent.futures import ThreadPoolExecutor
+from email.parser import BytesParser
+from hashlib import sha256
+from html.parser import HTMLParser
+from pathlib import Path
+from urllib.request import Request, urlopen
+from urllib.parse import unquote, urlparse, parse_qs
+import json
+import re
+import sys
+import tomllib
+
+from packaging.requirements import Requirement
+from packaging.tags import cpython_tags, compatible_tags
+from packaging.utils import canonicalize_name, parse_wheel_filename
+
+repo, proof = map(Path, sys.argv[1:])
+runtime = json.loads((repo/'runtimes/training/runtime.json').read_bytes())
+lock_bytes = (repo/'runtimes/training/requirements/linux-amd64-cuda.lock').read_bytes()
+assert sha256(lock_bytes).hexdigest() == runtime['locks']['linux-amd64-cuda.lock']
+pins = {}
+for line in lock_bytes.decode().replace('\\\n',' ').splitlines():
+    if not line or line.startswith('#'):
+        continue
+    fields=line.split()
+    requirement=Requirement(fields[0])
+    versions=[s.version for s in requirement.specifier]
+    assert len(versions)==1 and all(s.operator=='==' for s in requirement.specifier)
+    pins[canonicalize_name(requirement.name)]={'version':versions[0],
+        'hashes':{v.removeprefix('--hash=sha256:') for v in fields[1:]}}
+platforms=runtime['linux_manufacturing']['platforms']+['any']
+tags=list(cpython_tags((3,12),platforms=platforms))+list(compatible_tags((3,12),interpreter='cp312',platforms=platforms))
+rank={tag:i for i,tag in enumerate(dict.fromkeys(tags))}
+cache=proof/'metadata'
+cache.mkdir(exist_ok=True)
+
+def fetch(url, filename, accept=None):
+    path=cache/filename
+    if path.exists():
+        return path.read_bytes()
+    request=Request(url,headers={'Accept':accept} if accept else {})
+    with urlopen(request,timeout=20) as response:
+        raw=response.read((8<<20)+1)
+    assert len(raw)<=8<<20
+    path.write_bytes(raw)
+    return raw
+
+def metadata(name):
+    pin=pins[name]
+    release=json.loads(fetch(f'https://pypi.org/pypi/{name}/{pin["version"]}/json',name+'.release.json'))
+    candidates=[]
+    for entry in release['urls']:
+        if not entry['filename'].endswith('.whl') or entry.get('yanked'):
+            continue
+        distribution, version, build, file_tags=parse_wheel_filename(entry['filename'])
+        eligible=file_tags & rank.keys()
+        if eligible and entry['digests']['sha256'] in pin['hashes']:
+            candidates.append((min(rank[t] for t in eligible),entry))
+    assert candidates, name
+    entry=min(candidates,key=lambda row:row[0])[1]
+    simple=json.loads(fetch(f'https://pypi.org/simple/{name}/',name+'.simple.json','application/vnd.pypi.simple.v1+json'))
+    original=next(f for f in simple['files'] if f['filename']==entry['filename'])
+    digest=(original.get('core-metadata') or original.get('dist-info-metadata'))['sha256']
+    raw=fetch(entry['url']+'.metadata',entry['filename']+'.metadata')
+    assert sha256(raw).hexdigest()==digest
+    value=BytesParser().parsebytes(raw)
+    assert canonicalize_name(value['Name'])==name and value['Version']==pin['version']
+    return name, {'filename':entry['filename'],'url':entry['url'],'size_bytes':entry['size'],
+        'sha256':entry['digests']['sha256'],'metadata_sha256':digest,
+        'version':value['Version'],'requires':value.get_all('Requires-Dist',[]),
+        'license_expression':value['License-Expression'],'license':value['License'],
+        'license_files':value.get_all('License-File',[]),
+        'license_classifiers':[x for x in value.get_all('Classifier',[]) if x.startswith('License ::')]}
+
+with ThreadPoolExecutor(max_workers=4) as workers:
+    records=dict(workers.map(metadata,pins))
+cpu_url='https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl'
+cpu_raw=fetch(cpu_url+'.metadata','torch-cpu.metadata')
+assert sha256(cpu_raw).hexdigest()=='a3fd232f82dcc389c6dab2665dfc17649c03ffb72cb641e96a76a0690177b918'
+cpu=BytesParser().parsebytes(cpu_raw)
+assert cpu['Version']=='2.14.1+cpu'
+cpu_record={'version':cpu['Version'],'filename':unquote(urlparse(cpu_url).path.rsplit('/',1)[-1]),'url':cpu_url,
+    'sha256':'5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f',
+    'metadata_sha256':sha256(cpu_raw).hexdigest(),'requires':cpu.get_all('Requires-Dist',[]),
+    'license_expression':cpu['License-Expression'],'license_files':cpu.get_all('License-File',[])}
+environment={'implementation_name':'cpython','implementation_version':'3.12.15','os_name':'posix',
+    'platform_machine':'x86_64','platform_release':'','platform_system':'Linux','platform_version':'',
+    'python_full_version':'3.12.15','platform_python_implementation':'CPython','python_version':'3.12','sys_platform':'linux'}
+roots=tomllib.loads((repo/'runtimes/training/pyproject.toml').read_text())['project']['dependencies']
+def closure(profile):
+    selected=dict(records)
+    if profile=='cpu':
+        selected['torch']=cpu_record
+    pending=[Requirement(root) for root in roots]
+    extras={}
+    visited={}
+    edges=[]
+    while pending:
+        wanted=pending.pop()
+        name=canonicalize_name(wanted.name)
+        assert name in selected, (profile,'unlocked dependency',str(wanted))
+        current=selected[name]
+        assert wanted.specifier.contains(current['version']), (profile,str(wanted),current['version'])
+        previous=extras.setdefault(name,set())
+        updated=previous|set(wanted.extras)
+        if name in visited and updated==previous:
+            continue
+        extras[name]=updated
+        visited[name]=current
+        for spec in current['requires']:
+            dep=Requirement(spec)
+            if dep.marker and not any(dep.marker.evaluate({**environment,'extra':x}) for x in updated|{''}):
+                continue
+            edges.append({'from':name,'requirement':spec})
+            pending.append(dep)
+    return {'packages':sorted(visited),'edges':edges}
+cuda=closure('cuda')
+cpu_graph=closure('cpu')
+report={'linux_lock_sha256':sha256(lock_bytes).hexdigest(),'roots':roots,'target':environment,
+    'linux_lock_pin_count':len(pins),'torch_pypi':records['torch'],'torch_cpu':cpu_record,
+    'profiles':{'pypi_linux':cuda,'official_cpu':cpu_graph},
+    'cpu_only':sorted(set(cpu_graph['packages'])-set(cuda['packages'])),
+    'cuda_only':sorted(set(cuda['packages'])-set(cpu_graph['packages'])),
+    'wheel_metadata':records}
+(proof/'metadata-audit.json').write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')
+print('pins',len(pins),'active Linux closure',len(cuda['packages']),'CPU metadata closure',len(cpu_graph['packages']))
+print('CPU-only',report['cpu_only'],'CUDA-only',report['cuda_only'])
+print('PyPI Torch',records['torch'])
+print('official CPU Torch',cpu_record)

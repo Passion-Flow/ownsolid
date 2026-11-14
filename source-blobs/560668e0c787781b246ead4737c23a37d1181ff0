@@ -1,0 +1,153 @@
+"""Strict input and target guards for disposable installed session acceptance."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import urllib.parse
+import uuid
+
+
+class Refused(Exception):
+    """An actionable refusal that contains no credential or raw response."""
+
+
+def require(value, message):
+    if not value:
+        raise Refused(message)
+
+
+def uid(value):
+    try:
+        return isinstance(value, str) and str(uuid.UUID(value)) == value and uuid.UUID(value).int != 0
+    except (ValueError, AttributeError):
+        return False
+
+
+def private_directory(path):
+    info = path.lstat()
+    require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.geteuid()
+            and stat.S_IMODE(info.st_mode) == 0o700, "PRIVATE_DIRECTORY_REQUIRED")
+
+
+def private_bytes(path, limit=1024 * 1024):
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as source:
+        info = os.fstat(source.fileno())
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+                and stat.S_IMODE(info.st_mode) == 0o600 and 0 < info.st_size <= limit,
+                "PRIVATE_INPUT_FILE_REQUIRED: use an owner-only original input")
+        return source.read()
+
+
+def private_json(path):
+    return json.loads(private_bytes(path))
+
+
+def digest(path):
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    result = hashlib.sha256()
+    with os.fdopen(fd, "rb") as source:
+        info = os.fstat(source.fileno())
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+                and stat.S_IMODE(info.st_mode) & 0o022 == 0 and 0 < info.st_size <= 512 * 1024 * 1024,
+                "BINARY_INPUT_FILE_REQUIRED")
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            result.update(block)
+    return result.hexdigest()
+
+
+def origin(value):
+    parsed = urllib.parse.urlsplit(value)
+    require(parsed.scheme == "https" and parsed.hostname and parsed.port and
+            not any([parsed.username, parsed.password, parsed.path, parsed.query, parsed.fragment]) and
+            re.fullmatch(r"[A-Za-z0-9.-]+", parsed.hostname) and
+            not re.fullmatch(r"[0-9.]+", parsed.hostname), "INSTALLED_HTTPS_DNS_ORIGIN_REQUIRED")
+    return value
+
+
+def verify_sources(ready, control, client, cli_source, control_source):
+    require(re.fullmatch(r"[0-9a-f]{40}", cli_source) and re.fullmatch(r"[0-9a-f]{40}", control_source),
+            "EXPLICIT_CLI_AND_CONTROL_SOURCES_REQUIRED")
+    require(ready["candidate"] == control["target_source_sha"] == control["build_revision"]
+            == control["actual_source_label"] == control_source and control["build_modified"] == "false",
+            "INSTALLED_CONTROL_SOURCE_MISMATCH")
+    require(ready["control_image"] == control["actual_image"] and
+            re.fullmatch(r"sha256:[0-9a-f]{64}", control["actual_image"]), "INSTALLED_IMAGE_MISMATCH")
+    require(type(client["format_version"]) is int and client["format_version"] == 1 and
+            client["source_revision"] == cli_source and client["source_modified"] is False and
+            client["os"] == "linux" and client["arch"] == "amd64" and
+            re.fullmatch(r"[0-9a-f]{64}", client["binary_sha256"]), "FROZEN_NATIVE_CLIENT_REQUIRED")
+
+
+def fixture_policy(value, bootstrap_email, control_source):
+    keys = {"format_version", "purpose", "fixture_id", "control_source", "exclusive",
+            "protected_accounts", "protected_session_ids", "accounts"}
+    require(set(value) == keys and type(value["format_version"]) is int and value["format_version"] == 1
+            and value["purpose"] == "dev102-session-cli" and value["exclusive"] is True
+            and value["control_source"] == control_source and uid(value["fixture_id"]),
+            "DEDICATED_EXCLUSIVE_FIXTURE_REQUIRED")
+    protected = value["protected_accounts"]
+    require(isinstance(protected, list) and protected and
+            all(set(item) == {"user_id", "email"} and uid(item["user_id"]) and isinstance(item["email"], str) and item["email"] for item in protected),
+            "SHARED_ACCOUNT_DENYLIST_REQUIRED")
+    denied_ids = {item["user_id"] for item in protected}
+    denied_emails = {item["email"].strip().casefold() for item in protected}
+    require(bootstrap_email.strip().casefold() in denied_emails, "INSTALLED_BOOTSTRAP_IDENTITY_MUST_BE_PROTECTED")
+    protected_sessions = value["protected_session_ids"]
+    require(isinstance(protected_sessions, list) and protected_sessions
+            and all(uid(item) for item in protected_sessions), "SHARED_SESSION_DENYLIST_REQUIRED")
+    accounts = value["accounts"]
+    require(set(accounts) == {"owner", "foreign"}, "TWO_DEDICATED_ACCOUNTS_REQUIRED")
+    seen_ids, seen_emails = set(), set()
+    for actor in accounts.values():
+        require(set(actor) == {"user_id", "email", "password_file", "fixture_id", "disposable", "platform_admin"}
+                and actor["fixture_id"] == value["fixture_id"] and actor["disposable"] is True
+                and actor["platform_admin"] is True and uid(actor["user_id"]) and
+                isinstance(actor["email"], str) and "@" in actor["email"] and
+                not any(ord(c) < 32 for c in actor["email"]), "DISPOSABLE_PLATFORM_ACCOUNT_REQUIRED")
+        email = actor["email"].strip().casefold()
+        require(actor["user_id"] not in denied_ids | seen_ids and email not in denied_emails | seen_emails,
+                "SHARED_OR_REUSED_ACCOUNT_REFUSED")
+        seen_ids.add(actor["user_id"])
+        seen_emails.add(email)
+    return denied_ids, denied_emails, set(protected_sessions), {actor["user_id"]: actor["email"].strip().casefold() for actor in accounts.values()}
+
+
+class Registry:
+    """Only freshly logged-in canary contexts can nominate mutation targets."""
+
+    def __init__(self, policy):
+        self.denied_ids, self.denied_emails, self.denied_sessions, self.allowed = policy
+        self.created = {}
+        self.ended = set()
+
+    def actor(self, actor):
+        require(isinstance(actor, dict) and isinstance(actor.get("email"), str), "ATTESTED_ACTOR_REQUIRED")
+        require(self.allowed.get(actor["user_id"]) == actor["email"].strip().casefold() and actor["user_id"] not in self.denied_ids, "UNATTESTED_ACTOR_REFUSED")
+
+    def identity(self, actor, value, audience):
+        self.actor(actor)
+        user = value["user"]
+        require(user["id"] == actor["user_id"] and
+                user["email"].strip().casefold() == actor["email"].strip().casefold() and
+                user["is_platform_admin"] is True and value["audience"] == audience and
+                user["id"] not in self.denied_ids and
+                user["email"].strip().casefold() not in self.denied_emails,
+                "LIVE_DEDICATED_IDENTITY_MISMATCH: no session cleanup or mutation is permitted")
+
+    def record(self, session_id, actor, audience):
+        self.actor(actor)
+        require(audience in {"admin", "portal"}, "KNOWN_ENTRANCE_REQUIRED")
+        require(uid(session_id) and session_id not in self.denied_sessions and
+                session_id not in self.created and actor["user_id"] not in self.denied_ids,
+                "SHARED_OR_PREEXISTING_SESSION_REFUSED")
+        self.created[session_id] = (actor["user_id"], audience)
+
+    def target(self, actor, session_id, refusal=False):
+        self.actor(actor)
+        require(session_id in self.created and session_id not in self.denied_sessions,
+                "UNREGISTERED_SESSION_TARGET_REFUSED")
+        same = self.created[session_id] == (actor["user_id"], "admin")
+        require(not same if refusal else same, "SESSION_TARGET_SCOPE_REFUSED")

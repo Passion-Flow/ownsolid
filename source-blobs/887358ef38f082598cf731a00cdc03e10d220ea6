@@ -1,0 +1,243 @@
+--- run-obs110-daily-native.sh
++++ run-obs110-daily-native-v2.sh
+@@ -1,5 +1,37 @@
+ #!/usr/bin/env bash
+ set -euo pipefail
++# Open the original carriers without O_CREAT, O_TRUNC or symlink traversal.
++if [[ ${1:-} != --obs110-opened-carriers ]]; then
++    test "$#" -eq 0
++    exec python3 - "$0" <<'PY_OPEN'
++import os,stat,sys
++def open_carrier(path, target, expected):
++    try:
++        os.fstat(target)
++    except OSError:
++        pass
++    else:
++        raise RuntimeError('Refuse an unexpected inherited target descriptor')
++    fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC)
++    try:
++        info=os.fstat(fd)
++        if not stat.S_ISREG(info.st_mode) or info.st_nlink!=1 or (info.st_dev,info.st_ino)!=expected:
++            raise RuntimeError('Refuse a changed or nonregular lock carrier')
++        if fd==target:os.set_inheritable(fd,True)
++        else:os.dup2(fd,target,inheritable=True)
++    finally:
++        if fd!=target:os.close(fd)
++for path,target,expected in [
++    ('/run/lock/ownsolid-heavy.lock',8,(29,82)),
++    ('/root/lane-sci-tools/heavy-test.lock',9,(64512,7508772)),
++]:
++    open_carrier(path,target,expected)
++os.execv('/bin/bash',['bash',sys.argv[1],'--obs110-opened-carriers'])
++PY_OPEN
++fi
++test "$#" -eq 1
++test "$1" = --obs110-opened-carriers
++shift
+ cd /root/lane-obs-native-profile
+ mode=native
+ expected=5f83cfbf9c1c24b8efae927f76a69912d52c7c68
+@@ -7,27 +39,80 @@
+ test "$(git rev-parse HEAD)" = "$expected"
+ test -z "$(git status --porcelain)"
+ receipt=$(mktemp -d /root/lane-obs-tools/obs110-daily-native.XXXXXX)
+-exec > >(tee "$receipt/check.log") 2>&1
+-trap 'code=$?; printf "EXIT_CODE=%s\nRECEIPT=%s\n" "$code" "$receipt"' EXIT
++exec > >(exec 8>&- 9>&-; tee "$receipt/check.log") 2>&1
++active_native_pid=
++on_signal() {
++    local code=$1
++    trap '' TERM INT
++    # timeout signals the owned process group; join its existing cleanup.
++    if [[ -n $active_native_pid ]]; then
++        wait "$active_native_pid" || true
++        active_native_pid=
++    fi
++    exit "$code"
++}
++finish() {
++    local code=$?
++    trap - EXIT
++    python3 - "$receipt/fd-before-close.json" "$code" <<'PY_CLOSE_BEFORE'
++from pathlib import Path
++import json,os,sys
++data={'parent_pid':os.getppid(),'entry_exit_code':int(sys.argv[2]),'fds':{}}
++for fd in [8,9]:
++ try:
++  s=os.fstat(fd)
++  data['fds'][str(fd)]={'open':True,'device':s.st_dev,'inode':s.st_ino,
++    'parent_fdinfo':Path('/proc',str(os.getppid()),'fdinfo',str(fd)).read_text()}
++ except OSError:data['fds'][str(fd)]={'open':False}
++Path(sys.argv[1]).write_text(json.dumps(data,indent=2)+'\n')
++PY_CLOSE_BEFORE
++    exec 8>&- 9>&-
++    python3 - "$receipt/fd-after-close.json" <<'PY_CLOSE_AFTER'
++from pathlib import Path
++import json,os,sys
++data={'parent_pid':os.getppid(),'fds':{}}
++for fd in [8,9]:
++ try:os.fstat(fd);data['fds'][str(fd)]={'open':True}
++ except OSError:data['fds'][str(fd)]={'open':False}
++Path(sys.argv[1]).write_text(json.dumps(data,indent=2)+'\n')
++PY_CLOSE_AFTER
++    printf 'EXIT_CODE=%s\nRECEIPT=%s\n' "$code" "$receipt"
++    exit "$code"
++}
++trap finish EXIT
++trap 'on_signal 143' TERM
++trap 'on_signal 130' INT
++printf 'RECEIPT=%s\nENTRY_PARENT_PID=%s\n' "$receipt" "$BASHPID"
++
+ # BEGIN_OBS110_FLOCK_DIAGNOSTICS
+ diagnostic_flock() {
+     local label=$1 fd=$2 lock_path=$3 raw_rc executable kind stderr_path
++    local -a flock_args
++    if [[ $label == global ]]; then
++        flock_args=(-w 60 -E 75 "$fd")
++    else
++        flock_args=(-n -E 75 "$fd")
++    fi
+     stderr_path="$receipt/$label-flock.stderr"
+     executable=$(command -v flock) || executable=
+     kind=$(type -t flock) || kind=
+-    if flock -n "$fd" 2>"$stderr_path"; then
++    if flock "${flock_args[@]}" 2>"$stderr_path"; then
+         raw_rc=0
+     else
+         raw_rc=$?
+     fi
+-    python3 - "$receipt/$label-flock.json" "$label" "$fd" "$lock_path" "$raw_rc" "$executable" "$kind" "$stderr_path" "$BASHPID" "$expected" <<'PY_FLOCK' || printf 'FLOCK_DIAGNOSTIC_FAILED=%s\n' "$label"
++    if [[ $label == sci && $raw_rc -ne 0 ]]; then
++        exec 8>&-
++        printf 'GLOBAL_FD_CLOSED_BEFORE_SCI_REFUSAL_DIAGNOSTICS=1\n'
++    fi
++    python3 - "$receipt/$label-flock.json" "$label" "$fd" "$lock_path" "$raw_rc" "$executable" "$kind" "$stderr_path" "$BASHPID" "$expected" "${flock_args[@]}" <<'PY_FLOCK' || printf 'FLOCK_DIAGNOSTIC_FAILED=%s\n' "$label"
+ from pathlib import Path
+ import datetime as dt,hashlib,json,os,re,sys,time
+-out,label,fd,path,rc,executable,kind,stderr,parent,source=sys.argv[1:]
++out,label,fd,path,rc,executable,kind,stderr,parent,source,*flock_args=sys.argv[1:]
+ fd,parent=int(fd),int(parent)
+ began=time.monotonic()
+ data={'scope':'OBS110 lock attempt diagnostics only','label':label,'raw_return_code':int(rc),
+-      'executable_resolution':executable,'command_kind':kind,'argv':['-n',str(fd)],
++      'executable_resolution':executable,'command_kind':kind,'argv':flock_args,
+       'lock_path':path,'caller_pid':parent,'source':source,
+       'snapshot_started_at':dt.datetime.now(dt.timezone.utc).isoformat()}
+ def identity(s):
+@@ -92,10 +177,40 @@
+     return "$raw_rc"
+ }
+ # END_OBS110_FLOCK_DIAGNOSTICS
+-exec 8>/run/lock/ownsolid-heavy.lock
+-diagnostic_flock global 8 /run/lock/ownsolid-heavy.lock || { printf "ADMISSION_BLOCKED=global-heavy-lock\n"; exit 75; }
+-exec 9>/root/lane-sci-tools/heavy-test.lock
+-diagnostic_flock sci 9 /root/lane-sci-tools/heavy-test.lock || { printf "ADMISSION_BLOCKED=sci-heavy-lock\n"; exit 75; }
++verify_carriers() {
++    python3 - <<'PY_VERIFY_CARRIERS'
++import fcntl,json,os,stat
++for path,fd,expected in [
++ ('/run/lock/ownsolid-heavy.lock',8,(29,82)),
++ ('/root/lane-sci-tools/heavy-test.lock',9,(64512,7508772)),
++]:
++ info=os.fstat(fd);named=os.lstat(path)
++ if not stat.S_ISREG(info.st_mode) or info.st_nlink!=1 or not stat.S_ISREG(named.st_mode):
++  raise RuntimeError('Lock carrier must remain a regular unlinked-free file')
++ if (info.st_dev,info.st_ino)!=expected or (named.st_dev,named.st_ino)!=expected:
++  raise RuntimeError('Lock carrier identity changed')
++ flags=fcntl.fcntl(fd,fcntl.F_GETFL)
++ if flags&os.O_ACCMODE!=os.O_RDWR:raise RuntimeError('Lock carrier is not open read/write')
++ print('CARRIER_VERIFIED='+json.dumps({'fd':fd,'device':info.st_dev,'inode':info.st_ino,'size':info.st_size,'flags':flags}))
++PY_VERIFY_CARRIERS
++}
++verify_carriers
++for label in global sci; do
++    if [[ $label == global ]]; then fd=8; path=/run/lock/ownsolid-heavy.lock
++    else fd=9; path=/root/lane-sci-tools/heavy-test.lock; fi
++    if diagnostic_flock "$label" "$fd" "$path"; then
++        :
++    else
++        raw_rc=$?
++        if [[ $raw_rc -eq 75 ]]; then
++            printf 'ADMISSION_REFUSED=lock-contention-or-wait-timeout LABEL=%s RAW_RC=%s\n' "$label" "$raw_rc"
++        else
++            printf 'ADMISSION_FAILED=flock-error LABEL=%s RAW_RC=%s\n' "$label" "$raw_rc"
++        fi
++        exit "$raw_rc"
++    fi
++done
++verify_carriers
+ df -h /
+ free -m
+ ss -lntp
+@@ -104,9 +219,28 @@
+ test "$(free -m | awk '$1=="Mem:" {print $4}')" -ge 2048 || exit 75
+ python3 - <<'PY_IO'
+ from pathlib import Path
+-for line in Path('/proc/pressure/io').read_text().splitlines():
+-    if float(line.split('avg10=')[1].split()[0]) > 5:
+-        raise SystemExit(75)
++import math,re
++def parse_full_avg10(document):
++    full=[line.split() for line in document.splitlines() if line.split() and line.split()[0]=='full']
++    if len(full)!=1:raise ValueError('Exactly one full PSI row is required')
++    fields=[token.split('=',1) for token in full[0][1:]]
++    if any(len(field)!=2 or not field[0] or not field[1] for field in fields):
++        raise ValueError('Malformed full PSI field')
++    values=[value for key,value in fields if key=='avg10']
++    if len(values)!=1:raise ValueError('Exactly one full avg10 is required')
++    if not re.fullmatch(r'[0-9]+(?:\.[0-9]+)?',values[0]):raise ValueError('Malformed full avg10')
++    value=float(values[0])
++    if not math.isfinite(value) or not 0<=value<=100:raise ValueError('Full avg10 must be finite within 0..100')
++    return value
++try:
++    full=parse_full_avg10(Path('/proc/pressure/io').read_text())
++except ValueError as error:
++    print('ADMISSION_REFUSED=invalid-full-io-pressure REASON='+str(error))
++    raise SystemExit(75)
++print('IO_FULL_AVG10='+str(full))
++if full>5:
++    print('ADMISSION_REFUSED=full-io-pressure-over-five')
++    raise SystemExit(75)
+ PY_IO
+ printf 'CANDIDATE_SOURCE_COMMIT=%s\n' "$expected"
+ git status --short
+@@ -119,10 +253,34 @@
+ export OWNSOLID_TEST_POSTGRES_IMAGE=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+ export OWNSOLID_TEST_VICTORIA_METRICS=/root/lane-obs-tools/victoria-metrics-prod
+ export OWNSOLID_TEST_VMALERT=/root/lane-obs-tools/vmalert-prod
+-bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh cardinality
+-bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http
+-bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-tls
+-bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-retention
++run_native_entry() {
++    local entry=$1 code
++    printf 'ENTRY_START=%s\n' "$entry"
++    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh "$entry" >"$receipt/$entry.log" 2>&1 &
++    active_native_pid=$!
++    if wait "$active_native_pid"; then code=0; else code=$?; fi
++    active_native_pid=
++    cat "$receipt/$entry.log"
++    printf 'ENTRY_END=%s RAW_RC=%s\n' "$entry" "$code"
++    python3 - "$receipt/$entry.log" "$receipt/$entry-result.json" "$entry" "$code" <<'PY_ENTRY'
++from pathlib import Path
++import json,re,sys
++log,out,entry,code=sys.argv[1:]
++text=Path(log).read_text()
++runs=re.findall(r'^=== RUN   (\S+)',text,re.M)
++passed=re.findall(r'^\s*--- PASS: (\S+)',text,re.M)
++failed=re.findall(r'^\s*--- FAIL: (\S+)',text,re.M)
++skipped=re.findall(r'^\s*--- SKIP: (\S+)',text,re.M)
++data={'entry':entry,'raw_return_code':int(code),'run_names':runs,'top_level_run_names':[x for x in runs if '/' not in x],
++      'pass_names':passed,'fail_names':failed,'skip_names':skipped}
++Path(out).write_text(json.dumps(data,indent=2)+'\n')
++PY_ENTRY
++    return "$code"
++}
++run_native_entry cardinality
++run_native_entry history-http
++run_native_entry history-tls
++run_native_entry history-retention
+ sha256sum --check --quiet /root/lane-obs-tools/obs110-daily-native-inputs.sha256
+ sha256sum --check --quiet "$receipt/source-inputs.sha256"
+ test "$(git rev-parse HEAD)" = "$expected"

@@ -1,0 +1,31 @@
+# Quota status resume boundary
+
+Worktree /root/lane-sch is clean at local-only commit
+5f0195fbb84d095e4517e5b92f6c87ffd4342af1. Do not treat it as Go/PG qualified.
+
+Focused new-source runner: quota-status-target.sh (six new top-level cases plus
+three affected aggregate-reader regressions). Remaining phases:
+quota-status-remaining-gate.sh check, build, modules. Both require a clean
+worktree, shared fd8 Linux lock followed by the lane fd9 lock, and the stricter
+resource preflight. They pin and verify the source hashes. Neither has run.
+
+Respect the retained DEL original-instance window and TRN/OBS priority.
+There is no own running test, background retry, database fixture or service.
+Do not start an auto queue ahead of those windows. Do not push main while
+the current original product source remains frozen.
+
+The SCH Mac publication wrapper is now
+/private/tmp/ownsolid-sch-lock-1fxoq5r0/workstation-lock.py on the workstation.
+It uses the permanent regular same-uid carrier with fcntl.flock; it does not
+truncate, replace or unlink the shared file. It was tested with private
+carriers only and did not acquire the current shared lock.
+
+Authored patch, checksum and owner notes:
+sch108-5f0195fb.patch, sch108-5f0195fb.patch.sha256,
+sch108-5f0195fb-handoff.md. The review-only IAM/OpenAPI artifacts remain in
+quota-status-handoff.qK1Drwtm. They are not product changes or installed APIs.
+The earlier training handoff and 36fcd558 follow-on remain immutable.
+
+The new status-table row explicitly records unrun Go/PG gates. Update it with
+actual evidence after tests, without ticking SCH-108 until composed main/UI/E2E
+acceptance is complete. No P1 or P2 roadmap checkbox has changed.

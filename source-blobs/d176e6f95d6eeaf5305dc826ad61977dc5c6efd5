@@ -1,0 +1,61 @@
+"""Compare tiny TrainingArguments pickle opcodes without importing Torch or executing pickle."""
+from pathlib import Path
+import hashlib
+import io
+import json
+import pickletools
+import zipfile
+
+root=Path(__file__).resolve().parent/'cpu-prototype-install'
+index=json.loads((root/'resume-index.json').read_bytes());values={};receipts={};results={};archives={};operations={}
+wanted={'output_dir','logging_dir','run_name'}
+for case in ['baseline','resumed']:
+ scope=root/index['cases'][case]['relative_scope'];checkpoint=scope/'output/checkpoints/checkpoint-2'
+ result=json.loads((scope/'output/result.json').read_bytes());results[case]=result
+ assert hashlib.sha256((scope/'output/result.json').read_bytes()).hexdigest()==index['cases'][case]['result_sha256']
+ receipt_bytes=(checkpoint/'projectone-checkpoint.json').read_bytes()
+ expected_receipt=next(v['receipt_sha256'] for v in result['checkpoints'] if v['global_step']==2)
+ assert hashlib.sha256(receipt_bytes).hexdigest()==expected_receipt
+ receipt=json.loads(receipt_bytes);receipts[case]=receipt
+ item=next(v for v in receipt['files'] if v['path']=='training_args.bin')
+ assert item['size_bytes']<1024*1024,'use the bounded heavy reader for larger metadata'
+ raw=(checkpoint/'training_args.bin').read_bytes()
+ assert len(raw)==item['size_bytes'] and hashlib.sha256(raw).hexdigest()==item['sha256']
+ with zipfile.ZipFile(io.BytesIO(raw)) as archive:archives[case]={name:archive.read(name) for name in archive.namelist()}
+ pickle_path=next(name for name in archives[case] if name.endswith('/data.pkl'))
+ ops=[(op.name,arg) for op,arg,_ in pickletools.genops(archives[case][pickle_path])]
+ operations[case]=ops
+ memo={};pending=None;atom=None;fields={}
+ for op,arg in ops:
+  if op in {'BINUNICODE','SHORT_BINUNICODE','UNICODE'}:
+   atom=arg
+   if pending is not None:fields[pending]=arg;pending=None
+   elif arg in wanted:pending=arg
+  elif op in {'BINPUT','LONG_BINPUT','PUT'}:memo[arg]=atom
+  elif op in {'BINGET','LONG_BINGET','GET'}:
+   atom=memo.get(arg)
+   if pending is not None:
+    assert isinstance(atom,str);fields[pending]=atom;pending=None
+ assert 'output_dir' in fields,fields
+ expected=str(Path('/workspace')/index['cases'][case]['relative_scope']/'output/checkpoints')
+ assert fields['output_dir']==expected
+ if 'logging_dir' in fields:assert fields['logging_dir'].startswith(expected+'/runs/')
+ values[case]=fields
+assert len(operations['baseline'])==len(operations['resumed'])
+differences=[]
+for position,(left,right) in enumerate(zip(operations['baseline'],operations['resumed'])):
+ if left==right:continue
+ assert left[0]==right[0] and left[0] in {'BINUNICODE','SHORT_BINUNICODE','UNICODE'}
+ fields=[name for name in wanted if values['baseline'].get(name)==left[1] and values['resumed'].get(name)==right[1]]
+ assert fields,(left,right)
+ differences.append({'opcode_index':position,'fields':sorted(fields),'baseline':left[1],'resumed':right[1]})
+assert differences
+changed_members=[name for name in archives['baseline'] if archives['baseline'][name]!=archives['resumed'][name]]
+assert set(archives['baseline'])==set(archives['resumed'])
+assert all(name.endswith(('/data.pkl','/.data/serialization_id')) for name in changed_members)
+changed_receipts=[(a,b) for a,b in zip(receipts['baseline']['files'],receipts['resumed']['files']) if a!=b]
+assert receipts['baseline']['bindings']==receipts['resumed']['bindings']
+assert len(changed_receipts)==1 and changed_receipts[0][0]['path']==changed_receipts[0][1]['path']=='training_args.bin'
+result={'method':'pickle opcode inspection only; no pickle execution or Torch import','differing_argument_fields':values,'pickle_opcode_differences':differences,'other_pickle_opcodes_identical':True,'changed_zip_members':changed_members,'checkpoint_receipt_differences':changed_receipts,'training_loss':{name:v['training_loss'] for name,v in results.items()},'reported_step_losses':{name:[{'step':m['global_step'],'loss':m['values']['loss']} for m in v['metrics'] if 'loss' in m.get('values',{})] for name,v in results.items()}}
+output=root/'resume-differences.json';output.write_text(json.dumps(result,sort_keys=True,indent=2)+'\n')
+print(json.dumps(result,sort_keys=True),flush=True)

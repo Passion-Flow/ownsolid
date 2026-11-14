@@ -1,0 +1,163 @@
+diff --git a/docs/product/roadmap/models-and-registry.md b/docs/product/roadmap/models-and-registry.md
+index e6ee4687..2fb565c8 100644
+--- a/docs/product/roadmap/models-and-registry.md
++++ b/docs/product/roadmap/models-and-registry.md
+@@ -11,7 +11,7 @@ Model assets: import, versions, lineage, conversion and retirement, for every mo
+ 
+ - [ ] MOD-101 Import any Hugging Face format model from local media or an internal mirror, with checksums and resumable upload (P1) - Catalog: F062
+ - [ ] MOD-102 Model catalog with type (chat, embedding, rerank, vision, speech, image), size, context, license and capabilities (P1) - Catalog: F063
+-- [ ] MOD-103 Versions, artifacts and lineage: weights, adapters, tokenizer, template, training run, evaluation (P1) - Catalog: F064, F099
++- [ ] MOD-103 Versions, artifacts and lineage: weights, adapters, tokenizer, template, training run, evaluation (P1) - Catalog: F064, F099, [staged family and retained history domain](../../research/training-dataset-lineage.md#postgresql-family-domain-acceptance)
+ - [ ] MOD-104 Per-model serving defaults such as chat-template options (for example disabling thinking mode) (P1)
+ - [ ] MOD-105 LoRA merge and format conversion with recorded inputs and outputs (P1) - Catalog: F065
+ - [ ] MOD-106 Quantization jobs producing serving variants (P1) - Catalog: F066, F175
+diff --git a/docs/research/lane-m-questions.md b/docs/research/lane-m-questions.md
+index 14f3d597..0ba074a6 100644
+--- a/docs/research/lane-m-questions.md
++++ b/docs/research/lane-m-questions.md
+@@ -8,7 +8,7 @@ responsible owners can extend their respective boundaries.
+ | --- | --- |
+ | MOD-101 | The models module resolves the legacy digest for upload, archive verification, publication and recovery. The two real archives exercised fail-closed admission and Qwen replay. The next slice needs the shared multi-entry API, immutable catalogue persistence and digest-bound Agent transfer in the [contract handoff](model-registry.md#contract-handoff). |
+ | MOD-102 | The Admin catalogue endpoint returns a single approved descriptor, and the existing UI facets cover that descriptor or already imported rows. Type and capability coverage for the catalogue needs a multi-entry read contract and its UI consumer. |
+-| MOD-103 | Preparation and published derived model detail reads expose the original training and holdout version references from the [retained snapshot](training-dataset-lineage.md#derived-model-detail). The [DEV handoff](training-dataset-lineage.md#dev-contract-handoff) defines the Admin detail contract and S-202 tab. The [historical version boundary](training-dataset-lineage.md#remaining-model-version-history-boundary) separates retained records from the missing family/version history contract. Evaluation is owned by SCI. |
++| MOD-103 | Retained training and holdout references use the existing publication graph. The [staged family/history domain](training-dataset-lineage.md#durable-family-domain-contract) now supplies unnumbered atomic membership DDL, signed bounded keysets and current-authority ready/retired reads with [PostgreSQL evidence](training-dataset-lineage.md#postgresql-family-domain-acceptance). ARC must admit migration/roles/catalog and retained-identity rollback; DEV and the route owner must admit public schemas and dispatcher, and Web owns S-202. Evaluation remains with SCI. |
+ | MOD-104 | Chat-template defaults need to reach the serving engine with an explicit command or request policy. The Agent inference adapter and its wire command are shared boundaries. |
+ | MOD-105 | The preparation worker accepts the existing pinned recipe. LoRA merge and format conversion need an admitted recipe and an Agent runner that can dispatch and verify the new output; the current runtime alone cannot make the job usable. |
+ | MOD-106 | Serving variants require recipe admission and a serving manifest accepted by the Agent, including matching quantization arguments and validation. |
+diff --git a/docs/research/training-dataset-lineage.md b/docs/research/training-dataset-lineage.md
+index 7a79ee4f..d5ee9614 100644
+--- a/docs/research/training-dataset-lineage.md
++++ b/docs/research/training-dataset-lineage.md
+@@ -480,6 +480,11 @@ An isolated PostgreSQL transaction verified this ordering with an existing versi
+ the complete candidate DDL, a new default registration and forced constraint checks.
+ It observed two distinct families and rolled the entire prototype back successfully.
+ 
++Retained detail checks the selected exact version and resolved family together
++before decoding its catalogue or graph. A different family's damaged metadata must
++still return `RESOURCE_NOT_FOUND` under the requested anchor. Add that negative
++case alongside same-family ready/retired detail and unknown-version reads.
++
+ History resolves an exact anchor, uses the existing retained catalogue and lineage
+ checks, and orders by PostgreSQL [row comparison](https://www.postgresql.org/docs/18/functions-comparisons.html#ROW-WISE-COMPARISON)
+ on `(created_at,id)` descending. Fetch at most `limit+1` entries and validate the
+@@ -567,3 +572,44 @@ scope, preserve the body ceilings and current request deadline, and run real
+ dispatcher acceptance. ARC must admit the unnumbered DDL, scoped role grants,
+ catalog checks, backup/restore and data-preserving downgrade policy. Web then
+ composes S-202 without changing legacy ready-only list/detail consumers.
++
++### PostgreSQL family domain acceptance
++
++On 2026-11-13, Linux amd64 source `95dc2891`, based on `8b17a295`, ran
++against the schema 60 lineage, PostgreSQL 18.6 and pgvector 0.8.7 with
++`--network none`. Backfill/lifecycle, bounded history/authority, retained derived
++graph and verified derived registration roots passed. The selection transaction
++root also passed explicit and default publication rollback, orphan commit refusal,
++audit rollback and immutable membership controls. They exercised distinct IDs with
++the same name and digest, unchanged deployment references, retired metadata with
++exact-version execution refusal, tied timestamps, nullable continuation, invalid
++options, current session/account/Admin-role/epoch/workspace refusal, cross-scope
++refusal, damaged metadata/lineage and unknown-outcome projection suppression.
++
++The two concurrent selections reached real advisory-lock contention and the correct
++business outcomes. Their initial final assertion incorrectly included the second
++publisher's separately audited login. Source `052a7b18` corrected that test-only
++baseline, asserted the exact version's selection audit and passed both cases in
++3.03 seconds: matching selection converged and conflicting selection returned
++`MODEL_FAMILY_CONFLICT`, with one membership and one selection audit. Runtime and
++candidate DDL sources were unchanged. The already-passed cases were retained.
++The original cursor codec passed Linux's race detector, including all nine scope
++dimensions, tampering, invalid payloads and key rotation; its sources remain unchanged.
++
++The initial DDL failure and its isolated corrected prototype remain preserved
++separately from these passed cases. Each disposable PostgreSQL fixture, temporary
++store and private credential file was removed; original logs, source and binaries
++remain preserved. These are domain/SQL and file-registration results using synthetic
++review metadata and small synthetic weights, not model quality, production approval,
++public dispatcher, installed migration or S-202 acceptance. MOD-103 remains open.
++
++To replay, configure the private PostgreSQL DSN and fresh owned schema as described
++by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
++Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
++non-weight files for the derived-registration fixture. The tests embed and apply
++the unnumbered DDL only inside their disposable schemas.
++
++```sh
++go -C services/control test -p=1 -tags repository_integration ./internal/modules/models \
++  -run '^TestActualModelFamily' -count=1 -v
++```
+diff --git a/services/control/internal/modules/models/README.md b/services/control/internal/modules/models/README.md
+index fad6eb25..5e706c81 100644
+--- a/services/control/internal/modules/models/README.md
++++ b/services/control/internal/modules/models/README.md
+@@ -14,7 +14,11 @@ discard and is resumed by the next worker. See the
+ 
+ [service.go](service.go) exposes import/list operations. [importer.go](importer.go), [import_lock.go](import_lock.go), [storage.go](storage.go) and [verification.go](verification.go) separate bounded import execution and stored-byte verification. Derived registration/storage/snapshot files bind accepted preparation output. [directory_cache.go](directory_cache.go) uses the configured cache without replacing business ownership.
+ 
+-Model/version/import state originates in migration 000006. Bytes and SQL must agree on catalog/source/scope and digest. Queued/uploaded does not mean verified; cancellation, interrupted import, inconsistent directory identity and retirement need existing worker/recovery paths.
++Model/version/import state is stored by the cumulative `000011_models` migration;
++the later lifecycle migration binds derived publication. Bytes and SQL must agree
++on catalog/source/scope and digest. Queued/uploaded does not mean verified;
++cancellation, interrupted import, inconsistent directory identity and retirement
++need existing worker/recovery paths.
+ 
+ [import_manifest.go](import_manifest.go) resolves the persisted catalogue digest
+ to canonical metadata and the installed archive and directory verifiers.
+@@ -56,7 +60,8 @@ and validate the existing retained graph. They perform no physical file IO and
+ grant no execution permission. `VersionHistoryPolicy` reports the configured
+ UI page default and fixed wire bounds. Continuation is signed with the installed
+ Identity HMAC key and bound to actor, session, audience, scope, family, anchor
+-and filter. An absent candidate schema or key fails closed. Public contracts,
++and filter. Pagination requires that installed key; both reads fail closed if the
++candidate schema is absent. Public contracts,
+ routes, formal migration/role/catalog admission and S-202 remain with their
+ owners. See the [family domain contract](../../../../../docs/research/training-dataset-lineage.md#durable-family-domain-contract).
+ 
+diff --git a/services/control/internal/modules/models/family_repository_integration_test.go b/services/control/internal/modules/models/family_repository_integration_test.go
+index 2b9b98b3..9461b344 100644
+--- a/services/control/internal/modules/models/family_repository_integration_test.go
++++ b/services/control/internal/modules/models/family_repository_integration_test.go
+@@ -253,6 +253,14 @@ func TestActualModelFamilyHistoryPagesAndAuthority(t *testing.T) {
+ 				if err != nil || empty.Items == nil || len(empty.Items) != 0 || empty.NextCursor != nil {
+ 					t.Fatal("empty filtered page", err)
+ 				}
++				x.exec(t, `UPDATE model_versions SET manifest='{}'::jsonb WHERE id=$1`, "", other)
++				for _, version := range []string{other, uuid.NewString()} {
++					detail, err := x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, x.model, version)
++					modelReadError(t, err, "RESOURCE_NOT_FOUND")
++					if detail.ID != "" || detail.DatasetLineage != nil {
++						t.Fatal("foreign or unknown version leaked detail")
++					}
++				}
+ 				familyDenied(t, x, x.portal, x.f.Workspace, x.model, query, "ACCESS_DENIED")
+ 			case "invalid_inputs":
+ 				for _, limit := range []int{0, -1, 101} {
+diff --git a/services/control/internal/modules/models/history.go b/services/control/internal/modules/models/history.go
+index 904f3da9..241fba2a 100644
+--- a/services/control/internal/modules/models/history.go
++++ b/services/control/internal/modules/models/history.go
+@@ -271,17 +271,20 @@ func (s *Service) HistoricalVersion(ctx context.Context, a identity.Auth, worksp
+ 		}
+ 		w, family, selected := frame.workspace, frame.family, frame.version
+ 		if version != anchor {
+-			selected, err = s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, version)
++			var member bool
++			err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT EXISTS(
++ SELECT 1 FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND family_id=$3 AND version_id=$4)`,
++				w.TenantID, w.ID, family, version)).Scan(&member)
+ 			if err != nil {
+ 				return err
+ 			}
+-			other, err := versionFamilyWithin(ctx, q, w.TenantID, w.ID, version)
++			if !member {
++				return fail("RESOURCE_NOT_FOUND")
++			}
++			selected, err = s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, version)
+ 			if err != nil {
+ 				return err
+ 			}
+-			if other != family {
+-				return fail("RESOURCE_NOT_FOUND")
+-			}
+ 		}
+ 		metadata, err := historicalMetadata(selected)
+ 		if err != nil {

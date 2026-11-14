@@ -1,0 +1,24 @@
+{
+  "source": "66a3cafdbe1280d9b319f78077e89671253b5463",
+  "tree": "7971f52e403e879d1861d916adeb4262d9eb117b",
+  "config_sha256": "4e9ab201a940157e600bcdc20a8655ae2791bb09f73b723b6f425a465c6ac985",
+  "wrapper_sha256": "5d7ffd2bbeaae46f8e0c1e3a7e9173f077e2ffc243ef51523ce5c3e1887c4db0",
+  "receipt": "/private/tmp/obs110-main-integration-pb1qgf_t/obs110-producer-logic-v4.ow8h3efd",
+  "scope": "Mac pure targeted race tests plus Linux integration-tag compile only",
+  "lock_acquired": false,
+  "stages": [],
+  "passed": false,
+  "native_execution": false,
+  "started_at_unix": 1794531983.997353,
+  "failure": {
+    "type": "AdmissionBusy",
+    "message": "[Errno 35] Resource temporarily unavailable"
+  },
+  "owned_groups_exited": true,
+  "cleanup_errors": [],
+  "fd_closed": true,
+  "carrier_identity_unchanged": true,
+  "source_unchanged": true,
+  "exit_code": 75,
+  "elapsed_seconds": 0.09859775
+}

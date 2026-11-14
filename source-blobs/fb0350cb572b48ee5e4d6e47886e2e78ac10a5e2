@@ -1,0 +1,22 @@
+CREATE TABLE dataset_row_history (
+    tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    workspace_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    dataset_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    draft_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    row_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    revision BIGINT NOT NULL CHECK(revision BETWEEN 1 AND 9007199254740991),
+    actor_user_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+    action VARCHAR(16) NOT NULL CHECK(action IN('imported','appended','replaced','deleted')),
+    content_sha256 VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin CHECK(content_sha256 IS NULL OR REGEXP_LIKE(content_sha256,'^[a-f0-9]{64}$','c')),
+    reason VARCHAR(500) NOT NULL CHECK(CHAR_LENGTH(reason)>0),
+    occurred_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY(tenant_id,workspace_id,draft_id,row_id,revision),
+    FOREIGN KEY(tenant_id,workspace_id,dataset_id,draft_id,row_id) REFERENCES dataset_rows(tenant_id,workspace_id,dataset_id,draft_id,id),
+    FOREIGN KEY(actor_user_id) REFERENCES users(id),
+    CONSTRAINT dataset_row_history_tenant_id_canonical CHECK(REGEXP_LIKE(tenant_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT dataset_row_history_workspace_id_canonical CHECK(REGEXP_LIKE(workspace_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT dataset_row_history_dataset_id_canonical CHECK(REGEXP_LIKE(dataset_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT dataset_row_history_draft_id_canonical CHECK(REGEXP_LIKE(draft_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT dataset_row_history_row_id_canonical CHECK(REGEXP_LIKE(row_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT dataset_row_history_actor_user_id_canonical CHECK(actor_user_id IS NULL OR REGEXP_LIKE(actor_user_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

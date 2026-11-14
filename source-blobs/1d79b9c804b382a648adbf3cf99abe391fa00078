@@ -1,0 +1,9 @@
+{
+  "scope": "Completed inert chunk reconstruction only; ELF not executed",
+  "gzip_bytes": 10329686,
+  "gzip_sha256": "ecffed38dbe74e2dff5ff28259d789974f1c1082b3f98c00027eb33ed8894385",
+  "elf_bytes": 18027355,
+  "elf_sha256": "de5d6635221c2b377742a1a70f520b91dce869cc6ab0f38b701c22919d869309",
+  "chunks_verified": 20,
+  "original_partial_preserved": "/root/lane-rel-tools/listener-tls-unit-inputs/installer.test.gz.partial-1048576"
+}

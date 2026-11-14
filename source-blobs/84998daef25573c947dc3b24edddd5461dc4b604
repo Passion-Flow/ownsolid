@@ -1,0 +1,5 @@
+{
+  "previous_sha256": "83ec4957d4923182152704ed3e27e0ed659b9b39f8d2f624e1f46f98bf08e7e7",
+  "variant_sha256": "941dcbe1f9529dd74238d3a92c5f73baed637d75757673f66f6986d99edd22a6",
+  "scope": "One explicit bin directory chmod after mkdir under umask077; no execution"
+}

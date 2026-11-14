@@ -1,0 +1,13 @@
+{
+  "tag": "ownsolid/control:arc107-129573ae-5f57c32b",
+  "id": "sha256:e50117f36b5afc76183fd34d1058e7313fe2eec15770fffb3f3c920ad805015b",
+  "source": "129573ae8977cce83c1e81d9d386e45c1a176c3b",
+  "base": "sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+  "control": {
+    "bytes": 49725600,
+    "sha256": "4440b3b63ec5316d380aff58c509f7186f008e24bf2df701041dc6b462a3a655"
+  },
+  "web_asset_archive_sha256": "c58bc98d1d2ed8bf7e735cd0384df1bcde5a49d6a5d1e16df5e985d95e8340c1",
+  "qualified_input_root": "/root/lane-arc107-installed.129573ae.a4371d31",
+  "scope": "fixture assembled from exact native binary and complete qualified Mac web build; standard release-image factory is not exercised"
+}

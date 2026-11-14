@@ -1,0 +1,29 @@
+set -euo pipefail
+cd ~/lane-rel
+source ~/lane-rel-tools/env
+export PLAYWRIGHT_BROWSERS_PATH=$HOME/lane-rel-tools/playwright-browsers
+export LD_LIBRARY_PATH=$HOME/lane-rel-tools/browser-root/usr/lib/x86_64-linux-gnu
+export LANE_REL_HELP_SCRATCH=$1
+base=$HOME/lane-rel-tools/preview-help-gate.y9Ohc0w7
+grep -q '19 passed' "$base/run.log"
+df -h /
+free -m
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+python3 - "$base" "$LANE_REL_HELP_SCRATCH" <<'PY'
+from pathlib import Path
+import sys
+base, scratch = map(Path, sys.argv[1:])
+source = (base / "check.mjs").read_text()
+old = "const row = page.getByRole('listitem').filter({ has: page.getByText(code, { exact: true }) });"
+assert source.count(old) == 1
+source = source.replace(old, """const label = page.getByText(code, { exact: true });
+          await expect(label).toHaveCount(1);
+          const row = label.locator('xpath=..');""")
+(scratch / "check.mjs").write_text(source)
+source = (base / "inside.sh").read_text()
+old = 'make check && make build\npnpm -C web/packages/help exec vitest run src/help.test.ts --maxWorkers=1\n'
+assert source.count(old) == 1
+(scratch / "inside.sh").write_text(source.replace(old, ""))
+PY
+timeout --kill-after=15s 120s ionice -c2 -n7 nice -n10 unshare -n bash "$LANE_REL_HELP_SCRATCH/inside.sh"
+git diff --check

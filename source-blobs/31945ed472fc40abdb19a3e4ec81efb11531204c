@@ -1,0 +1,43 @@
+{
+  "audit_native_inputs_unchanged_since": "be62f58e846dcc654dafee65cba6cc7480890570",
+  "baseline_gate": "c2d1d4c494457b329b410df18960a2d77be647db",
+  "changed_main_paths": [
+    "docs/product/roadmap/training-and-finetuning.md",
+    "docs/product/status.md",
+    "docs/research/lane-trn-questions.md",
+    "docs/research/scheduling-queue-policy.md",
+    "docs/research/training-dataset-lineage.md",
+    "docs/research/training-interactive-environments.md",
+    "services/control/internal/modules/scheduling/README.md",
+    "services/control/internal/modules/scheduling/submission_preflight.go",
+    "services/control/internal/modules/scheduling/workspace_queue.go",
+    "services/control/internal/modules/scheduling/workspace_queue_executor_test.go"
+  ],
+  "fresh_commands": [
+    "unshare --net make -o test-tools -o check-web check",
+    "go -C services/control build ./..."
+  ],
+  "head": "8531226d8f16cf27de2d577b5ed99bfa34cdeb25",
+  "main": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+  "retained_checks": [
+    "repository tool tests",
+    "Web generate/lint/format/type check",
+    "non-Control build inputs",
+    "full test gates linked by c2d1d4c4",
+    "scoped contract unit roots and real PostgreSQL root"
+  ],
+  "retained_native_source_closure": [
+    "api",
+    "pkg",
+    "services/control/internal/platform",
+    "services/control/internal/testing/commitfault",
+    "services/control/migrations",
+    "services/control/config",
+    "services/control/go.mod",
+    "services/control/go.sum",
+    "go.work",
+    "go.work.sum",
+    "services/control/internal/modules/audit"
+  ],
+  "source_manifest": "1ca8259b60df5cd22c78e1647d807e46c0b7147925be312ad67d6356b425563d"
+}

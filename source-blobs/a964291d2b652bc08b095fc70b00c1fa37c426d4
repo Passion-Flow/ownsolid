@@ -1,0 +1,12 @@
+{
+  "source": "c90744abe25129181d21e8287d9403677090f299",
+  "host": "darwin/arm64",
+  "target": "linux/amd64",
+  "returncode": 0,
+  "seconds": 7.185,
+  "test_bodies_executed": 0,
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "binary": "/private/tmp/ownsolid-trn-qualification.knvee3h8/event-c907-linux-amd64.test",
+  "binary_sha256": "9a64311cd8503fd1a58944d389956c0fd746cf69a9ecdbb209465ce69ead1e8a",
+  "bytes": 67653131
+}

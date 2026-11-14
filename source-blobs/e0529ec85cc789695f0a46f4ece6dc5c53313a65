@@ -1,0 +1,30 @@
+{
+  "scope": "Independent readback after the allocated unit resource refusal; no native rerun",
+  "parent_pid": 3621127,
+  "parent_absent": true,
+  "launcher_created": false,
+  "namespace_created": false,
+  "test_log_created": false,
+  "unit_runs": 0,
+  "evidence_basis": "Parent commands list is empty and resource check precedes namespace Popen; no launcher field or test log exists",
+  "native_input_metadata_sha256": "eaef216388faf20da16386e2048246027bdc4cc36573079b692c0dc4ed45f4bb",
+  "sources": {
+    "/root/lane-del-listener-tls-preview": {
+      "head": "d2ca13940b9d224fb35ed6ac295dbe56ba08b17f",
+      "clean": true
+    },
+    "/root/lane-del-entrance-projection": {
+      "head": "1a41d97981798440b7f02061d3a73853726b03bc",
+      "clean": true
+    },
+    "/root/lane-del-current-main-preparation": {
+      "head": "5e764ea567b3613e96679cc3c0ea4d651707826c",
+      "clean": true
+    },
+    "/root/lane-del-latest-main-preparation": {
+      "head": "c6d5d1c1dbedef3774a7f8862f119ce464f3e240",
+      "clean": true
+    }
+  },
+  "fresh_memory_snapshot_scope": "No new memory snapshot is substituted for the missing failed sample"
+}

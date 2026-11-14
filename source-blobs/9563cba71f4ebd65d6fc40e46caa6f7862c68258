@@ -1,0 +1,25 @@
+{
+  "tested_published_main": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "architecture": "native Linux amd64; not an emulated or Darwin container result",
+  "postgresql": "18.6 / pgvector 0.8.7; existing pinned image sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+  "network": "Docker network none, loopback-only namespace; no host port mapping",
+  "tests": {
+    "distribution.log": [
+      "TestAliasDescriptionPostgreSQLUpgradeAndHTTPS",
+      "TestAliasDescriptionInstalledSchemaAndHTTPS",
+      "TestAliasDescriptionRollbackPreservesRetainedState",
+      "TestAliasDescriptionRollbackWaitsForCommittedWriter",
+      "TestAliasDescriptionRollbackRejectsPriorIsolationSnapshot",
+      "TestAliasDescriptionRollbackFreshIsolationPreservesRetainedState"
+    ],
+    "runtime-access.log": [
+      "TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal"
+    ]
+  },
+  "result": "7 roots passed; no failed or skipped root/subtest",
+  "up_sha256": "399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab",
+  "down_sha256": "61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86",
+  "scope": "description normal PostgreSQL/HTTPS and retained-state downgrade; one existing-principal grant-resume test",
+  "excluded": "no new full repository gate, historical seven-way restore run, browser, model, GPU, spool or CA acceptance",
+  "cleanup": "fixture process exit 0; own container removed; retained lane-gw restored; both heavy locks released"
+}

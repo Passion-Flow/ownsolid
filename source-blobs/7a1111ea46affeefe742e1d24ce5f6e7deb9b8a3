@@ -1,0 +1,92 @@
+"""Package only the small prototype sources, notices and original evidence metadata."""
+from pathlib import Path
+import gzip
+import hashlib
+import json
+import subprocess
+import tarfile
+
+root=Path(__file__).resolve().parent;inputs=root/'cpu-prototype-inputs';source=root/'cpu-prototype-source';workspace=root/'cpu-prototype-install'
+
+def sha(path):
+ with path.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
+
+license_probe=subprocess.run(['git','-C','/root/lane-trn','cat-file','-e','096c50b8:LICENSE'],capture_output=True)
+assert license_probe.returncode!=0
+(inputs/'ownsolid-source-scope.json').write_text(json.dumps({'source_commit':'096c50b8','root_license_file_present':False,'use':'Internal owner-authorized verification copy; no customer release or source-distribution licence is asserted'},sort_keys=True,indent=2)+'\n')
+base={'filename':'python-base-image.tar','size_bytes':(inputs/'python-base-image.tar').stat().st_size,'sha256':'fcea6604f98e4fa22fef3a26197b5f1980260979e0e730051dce1794a5fa9ee9','image':'sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70','verification':'Completed image save and SHA-256 before the successful disconnected installation'}
+(inputs/'base-image-archive.json').write_text(json.dumps(base,sort_keys=True,indent=2)+'\n')
+sources=json.loads((inputs/'wheel-sources.json').read_bytes());sources['torch']['metadata_origin_url']=sources['torch']['url']+'.metadata';sources['torch']['url']=sources['torch']['url'].replace('download-r2.pytorch.org','download.pytorch.org');(inputs/'wheel-sources.json').write_text(json.dumps(sources,sort_keys=True,indent=2)+'\n')
+p=inputs/'prototype.json';prototype=json.loads(p.read_bytes())
+prototype['source_files']={str(path.relative_to(source)):sha(path) for path in sorted(source.rglob('*')) if path.is_file() and '__pycache__' not in path.parts}
+for filename in ['explain_metadata_only.py','test_portable_cpu_inputs.py','package_cpu_evidence.py']:prototype['verification_scripts'][filename]=sha(root/filename)
+prototype['input_files']['wheel-sources.json']=sha(inputs/'wheel-sources.json')
+prototype['metadata_archive']={'maximum_uncompressed_bytes':16777216}
+p.write_text(json.dumps(prototype,sort_keys=True,indent=2)+'\n')
+readme='''# Private exact Linux CPU verification prototype
+
+This is internal engineering verification, not a signed or admitted production release.
+Use Linux amd64 with Docker and the root-owned fixture layout of this experiment.
+Create a NEW private root, use umask 077, and preserve source files 0600/directories 0700.
+Never replace an existing experiment. The materialized source includes unmodified worker
+Python at 096c50b8, the approved catalog and an explicitly separate CPU runtime manifest.
+
+Required binary inputs are kept outside this small source/evidence archive:
+
+- cpu-prototype-inputs/wheelhouse/: 37 training wheels plus pip, exact inventory and locks.
+- cpu-prototype-inputs/python-base-image.tar: exact cached Python 3.12.15 image; its
+  original OS/Python notices, package inventory and archive identity accompany it.
+- Approved Qwen model: all nine catalog files in a caller-selected read-only directory.
+  The retained server input is /root/lane-gw-acceptance/model. The source catalog lists
+  every size/hash and the Apache-2.0 license. No model weight is in this small archive.
+
+Copy the retained wheelhouse and image archive, extract this metadata archive into the
+fresh root, load the exact base locally and confirm its image ID. Then run:
+
+    python3 -B <root>/portable_cpu_inputs.py --media <root>/cpu-prototype-inputs \\
+      --inventory-sha256 57cc07d9ab616399b3ff5f7e09437292ac5ee0e811282c686d6b658594a110dc
+
+No download flag is needed. Original notices and both external Tokenizers notice assets
+are included unchanged. Under both existing Linux locks, reconstruct and run:
+
+    bash <root>/install_cpu_prototype.sh <root>
+    bash <root>/execute_cpu_prototype.sh <root> <approved-model> \\
+      <root>/cpu-prototype-inputs/dataset <root>/cpu-prototype-inputs/request-template.json
+
+Each phase checks the unchanged shared-host resource thresholds. On admission refusal,
+locks are released and successful cases remain intact. Resume with an explicit fifth
+case argument: interrupted, resumed, optimizer-changed or horizon-changed. Use the same
+computational inputs; resume-index.json and the runner refuse changed runtime/data inputs.
+
+The original raw outputs remain in the retained cpu-prototype-install/ workspace. The
+small archive includes their unmodified requests/reports/receipts and observations,
+not algorithmic tensor/optimizer binaries. A fresh worker really advanced from sealed
+step 1 to 2. resume-comparison.json verifies complete bindings and seals before comparing
+all algorithmic state. The five final files are byte-identical to baseline. The tiny
+explain_metadata_only.py validates the exact output-directory pickle difference without
+executing pickle or importing Torch. Trainer summary loss covers only newly executed steps.
+
+Source and model mounts are read-only. Work containers have no external network, a
+read-only root, dropped capabilities, private output and explicit CPU/memory/pid limits.
+Every container created for these experiments was removed. No signing key was created.
+The production CUDA/macOS manifests and validators remain unchanged.
+'''
+(root/'reproduce.md').write_text(readme)
+selected={path for path in source.rglob('*') if path.is_file() and '__pycache__' not in path.parts}
+selected|={path for path in inputs.rglob('*') if path.is_file() and 'wheelhouse' not in path.relative_to(inputs).parts and path.name!='python-base-image.tar'}
+selected|={root/name for name in prototype['verification_scripts']}|{root/'reproduce.md'}
+for name in ['pip-install-report.json','installed.json','install-refusals.json','resume-index.json','resume-comparison.json','resume-differences.json']:selected.add(workspace/name)
+selected|={path for path in (workspace/'runs').rglob('*') if path.is_file() and (path.suffix in {'.json','.jsonl','.log'} or path.name=='training_args.bin')}
+selected|={path for path in root.glob('*.log') if not path.name.startswith('package-cpu-evidence')}|{root/'source-permissions-refused.json'}
+size=sum(path.stat().st_size for path in selected)
+assert size<prototype['metadata_archive']['maximum_uncompressed_bytes'],'metadata archive exceeds its small artifact scope'
+manifest={str(path.relative_to(root)):{'size_bytes':path.stat().st_size,'sha256':sha(path)} for path in sorted(selected)}
+manifest_path=root/'source-evidence-inventory.json';manifest_path.write_text(json.dumps(manifest,sort_keys=True,indent=2)+'\n');selected.add(manifest_path)
+output=root/'cpu-prototype-source-evidence-v2.tar.gz'
+with output.open('xb') as raw:
+ with gzip.GzipFile(filename='',mode='wb',fileobj=raw,mtime=0) as compressed:
+  with tarfile.open(fileobj=compressed,mode='w',format=tarfile.PAX_FORMAT) as archive:
+   for path in sorted(selected):
+    info=archive.gettarinfo(str(path),arcname=str(path.relative_to(root)));info.uid=info.gid=0;info.uname=info.gname='';info.mtime=0;info.mode=0o600
+    with path.open('rb') as stream:archive.addfile(info,stream)
+print(json.dumps({'files':len(selected),'uncompressed_bytes':sum(path.stat().st_size for path in selected),'archive_bytes':output.stat().st_size,'archive_sha256':sha(output),'prototype_sha256':sha(p)}),flush=True)

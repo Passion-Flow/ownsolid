@@ -1,0 +1,22 @@
+# Optional SCH-108 follow-on
+
+Apply sch108-36fcd558.patch after the five original patches in
+training-handoff.AbUHULN6. Its author and order are retained by git am.
+
+Project the fresh typed admission error before training error normalization.
+ErrQuotaUnconfigured now yields configure_quota_policy, with no inferred
+resource or availability. Do not manufacture a typed error from stored
+wait_code text. Guidance is not authorization or a guarantee of admission.
+
+After rechecking local owner authority, handle a configuration wait through
+the existing savepoint rollback before persisting wait state. Keep scope,
+stale identity, storage and changed replay as full transaction failures:
+nonempty WaitReasons alone is not a safe retry classification.
+
+Qualified source: 36fcd55839867708170ebf6b9a8becebf2102453.
+Evidence: /root/lane-sch-tools/waitreason.KmztTZiN.
+One real PostgreSQL policy-absence/install/retry flow and one typed/wrapped/
+equal-text unit passed with -race in a disconnected namespace.
+make check, make build and Control module tests passed at that exact source.
+No DDL or training file changed. The installed authenticated training and
+public API/UI flows remain owner integrations; SCH-108 remains open.

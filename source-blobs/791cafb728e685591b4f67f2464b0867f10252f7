@@ -1,0 +1,58 @@
+#!/bin/sh
+set -eu
+root=/sys/fs/cgroup
+test "$(cat /proc/1/cgroup)" = '0::/'
+mkdir "$root/supervisor"
+printf '%s\n' "$$" > "$root/supervisor/cgroup.procs"
+test -z "$(cat "$root/cgroup.procs")"
+printf '+cpu +memory +pids\n' > "$root/cgroup.subtree_control"
+test "$(cat "$root/cgroup.type")" = domain
+printf 'nameserver %s\noptions timeout:1 attempts:1\n' "$ARC_SITE_DNS" >/etc/resolv.conf
+printf '127.0.0.1 admin.ownsolid.test portal.ownsolid.test\n' >>/etc/hosts
+mkdir -p /dev/net
+test -c /dev/net/tun || mknod /dev/net/tun c 10 200
+/bundle/egress-recorder -interface egress0 -log /capture/control-egress.jsonl >/capture/recorder.log 2>&1 &
+recorder=$!
+for i in $(seq 1 20); do
+  if ip link show egress0 >/dev/null 2>&1; then break; fi
+  if ! kill -0 "$recorder" 2>/dev/null; then cat /capture/recorder.log; exit 1; fi
+  sleep 1
+done
+ip link set egress0 up
+ip addr add 198.18.0.1/32 dev egress0
+ip -6 addr add 2001:db8:e9e5::1/128 dev egress0
+ip route replace default dev egress0
+ip -6 route replace default dev egress0
+for i in $(seq 1 60); do
+  if test -f /exchange/cgroup-admitted; then break; fi
+  sleep 1
+done
+test -f /exchange/cgroup-admitted
+dockerd --host=unix:///var/run/docker.sock --cgroup-parent=/arc-workloads >/capture/dockerd.log 2>&1 &
+daemon=$!
+trap 'kill "$daemon" "$recorder" 2>/dev/null || true' EXIT
+for i in $(seq 1 50); do
+  if docker info >/dev/null 2>&1; then break; fi
+  if ! kill -0 "$daemon" 2>/dev/null; then tail -35 /capture/dockerd.log; exit 1; fi
+  sleep 1
+done
+docker info --format 'isolated Docker storage={{.Driver}} cgroup={{.CgroupDriver}} version={{.CgroupVersion}}'
+printf "%s\n" registry-install > /capture/current-stage
+/bundle/registry-install registry-bundle --bundle /release/registry-stage/ownsolid.tar.gz \
+  --verification /site-inputs/verification.json --config /site-inputs/site.yaml > /capture/registry-install.json
+test "$(docker inspect -f '{{.HostConfig.ReadonlyRootfs}} {{range .Mounts}}{{if eq .Destination "/var/lib/registry"}}{{.RW}}{{end}}{{end}}' arc104-site-registry)" = 'true false'
+cp /release/registry-stage/manifest.json /capture/registry-signed-manifest.json
+touch /exchange/registry-ready
+export ARC_MANAGED_REGISTRY=1
+export OWNSOLID_E2E_INSTALLER=/bundle/ownsolid-install
+export OWNSOLID_E2E_ROOT=/srv/ownsolid
+export OWNSOLID_E2E_EGRESS_LOG=/capture/control-egress.jsonl
+export OWNSOLID_E2E_EGRESS_INTERFACE=egress0
+printf "%s\n" signed-cell-api > /capture/current-stage
+status=0
+/bundle/managed.test -test.v -test.timeout=35m -test.run='^TestARC104ManagedSigned$' || status=$?
+printf "%s\n" "$status" > /capture/test-process-exit
+for name in "$ARC_PROJECT-control-1" "$ARC_PROJECT-gateway"; do
+  if docker inspect "$name" >/dev/null 2>&1; then docker logs "$name" > "/capture/$name.log" 2>&1; fi
+done
+exit "$status"

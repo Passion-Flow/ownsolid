@@ -1,0 +1,26 @@
+{
+  "format_version": 1,
+  "source_revision": "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+  "source_modified": false,
+  "binary_sha256": "c6504aad053bd76a4c1fe159b49cfe3e778d526b7c33e6ca6a50f0143cdb943d",
+  "os": "linux",
+  "arch": "amd64",
+  "go_version": "go version go1.27.3 linux/amd64",
+  "toolchain_binary_sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b",
+  "cli_product_tree": "e9efdd830bba615b8a5d039382b75c405829e402",
+  "pinned_inputs": {
+    "go.work": "d2da06271b98cf27596a65743b8f6f39504cc5557c95b8842c1c97c861b593b8",
+    "tools/cli/go.mod": "3dd74502d148f32625f3c4a203ec8662e437fc88f1a982cc372b024866349fc2",
+    "tools/cli/go.sum": "21f06fc568cf3afbdc705df533c8970301c2af23b72de34478be1a92119f735b"
+  },
+  "flags": [
+    "-buildvcs=true",
+    "-trimpath",
+    "CGO_ENABLED=0",
+    "GOOS=linux",
+    "GOARCH=amd64",
+    "GOFLAGS=-p=1"
+  ],
+  "network": "isolated namespace; loopback only; no IPv4 or IPv6 default route",
+  "build_scope": "Session CLI startup/help only. Control source and installed acceptance are separate."
+}

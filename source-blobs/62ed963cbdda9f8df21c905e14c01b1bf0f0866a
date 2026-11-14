@@ -1,0 +1,20 @@
+{
+  "source_commit": "1a41d97981798440b7f02061d3a73853726b03bc",
+  "source_tree": "398d104c91ce834bec81b9231e28d2a2f6733548",
+  "source_clean": true,
+  "producer_scope": "Actual installer methods with a controlled operator-image recorder; no Docker or Control invocation",
+  "generated_on_base": "e5c8484274e5b1ddf75eefc437750377318608c0",
+  "product_go_file_hashes_match_clean_commit": {
+    "deploy/offline/internal/install/apply.go": "0e94ff32c72fba04e5074e19b6b667be0ab9ec6fca47df9064f15702c8d52ca4",
+    "deploy/offline/internal/install/config.go": "561c0c8977a54c994bef05214ce1b9a7d2552378b2340446a905f62b1f978eba",
+    "deploy/offline/internal/install/materialize.go": "8d2bbdfc4150919867039d9c51cc60086e1fca9967363153d720ae491d388541",
+    "deploy/offline/internal/install/preflight.go": "9fffd1d8503a0662ca212917b52b0cdde6230030f545665fe6171020e5b80cd5",
+    "deploy/offline/internal/install/serving_transport.go": "2091cc7f519d33bd26e734c6b27966bafd1b6fcf4af13084a59e46bcab77e38e",
+    "deploy/offline/internal/install/serving_transport_test.go": "28160a4ae922ab533963a433df99d54903aae2e02d2f07023cb7525049621640",
+    "deploy/offline/internal/install/entrance_listeners.go": "5e5c1126dc59ff553a34176f67b2fbc3bf27e0ce156c1e86c28e5d5fe69a2064",
+    "deploy/offline/internal/install/entrance_listeners_test.go": "bfca0b17e99ee96dd626723462d0ec4962ede18fb3b81772a8640fa446013d9b",
+    "deploy/offline/internal/install/listener_compatibility.go": "1691fb5a0a33c8bd5608f7319c2857f6f63fed4531804c091525614923942c05"
+  },
+  "producer_go_sha256": "551ff13cb007ad21adf92c4ad6ac1adc5d02d450c3866857531292582ae586b3",
+  "inputs_manifest_sha256": "bd0b6a78cbd04eb00551d8d6b59e9613fa19a888d2a6b6a354e67226d5c6f7cd"
+}

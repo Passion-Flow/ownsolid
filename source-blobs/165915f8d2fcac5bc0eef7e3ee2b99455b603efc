@@ -1,0 +1,28 @@
+{
+  "parent_gone": true,
+  "carriers": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "same_inode_device": true,
+      "locks_at_observation": []
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "same_inode_device": true,
+      "locks_at_observation": []
+    }
+  ],
+  "cleanup_readbacks": [
+    {
+      "absent": true,
+      "container": "lane-del-image-inventory-e74625ed-f2aa-49ab-a",
+      "project_networks": [],
+      "volumes": [
+        {
+          "absent": true,
+          "name": "1e9ed487b88ec033c6629b75696e66d0d5c1cace72cdb74cc62a59ee61d967bd"
+        }
+      ]
+    }
+  ]
+}

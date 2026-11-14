@@ -1,0 +1,18 @@
+{
+  "source": "5055d774ec6941df008f21f7e69abd48bad3fab0",
+  "host": "darwin/arm64",
+  "make_check": true,
+  "make_build": true,
+  "whole_make_test_run": false,
+  "installed_acceptance": false,
+  "native_linux_startup_run": false,
+  "client_sha256": "676106019d2d0a044ce6f39a976c7f7fb4aba1ed7107dad19795b446a818d6e6",
+  "client_bytes": 12112783,
+  "files_sha256": {
+    "gate.log": "84020230758e3df46121a67d5942517a9704baf47770611cf8e0e0ba340d6673",
+    "gate.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "mac-gate.sh": "38d6d7cd8a7e76174f1374052c63ac677415435a2d4950c21f4d210724bc495b",
+    "client/client-manifest.json": "0626cd085362632bf2301365ed39fd2a27fbffd06aa80b53e12c3396bf616db2",
+    "client/build-metadata.txt": "c1eca685566da156fff96e83fdea7c7e1ed6ccddfb779b109d4b560889b0b346"
+  }
+}

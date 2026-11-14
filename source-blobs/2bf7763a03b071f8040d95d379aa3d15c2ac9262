@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$HOME/lane-sch"
+. "$HOME/lane-sch-tools/env"
+export GOMAXPROCS=2 GOFLAGS="-p=1 -buildvcs=false" CARGO_BUILD_JOBS=1 GOTOOLCHAIN=local
+export GOPROXY=off CARGO_NET_OFFLINE=true
+unset PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_DSN_FILE PROJECT_ONE_TEST_NATIVE_POSTGRES_INPUT
+preflight() {
+ df -h /
+ free -m
+ cat /proc/pressure/io
+ test "$(df -Pk / | awk 'END {print $4}')" -ge 15728640 || return 75
+ test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 3072 || return 75
+ test "$(free -m | awk '/^Mem:/ {print $7}')" -ge 12288 || return 75
+ awk '/^full / {for(i=2;i<=NF;i++){split($i,a,"="); if((a[1]=="avg10"||a[1]=="avg60") && a[2]>5) exit 1}}' /proc/pressure/io || return 75
+ if ps -eo comm=,args= | awk '$1 ~ /^(cargo|rustc|compile|link|chrome-headless)$/ || /[v]llm serve/ {print; found=1} END {exit !found}'; then
+  printf 'Another heavy process is active; no work started.\n' >&2
+  return 75
+ fi
+}
+test "$(git branch --show-current)" = codex/sch-queue-executor
+preflight
+exec 8>>/run/lock/ownsolid-heavy.lock
+if ! flock -w 30 8; then printf "WAIT shared Linux gate lock\n" >&2; exit 75; fi
+exec 9>>"$HOME/lane-sch-tools/heavy-test.lock"
+if ! flock -n 9; then printf "WAIT scheduling lane lock\n" >&2; exit 75; fi
+preflight
+git diff --check
+test -z "$(git status --porcelain --untracked-files=all)"
+python3 tools/dev/roadmap_progress.py --check
+test ! -e tools/audit-verify/audit-verify
+if docker inspect lane-sch-selected-queue >/dev/null 2>&1; then
+ printf 'Fixture name already exists; leaving it untouched.\n' >&2
+ exit 1
+fi
+umask 077
+fixture="$(mktemp -d "$HOME/lane-sch-tools/selectedqueue.XXXXXXXX")"
+printf '%s\n' "$fixture" >"$HOME/lane-sch-tools/selectedqueue-fixture"
+container_id=
+cleanup() {
+ local code=$?
+ trap - EXIT
+ if [ -n "$container_id" ]; then
+  docker stop --time 10 "$container_id" >"$fixture/container-stop.log" 2>&1 || true
+ fi
+ rm -f -- "$fixture/password" "$fixture/test.dsn"
+ if [ "$(git ls-files --others --exclude-standard -- tools/audit-verify/audit-verify)" = tools/audit-verify/audit-verify ]; then
+  rm -f -- tools/audit-verify/audit-verify
+ fi
+ git status --short >"$fixture/status-after.log"
+ exit "$code"
+}
+trap cleanup EXIT
+ss -lntp >"$fixture/listeners-before.log"
+install -d -m 0777 "$fixture/socket"
+password="$(openssl rand -hex 24)"
+printf '%s\n' "$password" >"$fixture/password"
+chmod 0444 "$fixture/password"
+printf 'host=%s dbname=scheduling_selected_queue_test user=postgres password=%s sslmode=disable\n' "$fixture/socket" "$password" >"$fixture/test.dsn"
+unset password
+image="$(docker image inspect pgvector/pgvector:0.8.7-pg18-bookworm --format '{{.Id}}')"
+docker run --detach --rm --network none --name lane-sch-selected-queue \
+ --mount type=tmpfs,dst=/var/lib/postgresql,tmpfs-size=536870912 \
+ --mount "type=bind,src=$fixture/socket,dst=/var/run/postgresql" \
+ --mount "type=bind,src=$fixture/password,dst=/run/secrets/pg_password,readonly" \
+ --env POSTGRES_INITDB_ARGS='--auth-local=scram-sha-256 --auth-host=scram-sha-256' \
+ --env POSTGRES_DB=scheduling_selected_queue_test --env POSTGRES_PASSWORD_FILE=/run/secrets/pg_password \
+ "$image" -c "listen_addresses=127.0.0.1" 8>&- 9>&- >"$fixture/container"
+container_id="$(cat "$fixture/container")"
+for n in $(seq 1 60); do
+ if [ -S "$fixture/socket/.s.PGSQL.5432" ] && docker exec -u postgres "$container_id" pg_isready -h 127.0.0.1 -d scheduling_selected_queue_test >/dev/null; then break; fi
+ sleep 1
+done
+test -S "$fixture/socket/.s.PGSQL.5432"
+docker exec -u postgres "$container_id" sh -eu -c 'PGPASSWORD="$(cat /run/secrets/pg_password)"; export PGPASSWORD; exec psql -X -v ON_ERROR_STOP=1 -d scheduling_selected_queue_test -c "$1"' sh \
+ "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC; SHOW server_version;" >"$fixture/database-version.log"
+docker inspect --format '{{.HostConfig.NetworkMode}} {{json .HostConfig.PortBindings}}' "$container_id" >"$fixture/database-network.log"
+run_logged() {
+ local phase="$1"
+ shift
+ preflight
+ if ! "$@" 8>&- 9>&- >"$fixture/$phase.log" 2>&1; then
+  tail -90 "$fixture/$phase.log"
+  return 1
+ fi
+ printf 'PASS %s\n' "$phase"
+}
+git rev-parse HEAD >"$fixture/source-head"
+git diff --binary >"$fixture/source.diff"
+git ls-files --cached --others --exclude-standard -- services/control/internal/modules/scheduling docs/research/scheduling-queue-policy.md | sort | xargs sha256sum >"$fixture/source-files.sha256"
+run_logged selectedqueue-offline unshare --net bash -s <<'OFFLINE'
+set -euo pipefail
+ip link set lo up
+test -z "$(ip route show default)"
+test -z "$(ip -6 route show default)"
+fixture="$(cat "$HOME/lane-sch-tools/selectedqueue-fixture")"
+tmp="$(mktemp -d "$fixture/run.XXXXXXXX")"
+python3 "$HOME/lane-sch-tools/pg-loopback-relay.py" "$fixture/socket/.s.PGSQL.5432" >"$tmp/port" &
+relay_pid=$!
+trap 'kill "$relay_pid" 2>/dev/null || true; rm -f "$tmp/port" "$tmp/dsn"; rmdir "$tmp"' EXIT
+for n in $(seq 1 100); do
+ test ! -s "$tmp/port" || break
+ sleep 0.05
+done
+test -s "$tmp/port"
+port="$(cat "$tmp/port")"
+umask 077
+sed "s|^host=[^ ]* |host=127.0.0.1 port=$port |" "$fixture/test.dsn" >"$tmp/dsn"
+export OWNSOLID_SCHEDULING_TEST_DSN_FILE="$tmp/dsn" PROJECT_ONE_TEST_DSN_FILE="$tmp/dsn"
+go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -run '^(TestQueueExecutorSnapshotRejectsUnborrowedInputs$|TestPostgresQueueExecutor|TestPostgresWorkspaceQueue|TestPostgresPreflightUsesOneSnapshotAndRefreshes$|TestPostgresPreflightRequiresReadOnlyScopedSnapshot$)' -count=1 -v
+OFFLINE
+test "$(grep -c '^--- PASS: TestPostgres' "$fixture/selectedqueue-offline.log")" -eq 7
+grep -q '^--- PASS: TestQueueExecutorSnapshotRejectsUnborrowedInputs' "$fixture/selectedqueue-offline.log"
+grep '^--- PASS: Test' "$fixture/selectedqueue-offline.log"
+test "$(git rev-parse HEAD)" = "$(cat "$fixture/source-head")"
+git diff --exit-code HEAD
+sha256sum --check --status "$fixture/source-files.sha256"
+printf 'PASS\n' >"$fixture/selectedqueue-offline.passed"
+printf 'PASS targeted selected-store queue snapshots and affected legacy/preflight contracts; evidence %s\n' "$fixture"

@@ -1,0 +1,36 @@
+{
+  "source": "5b73fa05305c2c5d8178a256683ede8b4e9ef99f",
+  "main_base": "97a563ba047869fc95acf50c0017ef3cdea13139",
+  "owner_bytes_equal": "dc2db707fd7734be3d611f3079b922e742d2b463",
+  "native_go_sql_installed_or_role_qualified": false,
+  "files": {
+    "trn-reader-main-97a.bundle": {
+      "sha256": "58f216684d607d3ed727462c35b2afb02be91064acfc37d730f6ff16cd58fd6f",
+      "bytes": 26878
+    },
+    "reader-main-modules.log": {
+      "sha256": "021c13cc95b9ab704e0e008fa32427e02d0438bd7e546979e11fcb67b017c724",
+      "bytes": 408503
+    },
+    "reader-main-tag-compile.log": {
+      "sha256": "5d1219950ce8590fb05d5454e79cbdcde78bff3294b3fa1ae56d9763d2705a63",
+      "bytes": 212
+    },
+    "reader-main-check.log": {
+      "sha256": "d79d308eff230a74b2648f247388b09632c616cd3ebca638e610d391aa518856",
+      "bytes": 1517
+    },
+    "reader-main-build.log": {
+      "sha256": "4738b2ea3ff95fad0d2d98a470a3f5bc3965748577108329c919269c4dc923f4",
+      "bytes": 55550
+    },
+    "reader-main-repository-gates.json": {
+      "sha256": "58b3ab929da244cc8772198bbb85ed9565589834b93861a9fe7e24182b5f6edc",
+      "bytes": 2026
+    },
+    "run-reader-main-repository-gates.py": {
+      "sha256": "07107bee8811ac2ffadeb86b4665278d8879fc60f1944b73ab592bcf668544f8",
+      "bytes": 5382
+    }
+  }
+}

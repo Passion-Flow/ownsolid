@@ -1,0 +1,10 @@
+{
+  "source": "/root/lane-del-backup-output-path",
+  "stage": "/root/lane-rel-tools/backup-output-inputs.dFWQ46IY",
+  "output_parent": "/root/lane-rel-tools",
+  "fixture_parent": "/tmp",
+  "uid": 65534,
+  "gid": 65534,
+  "test_seconds": 10,
+  "go_memory_bytes": 134217728
+}

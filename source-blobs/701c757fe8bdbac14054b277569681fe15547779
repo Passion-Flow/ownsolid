@@ -1,0 +1,116 @@
+from pathlib import Path
+import re
+import textwrap
+
+root = Path("services/control/internal/modules/distribution")
+current_file = root / "cutovers.go"
+source = current_file.read_text()
+start = source.index("\t\t// The Workspace lock serializes")
+end = source.index("\t\tif _, e = tx.Exec", source.index("\t\tout.AppliedRevision = current.Revision + 1", start))
+original = source[start:end]
+plan_header = original[:original.index("\t\taction := ")]
+nonpause = original[original.index("\t\t\tif current.DisabledAt == nil"):original.index("\t\t\t\t_, e = tx.Exec", original.index("\t\t\tif in.Action == \"resume\" {\n\t\t\t\tvar count"))]
+pause_update = next(line.strip() for line in original.splitlines() if "SET disabled_at=clock_timestamp(),revision=revision+1" in line)
+resume_update = next(line.strip() for line in original.splitlines() if "SET disabled_at=NULL,revision=revision+1" in line)
+target_update = next(line.strip() for line in original.splitlines() if "SET deployment_id=$2,deployment_revision=$3,revision=revision+1" in line)
+assert pause_update.startswith("if _, e = tx.Exec") and pause_update.endswith("; e != nil {")
+pause_update = pause_update[3:-len("; e != nil {")]
+assert target_update.count("target.ID") == target_update.count("target.Revision") == 2
+target_update = target_update.replace("target.ID", "plan.After.DeploymentID").replace("target.Revision", "plan.After.DeploymentRevision")
+
+def body(code, indent="\t"):
+    code = re.sub(r"\breturn (e|fail\([^\n]+\))$", r"return CutoverPreview{}, \1", code, flags=re.MULTILINE)
+    return textwrap.indent(textwrap.dedent(code), indent)
+
+insert = """		plan, e := s.planCutover(ctx, tx, w, id, in)
+		if e != nil {
+			return e
+		}
+		action := map[string]string{"pause": "paused", "resume": "resumed", "retarget": "retargeted", "rollback": "rolled_back"}[in.Action]
+		switch in.Action {
+		case "pause":
+			"""+pause_update+"""
+		case "resume":
+			"""+resume_update+"""
+		default:
+			"""+target_update+"""
+		}
+		if e != nil {
+			return e
+		}
+		out.AppliedRevision = plan.After.Revision
+"""
+current_file.write_text((source[:start]+insert+source[end:]).replace('\n\t"reflect"', ""))
+preview_file = root / "cutover_preview.go"
+assert not preview_file.exists()
+preview_file.write_text("""package distribution
+
+import (
+	"context"
+	"reflect"
+
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+)
+
+// CutoverState identifies the alias revision, serving target and pause state.
+type CutoverState struct {
+	Revision           int64
+	DeploymentID       string
+	DeploymentRevision int64
+	Paused             bool
+}
+
+// CutoverPreview describes the checked state before and after a proposed cutover.
+type CutoverPreview struct {
+	Before CutoverState
+	After  CutoverState
+}
+
+// PreviewCutover validates a proposed cutover against current authority without
+// applying it. A later Cutover rechecks the expected revision and target.
+func (s *Service) PreviewCutover(ctx context.Context, a identity.Auth, workspace, id string, in CutoverRequest) (CutoverPreview, error) {
+	if !admin(a) {
+		return CutoverPreview{}, fail("ACCESS_DENIED")
+	}
+	if !wire.ValidID(id) || !validCutover(in) {
+		return CutoverPreview{}, fail("VALIDATION_FAILED")
+	}
+	var out CutoverPreview
+	err := s.transaction(ctx, a, workspace, in.Action != "pause", nil, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+		var e error
+		out, e = s.planCutover(ctx, tx, w, id, in)
+		return e
+	})
+	if err != nil {
+		return CutoverPreview{}, err
+	}
+	return out, nil
+}
+
+// planCutover resolves the live change under the apply lock order before any write.
+func (s *Service) planCutover(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, id string, in CutoverRequest) (CutoverPreview, error) {
+"""+body(plan_header)+"""	before := CutoverState{
+		Revision:           current.Revision,
+		DeploymentID:       current.DeploymentID,
+		DeploymentRevision: current.DeploymentRevision,
+		Paused:             current.DisabledAt != nil,
+	}
+	out := CutoverPreview{Before: before, After: before}
+	out.After.Revision++
+	if in.Action == "pause" {
+		if before.Paused {
+			return CutoverPreview{}, fail("ALIAS_ALREADY_PAUSED")
+		}
+		out.After.Paused = true
+		return out, nil
+	}
+"""+body(nonpause.replace("if current.DisabledAt == nil", "if !before.Paused", 1))+"""		out.After.Paused = false
+	}
+	out.After.DeploymentID = target.ID
+	out.After.DeploymentRevision = target.Revision
+	return out, nil
+}
+""")

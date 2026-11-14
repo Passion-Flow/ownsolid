@@ -1,0 +1,1 @@
+{"at": 1794508147.8023162, "outer": "ownsolid-e2e-5cnkce", "code": 1, "stdout_bytes": 0, "stderr": "Error response from daemon: can not get logs from container which is dead or marked for removal\n"}

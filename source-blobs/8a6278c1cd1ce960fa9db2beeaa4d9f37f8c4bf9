@@ -1,0 +1,22 @@
+{
+  "opportunity": "new_authorization_after_DEV_completed_and_released",
+  "created_utc": "2026-11-13T04:36:21.987695+00:00",
+  "source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "wrapper_hashes_match": true,
+  "source_clean": true,
+  "entry_invoked": false,
+  "retry_count": 0,
+  "carrier_acquisitions": 0,
+  "pre_entry_raw_exit_code": 0,
+  "pre_entry_wall_seconds": 0.07573,
+  "pre_entry_admission_log_sha256": "52715eb58e393892ffd252ab367781f6ea09ec4937f37223b581a4a920afb332",
+  "pre_entry_observation": {
+    "disk_free_bytes": 789123960832,
+    "io_full_avg10": 0.18,
+    "io_full_avg60": 0.08,
+    "memory_available_bytes": 20741480448,
+    "memory_free_bytes": 4792938496,
+    "other_heavy_process_count": 0
+  },
+  "pre_entry_assertion": []
+}

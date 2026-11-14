@@ -1,0 +1,86 @@
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+
+repo = Path('/root/lane-trn')
+expected = 'c527fb68111d6f2adae72dc6b5d1eb9051e89e06'
+mode = sys.argv[1]
+assert mode in ('events', 'cost')
+root = Path(tempfile.mkdtemp(prefix='lane-trn-event-' + mode + '.', dir='/root'))
+record = {'source': expected, 'mode': mode, 'platform': 'linux/amd64', 'started': False}
+fds = []
+rc = 75
+try:
+    for name, inode in [('/run/lock/ownsolid-heavy.lock', 82), ('/root/lane-sci-tools/heavy-test.lock', 7508772)]:
+        fd = os.open(name, os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC)
+        a, b = os.fstat(fd), os.stat(name, follow_symlinks=False)
+        assert stat.S_ISREG(a.st_mode) and a.st_uid == os.getuid() and a.st_ino == inode
+        assert (a.st_dev, a.st_ino) == (b.st_dev, b.st_ino)
+        deadline = time.monotonic() + 45
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    os.close(fd)
+                    raise RuntimeError('heavy_guard_busy')
+                time.sleep(0.25)
+        fds.append(fd)
+    admission = subprocess.run(['python3', '-B', '/root/lane-trn-cpu-admission.RaaYxrR7/preflight_cpu_prototype.py', '/root/lane-trn-cpu-admission.RaaYxrR7'], capture_output=True, text=True, timeout=15)
+    (root / 'admission.log').write_text(admission.stdout + admission.stderr)
+    assert admission.returncode == 0, 'original_admission_refused'
+    assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip() == expected
+    assert not subprocess.check_output(['git', 'status', '--porcelain'], cwd=repo, text=True)
+    source = Path('/root/lane-trn-tools/replay-training-events.sh').read_text()
+    source = source.replace('|TestActualTrainingEventBatchUnknownCommitAndExplicitReplay)$', '|TestActualTrainingEventBatchUnknownCommitAndExplicitReplay|TestActualTrainingResumedFinalCheckpointBatchAndReplay)$')
+    if mode == 'cost':
+        source = source.replace('test_status=0\n', "test_pattern='^TestAgentCallCostDoesNotGrowWithTheFleet$/(training_authority|declared_cost)$'\ntest_status=0\n")
+    script = root / 'replay.sh'
+    script.write_text(source)
+    script.chmod(0o700)
+    subprocess.run(['bash', '-n', str(script)], check=True)
+    env = os.environ.copy()
+    env.update({'PATH': '/root/lane-trn-tools/go/bin:' + env['PATH'], 'GOCACHE': '/root/lane-trn-tools/go-cache', 'GOMODCACHE': '/root/lane-trn-tools/go-mod', 'GOTOOLCHAIN': 'local', 'GOPROXY': 'off', 'GOSUMDB': 'off', 'GOFLAGS': '-p=2', 'GOMAXPROCS': '2', 'GOMEMLIMIT': '1073741824B', 'PROJECT_ONE_DATA_PYTHON': '/usr/bin/python3.12', 'OWNSOLID_TRAINING_REPLAY_REPOSITORY': str(repo), 'OWNSOLID_TRAINING_PG_LOG': str(root / 'postgres.log'), 'PYTHONDONTWRITEBYTECODE': '1'})
+    record['started'] = True
+    print(json.dumps({'running': mode, 'source': expected, 'evidence': str(root)}), flush=True)
+    start = time.monotonic()
+    with (root / 'native.log').open('x') as out:
+        run = subprocess.run(['bash', str(script)], env=env, stdout=out, stderr=subprocess.STDOUT, timeout=420)
+    record.update({'returncode': run.returncode, 'seconds': round(time.monotonic() - start, 3)})
+    events = []
+    for line in (root / 'native.log').read_text().splitlines():
+        try:
+            events.append(json.loads(line))
+        except ValueError:
+            pass
+    names = json.loads(Path('/root/lane-trn-tools/event-test-roots.json').read_text()) + ['TestActualTrainingResumedFinalCheckpointBatchAndReplay']
+    counts = {k: sum(e.get('Action') == k and 'Test' in e for e in events) for k in ('pass', 'skip', 'fail')}
+    roots = {e['Test'] for e in events if e.get('Action') == 'pass' and 'Test' in e and '/' not in e['Test']}
+    record.update({'test_actions': counts, 'passed_roots': sorted(roots)})
+    if mode == 'events':
+        rc = 0 if run.returncode == 0 and roots == set(names) and not counts['skip'] and not counts['fail'] else 1
+    else:
+        rc = run.returncode
+        record['cost_output'] = [e['Output'].strip() for e in events if 'statements' in e.get('Output', '') or 'ran ' in e.get('Output', '')]
+except Exception as err:
+    record.update({'error_class': type(err).__name__, 'error': str(err)})
+finally:
+    for name in ('native.log', 'postgres.log', 'admission.log'):
+        path = root / name
+        if path.exists():
+            record[name + '_sha256'] = hashlib.sha256(path.read_bytes()).hexdigest()
+    record['driver_returncode'] = rc
+    (root / 'result.json').write_text(json.dumps(record, indent=2) + '\n')
+    print(json.dumps({'evidence': str(root), **record}), flush=True)
+    for fd in reversed(fds):
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+raise SystemExit(rc)

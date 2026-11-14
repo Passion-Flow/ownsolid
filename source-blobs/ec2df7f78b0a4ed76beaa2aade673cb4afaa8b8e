@@ -1,0 +1,82 @@
+{
+  "admitted": true,
+  "cleanup_reserve_seconds": 120,
+  "cleanup_seconds": 0.055226805969141424,
+  "credential_paths_absent": true,
+  "elapsed_seconds": 122.16388766199816,
+  "error": "PAYLOAD_REFUSAL",
+  "error_type": "AssertionError",
+  "go_compilers_started": 0,
+  "image": {
+    "architecture": "amd64",
+    "id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "os": "linux",
+    "volume_target": "/var/lib/postgresql"
+  },
+  "lock_fd_closure": [
+    {
+      "closed": true,
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    },
+    {
+      "closed": true,
+      "path": "/run/lock/ownsolid-heavy.lock"
+    }
+  ],
+  "lock_identities_retained": true,
+  "lock_nb_attempts": [
+    {
+      "identity": {
+        "dev": 29,
+        "ino": 82,
+        "mode": 420,
+        "nlink": 1,
+        "regular": true,
+        "size": 0,
+        "uid": 0
+      },
+      "path": "/run/lock/ownsolid-heavy.lock"
+    },
+    {
+      "identity": {
+        "dev": 64512,
+        "ino": 7508772,
+        "mode": 420,
+        "nlink": 1,
+        "regular": true,
+        "size": 0,
+        "uid": 0
+      },
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    }
+  ],
+  "metadata": [],
+  "preflight": {
+    "disk_free_bytes": 788917272576,
+    "foreign_heavy": [],
+    "full_io_psi_avg10": 0.91,
+    "memory_bytes": {
+      "MemAvailable": 20793270272,
+      "MemFree": 3306266624
+    }
+  },
+  "remaining_owned_groups": [],
+  "remote_budget_seconds": 1000,
+  "remote_root": "/root/lane-arc111-formal61-e1.bx9t4g36",
+  "runner_pid": 358460,
+  "runtime_profiles_executed": [],
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "stages": [
+    {
+      "elapsed_seconds": 0.09308284800499678,
+      "exit": 0,
+      "name": "image-inspect",
+      "pid": 358462,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "b7801d4afafa4ae1450ae7b260bdb4bff3b0f67ff121ae8e9fbbd1f4aa109dd0"
+    }
+  ],
+  "state": "FAILED_OR_INCOMPLETE",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "within_remote_budget": true
+}

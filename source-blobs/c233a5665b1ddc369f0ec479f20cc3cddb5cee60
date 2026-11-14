@@ -1,0 +1,7 @@
+#!/bin/bash
+cd /root/lane-a-e2e
+log=${1:-gateways.log}
+images="ownsolid/control:lane-a-e2e ownsolid-e2e/postgres:18.6-pgvector-0.8.7 victoriametrics/victoria-metrics:v1.155.0 victoriametrics/victoria-logs:v1.53.0 docker:29.1.3-dind"
+OWNSOLID_E2E_LOAD=1 OWNSOLID_E2E_RUN=TestAgentGateways OWNSOLID_E2E_TIMEOUT=45m OWNSOLID_E2E_SCRATCH=/dev/shm OWNSOLID_E2E_DOCKER_TMPFS=12g ./run-single-node.sh /root/lane-a-e2e $images </dev/null > "$log" 2>&1
+c=$?; echo "exit=$c"; grep -E "^(--- |    --- |PASS|FAIL|ok)|zero egress" "$log" | cut -c1-200 | tail -12
+exit $c

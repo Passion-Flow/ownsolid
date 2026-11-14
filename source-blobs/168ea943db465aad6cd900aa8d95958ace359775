@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+qualified="$1"
+base="$2"
+fixture="$3"
+cd /root/lane-sch
+test "$(git branch --show-current)" = codex/sch-queued-admission
+test "$(git rev-parse HEAD)" = "$qualified"
+test -z "$(git status --porcelain)"
+native="$(cat "$fixture/source-head")"
+[[ "$native" =~ ^[0-9a-f]{40}$ ]]
+test -f "$fixture/queuedadmission-offline.passed"
+test "$(grep -c '^--- PASS: TestPostgres' "$fixture/queuedadmission-offline.log")" = 45
+test "$(grep -c '^--- PASS: Test' "$fixture/queuedadmission-offline.log")" = 66
+! grep -q '^--- SKIP:' "$fixture/queuedadmission-offline.log"
+for phase in modules check build platform; do
+ test "$(cat "$fixture/$phase.passed")" = PASS
+ test "$(cat "$fixture/$phase-head")" = "$native"
+done
+git diff --name-only "$native" "$qualified" >"$fixture/integration-delta"
+python3 - "$fixture/integration-delta" <<'DELTA'
+import sys
+def documentary(p):
+ return p.endswith('.md') and (p.startswith('docs/') or p=='services/control/internal/modules/scheduling/README.md')
+assert all(documentary(p) for p in open(sys.argv[1]).read().splitlines()), 'NATIVE_PROGRAM_INPUT_CHANGED'
+DELTA
+native_base="$(git merge-base "$native" "$base")"
+git merge-base --is-ancestor "$qualified" codex/sch-follow-on-research
+git diff --exit-code "$qualified" codex/sch-follow-on-research -- api services web pkg deploy runtimes tools Makefile go.work
+git switch codex/sch-follow-on-research
+python3 - "$qualified" "$base" "$native" "$native_base" <<'DOCS'
+from pathlib import Path
+import re,sys
+current,base,native,native_base=(v[:8] for v in sys.argv[1:])
+p=Path('docs/research/scheduling-queue-policy.md');s=p.read_text()
+heading='### Component qualification';start=s.index(heading);after=start+len(heading)
+later=re.search(r'(?m)^#{1,3} ',s[after:]);end=after+later.start() if later else len(s)
+section=f'''### Component qualification
+
+Source {native} on base {native_base} passed 45 real PostgreSQL cases and 66
+top-level component tests with Go race instrumentation, PostgreSQL 18.6 and
+pgvector 0.8.7 on Linux amd64. That exact source also passed full Control
+modules, make check, make build and the platform configuration and HTTP server
+tests with Go 1.27.3 and offline dependencies. No browser tests ran.
+The component network namespace had no default route; the private database
+had no container network or host port.
+
+Tests verified current usage after ordinary and queued waits, shared-writer
+concurrency, tenant isolation, owner rollback and commit, replay, cancellation,
+positive release, borrowing/reclaim and a suppressed real COMMIT acknowledgement.
+The configured 10,000-workspace domain held exactly two advisory lock tags.
+This is not SCH-111 fleet admission latency evidence.
+
+Integration source {current} on base {base} retains that exact-source native
+qualification. Its delta from the tested source was checked to contain only
+documentation; layout and roadmap checks were rerun. Earlier macOS and Linux
+runs retain their actual source identities and are not relabeled.
+
+With both protected fixture DSN variables configured, the native component
+command is:
+
+    go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -skip '^TestPostgresReservationCatalogRoundTrip$' -count=1 -timeout 8m -v
+
+The separate fresh/dump/restore catalog harness was explicitly excluded; this
+admission change has no production DDL. Privileged fixtures do not qualify native
+serving-role grants. Production eligible-batch and priority authority, all-writer
+protocol cutover, authenticated dispatch and the installed offline UI flow remain
+open. SCH-103 stays unticked.
+
+'''
+p.write_text((s[:start]+section+s[end:]).rstrip()+"\n")
+p=Path('docs/product/status.md');lines=p.read_text().splitlines();found=0
+for i,line in enumerate(lines):
+ if line.startswith('| Current queue admission (SCH-103, open)'):
+  found+=1
+  lines[i]=f'| Current queue admission (SCH-103, open) | Current fair-queue decision and exact reservation in one owner transaction, with bounded tenant fences | Source {native} passed 45 route-free PostgreSQL 18.6 race cases, 66 component tests, full Control modules, make check, make build and platform configuration/HTTP tests on Linux amd64. The configured 10,000-workspace domain held two advisory lock tags. Integration {current} on base {base} retained exact-source evidence after the documentation delta, layout and roadmap checks | No | Native serving-role grants, the real bounded eligible batch and priority authority, all-writer cutover, authenticated dispatch and the installed UI remain open. See [component qualification](../research/scheduling-queue-policy.md#component-qualification) |'
+assert found==1
+p.write_text('\n'.join(lines)+'\n')
+DOCS
+git diff --check
+make check-layout
+python3 tools/dev/roadmap_progress.py --check
+git add docs/research/scheduling-queue-policy.md docs/product/status.md
+git diff --cached --check
+if ! git diff --cached --quiet; then
+ git commit -m 'SCH-103: Record current native admission and full integration checks' -m 'Verify the exact Linux amd64 source with 45 route-free PostgreSQL race cases, 66 component tests, full Control modules, make check, make build and configuration/HTTP tests. Retain production owner, serving-role and installed UI acceptance as open; no roadmap tick.'
+fi
+printf 'FINAL_CANDIDATE %s\n' "$(git rev-parse HEAD)"
+git switch codex/sch-queued-admission

@@ -1,0 +1,11 @@
+{
+  "container": "58794b21f1a86b14d15b8c0a58a4c750d4f53a05bd831aa77e8e6351a1453ee5",
+  "image_platform": "linux/arm64",
+  "container_network": "none",
+  "docker_published_ports": false,
+  "host_ip": "127.0.0.1",
+  "port": 54800,
+  "transport": "owned stdio Go bridge over Docker exec; host loopback proxy",
+  "go_platform": "darwin/arm64",
+  "runtime_network": "sandbox denies non-loopback outbound"
+}

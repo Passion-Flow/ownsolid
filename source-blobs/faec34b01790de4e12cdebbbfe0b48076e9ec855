@@ -1,0 +1,593 @@
+"""One bounded invocation of the existing private reader PostgreSQL fixture.
+
+Preparation/review artifact only. --check-config never acquires carriers or
+starts Docker/Go. --execute is reserved for a separately reviewed native slot.
+"""
+import argparse
+import fcntl
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import re
+import signal
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+import uuid
+
+PLAN_SHA = '7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874'
+BINDING_SHA = 'f858093a1ee7b4f065dcdea76c9a7bcc885f8798bc5d62d779baf00024e2d3ab'
+DATASET_ROOT = 'TestActualPublishedReaderTrainingSnapshotAndRetirement'
+TRAINING_ROOT = 'TestActualAcceptedExperimentRead'
+SUBCASE = TRAINING_ROOT + '/independent_published_reader_with_real_accepted_bytes'
+PACKAGES = ['github.com/Passion-Flow/ownsolid/services/control/internal/modules/' + n for n in ('datasets', 'training')]
+CONFIG_KEYS = {'schema', 'repository', 'evidence_parent', 'plan_file', 'binding_file',
+               'policy_file', 'preflight_file', 'proof_root', 'docker_context',
+               'docker_endpoint', 'image_id', 'go_bin', 'go_cache', 'go_mod_cache',
+               'parent_seconds', 'cleanup_seconds', 'first_lock_seconds',
+               'go_seconds', 'package_seconds'}
+
+
+class Refusal(Exception):
+    def __init__(self, kind, raw=None, phase=None):
+        super().__init__(kind)
+        self.kind, self.raw, self.phase = kind, raw, phase
+
+
+def file_hash(path):
+    h = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1048576), b''):
+            h.update(block)
+    return h.hexdigest()
+
+
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise Refusal('INPUT_INVALID')
+        result[key] = value
+    return result
+
+
+def read_json(path):
+    with Path(path).open('rb') as stream:
+        raw = stream.read(32769)
+    if len(raw) > 32768:
+        raise Refusal('INPUT_INVALID')
+    return json.loads(raw, object_pairs_hook=unique_object)
+
+
+def parse_full_pressure(text):
+    lines = [line for line in text.splitlines() if line.split()[:1] == ['full']]
+    if len(lines) != 1:
+        raise Refusal('PRESSURE_INVALID')
+    if not re.fullmatch(r'full avg10=[0-9]+(?:\.[0-9]+)? avg60=[0-9]+(?:\.[0-9]+)? avg300=[0-9]+(?:\.[0-9]+)? total=[0-9]+', lines[0]):
+        raise Refusal('PRESSURE_INVALID')
+    fields = lines[0].split()
+    if len(fields) != 5:
+        raise Refusal('PRESSURE_INVALID')
+    pairs = [part.split('=', 1) for part in fields[1:]]
+    if any(len(pair) != 2 for pair in pairs) or [pair[0] for pair in pairs] != ['avg10', 'avg60', 'avg300', 'total']:
+        raise Refusal('PRESSURE_INVALID')
+    try:
+        averages = {key: float(value) for key, value in pairs[:3]}
+        total = int(pairs[3][1])
+    except ValueError:
+        raise Refusal('PRESSURE_INVALID') from None
+    if total < 0 or any(not math.isfinite(value) or not 0 <= value <= 100 for value in averages.values()):
+        raise Refusal('PRESSURE_INVALID')
+    return averages
+
+
+def validate_config(config, plan, binding):
+    if set(config) != CONFIG_KEYS or type(config['schema']) is not int or config['schema'] != 1:
+        raise Refusal('CONFIG_INVALID')
+    required = {'parent_seconds': 300, 'cleanup_seconds': 30, 'first_lock_seconds': 60,
+                'go_seconds': 170, 'package_seconds': 75}
+    for key, maximum in required.items():
+        value = config[key]
+        if type(value) is not int or value != maximum:
+            raise Refusal('CONFIG_INVALID')
+    for key in ('repository', 'evidence_parent', 'plan_file', 'binding_file', 'policy_file',
+                'preflight_file', 'proof_root', 'go_bin', 'go_cache', 'go_mod_cache'):
+        path = Path(config[key])
+        if not path.is_absolute() or str(path) != os.path.normpath(str(path)):
+            raise Refusal('CONFIG_INVALID')
+    if config['docker_context'] != 'default' or config['docker_endpoint'] != 'unix:///var/run/docker.sock':
+        raise Refusal('CONFIG_INVALID')
+    if config['image_id'] != plan['fixture']['cached_image_id']:
+        raise Refusal('CONFIG_INVALID')
+    expected = plan['expected_tests']
+    if expected != {'datasets': DATASET_ROOT, 'training': TRAINING_ROOT,
+                    'required_training_subcase': SUBCASE.split('/', 1)[1], 'allowed_skips': 0}:
+        raise Refusal('CONFIG_INVALID')
+    if binding['prepared_source'] != 'e639db9035b0b2c0229c90175493c605f328e295' or binding['plan_sha256'] != PLAN_SHA:
+        raise Refusal('SOURCE_INVALID')
+    carriers = plan['carriers']
+    expected_carriers = [('/run/lock/ownsolid-heavy.lock', 29, 82),
+                         ('/root/lane-sci-tools/heavy-test.lock', 64512, 7508772)]
+    if [(p['path'], p['device'], p['inode']) for p in carriers] != expected_carriers or any(p['uid'] != 0 for p in carriers):
+        raise Refusal('CONFIG_INVALID')
+
+
+def inspect_inputs(config):
+    if file_hash(config['plan_file']) != PLAN_SHA or file_hash(config['binding_file']) != BINDING_SHA:
+        raise Refusal('INPUT_CHANGED')
+    plan, binding = read_json(config['plan_file']), read_json(config['binding_file'])
+    validate_config(config, plan, binding)
+    if config['preflight_file'] != plan['original_preflight']['path'] or config['policy_file'] != str(Path(config['proof_root']) / 'cpu-prototype-inputs/prototype.json'):
+        raise Refusal('CONFIG_INVALID')
+    if file_hash(config['preflight_file']) != plan['original_preflight']['sha256'] or file_hash(config['policy_file']) != plan['original_preflight']['policy_sha256']:
+        raise Refusal('INPUT_CHANGED')
+    policy = read_json(config['policy_file'])['admission']
+    for key, minimum in [('minimum_free_memory_bytes', 3 * 1024**3),
+                         ('minimum_available_memory_bytes', 12 * 1024**3),
+                         ('minimum_free_disk_bytes', 15 * 1024**3)]:
+        if type(policy[key]) is not int or policy[key] < minimum:
+            raise Refusal('POLICY_INVALID')
+    limit = policy['maximum_io_full_average_percent']
+    if type(limit) not in (float, int) or not math.isfinite(limit) or not 0 <= limit <= 5:
+        raise Refusal('POLICY_INVALID')
+    original_parent = plan['existing_runner_ineligible']
+    if file_hash(original_parent['parent']) != original_parent['sha256']:
+        raise Refusal('INPUT_CHANGED')
+    repo = Path(config['repository'])
+    for relative, meta in plan['files'].items():
+        path = repo / relative
+        if path.is_symlink() or path.stat().st_size != meta['bytes'] or file_hash(path) != meta['sha256']:
+            raise Refusal('SOURCE_INVALID')
+    for name, meta in plan['retained_inputs'].items():
+        path = Path(name)
+        if path.is_symlink() or path.stat().st_size != meta['bytes'] or file_hash(path) != meta['sha256']:
+            raise Refusal('INPUT_CHANGED')
+    fixture = repo / binding['fixture_base']['path']
+    if file_hash(fixture) != binding['fixture_base']['sha256']:
+        raise Refusal('SOURCE_INVALID')
+    for carrier in plan['carriers']:
+        st = os.stat(carrier['path'], follow_symlinks=False)
+        if not stat.S_ISREG(st.st_mode) or (st.st_dev, st.st_ino, st.st_uid) != (carrier['device'], carrier['inode'], carrier['uid']):
+            raise Refusal('CARRIER_INVALID')
+    return plan, binding, policy
+
+
+class Budget:
+    def __init__(self, clock=time.monotonic):
+        self.clock = clock
+        self.started = clock()
+        self.hard = self.started + 300
+        self.work = self.hard - 30
+        self.cleaning = False
+        self.cleanup_end = self.hard - 5
+        self.commands = []
+
+    def child_end(self, cap):
+        end = min(self.cleanup_end if self.cleaning else self.work, self.clock() + cap)
+        if end - self.clock() <= 0:
+            raise Refusal('CLEANUP_DEADLINE' if self.cleaning else 'WORK_DEADLINE')
+        return end
+
+    def enter_cleanup(self):
+        self.cleaning = True
+        self.cleanup_end = min(self.hard - 5, self.clock() + 25)
+
+
+def work_alarm(_signum, _frame):
+    raise Refusal('WORK_DEADLINE', 124)
+
+
+def arm_work(budget):
+    remaining = budget.work - budget.clock()
+    if remaining <= 0:
+        raise Refusal('WORK_DEADLINE', 124)
+    signal.signal(signal.SIGALRM, work_alarm)
+    signal.setitimer(signal.ITIMER_REAL, remaining)
+
+
+def release_carriers(fds):
+    errors = []
+    while fds:
+        fd = fds.pop()
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        except OSError as error:
+            errors.append(type(error).__name__)
+        finally:
+            try:
+                os.close(fd)
+            except OSError as error:
+                errors.append(type(error).__name__)
+    return errors
+
+
+def acquire_carriers(carriers, budget):
+    fds = []
+    def first_timeout(_signum, _frame):
+        raise Refusal('FIRST_LOCK_BUSY', 73, 'first_carrier')
+    try:
+        for index, expected in enumerate(carriers):
+            budget.child_end(60 if index == 0 else 1)
+            fd = os.open(expected['path'], os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC)
+            fds.append(fd)
+            actual, named = os.fstat(fd), os.stat(expected['path'], follow_symlinks=False)
+            if not stat.S_ISREG(actual.st_mode) or actual.st_uid != os.geteuid() or (actual.st_dev, actual.st_ino, actual.st_uid) != (expected['device'], expected['inode'], expected['uid']) or (actual.st_dev, actual.st_ino) != (named.st_dev, named.st_ino):
+                raise Refusal('CARRIER_INVALID')
+            if index == 0:
+                remaining = budget.work - budget.clock()
+                if remaining <= 0:
+                    raise Refusal('WORK_DEADLINE', 124)
+                signal.signal(signal.SIGALRM, first_timeout if remaining > 60 else work_alarm)
+                signal.setitimer(signal.ITIMER_REAL, min(60, remaining))
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_EX)  # One blocking kernel call, no polling/retry.
+                finally:
+                    arm_work(budget)
+            else:
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    release_carriers(fds)  # Before evidence writing, release the first immediately.
+                    raise Refusal('SECOND_LOCK_BUSY', 74, 'second_carrier') from None
+        return fds
+    except BaseException:
+        release_carriers(fds)
+        raise
+
+
+def terminate_group(process, end, clock=time.monotonic):
+    # Kill the whole owned group even if its original leader exited first.
+    for sig, wait in [(signal.SIGTERM, 2), (signal.SIGKILL, 3)]:
+        try:
+            os.killpg(process.pid, sig)
+        except ProcessLookupError:
+            break
+        remaining = end - clock()
+        if remaining <= 0:
+            if sig != signal.SIGKILL:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            raise Refusal('CHILD_REAP_DEADLINE', process.poll())
+        try:
+            process.wait(timeout=min(wait, remaining))
+        except subprocess.TimeoutExpired:
+            continue
+        # A dead leader does not establish that descendants stopped.
+        if sig == signal.SIGTERM:
+            continue
+    remaining = end - clock()
+    if process.poll() is None and remaining > 0:
+        try:
+            process.wait(timeout=remaining)
+        except subprocess.TimeoutExpired:
+            pass
+    if process.poll() is None:
+        raise Refusal('CHILD_REAP_DEADLINE', None)
+    while True:
+        try:
+            os.killpg(process.pid, 0)
+        except ProcessLookupError:
+            return
+        if clock() >= end:
+            raise Refusal('CHILD_GROUP_REMAINS', process.returncode)
+        time.sleep(min(0.02, end - clock()))
+
+
+def command(argv, phase, budget, cap=10, env=None, cwd=None, log_path=None):
+    end = budget.child_end(cap)
+    observed = {'phase': phase, 'deadline_offset': round(end - budget.started, 3)}
+    budget.commands.append(observed)
+    stream = log_path.open('xb') if log_path else tempfile.TemporaryFile()
+    process = None
+    try:
+        process = subprocess.Popen(argv, stdout=stream, stderr=subprocess.STDOUT,
+                                   stdin=subprocess.DEVNULL, env=env, cwd=cwd,
+                                   start_new_session=True, close_fds=True)
+        observed['owned_process_group'] = process.pid
+        try:
+            process.wait(timeout=max(0.001, end - budget.clock() - min(5, cap / 2)))
+        except subprocess.TimeoutExpired:
+            terminate_group(process, end, budget.clock)
+            raise Refusal('CHILD_TIMEOUT', process.returncode, phase) from None
+        except BaseException:
+            # External interruption can use only the remaining absolute cleanup reserve.
+            terminate_group(process, min(budget.hard - 5, max(end, budget.clock() + 5)), budget.clock)
+            raise
+        terminate_group(process, end, budget.clock)
+        if log_path:
+            return process.returncode, b''
+        stream.seek(0)
+        output = stream.read(1048577)
+        if len(output) > 1048576:
+            raise Refusal('CHILD_OUTPUT_TOO_LARGE', process.returncode, phase)
+        return process.returncode, output
+    except BaseException as error:
+        observed['kind'] = error.kind if isinstance(error, Refusal) else type(error).__name__
+        if isinstance(error, Refusal) and error.phase is None:
+            error.phase = phase
+        raise
+    finally:
+        if process is not None:
+            observed['raw_exit_code'] = process.poll()
+            observed['reaped'] = process.returncode is not None
+        observed['ended_offset'] = round(budget.clock() - budget.started, 3)
+        stream.close()
+
+
+def require_command(argv, phase, budget, **kwargs):
+    rc, output = command(argv, phase, budget, **kwargs)
+    if rc:
+        raise Refusal('CHILD_FAILED', rc, phase)
+    return output
+
+
+def parse_go_result(raw):
+    events = []
+    for line in iter(lambda: raw.readline(1048577), b''):
+        if len(line) > 1048576:
+            raise Refusal('TEST_RESULT_INVALID')
+        try:
+            event = json.loads(line)
+            if not isinstance(event, dict):
+                raise Refusal('TEST_RESULT_INVALID')
+            events.append({key: event[key] for key in ('Action', 'Package', 'Test') if key in event})
+            if len(events) > 10000:
+                raise Refusal('TEST_RESULT_INVALID')
+        except ValueError:
+            continue
+    passed = {(e.get('Package'), e.get('Test')) for e in events if e.get('Action') == 'pass'}
+    required = {(PACKAGES[0], DATASET_ROOT), (PACKAGES[1], TRAINING_ROOT), (PACKAGES[1], SUBCASE)}
+    if any(e.get('Action') in ('skip', 'fail', 'build-fail') for e in events) or not required <= passed or any((package, None) not in passed for package in PACKAGES):
+        raise Refusal('TEST_RESULT_INVALID')
+    return {'test_pass_actions': sum(e.get('Action') == 'pass' and 'Test' in e for e in events),
+            'required_roots_and_subcase': sorted(name for _, name in required)}
+
+
+def go_environment(config, plan, dsn, run_id):
+    env = os.environ.copy()
+    for key in list(env):
+        if key.startswith(('PROJECT_ONE_TEST_', 'PROJECT_ONE_REPOSITORY_')) or key in ('PROJECT_ONE_DATA_PYTHON', 'PROJECT_ONE_ACTUAL_DATASET_DIRECTORY', 'PROJECT_ONE_APPROVED_MODEL_DIRECTORY'):
+            env.pop(key)
+    result_file = next(name for name in plan['retained_inputs'] if name.endswith('/result.json'))
+    env.update({'PATH': str(Path(config['go_bin']).parent) + os.pathsep + env['PATH'],
+                'GOCACHE': config['go_cache'], 'GOMODCACHE': config['go_mod_cache'],
+                'GOMAXPROCS': '2', 'GOFLAGS': '-p=2', 'GOMEMLIMIT': '1073741824B',
+                'GOPROXY': 'off', 'GOSUMDB': 'off', 'GOTOOLCHAIN': 'local',
+                'PROJECT_ONE_REPOSITORY_ENGINE': 'postgresql',
+                'PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE': str(dsn),
+                'PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA': 'm20_repository_' + run_id,
+                'PROJECT_ONE_TEST_DSN_FILE': str(dsn),
+                'PROJECT_ONE_ACTUAL_TRAINING_OUTPUT': str(Path(result_file).parent)})
+    return env
+
+
+def assert_source(config, binding, budget):
+    repo = config['repository']
+    head = require_command(['git', 'rev-parse', 'HEAD'], 'source_head', budget, cwd=repo).decode().strip()
+    dirty = require_command(['git', 'status', '--porcelain'], 'source_status', budget, cwd=repo)
+    if head != binding['prepared_source'] or dirty:
+        raise Refusal('SOURCE_INVALID')
+
+
+def owned_container(info, name, run_id):
+    labels = info.get('Config', {}).get('Labels') or {}
+    return info.get('Name') == '/' + name and labels.get('ownsolid.fixture.owner') == 'lane-trn' and labels.get('ownsolid.fixture.run') == run_id
+
+
+def write_private(path, raw):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(raw)
+
+
+def container_scope(info, config, name, run_id):
+    host = info.get('HostConfig', {})
+    return (owned_container(info, name, run_id) and info.get('Image') == config['image_id']
+            and host.get('NetworkMode') == 'none' and host.get('Memory') == 1073741824
+            and host.get('NanoCpus') == 2000000000 and not host.get('PortBindings'))
+
+
+def execute(config, plan, binding, policy, budget, progress=None):
+    root = Path(tempfile.mkdtemp(prefix='lane-trn-reader-native.', dir=config['evidence_parent']))
+    root.chmod(0o700)
+    run_id = uuid.uuid4().hex
+    name = 'lane-trn-reader-' + run_id
+    dsn = root / 'dsn'
+    fds, possible = [], False
+    record = {'source': binding['prepared_source'], 'run_id': run_id, 'container_name': name,
+              'native_started': False, 'locks_acquired': False, 'qualification': False,
+              'plan_sha256': PLAN_SHA, 'binding_sha256': BINDING_SHA,
+              'input_hashes': plan['retained_inputs'], 'source_hashes': plan['files'],
+              'children': budget.commands}
+    if progress is not None:
+        progress['record'] = record
+        progress['evidence'] = str(root)
+    docker = ['docker', '--context', config['docker_context']]
+    def save():
+        temporary = root / 'result.pending'
+        temporary.write_text(json.dumps(record, indent=2) + '\n')
+        temporary.replace(root / 'result.json')
+    def hard_alarm(_signum, _frame):
+        os._exit(124)  # OS closes retained carrier FDs even at the hard ceiling.
+    code = 1
+    save()
+    try:
+        assert_source(config, binding, budget)
+        fds = acquire_carriers(plan['carriers'], budget)
+        record['locks_acquired'] = True
+        arm_work(budget)
+        pressure = parse_full_pressure(Path('/proc/pressure/io').read_text())
+        if any(pressure[key] > policy['maximum_io_full_average_percent'] for key in ('avg10', 'avg60')):
+            raise Refusal('RESOURCE_REFUSED', None, 'strict_full_pressure')
+        rc, output = command(['python3', '-B', config['preflight_file'], config['proof_root']], 'original_admission', budget)
+        (root / 'admission.log').write_bytes(output)
+        if rc:
+            raise Refusal('RESOURCE_REFUSED', rc, 'original_admission')
+        endpoint = json.loads(require_command(docker[:1] + ['context', 'inspect', config['docker_context']], 'docker_context', budget))[0]['Endpoints']['docker']['Host']
+        if endpoint != config['docker_endpoint']:
+            raise Refusal('DOCKER_TARGET_INVALID')
+        image = json.loads(require_command(docker + ['image', 'inspect', config['image_id']], 'cached_image', budget))[0]
+        if (image['Id'], image['Os'], image['Architecture']) != (config['image_id'], 'linux', 'amd64'):
+            raise Refusal('IMAGE_INVALID')
+        write_private(dsn, b'postgres://postgres@127.0.0.1:5432/ownsolid_training_reader_test?sslmode=disable\n')
+        possible = True
+        record['container_create_attempted'] = True
+        save()
+        container = require_command(docker + ['create', '--pull', 'never', '--network', 'none', '--memory', '1g', '--cpus', '2', '--name', name, '--label', 'ownsolid.fixture.owner=lane-trn', '--label', 'ownsolid.fixture.run=' + run_id, '--env', 'POSTGRES_HOST_AUTH_METHOD=trust', '--env', 'POSTGRES_DB=ownsolid_training_reader_test', config['image_id']], 'pg_create', budget).decode().strip()
+        if not re.fullmatch('[a-f0-9]{64}', container):
+            raise Refusal('CONTAINER_ID_INVALID')
+        record['container_id'] = container
+        save()
+        require_command(docker + ['start', container], 'pg_start', budget)
+        ready_end = min(budget.work, budget.clock() + 25)
+        while budget.clock() < ready_end:
+            rc, _ = command(docker + ['exec', container, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres', '-d', 'ownsolid_training_reader_test'], 'pg_ready', budget, cap=2)
+            if rc == 0:
+                break
+            if rc != 1:
+                raise Refusal('CHILD_FAILED', rc, 'pg_ready')
+            time.sleep(min(0.2, max(0, ready_end - budget.clock())))
+        else:
+            raise Refusal('PG_READY_TIMEOUT', rc, 'pg_ready')
+        require_command(docker + ['exec', container, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-d', 'ownsolid_training_reader_test', '-v', 'ON_ERROR_STOP=1', '-c', 'CREATE EXTENSION vector WITH SCHEMA public'], 'pg_extension', budget)
+        info = json.loads(require_command(docker + ['inspect', container], 'pg_identity', budget))[0]
+        if not container_scope(info, config, name, run_id):
+            raise Refusal('CONTAINER_SCOPE_INVALID')
+        pid = info['State']['Pid']
+        if type(pid) is not int or pid <= 1:
+            raise Refusal('CONTAINER_PID_INVALID')
+        assert_source(config, binding, budget)
+        env = go_environment(config, plan, dsn, run_id)
+        pattern = '^(' + DATASET_ROOT + '|' + TRAINING_ROOT + ')$'
+        argv = ['nsenter', '-t', str(pid), '-n', config['go_bin'], '-C', 'services/control', 'test', '-tags', 'repository_integration', '-p', '1', '-count=1', '-timeout=75s', '-json', './internal/modules/datasets', './internal/modules/training', '-run', pattern]
+        record['native_started'] = True
+        save()
+        rc, _ = command(argv, 'go_reader_owners', budget, cap=170, env=env, cwd=config['repository'], log_path=root / 'native.log')
+        record['go_raw_exit_code'] = rc
+        if rc:
+            raise Refusal('CHILD_FAILED', rc, 'go_reader_owners')
+        with (root / 'native.log').open('rb') as stream:
+            record.update(parse_go_result(stream))
+        record['qualification'] = True
+        code = 0
+    except Refusal as error:
+        record.update({'kind': error.kind, 'raw_code': error.raw, 'phase': error.phase})
+        code = {'FIRST_LOCK_BUSY': 73, 'SECOND_LOCK_BUSY': 74, 'RESOURCE_REFUSED': 78}.get(error.kind, 1)
+    except BaseException as error:
+        record.update({'kind': 'PARENT_FAILED', 'error_type': type(error).__name__})
+        code = 1
+    finally:
+        budget.enter_cleanup()
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        signal.signal(signal.SIGALRM, hard_alarm)
+        signal.setitimer(signal.ITIMER_REAL, max(0.001, budget.hard - budget.clock()))
+        try:
+            if possible:
+                rc, raw = command(docker + ['ps', '-a', '-q', '--no-trunc', '--filter', 'name=^/' + name + '$'], 'cleanup_presence', budget, cap=3)
+                if rc:
+                    raise Refusal('CLEANUP_PRESENCE_UNCONFIRMED', rc)
+                ids = raw.decode().split()
+                if len(ids) > 1 or any(not re.fullmatch('[a-f0-9]{64}', item) for item in ids):
+                    raise Refusal('CLEANUP_SCOPE_UNCONFIRMED')
+                if ids:
+                    info = json.loads(require_command(docker + ['inspect', ids[0]], 'cleanup_identity', budget, cap=3))[0]
+                    if not container_scope(info, config, name, run_id) or ('container_id' in record and info.get('Id') != record['container_id']):
+                        raise Refusal('CLEANUP_FOREIGN_SCOPE')
+                    volumes = [mount['Name'] for mount in info.get('Mounts', []) if mount.get('Type') == 'volume']
+                    try:
+                        log_rc, _ = command(docker + ['logs', '--timestamps', ids[0]], 'cleanup_logs', budget, cap=3, log_path=root / 'postgres.log')
+                        record['pg_logs_raw_exit_code'] = log_rc
+                    except Refusal as error:
+                        record['pg_logs_kind'] = error.kind
+                    rc, _ = command(docker + ['stop', '--time', '1', ids[0]], 'cleanup_stop', budget, cap=6)
+                    record['pg_stop_raw_exit_code'] = rc
+                    if rc:
+                        raise Refusal('CLEANUP_STOP_FAILED', rc)
+                    require_command(docker + ['rm', '-v', ids[0]], 'cleanup_remove', budget, cap=4)
+                    # Successful readbacks must confirm exact container and owned volumes absent.
+                    raw = require_command(docker + ['ps', '-a', '-q', '--no-trunc', '--filter', 'id=' + ids[0]], 'cleanup_container_readback', budget, cap=2)
+                    if raw.strip():
+                        raise Refusal('CLEANUP_CONTAINER_REMAINS')
+                    if volumes:
+                        raw = require_command(docker + ['volume', 'ls', '--format', '{{.Name}}'], 'cleanup_volume_readback', budget, cap=2)
+                        if set(volumes) & set(raw.decode().split()):
+                            raise Refusal('CLEANUP_VOLUME_REMAINS')
+                    record['owned_container_and_volumes_removed'] = True
+                else:
+                    # A failed create may have left no matching container; no unowned deletion.
+                    record['no_matching_owned_container'] = True
+        except BaseException as error:
+            record.update({'cleanup_kind': error.kind if isinstance(error, Refusal) else type(error).__name__, 'qualification': False})
+            code = 1
+        finally:
+            try:
+                if dsn.exists():
+                    dsn.unlink()
+            except OSError as error:
+                record.update({'dsn_cleanup_error': type(error).__name__, 'qualification': False})
+                code = 1
+            finally:
+                release_errors = release_carriers(fds)
+            if release_errors:
+                record.update({'carrier_release_errors': release_errors, 'qualification': False})
+                code = 1
+            record.update({'parent_elapsed_seconds': round(budget.clock() - budget.started, 3), 'driver_exit_code': code})
+            for filename in ('native.log', 'postgres.log', 'admission.log'):
+                path = root / filename
+                if path.exists():
+                    record[filename + '_sha256'] = file_hash(path)
+            save()
+            print(json.dumps({'evidence': str(root), **record}), flush=True)
+    return code
+
+
+def main():
+    budget = Budget()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--check-config', action='store_true')
+    mode.add_argument('--execute', action='store_true')
+    args = parser.parse_args()
+    progress = {'record': {'source': 'e639db9035b0b2c0229c90175493c605f328e295',
+                           'plan_sha256': PLAN_SHA, 'binding_sha256': BINDING_SHA,
+                           'native_started': False, 'qualification': False}}
+    old_handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGALRM, signal.SIGINT, signal.SIGTERM)}
+    def interrupted(signum, _frame):
+        raise Refusal('PARENT_INTERRUPTED', -signum)
+    try:
+        signal.signal(signal.SIGTERM, interrupted)
+        signal.signal(signal.SIGINT, interrupted)
+        arm_work(budget)
+        config = read_json(args.config)
+        plan, binding, policy = inspect_inputs(config)
+        if args.check_config:
+            assert_source(config, binding, budget)
+            print(json.dumps({'config_valid': True, 'source': binding['prepared_source'], 'native_lock_attempts': 0, 'native_bodies_executed': 0, 'input_count': len(plan['retained_inputs'])}))
+            return 0
+        return execute(config, plan, binding, policy, budget, progress)
+    except Refusal as error:
+        print(json.dumps({**progress['record'], 'evidence': progress.get('evidence'),
+                          'kind': error.kind, 'raw_code': error.raw, 'phase': error.phase,
+                          'qualification': False, 'driver_exit_code': 1}))
+        return 1
+    except Exception as error:
+        print(json.dumps({**progress['record'], 'evidence': progress.get('evidence'),
+                          'kind': 'PARENT_FAILED', 'error_type': type(error).__name__,
+                          'qualification': False, 'driver_exit_code': 1}))
+        return 1
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        for sig, handler in old_handlers.items():
+            signal.signal(sig, handler)
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

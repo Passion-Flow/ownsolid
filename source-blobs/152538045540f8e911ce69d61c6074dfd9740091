@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/src/services/control/internal/modules/distribution/alias_read_http_test.go": "/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/alias_read_http_test.go"
+  }
+}

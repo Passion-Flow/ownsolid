@@ -1,0 +1,34 @@
+set -euo pipefail
+scratch=$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp
+python3 - "$scratch" <<'PY'
+import hashlib
+import json
+from pathlib import Path
+import sys
+import urllib.request
+
+scratch = Path(sys.argv[1])
+with urllib.request.urlopen("https://pypi.org/pypi/pip/25.3/json", timeout=15) as response:
+    info = json.load(response)
+wheel, = (item for item in info["urls"] if item["filename"].endswith(".whl"))
+with urllib.request.urlopen(wheel["url"], timeout=30) as response:
+    content = response.read()
+assert hashlib.sha256(content).hexdigest() == wheel["digests"]["sha256"]
+path = scratch / wheel["filename"]
+path.write_bytes(content)
+(scratch / "pip-wheel").write_text(str(path))
+print("Verified", path.name, wheel["digests"]["sha256"])
+PY
+"$scratch/python/bin/python" - "$scratch" <<'PY'
+from pathlib import Path
+import sys
+
+scratch = Path(sys.argv[1])
+sys.path.insert(0, (scratch / "pip-wheel").read_text())
+from pip._internal.cli.main import main
+raise SystemExit(main(["install", "--only-binary=:all:", "--disable-pip-version-check",
+    "-r", str(Path.home() / "lane-rel-cloud/tools/codegen/sdk/generator-requirements.txt"),
+    "--timeout", "20", "--retries", "1"]))
+PY
+"$scratch/python/bin/openapi-python-client" --version
+

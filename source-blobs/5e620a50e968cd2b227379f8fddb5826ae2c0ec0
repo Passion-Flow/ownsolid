@@ -1,0 +1,38 @@
+{
+  "observed_at": "2026-11-12T22:01:48.400742+00:00",
+  "parent_pid": 2929519,
+  "processes": [
+    {
+      "pid": 2929519,
+      "exists": false
+    },
+    {
+      "pid": 2929533,
+      "exists": false
+    },
+    {
+      "pid": 2929567,
+      "exists": false
+    },
+    {
+      "pid": 2929616,
+      "exists": false
+    }
+  ],
+  "carriers": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "device": 29,
+      "inode": 82,
+      "kernel_matches": []
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "device": 64512,
+      "inode": 7508772,
+      "kernel_matches": []
+    }
+  ],
+  "source_head": "93366c73fbebbb096a039e8c73097159df810d26",
+  "source_status": ""
+}

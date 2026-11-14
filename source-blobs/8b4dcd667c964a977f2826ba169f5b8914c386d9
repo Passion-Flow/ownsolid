@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+# Lane B test helper, not product code. deploy <name> readies a verified deployment on a new
+# scripted node and prints its id; adopt <name> <credential> writes the state call/wrong read.
+# Prepares what Gateway and keys needs on lane B's install and
+# stands in for the gateway process, which the installer does not run yet (GW-114).
+#   prepare <name>             joins a scripted node, deploys the ready model on it, provisions a
+#                              gateway instance and publishes an alias; prints the state file path
+#   call <state> <secret> <n>  admits n calls with the key over the real /gateway/v1 protocol and
+#                              reports each outcome; prints how many the control plane accepted
+#   wrong <state> <secret>     asks for another model with the key; prints the refusal
+import json, os, socket, ssl, subprocess, sys, time, urllib.error, urllib.request, uuid, http.cookiejar
+base = "https://admin.lane-b.test:18443"
+root_default = os.environ.get("LANE_B_ROOT", "/root/lane-b/install-iam117")
+cell = "/api/v1/sites/default/cells/default"
+real = socket.getaddrinfo
+socket.getaddrinfo = lambda h, *a, **k: real("127.0.0.1" if h.endswith("lane-b.test") else h, *a, **k)
+
+def opener(root):
+    ctx = ssl.create_default_context(cafile=root + "/config/ca.pem")
+    return urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx), urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+
+def request(op, method, path, body=None, headers=None):
+    h = {"Accept": "application/json", **(headers or {})}
+    if body is not None: h["Content-Type"] = "application/json"
+    r = urllib.request.Request(base + path, method=method, headers=h, data=None if body is None else json.dumps(body).encode())
+    try:
+        with op.open(r, timeout=40) as x: return x.status, json.loads(x.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")
+
+def admin(root):
+    op = opener(root)
+    csrf = lambda: request(op, "GET", "/api/v1/auth/csrf")[1]["data"]["token"]
+    cred = json.load(open(root + "/operator/admin-credential"))
+    status, body = request(op, "POST", "/api/v1/auth/login", {"email": "admin@lane-b.test", "password": cred["password"]}, {"Origin": base, "X-CSRF-Token": csrf()})
+    if status >= 300: sys.exit("login %s %s" % (status, body))
+    token = csrf()
+    def call(method, path, body=None):
+        h = {"Origin": base}
+        if method != "GET": h.update({"X-CSRF-Token": token, "Idempotency-Key": str(uuid.uuid4())})
+        return request(op, method, path, body, h)
+    return call
+
+def must(result, what):
+    status, body = result
+    if status >= 300: sys.exit("%s: %s %s" % (what, status, body.get("code") or body))
+    return body["data"]
+
+def wait(what, read, seconds=120):
+    end = time.time() + seconds
+    while time.time() < end:
+        value = read()
+        if value: return value
+        time.sleep(2)
+    sys.exit("timed out waiting for " + what)
+
+def deploy(root, name):
+    call = admin(root)
+    ws, model = served_workspace(call)
+    minted = must(call("POST", cell + "/admin/node-join-tokens", {"workspace_id": ws, "node_name": name, "execution_profile": "docker_inference"}), "join token")
+    subprocess.run(["sh", "/root/lane-b/join-scripted-node.sh", name], input=minted["token"].encode(), check=True)
+    def placed():
+        p = must(call("GET", cell + "/admin/deployments/placement?model_id=" + model["id"]), "placement")
+        r = p.get("recommended")
+        return r if r and any(c["node_id"] == r["node_id"] and c["name"] == name for c in p["candidates"]) else None
+    target = wait("a GPU on " + name, placed)
+    d = must(call("POST", cell + "/admin/deployments", {"node_id": target["node_id"], "model_id": model["id"], "gpu_uuid": target["gpu_uuid"], "reason": "Live publishing run"}), "deploy")
+    def verified():
+        x = must(call("GET", cell + "/admin/deployments/" + d["id"]), "deployment")
+        return x if x.get("observed_state") == "running" and (x.get("observation") or {}).get("verification") else None
+    d = wait("a verified deployment", verified)
+    return ws, target, d
+
+def publishing(root, name):
+    ws, target, d = deploy(root, name)
+    print(d["id"])
+
+def adopt(root, name, credential):
+    ws = admin(root)("GET", "/api/v1/admin/workspaces?limit=1")[1]["data"]["items"][0]["id"]
+    state = {"root": root, "workspace": ws, "gateway": credential.split(".")[1], "credential": credential, "alias": name}
+    path = "/root/lane-b/gateway-%s.json" % name
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f: json.dump(state, f)
+    print(path)
+
+def served_workspace(call):
+    # The workspace holding a ready model; runs leave other workspaces that may sort first.
+    for w in must(call("GET", "/api/v1/admin/workspaces?limit=100"), "workspaces")["items"]:
+        ready = [m for m in must(call("GET", cell + "/admin/models?workspace_id=" + w["id"]), "models")["items"] if m.get("state") == "ready"]
+        if ready: return w["id"], ready[0]
+    sys.exit("no workspace has a ready model")
+
+def prepare(root, name):
+    call = admin(root)
+    ws, model = served_workspace(call)
+    minted = must(call("POST", cell + "/admin/node-join-tokens", {"workspace_id": ws, "node_name": name, "execution_profile": "docker_inference"}), "join token")
+    subprocess.run(["sh", "/root/lane-b/join-scripted-node.sh", name], input=minted["token"].encode(), check=True)
+    def placed():
+        p = must(call("GET", cell + "/admin/deployments/placement?model_id=" + model["id"]), "placement")
+        r = p.get("recommended")
+        return r if r and any(c["node_id"] == r["node_id"] and c["name"] == name for c in p["candidates"]) else None
+    target = wait("a GPU on " + name, placed)
+    d = must(call("POST", cell + "/admin/deployments", {"node_id": target["node_id"], "model_id": model["id"], "gpu_uuid": target["gpu_uuid"], "reason": "Live gateway keys run"}), "deploy")
+    def verified():
+        x = must(call("GET", cell + "/admin/deployments/" + d["id"]), "deployment")
+        return x if x.get("observed_state") == "running" and (x.get("observation") or {}).get("verification") else None
+    d = wait("a verified deployment", verified)
+    g = must(call("POST", cell + "/admin/distribution/workspaces/%s/gateways" % ws, {"node_id": target["node_id"], "name": name, "client_origin": "https://gateway.lane-b.test:18443", "reason": "Live gateway keys run"}), "gateway")
+    alias = must(call("POST", cell + "/admin/distribution/workspaces/%s/aliases" % ws, {"gateway_id": g["gateway"]["id"], "deployment_id": d["id"], "deployment_revision": d["revision"], "name": name, "reason": "Live gateway keys run"}), "alias")
+    state = {"root": root, "workspace": ws, "gateway": g["gateway"]["id"], "credential": g["secret"], "alias": alias["name"], "deployment": d["id"]}
+    path = "/root/lane-b/gateway-%s.json" % name
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f: json.dump(state, f)
+    print(path)
+
+def machine(state, kind, body):
+    op = opener(state["root"])
+    return request(op, "POST", "/gateway/v1/sites/default/cells/default/instances/%s/%s" % (state["gateway"], kind), body, {"Authorization": "Bearer " + state["credential"]})
+
+def calls(path, secret, n):
+    state = json.load(open(path))
+    accepted = 0
+    for _ in range(n):
+        rid = str(uuid.uuid4())
+        status, body = machine(state, "admissions", {"request_id": rid, "api_key": secret, "model": state["alias"], "maximum_output_tokens": 16, "stream": False})
+        if status >= 300: sys.exit("admission %s %s" % (status, body.get("code")))
+        outcome = {"request_id": rid, "status": "succeeded", "error_code": None, "usage": {"prompt_tokens": 9, "completion_tokens": 3, "total_tokens": 12}, "elapsed_milliseconds": 420, "output_started": True}
+        status, body = machine(state, "outcomes", outcome)
+        if status >= 300: sys.exit("outcome %s %s" % (status, body.get("code")))
+        accepted += 1
+    print(accepted)
+
+def wrong(path, secret):
+    state = json.load(open(path))
+    status, body = machine(state, "admissions", {"request_id": str(uuid.uuid4()), "api_key": secret, "model": "not-" + state["alias"], "maximum_output_tokens": 16, "stream": False})
+    print(status, body.get("code"))
+
+if __name__ == "__main__":
+    {"prepare": lambda: prepare(root_default, sys.argv[2]), "deploy": lambda: publishing(root_default, sys.argv[2]), "adopt": lambda: adopt(root_default, sys.argv[2], sys.argv[3]), "call": lambda: calls(sys.argv[2], sys.argv[3], int(sys.argv[4])), "wrong": lambda: wrong(sys.argv[2], sys.argv[3])}[sys.argv[1]]()

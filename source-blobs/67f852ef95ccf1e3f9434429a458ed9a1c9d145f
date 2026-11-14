@@ -1,0 +1,68 @@
+{
+  "candidate_source": "17e46bddae86d606035ce3d895ce9877c0903302",
+  "base": "dfaf5e8868de489ed12a78c8289069576789fa8a",
+  "bundle": "/root/lane-trn-tools/trn-dat-candidate-17e46bdd.bundle",
+  "bundle_sha256": "61bb0a60549fc7e92156495a9695ce838aa70e0c70a9f089814d37d6832ba2a5",
+  "compiled_native_source": "f61bea6b995a3b9980b65be93f74047b736ea45c",
+  "native": {
+    "datasets": {
+      "roots": 5,
+      "seconds": 20.914
+    },
+    "training": {
+      "roots": 10,
+      "seconds": 81.195
+    },
+    "postgresql": "18.6",
+    "schema": 60,
+    "network": "none; test process loopback only"
+  },
+  "compiled_go_api_python_sql_inputs_unchanged_since_native": true,
+  "maintained_selector": "ten training roots and five dataset roots; Bash syntax checked",
+  "pending": [
+    "four ordinary Go owner packages after current rebase",
+    "make build after current rebase",
+    "make check after current rebase",
+    "fast-forward promotion of candidate code after gates"
+  ],
+  "prior_cpu_units": {
+    "source": "e24d9abd4b50ac656f39f5c2e309cf13f95cffc3",
+    "tests": 20,
+    "skips": 0,
+    "new_worker_computation": false
+  },
+  "published_research_only": "dfaf5e8868de489ed12a78c8289069576789fa8a",
+  "roadmap_items_ticked": 0,
+  "raw_logs": [
+    {
+      "path": "/root/lane-trn-dat-dfaf.505n49t1/native.log",
+      "sha256": "af665f19f3a8fcdec0b91de2b9ec8d528b581af037a26195c6405c39cb2e3b48"
+    },
+    {
+      "path": "/root/lane-trn-dat-dfaf.505n49t1/postgres.log",
+      "sha256": "fed4ebf113ae8087fb4d09561dc0cc94c8bc9984682a2e8d38eca85eeed4f1ad"
+    },
+    {
+      "path": "/root/lane-trn-cpu-admission.RaaYxrR7/schema60-dfaf-trn-http-f61bea6b.log",
+      "sha256": "dce8bcd0c8185fce177a03a8665312d58b8d9e97d4785fd869e0cd876204bed3"
+    },
+    {
+      "path": "/root/lane-trn-cpu-admission.RaaYxrR7/schema60-dfaf-trn-sql-f61bea6b.log",
+      "sha256": "9178015edbf9548b834f4fdbde7d3576bdd732302c9adf22b7099a7b7941731d"
+    }
+  ],
+  "light_checks": {
+    "layout": "passed",
+    "roadmap": "589 items; unchanged checkboxes",
+    "local_markdown_links": 201,
+    "gofmt": "passed",
+    "large_files": "all changed files below 1 MB"
+  },
+  "pending_runner": "/root/lane-trn-tools/run-trn-acceptance-window.sh /root/lane-trn-cpu-admission.RaaYxrR7 17e46bddae86d606035ce3d895ce9877c0903302 modules build check",
+  "required_locks": [
+    "/run/lock/ownsolid-heavy.lock",
+    "/root/lane-sci-tools/heavy-test.lock"
+  ],
+  "resource_policy": "unchanged original 3 GiB MemFree, 12 GiB available, 15 GiB disk, IO full avg10/avg60 <=5",
+  "installed_agent_control_ui_gpu_acceptance": false
+}

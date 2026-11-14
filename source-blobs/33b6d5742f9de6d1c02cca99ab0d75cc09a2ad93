@@ -1,0 +1,33 @@
+{
+  "candidate": "a62a63b5c116ecf0fb48e92d7c88853c8d3beb3d",
+  "tree": "c1a8c22420e0ec801e8262b670dc5f7c546fbc91",
+  "base": "2e64ab4c6c16bd84ae5c101b9de5444550760ff2",
+  "original_author_history_preserved": true,
+  "paths_since_base": [
+    "docs/product/status.md",
+    "docs/research/public-api-inventory.md",
+    "docs/research/sdk.md",
+    "tools/codegen/sdk/README.md",
+    "tools/codegen/sdk/generate.py",
+    "tools/codegen/sdk/tests/test_contract_json.py"
+  ],
+  "no_web_or_contract_changes_since_base": true,
+  "generation_inputs_36_identical_to_37": true,
+  "execution_authorized": false,
+  "stage": "Prepared plan and source-only inputs; no locks or generators",
+  "blocked_by": "Two-generator-only command scope excludes mandatory transitive pinned Go metadata command. See exact argv and source links in execution-plan.json and sdk.md.",
+  "linux_tools_ready": true,
+  "mac_fixed_oapi_tool_not_found_in_inspected_preparations": true,
+  "files": {
+    "source-only-input-manifest.json": "96a94dd3608b3ae41cfdbc013c757ca91d158949ffe34f986e7faa6a48d33f60",
+    "candidate-a62a63b5.bundle": "abb2bcd24b817fb56f243f45304db896d7decdbf7b956a2d83a942a5c318335c",
+    "source-only-inputs.tar.gz": "16ca79833009029c49cf593c2c178bf1c85ce81cf3e7f41c91486d5835635fe1",
+    "candidate-a62a63b5.patch": "abaa616691b7a56e16b6c007dfd3fb02e19c457715c8005ea1b278bb655baf59",
+    "execution-plan.json": "9b8da5805261e3854316801308a62e933bd7d5a4502c722cefcb0c4766163d35",
+    "prepared-tool-and-graph-inventory.json": "8daaaef3858b21d9d3c2e4ffce6e26c95a0fee104951c9d35a8bf38da4ebdfa2"
+  },
+  "old_719_sdk_result_sha256": "7234ed95c9e6be08412fe80a6c61ae1f5be497aa653fa1f8b385a408d7fde4e2",
+  "old_result_49_tests_28_projections_and_430_exit1_qualification_promoted": false,
+  "new_sdk_output_or_peak_rss": "NOTRUN",
+  "next_execution_requires": "Released and assigned host segment plus an exact reviewed transitive command scope; no old admission retry."
+}

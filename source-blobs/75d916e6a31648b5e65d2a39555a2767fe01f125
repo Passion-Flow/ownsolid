@@ -1,0 +1,29 @@
+{
+  "runner": "/root/lane-obs-tools/check-installed-history-client-own-window.sh",
+  "runner_sha256": "b6164068dea8d40233bb9e115b14c151050158e2489279b67e47ba6cdc532d6d",
+  "parent_pid": 2144136,
+  "started_at": "2026-11-12T13:51:25.903757+00:00",
+  "fd_observations": [
+    {
+      "fd": 8,
+      "target": "/run/lock/ownsolid-heavy.lock",
+      "device": 29,
+      "inode": 82,
+      "canonical_device": 29,
+      "canonical_inode": 82,
+      "fdinfo": "pos:\t0\nflags:\t0100001\nmnt_id:\t34\nino:\t82\nlock:\t1: FLOCK  ADVISORY  WRITE 2144138 00:1d:82 0 EOF\n"
+    },
+    {
+      "fd": 9,
+      "target": "/root/lane-sci-tools/heavy-test.lock",
+      "device": 64512,
+      "inode": 7508772,
+      "canonical_device": 64512,
+      "canonical_inode": 7508772,
+      "fdinfo": "pos:\t0\nflags:\t0100001\nmnt_id:\t31\nino:\t7508772\nlock:\t1: FLOCK  ADVISORY  WRITE 2144139 fc:00:7508772 0 EOF\n"
+    }
+  ],
+  "observed_at": "2026-11-12T13:51:25.954418+00:00",
+  "exit_code": 75,
+  "ended_at": "2026-11-12T13:51:25.966185+00:00"
+}

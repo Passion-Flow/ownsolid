@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+scratch="$(cd -- "$(dirname -- "$0")" && pwd)"
+root="$HOME/lane-sci"
+while [ "$(free -m | awk '/^Mem:/ {print $4}')" -lt 2048 ]; do
+  sleep 8
+done
+df -h /
+free -m
+test "$(df --output=avail -BG / | tail -1 | tr -dc '0-9')" -ge 15
+ss -lntp '( sport = :5432 )'
+name=lane-sci-aud-postarc-scope
+image=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+id="$(docker run --pull never -d --rm --name "$name" --network none --shm-size 128m \
+  --tmpfs /var/lib/postgresql/data:size=512m \
+  -e PGDATA=/var/lib/postgresql/data/pgdata -e POSTGRES_PASSWORD_FILE=/fixture/pg-password \
+  --mount "type=bind,source=$root,target=/repo,readonly" \
+  --mount "type=bind,source=$scratch,target=/fixture" "$image")"
+trap 'docker stop "$id" >/dev/null' EXIT
+for ((i=0;i<60;i++)); do
+  if docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null
+docker exec "$id" createdb -U postgres audit_scope_test
+docker exec "$id" psql -Xq -U postgres -d audit_scope_test -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector'
+docker exec -e PROJECT_ONE_TEST_DSN_FILE=/fixture/test-dsn \
+  -w /repo/services/control/internal/platform/database "$id" /fixture/database-58.test -test.v \
+  -test.run '^(TestEveryCellOwnedTableCarriesScope|TestNewRowsTakeTheLocalCell|TestCheckRefusesAnotherCellIdentity)$' \
+  2>&1 | tee "$scratch/post-arc-scope.log"
+docker exec -e PROJECT_ONE_TEST_DSN_FILE=/fixture/test-dsn -e OWNSOLID_TEST_AUDIT_VERIFY=/fixture/audit-verify \
+  -w /repo/services/control/internal/modules/audit "$id" /fixture/audit.test -test.v \
+  2>&1 | tee "$scratch/post-arc-audit.log"
+printf 'Merged ARC cell scope and audit tests passed\n'

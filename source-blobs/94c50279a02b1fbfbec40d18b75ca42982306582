@@ -1,0 +1,7 @@
+Prototype an optional server-owned same-origin next page path on
+MemoryDownload. The identity success writer emits it as an RFC 8288 next
+Link before the attachment. The distribution handler derives it from
+the cursor belonging to the exact serialized page. Preserve the validated
+query parameters and rebuild the public path with cellroute.Public. The
+prototype is an isolated Go overlay and does not change ownership of the
+shared HTTP type or writer.

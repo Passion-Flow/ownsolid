@@ -1,0 +1,300 @@
+"""One scheduled cached-image filesystem inspection; never start the container."""
+import argparse
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import signal
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+import uuid
+
+
+def digest(path):
+    with Path(path).open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def save(path, value):
+    with path.open('w') as stream:
+        json.dump(value, stream, indent=2, sort_keys=True)
+        stream.write('\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def run(config, config_path):
+    os.umask(0o077)
+    start = time.monotonic()
+    deadline = start + config['hard_seconds']
+    output = Path(tempfile.mkdtemp(prefix='image-inventory-native.', dir=config['output_parent']))
+    print(output, flush=True)
+    run_id = str(uuid.uuid4())
+    result = {'scope': 'Never-started cached image inspection only; no runtime, license approval, installed flow or zero-egress qualification',
+              'run_id': run_id, 'status': 'prepared', 'leases': [], 'commands': [], 'cases': [], 'cleanup_errors': []}
+    descriptors = []
+    fixture = None
+    containers = []
+    closed = set()
+    owned_volumes = {}
+    code = 1
+    def interrupted(signum, frame):
+        raise RuntimeError('Prototype parent interrupted: ' + str(signum))
+    handlers = {value: signal.signal(value, interrupted) for value in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
+    docker_config = output / 'empty-docker-config'
+    docker_config.mkdir(mode=0o700)
+    environment = {key: os.environ[key] for key in ['PATH', 'HOME'] if key in os.environ}
+    environment['DOCKER_CONFIG'] = str(docker_config)
+    environment.update(GOMAXPROCS='2', GOMEMLIMIT=str(config['go_memory_bytes']) + 'B')
+
+    def command(args, *, cleanup=False, limit=None, permit_failure=False):
+        available = deadline - time.monotonic() - (0 if cleanup else config['cleanup_seconds'])
+        if available <= 0:
+            raise TimeoutError('Prototype work or cleanup deadline reached')
+        timeout = min(available, limit or config['operation_seconds'])
+        number = len(result['commands'])
+        record = {'argv': args, 'timeout_seconds': timeout}
+        result['commands'].append(record)
+        save(output / 'result.json', result)
+        log_path = output / f'command-{number:03d}.log'
+        # Namespace PID 1 exiting joins its entire local client subtree.
+        argv = [config['unshare'], '--pid', '--fork', '--kill-child=KILL', '--mount-proc', *args]
+        with log_path.open('w') as log:
+            process = subprocess.Popen(argv, env=environment, stdout=log, stderr=subprocess.STDOUT)
+            handle = None
+            try:
+                handle = os.pidfd_open(process.pid)
+                record['exit'] = process.wait(timeout=timeout)
+            finally:
+                if process.poll() is None:
+                    if handle is not None:
+                        signal.pidfd_send_signal(handle, signal.SIGKILL)
+                    else:
+                        process.kill()
+                    process.wait(timeout=config['join_seconds'])
+                record['exit'] = process.returncode
+                if handle is not None:
+                    os.close(handle)
+        record['log'] = log_path.name
+        save(output / 'result.json', result)
+        raw = log_path.read_text()
+        if record['exit'] != 0 and not permit_failure:
+            raise RuntimeError('Prototype command failed: ' + str(number))
+        return record['exit'], raw
+
+    def docker(*args, **kwargs):
+        return command([config['docker'], '--host', 'unix://' + config['docker_socket'], *args], **kwargs)
+
+    def inspect(name, *, cleanup=False):
+        projection = ('[{"Image":{{json .Image}},"State":{"Status":{{json .State.Status}},'
+                      '"Running":{{json .State.Running}},"Pid":{{json .State.Pid}}},'
+                      '"Config":{"Labels":{"io.ownsolid.prototype.run_id":'
+                      '{{json (index .Config.Labels "io.ownsolid.prototype.run_id")}}}},'
+                      '"HostConfig":{"NetworkMode":{{json .HostConfig.NetworkMode}},'
+                      '"ReadonlyRootfs":{{json .HostConfig.ReadonlyRootfs}},'
+                      '"PortBindings":{{json .HostConfig.PortBindings}}},"Mounts":{{json .Mounts}}}]')
+        status, raw = docker('container', 'inspect', '--format', projection, name,
+                             cleanup=cleanup, permit_failure=True)
+        if status:
+            if 'No such container' not in raw and 'No such object' not in raw:
+                raise RuntimeError('Container absence is unconfirmed')
+            # An engine outage is not evidence that the owned container is gone.
+            docker('version', '--format', '{{.Server.Version}}', cleanup=cleanup)
+            return None
+        values = json.loads(raw)
+        if len(values) != 1:
+            raise RuntimeError('Ambiguous prototype container readback')
+        return values[0]
+
+    def networks(project, *, cleanup=False):
+        _, raw = docker('network', 'ls', '--filter', 'label=com.docker.compose.project=' + project,
+                        '--format', '{{.ID}}', cleanup=cleanup)
+        return raw.split()
+
+    def remember_volumes(name, observed):
+        labels = observed['Config'].get('Labels') or {}
+        if labels.get('io.ownsolid.prototype.run_id') != run_id or observed['Image'] != config['image']:
+            raise RuntimeError('Refuse cleanup of an unowned or replaced container')
+        volumes = set()
+        for mount in observed['Mounts']:
+            if mount['Type'] != 'volume' or not re.fullmatch(r'[0-9a-f]{64}', mount.get('Name', '')):
+                raise RuntimeError('Unexpected mount; preserve it for review')
+            volumes.add(mount['Name'])
+        previous = owned_volumes.setdefault(name, volumes)
+        if previous != volumes:
+            raise RuntimeError('Owned anonymous volume set changed')
+        return sorted(volumes)
+
+    def close_container(name):
+        if name in closed:
+            return
+        observed = inspect(name, cleanup=True)
+        if observed is not None:
+            remember_volumes(name, observed)
+            docker('rm', '--force', '--volumes', name, cleanup=True)
+            if inspect(name, cleanup=True) is not None:
+                raise RuntimeError('Owned prototype container remains')
+        elif name not in owned_volumes:
+            raise RuntimeError('Create acknowledgement or owned volume cleanup is unconfirmed')
+        volume_checks = []
+        for volume in sorted(owned_volumes[name]):
+            _, raw = docker('volume', 'ls', '--quiet', '--filter', 'name=' + volume, cleanup=True)
+            if raw.split():
+                raise RuntimeError('Owned anonymous volume removal is unconfirmed')
+            volume_checks.append({'name': volume, 'absent': True})
+        if networks(name, cleanup=True):
+            raise RuntimeError('Unexpected project network; preserve it for review')
+        result.setdefault('cleanup_readbacks', []).append({
+            'container': name, 'absent': True, 'volumes': volume_checks, 'project_networks': []})
+        closed.add(name)
+
+    try:
+        assert sys.platform == 'linux' and os.uname().machine == 'x86_64' and os.geteuid() == 0
+        integer_fields = ['hard_seconds', 'cleanup_seconds', 'operation_seconds', 'test_seconds',
+                          'join_seconds', 'minimum_free_memory_bytes', 'minimum_available_memory_bytes',
+                          'minimum_disk_bytes', 'memory_bytes', 'pids_limit', 'container_seconds', 'go_memory_bytes']
+        assert all(type(config[key]) is int and config[key] > 0 for key in integer_fields)
+        assert type(config['cpus']) in (int, float) and type(config['maximum_io_avg10']) in (int, float)
+        assert 0 <= config['maximum_io_avg10'] <= 5
+        assert re.fullmatch(r'[0-9a-f]{40}', config['candidate'])
+        assert re.fullmatch(r'[0-9a-f]{64}', config['binary_sha256'])
+        assert re.fullmatch(r'sha256:[0-9a-f]{64}', config['image'])
+        assert 0 < config['hard_seconds'] <= 60 and 0 < config['cleanup_seconds'] < config['hard_seconds']
+        assert config['minimum_free_memory_bytes'] >= 2 * 1024**3
+        assert config['minimum_available_memory_bytes'] >= 8 * 1024**3
+        assert config['minimum_disk_bytes'] >= 30 * 1024**3 and config['maximum_io_avg10'] <= 5
+        assert config['locks'] == ['/run/lock/ownsolid-heavy.lock', '/root/lane-sci-tools/heavy-test.lock']
+        assert 0 < config['cpus'] <= 1 and 16 <= config['pids_limit'] <= 128
+        assert 0 < config['memory_bytes'] <= 256 * 1024**2
+        assert config['container_seconds'] <= 30 and config['operation_seconds'] <= 8
+        assert config['test_seconds'] <= 15 and config['join_seconds'] <= config['cleanup_seconds']
+        source = Path(config['source'])
+        head = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
+        changed = subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'], text=True)
+        assert head == config['candidate'] and not changed
+        assert digest(config['binary']) == config['binary_sha256']
+        with Path(config['binary']).open('rb') as binary:
+            header = binary.read(20)
+        assert header[:5] == b'\x7fELF\x02' and header[5] == 1 and int.from_bytes(header[18:20], 'little') == 62
+        result['source'] = {'candidate': head, 'clean': True, 'binary_sha256': config['binary_sha256'],
+                            'script_sha256': digest(__file__), 'config_sha256': digest(config_path)}
+        result['parent'] = {'pid': os.getpid(), 'start_ticks': Path('/proc/self/stat').read_text().rsplit(')', 1)[1].split()[19]}
+        shutil.copyfile(__file__, output / 'parent.py')
+        shutil.copyfile(config_path, output / 'runtime.json')
+        for name in config['locks']:
+            fd = os.open(name, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+            descriptors.append(fd)
+            info = os.fstat(fd)
+            assert stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+            assert os.path.samestat(info, Path(name).lstat())
+            lease = {'path': name, 'fd': fd, 'device': info.st_dev, 'inode': info.st_ino, 'acquired': False}
+            result['leases'].append(lease)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                result['status'], code = 'lease-busy', 75
+                return code
+            lease['acquired'] = True
+        sys.path.insert(0, str(source / 'deploy/offline/internal/install/testdata/installed-acceptance'))
+        import host_runner
+        try:
+            result['resources'] = host_runner.resources(dict(config, output_directory=str(output)))
+        except host_runner.guard.Refused as error:
+            result['resource_error'] = str(error)
+            result['status'], code = 'resource-refused', 75
+            return code
+        projection = '{"Id":{{json .Id}},"Os":{{json .Os}},"Architecture":{{json .Architecture}}}'
+        _, raw = docker('image', 'inspect', '--format', projection, config['image'])
+        image = json.loads(raw)
+        assert image['Id'] == config['image'] and image['Os'] == 'linux' and image['Architecture'] == 'amd64'
+        projection = '{"Client":{"Version":{{json .Client.Version}}},"Server":{"Version":{{json .Server.Version}}}}'
+        _, raw = docker('version', '--format', projection)
+        version = json.loads(raw)
+        assert version['Client']['Version'] == config['docker_version'] and version['Server']['Version'] == config['docker_version']
+        _, compose_version = docker('compose', 'version', '--short')
+        result['versions'] = {'docker': config['docker_version'], 'compose': compose_version.strip()}
+        name = 'lane-del-image-inventory-' + run_id[:20]
+        if inspect(name) is not None or networks(name):
+            raise RuntimeError('Inventory name is occupied; preserve it')
+        containers.append(name)
+        docker('create', '--pull', 'never', '--name', name, '--network', 'none',
+               '--read-only', '--cpus', str(config['cpus']), '--memory', str(config['memory_bytes']),
+               '--memory-swap', str(config['memory_bytes']), '--pids-limit', str(config['pids_limit']),
+               '--no-healthcheck', '--label', 'io.ownsolid.prototype.run_id=' + run_id,
+               '--entrypoint', '/bin/false', config['image'])
+        state = inspect(name)
+        assert state is not None and state['State']['Status'] == 'created'
+        assert not state['State']['Running'] and state['State']['Pid'] == 0
+        assert state['HostConfig']['NetworkMode'] == 'none' and state['HostConfig']['ReadonlyRootfs']
+        assert not state['HostConfig'].get('PortBindings')
+        remember_volumes(name, state)
+        save(output / 'never-started-container.json', state)
+        case = {'kind': 'never-started-image-inventory', 'container': name, 'copies': {}}
+        result['cases'].append(case)
+        for image_path, target, required in [('/lib/apk/db/installed', 'apk-installed', True),
+                                         ('/etc/alpine-release', 'alpine-release', True),
+                                         ('/usr/share/licenses', 'image-licenses', False)]:
+            status, _ = docker('cp', '--quiet', name + ':' + image_path, str(output / target), permit_failure=True)
+            case['copies'][image_path] = {'exit': status, 'target': target}
+            if required:
+                assert status == 0 and stat.S_ISREG((output / target).lstat().st_mode)
+                case['copies'][image_path]['sha256'] = digest(output / target)
+        packages = []
+        for paragraph in (output / 'apk-installed').read_text().split('\n\n'):
+            fields = dict(line.split(':', 1) for line in paragraph.splitlines()
+                          if len(line) > 1 and line[1] == ':' and line[0] in 'PVLUo')
+            if fields:
+                assert fields.get('P') and fields.get('V') and fields.get('L')
+                packages.append(fields)
+        assert packages
+        save(output / 'declared-package-licenses.json', packages)
+        case['package_count'] = len(packages)
+        case['declared_licenses'] = sorted({item['L'] for item in packages})
+        case['scope'] = 'Declared package metadata only; notices still need review; no image code was executed'
+        close_container(name)
+        assert digest(config['binary']) == config['binary_sha256']
+        assert not subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'])
+        result['status'], code = 'image-inventory-collected', 0
+    except BaseException as error:
+        result['status'] = 'failed'
+        result['error'] = type(error).__name__ + ': ' + str(error)
+        code = 1
+    finally:
+        for item in handlers:
+            signal.signal(item, signal.SIG_IGN)
+        for name in reversed(containers):
+            try:
+                close_container(name)
+            except BaseException as error:
+                result['cleanup_errors'].append(name + ': ' + str(error))
+        if not result['cleanup_errors'] and fixture is not None:
+            shutil.rmtree(fixture)
+        try:
+            shutil.rmtree(docker_config)
+            result['empty_docker_config_removed'] = not docker_config.exists()
+        except OSError as error:
+            result['cleanup_errors'].append('Owned empty Docker config: ' + str(error))
+        if result['cleanup_errors']:
+            result['status'], code = 'cleanup-unconfirmed', 1
+        result['elapsed_seconds'], result['exit'] = time.monotonic() - start, code
+        save(output / 'result.json', result)
+        for fd in reversed(descriptors):
+            fcntl.flock(fd, fcntl.LOCK_UN)
+            os.close(fd)
+        print(json.dumps({'evidence': str(output), 'status': result['status'], 'exit': code}), flush=True)
+        for item, handler in handlers.items():
+            signal.signal(item, handler)
+    return code
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config', type=Path, required=True)
+    arguments = parser.parse_args()
+    raise SystemExit(run(json.loads(arguments.config.read_text()), arguments.config))

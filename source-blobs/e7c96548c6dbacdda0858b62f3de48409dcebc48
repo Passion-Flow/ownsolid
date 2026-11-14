@@ -1,0 +1,9 @@
+Compare identical closed-loop nonstreaming synthetic chat calls over direct
+HTTP and gateway TLS. Use the real PostgreSQL owner and installed gateway
+process fixture. Use 12 warm-up and 96 measured calls for one and two
+callers, with one connection per call on both paths. Validate the returned
+model and token counts, count all responses, and independently wait for
+one exact successful receipt per admitted request. Include capacity refusals
+in the offered rate and report success and refusal separately. This is a
+single-node synthetic comparison, with the private spool and PostgreSQL
+on tmpfs. It uses no model weights or GPU.

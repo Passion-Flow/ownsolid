@@ -1,0 +1,185 @@
+{
+  "scope": "single authorized Mac short validation: Python facts, controlled Registry client and Linux cross-build only; no installed/native service acceptance",
+  "parent_pid": 74977,
+  "started_at_utc": "2026-11-12T20:27:15.113229+00:00",
+  "runner_sha256": "33ba226940b243482963fec4422da99c137b35402cc301edce5239b426e3853d",
+  "initial_python_inputs": {
+    "run-alertmanager-expiry-v2.py": "0c8b843cde6b8c39bfd447d9569f011f0462633c84c4c4d9bba67b14fca0fb8c",
+    "test-alertmanager-expiry-facts.py": "89526232c065f0e6df07b8e7ceda89aaa9aaadafdcca6a53fcdba34e27dc6ee4"
+  },
+  "initial_registry_inputs": {
+    "cleanup_test.go": "fd9aa0e990d4743687d63945f18c80f488f01519c19a5663aa46ee51e6d93c4a",
+    "configuration.go": "f981ff7ebaec9c1b342d07ab5551d17c661d7b55d1e2213d6d1355c3cb8b8ae7",
+    "go.mod": "8631eae2a0e0a40f96220e6a5018a00fc1bc7280f3992ad493cb776c2abf7396",
+    "http.go": "48343e1d8e1d7e626fb1d526b45f925124358798769eb035335dbdd054e66d94",
+    "main.go": "8cc3ddb23f02d129910efe90b702f5c71840d35e661199a081c414fdd810f87e",
+    "main_test.go": "9d4918e5010a78d0823bd6bdec5b04f48a40355760c0bbea2cc2cd070471893f",
+    "recovery_test.go": "d31c6825cf1243a320381e09e961815fc01387df97b0744a5d94037755c1388b",
+    "response_test.go": "cc4ac0929f94b3d28f1404f76c9cbe2aa7d340192853d2b32b4fcf64c8eb3c41"
+  },
+  "v5_manifest_sha256": "800a63ca0f5b56418cac5d6bbacad5826305b130a7ab5a7b10071b89d0df7f84",
+  "stages": [
+    {
+      "kind": "python",
+      "command": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+        "/private/tmp/obs-short-validation-kk2e5xc6/python-source/test-alertmanager-expiry-facts.py",
+        "/private/tmp/obs-short-validation-kk2e5xc6/python-result-00.json"
+      ],
+      "cwd": "/private/tmp/obs-short-validation-kk2e5xc6/python-source",
+      "source_inputs": {
+        "run-alertmanager-expiry-v2.py": "0c8b843cde6b8c39bfd447d9569f011f0462633c84c4c4d9bba67b14fca0fb8c",
+        "test-alertmanager-expiry-facts.py": "89526232c065f0e6df07b8e7ceda89aaa9aaadafdcca6a53fcdba34e27dc6ee4"
+      },
+      "started_after_acquire_seconds": 0.036,
+      "log": "/private/tmp/obs-short-validation-kk2e5xc6/stage-00-python.log",
+      "child_pid": 78005,
+      "exit_code": 0,
+      "log_sha256": "70f706a53f726aa469db94639670b2ab43e20079c61d8078fd71d96f0450a92e",
+      "elapsed_seconds": 0.199,
+      "unit_results": {
+        "scope": "Pure lifecycle fact decoding only; never run a native process or lock gate.",
+        "tests_run": 9,
+        "expected_tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": true
+      }
+    },
+    {
+      "kind": "go",
+      "command": [
+        "/Users/passion./.local/opt/go/bin/go",
+        "test",
+        "-json",
+        "-race",
+        "-p",
+        "2",
+        "-count=1",
+        "-timeout=120s",
+        "./..."
+      ],
+      "cwd": "/private/tmp/obs-short-validation-kk2e5xc6/registry-source",
+      "source_inputs": {
+        "cleanup_test.go": "fd9aa0e990d4743687d63945f18c80f488f01519c19a5663aa46ee51e6d93c4a",
+        "configuration.go": "f981ff7ebaec9c1b342d07ab5551d17c661d7b55d1e2213d6d1355c3cb8b8ae7",
+        "go.mod": "8631eae2a0e0a40f96220e6a5018a00fc1bc7280f3992ad493cb776c2abf7396",
+        "http.go": "48343e1d8e1d7e626fb1d526b45f925124358798769eb035335dbdd054e66d94",
+        "main.go": "8cc3ddb23f02d129910efe90b702f5c71840d35e661199a081c414fdd810f87e",
+        "main_test.go": "9d4918e5010a78d0823bd6bdec5b04f48a40355760c0bbea2cc2cd070471893f",
+        "recovery_test.go": "d31c6825cf1243a320381e09e961815fc01387df97b0744a5d94037755c1388b",
+        "response_test.go": "cc4ac0929f94b3d28f1404f76c9cbe2aa7d340192853d2b32b4fcf64c8eb3c41"
+      },
+      "started_after_acquire_seconds": 0.235,
+      "log": "/private/tmp/obs-short-validation-kk2e5xc6/stage-01-go.log",
+      "child_pid": 78007,
+      "exit_code": 0,
+      "log_sha256": "10768587915dd13c778a43b5d935badb2036ec9eb8afd0b1c2543ab7515ef072",
+      "elapsed_seconds": 2.766,
+      "test_events": {
+        "pass": 18
+      },
+      "top_level_results": {
+        "TestDeletionMetadataAloneDoesNotConfirmCleanup": "pass",
+        "TestControlledRegistryClientLifecycle": "pass",
+        "TestExistingWorkspaceStopsBeforePinMutation": "pass",
+        "TestWrongScopeNeverBecomesCleanupAuthority": "pass",
+        "TestReplayMismatchRetainsOnlyTheAcknowledgedPin": "pass",
+        "TestHeldReferenceIsNeverForcedThroughCleanup": "pass",
+        "TestFreshSessionFormatAndPathIsolation": "pass",
+        "TestRedirectAndOversizedResponsesStopBeforeLogin": "pass",
+        "TestUntrustedPrivatePeerIsRejected": "pass",
+        "TestInputValidationAndImmutableConfiguration": "pass",
+        "TestCancellationReachesAnInflightRequest": "pass",
+        "TestOwnedSessionChangesAreNotOverwritten": "pass",
+        "TestLostImportAcknowledgementUsesTheRecordedKey": "pass",
+        "TestUncertainRemovalRequiresANewExplicitReconcileIntent": "pass",
+        "TestMissingContinuationDoesNotProveAnEmptyWorkspace": "pass",
+        "TestInvalidUTF8IsRejectedBeforeDecoding": "pass"
+      },
+      "package_results": {
+        "github.com/Passion-Flow/ownsolid/tools/installed-registry-probe": "pass"
+      }
+    },
+    {
+      "kind": "build",
+      "command": [
+        "/Users/passion./.local/opt/go/bin/go",
+        "build",
+        "-p",
+        "2",
+        "-trimpath",
+        "-o",
+        "/private/tmp/obs-short-validation-kk2e5xc6/installed-registry-linux-amd64",
+        "."
+      ],
+      "cwd": "/private/tmp/obs-short-validation-kk2e5xc6/registry-source",
+      "source_inputs": {
+        "cleanup_test.go": "fd9aa0e990d4743687d63945f18c80f488f01519c19a5663aa46ee51e6d93c4a",
+        "configuration.go": "f981ff7ebaec9c1b342d07ab5551d17c661d7b55d1e2213d6d1355c3cb8b8ae7",
+        "go.mod": "8631eae2a0e0a40f96220e6a5018a00fc1bc7280f3992ad493cb776c2abf7396",
+        "http.go": "48343e1d8e1d7e626fb1d526b45f925124358798769eb035335dbdd054e66d94",
+        "main.go": "8cc3ddb23f02d129910efe90b702f5c71840d35e661199a081c414fdd810f87e",
+        "main_test.go": "9d4918e5010a78d0823bd6bdec5b04f48a40355760c0bbea2cc2cd070471893f",
+        "recovery_test.go": "d31c6825cf1243a320381e09e961815fc01387df97b0744a5d94037755c1388b",
+        "response_test.go": "cc4ac0929f94b3d28f1404f76c9cbe2aa7d340192853d2b32b4fcf64c8eb3c41"
+      },
+      "started_after_acquire_seconds": 3.002,
+      "log": "/private/tmp/obs-short-validation-kk2e5xc6/stage-02-build.log",
+      "child_pid": 78035,
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "elapsed_seconds": 0.603
+    }
+  ],
+  "lock_acquired": true,
+  "passed": true,
+  "lock_file": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "lock_device": 16777234,
+  "lock_inode": 50313339,
+  "lock_fd": 3,
+  "lock_wait_seconds": 569.214,
+  "memory_pressure": "The system has 38654705664 (2359296 pages with a page size of 16384).\nSystem-wide memory free percentage: 80%",
+  "free_disk_bytes": 186921558016,
+  "estimated_free_memory_bytes": 30923764531,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "go_version": "go version go1.27.3 darwin/arm64",
+  "python_version": "3.9.6 (default, Oct 19 2026, 19:18:13) \n[Clang 21.0.0 (clang-2100.4.1.1)]",
+  "environment": {
+    "GOTOOLCHAIN": "local",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2 -mod=readonly",
+    "GOOS": "darwin",
+    "GOARCH": "arm64",
+    "CGO_ENABLED": "1",
+    "GOWORK": "off"
+  },
+  "binary": "/private/tmp/obs-short-validation-kk2e5xc6/installed-registry-linux-amd64",
+  "binary_sha256": "6727bd1e310c74f32eb3325a5f395f6e1aa6754a376d1170701de0b02ed8b124",
+  "binary_bytes": 10438146,
+  "binary_executed": false,
+  "final_python_inputs": {
+    "run-alertmanager-expiry-v2.py": "0c8b843cde6b8c39bfd447d9569f011f0462633c84c4c4d9bba67b14fca0fb8c",
+    "test-alertmanager-expiry-facts.py": "89526232c065f0e6df07b8e7ceda89aaa9aaadafdcca6a53fcdba34e27dc6ee4"
+  },
+  "final_registry_inputs": {
+    "cleanup_test.go": "fd9aa0e990d4743687d63945f18c80f488f01519c19a5663aa46ee51e6d93c4a",
+    "configuration.go": "f981ff7ebaec9c1b342d07ab5551d17c661d7b55d1e2213d6d1355c3cb8b8ae7",
+    "go.mod": "8631eae2a0e0a40f96220e6a5018a00fc1bc7280f3992ad493cb776c2abf7396",
+    "http.go": "48343e1d8e1d7e626fb1d526b45f925124358798769eb035335dbdd054e66d94",
+    "main.go": "8cc3ddb23f02d129910efe90b702f5c71840d35e661199a081c414fdd810f87e",
+    "main_test.go": "9d4918e5010a78d0823bd6bdec5b04f48a40355760c0bbea2cc2cd070471893f",
+    "recovery_test.go": "d31c6825cf1243a320381e09e961815fc01387df97b0744a5d94037755c1388b",
+    "response_test.go": "cc4ac0929f94b3d28f1404f76c9cbe2aa7d340192853d2b32b4fcf64c8eb3c41"
+  },
+  "all_owned_child_groups_exited": true,
+  "execution_elapsed_seconds": 3.611,
+  "lock_carrier_retained": true,
+  "carrier_identity_unchanged": true,
+  "parent_fd_closed": true,
+  "parent_exit_code": 0,
+  "ended_at_utc": "2026-11-12T20:36:47.948885+00:00"
+}

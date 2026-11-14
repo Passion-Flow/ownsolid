@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+gate=$LANE_REL_TEST_GATE
+rc=0
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  umask 022
+  make -o test-web-browser test
+' > "$gate/run.log" 2>&1 || rc=$?
+echo "$rc" > "$gate/exit"
+exit "$rc"

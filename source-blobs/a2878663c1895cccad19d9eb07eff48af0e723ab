@@ -1,0 +1,77 @@
+"""Compare complete sealed algorithmic state from owned CPU worker attempts."""
+import base64
+import hashlib
+import json
+from pathlib import Path
+import sys
+
+import numpy as np
+import torch
+from safetensors.torch import load_file
+sys.path[:0]=['/source/runtimes/training','/source/runtimes/data-processing']
+from projectone_training.checkpoints import CheckpointReference,verify_checkpoint,file_digest
+from projectone_training.configuration import Configuration
+from projectone_training.configuration_generated import CONTRACT
+from projectone_training.catalog import catalog_digest
+from dataclasses import asdict
+
+root=Path('/workspace');index=json.loads((root/'resume-index.json').read_bytes())
+assert all(n in index['cases'] for n in ['baseline','interrupted','resumed','optimizer-changed','horizon-changed'])
+
+def normalized(value):
+ if isinstance(value,torch.Tensor):
+  tensor=value.detach().cpu().contiguous()
+  return {'tensor':{'dtype':str(tensor.dtype),'shape':list(tensor.shape),'sha256':hashlib.sha256(tensor.reshape(-1).view(torch.uint8).numpy().tobytes()).hexdigest()}}
+ if isinstance(value,np.ndarray):return {'ndarray':{'dtype':value.dtype.str,'shape':list(value.shape),'sha256':hashlib.sha256(value.tobytes(order='C')).hexdigest()}}
+ if isinstance(value,np.generic):return {'numpy_scalar':{'dtype':value.dtype.str,'bytes':value.tobytes().hex()}}
+ if isinstance(value,dict):return {'dict':sorted([[normalized(k),normalized(v)] for k,v in value.items()],key=lambda row:json.dumps(row[0],sort_keys=True))}
+ if isinstance(value,(list,tuple)):return {'tuple' if isinstance(value,tuple) else 'list':[normalized(v) for v in value]}
+ if isinstance(value,float):return {'float':value.hex()}
+ if isinstance(value,bytes):return {'bytes':base64.b64encode(value).decode()}
+ if value is None or type(value) in (str,bool,int):return value
+ raise TypeError(type(value).__name__)
+
+def digest(value):return hashlib.sha256(json.dumps(normalized(value),sort_keys=True,separators=(',',':')).encode()).hexdigest()
+
+def checkpoint(case,step):
+ scope=root/index['cases'][case]['relative_scope'];directory=scope/f'output/checkpoints/checkpoint-{step}'
+ receipt=json.loads((directory/'projectone-checkpoint.json').read_bytes())
+ request=json.loads((scope/'request.json').read_bytes())
+ configuration=Configuration(**request['configuration']);resources=request['resources']
+ catalog=json.loads(Path('/source/api/agent/v1/model-catalog.json').read_bytes())
+ runtime=json.loads(Path('/source/runtimes/training/runtime.json').read_bytes())
+ expected={'configuration_sha256':configuration.digest(),'configuration':asdict(configuration),'execution_identity':request['execution_identity'],'scope':{k:request[k] for k in ['tenant_id','workspace_id','job_id']},'model_repository':catalog['repository'],'model_catalog_sha256':catalog_digest(catalog),'train_sha256':request['train_sha256'],'validation_sha256':request['validation_sha256'],'recipe_version':CONTRACT['recipe']['version'],'packages':runtime['packages']}
+ for name,key in [('train.jsonl','train_sha256'),('validation.jsonl','validation_sha256')]:assert file_digest(scope/'inputs'/name)==request[key]
+ verified,_=verify_checkpoint(CheckpointReference(directory,file_digest(directory/'projectone-checkpoint.json')),expected,configuration,resources['maximum_output_bytes'],resources['maximum_output_files'])
+ assert verified['global_step']==step
+ return scope,directory
+
+baseline,b=checkpoint('baseline',2);resumed,r=checkpoint('resumed',2)
+result={'scope':index['scope'],'source_step':1,'target_step':2,'resume_from_step':index['cases']['resumed']['resume_from_step'],'comparisons':{},'raw_checkpoint_files':{}}
+assert result['resume_from_step']==1
+for name in ['adapter_model.safetensors','optimizer.pt','scheduler.pt','rng_state.pth','trainer_state.json']:
+ bp,rp=b/name,r/name
+ if name.endswith('.safetensors'):left,right=load_file(str(bp)),load_file(str(rp))
+ elif name.endswith('.json'):left,right=json.loads(bp.read_bytes()),json.loads(rp.read_bytes())
+ else:
+  # Only local files just verified against this experiment's original sealed receipts.
+  left,right=torch.load(bp,map_location='cpu',weights_only=False),torch.load(rp,map_location='cpu',weights_only=False)
+ result['comparisons'][name]={'baseline_sha256':file_digest(bp),'resumed_sha256':file_digest(rp),'baseline_state_sha256':digest(left),'resumed_state_sha256':digest(right),'state_equal':normalized(left)==normalized(right)}
+for name in [p.name for p in sorted(b.iterdir()) if p.is_file()]:
+ result['raw_checkpoint_files'][name]={'baseline_sha256':file_digest(b/name),'resumed_sha256':file_digest(r/name),'bytes_equal':file_digest(b/name)==file_digest(r/name)}
+_,b1=checkpoint('baseline',1);_,s1=checkpoint('interrupted',1)
+result['interrupted_checkpoint_matches_baseline']={}
+for name in ['adapter_model.safetensors','optimizer.pt','scheduler.pt','rng_state.pth','trainer_state.json']:
+ if name.endswith('.safetensors'):left,right=load_file(str(b1/name)),load_file(str(s1/name))
+ elif name.endswith('.json'):left,right=json.loads((b1/name).read_bytes()),json.loads((s1/name).read_bytes())
+ else:left,right=torch.load(b1/name,map_location='cpu',weights_only=False),torch.load(s1/name,map_location='cpu',weights_only=False)
+ result['interrupted_checkpoint_matches_baseline'][name]=normalized(left)==normalized(right)
+left,right=load_file(str(baseline/'output/adapter/adapter_model.safetensors')),load_file(str(resumed/'output/adapter/adapter_model.safetensors'))
+result['final_adapter_state_equal']=normalized(left)==normalized(right)
+result['final_adapter_state_sha256']=digest(left)
+result['training_loss']={name:index['cases'][name]['training_loss'] for name in ['baseline','resumed']}
+result['negative_cases']={name:index['cases'][name]['error_code'] for name in ['optimizer-changed','horizon-changed']}
+result['all_algorithmic_state_equal']=all(v['state_equal'] for v in result['comparisons'].values()) and result['final_adapter_state_equal'] and all(result['interrupted_checkpoint_matches_baseline'].values())
+output=root/'resume-comparison.json';output.write_text(json.dumps(result,sort_keys=True,indent=2)+'\n')
+print(json.dumps(result,sort_keys=True),flush=True)
+assert result['all_algorithmic_state_equal'],'sealed CPU resume differs from uninterrupted algorithmic state'

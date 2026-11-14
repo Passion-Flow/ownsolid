@@ -1,0 +1,21 @@
+{
+  "guard_commit": "ce418068",
+  "guard_sha256": "fafa01dd1abff302ace46a32c129823504dd1987653026f3e1825f29f8224da5",
+  "original": "/root/lane-rel-tools/capture-parent.09v9xwhx/evidence",
+  "results": {
+    "deadline": {
+      "bytes": 662,
+      "reason": "[Errno 2] No such file or directory: '/root/lane-rel-tools/capture-current-guard.be61mfn8/deadline/capture-ended.json'",
+      "run_id": "dc9c881c-90fe-4e4c-b78d-7cbb515ec6eb",
+      "sha256": "6ee49a1df21d41200b9dfa81a8b87b24465773bc9b8c7019925fc987185010a3",
+      "status": "capture-incomplete"
+    },
+    "normal": {
+      "bytes": 662,
+      "run_id": "6ca7bd9d-2432-46bb-be68-8f05717da408",
+      "sha256": "2a2d3daabca4fed2e7da1a8a2e6a1a43e8c5e65b17fdca4b849a85fb2f5f3f09",
+      "status": "capture-passed"
+    }
+  },
+  "scope": "Current committed guard revalidates retained real Docker capture; no new packet producer"
+}

@@ -1,0 +1,42 @@
+{
+  "worktrees": {
+    "/root/lane-gw": {
+      "head": "229b5c687b80cfc0ee80b9e69cb80ec0399b53ae",
+      "branch": "lane-gw",
+      "state": "original 15-candidate stack retained unchanged; clean/local"
+    },
+    "/root/lane-gw120-evidence": {
+      "head": "38e1bf11d882dedc9d104536beff1c118fe13846",
+      "branch": "codex/gw120-evidence",
+      "state": "two clean documentation commits, no runtime changes; local/unpublished"
+    },
+    "/root/lane-gw104-read": {
+      "head": "54d4ac266ed8ce7fca9b4ac8776f3bc7e1565fad",
+      "branch": "codex/gw104-read",
+      "state": "clean/local isolated producer/read source; five original production files, four tests with new schema59 interaction, two docs"
+    }
+  },
+  "last_successful_workstation_main_fetch": "402d604e271653d7ca546e1245877a256a88b031",
+  "linux_remote_note": "origin/main may remain older; use a successful fresh workstation fetch plus verified bundle import when Linux HTTPS auth is unavailable",
+  "GW120_independent": "4526bca68a8d40dcba32300b0071c7a63b58f6f9: three-document evidence/UI contract, direct parent 402d604e",
+  "GW120_native": "exact published 4f76102c: six description roots plus one runtime-principal root, Linux amd64, no skips; not the arm64 14-root/seven-history admission",
+  "GW120_web_handoff": "/root/lane-gw-acceptance/gw120-independent.gg8yotlj/web-handoff.json",
+  "GW120_docs_package": "/root/lane-gw-acceptance/gw120-independent.gg8yotlj",
+  "GW104_source": "54d4ac26; default off; no metering/key DDL/shared API/root/agent/Web changes",
+  "GW104_handoff": "/root/lane-gw-acceptance/gw104-startup-handoff.2zn67zre",
+  "GW104_manual_entry": "bash /root/lane-gw-acceptance/gw104-startup-handoff.2zn67zre/run.sh",
+  "GW104_new_execution": "not started; runner shell syntax validated only; four selected roots planned with exact DEV 7705c5a3/0.12.0 test-only overlay",
+  "GW104_new_coverage": "description edit/clear/historical replay keeps both registered reads, route revision and target snapshot",
+  "GW104_sequence": "GW backend off -> ARC typed startup wiring -> GW same-SHA owner/producer/read qualification -> DEV same-source schema/SDK/Web/Help publication; production enablement only with matching compiled contract",
+  "GW123": "/root/lane-gw-acceptance/gw120-independent.gg8yotlj/profile-handoff.json",
+  "publication": "two nonblocking permanent Mac flock attempts returned busy before command dispatch; no push attempted",
+  "Mac_gate_wrapper": "/private/tmp/ownsolid-gw-mac-gate.swf0ar5z/mac-gate.py",
+  "Mac_carrier": "/private/tmp/ownsolid-workstation-full-gate.lock; permanent regular file, same UID, O_NOFOLLOW, flock LOCK_EX|LOCK_NB; hold same FD through full gate/build/publication; close only",
+  "Mac_GW120_fast_publisher": "/private/tmp/ownsolid-gw120-evidence-publish.ohlzuvfa/publish.py; publishes only 4526bca6 if fresh main equals 402d604e, otherwise exits without push",
+  "workstation_owner_archive": "/private/tmp/ownsolid-gw-owner-handoffs.6tvlydr0; verified both bundles/manifests and imported 54d4ac26 into a private Git ref",
+  "priority": "Train failed-subcase retry/module/runtime checks, then OBS short client checks/cross-build; do not grab their heavy window",
+  "last_resource_read": "751 GiB disk; MemFree 2828 MiB, MemAvailable 16364 MiB; I/O full avg10=6.64 >5 gate",
+  "own_runtime": "no new service/container/test process or host listener; no owned heavy lock; no automatic retry or publication queue",
+  "checks": "gofmt, diff whitespace, layout and roadmap (589 items) passed on prepared inputs; no new full make check/build, cargo, browser or GW104 protocol run",
+  "roadmap": "no new completed item, checkbox or support claim"
+}

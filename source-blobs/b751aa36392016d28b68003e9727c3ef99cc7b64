@@ -1,0 +1,2 @@
+# This OBS private entry is closed until a coordinator-owned epoch is activated.
+raise SystemExit("OBS_OLD_MAC_EPOCH_CLOSED")

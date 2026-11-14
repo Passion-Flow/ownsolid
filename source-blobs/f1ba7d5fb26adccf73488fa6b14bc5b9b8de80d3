@@ -1,0 +1,87 @@
+diff --git a/services/control/internal/modules/distribution/authorization.go b/services/control/internal/modules/distribution/authorization.go
+--- a/services/control/internal/modules/distribution/authorization.go
++++ b/services/control/internal/modules/distribution/authorization.go
+@@ -229,7 +229,8 @@
+ 		if e != nil {
+ 			return e
+ 		}
+-		if _, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, `UPDATE API_KEYS SET LAST_USED_AT=CURRENT_TIMESTAMP(6) WHERE ID=?`, []any{key.id}, "UPDATE api_keys SET last_used_at=clock_timestamp() WHERE id=$1", `UPDATE api_keys SET last_used_at=UTC_TIMESTAMP(6) WHERE id=?`, []any{key.id}, []any{key.id})); e != nil {
++		// An authenticated admission can classify an older key without a separate write.
++		if _, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, `UPDATE API_KEYS SET LAST_USED_AT=CURRENT_TIMESTAMP(6) WHERE ID=?`, []any{key.id}, "UPDATE api_keys SET last_used_at=clock_timestamp(),operation_only=COALESCE(operation_only,$2) WHERE id=$1", `UPDATE api_keys SET last_used_at=UTC_TIMESTAMP(6) WHERE id=?`, []any{key.id, key.operation}, []any{key.id})); e != nil {
+ 			return e
+ 		}
+ 		if e = s.machineAudit(ctx, tx, scope, &key.owner, "gateway.request_admitted", input.RequestID, request); e != nil {
+diff --git a/services/control/internal/modules/distribution/keys.go b/services/control/internal/modules/distribution/keys.go
+--- a/services/control/internal/modules/distribution/keys.go
++++ b/services/control/internal/modules/distribution/keys.go
+@@ -4,17 +4,19 @@
+ 	"context"
+ 	"database/sql"
+ 	"errors"
+-	"github.com/google/uuid"
++	"strings"
++
++	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+-	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+-	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+-	"strings"
++	"github.com/google/uuid"
+ )
+ 
+ const apiKeyPrefix = "pk1"
++
+ // gatewayCredentialPrefix starts a gateway's credential, whether control or the node's agent
+ // generated it.
+ const gatewayCredentialPrefix = agentwire.GatewayCredentialPrefix
+@@ -119,7 +121,7 @@
+ 		if operation {
+ 			purpose = operationKeyPurpose
+ 		}
+-		_, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, `INSERT INTO API_KEYS(ID,TENANT_ID,WORKSPACE_ID,ALIAS_ID,LABEL,SECRET_HASH,CREATED_BY,REQUESTED_EPOCH,IDEMPOTENCY_KEY,FINGERPRINT,EXPIRES_AT,MEMBERSHIP_AUTHORITY) VALUES(?,?,?,?,?,?,?,?,?,?,TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP(6)),?)`, []any{id, w.TenantID, w.ID, alias.ID, input.Label, s.digest(purpose, id, token), a.Me.User.ID, a.Epoch, key, expected, ttl, authority}, "INSERT INTO api_keys(id,tenant_id,workspace_id,alias_id,label,secret_hash,created_by,requested_epoch,idempotency_key,fingerprint,expires_at,membership_authority) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+make_interval(secs=>$11),$12)", `INSERT INTO api_keys(id,tenant_id,workspace_id,alias_id,label,secret_hash,created_by,requested_epoch,idempotency_key,fingerprint,expires_at,membership_authority) VALUES(?,?,?,?,?,?,?,?,?,?,TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),?)`, []any{id, w.TenantID, w.ID, alias.ID, input.Label, s.digest(purpose, id, token), a.Me.User.ID, a.Epoch, key, expected, ttl, authority}, []any{id, w.TenantID, w.ID, alias.ID, input.Label, s.digest(purpose, id, token), a.Me.User.ID, a.Epoch, key, expected, ttl, authority}))
++		_, e = distributionExecOne(ctx, tx, distributionNativeStatement(tx, `INSERT INTO API_KEYS(ID,TENANT_ID,WORKSPACE_ID,ALIAS_ID,LABEL,SECRET_HASH,CREATED_BY,REQUESTED_EPOCH,IDEMPOTENCY_KEY,FINGERPRINT,EXPIRES_AT,MEMBERSHIP_AUTHORITY) VALUES(?,?,?,?,?,?,?,?,?,?,TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP(6)),?)`, []any{id, w.TenantID, w.ID, alias.ID, input.Label, s.digest(purpose, id, token), a.Me.User.ID, a.Epoch, key, expected, ttl, authority}, "INSERT INTO api_keys(id,tenant_id,workspace_id,alias_id,label,secret_hash,created_by,requested_epoch,idempotency_key,fingerprint,expires_at,membership_authority,operation_only) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+make_interval(secs=>$11),$12,$13)", `INSERT INTO api_keys(id,tenant_id,workspace_id,alias_id,label,secret_hash,created_by,requested_epoch,idempotency_key,fingerprint,expires_at,membership_authority) VALUES(?,?,?,?,?,?,?,?,?,?,TIMESTAMPADD(SECOND,?,UTC_TIMESTAMP(6)),?)`, []any{id, w.TenantID, w.ID, alias.ID, input.Label, s.digest(purpose, id, token), a.Me.User.ID, a.Epoch, key, expected, ttl, authority, operation}, []any{id, w.TenantID, w.ID, alias.ID, input.Label, s.digest(purpose, id, token), a.Me.User.ID, a.Epoch, key, expected, ttl, authority}))
+ 		if e != nil {
+ 			return e
+ 		}
+diff --git a/services/control/internal/modules/distribution/rotation.go b/services/control/internal/modules/distribution/rotation.go
+--- a/services/control/internal/modules/distribution/rotation.go
++++ b/services/control/internal/modules/distribution/rotation.go
+@@ -35,6 +35,7 @@
+ 	epoch          int64
+ 	authority      string
+ 	lifetime       int
++	operationOnly  *bool
+ 	successorID    *string
+ 	successorKey   *string
+ 	successorPrint []byte
+@@ -80,14 +81,15 @@
+ 			out.Key, e = scanKey(tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT "+keyFields+keyJoins+" WHERE k.id=$1", *old.successorID)))
+ 			return e
+ 		}
+-		if current.State != "active" {
++		// A new successor requires positive proof that the predecessor is ordinary.
++		if current.State != "active" || old.operationOnly == nil || *old.operationOnly {
+ 			return fail("API_KEY_NOT_ACTIVE")
+ 		}
+ 		lifetime := min(max(old.lifetime, minimumKeyLifetimeSeconds), s.Identity.Config.Policy().Distribution.KeyMaxTTLSeconds)
+ 		successor := uuid.NewString()
+ 		token := security.Token()
+ 		raw := apiKeyPrefix + "." + successor + "." + token
+-		if _, e = distributionExecOne(ctx, tx, transaction.SQL(transaction.PostgreSQL, "INSERT INTO api_keys(id,tenant_id,workspace_id,alias_id,label,secret_hash,created_by,requested_epoch,idempotency_key,fingerprint,expires_at,membership_authority,rotated_from) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+make_interval(secs=>$11),$12,$13)", successor, w.TenantID, w.ID, old.aliasID, old.label, s.digest(ordinaryKeyPurpose, successor, token), old.owner, old.epoch, key, expected, lifetime, old.authority, id)); e != nil {
++		if _, e = distributionExecOne(ctx, tx, transaction.SQL(transaction.PostgreSQL, "INSERT INTO api_keys(id,tenant_id,workspace_id,alias_id,label,secret_hash,created_by,requested_epoch,idempotency_key,fingerprint,expires_at,membership_authority,rotated_from,operation_only) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp()+make_interval(secs=>$11),$12,$13,false)", successor, w.TenantID, w.ID, old.aliasID, old.label, s.digest(ordinaryKeyPurpose, successor, token), old.owner, old.epoch, key, expected, lifetime, old.authority, id)); e != nil {
+ 			return rotationConflict(e)
+ 		}
+ 		stop := transaction.SQL(transaction.PostgreSQL, "UPDATE api_keys SET expires_at=LEAST(expires_at,clock_timestamp()+make_interval(secs=>$2)) WHERE id=$1", id, input.OverlapSeconds)
+@@ -133,7 +135,7 @@
+ 
+ func readPredecessor(ctx context.Context, tx transaction.Executor, id string) (predecessor, error) {
+ 	var out predecessor
+-	e := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT k.alias_id::text,k.label,k.created_by::text,k.requested_epoch,k.membership_authority::text,ceil(extract(epoch FROM k.expires_at-k.created_at))::integer,s.id::text,s.idempotency_key::text,s.fingerprint FROM api_keys k LEFT JOIN api_keys s ON s.rotated_from=k.id WHERE k.id=$1", id)).Scan(&out.aliasID, &out.label, &out.owner, &out.epoch, &out.authority, &out.lifetime, &out.successorID, &out.successorKey, &out.successorPrint)
++	e := tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT k.alias_id::text,k.label,k.created_by::text,k.requested_epoch,k.membership_authority::text,ceil(extract(epoch FROM k.expires_at-k.created_at))::integer,k.operation_only,s.id::text,s.idempotency_key::text,s.fingerprint FROM api_keys k LEFT JOIN api_keys s ON s.rotated_from=k.id WHERE k.id=$1", id)).Scan(&out.aliasID, &out.label, &out.owner, &out.epoch, &out.authority, &out.lifetime, &out.operationOnly, &out.successorID, &out.successorKey, &out.successorPrint)
+ 	return out, e
+ }
+ 

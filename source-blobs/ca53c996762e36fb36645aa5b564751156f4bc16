@@ -1,0 +1,45 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+cd "$1"
+root=$PWD
+suffix=$2
+source_digest=$3
+name="arc104-managed-$suffix"
+image="ownsolid/control:$name"
+base=sha256:7d6b9d2d31804d65eb170852cfa4b1c8bab502fdaa1fa737965c9b6cc026e7fd
+df -h /
+free -m
+cat /proc/pressure/io
+if docker ps --format '{{.Names}}' | grep -Ei '(^|[-_])lane[-_]?del|^del[-_]'; then
+    echo 'DEL has a running fixture'
+    exit 75
+fi
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+test "$(docker image inspect -f '{{.Id}}' "$base")" = "$base"
+install -d -m 0700 "$root/signer" "$root/media/stage/assets/rke2" "$root/media/stage/assets/licenses"
+assets="$root/media/stage/assets"
+docker create --network none --name "$name-image-build" "$base" >/dev/null
+docker cp "$root/control" "$name-image-build:/usr/local/bin/control"
+docker commit "$name-image-build" "$image"
+docker rm "$name-image-build"
+for entry in "control-image=$image" "postgres-image=pgvector/pgvector:0.8.7-pg18-bookworm" "metrics-image=victoriametrics/victoria-metrics:v1.155.0" "logs-image=victoriametrics/victoria-logs:v1.53.0"; do
+    asset=${entry%%=*}
+    tag=${entry#*=}
+    docker image inspect -f '{{.Id}} {{.Os}}/{{.Architecture}}' "$tag"
+    docker image save --platform linux/amd64 -o "$assets/$asset" "$tag"
+done
+install -m 0600 "$root/compose.yaml" "$assets/compose"
+install -m 0600 "$root/README.md" "$assets/operator-docs"
+install -m 0700 "$root/ownsolid-install" "$assets/installer"
+printf 'Private ARC-104 integration fixture. Image and SBOM attestations are test data.\n' > "$assets/test-notice"
+for n in rke2.linux-amd64.tar.gz rke2-images-core.linux-amd64.tar.zst rke2-images-canal.linux-amd64.tar.zst; do
+    ln "/root/lane-arc-kwok.0DKaGD/rke2/$n" "$assets/rke2/$n"
+done
+install -m 0600 "$root/sha256sum-amd64.txt" "$assets/rke2/sha256sum-amd64.txt"
+tar -xOzf "$assets/rke2/rke2.linux-amd64.tar.gz" share/rke2/LICENSE.txt > "$assets/licenses/rke2.txt"
+OWNSOLID_CURRENT_FACTORY_STAGE="$root/media/stage" OWNSOLID_CURRENT_FACTORY_KEY_DIR="$root/signer" \
+OWNSOLID_CURRENT_FACTORY_SCHEMA=57 OWNSOLID_CURRENT_FACTORY_RELEASE="$name" \
+OWNSOLID_CURRENT_FACTORY_SOURCE_SHA256="$source_digest" OWNSOLID_CURRENT_FACTORY_RKE2=1 \
+    "$root/factory.test" -test.run '^TestManufactureCurrentRelease$' -test.v -test.timeout=12m
+sha256sum "$root/media/stage/ownsolid.tar.gz"

@@ -1,0 +1,114 @@
+diff --git a/docs/decisions/0071-retain-explicit-model-family-membership.md b/docs/decisions/0073-retain-explicit-model-family-membership.md
+similarity index 100%
+rename from docs/decisions/0071-retain-explicit-model-family-membership.md
+rename to docs/decisions/0073-retain-explicit-model-family-membership.md
+diff --git a/docs/research/lane-m-questions.md b/docs/research/lane-m-questions.md
+index c5a505d9..14f3d597 100644
+--- a/docs/research/lane-m-questions.md
++++ b/docs/research/lane-m-questions.md
+@@ -14,7 +14,7 @@ responsible owners can extend their respective boundaries.
+ | MOD-106 | Serving variants require recipe admission and a serving manifest accepted by the Agent, including matching quantization arguments and validation. |
+ | MOD-107 | Deployment and alias reference checks run in the shared retirement callback. [Both commit orders](model-retirement-dependencies.md#disconnected-postgresql-acceptance) passed with actual deployment and retirement services. Complete application and key references require their owning modules to participate, and the existing UI only receives a generic refusal. |
+ | MOD-108 | The [approved import review](model-import-file-safety.md#disconnected-postgresql-acceptance) refuses executable members and renamed pickle before extracting any payload. Generic catalogue admission and richer review require MOD-101 and a shared verifier contract. |
+-| MOD-109 | Each leased transfer verifies the complete opened file against its pinned digest before serving any range. [Disconnected TLS and SQL acceptance](model-transfer-integrity.md#disconnected-tls-and-postgresql-acceptance) covers independent ranges, corruption outside the requested range, refusal and retry. Pre-warming from the site registry requires NET-102 and Agent changes. |
++| MOD-109 | A complete-file request compares its digest with the pinned catalogue. A bounded range of a larger file carries its own response digest; the Agent verifies the assembled file against the catalogue before use. [Disconnected TLS and SQL acceptance](model-transfer-integrity.md#disconnected-tls-and-postgresql-acceptance) covers complete-file substitution, two-range assembly, descriptor refusals and retry. Site-registry pre-warming still requires the Agent owner. |
+ | MOD-110 | Deployment admission checks the reviewed Qwen catalogue and on-site use. The [consumer handoff](model-license-admission.md#consumer-handoff) defines the startup configuration, public reasons, training and SCI launch checks still needed. |
+ | MOD-113 | The signed index needs a trust root and delivery integration, plus a new multi-entry contract consumed by the UI. No unsigned index should replace the embedded trust decision. |
+ | MOD-114 | Offline search depends on MOD-113. The browser's current local filter covers imported inventory. |
+diff --git a/docs/research/training-dataset-lineage.md b/docs/research/training-dataset-lineage.md
+index 712028c5..7a79ee4f 100644
+--- a/docs/research/training-dataset-lineage.md
++++ b/docs/research/training-dataset-lineage.md
+@@ -448,7 +448,7 @@ design only. No public operation or roadmap item is completed by this note.
+ ## Durable family domain contract
+ 
+ Reviewed 2026-11-13 for the model-owner implementation. Follow
+-[ADR 0071](../decisions/0071-retain-explicit-model-family-membership.md).
++[ADR 0073](../decisions/0073-retain-explicit-model-family-membership.md).
+ The MLflow distinction between registry identities and immutable versions above
+ is useful; its name-based registration is deliberately not ownsolid's grouping
+ rule. Each legacy version gets its own random persisted family UUID, without
+@@ -518,3 +518,52 @@ UUID are BSD-3-Clause, pgx is MIT and PostgreSQL uses the PostgreSQL License, as
+ recorded in [the cleanup research](model-import-cleanup.md#mod-121-abandoned-upload-retention).
+ They permit commercial/offline use and redistribution with notices. The official
+ registry and SQL documentation are design references only.
++
++### Service and wire policy handoff
++
++The staged model-owner entry points are:
++
++| Entry | Inputs and result |
++| --- | --- |
++| `StageVersionFamilyWithin` | Borrowed publication transaction, current authenticated Admin, requested workspace, exact new version ID, optional exact anchor, reason and server request ID; returns the persisted family UUID. An empty anchor selects a new independent family. The caller inserts the version and commits the whole reviewed/import publication, or suppresses the result on any failure. |
++| `History` | Current authenticated Admin, requested workspace, exact anchor and typed optional limit/cursor/state; returns `workspace_id`, `family_id`, `anchor_version_id`, bounded `items` and required nullable `next_cursor`. |
++| `HistoricalVersion` | Current authenticated Admin, requested workspace, exact anchor and exact member version; returns retained metadata, family and anchor IDs, the existing manifest and optional existing dataset lineage. |
++| `VersionHistoryPolicy` | Configured UI page default, maximum limit 100, cursor 512 bytes, page envelope 512 KiB and detail envelope 128 KiB. Metadata items have the fixed 4 KiB ceiling described above. |
++
++Every metadata item contains `id`, `workspace_id`, `name`, `model_key`, `kind`,
++`catalog_digest`, `state` and UTC `created_at`. The new historical state vocabulary
++is `ready`/`retired`; the stored `deleted` state and all existing DTOs remain intact.
++The complete body bound includes the existing `{data: ...}` envelope. No ordinal,
++count, latest alias, artifact-path authority or automatically aggregated history
++is returned. Default and explicit registration both use the existing version insert;
++the admitted DDL makes its membership atomic. Explicit selection must precede it.
++
++New history is Admin-only and requires an active installation workspace. A platform
++Admin's current authority spans that installation; removing an ordinary membership
++does not demote that Admin. Session, account, Admin-role and workspace revocation
++are checked again on every page. There is no new Portal history permission. Omitted
++limit selects policy; explicit zero is invalid. Omitted filter selects both retained
++states; explicit empty filter is invalid. Omitted cursor starts navigation; explicit
++empty, stale-key, tampered or differently bound cursor is invalid. Limits may change
++between pages without changing the bound anchor or filter. The current cursor has
++no independent grant lifetime and remains subject to the live session and key.
++
++Domain failures return a zero page/detail, never a partial `data` projection.
++`INVALID_CURSOR` requires restarting from the exact anchor. `VALIDATION_FAILED`
++rejects explicit invalid options. Existing `AUTH_SESSION_EXPIRED`, `ACCESS_DENIED`
++and `RESOURCE_NOT_FOUND` retain current authority/scope meanings.
++`MODEL_HISTORY_UNAVAILABLE` identifies an unadmitted backend/schema, unavailable
++signing key or invalid installed pagination policy. `MODEL_FAMILY_CONFLICT` refuses
++a different immutable membership choice. `MODEL_FAMILY_INVALID` and
++`MODEL_HISTORY_INVALID` require repairing retained metadata from a verified source.
++Existing `MODEL_FILE_INVALID` and `MODEL_DERIVED_CATALOG_INVALID` identify invalid
++catalogue or retained lineage. Storage and typed transaction failures retain the
++existing normalization and suppress projections, including unknown commit outcomes.
++
++These are module results, not newly registered HTTP Problems. DEV must admit the
++public request/response and Problem schemas and generated clients. The original
++route owner must bind the server-authenticated actor and resolved installation
++scope, preserve the body ceilings and current request deadline, and run real
++dispatcher acceptance. ARC must admit the unnumbered DDL, scoped role grants,
++catalog checks, backup/restore and data-preserving downgrade policy. Web then
++composes S-202 without changing legacy ready-only list/detail consumers.
+diff --git a/services/control/internal/modules/models/family_repository_integration_test.go b/services/control/internal/modules/models/family_repository_integration_test.go
+index e4b41152..2b9b98b3 100644
+--- a/services/control/internal/modules/models/family_repository_integration_test.go
++++ b/services/control/internal/modules/models/family_repository_integration_test.go
+@@ -370,6 +370,8 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
+ 				second := x
+ 				second.f.User = otherUser
+ 				secondActor := second.issue(t, "admin")
++				// Actor construction has its own real login audit, outside publication.
++				before = x.audits(t)
+ 				observer, err := pgx.ConnectConfig(x.ctx, x.f.PostgreSQL.Config().ConnConfig.Copy())
+ 				if err != nil {
+ 					t.Fatal(err)
+@@ -453,8 +455,15 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
+ 				if name == "matching_concurrency" && len(failures) != 0 || name == "conflicting_concurrency" && (len(failures) != 1 || failures[0].Error() != "MODEL_FAMILY_CONFLICT") {
+ 					t.Fatal("concurrent selection", failures)
+ 				}
+-				if familyID(t, x, id) != familyID(t, x, x.model) || x.audits(t) != before+1 {
+-					t.Fatal("concurrent membership/audit duplicated")
++				var selections int
++				if err := x.f.Store.QueryRow(x.ctx, transaction.SQL(transaction.PostgreSQL,
++					`SELECT count(*) FROM audit_events WHERE tenant_id=$1 AND workspace_id=$2 AND action='model.version_family_selected' AND target_type='model_version' AND target_id=$3`,
++					x.f.Tenant, x.f.Workspace, id)).Scan(&selections); err != nil {
++					t.Fatal(err)
++				}
++				actual, expected, audits := familyID(t, x, id), familyID(t, x, x.model), x.audits(t)
++				if actual != expected || selections != 1 || audits != before+1 {
++					t.Fatalf("concurrent membership/audit: family=%s want=%s selections=%d audits=%d want=%d", actual, expected, selections, audits, before+1)
+ 				}
+ 			}
+ 		})

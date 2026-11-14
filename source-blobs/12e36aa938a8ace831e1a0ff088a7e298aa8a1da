@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "/root/lane-gw104-read/services/control/internal/modules/distribution/alias_read_http_test.go": "/root/lane-gw-acceptance/gw104-schema60-handoff.hp2zlc1c/alias_read_http_test.go"
+  }
+}

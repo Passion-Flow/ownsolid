@@ -1,0 +1,233 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: baseline.spec.ts >> keyboard >> waits for the focused control to enter the viewport before sampling
+- Location: ../../../../../../../.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/focus-probe/baseline-flows.ts:118:5
+
+# Error details
+
+```
+Error: expect(received).toEqual(expected) // deep equality
+
+- Expected  - 1
++ Received  + 7
+
+- Array []
++ Array [
++   Object {
++     "indicated": true,
++     "label": "button \"Keyboard target\"",
++     "visible": false,
++   },
++ ]
+```
+
+# Page snapshot
+
+```yaml
+- button "Keyboard target" [ref=e2]
+```
+
+# Test source
+
+```ts
+  1   | // Keyboard and screen-reader flows every application must pass: each control on every
+  2   | // page state is reachable with Tab and shows where focus is, a new page takes focus and
+  3   | // names itself, and layers close with Escape and give focus back.
+  4   | import { expect, test, type Page } from '@playwright/test';
+  5   | import { account, mockControlPlane, type ControlPlane } from "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/packages/shell/testing/control-plane.ts";
+  6   | import type { PageState } from "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/packages/shell/testing/pages.ts";
+  7   | import { settled } from "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/packages/shell/testing/accessibility-flows.ts";
+  8   | 
+  9   | /** One element Tab stopped on. */
+  10  | interface TabStop {
+  11  |   /** Tag and accessible name, to say which control failed. */
+  12  |   label: string;
+  13  |   /** Inside the viewport once focused, with a size. */
+  14  |   visible: boolean;
+  15  |   /** Looks different focused than unfocused: outline, ring, border or background. */
+  16  |   indicated: boolean;
+  17  | }
+  18  | 
+  19  | // More stops than any page has; reaching it means focus is stuck in a loop it cannot leave.
+  20  | const maximumStops = 120;
+  21  | 
+  22  | /**
+  23  |  * Presses Tab until focus returns to a control it has visited. Each stop's look is
+  24  |  * recorded while focused and compared with its look once focus has left the page.
+  25  |  */
+  26  | async function walkTabOrder(page: Page): Promise<TabStop[]> {
+  27  |   for (let index = 1; index <= maximumStops; index += 1) {
+  28  |     await page.keyboard.press('Tab');
+  29  |     await settled(page);
+  30  |     const done = await page.evaluate((visit) => {
+  31  |       const element = document.activeElement;
+  32  |       // Focus is on the browser's own controls between two passes through the page.
+  33  |       if (!(element instanceof HTMLElement) || element === document.body) return false;
+  34  |       if (element.dataset.tabVisit) return true;
+  35  |       const style = getComputedStyle(element);
+  36  |       const rect = element.getBoundingClientRect();
+  37  |       element.dataset.tabVisit = String(visit);
+  38  |       element.dataset.tabLook = [
+  39  |         style.outlineStyle,
+  40  |         style.outlineWidth,
+  41  |         style.outlineColor,
+  42  |         style.boxShadow,
+  43  |         style.borderColor,
+  44  |         style.backgroundColor,
+  45  |       ].join('|');
+  46  |       element.dataset.tabVisible = String(
+  47  |         rect.width > 0 &&
+  48  |           rect.height > 0 &&
+  49  |           rect.bottom > 0 &&
+  50  |           rect.right > 0 &&
+  51  |           rect.top < window.innerHeight &&
+  52  |           rect.left < window.innerWidth,
+  53  |       );
+  54  |       return false;
+  55  |     }, index);
+  56  |     if (done) break;
+  57  |     if (index === maximumStops) throw new Error(`Tab did not cycle within ${maximumStops} stops`);
+  58  |   }
+  59  |   await page.evaluate(() => {
+  60  |     (document.activeElement as HTMLElement | null)?.blur();
+  61  |   });
+  62  |   await settled(page);
+  63  |   return page.evaluate(() =>
+  64  |     [...document.querySelectorAll<HTMLElement>('[data-tab-visit]')]
+  65  |       .sort((a, b) => Number(a.dataset.tabVisit) - Number(b.dataset.tabVisit))
+  66  |       .map((element) => {
+  67  |         const style = getComputedStyle(element);
+  68  |         const look = [
+  69  |           style.outlineStyle,
+  70  |           style.outlineWidth,
+  71  |           style.outlineColor,
+  72  |           style.boxShadow,
+  73  |           style.borderColor,
+  74  |           style.backgroundColor,
+  75  |         ].join('|');
+  76  |         const name =
+  77  |           element.getAttribute('aria-label') ??
+  78  |           (element.textContent.trim().slice(0, 40) ||
+  79  |             (element.getAttribute('placeholder') ?? element.id));
+  80  |         return {
+  81  |           label: `${element.tagName.toLowerCase()} "${name}"`,
+  82  |           visible: element.dataset.tabVisible === 'true',
+  83  |           indicated: look !== element.dataset.tabLook,
+  84  |         };
+  85  |       }),
+  86  |   );
+  87  | }
+  88  | 
+  89  | /** Fails the test unless Tab reaches at least one control and each one shows focus. */
+  90  | export async function expectFocusVisible(page: Page): Promise<void> {
+  91  |   const stops = await walkTabOrder(page);
+  92  |   expect(stops.length).toBeGreaterThan(0);
+> 93  |   expect(stops.filter((stop) => !stop.visible || !stop.indicated)).toEqual([]);
+      |                                                                    ^ Error: expect(received).toEqual(expected) // deep equality
+  94  | }
+  95  | 
+  96  | /** True when focus is in an open menu, which moves with the arrow keys instead of Tab. */
+  97  | function inMenu(page: Page): Promise<boolean> {
+  98  |   return page.evaluate(() => Boolean(document.activeElement?.closest('[role="menu"]')));
+  99  | }
+  100 | 
+  101 | /** Options for {@link keyboardFlows}. */
+  102 | export interface KeyboardFlowOptions {
+  103 |   audience: ControlPlane['audience'];
+  104 |   /** Every page state of the application, the shell's included. */
+  105 |   pages: readonly PageState[];
+  106 | }
+  107 | 
+  108 | /** Registers the keyboard flows in the current spec file. */
+  109 | export function keyboardFlows({ audience, pages }: KeyboardFlowOptions): void {
+  110 |   test.describe('keyboard', () => {
+  111 |     let control: ControlPlane;
+  112 | 
+  113 |     test.beforeEach(async ({ page }) => {
+  114 |       control = await mockControlPlane(page, audience);
+  115 |       await page.emulateMedia({ reducedMotion: 'reduce' });
+  116 |     });
+  117 | 
+  118 |     test('waits for the focused control to enter the viewport before sampling', async ({
+  119 |       page,
+  120 |     }) => {
+  121 |       let reportFocus: () => void = () => undefined;
+  122 |       const focused = new Promise<void>((resolve) => {
+  123 |         reportFocus = resolve;
+  124 |       });
+  125 |       await page.exposeFunction('reportFocusedControl', reportFocus);
+  126 |       await page.setContent('<button type="button">Keyboard target</button>');
+  127 |       await page.evaluate(() => {
+  128 |         const button = document.querySelector('button');
+  129 |         if (!button) throw new Error('The keyboard fixture button is missing');
+  130 |         button.style.position = 'fixed';
+  131 |         button.style.top = '-1000px';
+  132 |         button.addEventListener(
+  133 |           'focus',
+  134 |           () => {
+  135 |             void (
+  136 |               window as unknown as { reportFocusedControl: () => Promise<void> }
+  137 |             ).reportFocusedControl();
+  138 |           },
+  139 |           { once: true },
+  140 |         );
+  141 |       });
+  142 |       const walking = expectFocusVisible(page);
+  143 |       await focused;
+  144 |       const target = page.getByRole('button', { name: 'Keyboard target' });
+  145 |       await expect(target).toBeFocused();
+  146 |       await expect(target).not.toBeInViewport();
+  147 |       await page.evaluate(() => {
+  148 |         const button = document.querySelector('button');
+  149 |         if (button) button.style.top = '20px';
+  150 |       });
+  151 |       await walking;
+  152 |     });
+  153 | 
+  154 |     test('still refuses a focused control that stays outside the viewport', async ({ page }) => {
+  155 |       page.setDefaultTimeout(200);
+  156 |       await page.setContent('<button type="button">Offscreen keyboard target</button>');
+  157 |       await page.evaluate(() => {
+  158 |         const button = document.querySelector('button');
+  159 |         if (!button) throw new Error('The keyboard fixture button is missing');
+  160 |         button.style.position = 'fixed';
+  161 |         button.style.top = '-1000px';
+  162 |       });
+  163 |       await expect(expectFocusVisible(page)).rejects.toThrow(/Timeout 200ms exceeded/);
+  164 |       await expect(page.getByRole('button', { name: 'Offscreen keyboard target' })).toBeFocused();
+  165 |       await expect(
+  166 |         page.getByRole('button', { name: 'Offscreen keyboard target' }),
+  167 |       ).not.toBeInViewport();
+  168 |     });
+  169 | 
+  170 |     for (const state of pages.filter((each) => (each.audience ?? audience) === audience)) {
+  171 |       test(`${state.name}: every control is reachable and shows focus`, async ({ page }) => {
+  172 |         await state.open(page, control);
+  173 |         if (await inMenu(page)) {
+  174 |           // Each item takes focus in turn and is highlighted while it has it.
+  175 |           const items = page.getByRole('menuitem');
+  176 |           for (let index = 0; index < (await items.count()); index += 1) {
+  177 |             await page.keyboard.press('ArrowDown');
+  178 |             await expect(items.nth(index)).toBeFocused();
+  179 |             await expect(items.nth(index)).toHaveAttribute('data-highlighted', '');
+  180 |           }
+  181 |           return;
+  182 |         }
+  183 |         await expectFocusVisible(page);
+  184 |       });
+  185 |     }
+  186 | 
+  187 |     test('sign-in follows the order it is read in', async ({ page }) => {
+  188 |       await page.goto('/sign-in');
+  189 |       await page.getByLabel('Email').waitFor();
+  190 |       const order: string[] = [];
+  191 |       for (let index = 0; index < 5; index += 1) {
+  192 |         await page.keyboard.press('Tab');
+  193 |         order.push(
+```

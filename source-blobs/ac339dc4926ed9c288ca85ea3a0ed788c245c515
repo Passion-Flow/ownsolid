@@ -1,0 +1,95 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,re,shlex,shutil,signal,stat,subprocess,sys,tarfile,threading,time,uuid
+root=Path(sys.argv[1]);inputs=Path(sys.argv[2]) if len(sys.argv)>2 else root;os.umask(0o077)
+assert inputs.name.startswith('lane-arc107-handoff.821227ea.') and inputs.is_dir()
+assert root.name=='fleet-kpis' and root.parent==inputs
+assert not (root/'installed-exit').exists(),'Inspect retained installed result before repeating'
+assert (inputs/'build-exit').read_text().strip()=='0'
+source=inputs/'source';evidence=json.loads((inputs/'binary-evidence.json').read_text());sourceproof=json.loads((inputs/'installed-source-verified.json').read_text());assert sourceproof['source']=='821227ea5b94a8357f695c290e78af3b81c54f22'
+for name,item in evidence.items():assert hashlib.sha256((inputs/'binaries'/name).read_bytes()).hexdigest()==item['sha256']
+asset=inputs/'native-handoff-web.tar.gz';assert asset.stat().st_size==5359807 and hashlib.sha256(asset.read_bytes()).hexdigest()=='a35e896fa5ae9b92e22a98760ba3545802c33ec0318853f647888359fb8532c9'
+locks=[];child=None;monitor=None;stopped=threading.Event()
+try:
+ for name in ['/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock']:
+  p=Path(name);fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW);i=os.fstat(fd);assert stat.S_ISREG(i.st_mode) and i.st_uid==os.getuid()
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:os.close(fd);raise SystemExit(75)
+  assert (i.st_dev,i.st_ino)==(p.lstat().st_dev,p.lstat().st_ino);locks.append(fd)
+ memory={}
+ for line in Path('/proc/meminfo').read_text().splitlines():
+  key,_,value=line.partition(':')
+  if key in ['MemFree','MemAvailable']:memory[key]=int(value.split()[0])
+ psi=float(Path('/proc/pressure/io').read_text().split('full avg10=')[1].split()[0]);disk=shutil.disk_usage(root)
+ preflight={'memory_kib':memory,'full_io_psi_avg10':psi,'disk_free_bytes':disk.free,'source':sourceproof['source'],'agents':2000,'outer_cpu_limit':4,'outer_memory_bytes':6*1024**3,'host_ports':[],'network':'none; only recorder default routes inside isolated DinD','scope':'2000-agent TestFleetLoad baseline at five-second pacing; actual measured single-node scope only'}
+ (root/'installed-preflight.json').write_text(json.dumps(preflight,indent=2)+'\n');print(json.dumps(preflight),flush=True)
+ if memory['MemFree']<2097152 or memory['MemAvailable']<8388608 or psi>5 or disk.free<30*1024**3:raise SystemExit(75)
+ commands=subprocess.check_output(['ps','-e','-o','comm='],text=True).splitlines();assert not any(Path(x.strip()).name in {'go','compile','link','gcc','cc1','rustc','cargo','make'} for x in commands),'Another compiler is active'
+ images={'python:3.12.15-slim-bookworm':'sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70','pgvector/pgvector:0.8.7-pg18-bookworm':'sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47','victoriametrics/victoria-metrics:v1.155.0':'sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84','victoriametrics/victoria-logs:v1.53.0':'sha256:45dc9bef07c0c404255790e41f2c22c62ff55a690a1d556e0f9cb6f6e2556f1b','docker:29.1.3-dind':'sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5'}
+ for name,digest in images.items():
+  actual=json.loads(subprocess.check_output(['docker','image','inspect',name]))[0];assert actual['Id']==digest,(name,actual['Id']);assert actual['Architecture']=='amd64' and actual['Os']=='linux'
+ (root/'cached-images.json').write_text(json.dumps(images,indent=2)+'\n')
+ original_fixture=json.loads((inputs/'fixture-image.json').read_text());image=original_fixture['tag']
+ actual=json.loads(subprocess.check_output(['docker','image','inspect',image]))[0]
+ assert actual['Id']==original_fixture['id'] and actual['Config']['Labels']['org.opencontainers.image.revision']==sourceproof['source']
+ (root/'fixture-image.json').write_text(json.dumps(original_fixture,indent=2)+'\n')
+ env=os.environ.copy()
+ for key in list(env):
+  if key.startswith(('PROJECT_ONE_','OWNSOLID_')):env.pop(key)
+ env['DOCKER_BUILDKIT']='0'
+ def stop(sig,frame):raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop);signal.signal(signal.SIGHUP,stop)
+ def execute(command,name,budget):
+  global child
+  with (root/name).open('wb') as out:
+   child=subprocess.Popen(command,env=env,stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+   try:code=child.wait(timeout=budget)
+   except subprocess.TimeoutExpired:
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=30)
+    except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+    code=124
+  return code
+ (root/'installed-start').write_text(str(time.time())+'\n');(root/'installed-stage').write_text('installed-2000\n')
+ raw=root/'raw';raw.mkdir(mode=0o700);scratch=root/'installation-scratch';scratch.mkdir(mode=0o700)
+ capture=root/'capture-fleet-kpis.py';assert capture.is_file()
+ runner=(source/'tests/e2e/run-single-node.sh').read_text()
+ runner=runner.replace('cleanup() {\n','cleanup() {\n\tpython3 -I "$ARC_INSTALLED_RUN/capture-fleet-kpis.py" "$name" "$ARC_INSTALLED_RUN/raw" || true\n',1)
+ runner=runner.replace('--privileged --network none','--privileged --network none --cpus=4 --memory=6g --pids-limit=4096',1)
+ marker='docker exec \\\n\t--env OWNSOLID_E2E_INSTALLER='
+ assert marker in runner
+ probe='''# Exercise the same recorder before accepting zero-egress output.
+if docker exec "$name" nc -z -w 2 192.0.2.1 9; then
+ echo "The isolated recorder unexpectedly allowed its probe" >&2
+ exit 1
+fi
+python3 -I "$ARC_INSTALLED_RUN/capture-fleet-kpis.py" "$name" "$ARC_INSTALLED_RUN/raw"
+'''
+ runner=runner.replace(marker,probe+'\n'+marker,1)
+ script=root/'run-installed.sh';script.write_text(runner);subprocess.run(['bash','-n',str(script)],check=True)
+ (root/'runner-input.json').write_text(json.dumps({'original_harness_sha256':hashlib.sha256((source/'tests/e2e/run-single-node.sh').read_bytes()).hexdigest(),'capturing_harness_sha256':hashlib.sha256(script.read_bytes()).hexdigest(),'adjustments':['capture named fixture logs before owned cleanup','bound outer fixture to four CPUs and 6 GiB','send the existing TEST-NET recorder probe before test execution'],'assertion_changes':False},indent=2)+'\n')
+ env.update({'ARC_INSTALLED_RUN':str(root),'OWNSOLID_E2E_SCRATCH':str(scratch),'OWNSOLID_E2E_LOAD':'1','OWNSOLID_E2E_RUN':'^TestFleetLoad$','OWNSOLID_E2E_TIMEOUT':'50m'})
+ def observe():
+  while not stopped.wait(10):
+   for p in scratch.iterdir():
+    if p.is_dir() and p.name.startswith('ownsolid-e2e.'):
+     name=p.name.lower().replace('.','-')
+     try:subprocess.run(['python3','-I',str(capture),name,str(raw)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=35)
+     except subprocess.TimeoutExpired:pass
+ monitor=threading.Thread(target=observe);monitor.start();(root/'installed-stage').write_text('installed-2000\n')
+ code=execute(['bash',str(script),str(inputs/'binaries'),image,'pgvector/pgvector:0.8.7-pg18-bookworm','victoriametrics/victoria-metrics:v1.155.0','victoriametrics/victoria-logs:v1.53.0','docker:29.1.3-dind'],'installed.log',3300)
+ stopped.set();monitor.join(timeout=40);assert not monitor.is_alive()
+ (root/'installed-exit').write_text(str(code)+'\n');(root/'installed-finish').write_text(str(time.time())+'\n');assert code==0,('installed fleet load failed',code)
+ output=(root/'installed.log').read_text();assert '--- PASS: TestFleetLoad' in output and 'zero egress: no outbound attempt recorded (' in output and '--- SKIP:' not in output
+ probes=re.search(r'zero egress: no outbound attempt recorded \((\d+) harness probes seen\)',output);assert probes and int(probes.group(1))>=1,'Recorder probe was not observed'
+ assert not list(scratch.iterdir()),'Owned outer scratch was not cleaned'
+ print('Installed 2000-agent fleet load passed',flush=True);(root/'installed-stage').write_text('complete\n')
+except BaseException as error:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=40)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ raise
+finally:
+ stopped.set()
+ if monitor is not None:monitor.join(timeout=40)
+ for fd in reversed(locks):fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

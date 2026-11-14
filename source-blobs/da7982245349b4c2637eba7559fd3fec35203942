@@ -1,0 +1,139 @@
+#!/bin/bash
+set -euo pipefail
+cd "$1"
+root=$PWD
+net=$2
+server="$net-server"
+worker="$net-worker"
+dns="$net-dns"
+df -h /
+free -m
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+test "$(docker network inspect -f '{{.Internal}}' "$net")" = true
+addr() { docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$1"; }
+export ARC_SITE_DNS
+ARC_SITE_DNS=$(addr "$dns")
+for role in server worker; do
+    test ! -e "$root/$role-data"
+    bash setup-node.sh "$role"
+    docker exec "$net-$role" sh -ceu '
+        test ! -e /usr/local/bin/rke2
+        test ! -e /etc/rancher/rke2/config.yaml
+        test ! -e /var/lib/rancher/rke2/server/manifests/rke2-canal.yaml.skip
+        test ! -e /fixture-state/kubernetes.json
+    '
+    for qname in registry-1.docker.io usage.projectcalico.org; do
+        docker exec "$net-$role" getent ahostsv4 "$qname" || true
+        docker logs "$dns" | tail -n 1 | grep -F "\"name\":\"$qname.\""
+    done
+done
+first=$(( $(docker logs "$dns" | wc -l) + 1 ))
+mkdir -p evidence
+docker logs "$dns" | head -n "$((first - 1))" > evidence/site-dns-positive-controls.jsonl
+save_egress() {
+    docker logs "$dns" 2>/dev/null | tail -n "+$first" > evidence/site-dns.jsonl
+    for role in server worker; do
+        cp "$root/$role-capture/egress.jsonl" "evidence/$role-egress.jsonl"
+    done
+}
+trap save_egress EXIT
+server_ip=$(addr "$server")
+worker_ip=$(addr "$worker")
+probe() {
+    docker exec -e "ARC104_MODE=$1" -e "ARC104_NODE_ADDRESS=$3" -e "ARC104_SERVER_ADDRESS=$server_ip" \
+        "$2" /fixture-artifacts/agent-felix.test -test.v -test.run '^TestARC104RealRKE2$' -test.timeout=6m
+}
+k() { docker exec "$server" /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml --request-timeout=25s "$@"; }
+pid() { docker exec "$1" systemctl show --property=MainPID --value "$2"; }
+probe server "$server" "$server_ip"
+test "$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.spec.usageReportingEnabled}')" = false
+docker exec "$server" sh -ceu 'test ! -e /var/lib/rancher/rke2/server/manifests/rke2-canal.yaml.skip'
+docker exec "$worker" sh -ceu 'test ! -e /var/lib/rancher/rke2/server/manifests/rke2-canal.yaml.skip'
+felix_created=$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.metadata.creationTimestamp}')
+canal_created=$(k -n kube-system get ds/rke2-canal -o jsonpath='{.metadata.creationTimestamp}')
+test "$(date -d "$felix_created" +%s)" -lt "$(date -d "$canal_created" +%s)"
+printf 'Agent-created Felix default %s preceded packaged Canal DaemonSet %s\n' "$felix_created" "$canal_created"
+k -n kube-system get helmchart/rke2-canal -o name
+k -n kube-system get crd/felixconfigurations.crd.projectcalico.org -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}' | grep -x rke2-canal
+server_pid=$(pid "$server" rke2-server)
+probe server "$server" "$server_ip"
+test "$(pid "$server" rke2-server)" = "$server_pid"
+test "$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.metadata.creationTimestamp}')" = "$felix_created"
+free -m
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+probe token "$server" "$server_ip"
+probe worker-reject "$worker" "$worker_ip"
+docker exec "$worker" sh -c 'journalctl -u rke2-agent --no-pager | grep -q "CA cert validation failed"'
+worker_id=0d9e8f7a-6b5c-4d3e-8f2a-1b0c9d8e7f6b
+test -z "$(k get node "$worker_id" --ignore-not-found -o name)"
+rejected_pid=$(pid "$worker" rke2-agent)
+test "$rejected_pid" -gt 0
+install -m 0600 "$root/token/bootstrap" "$root/token/rejected"
+probe token "$server" "$server_ip"
+test -s "$root/token/bootstrap"
+if cmp -s "$root/token/rejected" "$root/token/bootstrap"; then exit 1; fi
+probe worker "$worker" "$worker_ip"
+docker exec "$worker" grep -F -q -f /fixture-token/bootstrap /etc/rancher/rke2/config.yaml
+ready_pid=$(pid "$worker" rke2-agent)
+test "$ready_pid" -gt 0
+test "$ready_pid" != "$rejected_pid"
+probe worker "$worker" "$worker_ip"
+test "$(pid "$worker" rke2-agent)" = "$ready_pid"
+printf 'Wrong CA refused, worker retried with distinct token and replay kept both unit PIDs\n'
+for node in "$server" "$worker"; do
+    docker exec "$node" sh -ceu '
+        test "$(stat -c %a /etc/rancher/rke2/ownsolid-registries.yaml)" = 600
+        hosts=/var/lib/rancher/rke2/agent/etc/containerd/certs.d/docker.io/hosts.toml
+        grep -F "[host.\"https://127.0.0.1:0/v2\"]" "$hosts"
+        if grep -q "^server =" "$hosts"; then exit 1; fi
+    '
+done
+docker exec "$worker" test ! -e /var/lib/rancher/rke2/server/manifests/rke2-canal.yaml.skip
+k get nodes -o wide
+k -n kube-system rollout status ds/rke2-canal --timeout=90s
+k run arc104-felix-workload --restart=Never --image-pull-policy=Never \
+    --image=docker.io/rancher/mirrored-pause:3.10.2 \
+    --overrides='{"spec":{"nodeSelector":{"kubernetes.io/hostname":"0d9e8f7a-6b5c-4d3e-8f2a-1b0c9d8e7f6b"}}}'
+k wait --for=condition=Ready --timeout=90s pod/arc104-felix-workload
+test "$(k get pod arc104-felix-workload -o jsonpath='{.spec.nodeName}')" = "$worker_id"
+k get pod arc104-felix-workload -o wide
+test "$(k -n kube-system get ds/rke2-canal -o jsonpath='{.status.numberReady}')" = 2
+start=$SECONDS
+echo "Watching site DNS and both packet captures for 330 seconds with both Canal Pods and worker workload ready"
+sleep 330
+test "$(k -n kube-system get ds/rke2-canal -o jsonpath='{.status.numberReady}')" = 2
+test "$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.spec.usageReportingEnabled}')" = false
+k get nodes -o wide
+for pod in $(k -n kube-system get pods -l k8s-app=canal -o name); do
+    podname=${pod#pod/}
+    logfile="evidence/$podname-felix.log"
+    k -n kube-system logs "$pod" -c calico-node > "$logfile"
+    grep -Eo 'UsageReportingEnabled[[:space:]:="]+false' "$logfile" | sort | uniq -c
+    if grep -qE 'Waiting before first check-in|doing first report|Failed to report usage' "$logfile"; then
+        echo "Felix reporter started in $podname" >&2
+        exit 1
+    fi
+done
+test "$(k -n kube-system get pods -l k8s-app=canal -o name | wc -l)" = 2
+save_egress
+python3 - evidence/site-dns.jsonl <<'PY'
+import collections, json, re, sys
+counts = collections.Counter()
+for line in open(sys.argv[1]):
+    entry = json.loads(line)
+    name, kind = entry["name"], entry["type"]
+    if kind == 13 and re.fullmatch(r"[0-9]+\.[0-9]+\.", name):
+        counts["CoreDNS HINFO"] += 1
+    elif kind == 2 and name == ".":
+        counts["CoreDNS root NS"] += 1
+    else:
+        raise SystemExit(f"unexpected site DNS: {name} {kind}")
+print("RKE2 site resolver questions:", dict(counts))
+assert counts
+PY
+for role in server worker; do
+    log="evidence/$role-egress.jsonl"
+    test ! -s "$log"
+    printf '%s external IPv4/IPv6 packets: %s\n' "$role" "$(wc -l < "$log")"
+done
+printf 'Public DNS questions: 0 after %ss with both Canal Pods ready\n' "$((SECONDS-start))"

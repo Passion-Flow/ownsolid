@@ -1,0 +1,5 @@
+# Project-one LoRA adapter
+
+Base repository: Qwen/Qwen3-0.6B
+
+Produced by the pinned Project-one training recipe. This adapter is not merged with its base model. Model quality and target hardware qualification require separate recorded validation.

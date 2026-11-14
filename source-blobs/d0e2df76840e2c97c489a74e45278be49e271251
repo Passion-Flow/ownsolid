@@ -1,0 +1,17 @@
+go 1.27.0
+
+use (
+	./api
+	./catalog
+	./deploy/offline
+	./pkg/capabilities
+	./pkg/license
+	./pkg/operatorsocket
+	./services/agent
+	./services/control
+	./tests/e2e
+	./tools/audit-verify
+	./tools/cli
+	./tools/dev/simulator
+	./tools/release/offline
+)

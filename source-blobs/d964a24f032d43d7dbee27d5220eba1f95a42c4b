@@ -1,0 +1,16 @@
+{
+  "research_commit": "fbab1ab1",
+  "runtime_source": "821227ea5b94a8357f695c290e78af3b81c54f22",
+  "external_scripts": {
+    "fleet-kpi-runner.py": "0a1eb8a704d1c878239cda65ef5887e13920a89a0b9820cf3114e57e5a9845c7",
+    "capture-fleet-kpis.py": "99b09adeea6a4de2bcad93d028bfeb284751a1ab782b82b84a285274a8b8adca",
+    "fleet-kpi-admission.py": "cf2907d4a26e9a989f95e5747f181eda58a4684b46c4489c19217f90ce49fc48"
+  },
+  "unchanged_test": "TestFleetLoad",
+  "agents": 2000,
+  "seconds": 1500,
+  "heartbeat_seconds": 5,
+  "outer_cpu_limit": 4,
+  "outer_memory_bytes": 6442450944,
+  "assertion_changes": false
+}

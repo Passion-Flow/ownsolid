@@ -1,0 +1,63 @@
+import json
+import re
+from pathlib import Path
+
+scratch = Path(__file__).resolve().parent
+root = Path.home() / "lane-sci"
+database = root / "services/control/internal/platform/database"
+migration = "000058_audit_chain_head_scope"
+fixtures = root / "services/control/internal/modules/audit/testdata"
+migrations = root / "services/control/migrations/postgresql"
+hashes = {}
+for line in (scratch / "restore-matrix.log").read_text().splitlines():
+    match = re.fullmatch(r"catalog 58 (\w+) ([a-f0-9]{64})", line)
+    if match:
+        hashes[match[1]] = match[2]
+assert set(hashes) == {
+    "fresh58_test", "native_test", "restored55_test",
+    "restored56_test", "restored57_test", "restored58_test",
+}, hashes
+assert hashes["native_test"] == hashes["fresh58_test"]
+assert hashes["restored56_test"] == hashes["restored57_test"] == hashes["restored58_test"]
+
+def write_overlay(name, source, data):
+    backing = scratch / name
+    backing.write_text(data)
+    replacements[str(source)] = str(backing)
+
+replacements = {}
+for direction in ("up", "down"):
+    name = f"{migration}.{direction}.sql"
+    assert not (migrations / name).exists()
+    replacements[str(migrations / name)] = str(fixtures / name)
+
+version_file = database / "database.go"
+original = version_file.read_text()
+updated, count = re.subn(r"const SchemaVersion = 57\b", "const SchemaVersion = 58", original)
+assert count == 1
+write_overlay(version_file.name, version_file, updated)
+
+catalog_file = database / "catalog.go"
+original = (scratch / "arc-catalog.go").read_text()
+names = (
+    ("catalogFreshSHA256", hashes["fresh58_test"]),
+    ("catalogRestoredAt55SHA256", hashes["restored55_test"]),
+    ("catalogRestoredSHA256", hashes["restored56_test"]),
+)
+updated, count = re.subn(
+    r"const \(\n\s*catalogFreshSHA256.*?\n\)",
+    "const (\n" + "".join(f'\t{name} = "{digest}"\n' for name, digest in names) + ")",
+    original, flags=re.S,
+)
+assert count == 1
+updated, count = re.subn(
+    r"case catalogFreshSHA256[^:\n]*:",
+    "case " + ", ".join(name for name, _ in names) + ":",
+    updated,
+)
+assert count == 1
+write_overlay(catalog_file.name, catalog_file, updated)
+extra_test = "audit_candidate_restore_matrix_test.go"
+replacements[str(database / extra_test)] = str(scratch / extra_test)
+
+(scratch / "overlay.json").write_text(json.dumps({"Replace": replacements}, indent=2))

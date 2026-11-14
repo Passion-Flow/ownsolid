@@ -1,0 +1,461 @@
+diff --git a/docs/research/gateway-model-description.md b/docs/research/gateway-model-description.md
+index 8c0b8d79..9850cc39 100644
+--- a/docs/research/gateway-model-description.md
++++ b/docs/research/gateway-model-description.md
+@@ -160,8 +160,8 @@ revision and returned the current description. A forced audit failure
+ rolled back the update and its intent, and the same idempotency key
+ could then be used for a different request. Clearing text while paused
+ left the routing revision, deployment binding and target history
+-intact, and the existing API key remained valid after resume. The
+-candidate down SQL restored the predecessor HTTP response shape.
++intact, and the existing API key remained valid after resume. The current down SQL refuses retained content, revisions and replay
++intents; a pristine downgrade preserves the predecessor response shape.
+ 
+ The unnumbered, test-only up and down scripts live in
+ `services/control/internal/modules/distribution/testdata/`. The fixture
+@@ -303,3 +303,121 @@ the fresh and restored-at-55 paths after running the down SQL.
+ These are overlay measurements. Recompute the signatures, release
+ lineage and expected table count from the actual committed tail when
+ the migration is ordered. The candidate adds one table.
++
++
++## Schema-58 migration handoff
++
++The committed baseline 106ca52d includes the GW-120 production source
++from 8d359f49 and its scoped correction c9654657, plus the published
++OpenAPI contract. No additional production Go patch is needed to
++activate descriptions. ARC must append the exact unnumbered up SQL
++from distribution testdata at the actual shared tail, preserve all
++previous migration bytes, and recalculate the complete catalogue and
++runtime access checks. This gateway lane does not assign the number.
++The candidate adds one public table and raises the baseline count from
++118 to 119 before any subsequent migration.
++
++The new table is model_alias_description_intents: tenant, workspace,
++site, cell, actor, UUID intent key, alias, applied description revision,
++32-byte request fingerprint and creation time. Its composite primary
++key retains actor-scoped idempotency; its composite alias foreign key
++fences tenant, workspace, site and cell together. Both cell columns
++are non-null and default from the local registry. The existing
++protect_alias_cutover_record trigger rejects updates and deletes.
++model_aliases receives the plain text and independent revision, plus
++the composite unique key needed by the new foreign key. No role,
++sequence, extension, model, dataset or dependency is introduced.
++
++Apply migration DDL with the existing operator and installation lock,
++then extend the installed restricted runtime principal through the
++existing runtime-access step before starting control. The current
++grant policy requires SELECT, INSERT, UPDATE and DELETE on business
++tables, with no ownership, DDL, TRUNCATE, REFERENCES, TRIGGER or grant
++option; the immutable trigger still refuses intent updates/deletes.
++The new table is not an exception to that existing policy. Do not
++grant the runtime role access to audit_chain_head or writes to the
++migration ledger. ARC must verify effective runtime privileges against
++the actual new TableCount; the gateway candidate does not weaken the
++platform admission predicate.
++
++### Safe rollback
++
++Run the down script in one operator transaction while serving is
++stopped. Acquire ACCESS EXCLUSIVE locks on aliases and description
++intents before checking retained state. Refuse with SQLSTATE 55000 and
++MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE if any description
++is nonempty, any independent revision differs from 1, or any edit
++intent exists. Clearing the visible text does not make its revision
++and replay history disposable. A verified pre-upgrade backup and the
++normal restore procedure are required once the feature has been used;
++the down script never clears content or deletes intents to force a
++rollback. A pristine, unused upgrade can remove the new columns,
++reference constraint and table and retain the original alias routing
++state. The [PostgreSQL lock modes](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-TABLES)
++and [exception semantics](https://www.postgresql.org/docs/18/plpgsql-errors-and-messages.html)
++provide the same-transaction check and refusal. Existing licence
++terms above apply.
++
++Keep the predecessor HTTPS upgrade fixture pinned to schema 58 so it
++continues to prove omitted fields, SERVICE_NOT_READY and legacy
++publication replay after the production migration lands. A separate
++installed-schema fixture must use normal database migration/checking
++and run the same Admin/Portal flow without applying candidate DDL.
++Until ARC installs the shared migration, that fixture remains pending.
++Test pristine rollback, every retained-state predicate, rollback after
++clearing, and a writer committed while downgrade waits for its lock.
++Neither the feature nor S-304 is complete until the installed schema,
++restricted runtime and actual Portal consumer are qualified.
++
++
++### Committed schema-58 qualification
++
++The exact production schema-58 files from 106ca52d reproduced the three
++baseline catalogue signatures before applying the candidate. Fresh
++schema, a schema-58 logical restore followed by candidate application,
++a current candidate dump/reparse, and restore at 55 followed by upgrade
++through 58 all passed on PostgreSQL 18.6 and pgvector 0.8.7 with no
++external network. The latter two current restore paths agreed on the
++same digest. Pristine down returned the exact fresh and restored-at-55
++baseline catalogues. The three resulting signatures remain the values
++in the scoped table above. These are candidate measurements against
++the committed predecessor, not the formally numbered production tail.
++
++The unnumbered up SQL SHA-256 is
++399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
++The safe down SQL SHA-256 is
++4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
++Changing only the down refusal does not change the candidate catalogue.
++ARC must retain these exact raw bytes when assigning the actual tail
++and verify the complete release lineage and runtime principal.
++
++The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
++concurrent revision refusal, exact replay, scope checks and retry after
++audit rollback. TestAliasDescriptionRollbackPreservesRetainedState
++passed pristine rollback and independent text, revision and intent
++refusals. TestAliasDescriptionRollbackWaitsForCommittedWriter observed
++the table-lock wait, committed the writer, and then received the
++retained-state refusal without losing the write. Clearing through the
++HTTP route still prevented downgrade and retained a successful replay.
++The installed-schema test was explicitly skipped on schema 58.
++
++The Linux handoff and logs are retained in
++/root/lane-gw-acceptance/gw120-schema58._65ygj2r. run-tests.sh runs the
++focused PostgreSQL/HTTPS checks; catalog.sh reproduces fresh, current
++restore and old restore in one disposable container. Both acquire the
++shared Linux heavy-test and SCI replay locks and enforce the resource
++preflight. The schema fixture uses only its own namespace and no host
++listener. No model or GPU ran. For an already prepared private fixture,
++run the native tests from the repository root:
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription(PostgreSQLUpgradeAndHTTPS|InstalledSchemaAndHTTPS|RollbackPreservesRetainedState|RollbackWaitsForCommittedWriter)$' -count=1
++```
++
++After formal migration, require InstalledSchemaAndHTTPS to pass using
++the normal production migrator and catalog checks, without applying the
++candidate SQL. ARC owns the exact numbered files, catalogue constants,
++TableCount and restricted runtime verification; GW owns this backend
++read/write regression; WEB and DEL own the installed S-304 consumer
++qualification. Neither the candidate run nor a skipped installed test
++is a completed production description flow.
+diff --git a/services/control/internal/modules/distribution/alias_description_migration_test.go b/services/control/internal/modules/distribution/alias_description_migration_test.go
+new file mode 100644
+index 00000000..7c378211
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_description_migration_test.go
+@@ -0,0 +1,166 @@
++package distribution_test
++
++import (
++	"context"
++	"errors"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
++	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5/pgconn"
++)
++
++func applyAliasDescriptionRollback(t *testing.T, c scenario) error {
++	t.Helper()
++	ctx := t.Context()
++	tx, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		return err
++	}
++	defer tx.Rollback(ctx)
++	if _, err := tx.Exec(ctx, aliasDescriptionCandidateDown); err != nil {
++		return err
++	}
++	return tx.Commit(ctx)
++}
++
++func aliasDescriptionRetainedState(t *testing.T, c scenario) string {
++	t.Helper()
++	var state string
++	if err := c.s.DB.QueryRow(t.Context(), `SELECT jsonb_build_object(
++        'aliases',(SELECT jsonb_agg(to_jsonb(a) ORDER BY id) FROM model_aliases a),
++        'intents',(SELECT jsonb_agg(to_jsonb(i) ORDER BY tenant_id,workspace_id,actor_user_id,idempotency_key)
++          FROM model_alias_description_intents i))::text`).Scan(&state); err != nil {
++		t.Fatal(err)
++	}
++	return state
++}
++
++func assertAliasDescriptionRollbackError(t *testing.T, err error) {
++	t.Helper()
++	var pgErr *pgconn.PgError
++	if !errors.As(err, &pgErr) || pgErr.Code != "55000" || pgErr.Message != "MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE" {
++		t.Fatalf("expected retained description downgrade refusal, got %v", err)
++	}
++}
++
++func assertAliasDescriptionRollbackRefused(t *testing.T, c scenario) {
++	t.Helper()
++	before := aliasDescriptionRetainedState(t, c)
++	for range 2 {
++		assertAliasDescriptionRollbackError(t, applyAliasDescriptionRollback(t, c))
++		if after := aliasDescriptionRetainedState(t, c); after != before {
++			t.Fatal("refused downgrade changed descriptions or retained replay intents")
++		}
++	}
++}
++
++func TestAliasDescriptionRollbackPreservesRetainedState(t *testing.T) {
++	for _, mode := range []string{"pristine", "published_text", "cleared_revision", "retained_intent"} {
++		t.Run(mode, func(t *testing.T) {
++			c := setupAccount(t, fixture.NewAtVersion(t, 58))
++			ctx := t.Context()
++			alias := c.published(t)
++			if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++				t.Fatal(err)
++			}
++			switch mode {
++			case "published_text":
++				// Explicit fixture state isolates the publication text predicate at revision 1.
++				if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET description='Retain published intent' WHERE id=$1", alias.ID); err != nil {
++					t.Fatal(err)
++				}
++			case "cleared_revision":
++				// Empty visible text still carries an independent concurrency revision.
++				if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET description_revision=2 WHERE id=$1", alias.ID); err != nil {
++					t.Fatal(err)
++				}
++			case "retained_intent":
++				// The valid scoped intent must independently prevent destruction.
++				if _, err := c.s.DB.Exec(ctx, `INSERT INTO model_alias_description_intents
++                    (tenant_id,workspace_id,actor_user_id,idempotency_key,alias_id,result_revision,fingerprint)
++                    VALUES($1,$2,$3,$4,$5,1,$6)`, c.a.Me.Workspace.TenantID, alias.WorkspaceID,
++					c.a.Me.User.ID, uuid.NewString(), alias.ID, make([]byte, 32)); err != nil {
++					t.Fatal(err)
++				}
++			}
++			if mode != "pristine" {
++				assertAliasDescriptionRollbackRefused(t, c)
++				return
++			}
++			if err := applyAliasDescriptionRollback(t, c); err != nil {
++				t.Fatal(err)
++			}
++			if err := database.Check(ctx, c.s.DB); err != nil {
++				t.Fatal("pristine downgrade did not restore the exact schema-58 catalog", err)
++			}
++			got, err := c.s.Alias(ctx, c.a, alias.WorkspaceID, alias.ID)
++			if err != nil || got.ID != alias.ID || got.Revision != alias.Revision || got.DeploymentID != alias.DeploymentID ||
++				got.DeploymentRevision != alias.DeploymentRevision || got.Description != nil || got.DescriptionRevision != nil {
++				t.Fatal("pristine downgrade changed the retained alias", err)
++			}
++		})
++	}
++}
++
++func TestAliasDescriptionRollbackWaitsForCommittedWriter(t *testing.T) {
++	c := setupAccount(t, fixture.NewAtVersion(t, 58))
++	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
++	defer cancel()
++	alias := c.published(t)
++	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++		t.Fatal(err)
++	}
++	writer, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer writer.Rollback(ctx)
++	if _, err := writer.Exec(ctx, "UPDATE model_aliases SET description='Committed while downgrade waits' WHERE id=$1", alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	downgrade, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer downgrade.Rollback(ctx)
++	pid := downgrade.Conn().PgConn().PID()
++	result := make(chan error, 1)
++	go func() {
++		_, err := downgrade.Exec(ctx, aliasDescriptionCandidateDown)
++		if err == nil {
++			err = downgrade.Commit(ctx)
++		} else {
++			_ = downgrade.Rollback(ctx)
++		}
++		result <- err
++	}()
++	ticker := time.NewTicker(10 * time.Millisecond)
++	defer ticker.Stop()
++	for {
++		var waiting bool
++		if err := c.s.DB.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE pid=$1 AND wait_event_type='Lock')", pid).Scan(&waiting); err != nil {
++			t.Fatal(err)
++		}
++		if waiting {
++			break
++		}
++		select {
++		case err := <-result:
++			t.Fatalf("downgrade did not wait for the active writer: %v", err)
++		case <-ctx.Done():
++			t.Fatal("downgrade did not reach its table lock", ctx.Err())
++		case <-ticker.C:
++		}
++	}
++	if err := writer.Commit(ctx); err != nil {
++		t.Fatal(err)
++	}
++	assertAliasDescriptionRollbackError(t, <-result)
++	var description string
++	if err := c.s.DB.QueryRow(ctx, "SELECT description FROM model_aliases WHERE id=$1", alias.ID).Scan(&description); err != nil || description != "Committed while downgrade waits" {
++		t.Fatal("downgrade lost the writer committed before its lock", err)
++	}
++}
+diff --git a/services/control/internal/modules/distribution/alias_description_test.go b/services/control/internal/modules/distribution/alias_description_test.go
+index 4f5ca839..962933f8 100644
+--- a/services/control/internal/modules/distribution/alias_description_test.go
++++ b/services/control/internal/modules/distribution/alias_description_test.go
+@@ -15,6 +15,7 @@ import (
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
+ 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+ 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+@@ -31,7 +32,20 @@ var aliasDescriptionCandidateUp string
+ var aliasDescriptionCandidateDown string
+ 
+ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
++	c := setupAccount(t, fixture.NewAtVersion(t, 58))
++	exerciseAliasDescriptionHTTPS(t, c, false)
++}
++
++func TestAliasDescriptionInstalledSchemaAndHTTPS(t *testing.T) {
++	if database.SchemaVersion == 58 {
++		t.Skip("requires the production description migration after schema 58")
++	}
+ 	c := setup(t)
++	exerciseAliasDescriptionHTTPS(t, c, true)
++}
++
++func exerciseAliasDescriptionHTTPS(t *testing.T, c scenario, installed bool) {
++	t.Helper()
+ 	ctx := t.Context()
+ 	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
+ 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
+@@ -61,11 +75,15 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 	legacyID := legacy["id"].(string)
+ 	portal.Call("GET", portalPath+"/"+legacyID, nil, 200, "ModelAliasResponse")
+ 	portal.Call("GET", portalPath, nil, 200, "ModelAliasPageResponse")
+-	if _, exists := legacy["description"]; exists {
+-		t.Fatal("predecessor response gained a field")
+-	}
+-	if _, exists := legacy["description_revision"]; exists {
+-		t.Fatal("predecessor response gained a description revision")
++	if !installed {
++		if _, exists := legacy["description"]; exists {
++			t.Fatal("predecessor response gained a field")
++		}
++		if _, exists := legacy["description_revision"]; exists {
++			t.Fatal("predecessor response gained a description revision")
++		}
++	} else if legacy["description"] != "" || legacy["description_revision"] != float64(1) {
++		t.Fatal("normal migrated publication did not include description defaults")
+ 	}
+ 	problem := func(client *httpfixture.Client, path string, body any, status int, code string) {
+ 		t.Helper()
+@@ -77,34 +95,37 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 	edit := distribution.AliasDescriptionEdit{Description: "Initial edit", ExpectedDescriptionRevision: 1, Reason: "Synthetic catalogue edit"}
+ 	admin.Headers["Idempotency-Key"] = uuid.NewString()
+ 	predecessorEditPath := adminPath + "/" + legacyID + "/description"
+-	problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
+-	anonymous := httpfixture.New(t, server, "admin", schemas)
+-	if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
+-		t.Fatal("unauthenticated edit did not return the standard problem")
+-	}
+-	problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
+-	predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
+-	predecessorResponse, err := server.Client().Do(predecessorRequest)
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	var predecessorProblem map[string]any
+-	decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
+-	predecessorResponse.Body.Close()
+-	if decodeError != nil || predecessorResponse.StatusCode != 503 ||
+-		predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
+-		predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
+-		predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
+-		predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
+-		t.Fatal("invalid predecessor response or retry metadata", decodeError)
+-	}
+-	publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
+-	admin.Headers["Idempotency-Key"] = describedKey
+-	problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
++	if !installed {
++		problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
++		anonymous := httpfixture.New(t, server, "admin", schemas)
++		if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
++			t.Fatal("unauthenticated edit did not return the standard problem")
++		}
++		problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
++		predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
++		predecessorResponse, err := server.Client().Do(predecessorRequest)
++		if err != nil {
++			t.Fatal(err)
++		}
++		var predecessorProblem map[string]any
++		decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
++		predecessorResponse.Body.Close()
++		if decodeError != nil || predecessorResponse.StatusCode != 503 ||
++			predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
++			predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
++			predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
++			predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
++			t.Fatal("invalid predecessor response or retry metadata", decodeError)
++		}
++		publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
++		admin.Headers["Idempotency-Key"] = describedKey
++		problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
+ 
+-	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
+-		t.Fatal(err)
++		if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++			t.Fatal(err)
++		}
+ 	}
++
+ 	assertDescription := func(value map[string]any, description string, revision int) {
+ 		t.Helper()
+ 		if value["description"] != description || value["description_revision"] != float64(revision) {
+@@ -352,10 +373,13 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 		t.Fatal("edit intents and audit events disagree", intents, audits, err)
+ 	}
+ 
+-	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateDown); err != nil {
+-		t.Fatal(err)
++	assertAliasDescriptionRollbackRefused(t, c)
++	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse"), "", 4)
++	admin.Headers["Idempotency-Key"] = rollbackKey
++	if replay := admin.Write("POST", editPath, clear, 200, "AliasDescriptionResultResponse"); replay["replayed"] != true || replay["applied_description_revision"] != float64(4) {
++		t.Fatal("refused downgrade lost the retained edit replay")
+ 	}
+-	member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse")
++	assertRoute(3, 3)
+ }
+ 
+ func verifyAliasDescriptionScope(t *testing.T, c scenario, aliasID string) {
+diff --git a/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql b/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
+index 5362f5e9..6108a2e0 100644
+--- a/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
++++ b/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
+@@ -1,3 +1,12 @@
++-- Run in one operator transaction with serving stopped.
++LOCK TABLE model_aliases, model_alias_description_intents IN ACCESS EXCLUSIVE MODE;
++DO $$
++BEGIN
++ IF EXISTS(SELECT 1 FROM model_aliases WHERE description <> '' OR description_revision <> 1)
++   OR EXISTS(SELECT 1 FROM model_alias_description_intents) THEN
++  RAISE EXCEPTION 'MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE' USING ERRCODE='55000';
++ END IF;
++END $$;
+ DROP TABLE model_alias_description_intents;
+ ALTER TABLE model_aliases
+  DROP CONSTRAINT model_alias_description_scope_key,

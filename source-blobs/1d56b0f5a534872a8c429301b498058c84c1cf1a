@@ -1,0 +1,18 @@
+{
+  "parent_pid": 2967468,
+  "entry_exit_code": 75,
+  "fds": {
+    "8": {
+      "open": true,
+      "device": 29,
+      "inode": 82,
+      "parent_fdinfo": "pos:\t0\nflags:\t0500002\nmnt_id:\t34\nino:\t82\n"
+    },
+    "9": {
+      "open": true,
+      "device": 64512,
+      "inode": 7508772,
+      "parent_fdinfo": "pos:\t0\nflags:\t0500002\nmnt_id:\t31\nino:\t7508772\n"
+    }
+  }
+}

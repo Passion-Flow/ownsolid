@@ -1,0 +1,22 @@
+{
+  "platform": "linux/amd64",
+  "test_data": "generated_only",
+  "source_sha256": "f8f74d6b50b66a61c6d28faae61a201b3d2e848b3da3c04ecf7d108513ae80ae",
+  "checks": [
+    "second_writer_refused",
+    "reader_while_writer_held",
+    "independent_process_read",
+    "carrier_descriptor_readonly",
+    "same_length_change_and_repair",
+    "missing_and_symlink_refused",
+    "namespace_change_and_repair",
+    "root_replacement_refused",
+    "reader_close_preserves_writer_lock",
+    "writer_release_allows_next_owner"
+  ],
+  "passed": 10,
+  "seconds": 0.0343,
+  "maximum_rss_kib": 17408,
+  "postgresql_or_processor_started": false,
+  "scope": "kernel descriptor/ownership mechanism only; not Go product or mount qualification"
+}

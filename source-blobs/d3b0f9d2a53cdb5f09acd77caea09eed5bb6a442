@@ -1,0 +1,40 @@
+from pathlib import Path
+import datetime,hashlib,json,os,re,shutil,signal,subprocess,sys,tempfile,time
+config_path=Path(sys.argv[1]);config=json.loads(config_path.read_text());stage=Path(config['stage']);source=Path(config['source'])
+assert config['operation_seconds']+config['cleanup_seconds']<=config['hard_seconds']<=30
+manifest=json.loads((stage/'source.json').read_text())
+assert os.geteuid()==0 and os.uname().machine=='x86_64'
+assert subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True).strip()==manifest['base']
+changed=subprocess.check_output(['git','-C',str(source),'status','--porcelain'],text=True)
+assert {line[3:] for line in changed.splitlines()}==set(manifest['files'])
+for name,digest in manifest['files'].items():assert hashlib.sha256((source/name).read_bytes()).hexdigest()==digest
+assert hashlib.sha256((stage/'installer.test').read_bytes()).hexdigest()==manifest['binary_sha256']
+assert hashlib.sha256((stage/'canonical-compose.yaml').read_bytes()).hexdigest()==manifest['canonical_sha256']
+output=Path(tempfile.mkdtemp(prefix='portal-unit-native.',dir='/root/lane-rel-tools'))
+result={'scope':'Actual Linux amd64 installer unit tests with private loopback TLS, controlled Docker responses and private tmpfs; no real Docker command/daemon/image/Control/DB/host port or egress-attempt capture',
+ 'source':manifest,'runtime':config,'parent_pid':os.getpid(),'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'heavy_leases':'Not requested for lightweight isolated unit tests',
+ 'resources':{'meminfo':Path('/proc/meminfo').read_text(),'io':Path('/proc/pressure/io').read_text(),'disk_free':shutil.disk_usage('/tmp').free}}
+subprocess.run(['free','-m'],check=True);subprocess.run(['df','-h','/tmp'],check=True)
+shutil.copyfile(__file__,output/'parent.py');shutil.copyfile(stage/'native_unit_child_netlink.py',output/'child.py')
+child=None;started=time.monotonic()
+try:
+ argv=['/usr/bin/unshare','--mount','--net','--pid','--fork','--kill-child=KILL','--mount-proc','/usr/bin/python3','-I',str(stage/'native_unit_child_netlink.py'),str(config_path)]
+ environment={'PATH':'/usr/sbin:/usr/bin:/sbin:/bin'}
+ with (output/'tests.log').open('w') as log:
+  child=subprocess.Popen(argv,env=environment,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+  try:status=child.wait(timeout=config['operation_seconds'])
+  finally:
+   if child.poll() is None:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=config['join_seconds'])
+ text=(output/'tests.log').read_text()
+ result.update(exit=status,child_pid=child.pid,root_count=len(re.findall(r'^=== RUN   Test[^/\n]+$',text,re.M)),test_run_count=len(re.findall(r'^=== RUN   ',text,re.M)))
+ assert status==0,text
+ assert '--- SKIP:' not in text and '[no tests to run]' not in text and result['root_count']==config['root_count']
+ assert len(re.findall(r'^--- PASS: TestPortal[^/\n]+ \(',text,re.M))==11
+ assert hashlib.sha256((stage/'installer.test').read_bytes()).hexdigest()==manifest['binary_sha256']
+ result['passed']=True
+finally:
+ if child is not None and child.poll() is None:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=config['join_seconds'])
+ result['elapsed_seconds']=time.monotonic()-started;result['launcher_joined']=child is None or child.poll() is not None
+ result['private_tmpfs_lifetime']='Owned namespace exits with its PID 1; no host /tmp test directories were created'
+ (output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+ print(output,flush=True);print(json.dumps({k:result[k] for k in ['passed','exit','elapsed_seconds','test_run_count','root_count','launcher_joined'] if k in result}),flush=True)

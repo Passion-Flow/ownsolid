@@ -1,0 +1,35 @@
+{
+  "reviewed_main": "d99dbb25acf24897252717e8f724ded321e7338b",
+  "review_kind": "Static code trace; no browser/SQL reproduction",
+  "source_files_unchanged_from_candidate_base": true,
+  "consumers": [
+    "web/apps/console/src/audit-page.tsx",
+    "web/apps/console/src/resource-page.tsx"
+  ],
+  "shared_policy": "web/packages/shell/src/session.ts",
+  "problem_classifier": "web/packages/api/src/problem.ts",
+  "transport": "web/packages/api/src/transport.ts",
+  "network_timeout_retry_inherited": true,
+  "status_409_retryable": false,
+  "web_source_modified": false,
+  "generated_patch_fixes_consumer_behavior": false,
+  "owner_checks": [
+    "One request after network/timeout/409 until an explicit retry",
+    "First page and continuation retain selected filters/cursor",
+    "Focus, reconnect and remount after an uncertain result",
+    "Contextual read recovery copy; keep other query defaults and thirteen fields unchanged",
+    "Add focused browser cases to existing audit.spec.ts and resource-pages.spec.ts; no automatic request after 409, network error, timeout, focus, reconnect or cached remount",
+    "After a continuation failure, show contextual uncertainty and explicitly repeat only the failed cursor; do not silently refetch all previous audited pages",
+    "Pin first-page selection for an explicit retry; current rolling-window query function reads the clock again",
+    "Keep English and Simplified Chinese read-oriented recovery text and retain earlier request IDs"
+  ],
+  "consumer_patch": "/root/lane-rel-tools/identity-audit-contract/relay/web-consumer-retry.patch",
+  "consumer_patch_sha256": "41d1f2339aa81cf9b8c3a8f92d863295f65b73c48f7d49fd2a86bd0f96803fb6",
+  "consumer_source_sha256": {
+    "web/apps/console/src/audit-page.tsx": "9f49274fb47a013bf9c4d574b7a2ef841a2de1e8b196958090f6e48ab9774b15",
+    "web/apps/console/src/resource-page.tsx": "729bbe3e2c8d9c5632481340d7619294250d39fa41d874e78fdbddf38b41e94e"
+  },
+  "consumer_patch_apply_check_passed": true,
+  "consumer_patch_applied_to_product": false,
+  "consumer_patch_browser_tests_run": false
+}

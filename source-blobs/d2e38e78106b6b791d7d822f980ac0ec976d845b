@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+gate=$LANE_REL_REMAINDER_GATE
+previous=~/lane-rel-tools/cli-gateway-final.5K5fHtIV
+for attempt in $(seq 1 180); do
+  if test -f "$previous/exit"; then break; fi
+  sleep 5
+done
+test -f "$previous/exit"
+for attempt in $(seq 1 90); do
+  if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+  sleep 5
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+git rev-parse HEAD > "$gate/revision"
+rc=0
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  umask 022
+  rc=0
+  for module in services/control tests/e2e tools/audit-verify tools/cli; do
+    code=0
+    go -C "$module" test ./... -count=1 || code=$?
+    printf "RESULT %s %s\n" "$module" "$code"
+    if test "$code" != 0; then rc=1; fi
+  done
+  code=0
+  pnpm -C web test || code=$?
+  printf "RESULT web %s\n" "$code"
+  if test "$code" != 0; then rc=1; fi
+  exit "$rc"
+' > "$gate/run.log" 2>&1 || rc=$?
+echo "$rc" > "$gate/exit"
+exit "$rc"

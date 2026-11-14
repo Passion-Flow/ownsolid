@@ -1,0 +1,108 @@
+{
+  "status": "prepared_not_executed",
+  "baseline_source": "5b73fa05305c2c5d8178a256683ede8b4e9ef99f",
+  "native_lock_attempts": 0,
+  "native_go_or_sql_test_bodies_executed": 0,
+  "files": {
+    "docs/research/training-published-file-readers.md": {
+      "sha256": "9e4632bd65746e19cc888c2338823f232c562be1f470bf828ff522db8c52923f",
+      "bytes": 22580
+    },
+    "services/control/internal/modules/datasets/published_reader_repository_integration_test.go": {
+      "sha256": "28872e65701f152917e3ddb205af78399285d8c41d7d4751796bc817ee6bdf5d",
+      "bytes": 4370
+    },
+    "services/control/internal/modules/training/accepted_adapter_repository_integration_test.go": {
+      "sha256": "e835a9565c6ee8f0851fc4457a4f2cf5f2e9d57aec9dc875dd71f8c1c20404ce",
+      "bytes": 31721
+    }
+  },
+  "expected_tests": {
+    "datasets": "TestActualPublishedReaderTrainingSnapshotAndRetirement",
+    "training": "TestActualAcceptedExperimentRead",
+    "required_training_subcase": "independent_published_reader_with_real_accepted_bytes",
+    "allowed_skips": 0
+  },
+  "retained_inputs": {
+    "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/result.json": {
+      "bytes": 7405,
+      "sha256": "42f0790680294637f8248a37a405cec920ee6d1d6c3b678248946b769781796f"
+    },
+    "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/adapter_model.safetensors": {
+      "bytes": 4602248,
+      "sha256": "a46897f648b94c94a3fe55dff81c15a082e1a427126f958e3075a8feee2bf06b"
+    },
+    "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/adapter_config.json": {
+      "bytes": 1092,
+      "sha256": "4ed67247993152de870045c4551f54de48a5fb0b65d61118bf95acb2c15dfe67"
+    },
+    "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/README.md": {
+      "bytes": 248,
+      "sha256": "a6e9d9c398894029e948df596fe712e77bdd25f3e1a53f3dc51344b2f7d7a341"
+    }
+  },
+  "original_preflight": {
+    "path": "/root/lane-trn-cpu-admission.RaaYxrR7/preflight_cpu_prototype.py",
+    "sha256": "f8d97b23012702d4c466bf0d95500dd3a4e8d7d5c31c97dba1e3eca0b73171b3",
+    "policy_sha256": "410cf26bb1617b85cbcd8d86275a2faf9f71ae873b7747fa1d1cdac7fe0a678d",
+    "minimum_free_memory_bytes": 3221225472,
+    "minimum_available_memory_bytes": 12884901888,
+    "minimum_free_disk_bytes": 16106127360,
+    "maximum_io_full_avg10_and_avg60_percent": 5,
+    "other_heavy_processes": 0
+  },
+  "carriers": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "device": 29,
+      "inode": 82,
+      "uid": 0,
+      "first_wait": "one kernel wait, at most 60 seconds"
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "device": 64512,
+      "inode": 7508772,
+      "uid": 0,
+      "second_wait": "nonblocking only; release first immediately when busy"
+    }
+  ],
+  "existing_runner_ineligible": {
+    "parent": "/root/lane-trn-tools/run-native-event-current.py",
+    "sha256": "dc3f6f5eb9d35dc421e06101a7ce1cdab1adfe329b283901948a0c949b6dc3a1",
+    "defects": [
+      "both carriers currently wait in userspace loops",
+      "420-second child exceeds complete 300-second parent bound",
+      "fixed event source and patterns must remain independent"
+    ]
+  },
+  "fixture": {
+    "docker_context": "default",
+    "endpoint": "unix:///var/run/docker.sock",
+    "cached_image_id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "os_architecture": "linux/amd64",
+    "pull": "never",
+    "network": "none; nsenter loopback only",
+    "host_ports": [],
+    "cpu_limit": 2,
+    "memory_limit_bytes": 1073741824,
+    "database_name": "ownsolid_training_reader_test",
+    "identity_and_repository_dsn": "the same private 0600 file; unset inherited fixture DSNs",
+    "processing_gpu_and_fleet": false
+  },
+  "runner_delta_plan": {
+    "reuse": "the owned native PostgreSQL fixture and exact original preflight, with only the two reader roots selected",
+    "first_carrier": "open O_NOFOLLOW|O_CLOEXEC, verify regular same UID/dev/inode/path, one blocking kernel call with a 60-second deadline",
+    "second_carrier": "same verification, one LOCK_NB call, release first before recording busy result",
+    "parent_absolute_lifetime_seconds": 300,
+    "work_absolute_cutoff_seconds": 270,
+    "cleanup_and_record_reserved_seconds": 30,
+    "go_child_maximum_seconds": 170,
+    "go_test_package_timeout_seconds": 75,
+    "parallelism": "GOMAXPROCS=2, GOFLAGS=-p=2, go test -p 1",
+    "child_termination": "owned process group TERM then KILL and reap, bounded by the absolute work/cleanup deadlines",
+    "fixture_cleanup": "exact owned name and run labels, bounded log capture then stop/remove -v; protected DSN and private fixture removal; never touch foreign resources or permanent carriers",
+    "failure": "retain raw exit/status, source/input hashes, expected roots and zero-execution facts; no in-round retry"
+  },
+  "acceptance_scope": "full existing test-store principal plus real files only; not restricted role, gateway startup, GPU or a fleet cost result"
+}

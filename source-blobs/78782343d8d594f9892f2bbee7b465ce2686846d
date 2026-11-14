@@ -1,0 +1,33 @@
+{
+  "observed_utc": "2026-11-12T23:37:35.727607+00:00",
+  "parent_or_child_pid_exists": {
+    "3053332": false,
+    "3053350": false
+  },
+  "owned_process_group_members": [],
+  "owned_temporary_directories": [],
+  "carriers": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "same_regular_carrier": true
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "same_regular_carrier": true
+    }
+  ],
+  "locks_reacquired": false,
+  "sha256": {
+    "run_go_wire.py": "3dd821258a58db62fae5edf3f678aab4c9989fb8b8d2ce6649564f5616468c17",
+    "run_go_wire_native.py": "75b607b355497b987e1b7ab7061df7aad06c5f3b7070070d110a6bd5688d7fa0",
+    "go-native-linux-proof.json": "cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1",
+    "go-wire-native-linux.log": "f391f6191c1293348969b862e005b7126f4245a300000d978276ef027e985d15"
+  },
+  "audit_source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+  "audit_status": "",
+  "history_native_log_exists": false,
+  "generated_sdk_files_verified_after": {
+    "/root/lane-rel-tools/identity-audit-contract": 122,
+    "/root/lane-rel-tools/model-history-prototype/domain-draft": 81
+  }
+}

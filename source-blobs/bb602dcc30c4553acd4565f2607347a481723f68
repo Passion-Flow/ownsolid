@@ -1,0 +1,33 @@
+#!/bin/bash
+# Three fleet load runs on a quiet host. yatoly is stopped, never deleted, each time it starts:
+# containers by name, processes only by a working directory under its own tree.
+cd /root/lane-a-e2e
+images="ownsolid/control:lane-a-e2e ownsolid-e2e/postgres:18.6-pgvector-0.8.7 victoriametrics/victoria-metrics:v1.155.0 victoriametrics/victoria-logs:v1.53.0 docker:29.1.3-dind"
+tree=/home/appadmin/.yb0-8083-1102/
+quiet() {
+  stopped=0
+  for c in $(docker ps --format '{{.Names}}' | grep -E '^(yatoly|yb0)'); do docker stop -t 5 "$c" >/dev/null && stopped=$((stopped+1)); done
+  for p in $(ps -u appadmin -o pid=); do
+    case "$(readlink /proc/$p/cwd 2>/dev/null)" in "$tree"*) kill -TERM "$p" 2>/dev/null && stopped=$((stopped+1));; esac
+  done
+  echo $stopped
+}
+( while :; do
+    s=$(quiet)
+    echo "$(date -u +%H:%M:%S) stopped=$s load=$(cut -d' ' -f1 /proc/loadavg) appadmin_busy=$(ps -u appadmin -o pcpu=,cmd= | grep -vE 'gitea|systemd|sshd|bash|sd-pam|dumb-init' | awk '$1>5' | wc -l) laneb_control=$(docker inspect -f '{{.State.StartedAt}}' lane-b-control-1 2>/dev/null | cut -c12-19) images=$(docker images -q | wc -l) disk=$(df --output=avail -BM / | tail -1 | tr -d ' ')"
+    sleep 15
+  done ) > neighbours-quiet.log 2>&1 &
+watcher=$!
+trap 'kill $watcher 2>/dev/null' EXIT
+sleep 20
+failed=0
+for n in 1 2 3; do
+  echo "=== load $n $(date -u +%H:%M:%S)"
+  OWNSOLID_E2E_LOAD=1 OWNSOLID_E2E_RUN=TestFleetLoad OWNSOLID_E2E_TIMEOUT=50m OWNSOLID_E2E_SCRATCH=/dev/shm OWNSOLID_E2E_DOCKER_TMPFS=12g \
+    ./run-single-node.sh /root/lane-a-e2e $images </dev/null > load-quiet-$n.log 2>&1
+  c=$?
+  echo "load $n exit=$c $(date -u +%H:%M:%S)"
+  grep -E "^(--- |PASS|FAIL)|threshold [0-9]|zero egress" load-quiet-$n.log | cut -c1-200 | tail -8
+  [ $c -eq 0 ] || failed=1
+done
+[ $failed -eq 0 ]

@@ -1,0 +1,17 @@
+{
+  "entry": "cardinality",
+  "raw_return_code": 0,
+  "run_names": [
+    "TestScopedSeriesCardinalityOffline",
+    "TestScopedSeriesCardinalityOffline/daily-index-profile"
+  ],
+  "top_level_run_names": [
+    "TestScopedSeriesCardinalityOffline"
+  ],
+  "pass_names": [
+    "TestScopedSeriesCardinalityOffline",
+    "TestScopedSeriesCardinalityOffline/daily-index-profile"
+  ],
+  "fail_names": [],
+  "skip_names": []
+}

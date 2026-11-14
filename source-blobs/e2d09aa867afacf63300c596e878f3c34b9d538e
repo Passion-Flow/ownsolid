@@ -1,0 +1,18 @@
+{
+  "qualified": "a446ec580cf6dffc63df5d8269518f1ef8175d40",
+  "current": "12520508998c0cf8d1e7eb3e606d642bdbb37794",
+  "changed_paths": [
+    "docs/product/status.md",
+    "docs/research/app-lane-questions.md",
+    "docs/research/application-conversation-search.md",
+    "docs/research/gateway-model-description.md",
+    "docs/research/postgresql-catalog-upgrade-gate.md",
+    "docs/research/product-assistant-loop-guard.md",
+    "services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go",
+    "services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go"
+  ],
+  "only_nondoc_paths": [
+    "services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go",
+    "services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go"
+  ]
+}

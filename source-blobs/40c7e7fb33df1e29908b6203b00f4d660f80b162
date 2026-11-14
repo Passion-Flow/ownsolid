@@ -1,0 +1,34 @@
+set -euo pipefail
+cd /root/lane-rel-history
+source /root/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 CARGO_BUILD_JOBS=1 CARGO_NET_OFFLINE=true
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -w 45 8 || exit 75
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+exec 7>/root/lane-rel-tools/heavy-test.lock
+flock -n 7 || exit 75
+df -h /
+free -m
+test "$(df -Pm / | awk 'NR==2 {print $4}')" -ge 15360
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+cat /proc/pressure/io
+python3 - <<'PY'
+import json
+from pathlib import Path
+root=Path("/root/lane-rel-history")
+file=Path("/root/lane-rel-tools/gw104-contract.qgEXzK0n/schema-overlay.json")
+target=root/"services/control/internal/modules/distribution/lane_rel_alias_schema_test.go"
+source=root/"tools/codegen/sdk/tests/testdata/alias_capability_schema_test.go"
+file.write_text(json.dumps({"Replace":{str(target):str(source)}}))
+PY
+unshare -n bash -ec '
+ip link set lo up
+test "$(ip -o link show | wc -l)" -eq 1
+test -z "$(ip route show default)"
+test -z "$(ip -6 route show default)"
+go -C services/control test -race -overlay /root/lane-rel-tools/gw104-contract.qgEXzK0n/schema-overlay.json ./internal/modules/distribution -run "^TestAliasCapabilityReadSchemas$" -count=1 -v
+echo SCHEMA_PRESENCE_OMISSION_PASSED
+/root/lane-rel-tools/obs109-contract.Psjaj7Gp/python/bin/python tools/codegen/sdk/tests/alias_capability_smoke.py /root/lane-rel-tools/gw104-contract.qgEXzK0n/baseline/sdk /root/lane-rel-tools/gw104-contract.qgEXzK0n/candidate/sdk
+echo RELEASED_AND_UPDATED_CLIENTS_PASSED
+'

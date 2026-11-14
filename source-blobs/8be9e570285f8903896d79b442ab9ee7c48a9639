@@ -1,0 +1,94 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+runner=$(cd -- "$(dirname -- "$0")" && pwd -P)
+cd "$runner"
+mode=${1:---check}
+[[ $mode == --check || $mode == --prepare || $mode == --run ]]
+exec 8>"$runner/launch.lock"
+flock -n 8 || exit 75
+python3 "$runner/guard.py" "$runner" start | tee "$runner/prelaunch.json"
+if [[ $mode == --check ]]; then exit 0; fi
+archive=/root/lane-arc-managed.JFUrp5
+if [[ $mode == --prepare ]]; then
+    root=$(mktemp -d "$runner/cell.XXXXXX")
+    printf '%s\n' "$root" | tee "$runner/latest-cell"
+else
+    root=$(cat "$runner/latest-cell")
+    [[ $root == "$runner"/cell.* && -d $root ]]
+    test -s "$root/prepared.json"
+    test ! -e "$root/run-started"
+fi
+cd "$root"
+install -d -m 0700 capture media-mount
+network="arc104-registry-$(basename "$root" | cut -d. -f2 | tr '[:upper:]' '[:lower:]')"
+cleanup() {
+    local status=$?
+    trap - EXIT
+    set +e
+    if [[ $mode == --run ]]; then
+        for role in plane server worker dns; do
+            if docker inspect "$network-$role" >/dev/null 2>&1; then
+                docker inspect -f '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}' "$network-$role" > "capture/$role-exit.txt"
+                docker rm -f "$network-$role" >/dev/null || status=1
+            fi
+        done
+        if docker network inspect "$network" >/dev/null 2>&1; then docker network rm "$network" >/dev/null || status=1; fi
+        for name in exchange docker-data site-inputs site-runtime server-data server-state worker-data worker-state; do
+            local path="$root/$name"
+            if [[ -d $path ]]; then
+                if findmnt -rn -o TARGET | awk -v p="$path" '$0==p || index($0,p"/")==1{found=1} END{exit !found}'; then
+                    printf 'Mount still present under %s\n' "$path" >&2
+                    status=1
+                else
+                    find "$path" -xdev -depth -delete || status=1
+                fi
+            fi
+        done
+    fi
+    if test -f "$root/signer/ephemeral-release-signer"; then rm "$root/signer/ephemeral-release-signer"; fi
+    for p in source-mount media-mount; do
+        if mountpoint -q "$root/$p"; then umount "$root/$p" || status=1; fi
+    done
+    printf '%s\n' "$status" > "capture/$mode.exit"
+    printf '%s status=%s evidence=%s\n' "$mode" "$status" "$root/capture"
+    exit "$status"
+}
+trap cleanup EXIT
+if [[ $mode == --prepare ]]; then
+    install -d -m 0700 source-mount signer
+    truncate -s 24G media.ext4
+    mkfs.ext4 -q -F -m 0 media.ext4
+    mount -o ro,loop,nosuid,nodev "$archive/media.ext4" source-mount
+    mount -o loop,nosuid,nodev "$root/media.ext4" media-mount
+    chmod 0700 media-mount
+    install -d -m 0700 media-mount/stage media-mount/registry-stage media-mount/registry-stage/assets
+    for file in ownsolid.tar.gz release-trust.json; do
+        install -m 0600 "source-mount/stage/$file" media-mount/stage/
+    done
+    umount source-mount
+    printf '%s  %s\n' 3b02a9934f2adec70cdc614b2a9764ddb111a226609ec1e92c0aac2284d9bb90 media-mount/stage/ownsolid.tar.gz | sha256sum -c -
+    assets="$root/media-mount/registry-stage/assets"
+    python3 "$runner/reseed-inputs.py" "$root/media-mount/stage/ownsolid.tar.gz" "$assets"
+    install -m 0600 "$runner/registry-image" "$runner/registry-notice" "$assets/"
+    install -m 0700 "$runner/registry-install" "$assets/installer"
+    OWNSOLID_CURRENT_FACTORY_STAGE="$root/media-mount/registry-stage" OWNSOLID_CURRENT_FACTORY_KEY_DIR="$root/signer" \
+    OWNSOLID_CURRENT_FACTORY_SCHEMA=57 OWNSOLID_CURRENT_FACTORY_RELEASE="$network" \
+    OWNSOLID_CURRENT_FACTORY_SOURCE_SHA256="$(cat "$runner/source-head")" OWNSOLID_CURRENT_FACTORY_REGISTRY=1 \
+        "$runner/registry-factory.test" -test.run '^TestManufactureCurrentRelease$' -test.v -test.timeout=15m | tee capture/manufacture.log
+    sha256sum media-mount/registry-stage/ownsolid.tar.gz > capture/registry-archive.sha256
+    cp -p media-mount/registry-stage/manifest.json capture/manufactured-registry-manifest.json
+    jq -n --arg date "$(date -u --iso-8601=seconds)" --arg archive "$(cut -d' ' -f1 capture/registry-archive.sha256)" \
+        '{prepared_at:$date,registry_archive_sha256:$archive}' > prepared.json
+    exit 0
+fi
+cp -p "$runner/prelaunch.json" capture/host-start.json
+touch run-started
+mount -o loop,nosuid,nodev "$root/media.ext4" media-mount
+for file in agent egress-recorder ownsolid-install site-dns sha256sum-amd64.txt; do
+    install -m 0700 "$archive/$file" "$root/$file"
+done
+for file in managed.test registry-install guard.py host_admit.py site-files.py pull-proof.sh verify-captures.py run-managed.sh setup-node.sh control-inside.sh; do
+    install -m 0700 "$runner/$file" "$root/$file"
+done
+bash "$root/run-managed.sh" "$root" "$network" 2>&1 | tee "$root/capture/launcher.log"

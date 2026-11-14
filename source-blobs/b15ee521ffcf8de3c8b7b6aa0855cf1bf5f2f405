@@ -1,0 +1,29 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+handoff=$(dirname "$(readlink -f "$0")")
+test -z "$(git status --porcelain)"
+git merge-base --is-ancestor origin/main HEAD
+git cat-file -e origin/main:services/control/migrations/postgresql/000058_audit_chain_head_scope.up.sql || {
+    echo 'Waiting for the committed ARC audit scope migration and its shared build window.'
+    exit 75
+}
+df -h / /dev/shm
+free -m
+ss -lntp
+test "$(df -Pk / | awk 'NR==2 {print $4}')" -ge 15728640
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+exec 9>/run/lock/ownsolid-heavy.lock
+flock -n 9 || { echo 'The shared heavy-work lock is occupied.'; exit 75; }
+if ps -eo comm,args | awk '$1=="rustc" || ($1=="make" && $0 ~ /(^|[[:space:]])(check|build|test)([[:space:]]|$)/) {busy=1} END {exit !busy}'; then
+    echo 'Another heavy build is still running.'
+    exit 75
+fi
+run=$(mktemp -d "$handoff/gate.XXXXXXXX")
+git rev-parse HEAD | tee "$run/commit"
+bash /root/lane-gw-acceptance/gw107.ri6nhx80/published.sh "$run" | tee "$run/make.log"
+bash /root/lane-gw-acceptance/gw107.ri6nhx80/run-pg.sh "$run" release-receipt     '^Test(RealGoRustPostgres(RestartAfterLostOutcomeReply|LostOutcomeReply|GatewayChainAndControlOutage)|PostgresGatewayOutcomeMeteringAtomicRetry)$' > "$run/pg.log" 2>&1
+bash /root/lane-gw-acceptance/gw104.tRqMfqpr/rust.sh green | tee "$run/rust.log"
+test -z "$(git status --porcelain)"

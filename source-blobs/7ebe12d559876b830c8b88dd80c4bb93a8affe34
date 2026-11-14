@@ -1,0 +1,12 @@
+import io,subprocess,tarfile,sys,runpy
+from pathlib import Path
+p=Path(__file__).resolve().parent
+original=Path('/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o')
+source='219af27e3d9f73c78acc1b8ab8324e086a6a2f62'
+repo="/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid"
+raw=subprocess.check_output(['git','archive',source],cwd=repo)
+with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
+ assert all((original/'src'/m.name).read_bytes()==archive.extractfile(m).read() for m in archive.getmembers() if m.isfile()),'SOURCE_CHANGED'
+print('SOURCE_RECHECK_OK: exact 219af27e archive; stdio replacement transport',flush=True)
+sys.path.insert(0,str(p))
+runpy.run_path(str(p/'run-native-stdio.py'),run_name='__main__')

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Runs one live console spec from the lane B runner against lane B s installation.
+R=/root/lane-b/runner
+cd $R/repo/web/apps/console || exit 1
+spki=$(openssl x509 -in /root/lane-b/install-iam117/config/certificate.pem -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64)
+export PATH=$R/npm/bin:$PATH PLAYWRIGHT_BROWSERS_PATH=$R/browsers LD_LIBRARY_PATH=$R/libroot/usr/lib/x86_64-linux-gnu
+export OWNSOLID_LIVE_ORIGIN=https://admin.lane-b.test:18443 OWNSOLID_LIVE_EMAIL=admin@lane-b.test
+export OWNSOLID_LIVE_PASSWORD_FILE=/root/lane-b/install-iam117/operator/admin-credential OWNSOLID_LIVE_SPKI="$spki"
+export OWNSOLID_LIVE_HOST_RULES="MAP admin.lane-b.test 127.0.0.1"
+pnpm exec vite build >/dev/null 2>&1 || exit 1
+exec pnpm exec playwright test "$@" --reporter=line

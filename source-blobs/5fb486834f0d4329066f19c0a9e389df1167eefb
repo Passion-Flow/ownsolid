@@ -1,0 +1,112 @@
+package install
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+type temporaryParserFixtureRunner struct {
+	t      *testing.T
+	output string
+}
+
+func (r temporaryParserFixtureRunner) Run(_ context.Context, name string, args ...string) (string, error) {
+	r.t.Helper()
+	if name != "docker" || !strings.Contains(strings.Join(args, " "), "control-operator verify-serving-transport") {
+		r.t.Fatal("only the controlled fixture recorder is allowed")
+	}
+	var path string
+	for n, arg := range args {
+		if arg == "-f" {
+			path = args[n+1]
+		}
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	if err = os.WriteFile(r.output, raw, 0600); err != nil {
+		return "", err
+	}
+	return servingTransportSuccess + "\n", nil
+}
+
+func TestTemporaryComposeParserFixtures(t *testing.T) {
+	output := os.Getenv("OWNSOLID_PARSER_FIXTURE_OUTPUT")
+	if output == "" {
+		t.Fatal("explicit owned fixture output is required")
+	}
+	if err := os.Mkdir(output, 0700); err != nil {
+		t.Fatal(err)
+	}
+	c := validConfig(t)
+	c.InstallRoot = "${PARSER_INSTALL_ROOT}"
+	c.Project = "del-parser-fixture"
+	c.Runtime = RuntimeConfig{UID: 10001, GID: 10001, PostgresUID: 999}
+	c.Images = ImagesConfig{Control: "sha256:" + strings.Repeat("a", 64), Postgres: "sha256:" + strings.Repeat("b", 64), Metrics: "sha256:" + strings.Repeat("c", 64), Logs: "sha256:" + strings.Repeat("d", 64)}
+	c.Origins = OriginsConfig{Admin: "https://admin.parser.invalid:8443", Portal: "https://portal.parser.invalid:19443"}
+	canonical, err := os.ReadFile(filepath.Join("..", "..", "..", "compose", "compose.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	files := map[string]string{}
+	write := func(name string, raw []byte) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(output, name), raw, 0600); err != nil {
+			t.Fatal(err)
+		}
+		files[filepath.ToSlash(name)] = fmt.Sprintf("%x", sha256.Sum256(raw))
+	}
+	for _, name := range []string{"shared", "split", "shared-again", "split-override"} {
+		if err := os.Mkdir(filepath.Join(output, name), 0700); err != nil {
+			t.Fatal(err)
+		}
+		c.Network.PortalListener = nil
+		if strings.HasPrefix(name, "split") {
+			c.Network.PortalListener = &PortalListenerConfig{BindAddress: "127.0.0.1", HTTPSPort: 19443, ContainerPort: 9443}
+		}
+		projected, err := c.projectBrowserPorts(canonical)
+		if err != nil {
+			t.Fatal(err)
+		}
+		write(filepath.Join(name, "compose.yaml"), projected)
+		write(filepath.Join(name, ".env"), []byte(c.renderComposeEnv()+"COMPOSE_PROFILES=operator\n"))
+		args, err := c.servingArguments(containerConfigDir + "/control.yaml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		write(filepath.Join(name, "desired-serving-intent.json"), []byte(args[4]+"\n"))
+		if name == "split-override" {
+			private := c
+			private.InstallRoot = t.TempDir()
+			if err := os.Mkdir(private.Layout().Operator, 0700); err != nil {
+				t.Fatal(err)
+			}
+			target := filepath.Join(output, name, "compose.override.yaml")
+			runner := temporaryParserFixtureRunner{t: t, output: target}
+			if err := (&installer{config: private, runner: runner}).verifyServingImage(t.Context(), "sha256:"+strings.Repeat("e", 64)); err != nil {
+				t.Fatal(err)
+			}
+			raw, err := os.ReadFile(target)
+			if err != nil {
+				t.Fatal(err)
+			}
+			files[filepath.ToSlash(filepath.Join(name, "compose.override.yaml"))] = fmt.Sprintf("%x", sha256.Sum256(raw))
+		}
+	}
+	manifest := map[string]any{"scope": "Synthetic public Compose parser inputs only; controlled recorder, no Docker or Control execution, no real credentials", "canonical_sha256": fmt.Sprintf("%x", sha256.Sum256(canonical)), "files": files}
+	raw, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(filepath.Join(output, "input-manifest.json"), append(raw, '\n'), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Log("Prepared synthetic public parser fixtures from actual installer methods; native parser not invoked")
+}

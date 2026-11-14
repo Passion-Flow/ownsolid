@@ -1,0 +1,44 @@
+#!/bin/bash
+set -euo pipefail
+gate=$LANE_REL_COMBINED_GATE
+cd "$LANE_REL_COMBINED_ROOT"
+git rev-parse HEAD > "$gate/revision"
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 90); do
+  if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+  sleep 5
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+rc=0
+bash "$gate/fixture.sh" > "$gate/fixture.log" 2>&1 || rc=$?
+echo "$rc" > "$gate/fixture.exit"
+test "$rc" = 0
+grep -q '^--- PASS: TestGatewayUsageHistoryAuditExport ' "$gate/fixture.log"
+grep -q '^--- PASS: TestModelGatewayCAForPublishedAliasOverTLS ' "$gate/fixture.log"
+grep -q '^--- PASS: TestLaneDGatewayHistoryTLS ' "$gate/fixture.log"
+for attempt in $(seq 1 90); do
+  if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+  sleep 5
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+rc=0
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  make check && make build && go -C tools/cli test ./... -count=1 &&
+  go -C services/control test ./internal/modules/distribution ./internal/modules/identity ./internal/modules/identity/http ./internal/modules/nodes
+' > "$gate/check-build.log" 2>&1 || rc=$?
+echo "$rc" > "$gate/check-build.exit"
+test "$rc" = 0
+python3 - <<'PY'
+from pathlib import Path
+from subprocess import check_output
+for name in ("go.work.sum", "tools/audit-verify/audit-verify"):
+    if not check_output(["git", "ls-files", "--", name]):
+        Path(name).unlink(missing_ok=True)
+PY
+git diff --check HEAD~5..HEAD
+test -z "$(git status --porcelain)"
+git update-ref refs/codex/handoff/lane-rel-cli-gw107-land HEAD

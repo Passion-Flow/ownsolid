@@ -1,0 +1,23 @@
+{
+  "at": 1794542052.611693,
+  "rows": [
+    {
+      "tag": "ownsolid/control:arc107-handoff-821227ea-08099413",
+      "id": "sha256:0c57f136cefe12a877997a1477846ffe173912a715b3a8e0b42b6dcfdfde0b46",
+      "removed": true,
+      "exact_owned_tag_only": true,
+      "no_container_references": true,
+      "docker_result": "Untagged: ownsolid/control:arc107-handoff-821227ea-08099413\nDeleted: sha256:0c57f136cefe12a877997a1477846ffe173912a715b3a8e0b42b6dcfdfde0b46\nDeleted: sha256:f8b20ec7287d400cb3f85d4181d8958ee2d8df7bc6e5d541394eeb9094fe67f4\nDeleted: sha256:104f88d81189dc84fe8e3bfe8b76117ff40b90a6b835b95579dbf2a8a6dd269b\nDeleted: sha256:e4096ac0040d2ecad3e93bedea44a1bc10c7b5203d2b115fa98338c966ce1eaa\nDeleted: sha256:46796ff199e4b3857b5f66d6b700df5d8599fd5e4220ae651c3ad2e137968ea0\nDeleted: sha256:755106f6020cd2141d69549603462eaf4d77e4f35b739b800d11716da5a2a4e9\nDeleted: sha256:134a55d1033748babcafe99551190da9728c7584de7185c427fea5fb332c333a\nDeleted: sha256:b56d02408a376a54f65635eb4bd782e05f4bbdee1a5254e1b26a00b1a120879c\nDeleted: sha256:6cc52f95690c2d5aca282a000a16391286bc19c28e480fc59893ccfbcc359b91\nDeleted: sha256:5d22b1a7f38fb88c68e8112f2055adc3ed60b0b91a36350ca9583045d2e4e744"
+    },
+    {
+      "tag": "ownsolid/control:arc107-handoff-3ae6bfeb-ae445841",
+      "id": "sha256:704f35c660d6a90fb4bf4d8756289c1045deaabd0f31bb4246537e1468683f89",
+      "removed": true,
+      "exact_owned_tag_only": true,
+      "no_container_references": true,
+      "docker_result": "Untagged: ownsolid/control:arc107-handoff-3ae6bfeb-ae445841\nDeleted: sha256:704f35c660d6a90fb4bf4d8756289c1045deaabd0f31bb4246537e1468683f89"
+    }
+  ],
+  "all_sources_raw_logs_and_shared_images_retained": true,
+  "no_prune": true
+}

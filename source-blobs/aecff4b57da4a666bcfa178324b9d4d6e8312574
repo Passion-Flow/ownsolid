@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+# Lane B GW-114 live run, not product code. Drives a real control plane through the API:
+#   agent <name>     a real docker_inference agent (lane-b-gateway-host) gets its gateway started by
+#                    publishing, serves TLS with the issued certificate, and stops when revoked
+#   chain <name>     a protocol-1.6 scripted node holds a verified deployment of the real model
+#                    (vLLM CPU on 127.0.0.1:18000); its gateway leases run the agent's own gateway
+#                    code; a key issued by control calls the real model through the real gateway
+import importlib.util, json, os, ssl, subprocess, sys, time, socket, http.client
+spec = importlib.util.spec_from_file_location("fixture", "/root/lane-b/gateway-fixture.py")
+f = importlib.util.module_from_spec(spec); spec.loader.exec_module(f)
+root = "/root/lane-b/install-iam117"
+cell = f.cell
+gwca = root + "/config/model-gateway-ca.pem"
+log = lambda *a: print(time.strftime("%H:%M:%S"), *a, flush=True)
+
+def gateway_state(call, ws, gid):
+    items = f.must(call("GET", cell + "/admin/distribution/workspaces/%s/gateways?limit=50" % ws), "gateways")["items"]
+    return next(g for g in items if g["id"] == gid)
+
+def wait_state(call, ws, gid, want, seconds=180):
+    def read():
+        g = gateway_state(call, ws, gid)
+        log("gateway", g["state"], g["delivery"], g["delivery_state"], g["delivery_error_code"], g["client_origin"])
+        if g["delivery_state"] in (want, "failed"): return g
+        return None
+    return f.wait("gateway " + want, read, seconds)
+
+def tls_check(host, port, name):
+    ctx = ssl.create_default_context(cafile=gwca)
+    with socket.create_connection((host, port), timeout=10) as s:
+        with ctx.wrap_socket(s, server_hostname=name) as t:
+            cert = t.getpeercert()
+            return t.selected_alpn_protocol(), dict(x[0] for x in cert["subject"]), cert["subjectAltName"], cert["notAfter"]
+
+def provision(call, ws, node, name):
+    p = f.must(call("POST", cell + "/admin/distribution/workspaces/%s/gateways" % ws, {"node_id": node, "name": name, "reason": "GW-114 live run"}), "provision")
+    log("provisioned", p["gateway"]["id"], "secret shown:", p["secret"] is not None, "delivery:", p["gateway"]["delivery"])
+    assert p["secret"] is None and not p["secret_available"] and p["gateway"]["delivery"] == "agent"
+    return p["gateway"]["id"]
+
+def revoke_and_wait(call, ws, gid):
+    r = f.must(call("POST", cell + "/admin/distribution/workspaces/%s/gateways/%s/revoke" % (ws, gid), {"reason": "GW-114 live run done"}), "revoke")
+    log("revoked", r["state"], r["delivery_state"])
+    return wait_state(call, ws, gid, "stopped")
+
+def agent(name):
+    call = f.admin(root)
+    ws, _ = f.served_workspace(call)
+    subprocess.run(["sh", "/root/lane-b/gw114/live/join-gateway-agent.sh", name, ws], check=True)
+    nodes = f.wait("the agent's node", lambda: [n for n in f.must(call("GET", cell + "/admin/nodes?limit=100"), "nodes")["items"] if n["name"] == name and n["status"] == "active"] or None)
+    node = nodes[0]
+    log("node", node["id"], node["protocol_version"], node["execution_profile"], node["capabilities"][-2:])
+    gid = provision(call, ws, node["id"], name + " gateway")
+    g = wait_state(call, ws, gid, "running")
+    assert g["delivery_state"] == "running", g
+    log("tls", tls_check("127.0.0.1", 18543, "gw.lane-b.test"))
+    container = subprocess.run(["docker", "inspect", "ownsolid-gateway-" + gid, "--format", "{{.State.Running}} {{.HostConfig.ReadonlyRootfs}} {{.HostConfig.CapDrop}} {{.Config.User}} {{.HostConfig.NetworkMode}} {{.HostConfig.RestartPolicy.Name}}"], capture_output=True, text=True).stdout.strip()
+    log("container", container)
+    files = subprocess.run(["ls", "-ln", "/root/lane-b/gw114/live/gateways/" + gid + "/config"], capture_output=True, text=True).stdout
+    log("files\n" + files)
+    g = revoke_and_wait(call, ws, gid)
+    gone = subprocess.run(["docker", "inspect", "ownsolid-gateway-" + gid], capture_output=True).returncode != 0
+    left = sorted(os.listdir("/root/lane-b/gw114/live/gateways/" + gid))
+    log("after revoke: container removed:", gone, "left:", left)
+
+def chain(name):
+    call = f.admin(root)
+    ws, model = f.served_workspace(call)
+    minted = f.must(call("POST", cell + "/admin/node-join-tokens", {"workspace_id": ws, "node_name": name, "execution_profile": "docker_inference"}), "join token")
+    subprocess.run(["sh", "/root/lane-b/gw114/live/join-scripted-gateway-node.sh", name], input=minted["token"].encode(), check=True)
+    def placed():
+        p = f.must(call("GET", cell + "/admin/deployments/placement?model_id=" + model["id"]), "placement")
+        r = p.get("recommended")
+        return r if r and any(c["node_id"] == r["node_id"] and c["name"] == name for c in p["candidates"]) else None
+    target = f.wait("a GPU on " + name, placed)
+    d = f.must(call("POST", cell + "/admin/deployments", {"node_id": target["node_id"], "model_id": model["id"], "gpu_uuid": target["gpu_uuid"], "reason": "GW-114 live run"}), "deploy")
+    d = f.wait("a verified deployment", lambda: (lambda x: x if x.get("observed_state") == "running" and (x.get("observation") or {}).get("verification") else None)(f.must(call("GET", cell + "/admin/deployments/" + d["id"]), "deployment")))
+    gid = provision(call, ws, target["node_id"], name + " gateway")
+    early = call("POST", cell + "/admin/distribution/workspaces/%s/aliases" % ws, {"gateway_id": gid, "deployment_id": d["id"], "deployment_revision": d["revision"], "name": name, "reason": "too early"})
+    log("publish before start:", early[0], early[1].get("code"))
+    g = wait_state(call, ws, gid, "running")
+    assert g["delivery_state"] == "running", g
+    alias = f.must(call("POST", cell + "/admin/distribution/workspaces/%s/aliases" % ws, {"gateway_id": gid, "deployment_id": d["id"], "deployment_revision": d["revision"], "name": name, "reason": "GW-114 live run"}), "alias")
+    log("alias", alias["name"], alias["client_origin"])
+    key = f.must(call("POST", cell + "/admin/distribution/workspaces/%s/keys" % ws, {"alias_id": alias["id"], "label": name, "ttl_seconds": 86400, "reason": "GW-114 live run"}), "key")
+    secret = key.get("secret")
+    log("key", key["key"]["id"] if "key" in key else list(key))
+    host = "gw-scripted.lane-b.test:18544:127.0.0.1"
+    base = "https://gw-scripted.lane-b.test:18544"
+    curl = lambda *a: subprocess.run(["curl", "-sS", "--cacert", gwca, "--resolve", host, *a], capture_output=True, text=True)
+    log("models", curl("-H", "Authorization: Bearer " + secret, base + "/v1/models").stdout[:300])
+    body = json.dumps({"model": name, "messages": [{"role": "user", "content": "Reply with one word: hello"}], "max_tokens": 8})
+    log("chat", curl("-H", "Authorization: Bearer " + secret, "-H", "Content-Type: application/json", "-d", body, base + "/v1/chat/completions").stdout[:600])
+    stream = json.dumps({"model": name, "messages": [{"role": "user", "content": "Count to three."}], "max_tokens": 16, "stream": True})
+    out = curl("-N", "-H", "Authorization: Bearer " + secret, "-H", "Content-Type: application/json", "-d", stream, base + "/v1/chat/completions").stdout
+    log("stream ends with [DONE]:", out.strip().endswith("data: [DONE]"))
+    log("wrong key", curl("-H", "Authorization: Bearer pk1.wrong.key", base + "/v1/models").stdout[:200])
+    time.sleep(3)
+    keyid = key["key"]["id"] if "key" in key else key["id"]
+    calls = f.must(call("GET", cell + "/admin/distribution/workspaces/%s/requests?api_key_id=%s&limit=20" % (ws, keyid)), "calls")["items"]
+    log("call log", [(c.get("status") or c.get("state"), c.get("prompt_tokens"), c.get("completion_tokens")) for c in calls])
+    revoke_and_wait(call, ws, gid)
+    log("after revoke, models:", curl("-H", "Authorization: Bearer " + secret, base + "/v1/models").returncode != 0)
+
+{"agent": agent, "chain": chain}[sys.argv[1]](sys.argv[2])

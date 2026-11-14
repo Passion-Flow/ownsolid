@@ -1,0 +1,10 @@
+{
+  "memory_kib": {
+    "MemFree": 11758168,
+    "MemAvailable": 20478336
+  },
+  "full_io_psi_avg10": 0.31,
+  "disk_free_bytes": 792164454400,
+  "source": "821227ea5b94a8357f695c290e78af3b81c54f22",
+  "scope": "native current binaries and affected race/vet profiles; no database or container"
+}

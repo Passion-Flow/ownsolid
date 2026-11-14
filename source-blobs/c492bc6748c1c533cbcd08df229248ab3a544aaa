@@ -1,0 +1,1 @@
+{"add_generation_prompt":true,"add_special_tokens":false,"chat_template_kwargs":{"enable_thinking":false},"continue_final_message":false,"messages":[{"content":"Explain tides in one short sentence.","role":"user"}],"model":"projectone-qwen3-0.6b","return_token_strs":false}

@@ -1,0 +1,50 @@
+{
+  "result.json": {
+    "source_path": "/root/lane-obs-tools/obs110-producer-v4-admission/result.json",
+    "exists": true,
+    "sha256": "624b5255be4804212613fd5ff4971281ae7d2dbe3e8d7afdeb8f8d5387213e98",
+    "bytes": 901
+  },
+  "observation.json": {
+    "source_path": "/root/lane-obs-tools/obs110-producer-v4-admission/observation.json",
+    "exists": true,
+    "sha256": "d02934d148d51160cf70248f9c02977652e2599e3634f5cd63bfef2b7c3e67f9",
+    "bytes": 660
+  },
+  "stdout.log": {
+    "source_path": "/root/lane-obs-tools/obs110-producer-v4-admission/stdout.log",
+    "exists": true,
+    "sha256": "d54f5dcab80ddcf8bbcd148f7441c2307f2be40be484d34b10ee8b2f32bfe822",
+    "bytes": 849
+  },
+  "source-logic-v4.json": {
+    "source_path": "/root/lane-obs-tools/obs110-producer-v4-admission/source-logic-v4.json",
+    "exists": true,
+    "sha256": "4e9ab201a940157e600bcdc20a8655ae2791bb09f73b723b6f425a465c6ac985",
+    "bytes": 202
+  },
+  "test-source-logic-v4.py": {
+    "source_path": "/root/lane-obs-tools/obs110-producer-v4-admission/test-source-logic-v4.py",
+    "exists": true,
+    "sha256": "49e2d824bd23aec0cf5d37a3cccf27b06cab52b63050001e0102be3793881ef7",
+    "bytes": 5471
+  },
+  "check-source-logic-v4.py.frozen-epoch50313339": {
+    "source_path": "/root/lane-obs-tools/obs110-producer-v4-admission/check-source-logic-v4.py.frozen-epoch50313339",
+    "exists": true,
+    "sha256": "5d7ffd2bbeaae46f8e0c1e3a7e9173f077e2ffc243ef51523ce5c3e1887c4db0",
+    "bytes": 8508
+  },
+  "schema59-native-result.json": {
+    "source_path": "/root/lane-obs-tools/obs110-native-opportunity-v3.pbo1l1z5/result.json",
+    "exists": true,
+    "sha256": "87f30f963481f61fa531ad6c15a8355f5c62ad32fd4ef555d012fae7f49a391e",
+    "bytes": 11836
+  },
+  "source-and-evidence.bundle": {
+    "source_path": "/root/lane-obs-tools/source-recovery-q9_bn42t/source-and-evidence.bundle",
+    "exists": true,
+    "sha256": "4afe34474fb6e2850d9b30c8510f332ab631d1b78da83771bc2b72c95cf0c43c",
+    "bytes": 85773
+  }
+}

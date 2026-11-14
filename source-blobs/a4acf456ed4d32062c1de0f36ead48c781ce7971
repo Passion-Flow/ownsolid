@@ -1,0 +1,49 @@
+{
+  "producer_source": "2b4aaae5f8c690df9943b7dd7a7e4b5004aa421b",
+  "domain_source": "343cdd9d9a69572b77021baec5383b8acb4bfe64",
+  "draft_source": "6a2dd96fb392444de755db1cf5bfb771867064b0",
+  "previous_revision_b_superseded": true,
+  "resolved_domain_inputs": [
+    "Persisted immutable family UUID and one-family-per-legacy-version backfill",
+    "Default independent family on version insert; explicit exact-anchor selection borrows publication transaction",
+    "Admin-only retained ready/retired metadata without file IO or execution grants",
+    "Signed bounded keyset cursor, live authority and actual installed pagination/default/wire bounds"
+  ],
+  "model_owner_inputs_required": [],
+  "arc_owner_inputs_required": [
+    "Admit unnumbered model_family_candidate DDL, exact serving-role/catalog grants and retained backup/downgrade policy; ARC assigns migration number"
+  ],
+  "iam_owner_inputs_required": [
+    "Register exact-anchor history and exact-anchor/member retained detail from current authenticated platform Admin and installation scope",
+    "Admit or normalize the five unmapped domain/setup codes; verify actual HTTP statuses and transaction-failure projection",
+    "Preserve omitted/invalid options, current deadline, actual serialized body ceilings and zero projection on failed/unknown transactions",
+    "Keep StageVersionFamilyWithin in the caller-owned version-publication transaction; no speculative public write or Portal grant is defined here"
+  ],
+  "web_owner_inputs_required": [
+    "Fix the shared Help URL browser gate in its original owner checkout without bypassing the failed suite",
+    "After actual routes are admitted, integrate real S-202 history and lineage with current-authority failure/retired metadata states"
+  ],
+  "owner_sequence": [
+    "WEB shared Help gate",
+    "MODEL rebase/reverify/publish domain",
+    "ARC formal schema/role/catalog",
+    "IAM real dispatcher/error mapping",
+    "DEV final public contracts/SDK/Help",
+    "WEB S-202 and installed E2E"
+  ],
+  "publication": false,
+  "migration_number_selected_by_dev": false,
+  "error_semantics_reference": {
+    "commit": "3ba500410ae66b25f781b018bad42c0d6f91130d",
+    "path": "docs/research/training-dataset-lineage.md",
+    "section": "service-and-wire-policy-handoff",
+    "reference": "3ba500410ae66b25f781b018bad42c0d6f91130d:docs/research/training-dataset-lineage.md#service-and-wire-policy-handoff",
+    "five_codes_match_current_draft": true,
+    "runtime_diff_from_2b4aaae5": false,
+    "http_mapping_still_owned_by": "IAM",
+    "adr_reference": "3ba500410ae66b25f781b018bad42c0d6f91130d:docs/decisions/0077-retain-explicit-model-family-membership.md",
+    "adr_rename_commit": "f85e6512851dfd4c6fbfedd07f5f7cc17703b385",
+    "adr_contents_unchanged": true,
+    "existing_semantics_reused_without_duplicate_note": true
+  }
+}

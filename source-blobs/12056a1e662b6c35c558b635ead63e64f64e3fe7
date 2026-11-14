@@ -1,0 +1,99 @@
+"""Reconstruct or audit the private CPU input set from exact binaries and notices."""
+import argparse
+import base64
+import csv
+from email.parser import BytesParser
+import hashlib
+import io
+import json
+import os
+from pathlib import Path, PurePosixPath
+import re
+import shutil
+from urllib.parse import urlparse
+from urllib.request import urlopen
+import uuid
+import zipfile
+
+p=argparse.ArgumentParser(description=__doc__)
+p.add_argument('--media',type=Path,required=True)
+p.add_argument('--inventory-sha256',required=True)
+p.add_argument('--wheel-cache',type=Path)
+p.add_argument('--notice-cache',type=Path)
+p.add_argument('--allow-download',action='store_true',help='connected preparation only; disabled for offline reconstruction')
+a=p.parse_args();os.umask(0o077)
+root=a.media.resolve(strict=True);raw=(root/'inventory.json').read_bytes()
+assert hashlib.sha256(raw).hexdigest()==a.inventory_sha256,'input inventory digest changed'
+inventory=json.loads(raw);sources=json.loads((root/'wheel-sources.json').read_bytes())
+assert len(inventory['packages'])==37 and inventory['packages']['torch']['version']=='2.14.1+cpu'
+wheelhouse=root/'wheelhouse';wheelhouse.mkdir(mode=0o700,exist_ok=True)
+
+def sha(path):
+ with path.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
+
+def valid_name(name):
+ assert name==PurePosixPath(name).name and name not in ('','.','..')
+
+def stage(item,name):
+ valid_name(item['filename']);target=wheelhouse/item['filename']
+ if target.exists():
+  assert target.is_file() and not target.is_symlink() and target.stat().st_size==item['size'] and sha(target)==item['sha256'],name
+  return target
+ candidate=a.wheel_cache/item['filename'] if a.wheel_cache else None
+ temporary=wheelhouse/('.pending-'+uuid.uuid4().hex)
+ try:
+  if candidate and candidate.exists():
+   assert candidate.stat().st_size==item['size'] and sha(candidate)==item['sha256'],name
+   with candidate.open('rb') as src,temporary.open('xb') as dst:shutil.copyfileobj(src,dst,1024*1024)
+  else:
+   assert a.allow_download,'exact offline wheel unavailable: '+item['filename']
+   source=sources[name];assert source['sha256']==item['sha256'] and source['filename']==item['filename']
+   assert urlparse(source['url']).scheme=='https' and urlparse(source['url']).hostname in {'files.pythonhosted.org','download.pytorch.org','download-r2.pytorch.org'}
+   with urlopen(source['url'],timeout=30) as src,temporary.open('xb') as dst:
+    remaining=item['size']
+    while remaining:
+     block=src.read(min(1024*1024,remaining));assert block,'truncated exact wheel'
+     dst.write(block);remaining-=len(block)
+    assert not src.read(1),'oversized exact wheel'
+  assert temporary.stat().st_size==item['size'] and sha(temporary)==item['sha256'],name
+  os.link(temporary,target)
+ finally:
+  if temporary.exists():temporary.unlink()
+ return target
+
+notice_count=0
+for name,item in [*sorted(inventory['packages'].items()),('pip',inventory['installer'])]:
+ wheel=stage(item,name)
+ with zipfile.ZipFile(wheel) as archive:
+  names=archive.namelist();assert len(names)==len(set(names))
+  for path in names:assert not PurePosixPath(path).is_absolute() and '..' not in PurePosixPath(path).parts
+  meta=next(path for path in names if path.endswith('.dist-info/METADATA'));distinfo=meta.rsplit('/',1)[0]
+  parsed=BytesParser().parsebytes(archive.read(meta))
+  assert parsed['Version']==item['version'] and re.sub('[-_.]+','-',parsed['Name'].lower())==name
+  record={}
+  for path,digest,size in csv.reader(io.StringIO(archive.read(distinfo+'/RECORD').decode())):
+   assert path not in record;record[path]=(digest,size)
+  for file in item['files']:
+   path=file['path'];data=archive.read(path);assert len(data)==file['size'] and hashlib.sha256(data).hexdigest()==file['sha256']
+   digest,size=record[path];algorithm,encoded=digest.split('=',1)
+   assert algorithm in {'sha256','sha384','sha512'} and size==str(len(data))
+   assert base64.urlsafe_b64encode(hashlib.new(algorithm,data).digest()).decode().rstrip('=')==encoded
+   destination=root/'notices'/parsed['Name'].lower()/path
+   destination.parent.mkdir(parents=True,mode=0o700,exist_ok=True)
+   if destination.exists():assert sha(destination)==file['sha256']
+   else:
+    with destination.open('xb') as stream:stream.write(data)
+   notice_count+=file['notice']
+ print(name,item['version'],'verified',flush=True)
+for item in inventory['external_notices']:
+ valid_name(item['filename']);destination=root/item['filename']
+ if not destination.exists():
+  assert a.notice_cache,'exact external notice archive unavailable'
+  source=a.notice_cache/item['filename'];assert source.stat().st_size==item['size'] and sha(source)==item['sha256']
+  with source.open('rb') as src,destination.open('xb') as dst:shutil.copyfileobj(src,dst,1024*1024)
+ assert destination.stat().st_size==item['size'] and sha(destination)==item['sha256']
+lock=''.join(f'{name}=={item["version"]} --hash=sha256:{item["sha256"]}\n' for name,item in sorted(inventory['packages'].items()))
+assert hashlib.sha256(lock.encode()).hexdigest()==inventory['requirements_sha256']
+assert (root/'linux-amd64-cpu-prototype.lock').read_text()==lock
+assert (root/'installer.lock').read_text()==f'pip==26.2.1 --hash=sha256:{inventory["installer"]["sha256"]}\n'
+print(json.dumps({'training_packages':37,'wheel_notice_files_including_installer':notice_count,'lock_sha256':inventory['requirements_sha256'],'network_download_allowed':a.allow_download}),flush=True)

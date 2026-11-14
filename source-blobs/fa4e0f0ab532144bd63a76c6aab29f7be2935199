@@ -1,0 +1,70 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+target=${1:?Pass the full SHA of the freshly fetched published main after ARC activation}
+[[ "$target" =~ ^[a-f0-9]{40}$ ]]
+cd /root/lane-gw
+test "$(git rev-parse origin/main)" = "$target"
+test "$(git symbolic-ref --short HEAD)" = lane-gw
+test -z "$(git status --porcelain)"
+plan=$(cd "$(dirname "$0")" && pwd)
+python3 - "$target" <<'CHECK'
+import hashlib,subprocess,sys
+sha=sys.argv[1]
+def git(*args): return subprocess.check_output(['git',*args])
+files=git('ls-tree','-r','--name-only',sha,'services/control/migrations/postgresql').decode().splitlines()
+up=[name for name in files if name.endswith('.up.sql') and b'CREATE TABLE model_alias_description_intents (' in git('show',sha+':'+name)]
+if len(up)!=1: raise SystemExit('FORMAL_DESCRIPTION_MIGRATION_NOT_PUBLISHED: keep the retained branch; retry only after ARC publication')
+for direction,expected in [('up','399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab'),('down','61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86')]:
+    formal=up[0].replace('.up.sql','.'+direction+'.sql')
+    qualified='services/control/internal/modules/distribution/testdata/alias_description_candidate.'+direction+'.sql'
+    data=git('show',sha+':'+formal)
+    if hashlib.sha256(data).hexdigest()!=expected or data!=git('show',sha+':'+qualified): raise SystemExit('DESCRIPTION_BYTES_CHANGED: review the actual ARC source before executing')
+for name in ['alias_description_isolation_test.go','alias_description_migration_test.go']:
+    git('cat-file','-e',sha+':services/control/internal/modules/distribution/'+name)
+print('formal source and qualified up/down bytes matched')
+CHECK
+exec 9>/run/lock/ownsolid-heavy.lock
+flock -n 9 || { echo SHARED_HEAVY_LOCK_BUSY; exit 75; }
+exec 8>/root/lane-sci-tools/heavy-test.lock
+flock -n 8 || { echo SCI_REPLAY_LOCK_BUSY; exit 75; }
+df -h / /dev/shm
+free -m
+cat /proc/pressure/io
+ss -lntp
+test "$(df -Pk / | awk 'NR==2 {print $4}')" -ge 31457280
+test "$(awk '/MemFree:/ {print $2}' /proc/meminfo)" -ge 2097152
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 8388608
+awk '/^full / {split($2,a,"="); if(a[2]>5) exit 1}' /proc/pressure/io
+run=$(mktemp -d "$plan/run.XXXXXXXX")
+original=$(git rev-parse HEAD)
+printf 'tested_main=%s\nretained_gateway=%s\n' "$target" "$original" > "$run/source"
+restore() {
+    result=$?
+    if test -z "$(git status --porcelain)"; then
+        git switch lane-gw
+        test "$(git rev-parse HEAD)" = "$original" || result=1
+    else
+        echo 'SOURCE_CHANGED_DURING_ACCEPTANCE: kept all changes and the retained lane-gw reference'
+        result=1
+    fi
+    printf 'result=%s evidence=%s\n' "$result" "$run"
+    exit "$result"
+}
+trap restore EXIT
+git switch --detach "$target"
+pattern='^TestAliasDescription(PostgreSQLUpgradeAndHTTPS|InstalledSchemaAndHTTPS|RollbackPreservesRetainedState|RollbackWaitsForCommittedWriter|RollbackRejectsPriorIsolationSnapshot|RollbackFreshIsolationPreservesRetainedState)$'
+bash "$plan/run-pg.sh" "$run" formal-description "$pattern" > "$run/fixture.log" 2>&1
+python3 - "$run" <<'RESULTS'
+from pathlib import Path
+import re,sys
+run=Path(sys.argv[1])
+required={'TestAliasDescription'+suffix for suffix in ['PostgreSQLUpgradeAndHTTPS','InstalledSchemaAndHTTPS','RollbackPreservesRetainedState','RollbackWaitsForCommittedWriter','RollbackRejectsPriorIsolationSnapshot','RollbackFreshIsolationPreservesRetainedState']}
+for name,expected in [('distribution.log',required),('runtime-access.log',{'TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal'})]:
+    lines=(run/name).read_text()
+    roots={match.group(2):match.group(1) for match in re.finditer(r'^--- (PASS|FAIL|SKIP): (Test[A-Za-z0-9_]+) ',lines,re.M)}
+    if any(roots.get(test)!='PASS' for test in expected): raise SystemExit('Required formal test missing, failed or skipped: '+name)
+    print(name+': '+str(len(expected))+' required roots passed without skips')
+RESULTS
+test "$(git rev-parse HEAD)" = "$target"
+test -z "$(git status --porcelain)"

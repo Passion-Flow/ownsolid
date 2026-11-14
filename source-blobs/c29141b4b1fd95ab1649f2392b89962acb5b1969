@@ -1,0 +1,26 @@
+"""Apply the existing shared-host admission thresholds before CPU prototype jobs."""
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+root=Path(sys.argv[1]).resolve(strict=True)
+policy=json.loads((root/'cpu-prototype-inputs/prototype.json').read_bytes())['admission']
+for name in ['minimum_free_memory_bytes','minimum_available_memory_bytes','minimum_free_disk_bytes']:
+ assert type(policy[name]) is int and policy[name]>0
+assert type(policy['maximum_io_full_average_percent']) in (int,float) and 0<=policy['maximum_io_full_average_percent']<=5
+memory={line.split(':',1)[0]:int(line.split()[1])*1024 for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith(('MemFree:','MemAvailable:'))}
+pressure=next(line for line in Path('/proc/pressure/io').read_text().splitlines() if line.startswith('full '))
+values={k:float(v) for k,v in [field.split('=',1) for field in pressure.split()[1:]]}
+free=shutil.disk_usage(root).free
+heavy={'cargo','rustc','compile','link','chrome-headless'}
+processes=subprocess.check_output(['ps','-eo','comm=,args='],text=True)
+active=[line for line in processes.splitlines() if line.split()[0] in heavy or ('vllm serve' in line and not line.split()[0] in ['sshd','bash','sh','timeout'])]
+observation={'memory_free_bytes':memory['MemFree'],'memory_available_bytes':memory['MemAvailable'],'disk_free_bytes':free,'io_full_avg10':values['avg10'],'io_full_avg60':values['avg60'],'other_heavy_process_count':len(active)}
+print(json.dumps(observation,sort_keys=True),flush=True)
+assert memory['MemFree']>=policy['minimum_free_memory_bytes'],'shared-host free memory below admission threshold'
+assert memory['MemAvailable']>=policy['minimum_available_memory_bytes'],'shared-host available memory below admission threshold'
+assert free>=policy['minimum_free_disk_bytes'],'shared-host disk below admission threshold'
+assert all(values[k]<=policy['maximum_io_full_average_percent'] for k in ['avg10','avg60']),'shared-host I/O pressure above admission threshold'
+assert not active,'another heavy process is active'

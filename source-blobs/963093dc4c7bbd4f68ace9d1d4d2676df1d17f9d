@@ -1,0 +1,11 @@
+--- v2/reader_native_bounded.py
++++ v3/reader_native_bounded.py
+@@ -450,7 +450,7 @@
+             rc, _ = command(docker + ['exec', container, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres', '-d', 'ownsolid_training_reader_test'], 'pg_ready', budget, cap=2)
+             if rc == 0:
+                 break
+-            if rc != 1:
++            if rc not in (1, 2):
+                 raise Refusal('CHILD_FAILED', rc, 'pg_ready')
+             time.sleep(min(0.2, max(0, ready_end - budget.clock())))
+         else:

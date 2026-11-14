@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+fixture="$(cd -- "$(dirname -- "$0")" && pwd)"
+root="$HOME/lane-sci"
+git -C "$root" diff --exit-code ad7cf37e -- services/control/internal/modules/audit/testdata
+git -C "$root" diff --exit-code df1ec219 -- services/control/migrations/postgresql
+private="$(mktemp -d "$HOME/lane-sci-tools/audit55-replay.XXXXXXXX")"
+trap 'rm -r -- "$private"' EXIT
+for name in catalog.sql verify55.sh run.sh; do cp -- "$fixture/$name" "$private/$name"; done
+python3 - "$private/pg-password" <<'PY'
+from pathlib import Path
+import secrets
+import sys
+Path(sys.argv[1]).write_text(secrets.token_hex(24) + "\n")
+PY
+bash "$private/run.sh"

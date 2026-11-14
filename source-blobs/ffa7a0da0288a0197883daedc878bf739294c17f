@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+source /root/lane-rel-tools/env
+export PYTHONDONTWRITEBYTECODE=1 GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local PIP_NO_INDEX=1 UV_OFFLINE=1
+python3 - <<'CHECK'
+from pathlib import Path
+import os
+m=int(next(x.split()[1] for x in Path('/proc/meminfo').read_text().splitlines() if x.startswith('MemFree:')))//1024
+v=os.statvfs('/root')
+print('raw_memfree_mib',m,flush=True)
+if m<2048 or v.f_bavail*v.f_frsize<15*1024**3:raise SystemExit(75)
+CHECK
+exec flock --nonblock --conflict-exit-code 75 /run/lock/ownsolid-heavy.lock flock --nonblock --conflict-exit-code 75 /root/lane-sci-tools/heavy-test.lock flock --nonblock --conflict-exit-code 75 /root/lane-rel-tools/heavy-test.lock unshare --net bash -c '
+set -euo pipefail
+ip link set lo up
+cd /root/lane-rel-api-compat
+python3 -m unittest discover -s tools/codegen/sdk/tests -p "test_*.py" -v
+python3 tools/lint/layout/check_layout.py .
+python3 tools/dev/roadmap_progress.py --check
+git diff --check
+'

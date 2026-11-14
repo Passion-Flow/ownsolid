@@ -1,0 +1,61 @@
+"""Add an isolated real-model mode to the existing authorized gateway fixture."""
+
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+repo, scratch = map(Path, sys.argv[1:])
+relative = Path('services/control/internal/modules/distribution/gateway_integration_test.go')
+source = subprocess.check_output(['git', '-C', str(repo), 'show', f'HEAD:{relative}']).decode()
+
+
+def insert(old, new):
+    global source
+    assert source.count(old) == 1, old
+    source = source.replace(old, new, 1)
+
+
+insert('\tapplicationBudget\n', '\tapplicationBudget\n\tevl105AuthorizedPair\n')
+insert('func realGatewayChain(t *testing.T, mode gatewayChainMode) {', '''func TestEVL105AuthorizedCPUPair(t *testing.T) {
+	realGatewayChain(t, evl105AuthorizedPair)
+}
+
+func realGatewayChain(t *testing.T, mode gatewayChainMode) {''')
+insert('\tlicensePath := mode == licenseExpiry\n', '\tlicensePath := mode == licenseExpiry || mode == evl105AuthorizedPair\n')
+insert('\tcontrol.StartTLS()\n', '''	var cpuPair *evl105Pair
+	if mode == evl105AuthorizedPair {
+		cpuPair = newEVL105Pair(t)
+		control.Config.Handler = cpuPair.observeReports(control.Config.Handler)
+	}
+	control.StartTLS()
+''')
+insert('backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n', '''backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if cpuPair != nil {
+			cpuPair.forward(w, r)
+			return
+		}
+''')
+insert('\tif lostReply != nil {\n\t\tlimits["control_seconds"] = 4\n', '''	if cpuPair != nil {
+		limits["active_requests"] = 1
+		limits["request_seconds"] = 60
+		limits["idle_seconds"] = 30
+	}
+	if lostReply != nil {
+		limits["control_seconds"] = 4
+''')
+insert('\torigin := "https://" + listen\n', '''	if cpuPair != nil {
+		client.Timeout = 75 * time.Second
+	}
+	origin := "https://" + listen
+''')
+insert('\tif mode == promptCapacityRelease {\n\t\tverifyPromptCapacityRelease', '''	if cpuPair != nil {
+		cpuPair.verify(t, c, access, request)
+		return
+	}
+	if mode == promptCapacityRelease {
+		verifyPromptCapacityRelease''')
+helper = (scratch / 'pair-helper.go').read_text()
+replacement = scratch / relative.name
+replacement.write_text(source + '\n' + helper)
+(scratch / 'overlay.json').write_text(json.dumps({'Replace': {str(repo / relative): str(replacement)}}) + '\n')

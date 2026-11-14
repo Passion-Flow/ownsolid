@@ -1,0 +1,25 @@
+{
+  "head": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "origin_main": "1280ea79c94f54b37f63ec33541fabfa6325901c",
+  "qualified_source": "a446ec580cf6dffc63df5d8269518f1ef8175d40",
+  "changed_paths": [
+    "docs/product/roadmap/evaluation.md",
+    "docs/product/status.md",
+    "docs/research/app-bundle-verification.md",
+    "docs/research/app-catalog-manifest.md",
+    "docs/research/app-lane-questions.md",
+    "docs/research/application-conversation-search.md",
+    "docs/research/evaluation-reproducibility.md",
+    "docs/research/gateway-model-description.md",
+    "docs/research/lane-sci-decisions.md",
+    "docs/research/ops-lane-questions.md",
+    "docs/research/postgresql-catalog-upgrade-gate.md",
+    "docs/research/product-assistant-loop-guard.md",
+    "services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go",
+    "services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go"
+  ],
+  "default_product_inputs_unchanged": true,
+  "root_check_build_test": "reused unchanged qualified default build inputs",
+  "new_check": "passed",
+  "publish_requested": false
+}

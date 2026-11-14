@@ -1,0 +1,46 @@
+{
+  "base_commit": "93366c73fbebbb096a039e8c73097159df810d26",
+  "config": {
+    "candidate": "93366c73fbebbb096a039e8c73097159df810d26",
+    "cleanup_seconds": 20,
+    "evidence_parent": "/root/lane-rel-tools",
+    "fixture_parent": "/tmp",
+    "gid": 65534,
+    "go": "/root/lane-rel-tools/go/bin/go",
+    "go_memory_bytes": 1073741824,
+    "hard_seconds": 300,
+    "locks": [
+      "/run/lock/ownsolid-heavy.lock",
+      "/root/lane-sci-tools/heavy-test.lock"
+    ],
+    "maximum_full_io_avg10": 5,
+    "minimum_available_memory_bytes": 8589934592,
+    "minimum_disk_bytes": 32212254720,
+    "minimum_free_memory_bytes": 2147483648,
+    "probe": "/root/lane-rel-tools/lane-del-combination-4463bbe6/probe",
+    "recorder": "/root/lane-rel-tools/lane-del-combination-4463bbe6/egress-recorder",
+    "source": "/root/lane-del-acceptance-guard",
+    "uid": 65534,
+    "workers": 2
+  },
+  "config_sha256": "0a8ba15dc415db2f3d9ce3754800091e085a11258119afb790cb8f7fc7b7ad66",
+  "files": {
+    "deploy/offline/README.md": "997080e8f2aa502796e98dd55cd998d7a521f5f1d40873c53b3e0929293e0cf5",
+    "deploy/offline/go.mod": "8d13e78fa162a00cd50ce26fa6372bd1ab0148992827528fe9f475349c9c47f3",
+    "deploy/offline/go.sum": "f589b5a43d6dfdae7a8a6b7ead6b9b28d931d7cb1e153fb07b9c397be70fe0c3",
+    "deploy/offline/internal/install/support.go": "42faa21bfc55e11e067bc5be5b35868a29a2f2577c82911d71d1a8b68e4bf0fd",
+    "deploy/offline/internal/install/support_access.go": "c91fa0b0fe8781be006bd9c41c6517b515d99337194087cc4430c39f9089cd16",
+    "deploy/offline/internal/install/support_access_cli_test.go": "7e422c0209d3afce90bf31899d16f9ded5c8693f9bbf631e9add5f20621d29f2",
+    "deploy/offline/internal/install/support_access_test.go": "a62109608865640926310dca049ddda85664eec751415953590245f11c1e6e89",
+    "deploy/offline/internal/install/support_cluster.go": "b39619a7ccd03d0a55c5b9f10eecc12b3b408d6f443b78f8beb63e69caaa65a3",
+    "deploy/offline/internal/install/support_operations.go": "96883bfd3152e36a87e8c888fddcc4454e4b831f32a00f0f0bc651b8c586199d",
+    "deploy/offline/internal/install/testdata/installed-acceptance/acceptance_guard.py": "fafa01dd1abff302ace46a32c129823504dd1987653026f3e1825f29f8224da5",
+    "deploy/offline/internal/install/testdata/installed-acceptance/native_capture_selftest.py": "8958e5d1f1a6a0a2430f7ad2997fef3802ecbe0dd09a965ae4152bbc64815236",
+    "docs/decisions/0071-record-diagnostic-reads-before-local-collection.md": "cd7f167a496d662a2e2cb82dab58d2975b6a037006042a3cf7867dbb0aab1fb3",
+    "docs/research/support-diagnostics.md": "3f18335fcd6adbdf5e52e78194946eb929939464ef571338e4dbc14e939b95fa",
+    "go.work": "d2da06271b98cf27596a65743b8f6f39504cc5557c95b8842c1c97c861b593b8"
+  },
+  "runner_sha256": "83ec4957d4923182152704ed3e27e0ed659b9b39f8d2f624e1f46f98bf08e7e7",
+  "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "working_tree_modified": false
+}

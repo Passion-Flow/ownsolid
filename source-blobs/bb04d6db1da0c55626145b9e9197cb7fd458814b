@@ -1,0 +1,19 @@
+{
+  "scope": "Independent readback after the one revised parser invocation; no rerun",
+  "parent_and_launchers_absent": {
+    "3430071": true,
+    "3430085": true,
+    "3430104": true,
+    "3430123": true,
+    "3430142": true
+  },
+  "network_namespace_process_references": {
+    "4026532648": [],
+    "4026532588": []
+  },
+  "namespace_scan_errors": [],
+  "owned_fixture_prefix_remaining": [],
+  "fixture_path_scope": "Successful original wrapper did not retain exact fixture suffix; independent readback checks the exclusive owned prefix, not an invented path",
+  "source": "1a41d97981798440b7f02061d3a73853726b03bc",
+  "source_clean": true
+}

@@ -1,0 +1,64 @@
+{
+  "changed_zip_members": [
+    "training_args/data.pkl",
+    "training_args/.data/serialization_id"
+  ],
+  "checkpoint_receipt_differences": [
+    [
+      {
+        "path": "training_args.bin",
+        "sha256": "dd442afcb1e68ab5d168760bbb417bb0991ecafd3137fbc937a61f48b8d7d64d",
+        "size_bytes": 5265
+      },
+      {
+        "path": "training_args.bin",
+        "sha256": "3c71338c0c8f180ca3e52ddf870f743d40fbdf45c0b393ccc2c620eda86bdad3",
+        "size_bytes": 5265
+      }
+    ]
+  ],
+  "differing_argument_fields": {
+    "baseline": {
+      "output_dir": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/5bf20df3-be7e-404e-a33e-3f222a486ff6/output/checkpoints",
+      "run_name": "project"
+    },
+    "resumed": {
+      "output_dir": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/f37ed0ee-f214-4784-9101-ea0e9c4e79bc/output/checkpoints",
+      "run_name": "project"
+    }
+  },
+  "method": "pickle opcode inspection only; no pickle execution or Torch import",
+  "other_pickle_opcodes_identical": true,
+  "pickle_opcode_differences": [
+    {
+      "baseline": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/5bf20df3-be7e-404e-a33e-3f222a486ff6/output/checkpoints",
+      "fields": [
+        "output_dir"
+      ],
+      "opcode_index": 11,
+      "resumed": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/f37ed0ee-f214-4784-9101-ea0e9c4e79bc/output/checkpoints"
+    }
+  ],
+  "reported_step_losses": {
+    "baseline": [
+      {
+        "loss": 0.9951430559158325,
+        "step": 1
+      },
+      {
+        "loss": 5.267714500427246,
+        "step": 2
+      }
+    ],
+    "resumed": [
+      {
+        "loss": 5.267714500427246,
+        "step": 2
+      }
+    ]
+  },
+  "training_loss": {
+    "baseline": 3.1314287781715393,
+    "resumed": 5.267714500427246
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "memory_kib": {
+    "MemFree": 20582440,
+    "MemAvailable": 22379924
+  },
+  "full_io_psi_avg10": 0.62,
+  "disk_free_bytes": 794772193280,
+  "scope": "source-verified ARC110 current real PostgreSQL three-ingress composition; identical pure runtime packages already qualified at 8b4935ab; synthetic HTML, node facts and browser trust; no installed/browser/scale claim"
+}

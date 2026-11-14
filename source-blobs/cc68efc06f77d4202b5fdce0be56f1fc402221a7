@@ -1,0 +1,41 @@
+{
+  "source": "c90744abe25129181d21e8287d9403677090f299",
+  "platform": "darwin/arm64",
+  "offline_dependency_resolution": true,
+  "network_namespace_isolation": false,
+  "phases": {
+    "event-offline-web-install": {
+      "returncode": 0,
+      "seconds": 0.809,
+      "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/event-offline-web-install.log",
+      "sha256": "e7b6141cc6f5ae7ec4d91bbb629e6e1d3fbc6ff96745671219f94d41246b8609"
+    },
+    "event-check": {
+      "returncode": 0,
+      "seconds": 32.182,
+      "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/event-check.log",
+      "sha256": "af77a105f825e93878d79269422b088dd0c910745f539e7e3cdd4e349d64ddf1"
+    },
+    "event-build": {
+      "returncode": 0,
+      "seconds": 22.462,
+      "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/event-build.log",
+      "sha256": "293f76744d6498e0464228d3bf94b6beb3a3e1eb5994dec8da58a51c4b537da3"
+    }
+  },
+  "memory_pressure_before": "The system has 38654705664 (2359296 pages with a page size of 16384).\nSystem-wide memory free percentage: 78%\n",
+  "metadata_clock_probe": {
+    "hfs_ram": {
+      "ctime_before_ns": 1794521749000000000,
+      "ctime_after_ns": 1794521749000000000,
+      "changed": false,
+      "mtime_restored": true
+    },
+    "apfs": {
+      "ctime_before_ns": 1794521749089381301,
+      "ctime_after_ns": 1794521749105409567,
+      "changed": true,
+      "mtime_restored": true
+    }
+  }
+}

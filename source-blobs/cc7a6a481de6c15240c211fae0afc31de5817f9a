@@ -1,0 +1,50 @@
+# SCH-103 selected-executor ranking handoff
+
+Local-only candidate b9705abccd4361ee08efb7ed445fefddbc22ab34.
+Parent 24c58905 records the passing quota-status component gates on 934a2ec5.
+This new queue entry has NOT been compiled or run yet. Do not carry the older
+Go/PG passes forward as qualification of this change.
+
+The actual additive API is:
+
+```go
+func RankWorkspaceQueueExecutorWithin(
+    ctx context.Context, q transaction.Executor,
+    tenant string, entries []QueueEntry,
+) ([]QueueEntry, error)
+```
+
+The existing pgx RankWorkspaceQueueWithin remains compatible. Both share
+snapshot validation, scope, aggregate reads and ranking. The shared snapshot
+guard also serves the existing preflight, so its compatibility tests are
+included in the pending PG target.
+
+The selected owner uses its bounded context and Store.Within(ctx,true,...).
+Its first SQL is SET TRANSACTION ISOLATION LEVEL REPEATABLE READ. It then reads
+the complete authorized eligible owner batch and ranks/resolves the candidate
+through that same executor. The ranker changes no transaction setting, opens
+no pool and owns no commit. It rejects direct pools, another engine or mode.
+Do not fall back to legacy DB. Final ReserveQueuedWithin still runs in the
+fresh READ COMMITTED write transaction and rechecks current authority/rank.
+Keep excluded-job authority reconciliation and exact release semantics.
+
+Pending native early check: queue-executor-unit.sh (one new pure test).
+Its two attempts exited 75 at resource preflight before compilation.
+The Mac fallback also returned WORKSTATION_LOCK_BUSY before extraction/build.
+No test failed in these attempts.
+
+Pending disconnected PG target: queue-executor-target.sh (seven PG tests:
+two new selected-store flows, three legacy ranking flows and two affected
+preflight mode/snapshot flows). It has not run and created no environment.
+Then run queue-executor-remaining-gate.sh check, build, modules on that source.
+
+The new tests use actual selected Store.Within transactions and persistent
+owner queue fixture rows. A committed hold and inserted eligible row must be
+invisible in the existing snapshot and visible in the fresh one. The tests
+also reject wrong modes and inaccessible scope. These remain scheduler API
+tests, not proof of actual training composition or formal DDL/grants.
+
+No training/identity/API/Web file or production schema was changed. Preserve
+the original author by applying sch103-b9705abc.patch after the prior packet
+and its status-only follow-ups, or cherry-pick the authored commit on the
+coordinator's accepted base after review.

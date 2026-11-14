@@ -1,0 +1,79 @@
+set -euo pipefail
+umask 077
+cd /root/lane-rel-history
+expected=495e4056ac9ad60a7c4b48a77c334edde4f83880
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+source /root/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 CARGO_BUILD_JOBS=1 CARGO_NET_OFFLINE=true
+exec 8>/run/lock/ownsolid-heavy.lock
+until flock -w 45 8; do echo SHARED_HEAVY_LOCK_PENDING; done
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+exec 7>/root/lane-rel-tools/heavy-test.lock
+flock -n 7 || exit 75
+df -h /
+free -m
+ss -lntp
+test "$(df -Pm / | awk 'NR == 2 {print $4}')" -ge 15360
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+echo "SOURCE_COMMIT=$(git rev-parse HEAD)"
+unshare -n bash -ec '
+ip link set lo up
+test "$(ip -o link show | wc -l)" -eq 1
+test -z "$(ip route show default)"
+test -z "$(ip -6 route show default)"
+make web-install
+make check
+echo MAKE_CHECK_PASSED
+make build
+echo MAKE_BUILD_PASSED
+go -C tools/cli test -race -count=1 ./...
+echo CLI_UNIT_TESTS_PASSED
+'
+export OWNSOLID_TEST_VICTORIA_METRICS=/root/lane-obs-tools/victoria-metrics-prod
+export OWNSOLID_TEST_VMALERT=/root/lane-obs-tools/vmalert-prod
+work=$(mktemp -d)
+container=
+cleanup() {
+  if [ -n "$container" ]; then
+    docker stop --time 10 "$container" >/dev/null
+    docker rm "$container" >/dev/null
+    echo STOPPED_OWN_HISTORY_CLI_POSTGRESQL
+  fi
+  rm -f -- "$work/dsn"
+  rmdir -- "$work"
+}
+trap cleanup EXIT
+container=$(docker run --detach --pull never --network none --memory 384m \
+  --name "lane-rel-history-${work##*.}" --tmpfs /var/lib/postgresql:rw,nosuid,nodev,size=256m \
+  -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_USER=fixture -e POSTGRES_DB=ownsolid_history_cli_test \
+  sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47 \
+  -c listen_addresses=127.0.0.1 -c shared_buffers=16MB -c max_connections=16)
+pid=$(docker inspect --format '{{.State.Pid}}' "$container")
+printf 'postgresql://fixture@127.0.0.1:5432/ownsolid_history_cli_test?sslmode=disable\n' >"$work/dsn"
+export PROJECT_ONE_TEST_DSN_FILE="$work/dsn"
+export PROJECT_ONE_REPOSITORY_ENGINE=postgresql
+export PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE="$work/dsn"
+export PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA="cli_history_$(tr -d '-' </proc/sys/kernel/random/uuid)"
+nsenter --target "$pid" --net unshare --pid --fork --kill-child bash -ec '
+  ip link set lo up
+  test "$(ip -o link show | wc -l)" -eq 1
+  test -z "$(ip route show default)"
+  test -z "$(ip -6 route show default)"
+  for attempt in $(seq 1 80); do
+    if (exec 3<>/dev/tcp/127.0.0.1/5432) 2>/dev/null; then
+      docker exec "$1" psql -X -U fixture -d ownsolid_history_cli_test -v ON_ERROR_STOP=1 -c "$2"
+      GOFLAGS="-p=1 -race" bash tools/cli/testdata/run-history-tls.sh
+      exit
+    fi
+    sleep 0.25
+  done
+  exit 1
+' bash "$container" "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC;"
+echo COMPILED_HISTORY_CLI_NATIVE_TLS_PASSED
+
+test ! -e tools/audit-verify/audit-verify || rm -- tools/audit-verify/audit-verify
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+echo EXACT_SOURCE_ACCEPTANCE_PASSED

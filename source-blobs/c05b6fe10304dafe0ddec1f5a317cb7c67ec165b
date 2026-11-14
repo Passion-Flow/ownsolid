@@ -1,0 +1,1 @@
+{"max_completion_tokens":24,"messages":[{"content":"Explain photosynthesis in one short sentence.","role":"user"}],"model":"public-alias","stream":false,"temperature":0}

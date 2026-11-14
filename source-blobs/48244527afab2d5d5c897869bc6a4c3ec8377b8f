@@ -1,0 +1,222 @@
+package main
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"io"
+	"net"
+	"net/netip"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+	"syscall"
+	"unicode/utf8"
+)
+
+const stateFormat = "ownsolid-installed-registry-v1"
+const maximumReply = 1 << 20
+
+var uuidPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+var digestPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
+var commitPattern = regexp.MustCompile(`^[0-9a-f]{40}$`)
+
+type endpoint struct {
+	Origin      string `json:"origin"`
+	DialAddress string `json:"dial_address"`
+	CAFile      string `json:"ca_file"`
+}
+type asset struct {
+	ID             string   `json:"id"`
+	ManifestDigest string   `json:"manifest_digest"`
+	ConfigDigest   string   `json:"config_digest"`
+	ArchiveSHA256  string   `json:"archive_sha256"`
+	ArchiveBytes   int64    `json:"archive_bytes"`
+	Licenses       []string `json:"licenses"`
+}
+type configuration struct {
+	SourceCommit          string   `json:"source_commit"`
+	ReleaseManifestSHA256 string   `json:"release_manifest_sha256"`
+	Admin                 endpoint `json:"admin"`
+	Email                 string   `json:"email"`
+	PasswordFile          string   `json:"password_file"`
+	SessionFile           string   `json:"session_file"`
+	WorkspaceID           string   `json:"workspace_id"`
+	Asset                 asset    `json:"asset"`
+	ApproveLicenses       bool     `json:"approve_licenses"`
+	RequestSeconds        int      `json:"request_seconds"`
+	PhaseSeconds          int      `json:"phase_seconds"`
+}
+
+func pathValid(p string) bool {
+	return filepath.IsAbs(p) && filepath.Clean(p) == p && !strings.ContainsAny(p, "\x00\r\n")
+}
+func sha(raw []byte) string { sum := sha256.Sum256(raw); return hex.EncodeToString(sum[:]) }
+func artifactDigest(s string) bool {
+	return strings.HasPrefix(s, "sha256:") && digestPattern.MatchString(strings.TrimPrefix(s, "sha256:"))
+}
+func (c configuration) validate() error {
+	u, e := url.Parse(c.Admin.Origin)
+	address, port, split := net.SplitHostPort(c.Admin.DialAddress)
+	ip, parse := netip.ParseAddr(address)
+	if e != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawPath != "" || u.RawQuery != "" || u.Fragment != "" ||
+		split != nil || parse != nil || !(ip.IsPrivate() || ip.IsLoopback()) || port == "" ||
+		!commitPattern.MatchString(c.SourceCommit) || !digestPattern.MatchString(c.ReleaseManifestSHA256) ||
+		!pathValid(c.Admin.CAFile) || !pathValid(c.PasswordFile) || !pathValid(c.SessionFile) || c.PasswordFile == c.SessionFile ||
+		c.Email == "" || len(c.Email) > 320 || strings.ContainsAny(c.Email, "\x00\r\n") || !uuidPattern.MatchString(c.WorkspaceID) ||
+		!c.ApproveLicenses || c.Asset.ID == "" || len(c.Asset.ID) > 128 || strings.ContainsAny(c.Asset.ID, "/\x00\r\n") ||
+		!artifactDigest(c.Asset.ManifestDigest) || !artifactDigest(c.Asset.ConfigDigest) || !digestPattern.MatchString(c.Asset.ArchiveSHA256) ||
+		c.Asset.ArchiveBytes < 1 || c.Asset.ArchiveBytes > 1<<30 || len(c.Asset.Licenses) == 0 || len(c.Asset.Licenses) > 128 ||
+		c.RequestSeconds < 1 || c.RequestSeconds > 120 || c.PhaseSeconds < c.RequestSeconds || c.PhaseSeconds > 300 {
+		return errors.New("invalid acceptance configuration or missing explicit release/license inputs")
+	}
+	for _, license := range c.Asset.Licenses {
+		if license == "" || len(license) > 256 || strings.ContainsAny(license, "\x00\r\n") {
+			return errors.New("invalid approved license identifiers")
+		}
+	}
+	// Validate both ports without resolving DNS. Dialing uses only the explicit private address.
+	if !numericPort(port) {
+		return errors.New("invalid private dial port")
+	}
+	if u.Port() != "" && !numericPort(u.Port()) {
+		return errors.New("invalid advertised origin port")
+	}
+	if u.ForceQuery || u.String() != c.Admin.Origin || strings.HasSuffix(u.Host, ":") {
+		return errors.New("origin must be canonical and contain no query marker")
+	}
+	return nil
+}
+func numericPort(value string) bool {
+	n, e := strconv.Atoi(value)
+	return e == nil && n >= 1 && n <= 65535 && strconv.Itoa(n) == value
+}
+func protectedRead(path string, limit int64, private bool) ([]byte, error) {
+	if !pathValid(path) {
+		return nil, errors.New("input requires a canonical absolute file reference")
+	}
+	f, e := os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
+	if e != nil {
+		return nil, errors.New("input file is unavailable or linked")
+	}
+	defer f.Close()
+	info, e := f.Stat()
+	if e != nil || !info.Mode().IsRegular() || info.Size() < 1 || info.Size() > limit {
+		return nil, errors.New("input file is not a bounded regular file")
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || st.Nlink != 1 || (private && (st.Uid != uint32(os.Geteuid()) || info.Mode().Perm()&0077 != 0 || info.Mode().Perm()&0400 == 0)) ||
+		(!private && info.Mode().Perm()&0022 != 0) {
+		return nil, errors.New("input ownership, permissions or alias count is unsafe")
+	}
+	body, e := io.ReadAll(io.LimitReader(f, limit+1))
+	if e != nil || int64(len(body)) > limit {
+		return nil, errors.New("input read is incomplete or oversized")
+	}
+	return body, nil
+}
+func rejectDuplicateJSON(raw []byte) error {
+	if !utf8.Valid(raw) {
+		return errors.New("JSON must contain valid UTF-8")
+	}
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	var scan func(int) error
+	scan = func(depth int) error {
+		if depth > 32 {
+			return errors.New("JSON nesting exceeds the acceptance bound")
+		}
+		token, e := dec.Token()
+		if e != nil {
+			return e
+		}
+		switch token {
+		case json.Delim('{'):
+			seen := map[string]bool{}
+			for dec.More() {
+				key, e := dec.Token()
+				if e != nil {
+					return e
+				}
+				name, ok := key.(string)
+				if !ok || seen[name] {
+					return errors.New("duplicate JSON member")
+				}
+				seen[name] = true
+				if e = scan(depth + 1); e != nil {
+					return e
+				}
+			}
+			end, e := dec.Token()
+			if e != nil || end != json.Delim('}') {
+				return errors.New("incomplete JSON object")
+			}
+		case json.Delim('['):
+			for dec.More() {
+				if e := scan(depth + 1); e != nil {
+					return e
+				}
+			}
+			end, e := dec.Token()
+			if e != nil || end != json.Delim(']') {
+				return errors.New("incomplete JSON array")
+			}
+		}
+		return nil
+	}
+	if e := scan(0); e != nil {
+		return errors.New("invalid, duplicate or excessive JSON")
+	}
+	if _, e := dec.Token(); e != io.EOF {
+		return errors.New("multiple JSON documents")
+	}
+	return nil
+}
+func strictDecode(raw []byte, out any) error {
+	if rejectDuplicateJSON(raw) != nil {
+		return errors.New("invalid JSON")
+	}
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.DisallowUnknownFields()
+	if d.Decode(out) != nil {
+		return errors.New("unexpected response or configuration shape")
+	}
+	return nil
+}
+func exactKeys(raw []byte, keys ...string) error {
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(raw, &fields) != nil || fields == nil {
+		return errors.New("expected a JSON object")
+	}
+	allowed := map[string]bool{}
+	for _, k := range keys {
+		allowed[k] = true
+	}
+	for k := range fields {
+		if !allowed[k] {
+			return errors.New("unknown or noncanonical JSON member")
+		}
+	}
+	return nil
+}
+func loadConfiguration(path string) (configuration, error) {
+	var c configuration
+	raw, e := protectedRead(path, 32768, true)
+	if e != nil {
+		return c, e
+	}
+	if exactKeys(raw, "source_commit", "release_manifest_sha256", "admin", "email", "password_file", "session_file", "workspace_id", "asset", "approve_licenses", "request_seconds", "phase_seconds") != nil || strictDecode(raw, &c) != nil {
+		return c, errors.New("invalid acceptance configuration")
+	}
+	var fields map[string]json.RawMessage
+	_ = json.Unmarshal(raw, &fields)
+	if exactKeys(fields["admin"], "origin", "dial_address", "ca_file") != nil ||
+		exactKeys(fields["asset"], "id", "manifest_digest", "config_digest", "archive_sha256", "archive_bytes", "licenses") != nil {
+		return c, errors.New("invalid endpoint or approved asset shape")
+	}
+	return c, c.validate()
+}

@@ -1,0 +1,32 @@
+{
+  "scope": "Linux/x86_64 pure monitoring and monitoringmetrics units only; no native store/PostgreSQL or new HTTP candidate qualification",
+  "source_commit": "3cebfcef9f321364862a11d8b773c714facb6f68",
+  "source_tree": "0f5c800140e1036a157de62ba4c339b4e2780468",
+  "platform": "Linux/x86_64",
+  "toolchain_version_file": "go1.27.3",
+  "original_helper_sha256": "c60fbeba55bf54bdf61fa44d702ecc651a5005b6cad4f775c398668ecab127d6",
+  "diagnostic_copy_sha256": "6f70e6fda0c90ec265d51b9231662ec276112cfad9f4dacac7f61d15485d468b",
+  "unit_command": "go -C services/control test -race -p 2 -count=1 ./internal/modules/monitoring/... ./internal/platform/monitoringmetrics",
+  "outer_deadline_seconds": 300,
+  "kill_after_seconds": 10,
+  "raw_flock_return_codes": [
+    0,
+    0
+  ],
+  "caller_pids": [
+    2398847
+  ],
+  "owned_lock_descriptors_observed_at_admission": true,
+  "owning_parents_exited": true,
+  "own_flock_markers_remaining": [],
+  "lock_carriers_retained": true,
+  "exit_code": 0,
+  "passed": true,
+  "tested_packages": 4,
+  "relay_command_packages_without_tests": 4,
+  "individual_test_or_skip_counts": "not emitted by this frozen plain Go test command",
+  "source_still_clean": true,
+  "log_sha256": "109b3069dc730dc6bd486e3926db0bb4f6368a6996ec16ebf835f4ba61a9e5a9",
+  "source_inputs_sha256": "e8d0b8fcebd5d9bb9c766d8625bdcdd4aa6c510031e1fb3122319666516211ec",
+  "record_origin": "Post-run summary tied to the immutable raw check.log and lock diagnostics; no reconstruction of individual test events"
+}

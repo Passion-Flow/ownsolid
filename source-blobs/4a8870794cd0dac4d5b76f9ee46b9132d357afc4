@@ -1,0 +1,9 @@
+{
+  "memory_kib": {
+    "MemFree": 4471828,
+    "MemAvailable": 19971884
+  },
+  "full_io_psi_avg10": 0.0,
+  "disk_free_bytes": 800053510144,
+  "scope": "synthetic PostgreSQL row-lock/function permission prototype; SET ROLE only, no production schema/Go startup or network/SCRAM acceptance"
+}

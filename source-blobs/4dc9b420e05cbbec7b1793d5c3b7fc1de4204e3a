@@ -1,0 +1,106 @@
+{
+  "children_joined": true,
+  "cleanup_errors": [],
+  "commands": [
+    {
+      "case": "shared",
+      "docker_argv": [
+        "/usr/bin/docker",
+        "compose",
+        "config",
+        "--format",
+        "json"
+      ],
+      "docker_exec_attempted": true,
+      "elapsed_seconds": 0.2152438668999821,
+      "exit": 0,
+      "guard_stage": "exec-prepared",
+      "launcher_pid": 3430085,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 7131,
+      "stdout_sha256": "bd4227a0cca68c9858651175c2adb212c36a0ae16d9e863fb1645d6b245936da"
+    },
+    {
+      "case": "split",
+      "docker_argv": [
+        "/usr/bin/docker",
+        "compose",
+        "config",
+        "--format",
+        "json"
+      ],
+      "docker_exec_attempted": true,
+      "elapsed_seconds": 0.2149630670901388,
+      "exit": 0,
+      "guard_stage": "exec-prepared",
+      "launcher_pid": 3430104,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 7292,
+      "stdout_sha256": "a4c93f2cd4104b9882b8b08fea4a450d4e23e792589d640ee7c258924373ee4f"
+    },
+    {
+      "case": "shared-again",
+      "docker_argv": [
+        "/usr/bin/docker",
+        "compose",
+        "config",
+        "--format",
+        "json"
+      ],
+      "docker_exec_attempted": true,
+      "elapsed_seconds": 0.21538229403086007,
+      "exit": 0,
+      "guard_stage": "exec-prepared",
+      "launcher_pid": 3430123,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 7185,
+      "stdout_sha256": "3218b26d0f17ec537c33140856f18172b617ab5d79cebba460101d8b60af8566"
+    },
+    {
+      "case": "split-override",
+      "docker_argv": [
+        "/usr/bin/docker",
+        "compose",
+        "config",
+        "--format",
+        "json"
+      ],
+      "docker_exec_attempted": true,
+      "elapsed_seconds": 0.2159289049450308,
+      "exit": 0,
+      "guard_stage": "exec-prepared",
+      "launcher_pid": 3430142,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 7373,
+      "stdout_sha256": "d54ae16e6c0e46ee26e0bfeae42738d3606448e4c898c11d68005b5ff2371478"
+    }
+  ],
+  "elapsed_seconds": 1.1915325480513275,
+  "exit": 0,
+  "heavy_leases": "Not requested or opened for this bounded client parser",
+  "owned_fixture_removed": true,
+  "parent_pid": 3430071,
+  "resources": {
+    "disk_free_bytes": 790194954240,
+    "io": "some avg10=0.00 avg60=0.61 avg300=8.24 total=31850879125\nfull avg10=0.00 avg60=0.60 avg300=7.89 total=30022009853\n",
+    "meminfo": "MemTotal:       32818728 kB\nMemFree:         4835928 kB\nMemAvailable:   17592588 kB\nBuffers:         1157868 kB\nCached:         20539860 kB\nSwapCached:        17812 kB\nActive:         15078820 kB\nInactive:       10459744 kB\nActive(anon):    9697140 kB\nInactive(anon):  3945164 kB\nActive(file):    5381680 kB\nInactive(file):  6514580 kB\nUnevictable:       27708 kB\nMlocked:           27708 kB\nSwapTotal:       8388604 kB\nSwapFree:            236 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:               736 kB\nWriteback:             0 kB\nAnonPages:       3847124 kB\nMapped:           714528 kB\nShmem:           9792708 kB\nKReclaimable:    1325740 kB\nSlab:            1731860 kB\nSReclaimable:    1325740 kB\nSUnreclaim:       406120 kB\nKernelStack:       18592 kB\nPageTables:        64688 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    24797968 kB\nCommitted_AS:   27272600 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:       48180 kB\nVmallocChunk:          0 kB\nPercpu:           390656 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:    208896 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      589216 kB\nDirectMap2M:    16187392 kB\nDirectMap1G:    18874368 kB\n"
+  },
+  "scope": "Synthetic client parser only; no Control CLI, image execution, daemon, installed flow or egress-attempt capture",
+  "source": {
+    "candidate": "1a41d97981798440b7f02061d3a73853726b03bc",
+    "child_sha256": "dbebfc6cefb15e27155830b4a49be0beb45aada17f7f5a765367e8af76ee8769",
+    "clean": true,
+    "config_sha256": "f976355ce39819b80f9270c878d8d30e82b084ac53be6edbb8891d63e405ddd4",
+    "manifest_sha256": "bd0b6a78cbd04eb00551d8d6b59e9613fa19a888d2a6b6a354e67226d5c6f7cd",
+    "tree": "398d104c91ce834bec81b9231e28d2a2f6733548",
+    "wrapper_sha256": "86ada56ca6bc07253918c7404278b94cda5c551f98a3039f927322d5048d3a41"
+  },
+  "status": "client-parser-checks-passed",
+  "structural_checks": {
+    "operator_has_no_publication": true,
+    "override_changes_only_operator_image": true,
+    "shared_round_trip_equal": true,
+    "split_adds_only_portal_publication": true
+  },
+  "work_status": "client-parser-checks-passed"
+}

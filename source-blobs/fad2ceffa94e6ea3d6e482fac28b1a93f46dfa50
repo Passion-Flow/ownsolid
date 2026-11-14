@@ -1,0 +1,24 @@
+import selectors
+import socket
+import socketserver
+import sys
+
+class Handler(socketserver.BaseRequestHandler):
+    def handle(self):
+        with socket.socket(socket.AF_UNIX) as pg, selectors.DefaultSelector() as mux:
+            pg.connect(sys.argv[1])
+            mux.register(self.request, selectors.EVENT_READ, pg)
+            mux.register(pg, selectors.EVENT_READ, self.request)
+            while True:
+                for key, _ in mux.select(timeout=20):
+                    try:
+                        data = key.fileobj.recv(65536)
+                        if not data:
+                            return
+                        key.data.sendall(data)
+                    except OSError:
+                        return
+
+with socketserver.ThreadingTCPServer(("127.0.0.1", 0), Handler) as server:
+    print(server.server_address[1], flush=True)
+    server.serve_forever()

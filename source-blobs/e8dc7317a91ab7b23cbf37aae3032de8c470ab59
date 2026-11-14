@@ -1,0 +1,10 @@
+{
+  "changed-wheel": {
+    "exit_code": 1,
+    "installed_files": 0
+  },
+  "missing-wheel": {
+    "exit_code": 1,
+    "installed_files": 0
+  }
+}

@@ -1,0 +1,62 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,signal,stat,subprocess,tarfile,time,shutil
+root=Path('/root/lane-arc107-commands-760b80950612/native-qualified-414f48f6')
+input=json.loads((root/'input.json').read_text())
+cache=root.parent
+for name,digest in input['cached_payload_hashes'].items():assert hashlib.sha256((cache/name).read_bytes()).hexdigest()==digest
+assert not (root/'exit').exists(), 'Native job already attempted; inspect retained result rather than rerun'
+locks=[];child=None
+try:
+ for name in ['/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock']:
+  p=Path(name);fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW);i=os.fstat(fd)
+  assert stat.S_ISREG(i.st_mode) and i.st_uid==os.getuid()
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:os.close(fd);raise SystemExit(75)
+  assert (i.st_dev,i.st_ino)==(p.lstat().st_dev,p.lstat().st_ino);locks.append(fd)
+ mem={}
+ for line in Path('/proc/meminfo').read_text().splitlines():
+  k,_,v=line.partition(':')
+  if k in ('MemFree','MemAvailable'):mem[k]=int(v.split()[0])
+ psi=float(Path('/proc/pressure/io').read_text().split('full avg10=')[1].split()[0]);disk=shutil.disk_usage(root)
+ preflight={'memory_kib':mem,'full_io_psi_avg10':psi,'disk_free_bytes':disk.free,'scope':'two package native Go race suites, network namespace with loopback only, no container or database'}
+ (root/'preflight.json').write_text(json.dumps(preflight,indent=2)+'\n');print(json.dumps(preflight),flush=True)
+ if mem['MemFree']<2097152 or mem['MemAvailable']<8388608 or psi>5 or disk.free<30*1024**3:raise SystemExit(75)
+ commands=subprocess.check_output(['ps','-e','-o','comm='],text=True).splitlines()
+ assert not any(Path(x.strip()).name in {'go','compile','link','gcc','cc1','rustc','cargo','make'} for x in commands),'Another compiler is running; no native job started'
+ go='/root/lane-sci-tools/go/bin/go'
+ assert subprocess.check_output([go,'version'],text=True).strip()=='go version go1.27.3 linux/amd64'
+ assert shutil.which('gcc') is not None
+ (root/'compiler').write_bytes(subprocess.check_output([go,'version'])+subprocess.check_output(['gcc','--version']))
+ source=root/'source'
+ subprocess.run(['cp','-a','--reflink=auto',input['base_source'],str(source)],check=True)
+ subprocess.run(['git','-C',str(source),'apply','--check',str(cache/'update.patch')],check=True)
+ subprocess.run(['git','-C',str(source),'apply',str(cache/'update.patch')],check=True)
+ with (root/'source-verification.log').open('wb') as out:subprocess.run(['python3',str(cache/'verify-source.py'),str(source),str(cache/'manifest.json')],stdout=out,stderr=subprocess.STDOUT,check=True)
+ cpus=','.join(str(x) for x in sorted(os.sched_getaffinity(0))[:2])
+ assert len(cpus.split(','))==2
+ env=os.environ.copy();env.update({'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1','GOMEMLIMIT':'512MiB','CGO_ENABLED':'1','GOENV':'off','GOCACHE':'/root/lane-sci-tools/go-cache','GOMODCACHE':'/root/lane-sci-tools/go-mod'})
+ work=root/'tmp';work.mkdir(mode=0o700);env['TMPDIR']=str(work)
+ for key in list(env):
+  if key.startswith('PROJECT_ONE_TEST_') or key.startswith('PROJECT_ONE_REPOSITORY_'):env.pop(key)
+ script='set -euo pipefail; ip link set lo up; printf "network_namespace=%s\n" "$(readlink /proc/self/ns/net)"; ip route; "$2" -C "$3" list -deps -test -json ./internal/platform/httpserver ./internal/platform/agentgateway > "$4"; exec taskset -c "$1" "$2" -C "$3" test -race -count=1 -v ./internal/platform/httpserver ./internal/platform/agentgateway -timeout=90s'
+ def stop(signum,frame):
+  if child is not None and child.poll() is None:
+   os.killpg(child.pid,signal.SIGTERM)
+   try:child.wait(timeout=15)
+   except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+  (root/'exit').write_text('143\n');raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop);signal.signal(signal.SIGHUP,stop)
+ (root/'runner-pid').write_text(str(os.getpid())+'\n');(root/'start').write_text(str(time.time())+'\n')
+ with (root/'race.log').open('wb') as out:
+  child=subprocess.Popen(['unshare','--net','bash','-c',script,'arc-native',cpus,go,str(source/'services/control'),str(root/'package-inputs.json')],env=env,stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+  try:code=child.wait(timeout=180)
+  except subprocess.TimeoutExpired:
+   os.killpg(child.pid,signal.SIGTERM)
+   try:child.wait(timeout=15)
+   except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+   code=124
+ (root/'exit').write_text(str(code)+'\n');(root/'finish').write_text(str(time.time())+'\n')
+ print((root/'race.log').read_text()[-6000:],flush=True);print('Native transport/gateway race exit '+str(code),flush=True)
+ raise SystemExit(code)
+finally:
+ for fd in reversed(locks):fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

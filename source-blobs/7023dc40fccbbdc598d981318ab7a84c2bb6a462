@@ -1,0 +1,1778 @@
+{
+ "title": "Private artifact ingress",
+ "operations": [
+  {
+   "id": "portalget_objects",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "after",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "type": "array",
+        "items": {
+         "$ref": "Object"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost_objects",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "CreateObject"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Object"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalget_configuration",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/configuration",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Capabilities"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost_expire",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/expire",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Expiry"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "ExpiryResult"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalget__object_id_",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "grant_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Object"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalget__object_id__parts",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "type": "array",
+        "items": {
+         "$ref": "Part"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalput__object_id__parts__part_number_",
+   "method": "put",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/parts/{part_number}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "part_number",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Object"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__complete",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/complete",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Object"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__abort",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/abort",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Object"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__delete",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/delete",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Object"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__reconcile",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/reconcile",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Object"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalget__object_id__grants",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "after",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "type": "array",
+        "items": {
+         "$ref": "Grant"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__grants",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "GrantRequest"
+   },
+   "responses": [
+    {
+     "status": "201",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Grant"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portaldelete__object_id__grants__grant_id_",
+   "method": "delete",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/grants/{grant_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "grant_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "204",
+     "schema": null
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalget__object_id__content",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/content",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "grant_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": null
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__model_import",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/model-import",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "grant_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "ModelImport"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Ingestion"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__dataset_import",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/dataset-import",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "grant_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "DatasetImport"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Ingestion"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalget__object_id__ingestions__ingestion_id_",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "ingestion_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Ingestion"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__ingestions__ingestion_id__reconcile",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/reconcile",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "ingestion_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "grant_id",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Ingestion"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalget__object_id__ingestions",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "after",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "type": "array",
+        "items": {
+         "$ref": "Ingestion"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "portalpost__object_id__ingestions__ingestion_id__cancel",
+   "method": "post",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/artifact-objects/{object_id}/ingestions/{ingestion_id}/cancel",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "object_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "ingestion_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "Reason"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Ingestion"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "Capabilities": {
+   "type": "object",
+   "required": [
+    "maximum_object_bytes",
+    "part_bytes",
+    "maximum_grant_seconds",
+    "can_create",
+    "can_import_model",
+    "can_ingest_dataset"
+   ],
+   "properties": {
+    "maximum_object_bytes": {
+     "type": "integer",
+     "format": "int64"
+    },
+    "part_bytes": {
+     "type": "integer",
+     "format": "int64"
+    },
+    "maximum_grant_seconds": {
+     "type": "integer"
+    },
+    "can_create": {
+     "type": "boolean"
+    },
+    "can_import_model": {
+     "type": "boolean"
+    },
+    "can_ingest_dataset": {
+     "type": "boolean"
+    }
+   }
+  },
+  "CreateObject": {
+   "type": "object",
+   "required": [
+    "name",
+    "purpose",
+    "expected_bytes",
+    "sha256",
+    "reason"
+   ],
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 200
+    },
+    "purpose": {
+     "enum": [
+      "model_bundle",
+      "dataset_source"
+     ]
+    },
+    "expected_bytes": {
+     "type": "integer",
+     "format": "int64",
+     "minimum": 1
+    },
+    "sha256": {
+     "type": "string"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "DatasetImport": {
+   "type": "object",
+   "required": [
+    "dataset_id",
+    "source_name",
+    "reason"
+   ],
+   "properties": {
+    "dataset_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "source_name": {
+     "type": "string"
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "Expiry": {
+   "type": "object",
+   "required": [
+    "limit",
+    "reason"
+   ],
+   "properties": {
+    "limit": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "ExpiryResult": {
+   "type": "object",
+   "required": [
+    "queued_object_ids",
+    "referenced_object_ids"
+   ],
+   "properties": {
+    "queued_object_ids": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    "referenced_object_ids": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   }
+  },
+  "Grant": {
+   "type": "object",
+   "required": [
+    "id",
+    "object_id",
+    "recipient_user_id",
+    "action",
+    "not_before",
+    "expires_at",
+    "revoked_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "object_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "recipient_user_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "action": {
+     "enum": [
+      "read",
+      "ingest_model",
+      "ingest_dataset"
+     ]
+    },
+    "not_before": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "revoked_at": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "date-time"
+    }
+   }
+  },
+  "GrantRequest": {
+   "type": "object",
+   "required": [
+    "recipient_user_id",
+    "action",
+    "seconds",
+    "reason"
+   ],
+   "properties": {
+    "recipient_user_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "action": {
+     "enum": [
+      "read",
+      "ingest_model",
+      "ingest_dataset"
+     ]
+    },
+    "seconds": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "Ingestion": {
+   "type": "object",
+   "required": [
+    "id",
+    "object_id",
+    "kind",
+    "target_id",
+    "state",
+    "error_code"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "object_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "kind": {
+     "enum": [
+      "model",
+      "dataset"
+     ]
+    },
+    "target_id": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "uuid"
+    },
+    "state": {
+     "enum": [
+      "intent",
+      "running",
+      "submitted",
+      "failed"
+     ]
+    },
+    "error_code": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "ModelImport": {
+   "type": "object",
+   "required": [
+    "name",
+    "catalog_digest",
+    "license_acknowledged",
+    "reason"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "catalog_digest": {
+     "type": "string"
+    },
+    "license_acknowledged": {
+     "const": true
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "Object": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "name",
+    "purpose",
+    "expected_bytes",
+    "sha256",
+    "part_bytes",
+    "state",
+    "revision",
+    "created_at",
+    "updated_at",
+    "upload_expires_at",
+    "expires_at",
+    "error_code"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string"
+    },
+    "purpose": {
+     "enum": [
+      "model_bundle",
+      "dataset_source"
+     ]
+    },
+    "expected_bytes": {
+     "type": "integer",
+     "format": "int64"
+    },
+    "sha256": {
+     "type": "string"
+    },
+    "part_bytes": {
+     "type": "integer",
+     "format": "int64"
+    },
+    "state": {
+     "enum": [
+      "creating",
+      "uploading",
+      "completing",
+      "ready",
+      "deleting",
+      "deleted",
+      "aborting",
+      "aborted"
+     ]
+    },
+    "revision": {
+     "type": "integer"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "upload_expires_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "error_code": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "Part": {
+   "type": "object",
+   "required": [
+    "part_number",
+    "size_bytes",
+    "sha256",
+    "etag"
+   ],
+   "properties": {
+    "part_number": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 10000
+    },
+    "size_bytes": {
+     "type": "integer",
+     "format": "int64"
+    },
+    "sha256": {
+     "type": "string"
+    },
+    "etag": {
+     "type": "string"
+    }
+   }
+  },
+  "Reason": {
+   "type": "object",
+   "required": [
+    "reason"
+   ],
+   "properties": {
+    "reason": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  }
+ }
+}

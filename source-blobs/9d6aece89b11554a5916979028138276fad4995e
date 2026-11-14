@@ -1,0 +1,17 @@
+{
+  "source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+  "base": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+  "host": "linux/amd64",
+  "check": false,
+  "build": false,
+  "whole_make_test": false,
+  "cli_b967d7c8_qualified": false,
+  "installed_acceptance": false,
+  "locks": [],
+  "raw_memfree_mib": 3587,
+  "disk_free_bytes": 798864121856,
+  "attempted_lock": "/run/lock/ownsolid-heavy.lock",
+  "admitted": false,
+  "failure": "Shared file lock busy before any target started",
+  "elapsed_seconds": 0.026
+}

@@ -1,0 +1,66 @@
+{
+  "status": "source-prepared-only",
+  "installed_input_ready": false,
+  "selected_source_directory": "/root/lane-obs-tools/installed-registry-driver-v3",
+  "source_manifest": "/root/lane-obs-tools/installed-registry-driver-v3/source-inputs.json",
+  "source_manifest_sha256": "765a71956c52b3626e55fbdbc18174ef363683c043a4e327744f19bdf708dee4",
+  "source_archive_local": "/private/tmp/obs102-installed-registry-ppgfe6ls/source-v3.tar",
+  "source_archive_sha256": "b44883f503f5c7252612dbfe78883879a5321dfb3c32529038908fe692b8f1f9",
+  "source_archive_bytes": 81920,
+  "reviewed_contract_commit": "38aad60337d3e696cd3536bab932b100c9013a45",
+  "native_binary": null,
+  "verification": {
+    "gofmt": "passed",
+    "compilation": "not started",
+    "client_units": "16 prepared; workstation flock refusal started no test process",
+    "installed_requests": "none",
+    "linux_admission_attempts": 0
+  },
+  "required_materials_before_selection": [
+    "qualified driver source/binary binding",
+    "new actual installed fixture and control source/binary/instance binding",
+    "actually approved signed release asset and independent trust/license/digest/size evidence",
+    "fresh local Admin credentials and new independent session_file in a private directory",
+    "known disposable empty Workspace pin list",
+    "independent owner verification of the private site source receipt",
+    "selected resource window before history exclusive quiet-count phase"
+  ],
+  "phases": [
+    "init",
+    "verify",
+    "cleanup",
+    "logout"
+  ],
+  "public_routes": {
+    "csrf": "GET /api/v1/auth/csrf",
+    "login": "POST /api/v1/auth/login",
+    "me": "GET /api/v1/me",
+    "catalog": "GET /api/v1/admin/image-registry/release-images",
+    "pins": "GET/POST /api/v1/admin/image-registry/pins",
+    "readback": "GET /api/v1/admin/image-registry/pins/{owned_id}",
+    "references": "GET /api/v1/admin/image-registry/pins/{owned_id}/references",
+    "cleanup": "POST /api/v1/admin/image-registry/pins/{owned_id}/remove or reconcile-removal",
+    "logout": "POST /api/v1/auth/logout"
+  },
+  "custody": {
+    "session_format": "ownsolid-installed-registry-v1",
+    "init": "O_EXCL new path; refuses preexisting files or other driver formats",
+    "unknown_import": "record intent before first request; resolve exact same key without guessing a pin",
+    "cleanup": "only acknowledged scoped pin; refuse held references; deleted metadata alone does not acknowledge local cleanup",
+    "files": "no direct CAS, database or unknown-row deletion; only remove the session file created by this driver"
+  },
+  "schedule": {
+    "optional": true,
+    "must_not_delay": "GW120/Help/Scope/CLI",
+    "all_configuration_pin_writes_and_cleanup": "before history exclusive quiet-count phase",
+    "parallel_with_history": false,
+    "history_actor": "existing sole driver; no second actor; do not reuse old 4463 session"
+  },
+  "qualifications_not_claimed": [
+    "server authentication or permissions from controlled client tests",
+    "PostgreSQL or Registry durability from controlled client replies",
+    "private site source receipt from public Pin fields",
+    "installed release qualification or NET-102 completion",
+    "a current main make check/build result"
+  ]
+}

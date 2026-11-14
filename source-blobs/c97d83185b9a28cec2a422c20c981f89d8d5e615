@@ -1,0 +1,441 @@
+package e2e
+
+import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"reflect"
+	"slices"
+	"sort"
+	"strings"
+	"testing"
+	"time"
+
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+)
+
+const managedBase = "/api/v1/sites/default/cells/default/admin"
+
+type managedMember struct {
+	NodeID    string    `json:"node_id"`
+	Role      string    `json:"role"`
+	Address   string    `json:"node_address"`
+	State     string    `json:"state"`
+	ErrorCode string    `json:"error_code"`
+	TaskID    string    `json:"task_id"`
+	Attempts  int       `json:"join_attempts"`
+	Observed  time.Time `json:"observed_at"`
+}
+
+func TestARC105SignedManagedLoad(t *testing.T) {
+	e := loadEnvironment(t)
+	project := os.Getenv("ARC_PROJECT")
+	siteIP := os.Getenv("ARC_CONTROL_IP")
+	gatewayAddr := net.JoinHostPort(siteIP, "19443")
+	exchange := "/exchange"
+	archive := "/release/stage/ownsolid.tar.gz"
+	policy := "/release/arc105-verification.json"
+	prepared := "/release/arc105-prepared"
+	cName := project + "-control-1"
+	mustRun := func(name string, args ...string) string {
+		t.Helper()
+		output, err := run(t, name, args...)
+		if err != nil {
+			t.Fatalf("%s %s: %v\n%s", name, strings.Join(args, " "), err, output)
+		}
+		return output
+	}
+	putJSON := func(path string, value any) {
+		t.Helper()
+		raw, err := json.Marshal(value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		writePrivate(t, path, raw)
+	}
+	for _, target := range []string{"192.0.2.15:9705", "[2001:db8:105::15]:9705"} {
+		c, err := net.Dial("udp", target)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = c.Write([]byte("arc104 control positive control"))
+		c.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	waitFor(t, "Control host IPv4 and IPv6 positive controls", 10*time.Second, func() bool {
+		raw, _ := os.ReadFile(e.egress.log)
+		return strings.Contains(string(raw), "192.0.2.15:9705") && strings.Contains(string(raw), "[2001:db8:105::15]:9705")
+	})
+	putJSON(policy, map[string]any{"mount_root": "/release", "trust_file": "/release/stage/release-trust.json", "require_rke2": true, "minimum_free_bytes": 1048576})
+	verification := mustRun(e.installer, "prepare-bundle", "--bundle", archive, "--verification", policy, "--output", prepared)
+	var v struct {
+		ArchiveSHA256  string `json:"archive_sha256"`
+		ManifestSHA256 string `json:"manifest_sha256"`
+	}
+	if err := json.Unmarshal([]byte(verification), &v); err != nil || len(v.ArchiveSHA256) != 64 || len(v.ManifestSHA256) != 64 {
+		t.Fatalf("installer verification evidence absent: %v", err)
+	}
+	t.Logf("verified RKE2-required release archive=%s manifest=%s", v.ArchiveSHA256, v.ManifestSHA256)
+	sourceInstaller := filepath.Join(prepared, "installer")
+	if err := os.Chmod(sourceInstaller, 0700); err != nil {
+		t.Fatal(err)
+	}
+	e.installer = sourceInstaller
+	dir := t.TempDir()
+	trust := filepath.Join(dir, "trust.json")
+	putJSON(trust, e.trust)
+	config := filepath.Join(dir, "site.yaml")
+	content := fmt.Sprintf(`format_version: 1
+project: %s
+topology: {size: single-node}
+install_root: %s
+network: {bind_address: "0.0.0.0", https_port: 8443}
+origins: {portal: %s, admin: %s}
+license: {trust_file: %s}
+smtp: {host: smtp.ownsolid.test, from_address: platform@ownsolid.test}
+administrator:
+  email: %s
+  display_name: Installation Administrator
+  installation_name: ARC Managed Cell
+  workspace_name: Default Workspace
+resources: {database_role_connections: 50}
+preflight:
+  minimum_kernel: "5.15.0"
+  minimum_data_free_bytes: 268435456
+  minimum_docker_free_bytes: 1073741824
+  minimum_memory_bytes: 1073741824
+  minimum_utc: "2026-01-01T00:00:00Z"
+  containerd_root: /var/lib/docker/containerd/daemon
+`, project, e.root, portalOrigin, adminOrigin, trust, adminEmail)
+	writePrivate(t, config, []byte(content+fleetLimits))
+	output := mustRun(e.installer, "apply-bundle", "--config", config, "--bundle", archive, "--verification", policy)
+	if !strings.Contains(output, "INSTALL_COMPLETE") {
+		t.Fatal("signed installer did not report INSTALL_COMPLETE")
+	}
+	t.Log("verified packaged installer completed the signed Compose install")
+	runtimeUser := strings.TrimSpace(mustRun("docker", "inspect", "--format", "{{.Config.User}}", cName))
+	if runtimeUser != "10001:10001" {
+		t.Fatalf("unexpected test runtime identity %q", runtimeUser)
+	}
+	configDir := filepath.Join(e.root, "config")
+	approvedDir := filepath.Join(configDir, "rke2")
+	if err := os.Mkdir(approvedDir, 0750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chown(approvedDir, 0, 10001); err != nil {
+		t.Fatal(err)
+	}
+	approved := wire.ApprovedKubernetesRelease()
+	for _, artifact := range approved.Artifacts() {
+		path := filepath.Join(approvedDir, artifact.Name)
+		mustRun("install", "-m", "0640", "-o", "0", "-g", "10001", filepath.Join(prepared, "rke2", artifact.Name), path)
+		managedHash(t, path, artifact)
+	}
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		t.Fatal(err)
+	}
+	keyPath := filepath.Join(configDir, "arc-cell-join.key")
+	writePrivate(t, keyPath, key)
+	if err := os.Chown(keyPath, 10001, 10001); err != nil {
+		t.Fatal(err)
+	}
+	controlConfig := filepath.Join(configDir, "control.yaml")
+	file, err := os.OpenFile(controlConfig, os.O_WRONLY|os.O_APPEND, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.WriteString(file, "\nkubernetes_cells:\n  artifact_directory: /run/projectone/rke2\n  join_token_key_file: /run/projectone/arc-cell-join.key\n")
+	closeErr := file.Close()
+	if err != nil || closeErr != nil {
+		t.Fatalf("write fixture control settings: %v %v", err, closeErr)
+	}
+	if output, err := e.compose(t, "restart", "control"); err != nil {
+		t.Fatalf("restart configured control: %v %s", err, output)
+	}
+	localControl := agentGateway{address: "127.0.0.1:8443"}
+	waitFor(t, "configured control readiness", time.Minute, func() bool { return e.gatewayReady(t, localControl) == http.StatusOK })
+	admin, csrf := e.adminSession(t, e.password(t))
+	e.installLicense(t, admin, csrf)
+	e.setPacing(t, admin, csrf, 10, 10, 1, 30, "ARC-104 managed cell fixture")
+
+	gateway := managedGateway(t, e, cName, runtimeUser, project+"-gateway", 19443)
+	second := managedGateway(t, e, cName, runtimeUser, project+"-gateway-b", 19444)
+	if data := mustRun("docker", "inspect", "--format", "{{range .Mounts}}{{if eq .Destination \"/run/projectone\"}}{{.RW}}{{end}}{{end}}", gateway.name); strings.TrimSpace(data) != "false" {
+		t.Fatal("gateway artifact mount must be read-only")
+	}
+	if data := mustRun("docker", "inspect", "--format", "{{range .Mounts}}{{if eq .Destination \"/run/projectone\"}}{{.RW}}{{end}}{{end}}", cName); strings.TrimSpace(data) != "false" {
+		t.Fatal("control artifact mount must be read-only")
+	}
+	var workspaces struct{ Items []struct{ ID string } }
+	status, raw := admin.request(t, http.MethodGet, "/api/v1/admin/workspaces", nil, "")
+	decode(t, status, http.StatusOK, raw, &workspaces)
+	if len(workspaces.Items) != 1 {
+		t.Fatalf("unexpected workspace count %d", len(workspaces.Items))
+	}
+	ca, err := os.ReadFile(filepath.Join(configDir, "ca.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, role := range []string{"server", "worker"} {
+		var token struct{ Token string }
+		status, raw = admin.request(t, http.MethodPost, managedBase+"/node-join-tokens", map[string]string{"workspace_id": workspaces.Items[0].ID, "node_name": "arc104-" + role, "execution_profile": "kubernetes_node"}, csrf)
+		if status != http.StatusCreated {
+			t.Fatalf("%s enrollment token request failed: %d", role, status)
+		}
+		decode(t, status, http.StatusCreated, raw, &token)
+		nodeExchange := filepath.Join(exchange, role)
+		writePrivate(t, filepath.Join(nodeExchange, "ca.pem"), ca)
+		writePrivate(t, filepath.Join(nodeExchange, "join-token"), []byte(token.Token+"\n"))
+		putJSON(filepath.Join(nodeExchange, "agent.json"), map[string]any{
+			"control_origin": adminOrigin, "session_addresses": []string{gatewayAddr}, "ca_file": "/fixture-enrollment/ca.pem",
+			"state_directory": "/fixture-state", "disk_path": "/", "join_token_file": "/fixture-enrollment/join-token", "execution_profile": "kubernetes_node",
+			"kubernetes": map[string]int{"ready_seconds": 300},
+		})
+		writePrivate(t, filepath.Join(nodeExchange, "enroll"), nil)
+	}
+	nodeIDs := map[string]string{}
+	waitFor(t, "real Kubernetes agents on the TLS gateway", 2*time.Minute, func() bool {
+		var result struct{ Items []struct{ ID, Name string } }
+		status, raw := admin.request(t, http.MethodGet, nodesPath, nil, "")
+		decode(t, status, http.StatusOK, raw, &result)
+		for _, n := range result.Items {
+			nodeIDs[n.Name] = n.ID
+		}
+		return len(nodeIDs) == 2 && len(gatewayNodes(t, gateway.name)) == 2 &&
+			gatewayNodes(t, gateway.name)[nodeIDs["arc104-server"]] && gatewayNodes(t, gateway.name)[nodeIDs["arc104-worker"]]
+	})
+	server, worker := nodeIDs["arc104-server"], nodeIDs["arc104-worker"]
+	t.Log("both real enrolled Kubernetes-profile Agents established TLS sessions on the gateway")
+	var cluster struct {
+		ID      string `json:"id"`
+		Version string `json:"distribution_version"`
+		State   string `json:"state"`
+		CA      string `json:"ca_sha256"`
+		Members struct {
+			Ready int `json:"ready"`
+		} `json:"members"`
+	}
+	collection := managedBase + "/cell-clusters"
+	status, raw = admin.requestWith(t, http.MethodPost, collection, map[string]any{"name": "ARC-104 managed cell", "server_node_id": server, "worker_node_ids": []string{}, "reason": "Verify signed RKE2 managed installation"}, csrf, map[string]string{"Idempotency-Key": newUUID(t)})
+	decode(t, status, http.StatusCreated, raw, &cluster)
+	if cluster.ID == "" || cluster.Version != approved.Version {
+		t.Fatalf("unexpected cluster identity or version %v", cluster)
+	}
+	resource := collection + "/" + cluster.ID
+	members := func() map[string]managedMember {
+		var result struct{ Items []managedMember }
+		status, raw := admin.request(t, http.MethodGet, resource+"/members", nil, "")
+		decode(t, status, http.StatusOK, raw, &result)
+		out := map[string]managedMember{}
+		for _, m := range result.Items {
+			out[m.NodeID] = m
+		}
+		return out
+	}
+	waitMember := func(node, want string, attempt int, within time.Duration) (managedMember, string) {
+		t.Helper()
+		var m managedMember
+		d := waitFor(t, "member "+node+" "+want, within, func() bool {
+			m = members()[node]
+			if m.State == "failed" && want != "failed" {
+				t.Fatalf("member failed at %s: %s", m.Role, m.ErrorCode)
+			}
+			return m.State == want && m.Attempts == attempt && m.TaskID == ""
+		})
+		t.Logf("member %s %s attempt=%d code=%s in %s", m.Role, m.State, m.Attempts, m.ErrorCode, d.Round(time.Second))
+		var tasks struct {
+			Items []struct {
+				ID, Operation, State string
+				Created              time.Time `json:"created_at"`
+			}
+		}
+		status, raw := admin.request(t, http.MethodGet, nodesPath+"/"+node+"/tasks", nil, "")
+		decode(t, status, http.StatusOK, raw, &tasks)
+		var joins []int
+		for i, task := range tasks.Items {
+			if task.Operation == wire.KubernetesJoinOperation {
+				joins = append(joins, i)
+			}
+		}
+		sort.Slice(joins, func(i, j int) bool { return tasks.Items[joins[i]].Created.Before(tasks.Items[joins[j]].Created) })
+		if len(joins) != attempt {
+			t.Fatalf("join history has %d tasks, expected %d", len(joins), attempt)
+		}
+		task := tasks.Items[joins[attempt-1]]
+		expected := "succeeded"
+		if want == "failed" {
+			expected = "failed"
+		}
+		if task.State != expected {
+			t.Fatalf("join task state %q expected %q", task.State, expected)
+		}
+		return m, task.ID
+	}
+	sm, serverTask := waitMember(server, "ready", 1, 6*time.Minute)
+	if sm.Address != os.Getenv("ARC_SERVER_IP") || sm.Role != "server" {
+		t.Fatalf("stored enrollment address differs from real server: %+v", sm)
+	}
+	managedTaskArtifacts(t, admin, serverTask, approved.Artifacts())
+
+	missing := filepath.Join(approvedDir, approved.Binary.Name)
+	staged := filepath.Join(configDir, "arc-held-binary")
+	if err := os.Rename(missing, staged); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if _, err := os.Stat(staged); err == nil {
+			_ = os.Rename(staged, missing)
+		}
+	}()
+	status, raw = admin.request(t, http.MethodPost, resource+"/members", map[string]any{"worker_node_ids": []string{worker}, "reason": "Exercise missing approved archive failure"}, csrf)
+	decode(t, status, http.StatusOK, raw, &cluster)
+	fm, failedTask := waitMember(worker, "failed", 1, 3*time.Minute)
+	if fm.Address != os.Getenv("ARC_WORKER_IP") || fm.Role != "worker" || fm.ErrorCode != "KUBERNETES_ASSET_UNAVAILABLE" {
+		t.Fatalf("unexpected worker failure %+v", fm)
+	}
+	if failedTask == "" {
+		t.Fatal("missed failed worker join task")
+	}
+	var failedLog struct{ Items []struct{ Message string } }
+	status, raw = admin.request(t, http.MethodGet, managedBase+"/tasks/"+failedTask+"/log", nil, "")
+	decode(t, status, http.StatusOK, raw, &failedLog)
+	if !slices.ContainsFunc(failedLog.Items, func(l struct{ Message string }) bool {
+		return strings.Contains(l.Message, "Downloading "+approved.Binary.Name+" from control failed.")
+	}) {
+		t.Fatal("failed task did not identify the approved missing artifact")
+	}
+	if err := os.Rename(staged, missing); err != nil {
+		t.Fatal(err)
+	}
+	managedHash(t, missing, approved.Binary)
+	status, raw = admin.request(t, http.MethodPost, resource+"/members/"+worker+"/retry", map[string]string{"reason": "Restore the verified approved archive and retry"}, csrf)
+	decode(t, status, http.StatusOK, raw, &cluster)
+	wm, workerTask := waitMember(worker, "ready", 2, 6*time.Minute)
+	if workerTask == failedTask || wm.Address != os.Getenv("ARC_WORKER_IP") {
+		t.Fatal("retry did not run as a distinct worker join")
+	}
+	managedTaskArtifacts(t, admin, workerTask, approved.Artifacts())
+
+	status, raw = admin.request(t, http.MethodPost, resource+"/observations", map[string]string{"reason": "Observe both joined nodes through the gateway"}, csrf)
+	decode(t, status, http.StatusAccepted, raw, &cluster)
+	waitFor(t, "new readiness observations for both members", 2*time.Minute, func() bool {
+		current := members()
+		return current[server].Observed.After(sm.Observed) && current[worker].Observed.After(wm.Observed) &&
+			current[server].State == "ready" && current[worker].State == "ready" && current[server].TaskID == "" && current[worker].TaskID == ""
+	})
+	status, raw = admin.request(t, http.MethodGet, resource, nil, "")
+	decode(t, status, http.StatusOK, raw, &cluster)
+	if cluster.State != "ready" || cluster.Members.Ready != 2 || len(cluster.CA) != 64 {
+		t.Fatalf("wrong settled cluster state %+v", cluster)
+	}
+	logs := mustRun("docker", "logs", cName)
+	if strings.Contains(logs, "agent_session_opened") {
+		t.Fatal("Agent session opened directly on control")
+	}
+	if len(gatewayNodes(t, gateway.name)) != 2 {
+		t.Fatal("expected two final gateway sessions")
+	}
+	t.Log("API created, joined, retried and refreshed observations for both ready members")
+	putJSON(filepath.Join(exchange, "api-ready.json"), map[string]string{"server": server, "worker": worker, "cluster": cluster.ID, "version": cluster.Version, "ca_sha256": cluster.CA})
+	runARC105Load(t, e, admin, gateway, second, cName, cluster.ID)
+	waitFor(t, "dual stack, DNS and Pod workload proof", 3*time.Minute, func() bool {
+		_, err := os.Stat(filepath.Join(exchange, "node-proof"))
+		return err == nil
+	})
+}
+
+func managedHash(t *testing.T, path string, a wire.KubernetesArtifact) {
+	t.Helper()
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	sum := sha256.New()
+	n, err := io.Copy(sum, f)
+	if err != nil || n != a.SizeBytes || hex.EncodeToString(sum.Sum(nil)) != a.SHA256 {
+		t.Fatalf("approval mismatch on %s", a.Name)
+	}
+}
+
+func managedTaskArtifacts(t *testing.T, admin *browser, taskID string, approved []wire.KubernetesArtifact) {
+	t.Helper()
+	if taskID == "" {
+		t.Fatal("did not observe join task ID")
+	}
+	var log struct{ Items []struct{ Message string } }
+	status, raw := admin.request(t, http.MethodGet, managedBase+"/tasks/"+taskID+"/log", nil, "")
+	decode(t, status, http.StatusOK, raw, &log)
+	var want, got []string
+	for _, a := range approved {
+		want = append(want, a.Name)
+	}
+	for _, l := range log.Items {
+		if path, ok := strings.CutPrefix(l.Message, "Downloaded and verified "); ok {
+			got = append(got, strings.TrimSuffix(path, "."))
+		}
+	}
+	slices.Sort(got)
+	slices.Sort(want)
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("task download list %v, approved %v", got, want)
+	}
+	t.Logf("join task verified exactly the three approved RKE2 files: %v", got)
+}
+
+func managedGateway(t *testing.T, e environment, cName, user, name string, port int) agentGateway {
+	t.Helper()
+	must := func(args ...string) string {
+		t.Helper()
+		output, err := run(t, "docker", args...)
+		if err != nil {
+			t.Fatalf("docker %s: %v %s", args[0], err, output)
+		}
+		return strings.TrimSpace(output)
+	}
+	raw := must("inspect", "--format", "{{json .NetworkSettings.Networks}}", cName)
+	var networks map[string]any
+	if err := json.Unmarshal([]byte(raw), &networks); err != nil || len(networks) != 2 {
+		t.Fatalf("control networks: %v", err)
+	}
+	var edge, state string
+	for n := range networks {
+		if strings.HasSuffix(n, "_state") {
+			state = n
+		} else {
+			edge = n
+		}
+	}
+	if edge == "" || state == "" {
+		t.Fatal("missing private Compose networks")
+	}
+	configDir := filepath.Join(e.root, "config")
+	bytes, err := os.ReadFile(filepath.Join(configDir, "control.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	config := filepath.Join(configDir, "arc-gateway.yaml")
+	writePrivate(t, config, append(bytes, []byte("\nagent_gateway:\n  listen_address: 0.0.0.0:9443\n  tls_certificate_file: /run/projectone/certificate.pem\n  tls_private_key_file: /run/projectone/private-key.pem\n")...))
+	if err := os.Chown(config, 10001, 10001); err != nil {
+		t.Fatal(err)
+	}
+	image := must("inspect", "--format", "{{.Image}}", cName)
+	must("create", "--name", name, "--user", user, "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
+		"--network", edge, "--publish", fmt.Sprintf("0.0.0.0:%d:9443", port), "--volume", configDir+":/run/projectone:ro", image,
+		"serve-agent-gateway", "--config", "/run/projectone/arc-gateway.yaml")
+	must("network", "connect", state, name)
+	must("start", name)
+	g := agentGateway{name: name, address: fmt.Sprintf("127.0.0.1:%d", port)}
+	g.waitReady(t, e, time.Minute)
+	return g
+}

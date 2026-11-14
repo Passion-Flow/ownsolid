@@ -1,0 +1,54 @@
+"""Compile the current scoped tests with retained unchanged unit qualification."""
+# SCI_OLD_ADMISSION_CLOSED_2026_11_13
+__import__('sys').stderr.write('NOTRUN: SCI old admission is closed pending coordinator epoch activation.\n')
+raise SystemExit(78)
+import fcntl,hashlib,json,os,shutil,stat,subprocess,sys,tempfile
+from pathlib import Path
+import signal
+def interrupted(signum, frame):
+    raise KeyboardInterrupt
+for interruption in (signal.SIGTERM, signal.SIGHUP):
+    signal.signal(interruption, interrupted)
+home=Path.home();source=home/'lane-sci';tools=home/'lane-sci-tools';scratch=tools/'aud108-scoped'
+previous=Path(sys.argv[1]).resolve();run_units='--run-unit-tests' in sys.argv[2:]
+assert previous.parent==scratch
+if not run_units:
+    assert (previous/'unit-tests.log').read_text().rstrip().endswith('PASS')
+    for name in ['scoped.go','scoped_test.go']:assert (source/'services/control/internal/modules/audit'/name).read_bytes()==(previous/name).read_bytes()
+fds=[];name=None;run=None
+try:
+    for path in ['/run/lock/ownsolid-heavy.lock',str(tools/'heavy-test.lock')]:
+        fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW);fds.append(fd);info=os.fstat(fd)
+        assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+        try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:print('Bounded build slot busy; no queue',flush=True);raise SystemExit(75)
+    memory={line.split(':',1)[0]:int(line.split()[1]) for line in Path('/proc/meminfo').read_text().splitlines() if len(line.split())>=2}
+    psi=dict(item.split('=') for item in next(line for line in Path('/proc/pressure/io').read_text().splitlines() if line.startswith('full ')).split()[1:])
+    print(json.dumps({'phase':'bounded-build','free_mib':memory['MemFree']//1024,'available_mib':memory['MemAvailable']//1024,'io_avg10':float(psi['avg10']),'io_avg60':float(psi['avg60'])}),flush=True)
+    if memory['MemAvailable']<12288*1024 or float(psi['avg10'])>5 or float(psi['avg60'])>5:raise SystemExit(75)
+    if subprocess.run(['pgrep','-x','cargo|rustc|compile|link|chrome-headless'],stdout=subprocess.DEVNULL).returncode==0:
+        print('Competing build present; no queue started',flush=True);raise SystemExit(75)
+    run=Path(tempfile.mkdtemp(prefix='build-cgroup.',dir=scratch));run.chmod(0o700)
+    print('Evidence directory: '+str(run),flush=True)
+    (run/'base-commit.txt').write_text(subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True))
+    shutil.copy2(__file__,run/'build_bounded.py')
+    if not run_units:(run/'retained-unit-reference.json').write_text(json.dumps({'source':str(previous),'log_sha256':hashlib.sha256((previous/'unit-tests.log').read_bytes()).hexdigest(),'unchanged_files':['scoped.go','scoped_test.go']},sort_keys=True)+'\n')
+    name='lane-sci-scoped-build-'+run.name.split('.')[-1]
+    args=['docker','run','--pull','never','--cidfile',str(run/'container-id'),'--name',name,'--network','none','--cpus','1','--memory','1536m','--read-only','--tmpfs','/tmp:rw,size=512m']
+    for path,mode in [(source,'ro'),(tools/'go','ro'),(tools/'go-mod','ro'),(tools/'go-cache','rw'),(run,'rw')]:args+=['--mount',f'type=bind,source={path},target={path},{"readonly" if mode=="ro" else "readonly=false"}']
+    for key,value in {'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOCACHE':str(tools/'go-cache'),'GOMODCACHE':str(tools/'go-mod'),'GOFLAGS':'-p=1 -buildvcs=false','GOMAXPROCS':'1','GOMEMLIMIT':'256MiB','TMPDIR':'/tmp'}.items():args+=['-e',key+'='+value]
+    script='set -euo pipefail\numask 077\ncd "$1"\ncp services/control/internal/modules/audit/scoped*.go "$2/"\n"$3/go/bin/go" -C services/control test -c -tags repository_integration -o "$2/audit.test" ./internal/modules/audit > "$2/build.log" 2>&1\n"$3/go/bin/go" -C services/control vet -tags repository_integration ./internal/modules/audit > "$2/vet.log" 2>&1\nif [ "$4" = yes ];then\n  "$2/audit.test" -test.run \'^TestScopedAudit(RejectsInvalidEventsBeforeSQL|AcceptsBoundedServerFacts|BorrowAndAppendOutcomes)$\' -test.count=1 -test.v -test.timeout=60s | tee "$2/unit-tests.log"\nfi\n'
+    args+=['sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47','bash','-c',script,'scoped-build',str(source),str(run),str(tools),'yes' if run_units else 'no']
+    status=subprocess.call(args,pass_fds=tuple(fds))
+    (run/'build-exit.txt').write_text(str(status)+'\n')
+    state=subprocess.check_output(['docker','inspect','--format','exit={{.State.ExitCode}} oom={{.State.OOMKilled}} network={{.HostConfig.NetworkMode}} cpus={{.HostConfig.NanoCpus}} memory={{.HostConfig.Memory}} ports={{json .HostConfig.PortBindings}}',name],text=True)
+    (run/'container.txt').write_text(state)
+    print('Build/vet exit: '+str(status),flush=True)
+    raise SystemExit(status)
+finally:
+    if run is not None and (run/'container-id').is_file():
+        owned=(run/'container-id').read_text().strip()
+        if len(owned)==64 and all(ch in '0123456789abcdef' for ch in owned):
+            subprocess.run(['docker','stop','--timeout','15',owned],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=25)
+            subprocess.run(['docker','rm',owned],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15)
+    for fd in reversed(fds):os.close(fd)

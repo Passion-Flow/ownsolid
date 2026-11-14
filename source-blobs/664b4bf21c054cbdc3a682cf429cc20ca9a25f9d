@@ -1,0 +1,125 @@
+{{- $image := include "ownsolid.controlImage" . -}}
+{{- $files := include "ownsolid.runtimeFiles" . | fromJsonArray -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ownsolid.controlName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ownsolid.controlSelector" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ownsolid.controlSelector" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ownsolid.controlSelector" . | nindent 8 }}
+      annotations:
+        ownsolid.dev/config-sha256: {{ include "ownsolid.controlConfiguration" . | sha256sum | quote }}
+        ownsolid.dev/release-manifest-sha256: {{ .Values.release.manifestSHA256 | quote }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: {{ .Values.control.terminationGracePeriodSeconds }}
+      nodeSelector:
+        kubernetes.io/os: linux
+        kubernetes.io/arch: amd64
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.control.uid }}
+        runAsGroup: {{ .Values.control.gid }}
+        fsGroup: {{ .Values.control.gid }}
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: {{ required "HELM_PULL_SECRET_REQUIRED: set registry.pullSecret" .Values.registry.pullSecret | quote }}
+      initContainers:
+        - name: snapshot
+          image: {{ $image | quote }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              {{- .Files.Get "files/snapshot.sh" | trimSuffix "\n" | nindent 14 }}
+            - ownsolid-snapshot
+          args: {{ concat (list "/input" "/output" "/models" "control.yaml" "tls.crt" "tls.key") $files | toJson }}
+          securityContext:
+            {{- include "ownsolid.controlContainerSecurity" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.control.resources | nindent 12 }}
+          volumeMounts:
+            - name: input
+              mountPath: /input
+              readOnly: true
+            - name: runtime
+              mountPath: /output
+            - name: models
+              mountPath: /models
+              subPath: models
+              readOnly: true
+      containers:
+        - name: control
+          image: {{ $image | quote }}
+          imagePullPolicy: IfNotPresent
+          args: [serve, --config, /run/ownsolid/private/control.yaml]
+          ports:
+            - name: https
+              containerPort: 8443
+          securityContext:
+            {{- include "ownsolid.controlContainerSecurity" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.control.resources | nindent 12 }}
+          startupProbe:
+            tcpSocket:
+              port: https
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            {{- include "ownsolid.controlHealth" "ready" | nindent 12 }}
+            periodSeconds: 5
+          livenessProbe:
+            {{- include "ownsolid.controlHealth" "live" | nindent 12 }}
+            periodSeconds: 15
+          volumeMounts:
+            - name: runtime
+              mountPath: /run/ownsolid
+              readOnly: true
+            - name: models
+              mountPath: /var/lib/ownsolid/models
+              subPath: models
+      volumes:
+        - name: input
+          projected:
+            defaultMode: 288
+            sources:
+              - configMap:
+                  name: {{ include "ownsolid.controlName" . }}
+                  items:
+                    - key: control.yaml
+                      path: control.yaml
+              - secret:
+                  name: {{ required "HELM_RUNTIME_SECRET_REQUIRED: set control.runtimeSecret" .Values.control.runtimeSecret | quote }}
+                  items:
+                    {{- range $files }}
+                    - key: {{ . | quote }}
+                      path: {{ . | quote }}
+                    {{- end }}
+              - secret:
+                  name: {{ required "HELM_TLS_SECRET_REQUIRED: set ingress.tlsSecret" .Values.ingress.tlsSecret | quote }}
+                  items:
+                    - key: tls.crt
+                      path: tls.crt
+                    - key: tls.key
+                      path: tls.key
+        - name: runtime
+          emptyDir:
+            medium: Memory
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ required "HELM_MODEL_CLAIM_REQUIRED: set control.modelClaim" .Values.control.modelClaim | quote }}

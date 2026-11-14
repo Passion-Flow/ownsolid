@@ -1,0 +1,86 @@
+{
+  "observed_utc": "2026-11-13T02:36:37.348205+00:00",
+  "receipt_sha256": "2a2f375737ca697d66aceb549712b1d7732db4fe541dc5805312985ff50e8dfa",
+  "result_sha256": "df9f2e6a4385484a67506722a5962d02da1f1034646b6629b3ce499e5aafe09f",
+  "admission_log_sha256": "f984c56f75fbef62f6ffc38031238c8e6ec340bdf347ffd475e9fc1ce9d53b3a",
+  "actual_admission_observation": {
+    "disk_free_bytes": 790032785408,
+    "io_full_avg10": 0.01,
+    "io_full_avg60": 0.08,
+    "memory_available_bytes": 16132050944,
+    "memory_free_bytes": 1759084544,
+    "other_heavy_process_count": 0
+  },
+  "admission_assertion": [
+    "AssertionError: shared-host free memory below admission threshold"
+  ],
+  "platform": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "python": "3.12.3"
+  },
+  "carrier_stats": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "device": 29,
+      "inode": 82,
+      "uid": 0,
+      "mode": "0o644",
+      "bytes": 0
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "device": 64512,
+      "inode": 7508772,
+      "uid": 0,
+      "mode": "0o644",
+      "bytes": 0
+    }
+  ],
+  "both_carriers_acquired_then_released": true,
+  "carrier_release_errors_recorded": [],
+  "live_exact_entry_or_wrapper_processes": [],
+  "owned_child_group_audit": [
+    {
+      "phase": "source_head",
+      "pgid": 3459452,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "source_status",
+      "pgid": 3459453,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "original_admission",
+      "pgid": 3459464,
+      "raw_exit_code": 1,
+      "recorded_reaped": true,
+      "group_absent": true
+    }
+  ],
+  "exact_container_name": "lane-trn-reader-dfbcb03d811645eda2500510611230f9",
+  "exact_container_name_readback_raw_exit_code": 0,
+  "exact_container_name_present": false,
+  "container_or_volume_creation_attempted": false,
+  "protected_dsn_present": false,
+  "evidence_files": [
+    "admission.log",
+    "result.json"
+  ],
+  "native_roots_started": 0,
+  "native_subtests_started": 0,
+  "native_packages_started": 0,
+  "native_skips": 0,
+  "schema_created": false,
+  "go_environment_applied": false,
+  "source_clean": "e639db9035b0b2c0229c90175493c605f328e295",
+  "original_admission_started": true,
+  "repeat_attempts_in_this_opportunity": 0,
+  "cleanup_mutations_performed": 0,
+  "foreign_resources_touched": false
+}

@@ -1,0 +1,11 @@
+{
+  "parent_pid": 2967468,
+  "fds": {
+    "8": {
+      "open": false
+    },
+    "9": {
+      "open": false
+    }
+  }
+}

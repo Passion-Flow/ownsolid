@@ -1,0 +1,1 @@
+{"chat_template_kwargs":{"enable_thinking":false},"max_tokens":24,"messages":[{"content":"Explain tides in one short sentence.","role":"user"}],"model":"projectone-qwen3-0.6b","n":1,"stream":false,"temperature":0.0}

@@ -1,0 +1,261 @@
+#!/usr/bin/env python3
+"""Observe Alertmanager expiry/resumption outside product code, with synthetic data."""
+import argparse
+import datetime as dt
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import signal
+import socket
+import subprocess
+import tempfile
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.request import ProxyHandler, Request, build_opener
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--binary", required=True, type=Path)
+parser.add_argument("--binary-sha256", required=True)
+parser.add_argument("--output", required=True, type=Path)
+args = parser.parse_args()
+if not __debug__:
+    raise SystemExit("Assertions must remain enabled")
+if not args.binary.is_absolute() or not args.binary.is_file() or not os.access(args.binary, os.X_OK):
+    raise SystemExit("Require an absolute verified executable")
+if not re.fullmatch("[0-9a-f]{64}", args.binary_sha256):
+    raise SystemExit("Require the independently verified binary SHA-256")
+if hashlib.sha256(args.binary.read_bytes()).hexdigest() != args.binary_sha256:
+    raise SystemExit("Native executable identity changed")
+if not args.output.is_absolute() or args.output.exists():
+    raise SystemExit("Use a fresh absolute output file")
+interfaces = subprocess.check_output(["ip", "-o", "link", "show"], text=True).splitlines()
+if len(interfaces) != 1 or ": lo:" not in interfaces[0]:
+    raise SystemExit("Run only in an isolated loopback-only network namespace")
+for family in ("-4", "-6"):
+    if subprocess.check_output(["ip", family, "route", "show", "default"]).strip():
+        raise SystemExit("External routes are forbidden")
+os.umask(0o077)
+output_fd = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+events = []
+event_lock = threading.Lock()
+client = build_opener(ProxyHandler({}))
+maximum_bytes = 256 << 10
+
+def timestamp():
+    return dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
+
+class Receiver(BaseHTTPRequestHandler):
+    def do_POST(self):
+        self.connection.settimeout(2)
+        try:
+            size = int(self.headers.get("Content-Length", "-1"))
+            if self.path != "/hooks" or not 0 < size <= maximum_bytes:
+                raise ValueError("Invalid native webhook framing")
+            event = json.loads(self.rfile.read(size))
+            if event.get("version") != "4" or event.get("truncatedAlerts") != 0:
+                raise ValueError("Native webhook is incomplete")
+            if event.get("status") not in ("firing", "resolved"):
+                raise ValueError("Native webhook status is invalid")
+            if not isinstance(event.get("alerts"), list) or len(event["alerts"]) > 40:
+                raise ValueError("Unexpected native membership")
+            with event_lock:
+                if len(events) >= 32:
+                    raise ValueError("Unexpected notification storm")
+                events.append({"observed_at": timestamp(), "event": event})
+            self.send_response(204)
+            self.end_headers()
+        except (ValueError, TypeError, json.JSONDecodeError):
+            self.send_response(400)
+            self.end_headers()
+    def log_message(self, *_):
+        pass
+
+receiver = HTTPServer(("127.0.0.1", 0), Receiver)
+thread = threading.Thread(target=receiver.serve_forever, name="native-webhook-observer")
+thread.start()
+native = None
+native_log = None
+temporary = None
+
+def interrupted(number, _frame):
+    raise InterruptedError('Lifecycle observation interrupted by signal ' + str(number))
+
+signal.signal(signal.SIGTERM, interrupted)
+signal.signal(signal.SIGINT, interrupted)
+result = {
+    "scope": "Synthetic native Alertmanager lifecycle observation; no product, delivery durability or PostgreSQL acceptance",
+    "binary_sha256": args.binary_sha256,
+    "started_at": timestamp(),
+    "completed": False,
+    "native_started": False,
+    "native_ready": False,
+    "native_stopped": False,
+}
+failure = None
+try:
+    version = subprocess.check_output([str(args.binary), "--version"], stderr=subprocess.STDOUT, timeout=5, text=True)
+    if "version 0.34.2" not in version:
+        raise RuntimeError("Require the pinned Alertmanager 0.34.2")
+    result["version"] = version.strip()
+    temporary = tempfile.TemporaryDirectory(prefix="obs-am-expiry-")
+    root = Path(temporary.name)
+    with socket.socket() as reservation:
+        reservation.bind(("127.0.0.1", 0))
+        address = "127.0.0.1:" + str(reservation.getsockname()[1])
+    config = {
+        "route": {
+            "receiver": "fixture",
+            "group_by": ["tenant_id", "workspace_id", "site_id", "cell_id", "rack_id", "alertname"],
+            "group_wait": "1s", "group_interval": "1s", "repeat_interval": "1h",
+        },
+        "receivers": [{"name": "fixture", "webhook_configs": [{
+            "url": "http://127.0.0.1:" + str(receiver.server_port) + "/hooks",
+            "send_resolved": True,
+            "timeout": "2s",
+            "http_config": {"follow_redirects": False},
+        }]}],
+    }
+    config_path = root / "alertmanager.json"
+    config_path.write_text(json.dumps(config))
+    native_log = open(root / "native.log", "w+")
+    native = subprocess.Popen([
+        str(args.binary), "--config.file=" + str(config_path),
+        "--storage.path=" + str(root / "data"),
+        "--web.listen-address=" + address, "--cluster.listen-address=",
+        "--log.level=warn",
+    ], stdout=native_log, stderr=subprocess.STDOUT, env={**os.environ, "GOMAXPROCS": "2"})
+    result["native_started"] = True
+    result["native_pid"] = native.pid
+    origin = "http://" + address
+    result["native_address"] = address
+    result["receiver_address"] = "127.0.0.1:" + str(receiver.server_port)
+
+    def request(path, payload=None):
+        if native.poll() is not None:
+            raise RuntimeError("Native Alertmanager exited")
+        data = None if payload is None else json.dumps(payload).encode()
+        with client.open(Request(origin + path, data=data, headers={"Content-Type": "application/json"}), timeout=2) as response:
+            if path == "/-/ready" and response.status != 200:
+                raise RuntimeError("Native readiness did not return HTTP 200")
+            body = response.read(maximum_bytes + 1)
+            if len(body) > maximum_bytes:
+                raise RuntimeError("Native reply exceeds the fixture limit")
+            return body
+
+    ready_by = time.monotonic() + 10
+    while True:
+        try:
+            request("/-/ready")
+            result["native_ready"] = True
+            break
+        except Exception:
+            if native.poll() is not None or time.monotonic() >= ready_by:
+                raise
+            time.sleep(0.05)
+
+    started = dt.datetime.now(dt.timezone.utc).replace(microsecond=0) - dt.timedelta(minutes=1)
+    starts_at = started.isoformat().replace("+00:00", "Z")
+    def members():
+        ends_at = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=5)).isoformat().replace("+00:00", "Z")
+        return [{
+            "labels": {
+                "alertname": "OwnsolidExpiryProbe", "tenant_id": "tenant-a",
+                "workspace_id": "work-a", "site_id": "site-1", "cell_id": "cell-1",
+                "rack_id": "rack-1", "node_id": "fixture-node-" + str(index),
+                "severity": "warning",
+            },
+            "startsAt": starts_at, "endsAt": ends_at,
+        } for index in range(40)]
+
+    def wait_event(status, after):
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            if native.poll() is not None:
+                raise RuntimeError("Native process ended before the lifecycle observation")
+            with event_lock:
+                for index in range(after, len(events)):
+                    event = events[index]["event"]
+                    if event["status"] == status:
+                        if len(event["alerts"]) != 40:
+                            raise RuntimeError("Native group did not contain all 40 synthetic members")
+                        return index, event
+            time.sleep(0.05)
+        raise TimeoutError("No native " + status + " observation before the deadline")
+
+    request("/api/v2/alerts", members())
+    first_index, first = wait_event("firing", 0)
+    closed_index, closed = wait_event("resolved", first_index + 1)
+    request("/api/v2/alerts", members())
+    resumed_index, resumed = wait_event("firing", closed_index + 1)
+    def signature(event):
+        return sorted((alert["fingerprint"], alert["startsAt"], alert["status"]) for alert in event["alerts"])
+    if first["groupKey"] != closed["groupKey"] or first["groupKey"] != resumed["groupKey"]:
+        raise RuntimeError("Fixed-route group identity unexpectedly changed")
+    result.update({
+        "requested_starts_at": starts_at,
+        "group_key_stable": True,
+        "first_firing_index": first_index,
+        "expiry_resolved_index": closed_index,
+        "resumed_firing_index": resumed_index,
+        "same_fingerprint_start_status_identity": signature(first) == signature(resumed),
+        "completed": True,
+    })
+    native.terminate()
+    try:
+        code = native.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        native.kill()
+        native.wait()
+        raise RuntimeError("Native process missed its graceful stop deadline")
+    if code != 0:
+        raise RuntimeError("Native process did not stop cleanly")
+    result["native_stopped"] = True
+    native_log.seek(0)
+    result["native_log"] = native_log.read()[-8192:]
+    native_log.close()
+    native_log = None
+    native = None
+except BaseException as error:
+    failure = error
+    result["completed"] = False
+    result["failure_type"] = type(error).__name__
+    result["failure"] = str(error)
+finally:
+    if native is not None:
+        if native.poll() is None:
+            native.terminate()
+            try:
+                native.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                native.kill()
+                native.wait()
+        else:
+            native.wait()
+        result["native_stopped"] = True
+    if native_log is not None:
+        native_log.seek(0)
+        result["native_log"] = native_log.read()[-8192:]
+        native_log.close()
+    receiver.shutdown()
+    receiver.server_close()
+    thread.join(timeout=2)
+    result["receiver_stopped"] = not thread.is_alive()
+    if thread.is_alive():
+        result["completed"] = False
+        failure = failure or RuntimeError("Receiver did not stop")
+    with event_lock:
+        result["events"] = list(events)
+    result["ended_at"] = timestamp()
+    if temporary is not None:
+        temporary.cleanup()
+    with os.fdopen(output_fd, "w") as output:
+        json.dump(result, output, indent=2)
+        output.write("\n")
+        output.flush()
+        os.fsync(output.fileno())
+    print(json.dumps({key: value for key, value in result.items() if key not in {"events", "native_log"}}, indent=2))
+if failure is not None:
+    raise SystemExit(1)

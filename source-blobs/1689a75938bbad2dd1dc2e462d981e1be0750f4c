@@ -1,0 +1,12 @@
+{
+  "scope": "Cross-built observer; Linux transport has not run",
+  "source": "620f76daef06b0028112022b652281bc61bfdae0",
+  "binary": "command-transport-linux-amd64.test",
+  "bytes": 12251296,
+  "sha256": "9753bd071014ac5a17c0dfcdf6ab3694229ab49506d9ecb49371e50190b318d2",
+  "files": {
+    "probe_test.go": "b4288db1b14851315678c224b71e2cad3b4f3033cdfa6472e6c072775480c5d4",
+    "overlay.json": "e8c685861166dafdaeda40a0c816e30b8877b47e9fd8f357fd1dd2f83f28ac2d",
+    "native_transport_parent.py": "1474b735f5bf1ac1dbbf9e4d5206161920fe3ebc9988d1d76c456ea3286dab4f"
+  }
+}

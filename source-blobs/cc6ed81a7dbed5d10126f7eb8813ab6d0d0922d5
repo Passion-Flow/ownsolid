@@ -1,0 +1,211 @@
+{
+  "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "tree": "b8aea641ecd1b79be71270ad80ab03c1e131df31",
+  "observed_utc": "2026-11-13T03:10:15.447863+00:00",
+  "gate_invoked": false,
+  "admission_attempted": false,
+  "queue_created": false,
+  "build_test_or_browser_started": false,
+  "tools": {
+    "go": {
+      "argv": [
+        "go",
+        "version"
+      ],
+      "exit": 0,
+      "stdout": "go version go1.27.3 linux/amd64\n",
+      "stderr": "",
+      "path": "/root/lane-rel-tools/go/bin/go",
+      "entry_sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b"
+    },
+    "cargo": {
+      "argv": [
+        "cargo",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "cargo 1.99.1 (5f94df478 2026-08-27)\n",
+      "stderr": "",
+      "path": "/root/lane-rel-tools/cargo/bin/cargo",
+      "entry_sha256": "b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55",
+      "resolved_binary": {
+        "path": "/root/lane-rel-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af"
+      }
+    },
+    "rustc": {
+      "argv": [
+        "rustc",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+      "stderr": "",
+      "path": "/root/lane-rel-tools/cargo/bin/rustc",
+      "entry_sha256": "b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55",
+      "resolved_binary": {
+        "path": "/root/lane-rel-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+        "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853"
+      }
+    },
+    "node": {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "v26.13.0\n",
+      "stderr": "",
+      "path": "/root/lane-rel-tools/node/bin/node",
+      "entry_sha256": "0adde40d1b7dfa57c8bc83cbc319758c3ec6ebba21363bb2fa752ea6b267ad1b"
+    },
+    "python3": {
+      "argv": [
+        "python3",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "Python 3.12.3\n",
+      "stderr": "",
+      "path": "/usr/bin/python3",
+      "entry_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+    },
+    "gcc": {
+      "argv": [
+        "gcc",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+      "stderr": "",
+      "path": "/usr/bin/gcc",
+      "entry_sha256": "1b99826121ae6682a634e5efe09bd3e3df58ce58e0b28f849114ab5b89139c26"
+    },
+    "unshare": {
+      "argv": [
+        "unshare",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "unshare from util-linux 2.39.3\n",
+      "stderr": "",
+      "path": "/usr/bin/unshare",
+      "entry_sha256": "a23c8863860669003dc4660039fe642f5795c8c2195898ebc5d01afa1ac3d11c"
+    },
+    "ip": {
+      "argv": [
+        "ip",
+        "-Version"
+      ],
+      "exit": 0,
+      "stdout": "ip utility, iproute2-6.1.0, libbpf 1.3.0\n",
+      "stderr": "",
+      "path": "/usr/sbin/ip",
+      "entry_sha256": "ea200fcc3a7bf723a8e0e2a21ceb3805324812fef36f6ba0552362a9a9e65f92"
+    },
+    "pnpm": {
+      "argv": [
+        "/bin/sh",
+        "-c",
+        "exec /root/lane-rel-tools/node/bin/pnpm --version"
+      ],
+      "exit": 0,
+      "stdout": "12.16.1\n",
+      "stderr": "",
+      "path": "/root/lane-rel-tools/node/bin/pnpm",
+      "entry_kind": "Official shebangless shell placeholder",
+      "entry_sha256": "e3b733fd3845c17d37eb5f994e28fd61bec9f2e146e6d3153db5db8465b3a2a1",
+      "native_path": "/root/lane-rel-tools/node/lib/node_modules/pnpm/node_modules/@pnpm/exe.linux-x64/pnpm",
+      "native_sha256": "41fe8049fc73f4239b99487c35def4eacdb3cb18659a6003573500e3cc313628",
+      "native_architecture": "ELF64 x86_64",
+      "binary_replaced": false
+    }
+  },
+  "cache_checks": {
+    "effective_go_environment": {
+      "argv": [
+        "go",
+        "env",
+        "GOWORK",
+        "GOMODCACHE",
+        "GOCACHE",
+        "GOTOOLCHAIN"
+      ],
+      "exit": 0,
+      "stdout": "/root/lane-rel-identity-audit-contract/go.work\n/root/lane-rel-tools/gomod\n/root/lane-rel-tools/gocache\nlocal\n",
+      "stderr": ""
+    },
+    "go_module_graph": {
+      "argv": [
+        "go",
+        "list",
+        "-m",
+        "-json",
+        "all"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    "cargo_metadata": {
+      "argv": [
+        "cargo",
+        "metadata",
+        "--locked",
+        "--offline",
+        "--format-version=1",
+        "--filter-platform=x86_64-unknown-linux-gnu"
+      ],
+      "exit": 0,
+      "stderr": ""
+    },
+    "web_dependencies": {
+      "argv": [
+        "/bin/sh",
+        "-c",
+        "exec /root/lane-rel-tools/node/bin/pnpm install --offline --frozen-lockfile --ignore-scripts"
+      ],
+      "exit": 0,
+      "stdout": "Scope: all 9 workspace projects\n\u2713 Lockfile passes supply-chain policies (verified 4d ago)\nLockfile is up to date, resolution step is skipped\nProgress: resolved 1, reused 0, downloaded 0, added 0\nPackages are hard linked from the content-addressable store to the virtual store.\n  Content-addressable store is at: /root/lane-rel-tools/share/pnpm/store/v11\n  Virtual store is at:             node_modules/.pnpm\nPackages: +413\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\nProgress: resolved 413, reused 413, downloaded 0, added 413, done\nAgent skills awaiting approval: @tanstack/react-router.\nRun \"pnpm approve\" to review them.\n\ndevDependencies:\n+ @eslint/js 10.0.1\n+ @ownsolid/config <- packages/config\n+ eslint 10.14.0\n+ eslint-plugin-jsx-a11y-x 0.2.0\n+ eslint-plugin-react-hooks 7.1.1\n+ globals 17.14.0\n+ prettier 3.9.10\n+ typescript 6.0.3\n+ typescript-eslint 8.72.1\n\nDone in 8.7s using pnpm v12.16.1\n",
+      "stderr": ""
+    },
+    "playwright_browser": {
+      "browser_started": false,
+      "metadata_manifests": [
+        "/root/lane-rel-identity-audit-contract/web/node_modules/.pnpm/playwright-core@1.64.1/node_modules/playwright-core/browsers.json"
+      ],
+      "executable_candidates": [],
+      "cache_root": "/root/.cache/ms-playwright"
+    }
+  },
+  "preparation_failures_retained": [
+    "Direct Popen(pnpm) returned errno8 for the official shebangless placeholder.",
+    "Two later SSH diagnostics failed before remote execution; a third read succeeded.",
+    "An inline metadata collector had a quoting SyntaxError before execution; this file replaces it."
+  ],
+  "cache_paths": {
+    "GOMODCACHE": "/root/lane-rel-tools/gomod",
+    "GOCACHE": "/root/lane-rel-tools/gocache",
+    "CARGO_HOME": "/root/lane-rel-tools/cargo",
+    "CARGO_TARGET_DIR": null,
+    "GOWORK": null,
+    "PLAYWRIGHT_BROWSERS_PATH": null
+  },
+  "resource_snapshot": {
+    "memfree_mib": 6116,
+    "memavailable_mib": 19801,
+    "disk_free_bytes": 789895000064,
+    "io_full_avg10": 0.04
+  },
+  "cache_preparation_numeric_profile_met": true,
+  "source_clean_after": false,
+  "finished_utc": "2026-11-13T03:10:37.847775+00:00",
+  "generated_artifact_cleanup": {
+    "path": "go.work.sum",
+    "created_by": "offline Go workspace module metadata inspection",
+    "archived": "/root/lane-rel-tools/identity-audit-contract/linux-preparation-generated-go.work.sum",
+    "sha256": "dfcab1e17444ab9f0bbdb24e4a5b68fb8bd022ae4e523c8561f068cf30d536c3",
+    "removed_from_source_checkout": true,
+    "tracked_files_edited": false
+  },
+  "source_clean_after_cleanup": true
+}

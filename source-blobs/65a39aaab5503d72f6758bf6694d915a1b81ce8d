@@ -1,0 +1,41 @@
+"""Independently recalculate the retained EVL-105 CPU-serving observations."""
+
+import hashlib
+import json
+import math
+from pathlib import Path
+import sys
+
+raw = Path(sys.argv[1]).read_bytes()
+report = json.loads(raw)
+assert report['packages'] == {'vllm': '0.29.0+cpu', 'torch': '2.13.0+cpu', 'transformers': '5.16.1'}
+assert report['model'] == 'ownsolid-evl105-qwen3-0.6b'
+assert len(report['warmup']) == 2
+assert [run['concurrency'] for run in report['runs']] == [1, 2]
+first, second = (run['samples'] for run in report['runs'])
+assert [(row['case'], row['request_sha256'], row['prompt_tokens']) for row in first] == [
+    (row['case'], row['request_sha256'], row['prompt_tokens']) for row in second
+]
+requests = [*report['warmup'], *first, *second]
+assert len({row['id'] for row in requests}) == len(requests) == 18
+assert all(row['finish_reason'] in {'stop', 'length'} for row in requests)
+assert all(row['prompt_tokens'] > 0 and 0 < row['completion_tokens'] <= 24 for row in requests)
+assert all(row['finished_ns'] - row['started_ns'] == row['latency_ns'] > 0 for row in requests)
+assert max(row['finished_ns'] for row in report['warmup']) < min(row['started_ns'] for row in first)
+assert max(row['finished_ns'] for row in first) < min(row['started_ns'] for row in second)
+print(report['packages'])
+for run in report['runs']:
+    samples = run['samples']
+    assert len(samples) == 8
+    peak = max(sum(other['started_ns'] <= row['started_ns'] < other['finished_ns'] for other in samples) for row in samples)
+    assert peak == run['concurrency']
+    span = max(row['finished_ns'] for row in samples) - min(row['started_ns'] for row in samples)
+    assert run['wall_ns'] == span
+    seconds = span / 1_000_000_000
+    durations = sorted(row['latency_ns'] / 1_000_000 for row in samples)
+    p50, p95 = (durations[math.ceil(p * len(durations)) - 1] for p in (0.50, 0.95))
+    tokens = sum(row['completion_tokens'] for row in samples)
+    print(f"Concurrency {peak}: p50 {p50:.3f} ms, p95 {p95:.3f} ms, {len(samples)/seconds:.3f} req/s, {tokens/seconds:.3f} output tok/s ({tokens} tokens); span {seconds:.3f} s")
+print('Prompt token range', min(row['prompt_tokens'] for row in first), max(row['prompt_tokens'] for row in first))
+print('Matching output digests', sum(a['output_sha256'] == b['output_sha256'] for a, b in zip(first, second, strict=True)), '/ 8')
+print('Observation SHA-256', hashlib.sha256(raw).hexdigest())

@@ -1,0 +1,15 @@
+# GW-104 source and contract handoff
+
+The contract bundle contains the reviewed locale and API/generated client commits.
+Apply it only with the original GW owner's exact source patch from manifest.json.
+The composition tree identifies that combination without creating or publishing a
+backend commit. The test overlay adds strict assertions to a private copy of the
+owner fixture; it does not alter the owner source files.
+
+The production publication flag remains false. Original owners must complete and
+qualify catalog-specific activation before a joint release. Earlier cumulative
+profiles remain off. The shared Mac release lock and queue still apply.
+
+Full check/build and the focused native protocol results have different scopes.
+The manifest and retained logs distinguish real PostgreSQL/TLS tests, controlled
+client decoder tests, unrun model/GPU work and the still-open catalogue UI.

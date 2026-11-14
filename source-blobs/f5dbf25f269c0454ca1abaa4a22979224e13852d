@@ -1,0 +1,24 @@
+# Published quota release checkpoint
+
+Independent quota status is merged on GitHub main at
+b87f338892f5dff2f7fa33232be5b51a742292e8, verified with credentialed ls-remote.
+The server origin/main tracks that same SHA. Worktree /root/lane-sch remains
+clean on codex/sch-quota-release. Exact tested source 0e7d5a9e is pinned at
+refs/codex/sch-quota-qualified/0e7d5a9e; the final difference is documentation only.
+
+Linux evidence: /root/lane-sch-tools/quotarelease.eDcUCZUJ.
+All six offline PG race cases, all Control modules, make check and make build passed.
+Packet: /root/lane-sch-tools/sch108-quota-release.nFvy67Md, including actual main-head,
+exact construction/signatures/DTO/errors, existing DDL/role boundaries and checksums.
+The original broad sch108-public.d1Boy6XA packet is unchanged and superseded only
+for quota integration; do not apply it or the old Executor branch for quota.
+
+The original lane-sch remains 7b29f0f6. The selected-Executor b9705abc API has only
+its earlier pure native boundary pass; seven PG cases remain unqualified.
+Next safe task: isolate that additive API from the preserved branch on current main,
+review its dependencies, then run only the necessary current native qualification
+when resource preflight allows. Never lose or mix the old broader candidate.
+
+No own service, test, background retry or workstation lease remains. Formal schema,
+serving-role, IAM/DEV/Web integration and installed E2E remain with their owners.
+No roadmap box has been ticked.

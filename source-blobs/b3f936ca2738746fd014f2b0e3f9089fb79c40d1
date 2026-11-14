@@ -1,0 +1,33 @@
+{
+  "source": "b87f338892f5dff2f7fa33232be5b51a742292e8",
+  "prototype_sha256": "066e882807db7047d32a1c1f7115397dceeb0f0dc89e74dff7b6fa37bb3bc8c8",
+  "publication": false,
+  "runtime_or_model_storage_changed": false,
+  "model_owner_inputs_required": [
+    {
+      "decision": "Durable family identity",
+      "proposal": "Owner-supplied canonical UUID scoped to the installed tenant and exact workspace; bind existing immutable version IDs atomically.",
+      "required": "Authoritative type/read contract, uniqueness and migration/backfill semantics. Never group by display name, model_key, digest or base-model parent."
+    },
+    {
+      "decision": "New version family membership",
+      "proposal": "Explicit family selection for import/derived registration; lineage parentage does not imply family membership.",
+      "required": "Owner decision for first registration, reimport after retirement and derived publication. Same digest with distinct IDs must remain distinct history entries."
+    },
+    {
+      "decision": "Historical metadata policy",
+      "proposal": "Separate ready/retired metadata reads; keep current ModelVersion and deployment/training ready-only admission unchanged.",
+      "required": "Scoped owner read that validates retained catalogs/lineage without substituting current heads or reading large artifact files."
+    },
+    {
+      "decision": "Stable bounded pagination",
+      "proposal": "Created-at descending and immutable ID descending, one page at a time; 1..100 with server policy default and opaque scope/filter-bound cursor.",
+      "required": "Owner keyset/cursor codec, effective policy, response budget and live revocation/retention semantics. No snapshot or total-count claim."
+    },
+    {
+      "decision": "Publication boundary",
+      "proposal": "Admin history first, optional family reference on existing Admin detail after owner establishes the mapping; no public endpoint until qualified.",
+      "required": "Owner mapping/projection, route/auth/read transaction and error outcomes. DEV then finalizes public OpenAPI/Go/Python/Help; Web owns S-202."
+    }
+  ]
+}

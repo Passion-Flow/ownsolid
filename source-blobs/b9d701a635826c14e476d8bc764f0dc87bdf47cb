@@ -1,0 +1,2073 @@
+diff --git a/api/release/v1/mvp-postgresql-cpu-v1-lineage.json b/api/release/v1/mvp-postgresql-cpu-v1-lineage.json
+index ac2bc13c..c3163abd 100644
+--- a/api/release/v1/mvp-postgresql-cpu-v1-lineage.json
++++ b/api/release/v1/mvp-postgresql-cpu-v1-lineage.json
+@@ -2,8 +2,8 @@
+   "format_version": 1,
+   "kind": "projectone-postgresql-lineage-v1",
+   "application_profile": "mvp-postgresql-cpu-v1",
+-  "schema_version": 58,
+-  "table_count_including_ledger": 118,
++  "schema_version": 59,
++  "table_count_including_ledger": 119,
+   "prefix_lineage": "account22",
+   "prefix_schema_version": 22,
+   "entries": [
+@@ -296,6 +296,11 @@
+       "version": 58,
+       "source_path": "services/control/migrations/postgresql/000058_audit_chain_head_scope.up.sql",
+       "sha256": "c4d228212ca9a4107dc5e4a78468f9f7a35dfba818564d406a0a8861cdca1413"
++    },
++    {
++      "version": 59,
++      "source_path": "services/control/migrations/postgresql/000059_model_alias_description.up.sql",
++      "sha256": "399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab"
+     }
+   ]
+ }
+diff --git a/api/release/v1/postgres_application.go b/api/release/v1/postgres_application.go
+index 9c40584d..18812d4b 100644
+--- a/api/release/v1/postgres_application.go
++++ b/api/release/v1/postgres_application.go
+@@ -4,8 +4,8 @@ import "encoding/json"
+ 
+ const PostgreSQLLegacyApplicationProfile = "releases"
+ const MVPPostgreSQLCPUApplicationProfile = "mvp-postgresql-cpu-v1"
+-const MVPPostgreSQLCPUV1SchemaVersion = 58
+-const MVPPostgreSQLCPUV1TableCount = 118
++const MVPPostgreSQLCPUV1SchemaVersion = 59
++const MVPPostgreSQLCPUV1TableCount = 119
+ 
+ func effectivePostgreSQLApplicationProfile(profile string) string {
+ 	switch profile {
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 2297b8e3..53651a36 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -7,7 +7,7 @@ today and what is known to fail.
+ | Capability | Implemented | Run end to end | Customer verified | Known failures |
+ | --- | --- | --- | --- | --- |
+ | Repository layout checks | Yes | Yes | n/a | None |
+-| Full repository test gate for delivery and recovery | Pass on the workstation for the CAT-107 and REL-104 admission work | `make check`, `make build` and `make test` passed. Chromium passed 1,074 Console and 387 Portal cases. All Go packages previously ran on Linux amd64 at `ddfd4d7a`, including UID-sensitive fixtures under the required test identities | n/a | None in this run. The previous Web Help contract failure passed after `9d25ee7c` |
++| Full repository test gate for delivery and recovery | Pass on the workstation for schema-59 admission at a446ec58 | `make check`, `make build` and `make test` passed. Chromium passed 1,075 Console and 389 Portal cases without retries, with 28 and 9 unchanged live-environment skips. [Exact admission](../research/gateway-model-description.md#formal-schema-59-acceptance). All Go packages previously ran on native Linux amd64 at `ddfd4d7a`, including UID-sensitive fixtures under the required identities | n/a | None in the current workstation run; a new native Linux amd64 rerun remains separate |
+ | Cell and site scope on tables, API paths and shared keys | Yes, PostgreSQL only; identity fixed to `default` until ARC-202 | See the single-node install row | n/a | MySQL and Dameng chains lack the columns (CMP-201, CMP-202) |
+ | Agent session protocol v1: gRPC stream on HTTP/2 for heartbeats and claims, HTTPS long-poll fallback (ADR 0007) | Yes; stream gateway runs in the control process, task wake reaches other gateways through the outbox (ADR 0028) | Yes: a real agent enrolled into the offline single-node install, ran tasks over the stream and reconnected after a control restart, Docker-in-Docker on `ownsolid-cpu`. The fallback ran against the real handler and PostgreSQL on the Mac | n/a | None |
+ | Single-node install (`ownsolid-install`, control image, Compose) | Yes, with the web console and portal from `web/` | Installed, signed in, restarted and reinstalled with no network route, Docker-in-Docker on `ownsolid-cpu`; the image's console and portal load with every asset | No | None |
+@@ -58,11 +58,12 @@ today and what is known to fail.
+ | Model gateway on serving nodes (GW-114): the agent of a `docker_inference` node at protocol 1.6 starts the Rust gateway when a deployment's gateway is registered, with a credential and TLS key generated on the node and activated under the task's lease; control keeps the credential's digest and signs a serving certificate for the origin the node declares with a model gateway CA the installer creates; the gateway runs locked down on the host network beside the engine and is stopped, with its secrets removed, when revoked; the console publishes without an address or a credential and explains a failed start | Yes, PostgreSQL only; nodes enrolled before protocol 1.6 and the AI and model lifecycle profiles keep an administrator-placed gateway (GW-123); certificates last a year and are renewed by publishing again (GW-124); authorized alias CA downloads are implemented and the UI links are pending (GW-125); the image is loaded with `docker load` until the signed bundle (DEL-101) | Live on an installation, 2026-11-09: a real agent started, served and stopped the real gateway image; from the browser a deployment was published through its node's own gateway and a key issued from the card reached vLLM's CPU build serving Qwen3-0.6B, plain and streamed, each call in the key's log with the engine's token counts, a wrong key refused. The deployment's node was scripted, its gateway tasks run by the agent's own gateway code; no GPU. Two Docker timeouts on the shared host surfaced as `GATEWAY_DOCKER_UNAVAILABLE` and `GATEWAY_STOP_FAILED` on the page | n/a | One address for every model is GW-121 |
+ | Model gateway trust download (GW-125, open) | Admin and Portal download the loaded public CA for an active agent-managed alias. Agent activation and downloads use certificate-only encoding | Disconnected PostgreSQL and TLS verified the signed endpoint, name mismatch, tenant refusal, manual and revoked gateways, and mixed PEM refusal. [Evidence](../research/gateway-delivery.md#downloading-caller-trust-gw-125) | No | Public contract and generated clients are published. Console and Portal links are pending |
+ | Product assistant execution policy and budgets (AGT-112, open) | Fail-closed installation admission, staged shared execution/token reservations and durable deterministic run/step limits with cancellation and result fences | Disconnected Linux arm64 and native amd64 PostgreSQL 18.6 passed thirteen budget and nineteen run cases. Native scoped commands, paired Admin/Portal HTTPS twice, real audit export and standalone verifier passed on schema 58. Complete repository check/build/test passed twice, with both browser suites without retries and affected race/vet checks. See [loop guard acceptance](../research/product-assistant-loop-guard.md#isolated-acceptance) | No | An earlier default-fixture schema initialization returned SCHEMA_UNAVAILABLE before commands ran; its cause is unestablished. Explicit construction budgets preserve the verified 5s business deadline. A native fixture stop lost its Docker exit event; later inspection confirmed removal. Production configuration, schema/cell classification and restore catalogue, trusted user policy and gateway usage binding, controls, telemetry and browser integration remain open |
++| Scoped application names in the product assistant (AGT-111, open) | Deterministic English and Chinese quoted-name reads return a canonical ID only for one authorized published application, with durable name binding and final result fences | Complete check/build/test and affected race/vet passed at `21b86219`. Disconnected Linux arm64 PostgreSQL 18.6 passed the new resolution and failure cases, existing budget/run/scoped reads and both real HTTPS roots. See [acceptance](../research/product-assistant-name-resolution.md#acceptance-and-handoff) | No | Native amd64 lookup execution awaits the shared CPU window. A harness cleanup check misread a lowercase Docker diagnostic; exact inspection confirmed removal. Production route, policy/schema bindings, both browser flows and other resource owners remain open |
+ | Portal conversation history search (APP-109, open) | PostgreSQL caller-private literal search with authenticated, query-bound continuations and metadata-only responses | Registered Portal TLS passed with native Linux amd64 PostgreSQL 18.6/pgvector 0.8.7 in network mode none. The owned fixture container was confirmed removed. See [search acceptance](../research/application-conversation-search.md#acceptance-and-handoff) | No | Portal search controls, rename/export operations and the complete conversation UI remain open |
+ | Gateway Responses and Messages (GW-103, open) | The Rust gateway serves foreground text over JSON and SSE with shared authorization and usage accounting. Responses accepts strings and stateless text message items. Tool requests remain disabled | Loopback-only Linux TLS tests with a synthetic backend reject complete tool declarations and forged result histories, and preserve quota and single dispatch after an unsolicited tool delta or cancellation. The native Rust, Go and PostgreSQL fixture rejected a key that was valid in a second test installation. The isolated source and template probe verified the closed-schema candidate and scope-bound IDs outside the product | No | The pinned vLLM 0.31.0 launch lacks a parser and does not produce a native named-call envelope. Tool, public OpenAPI and actual engine acceptance remain open. See [tool round-trip research](../research/gateway-tool-roundtrip.md) |
+ | Gateway Chat text parts (GW-101, open) | Chat Completions accepts plain strings and ordered text parts for the existing roles | Disconnected native Rust TLS verified normalization, malformed part rejection and durable JSON and SSE usage against synthetic inference. [Acceptance](../research/gateway-chat-streaming.md) | No | Current production backend and UI qualification are pending |
+ | Authorized gateway usage history (GW-107, open) | Admin and Portal download bounded CSV attachments from their scoped request histories. Both formats verify canonical receipts | Disconnected PostgreSQL and production TLS dispatch verified attachment headers, JSON-cursor continuation, known and unknown usage, read-only retries and refusal without a partial file. Native Go/Rust verified the underlying reports. [Acceptance](../research/gateway-usage-history.md) | No | Public contract uses JSON cursors. Production continuation link and UI are pending |
+-| Published model descriptions (GW-120, open) | Scoped publish, Admin edit and Portal read work on the PostgreSQL candidate. Predecessor responses keep their existing contract | Disconnected HTTPS and PostgreSQL verified legacy replay, concurrent editing, tenant scope, rollback on audit failure, clearing and retained routing. [Evidence](../research/gateway-model-description.md) | No | The public contract is available. Production migration and catalogue signatures after shared database ordering, Console editing and Portal S-304 are pending |
++| Published model descriptions (GW-120, open) | Scoped publication, Admin edit and Portal reads are active in PostgreSQL schema 59. Predecessor responses retain their contract | On disconnected Linux arm64 PostgreSQL 18.6, normal installed HTTPS, legacy replay, concurrent edits, tenant scope, audit rollback and clear/replay passed. Seven migration/restore paths reached 119 tables and preserved four original audit checkpoints. Restricted-role grant resume, pristine and retained-state rollback, waiting writers and stale-snapshot refusal passed. [Evidence](../research/gateway-model-description.md#formal-schema-59-acceptance) | No | Console editing and actual installed Portal S-304 acceptance remain pending. Native Linux amd64 was not rerun for this input |
+ | Scheduling policy and cell observation (SCH-101 to SCH-104, SCH-107, SCH-108, SCH-110, open) | Job demand, quota policy, queue order, quota preflight and scheduler observation libraries | Linux Go race tests covered exact demand, tenant scope and child ceilings. Disconnected TLS verified cell identity, protected token rotation, refusal before network I/O and the exact Kueue Workload blocker. Scheduling tests rejected stale blockers and verified fixed guidance without controller messages. PostgreSQL 18.6 verified that two concurrent policy edits could not both consume the same parent allocation | No | Production schema and workload composition, offline cell installation, reservation and product entrances remain open. See [integration boundaries](../research/lane-sch-questions.md) |
+ | Transactional training scheduling seam (SCH-101, open) | PostgreSQL reservation and exact release on the workload owner's transaction, with candidate schema | Linux PostgreSQL 18.6 covered contention, owner rollback and live quota edits. A logical dump/restore of the v57 catalog with candidate tables preserved a held and a released attempt and their admission decisions. Disconnected local replay and release refused foreign site/cell records for single and gang attempts | No | Production migration and fingerprints, the authenticated training caller and installed offline flow remain open. See [training and database handoff](../research/scheduling-training-reservations.md) |
+ | Live workspace queue ranking (SCH-103, open) | Tenant-scoped ordering from current quota and reservation shares in one read-only snapshot | Isolated Linux PostgreSQL 18.6 verified priority, snapshot stability, changed rank after holds and quota edits, FIFO after release, one reservation query for multiple workspaces and zero reservation reads on foreign or missing scope. A foreign site/cell in the selected active records refused the entire rank and preserved the records | No | Durable queue membership, authority over priority classes and the workload owner dispatch remain open. See [live workspace shares](../research/scheduling-queue-policy.md#live-workspace-shares) |
+@@ -164,6 +165,14 @@ with 118 tables and the original independently verified checkpoints. The full
+ repository check, build and test passed, including both complete browser suites.
+ See the [exact integration admission](../research/audit-chain-head-cell-scope.md#exact-integration-admission).
+ 
++Schema 59 adds the scoped model-description intent table, bringing the
++current lineage to 59 entries and 119 public tables. Fresh, native 58-to-59
++and logical restore at 55 through 59 passed on disconnected Linux arm64
++PostgreSQL 18.6. The four retained audit exports matched the original
++checkpoints byte-for-byte. Installed Admin/Portal HTTPS, existing-role
++grant resume, retained-state and isolation-safe downgrade tests and all
++repository gates passed on a446ec58. See the [current schema admission](../research/gateway-model-description.md#formal-schema-59-acceptance).
++
+ `deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
+ removal by the owner: no image build copies it.
+ 
+diff --git a/docs/research/app-lane-questions.md b/docs/research/app-lane-questions.md
+index 90c9509e..9f837752 100644
+--- a/docs/research/app-lane-questions.md
++++ b/docs/research/app-lane-questions.md
+@@ -324,3 +324,24 @@ Ten focused serial diagnostic runs and later complete one- and two-worker
+ suites passed. Those results do not establish a fix for the earlier failure.
+ The unchanged Web source remains outside APP ownership. Its owner needs
+ the exact case and original trace for diagnosis. No assertion was changed.
++
++## Scoped application names for AGT-111
++
++The deterministic Portal command now accepts `find application "Application
++name"` and the Chinese example returned by `Commands(actor, "zh-CN")`.
++The quoted argument is one JSON string, not a target UUID or workspace
++selector. `Result.ApplicationResolution` carries the typed state, up to two
++authorized application projections, and `application_id` only for a unique
++current publication. The projection includes the immutable version and graph
++digest. Read and display those results as data; resolving a name authorizes
++no execution or mutation. Show no-match and ambiguity explicitly and require
++a fresh lookup after scope or publication changes.
++
++`http.NewGuarded` applies the same installation/user policy, durable step
++claims and final result fence. The command reuses the reviewed
++`ListApplications` read policy and records `find_application` as its audit
++action. No new OpenAPI operation or model tool is enabled. The entry owner
++still needs the real route and both browser flows; the configuration and
++database owners still need their existing AGT-112 bindings. Other resource
++types keep their respective owners and remain open. See the
++[name contract and acceptance](product-assistant-name-resolution.md).
+diff --git a/docs/research/gateway-model-description.md b/docs/research/gateway-model-description.md
+index 8c0b8d79..5e6ce14f 100644
+--- a/docs/research/gateway-model-description.md
++++ b/docs/research/gateway-model-description.md
+@@ -1,6 +1,6 @@
+ # Published model descriptions (GW-120)
+ 
+-Reviewed 2026-11-09.
++Reviewed 2026-11-12.
+ 
+ [Hugging Face model cards](https://huggingface.co/docs/hub/model-cards)
+ record intended uses and limitations with the imported model. The
+@@ -160,8 +160,8 @@ revision and returned the current description. A forced audit failure
+ rolled back the update and its intent, and the same idempotency key
+ could then be used for a different request. Clearing text while paused
+ left the routing revision, deployment binding and target history
+-intact, and the existing API key remained valid after resume. The
+-candidate down SQL restored the predecessor HTTP response shape.
++intact, and the existing API key remained valid after resume. The current down SQL refuses retained content, revisions and replay
++intents; a pristine downgrade preserves the predecessor response shape.
+ 
+ The unnumbered, test-only up and down scripts live in
+ `services/control/internal/modules/distribution/testdata/`. The fixture
+@@ -303,3 +303,265 @@ the fresh and restored-at-55 paths after running the down SQL.
+ These are overlay measurements. Recompute the signatures, release
+ lineage and expected table count from the actual committed tail when
+ the migration is ordered. The candidate adds one table.
++
++
++## Schema-58 migration handoff
++
++The committed baseline 106ca52d includes the GW-120 production source
++from 8d359f49 and its scoped correction c9654657, plus the published
++OpenAPI contract. No additional production Go patch is needed to
++activate descriptions. ARC must append the exact unnumbered up SQL
++from distribution testdata at the actual shared tail, preserve all
++previous migration bytes, and recalculate the complete catalogue and
++runtime access checks. This gateway lane does not assign the number.
++The candidate adds one public table and raises the baseline count from
++118 to 119 before any subsequent migration.
++
++The new table is model_alias_description_intents: tenant, workspace,
++site, cell, actor, UUID intent key, alias, applied description revision,
++32-byte request fingerprint and creation time. Its composite primary
++key retains actor-scoped idempotency; its composite alias foreign key
++fences tenant, workspace, site and cell together. Both cell columns
++are non-null and default from the local registry. The existing
++protect_alias_cutover_record trigger rejects updates and deletes.
++model_aliases receives the plain text and independent revision, plus
++the composite unique key needed by the new foreign key. No role,
++sequence, extension, model, dataset or dependency is introduced.
++
++Apply migration DDL with the existing operator and installation lock,
++then extend the installed restricted runtime principal through the
++existing runtime-access step before starting control. The current
++grant policy requires SELECT, INSERT, UPDATE and DELETE on business
++tables, with no ownership, DDL, TRUNCATE, REFERENCES, TRIGGER or grant
++option; the immutable trigger still refuses intent updates/deletes.
++The new table is not an exception to that existing policy. Do not
++grant the runtime role access to audit_chain_head or writes to the
++migration ledger. ARC must verify effective runtime privileges against
++the actual new TableCount; the gateway candidate does not weaken the
++platform admission predicate.
++
++### Safe rollback
++
++Run the down script in one operator transaction while serving is
++stopped. Acquire ACCESS EXCLUSIVE locks on aliases and description
++intents before checking retained state. Refuse with SQLSTATE 55000 and
++MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE if any description
++is nonempty, any independent revision differs from 1, or any edit
++intent exists. Clearing the visible text does not make its revision
++and replay history disposable. A verified pre-upgrade backup and the
++normal restore procedure are required once the feature has been used;
++the down script never clears content or deletes intents to force a
++rollback. A pristine, unused upgrade can remove the new columns,
++reference constraint and table and retain the original alias routing
++state. The [PostgreSQL lock modes](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-TABLES)
++and [exception semantics](https://www.postgresql.org/docs/18/plpgsql-errors-and-messages.html)
++provide the same-transaction check and refusal. Existing licence
++terms above apply.
++
++Keep the predecessor HTTPS upgrade fixture pinned to schema 58 so it
++continues to prove omitted fields, SERVICE_NOT_READY and legacy
++publication replay after the production migration lands. A separate
++installed-schema fixture must use normal database migration/checking
++and run the same Admin/Portal flow without applying candidate DDL.
++Until ARC installs the shared migration, that fixture remains pending.
++Test pristine rollback, every retained-state predicate, rollback after
++clearing, and a writer committed while downgrade waits for its lock.
++Neither the feature nor S-304 is complete until the installed schema,
++restricted runtime and actual Portal consumer are qualified.
++
++
++### Committed schema-58 qualification
++
++The exact production schema-58 files from 106ca52d reproduced the three
++baseline catalogue signatures before applying the candidate. Fresh
++schema, a schema-58 logical restore followed by candidate application,
++a current candidate dump/reparse, and restore at 55 followed by upgrade
++through 58 all passed on PostgreSQL 18.6 and pgvector 0.8.7 with no
++external network. The latter two current restore paths agreed on the
++same digest. Pristine down returned the exact fresh and restored-at-55
++baseline catalogues. The three resulting signatures remain the values
++in the scoped table above. These are candidate measurements against
++the committed predecessor, not the formally numbered production tail.
++
++The unnumbered up SQL SHA-256 is
++399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab.
++The original handoff down SQL SHA-256 is
++4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2.
++Changing only the down refusal does not change the candidate catalogue.
++Keep the up bytes unchanged. The isolation successor below tightens
++the down script before formal admission. Verify the complete release
++lineage and runtime principal against the final numbered files.
++
++The schema-58 HTTPS upgrade test passed with real sessions, CSRF,
++concurrent revision refusal, exact replay, scope checks and retry after
++audit rollback. TestAliasDescriptionRollbackPreservesRetainedState
++passed pristine rollback and independent text, revision and intent
++refusals. TestAliasDescriptionRollbackWaitsForCommittedWriter observed
++the table-lock wait, committed the writer, and then received the
++retained-state refusal without losing the write. Clearing through the
++HTTP route still prevented downgrade and retained a successful replay.
++The installed-schema test was explicitly skipped on schema 58.
++
++The Linux handoff and logs are retained in
++/root/lane-gw-acceptance/gw120-schema58._65ygj2r. run-tests.sh runs the
++focused PostgreSQL/HTTPS checks; catalog.sh reproduces fresh, current
++restore and old restore in one disposable container. Both acquire the
++shared Linux heavy-test and SCI replay locks and enforce the resource
++preflight. The schema fixture uses only its own namespace and no host
++listener. No model or GPU ran. For an already prepared private fixture,
++run the native tests from the repository root:
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription(PostgreSQLUpgradeAndHTTPS|InstalledSchemaAndHTTPS|RollbackPreservesRetainedState|RollbackWaitsForCommittedWriter)$' -count=1
++```
++
++After formal migration, require InstalledSchemaAndHTTPS to pass using
++the normal production migrator and catalog checks, without applying the
++candidate SQL. ARC owns the exact numbered files, catalogue constants,
++TableCount and restricted runtime verification; GW owns this backend
++read/write regression; WEB and DEL own the installed S-304 consumer
++qualification. Neither the candidate run nor a skipped installed test
++is a completed production description flow.
++
++
++The pristine predecessor rollback assertion compares the exact captured
++schema-58 catalogue before and after the candidate, rather than calling
++the check for the installed current tail. This keeps the predecessor
++regression valid when ARC adds the production migration. The focused
++PostgreSQL/HTTPS and concurrent rollback tests passed with this assertion.
++
++
++## Formal migration admission plan
++
++The integration baseline is 1aad4eed, which retains schema 58 and 118
++public tables. The handoff from ba815623 was checked locally against
++its complete SHA-256 manifest, including the eight unchanged production
++source files. Assign only the next contiguous version, 59. Preserve the exact
++up bytes and use the isolation-guarded down successor below. Preserve every earlier SQL asset and release
++lineage entry. This changes no agent protocol or agent version policy.
++No new dependency, model, dataset or network runtime is introduced.
++
++The PostgreSQL 18 locking and exception references above were reviewed
++again on 2026-11-12. ACCESS EXCLUSIVE conflicts with both reads and
++writes and remains held through the transaction; a raised exception
++aborts the transaction. Use the operator's existing bounded transaction
++and stopped-serving installation procedure. Reject destructive rollback
++rather than silently discarding retained content. Reject dropping only
++the intent table or checking state before taking locks, because either
++would bypass the retained-state or concurrent-writer guarantee.
++
++Acceptance requires independently reproducing the three catalogue
++forms on PostgreSQL 18.6 with pgvector 0.8.7, using production migrations
++and the historical 55 through 58 restore inputs plus a current dump.
++Require repeated normal migration/readiness, unchanged predecessor
++checksums and retained audit checkpoints. Exercise missing-grant refusal,
++existing-role grant resume without OID or password changes, runtime
++intent mutation refusal and journal/private-head denial. Run the handed-off
++predecessor, installed-schema, retained-state and waiting-writer tests
++against the same formal source commit, then complete the repository gates.
++These are admission requirements, not new run results. UI qualification
++and the GW-120 roadmap tick remain with the Gateway and Web owners.
++
++
++### Downgrade transaction isolation
++
++[PostgreSQL LOCK](https://www.postgresql.org/docs/18/sql-lock.html)
++requires either READ COMMITTED or taking the lock before the first
++snapshot in a REPEATABLE READ or SERIALIZABLE transaction. A table lock
++taken after an earlier snapshot does not make subsequent reads current.
++A transaction that first inspects an alias, then waits for an outside
++writer, can miss the newly committed description when checking whether
++downgrade is pristine. Stopping new serving traffic does not repair an
++already captured operator snapshot.
++
++An isolated prototype on 2026-11-12 used the frozen 62a3792f source,
++PostgreSQL 18.6 and pgvector 0.8.7 in a network-none Linux arm64
++container on the Mac arm64 workstation. The original down script passed
++its destructive DDL after another transaction committed a description;
++the added assertion failed as expected. The prototype rolled back its
++DDL and retained the writer's committed data. Prepending SET TRANSACTION
++ISOLATION LEVEL READ COMMITTED rejected the stale snapshot with SQLSTATE
++25001 before locking or DDL, and the retained-data assertion passed.
++This is a prototype result, not the complete formal migration gate.
++
++Make that SET the first executable statement of both the qualified
++fixture and numbered down script. A fresh operator transaction selects
++READ COMMITTED before acquiring the two ACCESS EXCLUSIVE locks. A
++transaction that already captured another isolation snapshot refuses;
++roll it back and start a fresh operator transaction. Do not merely
++mention the isolation requirement in a comment or rely on a deployment's
++default_transaction_isolation. Neither guarantees a current state check.
++The up checksum and structural catalogues remain unchanged. The current
++down SHA-256 is 61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86.
++
++Add production-script regressions for prior REPEATABLE READ and
++SERIALIZABLE snapshots, checking exact 25001 refusal and retained writer
++data, plus fresh transactions at every supported PostgreSQL isolation
++level, which must still refuse retained description state with 55000.
++Keep the original pristine, cleared revision, intent-only, concurrent
++lock-wait and installed HTTPS cases. Require all of them to run on the
++same formal source before publication.
++
++
++## Formal schema 59 acceptance
++
++The exact source a446ec580cf6dffc63df5d8269518f1ef8175d40 passed the
++formal admission on 2026-11-12. PostgreSQL 18.6 and pgvector 0.8.7 ran
++in network-none Linux arm64 containers on the Darwin arm64 workstation.
++The accepted schema-58 predecessor was built separately from 106ca52d.
++All 58 preceding up/down assets and all 58 release entries remained
++byte-identical. Migration 000059 uses the owner up bytes and the
++isolation-guarded down successor qualified above. The normal production
++migrator, schema checker and runtime grant catalog now bind 59 entries
++and 119 public tables, including the migration ledger.
++
++| Actual migration history | Catalogue SHA-256 |
++| --- | --- |
++| Fresh installation or native 58-to-59 upgrade | 72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782 |
++| Restore at 55, then upgrade to 59 | 8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069 |
++| Restore at 56, 57, 58 or 59, then admit 59 | 18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc |
++
++All seven histories ran the production migrator twice and the normal
++schema check, asserting exactly 59 ledger entries and 119 tables.
++The original 55 through 58 custom-format archives were checksum-checked
++before use. Audit exports from all four historical restores matched
++the retained original JSONL bytes, and the independent offline verifier
++accepted the original checkpoint each time. These runs qualify the
++measured catalogue histories and retained audit data; they are not a
++full installed browser or model-serving qualification.
++
++Six distribution test roots passed without skips: predecessor HTTPS,
++normal installed-schema HTTPS, four retained-state rollback cases,
++the committed-writer lock wait, two prior-snapshot refusals and four
++fresh-isolation cases. Eight runtime-access roots also passed without
++skips, including the new 58-to-59 grant resume. Missing new-table access
++refused serving with DATABASE_RUNTIME_PRIVILEGES_INCOMPATIBLE and SQL
++42501. Grant-only resume and repeat retained the role OID, password
++verifier and every predecessor ledger row. The actual runtime principal
++reached the new foreign key but could not read audit_chain_head, mutate
++the ledger, truncate the intent table or disable its triggers.
++
++The same source passed an uninterrupted make check, make build and
++make test on the workstation. Chromium passed 1,075 Console and 389
++Portal cases; the unchanged live-environment skips were 28 and 9.
++Both suites ran without retries, at four and one workers respectively.
++Go, Rust and Web checks and tests passed. The private APFS temporary
++volume and all owned PostgreSQL containers, volumes and credential files
++were removed after the runs. The raw catalogue/restore log SHA-256 is
++069f70673f0764e6c16adb027488c53ed2d47aa32733d51ce0b01ed1c4e46a1d.
++The retained admission manifest SHA-256 is
++4a3e92dbd921d0d971ebcd1395329da32ed8e0dcf9b8b901f592123d667a76b4.
++
++The separate native Linux amd64 queue exited at resource admission and
++ran no new compiler or database. Do not report this arm64 result as an
++amd64 rerun. No model, GPU or production browser installation ran in
++this qualification. GW-120 and S-304 remain open until Console editing
++and the actual Portal consumer complete their installed acceptance.
++
++With an explicitly owned private PostgreSQL fixture configured through
++PROJECT_ONE_TEST_DSN_FILE, reproduce the current backend regressions:
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution -run '^TestAliasDescription' -count=1 -v
++go -C services/control test -p 1 ./internal/operations/databaseaccess -run '^(TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal|TestUpgrade.*|TestActualRuntimeAccessPreparationAccountWorkspaceDMLAndNoDDL)$' -count=1 -v
++```
+diff --git a/docs/research/postgresql-catalog-upgrade-gate.md b/docs/research/postgresql-catalog-upgrade-gate.md
+index 4c7f309d..7ffb6684 100644
+--- a/docs/research/postgresql-catalog-upgrade-gate.md
++++ b/docs/research/postgresql-catalog-upgrade-gate.md
+@@ -115,7 +115,10 @@ with the local defaults and references the exact alias tenant, workspace,
+ site and cell through a composite foreign key. Its up checksum is
+ `399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab`.
+ The down checksum is
+-`dff9447544bdb8b3fdb78f82356fbab997518250ca3c88049b454ebd33e63a32`.
++`61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86`.
++The down successor explicitly selects READ COMMITTED before locking;
++a prior stronger-isolation snapshot refuses before DDL, as qualified
++in the Gateway research note.
+ The Gateway fixture measured three successor catalogs after applying
+ the Audit scope overlay. Keep these as comparison values. Assign the
+ next contiguous migration only after the Audit migration lands on main.
+@@ -206,3 +209,24 @@ requires durable store bindings, live lease fencing, write permits
+ and coordinated restore qualification. Their module owners retain
+ their source and normal-flow verification. Assign numbers only when
+ each candidate is admitted against the current predecessor.
++
++
++## Accepted description tail
++
++Schema 59 installs the scoped GW-120 owner up SQL without changing
++any of the 58 predecessor entries. The [formal schema-59 acceptance](gateway-model-description.md#formal-schema-59-acceptance)
++independently reproduced fresh, native 58-to-59, restored 55 through 58
++and restored current catalogues on the pinned PostgreSQL stack. All
++seven production migration/replay/check paths passed at 119 tables;
++the four historical audit checkpoints were retained byte-for-byte.
++The PostgreSQL-only runtime table list includes the new intent table.
++Existing-role grant resume and exact serving refusal before grants
++passed. MySQL's shared catalog and audit head access remain unchanged.
++The complete workstation check, build and test passed on a446ec58.
++These are Linux arm64 SQL results, distinct from the earlier native
++Linux amd64 Audit admission.
++
++GW-120 is therefore the accepted tail for subsequent ordering. DAT-101
++and metering remain separate unnumbered candidates until their owners
++supply ready inputs against this exact predecessor. Do not assign a
++number to an incomplete handoff or reuse a prior overlay fingerprint.
+diff --git a/docs/research/product-assistant-name-resolution.md b/docs/research/product-assistant-name-resolution.md
+new file mode 100644
+index 00000000..37b6dec5
+--- /dev/null
++++ b/docs/research/product-assistant-name-resolution.md
+@@ -0,0 +1,112 @@
++# Scoped assistant name resolution (AGT-111)
++
++Reviewed: 2026-11-12. The first path resolves a published application in the
++authenticated Portal workspace without a model. It performs no mutation.
++
++## Sources and licences
++
++[Kubernetes object names and IDs](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/)
++distinguish a scoped human name from an object's unique identity. Return IDs
++from the resource owner, never manufacture one from model text. The existing
++workflow writer normalizes display names to NFC and trims surrounding space;
++its name-key uniqueness is a separate, broader normalization rule. Match the
++visible NFC name exactly, including case. PostgreSQL's
++[explicit C collation](https://www.postgresql.org/docs/18/collation.html)
++keeps equality independent of a deployment's linguistic collation. Use bound
++parameters, not a pattern or generated SQL.
++
++[Go JSON strings](https://pkg.go.dev/encoding/json/v2) provide one bounded,
++unambiguous quoted argument. A complete JSON string must consume the rest of
++the command. Prefix normalization must not lowercase or collapse spaces in
++the name. The existing command palette and exact-command references are in
++[the command research](product-assistant-commands.md).
++
++Reuse Go 1.27.3 (BSD-style), x/text v0.43.0
++([BSD-3-Clause](https://raw.githubusercontent.com/golang/text/v0.43.0/LICENSE)),
++pgx v5.11.0 (MIT), and PostgreSQL 18.6/pgvector 0.8.7 (PostgreSQL License).
++The remaining primary licence links are in the
++[budget research](product-assistant-execution-budgets.md#sources-and-licences).
++These allow commercial redistribution with notices and offline use. No new
++dependency, model, dataset, index or shipped service is introduced.
++
++## Decision
++
++Add English and Simplified Chinese `find application` command templates with
++one JSON-quoted visible name. Keep the existing fixed grammar unchanged.
++Resolve under the same session, workspace and publication checks as the
++application list, in its owning transaction. Reuse the reviewed ListApplications
++read permission. This command narrows that projection; it does not expose a
++new transport or add an unreviewed API operation to the tool inventory.
++
++The application owner returns `resolved`, `not_found` or `ambiguous`, at most
++two authorized candidates, and a canonical application ID only for a unique
++match. Disabled, unpublished and foreign resources yield the same empty
++result as a nonexistent name. A duplicate visible name never selects the
++first row, even if malformed source data bypassed normal name-key creation.
++The existing workspace workflow quota is at most 1,000 and the ordinary
++business deadline still bounds the scoped equality query.
++
++Read the current publication's immutable version ID and graph digest with
++the workflow ID. Future plans must bind those server results and recheck the
++owner at execution; name resolution alone authorizes no effect. Keep all
++writes and sensitive reads closed. Redact candidate display names using the
++existing assistant policy. Store no name in run/step checkpoints or audit
++metadata. Include the normalized name in the server execution fingerprint so
++an execution UUID cannot be replayed for another lookup.
++
++## Rejected paths and failure tests
++
++- Fuzzy matching, case folding and substring parsing can choose an unintended
++  resource. Use exact NFC display-name equality and an explicit no-match state.
++- Client/model UUIDs, workspace selectors or arbitrary URLs cannot select scope.
++- A prefix followed by free-form text admits compound instructions. Require
++  one complete quoted string, valid UTF-8, the 120-character contract bound
++  and no control characters. Quoted command-like names remain data.
++- Do not copy the workflow owner's private name-key algorithm or create a
++  second name index. Do not paginate through and accumulate the whole catalog.
++- Preserve commit uncertainty and suppress all candidates after audit, current
++  authority, budget or final-policy failure.
++
++Exercise both languages through the guarded real HTTPS path and disconnected
++PostgreSQL. Cover NFC, Chinese and maximum-length names, exact case, literal
++wildcards and quotes, malformed/trailing JSON, no match, hidden publications,
++duplicate names, other users/workspaces/tenants, revoked access, source failure,
++budget exhaustion, changed-name replay, cancellation and metadata-only audit.
++Reuse existing unchanged core budget evidence. Production route/configuration,
++schema registration, the command UI and other resource kinds remain owner
++integration requirements; AGT-111 stays unchecked.
++
++## Acceptance and handoff
++
++Source `21b86219` passed the complete `make check`, `make build` and `make
++test` gate. Console passed 1,075 browser cases and Portal passed 389, with
++their existing 28 and 9 live-environment skips and no automatic retries.
++Affected application and assistant race tests and vet passed.
++
++An isolated Linux arm64 PostgreSQL 18.6/pgvector 0.8.7 container in network
++mode `none` passed all five selected repository roots, including both new
++name-resolution roots, and both real HTTPS roots. The name tests exercised
++exact bilingual/NFC lookup, maximum names, literal wildcards and quotes,
++command-like names as data, absent/unpublished/disabled/ambiguous resources,
++changed-name replay, foreign scope, membership/session revocation, budget
++exhaustion, audit refusal, cancellation and final-policy suppression. The
++guarded Portal HTTPS flow resolved both language prefixes to the published
++UUID and refused disabled execution and a supplied cursor.
++
++The retained repository log SHA-256 is
++`ad6f5e8f81f49194dd92c4c60a356556f9ec361dc43230350d5fb6d7ba6dce0d`;
++the HTTPS log is
++`d5286a03b801356035a9689001cc06582cfd53e8e194bd72aab3782cd9c64a7e`.
++The harness initially reported a cleanup failure because its absent-object
++check expected capitalized Docker output. A separate exact-container
++inspection confirmed removal; the lowercase diagnostic was retained and
++the harness check corrected. No product test was rerun to conceal that
++harness result. The owned temporary APFS volume was detached and removed.
++
++The native amd64 runner twice refused a busy shared CPU lock before source
++construction or containers started. This new lookup therefore has arm64
++execution evidence only; earlier native budget/loop evidence does not
++qualify it. Reuse the selected test roots above on the native target when
++the shared window is available. No persistent test service or queue was
++left running. The existing three model safety observations remain
++unqualified; this deterministic lookup invokes no model.
+diff --git a/services/control/internal/modules/applications/README.md b/services/control/internal/modules/applications/README.md
+index 9f38124d..e3ef5c10 100644
+--- a/services/control/internal/modules/applications/README.md
++++ b/services/control/internal/modules/applications/README.md
+@@ -41,6 +41,13 @@ commit. The authenticated workspace supplies the selector and the owner
+ transaction resolves the scope. The ordinary portal routes call `List` and
+ `Conversations`.
+ 
++`ResolveNameForAssistant` uses the same owning transaction for a bounded exact
++NFC display-name lookup on PostgreSQL. It returns at most two published
++candidates in the authenticated workspace, without a caller-supplied scope.
++A canonical application ID is returned only for a unique match. An ambiguous,
++unpublished or disabled resource cannot authorize an action. See the
++[AGT-111 contract](../../../../../docs/research/product-assistant-name-resolution.md).
++
+ ## Tests
+ 
+ - `go -C services/control test ./internal/modules/applications/...` runs the unit tests.
+diff --git a/services/control/internal/modules/applications/name_resolution.go b/services/control/internal/modules/applications/name_resolution.go
+new file mode 100644
+index 00000000..7b35af73
+--- /dev/null
++++ b/services/control/internal/modules/applications/name_resolution.go
+@@ -0,0 +1,96 @@
++package applications
++
++import (
++	"context"
++	"strings"
++	"unicode"
++	"unicode/utf8"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"golang.org/x/text/unicode/norm"
++)
++
++// MaximumApplicationNameCharacters is the application contract's display-name bound.
++const MaximumApplicationNameCharacters = 120
++
++// ApplicationResolution contains current authorized candidates, never an action.
++// ApplicationID is populated only when the visible name resolves uniquely.
++type ApplicationResolution struct {
++	State         string        `json:"state"`
++	ApplicationID string        `json:"application_id,omitempty"`
++	Candidates    []Application `json:"candidates"`
++}
++
++// NormalizeApplicationName follows the writer's NFC display-name normalization.
++// Matching remains case-sensitive; the broader workflow name key is not reused.
++func NormalizeApplicationName(value string) (string, error) {
++	if !utf8.ValidString(value) {
++		return "", failure("VALIDATION_FAILED")
++	}
++	value = strings.TrimSpace(norm.NFC.String(value))
++	if value == "" || utf8.RuneCountInString(value) > MaximumApplicationNameCharacters || strings.ContainsFunc(value, unicode.IsControl) {
++		return "", failure("VALIDATION_FAILED")
++	}
++	return value, nil
++}
++
++// ResolveNameForAssistant resolves a visible name within current server scope.
++// It shares publication, membership and metadata-only auditing with ListForAssistant.
++// A name, including command-like text, is data and grants no execution authority.
++func (s *Service) ResolveNameForAssistant(ctx context.Context, actor identity.Auth, name, requestID string) (ApplicationResolution, error) {
++	name, err := NormalizeApplicationName(name)
++	if err != nil {
++		return ApplicationResolution{}, err
++	}
++	out := ApplicationResolution{State: "not_found", Candidates: []Application{}}
++	err = s.transaction(ctx, actor, assistantWorkspace(actor), &assistantRead{requestID: requestID, toolID: "find_application"},
++		func(ctx context.Context, tx transaction.Executor, workspace workspaces.Workspace) error {
++			if tx.Dialect() != transaction.PostgreSQL {
++				return failure("STORAGE_UNAVAILABLE")
++			}
++			configuration, err := s.Workflows.ConfigurationWithin(ctx, tx, actor, workspace.ID)
++			if err != nil {
++				return err
++			}
++			// Two matches suffice to refuse an implicit selection. C equality
++			// avoids locale-dependent case or accent equivalence.
++			rows, err := tx.Query(ctx, transaction.SQL(transaction.PostgreSQL, publishedApplicationsPostgreSQL+
++				` AND f.name COLLATE "C"=$3::text ORDER BY f.id LIMIT 2`, workspace.TenantID, workspace.ID, name))
++			if err != nil {
++				return err
++			}
++			defer rows.Close()
++			for rows.Next() {
++				app, err := scanApplication(rows)
++				if err != nil {
++					return err
++				}
++				app.CanExecute = configuration.Enabled && configuration.CanExecute
++				app.QuestionBytes = configuration.Limits.QuestionBytes
++				out.Candidates = append(out.Candidates, app)
++			}
++			if err := rows.Err(); err != nil {
++				return err
++			}
++			switch len(out.Candidates) {
++			case 1:
++				out.State, out.ApplicationID = "resolved", out.Candidates[0].WorkflowID
++			case 2:
++				out.State = "ambiguous"
++			}
++			return nil
++		})
++	if err != nil {
++		return ApplicationResolution{}, err
++	}
++	return out, nil
++}
++
++func scanApplication(row interface{ Scan(...any) error }) (Application, error) {
++	var app Application
++	err := row.Scan(&app.WorkflowID, &app.WorkspaceID, &app.Name, &app.VersionID, &app.VersionNumber, &app.GraphSHA256, &app.PublishedAt)
++	app.PublishedAt = app.PublishedAt.UTC()
++	return app, err
++}
+diff --git a/services/control/internal/modules/applications/projection.go b/services/control/internal/modules/applications/projection.go
+index aabe71fe..934ec7ce 100644
+--- a/services/control/internal/modules/applications/projection.go
++++ b/services/control/internal/modules/applications/projection.go
+@@ -9,6 +9,8 @@ import (
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/pagination"
+ )
+ 
++const publishedApplicationsPostgreSQL = `SELECT f.id::text,f.workspace_id::text,f.name,v.id::text,v.version_number,v.graph_sha256,v.published_at FROM workflows f JOIN workflow_versions v ON v.tenant_id=f.tenant_id AND v.workspace_id=f.workspace_id AND v.workflow_id=f.id AND v.id=f.current_version_id WHERE f.tenant_id=$1 AND f.workspace_id=$2 AND f.enabled`
++
+ // projectionQuery keeps each vendor's SQL explicit. Source authority is still
+ // rechecked by transaction and ConfigurationWithin before this query executes.
+ func projectionQuery(dialect transaction.Dialect, conversations bool, tenant, workspace, user, search string, cursor pagination.Cursor, limit int) (transaction.Statement, error) {
+@@ -34,7 +36,7 @@ func projectionQuery(dialect transaction.Dialect, conversations bool, tenant, wo
+ 		stamp, id = "v.published_at", "f.id"
+ 		switch dialect {
+ 		case transaction.PostgreSQL:
+-			query = `SELECT f.id::text,f.workspace_id::text,f.name,v.id::text,v.version_number,v.graph_sha256,v.published_at FROM workflows f JOIN workflow_versions v ON v.tenant_id=f.tenant_id AND v.workspace_id=f.workspace_id AND v.workflow_id=f.id AND v.id=f.current_version_id WHERE f.tenant_id=$1 AND f.workspace_id=$2 AND f.enabled`
++			query = publishedApplicationsPostgreSQL
+ 		case transaction.MySQL:
+ 			query = `SELECT f.id,f.workspace_id,f.name,v.id,v.version_number,v.graph_sha256,v.published_at FROM workflows f JOIN workflow_versions v ON v.tenant_id=f.tenant_id AND v.workspace_id=f.workspace_id AND v.workflow_id=f.id AND v.id=f.current_version_id WHERE f.tenant_id=? AND f.workspace_id=? AND f.enabled`
+ 		case transaction.Dameng:
+diff --git a/services/control/internal/modules/applications/service.go b/services/control/internal/modules/applications/service.go
+index a76f8607..04ba1632 100644
+--- a/services/control/internal/modules/applications/service.go
++++ b/services/control/internal/modules/applications/service.go
+@@ -105,11 +105,10 @@ func (s *Service) list(ctx context.Context, a identity.Auth, workspace string, v
+ 		}
+ 		defer rows.Close()
+ 		for rows.Next() {
+-			var app Application
+-			if e = rows.Scan(&app.WorkflowID, &app.WorkspaceID, &app.Name, &app.VersionID, &app.VersionNumber, &app.GraphSHA256, &app.PublishedAt); e != nil {
++			app, e := scanApplication(rows)
++			if e != nil {
+ 				return e
+ 			}
+-			app.PublishedAt = app.PublishedAt.UTC()
+ 			app.CanExecute = configuration.Enabled && configuration.CanExecute
+ 			app.QuestionBytes = configuration.Limits.QuestionBytes
+ 			out.Items = append(out.Items, app)
+diff --git a/services/control/internal/modules/distribution/README.md b/services/control/internal/modules/distribution/README.md
+index 4e9ace7f..0c1cf5f9 100644
+--- a/services/control/internal/modules/distribution/README.md
++++ b/services/control/internal/modules/distribution/README.md
+@@ -74,9 +74,22 @@ conflict requires reading the alias again before editing. Portal sees
+ the description on its authorized alias list and detail. Description
+ edits preserve the published target, route revision and existing keys.
+ 
+-The current PostgreSQL lineage still returns predecessor alias responses.
+-The candidate DDL, offline fixture and shared integration order are
+-recorded in the [description qualification](../../../../../docs/research/gateway-model-description.md).
++PostgreSQL migration 000059 installs these fields and the immutable edit
++intent table. Apply the normal schema upgrade and extend the existing
++restricted runtime principal before starting control. Predecessor schema
++58 keeps its original alias response and refuses description writes with
++`SERVICE_NOT_READY`. The [description qualification](../../../../../docs/research/gateway-model-description.md)
++records the exact migration and verification requirements.
++
++A pristine downgrade can remove the unused feature in one operator
++transaction with serving stopped. The script selects READ COMMITTED
++before locking. A transaction with a prior stronger-isolation snapshot
++refuses before DDL; roll it back and begin a fresh operator transaction.
++Any retained text, changed description
++revision or edit intent refuses downgrade with
++`MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE`. Clearing text retains
++its revision and replay history; restore a verified pre-upgrade backup
++through the normal recovery procedure to recover the predecessor instead.
+ 
+ ## Development checks
+ 
+diff --git a/services/control/internal/modules/distribution/alias_description_isolation_test.go b/services/control/internal/modules/distribution/alias_description_isolation_test.go
+new file mode 100644
+index 00000000..23cb265e
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_description_isolation_test.go
+@@ -0,0 +1,85 @@
++package distribution_test
++
++import (
++	"errors"
++	"testing"
++
++	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/Passion-Flow/ownsolid/services/control/migrations"
++	"github.com/jackc/pgx/v5"
++	"github.com/jackc/pgx/v5/pgconn"
++)
++
++func formalAliasDescriptionDown(t *testing.T) string {
++	t.Helper()
++	up, err := migrations.Files.ReadFile("postgresql/000059_model_alias_description.up.sql")
++	if err != nil || string(up) != aliasDescriptionCandidateUp {
++		t.Fatal("formal up script differs from the qualified fixture", err)
++	}
++	down, err := migrations.Files.ReadFile("postgresql/000059_model_alias_description.down.sql")
++	if err != nil || string(down) != aliasDescriptionCandidateDown {
++		t.Fatal("formal down script differs from the qualified fixture", err)
++	}
++	return string(down)
++}
++
++func TestAliasDescriptionRollbackRejectsPriorIsolationSnapshot(t *testing.T) {
++	for _, isolation := range []pgx.TxIsoLevel{pgx.RepeatableRead, pgx.Serializable} {
++		t.Run(string(isolation), func(t *testing.T) {
++			c := setupAccount(t, fixture.NewAtVersion(t, 58))
++			ctx := t.Context()
++			alias := c.published(t)
++			if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++				t.Fatal(err)
++			}
++			tx, err := c.s.DB.BeginTx(ctx, pgx.TxOptions{IsoLevel: isolation})
++			if err != nil {
++				t.Fatal(err)
++			}
++			defer tx.Rollback(ctx)
++			var initial string
++			if err := tx.QueryRow(ctx, "SELECT description FROM model_aliases WHERE id=$1", alias.ID).Scan(&initial); err != nil || initial != "" {
++				t.Fatal("pristine prior snapshot", initial, err)
++			}
++			const committed = "Retain text committed after the operator snapshot"
++			if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET description=$2 WHERE id=$1", alias.ID, committed); err != nil {
++				t.Fatal(err)
++			}
++			_, err = tx.Exec(ctx, formalAliasDescriptionDown(t))
++			var refusal *pgconn.PgError
++			if !errors.As(err, &refusal) || refusal.Code != "25001" {
++				t.Fatal("prior isolation snapshot did not refuse before DDL", err)
++			}
++			if err := tx.Rollback(ctx); err != nil {
++				t.Fatal(err)
++			}
++			var retained string
++			if err := c.s.DB.QueryRow(ctx, "SELECT description FROM model_aliases WHERE id=$1", alias.ID).Scan(&retained); err != nil || retained != committed {
++				t.Fatal("refused downgrade changed the committed writer state", retained, err)
++			}
++		})
++	}
++}
++
++func TestAliasDescriptionRollbackFreshIsolationPreservesRetainedState(t *testing.T) {
++	for _, isolation := range []pgx.TxIsoLevel{pgx.ReadCommitted, pgx.ReadUncommitted, pgx.RepeatableRead, pgx.Serializable} {
++		t.Run(string(isolation), func(t *testing.T) {
++			c := setupAccount(t, fixture.NewAtVersion(t, 58))
++			ctx := t.Context()
++			alias := c.published(t)
++			if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++				t.Fatal(err)
++			}
++			tx, err := c.s.DB.BeginTx(ctx, pgx.TxOptions{IsoLevel: isolation})
++			if err != nil {
++				t.Fatal(err)
++			}
++			defer tx.Rollback(ctx)
++			if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET description='Retain committed text' WHERE id=$1", alias.ID); err != nil {
++				t.Fatal(err)
++			}
++			_, err = tx.Exec(ctx, formalAliasDescriptionDown(t))
++			assertAliasDescriptionRollbackError(t, err)
++		})
++	}
++}
+diff --git a/services/control/internal/modules/distribution/alias_description_migration_test.go b/services/control/internal/modules/distribution/alias_description_migration_test.go
+new file mode 100644
+index 00000000..33d03827
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_description_migration_test.go
+@@ -0,0 +1,171 @@
++package distribution_test
++
++import (
++	"context"
++	"errors"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
++	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5/pgconn"
++)
++
++func applyAliasDescriptionRollback(t *testing.T, c scenario) error {
++	t.Helper()
++	ctx := t.Context()
++	tx, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		return err
++	}
++	defer tx.Rollback(ctx)
++	if _, err := tx.Exec(ctx, aliasDescriptionCandidateDown); err != nil {
++		return err
++	}
++	return tx.Commit(ctx)
++}
++
++func aliasDescriptionRetainedState(t *testing.T, c scenario) string {
++	t.Helper()
++	var state string
++	if err := c.s.DB.QueryRow(t.Context(), `SELECT jsonb_build_object(
++        'aliases',(SELECT jsonb_agg(to_jsonb(a) ORDER BY id) FROM model_aliases a),
++        'intents',(SELECT jsonb_agg(to_jsonb(i) ORDER BY tenant_id,workspace_id,actor_user_id,idempotency_key)
++          FROM model_alias_description_intents i))::text`).Scan(&state); err != nil {
++		t.Fatal(err)
++	}
++	return state
++}
++
++func assertAliasDescriptionRollbackError(t *testing.T, err error) {
++	t.Helper()
++	var pgErr *pgconn.PgError
++	if !errors.As(err, &pgErr) || pgErr.Code != "55000" || pgErr.Message != "MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE" {
++		t.Fatalf("expected retained description downgrade refusal, got %v", err)
++	}
++}
++
++func assertAliasDescriptionRollbackRefused(t *testing.T, c scenario) {
++	t.Helper()
++	before := aliasDescriptionRetainedState(t, c)
++	for range 2 {
++		assertAliasDescriptionRollbackError(t, applyAliasDescriptionRollback(t, c))
++		if after := aliasDescriptionRetainedState(t, c); after != before {
++			t.Fatal("refused downgrade changed descriptions or retained replay intents")
++		}
++	}
++}
++
++func TestAliasDescriptionRollbackPreservesRetainedState(t *testing.T) {
++	for _, mode := range []string{"pristine", "published_text", "cleared_revision", "retained_intent"} {
++		t.Run(mode, func(t *testing.T) {
++			c := setupAccount(t, fixture.NewAtVersion(t, 58))
++			ctx := t.Context()
++			alias := c.published(t)
++			var predecessorCatalog string
++			if err := c.s.DB.QueryRow(ctx, database.CatalogSQL).Scan(&predecessorCatalog); err != nil {
++				t.Fatal(err)
++			}
++			if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++				t.Fatal(err)
++			}
++			switch mode {
++			case "published_text":
++				// Explicit fixture state isolates the publication text predicate at revision 1.
++				if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET description='Retain published intent' WHERE id=$1", alias.ID); err != nil {
++					t.Fatal(err)
++				}
++			case "cleared_revision":
++				// Empty visible text still carries an independent concurrency revision.
++				if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET description_revision=2 WHERE id=$1", alias.ID); err != nil {
++					t.Fatal(err)
++				}
++			case "retained_intent":
++				// The valid scoped intent must independently prevent destruction.
++				if _, err := c.s.DB.Exec(ctx, `INSERT INTO model_alias_description_intents
++                    (tenant_id,workspace_id,actor_user_id,idempotency_key,alias_id,result_revision,fingerprint)
++                    VALUES($1,$2,$3,$4,$5,1,$6)`, c.a.Me.Workspace.TenantID, alias.WorkspaceID,
++					c.a.Me.User.ID, uuid.NewString(), alias.ID, make([]byte, 32)); err != nil {
++					t.Fatal(err)
++				}
++			}
++			if mode != "pristine" {
++				assertAliasDescriptionRollbackRefused(t, c)
++				return
++			}
++			if err := applyAliasDescriptionRollback(t, c); err != nil {
++				t.Fatal(err)
++			}
++			var restoredCatalog string
++			if err := c.s.DB.QueryRow(ctx, database.CatalogSQL).Scan(&restoredCatalog); err != nil || restoredCatalog != predecessorCatalog {
++				t.Fatal("pristine downgrade did not restore the exact predecessor catalog", err)
++			}
++			got, err := c.s.Alias(ctx, c.a, alias.WorkspaceID, alias.ID)
++			if err != nil || got.ID != alias.ID || got.Revision != alias.Revision || got.DeploymentID != alias.DeploymentID ||
++				got.DeploymentRevision != alias.DeploymentRevision || got.Description != nil || got.DescriptionRevision != nil {
++				t.Fatal("pristine downgrade changed the retained alias", err)
++			}
++		})
++	}
++}
++
++func TestAliasDescriptionRollbackWaitsForCommittedWriter(t *testing.T) {
++	c := setupAccount(t, fixture.NewAtVersion(t, 58))
++	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
++	defer cancel()
++	alias := c.published(t)
++	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++		t.Fatal(err)
++	}
++	writer, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer writer.Rollback(ctx)
++	if _, err := writer.Exec(ctx, "UPDATE model_aliases SET description='Committed while downgrade waits' WHERE id=$1", alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	downgrade, err := c.s.DB.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer downgrade.Rollback(ctx)
++	pid := downgrade.Conn().PgConn().PID()
++	result := make(chan error, 1)
++	go func() {
++		_, err := downgrade.Exec(ctx, aliasDescriptionCandidateDown)
++		if err == nil {
++			err = downgrade.Commit(ctx)
++		} else {
++			_ = downgrade.Rollback(ctx)
++		}
++		result <- err
++	}()
++	ticker := time.NewTicker(10 * time.Millisecond)
++	defer ticker.Stop()
++	for {
++		var waiting bool
++		if err := c.s.DB.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE pid=$1 AND wait_event_type='Lock')", pid).Scan(&waiting); err != nil {
++			t.Fatal(err)
++		}
++		if waiting {
++			break
++		}
++		select {
++		case err := <-result:
++			t.Fatalf("downgrade did not wait for the active writer: %v", err)
++		case <-ctx.Done():
++			t.Fatal("downgrade did not reach its table lock", ctx.Err())
++		case <-ticker.C:
++		}
++	}
++	if err := writer.Commit(ctx); err != nil {
++		t.Fatal(err)
++	}
++	assertAliasDescriptionRollbackError(t, <-result)
++	var description string
++	if err := c.s.DB.QueryRow(ctx, "SELECT description FROM model_aliases WHERE id=$1", alias.ID).Scan(&description); err != nil || description != "Committed while downgrade waits" {
++		t.Fatal("downgrade lost the writer committed before its lock", err)
++	}
++}
+diff --git a/services/control/internal/modules/distribution/alias_description_test.go b/services/control/internal/modules/distribution/alias_description_test.go
+index 4f5ca839..962933f8 100644
+--- a/services/control/internal/modules/distribution/alias_description_test.go
++++ b/services/control/internal/modules/distribution/alias_description_test.go
+@@ -15,6 +15,7 @@ import (
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
+ 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+ 	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+@@ -31,7 +32,20 @@ var aliasDescriptionCandidateUp string
+ var aliasDescriptionCandidateDown string
+ 
+ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
++	c := setupAccount(t, fixture.NewAtVersion(t, 58))
++	exerciseAliasDescriptionHTTPS(t, c, false)
++}
++
++func TestAliasDescriptionInstalledSchemaAndHTTPS(t *testing.T) {
++	if database.SchemaVersion == 58 {
++		t.Skip("requires the production description migration after schema 58")
++	}
+ 	c := setup(t)
++	exerciseAliasDescriptionHTTPS(t, c, true)
++}
++
++func exerciseAliasDescriptionHTTPS(t *testing.T, c scenario, installed bool) {
++	t.Helper()
+ 	ctx := t.Context()
+ 	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
+ 	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
+@@ -61,11 +75,15 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 	legacyID := legacy["id"].(string)
+ 	portal.Call("GET", portalPath+"/"+legacyID, nil, 200, "ModelAliasResponse")
+ 	portal.Call("GET", portalPath, nil, 200, "ModelAliasPageResponse")
+-	if _, exists := legacy["description"]; exists {
+-		t.Fatal("predecessor response gained a field")
+-	}
+-	if _, exists := legacy["description_revision"]; exists {
+-		t.Fatal("predecessor response gained a description revision")
++	if !installed {
++		if _, exists := legacy["description"]; exists {
++			t.Fatal("predecessor response gained a field")
++		}
++		if _, exists := legacy["description_revision"]; exists {
++			t.Fatal("predecessor response gained a description revision")
++		}
++	} else if legacy["description"] != "" || legacy["description_revision"] != float64(1) {
++		t.Fatal("normal migrated publication did not include description defaults")
+ 	}
+ 	problem := func(client *httpfixture.Client, path string, body any, status int, code string) {
+ 		t.Helper()
+@@ -77,34 +95,37 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 	edit := distribution.AliasDescriptionEdit{Description: "Initial edit", ExpectedDescriptionRevision: 1, Reason: "Synthetic catalogue edit"}
+ 	admin.Headers["Idempotency-Key"] = uuid.NewString()
+ 	predecessorEditPath := adminPath + "/" + legacyID + "/description"
+-	problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
+-	anonymous := httpfixture.New(t, server, "admin", schemas)
+-	if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
+-		t.Fatal("unauthenticated edit did not return the standard problem")
+-	}
+-	problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
+-	predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
+-	predecessorResponse, err := server.Client().Do(predecessorRequest)
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	var predecessorProblem map[string]any
+-	decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
+-	predecessorResponse.Body.Close()
+-	if decodeError != nil || predecessorResponse.StatusCode != 503 ||
+-		predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
+-		predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
+-		predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
+-		predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
+-		t.Fatal("invalid predecessor response or retry metadata", decodeError)
+-	}
+-	publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
+-	admin.Headers["Idempotency-Key"] = describedKey
+-	problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
++	if !installed {
++		problem(admin, predecessorEditPath, edit, 503, "SERVICE_NOT_READY")
++		anonymous := httpfixture.New(t, server, "admin", schemas)
++		if got := anonymous.Call("POST", predecessorEditPath, edit, 403, "Problem"); got["code"] != "CSRF_INVALID" {
++			t.Fatal("unauthenticated edit did not return the standard problem")
++		}
++		problem(anonymous, predecessorEditPath, edit, 401, "AUTH_REQUIRED")
++		predecessorRequest := descriptionEditRequest(t, c, server, "admin@example.invalid", c.password, predecessorEditPath, edit.Description)
++		predecessorResponse, err := server.Client().Do(predecessorRequest)
++		if err != nil {
++			t.Fatal(err)
++		}
++		var predecessorProblem map[string]any
++		decodeError := json.NewDecoder(predecessorResponse.Body).Decode(&predecessorProblem)
++		predecessorResponse.Body.Close()
++		if decodeError != nil || predecessorResponse.StatusCode != 503 ||
++			predecessorResponse.Header.Get("Content-Type") != "application/problem+json" ||
++			predecessorResponse.Header.Get("Retry-After") != strconv.Itoa(c.s.Identity.Config.Policy().HTTP.ServiceUnavailableRetrySeconds) ||
++			predecessorResponse.Header.Get("X-Request-ID") == "" || predecessorProblem["request_id"] != predecessorResponse.Header.Get("X-Request-ID") ||
++			predecessorProblem["code"] != "SERVICE_NOT_READY" || schemas["Problem"].Validate(predecessorProblem) != nil {
++			t.Fatal("invalid predecessor response or retry metadata", decodeError)
++		}
++		publish["name"], publish["description"] = "described-alias", "  Use for comparisons.\r\nSecond line.  "
++		admin.Headers["Idempotency-Key"] = describedKey
++		problem(admin, adminPath, publish, 503, "SERVICE_NOT_READY")
+ 
+-	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
+-		t.Fatal(err)
++		if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateUp); err != nil {
++			t.Fatal(err)
++		}
+ 	}
++
+ 	assertDescription := func(value map[string]any, description string, revision int) {
+ 		t.Helper()
+ 		if value["description"] != description || value["description_revision"] != float64(revision) {
+@@ -352,10 +373,13 @@ func TestAliasDescriptionPostgreSQLUpgradeAndHTTPS(t *testing.T) {
+ 		t.Fatal("edit intents and audit events disagree", intents, audits, err)
+ 	}
+ 
+-	if _, err := c.s.DB.Exec(ctx, aliasDescriptionCandidateDown); err != nil {
+-		t.Fatal(err)
++	assertAliasDescriptionRollbackRefused(t, c)
++	assertDescription(member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse"), "", 4)
++	admin.Headers["Idempotency-Key"] = rollbackKey
++	if replay := admin.Write("POST", editPath, clear, 200, "AliasDescriptionResultResponse"); replay["replayed"] != true || replay["applied_description_revision"] != float64(4) {
++		t.Fatal("refused downgrade lost the retained edit replay")
+ 	}
+-	member.Call("GET", portalPath+"/"+id, nil, 200, "ModelAliasResponse")
++	assertRoute(3, 3)
+ }
+ 
+ func verifyAliasDescriptionScope(t *testing.T, c scenario, aliasID string) {
+diff --git a/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql b/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
+index 5362f5e9..2bf00871 100644
+--- a/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
++++ b/services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql
+@@ -1,3 +1,13 @@
++-- Run in one operator transaction with serving stopped.
++SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
++LOCK TABLE model_aliases, model_alias_description_intents IN ACCESS EXCLUSIVE MODE;
++DO $$
++BEGIN
++ IF EXISTS(SELECT 1 FROM model_aliases WHERE description <> '' OR description_revision <> 1)
++   OR EXISTS(SELECT 1 FROM model_alias_description_intents) THEN
++  RAISE EXCEPTION 'MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE' USING ERRCODE='55000';
++ END IF;
++END $$;
+ DROP TABLE model_alias_description_intents;
+ ALTER TABLE model_aliases
+  DROP CONSTRAINT model_alias_description_scope_key,
+diff --git a/services/control/internal/modules/productagent/README.md b/services/control/internal/modules/productagent/README.md
+index 59f93e78..3cb3c31d 100644
+--- a/services/control/internal/modules/productagent/README.md
++++ b/services/control/internal/modules/productagent/README.md
+@@ -11,11 +11,19 @@ records the built-in assistant actor, real user subject, authorized workspace,
+ request ID and registered command ID before returning the result.
+ 
+ The English and Simplified Chinese aliases are compiled into the binary.
+-`Commands` returns exact phrases from those same tables for `en` and `zh-CN`
++`Commands` returns phrases and quoted-name examples from those same tables for `en` and `zh-CN`
+ after checking the current session. It filters by entrance and is empty when
+ the authenticated context has no workspace. Command execution needs a
+ workspace until the shared audit owner supports global scope. A command
+-matches one complete alias after case and space normalization. The service
++matches one complete alias after case and space normalization. `find application
++"Application name"` and its Chinese template accept one complete JSON string.
++Only the prefix is case/space normalized; the name uses exact NFC equality in
++the current Portal workspace. `application_resolution` returns `resolved`,
++`not_found` or `ambiguous`, at most two authorized candidates, and an
++`application_id` only for a unique published match. Names are never commands
++or authorization. The lookup reuses the reviewed application-list permission
++and rejects pagination cursors. See [name resolution](../../../../../docs/research/product-assistant-name-resolution.md).
++The service
+ works offline with fixed routes and typed reads. See the
+ [entry-point and audit handoff](../../../../../docs/research/app-lane-questions.md)
+ for the remaining browser, HTTP and confirmed mutation work.
+@@ -39,7 +47,7 @@ reads and reversible writes are denied by this dispatcher. See the
+ [risk tiers](../../../../../docs/research/product-assistant-risk-tiers.md)
+ and [write confirmation](../../../../../docs/research/product-assistant-write-confirmation.md).
+ 
+-The two assistant reads remove Unicode directional controls and mask known
++Assistant projections remove Unicode directional controls and mask known
+ model keys and gateway credentials in display names. The stored names and ordinary Portal projections
+ retain their existing values. See [result redaction](../../../../../docs/research/product-assistant-result-redaction.md).
+ 
+@@ -109,7 +117,9 @@ GOPROXY=off GOSUMDB=off go -C services/control test -p=1 \
+ ```
+ 
+ Select `^TestDurableExecutionRuns$` with the same fixture inputs for the
+-persistent guard. Select `^TestAuthenticatedGuardedAssistantHTTP$` in the
++persistent guard. Select `^TestApplicationNameResolution` for exact-name reads,
++changed-name retries, audit refusal, revoked access and final result fences.
++Select `^TestAuthenticatedGuardedAssistantHTTP$` in the
+ HTTP overlay command below for real TLS, CSRF and policy admission tests.
+ 
+ ## Tests
+diff --git a/services/control/internal/modules/productagent/admission.go b/services/control/internal/modules/productagent/admission.go
+index b2730409..ec398460 100644
+--- a/services/control/internal/modules/productagent/admission.go
++++ b/services/control/internal/modules/productagent/admission.go
+@@ -40,7 +40,14 @@ const (
+ // operation still verifies the session and workspace in its own transaction.
+ func (s *Service) admit(cmd command, actor identity.Auth, cursor string) (string, error) {
+ 	var path string
+-	policy, hasTool := s.tools[cmd.id]
++	toolID := cmd.id
++	if cmd.readTool != "" {
++		toolID = cmd.readTool
++	}
++	policy, hasTool := s.tools[toolID]
++	if cmd.nameArgument && cursor != "" {
++		return "", ErrInvalidCommand
++	}
+ 	switch cmd.risk {
+ 	case riskNavigate:
+ 		path = cmd.destination(actor.Me.Audience)
+diff --git a/services/control/internal/modules/productagent/commands.go b/services/control/internal/modules/productagent/commands.go
+index 2688df2f..dcf37eb8 100644
+--- a/services/control/internal/modules/productagent/commands.go
++++ b/services/control/internal/modules/productagent/commands.go
+@@ -9,21 +9,27 @@ import (
+ 	"strings"
+ 	"unicode"
+ 	"unicode/utf8"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
+ )
+ 
+ // MaxCommandBytes bounds the command language at its input boundary.
+ const MaxCommandBytes = 128
+ 
+ type command struct {
+-	id     string
+-	risk   riskTier
+-	admin  string
+-	portal string
++	id              string
++	risk            riskTier
++	admin           string
++	portal          string
++	readTool        string
++	nameArgument    bool
++	applicationName string
+ }
+ 
+ const (
+ 	listApplications  = "list_applications"
+ 	listConversations = "list_conversations"
++	findApplication   = "find_application"
+ )
+ 
+ var commands = map[string]command{
+@@ -38,18 +44,20 @@ var commands = map[string]command{
+ 	"open_support":        {risk: riskNavigate, admin: "/support", portal: "/support"},
+ 	listApplications:      {risk: riskRead},
+ 	listConversations:     {risk: riskRead},
++	findApplication:       {risk: riskRead, readTool: listApplications, nameArgument: true},
+ }
+ 
+ //go:embed locales/*/commands.json
+ var locales embed.FS
+ 
+ type commandCatalog struct {
+-	aliases map[string]command
+-	locales map[string]map[string][]string
++	aliases      map[string]command
++	namePrefixes map[string]command
++	locales      map[string]map[string][]string
+ }
+ 
+ func loadCommands(source fs.FS) (commandCatalog, error) {
+-	catalog := commandCatalog{aliases: make(map[string]command), locales: make(map[string]map[string][]string)}
++	catalog := commandCatalog{aliases: make(map[string]command), namePrefixes: make(map[string]command), locales: make(map[string]map[string][]string)}
+ 	for _, locale := range []struct{ tag, path string }{
+ 		{"en", "locales/en/commands.json"},
+ 		{"zh-CN", "locales/zh-cn/commands.json"},
+@@ -68,6 +76,22 @@ func loadCommands(source fs.FS) (commandCatalog, error) {
+ 			}
+ 			definition.id = id
+ 			for _, phrase := range local[id] {
++				if definition.nameArgument {
++					at := strings.IndexByte(phrase, '"')
++					var example string
++					if at < 1 || json.Unmarshal([]byte(phrase[at:]), &example) != nil {
++						return commandCatalog{}, fmt.Errorf("invalid name template for %q", id)
++					}
++					if _, err := applications.NormalizeApplicationName(example); err != nil {
++						return commandCatalog{}, err
++					}
++					prefix := normalize(phrase[:at])
++					if _, exists := catalog.namePrefixes[prefix]; prefix == "" || exists {
++						return commandCatalog{}, fmt.Errorf("invalid or duplicate name prefix for %q", id)
++					}
++					catalog.namePrefixes[prefix] = definition
++					continue
++				}
+ 				normalized := normalize(phrase)
+ 				if _, exists := catalog.aliases[normalized]; normalized == "" || exists {
+ 					return commandCatalog{}, fmt.Errorf("invalid or duplicate alias for %q in %s", id, locale.path)
+@@ -80,9 +104,53 @@ func loadCommands(source fs.FS) (commandCatalog, error) {
+ 		}
+ 		catalog.locales[locale.tag] = local
+ 	}
++	for prefix := range catalog.namePrefixes {
++		if _, exists := catalog.aliases[prefix]; exists {
++			return commandCatalog{}, fmt.Errorf("name prefix conflicts with a fixed alias")
++		}
++	}
+ 	return catalog, nil
+ }
+ 
++// A Unicode scalar can use two six-byte JSON surrogate escapes. Bound the
++// transport representation without narrowing the name contract's rune bound.
++const maximumNameCommandBytes = MaxCommandBytes + 12*applications.MaximumApplicationNameCharacters + 2
++
++func (s *Service) resolveCommand(input string) (command, error) {
++	if len(input) > maximumNameCommandBytes || !utf8.ValidString(input) {
++		return command{}, ErrInvalidCommand
++	}
++	if at := strings.IndexByte(input, '"'); at >= 0 {
++		if cmd, exists := s.catalog.namePrefixes[normalize(input[:at])]; exists {
++			var name string
++			if err := json.Unmarshal([]byte(input[at:]), &name); err != nil {
++				return command{}, ErrInvalidCommand
++			}
++			name, err := applications.NormalizeApplicationName(name)
++			if err != nil {
++				return command{}, ErrInvalidCommand
++			}
++			cmd.applicationName = name
++			return cmd, nil
++		}
++	}
++	normalized := normalize(input)
++	if normalized == "" {
++		return command{}, ErrInvalidCommand
++	}
++	if cmd, ok := s.catalog.aliases[normalized]; ok {
++		return cmd, nil
++	}
++	return command{}, ErrUnknownCommand
++}
++
++func (c command) fingerprint(cursor string) string {
++	if c.nameArgument {
++		return executionDigest("application_name_v1", c.id, c.applicationName, cursor)
++	}
++	return commandFingerprint(c.id, cursor)
++}
++
+ func normalize(input string) string {
+ 	if len(input) > MaxCommandBytes || !utf8.ValidString(input) {
+ 		return ""
+diff --git a/services/control/internal/modules/productagent/execution_run.go b/services/control/internal/modules/productagent/execution_run.go
+index 4e2e1077..b08d2740 100644
+--- a/services/control/internal/modules/productagent/execution_run.go
++++ b/services/control/internal/modules/productagent/execution_run.go
+@@ -124,7 +124,7 @@ func (r *ExecutionRuns) RunCommand(ctx context.Context, actor identity.Auth, run
+ 	if err != nil {
+ 		return Result{}, err
+ 	}
+-	execution := BudgetExecution{ID: executionID, ExecutionSHA256: commandFingerprint(cmd.id, cursor)}
++	execution := BudgetExecution{ID: executionID, ExecutionSHA256: cmd.fingerprint(cursor)}
+ 	if err := r.claim(ctx, actor, runID, execution, cmd.id); err != nil {
+ 		return Result{}, err
+ 	}
+@@ -170,7 +170,7 @@ func (r *ExecutionRuns) RunCommandForRequest(ctx context.Context, actor identity
+ 	}
+ 	ctx, cancel := context.WithTimeout(ctx, config.Seconds(commands.identity.Config.Policy().HTTP.RequestSeconds))
+ 	defer cancel()
+-	fingerprint := commandFingerprint(cmd.id, cursor)
++	fingerprint := cmd.fingerprint(cursor)
+ 	err = r.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
+ 		policy, err := r.budgets.readPolicy(ctx, tx, subject)
+ 		if err != nil {
+@@ -205,9 +205,9 @@ func executionDigest(fields ...string) string {
+ }
+ 
+ func (s *Service) admitRunCommand(actor identity.Auth, input, cursor string) (command, error) {
+-	cmd, ok := s.catalog.aliases[normalize(input)]
+-	if !ok {
+-		return command{}, ErrUnknownCommand
++	cmd, err := s.resolveCommand(input)
++	if err != nil {
++		return command{}, err
+ 	}
+ 	if _, err := s.admit(cmd, actor, cursor); err != nil {
+ 		return command{}, err
+diff --git a/services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go b/services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go
+index bcf502bf..a87371fa 100644
+--- a/services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go
++++ b/services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go
+@@ -4,6 +4,7 @@ package http_test
+ 
+ import (
+ 	"context"
++	"encoding/json"
+ 	"errors"
+ 	"net/http"
+ 	"os"
+@@ -15,6 +16,7 @@ import (
+ 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent"
+ 	productagenthttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/productagent/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+@@ -136,6 +138,42 @@ func TestAuthenticatedGuardedAssistantHTTP(t *testing.T) {
+ 				if result := client.call(t, http.MethodPost, commandPath, `{"command":"show applications"}`, nil).result(t); result.Applications == nil {
+ 					t.Fatal("guarded typed read did not run without a model")
+ 				}
++				actor, err := owner.Authenticate(ctx, token, audience)
++				if err != nil || actor.Me.Workspace == nil {
++					t.Fatalf("lookup authentication: %v", err)
++				}
++				const name = "HTTP Caf\u00e9 \u5e94\u7528  %_\"quoted\""
++				app, err := dispatcher.Workflows.Service.Create(ctx, actor, workflows.CreateRequest{
++					WorkspaceID: actor.Me.Workspace.ID, Name: name, Reason: "Seed guarded name lookup",
++				}, uuid.NewString(), uuid.NewString())
++				if err != nil {
++					t.Fatal(err)
++				}
++				version := uuid.NewString()
++				if _, err := owner.DB.Exec(ctx, `INSERT INTO workflow_versions(id,tenant_id,workspace_id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by)
++SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_by FROM workflows WHERE id=$2`, version, app.ID); err != nil {
++					t.Fatal(err)
++				}
++				if _, err := owner.DB.Exec(ctx, `UPDATE workflows SET current_version_id=$1 WHERE id=$2`, version, app.ID); err != nil {
++					t.Fatal(err)
++				}
++				for _, prefix := range []string{"find application", "\u67e5\u627e\u5e94\u7528"} {
++					argument, _ := json.Marshal(name)
++					body, _ := json.Marshal(map[string]string{"command": prefix + " " + string(argument)})
++					reply := client.call(t, http.MethodPost, commandPath, string(body), nil)
++					result := reply.result(t)
++					if result.ApplicationResolution == nil || result.ApplicationResolution.State != "resolved" || result.ApplicationResolution.ApplicationID != app.ID || result.Path != "" {
++						t.Fatalf("guarded name lookup: %+v", result)
++					}
++					if err := owner.DB.QueryRow(ctx, `SELECT count(*) FROM product_agent_steps s JOIN audit_events a ON a.request_id=s.id
++WHERE s.id=$1 AND s.state='completed' AND a.action='product_assistant.find_application'`, reply.id).Scan(&count); err != nil || count != 1 {
++						t.Fatalf("guarded lookup checkpoint and audit: %d, %v", count, err)
++					}
++					enabled.Store(false)
++					assertDenied(string(body), 403, "ACCESS_DENIED", nil)
++					enabled.Store(true)
++				}
++				assertDenied(`{"command":"find application \"missing\"","cursor":"caller continuation"}`, 400, "VALIDATION_FAILED", nil)
+ 			}
+ 		})
+ 	}
+diff --git a/services/control/internal/modules/productagent/locales/en/commands.json b/services/control/internal/modules/productagent/locales/en/commands.json
+index 09d4c7f4..1ca3a59e 100644
+--- a/services/control/internal/modules/productagent/locales/en/commands.json
++++ b/services/control/internal/modules/productagent/locales/en/commands.json
+@@ -9,5 +9,6 @@
+   "open_keys": ["open keys", "open api keys"],
+   "open_support": ["open support"],
+   "list_applications": ["show applications", "list applications"],
+-  "list_conversations": ["show conversations", "list conversations"]
++  "list_conversations": ["show conversations", "list conversations"],
++  "find_application": ["find application \"Application name\""]
+ }
+diff --git a/services/control/internal/modules/productagent/locales/zh-cn/commands.json b/services/control/internal/modules/productagent/locales/zh-cn/commands.json
+index 66166ab4..f60262fb 100644
+--- a/services/control/internal/modules/productagent/locales/zh-cn/commands.json
++++ b/services/control/internal/modules/productagent/locales/zh-cn/commands.json
+@@ -9,5 +9,6 @@
+   "open_keys": ["打开密钥", "打开接口密钥"],
+   "open_support": ["打开支持范围"],
+   "list_applications": ["查看应用", "列出应用"],
+-  "list_conversations": ["查看会话", "列出会话"]
++  "list_conversations": ["查看会话", "列出会话"],
++  "find_application": ["查找应用 \"应用名称\""]
+ }
+diff --git a/services/control/internal/modules/productagent/name_commands_repository_integration_test.go b/services/control/internal/modules/productagent/name_commands_repository_integration_test.go
+new file mode 100644
+index 00000000..77598ba8
+--- /dev/null
++++ b/services/control/internal/modules/productagent/name_commands_repository_integration_test.go
+@@ -0,0 +1,196 @@
++//go:build repository_integration
++
++package productagent
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"strings"
++	"sync/atomic"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++)
++
++func (g *executionRunFixture) publishNamedApplication(t *testing.T, name string) string {
++	t.Helper()
++	flow := g.gates[0].commands.applications.Workflows
++	resource, err := flow.Create(g.ctx, g.actors[1], workflows.CreateRequest{WorkspaceID: g.f.Workspace, Name: name, Reason: "Owned name-resolution fixture"}, uuid.NewString(), uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	version := uuid.NewString()
++	g.exec(`INSERT INTO workflow_versions(id,tenant_id,workspace_id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by) SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_by FROM workflows WHERE id=$2`, version, resource.ID)
++	g.exec(`UPDATE workflows SET current_version_id=$1 WHERE id=$2`, version, resource.ID)
++	return resource.ID
++}
++
++func TestApplicationNameResolutionWithDurableRun(t *testing.T) {
++	g := newExecutionRunFixture(t)
++	lookup := func(prefix, name string) (Result, string, error) {
++		encoded, _ := json.Marshal(name)
++		id := uuid.NewString()
++		result, err := g.runs[0].RunCommandForRequest(g.ctx, g.actors[1], prefix+" "+string(encoded), "", id)
++		return result, id, err
++	}
++	const label = "Caf\u00e9 \u5e73\u53f0  100%_\"x\""
++	app := g.publishNamedApplication(t, label)
++	for _, prefix := range []string{"find application", "\u67e5\u627e\u5e94\u7528"} {
++		result, id, err := lookup(prefix, " Cafe\u0301 \u5e73\u53f0  100%_\"x\" ")
++		if err != nil || result.ApplicationResolution == nil || result.ApplicationResolution.State != "resolved" || result.ApplicationResolution.ApplicationID != app || len(result.ApplicationResolution.Candidates) != 1 {
++			t.Fatalf("canonical lookup: %+v, %v", result, err)
++		}
++		g.audit(t, id, 1)
++		g.step(t, id, "completed")
++		var leaked int
++		if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT count(*) FROM audit_events WHERE request_id=$1 AND position($2 IN metadata::text)>0`, id, "100%_").Scan(&leaked); err != nil || leaked != 0 {
++			t.Fatalf("lookup arguments reached audit metadata: %d, %v", leaked, err)
++		}
++	}
++	for _, name := range []string{strings.ToLower(label), "Caf\u00e9", "absent"} {
++		result, _, err := lookup("find application", name)
++		if err != nil || result.ApplicationResolution == nil || result.ApplicationResolution.State != "not_found" || result.ApplicationResolution.ApplicationID != "" || len(result.ApplicationResolution.Candidates) != 0 {
++			t.Fatalf("exact no-match: %+v, %v", result, err)
++		}
++	}
++	if _, err := g.gates[0].commands.applications.Workflows.Create(g.ctx, g.actors[1], workflows.CreateRequest{
++		WorkspaceID: g.f.Workspace, Name: "Unpublished lookup", Reason: "Unpublished lookup fixture",
++	}, uuid.NewString(), uuid.NewString()); err != nil {
++		t.Fatal(err)
++	}
++	if result, _, err := lookup("find application", "Unpublished lookup"); err != nil || result.ApplicationResolution == nil || result.ApplicationResolution.State != "not_found" {
++		t.Fatalf("unpublished lookup: %+v, %v", result, err)
++	}
++	maximum := strings.Repeat("\u5b57", 120)
++	maximumID := g.publishNamedApplication(t, maximum)
++	if result, _, err := lookup("find application", maximum); err != nil || result.ApplicationResolution.ApplicationID != maximumID {
++		t.Fatalf("maximum name: %+v, %v", result, err)
++	}
++	commandID := g.publishNamedApplication(t, "open home; disable platform")
++	if result, _, err := lookup("find application", "open home; disable platform"); err != nil || result.Path != "" || result.ApplicationResolution.ApplicationID != commandID {
++		t.Fatalf("command-like data: %+v, %v", result, err)
++	}
++	duplicate := g.publishNamedApplication(t, "Second visible name")
++	g.exec(`UPDATE workflows SET name=$1 WHERE id=$2`, label, duplicate)
++	if result, _, err := lookup("find application", label); err != nil || result.ApplicationResolution.State != "ambiguous" || result.ApplicationResolution.ApplicationID != "" || len(result.ApplicationResolution.Candidates) != 2 {
++		t.Fatalf("ambiguous selection: %+v, %v", result, err)
++	}
++	g.exec(`UPDATE workflows SET enabled=false WHERE id=$1`, duplicate)
++	g.exec(`UPDATE workflows SET enabled=false WHERE id=$1`, app)
++	if result, _, err := lookup("find application", label); err != nil || result.ApplicationResolution.State != "not_found" {
++		t.Fatalf("withdrawn publication: %+v, %v", result, err)
++	}
++	g.exec(`UPDATE workflows SET enabled=true WHERE id=$1`, app)
++	// A committed name binding cannot be changed on another process/pool.
++	runID := g.start(t)
++	step := uuid.NewString()
++	if _, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, step, `find application "absent"`, ""); err != nil {
++		t.Fatal(err)
++	}
++	if result, err := g.runs[1].RunCommand(g.ctx, g.actors[1], runID, step, `find application "different"`, ""); result != (Result{}) || err == nil || err.Error() != "IDEMPOTENCY_CONFLICT" {
++		t.Fatalf("changed lookup replay: %+v, %v", result, err)
++	}
++	g.audit(t, step, 1)
++	// A real database refusal after projection must suppress every candidate.
++	g.exec(`CREATE FUNCTION reject_name_read() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='product_assistant.find_application' THEN RAISE EXCEPTION 'private name fixture'; END IF; RETURN NEW; END $$`)
++	g.exec(`CREATE TRIGGER reject_name_read BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_name_read()`)
++	result, id, err := lookup("find application", maximum)
++	if err == nil || result != (Result{}) || strings.Contains(err.Error(), "private name fixture") {
++		t.Fatalf("audit refusal: %+v, %v", result, err)
++	}
++	g.audit(t, id, 0)
++	g.exec(`DROP TRIGGER reject_name_read ON audit_events`)
++	// Scope is rechecked, even when a caller supplies an internal Auth value.
++	foreignTenant, foreignWorkspace := uuid.NewString(), uuid.NewString()
++	g.exec(`INSERT INTO tenants(id,name,status) VALUES($1,'Lookup foreign tenant','active')`, foreignTenant)
++	g.exec(`INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Lookup foreign workspace','active')`, foreignWorkspace, foreignTenant)
++	actor := g.actors[1]
++	actor.Me.Workspace = &identity.Workspace{ID: foreignWorkspace, TenantID: foreignTenant}
++	if result, err := g.runs[0].RunCommandForRequest(g.ctx, actor, `find application "absent"`, "", uuid.NewString()); result != (Result{}) || err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++		t.Fatalf("foreign lookup: %+v, %v", result, err)
++	}
++	policy := *g.policy.Load()
++	policy.User.Executions = 0
++	g.policy.Store(&policy)
++	if result, _, err := lookup("find application", maximum); result != (Result{}) || !errors.Is(err, ErrBudgetExceeded) {
++		t.Fatalf("exhausted lookup: %+v, %v", result, err)
++	}
++	policy.User.Executions = 100
++	g.policy.Store(&policy)
++	g.exec(`DELETE FROM workspace_memberships WHERE user_id=$1 AND tenant_id=$2 AND workspace_id=$3`, g.f.User, g.f.Tenant, g.f.Workspace)
++	if result, _, err := lookup("find application", maximum); result != (Result{}) || err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++		t.Fatalf("revoked membership lookup: %+v, %v", result, err)
++	}
++	g.exec(`INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role,authority_id) VALUES($1,$2,$3,'owner',$4)`, g.f.User, g.f.Tenant, g.f.Workspace, uuid.NewString())
++	g.exec(`UPDATE sessions SET revoked_at=clock_timestamp(),revoke_reason='logout' WHERE id=$1`, g.actors[1].SessionID)
++	if result, _, err := lookup("find application", maximum); result != (Result{}) || err == nil || err.Error() != "AUTH_SESSION_EXPIRED" {
++		t.Fatalf("revoked lookup: %+v, %v", result, err)
++	}
++}
++
++func TestApplicationNameResolutionFinalFences(t *testing.T) {
++	t.Run("policy revoked after owner read", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		g.publishNamedApplication(t, "Protected application")
++		var calls atomic.Int64
++		source := g.gates[0].policy
++		g.gates[0].policy = func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) (ExecutionBudgetPolicy, error) {
++			p, err := source(ctx, tx, subject)
++			if calls.Add(1) == 4 {
++				p.UserAccess = BudgetAccessDisabled
++			}
++			return p, err
++		}
++		runID := g.start(t)
++		id := uuid.NewString()
++		result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, `find application "Protected application"`, "")
++		if result != (Result{}) || err != ErrCommandDenied {
++			t.Fatalf("lookup final policy: %+v, %v", result, err)
++		}
++		g.audit(t, id, 1)
++		g.step(t, id, "suppressed")
++	})
++	t.Run("cross-instance cancel during owner read", func(t *testing.T) {
++		g := newExecutionRunFixture(t)
++		g.publishNamedApplication(t, "Protected application")
++		entered, release := make(chan struct{}), make(chan struct{})
++		var calls atomic.Int64
++		g.gates[0].commands.executionPolicy = func(ctx context.Context) (bool, error) {
++			if calls.Add(1) == 4 {
++				close(entered)
++				select {
++				case <-release:
++				case <-ctx.Done():
++					return false, ctx.Err()
++				}
++			}
++			return true, nil
++		}
++		runID := g.start(t)
++		id := uuid.NewString()
++		finished := make(chan error, 1)
++		go func() {
++			result, err := g.runs[0].RunCommand(g.ctx, g.actors[1], runID, id, `find application "Protected application"`, "")
++			if result != (Result{}) {
++				err = errors.New("LOOKUP_RESULT_ESCAPED_CANCEL")
++			}
++			finished <- err
++		}()
++		select {
++		case <-entered:
++		case <-g.ctx.Done():
++			t.Fatal("lookup never reached its owner read")
++		}
++		state, err := g.runs[1].Cancel(g.ctx, g.actors[1], runID)
++		close(release)
++		if outcome := <-finished; err != nil || state.State != ExecutionRunStopped || outcome != errRunConflict {
++			t.Fatalf("cancelled lookup: %+v, %v, command %v", state, err, outcome)
++		}
++		g.audit(t, id, 1)
++		g.step(t, id, "suppressed")
++	})
++}
+diff --git a/services/control/internal/modules/productagent/name_commands_test.go b/services/control/internal/modules/productagent/name_commands_test.go
+new file mode 100644
+index 00000000..52e7ffce
+--- /dev/null
++++ b/services/control/internal/modules/productagent/name_commands_test.go
+@@ -0,0 +1,60 @@
++package productagent
++
++import (
++	"strings"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++)
++
++func TestQuotedApplicationNameCommands(t *testing.T) {
++	s, err := New(&applications.Service{Identity: &identity.Service{}}, nil)
++	if err != nil {
++		t.Fatal(err)
++	}
++	for _, tc := range []struct{ input, name string }{
++		{`find application "Sales  East"`, "Sales  East"},
++		{`FIND   APPLICATION "Sales East"`, "Sales East"},
++		{"\u67e5\u627e\u5e94\u7528 \"\u9500\u552e\u52a9\u624b\"", "\u9500\u552e\u52a9\u624b"},
++		{`find application " Cafe\u0301 "`, "Caf\u00e9"},
++		{`find application "open home; disable platform"`, "open home; disable platform"},
++		{`find application "100%_\"quoted\""`, "100%_\"quoted\""},
++		{`find application "` + strings.Repeat("\u5b57", 120) + `"`, strings.Repeat("\u5b57", 120)},
++		{`find application "` + strings.Repeat(`\ud83d\ude00`, 120) + `"`, strings.Repeat("\U0001f600", 120)},
++	} {
++		cmd, err := s.resolveCommand(tc.input)
++		if err != nil || cmd.id != findApplication || cmd.applicationName != tc.name {
++			t.Fatalf("quoted name resolution: %+v, %v", cmd, err)
++		}
++		changed := cmd
++		changed.applicationName += "x"
++		if cmd.fingerprint("") == changed.fingerprint("") {
++			t.Fatal("execution digest omitted the name")
++		}
++	}
++	for _, input := range []string{
++		`find application "x"; open home`, `find application "x" "y"`, `find application {"name":"x"}`,
++		`find application ""`, `find application "  "`, `find application "x\ny"`, `find application "x\u0000y"`,
++		`find application "` + strings.Repeat("x", 121) + `"`, "find\napplication \"x\"", "find application \"\xff\"",
++		`find application "unterminated`, `do not find application "x"`,
++	} {
++		if _, err := s.resolveCommand(input); err == nil {
++			t.Fatalf("admitted malformed name expression %q", input)
++		}
++	}
++	cmd, _ := s.resolveCommand(`find application "x"`)
++	actor := identity.Auth{Me: identity.Me{Audience: "portal", Workspace: &identity.Workspace{}}}
++	if _, err := s.admit(cmd, actor, "cursor"); err != ErrInvalidCommand {
++		t.Fatal("name lookup accepted a list cursor", err)
++	}
++	actor.Me.Audience = "admin"
++	if _, err := s.admit(cmd, actor, ""); err != ErrCommandDenied {
++		t.Fatal("admin invoked Portal name lookup", err)
++	}
++	delete(s.tools, listApplications)
++	actor.Me.Audience = "portal"
++	if _, err := s.admit(cmd, actor, ""); err != ErrCommandDenied {
++		t.Fatal("lookup bypassed the reviewed read", err)
++	}
++}
+diff --git a/services/control/internal/modules/productagent/service.go b/services/control/internal/modules/productagent/service.go
+index 75bd3463..27089844 100644
+--- a/services/control/internal/modules/productagent/service.go
++++ b/services/control/internal/modules/productagent/service.go
+@@ -40,10 +40,11 @@ type CommandHelp struct {
+ 
+ // Result holds exactly one navigation or read result. Paths belong to the current entrance.
+ type Result struct {
+-	Command       string                                        `json:"command"`
+-	Path          string                                        `json:"path,omitempty"`
+-	Applications  *applications.Page[applications.Application]  `json:"applications,omitempty"`
+-	Conversations *applications.Page[applications.Conversation] `json:"conversations,omitempty"`
++	Command               string                                        `json:"command"`
++	Path                  string                                        `json:"path,omitempty"`
++	Applications          *applications.Page[applications.Application]  `json:"applications,omitempty"`
++	Conversations         *applications.Page[applications.Conversation] `json:"conversations,omitempty"`
++	ApplicationResolution *applications.ApplicationResolution           `json:"application_resolution,omitempty"`
+ }
+ 
+ // Service dispatches only fixed destinations and scoped, typed reads.
+@@ -115,13 +116,9 @@ func (s *Service) RunForRequest(ctx context.Context, actor identity.Auth, input,
+ 	if !wire.ValidID(requestID) {
+ 		return Result{}, ErrInvalidRequestID
+ 	}
+-	normalized := normalize(input)
+-	if normalized == "" {
+-		return Result{}, ErrInvalidCommand
+-	}
+-	cmd, ok := s.catalog.aliases[normalized]
+-	if !ok {
+-		return Result{}, ErrUnknownCommand
++	cmd, err := s.resolveCommand(input)
++	if err != nil {
++		return Result{}, err
+ 	}
+ 
+ 	path, err := s.admit(cmd, actor, cursor)
+@@ -133,7 +130,7 @@ func (s *Service) RunForRequest(ctx context.Context, actor identity.Auth, input,
+ 	}
+ 	switch cmd.risk {
+ 	case riskRead:
+-		return s.readApplications(ctx, actor, cmd.id, cursor, requestID)
++		return s.readApplications(ctx, actor, cmd, cursor, requestID)
+ 	case riskNavigate:
+ 		if err := s.auditNavigation(ctx, actor, cmd.id, requestID); err != nil {
+ 			return Result{}, err
+@@ -177,12 +174,22 @@ func (s *Service) auditNavigation(ctx context.Context, actor identity.Auth, id,
+ 	})
+ }
+ 
+-func (s *Service) readApplications(ctx context.Context, actor identity.Auth, id, cursor, requestID string) (Result, error) {
++func (s *Service) readApplications(ctx context.Context, actor identity.Auth, cmd command, cursor, requestID string) (Result, error) {
++	id := cmd.id
+ 	query := url.Values{}
+ 	if cursor != "" {
+ 		query.Set("cursor", cursor)
+ 	}
+ 	switch id {
++	case findApplication:
++		resolution, err := s.applications.ResolveNameForAssistant(ctx, actor, cmd.applicationName, requestID)
++		if err != nil {
++			return Result{}, err
++		}
++		for i := range resolution.Candidates {
++			resolution.Candidates[i].Name = safeDisplayName(resolution.Candidates[i].Name)
++		}
++		return Result{Command: id, ApplicationResolution: &resolution}, nil
+ 	case listApplications:
+ 		page, err := s.applications.ListForAssistant(ctx, actor, query, requestID)
+ 		if err != nil {
+diff --git a/services/control/internal/modules/productagent/service_repository_integration_test.go b/services/control/internal/modules/productagent/service_repository_integration_test.go
+index 9fbd5725..adb22076 100644
+--- a/services/control/internal/modules/productagent/service_repository_integration_test.go
++++ b/services/control/internal/modules/productagent/service_repository_integration_test.go
+@@ -93,9 +93,11 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
+ 		return help
+ 	}
+ 	assertCommands(admin, "en", "open_audit", "open_gateway", "open_home", "open_model_library", "open_model_services", "open_nodes", "open_support")
+-	portalCommands := []string{listApplications, listConversations, "open_home", "open_keys", "open_models", "open_support"}
++	portalCommands := []string{findApplication, listApplications, listConversations, "open_home", "open_keys", "open_models", "open_support"}
+ 	help := assertCommands(portal, "zh-CN", portalCommands...)
+-	if !slices.Contains(help[3].Aliases, "\u6253\u5f00\u5bc6\u94a5") {
++	if !slices.ContainsFunc(help, func(item CommandHelp) bool {
++		return item.ID == "open_keys" && slices.Contains(item.Aliases, "\u6253\u5f00\u5bc6\u94a5")
++	}) {
+ 		t.Fatal("localized directory omitted the portal keys phrase")
+ 	}
+ 	help[0].Aliases[0] = "client edit"
+diff --git a/services/control/internal/operations/databaseaccess/alias_description_upgrade_test.go b/services/control/internal/operations/databaseaccess/alias_description_upgrade_test.go
+new file mode 100644
+index 00000000..13a67312
+--- /dev/null
++++ b/services/control/internal/operations/databaseaccess/alias_description_upgrade_test.go
+@@ -0,0 +1,85 @@
++package databaseaccess
++
++import (
++	"errors"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5/pgconn"
++	"github.com/jackc/pgx/v5/pgxpool"
++)
++
++func TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal(t *testing.T) {
++	f := upgradeFixture(t, 58)
++	ctx := t.Context()
++	before, err := readRuntimePrincipal(ctx, f.lease, f.input)
++	if err != nil {
++		t.Fatal(err)
++	}
++	var oldLedger string
++	if err := f.lease.QueryRow(ctx, "SELECT jsonb_agg(to_jsonb(m) ORDER BY version)::text FROM schema_migrations m").Scan(&oldLedger); err != nil {
++		t.Fatal(err)
++	}
++	if err := database.Migrate(ctx, f.lease); err != nil {
++		t.Fatal(err)
++	}
++	if state, err := InspectUpgrade(ctx, f.service.DB, f.lease, f.input); err != nil || state != UpgradeGrantsPending {
++		t.Fatal("new table must require grant resume", state, err)
++	}
++	runtime, err := pgxpool.NewWithConfig(ctx, f.input.connection.Copy())
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer runtime.Close()
++	store, err := transaction.FromPostgreSQL(runtime)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := database.CheckRuntimeWithin(ctx, store); err == nil || err.Error() != "DATABASE_RUNTIME_PRIVILEGES_INCOMPATIBLE" {
++		t.Fatal("missing runtime grant did not receive the exact serving refusal", err)
++	}
++	_, missingGrant := runtime.Exec(ctx, "SELECT * FROM model_alias_description_intents")
++	var missingGrantError *pgconn.PgError
++	if !errors.As(missingGrant, &missingGrantError) || missingGrantError.Code != "42501" {
++		t.Fatal("new table did not refuse the predecessor runtime grant", missingGrant)
++	}
++	for range 2 {
++		if state, err := Upgrade(ctx, f.service.DB, f.lease, f.input); err != nil || state != UpgradeComplete {
++			t.Fatal("grant resume", state, err)
++		}
++		if after, err := readRuntimePrincipal(ctx, f.lease, f.input); err != nil || after != before {
++			t.Fatal("grant resume changed runtime identity", err)
++		}
++		var retainedLedger string
++		if err := f.lease.QueryRow(ctx, "SELECT jsonb_agg(to_jsonb(m) ORDER BY version)::text FROM schema_migrations m WHERE version<=58").Scan(&retainedLedger); err != nil || retainedLedger != oldLedger {
++			t.Fatal("grant resume changed the predecessor ledger", err)
++		}
++		if err := database.CheckRuntimeWithin(ctx, store); err != nil {
++			t.Fatal("runtime admission after grant resume", err)
++		}
++	}
++	// The normal scoped constraints remain active for the serving principal.
++	// No matching alias exists, so INSERT must pass its ACL and fail its FK.
++	_, err = runtime.Exec(ctx, `INSERT INTO model_alias_description_intents
++		(tenant_id,workspace_id,actor_user_id,idempotency_key,alias_id,result_revision,fingerprint)
++		SELECT tenant_id,workspace_id,user_id,$1,$2,1,$3 FROM workspace_memberships LIMIT 1`,
++		uuid.NewString(), uuid.NewString(), make([]byte, 32))
++	var foreignKey *pgconn.PgError
++	if !errors.As(err, &foreignKey) || foreignKey.Code != "23503" {
++		t.Fatal("runtime insert did not reach the scoped foreign key", err)
++	}
++	for _, statement := range []string{
++		"SELECT * FROM audit_chain_head",
++		"UPDATE schema_migrations SET checksum=checksum WHERE version=1",
++		"TRUNCATE model_alias_description_intents",
++		"ALTER TABLE model_alias_description_intents DISABLE TRIGGER ALL",
++	} {
++		_, err := runtime.Exec(ctx, statement)
++		var denied *pgconn.PgError
++		if !errors.As(err, &denied) || denied.Code != "42501" {
++			t.Fatal("runtime exceeded its grants", statement, err)
++		}
++	}
++}
+diff --git a/services/control/internal/operations/databaseaccess/postgres_catalog.go b/services/control/internal/operations/databaseaccess/postgres_catalog.go
+index a44a3c0e..b1a682b3 100644
+--- a/services/control/internal/operations/databaseaccess/postgres_catalog.go
++++ b/services/control/internal/operations/databaseaccess/postgres_catalog.go
+@@ -17,7 +17,7 @@ var postgreSQLVariantTables = [...]string{
+ func postgreSQLTables() []string {
+ 	names := append([]string{}, applicationTables[:]...)
+ 	names = append(names, postgreSQLVariantTables[:]...)
+-	names = append(names, "agent_pacing", "cell_cluster_members", "cell_clusters", "cells", "control_outbox", "node_task_history", "node_task_progress", "saved_views", "sites", "tenant_node_counts")
++	names = append(names, "agent_pacing", "cell_cluster_members", "cell_clusters", "cells", "control_outbox", "model_alias_description_intents", "node_task_history", "node_task_progress", "saved_views", "sites", "tenant_node_counts")
+ 	sort.Strings(names)
+ 	return names
+ }
+diff --git a/services/control/internal/operations/databaseaccess/upgrade_test.go b/services/control/internal/operations/databaseaccess/upgrade_test.go
+index 907a18d5..4da8bd4c 100644
+--- a/services/control/internal/operations/databaseaccess/upgrade_test.go
++++ b/services/control/internal/operations/databaseaccess/upgrade_test.go
+@@ -39,7 +39,7 @@ func upgradeFixture(t *testing.T, version int) actualFixture {
+ 		t.Fatal(e)
+ 	}
+ 	statements := []string{"GRANT USAGE ON SCHEMA " + pgx.Identifier{schema}.Sanitize() + " TO " + role, "GRANT SELECT ON TABLE " + pgx.Identifier{schema, "schema_migrations"}.Sanitize() + " TO " + role}
+-	rows, e := f.lease.Query(ctx, "SELECT tablename FROM pg_tables WHERE schemaname=current_schema() AND tablename<>'schema_migrations' ORDER BY 1")
++	rows, e := f.lease.Query(ctx, "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relkind IN ('r','p') AND NOT c.relispartition AND c.relname NOT IN ('schema_migrations','audit_chain_head') ORDER BY 1")
+ 	if e != nil {
+ 		t.Fatal(e)
+ 	}
+diff --git a/services/control/internal/platform/database/catalog.go b/services/control/internal/platform/database/catalog.go
+index bc64aa48..1634009a 100644
+--- a/services/control/internal/platform/database/catalog.go
++++ b/services/control/internal/platform/database/catalog.go
+@@ -33,12 +33,12 @@ SELECT jsonb_build_object('table_count',(SELECT count(*) FROM owned WHERE relkin
+   (SELECT jsonb_agg(jsonb_build_array(t.tgname,t.tgtype,t.tgenabled,p.proname,encode(t.tgargs,'hex'),pg_get_expr(t.tgqual,t.tgrelid),p.prosrc,p.provolatile,p.prosecdef,p.proconfig) ORDER BY t.tgname)
+    FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE t.tgrelid=o.oid AND NOT t.tgisinternal)) ORDER BY o.relname) FROM owned o))::text`
+ 
+-// Exact schema 58 catalogs from pinned PostgreSQL 18.6. A restore at 55
+-// reparses earlier expressions while migrations 56 through 58 run from source.
++// Exact schema 59 catalogs from pinned PostgreSQL 18.6. A restore at 55
++// reparses earlier expressions while migrations 56 through 59 run from source.
+ const (
+-	catalogFreshSHA256        = "56795c36a7a0115478e17ee9af9ea98f27c1922c201cfec0b874d8d72b713d1d"
+-	catalogRestoredSHA256     = "ded94bd6eeb9c84949fd7647bd1b200e612b03fd4aedf8462280f5dacd87ce5d"
+-	catalogRestoredAt55SHA256 = "9e464ca9f6708f89731980adc8def9096e05b7f11f842ee09faa7836a12d0e42"
++	catalogFreshSHA256        = "72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782"
++	catalogRestoredSHA256     = "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc"
++	catalogRestoredAt55SHA256 = "8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069"
+ )
+ 
+ func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
+diff --git a/services/control/internal/platform/database/catalog_upgrade_test.go b/services/control/internal/platform/database/catalog_upgrade_test.go
+index 9e950013..fa42098f 100644
+--- a/services/control/internal/platform/database/catalog_upgrade_test.go
++++ b/services/control/internal/platform/database/catalog_upgrade_test.go
+@@ -14,7 +14,7 @@ func TestCatalogAdmissionAfterLogicalRestore(t *testing.T) {
+ 	if os.Getenv("PROJECT_ONE_TEST_DSN_FILE") == "" && os.Getenv("PROJECT_ONE_TEST_DSN") == "" {
+ 		t.Skip("requires an owned PostgreSQL restore fixture")
+ 	}
+-	for _, version := range []int{55, 56, 57, database.SchemaVersion} {
++	for _, version := range []int{55, 56, 57, 58, database.SchemaVersion} {
+ 		t.Run(fmt.Sprintf("restore_at_%d", version), func(t *testing.T) {
+ 			ctx := t.Context()
+ 			fixture.PreflightOwnedPostgres(t)
+diff --git a/services/control/internal/platform/database/database.go b/services/control/internal/platform/database/database.go
+index a91bbc59..9600edb8 100644
+--- a/services/control/internal/platform/database/database.go
++++ b/services/control/internal/platform/database/database.go
+@@ -99,10 +99,10 @@ func CheckPrefixWithin(ctx context.Context, q transaction.Executor) (int, error)
+ }
+ 
+ // SchemaVersion is the number of migrations in the one PostgreSQL lineage.
+-const SchemaVersion = 58
++const SchemaVersion = 59
+ 
+ // TableCount is the number of public tables the complete lineage creates.
+-const TableCount = 118
++const TableCount = 119
+ 
+ // ordered reads the one migration lineage. File names carry a contiguous
+ // version prefix; the checksum covers the exact file bytes.
+diff --git a/services/control/migrations/postgresql/000059_model_alias_description.down.sql b/services/control/migrations/postgresql/000059_model_alias_description.down.sql
+new file mode 100644
+index 00000000..2bf00871
+--- /dev/null
++++ b/services/control/migrations/postgresql/000059_model_alias_description.down.sql
+@@ -0,0 +1,15 @@
++-- Run in one operator transaction with serving stopped.
++SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
++LOCK TABLE model_aliases, model_alias_description_intents IN ACCESS EXCLUSIVE MODE;
++DO $$
++BEGIN
++ IF EXISTS(SELECT 1 FROM model_aliases WHERE description <> '' OR description_revision <> 1)
++   OR EXISTS(SELECT 1 FROM model_alias_description_intents) THEN
++  RAISE EXCEPTION 'MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE' USING ERRCODE='55000';
++ END IF;
++END $$;
++DROP TABLE model_alias_description_intents;
++ALTER TABLE model_aliases
++ DROP CONSTRAINT model_alias_description_scope_key,
++ DROP COLUMN description_revision,
++ DROP COLUMN description;
+diff --git a/services/control/migrations/postgresql/000059_model_alias_description.up.sql b/services/control/migrations/postgresql/000059_model_alias_description.up.sql
+new file mode 100644
+index 00000000..498ed28c
+--- /dev/null
++++ b/services/control/migrations/postgresql/000059_model_alias_description.up.sql
+@@ -0,0 +1,24 @@
++ALTER TABLE model_aliases
++ ADD COLUMN description varchar(500) NOT NULL DEFAULT '',
++ ADD COLUMN description_revision bigint NOT NULL DEFAULT 1
++  CHECK(description_revision BETWEEN 1 AND 9007199254740991),
++ ADD CONSTRAINT model_alias_description_scope_key UNIQUE(tenant_id,workspace_id,id,site_id,cell_id);
++CREATE TABLE model_alias_description_intents (
++ tenant_id uuid NOT NULL,
++ workspace_id uuid NOT NULL,
++ site_id varchar(32) NOT NULL DEFAULT local_site_id(),
++ cell_id varchar(32) NOT NULL DEFAULT local_cell_id(),
++ actor_user_id uuid NOT NULL REFERENCES users(id),
++ idempotency_key uuid NOT NULL,
++ alias_id uuid NOT NULL,
++ result_revision bigint NOT NULL CHECK(result_revision BETWEEN 1 AND 9007199254740991),
++ fingerprint bytea NOT NULL CHECK(octet_length(fingerprint)=32),
++ created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
++ PRIMARY KEY(tenant_id,workspace_id,actor_user_id,idempotency_key),
++ CONSTRAINT model_alias_description_scope_fk
++  FOREIGN KEY(tenant_id,workspace_id,alias_id,site_id,cell_id)
++  REFERENCES model_aliases(tenant_id,workspace_id,id,site_id,cell_id)
++);
++CREATE TRIGGER model_alias_description_intent_immutable
++ BEFORE UPDATE OR DELETE ON model_alias_description_intents
++ FOR EACH ROW EXECUTE FUNCTION protect_alias_cutover_record();

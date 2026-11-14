@@ -1,0 +1,125 @@
+{
+  "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "base": "9e32b023a0a3deed6a8653a8878d52c2583fd6cf",
+  "host": "linux/amd64",
+  "check": false,
+  "build": false,
+  "whole_make_test": false,
+  "cli_b967d7c8_qualified": false,
+  "installed_acceptance": false,
+  "locks": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "dev": 29,
+      "inode": 82,
+      "fd": 3,
+      "fd_closed": true,
+      "carrier_preserved": true
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "dev": 64512,
+      "inode": 7508772,
+      "fd": 4,
+      "fd_closed": true,
+      "carrier_preserved": true
+    }
+  ],
+  "absolute_seconds_cap": 1200,
+  "cleanup_reserve_seconds": 20,
+  "owned_process_groups": [
+    {
+      "pgid": 3731509,
+      "phase": "source-head",
+      "inherited_lock_fd_count": 0,
+      "group_cleared": true,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 0
+    },
+    {
+      "pgid": 3731510,
+      "phase": "source-clean",
+      "inherited_lock_fd_count": 0,
+      "group_cleared": true,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 0
+    },
+    {
+      "pgid": 3731521,
+      "phase": "web-install",
+      "inherited_lock_fd_count": 2,
+      "group_cleared": true,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 0
+    },
+    {
+      "pgid": 3731575,
+      "phase": "check",
+      "inherited_lock_fd_count": 2,
+      "group_cleared": true,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 2
+    },
+    {
+      "pgid": 3733250,
+      "phase": "final-source-clean",
+      "inherited_lock_fd_count": 0,
+      "group_cleared": true,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 0
+    }
+  ],
+  "entry_scope": "Exact original-author audit/SDK/tool and Web projection joint source; web-install/check/build/test. Strict live admission is required.",
+  "raw_memfree_mib": 4670,
+  "memavailable_mib": 19789,
+  "disk_free_bytes": 789124403200,
+  "io_full_avg10": 0.0,
+  "resource_snapshots": [
+    {
+      "elapsed_seconds": 0.001,
+      "raw_memfree_mib": 4692,
+      "memavailable_mib": 19811,
+      "disk_free_bytes": 789124411392,
+      "io_full_avg10": 0.0
+    },
+    {
+      "elapsed_seconds": 0.026,
+      "raw_memfree_mib": 4691,
+      "memavailable_mib": 19811,
+      "disk_free_bytes": 789124411392,
+      "io_full_avg10": 0.0
+    },
+    {
+      "elapsed_seconds": 0.036,
+      "raw_memfree_mib": 4691,
+      "memavailable_mib": 19811,
+      "disk_free_bytes": 789124407296,
+      "io_full_avg10": 0.0
+    },
+    {
+      "elapsed_seconds": 0.253,
+      "raw_memfree_mib": 4670,
+      "memavailable_mib": 19789,
+      "disk_free_bytes": 789124403200,
+      "io_full_avg10": 0.0
+    }
+  ],
+  "phase": "final-source-clean",
+  "attempted_lock": "/root/lane-sci-tools/heavy-test.lock",
+  "admitted": true,
+  "elapsed_seconds": 89.572,
+  "web-install_exit": 0,
+  "web-install": true,
+  "check_exit": 2,
+  "passed": false,
+  "failure": "RuntimeError: check exited 2",
+  "failure_kind": "execution_or_precondition_error",
+  "source_clean_after": true,
+  "all_owned_process_groups_cleared": true,
+  "exit": 1
+}

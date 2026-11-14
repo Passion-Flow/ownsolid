@@ -1,0 +1,60 @@
+from pathlib import Path
+import datetime,hashlib,json,os,re,shutil,signal,stat,subprocess,tempfile,time
+root=Path(__file__).resolve().parent
+config=json.loads((root/'native-runtime.json').read_text())
+source=Path(config['source']); stage=Path(config['stage'])
+manifest=json.loads((stage/'after-source.json').read_text())
+assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()==manifest['base']
+for name,sha in manifest['files'].items():
+ assert hashlib.sha256((source/'deploy/offline'/name).read_bytes()).hexdigest()==sha
+for name,sha in manifest['binaries'].items():
+ assert hashlib.sha256((stage/name).read_bytes()).hexdigest()==sha
+ header=(stage/name).read_bytes()[:20]
+ assert header[:6]==b'\x7fELF\x02\x01' and int.from_bytes(header[18:20],'little')==62
+output=Path(tempfile.mkdtemp(prefix='backup-output-native.',dir=config['output_parent']))
+result={'scope':'Only three filesystem roots on actual Linux amd64; cross-built actual package; no Docker, database, image, ports or installed qualification','parent_pid':os.getpid(),'source':manifest,'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'heavy_leases':'Not requested for this lightweight filesystem-only run','steps':[]}
+result['resources']={'meminfo':Path('/proc/meminfo').read_text(),'io':Path('/proc/pressure/io').read_text(),'disk_free':shutil.disk_usage(config['fixture_parent']).free}
+result['script_sha256']=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+result['config_sha256']=hashlib.sha256((root/'native-runtime.json').read_bytes()).hexdigest()
+fixture=None; children=[]
+try:
+ assert os.geteuid()==0 and os.uname().machine=='x86_64'
+ subprocess.run(['free','-m'],check=True)
+ subprocess.run(['df','-h',config['fixture_parent']],check=True)
+ fixture=Path(tempfile.mkdtemp(prefix='lane-del-backup-path-',dir=config['fixture_parent']));fixture.chmod(0o711)
+ bindir=fixture/'bin';bindir.mkdir(mode=0o755);bindir.chmod(0o755)
+ private=fixture/'tmp';private.mkdir(mode=0o700);private.chmod(0o700);os.chown(private,config['uid'],config['gid'])
+ for name,expected in [('before.test',1),('after.test',0)]:
+  binary=bindir/name;shutil.copyfile(stage/name,binary);binary.chmod(0o555)
+  argv=['unshare','--mount','--net','--pid','--fork','--kill-child=KILL','--mount-proc','/bin/sh','-c',
+        'set -eu; ip -brief link; ip route show; ip -6 route show; exec "$@"','filesystem-native',
+        'setpriv','--reuid',str(config['uid']),'--regid',str(config['gid']),'--clear-groups',str(binary),
+        '-test.run=^TestBackupOutput','-test.v','-test.timeout='+str(config['test_seconds'])+'s']
+  environment={'PATH':'/usr/sbin:/usr/bin:/sbin:/bin','TMPDIR':str(private)+'/', 'GOMAXPROCS':'1','GOMEMLIMIT':str(config['go_memory_bytes'])+'B'}
+  started=time.monotonic()
+  with (output/(name+'.log')).open('w') as log:
+   child=subprocess.Popen(argv,env=environment,stdout=log,stderr=subprocess.STDOUT,start_new_session=True);children.append(child)
+   try:status=child.wait(timeout=config['test_seconds']+2)
+   finally:
+    if child.poll() is None:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=2)
+  text=(output/(name+'.log')).read_text()
+  assert status==expected,(name,status,text)
+  assert '--- SKIP:' not in text and '[no tests to run]' not in text
+  assert len(re.findall(r'^=== RUN   Test[^/\n]+$',text,re.M))==3
+  if expected:
+   assert text.count('resolved internal output was admitted: <nil>')==4
+   assert 'unresolvable installation root was admitted: <nil>' in text
+  else:
+   for test in ['TestBackupOutputMustBeOutsideTheInstallation','TestBackupOutputRejectsResolvedInstallationAliases','TestBackupOutputRefusesAnUnresolvableInstallationRoot']:
+    assert re.search(r'^--- PASS: '+test+r' \(',text,re.M)
+  result['steps'].append({'binary':name,'binary_sha256':manifest['binaries'][name],'pid':child.pid,'exit':status,'expected_exit':expected,'seconds':time.monotonic()-started})
+ result['passed']=True
+finally:
+ for child in children:
+  if child.poll() is None:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=2)
+ if fixture is not None:shutil.rmtree(fixture)
+ result['owned_fixture_removed']=fixture is None or not fixture.exists()
+ result['children_joined']=all(child.poll() is not None for child in children)
+ result['packet_capture']='Not used; no new zero-egress detector qualification claimed'
+ (output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+ print(output,flush=True);print(json.dumps(result),flush=True)

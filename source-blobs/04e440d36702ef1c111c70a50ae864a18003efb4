@@ -1,0 +1,32 @@
+import asyncio
+import sys
+
+async def copy(source, target):
+    try:
+        while data := await source.read(65536):
+            target.write(data)
+            await target.drain()
+        if target.can_write_eof():
+            target.write_eof()
+    except (ConnectionError, OSError):
+        target.close()
+
+async def relay(reader, writer):
+    try:
+        upstream, connection = await asyncio.open_unix_connection(sys.argv[1])
+    except OSError:
+        writer.close()
+        return
+    try:
+        await asyncio.gather(copy(reader, connection), copy(upstream, writer))
+    finally:
+        connection.close()
+        writer.close()
+
+async def main():
+    server = await asyncio.start_server(relay, "127.0.0.1", 0)
+    print(server.sockets[0].getsockname()[1], flush=True)
+    async with server:
+        await server.serve_forever()
+
+asyncio.run(main())

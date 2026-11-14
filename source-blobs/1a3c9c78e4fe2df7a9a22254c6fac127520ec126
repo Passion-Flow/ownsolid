@@ -1,0 +1,71 @@
+# Current queue admission release
+
+Candidate 4e3d75d6954631cb33b4c03534edd3366aebfc62, base 726f2149.
+Exact qualified runtime source 62c9dd0947f967291e2fa805b39742e23e02944b.
+Admission qualification commit b3537f64 is followed by two research-only commits
+for SCH-105 and SCH-106. The candidate differs from the runtime source only in
+five owned documentation/status paths. No program input changed.
+Check actual-main-head for publication proof; no such file means unpublished.
+
+## Entry and transaction contract
+
+ReserveQueuedWithin(ctx context.Context, q transaction.Executor, a Attempt,
+    intent JobIntent, workspaces []string, read QueueReader) (bool, error)
+QueueReader func(context.Context, transaction.Executor) ([]QueueEntry, error)
+ErrQueueTurnPending = SCHEDULING_QUEUE_TURN_PENDING
+
+Borrow the selected owner's READ COMMITTED write executor. Queue admission
+is the first scheduling write. Retain current actor/Workspace/node/selected-job
+and physical fences. Supply the complete server-authorized domain and complete
+bounded current eligible batch through that same executor. Persisted authority
+resolves priority and positive sequence. Do not filter the returned batch by an
+earlier domain. The callback takes no other jobs' row locks, changes no state,
+opens no other transaction and calls no external service.
+
+A current head reuses ReserveWithin and its borrowing/reclaim barriers. True is a
+provisional logical hold. Commit dequeue, tasks, attempts, physical holds and audit
+with it before success. False/nil is exact held replay, skips the dequeued owner
+row read and must not create another task. Roll back on any error. Unknown commit
+exposes no success; retry the exact identity.
+
+## Fence protocol
+
+Policy shared -> tenant -> selected workspace -> optional cohort.
+Ordinary reserve/release/reclaim take tenant shared; queued admission takes
+exclusive. Do not upgrade a prior shared scheduling fence in one transaction.
+All Control writers must adopt before activation; mixed-version atomic queue
+admission is not claimed. Other tenants remain independent; hash collisions
+serialize. No private pool, new production DDL, route or dispatcher is installed.
+ADR 0073 records the decision; main's ARC 0071/0072 remain intact.
+
+## Qualification on the exact accepted base
+
+Linux amd64, Go 1.27.3, PostgreSQL 18.6/pgvector 0.8.7:
+45 actual database cases and 66 top-level component tests with race
+instrumentation, no skipped component test, route-free namespace and a private
+network-none tmpfs database. The separate catalog fresh/dump/restore harness is
+explicitly excluded. The exact source passed complete Control modules,
+make check and make build with offline dependencies; each log records its head.
+
+The configured 10,000-workspace domain held exactly two advisory lock tags,
+tenant and selected workspace. It is not SCH-111 node/job latency evidence.
+Tests cover current usage after ordinary/queued waits, shared-writer concurrency,
+cross-tenant fences, rollback/commit, current scope, concurrent replay,
+cancellation, loans/reclaim and positive release, and a suppressed real COMMIT
+acknowledgement. Privileged fixtures do not prove native serving-role grants.
+The private database container and credential files were cleaned up.
+
+ARC retains schema/grants/readiness, including advisory builtin EXECUTE in a
+hardened installation. The workload owner retains real eligible selection,
+priority authority, physical proof, dispatch, tasks/audit and sole commit.
+IAM/API/Web/Help and installed offline flow remain unactivated. SCH-103 remains
+unticked. No complete production feature or fleet scale acceptance is claimed.
+
+
+## Follow-on research
+
+SCH-105 and SCH-106 notes cite current primary sources, licenses, alternatives,
+failure coverage and finished product behavior. Their own status rows explicitly
+say research only and not run. No shadow runtime, checkpoint receipt, topology
+producer, Agent/API edit or roadmap tick is included. These are separate commits
+and do not activate the admission seam.

@@ -1,0 +1,3 @@
+module github.com/Passion-Flow/ownsolid/tools/installed-registry-probe
+
+go 1.27.0

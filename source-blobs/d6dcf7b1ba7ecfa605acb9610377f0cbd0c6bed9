@@ -1,0 +1,29 @@
+{
+  "reviewed_source": "402d604e271653d7ca546e1245877a256a88b031",
+  "documentation_commit": "38e1bf11d882dedc9d104536beff1c118fe13846",
+  "item": "GW-123",
+  "state": "static source/test-policy finding; no new live-profile execution",
+  "actual_failure": "Automatic gateway delivery for DockerAIProfile and DockerModelLifecycleProfile is unsupported by this source",
+  "gates": [
+    "Capabilities/OperationAllowed only declare gateway tasks for DockerInferenceProfile",
+    "LoadConfig rejects Gateway configuration on other profiles",
+    "validateExecutionLease rejects gateway leases outside DockerInferenceProfile",
+    "runtime constructs GatewayManager only for DockerInferenceProfile"
+  ],
+  "source_sha256": {
+    "api/agent/v1/components.go": "852733ea44e8e22a7666f3c5789245631940aa8ce0e24b9f9d2424cc3015cdd4",
+    "api/agent/v1/gateway_test.go": "f2aa26ea0595deb7f652a0ceb4377d27e6ac67a6f2d85208ce26a150b9d46c30",
+    "services/agent/internal/runtime/runtime.go": "9380e223c7544ae817acde1b8798a42670d842d1ebff557e957b9b987ffccf56",
+    "services/agent/internal/runtime/lease.go": "77081803074ec3cec20dc5dabc7fa4ff2d7ef7c91570d936023ae23ab4ad420a",
+    "services/agent/internal/runtime/gateway_test.go": "dc78ba209d4345af10c60cbad4e21fb86cba3a0b5b95e8e34bf7f96ec066b564"
+  },
+  "existing_policy_tests": [
+    "api/agent/v1/gateway_test.go: TestGatewayTasksBelongToTheInferenceProfileOnly",
+    "services/agent/internal/runtime/gateway_test.go: TestGatewayLeasesRunOnlyOnTheInferenceProfile"
+  ],
+  "scope_distinction": "distribution generic provisioning/profile test accepts three inference-capable enrollments; it does not establish automatic delivery",
+  "owners": "ARC: agent contract/profile-version/upgrade admission; AGT: configuration, lease validation, manager lifecycle; GW: Control/agent installed publication acceptance",
+  "unblock": "Integrate all four gates with profile-version/capability compatibility, preserve inference and non-inference safety boundaries, then run real enrollment/start/activation/listener/call/revoke/stop for all three profiles",
+  "scope_guard": "No agent, API or root source was changed by GW",
+  "publication": "documentation still local; validate these reviewed source inputs after a fresh rebase before publishing a current failure claim"
+}

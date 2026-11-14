@@ -1,0 +1,46 @@
+"""Require input refusals from the existing replay command without a report."""
+
+import hashlib
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def main():
+    evidence, root = map(Path, sys.argv[1:])
+    version = evidence / "publication/version.json"
+    capture = evidence / "run-1/capture.json"
+    flags = {
+        "dataset-version": version,
+        "dataset-version-sha256": sha(version),
+        "validation": evidence / "publication/validation.jsonl",
+        "capture": capture,
+        "capture-sha256": sha(capture),
+        "model-catalog": root / "api/agent/v1/model-catalog.json",
+        "recipe": root / "runtimes/model-lifecycle/tests/testdata/safety-recipe-v1.json",
+    }
+    with TemporaryDirectory(prefix="evl106-refusal-") as tmp:
+        changed = Path(tmp) / "capture.json"
+        changed.write_bytes(capture.read_bytes() + b" ")
+        for name, overrides, error in (
+            ("altered capture bytes", {"capture": changed}, b"EVALUATION_CAPTURE_MISMATCH"),
+            ("wrong asset of the authorized version",
+             {"validation": evidence / "publication/train.jsonl"}, b"EVALUATION_DATASET_MISMATCH"),
+        ):
+            selected = {**flags, **overrides}
+            args = [item for k, v in selected.items() for item in ("--" + k, str(v))]
+            result = subprocess.run(
+                [sys.executable, "-B", "-m", "projectone_model_lifecycle.evaluation_report", *args],
+                capture_output=True, timeout=30,
+            )
+            assert result.returncode == 1 and result.stderr.strip() == error and not result.stdout
+            print(f"{name}: {error.decode()}, no report")
+
+
+if __name__ == "__main__":
+    main()

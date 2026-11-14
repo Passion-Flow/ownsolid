@@ -1,0 +1,95 @@
+import os,socket,socketserver,subprocess,threading
+
+class PGProxy:
+ def __init__(self,container,docker_command):
+  self.command=tuple(docker_command)
+  self.container=container
+  self.guard=threading.Lock()
+  self.slots=threading.BoundedSemaphore(64)
+  self.clients=set()
+  self.children=set()
+  self.cleanup_errors=[]
+  self.handlers=set()
+  self.closing=False
+  self.changed=threading.Condition(self.guard)
+  owner=self
+  class Handler(socketserver.BaseRequestHandler):
+   def handle(self):
+    if not owner.slots.acquire(blocking=False):return
+    child=None
+    sender=None
+    try:
+     with owner.guard:
+      if owner.closing:return
+      owner.handlers.add(threading.current_thread())
+      owner.clients.add(self.request)
+      child=subprocess.Popen(list(owner.command)+['exec','-i',owner.container,'/tmp/ownsolid-pg-stdio'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
+      owner.children.add(child)
+     def send_input():
+      try:
+       while True:
+        data=self.request.recv(65536)
+        if not data:break
+        child.stdin.write(data)
+        child.stdin.flush()
+      except (OSError,ValueError):pass
+      finally:
+       try:child.stdin.close()
+       except (OSError,ValueError):pass
+     sender=threading.Thread(target=send_input,daemon=True)
+     sender.start()
+     while True:
+      data=os.read(child.stdout.fileno(),65536)
+      if not data:break
+      self.request.sendall(data)
+    except (OSError,ValueError):pass
+    finally:
+     try:self.request.shutdown(socket.SHUT_RDWR)
+     except OSError:pass
+     if child is not None:
+      try:owner.stop_child(child)
+      except (OSError,subprocess.TimeoutExpired) as error:
+       with owner.guard:owner.cleanup_errors.append(type(error).__name__)
+      child.stdout.close()
+      if child.poll() is not None:
+       with owner.guard:owner.children.discard(child)
+     if sender is not None:sender.join(timeout=5)
+     with owner.changed:
+      owner.clients.discard(self.request)
+      owner.handlers.discard(threading.current_thread())
+      owner.changed.notify_all()
+     owner.slots.release()
+  class Server(socketserver.ThreadingMixIn,socketserver.TCPServer):
+   daemon_threads=True
+   block_on_close=False
+  self.server=Server(('127.0.0.1',0),Handler)
+  self.port=self.server.server_address[1]
+  self.thread=threading.Thread(target=self.server.serve_forever,kwargs={'poll_interval':0.1},daemon=True)
+ @staticmethod
+ def stop_child(child):
+  if child.poll() is None:
+   try:child.terminate()
+   except ProcessLookupError:pass
+  try:child.wait(timeout=5)
+  except subprocess.TimeoutExpired:
+   try:child.kill()
+   except ProcessLookupError:pass
+   child.wait(timeout=5)
+ def start(self):self.thread.start()
+ def close(self):
+  with self.guard:self.closing=True
+  self.server.shutdown()
+  self.server.server_close()
+  with self.guard:
+   clients=list(self.clients)
+   children=list(self.children)
+  for client in clients:
+   try:client.shutdown(socket.SHUT_RDWR)
+   except OSError:pass
+  for child in children:
+   self.stop_child(child)
+  self.thread.join(timeout=5)
+  with self.changed:
+   if not self.changed.wait_for(lambda:not self.handlers and not self.children,timeout=15):
+    raise RuntimeError('owned proxy handlers did not stop')
+   if self.cleanup_errors:raise RuntimeError('owned proxy child cleanup failed')

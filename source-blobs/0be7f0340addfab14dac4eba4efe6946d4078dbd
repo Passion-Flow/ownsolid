@@ -1,0 +1,37 @@
+set -euo pipefail
+cd ~/lane-rel-usage-cli
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 npm_config_offline=true CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=1
+fixture=~/lane-rel-tools/gw120-joint-fixture-run.yfONoY8i
+for attempt in $(seq 1 120); do
+  if test -f "$fixture/exit"; then break; fi
+  sleep 4
+done
+test "$(cat "$fixture/exit")" = 0
+df -h /
+free -m
+cat /proc/pressure/io
+baseline=$(mktemp -d ~/lane-rel-tools/gw120-inventory.XXXXXXXX)
+git archive b607a08e api/openapi/v1 | tar -xf - -C "$baseline"
+export LANE_REL_GW120_BASELINE=$baseline
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  python3 tools/codegen/sdk/audit.py --baseline "$LANE_REL_GW120_BASELINE/api/openapi/v1" > "$LANE_REL_GW120_BASELINE/report.json"
+  for attempt in $(seq 1 150); do
+    if test "$(free -m | awk "/^Mem:/ {print \$4}")" -ge 2048; then break; fi
+    sleep 4
+  done
+  test "$(free -m | awk "/^Mem:/ {print \$4}")" -ge 2048
+  make check && make build &&
+  pnpm -C web/packages/help exec vitest run src/help.test.ts --maxWorkers=1 &&
+  go -C services/control test ./internal/modules/distribution &&
+  go -C tools/cli test ./...
+'
+printf '%s\n' "$baseline"
+git diff --check
+for path in go.work.sum tools/audit-verify/audit-verify; do
+  if ! git ls-files --error-unmatch "$path" >/dev/null 2>&1; then rm -f "$path"; fi
+done
+test -z "$(git status --porcelain)"
+git update-ref refs/lane-rel/gw120-joint-verified HEAD

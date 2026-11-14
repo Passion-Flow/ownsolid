@@ -1,0 +1,40 @@
+# Existing unnumbered DDL and ownership
+
+This release introduces NO new DDL file and NO formal migration.
+The two files in existing-ddl/ are byte-identical copies of the already
+accepted main's scheduling/testdata/quota.sql and reservations.sql.
+They are existing unnumbered candidates, not an installed catalog.
+Accepted base f7842492 is schema 60 / 120 tables and has no scheduling tables.
+The earlier schema-59 evidence remains pinned to f726e56b.
+
+ARC owns their eventual contiguous formal migration, scope enumeration,
+fresh/restored fingerprints, runtime role grants and readiness admission.
+The files add two tables. Apply quota.sql then reservations.sql only after
+ARC reconciles the current GW-120/DAT-101/metering queue and assigns the
+actual next number. Never renumber accepted lineage or reuse old fingerprints.
+
+scheduling_quota_policy is global: singleton, positive bigint revision and
+allocation JSON. scheduling_reservations is cell-owned, with exact attempt,
+server tenant/workspace, local site/cell, normalized demand, quota revision
+and reserve/release times. Its foreign keys require the installed workspaces
+(tenant_id,id) key and site/cell registries; defaults use local_site_id() and
+local_cell_id(). Both are required for this reader. Optional borrowing DDL
+is separate, remains disabled by default and is not introduced here.
+
+Reuse the current Control business principal and installed Workspace authority.
+The reader needs SELECT on both tables and the policy FOR SHARE fence also
+requires UPDATE privilege on at least one policy column. PostgreSQL documents
+that rule at https://www.postgresql.org/docs/18/sql-select.html .
+Preserve the identity/Workspace owner's existing row-lock and function grants.
+Browser roles get no DB principal or direct table access.
+
+The module enforces audience, current server actor/session/source and Workspace
+scope in code. The existing authority allows current members, including viewers,
+to read their own allocation; Admin uses its current platform-admin session
+within the installed tenant. No tenant/customer/role is accepted from input.
+Missing tables/grants fail as storage errors, never fabricated zero capacity.
+
+The six PG tests run under an isolated fixture principal. Production serving-role
+and catalog readiness remain ARC/IAM prerequisites to turning on the route.
+There is no entitlement signing code, policy seed, capacity/topology producer
+or training-consumer activation in this slice.

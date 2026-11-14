@@ -1,0 +1,52 @@
+"""Check both preserved evidence sources and extract exact gateway parser inputs."""
+
+from hashlib import sha256
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+scratch, cpu_archive, profile = map(Path, sys.argv[1:4])
+revision = sys.argv[4]
+raw = cpu_archive.read_bytes()
+assert sha256(raw).hexdigest() == "ceace0a1253b196142fa739cf8766f930f85086dfe9ed06a0acf704a1d8911bc"
+profile_log = (profile / "profile.log").read_bytes()
+assert sha256(profile_log).hexdigest() == "2f23d100b9620d1205954bf0073c8d68972dad79a8ee9af1103c3a529563b039"
+overlay = (profile / "gateway_integration_test.go").read_bytes()
+assert sha256(overlay).hexdigest() == "681046c3be86202f6208b0662b8c3423c2b59846e963847cedb1cec9e3819f8f"
+assert b"capacity-profile settled=216 refused=0" in profile_log
+assert b"--- PASS: TestRealGoRustPostgresCapacityProfile" in profile_log
+assert b"httptest.NewServer" in overlay
+
+capture = json.loads(raw)
+serial, parallel = (entry["samples"] for entry in capture["runs"])
+for number, (first, second) in enumerate(zip(serial[:2], parallel[:2], strict=True), 1):
+    assert first["case"] == second["case"]
+    assert first["id"] != second["id"]
+    assert first["output_sha256"] == second["output_sha256"]
+    for field in ("prompt_tokens", "completion_tokens", "request_sha256", "finish_reason"):
+        assert first[field] == second[field]
+    request = json.dumps({
+        "model": capture["model"],
+        "messages": [{"role": "user", "content": f"Explain {first['case']} in one short sentence."}],
+        "max_completion_tokens": 24, "seed": 42, "stream": False,
+        "temperature": 0, "chat_template_kwargs": {"enable_thinking": False},
+    }).encode()
+    assert sha256(request).hexdigest() == first["request_sha256"]
+    (scratch / f"request-{number}.json").write_bytes(request)
+    print(f"Direct case {first['case']}: input SHA-256 {first['request_sha256']}, output SHA-256 {first['output_sha256']}, "
+          f"prompt/completion tokens {first['prompt_tokens']}/{first['completion_tokens']}")
+
+def tracked(name):
+    return subprocess.check_output(["git", "show", f"{revision}:services/gateway/src/{name}"])
+
+protocol = tracked("protocol.rs")
+configuration = tracked("configuration.rs")
+start = configuration.index(b"#[derive(Clone, Debug, Deserialize, Serialize)]\n#[serde(default, deny_unknown_fields)]\npub struct Limits {")
+end = configuration.index(b"\nimpl Limits {", start)
+assert b"impl Default for Limits" in configuration[start:end]
+(scratch / "protocol.rs").write_bytes(protocol)
+(scratch / "configuration.rs").write_bytes(b"use serde::{Deserialize, Serialize};\n" + configuration[start:end])
+print("Gateway source commit", revision)
+print("Gateway parser SHA-256", sha256(protocol).hexdigest())
+print("Retained GW-112 digest and synthetic transport proof checked")

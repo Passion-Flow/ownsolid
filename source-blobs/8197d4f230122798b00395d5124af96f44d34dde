@@ -1,0 +1,79 @@
+{
+  "format_version": 1,
+  "reviewed_source": "3cebfcef9f321364862a11d8b773c714facb6f68",
+  "base": "4f76102",
+  "schema": 59,
+  "review_kind": "Contract naming, canonical parameters, response semantics and recovery planning only",
+  "public_changes": false,
+  "unit_tests_run": false,
+  "native_tests_run": false,
+  "published": false,
+  "proposed_operation_id": "adminSeriesCardinality",
+  "review_sha256": "51d113265033cc59c12dded2c5140f8c9ae6459af135570a1e7d6e0df209e885",
+  "publication_conditions": [
+    "Linux and native owner receipts; preserve verified Mac unit evidence separately",
+    "Exact native startup index flags and two UTC dates in one partition with different series populations",
+    "Original dispatcher query/status/audit qualification",
+    "Public Problem and SDK/Help/locales synchronization"
+  ],
+  "confirmed_adapter_caution": "Existing 512-byte history RawQuery cap cannot admit a percent-encoded 1024-byte exact metric; use a separately bounded cardinality query cap.",
+  "owner_clarification": {
+    "public_validation_status": 400,
+    "public_limit_grammar": "^[1-9][0-9]*$",
+    "explicit_empty_metric": "reject",
+    "omission_only_default": true,
+    "exact_metric_is_not_a_budget_guarantee": true
+  },
+  "validation_status_conflict": {
+    "source_shared_status": 400,
+    "owner_corrected_status": 400,
+    "resolved": true,
+    "shared_registry_change_required": false,
+    "private_handler_tuple_is_wire_proof": false
+  },
+  "mac_unit_evidence_verified": true,
+  "mac_unit_evidence": {
+    "source": "3cebfcef9f321364862a11d8b773c714facb6f68",
+    "host": "darwin/arm64",
+    "passed": true,
+    "top_level_tests": 46,
+    "pass_events": 139,
+    "log_sha256": "fcd057faad562d94984f05a85e393764e39838ecfc17a8ae7eb10f74e18b9342",
+    "receipt_sha256": "9a4d682bb796ecb9092f4b396b84828489d08cf2b7241ee2a53eb38c3a65c3bc",
+    "receipt_file": "mac-unit-proof.json",
+    "run_by_reviewer": false,
+    "linux_or_native_qualification": false
+  },
+  "generator_naming_correction": "Configured suffix is HTTPResponse; previous default-suffix collision rationale withdrawn",
+  "help_projection_caution": "Parameter descriptions reach Help; pattern and arbitrary x-* extensions do not",
+  "private_adapter_review": {
+    "source": "2dfbb85e79f81c5fec09664d5137323acb2701d1",
+    "tree": "ac9b4983b2da62e0a493dcd8cfdc24d0a3760bcb",
+    "static_inspection_only": true,
+    "raw_query_bytes": 4096,
+    "public_registered": false,
+    "unit_proof_verified": true,
+    "tested_source": "d8ad7e790e2d08a267df819ce8547225983fc08d",
+    "tested_tree": "7ec015f2f87d362f1c943dcb811699f69f45856a",
+    "unit_host": "darwin/arm64",
+    "top_level_tests": 7,
+    "pass_events": 49,
+    "proof_sha256": "b8511e24c4b2ace105e34d07f004654c8b9e956f310951d362a9e691fd582b3b",
+    "log_sha256": "fc6712d61c151be59d4fa52202c6c10cf421dcc4afc81067692dbdcd088f14f2",
+    "linux_native_qualified": false
+  },
+  "native_index_mode": {
+    "pinned_version": "1.155.0",
+    "source_default_disable_per_day_index": false,
+    "source_inspected": true,
+    "effective_installed_flags_verified": false,
+    "two_day_native_control_run": false,
+    "daily_semantics_qualified": false
+  },
+  "reported_linux_unit": {
+    "research_commit": "261a6fd2",
+    "diagnostic_source_prefix": "6f70",
+    "owner_reported_pass": true,
+    "receipt_independently_verified": false
+  }
+}

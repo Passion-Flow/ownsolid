@@ -1,0 +1,13 @@
+{
+  "open_home": ["open home", "open overview"],
+  "open_nodes": ["open nodes"],
+  "open_model_library": ["open model library"],
+  "open_model_services": ["open model services"],
+  "open_gateway": ["open gateway"],
+  "open_audit": ["open audit"],
+  "open_models": ["open models"],
+  "open_keys": ["open keys", "open api keys"],
+  "open_support": ["open support"],
+  "list_applications": ["show applications", "list applications"],
+  "list_conversations": ["show conversations", "list conversations"]
+}

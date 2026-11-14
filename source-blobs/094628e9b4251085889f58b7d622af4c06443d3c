@@ -1,0 +1,31 @@
+# Complete owned HTTP failure set
+
+| HTTP | Code |
+| --- | --- |
+| 400 | `VALIDATION_FAILED` |
+| 401 | `AUTH_SESSION_EXPIRED` |
+| 403 | `ACCESS_DENIED` |
+| 404 | `RESOURCE_NOT_FOUND` |
+| 409 | `STORAGE_COMMIT_OUTCOME_UNKNOWN` |
+| 503 | `STORAGE_UNAVAILABLE` |
+| 503 | `STORAGE_CANCELLED` |
+| 503 | `STORAGE_TIMEOUT` |
+| 503 | `STORAGE_LOCK_TIMEOUT` |
+| 503 | `STORAGE_DEADLOCK` |
+| 503 | `STORAGE_COMMIT_ROLLED_BACK` |
+
+No owned failure returns a data payload. Internal
+SCHEDULING_QUOTA_POLICY_UNAVAILABLE and
+SCHEDULING_RESERVATION_TRANSACTION_REQUIRED map to STORAGE_UNAVAILABLE.
+SCHEDULING_QUOTA_UNCONFIGURED and SCHEDULING_QUOTA_UNALLOCATED are fixed
+reason codes in a successful status, not HTTP failures. Their actions are
+configure_quota_policy and configure_workspace_quota respectively.
+
+Identity recheck maps revoked/disabled/demoted/source-invalid sessions to
+AUTH_SESSION_EXPIRED. There are no account/source/reauthentication-specific
+codes in this module. Unknown owner errors are not forwarded.
+
+This table covers the actual Handle boundary, after IAM authentication.
+IAM must retain and enumerate its own actual pre-dispatch authentication,
+origin, readiness and capacity errors using its existing problem catalog.
+The review schema intentionally does not invent a complete IAM error list.

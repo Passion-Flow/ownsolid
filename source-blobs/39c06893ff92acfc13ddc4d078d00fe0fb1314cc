@@ -1,0 +1,37 @@
+# Exact verification boundary
+
+source-head and base-head are the exact candidate and accepted main base.
+No Go compile, Go test or real PostgreSQL run has qualified this candidate yet.
+The earlier 61 tooling passes belong to the retained earlier source and
+unchanged tooling inputs; they are not Go/PG evidence for this candidate.
+No production route, UI, cell flow or roadmap box is completed.
+
+Mac early check: use the retained isolated source-snapshot runner at
+/private/tmp/ownsolid-sch-quota-mac.2ponztpn/check.sh under the permanent shared
+workstation flock wrapper. Update its pinned SHA to source-head before the
+first extraction. It runs three new nonintegration tests with -race and also
+typechecks all scheduling test files. Record macOS arm64 separately. The
+first two lock attempts returned 75 before extraction/build; no test ran.
+
+Linux small target: /root/lane-sch-tools/quota-status-target.sh.
+It uses a new owned network-none PostgreSQL 18.6/pgvector 0.8.7 container and
+a route-free loopback namespace. It holds the shared heavy lock then lane
+lock, checks resources, pins source and confirms nine top-level PASS results:
+three new pure tests, three new authenticated PG flows and three affected
+reservation/share/borrowing regressions. It has not run.
+
+The equivalent scoped command, with the protected real fixture inputs, is:
+
+```sh
+go -C services/control test -p 1 -race -tags repository_integration ./internal/modules/scheduling/... -run '^(TestWorkspaceQuotaStatus|TestQuotaReadRejects|TestPostgresWorkspaceQuotaStatus|TestPostgresHTTPWorkspaceQuotaStatus|TestPostgresReservationAndReleaseReplay$|TestPostgresWorkspaceQueueUsesLiveCommittedShares$|TestPostgresConcurrentBorrowersCannotDoubleLend$)' -count=1 -v
+```
+
+After success, run quota-status-remaining-gate.sh check, build and modules.
+These execute make check, make build and the Control module suite and record
+HEAD plus clean source/hash evidence. Respect TRN then OBS's pure-client short
+window before requesting this small PG phase. Do not mix OBS110 into it.
+No background retry or service has been started by this packet.
+
+Actual IAM route/auth composition tests, formal-role/schema acceptance, Web
+and disconnected installed end-to-end acceptance remain owner integrations.
+Only their completed main acceptance can support roadmap completion.

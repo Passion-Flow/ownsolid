@@ -1,0 +1,15 @@
+{
+  "source_commit": "12520508998c0cf8d1e7eb3e606d642bdbb37794",
+  "source_tree": "23fbdaef2db762b5d27589daeb11c16e8157f553",
+  "prerequisite": "106ca52dd867bcb38f142948a52a1f4af41d1d8e",
+  "origin_main": "68fc5e02f6110e2d9681a3dd3c306f7cd3881bdc",
+  "candidate_schema": 59,
+  "candidate_tables": 119,
+  "published": false,
+  "up_sha256": "399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab",
+  "down_sha256": "61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86",
+  "bundle_sha256": "eabcdb39ce960c8eab6903cf53830506fbb76c01c02237ffea98e570d54ea653",
+  "qualified_source": "a446ec580cf6dffc63df5d8269518f1ef8175d40",
+  "new_inputs": "Only two APP repository_integration && assistant_http_dispatch test files; both are excluded by actual default and Linux arm64 package selection.",
+  "qualified_scope": "Root gates, fourteen PostgreSQL/HTTPS roots, seven migration histories; Linux arm64 SQL on Darwin arm64. Native Linux amd64 rerun not claimed."
+}

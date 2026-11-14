@@ -1,0 +1,10 @@
+{
+  "scope": "Preparation and six pure mocked inspection checks only; no script native invocation or Docker operation",
+  "inspection_cases_passed": 6,
+  "candidate": "620f76daef06b0028112022b652281bc61bfdae0",
+  "binary_sha256": "9753bd071014ac5a17c0dfcdf6ab3694229ab49506d9ecb49371e50190b318d2",
+  "authority": "Requires a new root resource allocation; previous inspection and parser grants do not apply",
+  "native_transport_restricted_parent.py": "9f9800696cead3d2a702e0d9e6c6bb56819e5f843b4077474467176caea85d4d",
+  "runtime-restricted.json": "cbc2ec44f4df9dea419cc6d5a94bdcc61198cb64260abbb8f1b031103e206244",
+  "transport-restricted.diff": "09d44d5274ee52d8e6b9ae3b2310aea56fcb12d1683b2cb6d54d48ee1be5928d"
+}

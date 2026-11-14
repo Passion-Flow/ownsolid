@@ -1,0 +1,381 @@
+package main
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"encoding/pem"
+	"errors"
+	"fmt"
+	"net"
+	"net/http"
+	"net/http/cookiejar"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+)
+
+const fixtureWorkspace = "11111111-1111-4111-8111-111111111111"
+const fixtureActor = "22222222-2222-4222-8222-222222222222"
+
+func uintPointer(v uint64) *uint64 { return &v }
+func fixtureWindow(from, to string) window {
+	return window{From: from, To: to, Cells: []cellExpectation{{SiteID: "site-a", CellID: "cell-a", Observed: uintPointer(2), Reachable: uintPointer(0)}}, RequireSparse: true, RequireZero: true}
+}
+func fixtureHistory(w window, tier string, step int) map[string]any {
+	return map[string]any{"data": map[string]any{"tier": tier, "step_seconds": step, "from": w.From, "to": w.To, "cells": []any{map[string]any{"site_id": "site-a", "cell_id": "cell-a", "points": []any{map[string]any{"at": w.From, "observed": 2, "reachable": 0}}}}}}
+}
+func TestVerifyMeasuredZeroAndSparseAbsence(t *testing.T) {
+	w := fixtureWindow("2026-11-12T00:00:00Z", "2026-11-12T00:00:30Z")
+	value := fixtureHistory(w, "raw", 15)
+	body, _ := json.Marshal(value)
+	points, zero, sparse, err := verifyHistory(body, w, "raw")
+	if err != nil || points != 1 || !zero || !sparse {
+		t.Fatalf("valid measured zero/gap: points=%d zero=%t sparse=%t err=%v", points, zero, sparse, err)
+	}
+	cases := map[string]func(map[string]any){
+		"missing-observed": func(v map[string]any) {
+			delete(v["data"].(map[string]any)["cells"].([]any)[0].(map[string]any)["points"].([]any)[0].(map[string]any), "observed")
+		},
+		"null-reachable": func(v map[string]any) {
+			v["data"].(map[string]any)["cells"].([]any)[0].(map[string]any)["points"].([]any)[0].(map[string]any)["reachable"] = nil
+		},
+		"wrong-grid": func(v map[string]any) { v["data"].(map[string]any)["step_seconds"] = 14 },
+		"foreign-cell": func(v map[string]any) {
+			v["data"].(map[string]any)["cells"].([]any)[0].(map[string]any)["cell_id"] = "other"
+		},
+		"wrong-tier": func(v map[string]any) { v["data"].(map[string]any)["tier"] = "rollup" },
+		"duplicate-time": func(v map[string]any) {
+			cell := v["data"].(map[string]any)["cells"].([]any)[0].(map[string]any)
+			point := cell["points"].([]any)[0]
+			cell["points"] = []any{point, point}
+		},
+	}
+	for name, mutate := range cases {
+		t.Run(name, func(t *testing.T) {
+			v := fixtureHistory(w, "raw", 15)
+			mutate(v)
+			b, _ := json.Marshal(v)
+			if _, _, _, err := verifyHistory(b, w, "raw"); err == nil {
+				t.Fatal("invalid shape passed")
+			}
+		})
+	}
+}
+
+func writePrivate(t *testing.T, path string, body []byte) {
+	t.Helper()
+	if err := os.WriteFile(path, body, 0600); err != nil {
+		t.Fatal(err)
+	}
+}
+func TestPublicTLSCookieAuditAndStaleSessionLifecycle(t *testing.T) {
+	dir := t.TempDir()
+	entropy := make([]byte, 32)
+	if _, err := rand.Read(entropy); err != nil {
+		t.Fatal(err)
+	}
+	password := hex.EncodeToString(entropy)
+	raw := fixtureWindow("2026-11-12T00:00:00Z", "2026-11-12T00:00:30Z")
+	rollup := fixtureWindow("2026-10-01T00:00:00Z", "2026-10-01T00:02:00Z")
+	var mu sync.Mutex
+	var sequence, rangeReads, logins, staleReplays int
+	metricsStarted := time.Now()
+	active := map[string]bool{}
+	audits := map[string]map[string]any{}
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		if r.URL.Path == "/metrics" {
+			if r.Header.Get("Cookie") != "" {
+				t.Error("Admin cookies reached private store observation")
+			}
+			fmt.Fprintf(w, "%s %d\nprocess_start_time_seconds 1700000000\nvm_app_uptime_seconds %d\n", counterMetric, rangeReads, uint64(time.Since(metricsStarted)/time.Second))
+			return
+		}
+		sequence++
+		id := fmt.Sprintf("33333333-3333-4333-8333-%012x", sequence)
+		w.Header().Set("X-Request-ID", id)
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Content-Type", "application/json")
+		write := func(v any) {
+			if err := json.NewEncoder(w).Encode(v); err != nil {
+				t.Error(err)
+			}
+		}
+		refuse := func() {
+			w.Header().Set("Content-Type", "application/problem+json")
+			w.WriteHeader(401)
+			write(map[string]any{"code": "AUTH_SESSION_EXPIRED", "request_id": id})
+		}
+		switch r.URL.Path {
+		case "/api/v1/auth/csrf":
+			http.SetCookie(w, &http.Cookie{Name: "csrf", Value: "fixture-csrf", Path: "/", Secure: true, HttpOnly: true})
+			write(map[string]any{"data": map[string]any{"token": "fixture-csrf"}})
+		case "/api/v1/auth/login":
+			var v map[string]string
+			if json.NewDecoder(r.Body).Decode(&v) != nil || v["email"] != "admin@example.test" || v["password"] != password || r.Header.Get("X-CSRF-Token") != "fixture-csrf" {
+				t.Error("invalid login contract")
+				w.WriteHeader(400)
+				return
+			}
+			if _, err := r.Cookie("csrf"); err != nil {
+				t.Error("CSRF cookie absent")
+			}
+			logins++
+			session := fmt.Sprintf("fixture-session-%d", logins)
+			active[session] = true
+			http.SetCookie(w, &http.Cookie{Name: "session", Value: session, Path: "/", Secure: true, HttpOnly: true})
+			write(map[string]any{"data": map[string]any{"user": map[string]any{"id": fixtureActor, "is_platform_admin": true}, "audience": "admin"}})
+		case "/api/v1/auth/logout":
+			c, err := r.Cookie("session")
+			if err != nil || !active[c.Value] {
+				refuse()
+				return
+			}
+			delete(active, c.Value)
+			if r.Header.Get("X-CSRF-Token") != "fixture-csrf" {
+				t.Error("logout lacks CSRF token")
+			}
+			http.SetCookie(w, &http.Cookie{Name: "session", Value: "", Path: "/", Secure: true, MaxAge: -1})
+			w.WriteHeader(204)
+		case "/api/v1/admin/audit-events":
+			c, err := r.Cookie("session")
+			if err != nil || !active[c.Value] {
+				refuse()
+				return
+			}
+			items := []map[string]any{}
+			if event, ok := audits[r.URL.Query().Get("request_id")]; ok {
+				items = append(items, event)
+			}
+			if r.URL.Query().Get("target_id") != fixtureWorkspace {
+				t.Error("audit Workspace filter absent")
+			}
+			write(map[string]any{"data": map[string]any{"items": items, "next_cursor": nil}})
+		default:
+			if !strings.HasSuffix(r.URL.Path, "/admin/monitoring/fleet-history") {
+				t.Errorf("unexpected public route: %s", r.URL.Path)
+				w.WriteHeader(404)
+				return
+			}
+			c, err := r.Cookie("session")
+			if err != nil || !active[c.Value] {
+				if err == nil && c.Value != "" {
+					staleReplays++
+				}
+				refuse()
+				return
+			}
+			if r.URL.Query().Get("workspace_id") != fixtureWorkspace {
+				t.Error("history scope absent")
+			}
+			audits[id] = map[string]any{"id": id, "action": "monitoring.snapshot", "outcome": "success", "audience": "admin", "actor_user_id": fixtureActor, "target_type": "workspace", "target_id": fixtureWorkspace, "request_id": id}
+			if r.URL.Query().Get("from") == raw.From {
+				rangeReads++
+				write(fixtureHistory(raw, "raw", 15))
+			} else {
+				write(fixtureHistory(rollup, "rollup", 60))
+			}
+		}
+	}))
+	defer server.Close()
+	ca := filepath.Join(dir, "ca.pem")
+	writePrivate(t, ca, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}))
+	secret := filepath.Join(dir, "password")
+	writePrivate(t, secret, []byte(password+"\n"))
+	ep := endpoint{Origin: server.URL, CAFile: ca}
+	cfg := input{SourceSHA: strings.Repeat("a", 40), Admin: ep, Raw: ep, Long: ep, Email: "admin@example.test", PasswordFile: secret, SessionFile: filepath.Join(dir, "session.json"), SiteID: "site-a", CellID: "cell-a", WorkspaceID: fixtureWorkspace, TimeoutSeconds: 5, RawWindow: raw, RollupWindow: rollup, RequiredCommands: []string{"read", "logout-replay"}}
+	config := filepath.Join(dir, "input.json")
+	body, _ := json.Marshal(cfg)
+	writePrivate(t, config, body)
+	for _, command := range []string{"init", "read", "logout-replay", "finish", "init", "abort"} {
+		if err := execute(config, command); err != nil {
+			t.Fatalf("%s: %v", command, err)
+		}
+	}
+	if _, err := os.Stat(cfg.SessionFile); !os.IsNotExist(err) {
+		t.Fatal("owned session state remains")
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if logins != 3 || staleReplays != 1 || len(active) != 0 || rangeReads != 2 {
+		t.Fatalf("lifecycle: logins=%d stale=%d active=%d raw=%d", logins, staleReplays, len(active), rangeReads)
+	}
+}
+func TestNullAuditItemsCannotProveNoAudit(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Request-ID", "33333333-3333-4333-8333-333333333333")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, `{"data":{"items":null,"next_cursor":null}}`)
+	}))
+	defer server.Close()
+	ca := filepath.Join(t.TempDir(), "ca.pem")
+	writePrivate(t, ca, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}))
+	client, origin, err := clientFor(endpoint{Origin: server.URL, CAFile: ca}, 5, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.CloseIdleConnections()
+	d := driver{admin: client, origin: origin, state: savedState{ActorID: fixtureActor, Pending: []auditExpectation{{RequestID: "44444444-4444-4444-8444-444444444444", WorkspaceID: fixtureWorkspace, Count: 0}}}}
+	if err := d.verifyAudits(); err == nil {
+		t.Fatal("null audit page was treated as an empty result")
+	}
+}
+func TestCreateSessionStateDoesNotOverwrite(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "foreign-state")
+	original := []byte("unrelated fixture data")
+	writePrivate(t, path, original)
+	jar, _ := cookiejar.New(nil)
+	client := &http.Client{Jar: jar}
+	origin, _ := url.Parse("https://admin.example.test")
+	d := driver{admin: client, origin: origin, cfg: input{SessionFile: path}}
+	if err := d.save(true); err == nil {
+		t.Fatal("existing fixture overwritten")
+	}
+	body, err := os.ReadFile(path)
+	if err != nil || string(body) != string(original) {
+		t.Fatal("existing data changed")
+	}
+}
+
+func TestOpaqueUnixRelayPreservesTLSIdentity(t *testing.T) {
+	dir := t.TempDir()
+	socket := filepath.Join(dir, "relay.sock")
+	listener, err := net.Listen("unix", socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Host != "example.com:8443" || r.TLS == nil || r.TLS.ServerName != "example.com" {
+			t.Error("opaque relay changed HTTP origin or TLS SNI")
+		}
+		w.WriteHeader(200)
+	}))
+	server.Listener.Close()
+	server.Listener = listener
+	server.StartTLS()
+	defer server.Close()
+	ca := filepath.Join(dir, "ca.pem")
+	writePrivate(t, ca, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}))
+	ep := endpoint{Origin: "https://example.com:8443", CAFile: ca, DialUnixSocket: socket}
+	client, origin, err := clientFor(ep, 5, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.CloseIdleConnections()
+	response, err := client.Get(origin.String() + "/health")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if response.StatusCode != 200 || response.TLS == nil || len(response.TLS.VerifiedChains) == 0 {
+		t.Fatal("opaque relay did not preserve verified TLS")
+	}
+	ep.Origin = "https://wrong.invalid:8443"
+	wrong, wrongOrigin, err := clientFor(ep, 5, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer wrong.CloseIdleConnections()
+	response, err = wrong.Get(wrongOrigin.String() + "/health")
+	if response != nil {
+		response.Body.Close()
+	}
+	if err == nil {
+		t.Fatal("incorrect TLS identity was accepted through Unix relay")
+	}
+}
+
+func TestNativeCachedMetricsSnapshotIsRefreshed(t *testing.T) {
+	var mu sync.Mutex
+	var count uint64
+	var cached string
+	var refreshed time.Time
+	metricsStarted := time.Now()
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		if time.Since(refreshed) > time.Second {
+			cached = fmt.Sprintf("%s %d\nprocess_start_time_seconds 1700000000\nvm_app_uptime_seconds %d\n", counterMetric, count, uint64(time.Since(metricsStarted)/time.Second))
+			refreshed = time.Now()
+		}
+		fmt.Fprint(w, cached)
+	}))
+	defer server.Close()
+	ca := filepath.Join(t.TempDir(), "ca.pem")
+	writePrivate(t, ca, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}))
+	client, _, err := clientFor(endpoint{Origin: server.URL, CAFile: ca}, 5, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.CloseIdleConnections()
+	response, err := client.Get(server.URL + "/metrics")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	mu.Lock()
+	count = 1
+	mu.Unlock()
+	d := driver{cfg: input{Raw: endpoint{Origin: server.URL}, TimeoutSeconds: 5}, raw: client}
+	positive, err := d.rawCounter()
+	if err != nil || positive.Count != 1 {
+		t.Fatalf("positive evidence reused cached zero: %+v %v", positive, err)
+	}
+	mu.Lock()
+	count = 2
+	mu.Unlock()
+	after, err := d.rawCounter()
+	if err != nil || sameCounter(positive, after) || after.Count != 2 || positive.Epoch != after.Epoch {
+		t.Fatalf("negative evidence hid an increment behind its cached snapshot: before=%+v after=%+v err=%v", positive, after, err)
+	}
+}
+
+func TestCounterFreshnessRejectsEpochChangeAndTimeout(t *testing.T) {
+	for _, mode := range []string{"epoch-change", "frozen-snapshot"} {
+		t.Run(mode, func(t *testing.T) {
+			var mu sync.Mutex
+			calls := 0
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				mu.Lock()
+				defer mu.Unlock()
+				calls++
+				epoch, uptime := 1700000000, 0
+				if mode == "epoch-change" && calls > 1 {
+					epoch++
+					uptime++
+				}
+				fmt.Fprintf(w, "%s 0\nprocess_start_time_seconds %d\nvm_app_uptime_seconds %d\n", counterMetric, epoch, uptime)
+			}))
+			defer server.Close()
+			ca := filepath.Join(t.TempDir(), "ca.pem")
+			writePrivate(t, ca, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}))
+			client, _, err := clientFor(endpoint{Origin: server.URL, CAFile: ca}, 5, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer client.CloseIdleConnections()
+			d := driver{cfg: input{Raw: endpoint{Origin: server.URL}, TimeoutSeconds: 1}, raw: client}
+			sample, err := d.rawCounter()
+			if err == nil || sample.Epoch != 0 {
+				t.Fatal("invalid freshness released a usable observation", sample, err)
+			}
+			if mode == "epoch-change" && !strings.Contains(err.Error(), "epoch") {
+				t.Fatal("epoch refusal missing", err)
+			}
+			if mode == "frozen-snapshot" && !errors.Is(err, context.DeadlineExceeded) {
+				t.Fatal("unbounded or misclassified freshness timeout", err)
+			}
+		})
+	}
+}

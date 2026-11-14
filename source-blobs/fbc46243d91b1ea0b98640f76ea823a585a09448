@@ -1,0 +1,473 @@
+package main
+
+import (
+	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/json"
+	"encoding/pem"
+	"io"
+	"log"
+	"math/big"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+)
+
+type controlledAPI struct {
+	omitCursor                                                       bool
+	loseImportReply, importReplyLost, failReconcile                  bool
+	importKeys, reconcileKeys                                        []string
+	mu                                                               sync.Mutex
+	config                                                           configuration
+	server                                                           *httptest.Server
+	actor, password, session, csrf                                   string
+	current                                                          *pin
+	importKey                                                        string
+	calls                                                            map[string]int
+	redirect, oversized, wrongWorkspace, wrongReplay, nonempty, held bool
+	waitForCancel                                                    bool
+	entered                                                          chan struct{}
+}
+
+func fixture(t *testing.T) (*controlledAPI, *apiClient) {
+	t.Helper()
+	root := t.TempDir()
+	id := func() string {
+		value, e := newID()
+		if e != nil {
+			t.Fatal(e)
+		}
+		return value
+	}
+	f := &controlledAPI{actor: id(), password: id(), session: id(), csrf: id(), calls: map[string]int{}}
+	f.config = configuration{SourceCommit: strings.Repeat("1", 40), ReleaseManifestSHA256: strings.Repeat("2", 64),
+		Email: "fixture@example.invalid", PasswordFile: filepath.Join(root, "password"), SessionFile: filepath.Join(root, "session"),
+		WorkspaceID: id(), Asset: asset{ID: "fixture-image", ManifestDigest: "sha256:" + strings.Repeat("a", 64), ConfigDigest: "sha256:" + strings.Repeat("b", 64),
+			SourceArchiveSHA256: strings.Repeat("c", 64), SourceArchiveBytes: 128, TransportArchiveSHA256: strings.Repeat("d", 64), TransportArchiveBytes: 256, Licenses: []string{"Apache-2.0"}}, ApproveLicenses: true, RequestSeconds: 3, PhaseSeconds: 20}
+	if e := os.WriteFile(f.config.PasswordFile, []byte(f.password), 0600); e != nil {
+		t.Fatal(e)
+	}
+	f.server = httptest.NewUnstartedServer(http.HandlerFunc(f.serve))
+	f.server.Config.ErrorLog = log.New(io.Discard, "", 0)
+	f.server.StartTLS()
+	t.Cleanup(f.server.Close)
+	f.config.Admin = endpoint{Origin: f.server.URL, DialAddress: f.server.Listener.Addr().String(), CAFile: filepath.Join(root, "ca.pem")}
+	cert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: f.server.Certificate().Raw})
+	if e := os.WriteFile(f.config.Admin.CAFile, cert, 0600); e != nil {
+		t.Fatal(e)
+	}
+	client, e := newAPIClient(f.config)
+	if e != nil {
+		t.Fatal(e)
+	}
+	t.Cleanup(client.close)
+	return f, client
+}
+func (f *controlledAPI) set(fn func()) { f.mu.Lock(); defer f.mu.Unlock(); fn() }
+func (f *controlledAPI) count(path string) int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.calls[path]
+}
+func (f *controlledAPI) write(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if status != 204 {
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": data})
+	}
+}
+func (f *controlledAPI) serve(w http.ResponseWriter, r *http.Request) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.calls[r.Method+" "+r.URL.Path]++
+	requestID, _ := newID()
+	w.Header().Set("X-Request-ID", requestID)
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if r.Header.Get("Origin") != f.config.Admin.Origin {
+		http.Error(w, "origin", 403)
+		return
+	}
+	if r.URL.Path == "/api/v1/auth/csrf" {
+		if f.waitForCancel {
+			close(f.entered)
+			<-r.Context().Done()
+			return
+		}
+		if f.redirect {
+			http.Redirect(w, r, "/should-not-be-requested", 307)
+			return
+		}
+		if f.oversized {
+			f.write(w, 200, map[string]string{"token": strings.Repeat("x", maximumReply+1)})
+			return
+		}
+		http.SetCookie(w, &http.Cookie{Name: "csrf", Value: f.csrf, Path: "/", Secure: true})
+		f.write(w, 200, map[string]string{"token": f.csrf})
+		return
+	}
+	if r.Method == "POST" {
+		cookie, e := r.Cookie("csrf")
+		if e != nil || cookie.Value != f.csrf || r.Header.Get("X-CSRF-Token") != f.csrf {
+			http.Error(w, "csrf", 403)
+			return
+		}
+	}
+	identity := map[string]any{"user": map[string]any{"id": f.actor, "is_platform_admin": true}, "audience": "admin"}
+	if r.URL.Path == "/api/v1/auth/login" {
+		var in map[string]string
+		if json.NewDecoder(r.Body).Decode(&in) != nil || in["email"] != f.config.Email || in["password"] != f.password {
+			http.Error(w, "login", 401)
+			return
+		}
+		http.SetCookie(w, &http.Cookie{Name: "admin-session", Value: f.session, Path: "/", Secure: true, HttpOnly: true})
+		f.write(w, 200, identity)
+		return
+	}
+	cookie, e := r.Cookie("admin-session")
+	if e != nil || cookie.Value != f.session {
+		http.Error(w, "session", 401)
+		return
+	}
+	if r.URL.Path == "/api/v1/me" {
+		f.write(w, 200, identity)
+		return
+	}
+	if r.URL.Path == "/api/v1/auth/logout" {
+		f.write(w, 204, nil)
+		return
+	}
+	if r.URL.Query().Get("workspace_id") != f.config.WorkspaceID {
+		http.Error(w, "scope", 400)
+		return
+	}
+	switch {
+	case r.URL.Path == registryRoot+"/release-images":
+		a := f.config.Asset
+		f.write(w, 200, []any{map[string]any{"id": a.ID, "manifest_digest": a.ManifestDigest, "config_digest": a.ConfigDigest, "archive_bytes": a.SourceArchiveBytes, "licenses": a.Licenses}})
+	case r.URL.Path == registryRoot+"/pins" && r.Method == "GET":
+		if f.omitCursor {
+			f.write(w, 200, map[string]any{"items": []any{}})
+			return
+		}
+		items := []any{}
+		if f.nonempty {
+			items = append(items, map[string]any{"id": f.actor})
+		}
+		f.write(w, 200, map[string]any{"items": items, "next_cursor": nil})
+	case r.URL.Path == registryRoot+"/pins" && r.Method == "POST":
+		f.importKeys = append(f.importKeys, r.Header.Get("Idempotency-Key"))
+		var input struct {
+			Acknowledge bool   `json:"acknowledge_licenses"`
+			Asset       string `json:"asset_id"`
+			Reason      string `json:"reason"`
+		}
+		if json.NewDecoder(r.Body).Decode(&input) != nil || !input.Acknowledge || input.Asset != f.config.Asset.ID || input.Reason == "" || !uuidPattern.MatchString(r.Header.Get("Idempotency-Key")) {
+			http.Error(w, "input", 400)
+			return
+		}
+		if f.current == nil {
+			a := f.config.Asset
+			id, _ := newID()
+			now := time.Now().UTC()
+			f.current = &pin{ID: id, WorkspaceID: f.config.WorkspaceID, AssetID: a.ID, State: "ready", ManifestDigest: &a.ManifestDigest, ConfigDigest: &a.ConfigDigest, ArchiveSHA256: &a.TransportArchiveSHA256, ArchiveBytes: &a.TransportArchiveBytes, Revision: 1, CreatedAt: now, UpdatedAt: now}
+			f.importKey = r.Header.Get("Idempotency-Key")
+		} else if f.importKey != r.Header.Get("Idempotency-Key") {
+			http.Error(w, "key", 409)
+			return
+		}
+		out := *f.current
+		if f.loseImportReply && !f.importReplyLost {
+			f.importReplyLost = true
+			conn, _, err := w.(http.Hijacker).Hijack()
+			if err == nil {
+				_ = conn.Close()
+			}
+			return
+		}
+		if f.wrongWorkspace {
+			out.WorkspaceID = f.actor
+		}
+		if f.wrongReplay && f.calls["POST "+registryRoot+"/pins"] > 1 {
+			out.ID, _ = newID()
+		}
+		f.write(w, 201, out)
+	case f.current != nil && r.URL.Path == registryRoot+"/pins/"+f.current.ID:
+		f.write(w, 200, *f.current)
+	case f.current != nil && r.URL.Path == registryRoot+"/pins/"+f.current.ID+"/references":
+		refs := []any{}
+		if f.held {
+			refs = append(refs, map[string]string{"deployment_id": f.actor})
+		}
+		f.write(w, 200, map[string]any{"deployments": refs, "offline": []any{}})
+	case f.current != nil && (r.URL.Path == registryRoot+"/pins/"+f.current.ID+"/remove" || r.URL.Path == registryRoot+"/pins/"+f.current.ID+"/reconcile-removal"):
+		if !uuidPattern.MatchString(r.Header.Get("Idempotency-Key")) {
+			http.Error(w, "key", 400)
+			return
+		}
+		if strings.HasSuffix(r.URL.Path, "/reconcile-removal") {
+			f.reconcileKeys = append(f.reconcileKeys, r.Header.Get("Idempotency-Key"))
+			if f.failReconcile {
+				f.failReconcile = false
+				http.Error(w, "controlled uncertain removal", 503)
+				return
+			}
+		}
+		f.current.State = "deleted"
+		f.current.Revision++
+		f.write(w, 200, *f.current)
+	default:
+		http.NotFound(w, r)
+	}
+}
+func phase(t *testing.T, api *apiClient, mode string) error {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return (&driver{api: api}).run(ctx, mode)
+}
+func TestControlledRegistryClientLifecycle(t *testing.T) {
+	f, api := fixture(t)
+	for _, mode := range []string{"init", "verify", "cleanup", "cleanup", "logout"} {
+		if e := phase(t, api, mode); e != nil {
+			t.Fatalf("%s: %v", mode, e)
+		}
+	}
+	if f.count("POST "+registryRoot+"/pins") != 2 {
+		t.Fatal("import and exact key replay were not both sent")
+	}
+	f.mu.Lock()
+	id := f.current.ID
+	f.mu.Unlock()
+	if f.count("POST "+registryRoot+"/pins/"+id+"/remove") != 1 {
+		t.Fatal("cleanup repeated a mutation")
+	}
+	if _, e := os.Stat(f.config.SessionFile); !os.IsNotExist(e) {
+		t.Fatal("independent session remains")
+	}
+}
+func TestExistingWorkspaceStopsBeforePinMutation(t *testing.T) {
+	f, api := fixture(t)
+	f.set(func() { f.nonempty = true })
+	if e := phase(t, api, "init"); e != nil {
+		t.Fatal(e)
+	}
+	if e := phase(t, api, "verify"); e == nil {
+		t.Fatal("nonempty fixture admitted")
+	}
+	if f.count("POST "+registryRoot+"/pins") != 0 {
+		t.Fatal("preexisting Workspace mutated")
+	}
+	if e := phase(t, api, "logout"); e != nil {
+		t.Fatal(e)
+	}
+}
+func TestWrongScopeNeverBecomesCleanupAuthority(t *testing.T) {
+	f, api := fixture(t)
+	f.set(func() { f.wrongWorkspace = true })
+	if e := phase(t, api, "init"); e != nil {
+		t.Fatal(e)
+	}
+	if e := phase(t, api, "verify"); e == nil {
+		t.Fatal("wrong scope accepted")
+	}
+	if e := phase(t, api, "cleanup"); e == nil {
+		t.Fatal("guessed a cleanup identity")
+	}
+	f.mu.Lock()
+	id := f.current.ID
+	f.mu.Unlock()
+	if f.count("POST "+registryRoot+"/pins/"+id+"/remove") != 0 {
+		t.Fatal("unacknowledged or foreign pin deleted")
+	}
+}
+func TestReplayMismatchRetainsOnlyTheAcknowledgedPin(t *testing.T) {
+	f, api := fixture(t)
+	f.set(func() { f.wrongReplay = true })
+	if e := phase(t, api, "init"); e != nil {
+		t.Fatal(e)
+	}
+	if e := phase(t, api, "verify"); e == nil {
+		t.Fatal("changed replay identity accepted")
+	}
+	if e := phase(t, api, "cleanup"); e != nil {
+		t.Fatal(e)
+	}
+	if e := phase(t, api, "logout"); e != nil {
+		t.Fatal(e)
+	}
+}
+func TestHeldReferenceIsNeverForcedThroughCleanup(t *testing.T) {
+	f, api := fixture(t)
+	for _, mode := range []string{"init", "verify"} {
+		if e := phase(t, api, mode); e != nil {
+			t.Fatal(e)
+		}
+	}
+	f.set(func() { f.held = true })
+	if e := phase(t, api, "cleanup"); e == nil {
+		t.Fatal("held reference ignored")
+	}
+	f.mu.Lock()
+	id := f.current.ID
+	f.mu.Unlock()
+	if f.count("POST "+registryRoot+"/pins/"+id+"/remove") != 0 {
+		t.Fatal("referenced pin mutated")
+	}
+}
+func TestFreshSessionFormatAndPathIsolation(t *testing.T) {
+	f, api := fixture(t)
+	if e := os.WriteFile(f.config.SessionFile, []byte(`{"format":"foreign-test-driver"}`), 0600); e != nil {
+		t.Fatal(e)
+	}
+	for _, mode := range []string{"init", "verify", "cleanup"} {
+		if e := phase(t, api, mode); e == nil {
+			t.Fatal("foreign session used", mode)
+		}
+	}
+	if f.count("GET /api/v1/auth/csrf") != 0 || f.count("GET /api/v1/me") != 0 {
+		t.Fatal("foreign session caused a request")
+	}
+}
+func TestRedirectAndOversizedResponsesStopBeforeLogin(t *testing.T) {
+	for _, mode := range []string{"redirect", "oversized"} {
+		t.Run(mode, func(t *testing.T) {
+			f, api := fixture(t)
+			f.set(func() { f.redirect = mode == "redirect"; f.oversized = mode == "oversized" })
+			if e := phase(t, api, "init"); e == nil {
+				t.Fatal("invalid bootstrap accepted")
+			}
+			if f.count("GET /should-not-be-requested") != 0 || f.count("POST /api/v1/auth/login") != 0 {
+				t.Fatal("bootstrap refusal caused an extra request")
+			}
+		})
+	}
+}
+func TestUntrustedPrivatePeerIsRejected(t *testing.T) {
+	f, _ := fixture(t)
+	pub, key, e := ed25519.GenerateKey(rand.Reader)
+	if e != nil {
+		t.Fatal(e)
+	}
+	cert := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "Unrelated fixture CA"}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(time.Hour), IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign}
+	der, e := x509.CreateCertificate(rand.Reader, cert, cert, pub, key)
+	if e != nil {
+		t.Fatal(e)
+	}
+	ca := filepath.Join(t.TempDir(), "unrelated.pem")
+	if e = os.WriteFile(ca, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}), 0600); e != nil {
+		t.Fatal(e)
+	}
+	cfg := f.config
+	cfg.Admin.CAFile = ca
+	api, e := newAPIClient(cfg)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer api.close()
+	if e = phase(t, api, "init"); e == nil {
+		t.Fatal("untrusted private TLS peer accepted")
+	}
+	if f.count("POST /api/v1/auth/login") != 0 {
+		t.Fatal("credentials reached an untrusted peer")
+	}
+}
+func TestInputValidationAndImmutableConfiguration(t *testing.T) {
+	f, api := fixture(t)
+	original := api.config.fingerprint()
+	f.config.Asset.Licenses[0] = "Changed"
+	if api.config.fingerprint() != original {
+		t.Fatal("caller changed the selected configuration through a slice")
+	}
+	for _, change := range []func(*configuration){
+		func(c *configuration) { c.ApproveLicenses = false }, func(c *configuration) { c.SourceCommit = "" },
+		func(c *configuration) { c.Asset.ManifestDigest = "" }, func(c *configuration) { c.Asset.SourceArchiveBytes = 0 },
+		func(c *configuration) { c.Asset.TransportArchiveSHA256 = "" }, func(c *configuration) { c.Asset.TransportArchiveBytes = 0 },
+		func(c *configuration) { c.Admin.DialAddress = "8.8.8.8:443" }, func(c *configuration) { c.Admin.DialAddress = "127.0.0.1:ssh" },
+		func(c *configuration) { c.Admin.Origin = "http://127.0.0.1" }, func(c *configuration) { c.Admin.Origin = f.server.URL + "?" },
+	} {
+		cfg := f.config
+		change(&cfg)
+		if cfg.validate() == nil {
+			t.Fatal("invalid or unapproved input accepted")
+		}
+	}
+	raw, _ := json.Marshal(api.config)
+	root := filepath.Join(t.TempDir(), "config.json")
+	if e := os.WriteFile(root, raw, 0600); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := loadConfiguration(root); e != nil {
+		t.Fatal(e)
+	}
+	duplicate := append([]byte(`{"source_commit":"bad",`), raw[1:]...)
+	if e := os.WriteFile(root, duplicate, 0600); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := loadConfiguration(root); e == nil {
+		t.Fatal("duplicate member admitted")
+	}
+}
+
+func TestCancellationReachesAnInflightRequest(t *testing.T) {
+	f, _ := fixture(t)
+	f.set(func() { f.waitForCancel = true; f.entered = make(chan struct{}) })
+	cfg := f.config
+	cfg.RequestSeconds = 30
+	cfg.PhaseSeconds = 60
+	api, err := newAPIClient(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer api.close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	completed := make(chan error, 1)
+	go func() { _, err := api.csrf(ctx); completed <- err }()
+	select {
+	case <-f.entered:
+	case <-time.After(5 * time.Second):
+		t.Fatal("controlled request did not start")
+	}
+	cancel()
+	select {
+	case err := <-completed:
+		if err == nil {
+			t.Fatal("canceled request succeeded")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("cancellation did not reach the inflight request")
+	}
+	if f.count("POST /api/v1/auth/login") != 0 {
+		t.Fatal("canceled bootstrap reached login")
+	}
+}
+func TestOwnedSessionChangesAreNotOverwritten(t *testing.T) {
+	f, api := fixture(t)
+	if e := phase(t, api, "init"); e != nil {
+		t.Fatal(e)
+	}
+	d := &driver{api: api}
+	if e := d.load(); e != nil {
+		t.Fatal(e)
+	}
+	replacement := []byte("replacement fixture state")
+	if e := os.WriteFile(f.config.SessionFile, replacement, 0600); e != nil {
+		t.Fatal(e)
+	}
+	if d.save(false) == nil {
+		t.Fatal("overwrote another actor's state")
+	}
+	body, e := os.ReadFile(f.config.SessionFile)
+	if e != nil || string(body) != string(replacement) {
+		t.Fatal("replacement state changed")
+	}
+}

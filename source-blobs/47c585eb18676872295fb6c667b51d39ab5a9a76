@@ -1,0 +1,150 @@
+{
+  "platform": "linux/amd64",
+  "toolchain": "go1.27.3",
+  "admission_attempts": 1,
+  "admitted": true,
+  "segment_exit": 1,
+  "segment_elapsed_seconds": 49.817,
+  "segment_failure_kind": "Resource refusal before independent history group; not an audit test failure",
+  "parent_pid": 3053332,
+  "audit": {
+    "name": "audit-wire",
+    "source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+    "platform": "linux/amd64",
+    "fixture_sha256": "6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821",
+    "cwd": "/root/lane-rel-tools/identity-audit-contract/sdk/gen/go",
+    "command": [
+      "/usr/bin/unshare",
+      "--net",
+      "/bin/bash",
+      "--noprofile",
+      "--norc",
+      "-euc",
+      "/usr/sbin/ip link set lo up\nexec /root/lane-rel-tools/go/bin/go test -json -race -count=1 -p=2 -mod=readonly -timeout=90s /root/lane-rel-identity-audit-contract/tools/codegen/sdk/tests/audit_read_wire_test.go"
+    ],
+    "started_utc": "2026-11-12T23:36:10.511482+00:00",
+    "inherited_fds": [
+      3,
+      4
+    ],
+    "run": true,
+    "passed": true,
+    "pid": 3053350,
+    "pgid": 3053350,
+    "exit": 0,
+    "actual_roots": [
+      "TestAuditRead409DoesNotRetry",
+      "TestAuditReadDoesNotReplayALostReplyOnASharedClient",
+      "TestAuditReadExplicitRetryIsANewRequest",
+      "TestAuditReadPreservesClientTimeout",
+      "TestAuditReadPreservesTLSAndCookies",
+      "TestAuditReadRefusesRedirects",
+      "TestAuditReadRejectsUninspectableExecutorsBeforeDispatch",
+      "TestConcurrentAuditReadsRemainOneRequestEach",
+      "TestOtherIdentityCallsRetainTheConfiguredExecutor",
+      "TestStandardSharedGETCanReplayALostReply"
+    ],
+    "passed_roots": [
+      "TestAuditRead409DoesNotRetry",
+      "TestAuditReadDoesNotReplayALostReplyOnASharedClient",
+      "TestAuditReadExplicitRetryIsANewRequest",
+      "TestAuditReadPreservesClientTimeout",
+      "TestAuditReadPreservesTLSAndCookies",
+      "TestAuditReadRefusesRedirects",
+      "TestAuditReadRejectsUninspectableExecutorsBeforeDispatch",
+      "TestConcurrentAuditReadsRemainOneRequestEach",
+      "TestOtherIdentityCallsRetainTheConfiguredExecutor",
+      "TestStandardSharedGETCanReplayALostReply"
+    ],
+    "passed_subtests": [
+      "TestAuditRead409DoesNotRetry/assistant",
+      "TestAuditRead409DoesNotRetry/standard",
+      "TestAuditReadDoesNotReplayALostReplyOnASharedClient/consecutive_replies_lost",
+      "TestAuditReadDoesNotReplayALostReplyOnASharedClient/reply_lost_once",
+      "TestAuditReadPreservesClientTimeout/caller_cancellation",
+      "TestAuditReadPreservesClientTimeout/client_timeout"
+    ],
+    "skipped": [],
+    "log": "/root/lane-rel-tools/identity-audit-contract/go-wire-native-linux.log",
+    "log_sha256": "f391f6191c1293348969b862e005b7126f4245a300000d978276ef027e985d15",
+    "ended_utc": "2026-11-12T23:36:59.704270+00:00",
+    "compiled": true,
+    "actual_root_count": 10,
+    "subtest_count": 6,
+    "skip_count": 0,
+    "transport_source": "1e8f1fadf8caff8d7b9ac771cd91641ba19d4287"
+  },
+  "history_codec": {
+    "source": "6a2dd96fb392444de755db1cf5bfb771867064b0",
+    "expected_roots": [
+      "TestHistoryQueryAndExactRows",
+      "TestReadyCompatibilityAndRetiredDetail",
+      "TestExplicitInvalidValuesAndProblemCodec"
+    ],
+    "actual_roots": [],
+    "actual_root_count": 0,
+    "skipped": [],
+    "skip_count": 0,
+    "test_exit": null,
+    "compiled": false,
+    "run": false,
+    "reason": "IO full avg10 27.29 > maximum5 at pre-group resource check",
+    "log_created": false
+  },
+  "proof_server": "/root/lane-rel-tools/identity-audit-contract/go-native-linux-proof.json",
+  "proof_sha256": "cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1",
+  "release_server": "/root/lane-rel-tools/identity-audit-contract/go-native-linux-release-observation.json",
+  "release_sha256": "233291eed0a5606e1086e923c322b46cd90f5b69ffe8a3b1031547cac71a334b",
+  "runner_sha256": "75b607b355497b987e1b7ab7061df7aad06c5f3b7070070d110a6bd5688d7fa0",
+  "legacy_runner_unchanged_sha256": "3dd821258a58db62fae5edf3f678aab4c9989fb8b8d2ce6649564f5616468c17",
+  "adaptation_diff_sha256": "1a95d19bfbef6c689685dec3476471033b8f5266306938512b2dae966600416b",
+  "carriers": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "fd": 3,
+      "device": 29,
+      "inode": 82,
+      "uid": 0,
+      "acquired": true,
+      "acquired_utc": "2026-11-12T23:36:09.888556+00:00",
+      "fd_closed": true,
+      "closed_utc": "2026-11-12T23:36:59.705107+00:00",
+      "carrier_preserved": true
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "fd": 4,
+      "device": 64512,
+      "inode": 7508772,
+      "uid": 0,
+      "acquired": true,
+      "acquired_utc": "2026-11-12T23:36:09.888591+00:00",
+      "fd_closed": true,
+      "closed_utc": "2026-11-12T23:36:59.705078+00:00",
+      "carrier_preserved": true
+    }
+  ],
+  "resource_before_history": {
+    "phase": "before_history-codec",
+    "memfree_mib": 16256,
+    "memavailable_mib": 21780,
+    "disk_free_bytes": 793074003968,
+    "io_full_avg10": 27.29
+  },
+  "all_owned_processes_ended": true,
+  "owned_temporary_directories_removed": true,
+  "generated_sdk_file_hashes_verified_after": {
+    "/root/lane-rel-tools/identity-audit-contract": 122,
+    "/root/lane-rel-tools/model-history-prototype/domain-draft": 81
+  },
+  "locks_reacquired_for_observation": false,
+  "automatic_retry_or_requeue": false,
+  "mac_outcome_reused": false,
+  "whole_gate_qualified": false,
+  "installed_qualified": false,
+  "public_history_qualified": false,
+  "status_commits": {
+    "identity-audit-contract": "c9820e25077ccfe6252068d6549af41c0818df17",
+    "model-history-contract": "6a4c354ddbbf6064bc26e03b5ac86c717a6dcfe3"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "original_input": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "configured_lint_scope": "Full web workspace, exact package lint script, zero warnings, original rules and directories",
+  "typescript_eslint": "8.72.1",
+  "typescript": "6.0.3",
+  "project_service": true,
+  "explicit_tsconfig_count": 8,
+  "tracked_ts_tsx": 390,
+  "generated_ts_tsx": 31,
+  "generated_bytes": 1730637,
+  "generated_lines": 39775,
+  "generated_lint_ignores_already_present": true,
+  "api_barrel_imports_generated_types": true,
+  "historical_parent_node_options_recorded": false,
+  "observed_effective_heap_limit_mib": 2048,
+  "heap_limit_origin": "Assigned acceptance wrapper, not a repository-wide product limit",
+  "current_environment_read_only_probe": {
+    "environment_file_sha256": "a3e75d40234df8de95973db1e553f7860b0be0011bad195bfc5e4668a7ed9f8a",
+    "parent_absolute_node_heap_caps_mib": [],
+    "scope": "Current observation only, not historical reconstruction"
+  },
+  "web_source_defect_established": false,
+  "allocation_hotspot_measured": false,
+  "web_owner_task_sent": false,
+  "source_config_rules_or_scope_changed": false,
+  "official_sources": [
+    "https://typescript-eslint.io/troubleshooting/typed-linting/performance/",
+    "https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-megabytes"
+  ],
+  "upstream_issue_hypothesis_only": "https://github.com/typescript-eslint/typescript-eslint/issues/13109",
+  "new_lint_or_capacity_run": false
+}

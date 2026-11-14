@@ -1,0 +1,124 @@
+{
+  "source": "4b1e5c99bdc2e9349eabc40378c6c8743e62b82f",
+  "base": "9975d76902a777abd4fa75c04c265b7194d04214",
+  "commands": [
+    {
+      "argv": [
+        "/Users/passion./.local/opt/node/bin/node",
+        "tools/codegen/web-api.mjs"
+      ],
+      "exit": 0,
+      "stdout": "wrote 30 files to web/packages/api/src/gen\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/Users/passion./.local/opt/node/bin/node",
+        "tools/codegen/web-help.mjs"
+      ],
+      "exit": 0,
+      "stdout": "wrote 144 files to web/packages/help/src/gen\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/Users/passion./.local/opt/node/bin/node",
+        "tools/codegen/web-api.mjs",
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "generated API types match 29 contracts\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/Users/passion./.local/opt/node/bin/node",
+        "tools/codegen/web-help.mjs",
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "cache_lock_and_packages_byte_identical": true,
+  "product_web_modified": false,
+  "whole_repository_gate": false,
+  "changed_paths": [
+    "web/packages/api/src/gen/identity.ts",
+    "web/packages/help/locales/zh-cn/api-descriptions.json",
+    "web/packages/help/src/gen/api/console/identity.json",
+    "web/packages/help/src/gen/contracts/console/identity.json",
+    "web/packages/help/src/gen/locales/zh-cn/api-descriptions.json"
+  ],
+  "relay_patch": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/relay/web-owner-current-main.patch",
+  "relay_patch_sha256": "a3def1685309d4a7609274852cbc17f0904f9477a8edcaa9d016b4ced085dea9",
+  "patch_byte_identical_to_old_relay": false,
+  "required_owned_product_paths_unchanged": true,
+  "baseline_inventory_operations": 430,
+  "baseline_conflicts": 0,
+  "baseline_compatibility_findings": [
+    {
+      "code": "PUBLIC_RESPONSE_MODELS_CHANGED",
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/audit-events",
+      "audience": "admin",
+      "operation_id": "listAuditEvents",
+      "previous_response_models": {
+        "200 application/json": [
+          "#/components/schemas/AuditEvent",
+          "#/components/schemas/AuditListResponse"
+        ],
+        "400 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "401 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "403 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "503 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "default application/problem+json": [
+          "#/components/schemas/Problem"
+        ]
+      },
+      "current_response_models": {
+        "200 application/json": [
+          "#/components/schemas/AuditEvent",
+          "#/components/schemas/AuditListResponse"
+        ],
+        "400 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "401 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "403 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "409 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "503 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "default application/problem+json": [
+          "#/components/schemas/Problem"
+        ]
+      }
+    }
+  ],
+  "baseline_comparison_exit": 1,
+  "baseline_review": "Expected source-review signal: existing shared Problem added as explicit409; no field shape or operation identity changed. Go409 accessor migration is documented and tested.",
+  "preparation_errors_retained": [
+    "System Python lacked tar extractall filter before any baseline extraction; preparation resumed with pinned Python3.12",
+    "Private assertion initially inspected findings instead of compatibility_findings after the successful report; original report retained, no audit rerun"
+  ],
+  "reused_after_document_only_rebase_to": "d16d7f11699ef00e1d26fa576be2db76a8d640af",
+  "current_main_base": "0b570a8392a3d86f9a7637883355e223c94e76bd",
+  "api_codegen_web_makefile_capability_identity_inputs_byte_identical_to_tested_4b1e5c99": true
+}

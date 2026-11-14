@@ -1,0 +1,44 @@
+mod configuration;
+mod protocol;
+
+use configuration::Limits;
+use protocol::ChatRequest;
+use serde_json::{Value, json};
+use std::{env, fs};
+
+fn main() {
+    let limits = Limits::default();
+    let mut cases = 0;
+    for fixture in env::args().skip(1) {
+        let exact = fs::read(fixture).unwrap();
+        assert_eq!(ChatRequest::parse(&exact, &limits).err(), Some("unsupported_parameter"));
+        let original: Value = serde_json::from_slice(&exact).unwrap();
+        for remaining in ["seed", "chat_template_kwargs"] {
+            let mut isolated = original.clone();
+            let object = isolated.as_object_mut().unwrap();
+            for field in ["seed", "chat_template_kwargs"] {
+                if field != remaining {
+                    assert!(object.remove(field).is_some());
+                }
+            }
+            let raw = serde_json::to_vec(&isolated).unwrap();
+            assert_eq!(ChatRequest::parse(&raw, &limits).err(), Some("unsupported_parameter"));
+        }
+        let mut accepted = original.clone();
+        let object = accepted.as_object_mut().unwrap();
+        assert!(object.remove("seed").is_some());
+        assert!(object.remove("chat_template_kwargs").is_some());
+        let request = ChatRequest::parse(&serde_json::to_vec(&accepted).unwrap(), &limits)
+            .expect("gateway-shape parser control");
+        let backend = request.completion_payload("ownsolid-evl105-qwen3-0.6b");
+        assert_eq!(backend, json!({
+            "model": original["model"], "messages": original["messages"],
+            "max_tokens": original["max_completion_tokens"], "temperature": original["temperature"],
+            "n": 1, "stream": false, "chat_template_kwargs": {"enable_thinking": false}
+        }));
+        assert_eq!(request.tokenize_payload("ownsolid-evl105-qwen3-0.6b")["messages"], original["messages"]);
+        cases += 1;
+    }
+    assert_eq!(cases, 2);
+    println!("Two exact requests refused, each extra field refused alone, two gateway-shape parser controls accepted without forwarding a seed");
+}

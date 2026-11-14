@@ -1,0 +1,58 @@
+set -euo pipefail
+cd ~/lane-rel-usage-cli
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+umask 077
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 2100 9
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+
+test "$(git rev-parse --short HEAD)" = e2928f7c
+unshare -n bash -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    make check-layout check-roadmap test-tools
+    go -C deploy/offline test ./cmd/install ./internal/install
+    go -C services/control test ./internal/modules/metering
+    go -C deploy/offline build ./...
+    go -C services/control build ./...
+'
+export PROJECT_ONE_DATA_PYTHON=$(readlink -f /usr/bin/python3.12)
+image=pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+container=$(docker run -d --rm --pull never --network none --memory 896m --cpus 2 \
+  --tmpfs /tmp:rw,size=384m --name lane-rel-trn-checkpoint-latest --label ownsolid.lane=lane-rel \
+  --entrypoint sh "$image" -ec '
+    data=$(mktemp -d)
+    chown postgres "$data"
+    gosu postgres initdb -D "$data" --auth=trust --locale=C --encoding=UTF8 >/dev/null
+    exec gosu postgres postgres -D "$data" -h 127.0.0.1
+  ')
+trap 'docker stop --time 5 "$container" >/dev/null 2>&1 || true' EXIT
+ready=no
+for attempt in $(seq 1 25); do
+    if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+        ready=yes
+        break
+    fi
+    sleep 1
+done
+test "$ready" = yes
+docker exec "$container" createdb -h 127.0.0.1 -U postgres lane_rel_trn_checkpoint_latest_test
+docker exec "$container" psql -h 127.0.0.1 -U postgres -d lane_rel_trn_checkpoint_latest_test -v ON_ERROR_STOP=1 \
+    -c 'CREATE EXTENSION vector WITH SCHEMA public VERSION $$0.8.7$$; REVOKE CREATE ON SCHEMA public FROM PUBLIC' >/dev/null
+pid=$(docker inspect -f '{{.State.Pid}}' "$container")
+export PROJECT_ONE_TEST_DSN=postgresql://postgres@127.0.0.1/lane_rel_trn_checkpoint_latest_test?sslmode=disable
+
+ionice -c2 -n7 nice -n10 nsenter -t "$pid" -n sh -ec '
+    test "$(wc -l < /proc/net/route)" -eq 1
+    go -C tools/cli test ./...
+    ./tools/cli/testdata/run-training-tls.sh
+    go -C services/control test ./internal/modules/training -run "^TestActualTLSDualEntranceTrainingIntentHistoryMetricsRecoveryAndCurrentRoles$" -v -count=1
+'

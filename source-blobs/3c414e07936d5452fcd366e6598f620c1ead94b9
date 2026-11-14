@@ -1,0 +1,26 @@
+from pathlib import Path
+import json,os,resource,shutil,subprocess,sys
+config=json.loads(Path(sys.argv[1]).read_text());stage=Path(config['stage'])
+assert os.geteuid()==0 and os.getpid()==1
+subprocess.run(['/usr/bin/mount','--make-rprivate','/'],check=True)
+subprocess.run(['/usr/bin/mount','-t','tmpfs','-o','nosuid,nodev,mode=1777,size='+str(config['tmpfs_bytes']),'tmpfs','/tmp'],check=True)
+subprocess.run(['/usr/sbin/ip','link','set','lo','up'],check=True)
+links=json.loads(subprocess.check_output(['/usr/sbin/ip','-json','link','show'],text=True));assert [link['ifname'] for link in links]==['lo']
+subprocess.run(['/usr/sbin/ip','-brief','link'],check=True)
+subprocess.run(['/usr/sbin/ip','route','show'],check=True)
+subprocess.run(['/usr/sbin/ip','-6','route','show'],check=True)
+root=Path(config['unit_work_root']);root.mkdir(mode=0o755);root.chmod(0o755)
+for relative in ['bin','working/deploy/compose','working/deploy/offline/internal/install','tmp']:
+ p=root/relative;p.mkdir(parents=True,exist_ok=True,mode=0o755)
+ for ancestor in [p,*p.parents]:
+  if ancestor==root:break
+  if root in ancestor.parents:ancestor.chmod(0o755)
+binary=root/'bin/installer.test';shutil.copyfile(stage/'installer.test',binary);binary.chmod(0o555)
+compose=root/'working/deploy/compose/compose.yaml';shutil.copyfile(stage/'canonical-compose.yaml',compose);compose.chmod(0o444)
+private=root/'tmp';private.chmod(0o700);os.chown(private,config['uid'],config['gid'])
+resource.setrlimit(resource.RLIMIT_CPU,(config['cpu_seconds'],config['cpu_seconds']));resource.setrlimit(resource.RLIMIT_CORE,(0,0))
+os.setgroups([]);os.setgid(config['gid']);os.setuid(config['uid'])
+os.chdir(root/'working/deploy/offline/internal/install')
+print(json.dumps({'scope':'Private tmpfs + mount/net/PID namespace; only loopback up; actual unit tests, not installed Control','uid':os.geteuid(),'gid':os.getegid(),'mount_namespace':os.stat('/proc/self/ns/mnt').st_ino,'network_namespace':os.stat('/proc/self/ns/net').st_ino}),flush=True)
+os.environ.update(TMPDIR=str(private)+'/',GOMAXPROCS='1',GOMEMLIMIT=str(config['go_memory_bytes'])+'B')
+os.execv(str(binary),[str(binary),'-test.run=^(TestPortal|TestServing|TestApplyServing)','-test.v','-test.timeout='+str(config['test_seconds'])+'s'])

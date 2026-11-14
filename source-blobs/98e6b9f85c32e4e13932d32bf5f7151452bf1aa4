@@ -1,0 +1,40 @@
+{
+  "repository": "/root/lane-trn",
+  "branch": "codex/lane-trn-cpu-admission",
+  "head": "bf38c07bca3e6599f4e70b6a1d6665d71f03605f",
+  "base": "68fc5e02f6110e2d9681a3dd3c306f7cd3881bdc",
+  "local_candidate_commits": 9,
+  "uncommitted_paths": [],
+  "published": false,
+  "native_go_or_postgresql_run_started": false,
+  "autostart": false,
+  "current_resource_order": "DEL 4463 unique installation joint acceptance, then training full gates and PostgreSQL, then OBS110 unit-only",
+  "proof_root": "/root/lane-trn-cpu-admission.RaaYxrR7",
+  "accepted_cpu_prototype": "37 packages plus pip, 215 original wheel notices; real sealed step1 interruption and fresh step2 resume, five algorithmic files byte-identical; private profile only",
+  "original_python_source_commit": "096c50b8",
+  "python_and_model_catalog_inputs_unchanged": true,
+  "dat101_worktree": "/root/lane-trn-dat101",
+  "dat101_commit": "fa82645ca49811521872df90450dad858816b71f",
+  "phases": [
+    "pg",
+    "check",
+    "build",
+    "modules",
+    "runtime"
+  ],
+  "manual_entry": "/root/lane-trn-tools/run-trn-acceptance-window.sh",
+  "linux_locks": [
+    "/run/lock/ownsolid-heavy.lock",
+    "/root/lane-sci-tools/heavy-test.lock"
+  ],
+  "resource_preflight": "/root/lane-trn-cpu-admission.RaaYxrR7/preflight_cpu_prototype.py",
+  "resource_policy": "unchanged: 3 GiB free and 12 GiB available memory; 15 GiB disk; full IO avg10/avg60 at most 5 percent; no other heavy process",
+  "scheduler_handoff": "/root/lane-sch-tools/training-handoff.AbUHULN6",
+  "scheduler_boundary": "RankWorkspaceQueueWithin requires raw pgx.Tx; selected Store exposes Executor. Need compatible checked ranking entry and ARC formal DDL/grants/catalog; do not bypass via legacy pool or FIFO.",
+  "mac_publish_lock": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "mac_lock_protocol": "persistent regular same-uid non-symlink file; fcntl.flock LOCK_EX|LOCK_NB; keep same FD through gated work; unlock and close only; never unlink, replace or truncate",
+  "promotion": "fetch/rebase and compare affected actual inputs under the publication protocol; FF main only after required native gates pass",
+  "preserved_original_ref": "refs/codex/handoff/trn-before-rebase-5b2eab1f",
+  "last_refused_admission_log": "continued-cell-pg-attempt1.log",
+  "last_refused_admission_log_sha256": "86470fef7c4fd1dea0a0e0995b82764bafd87535814a9ca104bf7f430366dae0"
+}

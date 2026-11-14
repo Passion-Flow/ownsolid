@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+expected_source=48ed1588c41cd4ffca484849166ef558be632acafb142b40486fb56f479a856b
+expected_test=f77a6d8e1ae1983be5415a3d1937290b953ca664db18097f26f1305a1c933a2d
+base=/root/lane-obs-tools/installed-history-driver
+if [[ ${1:-} != child ]]; then
+    receipt=$(mktemp -d /root/lane-obs-tools/installed-history-client-linux.XXXXXX)
+    printf 'CLIENT_RECEIPT=%s\n' "$receipt"
+    exec 3>&1
+    exec >"$receipt/check.log" 2>&1
+    trap 'status=$?; printf "EXIT_CODE=%s\n" "$status"; tail -18 "$receipt/check.log" >&3; printf "CLIENT_RECEIPT=%s\n" "$receipt" >&3' EXIT
+    exec 8>/run/lock/ownsolid-heavy.lock
+    flock -n 8 || { printf 'ADMISSION_BLOCKED=global-heavy-lock\n'; exit 75; }
+    exec 9>/root/lane-sci-tools/heavy-test.lock
+    flock -n 9 || { printf 'ADMISSION_BLOCKED=sci-heavy-lock\n'; exit 75; }
+    timeout --signal=TERM --kill-after=2s 118s bash "$0" child "$receipt"
+    exit
+fi
+receipt=${2:?}
+python3 - <<'PY_LEASE'
+from pathlib import Path
+import os
+seen=set()
+for fd in [8,9]:
+    target=os.readlink('/proc/self/fd/'+str(fd))
+    info=Path('/proc/self/fdinfo/'+str(fd)).read_text()
+    assert 'FLOCK' in info and 'WRITE' in info, 'Current parent does not hold the inherited lease'
+    seen.add(target)
+assert seen=={'/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock'}
+print('INHERITED_OWN_PARENT_DUAL_LOCK_LEASE_CONFIRMED', flush=True)
+PY_LEASE
+date -u +%FT%TZ
+df -h /
+free -m
+cat /proc/pressure/io
+test "$(df --output=avail -B1 / | tail -1)" -ge 16106127360 || exit 75
+test "$(free -m | awk '$1=="Mem:" {print $4}')" -ge 2048 || exit 75
+test "$(free -m | awk '$1=="Mem:" {print $7}')" -ge 2048 || exit 75
+python3 - <<'PY_IO'
+from pathlib import Path
+for line in Path('/proc/pressure/io').read_text().splitlines():
+    if float(line.split('avg10=')[1].split()[0]) > 5:
+        raise SystemExit(75)
+PY_IO
+test "$(sha256sum "$base/main.go" | cut -d ' ' -f 1)" = "$expected_source"
+test "$(sha256sum "$base/main_test.go" | cut -d ' ' -f 1)" = "$expected_test"
+sha256sum "$base/main.go" "$base/main_test.go" > "$receipt/inputs.sha256"
+cp "$base/main.go" "$base/main_test.go" "$receipt/"
+export PATH=/root/lane-obs-tools/go/bin:$PATH
+export GOMAXPROCS=2 GOFLAGS=-p=2 GO111MODULE=off GOWORK=off GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local
+short_tmp=$(mktemp -d /tmp/obsc.XXXXXX)
+trap 'rmdir -- "$short_tmp" || true' EXIT
+export TMPDIR="$short_tmp"
+go version > "$receipt/compiler.txt"
+unshare --net bash -ec '
+    set -o pipefail
+    ip link set lo up
+    test "$(ip -o link show | wc -l)" -eq 1
+    test -z "$(ip route show default)"
+    test -z "$(ip -6 route show default)"
+    cd "$1"
+    go test -json -race -count=1 -timeout=60s > tests.jsonl
+    go vet ./... > vet.log 2>&1
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o installed-history-linux-amd64 main.go > build.log 2>&1
+' bash "$receipt"
+sha256sum --check --quiet "$receipt/inputs.sha256"
+python3 - "$receipt" <<'PY_PROOF'
+import hashlib,json,subprocess,sys
+from pathlib import Path
+root=Path(sys.argv[1])
+expected={'TestVerifyMeasuredZeroAndSparseAbsence','TestPublicTLSCookieAuditAndStaleSessionLifecycle','TestNullAuditItemsCannotProveNoAudit','TestCreateSessionStateDoesNotOverwrite','TestOpaqueUnixRelayPreservesTLSIdentity','TestNativeCachedMetricsSnapshotIsRefreshed','TestCounterFreshnessRejectsEpochChangeAndTimeout'}
+passed={}
+for line in (root/'tests.jsonl').read_text().splitlines():
+    event=json.loads(line)
+    if event.get('Action')=='pass' and event.get('Test') in expected:
+        passed[event['Test']]=event.get('Elapsed')
+assert set(passed)==expected,passed
+binary=root/'installed-history-linux-amd64'
+desc=subprocess.check_output(['file',str(binary)],text=True).strip()
+assert 'ELF 64-bit' in desc and 'x86-64' in desc and 'statically linked' in desc,desc
+program_headers=subprocess.check_output(['readelf','-l',str(binary)],text=True)
+assert 'INTERP' not in program_headers,program_headers
+names=['main.go','main_test.go','tests.jsonl','vet.log','build.log','installed-history-linux-amd64']
+proof={'scope':'Linux amd64 pure-client tests and static build; no installed product phase or VM/PG',
+       'compiler':(root/'compiler.txt').read_text().strip(),
+       'race_tests':passed,'vet':'passed','target':{'GOOS':'linux','GOARCH':'amd64','CGO_ENABLED':'0','GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=2','trimpath':True},
+       'files':{name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in names},
+       'binary_description':desc}
+(root/'proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+print(json.dumps(proof,indent=2))
+print('ALL_SEVEN_CLIENT_SELF_TESTS_NATIVE_STATIC_BUILD_PASSED')
+PY_PROOF
+date -u +%FT%TZ

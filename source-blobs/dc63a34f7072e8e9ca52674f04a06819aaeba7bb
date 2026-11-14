@@ -1,0 +1,96 @@
+"""Capture a small fixed local vLLM CPU HTTP workload with complete observations."""
+
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
+import hashlib
+import http.client
+import importlib.metadata
+import json
+import socket
+import time
+
+HOST = "127.0.0.1"
+PORT = 18105
+MODEL = "ownsolid-evl105-qwen3-0.6b"
+TOPICS = (
+    "photosynthesis", "tides", "prime numbers", "glaciers",
+    "binary search", "composting", "gravity", "rainbows",
+)
+MAX_TOKENS = 24
+SEED = 42
+
+
+def request(method, path, payload=None):
+    headers = {"Connection": "close"}
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+    with closing(http.client.HTTPConnection(HOST, PORT, timeout=45)) as connection:
+        started = time.monotonic_ns()
+        connection.request(method, path, payload, headers)
+        response = connection.getresponse()
+        body = response.read(1_000_001)
+        finished = time.monotonic_ns()
+        if response.status != 200 or len(body) > 1_000_000:
+            raise ValueError(f"{method} {path} failed with HTTP {response.status}")
+    return started, finished, json.loads(body)
+
+
+def wait_ready():
+    deadline = time.monotonic() + 600
+    while time.monotonic() < deadline:
+        try:
+            _, _, listed = request("GET", "/v1/models")
+            if [entry["id"] for entry in listed["data"]] != [MODEL]:
+                raise ValueError("unexpected model list")
+            return
+        except (ConnectionError, socket.timeout, http.client.RemoteDisconnected):
+            time.sleep(4)
+    raise TimeoutError("local vLLM startup did not complete")
+
+
+def measure(case):
+    prompt = f"Explain {case} in one short sentence."
+    body = json.dumps({
+        "model": MODEL, "messages": [{"role": "user", "content": prompt}],
+        "max_completion_tokens": MAX_TOKENS, "seed": SEED, "stream": False,
+        "temperature": 0, "chat_template_kwargs": {"enable_thinking": False},
+    }).encode()
+    started, finished, result = request("POST", "/v1/chat/completions", body)
+    if result["model"] != MODEL or result["object"] != "chat.completion" or len(result["choices"]) != 1:
+        raise ValueError("malformed chat completion")
+    choice = result["choices"][0]
+    text = choice["message"]["content"]
+    if choice["finish_reason"] not in {"stop", "length"} or not isinstance(text, str) or not text.strip():
+        raise ValueError("missing usable chat completion")
+    usage = result["usage"]
+    prompt_tokens, completion_tokens = usage["prompt_tokens"], usage["completion_tokens"]
+    if not (type(prompt_tokens) is int and prompt_tokens > 0 and type(completion_tokens) is int
+            and 0 < completion_tokens <= MAX_TOKENS and usage["total_tokens"] == prompt_tokens + completion_tokens):
+        raise ValueError("invalid token usage")
+    return {
+        "case": case, "id": result["id"], "started_ns": started, "finished_ns": finished,
+        "latency_ns": finished - started, "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens, "finish_reason": choice["finish_reason"],
+        "request_sha256": hashlib.sha256(body).hexdigest(),
+        "output_sha256": hashlib.sha256(text.encode()).hexdigest(),
+    }
+
+
+def main():
+    wait_ready()
+    warmup = [measure(case) for case in ("triangles", "clouds")]
+    runs = []
+    for concurrency in (1, 2):
+        with ThreadPoolExecutor(max_workers=concurrency) as executor:
+            samples = list(executor.map(measure, TOPICS))
+        wall_ns = max(item["finished_ns"] for item in samples) - min(item["started_ns"] for item in samples)
+        runs.append({"concurrency": concurrency, "wall_ns": wall_ns, "samples": samples})
+    all_samples = [*warmup, *(item for run in runs for item in run["samples"])]
+    if len({item["id"] for item in all_samples}) != len(all_samples):
+        raise ValueError("duplicate completion identifier")
+    versions = {name: importlib.metadata.version(name) for name in ("vllm", "torch", "transformers")}
+    print(json.dumps({"model": MODEL, "packages": versions, "warmup": warmup, "runs": runs}, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()

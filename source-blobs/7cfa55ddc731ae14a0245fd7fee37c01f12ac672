@@ -1,0 +1,23 @@
+set -euo pipefail
+source /root/lane-gw-toolchain/env
+root=/root/lane-gw-acceptance
+ip link set lo up
+ip -br addr
+ip route
+ss -lntp
+python3 "$root/relay.py" "$root/engine/vllm.sock" > "$root/relay-port" &
+relay_pid=$!
+trap 'kill "$relay_pid" 2>/dev/null || true; wait "$relay_pid" 2>/dev/null || true' EXIT
+for i in $(seq 1 15); do
+  [ ! -s "$root/relay-port" ] || break
+  sleep 1
+done
+port=$(cat "$root/relay-port")
+test -n "$port"
+for i in $(seq 1 260); do
+  if curl -fsS --max-time 2 "http://127.0.0.1:$port/v1/models" > "$root/engine-models.json" 2>/dev/null; then break; fi
+  sleep 2
+done
+jq -e '.data[0].id == "projectone-qwen3-0.6b"' "$root/engine-models.json"
+cd /root/lane-gw/services/gateway
+OWNSOLID_TEST_VLLM_ADDRESS="127.0.0.1:$port" cargo test --locked --offline offline_vllm_stream -- --ignored --nocapture

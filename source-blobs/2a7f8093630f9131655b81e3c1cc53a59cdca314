@@ -1,0 +1,23 @@
+{
+  "elapsed_seconds": 0.38693430298008025,
+  "exit": 75,
+  "leases": [
+    {
+      "acquired": false,
+      "device": 29,
+      "fd": 3,
+      "inode": 82,
+      "kernel_matches": [
+        "26: FLOCK  ADVISORY  WRITE 2643584 00:1d:82 0 EOF"
+      ],
+      "path": "/run/lock/ownsolid-heavy.lock"
+    }
+  ],
+  "parent": {
+    "pid": 2666790,
+    "start_ticks": "77507674"
+  },
+  "scope": "Exact working-tree support unit/CLI protocol only; no product, database, server audit or release qualification",
+  "status": "lease-busy",
+  "steps": []
+}

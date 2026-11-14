@@ -1,0 +1,1432 @@
+diff --git a/docs/decisions/0048-agent-gateways-beside-control.md b/docs/decisions/0048-agent-gateways-beside-control.md
+index d5b25947..acf6bac7 100644
+--- a/docs/decisions/0048-agent-gateways-beside-control.md
++++ b/docs/decisions/0048-agent-gateways-beside-control.md
+@@ -46,6 +46,12 @@ the database, so any gateway serves any agent.
+ `SERVICE_NOT_READY`, so agents move at once; the liveness table is flushed before the pool
+ closes.
+ 
++**A dedicated gateway also ages individual connections.** The listener sets a
++jittered drain point and a later socket deadline. Age retires the v1 stream
++between exchanges, preserving the current reply and the Agent's persisted
++acknowledgement cursor. The common embedded listener follows its existing
++lifecycle. See [the ARC-107 listener research](../research/agent-gateway-rebalance.md#dedicated-listener-connection-age).
++
+ ## Consequences
+ 
+ - The session tier scales by adding gateway processes on more hosts; connections per agent stay
+diff --git a/docs/decisions/0070-scope-gateway-http-shutdown-to-one-connection.md b/docs/decisions/0070-scope-gateway-http-shutdown-to-one-connection.md
+new file mode 100644
+index 00000000..406ff94f
+--- /dev/null
++++ b/docs/decisions/0070-scope-gateway-http-shutdown-to-one-connection.md
+@@ -0,0 +1,44 @@
++# Scope gateway HTTP shutdown to one connection
++
++Status: accepted for ARC-107 implementation; production acceptance remains open.
++
++## Context
++
++The dedicated Agent gateway serves gRPC through net/http and keeps its
++existing HTTP health paths. An application age status and socket deadline
++can end a stream, but an established response cannot acquire a new response
++header to ask the HTTP/2 transport for GOAWAY. The earlier transport check
++only exercises a new request after age.
++
++## Decision
++
++Give each accepted dedicated gateway connection one standard http.Server
++owner and a listener that yields that connection once. Closing the listener
++ends acceptance; the HTTP server retains ownership of the accepted socket.
++Retain the common connection budget, verified TLS, request policy, jittered
++drain instant and bounded socket deadlines.
++
++At connection age, call that server's public Shutdown with the configured
++exchange grace. Go owns GOAWAY and frame serialization. Active exchanges
++keep their original contexts and may finish. Force-close an owner whose
++grace expires. Peer closure cancels its timer, and process shutdown joins
++all remaining owners within the existing process shutdown budget.
++
++Keep v1 messages, authentication, persisted acknowledgement cursors,
++lease handling, advertised origin and health paths unchanged. Shared
++browser/machine listeners retain their current process owner.
++
++## Consequences
++
++Each live connection has a small additional HTTP owner and shutdown state.
++Measure that overhead with the simulator before making a fleet-scale claim.
++The lifecycle must release the global connection slot exactly once and
++join its goroutines under peer, age and process-close races.
++
++A global server shutdown would retire unrelated connections. Hand-written
++GOAWAY frames or access to Go internal types would bypass the transport's
++ownership. A native gRPC listener would require a separate HTTP health
++endpoint or a protocol multiplexer. Those changes are unnecessary here.
++
++The [research and acceptance requirements](../research/agent-gateway-rebalance.md#automatic-goaway-for-an-established-stream)
++link the primary Go and gRPC contracts. No runtime dependency is added.
+diff --git a/docs/operations/install.md b/docs/operations/install.md
+index 0957f0a0..b6f28699 100644
+--- a/docs/operations/install.md
++++ b/docs/operations/install.md
+@@ -121,6 +121,7 @@ agent_gateway:
+   listen_address: 0.0.0.0:9443
+   tls_certificate_file: /run/projectone/certificate.pem
+   tls_private_key_file: /run/projectone/private-key.pem
++  connection_max_age_seconds: 1800
+ ```
+ 
+ The certificate must name the host of the origin agents use (the admin origin unless
+@@ -132,6 +133,12 @@ install configuration raises it: set it to 10 plus each gateway's pool and apply
+ that finds the limit full stops with `DATABASE_CONNECTION_LIMIT_REACHED`. It serves only the session stream and `/health/live` and `/health/ready`; agents keep
+ sending enrollment, results, renewals and transfers to the origin.
+ 
++The dedicated listener begins draining each connection at a randomized point in
++the final tenth of `connection_max_age_seconds`. Omission or zero selects 1,800 seconds.
++Overrides range from 60 to 86,400 seconds. A current exchange can finish.
++The transport closes by the end of the bounded drain window. Reconnecting agents
++keep their acknowledged task sequence. Restart the gateway to change the setting.
++
+ Give agents the gateways in their configuration, the addresses they reach them on:
+ 
+ ```json
+diff --git a/docs/product/status.md b/docs/product/status.md
+index ae9c93cc..0b49d0e6 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -115,6 +115,7 @@ today and what is known to fail.
+ | Break-glass operator path and agent shedding (ARC-016): agents leave a reserve of the database pool to operators; four shed levels refuse agent traffic lowest priority first, in memory and before database work, with the retry hint agents honor; set from the console (Nodes, Agent pacing, typed confirmation for `heartbeats`, a warning on the Nodes page while in force) or on the host with `ownsolid-install agents shed` over a mode 0600 Unix socket; a host level waits in a file while control is down and control starts with it; a lock or a slow database makes control not ready instead of stopping it (ADR 0043, 0045) | Yes, PostgreSQL only | `TestBreakGlass` with 2,000 simulated agents in the offline single-node install on `ownsolid-cpu`, two passing runs in a row: with every agent seat waiting on a 40 s lock, sign-in 88 ms and a console read 6 ms, and control did not restart; the console level turned every node offline within 31 s, was audited with the user, and every agent was heard 61 s after it was lifted; with the connection limit proven full the host level took effect and was audited with the `operator` audience; with PostgreSQL stopped the host level held the fleet back across control's return, was stored and audited, and no agent was heard; a stored level survived a control restart with no agent let in; zero egress. Console flows ran in real Chromium against the mocked control plane | n/a | MySQL and Dameng cannot store a level (CMP-201, CMP-202). Not run with a real agent or on real hardware |
+ | Node views (ARC-101): a repeated heartbeat is answered from memory with no SQL; triggers announce changes through the outbox, so a revoked node is refused within one poll, 200 ms by default, and within `nodes.view_max_age_seconds` if news stops; a failed outbox read sends every heartbeat back to the database; a held claim ends when its node changes (ADR 0047) | Yes, PostgreSQL only | PostgreSQL 18.6: a warm heartbeat answers with the table locked, and every revocation case fails if events are ignored. `TestSingleNodeInstall` passed on `ownsolid-cpu`, including a change through the API under the serving role. `TestFleetLoad` with 2,000 simulated agents passed every threshold once, at 2,504 commits a second | n/a | None known. MySQL and Dameng keep reading the database. One gateway; the hit rate at load was not recorded ([research](../research/node-view-cache.md)) |
+ | Agent gateways (ARC-102): `serve-agent-gateway` serves agent session streams beside control from its own pool, without the installation lock, fenced on control holding the installation and drained on stop; agents order the gateways by rendezvous hash and move to the next one when theirs fails; the serving role's connection limit is configurable for control plus gateways (ADR 0048) | Yes, PostgreSQL only | `TestAgentGateways` on `ownsolid-cpu`, offline: control and two gateway containers, 500 simulated agents. The fleet split 237/263, tasks succeeded in under 2 s through two and through one gateway, every agent was back 7.5 s after a gateway was killed and at once after a drain, and both gateways fenced while control was stopped and served again when it returned | n/a | None known. The installer does not place gateways on hosts yet (REL-101); gateways share the serving role (ARC-111); no rebalancing after a gateway returns (ARC-107); load across gateways is ARC-105 ([research](../research/agent-gateway-tier.md)) |
++| Dedicated Agent gateway connection age (ARC-107, open) | Candidate. A connection-scoped standard HTTP owner sends automatic GOAWAY at jittered age, preserves admitted replies and bounds socket lifetime | On macOS arm64, the frame-level and leased-claim cases, process shutdown and connection-slot release passed three race repetitions. The full httpserver, agentgateway, config and server package race suites passed. Earlier disconnected Linux arm64 evidence covers the prior deadline-based listener only. See [automatic drain qualification](../research/agent-gateway-rebalance.md#automatic-goaway-for-an-established-stream) | No | Linux target, installed rollout, simulator resource measurements and shared-listener qualification of the new owner remain open |
+ | Agent certificates (ARC-103): a node makes its own key and gets a client certificate naming it at enrollment; every call needs that certificate and the bound credential; the key is pinned, so a rotation is a revocation point; agents rotate by themselves 70% to 90% through the lifetime and confirm from the new key; a node that outlived its certificate recovers with the credential and a request signed by a pinned key; enrollment is limited per source network (ADR 0050) | Yes, PostgreSQL only; MySQL and Dameng keep the credential until CMP-201 and CMP-202 | `TestSingleNodeInstall` on `ownsolid-cpu`, offline, all 32 subtests: the real agent enrolled with a certificate, was refused without it (`AGENT_CERTIFICATE_REQUIRED`), rotated it without restarting, the old certificate was then refused (`AGENT_CERTIFICATE_SUPERSEDED`) and the new one ran tasks; the simulated fleet of the same run held a certificate per agent. `TestAgentGateways` passed with gateways verifying certificates from the CA alone. In one of three install runs, `apply` after a stopped database failed once at the administrator step with `BOOTSTRAP_RESULT_CONFLICT` and passed on the rerun | n/a | None known. Racks are source networks until FLT-101 names them (ARC-112); replacing the agent CA is a manual procedure (ARC-113); the console does not show certificate expiry (ARC-114). Certificate expiry on a clock more than 5 minutes behind control needs NTP ([research](../research/agent-mtls-identity.md)) |
+ | Control crash recovery (REL-001): control needs no shutdown to be safe. After a SIGKILL the restart policy brings it back, running tasks finish on their first attempt, an upload resumes from what the server kept, and an import killed while unpacking starts again by itself, spending one attempt (ADR 0046) | Yes; import recovery shares its code on all three databases, tested on PostgreSQL | `TestControlCrash` with 2,000 simulated agents in the offline single-node install on `ownsolid-cpu`, two passing runs in a row: control ready 1.7 to 3.4 s after each kill, 101 of 101 tasks on their first attempt, the real model bundle `ready` on attempt 2, a repeated write found the same task, every agent heard again, zero egress | n/a | None known. Mail and workflow recovery tests passed; dataset, knowledge and task-delivery recovery tests exist but did not run for this item ([research](../research/control-crash-recovery.md)). One control process on one host; simulated nodes; model store in memory |
+ 
+@@ -153,12 +154,14 @@ data-processing Python and component assets are not installed there. The ARC-004
+ was checked against that baseline and adds no failure. ARC-005 was checked the same way
+ on the packages it touches (nodes, identity HTTP, machine composition, agent tests).
+ 
+-At schema 57, TestEveryCellOwnedTableCarriesScope fails because audit_chain_head lacks
+-both required scope columns. The 58 candidate passed the six SQL catalog paths,
+-production Go migrator and Audit module on disconnected Linux amd64 PostgreSQL 18.6.
+-The standalone verifier retained the earlier checkpoints. Repository admission of
+-58 still requires the full gate on the integration tree. See the
+-[audit scope replay gate](../research/audit-chain-head-cell-scope.md#shared-linux-replay-gate).
++Schema 57 lacks the two required scope columns on audit_chain_head. Migration 58
++fixes that admission failure without rewriting retained audit positions or hashes.
++The six SQL catalog histories passed on disconnected Linux amd64 PostgreSQL 18.6.
++The joint IAM and Audit input also passed fresh install, logical restore from 55
++and 58, repeated production migration, scope refusal and the complete Audit module,
++with 118 tables and the original independently verified checkpoints. The full
++repository check, build and test passed, including both complete browser suites.
++See the [exact integration admission](../research/audit-chain-head-cell-scope.md#exact-integration-admission).
+ 
+ `deploy/images/control/assets/index.html`, the old placeholder page, is unused and awaits
+ removal by the owner: no image build copies it.
+diff --git a/docs/research/agent-gateway-rebalance.md b/docs/research/agent-gateway-rebalance.md
+index 606a5c52..26715e5e 100644
+--- a/docs/research/agent-gateway-rebalance.md
++++ b/docs/research/agent-gateway-rebalance.md
+@@ -84,3 +84,119 @@ namespace with only loopback. All 40 agents went from 18/22 sessions to 0/40 and
+ returned to their original 18/22 split in 12.732 seconds. The separate
+ 500-agent installation drill stopped when its Docker-in-Docker container exited
+ during setup. No installation-level result is recorded for ARC-107.
++
++## Dedicated listener connection age
++
++The standalone `serve-agent-gateway` listener has its own TLS socket and
++connection budget. Attach the drain instant in
++[Go's ConnContext](https://pkg.go.dev/net/http#Server) and bound the
++underlying socket's read and write deadlines through the public
++[net.Conn interface](https://pkg.go.dev/net#Conn). Choose the instant
++uniformly from the final tenth of the configured maximum age. Set the
++hard socket deadline after the largest allowed claim wait and the
++existing request budgets for peer validation, the exchange and its
++reply. Clamp every transport deadline update to that hard limit,
++including a request to clear a deadline. This keeps a stalled TLS or
++HTTP/2 peer from keeping the aged connection indefinitely.
++
++The stream owns one exchange at a time. Age ends it between exchanges
++using the same v1 `SERVICE_NOT_READY` status as process drain. An
++exchange admitted before the age keeps its normal context and can
++deliver its reply. The v1 Agent retains its persisted acknowledged
++sequence and already retries an interrupted acknowledgement through
++the authenticated HTTPS path. The dedicated server's original process
++drain stays independent. The connection's HTTP owner initiates standard
++HTTP/2 shutdown at the age instant, independently of later requests.
++The existing stream drains at the application boundary, with the socket
++deadline as the final bound. The earlier response-header mechanism only
++notified connections that made a new request after age; the stronger
++acceptance below requires automatic notification of an established stream.
++
++Reject use of the global Gateway drain for one connection. It would
++cancel existing claims and refuse every healthy connection. Avoid
++writing frames directly on the TLS socket, which would race the
++standard library's HTTP/2 framer. The embedded Agent endpoint shares a
++listener with other traffic and needs its own scoped integration.
++The dedicated option keeps older YAML valid with a 1,800-second
++maximum and leaves the v1 messages, leases and cursor format intact.
++
++Test verified local TLS and HTTP/2 through the production listener.
++Hold an admitted claim across age, complete its reply, observe the v1
++drain status, and reconnect to a second listener with the same
++acknowledged cursor. Refuse post-age exchanges on the old stream.
++Check the pinned HTTP/2 close behavior and bound a transport that
++does not reconnect. The Go and gRPC licences above apply and no
++new runtime dependency or data is added. This scope does not
++qualify installed gateways or fleet load.
++
++The earlier deadline-based two-listener regression passed under the Go race detector and
++in an isolated Linux arm64 container with no network. It held a
++claim across age, received the next lease and the legacy drain
++status, then confirmed that the same listener accepted a new
++connection and the second listener received the previous acknowledged
++cursor.
++That transport test decoded a real HTTP/2 GOAWAY on an aged request
++and proved the socket deadline closed a silent connection. The
++legacy configuration default, bounds and process-wide drain passed
++in the same disconnected run. For the focused replay use:
++
++```sh
++go -C services/control test -p 1 ./internal/platform/agentgateway ./internal/platform/httpserver ./internal/platform/config \
++  -run '^(TestAgedGatewayFinishesHeldClaimAndPreservesCursor|TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport|TestAgentGatewayConnectionMaxAgeDefaultsAndBounds|TestDrainEndsSessionsAndRefusesNewOnes)$' -count=1
++```
++
++## Automatic GOAWAY for an established stream
++
++The existing frame-level test sends a new request after the age instant.
++It proves that the response header starts HTTP/2 drain, but does not prove
++automatic GOAWAY while an earlier stream remains active. The source-level
++reason is that the age middleware runs when a request starts; it cannot
++change headers already sent by a long-running gRPC response. A hard socket
++deadline bounds closure but is not a graceful-drain notification.
++
++[gRPC A9](https://github.com/grpc/proposal/blob/master/A9-server-side-conn-mgt.md)
++requires an age-triggered GOAWAY followed by time for outstanding RPCs.
++The pinned [gRPC-Go handler](https://github.com/grpc/grpc-go/blob/v1.85.0/server.go)
++delegates HTTP/2 ownership to net/http. The pinned
++[Go HTTP/2 setup](https://github.com/golang/go/blob/go1.27.3/src/net/http/http2.go)
++registers its graceful connection shutdown with the public
++[http.Server.Shutdown](https://pkg.go.dev/net/http#Server.Shutdown).
++That API waits for active requests, while the socket owner still needs a
++deadline and forced close when its grace expires.
++
++Use one standard HTTP server owner per accepted dedicated gateway
++connection, retaining the same TLS, connection budget and request policy.
++Its single-connection listener closes acceptance without closing the active
++socket. At that connection's existing jittered age, invoke its public
++Shutdown with the bounded grace. The server owns all HTTP/2 frame writes.
++Join the per-connection owner on peer closure or process shutdown and retain
++the hard transport deadline. This scopes the standard shutdown mechanism
++to one connection without new dependencies or wire changes. See
++[ADR 0070](../decisions/0070-scope-gateway-http-shutdown-to-one-connection.md).
++
++Reject a global server Shutdown because it drains healthy peers too.
++Reject direct frame writes and access to Go internal connection objects.
++Replacing the handler with native gRPC transport would also require a new
++health-listener or protocol multiplexer and changes to deployment routing.
++The selected approach preserves the existing gateway origin and health paths.
++The existing Go BSD-3-Clause and gRPC-Go Apache-2.0 licences still apply;
++there is no new dependency, model, data set or runtime download.
++
++Require a real TLS/HTTP/2 test with one response held open before age.
++Without another client request, observe NO_ERROR GOAWAY covering the
++accepted stream, then release and verify the complete original response.
++Keep the leased-claim/cursor regression, silent-peer deadline, healthy-peer
++acceptance and bounded process shutdown checks. Run the native target,
++installed two-gateway rollout and simulator distribution checks before
++closing ARC-107. Source review alone is not acceptance.
++
++The strengthened held-response test first failed with EOF after 1.91
++seconds: no request followed the age instant and no GOAWAY arrived.
++The connection-owned Shutdown implementation then passed three race
++repetitions of the frame-level and leased-claim checks, legacy age bounds
++and process drain. Normal and timed-out process shutdown and release of a
++single connection slot each passed three race repetitions. The complete
++httpserver, agentgateway, config and cmd/server package suites also passed
++with the race detector on macOS arm64, using a short-path private APFS
++temporary volume. Target Linux and installed rollout qualification of this
++new transport owner, including simulator resource measurements, remain open.
+diff --git a/docs/research/app-lane-questions.md b/docs/research/app-lane-questions.md
+index 06e13ebf..9b72bf26 100644
+--- a/docs/research/app-lane-questions.md
++++ b/docs/research/app-lane-questions.md
+@@ -274,8 +274,12 @@ The paired constructor and audit fixture passed disconnected PostgreSQL
+ checks and SCI input review. On 2026-11-12 the rebased assistant and audit
+ source passed the native `make check`, `make build` and `make test` gate,
+ with both complete browser suites run sequentially at one worker and no
+-automatic retries. The assistant and audit race tests and vet, five
+-qualification unit tests, real audit export with its independent verifier,
++automatic retries. After the monitoring contract integration, the full
++gate passed again with two workers per entrance and no retries. Later
++standalone CLI changes passed repository checks, a complete build, full
++CLI tests, race tests and vet; comparison verified that the other runtime,
++contract and fixture files were unchanged. The assistant and audit race
++tests and vet, five qualification unit tests, real audit export with its independent verifier,
+ current-session commands and both-entrance HTTPS policy checks also passed.
+ 
+ The [durable budget component](product-assistant-execution-budgets.md)
+@@ -301,7 +305,7 @@ Portal keyboard visibility failure at
+ drawer's `Download CSV` button with its focus indication, while the sampled
+ rectangle was outside the viewport. The exact case is
+ `a key's drawer with its sample calls: every control is reachable and shows focus`.
+-Ten focused serial diagnostic runs and the final complete serial suite
+-passed. Those results do not establish a fix for the earlier failure.
++Ten focused serial diagnostic runs and later complete one- and two-worker
++suites passed. Those results do not establish a fix for the earlier failure.
+ The unchanged Web source remains outside APP ownership. Its owner needs
+ the exact case and original trace for diagnosis. No assertion was changed.
+diff --git a/docs/research/audit-chain-head-cell-scope.md b/docs/research/audit-chain-head-cell-scope.md
+index 57fbb29c..cd79f7f7 100644
+--- a/docs/research/audit-chain-head-cell-scope.md
++++ b/docs/research/audit-chain-head-cell-scope.md
+@@ -224,7 +224,7 @@ The SQL replay accepted eight concurrent appends each after logical
+ restore from 55 and 58. The Audit module also passed scope refusal,
+ concurrent appends and mutation detection.
+ 
+-The clean archive remains the replay input after rebasing on
++The clean archive was reused for the integration rebased on
+ `273929ee`. The Linux amd64 package list for the production database
+ and Audit tests and the standalone verifier selected 758 Go and
+ embed inputs across 48 repository package directories. None changed
+@@ -244,16 +244,54 @@ promoting 58.
+ 
+ ## Exact integration admission
+ 
+-The preserved replay archive and the 758-input comparison remain unchanged.
+-A comparison against the integration based on `203109c7` selected the same
+-966 repository Go, test, embed and assembly paths as the archive. All 986
+-selected source, module, migration and release-lineage inputs matched
+-byte for byte. The 57 published up migrations remain identical to main,
+-and all 58 source checksums match the release descriptor.
+-
+-The earlier full repository gate passed check, build and test on
+-`7170ef90`. Subsequent Web and runtime changes require the new integrated
+-candidate to pass the same gate before promotion. Workstation runs use
+-the shared `ownsolid-workstation-full-gate.lock` and a private temporary
+-volume with sufficient free space. The unchanged Linux replay inputs
+-reuse the completed amd64 migrator, scope, checkpoint and Audit tests.
++The joint IAM and Audit gate froze source commit
++`0f02cf937479aeae9dcbdea8da4ee8ef27f551a5` on the accepted APP baseline
++`279382f2`. Its equivalent code revision is `8c04ab6f`, rebased over the
++subsequent three-file APP documentation update. Every non-Markdown file is
++identical between those two inputs. The 57 published up migrations and
++their release entries remain byte-identical, and all 58 source checksums
++match the release descriptor. No NET-102 source-selection work is included.
++
++The expanded Linux package comparison selected 971 repository Go, test,
++embed and assembly inputs across 53 directories, compared with the
++original archive's 966. Eighteen files changed in the model, assistant and
++HTTP dependencies and test variants. Module manifests, migration SQL,
++catalog admission and release lineage did not change. Rebuild the affected
++Linux tests instead of attributing the earlier archive's run to this input.
++The joint tracked-source archive SHA-256 is
++`88b4a8b698e50bb95c9c56cc3e42f208baa2183fde693342eb7bd024f8cf3780`.
++
++The supplemental Linux amd64 run held both original locks with full I/O
++PSI avg10 of 1.78%, 8,245,684 KiB free memory and 763 GiB available disk.
++Compilation used the pinned Go toolchain with networking disabled. The
++PostgreSQL 18.6 and pgvector 0.8.7 fixture used `network=none`. Fresh install
++and logical restores from 55 and 58 passed the production migrator, its
++idempotent replay and admission. All three catalogs matched the accepted
++schema-58 fingerprints with 118 tables. Both restored exports preserved
++the original checkpoint byte-for-byte and passed the standalone verifier.
++The complete Audit module passed, including mixed V1/V2 retention,
++32 concurrent appends, foreign-scope and serving-role refusal, mutation
++detection, retention and assistant disclosure. All 16 top-level checks
++passed with no skips. The combined log SHA-256 is
++`57af522c61ced035193816506be6c137ab45d230e223bf83af2df6a5b334cbe8`.
++The owned PostgreSQL container, volume and credential files were removed.
++The earlier six-history SQL qualification remains the original evidence
++for the unchanged migration bytes.
++
++IAM independently qualified the same frozen source: 12 HTTPS cases each
++ran three times, all 54 SSO cases passed, real Gitea recovery and callback
++replay passed, and three TOTP unit cases each ran three times. All four
++stage exit codes were zero with no skips; the source archive, binaries and
++raw log digests were checked independently. Those probes ran on Linux
++arm64 and macOS arm64. Production startup still calls `sso.New`, so
++IAM-119 remains open for its production wiring and UI acceptance.
++
++The frozen joint input passed `make check`, `make build` and `make test`.
++Both browser suites ran in sequence without automatic retries: Console
++passed 1,075 cases with 28 existing live-test skips, and Portal passed 389
++with nine existing live-test skips. Go, Rust and Web tests all passed.
++The workstation gate used the shared lock, bounded concurrency and a
++short-path private APFS temporary volume. Sleep prevention lasted only
++for the gate process, and the owned volume was detached afterwards.
++Documentation-only integration updates require the source-input
++equivalence check and `make check` before fast-forward publication.
+diff --git a/docs/research/product-assistant-execution-budgets.md b/docs/research/product-assistant-execution-budgets.md
+index 630fd269..0430f2e4 100644
+--- a/docs/research/product-assistant-execution-budgets.md
++++ b/docs/research/product-assistant-execution-budgets.md
+@@ -162,10 +162,17 @@ session commands and both-entrance HTTPS policy cases also passed against
+ disconnected PostgreSQL. These are component and staged-dispatcher results;
+ they do not establish a production migration, policy source or browser flow.
+ 
+-The same component passed the native full repository gate, including both
+-complete browser suites at one worker, followed by focused race tests and
+-vet. The [shared browser gate boundary](app-lane-questions.md#shared-browser-gate-boundary)
+-retains the earlier failure separately. A subsequent upstream integration
+-changed only Markdown documentation. All non-Markdown repository files
+-were byte-identical to the measured source before the final documentation
+-checks.
++The same component passed a complete native repository gate with both
++browser suites at one worker. After integrating the monitoring contract,
++it passed the full gate again at `3b49f6ae`, with two workers per entrance,
++no automatic retries, and focused race tests and vet. The
++[shared browser gate boundary](app-lane-questions.md#shared-browser-gate-boundary)
++retains the earlier failure separately.
++
++Later upstream changes added standalone CLI code and Markdown documentation.
++Comparison with the measured source verified that every non-CLI,
++non-Markdown repository file remained byte-identical. Only the CLI command
++imports its module. Repository checks and the complete build, CLI tests,
++CLI race tests and vet passed after that rebase before fast-forward
++publication at `279382f2`. This preserves the unchanged completed stages
++and records the affected module's separate acceptance.
+diff --git a/docs/research/product-assistant-model-qualification.md b/docs/research/product-assistant-model-qualification.md
+index 57a28ed0..9deb5cef 100644
+--- a/docs/research/product-assistant-model-qualification.md
++++ b/docs/research/product-assistant-model-qualification.md
+@@ -101,12 +101,14 @@ Keep the raw text out of the result and mark the evidence as retained
+ native output replay. A controlled replay without the native archive
+ keeps its existing mode.
+ 
+-The [SCI gateway compatibility check](evaluation-performance-benchmark.md)
+-found that the retained direct requests carry fields rejected by the
+-current gateway. Adapting the body removes seed forwarding, so it
+-cannot establish an equivalent production profile. A separately
+-qualified gateway request, session-scoped admission, and positive
+-capability evidence are needed before assigning a production tier.
++The [SCI gateway comparison](evaluation-performance-benchmark.md#authorized-cpu-gateway-pair)
++initially found direct request fields rejected by the gateway. Its later
++two-case greedy CPU pair matched the original completion digests and
++token counts, with authenticated HTTPS usage acknowledgments and scoped
++canonical receipts. That result qualifies the tested transport profile;
++it does not replay these three safety cases through a user-session-bound
++assistant route or establish positive assistant task capability. Those
++bindings and evidence remain required before assigning a production tier.
+ The APP runner uses the existing bounded file reader and strict JSON
+ decoding helpers. It adds no dependency, model or dataset.
+ 
+diff --git a/services/control/cmd/server/agent_gateway.go b/services/control/cmd/server/agent_gateway.go
+index e1c203d1..cb88af28 100644
+--- a/services/control/cmd/server/agent_gateway.go
++++ b/services/control/cmd/server/agent_gateway.go
+@@ -14,6 +14,7 @@ import (
+ 	"syscall"
+ 	"time"
+ 
++	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ 	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentgateway"
+@@ -269,7 +270,12 @@ func runAgentGateway(args []string) (result error) {
+ 	defer context.AfterFunc(g.ctx, gateway.Sessions.Drain)()
+ 	fmt.Println("AGENT_GATEWAY_STARTED")
+ 	slog.Info("agent_gateway_started", "listen_address", c.AgentGateway.ListenAddress, "origin", origin)
+-	e = httpserver.ServeListener(g.ctx, listener, tlsConfig, agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}, policy.HTTP)
++	age := httpserver.ConnectionAge{
++		Maximum: c.AgentGateway.MaxConnectionAge(),
++		// Allow a peer check, one admitted exchange and a bounded reply.
++		Grace: config.Seconds(3*policy.HTTP.RequestSeconds + wire.MaxClaimWaitSeconds),
++	}
++	e = httpserver.ServeListener(g.ctx, listener, tlsConfig, agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}, policy.HTTP, age)
+ 	if e != nil {
+ 		result = errors.New("SERVER_FAILED")
+ 	}
+diff --git a/services/control/config/examples/control/control.example.yaml b/services/control/config/examples/control/control.example.yaml
+index 48f824cc..81e77ae1 100644
+--- a/services/control/config/examples/control/control.example.yaml
++++ b/services/control/config/examples/control/control.example.yaml
+@@ -476,6 +476,8 @@ task_events:
+ #   listen_address: 0.0.0.0:9443
+ #   tls_certificate_file: /run/projectone/agent-gateway-certificate.pem
+ #   tls_private_key_file: /run/projectone/agent-gateway-private-key.pem
++#   # Drain begins in the final tenth of this age. The range is 60-86400 seconds.
++#   connection_max_age_seconds: 1800
+ 
+ # M30 owner: optional canonical absolute protected JSON file, no default.
+ # Omit to disable diagnostics; present empty/null/false/relative values fail.
+diff --git a/services/control/internal/platform/agentgateway/connection_age_test.go b/services/control/internal/platform/agentgateway/connection_age_test.go
+new file mode 100644
+index 00000000..5c94d9ee
+--- /dev/null
++++ b/services/control/internal/platform/agentgateway/connection_age_test.go
+@@ -0,0 +1,172 @@
++package agentgateway
++
++import (
++	"context"
++	"crypto/tls"
++	"net"
++	"net/http"
++	"net/http/httptest"
++	"strings"
++	"testing"
++	"time"
++
++	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
++	"google.golang.org/grpc"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/credentials"
++	"google.golang.org/grpc/status"
++)
++
++type heldAgeClaim struct {
++	fakeBackend
++	started chan time.Time
++	finish  chan struct{}
++	next    wire.Lease
++}
++
++func (b *heldAgeClaim) Claim(ctx context.Context, node, credential, request string, input wire.ClaimRequest) (wire.Claim, error) {
++	if input.AcknowledgedSequence == 0 {
++		return b.fakeBackend.Claim(ctx, node, credential, request, input)
++	}
++	b.started <- httpserver.ConnectionDrainAt(ctx)
++	select {
++	case <-ctx.Done():
++		return wire.Claim{}, ctx.Err()
++	case <-b.finish:
++		return wire.Claim{Lease: &b.next}, nil
++	}
++}
++
++func TestAgedGatewayFinishesHeldClaimAndPreservesCursor(t *testing.T) {
++	fixture := httptest.NewTLSServer(http.NotFoundHandler())
++	serverTLS := fixture.TLS.Clone()
++	serverTLS.NextProtos = []string{"h2", "http/1.1"}
++	clientTLS := &tls.Config{RootCAs: fixture.Client().Transport.(*http.Transport).TLSClientConfig.RootCAs,
++		ServerName: "example.com", MinVersion: tls.VersionTLS12}
++	fixture.Close()
++	start := func(backend Backend, maximum time.Duration) func() *grpc.ClientConn {
++		t.Helper()
++		gateway, err := New(backend, Policy{MaxSessions: 4, ExchangeSeconds: 3}, problem)
++		if err != nil {
++			t.Fatal(err)
++		}
++		listener, err := net.Listen("tcp", "127.0.0.1:0")
++		if err != nil {
++			t.Fatal(err)
++		}
++		ctx, stop := context.WithCancel(t.Context())
++		done := make(chan error, 1)
++		go func() {
++			done <- httpserver.ServeListener(ctx, listener, serverTLS.Clone(),
++				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++					if !Owns(r) {
++						http.NotFound(w, r)
++						return
++					}
++					gateway.ServeHTTP(w, r, "127.0.0.1")
++				}), config.DefaultHTTPPolicy(), httpserver.ConnectionAge{Maximum: maximum, Grace: 3 * time.Second})
++		}()
++		t.Cleanup(func() {
++			stop()
++			select {
++			case err := <-done:
++				if err != nil {
++					t.Error(err)
++				}
++			case <-time.After(5 * time.Second):
++				t.Error("dedicated listener did not stop")
++			}
++		})
++		return func() *grpc.ClientConn {
++			t.Helper()
++			conn, err := grpc.NewClient("passthrough:///"+listener.Addr().String(), grpc.WithTransportCredentials(credentials.NewTLS(clientTLS.Clone())))
++			if err != nil {
++				t.Fatal(err)
++			}
++			t.Cleanup(func() { _ = conn.Close() })
++			return conn
++		}
++	}
++
++	lease := wire.Lease{TaskID: testNode, Operation: wire.CollectFacts, LeaseToken: strings.Repeat("A", 43), Attempt: 1, Sequence: 7}
++	nextLease := lease
++	nextLease.TaskID = "9334a6cf-5382-4150-99f7-ac4d142a1731"
++	nextLease.Sequence++
++	first := &heldAgeClaim{
++		fakeBackend: fakeBackend{lease: &lease}, started: make(chan time.Time, 1),
++		finish: make(chan struct{}), next: nextLease,
++	}
++	second := &fakeBackend{}
++	older := start(first, 2*time.Second)
++	newer := start(second, time.Minute)
++	stream := open(t, older())
++	if reply, err := exchange(t, stream, heartbeat(1)); err != nil || reply.Disposition == nil {
++		t.Fatalf("initial heartbeat: %+v %v", reply, err)
++	}
++	if reply, err := exchange(t, stream, wire.AgentMessage{ID: 2, Claim: &wire.ClaimRequest{}}); err != nil ||
++		reply.Claim == nil || reply.Claim.Lease == nil || reply.Claim.Lease.Sequence != lease.Sequence {
++		t.Fatalf("initial claim: %+v %v", reply, err)
++	}
++	ack := wire.TaskAcknowledgement{TaskID: lease.TaskID, LeaseToken: lease.LeaseToken, Sequence: lease.Sequence}
++	if reply, err := exchange(t, stream, wire.AgentMessage{ID: 3, Ack: &ack}); err != nil || reply.Acknowledged == nil {
++		t.Fatalf("acknowledge: %+v %v", reply, err)
++	}
++	claim := wire.AgentMessage{ID: 4, Claim: &wire.ClaimRequest{AcknowledgedSequence: lease.Sequence}}
++	if err := stream.SendMsg(&claim); err != nil {
++		t.Fatal(err)
++	}
++	var drain time.Time
++	select {
++	case drain = <-first.started:
++	case <-time.After(3 * time.Second):
++		t.Fatal("claim did not start")
++	}
++	if !time.Now().Before(drain) {
++		t.Fatal("claim did not start before connection age")
++	}
++	timer := time.NewTimer(time.Until(drain))
++	defer timer.Stop()
++	<-timer.C
++	// A queued frame and the age timer are both ready after the held reply.
++	queued := heartbeat(5)
++	if err := stream.SendMsg(&queued); err != nil {
++		t.Fatal(err)
++	}
++	close(first.finish)
++	var reply wire.ControlMessage
++	if err := stream.RecvMsg(&reply); err != nil || reply.Validate(claim) != nil {
++		t.Fatalf("held claim did not finish: %+v %v", reply, err)
++	}
++	if reply.Claim == nil || reply.Claim.Lease == nil ||
++		reply.Claim.Lease.TaskID != nextLease.TaskID || reply.Claim.Lease.Sequence != nextLease.Sequence {
++		t.Fatalf("held claim lost the next lease: %+v", reply.Claim)
++	}
++	if err := stream.RecvMsg(&reply); status.Code(err) != codes.Unavailable || status.Convert(err).Message() != "SERVICE_NOT_READY" {
++		t.Fatalf("legacy drain status: %v", err)
++	}
++	first.mu.Lock()
++	admitted, acknowledgements := len(first.admitted), len(first.acks)
++	first.mu.Unlock()
++	if admitted != 4 || acknowledgements != 1 {
++		t.Fatalf("aged stream admitted extra work: %d exchanges, %d acknowledgements", admitted, acknowledgements)
++	}
++
++	if reply, err := exchange(t, open(t, older()), heartbeat(1)); err != nil || reply.Disposition == nil {
++		t.Fatalf("age drained the whole gateway: %+v %v", reply, err)
++	}
++	reconnected := open(t, newer())
++	if reply, err := exchange(t, reconnected, heartbeat(1)); err != nil || reply.Disposition == nil {
++		t.Fatalf("next gateway heartbeat: %+v %v", reply, err)
++	}
++	claim.ID = 2
++	if reply, err := exchange(t, reconnected, claim); err != nil || reply.Validate(claim) != nil {
++		t.Fatalf("next gateway claim: %+v %v", reply, err)
++	}
++	second.mu.Lock()
++	defer second.mu.Unlock()
++	if len(second.cursors) != 1 || second.cursors[0] != lease.Sequence {
++		t.Fatalf("next gateway lost acknowledged sequence: %v", second.cursors)
++	}
++}
+diff --git a/services/control/internal/platform/agentgateway/gateway.go b/services/control/internal/platform/agentgateway/gateway.go
+index 5c6f2ac9..0a5f303d 100644
+--- a/services/control/internal/platform/agentgateway/gateway.go
++++ b/services/control/internal/platform/agentgateway/gateway.go
+@@ -22,6 +22,7 @@ import (
+ 	"google.golang.org/grpc/status"
+ 
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/agentidentity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
+ )
+ 
+@@ -121,7 +122,7 @@ func Owns(r *http.Request) bool {
+ // audience. address is the client address used for rate limits.
+ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request, address string) {
+ 	// The listener's request deadlines are for short requests. A session ends through its
+-	// idle timeout, the agent closing it or the serving context being cancelled.
++	// idle timeout, connection age between exchanges, agent closing it or serving cancellation.
+ 	controller := http.NewResponseController(w)
+ 	if e := controller.SetReadDeadline(time.Time{}); e != nil && !errors.Is(e, http.ErrNotSupported) {
+ 		http.Error(w, "", http.StatusServiceUnavailable)
+@@ -162,6 +163,10 @@ func header(md metadata.MD, name string) (string, bool) {
+ }
+ 
+ func (g *Gateway) connect(stream grpc.ServerStream) error {
++	age := httpserver.ConnectionDrainAt(stream.Context())
++	if !age.IsZero() && !time.Now().Before(age) {
++		return status.Error(codes.Unavailable, errDraining.Error())
++	}
+ 	select {
+ 	case g.slots <- struct{}{}:
+ 		defer func() { <-g.slots }()
+@@ -228,9 +233,16 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
+ 	idleAfter := idleTimeout
+ 	idle := time.NewTimer(idleAfter)
+ 	defer idle.Stop()
++	var aged <-chan time.Time
++	if !age.IsZero() {
++		timer := time.NewTimer(time.Until(age))
++		defer timer.Stop()
++		aged = timer.C
++	}
+ 	var last uint64
+ 	for {
+ 		var m wire.AgentMessage
++		var ageElapsed bool
+ 		select {
+ 		case m = <-messages:
+ 		case <-received:
+@@ -238,12 +250,19 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
+ 			return nil
+ 		case <-idle.C:
+ 			return status.Error(codes.DeadlineExceeded, "AGENT_SESSION_IDLE")
++		case <-aged:
++			ageElapsed = true
+ 		case <-ctx.Done():
+ 			if errors.Is(context.Cause(ctx), errReplaced) {
+ 				return status.Error(codes.Aborted, errReplaced.Error())
+ 			}
+ 			return status.Error(codes.Unavailable, "SERVICE_NOT_READY")
+ 		}
++		// The next message and the age timer may become ready together.
++		if ageElapsed || !age.IsZero() && !time.Now().Before(age) {
++			slog.Info("agent_session_connection_aged", "node_id", node)
++			return status.Error(codes.Unavailable, errDraining.Error())
++		}
+ 		if e := m.Validate(last); e != nil || last == 0 && m.Heartbeat == nil {
+ 			return status.Error(codes.InvalidArgument, "AGENT_SESSION_MESSAGE_INVALID")
+ 		}
+diff --git a/services/control/internal/platform/config/agent_gateway.go b/services/control/internal/platform/config/agent_gateway.go
+index 80b490cb..45b10442 100644
+--- a/services/control/internal/platform/config/agent_gateway.go
++++ b/services/control/internal/platform/config/agent_gateway.go
+@@ -3,6 +3,7 @@ package config
+ import (
+ 	"crypto/tls"
+ 	"errors"
++	"time"
+ )
+ 
+ // AgentGatewayConfiguration is the listener of an agent gateway process (ADR 0048), which
+@@ -17,6 +18,16 @@ type AgentGatewayConfiguration struct {
+ 	// certificate must name the agent entrance's host, because agents verify that name.
+ 	TLSCertificateFile string `yaml:"tls_certificate_file"`
+ 	TLSPrivateKeyFile  string `yaml:"tls_private_key_file"`
++	// ConnectionMaxAgeSeconds bounds when a dedicated connection begins draining. Zero selects the default.
++	ConnectionMaxAgeSeconds int `yaml:"connection_max_age_seconds,omitempty"`
++}
++
++// MaxConnectionAge is the latest age at which a dedicated connection begins draining.
++func (g AgentGatewayConfiguration) MaxConnectionAge() time.Duration {
++	if g.ConnectionMaxAgeSeconds == 0 {
++		return 30 * time.Minute
++	}
++	return Seconds(g.ConnectionMaxAgeSeconds)
+ }
+ 
+ // Validate accepts an absent section and refuses an incomplete one.
+@@ -24,7 +35,8 @@ func (g *AgentGatewayConfiguration) Validate() error {
+ 	if g == nil {
+ 		return nil
+ 	}
+-	if validateServerListener(g.ListenAddress) != nil || !serverReference(g.TLSCertificateFile) || !serverReference(g.TLSPrivateKeyFile) || g.TLSCertificateFile == g.TLSPrivateKeyFile {
++	if validateServerListener(g.ListenAddress) != nil || !serverReference(g.TLSCertificateFile) || !serverReference(g.TLSPrivateKeyFile) || g.TLSCertificateFile == g.TLSPrivateKeyFile ||
++		g.ConnectionMaxAgeSeconds != 0 && (g.ConnectionMaxAgeSeconds < 60 || g.ConnectionMaxAgeSeconds > 86400) {
+ 		return errors.New("CONFIG_AGENT_GATEWAY_INVALID")
+ 	}
+ 	return nil
+diff --git a/services/control/internal/platform/config/agent_gateway_test.go b/services/control/internal/platform/config/agent_gateway_test.go
+index c31d31f7..64b3f07f 100644
+--- a/services/control/internal/platform/config/agent_gateway_test.go
++++ b/services/control/internal/platform/config/agent_gateway_test.go
+@@ -3,6 +3,7 @@ package config
+ import (
+ 	"crypto/tls"
+ 	"testing"
++	"time"
+ )
+ 
+ func agentGatewayTestConfiguration(t *testing.T, names []string) Config {
+@@ -38,6 +39,26 @@ func TestAgentGatewayConfigurationIsCompleteAndApart(t *testing.T) {
+ 	}
+ }
+ 
++func TestAgentGatewayConnectionMaxAgeDefaultsAndBounds(t *testing.T) {
++	c := agentGatewayTestConfiguration(t, []string{"machine.example.invalid"})
++	if got := c.AgentGateway.MaxConnectionAge(); got != 30*time.Minute {
++		t.Fatalf("legacy gateway age: %v", got)
++	}
++	for _, value := range []int{60, 1200, 86400} {
++		c.AgentGateway.ConnectionMaxAgeSeconds = value
++		decoded := machineTestDecode(t, c)
++		if e := decoded.Validate(); e != nil || decoded.AgentGateway.MaxConnectionAge() != Seconds(value) {
++			t.Fatalf("connection age %d: %v", value, e)
++		}
++	}
++	for _, value := range []int{-1, 59, 86401} {
++		c.AgentGateway.ConnectionMaxAgeSeconds = value
++		if e := c.Validate(); e == nil || e.Error() != "CONFIG_AGENT_GATEWAY_INVALID" {
++			t.Fatalf("invalid connection age %d: %v", value, e)
++		}
++	}
++}
++
+ func TestAgentGatewayServesTheAgentOriginWithItsCertificate(t *testing.T) {
+ 	c := agentGatewayTestConfiguration(t, []string{"machine.example.invalid"})
+ 	origin, tlsConfig, e := c.AgentGatewayServing()
+diff --git a/services/control/internal/platform/httpserver/aged_connections.go b/services/control/internal/platform/httpserver/aged_connections.go
+new file mode 100644
+index 00000000..0f26037b
+--- /dev/null
++++ b/services/control/internal/platform/httpserver/aged_connections.go
+@@ -0,0 +1,168 @@
++package httpserver
++
++import (
++	"context"
++	"crypto/tls"
++	"errors"
++	"log/slog"
++	"net"
++	"net/http"
++	"sync"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++)
++
++// oneConnectionListener lets Shutdown retire one transport. Closing acceptance
++// must leave the accepted socket owned by http.Server until requests finish.
++type oneConnectionListener struct {
++	conn      net.Conn
++	mu        sync.Mutex
++	delivered bool
++	closed    chan struct{}
++	once      sync.Once
++}
++
++func (l *oneConnectionListener) Accept() (net.Conn, error) {
++	l.mu.Lock()
++	select {
++	case <-l.closed:
++		l.mu.Unlock()
++		return nil, net.ErrClosed
++	default:
++	}
++	if !l.delivered {
++		l.delivered = true
++		l.mu.Unlock()
++		return l.conn, nil
++	}
++	l.mu.Unlock()
++	<-l.closed
++	return nil, net.ErrClosed
++}
++
++func (l *oneConnectionListener) Close() error {
++	l.once.Do(func() { close(l.closed) })
++	return nil
++}
++
++func (l *oneConnectionListener) Addr() net.Addr { return l.conn.LocalAddr() }
++
++func serveAgedListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, age ConnectionAge) (result error) {
++	ctx, cancel := context.WithCancel(ctx)
++	accepted := &bounded{Listener: listener, slots: make(chan struct{}, policy.MaxConnections)}
++	var workers sync.WaitGroup
++	var firstFailure sync.Once
++	var shutdownError error
++	watchDone := make(chan struct{})
++	go func() {
++		defer close(watchDone)
++		<-ctx.Done()
++		_ = accepted.Close()
++	}()
++	defer func() {
++		cancel()
++		_ = accepted.Close()
++		workers.Wait()
++		<-watchDone
++		result = errors.Join(result, shutdownError)
++	}()
++	// Retain net/http's bounded backoff for temporary kernel accept failures.
++	const initialAcceptBackoff = 5 * time.Millisecond
++	const maximumAcceptBackoff = time.Second
++	var backoff time.Duration
++	for {
++		conn, err := accepted.Accept()
++		if err != nil {
++			if ctx.Err() != nil {
++				return nil
++			}
++			if temporary, ok := err.(net.Error); ok && temporary.Temporary() {
++				if backoff == 0 {
++					backoff = initialAcceptBackoff
++				} else {
++					backoff = min(2*backoff, maximumAcceptBackoff)
++				}
++				timer := time.NewTimer(backoff)
++				select {
++				case <-ctx.Done():
++					timer.Stop()
++					return nil
++				case <-timer.C:
++				}
++				continue
++			}
++			return err
++		}
++		backoff = 0
++		aged, err := ageConnection(conn, age)
++		if err != nil {
++			_ = conn.Close()
++			slog.Warn("http_connection_age_deadline_failed")
++			continue
++		}
++		workers.Go(func() {
++			if err := serveAgedConnection(ctx, aged, tlsConfig, handler, policy, age.Grace); err != nil {
++				firstFailure.Do(func() { shutdownError = err })
++				cancel()
++			}
++		})
++	}
++}
++
++func serveAgedConnection(ctx context.Context, conn *agingConn, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, grace time.Duration) error {
++	// net/http configures ALPN on its TLS config. Each connection owner needs
++	// its own clone rather than concurrent mutations of the shared snapshot.
++	server := newHTTPServer(ctx, tlsConfig.Clone(), handler, policy)
++	secured := tls.Server(conn, server.TLSConfig)
++	defer secured.Close()
++	listener := &oneConnectionListener{conn: secured, closed: make(chan struct{})}
++	defer listener.Close()
++	closed := make(chan struct{})
++	var markClosed sync.Once
++	server.ConnContext = withConnectionDrainAt
++	server.ConnState = func(_ net.Conn, state http.ConnState) {
++		if state == http.StateClosed {
++			markClosed.Do(func() { close(closed) })
++			_ = listener.Close()
++		}
++	}
++	retire := time.NewTimer(time.Until(conn.drainAt))
++	defer retire.Stop()
++	shutdownDone := make(chan error, 1)
++	go func() {
++		reason := "connection_age"
++		budget := grace
++		select {
++		case <-closed:
++			shutdownDone <- nil
++			return
++		case <-ctx.Done():
++			reason = "process_shutdown"
++			budget = config.Seconds(policy.ShutdownSeconds)
++		case <-retire.C:
++		}
++		slog.Debug("http_connection_draining", "reason", reason)
++		shutdown, cancel := context.WithTimeout(context.Background(), budget)
++		defer cancel()
++		err := server.Shutdown(shutdown)
++		if err != nil {
++			_ = server.Close()
++			if reason == "connection_age" {
++				slog.Warn("http_connection_age_grace_expired")
++				// An uncooperative peer consumes only its own bounded grace.
++				err = nil
++			}
++		}
++		shutdownDone <- err
++	}()
++	err := server.Serve(listener)
++	if err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
++		_ = server.Close()
++		_ = secured.Close()
++		markClosed.Do(func() { close(closed) })
++		<-shutdownDone
++		return err
++	}
++	return <-shutdownDone
++}
+diff --git a/services/control/internal/platform/httpserver/aged_connections_test.go b/services/control/internal/platform/httpserver/aged_connections_test.go
+new file mode 100644
+index 00000000..b51f3af1
+--- /dev/null
++++ b/services/control/internal/platform/httpserver/aged_connections_test.go
+@@ -0,0 +1,152 @@
++package httpserver
++
++import (
++	"context"
++	"crypto/tls"
++	"errors"
++	"net"
++	"net/http"
++	"sync"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++)
++
++func TestAgedListenerReportsUnconfirmedProcessShutdown(t *testing.T) {
++	for _, cooperate := range []bool{true, false} {
++		name := "handler_joins"
++		if !cooperate {
++			name = "handler_exceeds_budget"
++		}
++		t.Run(name, func(t *testing.T) {
++			certificate, roots := transportCertificate(t)
++			listener, err := net.Listen("tcp", "127.0.0.1:0")
++			if err != nil {
++				t.Fatal(err)
++			}
++			release := make(chan struct{})
++			var releaseOnce sync.Once
++			finish := func() { releaseOnce.Do(func() { close(release) }) }
++			handlerDone := make(chan struct{})
++			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++				defer close(handlerDone)
++				w.WriteHeader(http.StatusOK)
++				if err := http.NewResponseController(w).Flush(); err != nil {
++					return
++				}
++				if !cooperate {
++					<-release
++					return
++				}
++				select {
++				case <-r.Context().Done():
++				case <-release:
++				}
++			})
++			ctx, stop := context.WithCancel(t.Context())
++			policy := config.DefaultHTTPPolicy()
++			policy.ShutdownSeconds = 1
++			done := make(chan error, 1)
++			go func() {
++				done <- ServeListener(ctx, listener, &tls.Config{Certificates: []tls.Certificate{certificate},
++					MinVersion: tls.VersionTLS12, NextProtos: []string{"h2"}}, handler, policy,
++					ConnectionAge{Maximum: time.Minute, Grace: time.Second})
++			}()
++			transport := &http.Transport{ForceAttemptHTTP2: true,
++				TLSClientConfig: &tls.Config{RootCAs: roots, ServerName: "localhost", MinVersion: tls.VersionTLS12}}
++			client := &http.Client{Transport: transport, Timeout: 5 * time.Second}
++			t.Cleanup(func() {
++				stop()
++				finish()
++				transport.CloseIdleConnections()
++			})
++			response, err := client.Get("https://" + listener.Addr().String() + "/held")
++			if err != nil {
++				t.Fatal(err)
++			}
++			defer response.Body.Close()
++			if response.ProtoMajor != 2 || response.StatusCode != http.StatusOK {
++				t.Fatalf("held HTTP/2 response not established: %s %d", response.Proto, response.StatusCode)
++			}
++			stop()
++			select {
++			case err := <-done:
++				if cooperate && err != nil {
++					t.Fatalf("cooperative shutdown failed: %v", err)
++				}
++				if !cooperate && !errors.Is(err, context.DeadlineExceeded) {
++					t.Fatalf("unconfirmed shutdown reported success: %v", err)
++				}
++			case <-time.After(4 * time.Second):
++				t.Fatal("connection owner exceeded process shutdown bound")
++			}
++			finish()
++			select {
++			case <-handlerDone:
++			case <-time.After(time.Second):
++				t.Fatal("released handler did not join")
++			}
++		})
++	}
++}
++
++func TestAgedListenerReleasesConnectionCapacityAfterPeerClose(t *testing.T) {
++	certificate, roots := transportCertificate(t)
++	listener, err := net.Listen("tcp", "127.0.0.1:0")
++	if err != nil {
++		t.Fatal(err)
++	}
++	ctx, stop := context.WithCancel(t.Context())
++	policy := config.DefaultHTTPPolicy()
++	policy.MaxConnections = 1
++	policy.MaxActiveRequests = 1
++	done := make(chan error, 1)
++	go func() {
++		done <- ServeListener(ctx, listener, &tls.Config{Certificates: []tls.Certificate{certificate},
++			MinVersion: tls.VersionTLS12, NextProtos: []string{"h2"}}, http.NotFoundHandler(), policy,
++			ConnectionAge{Maximum: time.Minute, Grace: time.Second})
++	}()
++	t.Cleanup(func() {
++		stop()
++		select {
++		case err := <-done:
++			if err != nil {
++				t.Error(err)
++			}
++		case <-time.After(5 * time.Second):
++			t.Error("connection-capacity listener did not join")
++		}
++	})
++	dial := func() (*tls.Conn, error) {
++		return tls.DialWithDialer(&net.Dialer{Timeout: time.Second}, "tcp", listener.Addr().String(),
++			&tls.Config{RootCAs: roots, ServerName: "localhost", MinVersion: tls.VersionTLS12, NextProtos: []string{"h2"}})
++	}
++	first, err := dial()
++	if err != nil {
++		t.Fatal(err)
++	}
++	t.Cleanup(func() { _ = first.Close() })
++	if extra, err := dial(); err == nil {
++		_ = extra.Close()
++		t.Fatal("listener exceeded its single connection slot")
++	}
++	if err := first.Close(); err != nil {
++		t.Fatal(err)
++	}
++	deadline := time.Now().Add(3 * time.Second)
++	for {
++		next, err := dial()
++		if err == nil {
++			if next.ConnectionState().NegotiatedProtocol != "h2" {
++				t.Error("replacement did not negotiate verified HTTP/2")
++			}
++			_ = next.Close()
++			return
++		}
++		if !time.Now().Before(deadline) {
++			t.Fatalf("peer closure did not release connection capacity: %v", err)
++		}
++		time.Sleep(5 * time.Millisecond)
++	}
++}
+diff --git a/services/control/internal/platform/httpserver/connection_age.go b/services/control/internal/platform/httpserver/connection_age.go
+new file mode 100644
+index 00000000..522ee6f0
+--- /dev/null
++++ b/services/control/internal/platform/httpserver/connection_age.go
+@@ -0,0 +1,60 @@
++package httpserver
++
++import (
++	"context"
++	"crypto/tls"
++	"math/rand/v2"
++	"net"
++	"time"
++)
++
++// ConnectionAge bounds when a dedicated listener drains a connection and how
++// long an exchange already admitted on it may finish.
++type ConnectionAge struct {
++	Maximum time.Duration
++	Grace   time.Duration
++}
++
++func ageConnection(conn net.Conn, age ConnectionAge) (*agingConn, error) {
++	drainAt := time.Now().Add(age.Maximum - rand.N(age.Maximum/10+1))
++	closeAt := drainAt.Add(age.Grace)
++	if err := conn.SetDeadline(closeAt); err != nil {
++		return nil, err
++	}
++	return &agingConn{Conn: conn, drainAt: drainAt, closeAt: closeAt}, nil
++}
++
++type agingConn struct {
++	net.Conn
++	drainAt time.Time
++	closeAt time.Time
++}
++
++func (c *agingConn) bound(deadline time.Time) time.Time {
++	if deadline.IsZero() || deadline.After(c.closeAt) {
++		return c.closeAt
++	}
++	return deadline
++}
++
++func (c *agingConn) SetDeadline(t time.Time) error      { return c.Conn.SetDeadline(c.bound(t)) }
++func (c *agingConn) SetReadDeadline(t time.Time) error  { return c.Conn.SetReadDeadline(c.bound(t)) }
++func (c *agingConn) SetWriteDeadline(t time.Time) error { return c.Conn.SetWriteDeadline(c.bound(t)) }
++
++type connectionDrainKey struct{}
++
++func withConnectionDrainAt(ctx context.Context, conn net.Conn) context.Context {
++	if secured, ok := conn.(*tls.Conn); ok {
++		if aged, ok := secured.NetConn().(*agingConn); ok {
++			return context.WithValue(ctx, connectionDrainKey{}, aged.drainAt)
++		}
++	}
++	return ctx
++}
++
++// ConnectionDrainAt reports when the dedicated transport stops taking new
++// exchanges. A zero time indicates that the listener has no age policy.
++func ConnectionDrainAt(ctx context.Context) time.Time {
++	at, _ := ctx.Value(connectionDrainKey{}).(time.Time)
++	return at
++}
+diff --git a/services/control/internal/platform/httpserver/connection_age_test.go b/services/control/internal/platform/httpserver/connection_age_test.go
+new file mode 100644
+index 00000000..1851a31a
+--- /dev/null
++++ b/services/control/internal/platform/httpserver/connection_age_test.go
+@@ -0,0 +1,190 @@
++package httpserver
++
++import (
++	"bytes"
++	"context"
++	"crypto/tls"
++	"errors"
++	"io"
++	"net"
++	"net/http"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"golang.org/x/net/http2"
++	"golang.org/x/net/http2/hpack"
++)
++
++func TestDedicatedTLSAgeSendsGoAwayAndBoundsIdleTransport(t *testing.T) {
++	certificate, roots := transportCertificate(t)
++	listener, err := net.Listen("tcp", "127.0.0.1:0")
++	if err != nil {
++		t.Fatal(err)
++	}
++	draining := make(chan time.Time, 1)
++	finish := make(chan struct{})
++	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if r.URL.Path == "/initial" {
++			draining <- ConnectionDrainAt(r.Context())
++			w.WriteHeader(http.StatusOK)
++			if err := http.NewResponseController(w).Flush(); err != nil {
++				return
++			}
++			select {
++			case <-finish:
++				_, _ = io.WriteString(w, "complete")
++			case <-r.Context().Done():
++			}
++			return
++		}
++		w.WriteHeader(http.StatusNoContent)
++	})
++	ctx, stop := context.WithCancel(t.Context())
++	done := make(chan error, 1)
++	go func() {
++		done <- ServeListener(ctx, listener, &tls.Config{Certificates: []tls.Certificate{certificate},
++			MinVersion: tls.VersionTLS12, NextProtos: []string{"h2"}}, handler,
++			config.DefaultHTTPPolicy(), ConnectionAge{Maximum: time.Second, Grace: time.Second})
++	}()
++	t.Cleanup(func() {
++		stop()
++		select {
++		case err := <-done:
++			if err != nil {
++				t.Error(err)
++			}
++		case <-time.After(5 * time.Second):
++			t.Error("aged listener did not shut down")
++		}
++	})
++
++	connect := func() (*tls.Conn, *http2.Framer) {
++		t.Helper()
++		conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 2 * time.Second}, "tcp", listener.Addr().String(),
++			&tls.Config{RootCAs: roots, ServerName: "localhost", MinVersion: tls.VersionTLS12, NextProtos: []string{"h2"}})
++		if err != nil {
++			t.Fatal(err)
++		}
++		t.Cleanup(func() { _ = conn.Close() })
++		if state := conn.ConnectionState(); state.NegotiatedProtocol != "h2" || len(state.VerifiedChains) == 0 {
++			t.Fatal("verified HTTP/2 was not negotiated")
++		}
++		if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
++			t.Fatal(err)
++		}
++		if _, err := io.WriteString(conn, http2.ClientPreface); err != nil {
++			t.Fatal(err)
++		}
++		framer := http2.NewFramer(conn, conn)
++		framer.ReadMetaHeaders = hpack.NewDecoder(4096, nil)
++		if err := framer.WriteSettings(); err != nil {
++			t.Fatal(err)
++		}
++		return conn, framer
++	}
++	request := func(framer *http2.Framer, stream uint32, route string) {
++		t.Helper()
++		var block bytes.Buffer
++		encoder := hpack.NewEncoder(&block)
++		for _, field := range []hpack.HeaderField{
++			{Name: ":method", Value: http.MethodGet}, {Name: ":scheme", Value: "https"},
++			{Name: ":authority", Value: "localhost"}, {Name: ":path", Value: route},
++		} {
++			if err := encoder.WriteField(field); err != nil {
++				t.Fatal(err)
++			}
++		}
++		if err := framer.WriteHeaders(http2.HeadersFrameParam{StreamID: stream, BlockFragment: block.Bytes(), EndStream: true, EndHeaders: true}); err != nil {
++			t.Fatal(err)
++		}
++	}
++	read := func(framer *http2.Framer, stream uint32, status string, ended bool) {
++		t.Helper()
++		for {
++			frame, err := framer.ReadFrame()
++			if err != nil {
++				t.Fatal(err)
++			}
++			switch frame := frame.(type) {
++			case *http2.SettingsFrame:
++				if !frame.IsAck() {
++					if err := framer.WriteSettingsAck(); err != nil {
++						t.Fatal(err)
++					}
++				}
++			case *http2.MetaHeadersFrame:
++				if frame.StreamID == stream {
++					if frame.PseudoValue("status") != status || frame.StreamEnded() != ended {
++						t.Fatalf("unexpected status: %v", frame.Fields)
++					}
++					for _, field := range frame.RegularFields() {
++						if field.Name == "connection" {
++							t.Fatal("connection header escaped onto the HTTP/2 wire")
++						}
++					}
++					return
++				}
++			case *http2.GoAwayFrame:
++				t.Fatalf("GOAWAY preceded the admitted response headers: %+v", frame)
++			}
++		}
++	}
++
++	_, framer := connect()
++	request(framer, 1, "/initial")
++	read(framer, 1, "200", false)
++	var drain time.Time
++	select {
++	case drain = <-draining:
++	case <-time.After(time.Second):
++		t.Fatal("listener did not report its connection age")
++	}
++	if drain.IsZero() {
++		t.Fatal("listener did not attach its connection age")
++	}
++	timer := time.NewTimer(time.Until(drain))
++	defer timer.Stop()
++	<-timer.C
++	// Send no further request. Age must notify a stream whose headers are
++	// already on the wire, while keeping that stream's response intact.
++	for {
++		frame, err := framer.ReadFrame()
++		if err != nil {
++			t.Fatalf("held response received no automatic GOAWAY: %v", err)
++		}
++		if retirement, ok := frame.(*http2.GoAwayFrame); ok {
++			if retirement.ErrCode != http2.ErrCodeNo || retirement.LastStreamID != 1 {
++				t.Fatalf("GOAWAY did not retain the admitted stream: %+v", retirement)
++			}
++			break
++		}
++	}
++	close(finish)
++	var body bytes.Buffer
++	completed := false
++	for !completed {
++		frame, err := framer.ReadFrame()
++		if err != nil {
++			t.Fatalf("admitted response was interrupted after GOAWAY: %v", err)
++		}
++		if data, ok := frame.(*http2.DataFrame); ok && data.StreamID == 1 {
++			body.Write(data.Data())
++			completed = data.StreamEnded()
++		}
++	}
++	if body.String() != "complete" {
++		t.Fatalf("admitted response body changed: %q", body.String())
++	}
++	_, young := connect()
++	request(young, 1, "/healthy")
++	read(young, 1, "204", true)
++
++	idle, _ := connect()
++	// No request asks this connection to drain. The socket limit must end
++	// it before the client deadline or the normal server idle timeout.
++	if _, err := io.Copy(io.Discard, idle); errors.Is(err, context.DeadlineExceeded) ||
++		err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
++		t.Fatalf("aged idle socket did not close cleanly: %v", err)
++	}
++}
+diff --git a/services/control/internal/platform/httpserver/server.go b/services/control/internal/platform/httpserver/server.go
+index 36541290..ea678d6d 100644
+--- a/services/control/internal/platform/httpserver/server.go
++++ b/services/control/internal/platform/httpserver/server.go
+@@ -69,25 +69,28 @@ func serve(ctx context.Context, address string, tlsConfig *tls.Config, handler h
+ 	if e != nil {
+ 		return e
+ 	}
+-	return serveListener(ctx, listener, tlsConfig, handler, policy)
++	return serveListener(ctx, listener, tlsConfig, handler, policy, ConnectionAge{})
+ }
+ 
+-// ServeListener serves direct TLS on a listener the caller bound, as Serve does on an
+-// address, and closes it. It returns once the bounded shutdown that ctx starts has ended.
+-func ServeListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) error {
++// ServeListener serves and ages connections on a dedicated prebound TLS listener.
++// It closes the listener and returns after the bounded shutdown that ctx starts.
++func ServeListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, age ConnectionAge) error {
+ 	check := config.DefaultRuntimePolicy()
+ 	check.HTTP = policy
+-	if listener == nil || tlsConfig == nil || check.Validate() != nil {
++	if listener == nil || tlsConfig == nil || check.Validate() != nil || age.Maximum <= 0 || age.Grace <= 0 {
+ 		if listener != nil {
+ 			listener.Close()
+ 		}
+ 		return errors.New("CONFIG_TRANSPORT_INVALID")
+ 	}
+-	return serveListener(ctx, listener, tlsConfig, handler, policy)
++	return serveListener(ctx, listener, tlsConfig, handler, policy, age)
+ }
+ 
+-func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) error {
+-	server := &http.Server{BaseContext: func(net.Listener) context.Context { return ctx }, Handler: handler, ReadHeaderTimeout: config.Seconds(policy.ReadHeaderSeconds), ReadTimeout: config.Seconds(policy.RequestSeconds), WriteTimeout: config.Seconds(policy.RequestSeconds), IdleTimeout: config.Seconds(policy.IdleSeconds), MaxHeaderBytes: MaxJSONBytes, TLSConfig: tlsConfig}
++func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy, age ConnectionAge) error {
++	if age.Maximum > 0 {
++		return serveAgedListener(ctx, listener, tlsConfig, handler, policy, age)
++	}
++	server := newHTTPServer(ctx, tlsConfig, handler, policy)
+ 	servingDone := make(chan struct{})
+ 	shutdownDone := make(chan error, 1)
+ 	go func() {
+@@ -118,6 +121,19 @@ func serveListener(ctx context.Context, listener net.Listener, tlsConfig *tls.Co
+ 	return e
+ }
+ 
++func newHTTPServer(ctx context.Context, tlsConfig *tls.Config, handler http.Handler, policy config.HTTPPolicy) *http.Server {
++	return &http.Server{
++		BaseContext:       func(net.Listener) context.Context { return ctx },
++		Handler:           handler,
++		ReadHeaderTimeout: config.Seconds(policy.ReadHeaderSeconds),
++		ReadTimeout:       config.Seconds(policy.RequestSeconds),
++		WriteTimeout:      config.Seconds(policy.RequestSeconds),
++		IdleTimeout:       config.Seconds(policy.IdleSeconds),
++		MaxHeaderBytes:    MaxJSONBytes,
++		TLSConfig:         tlsConfig,
++	}
++}
++
+ type listenerEndpoint struct {
+ 	listener net.Listener
+ 	handler  http.Handler

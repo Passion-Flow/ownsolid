@@ -1,0 +1,14 @@
+{
+  "source": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+  "base": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+  "original_source": "ff0f32389760cf2868402cdc9a3630658beae237",
+  "tooling_input_source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+  "tooling_tests": {
+    "layout": 13,
+    "sdk_and_codegen": 57,
+    "exit": 0,
+    "log_sha256": "51d2779763d78b7d407b71e002e622bd8c10e54359fdc93ec7f2d83cf291d7ab"
+  },
+  "published_main": false,
+  "cli_candidate_qualified": false
+}

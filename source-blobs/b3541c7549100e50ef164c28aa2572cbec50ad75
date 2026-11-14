@@ -1,0 +1,58 @@
+{
+  "fingerprints": [
+    {
+      "prompt": "abc",
+      "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    },
+    {
+      "prompt": " \tabc\r\ndef\r \n",
+      "sha256": "d53d6b91af7caf8fe3d8021f116270137c0079d579a1e16965da80c2ed138ffb"
+    },
+    {
+      "prompt": "\u00a0abc",
+      "sha256": "d8e26611a218642ba69273c9abb028188eee16022d81dbe179ab1c6da6cd901a"
+    },
+    {
+      "prompt": "\u00e9",
+      "sha256": "4a99557e4033c3539de2eb65472017cad5f9557f7a0625a09f1c3f6e2ba69c4c"
+    },
+    {
+      "prompt": "e\u0301",
+      "sha256": "bf12767b0f2a56b2190075bae8169f656e3ce8d6357d4aff184bc6c7ea48f9f6"
+    },
+    {
+      "prompt": "\u4e2d\u6587\r\n\u8bf7\u6c42",
+      "sha256": "049d586cdc712d36d2a62b6871dbddbe424a2d99df24b1757690c9fb351cda9a"
+    }
+  ],
+  "configuration": {
+    "device": "cpu_verification",
+    "maximum_input_tokens": 512,
+    "maximum_new_tokens": 8,
+    "seed": 42,
+    "threads": 2,
+    "minimum_accuracy_basis_points": 8000,
+    "maximum_regression_basis_points": 0
+  },
+  "configuration_sha256": "4f1e1c6247030d5d655b79816d77578ecb1dc1529f0c7737f6c8e612e31236d2",
+  "recipe_sha256": "758116ac56ff4bf0defe191d93464a40da141d779918800bb72cf53434fec496",
+  "prediction_labels": [
+    {
+      "output": " \nBILLING\t",
+      "label": "billing"
+    },
+    {
+      "output": "\u001cACCOUNT\u3000",
+      "label": "account"
+    },
+    {
+      "output": "billing.",
+      "label": null
+    },
+    {
+      "output": "\uff21\uff23\uff23\uff2f\uff35\uff2e\uff34",
+      "label": null
+    }
+  ],
+  "approved_model_catalog_sha256": "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc"
+}

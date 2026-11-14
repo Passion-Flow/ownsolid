@@ -1,0 +1,15 @@
+{
+  "memory_kib": {
+    "MemFree": 4256116,
+    "MemAvailable": 19989112
+  },
+  "full_io_psi_avg10": 0.01,
+  "disk_free_bytes": 801430425600,
+  "source": "129573ae8977cce83c1e81d9d386e45c1a176c3b",
+  "agents": 500,
+  "outer_cpu_limit": 2,
+  "outer_memory_bytes": 6442450944,
+  "host_ports": [],
+  "network": "none; only recorder default routes inside isolated DinD",
+  "scope": "500-agent automatic retirement, 25 in-flight tasks twice, single-gateway failure and preferred return; not a capacity result"
+}

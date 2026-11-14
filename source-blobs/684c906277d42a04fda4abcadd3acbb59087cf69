@@ -1,0 +1,20 @@
+from pathlib import Path
+import shutil
+import sys
+
+root=Path("/root/lane-rel-history")
+sys.path.insert(0,str(root/"tools/codegen/sdk"))
+from generate import generate_domain, checked_tool, GO_VERSION, PYTHON_VERSION, TEMPLATES
+work=Path("/root/lane-rel-tools/gw104-contract.qgEXzK0n")
+go=checked_tool("/root/lane-rel-tools/obs109-contract.Psjaj7Gp/bin/oapi-codegen","-version",GO_VERSION)
+python=checked_tool("/root/lane-rel-tools/obs109-contract.Psjaj7Gp/python/bin/openapi-python-client","--version",PYTHON_VERSION)
+for name in ["baseline","candidate"]:
+    variant=work/name
+    go_root=variant/"sdk/gen/go"
+    python_root=variant/"sdk/gen/python/ownsolid_sdk"
+    go_root.mkdir(parents=True)
+    python_root.mkdir(parents=True)
+    (python_root/"__init__.py").write_text("# Generated prototype.\n")
+    generate_domain(variant/"contracts/distribution/openapi.json",variant,go_root,python_root,go,python)
+    for file in ["go.mod","go.sum"]:
+        shutil.copyfile(TEMPLATES/(file+".template"),go_root/file)

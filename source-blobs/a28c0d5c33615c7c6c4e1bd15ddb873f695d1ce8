@@ -1,0 +1,33 @@
+{
+  "scope": "Mac darwin/arm64 client self-tests, not Linux native tests or product acceptance",
+  "compiler": "go version go1.27.3 darwin/arm64",
+  "race_tests": {
+    "TestVerifyMeasuredZeroAndSparseAbsence": 0,
+    "TestPublicTLSCookieAuditAndStaleSessionLifecycle": 6.1,
+    "TestNullAuditItemsCannotProveNoAudit": 0.01,
+    "TestCreateSessionStateDoesNotOverwrite": 0,
+    "TestOpaqueUnixRelayPreservesTLSIdentity": 0.01,
+    "TestNativeCachedMetricsSnapshotIsRefreshed": 2.01,
+    "TestCounterFreshnessRejectsEpochChangeAndTimeout": 1.12
+  },
+  "vet": "passed",
+  "target": {
+    "GOOS": "linux",
+    "GOARCH": "amd64",
+    "CGO_ENABLED": "0",
+    "GOTOOLCHAIN": "local",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2",
+    "trimpath": true
+  },
+  "files": {
+    "main.go": "48ed1588c41cd4ffca484849166ef558be632acafb142b40486fb56f479a856b",
+    "main_test.go": "f77a6d8e1ae1983be5415a3d1937290b953ca664db18097f26f1305a1c933a2d",
+    "tests.jsonl": "d9d1a44b9e28d01134a1ee0714fc7cbcbe4c8e48300743790c63240375a52dc0",
+    "vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "installed-history-linux-amd64": "91fc9bc6962a5829613fb0cb8d0913995cef856ff0832bce95f6cc587199b708"
+  }
+}

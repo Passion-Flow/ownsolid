@@ -1,0 +1,63 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+)
+
+func fail(code string) {
+	fmt.Fprintln(os.Stderr, code)
+	os.Exit(1)
+}
+
+func main() {
+	if len(os.Args) != 2 {
+		fail("PG_WIRE_DSN_FILE_REQUIRED")
+	}
+	raw, err := os.ReadFile(os.Args[1])
+	if err != nil {
+		fail("PG_WIRE_DSN_FILE_UNREADABLE")
+	}
+	cfg, err := pgx.ParseConfig(strings.TrimSpace(string(raw)))
+	if err != nil || cfg.Host != "127.0.0.1" || cfg.Database != "gw_read_test" || cfg.Password == "" || cfg.TLSConfig != nil || len(cfg.Fallbacks) != 0 {
+		fail("PG_WIRE_OWNED_LOOPBACK_REQUIRED")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	denied := cfg.Copy()
+	denied.Password += "!"
+	unexpected, deniedError := pgx.ConnectConfig(ctx, denied)
+	if unexpected != nil {
+		unexpected.Close(context.Background())
+		fail("PG_WIRE_PASSWORD_NOT_REQUIRED")
+	}
+	var authError *pgconn.PgError
+	if !errors.As(deniedError, &authError) || authError.Code != "28P01" {
+		fail("PG_WIRE_PASSWORD_REFUSAL_UNCONFIRMED")
+	}
+	conn, err := pgx.ConnectConfig(ctx, cfg)
+	if err != nil {
+		fail("PG_WIRE_AUTHENTICATION_FAILED")
+	}
+	defer conn.Close(context.Background())
+	var version, port int
+	var database, address string
+	err = conn.QueryRow(ctx, "SELECT current_setting('server_version_num')::integer,current_database(),inet_server_addr()::text,inet_server_port()").Scan(&version, &database, &address, &port)
+	if err != nil || database != "gw_read_test" || address != "127.0.0.1" || port != 5432 {
+		fail("PG_WIRE_QUERY_REFUSED")
+	}
+	if err := json.NewEncoder(os.Stdout).Encode(map[string]any{
+		"authenticated": true, "wrong_password_rejected": "28P01", "driver": "pgx 5.11.0", "server_version_num": version,
+		"database": database, "server_address": address, "server_port": port,
+	}); err != nil {
+		fail("PG_WIRE_EVIDENCE_WRITE_FAILED")
+	}
+}

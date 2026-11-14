@@ -1,0 +1,40 @@
+package database_test
+
+import (
+	"os"
+	"strings"
+	"testing"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+func TestAuditCandidateProductionMigratorAfterRestore(t *testing.T) {
+	raw, err := os.ReadFile(os.Getenv("PROJECT_ONE_TEST_DSN_FILE"))
+	if err != nil {
+		t.Fatal("owned PostgreSQL fixture input required")
+	}
+	for _, name := range []string{"integrated_fresh_test", "integrated_55_test", "integrated_56_test", "integrated_57_test", "integrated_58_test"} {
+		t.Run(name, func(t *testing.T) {
+			config, err := pgxpool.ParseConfig(strings.TrimSpace(string(raw)))
+			if err != nil {
+				t.Fatal("invalid PostgreSQL fixture input")
+			}
+			config.ConnConfig.Database = name
+			db, err := pgxpool.NewWithConfig(t.Context(), config)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(db.Close)
+			if err := database.Migrate(t.Context(), db); err != nil {
+				t.Fatalf("migration: %v", err)
+			}
+			if err := database.Migrate(t.Context(), db); err != nil {
+				t.Fatalf("migration replay: %v", err)
+			}
+			if err := database.Check(t.Context(), db); err != nil {
+				t.Fatalf("admission: %v", err)
+			}
+		})
+	}
+}

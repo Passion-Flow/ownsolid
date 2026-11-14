@@ -1,0 +1,79 @@
+import fcntl,hashlib,json,os,re,shutil,stat,subprocess,sys,time,uuid
+from pathlib import Path
+root=Path('/private/tmp/ownsolid-trn-qualification.knvee3h8');src=root/'src-cost'
+carrier='/private/tmp/ownsolid-workstation-full-gate.lock'
+fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC);a=os.fstat(fd);b=os.stat(carrier,follow_symlinks=False)
+assert stat.S_ISREG(a.st_mode) and a.st_uid==os.getuid() and a.st_ino==50313339 and (a.st_dev,a.st_ino)==(b.st_dev,b.st_ino)
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);print('protocol_not_started_guard_busy');sys.exit(75)
+container=device=None;run=uuid.uuid4().hex;result=None
+record={'source':'fff5a75af502c8ed9eb9ed595df641d6b6878b8e','go_platform':'darwin/arm64','database_platform':'linux/arm64','native_linux_amd64_acceptance':False,'sql_cost_measured':False,'network_namespace_egress_isolation':False}
+def docker(*args,**kw):return subprocess.check_output(['docker','--context','desktop-linux',*args],text=True,timeout=kw.get('timeout',20)).strip()
+try:
+ assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=src,text=True).strip()==record['source']
+ assert not subprocess.check_output(['git','status','--porcelain'],cwd=src,text=True)
+ assert shutil.disk_usage(root).free>=15*1024**3
+ record['host_memory_pressure']=subprocess.check_output(['/usr/bin/memory_pressure','-Q'],text=True)
+ endpoint=subprocess.check_output(['docker','context','inspect','desktop-linux','--format','{{.Endpoints.docker.Host}}'],text=True,timeout=10).strip();assert endpoint.startswith('unix://')
+ info=json.loads(docker('info','--format','{{json .}}'));assert info['OperatingSystem']=='Docker Desktop' and info['Architecture']=='aarch64'
+ def used_bytes(text):
+  v,u=re.fullmatch(r'([0-9.]+)([a-zA-Z]+)',text.strip()).groups();return int(float(v)*{'B':1,'kB':1000,'KB':1000,'KiB':1024,'MB':10**6,'MiB':1024**2,'GB':10**9,'GiB':1024**3,'TB':10**12,'TiB':1024**4}[u])
+ used=sum(used_bytes(line.split('/',1)[0]) for line in docker('stats','--no-stream','--format','{{.MemUsage}}').splitlines() if line)
+ record['docker_memory']={'total':info['MemTotal'],'reported_container_used':used};assert info['MemTotal']-used>=3*1024**3
+ image='sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47'
+ assert docker('image','inspect',image,'--format','{{.Architecture}}')=='arm64';record['image_id']=image
+ print(json.dumps({'phase':'admitted_protocol_fixture','source':record['source'],'docker_memory':record['docker_memory']}),flush=True)
+ device=subprocess.check_output(['hdiutil','attach','-nomount','ram://4194304'],text=True).strip();assert re.fullmatch(r'/dev/disk[0-9]+',device)
+ volume='ownsolid-trn-events-'+run[:8];subprocess.run(['diskutil','erasevolume','HFS+',volume,device],check=True,stdout=subprocess.DEVNULL)
+ scratch=Path('/Volumes')/volume/'private';scratch.mkdir(mode=0o700);assert scratch.resolve()==scratch
+ database='ownsolid_training_events_test'
+ container=docker('run','--detach','--pull','never','--memory','1g','--cpus','2','--name','lane-trn-events-mac-'+run[:12],'--label','ownsolid.fixture.owner=lane-trn','--label','ownsolid.fixture.run='+run,'--publish','127.0.0.1::5432','--env','POSTGRES_HOST_AUTH_METHOD=trust','--env','POSTGRES_DB='+database,image)
+ assert re.fullmatch(r'[0-9a-f]{64}',container);record['container_id']=container
+ ready=False
+ for attempt in range(35):
+  r=subprocess.run(['docker','--context','desktop-linux','exec',container,'pg_isready','-h','127.0.0.1','-U','postgres','-d',database],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=10)
+  if r.returncode==0:ready=True;break
+  time.sleep(1)
+ assert ready,'private PostgreSQL startup timeout'
+ record['postgresql']=docker('exec',container,'postgres','--version');assert '18.6' in record['postgresql']
+ docker('exec',container,'psql','-h','127.0.0.1','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-c','CREATE EXTENSION vector WITH SCHEMA public')
+ ports=json.loads(docker('inspect',container,'--format','{{json .NetworkSettings.Ports}}'))['5432/tcp'];assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1'
+ port=int(ports[0]['HostPort']);assert 1024<=port<=65535
+ dsn=scratch/'dsn';dsn.write_text('postgresql://postgres@127.0.0.1:'+str(port)+'/'+database+'?sslmode=disable\n');os.chmod(dsn,0o600)
+ env=os.environ.copy()
+ for key in list(env):
+  if key.startswith(('PROJECT_ONE_TEST_','PROJECT_ONE_REPOSITORY_')):env.pop(key)
+ env.update({'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOFLAGS':'-p=2','GOMAXPROCS':'2','GOMEMLIMIT':'1073741824B','PYTHONDONTWRITEBYTECODE':'1','TMPDIR':str(scratch)+'/', 'PROJECT_ONE_REPOSITORY_ENGINE':'postgresql','PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE':str(dsn),'PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA':'m20_repository_'+run,'PROJECT_ONE_TEST_DSN_FILE':str(dsn),'PROJECT_ONE_DATA_PYTHON':str(Path(sys.executable).resolve())})
+ names=['TestActualTrainingAtomicOrderedEventBatchConcurrentReplayAndRevocation','TestActualTrainingInvalidBatchAndAuditFailureRollbackEveryEventAndPhase','TestActualTLSOrderedTrainingEventBatchContractAndCancellation','TestActualTrainingMixedEventBatchPersistsFinalCursorAndExactReplay','TestActualTrainingFinalCursorFailureRollsBackEventsPhaseAndAudits','TestActualTrainingLateBatchOrderFailureRollsBackEveryMember','TestActualTrainingConcurrentWholeEventBatchHasOnePersistedOutcome','TestActualTrainingEventBatchUnknownCommitAndExplicitReplay']
+ log=root/'cost-protocol-go.log';start=time.monotonic();record['expected_roots']=names
+ print(json.dumps({'phase':'running_protocol_tests','roots':len(names),'postgresql':record['postgresql'],'loopback_port':port}),flush=True)
+ with log.open('x') as out:r=subprocess.run(['go','-C','services/control','test','-tags','repository_integration','-p','1','-count=1','-timeout','5m','-json','./internal/modules/training','-run','^('+'|'.join(names)+')$'],cwd=src,env=env,stdout=out,stderr=subprocess.STDOUT,timeout=330)
+ events=[]
+ for line in log.read_text().splitlines():
+  try:events.append(json.loads(line))
+  except ValueError:pass
+ roots={v['Test'] for v in events if v.get('Action')=='pass' and 'Test'in v and '/'not in v['Test']}
+ counts={k:sum(v.get('Action')==k and 'Test'in v for v in events) for k in ['pass','skip','fail']}
+ record.update({'returncode':r.returncode,'seconds':round(time.monotonic()-start,3),'test_actions':counts,'passed_roots':sorted(roots),'go_log_sha256':hashlib.sha256(log.read_bytes()).hexdigest()})
+ result=0 if r.returncode==0 and roots==set(names) and not counts['skip'] and not counts['fail'] else 1
+except Exception as err:
+ record['fixture_error_class']=type(err).__name__;print('fixture_error_class='+type(err).__name__,flush=True);result=1
+finally:
+ if container is not None:
+  try:
+   labels=json.loads(docker('inspect',container,'--format','{{json .Config.Labels}}'));assert labels.get('ownsolid.fixture.owner')=='lane-trn' and labels.get('ownsolid.fixture.run')==run
+   logs=docker('logs','--timestamps',container)
+   with (root/'cost-protocol-pg.log').open('x') as out:out.write(logs+'\n')
+   record['pg_log_sha256']=hashlib.sha256((root/'cost-protocol-pg.log').read_bytes()).hexdigest()
+   docker('stop','--time','5',container)
+   assert docker('inspect',container,'--format','{{.State.Status}}')=='exited'
+   docker('rm',container);record['owned_container_removed']=True
+  except Exception as err:record['container_cleanup_error_class']=type(err).__name__;result=1
+ if device is not None:
+  r=subprocess.run(['hdiutil','detach',device],stdout=subprocess.DEVNULL);record['owned_ram_removed']=r.returncode==0
+  if r.returncode:result=1
+ record['qualified_protocol_result']=result==0
+ with (root/'cost-protocol-result.json').open('x') as out:out.write(json.dumps(record,indent=2)+'\n')
+ print(json.dumps(record),flush=True)
+ fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)
+raise SystemExit(result)

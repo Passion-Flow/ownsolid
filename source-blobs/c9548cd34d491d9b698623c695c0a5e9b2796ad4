@@ -1,0 +1,28 @@
+# Selected-executor ranking qualification
+
+Candidate b9705abccd4361ee08efb7ed445fefddbc22ab34 remains local.
+Native Linux amd64 Go 1.27.3 compilation and the new
+TestQueueExecutorSnapshotRejectsUnborrowedInputs passed with -race.
+Evidence: /root/lane-sch-tools/queue-executor-unit.TWyk54lD:
+source-head, source.diff (empty), platform.log, unit.log and unit.passed.
+
+Earlier unit attempts exited at resource preflight and did not test anything.
+The Mac fallback never acquired its shared lock or extracted source.
+
+The first PG target attempt returned 75 before locks/fixture/tests because
+MemFree=2708 MiB was below the 3072 MiB floor. The pending target consists
+of seven real PG flows and does not rerun the just-passed pure test.
+PG and full gates for this new snapshot guard/API remain pending.
+
+The earlier quota-status source 934a2ec5 has separate passing PG/check/build/
+Control-module evidence; it is not qualification of this new API change.
+Production scheduler DDL/grants and actual training consumer composition
+remain separate owner integrations. No roadmap checkbox or main publication
+has changed.
+
+A second PG request also returned 75 before locks/fixture/tests:
+MemFree=2679 MiB, below the same 3072 MiB floor. No failing PG test exists.
+The final status-only follow-up records the native compile/boundary pass.
+Runtime inputs remain identical to b9705abc; do not rerun the passed early
+pure check only for that documentation change. Seven actual PG flows and
+check/build/modules remain the next required commands.

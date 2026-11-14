@@ -1,0 +1,36 @@
+format_version: 1
+root: /srv/fleet-history
+project: lane-del-history
+uid: 10001
+gid: 10001
+subnet: 172.29.244.0/28
+metrics_image: sha256:37677492c6e08c70b91df8d0661ec14bd8da9163a4ed8e2bebb3f9a84cd64b84
+evaluator_image: sha256:1787a48e04c150701f477c27835d23c794694368f6b654e2a09fc636e7dc3404
+evaluator_listen: 127.0.0.1:18880
+raw:
+    listen: 10.77.0.1:18428
+    retention: 2d
+    tls:
+        ca_file: /evidence/history-inputs/raw-ca.pem
+        certificate_file: /evidence/history-inputs/raw-certificate.pem
+        private_key_file: /evidence/history-inputs/raw-private-key.pem
+long:
+    listen: 10.77.0.1:28428
+    retention: 100d
+    tls:
+        ca_file: /evidence/history-inputs/long-ca.pem
+        certificate_file: /evidence/history-inputs/long-certificate.pem
+        private_key_file: /evidence/history-inputs/long-private-key.pem
+store_resources:
+    memory: 256m
+    cpus: "1"
+    pids: 128
+evaluator_resources:
+    memory: 128m
+    cpus: "1"
+    pids: 128
+rules_file: /evidence/history-inputs/rules.yaml
+rules_sha256: 19a7afd1e14abff3c5777cf32406cddd5726ab3bd098de0210d3991d241a73c3
+monitoring_file: /evidence/history-inputs/monitoring.json
+control_ca_file: /evidence/history-inputs/control-ca.pem
+request_seconds: 180

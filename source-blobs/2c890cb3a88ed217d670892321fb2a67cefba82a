@@ -1,0 +1,10 @@
+{
+  "containers_absent": [
+    "143046e265caf652f1ec5b39eba9a06b308b4c58e34ba76f02f5699d232b8e76",
+    "f9d7e52f361f70b8d2600d46556b35167f8c32db92519c2fcbe7554c30ba7a94",
+    "a317ef071714dab00c093f5b5643c825e485cfde30a4e07cc8dc37d7c7018cea",
+    "08eec2f015ec8298bec4b799db963ea60e8dfc0ba505a1e76ee70ef186efc941"
+  ],
+  "owned_transfer_removed": true,
+  "source_and_logs_retained": true
+}

@@ -1,0 +1,292 @@
+//go:build dataset_processor_integration
+
+package datasets_test
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
+	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
+	"os"
+	"path/filepath"
+	"reflect"
+	"runtime"
+	"strings"
+	"testing"
+)
+
+func TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness(t *testing.T) {
+	ctx := context.Background()
+	account := fixture.New(t)
+	password := fixture.Bootstrap(t, account)
+	auth := fixture.Login(t, account, "admin@example.invalid", password, "admin")
+	root := t.TempDir()
+	os.Chmod(root, 0700)
+	if e := datasets.InitializeStore(root, auth.Me.Workspace.TenantID, os.Geteuid(), os.Getegid()); e != nil {
+		t.Fatal(e)
+	}
+	store, e := datasets.OpenStore(root, auth.Me.Workspace.TenantID, 4096)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer store.Close()
+	_, filename, _, _ := runtime.Caller(0)
+	script := filepath.Clean(filepath.Join(filepath.Dir(filename), "../../../../../runtimes/data-processing/process.py"))
+	binary := os.Getenv("PROJECT_ONE_DATA_PYTHON")
+	if binary == "" {
+		t.Fatal("actual pinned native CPython required")
+	}
+	processor, e := datasets.NewProcessor(config.DatasetConfiguration{ArtifactRoot: root, PythonExecutable: binary, ProcessorFile: script}, config.DefaultDatasetPolicy())
+	if e != nil {
+		t.Fatal(e)
+	}
+	account.Config.Datasets = config.DatasetConfiguration{ArtifactRoot: root, PythonExecutable: binary, ProcessorFile: script}
+	if account.Config.Models.ArtifactRoot != "" {
+		if e = models.InitializeStore(account.Config.Models.ArtifactRoot, os.Geteuid(), os.Getegid()); e != nil {
+			t.Fatal(e)
+		}
+	}
+	handler := identityhttp.New(account)
+	if handler.Notifications != nil {
+		if e = handler.Notifications.Service.Start(ctx); e != nil {
+			t.Fatal("start actual notification maintenance", e)
+		}
+		defer func() {
+			stop, cancel := context.WithTimeout(context.Background(), config.Seconds(account.Config.Policy().Portal.CommitSeconds))
+			defer cancel()
+			if e := handler.Notifications.Service.Stop(stop); e != nil {
+				t.Error("stop actual notification maintenance", e)
+			}
+		}()
+	}
+	handler.Datasets.Service.Store = store
+	handler.Datasets.Service.Processor = processor
+	server := httpfixture.NewTLSServer(t, handler)
+	defer server.Close()
+	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/datasets/openapi.json")
+	admin := httpfixture.New(t, server, "admin", schemas)
+	portal := httpfixture.New(t, server, "portal", schemas)
+	for _, c := range []*httpfixture.Client{admin, portal} {
+		c.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": password}, 200, "")
+	}
+	workspace := auth.Me.Workspace.ID
+	base := "/api/v1/workspaces/" + workspace + "/datasets"
+	adminBase := "/api/v1/admin/datasets"
+	portal.Call("GET", base+"/configuration", nil, 200, "DatasetConfigurationResponse")
+	admin.Call("GET", adminBase+"/configuration?workspace_id="+workspace, nil, 200, "DatasetConfigurationResponse")
+	portal.Call("GET", adminBase+"?workspace_id="+workspace, nil, 404, "Problem")
+	input := map[string]any{"name": "HTTP actual corpus", "origin": "Synthetic isolated local source", "license": "Synthetic CC0", "rights_asserted": true, "reason": "Actual HTTP acceptance"}
+	portal.Headers = map[string]string{"Idempotency-Key": uuid.NewString()}
+	created := portal.Write("POST", base, input, 201, "DatasetResponse")
+	dataset := created["id"].(string)
+	path := base + "/" + dataset
+	adminPath := adminBase + "/" + dataset
+	portal.Write("POST", base, input, 201, "DatasetResponse")
+	admin.Call("GET", adminBase+"?workspace_id="+workspace+"&limit=1", nil, 200, "DatasetPageResponse")
+	admin.Call("GET", adminPath, nil, 200, "DatasetResponse")
+	for _, body := range [][]byte{[]byte(`{"Name":"bad","origin":"x","license":"x","rights_asserted":true,"reason":"x"}`), []byte(`{"name":"bad","origin":"x","license":"x","rights_asserted":true,"reason":"\ud800"}`), []byte(`{"name":"bad","origin":"x","license":"x","rights_asserted":true,"reason":null}`), []byte(`{"name":"bad","origin":"x","license":"x","rights_asserted":true,"reason":"x","workspace_id":"foreign"}`)} {
+		portal.Write("POST", base, body, 400, "Problem")
+	}
+	raw := []byte("{\"source_id\":\"a\",\"prompt\":\"Hello \u4e2d\u6587\",\"completion\":\"First\"}\n{bad}\n{\"source_id\":\"b\",\"prompt\":\"Other\",\"completion\":\"Second\"}\n")
+	sum := sha256.Sum256(raw)
+	digest := hex.EncodeToString(sum[:])
+	portal.Headers["Idempotency-Key"] = uuid.NewString()
+	draft := portal.Write("POST", path+"/drafts", map[string]any{"source_name": "fixture.jsonl", "expected_bytes": len(raw), "source_sha256": digest, "reason": "Actual bounded HTTP source"}, 201, "DatasetDraftResponse")
+	draftID := draft["id"].(string)
+	draftPath := path + "/drafts/" + draftID
+	if draft["total_rows"] != nil {
+		t.Fatal("unvalidated counts misrepresented")
+	}
+	portal.Headers["Content-Type"] = "application/x-ndjson"
+	portal.Headers["X-Content-SHA256"] = digest
+	portal.Write("POST", draftPath+"/source", raw, 202, "DatasetDraftResponse")
+	delete(portal.Headers, "Content-Type")
+	delete(portal.Headers, "X-Content-SHA256")
+	if worked, e := handler.Datasets.Service.ProcessNext(ctx); e != nil || !worked {
+		t.Fatal("actual HTTP source processor", e)
+	}
+	rows := portal.Call("GET", draftPath+"/rows?limit=2", nil, 200, "DatasetRowPageResponse")
+	items := rows["items"].([]any)
+	invalid := items[1].(map[string]any)
+	draft = portal.Call("GET", draftPath, nil, 200, "DatasetDraftResponse")
+	if invalid["line_number"] != float64(2) || invalid["error_code"] == nil || draft["invalid_rows"] != float64(1) {
+		t.Fatal("line validation presentation")
+	}
+	body := map[string]any{"expected_revision": draft["revision"], "row_revision": invalid["revision"], "source_id": "c", "prompt": strings.Repeat("p", 12000), "completion": strings.Repeat("c", 12000), "reason": "Repair with an actual body larger than identity envelope"}
+	portal.Write("PATCH", draftPath+"/rows/"+invalid["id"].(string), body, 200, "DatasetRowResponse")
+	draft = portal.Call("GET", draftPath, nil, 200, "DatasetDraftResponse")
+	portal.Headers["Idempotency-Key"] = uuid.NewString()
+	job := portal.Write("POST", draftPath+"/publications", map[string]any{"expected_revision": draft["revision"], "seed": "00112233445566778899aabbccddeeff", "validation_basis_points": 2000, "reason": "Publish actual HTTP dataset"}, 202, "DatasetJobResponse")
+	if worked, e := handler.Datasets.Service.ProcessNext(ctx); e != nil || !worked {
+		t.Fatal("actual HTTP publication", e)
+	}
+	portal.Call("GET", path+"/jobs/"+job["id"].(string), nil, 200, "DatasetJobResponse")
+	versionID := job["version_id"].(string)
+	versionPath := path + "/versions/" + versionID
+	portal.Call("GET", versionPath, nil, 200, "DatasetVersionResponse")
+	portal.Call("GET", path+"/versions", nil, 200, "DatasetVersionPageResponse")
+	exported := portal.Call("GET", versionPath+"/files/train", nil, 200, "dataset-file")
+	if exported["text"] == "" {
+		t.Fatal("empty training export")
+	}
+	portal.Call("GET", "/health/ready", nil, 200, "")
+	var attempt string
+	if e = account.DB.QueryRow(ctx, "SELECT attempt_id::text FROM dataset_versions WHERE id=$1", versionID).Scan(&attempt); e != nil {
+		t.Fatal(e)
+	}
+	file := filepath.Join(root, "versions", versionID, attempt, "train.jsonl")
+	original, e := os.ReadFile(file)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = os.WriteFile(file, []byte("corruption"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	portal.Call("GET", versionPath+"/files/train", nil, 409, "Problem")
+	portal.Call("GET", "/health/ready", nil, 503, "Problem")
+	if e = os.WriteFile(file, original, 0600); e != nil {
+		t.Fatal(e)
+	}
+	portal.Call("GET", "/health/ready", nil, 200, "")
+
+	wrap := func(value map[string]any) map[string]any { return map[string]any{"data": value} }
+	fixtureDir := os.Getenv("LANE_REL_DATASET_FIXTURE_DIR")
+	oldSchemas := httpfixture.Schemas(t, filepath.Join(fixtureDir, "legacy-datasets.json"))
+	oldVersion := portal.Call("GET", versionPath, nil, 200, "DatasetVersionResponse")
+	if err := oldSchemas["DatasetVersionResponse"].Validate(wrap(oldVersion)); err != nil {
+		t.Fatal("original HTTP publication stopped fitting the closed schema 1 response", err)
+	}
+	oldManifest := oldVersion["manifest"].(map[string]any)
+	if oldManifest["schema_version"] != float64(1) || len(oldManifest["files"].([]any)) != 5 {
+		t.Fatal("public default did not retain the schema 1 manifest")
+	}
+	if problem := portal.Call("GET", versionPath+"/files/test", nil, 409, "Problem"); problem["code"] != "DATASET_FILE_INVALID" {
+		t.Fatal("schema 1 unexpectedly offered a test file")
+	}
+
+	service := handler.Datasets.Service
+	next, err := service.CloneVersion(ctx, auth, workspace, dataset, versionID, "Exercise retained three-way read", uuid.NewString(), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if worked, err := service.ProcessNext(ctx); err != nil || !worked {
+		t.Fatal("process retained clone", err)
+	}
+	next, err = service.GetDraft(ctx, auth, workspace, dataset, next.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	intent := datasets.PublicationRequest{
+		ExpectedRevision: next.Revision, Seed: "00112233445566778899aabbccddeeff",
+		ValidationBasisPoints: 2000, Reason: "Publish a retained three-way fixture through its owner",
+	}
+	portal.Headers["Idempotency-Key"] = uuid.NewString()
+	problem := portal.Write("POST", path+"/drafts/"+next.ID+"/publications", map[string]any{
+		"expected_revision": next.Revision, "seed": intent.Seed,
+		"validation_basis_points": 2000, "test_basis_points": 2000, "reason": "Check existing HTTP write boundary",
+	}, 400, "Problem")
+	if problem["code"] != "VALIDATION_FAILED" {
+		t.Fatal("public write unexpectedly accepted the new option")
+	}
+	queued, err := service.PublishWithOptions(ctx, auth, workspace, dataset, next.ID, intent,
+		datasets.PublicationOptions{TestBasisPoints: 2000}, uuid.NewString(), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if worked, err := service.ProcessNext(ctx); err != nil || !worked {
+		t.Fatal("process actual three-way publication", err)
+	}
+	retained, err := service.GetVersion(ctx, auth, workspace, dataset, *queued.VersionID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	observed := portal.Call("GET", path+"/versions/"+retained.ID, nil, 200, "DatasetVersionResponse")
+	retainedManifest := observed["manifest"].(map[string]any)
+	if retainedManifest["schema_version"] != float64(2) || retainedManifest["test_basis_points"] != float64(2000) ||
+		retainedManifest["test_groups"] != float64(1) || retainedManifest["test_rows"] != float64(1) ||
+		len(retainedManifest["files"].([]any)) != 6 || observed["effective_source_sha256"] != oldVersion["effective_source_sha256"] {
+		t.Fatal("the retained three-way read lost the split or source lineage")
+	}
+	if got := admin.Call("GET", adminPath+"/versions/"+retained.ID, nil, 200, "DatasetVersionResponse"); !reflect.DeepEqual(got, observed) {
+		t.Fatal("Admin and Portal disagree on the retained version")
+	}
+	for _, entry := range []struct {
+		client *httpfixture.Client
+		base   string
+	}{
+		{portal, path}, {admin, adminPath},
+	} {
+		page := entry.client.Call("GET", entry.base+"/versions", nil, 200, "DatasetVersionPageResponse")
+		if len(page["items"].([]any)) != 2 {
+			t.Fatal("mixed version page did not retain both versions")
+		}
+		var want string
+		for _, asset := range retained.Manifest.Files {
+			if asset.Path == "test.jsonl" {
+				want = asset.SHA256
+			}
+		}
+		if got := entry.client.Call("GET", entry.base+"/versions/"+retained.ID+"/files/test", nil, 200, "dataset-file"); want == "" || got["sha256"] != want || got["text"] == "" {
+			t.Fatal("HTTP download differs from the sealed test file")
+		}
+	}
+	if got := portal.Call("GET", path+"/versions/"+retained.ID+"/files/manifest", nil, 200, "dataset-file"); got["sha256"] != retained.ManifestSHA256 {
+		t.Fatal("the downloaded manifest differs from its sealed digest")
+	}
+	portal.Call("GET", "/api/v1/workspaces/"+uuid.NewString()+"/datasets/"+dataset+"/versions/"+retained.ID+"/files/test", nil, 404, "Problem")
+
+	capture := func(name string, value map[string]any) []byte {
+		t.Helper()
+		raw, err := json.Marshal(wrap(value))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(fixtureDir, name), raw, 0600); err != nil {
+			t.Fatal(err)
+		}
+		return raw
+	}
+	capture("legacy-version.json", oldVersion)
+	wire := capture("three-way-version.json", observed)
+	for _, invalid := range []struct {
+		name   string
+		mutate func(map[string]any)
+	}{
+		{"missing test count", func(m map[string]any) { delete(m, "test_rows") }},
+		{"wrong algorithm", func(m map[string]any) { m["split_algorithm"] = "source-union-sha256.v1" }},
+		{"duplicate asset", func(m map[string]any) { files := m["files"].([]any); files[0] = files[1] }},
+		{"empty test asset", func(m map[string]any) {
+			for _, asset := range m["files"].([]any) {
+				item := asset.(map[string]any)
+				if item["path"] == "test.jsonl" {
+					item["size_bytes"] = float64(0)
+				}
+			}
+		}},
+		{"schema 1 with test fields", func(m map[string]any) { m["schema_version"] = float64(1) }},
+	} {
+		t.Run(invalid.name, func(t *testing.T) {
+			var envelope map[string]any
+			if err := json.Unmarshal(wire, &envelope); err != nil {
+				t.Fatal(err)
+			}
+			invalid.mutate(envelope["data"].(map[string]any)["manifest"].(map[string]any))
+			if err := schemas["DatasetVersionResponse"].Validate(envelope); err == nil {
+				t.Fatal("contract accepted an incompatible manifest")
+			}
+		})
+	}
+	csrf := portal.CSRF
+	portal.CSRF = ""
+	portal.Call("POST", versionPath+"/retire", map[string]any{"reason": "Missing CSRF"}, 403, "Problem")
+	portal.CSRF = csrf
+	portal.Write("POST", versionPath+"/retire", map[string]any{"reason": "Retain immutable history"}, 200, "DatasetVersionResponse")
+	admin.Call("GET", adminPath+"/versions/"+versionID, nil, 200, "DatasetVersionResponse")
+}

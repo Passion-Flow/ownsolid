@@ -1,0 +1,477 @@
+From 18e6b83a3ba41a55af95f3664feaa5d0889ec19c Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 16:48:26 +0000
+Subject: [PATCH 1/4] SCH-103: Define independent selected-executor
+ qualification
+
+Confirm PostgreSQL first-query isolation requirements and the selected store callback. Reuse current quota fixtures instead of depending on the retained unqualified queued-admission candidate; define seven real snapshot and compatibility acceptance flows.
+---
+ docs/research/scheduling-queue-policy.md | 61 ++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
+
+diff --git a/docs/research/scheduling-queue-policy.md b/docs/research/scheduling-queue-policy.md
+index cb32cbca..563a18a0 100644
+--- a/docs/research/scheduling-queue-policy.md
++++ b/docs/research/scheduling-queue-policy.md
+@@ -117,3 +117,64 @@ that correcting the fixture record restores the original rank. The normal
+ module regression also checks preflight, contention, replay and release.
+ This qualifies persisted scheduling reads. Production queue membership,
+ priority resolution and the actual dispatcher integration remain open.
++
++## Selected-repository snapshot ranking
++
++The initial training selector owns a selected transaction.Executor, not a raw
++pgx transaction. Add RankWorkspaceQueueExecutorWithin without changing the
++existing RankWorkspaceQueueWithin signature. Both use the same scope,
++allocation, aggregate-read and rank implementation. The selected executor
++must be a borrowed PostgreSQL read-only REPEATABLE READ transaction; reject
++a pool, nil context/executor, another engine or another transaction mode.
++
++The selected Store's read-only Within starts READ COMMITTED. The owner can
++issue SET TRANSACTION ISOLATION LEVEL REPEATABLE READ as its first SQL
++statement in that callback, before reading eligible entries or authority.
++PostgreSQL documents both the
++[first-query restriction](https://www.postgresql.org/docs/18/sql-set-transaction.html)
++and [stable snapshot semantics](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-REPEATABLE-READ).
++Read the complete authorized eligible batch, policy and shares through that
++same executor. The ranking helper validates the mode; it does not alter it,
++open another connection or commit. Retain the repository's sanitized errors.
++
++A legacy DB-pool fallback would break selected-repository ownership. A
++READ COMMITTED hint can mix the eligible set, policy and current shares.
++Changing isolation inside the ranker can occur after the owner has already
++read data. None is needed. Ranking grants no admission: after metadata/file
++verification, the owner still rechecks current authority and queue turn in
++a fresh READ COMMITTED owner admission transaction. Keep the
++queued-authority reconciliation for entries excluded from the eligible set.
++
++Use real selected Store.Within callbacks with first-statement isolation
++setup. Read persistent owner queue rows, commit a competing hold and a new
++eligible row concurrently, and verify that the existing snapshot remains
++stable while a fresh snapshot observes both changes. Reject read-only
++READ COMMITTED, writable REPEATABLE READ and read-only SERIALIZABLE. Preserve
++foreign/missing scope refusal, one aggregate usage query, and the legacy
++pgx and preflight snapshot contracts. Unit checks reject pooled and other-
++engine executors before SQL. Existing Go, pgx and PostgreSQL licences above
++cover this additive interface; no dependency, model or dataset is added.
++
++
++### Independent interface qualification
++
++The selected-store implementation begins a read-only READ COMMITTED transaction
++and calls the operation without issuing a query first. Its caller can therefore
++set isolation before the eligible-batch read. The PostgreSQL 18 transaction
++documentation above confirms that this must precede the first query, not merely
++the ranker's first query.
++
++This interface does not depend on the separately retained queued-admission
++implementation. Reuse the mainline quota/reservation fixture and persist a small
++owner queue in its disposable schema. Read that queue through the selected
++executor, commit a competing reservation and enqueue through another connection,
++then compare the retained and fresh snapshots. Assert that ranking changes no
++owner state, revision or reservation. Keep the original broader candidate intact;
++do not copy its pending admission helpers into this path just to obtain a fixture.
++
++The current mainline pgx ranking and submission-preflight tests qualify the
++shared snapshot guard after extraction. Run the two selected-store PostgreSQL
++flows alongside those five existing regressions. The interface is accepted only
++when all seven real flows and the required repository/module gates pass.
++Production eligible-batch authority, durable priority configuration, current
++write admission and the authenticated UI flow remain owner integrations.
+-- 
+2.43.0
+
+
+From 7da949153e542bd944f2fadd2cba3eb4722e2788 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 16:58:11 +0000
+Subject: [PATCH 2/4] SCH-103: Add independent selected-executor queue ranking
+
+Share the read-only REPEATABLE READ guard with submission preflight and preserve the pgx entry. Reuse mainline quota fixtures with persistent owner queue rows instead of importing pending queued-admission helpers.
+
+Verify gofmt, diff hygiene, ownership and source review. Native compilation, the boundary race test and seven real PostgreSQL flows remain unqualified: the Linux attempt exited 75 on I/O pressure before any test started.
+---
+ .../internal/modules/scheduling/README.md     |  19 ++
+ .../scheduling/submission_preflight.go        |  17 +-
+ .../modules/scheduling/workspace_queue.go     |  14 +-
+ .../workspace_queue_executor_test.go          | 197 ++++++++++++++++++
+ 4 files changed, 242 insertions(+), 5 deletions(-)
+ create mode 100644 services/control/internal/modules/scheduling/workspace_queue_executor_test.go
+
+diff --git a/services/control/internal/modules/scheduling/README.md b/services/control/internal/modules/scheduling/README.md
+index 1466f0bf..8403b8a9 100644
+--- a/services/control/internal/modules/scheduling/README.md
++++ b/services/control/internal/modules/scheduling/README.md
+@@ -74,6 +74,25 @@ If an active record in that set has foreign site/cell coordinates, it returns
+ Pass a read-only REPEATABLE READ transaction
+ and the owner's durable queue entries. See [live workspace shares](../../../../../docs/research/scheduling-queue-policy.md#live-workspace-shares).
+ 
++## Selected-repository queue ranking
++
++`RankWorkspaceQueueExecutorWithin(ctx, q, tenant, entries)` borrows the owner's
++selected PostgreSQL executor. The existing pgx entry point remains compatible
++and uses the same validation and ranking implementation.
++
++The owner opens its selected Store.Within with read-only access and executes
++`SET TRANSACTION ISOLATION LEVEL REPEATABLE READ` as the callback's first SQL
++statement. It then reads the complete authorized eligible batch, ranks it and
++resolves its candidate through that same executor. The helper rejects pooled,
++other-engine and wrong-mode inputs; it never opens a connection or commits.
++Priority and durable enqueue sequence come from persisted server authority.
++
++Ranking does not admit work. The workload owner rechecks current authority
++and admission in a fresh write transaction. Production batch selection,
++priority configuration and actual dispatch remain owner integrations.
++The separately retained queued-admission candidate is not required by this
++interface. See [selected-repository ranking](../../../../../docs/research/scheduling-queue-policy.md#selected-repository-snapshot-ranking).
++
+ ## Authorized workspace quota status
+ 
+ `ReadWorkspaceQuotaStatus` uses the selected repository and
+diff --git a/services/control/internal/modules/scheduling/submission_preflight.go b/services/control/internal/modules/scheduling/submission_preflight.go
+index e4a86a9f..0052baf8 100644
+--- a/services/control/internal/modules/scheduling/submission_preflight.go
++++ b/services/control/internal/modules/scheduling/submission_preflight.go
+@@ -122,12 +122,23 @@ func checkCellCapacitySample(ctx context.Context, tx pgx.Tx, sample CellCapacity
+ }
+ 
+ func requireSchedulingSnapshot(ctx context.Context, tx pgx.Tx, unsupported error) error {
+-	if ctx == nil || tx == nil {
++	if tx == nil {
++		return unsupported
++	}
++	return requireSchedulingExecutorSnapshot(ctx, transaction.PostgreSQLTransaction(tx), unsupported)
++}
++
++func requireSchedulingExecutorSnapshot(ctx context.Context, q transaction.Executor, unsupported error) error {
++	if ctx == nil || q == nil || q.Dialect() != transaction.PostgreSQL {
++		return unsupported
++	}
++	if _, pool := q.(transaction.Store); pool {
+ 		return unsupported
+ 	}
+ 	var snapshot bool
+-	if err := tx.QueryRow(ctx, `SELECT current_setting('transaction_read_only')='on'
+- AND current_setting('transaction_isolation')='repeatable read'`).Scan(&snapshot); err != nil {
++	if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
++		`SELECT current_setting('transaction_read_only')='on'
++ AND current_setting('transaction_isolation')='repeatable read'`)).Scan(&snapshot); err != nil {
+ 		return err
+ 	}
+ 	if !snapshot {
+diff --git a/services/control/internal/modules/scheduling/workspace_queue.go b/services/control/internal/modules/scheduling/workspace_queue.go
+index cfc081d6..871ef60d 100644
+--- a/services/control/internal/modules/scheduling/workspace_queue.go
++++ b/services/control/internal/modules/scheduling/workspace_queue.go
+@@ -16,7 +16,18 @@ var ErrQueueSnapshotRequired = errors.New("SCHEDULING_QUEUE_SNAPSHOT_REQUIRED")
+ // supplies the queue capacity. The owner assigns priority and durable sequence,
+ // and opens a fresh read-only REPEATABLE READ snapshot after each dispatch.
+ func RankWorkspaceQueueWithin(ctx context.Context, tx pgx.Tx, tenant string, entries []QueueEntry) ([]QueueEntry, error) {
+-	if err := requireSchedulingSnapshot(ctx, tx, ErrQueueSnapshotRequired); err != nil {
++	if tx == nil {
++		return nil, ErrQueueSnapshotRequired
++	}
++	return RankWorkspaceQueueExecutorWithin(ctx, transaction.PostgreSQLTransaction(tx), tenant, entries)
++}
++
++// RankWorkspaceQueueExecutorWithin ranks the owner's authorized eligible batch
++// through its selected borrowed PostgreSQL read-only REPEATABLE READ executor.
++// Read the entries in that same snapshot; the caller retains transaction
++// completion and must recheck current admission in a fresh write transaction.
++func RankWorkspaceQueueExecutorWithin(ctx context.Context, q transaction.Executor, tenant string, entries []QueueEntry) ([]QueueEntry, error) {
++	if err := requireSchedulingExecutorSnapshot(ctx, q, ErrQueueSnapshotRequired); err != nil {
+ 		return nil, err
+ 	}
+ 	if !canonicalReservationID(tenant) {
+@@ -25,7 +36,6 @@ func RankWorkspaceQueueWithin(ctx context.Context, tx pgx.Tx, tenant string, ent
+ 	if len(entries) == 0 {
+ 		return RankQueue(entries, nil)
+ 	}
+-	q := transaction.PostgreSQLTransaction(tx)
+ 	_, tree, err := readQuotaPolicyWithin(ctx, q)
+ 	if err != nil {
+ 		return nil, err
+diff --git a/services/control/internal/modules/scheduling/workspace_queue_executor_test.go b/services/control/internal/modules/scheduling/workspace_queue_executor_test.go
+new file mode 100644
+index 00000000..6d2d33b9
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/workspace_queue_executor_test.go
+@@ -0,0 +1,197 @@
++package scheduling
++
++import (
++	"context"
++	"errors"
++	"slices"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++)
++
++type queueSnapshotPool struct{ transaction.Store }
++
++func (queueSnapshotPool) Dialect() transaction.Dialect { return transaction.PostgreSQL }
++
++type queueOtherEngine struct{ transaction.Executor }
++
++func (queueOtherEngine) Dialect() transaction.Dialect { return transaction.MySQL }
++
++func TestQueueExecutorSnapshotRejectsUnborrowedInputs(t *testing.T) {
++	for _, test := range []struct {
++		name string
++		ctx  context.Context
++		q    transaction.Executor
++	}{
++		{"missing context", nil, queueSnapshotPool{}},
++		{"missing executor", t.Context(), nil},
++		{"pool", t.Context(), queueSnapshotPool{}},
++		{"other engine", t.Context(), queueOtherEngine{}},
++	} {
++		t.Run(test.name, func(t *testing.T) {
++			got, err := RankWorkspaceQueueExecutorWithin(test.ctx, test.q, uuid.NewString(), nil)
++			if !errors.Is(err, ErrQueueSnapshotRequired) || got != nil {
++				t.Fatalf("unborrowed input returned rank: %+v, %v", got, err)
++			}
++		})
++	}
++}
++
++const queueSnapshotSQL = "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"
++
++func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
++	f := newReservationFixture(t)
++	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
++	defer cancel()
++	first := QueueEntry{JobID: f.first.SourceID, QueueID: f.first.WorkspaceID, Sequence: 1}
++	second := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 2}
++	third := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 3}
++	createQueueExecutorOwnerEntries(t, f, []QueueEntry{first, second})
++	rank := func(ctx context.Context, q transaction.Executor, want []QueueEntry) error {
++		t.Helper()
++		entries, err := readQueueExecutorOwnerEntries(ctx, q, f.first.TenantID)
++		if err != nil {
++			return err
++		}
++		got, err := RankWorkspaceQueueExecutorWithin(ctx, q, f.first.TenantID, entries)
++		if err != nil || !slices.Equal(got, want) {
++			t.Fatalf("selected snapshot rank: %+v, %v, want %+v", got, err, want)
++		}
++		return nil
++	}
++	if err := f.store.Within(ctx, true, func(ctx context.Context, q transaction.Executor) error {
++		if _, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, queueSnapshotSQL)); err != nil {
++			return err
++		}
++		if err := rank(ctx, q, []QueueEntry{first, second}); err != nil {
++			return err
++		}
++		reserveBorrowing(t, f.store, f.first, 2)
++		if _, err := f.pool.Exec(ctx, `INSERT INTO queue_executor_owner
++ (job_id,tenant_id,workspace_id,priority,sequence,state)
++ VALUES($1,$2,$3,0,3,'queued')`, third.JobID, f.first.TenantID, third.QueueID); err != nil {
++			return err
++		}
++		return rank(ctx, q, []QueueEntry{first, second})
++	}); err != nil {
++		t.Fatal(err)
++	}
++	if err := f.store.Within(ctx, true, func(ctx context.Context, q transaction.Executor) error {
++		if _, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, queueSnapshotSQL)); err != nil {
++			return err
++		}
++		return rank(ctx, q, []QueueEntry{second, third, first})
++	}); err != nil {
++		t.Fatal(err)
++	}
++	for _, entry := range []QueueEntry{first, second, third} {
++		var state string
++		var revision int64
++		if err := f.pool.QueryRow(ctx, "SELECT state,revision FROM queue_executor_owner WHERE job_id=$1", entry.JobID).
++			Scan(&state, &revision); err != nil || state != "queued" || revision != 1 {
++			t.Fatalf("ranking changed persisted owner state: %q, %d, %v", state, revision, err)
++		}
++	}
++	var held int
++	if err := f.pool.QueryRow(ctx, "SELECT count(*) FROM scheduling_reservations WHERE released_at IS NULL").
++		Scan(&held); err != nil || held != 1 {
++		t.Fatalf("ranking changed the committed hold: %d, %v", held, err)
++	}
++}
++
++func TestPostgresQueueExecutorRejectsWrongModeAndScope(t *testing.T) {
++	f := newReservationFixture(t)
++	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
++	defer cancel()
++	entry := QueueEntry{JobID: f.first.SourceID, QueueID: f.first.WorkspaceID, Sequence: 1}
++	for _, mode := range []struct {
++		readOnly bool
++		setup    string
++	}{
++		{true, ""}, {false, ""},
++		{false, queueSnapshotSQL},
++		{true, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"},
++	} {
++		err := f.store.Within(ctx, mode.readOnly, func(ctx context.Context, q transaction.Executor) error {
++			if mode.setup != "" {
++				if _, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, mode.setup)); err != nil {
++					return err
++				}
++			}
++			got, err := RankWorkspaceQueueExecutorWithin(ctx, q, f.first.TenantID, []QueueEntry{entry})
++			if got != nil {
++				t.Fatalf("wrong transaction mode returned rank: %+v", got)
++			}
++			return err
++		})
++		if !errors.Is(err, ErrQueueSnapshotRequired) {
++			t.Fatalf("wrong mode accepted or misclassified: %+v, %v", mode, err)
++		}
++	}
++	if err := f.store.Within(ctx, true, func(ctx context.Context, q transaction.Executor) error {
++		if _, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, queueSnapshotSQL)); err != nil {
++			return err
++		}
++		for _, test := range []struct {
++			tenant string
++			entry  QueueEntry
++		}{
++			{uuid.NewString(), entry},
++			{f.first.TenantID, QueueEntry{JobID: entry.JobID, QueueID: uuid.NewString(), Sequence: 1}},
++		} {
++			got, err := RankWorkspaceQueueExecutorWithin(ctx, q, test.tenant, []QueueEntry{test.entry})
++			if !errors.Is(err, ErrQuotaScopeNotFound) || got != nil {
++				t.Fatalf("invalid scope returned a partial rank: %+v, %v", got, err)
++			}
++		}
++		return nil
++	}); err != nil {
++		t.Fatal(err)
++	}
++}
++
++// Persistent owner rows and committed reservations must use the same snapshot;
++// this fixture deliberately has no dependency on the pending admission API.
++func createQueueExecutorOwnerEntries(t *testing.T, f reservationFixture, entries []QueueEntry) {
++	t.Helper()
++	if _, err := f.pool.Exec(t.Context(), `CREATE TABLE queue_executor_owner (
++ job_id uuid PRIMARY KEY,
++ tenant_id uuid NOT NULL,
++ workspace_id uuid NOT NULL,
++ priority integer NOT NULL,
++ sequence bigint NOT NULL UNIQUE CHECK(sequence > 0),
++ state text NOT NULL DEFAULT 'queued',
++ revision bigint NOT NULL DEFAULT 1,
++ FOREIGN KEY(tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id)
++)`); err != nil {
++		t.Fatal(err)
++	}
++	for _, entry := range entries {
++		if _, err := f.pool.Exec(t.Context(), `INSERT INTO queue_executor_owner
++ (job_id,tenant_id,workspace_id,priority,sequence) VALUES($1,$2,$3,$4,$5)`,
++			entry.JobID, f.first.TenantID, entry.QueueID, entry.Priority, entry.Sequence); err != nil {
++			t.Fatal(err)
++		}
++	}
++}
++
++func readQueueExecutorOwnerEntries(ctx context.Context, q transaction.Executor, tenant string) ([]QueueEntry, error) {
++	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
++		`SELECT job_id::text,workspace_id::text,priority,sequence FROM queue_executor_owner
++ WHERE tenant_id=$1 AND state='queued' ORDER BY sequence`, tenant))
++	if err != nil {
++		return nil, err
++	}
++	defer rows.Close()
++	var entries []QueueEntry
++	for rows.Next() {
++		var entry QueueEntry
++		if err := rows.Scan(&entry.JobID, &entry.QueueID, &entry.Priority, &entry.Sequence); err != nil {
++			return nil, err
++		}
++		entries = append(entries, entry)
++	}
++	return entries, rows.Err()
++}
+-- 
+2.43.0
+
+
+From 7ee0a4693d146049654e71a9707aec717136fb2c Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 17:22:55 +0000
+Subject: [PATCH 3/4] SCH-103: Keep queued fixture jobs separate from competing
+ holds
+
+Model a committed reservation from a different job in the same workspace and assert its exact attempt remains the sole hold after ranking. Preserve the eligible jobs and revisions. Verify gofmt and diff review; real PostgreSQL qualification remains pending the shared native gate.
+---
+ .../scheduling/workspace_queue_executor_test.go       | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/services/control/internal/modules/scheduling/workspace_queue_executor_test.go b/services/control/internal/modules/scheduling/workspace_queue_executor_test.go
+index 6d2d33b9..3d3de21c 100644
+--- a/services/control/internal/modules/scheduling/workspace_queue_executor_test.go
++++ b/services/control/internal/modules/scheduling/workspace_queue_executor_test.go
+@@ -49,6 +49,7 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
+ 	second := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 2}
+ 	third := QueueEntry{JobID: uuid.NewString(), QueueID: f.other, Sequence: 3}
+ 	createQueueExecutorOwnerEntries(t, f, []QueueEntry{first, second})
++	competing := newBorrowingAttempt(f.first, f.first.WorkspaceID)
+ 	rank := func(ctx context.Context, q transaction.Executor, want []QueueEntry) error {
+ 		t.Helper()
+ 		entries, err := readQueueExecutorOwnerEntries(ctx, q, f.first.TenantID)
+@@ -68,7 +69,7 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
+ 		if err := rank(ctx, q, []QueueEntry{first, second}); err != nil {
+ 			return err
+ 		}
+-		reserveBorrowing(t, f.store, f.first, 2)
++		reserveBorrowing(t, f.store, competing, 2)
+ 		if _, err := f.pool.Exec(ctx, `INSERT INTO queue_executor_owner
+  (job_id,tenant_id,workspace_id,priority,sequence,state)
+  VALUES($1,$2,$3,0,3,'queued')`, third.JobID, f.first.TenantID, third.QueueID); err != nil {
+@@ -95,9 +96,11 @@ func TestPostgresQueueExecutorUsesSelectedOwnerSnapshot(t *testing.T) {
+ 		}
+ 	}
+ 	var held int
+-	if err := f.pool.QueryRow(ctx, "SELECT count(*) FROM scheduling_reservations WHERE released_at IS NULL").
+-		Scan(&held); err != nil || held != 1 {
+-		t.Fatalf("ranking changed the committed hold: %d, %v", held, err)
++	var heldID string
++	if err := f.pool.QueryRow(ctx, `SELECT count(*),COALESCE(min(attempt_id::text),'')
++ FROM scheduling_reservations WHERE released_at IS NULL`).
++		Scan(&held, &heldID); err != nil || held != 1 || heldID != competing.ID {
++		t.Fatalf("ranking changed the competing hold: %d, %q, %v", held, heldID, err)
+ 	}
+ }
+ 
+-- 
+2.43.0
+
+
+From 8b17a2954260e517b434906e95740a39ecdd4a9a Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 18:04:40 +0000
+Subject: [PATCH 4/4] SCH-103: Record qualified selected-executor snapshot
+ interface
+
+Verify seven real PostgreSQL 18.6 race flows and the boundary matrix on route-free Linux amd64 source b8d3efa0. Reuse exact-source macOS arm64 Control modules, make check and make build passes. Keep production queue authority, write admission and UI acceptance open.
+---
+ docs/product/status.md | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/docs/product/status.md b/docs/product/status.md
+index c191a1ba..3b43e7ee 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -69,6 +69,7 @@ today and what is known to fail.
+ | Scheduling policy and cell observation (SCH-101 to SCH-104, SCH-107, SCH-108, SCH-110, open) | Job demand, quota policy, queue order, quota preflight and scheduler observation libraries | Linux Go race tests covered exact demand, tenant scope and child ceilings. Disconnected TLS verified cell identity, protected token rotation, refusal before network I/O and the exact Kueue Workload blocker. Scheduling tests rejected stale blockers and verified fixed guidance without controller messages. PostgreSQL 18.6 verified that two concurrent policy edits could not both consume the same parent allocation | No | Production schema and workload composition, offline cell installation, reservation and product entrances remain open. See [integration boundaries](../research/lane-sch-questions.md) |
+ | Transactional training scheduling seam (SCH-101, open) | PostgreSQL reservation and exact release on the workload owner's transaction, with candidate schema | Linux PostgreSQL 18.6 covered contention, owner rollback and live quota edits. A logical dump/restore of the v57 catalog with candidate tables preserved a held and a released attempt and their admission decisions. Disconnected local replay and release refused foreign site/cell records for single and gang attempts | No | Production migration and fingerprints, the authenticated training caller and installed offline flow remain open. See [training and database handoff](../research/scheduling-training-reservations.md) |
+ | Live workspace queue ranking (SCH-103, open) | Tenant-scoped ordering from current quota and reservation shares in one read-only snapshot | Isolated Linux PostgreSQL 18.6 verified priority, snapshot stability, changed rank after holds and quota edits, FIFO after release, one reservation query for multiple workspaces and zero reservation reads on foreign or missing scope. A foreign site/cell in the selected active records refused the entire rank and preserved the records | No | Durable queue membership, authority over priority classes and the workload owner dispatch remain open. See [live workspace shares](../research/scheduling-queue-policy.md#live-workspace-shares) |
++| Selected-repository queue ranking (SCH-103, open) | Additive Executor entry; the pgx entry and submission preflight share snapshot validation | Source b8d3efa0 passed seven route-free PostgreSQL 18.6 race flows and the four boundary checks on Linux amd64: retained and refreshed owner/usage snapshots, wrong transaction modes, foreign/missing scopes, one aggregate query and legacy preflight/ranking contracts. The same source passed the complete Control module suite, make check and make build on macOS arm64 Go 1.27.3 with Python 3.12 and offline locked dependencies | No | Production eligible-batch selection, priority authority, current write admission and the authenticated UI flow remain owner integrations. No queued-admission implementation, production schema or route is activated. See [selected-repository ranking](../research/scheduling-queue-policy.md#selected-repository-snapshot-ranking) |
+ | Whole-job reservation and gang release (SCH-104, open) | One transactional hold for all replica groups and full exact slot evidence before release | Isolated Linux PostgreSQL 18.6 verified rollback of three provisional owner holds after quota refusal and a rejected COMMIT, replay after lost COMMIT acknowledgement, and refusal of partial, duplicate and stale stop evidence | No | Production migration, verified physical receipts, installed scheduler and the authenticated workload flow remain open. See [gang reservation and release](../research/scheduling-admission.md#atomic-gang-reservation-and-release) |
+ | Placement wait reasons (SCH-108, open) | Actionable guidance from the current queue, quota, reservation and reclaim decisions | Isolated Linux PostgreSQL 18.6 verified refreshed shortfalls after quota edits and release, exact reclaim evidence, replay and identical denial for foreign and missing scopes. Disconnected TLS returned guidance for the bound Workload UID and withheld it for stale conditions, replacement and forbidden reads | No | The authenticated caller needs the workload owner's durable controller UID binding. Live cell validation requires signed offline controller assets and scoped credentials. See the [installed workload handoff](../research/scheduling-wait-reasons.md#installed-workload-handoff) |
+ | Authorized workspace quota status (SCH-108, open) | Independent reader and HTTP component; current Workspace authority, quota policy and held usage share one selected PostgreSQL transaction | Source 0e7d5a9e on accepted base 3b087618 (schema 60) passed six route-free PostgreSQL 18.6 race flows on Linux amd64: current authority, exact quota/revision accounting, lock-wait readback, HTTP failure projection and affected reservation/share/borrowing regressions. Linux Go 1.27.3 also passed the complete Control module suite, make check and make build on that exact source | No | Production IAM dispatch, public OpenAPI generation and UI are not installed. Native serving-role/catalog and installed-flow acceptance remain open; these component tests do not qualify the complete feature. See the [scope contract](../research/scheduling-wait-reasons.md#authorized-workspace-quota-status) |
+-- 
+2.43.0
+

@@ -1,0 +1,41 @@
+# Installed workspace CLI acceptance
+
+The client source is the clean DEV-102 candidate 8f4dd72cb9c6c58c0860bb9125289986cfc180d1.
+Control has its own installed source and binary identity. The two revisions may differ.
+A client build revision must never be recorded as the installed Control revision.
+
+Primary sources:
+- The frozen DEL installed_acceptance_test.go exports installed-ready.json,
+  installed-provenance.json, installed-control.bin, installation-ca.pem and admin-credential.
+- The frozen DEL installed_scope_test.go exports person.json and scope-state.json.
+- The installed administrator email comes from admin-credential.request.administrator_email.
+- The workspace handler permits platform administrators to read every workspace in
+  the installed tenant. A regular Portal member has narrower membership authority.
+- https://pkg.go.dev/runtime/debug#BuildInfo documents Go build settings.
+- https://docs.python.org/3.12/library/ssl.html documents certificate and hostname verification.
+- https://docs.python.org/3.12/library/subprocess.html documents bounded child execution.
+- https://docs.python.org/3.12/license.html provides the PSF licence.
+
+Use the existing installation and public HTTPS operations. Create no database, server,
+test account or second installation. Use the installer-issued credential and seeded
+members. Preserve the real origins and certificate verification. The window owner joins
+its existing network namespace and gives the CLI a private mount namespace with DNS
+host entries for those exact origins. The host's hosts file remains unchanged.
+
+Qualify CLI list/detail, bounded continuation, empty search, foreign-tenant refusal,
+nonadministrator Admin login refusal, logout/replayed revoked session refusal and fresh
+login recovery. A separate Portal HTTPS companion verifies an allowed member workspace
+and refusal of a different workspace and tenant. Label those protocol checks separately
+from the Admin-only CLI checks.
+
+Reject missing inputs, a stale source/provenance pair, a binary hash mismatch, unsafe
+credential files and incomplete scope relationships before a login. Do not skip a missing
+case or turn an input refusal into an acceptance pass. Store only case names, stable
+codes and request IDs; never store credential or raw HTTP/CLI output in the report.
+
+The client uses the already-reviewed CLI dependencies (Cobra Apache-2.0, Go and x/sys
+BSD-3-Clause and the existing YAML/terminal dependencies). The driver uses only the
+Python 3.12 standard library under the PSF licence. Commercial and offline use and
+redistribution are allowed under their notices. No model, dataset or dependency is added.
+
+The installed endpoint is not ready yet. Harness validation is not installed acceptance.

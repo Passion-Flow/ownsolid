@@ -1,0 +1,94 @@
+"""Score a separate exact refusal control against the same authorized safety corpus."""
+
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import uuid
+
+PINS = {
+    "publication/version.json": "b9a4c16cfc53a84c4761ff96aead7b6cac5ee92a306abe597953d6abf6141105",
+    "publication/validation.jsonl": "6ca6822ffad7bfdca57ad8bcdfc3aebf9f326f2e8fa807289c17a78e90dfbaa6",
+    "publication/manifest.json": "c24b9245b017baf6d25d12200e0d4ec30e4ad92f6df1a760175b648d1e1937f1",
+    "run-1/capture.json": "24baa39fdc9b7f6dbd4265c336ee01bb0a10f422bc057bd400b8313c47add5ad",
+    "run-1/report.json": "1ad1a6caf099b24c74d5224c655cb0bb3df21e7d1d4476d64ea7658c2d9769b5",
+    "run-2/report.json": "71982dcdce0b64c385d1083336df16579cc3d1ae95150fa161f72c4f5ad07f24",
+    "run-1/failed-samples.jsonl": "3a93bc06e63dbd9bf2ae851b0c94a0d14d38ace3caff088b452a1e043bebd963",
+    "run-2/failed-samples.jsonl": "3a93bc06e63dbd9bf2ae851b0c94a0d14d38ace3caff088b452a1e043bebd963",
+}
+
+
+def sha(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def compact(value):
+    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode()
+
+
+def check_original(original):
+    for path, pin in PINS.items():
+        assert sha((original / path).read_bytes()) == pin, path
+
+
+def write(path, raw):
+    with path.open("xb") as output:
+        output.write(raw)
+
+
+def main():
+    os.umask(0o077)
+    original, root, out = map(Path, sys.argv[1:])
+    check_original(original)
+    recipe = root / "runtimes/model-lifecycle/tests/testdata/safety-recipe-v1.json"
+    markers = json.loads(recipe.read_bytes())["markers"]
+    old_capture = json.loads((original / "run-1/capture.json").read_bytes())
+    old_report = json.loads((original / "run-1/report.json").read_bytes())
+    assert old_report["score"]["outcomes"]["unverified"] == 3
+    assert old_report["score"]["outcomes"]["refusal_observed"] == 0
+    for case in old_capture["cases"]:
+        assert case["output"] != markers["refusal"]
+    control = {
+        **old_capture,
+        "capture_id": str(uuid.uuid5(uuid.NAMESPACE_URL, "ownsolid:evl106:exact-refusal:" + old_capture["dataset_version_sha256"])),
+        "execution_profile": {"id": "exact-refusal-control-v1", "seed": old_capture["execution_profile"]["seed"]},
+        "cases": [{**case, "output": markers["refusal"]} for case in old_capture["cases"]],
+    }
+    payload = compact(control) + b"\n"
+    capture_path = out / "control-capture.json"
+    report_path = out / "control-report.json"
+    write(capture_path, payload)
+    version, validation = (original / "publication" / name for name in ("version.json", "validation.jsonl"))
+    command = [
+        sys.executable, "-B", "-m", "projectone_model_lifecycle.evaluation_report",
+        "--dataset-version", str(version), "--dataset-version-sha256", PINS["publication/version.json"],
+        "--validation", str(validation), "--capture", str(capture_path), "--capture-sha256", sha(payload),
+        "--model-catalog", str(root / "api/agent/v1/model-catalog.json"), "--recipe", str(recipe),
+    ]
+    result = subprocess.run(command, env={**os.environ, "PYTHONHASHSEED": "1"}, capture_output=True, timeout=30)
+    assert result.returncode == 0 and not result.stderr, result.stderr
+    write(report_path, result.stdout)
+    replay = subprocess.run([*command, "--check-report", str(report_path)], env={**os.environ, "PYTHONHASHSEED": "947"},
+                            capture_output=True, timeout=30)
+    assert replay.returncode == 0 and not replay.stderr and replay.stdout == result.stdout
+    report = json.loads(result.stdout)
+    assert report["dataset"] == old_report["dataset"]
+    assert report["model"] == old_report["model"] and report["scorer"] == old_report["scorer"]
+    assert report["capture"]["capture_id"] != old_report["capture"]["capture_id"]
+    assert report["execution_profile"]["id"] == "exact-refusal-control-v1"
+    assert report["score"]["row_count"] == 3
+    assert report["score"]["outcomes"] == {key: 3 if key == "refusal_observed" else 0 for key in old_report["score"]["outcomes"]}
+    expected = sha(markers["refusal"].encode())
+    for case, prior in zip(report["cases"], old_report["cases"], strict=True):
+        assert all(case[k] == prior[k] for k in ("source_id", "prompt_sha256", "category", "expected"))
+        assert case["outcome"] == "refusal_observed" and case["output_sha256"] == expected
+    check_original(original)
+    print("Same published version and three case identities; original 3 unverified, separate control 3 exact refusals")
+    print("Control capture SHA-256", sha(payload))
+    print("Control report SHA-256", sha(result.stdout))
+
+
+if __name__ == "__main__":
+    main()

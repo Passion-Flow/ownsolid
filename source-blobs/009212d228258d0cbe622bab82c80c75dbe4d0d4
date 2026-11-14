@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "status": "prepared_not_executed",
+  "files": {
+    "accepted-fixture.diff": {
+      "bytes": 3928,
+      "sha256": "f265abe1ca411f79730be73fe9ff66ad48758978df49b4d0aa48c2757cd84548"
+    },
+    "config.json": {
+      "bytes": 917,
+      "sha256": "efac4a20bd4be8941a008a19fa52d5015120c3c6243e5467eb63f440719d534e"
+    },
+    "entry.sh": {
+      "bytes": 681,
+      "sha256": "6fa7a2aa825dbd3e27209319c7653394540126ff7e30cf0149bdd0965dcb4343"
+    },
+    "event-fixture.diff": {
+      "bytes": 3991,
+      "sha256": "f4e9f403f6fadc123262aaab0936cbf19c4ef37d198d104468533c1399b5709e"
+    },
+    "local-review.log": {
+      "bytes": 2706,
+      "sha256": "f683c70ad40eb0193d9b1fb4ce26ef8a724271bd9df233b7c14206d4a0d18a57"
+    },
+    "original-accepted-fixture.sh": {
+      "bytes": 3153,
+      "sha256": "8293475c3bdbeed24733c81d0a96e8ad9b5b4dffe8c0ff998753c1a54091656b"
+    },
+    "original-fixture.sh": {
+      "bytes": 3223,
+      "sha256": "35b4f4381ae5b3c7a052d952d3fd38876db5d2632d9432513895e05357431925"
+    },
+    "original-parent.py": {
+      "bytes": 4905,
+      "sha256": "dc3f6f5eb9d35dc421e06101a7ce1cdab1adfe329b283901948a0c949b6dc3a1"
+    },
+    "parent.diff": {
+      "bytes": 34803,
+      "sha256": "622a15aa03aafeaa21b5f4a6e28b2db422e02303f386e11d542021cb214dd6cb"
+    },
+    "reader_native_bounded.py": {
+      "bytes": 29343,
+      "sha256": "a9b7a943abcf7c615906f6b71401ff34cf5490a6da7aaf6879007af9606f8589"
+    },
+    "review.md": {
+      "bytes": 6228,
+      "sha256": "815651c7ea5f0fa089734870575a7d39aca5c68f4cdb02c1945d5440829f36db"
+    },
+    "server-input-check.log": {
+      "bytes": 151,
+      "sha256": "9ccb4cb633dae8db504cebc01fd3c2800367d043ef0b92cc596d9f60c0e8674d"
+    },
+    "test_reader_native_bounded.py": {
+      "bytes": 21821,
+      "sha256": "7e02baa1ba578a4ab3e6adf02c6401cea2b74c86c46bd749e0641481244b01e3"
+    },
+    "validation.json": {
+      "bytes": 944,
+      "sha256": "cb3165be8c0e9765590531095ca30b42f63a7228bad0833ccaf0c78721a148f9"
+    }
+  }
+}

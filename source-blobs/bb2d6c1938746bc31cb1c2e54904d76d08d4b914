@@ -1,0 +1,191 @@
+{
+  "phase": "preparation only",
+  "execution_authorized": false,
+  "locks_opened": false,
+  "generators_started": false,
+  "candidate_source": "a62a63b5c116ecf0fb48e92d7c88853c8d3beb3d",
+  "candidate_tree": "c1a8c22420e0ec801e8262b670dc5f7c546fbc91",
+  "linux_frozen_source": "37cbb09c3d4933a53e4aea844a979d8b91d67b58",
+  "generation_inputs_identical_between_frozen_source_input_manifest_and_candidate": true,
+  "scope": "28-domain source generation and file comparisons only",
+  "strict_two_generator_allowlist_closed": false,
+  "blocking_constraint": {
+    "source": "Coordinator assignment: only the two fixed generators and exact local post-hooks may execute",
+    "mandatory_extra_executable": {
+      "path": "/root/lane-rel-tools/go/bin/go",
+      "resolved": "/root/lane-rel-tools/go/bin/go",
+      "sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b",
+      "bytes": 17164222
+    },
+    "mandatory_metadata_argv": [
+      "env",
+      "-json",
+      "GO111MODULE",
+      "GOFLAGS",
+      "GOINSECURE",
+      "GOMOD",
+      "GOMODCACHE",
+      "GONOPROXY",
+      "GONOSUMDB",
+      "GOPATH",
+      "GOPROXY",
+      "GOROOT",
+      "GOSUMDB",
+      "GOWORK"
+    ],
+    "possible_module_metadata_argv": [
+      "list",
+      "-m",
+      "-e",
+      "-json",
+      "..."
+    ],
+    "package_detection_go_list_f_needed": false,
+    "reason": "Explicit package configuration bypasses package-name detection, but imports.Process constructs a nil ProcessEnv map and calls go env during its initialization.",
+    "scope_change_or_reviewed_exact_metadata_allowlist_required_before_execution": true,
+    "rejected_bypasses": [
+      "Disable generator formatting",
+      "Synthetic go env replies or replacement executable",
+      "Compile or install another generator",
+      "Reuse the consumed full-gate or SDK admission attempts"
+    ]
+  },
+  "prepared_tool_inventory": {
+    "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/light-generation-plan/prepared-tool-and-graph-inventory.json",
+    "sha256": "8daaaef3858b21d9d3c2e4ffce6e26c95a0fee104951c9d35a8bf38da4ebdfa2"
+  },
+  "source_only_inputs": {
+    "manifest": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/light-generation-plan/source-only-input-manifest.json",
+    "manifest_sha256": "96a94dd3608b3ae41cfdbc013c757ca91d158949ffe34f986e7faa6a48d33f60",
+    "archive": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/light-generation-plan/source-only-inputs.tar.gz",
+    "archive_sha256": "16ca79833009029c49cf593c2c178bf1c85ce81cf3e7f41c91486d5835635fe1",
+    "source_files": 36,
+    "raw_contract_files": 29,
+    "public_domains": 28,
+    "operations": 430
+  },
+  "python_post_hooks": [],
+  "ruff_or_shell_hook_invoked": false,
+  "bounded_helper_reuse": {
+    "path": "/root/lane-rel-tools/api-compat/full_native_gate.py",
+    "sha256": "f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a",
+    "mode": "Reuse only the unchanged bounded process-group/descendant functions; never import or run the full entry top level.",
+    "function_sha256": {
+      "budget": "d35fd6d6e60d4d1386e0845946d0947c28f821810cded21451abc6b32257c91b",
+      "reap_group": "22e987ba6da50640f04361d69ba7dfd57b7e5e9328d7e44209bdc4e725c7c5a3",
+      "owned_children": "417c98297cf8157a8c530227b0d3e3502bc6b1979c96f1468b181e6658295ef6",
+      "group_alive": "899c6c3350e6b4b4b4cf7762ca71e1201a5f8cb171c16d7d7a9fc03b883dda29",
+      "signal_owned": "f9733803864724e7fd3b4b7559629933a2dd18a35a2e0f7d8b0a5567b11efec1",
+      "stop": "8cb613883bc892499216c5714bb38fbf22c6db96f014753e748fae2d406ed297",
+      "spawn": "41641bbb1055d55f5b08c50562c9821accc797badd05b4158eedb347acf4552f"
+    },
+    "resource_function_reused": false,
+    "full_entry_or_profile_modified": false
+  },
+  "linux_admission": {
+    "free_mib_min": 2048,
+    "available_mib_min": 8192,
+    "disk_gib_min": 30,
+    "io_full_avg10_max": 5,
+    "carrier_order": [
+      {
+        "path": "/run/lock/ownsolid-heavy.lock",
+        "device": 29,
+        "inode": 82,
+        "uid": 0,
+        "regular": true,
+        "lock_taken": false
+      },
+      {
+        "path": "/root/lane-sci-tools/heavy-test.lock",
+        "device": 64512,
+        "inode": 7508772,
+        "uid": 0,
+        "regular": true,
+        "lock_taken": false
+      }
+    ],
+    "flock_mode": "One LOCK_EX|LOCK_NB per permanent carrier; no wait, retry, replacement or third carrier.",
+    "resample": "Before carriers, after carriers and before every domain."
+  },
+  "mac_readiness": {
+    "ready": false,
+    "free_mib_min": 2048,
+    "disk_gib_min": 15,
+    "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+    "existing_helper": "/Users/passion./.local/state/ownsolid/lane-rel/with_mac_window.py",
+    "helper_sha256": "71d1d2b7403b5606d01e7a34d8e4f5e80a23b0d151288a6877b7b6a7c66804c2",
+    "wait_seconds": 0,
+    "prepared_oapi_codegen_found": false,
+    "not_used_or_locked": true
+  },
+  "limits": {
+    "whole_entry_seconds_max": 300,
+    "execution_seconds_max": 280,
+    "cleanup_reserve_seconds": 20,
+    "external_command_run_seconds_max": 50,
+    "external_command_cleanup_seconds_max": 6,
+    "external_command_total_seconds_max": 60,
+    "cpu_affinity_count": 1,
+    "domain_parallelism": 1,
+    "GOMAXPROCS": "1",
+    "GOMEMLIMIT_max_bytes": 536870912,
+    "GOMEMLIMIT_kind": "soft Go-runtime limit, not hard process RSS",
+    "NODE_OPTIONS_absolute_old_space_mib_max": 512,
+    "Node_allowed_to_execute": false,
+    "RAYON_NUM_THREADS": "1 if applicable; no Ruff hook in this graph",
+    "stricter_inherited_values": "Preserve; reject invalid, ambiguous or unsupported limits before carriers.",
+    "hard_memory_limit": "No new hard RSS cap asserted. Record inherited RLIMIT and cgroup limits; do not raise them."
+  },
+  "offline": {
+    "linux_network_namespace": "Unshare CLONE_NEWNET before any generator; only loopback interface, no external routes.",
+    "GOTOOLCHAIN": "local",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "PIP_NO_INDEX": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "compilation_install_download_pg_services_browser": "forbidden"
+  },
+  "planned_top_level_generator_commands": {
+    "version_checks": 2,
+    "domain_generator_commands": 56,
+    "execution_mode": "Call unchanged product generate() with a per-subprocess adapter using the pinned bounded helper and existing atomic staging/rename. No generation algorithm or post-hook configuration change.",
+    "equivalent_product_cli": [
+      "/root/lane-rel-tools/obs109-contract.Psjaj7Gp/python/bin/python",
+      "/root/lane-rel-tools/strict-contract-json-37cbb09c/source/tools/codegen/sdk/generate.py",
+      "--out",
+      "<new independent output directory>",
+      "--go-generator",
+      "/root/lane-rel-tools/obs109-contract.Psjaj7Gp/bin/oapi-codegen",
+      "--python-generator",
+      "/root/lane-rel-tools/obs109-contract.Psjaj7Gp/python/bin/openapi-python-client"
+    ]
+  },
+  "measurement": {
+    "status": "NOTRUN",
+    "per_command_peak": "wait4 ru_maxrss, recorded with Linux KiB units; do not label as peak aggregate RSS.",
+    "process_group_peak": "Sample sum of current process-tree RSS with interval and maximum recorded; label sampled, not an exact continuous peak.",
+    "parent_peak": "getrusage RUSAGE_SELF peak RSS",
+    "soft_limits": "Record effective environment after min-with-inherited validation.",
+    "hard_limits": "Record inherited RLIMIT_AS, RLIMIT_DATA, RLIMIT_RSS, RLIMIT_CPU and cgroup memory.max/memory.high where available.",
+    "no_measured_peak_or_capacity_claim": true
+  },
+  "comparison": {
+    "all_outputs": "Actual per-file relative path, byte length and SHA-256; actual Go/Python domain count and total file count.",
+    "old_archive": "/root/lane-rel-tools/identity-audit-contract/identity-sdk-inputs.tar.gz",
+    "old_archive_sha256": "6ba53a09b2f1fc3794f4f723366b05629ad7cc54a4dbecd81144f52a33365aa2",
+    "old_scope": "122 identity-plus-shared files only; compare byte contents, changed/missing/new identity files separately.",
+    "full_28_2e_output_baseline": "Unavailable; do not claim full generated-byte equality from projection equality.",
+    "new_output_file_count": null,
+    "old_122_comparison": "NOTRUN"
+  },
+  "qualification_boundaries": {
+    "49_tests": "Retain source37 qualification only; no new SDK/native qualification.",
+    "28_projections": "Source-only values, not generated output.",
+    "430_audit_exit": 1,
+    "native_and_full": "NOTRUN",
+    "old_9be_OOM_and_2e_and_37_refusals": "Immutable",
+    "roadmap_ticked": false,
+    "published": false
+  }
+}

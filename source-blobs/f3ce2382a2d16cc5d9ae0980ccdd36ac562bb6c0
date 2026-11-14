@@ -1,0 +1,163 @@
+{
+  "archive_manifest_unchanged": true,
+  "closed_entry_count": 22,
+  "entries": [
+    {
+      "closed_sha256": "488a093117bc2b96e9de16a90670335109caea8d71ae804c5e5e3789bf27c123",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "ea4ca935509dd300cba4f13fded4f9ce547aa8a188776a9b71060581d08dd86b",
+      "path": "/root/lane-sci-tools/aud108-scoped/run.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/ea4ca935509dd300cba4f13fded4f9ce547aa8a188776a9b71060581d08dd86b.txt"
+    },
+    {
+      "closed_sha256": "c576dba89eb01ee311c4ea91f9ea5af7e11f71b560afa955c010b36199ceac86",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "594389884b87511775fa0678f9cdfb9a17dc869cded073ade2a55f1cecd6effa",
+      "path": "/root/lane-sci-tools/evl105-authorized-pair/run-resume-psi25-original.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/594389884b87511775fa0678f9cdfb9a17dc869cded073ade2a55f1cecd6effa.txt"
+    },
+    {
+      "closed_sha256": "a9bec35060981d7f6937ae1f2f4142736f2179a08f50f80c0827c29580631e31",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "6806e54e88d648da13dd9f58474494e07a5eb1fb37036311e7eeb23c5031b72c",
+      "path": "/root/lane-sci-tools/evl105-authorized-pair/run-resume.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/6806e54e88d648da13dd9f58474494e07a5eb1fb37036311e7eeb23c5031b72c.txt"
+    },
+    {
+      "closed_sha256": "17e45eba12af885eb0999a9672a85792a373b64169ff088ac057ba13db401022",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "996629c019aa8f6d858708f9f0ec854beb52136b577d6a7ac29b333a436817ce",
+      "path": "/root/lane-sci-tools/evl105-authorized-pair/run.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/996629c019aa8f6d858708f9f0ec854beb52136b577d6a7ac29b333a436817ce.txt"
+    },
+    {
+      "closed_sha256": "0d680953bc59c927a9d06b9b464523440694fc0b9808e6277b5a8504c2fa1def",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "f94e07d69d639e81f9f0543a4ddec5fe72e259088d1775af5e463cfc8d932b0b",
+      "path": "/root/lane-sci-tools/evl104-cpu-trace/run-check-build.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/f94e07d69d639e81f9f0543a4ddec5fe72e259088d1775af5e463cfc8d932b0b.txt"
+    },
+    {
+      "closed_sha256": "679662f03f050a6565902140f59d3b0f4970e36ad10ffd8d0408c143b93c3482",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "5e8884111ae9b03e0668e412bb31b4fe5d5e5777e960751d6e3df69fea1d8053",
+      "path": "/root/lane-sci-tools/evl104-cpu-trace/run.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/5e8884111ae9b03e0668e412bb31b4fe5d5e5777e960751d6e3df69fea1d8053.txt"
+    },
+    {
+      "closed_sha256": "e729753fd2cea12f14186bbc19e7d1b2a102ecb78d85ee7977f80a6b23e747b9",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "08571f7208ff2833185b88508143f8a0bec010d16c407948e77da6728cb91874",
+      "path": "/root/lane-sci-tools/evl105-cpu-serving/run-cache-mount.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/08571f7208ff2833185b88508143f8a0bec010d16c407948e77da6728cb91874.txt"
+    },
+    {
+      "closed_sha256": "07fb6f10b6be5f7e309a13466559dbb9d830342f3829a7e15819a2b154bfa7e0",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "b446774b0544e32094976abd02207060c74c193ffb75f9d3a63884dce2d9865d",
+      "path": "/root/lane-sci-tools/evl105-cpu-serving/run-check-build.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/b446774b0544e32094976abd02207060c74c193ffb75f9d3a63884dce2d9865d.txt"
+    },
+    {
+      "closed_sha256": "9fab1bbe00c256077835c1859d4a159146518e0ee0a82971da5eb0a50b7b42c7",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "67be9d6ffab841cf1c261803917a45a132a9e047bc33833569aeb6dd2ac46ab0",
+      "path": "/root/lane-sci-tools/evl105-cpu-serving/run-retry.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/67be9d6ffab841cf1c261803917a45a132a9e047bc33833569aeb6dd2ac46ab0.txt"
+    },
+    {
+      "closed_sha256": "f79e2255c9eaacfac8bd0c6ed2057a8976e9db7a225be1043e3c93496f1e8244",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "fc716b601c1057860f154677a1ea8fb41a4930c68aaace29cfa5a0e0f0de44e9",
+      "path": "/root/lane-sci-tools/evl105-cpu-serving/run-serving.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/fc716b601c1057860f154677a1ea8fb41a4930c68aaace29cfa5a0e0f0de44e9.txt"
+    },
+    {
+      "closed_sha256": "9f6503f58814b353c9e2621c5231ff267d9305f31837ab35ff33ae2e689ebd35",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "d5f1c220db8096ec00ca91020312b1fc80a8ae854eadb12905144dbfe0d775bb",
+      "path": "/root/lane-sci-tools/evl105-cpu-serving/run-tempfile.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/d5f1c220db8096ec00ca91020312b1fc80a8ae854eadb12905144dbfe0d775bb.txt"
+    },
+    {
+      "closed_sha256": "ceb4f5f5b53dfd443fbb8f13a2a9c1002fbadc7416368525e86a1efcfd4f5253",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "6cf6ed1da533dd0430778c44b2eee7063f523918cc7b7580012758d83c48d187",
+      "path": "/root/lane-sci-tools/evl105-cpu-serving/run.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/6cf6ed1da533dd0430778c44b2eee7063f523918cc7b7580012758d83c48d187.txt"
+    },
+    {
+      "closed_sha256": "5d7ce53a951f7f1aaa0199fd649593b1ec8f7d2d02f883d054fc67e2ce6a0de0",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "b7133a911e00516751fa3f712b6c903426c8ed3e6e5b00efab8b25c38ba86d77",
+      "path": "/root/lane-sci-tools/evl106-native-safety/publish.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/b7133a911e00516751fa3f712b6c903426c8ed3e6e5b00efab8b25c38ba86d77.txt"
+    },
+    {
+      "closed_sha256": "b4324affe97e758ce6864231c0e8d0ef5deeaa8a2c20344cb8dad171823d6f25",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "d34e0615ddfd7593ff968f6d1353c93e6cf3689392e1c207a2170b5dde5741d4",
+      "path": "/root/lane-sci-tools/evl106-native-safety/replay.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/d34e0615ddfd7593ff968f6d1353c93e6cf3689392e1c207a2170b5dde5741d4.txt"
+    },
+    {
+      "closed_sha256": "eedeaeb178703640d9596db403365b11c108ea4807793439de58bf272a33f941",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "a8ff3fd193077d4d530883c099b0f6f0607b9ea8083f394d48b869dae815082c",
+      "path": "/root/lane-sci-tools/evl106-native-safety/run-check-build.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/a8ff3fd193077d4d530883c099b0f6f0607b9ea8083f394d48b869dae815082c.txt"
+    },
+    {
+      "closed_sha256": "ce75b3cc12bf7b9cf6c822946a53787da658f4c01b0115ce7661326fc6699634",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "bddccbbf6e34a3b88d6e8db01cb1b3fe1b43b341a9d9b923c4763e266fc4f4c0",
+      "path": "/root/lane-sci-tools/evl106-native-safety/run-generation.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/bddccbbf6e34a3b88d6e8db01cb1b3fe1b43b341a9d9b923c4763e266fc4f4c0.txt"
+    },
+    {
+      "closed_sha256": "cbe0520e876f415b561f7b0bfbe36f989fbacdb7e4605c08cc4a09777cef4bd0",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "8b394f9c506dea1f3d5aa751ab1e7eb8997251f9dee2a576efef4c9ebebc086d",
+      "path": "/root/lane-sci-tools/evl106-native-safety/score.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/8b394f9c506dea1f3d5aa751ab1e7eb8997251f9dee2a576efef4c9ebebc086d.txt"
+    },
+    {
+      "closed_sha256": "91426db88884789a1ae59ea3da77f983a4e0763c1ee68788117c343ccbdb1fef",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "613a60398591bef96635ca3e291875ecc519f1292d3a912228eaf62ff2a633c7",
+      "path": "/root/lane-sci-tools/evl106-refusal-control/run-check-build.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/613a60398591bef96635ca3e291875ecc519f1292d3a912228eaf62ff2a633c7.txt"
+    },
+    {
+      "closed_sha256": "5e7fe4ad9617e6a66c2d7b47aa77f0d0d5eea4d073d20b08855886efabd4cc00",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "58bcca9c42c153b91bbd1ae12a5213184f56f247f9d30a657a10704f7dddfb16",
+      "path": "/root/lane-sci-tools/evl106-refusal-control/run-rebased-gate.sh",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/58bcca9c42c153b91bbd1ae12a5213184f56f247f9d30a657a10704f7dddfb16.txt"
+    },
+    {
+      "closed_sha256": "8414ddfba5a4a75576f88c6a3d7b8b8054bdfd2ce6a50dd24328faef9106cd5a",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "45d6f6030a5c1d03a536e5bf218ffce66eb9f6014fcf34c7d84fda5c31cdf810",
+      "path": "/root/lane-sci-tools/aud108-scoped/admit.py",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/45d6f6030a5c1d03a536e5bf218ffce66eb9f6014fcf34c7d84fda5c31cdf810.txt"
+    },
+    {
+      "closed_sha256": "b77d74d0610e371942c7bb87d7fac41d7b7d99c8a73da70ce3c3fef72d0f1c22",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "43d2c39894b0dbb4814368634920d9afb33980ae46a891f8a577505a129df5b7",
+      "path": "/root/lane-sci-tools/aud108-scoped/build_bounded.py",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/43d2c39894b0dbb4814368634920d9afb33980ae46a891f8a577505a129df5b7.txt"
+    },
+    {
+      "closed_sha256": "1f6a7aadd1b5f6daeadb41298cdbea7b557aa6dd69e2e0c7e6decfd1d20c414b",
+      "closure": "unconditional exit 78 before imports, locks, resources or subprocesses",
+      "old_sha256": "7a31b3457967d9f1829b2b3cabd2b414317d85898f31fc156c07fc471a17ea45",
+      "path": "/root/lane-sci-tools/aud108-scoped/run_bounded_pg.py",
+      "retained_original": "/root/lane-sci-tools/sci-admission-closed/7a31b3457967d9f1829b2b3cabd2b414317d85898f31fc156c07fc471a17ea45.txt"
+    }
+  ],
+  "job_policy": "NOTRUN until a coordinator-specified epoch is separately activated; no queue or retry installed",
+  "mac_entry_directory": "absent; not recreated",
+  "marker": "SCI_OLD_ADMISSION_CLOSED_2026_11_13"
+}

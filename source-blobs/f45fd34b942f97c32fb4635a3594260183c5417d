@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+base="$1"
+expected_archive="$2"
+[[ "$base" =~ ^[0-9a-f]{40}$ ]]
+[[ "$expected_archive" =~ ^[0-9a-f]{64}$ ]]
+cd /root/lane-sch
+test -z "$(git status --porcelain)"
+test "$(git branch --show-current)" = codex/sch-queued-admission
+archive=/root/lane-sch-tools/current-upstream.bundle
+test "$(sha256sum "$archive" | awk '{print $1}')" = "$expected_archive"
+git -c gc.auto=0 -c maintenance.auto=false fetch "$archive" refs/remotes/origin/main:refs/codex/sch-upstream/active
+test "$(git rev-parse refs/codex/sch-upstream/active)" = "$base"
+old_queue="$(git rev-parse HEAD)"
+git merge-base --is-ancestor "$old_queue" codex/sch-follow-on-research
+if git ls-tree -r --name-only "$base" docs/decisions | grep -q -- '-bound-tenant-admission-locking.md$'; then
+ printf 'OWN_ADR_ALREADY_PUBLIC %s\n' "$base"
+ exit 77
+fi
+git rebase refs/codex/sch-upstream/active
+python3 - "$base" <<'ADR'
+from pathlib import Path
+import re,subprocess,sys
+names=subprocess.check_output(['git','ls-tree','--name-only',sys.argv[1]+':docs/decisions'],text=True).splitlines()
+number=max(int(re.match(r'(\d{4})-',n).group(1)) for n in names if re.match(r'\d{4}-',n))+1
+matches=list(Path('docs/decisions').glob('*-bound-tenant-admission-locking.md'))
+assert len(matches)==1
+old=matches[0]; prefix=old.name[:4]; target=f'{number:04}'
+if prefix==target: raise SystemExit(0)
+new=old.with_name(target+old.name[4:])
+subprocess.run(['git','mv',str(old),str(new)],check=True)
+new.write_text(new.read_text().replace('# '+prefix+':','# '+target+':',1))
+for name in ['docs/research/scheduling-queue-policy.md','services/control/internal/modules/scheduling/README.md']:
+ p=Path(name);s=p.read_text()
+ s=s.replace('ADR '+prefix,'ADR '+target).replace(prefix+'-bound-tenant-admission-locking.md',target+'-bound-tenant-admission-locking.md')
+ p.write_text(s)
+subprocess.run(['git','add',str(new),'docs/research/scheduling-queue-policy.md','services/control/internal/modules/scheduling/README.md'],check=True)
+subprocess.run(['git','diff','--cached','--check'],check=True)
+subprocess.run(['git','commit','-m','SCH-103: Preserve published ADRs and assign admission '+target,'-m','Update only the unpublished owned decision and its references. Verify whitespace; current integration gates follow.'],check=True)
+ADR
+queue="$(git rev-parse HEAD)"
+git switch codex/sch-follow-on-research
+git rebase --onto "$queue" "$old_queue"
+research="$(git rev-parse HEAD)"
+make check-layout
+python3 tools/dev/roadmap_progress.py --check
+git switch codex/sch-queued-admission
+native=62c9dd0947f967291e2fa805b39742e23e02944b
+git diff --exit-code "$native" "$queue" -- services/control/internal/modules/scheduling services/control/internal/modules/workspaces services/control/internal/modules/audit services/control/internal/platform api pkg tools/release/offline/pkg/bundle services/control/go.mod services/control/go.sum ':!services/control/internal/modules/scheduling/README.md' > /root/lane-sch-tools/current-queue-native-input-equivalence.diff
+git diff --exit-code db7ee24a "$queue" -- services/control/internal/modules/identity/audit_read.go services/control/internal/modules/identity/lists.go > /root/lane-sch-tools/current-queue-reviewed-audit-equivalence.diff
+git diff --name-only "$native" "$queue" -- services/control/internal/modules/identity > /root/lane-sch-tools/current-queue-identity-delta.log
+python3 - /root/lane-sch-tools/current-queue-identity-delta.log <<'AUTH'
+import sys
+runtime=[p for p in open(sys.argv[1]).read().splitlines() if p.endswith('.go') and not p.endswith('_test.go')]
+assert set(runtime)=={'services/control/internal/modules/identity/audit_read.go','services/control/internal/modules/identity/lists.go'},'UNREVIEWED_AUTHORITY_CHANGE'
+AUTH
+git -c pack.threads=1 -c pack.windowMemory=32m bundle create /root/lane-sch-tools/current-queue.bundle refs/heads/codex/sch-queued-admission refs/heads/codex/sch-follow-on-research ^refs/codex/sch-upstream/active
+printf 'SYNC_QUEUE %s\nSYNC_RESEARCH %s\nSYNC_BASE %s\n' "$queue" "$research" "$base"
+sha256sum /root/lane-sch-tools/current-queue.bundle

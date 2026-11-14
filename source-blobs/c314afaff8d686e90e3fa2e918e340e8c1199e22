@@ -1,0 +1,18 @@
+{
+  "time_utc": "2026-11-13T11:38:08.395673+00:00",
+  "status": "all-five-legacy-entries-unconditionally-refuse",
+  "originals_archive": "/root/lane-gw-acceptance/retired-mac-gate-epoch.363m8nfm/original-wrappers-evidence-only.tar",
+  "archive_sha256": "f1ca96f8844a352bb7d432b35a0261b74d26c85bc63d2014030ece2920268449",
+  "original_wrapper_sha256": {
+    "gw104-native-stdio-prepared.xjgbczzs/admitted-sql-preflight-failure/gate-15m.py": "6e05ccc75413501846ba49c8df365fe9282fbcaa9532679575d63ab37dba7213",
+    "gw104-native-stdio-prepared.xjgbczzs/qualified-native-arm64/gate-15m.py": "61152adaacf90b96276ac5c405e2c095571f9162c400d0a65404a4caf37800d5",
+    "resume-20261112.rxzfd_wn/mac-gate.py": "c848aee643268773b4e40491dea3aae2f05f7fb8ea1060b165c316df1cad2592",
+    "resume-schema59.il897pda/mac-gate.py": "c848aee643268773b4e40491dea3aae2f05f7fb8ea1060b165c316df1cad2592",
+    "gw104-mac-native-failure.okfmTgXv/mac-gate-once-wait.py": "b75f69f6fa7146bad934cbf44533be47740bf95c096da52bc1a73899fc30fea1"
+  },
+  "disabled_wrapper_sha256": "8d1e83579fd1b0daf8cbb57356ffb13c68cf9fae172f64fb63aca6da28b61a42",
+  "historical_proofs_and_other_fixture_inputs": "unchanged; original wrapper bytes preserved inside evidence-only tar at original relative names",
+  "lock_operations": 0,
+  "jobs_started": 0,
+  "product_source_changes": 0
+}

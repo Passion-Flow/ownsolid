@@ -1,0 +1,24 @@
+{
+  "state": "Immutable owner inputs copied and verified only; no freeze, runtime binding, image build or installed run",
+  "source_preparation": "5893a7c6bf1b1e9314e463c09b9b363c64d0d3bc",
+  "files": {
+    "qualified-a4f-web-build.tar.gz": "02e3c0e7463b79a72f91bb42a28b0982e955a06941fcd0d977c2a593ccee56e5",
+    "installed-entry-a4f-inputs.tar.gz": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "input-manifest.json": "fdfa7ac48a586b73ecd286d059b2bad57f7ffb9103ecdbc2eb484952ec221a35",
+    "entry.md": "c41f1eec09fee9c22e0538d33f16e8cbc1529ad8f87b8389d2f89aad8c540239",
+    "original-qualification.json": "2e90c9839401da5610c86741ff84bf4ffd524981216abb5d609ae6c2b4842cb2",
+    "original-author-series": "f87b23ac33e84b2add2e17f1da189292c13602b78c0f9035f7990cb0bf8c28d7",
+    "original-author-series.patch": "59d7926efc8c90fd419f304e38bd64d59d76941b032c7813297cb3927d3cde1a",
+    "original-console-report.json": "7b8569c9533098967e438068de1c61a6ab43277e19c6bd500c5d2c14e7d6e036",
+    "original-portal-report.json": "feb36dc7dc92e2e5767c6eafdda04b4b7a6ed400203d5fcee5010467337ce03c",
+    "entry-digests.json": "b85a533190889bdb4bbc437fc8e0e7882f1587cb7976147345309a29d10ccd47"
+  },
+  "verified_assets": 1230,
+  "original_qualified_source": "6a77bcdbc372a0aa7fac24b3f21a83105c246c86",
+  "excluded_pending_change": {
+    "item": "AUD-108 explicit read recovery",
+    "source": "1ba73577",
+    "state": "New implementation is outside this e5c Web tree and undergoing its own complete gate",
+    "knownBehavior": "The older response-loss plus focus/reconnect control observes six audit requests in each consumer without manual retry. Do not treat this package as containing the newer fix."
+  }
+}

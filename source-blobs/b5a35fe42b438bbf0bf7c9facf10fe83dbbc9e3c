@@ -1,0 +1,27 @@
+--- a/services/control/internal/modules/identity/http/handler.go
++++ b/services/control/internal/modules/identity/http/handler.go
+@@ -60,6 +60,7 @@
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/sso"
+ 	ssohttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/sso/http"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
++	schedulinghttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/scheduling/http"
+ 	traininghttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/training/http"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows"
+ 	workflowhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/workflows/http"
+@@ -659,6 +660,16 @@
+ 	}
+ 	if ssohttp.Owns(path) {
+ 		return h.SSO.Handle(w, r, audience, session, requestID)
++	}
++	if schedulinghttp.Owns(path) {
++		a, e := s.Authenticate(ctx, session, audience)
++		if e != nil {
++			return nil, 0, e
++		}
++		if h.Workspaces == nil {
++			return nil, 0, errors.New("STORAGE_UNAVAILABLE")
++		}
++		return (&schedulinghttp.Handler{Workspaces: h.Workspaces.Service}).Handle(w, r, a, requestID)
+ 	}
+ 	if traininghttp.Owns(path) {
+ 		a, e := s.Authenticate(ctx, session, audience)

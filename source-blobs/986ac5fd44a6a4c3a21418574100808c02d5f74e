@@ -1,0 +1,12 @@
+# Lane B GW-114 prototype helper: mints an API key for the alias in a gateway fixture state file.
+import json, os, sys
+sys.argv, state_path, out = ["x"], sys.argv[1], sys.argv[2]
+exec(open("/root/lane-b/gateway-fixture.py").read().split("if __name__")[0])
+s = json.load(open(state_path))
+c = admin(root_default)
+base_path = cell + "/admin/distribution/workspaces/%s" % s["workspace"]
+alias = [a for a in must(c("GET", base_path + "/aliases"), "aliases")["items"] if a["name"] == s["alias"]][0]
+k = must(c("POST", base_path + "/keys", {"alias_id": alias["id"], "label": "gw114 prototype", "ttl_seconds": 0, "reason": "GW-114 prototype"}), "key")
+fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+with os.fdopen(fd, "w") as f: f.write(k["secret"])
+print(k["key"]["id"] if "key" in k else sorted(k))

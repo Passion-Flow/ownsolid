@@ -1,0 +1,21 @@
+{
+  "format_version": 1,
+  "defaults": {
+    "stop_seconds": 15,
+    "observe_seconds": 10,
+    "poll_milliseconds": 200,
+    "reserve_percent": 30
+  },
+  "minimum": {
+    "stop_seconds": 1,
+    "observe_seconds": 1,
+    "poll_milliseconds": 50,
+    "reserve_percent": 30
+  },
+  "maximum": {
+    "stop_seconds": 120,
+    "observe_seconds": 120,
+    "poll_milliseconds": 5000,
+    "reserve_percent": 90
+  }
+}

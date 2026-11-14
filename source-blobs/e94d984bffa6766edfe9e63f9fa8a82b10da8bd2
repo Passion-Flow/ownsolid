@@ -1,0 +1,42 @@
+# Actual selected-repository entry
+
+Import package scheduling and call its additive exported function:
+
+    func RankWorkspaceQueueExecutorWithin(
+        ctx context.Context, q transaction.Executor,
+        tenant string, entries []QueueEntry,
+    ) ([]QueueEntry, error)
+
+There is no constructor, authentication replacement or second pool.
+QueueEntry has JobID and QueueID strings, Priority int32 and Sequence uint64.
+QueueID is the Workspace ID. Tenant, job identities, priority and positive
+durable enqueue sequence come from the workload owner's persisted authority.
+
+The owner opens the selected Store.Within(ctx, true, callback). Its first SQL
+statement is SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, before reading
+authority, the complete eligible batch or any probe. Through that same borrowed
+executor it reads the batch, calls the ranker and resolves its candidate.
+A bounded context and transaction completion remain with the owner.
+Any callback or commit error publishes no selected candidate. Ranking itself
+does not reserve, commit, open connections or change transaction mode.
+
+Keep the old RankWorkspaceQueueWithin(ctx, pgx.Tx, tenant, entries) compatible.
+Both entries now use identical mode, scope, policy, aggregate and rank logic.
+The new helper rejects a Store/pool, missing context/executor, another engine,
+read-only READ COMMITTED, writable REPEATABLE READ and read-only SERIALIZABLE.
+ErrQueueSnapshotRequired describes invalid transaction setup. Existing quota,
+scope, queue-validation and normalized storage errors propagate from the same
+legacy implementation; this introduces no new HTTP error contract.
+
+Read every competing eligible row in the same authorized tenant/local scope;
+an HTTP page, client priority or caller timestamp is not an eligible batch.
+The owner retains priority resolution, bounds/overflow refusal, requester and
+Workspace reconciliation, and a fresh current-authority write admission.
+No batch reader, training method, production queue or admission activation is
+supplied by this packet. The separately retained ReserveQueuedWithin candidate
+is neither copied nor required to consume this read entry.
+
+The reader needs only existing SELECT grants for quota/reservations plus the
+owner's eligible rows. Fixtures use an isolated superuser and do not qualify
+serving-role grants or production readiness. ARC/IAM/workload owners retain
+catalog, role, authenticated flow and installed acceptance responsibilities.

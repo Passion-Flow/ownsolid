@@ -1,0 +1,65 @@
+{
+  "observed_utc": "2026-11-13T01:26:58.555845+00:00",
+  "receipt_sha256": "02143c12cee6538123d3d5b9aae20c59c64e038c62289f3298d798f66603ab45",
+  "result_sha256": "53b36680e6eb696f01c2ddbb5689ac99155f09e825742f081b6437f4a8c0338f",
+  "source_clean": "e639db9035b0b2c0229c90175493c605f328e295",
+  "platform": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "python": "3.12.3"
+  },
+  "carrier_stats": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "device": 29,
+      "inode": 82,
+      "uid": 0,
+      "mode": "0o644",
+      "bytes": 0
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "device": 64512,
+      "inode": 7508772,
+      "uid": 0,
+      "mode": "0o644",
+      "bytes": 0
+    }
+  ],
+  "first_carrier": "opened once, timed out before ownership; process exited and FD closed",
+  "second_carrier": "not opened or attempted",
+  "live_exact_entry_or_wrapper_processes": [],
+  "owned_child_group_audit": [
+    {
+      "phase": "source_head",
+      "pgid": 3236131,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "source_status",
+      "pgid": 3236132,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    }
+  ],
+  "exact_container_name_readback_raw_exit_code": 0,
+  "exact_container_name_present": false,
+  "container_or_volume_creation_attempted": false,
+  "protected_dsn_present": false,
+  "evidence_files": [
+    "result.json"
+  ],
+  "native_roots_started": 0,
+  "native_subtests_started": 0,
+  "native_packages_started": 0,
+  "native_skips": 0,
+  "schema_created": false,
+  "go_environment_applied": false,
+  "original_admission_started": false,
+  "repeat_attempts": 0,
+  "cleanup_mutations_performed": 0,
+  "foreign_resources_touched": false
+}

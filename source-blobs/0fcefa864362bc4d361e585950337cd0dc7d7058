@@ -1,0 +1,8 @@
+{
+  "source_contract_sha256": "b9fd1312c4c813b394e9eb292f22ad20125ea7d380100c31bccc0aff89dffc92",
+  "exit": 0,
+  "expected_top_level_tests": 3,
+  "admission_busy": false,
+  "log_sha256": "8c9e2134be8ea1541073bf1491d07c47a3fa4b5bd02224267ca9c752e49abe92",
+  "actual_service_or_auth_run": false
+}

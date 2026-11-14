@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+"""Run the verified synthetic Alertmanager observer in one bounded Linux window."""
+import argparse,fcntl,hashlib,json,math,os,platform,signal,stat,subprocess,tempfile,time
+from pathlib import Path
+
+p=argparse.ArgumentParser(description=__doc__)
+p.add_argument('--observer',required=True,type=Path)
+p.add_argument('--observer-sha256',required=True)
+p.add_argument('--binary',required=True,type=Path)
+p.add_argument('--binary-sha256',required=True)
+p.add_argument('--output-parent',required=True,type=Path)
+p.add_argument('--global-lock',required=True,type=Path)
+p.add_argument('--lane-lock',required=True,type=Path)
+p.add_argument('--deadline-seconds',type=int,default=180)
+a=p.parse_args()
+assert __debug__ and platform.system()=='Linux' and platform.machine()=='x86_64'
+assert 30<=a.deadline_seconds<=300
+def file_sha(path):
+ digest=hashlib.sha256()
+ with path.open('rb') as source:
+  for chunk in iter(lambda:source.read(1<<20),b''):digest.update(chunk)
+ return digest.hexdigest()
+for path,digest in [(a.observer,a.observer_sha256),(a.binary,a.binary_sha256)]:
+ assert path.is_absolute() and path.is_file()
+ assert len(digest)==64 and all(c in '0123456789abcdef' for c in digest)
+ assert file_sha(path)==digest
+assert a.output_parent.is_absolute() and a.output_parent.is_dir()
+assert os.access(a.binary,os.X_OK)
+os.umask(0o077)
+root=Path(tempfile.mkdtemp(prefix='obs104-expiry.',dir=a.output_parent))
+proof={'scope':'external synthetic Alertmanager lifecycle observation only',
+       'observer_sha256':a.observer_sha256,'binary_sha256':a.binary_sha256,
+       'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+       'deadline_seconds':a.deadline_seconds,'native_started':False,'passed':False}
+fds=[]
+child=None
+started=time.monotonic()
+code=1
+def alive(pid):
+ try:os.killpg(pid,0);return True
+ except ProcessLookupError:return False
+def stop(pid):
+ if not alive(pid):return
+ try:os.killpg(pid,signal.SIGTERM)
+ except ProcessLookupError:return
+ until=time.monotonic()+3
+ while alive(pid) and time.monotonic()<until:time.sleep(.05)
+ if alive(pid):
+  try:os.killpg(pid,signal.SIGKILL)
+  except ProcessLookupError:pass
+def interrupted(number,_frame):raise InterruptedError('Window interrupted: '+str(number))
+signal.signal(signal.SIGINT,interrupted)
+signal.signal(signal.SIGTERM,interrupted)
+try:
+ identities=[]
+ for path in [a.global_lock,a.lane_lock]:
+  assert path.is_absolute()
+  fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW)
+  fds.append(fd)
+  info=os.fstat(fd)
+  assert stat.S_ISREG(info.st_mode)
+  fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  identities.append({'path':str(path),'device':info.st_dev,'inode':info.st_ino})
+ proof['owned_locks']=identities
+ with (root/'preflight.log').open('x') as log:
+  for command in [['df','-h','/'],['free','-m'],['ss','-lntp']]:
+   subprocess.run(command,check=True,stdout=log,stderr=subprocess.STDOUT,timeout=5)
+ memory={k:int(v.strip().split()[0]) for k,v in
+         (line.split(':',1) for line in Path('/proc/meminfo').read_text().splitlines())}
+ proof['mem_free_kib']=memory['MemFree']
+ disk=os.statvfs(a.output_parent)
+ proof['disk_available_bytes']=disk.f_bavail*disk.f_frsize
+ io=Path('/proc/pressure/io').read_text()
+ proof['io_pressure']=io
+ if memory['MemFree']<2048*1024 or proof['disk_available_bytes']<15*1024**3:
+  raise BlockingIOError('Memory or disk admission refused')
+ for line in io.splitlines():
+  value=float(dict(item.split('=',1) for item in line.split()[1:])['avg10'])
+  if not math.isfinite(value) or value>5:raise BlockingIOError('I/O admission refused')
+ for info in identities:
+  now=os.stat(info['path'],follow_symlinks=False)
+  assert (now.st_dev,now.st_ino)==(info['device'],info['inode'])
+ command=['unshare','--net','--pid','--fork','--kill-child','bash','-ec',
+          'ip link set lo up; exec python3 "$@"','observer',
+          str(a.observer),'--binary',str(a.binary),'--binary-sha256',a.binary_sha256,
+          '--output',str(root/'observation.json')]
+ env=os.environ.copy()
+ env['GOMAXPROCS']='2'
+ with (root/'observer.log').open('x') as log:
+  child=subprocess.Popen(command,env=env,stdout=log,stderr=subprocess.STDOUT,
+                         pass_fds=tuple(fds),start_new_session=True)
+  proof['namespace_process_started']=True
+  proof['native_started']=None
+  proof['child_pid']=child.pid
+  try:result=child.wait(timeout=a.deadline_seconds)
+  except subprocess.TimeoutExpired:
+   proof['timed_out']=True
+   stop(child.pid)
+   child.wait(timeout=5)
+   raise TimeoutError('Observation deadline expired')
+ proof['observer_exit_code']=result
+ if alive(child.pid):
+  stop(child.pid)
+  raise RuntimeError('Namespace process group survived')
+ proof['child_group_empty']=True
+ observation=root/'observation.json'
+ if observation.exists():
+  assert observation.stat().st_size<=16*1024**2
+  body=observation.read_bytes()
+  proof['observation_sha256']=hashlib.sha256(body).hexdigest()
+  observed=json.loads(body)
+  proof['native_started']=True if 'version' in observed else None
+  proof['observation_completed']=observed.get('completed') is True
+  proof['native_stopped']=observed.get('native_stopped') is True
+  proof['receiver_stopped']=observed.get('receiver_stopped') is True
+ assert result==0
+ assert all(proof.get(key) is True for key in
+            ['observation_completed','native_stopped','receiver_stopped','child_group_empty'])
+ for info in identities:
+  now=os.stat(info['path'],follow_symlinks=False)
+  assert (now.st_dev,now.st_ino)==(info['device'],info['inode'])
+ proof['passed']=True
+ code=0
+except BlockingIOError as error:
+ proof['admission_refused']=str(error)
+ code=75
+except BaseException as error:
+ proof['failure_type']=type(error).__name__
+ proof['failure']=str(error)
+finally:
+ if child is not None:
+  stop(child.pid)
+  if child.poll() is None:
+   try:child.wait(timeout=5)
+   except subprocess.TimeoutExpired:proof['cleanup_wait_expired']=True
+ remaining=child is not None and alive(child.pid)
+ if remaining:
+  proof['passed']=False
+  proof['lock_release_deferred_to_inherited_descriptors']=True
+  code=1
+ else:
+  proof['all_child_groups_exited']=True
+ proof['elapsed_seconds']=round(time.monotonic()-started,3)
+ (root/'proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+ for fd in reversed(fds):
+  if not remaining:fcntl.flock(fd,fcntl.LOCK_UN)
+  os.close(fd)
+ print('OBS104_RECEIPT',root,flush=True)
+ print(json.dumps(proof,indent=2),flush=True)
+raise SystemExit(code)

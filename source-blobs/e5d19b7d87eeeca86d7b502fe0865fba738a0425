@@ -1,0 +1,14 @@
+set -euo pipefail
+source ~/lane-rel-tools/env
+umask 077
+exec 8>/var/lock/ownsolid-heavy.lock
+flock -n 8 || exit 75
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -n 9 || exit 75
+test "$(df -Pm / | awk 'NR == 2 {print $4}')" -ge 15360
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+scratch=$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp
+mkdir -p "$scratch/bin"
+timeout 180 env GOWORK=off GOBIN="$scratch/bin" GOMAXPROCS=2 GOFLAGS=-p=1 GOPROXY=https://goproxy.cn go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.8.2
+"$scratch/bin/oapi-codegen" -version
+

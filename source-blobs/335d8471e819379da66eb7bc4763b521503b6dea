@@ -1,0 +1,68 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+cd "$1"
+root=$PWD
+net=$2
+plane="$net-plane"
+dns="$net-dns"
+server="$net-server"
+worker="$net-worker"
+first=$(( $(wc -l < capture/site-dns-positive-controls.jsonl) + 1 ))
+save_captures() {
+    docker logs "$dns" | tail -n "+$first" > capture/site-dns.jsonl
+    for role in server worker; do
+        cp "$root/$role-capture/egress.jsonl" "capture/$role-egress.jsonl"
+    done
+}
+trap save_captures EXIT
+still_running() { test "$(docker inspect -f '{{.State.Running}}' "$plane")" = true; }
+k() { docker exec "$server" /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml --request-timeout=25s "$@"; }
+test "$(k get pod arc104-managed-workload -o jsonpath='{.status.conditions[?(@.type=="PodScheduled")].status}')" = True
+k get pod arc104-managed-workload -o wide
+test "$(k -n kube-system get ds/rke2-canal -o jsonpath='{.status.numberReady}')" = 2
+start=$SECONDS
+printf 'Watching site DNS and all three dual-stack captures with workload and both Canal Pods ready\n'
+sleep 330
+still_running
+test "$(k -n kube-system get ds/rke2-canal -o jsonpath='{.status.numberReady}')" = 2
+test "$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.spec.usageReportingEnabled}')" = false
+for pod in $(k -n kube-system get pods -l k8s-app=canal -o name); do
+    logfile="capture/${pod#pod/}-felix.log"
+    k -n kube-system logs "$pod" -c calico-node > "$logfile"
+    grep -Eo 'UsageReportingEnabled[[:space:]:="]+false' "$logfile" | sort | uniq -c
+    if grep -qE 'Waiting before first check-in|doing first report|Failed to report usage' "$logfile"; then exit 1; fi
+done
+test "$(k -n kube-system get pods -l k8s-app=canal -o name | wc -l)" = 2
+save_captures
+python3 - <<'PY'
+import collections, json, re
+from pathlib import Path
+capture=Path("capture")
+for role in ("server","worker"):
+    assert not (capture/f"{role}-egress.jsonl").read_text(),f"{role} emitted external packets"
+    print(f"{role} external IPv4/IPv6 packets: 0")
+seen=collections.Counter()
+for line in (capture/"control-egress.jsonl").read_text().splitlines():
+    destination=json.loads(line)["destination"]
+    assert destination in ("192.0.2.15:9705","[2001:db8:105::15]:9705"),f"Control external packet: {destination}"
+    seen[destination]+=1
+assert len(seen)==2,seen
+print("Control host external IPv4/IPv6 product packets: 0 (both probes seen)")
+dns=collections.Counter()
+for line in (capture/"site-dns.jsonl").read_text().splitlines():
+    entry=json.loads(line)
+    name,kind=entry["name"],entry["type"]
+    if kind==13 and re.fullmatch(r"[0-9]+\.[0-9]+\.",name):
+        dns["CoreDNS HINFO"]+=1
+    elif kind==2 and name==".":
+        dns["CoreDNS root NS"]+=1
+    else:
+        raise SystemExit(f"unexpected site DNS: {name} {kind}")
+assert dns,dns
+print("Site DNS questions:",dict(dns))
+PY
+printf 'Public DNS questions: 0 after %ss with the managed worker workload ready\n' "$((SECONDS-start))"
+touch exchange/node-proof
+docker wait "$plane"
+test "$(docker inspect -f '{{.State.ExitCode}}' "$plane")" = 0

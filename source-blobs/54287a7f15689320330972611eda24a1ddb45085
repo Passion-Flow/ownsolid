@@ -1,0 +1,27 @@
+{
+  "entry_sha256": "f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a",
+  "checks": 25,
+  "case_kinds": [
+    "absolute-node-cap",
+    "absolute-reserved-budget",
+    "cpu-cap",
+    "invalid-or-conflicting-heap-refused",
+    "strict-resource-pass",
+    "strict-resource-refusal"
+  ],
+  "passed": true,
+  "unchanged_process_cleanup_functions": [
+    "budget",
+    "reap_group",
+    "owned_children",
+    "group_alive",
+    "signal_owned",
+    "stop",
+    "spawn",
+    "metadata",
+    "expired",
+    "interrupted"
+  ],
+  "scope": "Pure Python policy/helper checks with synthetic public resource data; no entry, lock, lint, build, browser or capacity test executed",
+  "new_full_gate_run": false
+}

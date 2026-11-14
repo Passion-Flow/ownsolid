@@ -1,0 +1,42 @@
+import copy
+import json
+from pathlib import Path
+import sys
+
+root=Path("/root/lane-rel-history")
+work=Path(sys.argv[1])
+document=json.loads((root/"api/openapi/v1/distribution/openapi.json").read_text())
+(work/"baseline.json").write_text(json.dumps(document,indent=2)+"\n")
+schemas=document["components"]["schemas"]
+descriptions=[
+    "Verified capabilities of the alias's current target. Omitted when exact evidence is unavailable.",
+    "True only after the exact current deployment has passed generation verification; it does not advertise enabled gateway adapters.",
+    "Upper bound on context tokens from the verified model, serving recipe and gateway policy. The live tokenizer may enforce a smaller limit.",
+]
+schemas["ModelAliasReadCapabilities"]={
+    "type":"object","additionalProperties":False,
+    "properties":{
+        "text_generation_verified":{"type":"boolean","const":True,"description":descriptions[1]},
+        "context_token_ceiling":{"type":"integer","minimum":1,"maximum":9007199254740991,"description":descriptions[2]},
+    },
+    "required":["text_generation_verified","context_token_ceiling"],
+}
+schemas["ModelAliasRead"]=copy.deepcopy(schemas["ModelAlias"])
+schemas["ModelAliasRead"]["properties"]["capabilities"]={
+    "$ref":"#/components/schemas/ModelAliasReadCapabilities","description":descriptions[0],
+}
+schemas["ModelAliasReadResponse"]=copy.deepcopy(schemas["ModelAliasResponse"])
+schemas["ModelAliasReadResponse"]["properties"]["data"]={"$ref":"#/components/schemas/ModelAliasRead"}
+schemas["ModelAliasPage"]["properties"]["items"]["items"]={"$ref":"#/components/schemas/ModelAliasRead"}
+targets={"adminGetModelAlias","portalGetModelAlias"}
+for item in document["paths"].values():
+    for operation in item.values():
+        if isinstance(operation,dict) and operation.get("operationId") in targets:
+            operation["responses"]["200"]["content"]["application/json"]["schema"]={"$ref":"#/components/schemas/ModelAliasReadResponse"}
+document["info"]["version"]="0.12.0"
+for name,data in [("baseline",json.loads((work/"baseline.json").read_text())),("candidate",document)]:
+    target=work/name/"contracts/distribution/openapi.json"
+    target.parent.mkdir(parents=True)
+    target.write_text(json.dumps(data,indent=2)+"\n")
+(work/"descriptions.json").write_text(json.dumps(descriptions,indent=2)+"\n")
+print(work)

@@ -1,0 +1,381 @@
+{
+ "title": "ownsolid applications",
+ "operations": [
+  {
+   "id": "ListApplications",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/applications",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ApplicationPageResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "STORAGE_TIMEOUT",
+     "SERVICE_NOT_READY",
+     "WORKFLOW_UNAVAILABLE"
+    ]
+   }
+  },
+  {
+   "id": "ListApplicationConversations",
+   "method": "get",
+   "path": "/api/v1/sites/{site_id}/cells/{cell_id}/application-conversations",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ApplicationConversationPageResponse"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "INVALID_CURSOR",
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "409": [
+     "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "STORAGE_TIMEOUT",
+     "SERVICE_NOT_READY",
+     "WORKFLOW_UNAVAILABLE"
+    ]
+   }
+  }
+ ],
+ "schemas": {
+  "Application": {
+   "type": "object",
+   "required": [
+    "workflow_id",
+    "workspace_id",
+    "name",
+    "version_id",
+    "version_number",
+    "graph_sha256",
+    "published_at",
+    "can_execute",
+    "question_bytes"
+   ],
+   "properties": {
+    "workflow_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "version_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "version_number": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2147483647
+    },
+    "graph_sha256": {
+     "type": "string"
+    },
+    "published_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "can_execute": {
+     "type": "boolean"
+    },
+    "question_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 32768
+    }
+   }
+  },
+  "ApplicationConversation": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "workflow_id",
+    "workflow_name",
+    "version_id",
+    "version_number",
+    "turn_count",
+    "created_at",
+    "updated_at",
+    "can_execute",
+    "question_bytes"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workflow_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workflow_name": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "version_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "version_number": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2147483647
+    },
+    "turn_count": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10000
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "can_execute": {
+     "type": "boolean"
+    },
+    "question_bytes": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 32768
+    }
+   }
+  },
+  "ApplicationConversationPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "ApplicationConversation"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "ApplicationConversationPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ApplicationConversationPage"
+    }
+   }
+  },
+  "ApplicationPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Application"
+     }
+    },
+    "next_cursor": {
+     "anyOf": [
+      {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 512
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "ApplicationPageResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "ApplicationPage"
+    }
+   }
+  }
+ }
+}

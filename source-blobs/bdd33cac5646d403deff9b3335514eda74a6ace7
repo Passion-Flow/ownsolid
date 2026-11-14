@@ -1,0 +1,348 @@
+{
+  "source": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+  "base": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+  "source_clean": true,
+  "bundle_sha256": "58ed19344aa42c7b70fd33182e5f037680dd7ee811cc0bab7f575ac172c8f6ab",
+  "file_sha256": {
+    "tools/codegen/sdk/audit.py": "dab60b175ccf3455650d00cf1c4d2e594701b839b5cd144e1cda1a5641484068",
+    "tools/codegen/sdk/tests/test_response_object_audit.py": "eaf4864ddfd058f4f065a756ecc71c799371aeba7182f4c4f9f3e777ee43357c",
+    "tools/codegen/sdk/README.md": "2d2064c19ecc9d34365c0ff59ced2b96c2f2fda99bc0a3bd5cc02d693e499957",
+    "docs/research/public-api-versioning.md": "3c69bf00e3d1076b8b9e31a874a0011414c88af1ddc1e8e28424c7412b6cfd70",
+    "docs/product/status.md": "589b599c4f298fe2953ea93fcabcac41e60fbdf3bcf9686d4687e187344fb7ee"
+  },
+  "targeted_tests_passed": 22,
+  "network": "Isolated network namespace without external interfaces",
+  "whole_make_check": false,
+  "whole_make_build": false,
+  "whole_make_test": false,
+  "published_main": false,
+  "roadmap_ticked": false,
+  "self_review": {
+    "result": "No actionable defect found in the declared review scope",
+    "compared_paths": 5,
+    "all_existing_audit_consumers_tested": [
+      "test_audit.py",
+      "test_response_audit.py",
+      "test_response_object_audit.py"
+    ],
+    "tests_passed": 22,
+    "upstream_main_reviewed": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+    "upstream_codegen_or_openapi_inputs_changed_since_base": false,
+    "limits": "Declared field names, required names and closure only; no property-value, request or effective-composition compatibility claim",
+    "unblock": "An admitted repository gate window, required checks/build/test and fast-forward publication; CLI remains a separate candidate"
+  },
+  "original_source": "ff0f32389760cf2868402cdc9a3630658beae237",
+  "tooling_input_source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+  "tooling_tests": {
+    "layout": 13,
+    "sdk_and_codegen": 57,
+    "exit": 0,
+    "log_sha256": "51d2779763d78b7d407b71e002e622bd8c10e54359fdc93ec7f2d83cf291d7ab"
+  },
+  "only_documentation_changed_after_tooling_tests": [
+    "tools/codegen/sdk/README.md",
+    "docs/research/public-api-versioning.md",
+    "docs/product/status.md"
+  ],
+  "cli_b967d7c8_qualified": false,
+  "initial_sdk_heavy_admission_exit": 75,
+  "targeted_tests_log_sha256": "d47ff2465b98bfba6862a01f037aaf8ecceae914d1e7cce0e7c4279161d0508e",
+  "sdk_tooling_suite_exit": 0,
+  "native_gate_entry": "/root/lane-rel-tools/api-compat/full_native_gate.py",
+  "native_gate_scope": "Prepared composition web-install/check/build/full make test entry; not executed, separate admission required. Product metadata and shared Help fix remain prerequisites.",
+  "native_gate_status": {
+    "first_input_source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+    "first_check_exit": 2,
+    "first_failure": "Missing prepared Help parser dependency in a fresh checkout",
+    "failed_log": "/root/lane-rel-tools/api-compat/failed-missing-dependencies-native-gate.log",
+    "failed_log_sha256": "cba0f17f284247f03bb6c722c9d69d6bf3240a7fabdc84a5db71c34fb5d73b41",
+    "tooling_recovery_passed": true,
+    "retry_admission_exit": 75,
+    "make_check_passed": false,
+    "make_build_run": false,
+    "whole_make_test_run": false,
+    "historical_entry_source": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+    "prepared_entry_source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+    "prepared_entry_executed": false,
+    "latest_joint_attempt": {
+      "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+      "entry_sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c",
+      "manifest_sha256": "9a5e296cd3612ae6f9bdd36294148a83dfc4110e4319e837552f76975d096843",
+      "raw_proof": "/root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb-proof.json",
+      "raw_proof_sha256": "ea63d0f4d26a25744f322da5402381397c7fd14768c7afb8ab9b4c8509aaa5fe",
+      "raw_log": "/root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb.log",
+      "raw_log_sha256": "fbcc353ee78c27155e318b3c71fd4ec57fea98bf551080391dd094736c1044c3",
+      "entry_safety_cases": 6,
+      "entry_safety_passed": true,
+      "admitted": true,
+      "parent_exit": 1,
+      "web_install_exit": 0,
+      "check_exit": 2,
+      "build_exit": null,
+      "test_exit": null,
+      "elapsed_seconds": 89.572,
+      "failure": "Web typed ESLint exhausted its2048MiB Node heap, process exit134; not an admission refusal or failed SDK assertion.",
+      "tooling_cases_passed": {
+        "layout": 13,
+        "sdk_tooling": 67
+      },
+      "all_owned_groups_cleared": true,
+      "both_shared_fds_closed_and_carriers_preserved": true,
+      "source_clean_after": true,
+      "retry_queued": false,
+      "resource_snapshots": [
+        {
+          "elapsed_seconds": 0.001,
+          "raw_memfree_mib": 4692,
+          "memavailable_mib": 19811,
+          "disk_free_bytes": 789124411392,
+          "io_full_avg10": 0.0
+        },
+        {
+          "elapsed_seconds": 0.026,
+          "raw_memfree_mib": 4691,
+          "memavailable_mib": 19811,
+          "disk_free_bytes": 789124411392,
+          "io_full_avg10": 0.0
+        },
+        {
+          "elapsed_seconds": 0.036,
+          "raw_memfree_mib": 4691,
+          "memavailable_mib": 19811,
+          "disk_free_bytes": 789124407296,
+          "io_full_avg10": 0.0
+        },
+        {
+          "elapsed_seconds": 0.253,
+          "raw_memfree_mib": 4670,
+          "memavailable_mib": 19789,
+          "disk_free_bytes": 789124403200,
+          "io_full_avg10": 0.0
+        }
+      ]
+    }
+  },
+  "disposition": "Historical89 source and qualifications retained; publication proceeds only through the combined audit/DEV-204 composition.",
+  "historical_handoff": "/root/lane-rel-tools/api-compat/handoff.native89c1610e.json",
+  "historical_handoff_sha256": "be0c72031cfc622280eaedf2f185fab036f66638815d73a22aca2bf957191fe6",
+  "composed_into": "e3bbbeaf62d17c83a13930278e32212a004f16b9",
+  "composition_handoff": "/root/lane-rel-tools/identity-audit-contract/handoff.json",
+  "current_targeted_test_source": "4b1e5c99bdc2e9349eabc40378c6c8743e62b82f",
+  "composition_targeted_tests_passed": 32,
+  "historical_native_gate_scope": "make web-install, make check and make build only; no CLI full make test or IAM wire qualification",
+  "prepared_gate": {
+    "format_version": 1,
+    "purpose": "Prepared single native full-gate execution; not an admission or queue request",
+    "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+    "main_base": "9e32b023a0a3deed6a8653a8878d52c2583fd6cf",
+    "platform": "linux/amd64",
+    "entry": "/root/lane-rel-tools/api-compat/full_native_gate.py",
+    "entry_sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c",
+    "worktree": "/root/lane-rel-identity-audit-contract",
+    "required_checkout_before_admission": "9be01cbbf0144a2f2537667834539de31e40f58f",
+    "server_current_checkout_expected": "9be01cbbf0144a2f2537667834539de31e40f58f",
+    "entry_argv": [
+      "python3",
+      "/root/lane-rel-tools/api-compat/full_native_gate.py"
+    ],
+    "toolchain_environment_file": "/root/lane-rel-tools/env",
+    "targets": [
+      "web-install",
+      "check",
+      "build",
+      "test"
+    ],
+    "admission_model": "Entry opens and nonblocking-acquires the two permanent shared carriers once, in order; child targets inherit the same FDs. No external parent may separately hold those locks when invoking this self-admission entry.",
+    "carriers": [
+      "/run/lock/ownsolid-heavy.lock",
+      "/root/lane-sci-tools/heavy-test.lock"
+    ],
+    "private_third_carrier_used": false,
+    "thresholds": {
+      "memfree_mib_min": 2048,
+      "memavailable_mib_min": 8192,
+      "disk_free_gib_min": 30,
+      "io_full_avg10_max": 5
+    },
+    "total_seconds_cap": 1200,
+    "parent_umask": "077",
+    "child_toolchain_umask": "022",
+    "go_parallelism": 1,
+    "gomaxprocs": 2,
+    "cargo_jobs": 1,
+    "node_heap_mib": 2048,
+    "network": "Each target runs in an isolated Linux network namespace with only loopback; pinned Go/Cargo/pnpm caches are offline",
+    "makefile_overlay": false,
+    "targets_skipped": [],
+    "retry_or_wait": false,
+    "raw_log": "/root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb.log",
+    "raw_log_open_mode": "exclusive create; do not overwrite an existing attempt",
+    "result": "/root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb-proof.json",
+    "prior_failures_preserved": true,
+    "prior_native_source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+    "execution_authorized": true,
+    "entry_executed": false,
+    "admission_attempted": false,
+    "queue_created": false,
+    "ready_for_execution": true,
+    "prerequisites": [
+      "Live original strict resource and permanent two-carrier nonblocking admission in this entry",
+      "No outer lock, wait, queue or retry; retain raw refusal/failure evidence",
+      "After all four gates pass, reconcile actual latest main and rerun affected checks before one fast-forward publication"
+    ],
+    "platform_boundary": "Linux exact-source preparation is complete. Execution still requires the preceding TRN actual result/release and root assignment of this full resource segment.",
+    "generation_input_source": "871e3df7df9ea0f0f5adb8f3bd91a226a52b44af",
+    "bounded_tooling_test_source": "2c20c8cccc360f3345126a5c36fc3de3c3363732",
+    "code_and_generation_inputs_unchanged_after_documentation": false,
+    "source_bundle": "/root/lane-rel-tools/identity-audit-contract/joint-source.bundle",
+    "source_bundle_sha256": "e2787456d78729e5ecf7082bf52832cd5abd8012eabc182c0ab28f735a920ce6",
+    "changed_source_files": {
+      "api/openapi/v1/identity/openapi.json": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+      "docs/product/status.md": "cf4d0427590050dad8a5d235cf2a27b949c594d0b1fc69fe3416c03ff903611f",
+      "docs/research/public-api-inventory.md": "177e884678df04d624610ee28f876e35e9ba9b51e22a810be23e3cab08527f62",
+      "docs/research/public-api-versioning.md": "3c69bf00e3d1076b8b9e31a874a0011414c88af1ddc1e8e28424c7412b6cfd70",
+      "tools/codegen/sdk/README.md": "e9d2832071a9e2eb1b6fb32c6b53fca9f0cdc800b31ab07335656e4fa1764d32",
+      "tools/codegen/sdk/audit.py": "dab60b175ccf3455650d00cf1c4d2e594701b839b5cd144e1cda1a5641484068",
+      "tools/codegen/sdk/generate.py": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2",
+      "tools/codegen/sdk/templates/audit_read.go.template": "81914fe9c6d17de6b2c3e5f95a4fade9e4322714d1c9446840a5f8f578c16c5d",
+      "tools/codegen/sdk/tests/audit_read_wire_test.go": "6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821",
+      "tools/codegen/sdk/tests/test_audit_read_codegen.py": "6155b9826399bb77753b9ad0a40816ae3d3b73dfb1c8d702dc0a39bee8c0c383",
+      "tools/codegen/sdk/tests/test_audit_read_contract.py": "ac1680bdfa37e51ef5bb53f8b7fc787b929d50f2e04516b4db21cb48875f7ab4",
+      "tools/codegen/sdk/tests/test_response_object_audit.py": "eaf4864ddfd058f4f065a756ecc71c799371aeba7182f4c4f9f3e777ee43357c",
+      "tools/codegen/sdk/tests/wire_smoke.py": "d6417bf20f1362a9349998580819eca149b6be3d5ccdaae221212a5001483022",
+      "web/packages/api/src/gen/identity.ts": "3edf4de889080de15b229ceaf5b6da72a8dc34a90e43a1bce85be057c60bf73a",
+      "web/packages/help/locales/zh-cn/api-descriptions.json": "b6615f7c909fb18b6fbaa7087750e2278303e842e38881c448c8d7b17841a502",
+      "web/packages/help/src/gen/api/console/identity.json": "5ea47a03807a700c4b54ffc360085fcfb936702b66278dd73ae0ac3a124bc96c",
+      "web/packages/help/src/gen/contracts/console/identity.json": "15952e600e0250ce7d16ed9760adc45272607f1b6dfcffec62b19621d0541406",
+      "web/packages/help/src/gen/locales/zh-cn/api-descriptions.json": "ea7c71db4ae1da75fa653f2d851f52ee95bfc1d4fbe1b3ad38d7ae54b593abb3"
+    },
+    "protected_consumer_files": {
+      "web/apps/console/src/audit-read.tsx": "18a7d5bb53a5e31485b7c9a648f43e8dcfe1f155057c0981847a9db9ab7929f4",
+      "web/apps/console/src/audit-page.tsx": "66e1ea6dcd4c2ffd7f20c574ba2f2f58d2eae987aa739717757b5ef705016b1d",
+      "web/apps/console/src/resource-page.tsx": "4bbaa84181c0879e15df113a193a4ee884f1795741c2d28b9080355d9ae5be6b",
+      "web/apps/console/e2e/audit-read-recovery.spec.ts": "6d37859ef3bb0688b2997b8721992555d425c8fa4fbdf32f5006dc936139d7c3",
+      "web/packages/shell/testing/help-flows.ts": "de309e95ea595eed027c8b4c9b67e69de97eab1e24dd6061cfe707aa9d4d3d18"
+    },
+    "tree": "b8aea641ecd1b79be71270ad80ab03c1e131df31",
+    "expected_frozen_checkout_before_staging": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+    "source_bundle_prerequisites": [
+      "8b17a2954260e517b434906e95740a39ecdd4a9a"
+    ],
+    "server_checkout_staged": true,
+    "source_staging_authorized": true,
+    "server_source_clean": true,
+    "source_preparation_ready": true,
+    "offline_cache_preparation": {
+      "linux-source-toolchain-preparation.json": {
+        "path": "/root/lane-rel-tools/identity-audit-contract/linux-source-toolchain-preparation.json",
+        "sha256": "55cdffa3640d3ee59499fb0ceece897050769e7d613ff33cb7cd077d6aff8954"
+      },
+      "linux-browser-cache-preparation.json": {
+        "path": "/root/lane-rel-tools/identity-audit-contract/linux-browser-cache-preparation.json",
+        "sha256": "87e3d512e18337bf2813ee434df40f8007c663c3c4718b1df32d0b6fb2487905"
+      }
+    },
+    "browser_environment": {
+      "PLAYWRIGHT_BROWSERS_PATH": "/root/lane-rel-tools/playwright-browsers",
+      "LD_LIBRARY_PATH": "/root/lane-rel-tools/playwright-libs.tUcBz3Xq/sysroot/usr/lib/x86_64-linux-gnu"
+    },
+    "generated_workspace_sum_cleanup": "Archive only a newly generated owned regular go.work.sum outside the checkout, retain its SHA256, then remove that generated file before checking the source is clean. Existing source files are never removed.",
+    "original_make_commands": [
+      [
+        "make",
+        "web-install"
+      ],
+      [
+        "make",
+        "check"
+      ],
+      [
+        "make",
+        "build"
+      ],
+      [
+        "make",
+        "test"
+      ]
+    ],
+    "invocation_shell_lines": [
+      "umask 077",
+      "set -C",
+      ". /root/lane-rel-tools/env",
+      "python3 /root/lane-rel-tools/api-compat/full_native_gate.py > /root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb.log 2>&1"
+    ],
+    "owned_sdk_and_web_generation_inputs_unchanged": true,
+    "published_model_domain_added_from_main": true,
+    "authorization_scope": "Root assigned one corrected exact Linux attempt after the consumed/released TRN RESOURCE_REFUSED78 segment; this does not pre-admit current resources.",
+    "total_deadline_scope": "Absolute1200 seconds from entry, including preconditions, metadata, four targets, cleanup, source checks and FD release; execution budget1180 reserves20 for cleanup. SIGALRM bounds the entry; every external metadata call uses remaining budget.",
+    "cleanup_reserve_seconds": 20,
+    "owned_process_group_cleanup": "Linux child-subreaper reaps only owned descendants, including detached orphans. Both normal/exception exits verify the created group and adopted-child set are empty before continuing or explicitly releasing shared FDs. Signal only the created group and individually adopted own PIDs; never an unrelated group. One bounded6-second cleanup interval stays inside the absolute1200-second deadline.",
+    "inherited_limits": "Preserve lower GOMAXPROCS and Node heap limits; Go parallelism1 and Cargo jobs1 remain maximums.",
+    "status_at_manifest_creation": "Execution authorized, entry not yet invoked; immutable attempt result will record actual admission and target results."
+  },
+  "current_source_delivery_handoff": "/root/lane-rel-tools/identity-audit-contract/handoff.json",
+  "joint_tooling_tests": {
+    "source": "2c20c8cccc360f3345126a5c36fc3de3c3363732",
+    "layout": 13,
+    "sdk_tooling": 67,
+    "exit": 0
+  },
+  "current_source_delivery_handoff_sha256": "167d4a34fd45b506121f997dda6c38e4d415dd2b1ac17a4ebd3503ff5ffef477",
+  "latest_joint_attempt": {
+    "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+    "entry_sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c",
+    "manifest_sha256": "9a5e296cd3612ae6f9bdd36294148a83dfc4110e4319e837552f76975d096843",
+    "raw_proof": "/root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb-proof.json",
+    "raw_proof_sha256": "ea63d0f4d26a25744f322da5402381397c7fd14768c7afb8ab9b4c8509aaa5fe",
+    "raw_log": "/root/lane-rel-tools/api-compat/joint-native-gate-9be01cbb.log",
+    "raw_log_sha256": "fbcc353ee78c27155e318b3c71fd4ec57fea98bf551080391dd094736c1044c3",
+    "entry_safety_cases": 6,
+    "entry_safety_passed": true,
+    "admitted": true,
+    "parent_exit": 1,
+    "web_install_exit": 0,
+    "check_exit": 2,
+    "build_exit": null,
+    "test_exit": null,
+    "elapsed_seconds": 89.572,
+    "failure": "Web typed ESLint exhausted its2048MiB Node heap, process exit134; not an admission refusal or failed SDK assertion.",
+    "tooling_cases_passed": {
+      "layout": 13,
+      "sdk_tooling": 67
+    },
+    "all_owned_groups_cleared": true,
+    "both_shared_fds_closed_and_carriers_preserved": true,
+    "source_clean_after": true,
+    "retry_queued": false,
+    "resource_snapshots": [
+      {
+        "elapsed_seconds": 0.001,
+        "raw_memfree_mib": 4692,
+        "memavailable_mib": 19811,
+        "disk_free_bytes": 789124411392,
+        "io_full_avg10": 0.0
+      },
+      {
+        "elapsed_seconds": 0.026,
+        "raw_memfree_mib": 4691,
+        "memavailable_mib": 19811,
+        "disk_free_bytes": 789124411392,
+        "io_full_avg10": 0.0
+      },
+      {
+        "elapsed_seconds": 0.036,
+        "raw_memfree_mib": 4691,
+        "memavailable_mib": 19811,
+        "disk_free_bytes": 789124407296,
+        "io_full_avg10": 0.0
+      },
+      {
+        "elapsed_seconds": 0.253,
+        "raw_memfree_mib": 4670,
+        "memavailable_mib": 19789,
+        "disk_free_bytes": 789124403200,
+        "io_full_avg10": 0.0
+      }
+    ]
+  }
+}

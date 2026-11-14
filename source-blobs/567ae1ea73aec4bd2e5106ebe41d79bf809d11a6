@@ -1,0 +1,34 @@
+# Profile dispatch and agent lifecycle
+
+[runtime.go](runtime.go) loads protected typed configuration, enrolls the node and composes clients/managers for one declared execution profile. It rejects unsupported profiles, contradictory manager configuration and overlapping identity/workload roots. The absent profile resolves to the explicit read-only baseline; it does not enable every manager.
+
+[lease.go](lease.go) validates complete operation/profile/task/token/attempt/payload bindings before dispatch. Training and preparation runtime files coordinate lease renewal, events, transfers and terminal outcomes; recovery files retain fenced work and operator cleanup obligations. Registry operations are separately selected, not arbitrary background image downloads.
+
+The run loop sends heartbeats and claims through one [client session](../client/README.md) per process, the session stream with an HTTPS long-poll fallback ([ADR 0007](../../../../docs/decisions/0007-agent-session-protocol.md)). A claim waits up to one interval for work, and that wait counts toward the interval, so an idle agent reports once per interval and a busy one starts its next cycle at once. The loop logs `agent_session_transport` when the transport changes. Before it runs a lease, the cycle saves the task cursor and acknowledges the lease, and it runs nothing control did not confirm; a lease older than the cursor is refused, and a resync recovers local work and adopts control's cursor ([ADR 0011](../../../../docs/decisions/0011-task-delivery-semantics.md)).
+
+[pacing.go](pacing.go) decides the wait between cycles from the pacing control last sent: what is left of a jittered interval after a success, a full-jitter backoff after a failure ([ADR 0013](../../../../docs/decisions/0013-agent-pacing.md)), and at least control's retry hint after a refusal ([ADR 0018](../../../../docs/decisions/0018-agent-call-admission.md)).
+
+[lease_renewal.go](lease_renewal.go) keeps the lease of every running task renewed, for components, inference, training and model preparation alike. Failing to reach control ends nothing: renewal tries again at the next tick for as long as control is away, and only a refusal control wrote cancels the task, with that refusal as the cause ([ADR 0032](../../../../docs/decisions/0032-static-stability.md)). A finished task's result is sent again until control answers or the task's limit passes.
+
+Training and model preparation attempts outlive the agent process. Each cycle first adopts an attempt an earlier process left running and follows it to its end, so startup never needs control; a shutdown leaves the container running for the next process.
+
+Runtime borrows [state](../state/README.md) for identity and process locking, [settings](../settings/README.md) for bounded policy, and [client](../client/README.md) for control transport. Managers own their local journals and resource checks. A failed enrollment acknowledgement or lost lease must not erase identity/workload evidence or silently create a replacement attempt.
+
+[component_recovery.go](component_recovery.go) invokes the same component manager
+at startup and before each cycle's discovery, observation, heartbeat and claim.
+Recovery uses the existing typed `component_task_seconds` budget and preserves a
+shorter caller deadline. Failure blocks that cycle; the existing bounded run loop
+may reconcile the retained journal on its next attempt without a process restart.
+The read-only profile has no component manager or component recovery effects.
+
+Change the corresponding [agent contract](../../../../contracts/agent), cmd/agent options, protected [configuration examples](../../../../config/examples/agent), control/nodes hooks and manager/client interfaces together. New active work needs explicit startup validation, cancellation, joined shutdown and exact cleanup ownership.
+
+Focused check: `go -C services/agent test ./internal/runtime`. Container lifecycle/recovery fixtures, actual control enrollment and native target operations are separate gates; mocked lease dispatch does not prove real process ownership or hardware execution.
+
+
+[environment.go](environment.go) maps only explicit protected `--env-file` values
+to this same typed configuration and its policy owners. Valid JSON is checked
+before overrides; complete profile/root/resource validation runs afterward.
+Unknown, duplicate, empty or contradictory inputs fail. Run/enrollment/fenced
+cleanup use the identical file. See the [commented mapping](../../../../config/examples/agent/lifecycle-policy.env.example)
+and [closed key contract](../../../../contracts/configuration/v1/agent-environment/schema.json).

@@ -1,0 +1,12 @@
+{
+  "independent_commit": "0ea888ec619eda15b182216f1ef9b5fd34a999a6",
+  "parent": "be62f58e846dcc654dafee65cba6cc7480890570",
+  "documentation_head": "ffb0fea97ee3decc9ca6e19c56fd5d1fa9996b3c",
+  "checks": "diff/layout/roadmap pass; complete Web parent retained",
+  "native_evidence": "exact 4f76102c Linux amd64 6+1; not relabeled as schema60",
+  "Web_evidence": "60b85e complete Web gate recorded by be62f58e; installed flow still open",
+  "publication": "not attempted: one actual permanent flock attempt after Web progress returned busy before dispatch",
+  "GW104_source": "219af27e, still clean and unpublished; Mac native four-root entry prepared but not executed",
+  "Mac_native_entry": "python3 /private/tmp/ownsolid-gw-mac-gate.swf0ar5z/mac-gate.py -- python3 /private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/run-native.py",
+  "unblock": "successful exclusive permanent-carrier flock and resource preflight for the focused native command; DEL same-source new isolated installation for installed UI/API/database closure"
+}

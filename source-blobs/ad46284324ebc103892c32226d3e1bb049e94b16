@@ -1,0 +1,1556 @@
+From eeb0e9a6e98fbf05b51409eee5dcff032ade84ef Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 11:10:56 +0000
+Subject: [PATCH 1/6] GW-107: Project gateway receipts atomically when metering
+ is enabled
+
+Verify the disabled predecessor, actual TLS and PostgreSQL rollback after a failed ledger write, and one scoped charge and audit under concurrent replay.
+---
+ docs/product/status.md                        |   2 +-
+ docs/research/gateway-usage-history.md        |  50 ++++++
+ .../internal/modules/distribution/README.md   |   6 +
+ .../internal/modules/distribution/model.go    |   3 +
+ .../distribution/outcome_metering_test.go     | 148 ++++++++++++++++++
+ .../internal/modules/distribution/outcomes.go |  19 ++-
+ 6 files changed, 226 insertions(+), 2 deletions(-)
+ create mode 100644 services/control/internal/modules/distribution/outcome_metering_test.go
+
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 2babc38f..a7e1eef0 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -54,7 +54,7 @@ today and what is known to fail.
+ | Model gateway trust download (GW-125, open) | Admin and Portal download the loaded public CA for an active agent-managed alias. Agent activation and downloads use certificate-only encoding | Disconnected PostgreSQL and TLS verified the signed endpoint, name mismatch, tenant refusal, manual and revoked gateways, and mixed PEM refusal. [Evidence](../research/gateway-delivery.md#downloading-caller-trust-gw-125) | No | Public contract and generated clients are published. Console and Portal links are pending |
+ | Gateway Responses and Messages (GW-103, open) | The Rust gateway serves foreground text over JSON and SSE with shared authorization and usage accounting. Responses accepts strings and stateless text message items. Tool requests remain disabled | Loopback-only Linux TLS tests with a synthetic backend reject complete tool declarations and forged result histories, and preserve quota and single dispatch after an unsolicited tool delta or cancellation. The native Rust, Go and PostgreSQL fixture rejected a key that was valid in a second test installation. The isolated source and template probe verified the closed-schema candidate and scope-bound IDs outside the product | No | The pinned vLLM 0.31.0 launch lacks a parser and does not produce a native named-call envelope. Tool, public OpenAPI and actual engine acceptance remain open. See [tool round-trip research](../research/gateway-tool-roundtrip.md) |
+ | Gateway Chat text parts (GW-101, open) | Chat Completions accepts plain strings and ordered text parts for the existing roles | Disconnected native Rust TLS verified normalization, malformed part rejection and durable JSON and SSE usage against synthetic inference. [Acceptance](../research/gateway-chat-streaming.md) | No | Current production backend and UI qualification are pending |
+-| Authorized gateway usage history (GW-107, open) | Admin and Portal download bounded CSV attachments from their scoped request histories. Both formats verify canonical receipts | Disconnected PostgreSQL and production TLS dispatch verified attachment headers, JSON-cursor continuation, known and unknown usage, read-only retries and refusal without a partial file. Native Go/Rust verified the underlying reports. [Acceptance](../research/gateway-usage-history.md) | No | Public contract uses JSON cursors. Production continuation link and UI are pending |
++| Authorized gateway usage history (GW-107, open) | Admin and Portal download bounded CSV attachments from their scoped request histories. Both formats verify canonical receipts | Disconnected PostgreSQL and production TLS dispatch verified attachment headers, JSON-cursor continuation, known and unknown usage, read-only retries and refusal without a partial file. Native Go/Rust verified the underlying reports. The optional PostgreSQL projection verified atomic rollback and exactly-once replay. [Acceptance](../research/gateway-usage-history.md) | No | Public contract uses JSON cursors. Production continuation link and UI are pending. Metering projection is disabled until the ledger migration |
+ | Published model descriptions (GW-120, open) | Scoped publish, Admin edit and Portal read work on the PostgreSQL candidate. Predecessor responses keep their existing contract | Disconnected HTTPS and PostgreSQL verified legacy replay, concurrent editing, tenant scope, rollback on audit failure, clearing and retained routing. [Evidence](../research/gateway-model-description.md) | No | The public contract is available. Production migration and catalogue signatures after shared database ordering, Console editing and Portal S-304 are pending |
+ | Scheduling policy and cell observation (SCH-101 to SCH-104, SCH-107, SCH-108, SCH-110, open) | Job demand, quota policy, queue order, quota preflight and scheduler observation libraries | Linux Go race tests covered exact demand, tenant scope and child ceilings. Disconnected TLS verified cell identity, protected token rotation and refusal before network I/O. PostgreSQL 18.6 verified that two concurrent policy edits could not both consume the same parent allocation | No | Production schema and workload composition, offline cell installation, reservation and product entrances remain open. See [integration boundaries](../research/lane-sch-questions.md) |
+ | Transactional training scheduling seam (SCH-101, open) | PostgreSQL reservation and exact release on the workload owner's transaction, with candidate schema | Linux PostgreSQL 18.6 covered contention, owner rollback and live quota edits. A logical dump/restore of the v57 catalog with candidate tables preserved a held and a released attempt and their admission decisions | No | Production migration and fingerprints, the authenticated training caller and installed offline flow remain open. See [training and database handoff](../research/scheduling-training-reservations.md) |
+diff --git a/docs/research/gateway-usage-history.md b/docs/research/gateway-usage-history.md
+index 7171cc86..37ac66f8 100644
+--- a/docs/research/gateway-usage-history.md
++++ b/docs/research/gateway-usage-history.md
+@@ -161,3 +161,53 @@ The [published CSV contract](gateway-usage-csv-contract.md) uses
+ JSON-cursor continuation and is ready for Web integration. Adopting the
+ shared type and writer changes needs a corresponding contract update
+ and verification from the usage page.
++
++## Optional transaction projection into metering
++
++The metering owner introduced `AppendGatewayReceiptWithin` in
++`cc2f1c3a`. It rechecks the persisted gateway receipt, scope, admission
++time and token bounds. The [Go transaction guide](https://go.dev/doc/database/execute-transactions)
++describes committing only when all operations succeed. Use the existing
++Report transaction after it stores the canonical outcome and audit, or
++after it verifies an exact replay. Pass the authenticated gateway, tenant
++and workspace and the canonical acknowledgement. The ledger's producer
++and event key make retries idempotent, including a replay of a receipt
++written before the projection was enabled. Changed reports are refused
++before the projection. The acknowledgement follows commit.
++
++Keep the projection disabled in the zero-valued service. Composition
++can opt in only after the owning production PostgreSQL ledger schema is
++available. An independent background write would leave an acknowledged
++outcome without its charge after a crash. A parallel usage calculation
++would drift from the existing token and unmeasured usage rules. No
++dependency, model or dataset is added. Existing Go, pgx and PostgreSQL
++licenses apply for commercial, offline and redistribution use under
++their notice terms.
++
++Use the metering owner's candidate ledger SQL in the isolated PostgreSQL
++test. Verify an ordinary outcome on the default service before the ledger
++exists. Enable projection in the real TLS dispatcher, inject a failing
++ledger insert, and verify that the report, audit and release of capacity
++roll back with no acknowledgement. Remove the failure and race exact
++retries. Require one ledger event with the original scope, admission
++time and token counts, one report audit event, and the matching canonical
++acknowledgement from both retries. Verify the same result when replaying
++an outcome already committed on the predecessor.
++
++The Linux amd64 loopback-only PostgreSQL run passed
++`TestPostgresGatewayOutcomeMeteringAtomicRetry`. An exception after the
++ledger insert returned `503 STORAGE_UNAVAILABLE` without an
++acknowledgement. The outcome, report audit and release of capacity all
++rolled back. Two concurrent retries returned the same acknowledgement
++with one event for nine tokens and one audit row. The predecessor
++receipt replay also created one event, preserving the original
++admission time and scope. A conflicting receipt returned 409. The same
++run passed the default TLS route without the ledger, the native Rust
++lost-acknowledgement recovery, and the scoped alias description upgrade.
++
++Run the test from the root with `PROJECT_ONE_TEST_DSN_FILE` pointing
++to the private loopback fixture DSN, PostgreSQL 18.6 and pgvector 0.8.7.
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution -run '^TestPostgresGatewayOutcomeMeteringAtomicRetry$' -count=1
++```
+diff --git a/services/control/internal/modules/distribution/README.md b/services/control/internal/modules/distribution/README.md
+index 4e9ace7f..d71d94f8 100644
+--- a/services/control/internal/modules/distribution/README.md
++++ b/services/control/internal/modules/distribution/README.md
+@@ -21,6 +21,12 @@ digest, the same check used for report replay. If a stored receipt fails
+ verification, the request returns `STORAGE_UNAVAILABLE` without a partial
+ page. See the [usage history verification](../../../../../docs/research/gateway-usage-history.md).
+ 
++The Report transaction can project an accepted receipt into the PostgreSQL
++usage ledger through `Service.ProjectGatewayReceipts`. The service defaults
++to disabled. Enable it in control composition only after the ledger migration
++is active. A projection failure rolls back the receipt and its report audit
++and leaves the gateway able to retry the same canonical outcome.
++
+ Add `/export` to the cell-scoped Admin or Portal request list path to
+ download one authorized page as `gateway-usage.csv`. The request takes the
+ same `api_key_id`, `limit` and `cursor` query parameters. To continue,
+diff --git a/services/control/internal/modules/distribution/model.go b/services/control/internal/modules/distribution/model.go
+index cbafbb4f..e837bbbc 100644
+--- a/services/control/internal/modules/distribution/model.go
++++ b/services/control/internal/modules/distribution/model.go
+@@ -21,6 +21,9 @@ type Service struct {
+ 	// Certificates signs the serving certificates of gateways agents run (ADR 0052). Only
+ 	// the agent path, which activates them, holds it.
+ 	Certificates *agentidentity.Authority
++	// ProjectGatewayReceipts enables transactional metering after the PostgreSQL ledger is installed.
++	// Set it only at composition time.
++	ProjectGatewayReceipts bool
+ }
+ 
+ type RecoveryChallenge struct {
+diff --git a/services/control/internal/modules/distribution/outcome_metering_test.go b/services/control/internal/modules/distribution/outcome_metering_test.go
+new file mode 100644
+index 00000000..2789cd4e
+--- /dev/null
++++ b/services/control/internal/modules/distribution/outcome_metering_test.go
+@@ -0,0 +1,148 @@
++package distribution_test
++
++import (
++	"bytes"
++	"encoding/json"
++	"net/http"
++	"os"
++	"testing"
++
++	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++	gatewaywire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
++	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/cellroute"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
++	"github.com/google/uuid"
++)
++
++func TestPostgresGatewayOutcomeMeteringAtomicRetry(t *testing.T) {
++	c := setup(t)
++	ctx := t.Context()
++	access := c.access(t)
++	gateway, credential := access.gateway.Gateway.ID, *access.gateway.Secret
++	admit := func() gatewaywire.Outcome {
++		t.Helper()
++		input := access.input()
++		if _, err := c.s.Admit(ctx, gateway, credential, input, uuid.NewString()); err != nil {
++			t.Fatal(err)
++		}
++		return success(input.RequestID)
++	}
++	legacy := admit()
++	prior, err := c.s.Report(ctx, gateway, credential, legacy, uuid.NewString())
++	if err != nil || prior.RequestID != legacy.RequestID {
++		t.Fatal("default report requires no ledger", err)
++	}
++	ledger, err := os.ReadFile("../metering/testdata/ledger.sql")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(ctx, string(ledger)); err != nil {
++		t.Fatal(err)
++	}
++	outcome := admit()
++	if _, err := c.s.DB.Exec(ctx, `CREATE FUNCTION refuse_synthetic_gateway_charge() RETURNS trigger
++		LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic metering failure'; END $$;
++		CREATE TRIGGER reject_synthetic_gateway_charge AFTER INSERT ON usage_ledger
++		FOR EACH ROW EXECUTE FUNCTION refuse_synthetic_gateway_charge();`); err != nil {
++		t.Fatal(err)
++	}
++	handler := identityhttp.New(c.s.Identity)
++	handler.Distribution.Service.ProjectGatewayReceipts = true
++	server := httpfixture.NewTLSServer(t, handler)
++	url := httpfixture.AdminOrigin + cellroute.Public("/gateway/v1/instances/"+gateway+"/outcomes", agentwire.LocalScope())
++	type reportReply struct {
++		status int
++		code   string
++		ack    gatewaywire.Acknowledgment
++		err    error
++	}
++	report := func(out gatewaywire.Outcome) reportReply {
++		body, err := out.Canonical()
++		if err != nil {
++			return reportReply{err: err}
++		}
++		request, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
++		if err != nil {
++			return reportReply{err: err}
++		}
++		request.Header.Set("Authorization", "Bearer "+credential)
++		request.Header.Set("Content-Type", "application/json")
++		response, err := server.Client().Do(request)
++		if err != nil {
++			return reportReply{err: err}
++		}
++		defer response.Body.Close()
++		var payload struct {
++			Code string                     `json:"code"`
++			Data gatewaywire.Acknowledgment `json:"data"`
++		}
++		err = json.NewDecoder(response.Body).Decode(&payload)
++		return reportReply{response.StatusCode, payload.Code, payload.Data, err}
++	}
++	failed := report(outcome)
++	if failed.err != nil || failed.status != http.StatusServiceUnavailable || failed.code != "STORAGE_UNAVAILABLE" ||
++		failed.ack != (gatewaywire.Acknowledgment{}) {
++		t.Fatalf("ledger failure did not return a safe refusal: %+v", failed)
++	}
++	var pristine bool
++	if err := c.s.DB.QueryRow(ctx, `SELECT state='admitted' AND capacity_held AND outcome IS NULL
++		AND outcome_sha256 IS NULL AND reported_at IS NULL AND resolved_at IS NULL
++		AND NOT EXISTS(SELECT 1 FROM audit_events WHERE target_id=r.id AND action='gateway.request_reported')
++		AND NOT EXISTS(SELECT 1 FROM usage_ledger)
++		FROM gateway_requests r WHERE id=$1`, outcome.RequestID).Scan(&pristine); err != nil || !pristine {
++		t.Fatal("failed projection left a report, audit event, released capacity or ledger row", err)
++	}
++	if _, err := c.s.DB.Exec(ctx, "DROP TRIGGER reject_synthetic_gateway_charge ON usage_ledger"); err != nil {
++		t.Fatal(err)
++	}
++
++	digest, err := outcome.Digest()
++	if err != nil {
++		t.Fatal(err)
++	}
++	expected := gatewaywire.Acknowledgment{RequestID: outcome.RequestID, CanonicalSHA256: digest}
++	start := make(chan struct{})
++	retries := make(chan reportReply, 2)
++	for range cap(retries) {
++		go func() {
++			<-start
++			retries <- report(outcome)
++		}()
++	}
++	close(start)
++	for range cap(retries) {
++		reply := <-retries
++		if reply.err != nil || reply.status != http.StatusOK || reply.ack != expected {
++			t.Fatalf("exact retry did not acknowledge the original receipt: %+v", reply)
++		}
++	}
++	changed := outcome
++	changed.OutputStarted = false
++	if reply := report(changed); reply.err != nil || reply.status != http.StatusConflict || reply.code != "GATEWAY_OUTCOME_CONFLICT" {
++		t.Fatalf("changed report was not refused: %+v", reply)
++	}
++	for range 2 {
++		if reply := report(legacy); reply.err != nil || reply.status != http.StatusOK || reply.ack != prior {
++			t.Fatalf("predecessor report did not replay: %+v", reply)
++		}
++	}
++
++	for _, id := range []string{outcome.RequestID, legacy.RequestID} {
++		var ledgerRows, auditRows int
++		if err := c.s.DB.QueryRow(ctx, `SELECT
++			(SELECT count(*) FROM usage_ledger l WHERE l.producer='gateway/receipt-v1' AND l.event_id=r.id::text
++				AND l.tenant_id=r.tenant_id AND l.workspace_id=r.workspace_id AND l.occurred_at=r.admitted_at
++				AND l.requests=1 AND l.tokens=9 AND l.unmeasured_token_requests=0),
++			(SELECT count(*) FROM audit_events WHERE target_id=r.id AND action='gateway.request_reported')
++			FROM gateway_requests r WHERE id=$1 AND state='reported' AND NOT capacity_held
++				AND tenant_id=$2 AND workspace_id=$3 AND gateway_id=$4`,
++			id, c.a.Me.Workspace.TenantID, access.alias.WorkspaceID, gateway).Scan(&ledgerRows, &auditRows); err != nil || ledgerRows != 1 || auditRows != 1 {
++			t.Fatal("expected one correctly scoped charge and report audit for the original receipt", err, ledgerRows, auditRows)
++		}
++	}
++	var ledgerRows int
++	if err := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM usage_ledger").Scan(&ledgerRows); err != nil || ledgerRows != 2 {
++		t.Fatal("projection wrote an extra ledger event", err, ledgerRows)
++	}
++}
+diff --git a/services/control/internal/modules/distribution/outcomes.go b/services/control/internal/modules/distribution/outcomes.go
+index 7614669d..212ca97d 100644
+--- a/services/control/internal/modules/distribution/outcomes.go
++++ b/services/control/internal/modules/distribution/outcomes.go
+@@ -8,7 +8,9 @@ import (
+ 	"time"
+ 
+ 	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/metering"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
+ )
+ 
+ // storedRequestOutcome checks the canonical receipt for both history and report replay.
+@@ -43,6 +45,7 @@ func (s *Service) Report(ctx context.Context, gateway, credential string, outcom
+ 	if e != nil {
+ 		return wire.Acknowledgment{}, e
+ 	}
++	receipt := wire.Acknowledgment{RequestID: outcome.RequestID, CanonicalSHA256: digest}
+ 	var scope machineScope
+ 	e = s.storageTransaction(ctx, func(ctx context.Context, q transaction.Executor) error {
+ 		var e error
+@@ -102,10 +105,24 @@ func (s *Service) Report(ctx context.Context, gateway, credential string, outcom
+ 				return e
+ 			}
+ 		}
++		if s.ProjectGatewayReceipts {
++			return projectGatewayReceipt(ctx, tx, scope, receipt)
++		}
+ 		return nil
+ 	})
+ 	if e != nil {
+ 		return wire.Acknowledgment{}, e
+ 	}
+-	return wire.Acknowledgment{RequestID: outcome.RequestID, CanonicalSHA256: digest}, nil
++	return receipt, nil
++}
++
++func projectGatewayReceipt(ctx context.Context, tx transaction.Executor, scope machineScope, receipt wire.Acknowledgment) error {
++	tenant, tenantErr := uuid.Parse(scope.tenant)
++	workspace, workspaceErr := uuid.Parse(scope.workspace)
++	gateway, gatewayErr := uuid.Parse(scope.gateway)
++	if tenantErr != nil || workspaceErr != nil || gatewayErr != nil {
++		return fail("STORAGE_UNAVAILABLE")
++	}
++	_, err := metering.AppendGatewayReceiptWithin(ctx, tx, metering.Scope{TenantID: tenant, WorkspaceID: workspace}, gateway, receipt)
++	return err
+ }
+-- 
+2.43.0
+
+
+From a5e157e83032932cf4d75ca6a537a2c1a98c68eb Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 11:18:08 +0000
+Subject: [PATCH 2/6] GW-112: Verify native spool replay after a committed
+ receipt and process kill
+
+Restart the real gateway against the same spool and PostgreSQL dispatcher in a disconnected fixture, verifying unchanged scope, one audit, one metering event and no new inference.
+---
+ docs/product/roadmap/gateway.md               |  2 +-
+ docs/product/status.md                        |  2 +-
+ docs/research/gateway-throughput.md           | 49 +++++++++++
+ .../distribution/gateway_integration_test.go  | 88 ++++++++++++++-----
+ .../gateway_outcome_retry_integration_test.go | 26 +++++-
+ .../distribution/outcome_metering_test.go     | 19 ++--
+ 6 files changed, 156 insertions(+), 30 deletions(-)
+
+diff --git a/docs/product/roadmap/gateway.md b/docs/product/roadmap/gateway.md
+index 1173ac08..d49e56d3 100644
+--- a/docs/product/roadmap/gateway.md
++++ b/docs/product/roadmap/gateway.md
+@@ -31,7 +31,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
+ - [ ] GW-111 Configuration publishing with diff preview and rollback (P1) - Catalog: F083
+   - The Admin preview route checks pause, resume, retarget and rollback with the same current state as apply. [Disconnected TLS and PostgreSQL acceptance](../../research/gateway-cutover-preview.md) covers parity, no writes, CSRF, stale revision and foreign refusal. The public contract and Admin CLI are available. The Console flow and native cutover and rollback between two authorized ready deployments remain open.
+ - [ ] GW-112 Load tested: requests per second and added latency at measured scale, published (P1) - Catalog: F086
+-  - The [component and native-path measurements](../../research/gateway-throughput.md) record synthetic throughput, two removed PostgreSQL aggregates and prompt capacity release after durable outcomes, and native retry after a committed acknowledgement is lost. Sustained installation-scale throughput and added latency remain open.
++  - The [component and native-path measurements](../../research/gateway-throughput.md) record synthetic throughput, two removed PostgreSQL aggregates and prompt capacity release after durable outcomes, and native retry and spool recovery after process restart when a committed acknowledgement is lost. Sustained installation-scale throughput and added latency remain open.
+ - [x] GW-113 Gateway and keys page: issue, rotate and revoke keys, with each key's call log (S-206) (P1) - Evidence: 4c1eb36, b9e6728; live run on an installation, 2026-11-08, twice: keys issued, rotated with an overlap and revoked from the browser against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; no model ran, and aliases are published through the API until GW-117
+ - [x] GW-114 The model gateway runs on each serving node, started by its agent when a deployment is published, with its identity provisioned on the node and no network needed ([ADR 0052](../../decisions/0052-the-model-gateway-runs-beside-the-model.md)) (P1) - Evidence: 90ebbad; live on an installation, 2026-11-09: a real agent (protocol 1.6) started the real gateway image when its gateway was registered, served TLS with the certificate control issued for its declared origin, and stopped it with its secrets removed when revoked; from the browser a deployment was published through its node's own gateway with no address typed and no credential shown, a key issued from the card, and calls with it reached vLLM's CPU build serving Qwen3-0.6B (plain and streamed, wrong key refused, each call in the key's log with the engine's token counts). The deployment's node was scripted, with its gateway tasks run by the agent's own gateway code; no GPU
+ - [x] GW-117 Publish a deployment to the gateway from the console: provision a gateway instance and name the alias a key calls (P1) - Evidence: c6936b9, b45b879; live run on an installation, 2026-11-08: a verified deployment on a scripted node was published from its page, which registered the node's gateway and showed its credential once; a key issued from the same card made two calls admitted over the real gateway protocol with that credential by a stand-in for the gateway process (GW-114), and after Stop publishing the name was refused; no model ran
+diff --git a/docs/product/status.md b/docs/product/status.md
+index a7e1eef0..80629bc8 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -68,7 +68,7 @@ today and what is known to fail.
+ | Workspace budget threshold status (TEN-108, open) | Exact operator-configured warning and limit comparison over the scoped showback snapshot | Isolated Linux PostgreSQL 18.6 verified inclusive and fractional thresholds, unrated usage, retry stability, currency mismatch and tenant isolation. The authenticated workspace read used the same rated totals for budget status. A verified gateway receipt with null usage counted one request and marked the subtotal incomplete, while zero completion tokens preserved known prompt usage | No | Effective policy, complete producer coverage, durable notifications and transactional admission enforcement remain open. See [budget status research](../research/metering-budget-status.md) |
+ | Prepaid balance and offline top-up (TEN-109, open) | Authority and persistence boundaries reviewed against the current catalog | No balance write or debit test | No | Requires a verified grant source, approved scoped credit persistence and exact workload charge evidence. See [prepaid balance authority](../research/metering-prepaid-credits.md) |
+ | Hierarchical gateway quotas (GW-106, open) | The Rust gateway enforces request, concurrency and token limits at tenant, application and key scopes. Gateways can use one authenticated quota authority | Two gateway processes shared a 71-token daily budget through real control authorization, PostgreSQL and disconnected vLLM. Two streams used 64 tokens in total, two requests were rejected and every concurrency lease was released. See [gateway quota verification](../research/gateway-limits.md) A native Rust and Go/PostgreSQL run verified that two real workspace keys share one application's monthly ceiling and another application continues to serve. | No | Control-owned scope assignment, Console policy management and installer provisioning remain open |
+-| Gateway request cost and capacity release (GW-112, open) | Machine lookup and admission omit the management-only held-request aggregate. Durable publication wakes outcome reporting, with bounded retries on failure | Disconnected Go/Rust and PostgreSQL verified the removed queries, prompt hold release, outage, and exact replay after a committed TLS reply was lost. A separate release-mode synthetic comparison measured 70.3 and 80.3 successful requests/s at one and two callers. [Evidence](../research/gateway-throughput.md) | No | Installed-system throughput and latency at declared scale are pending |
++| Gateway request cost and capacity release (GW-112, open) | Machine lookup and admission omit the management-only held-request aggregate. Durable publication wakes outcome reporting, with bounded retries on failure | Disconnected Go/Rust and PostgreSQL verified the removed queries, prompt hold release, outage, and exact replay after a committed TLS reply was lost, including process restart with one scoped ledger event. A separate release-mode synthetic comparison measured 70.3 and 80.3 successful requests/s at one and two callers. [Evidence](../research/gateway-throughput.md) | No | Installed-system throughput and latency at declared scale are pending |
+ | Gateway key purpose at rotation (GW-105, open) | Candidate only | Disconnected PostgreSQL reproduced an ordinary successor from a private operation key. A prototype with exact fresh and restored schema signatures refused it, upgraded legacy keys and passed the existing rotation and native Go/Rust license flow | No | Production rotation still lacks persisted purpose. The [handoff](../research/gateway-key-purpose.md) requires the shared PostgreSQL catalog update. Durable application identity is pending |
+ | My API keys in the portal (POR-106): a person's own keys in the workspace in the switcher, with name, prefix, model, last use and expiry and no owner column; tiles for keys expiring within a week and never used; issuing with the secret shown once, then the key's base URL, model and a sample in cURL, Python and Node.js, with what a private certificate authority needs; rotation with an overlap, revocation by typing the name, and each key's own calls. The console's drawer shows the same usage panel | Yes | Yes, a non-administrator on an installation: issue, rotate, revoke and read calls, admitted over the real gateway protocol by a stand-in for the gateway process; another person's key is not found and another workspace is refused. Samples run against a local HTTPS stub with the real OpenAI SDKs and curl; no model ran | No | The installer starts no model gateway (GW-114), so no call reaches a model on an installed product |
+ | Models in the portal (POR-104, open): the names the gateway serves in the workspace in the switcher, disabled ones left out, each joined through its deployment to its model: where it came from, context length, its base, license, base URL and what it is good for; tiles for can be called and not available, search by name or model, filters in the address; a name stays on screen when its model's facts fail to load, with a retry; price and trying a model shown as not ready with the reason; Issue a key opens the issue dialog | Yes | Yes, a non-administrator on an installation: a deployment published on a scripted node read with its model and context length, the way on to a key, and another workspace's three reads refused; no request left the installation or reached an administrator path | No | No price exists (TEN-107), no administrator's description (GW-120), and the playground waits for the gateway (POR-105, GW-114) |
+diff --git a/docs/research/gateway-throughput.md b/docs/research/gateway-throughput.md
+index 8cb00404..a2b5dfd0 100644
+--- a/docs/research/gateway-throughput.md
++++ b/docs/research/gateway-throughput.md
+@@ -242,3 +242,52 @@ one audit event under the original scope before its TLS connection
+ closed. The second returned the same digest. The native gateway
+ removed its pending record, PostgreSQL preserved the original report
+ timestamp and outcome, and the upstream saw one generation.
++
++## Recovery after the gateway process exits
++
++The existing Rust process test uses synthetic Control replies.
++Exercise the same spool recovery with the real Control dispatcher and
++PostgreSQL, including the optional receipt projection from GW-107.
++Keep the canonical receipt and retry semantics described in
++[RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2).
++The Rust reporter begins a flush at startup. Reuse the same private
++configuration and spool directory across both child processes. Use
++[Go process wait](https://pkg.go.dev/os/exec#Cmd.Wait) to join the killed
++child and verify the SIGKILL exit before starting its replacement.
++
++Drop the first successful TLS reply after the report and ledger commit.
++Use an extended scheduled retry interval for this test so the original
++process exits before it can send a second report. Confirm the spool
++file's bytes are unchanged after exit. Start the replacement with the
++same configuration and no incoming requests. Require an identical
++acknowledgement, then verify deletion of the spool file, the original
++report timestamp and authorization scope, one generation, one report
++audit event and one ledger event at the original admission time.
++A manually replayed POST would miss the startup reporter and lock
++reacquisition. A graceful stop would allow a final flush to hide them.
++
++The fixture enables metering only with its candidate ledger SQL.
++Production composition continues to use the default-disabled service.
++The prepared upstream remains synthetic. No model, dataset or
++dependency is added. The existing Go, Rust test stack, and PostgreSQL
++license and offline-use boundaries remain as documented above.
++
++The disconnected Linux amd64 run passed
++`TestRealGoRustPostgresRestartAfterLostOutcomeReply`. The original
++process exited on SIGKILL after Control committed its outcome, audit
++and nine-token ledger event. The replacement replayed the receipt
++through real TLS before receiving any caller request. Both processes
++used the same spool and credential. After the exact acknowledgement,
++the pending file was removed and the report timestamp and body were
++unchanged. The scoped ledger and report audit each contained one row,
++and the upstream saw one generation. The same run passed the
++same-process lost reply and shared and dedicated Control outage cases,
++the optional metering rollback and retry, and the alias upgrade.
++
++With the private loopback PostgreSQL 18.6 fixture and pgvector 0.8.7,
++set `PROJECT_ONE_TEST_DSN_FILE` and the canonical absolute path to the
++compiled Rust binary in `PROJECT_ONE_GATEWAY_BINARY`. Run from the root.
++
++```sh
++go -C services/control test -p 1 -tags gateway_integration ./internal/modules/distribution   -run '^Test(RealGoRustPostgres(RestartAfterLostOutcomeReply|LostOutcomeReply)|PostgresGatewayOutcomeMeteringAtomicRetry|AliasDescriptionPostgreSQLUpgradeAndHTTPS)$' -count=1
++```
+diff --git a/services/control/internal/modules/distribution/gateway_integration_test.go b/services/control/internal/modules/distribution/gateway_integration_test.go
+index 4242924c..66981cff 100644
+--- a/services/control/internal/modules/distribution/gateway_integration_test.go
++++ b/services/control/internal/modules/distribution/gateway_integration_test.go
+@@ -15,6 +15,7 @@ import (
+ 	"crypto/x509/pkix"
+ 	"encoding/json"
+ 	"encoding/pem"
++	"errors"
+ 	"fmt"
+ 	"io"
+ 	"math/big"
+@@ -52,6 +53,7 @@ const (
+ 	applicationBudget
+ 	promptCapacityRelease
+ 	lostOutcomeReply
++	restartAfterLostOutcomeReply
+ )
+ 
+ // Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
+@@ -160,7 +162,11 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+ 		control.Config.Handler = handler.MachineHandler()
+ 	}
+ 	var lostReply *outcomeReplyLoss
+-	if mode == lostOutcomeReply {
++	if mode == restartAfterLostOutcomeReply {
++		installTestUsageLedger(t, c)
++		handler.Distribution.Service.ProjectGatewayReceipts = true
++	}
++	if mode == lostOutcomeReply || mode == restartAfterLostOutcomeReply {
+ 		lostReply = newOutcomeReplyLoss(access.gateway.Gateway.ID)
+ 		control.Config.Handler = lostReply.wrap(t, control.Config.Handler)
+ 	}
+@@ -274,7 +280,7 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+ 	listener.Close()
+ 	limits := map[string]any{"active_requests": 2, "queued_requests": 2, "backend_idle_connections": 2, "connect_seconds": 1, "control_seconds": 1, "request_seconds": 5, "idle_seconds": 2, "header_seconds": 1, "shutdown_seconds": 2, "outcome_retry_seconds": 1}
+ 	configuration := map[string]any{"gateway_id": access.gateway.Gateway.ID, "node_id": c.node.NodeID, "listen_address": listen, "backend_address": strings.TrimPrefix(backend.URL, "http://"), "control_origin": control.URL, "control_ca_file": filepath.Join(root, "ca.pem"), "gateway_credential_file": filepath.Join(root, "credential"), "tls_certificate_file": filepath.Join(root, "certificate.pem"), "tls_private_key_file": filepath.Join(root, "key.pem"), "state_directory": state, "limits": limits}
+-	if mode == promptCapacityRelease {
++	if mode == promptCapacityRelease || mode == restartAfterLostOutcomeReply {
+ 		limits["outcome_retry_seconds"] = 30
+ 	}
+ 	if lostReply != nil {
+@@ -297,25 +303,21 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+ 		t.Fatal(e)
+ 	}
+ 	defer log.Close()
+-	command := exec.Command(binary, "serve", "--config", configPath)
+-	command.Stdout = log
+-	command.Stderr = log
+-	if e = command.Start(); e != nil {
+-		t.Fatal(e)
++	startGateway := func() *gatewayTestProcess {
++		t.Helper()
++		child := exec.Command(binary, "serve", "--config", configPath)
++		child.Stdout, child.Stderr = log, log
++		if err := child.Start(); err != nil {
++			t.Fatal(err)
++		}
++		done := make(chan error, 1)
++		go func() { done <- child.Wait() }()
++		return &gatewayTestProcess{child: child, done: done}
+ 	}
+-	exited := make(chan error, 1)
+-	go func() { exited <- command.Wait() }()
++	process := startGateway()
+ 	defer func() {
+-		command.Process.Signal(syscall.SIGTERM)
+-		select {
+-		case e := <-exited:
+-			if e != nil {
+-				t.Error("native gateway exit", e)
+-			}
+-		case <-time.After(8 * time.Second):
+-			command.Process.Kill()
+-			<-exited
+-			t.Error("native gateway shutdown timeout")
++		if err := process.stop(syscall.SIGTERM); err != nil {
++			t.Error("native gateway shutdown", err)
+ 		}
+ 		if output := os.Getenv("PROJECT_ONE_EVIDENCE_ROOT"); output != "" {
+ 			data, e := os.ReadFile(logPath)
+@@ -431,7 +433,20 @@ func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+ 		return body
+ 	}
+ 	if lostReply != nil {
+-		lostReply.verify(t, c, access, state, request("/v1/chat/completions", *access.key.Secret, chat(false)), &generations)
++		var restart func(verifyStopped func())
++		if mode == restartAfterLostOutcomeReply {
++			restart = func(verifyStopped func()) {
++				t.Helper()
++				old := process
++				process = nil
++				if err := old.stop(syscall.SIGKILL); err != nil {
++					t.Fatal("native gateway did not exit on SIGKILL", err)
++				}
++				verifyStopped()
++				process = startGateway()
++			}
++		}
++		lostReply.verify(t, c, access, state, request("/v1/chat/completions", *access.key.Secret, chat(false)), &generations, restart)
+ 		return
+ 	}
+ 	response := request("/v1/models", *access.key.Secret, nil)
+@@ -834,3 +849,36 @@ func verifyPromptCapacityRelease(t *testing.T, c scenario, access access, reques
+ 		}
+ 	}
+ }
++
++type gatewayTestProcess struct {
++	child *exec.Cmd
++	done  <-chan error
++}
++
++func (p *gatewayTestProcess) stop(signal syscall.Signal) error {
++	if p == nil {
++		return nil
++	}
++	if err := p.child.Process.Signal(signal); err != nil && !errors.Is(err, os.ErrProcessDone) {
++		p.child.Process.Kill()
++		<-p.done
++		return err
++	}
++	select {
++	case err := <-p.done:
++		if signal == syscall.SIGTERM {
++			return err
++		}
++		var exited *exec.ExitError
++		if errors.As(err, &exited) {
++			if status, ok := exited.Sys().(syscall.WaitStatus); ok && status.Signaled() && status.Signal() == signal {
++				return nil
++			}
++		}
++		return fmt.Errorf("expected exit on %s, got %v", signal, err)
++	case <-time.After(8 * time.Second):
++		p.child.Process.Kill()
++		<-p.done
++		return errors.New("native gateway shutdown timeout")
++	}
++}
+diff --git a/services/control/internal/modules/distribution/gateway_outcome_retry_integration_test.go b/services/control/internal/modules/distribution/gateway_outcome_retry_integration_test.go
+index 31ea1533..5cabc622 100644
+--- a/services/control/internal/modules/distribution/gateway_outcome_retry_integration_test.go
++++ b/services/control/internal/modules/distribution/gateway_outcome_retry_integration_test.go
+@@ -24,6 +24,10 @@ func TestRealGoRustPostgresLostOutcomeReply(t *testing.T) {
+ 	realGatewayChain(t, lostOutcomeReply)
+ }
+ 
++func TestRealGoRustPostgresRestartAfterLostOutcomeReply(t *testing.T) {
++	realGatewayChain(t, restartAfterLostOutcomeReply)
++}
++
+ type outcomeReplyLoss struct {
+ 	path        string
+ 	attempts    atomic.Int32
+@@ -90,7 +94,7 @@ func (loss *outcomeReplyLoss) wrap(t *testing.T, next http.Handler) http.Handler
+ 	})
+ }
+ 
+-func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, state string, response *http.Response, generations *atomic.Int32) {
++func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, state string, response *http.Response, generations *atomic.Int32, restart func(verifyStopped func())) {
+ 	t.Helper()
+ 	requestID := response.Header.Get("X-Request-ID")
+ 	var completion struct {
+@@ -136,6 +140,18 @@ func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, st
+ 		if err != nil || auditCount != 1 {
+ 			t.Fatalf("expected one scoped, committed outcome and audit event: %v, count %d", err, auditCount)
+ 		}
++		if restart != nil {
++			var total, matching int
++			err = c.s.DB.QueryRow(t.Context(), `SELECT count(*), count(*) FILTER (
++				WHERE l.producer='gateway/receipt-v1' AND l.event_id=$1 AND l.tenant_id=r.tenant_id
++					AND l.workspace_id=r.workspace_id AND l.occurred_at=r.admitted_at
++					AND l.requests=1 AND l.tokens=$2 AND l.unmeasured_token_requests=0)
++				FROM usage_ledger l CROSS JOIN gateway_requests r WHERE r.id=$1::uuid`,
++				requestID, usage.TotalTokens).Scan(&total, &matching)
++			if err != nil || total != 1 || matching != 1 {
++				t.Fatalf("expected one scoped metering event: %v, total %d, matching %d", err, total, matching)
++			}
++		}
+ 		return body, reportedAt
+ 	}
+ 	initial, reportedAt := readReported()
+@@ -164,6 +180,14 @@ func (loss *outcomeReplyLoss) verify(t *testing.T, c scenario, access access, st
+ 		t.Fatal("native spool differs from the committed outcome", err)
+ 	}
+ 
++	if restart != nil {
++		restart(func() {
++			retained, err := os.ReadFile(pending)
++			if err != nil || !bytes.Equal(data, retained) || loss.attempts.Load() != 1 {
++				t.Fatal("the exited gateway changed the spool or attempted replay before restart", err)
++			}
++		})
++	}
+ 	close(loss.allowReplay)
+ 	if replay := await(loss.replay); replay != first {
+ 		t.Fatal("Control replay changed the canonical acknowledgment")
+diff --git a/services/control/internal/modules/distribution/outcome_metering_test.go b/services/control/internal/modules/distribution/outcome_metering_test.go
+index 2789cd4e..738aa046 100644
+--- a/services/control/internal/modules/distribution/outcome_metering_test.go
++++ b/services/control/internal/modules/distribution/outcome_metering_test.go
+@@ -33,13 +33,7 @@ func TestPostgresGatewayOutcomeMeteringAtomicRetry(t *testing.T) {
+ 	if err != nil || prior.RequestID != legacy.RequestID {
+ 		t.Fatal("default report requires no ledger", err)
+ 	}
+-	ledger, err := os.ReadFile("../metering/testdata/ledger.sql")
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	if _, err := c.s.DB.Exec(ctx, string(ledger)); err != nil {
+-		t.Fatal(err)
+-	}
++	installTestUsageLedger(t, c)
+ 	outcome := admit()
+ 	if _, err := c.s.DB.Exec(ctx, `CREATE FUNCTION refuse_synthetic_gateway_charge() RETURNS trigger
+ 		LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic metering failure'; END $$;
+@@ -146,3 +140,14 @@ func TestPostgresGatewayOutcomeMeteringAtomicRetry(t *testing.T) {
+ 		t.Fatal("projection wrote an extra ledger event", err, ledgerRows)
+ 	}
+ }
++
++func installTestUsageLedger(t *testing.T, c scenario) {
++	t.Helper()
++	ledger, err := os.ReadFile("../metering/testdata/ledger.sql")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(t.Context(), string(ledger)); err != nil {
++		t.Fatal(err)
++	}
++}
+-- 
+2.43.0
+
+
+From 65ed7c8763b5cd60929cd62f45e0d1637d26345d Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 11:31:09 +0000
+Subject: [PATCH 3/6] GW-104: Project capabilities from the exact verified
+ alias target
+
+Verify the internal Admin and Portal projection on disconnected PostgreSQL, including legacy aliases, invalid revisions, scoped refusal, retarget and the published HTTPS shape.
+---
+ docs/product/roadmap/gateway.md               |   2 +-
+ docs/product/status.md                        |   2 +-
+ docs/research/gateway-alias-capabilities.md   |  88 +++++++++++++
+ .../distribution/alias_capabilities.go        |  95 ++++++++++++++
+ .../distribution/alias_capabilities_test.go   | 120 ++++++++++++++++++
+ .../alias_capability_recipe_test.go           |  33 +++++
+ .../internal/modules/distribution/history.go  |   6 +-
+ 7 files changed, 343 insertions(+), 3 deletions(-)
+ create mode 100644 services/control/internal/modules/distribution/alias_capabilities.go
+ create mode 100644 services/control/internal/modules/distribution/alias_capabilities_test.go
+ create mode 100644 services/control/internal/modules/distribution/alias_capability_recipe_test.go
+
+diff --git a/docs/product/roadmap/gateway.md b/docs/product/roadmap/gateway.md
+index d49e56d3..58bb9357 100644
+--- a/docs/product/roadmap/gateway.md
++++ b/docs/product/roadmap/gateway.md
+@@ -17,7 +17,7 @@ Reviewed 2026-11-08 against LiteLLM virtual keys, Portkey, OpenAI project API ke
+ - [ ] GW-103 OpenAI Responses API and Anthropic Messages API for coding tools (P1) - Catalog: F073
+   - Foreground Responses accepts strings and stateless text message items over JSON and SSE and uses the same authorization and token accounting as Chat Completions ([protocol and acceptance](../../research/gateway-responses.md)). Anthropic foreground text Messages uses the same pipeline ([protocol and acceptance](../../research/gateway-messages.md)). The [tool round-trip research](../../research/gateway-tool-roundtrip.md) records why the pinned serving recipe keeps tool calls disabled. Stateful requests, tool calls, generated public contracts, coding-tool interoperability, and real engine acceptance for these adapters remain open.
+ - [ ] GW-104 Model aliases mapped to deployments, with capability metadata (P1) - Catalog: F072
+-  - Publication binds a ready deployment revision. The native gateway also checks alias identity after queueing and accepts a fresh target for the same alias. [Offline acceptance and capability design](../../research/gateway-alias-capabilities.md). The public capability fields, generated client contract and catalogue UI remain open.
++  - Publication binds a ready deployment revision. The native gateway also checks alias identity after queueing and accepts a fresh target for the same alias. [Offline acceptance and capability design](../../research/gateway-alias-capabilities.md). The server-side candidate projects only the exact verified target and context ceiling. The public capability fields, generated client contract and catalogue UI remain open.
+ - [ ] GW-105 Keys scoped by workspace, app, model and expiry; upstream credentials never exposed (P1) - Catalog: F078, F079
+   - [One-use key rotation regression and candidate](../../research/gateway-key-purpose.md) verified in disconnected PostgreSQL. Production integration needs the shared catalog owner to land both schema signatures with the migration. Persistent application identity remains open.
+ - [ ] GW-106 Rate limits, concurrency and token-aware budgets per tenant, app and key (P1) - Catalog: F080, F617
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 80629bc8..2fdf2521 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -44,7 +44,7 @@ today and what is known to fail.
+ | Model services (SRV-111): a workspace's deployments with tiles by state that filter from the address, search, saved views and a drawer; each deployment's page with its replica, configuration and activity; deploying with a server-judged recommendation, every GPU's reason and the cost before the commit; start, check, verify, and stop and remove that name the gateway callers and confirm by typing | Yes, one replica on one whole GPU; scaling, rollback, traffic and logs are shown as not ready (SRV-105, SRV-113, SRV-114) | Live on an installation, 2026-11-08: a real agent joined with the configuration the console wrote, and on a host with no GPU the flow gave the real refusal. A scripted node reporting a synthetic GPU then carried a deployment through a real control plane and database from the browser: deploy, check, stop, start, remove, with the GPU released and each action in the deployment's activity. No model ran | n/a | A model has never been deployed through these pages on a real GPU: no available environment has one (SRV-110) |
+ | Gateway and keys (GW-113): a workspace's keys with name, prefix, scope, owner, last use and expiry; tiles for keys expiring within a week and never used that filter from the address; issuing for a model on the gateway with a lifetime the installation allows and the secret shown once; rotation that keeps scope and owner with an overlap of up to seven days and one successor per key; revocation confirmed by typing; each key's calls in its drawer | Yes, PostgreSQL only for rotation (MySQL and Dameng refuse it before any write); per-key limits are shown as not ready (GW-106) | Live on an installation, 2026-11-08, two runs: a scripted node carried a verified deployment, a gateway instance and an alias were made through the API, and from the browser a key was issued, used, rotated with a one-hour overlap during which both secrets were admitted, and its successor revoked and then refused. Calls went over the real `/gateway/v1` protocol from a stand-in for the gateway process; each key's drawer showed only its own calls, and a call for another model was refused with `MODEL_ALIAS_NOT_FOUND`. No model ran | n/a | Agent-run gateways need an inference node at protocol 1.6 (GW-114, GW-123) |
+ | Publishing to the gateway (GW-117): a deployment's On the gateway card publishes a running, verified deployment under a name checked as typed, registers the node's gateway when it has none and shows its credential, gateway ID and node ID once, keeps that credential on screen when publishing then fails and retries publishing only, replaces a gateway whose credential answer was lost; shows availability, base URL and a sample call, issues a key for the name, and stops publishing after the name is typed, naming the keys that stop | Yes | Live on an installation, 2026-11-08: from the browser a verified deployment on a scripted node was published, its new gateway's credential read from the dialog, a key issued from the card, two calls admitted over the real `/gateway/v1` protocol with that credential by a stand-in for the gateway process, then publishing stopped and the next call refused with `MODEL_ALIAS_UNAVAILABLE`; the audit trail holds the gateway, name, key and stop. No model ran | n/a | A gateway's lost credential cannot be replaced without retiring its names (GW-118) |
+-| Gateway alias continuity (GW-104, open) | Ready deployment revisions are published under a stable alias. The native gateway checks that the admitted request retains that alias identity before sending text to the engine | Disconnected Rust TLS rejected an inconsistent admission without tokenization or generation and accepted an updated target under the same alias. PostgreSQL verified scoped publication and the existing pause, retarget and rollback flow. [Acceptance](../research/gateway-alias-capabilities.md) | No | DEV capability discovery fields and the catalogue projection are pending |
++| Gateway alias continuity (GW-104, open) | Ready deployment revisions are published under a stable alias. The native gateway checks that the admitted request retains that alias identity before sending text to the engine | Disconnected Rust TLS rejected an inconsistent admission without tokenization or generation and accepted an updated target under the same alias. PostgreSQL verified scoped publication, cutover, and an internal capability projection that withheld metadata for an old or invalid target revision. [Acceptance](../research/gateway-alias-capabilities.md) | No | DEV capability discovery fields and the catalogue projection are pending |
+ | Gateway cutover preview (GW-111, open) | The Admin TLS preview route projects current and proposed alias state using the existing cutover authority and target validation | Disconnected PostgreSQL verified preview and apply parity for pause, resume, retarget and rollback, zero preview writes, CSRF, stale and foreign refusal, exact replay and pause/admission interleavings. [Acceptance](../research/gateway-cutover-preview.md) | No | The public preview contract and Admin CLI are available. The Console flow and native cutover and rollback between two authorized ready deployments are pending |
+ | Gateway request correlation (GW-109, open) | A gateway UUID links the caller, generation dispatch and admitted deployment revision. Existing Admin request and deployment details resolve the assigned GPU | Disconnected native Go/Rust and PostgreSQL matched JSON, SSE and cancellation dispatch to history and resolved the same synthetic GPU through Admin TLS | No | Real GPU execution and distributed trace collection are pending |
+ | Dataset source intake and cleaning (DAT-101 to DAT-103, open) | The import component streams JSONL, JSON, CSV and Parquet from uploads or authorized S3 objects. It validates training row formats and can return bounded before and after cleaning samples | The importer ran without an external route on Linux amd64 and arm64. With cleaning enabled, peak RSS was 22.95 MiB for 16 MiB input and 24.64 MiB for 128 MiB input on arm64. Existing workspace permission, publication and snapshot flows passed PostgreSQL regression tests. See [dataset intake verification](../research/dataset-import.md) and [cleaning verification](../research/dataset-cleaning.md) | No | Durable import registration, report readback, UI and release image integration remain open |
+diff --git a/docs/research/gateway-alias-capabilities.md b/docs/research/gateway-alias-capabilities.md
+index 6036a9e3..fc5e69e1 100644
+--- a/docs/research/gateway-alias-capabilities.md
++++ b/docs/research/gateway-alias-capabilities.md
+@@ -69,3 +69,91 @@ generation and a receipt with nine tokens. Disconnected PostgreSQL
+ covered ready-revision publication, cutover and same-key rollback, and
+ the existing Admin TLS cutover contract. The Rust HTTP model backend
+ was a synthetic fixture. No serving recipe or public schema changed.
++
++## Scoped target metadata candidate
++
++The current deployment owner validates ready state, its exact revision
++and lease, the scoped model, the pinned serving image and a positive
++generation observation in `ReadyGatewayTargetWithin`. Model import
++verifies the approved base catalogue by digest. The derived model owner
++validates its immutable catalogue and context field before serving.
++[vLLM's server contract](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/)
++separates text generation from tasks such as pooling and tool calls.
++The [compatible OpenAI model object](https://developers.openai.com/api/reference/resources/models)
++does not describe those capabilities.
++
++Provide a separate server-internal, opt-in projection using the existing
++Admin and Portal alias visibility and a single scoped transaction.
++Require the current alias revision's immutable target snapshot to match
++the exact ready deployment, model catalogue and serving recipe. For an
++identified ready target, report verified text generation and the
++configured context ceiling. Use the minimum of the pinned model limit,
++serving recipe limit and current gateway admission policy. The live
++tokenizer can apply a tighter limit. Missing or mismatched snapshot,
++unknown kind or digest, disabled alias, unavailable deployment and
++inactive workspace yield no metadata. The candidate PostgreSQL path
++requires the local cell on the alias, target and deployment.
++
++A name or family match could describe the wrong model after a retarget.
++Reading the latest history row without matching the alias revision could
++turn an old target into a current promise. Reading the host's agent
++capability would describe its operator profile instead of its deployment.
++Keep these metadata reads off machine authorization and existing HTTP
++paths until DEV publishes the field and clients.
++
++Test the projection through the real PostgreSQL authorization service
++for an Admin and Portal member, a missing old snapshot, a disabled alias,
++a stale deployment revision, and foreign workspace or tenant refusal.
++Retarget and resume the same alias and verify the new target identity.
++Compare the existing HTTP response against the released schema. Verify
++the recipe selector refuses unknown digests and recipes. No dependencies,
++models or data sets are added. The existing Go and PostgreSQL tools,
++Apache-2.0 model catalogue and pinned engine remain within their notice,
++commercial use and offline redistribution boundaries.
++
++### Versioned contract handoff
++
++The released `ModelAlias` and machine binding schemas are closed.
++Keep the compatibility model list and machine admission unchanged.
++For the Admin and Portal cell-scoped alias detail and list operations,
++the proposed optional `capabilities` object can carry
++`text_generation_verified` and `context_token_ceiling`. The first is a
++positive assertion backed by the exact deployment's verification.
++The second is a positive integer ceiling from the model, recipe and
++policy, subject to the live tokenizer. When the server has no exact
++proof, omit the object. An empty or false value would conflate missing
++proof with a verified negative. The projected alias ID and revision
++and deployment ID and revision must match the surrounding alias view.
++Produce both views within the same transaction when wiring the
++contract. Maintain existing disabled-alias visibility and the
++not-found boundary for unauthorized scopes.
++
++The candidate intentionally carries no provider address, credentials,
++model manifest, raw observation, or API adapter capability. A claim
++for tools, pooling, rerank, multimodal input or an individual gateway
++adapter needs the owning versioned serving and gateway capability
++source. DEV owns the schema, generator and operation binding. WEB
++owns the catalogue display and its missing-metadata state.
++
++### Disconnected qualification
++
++`TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget` passed with
++PostgreSQL 18.6 and pgvector 0.8.7 in a loopback-only Linux namespace.
++Admin and a Portal member saw the same verified base target and the
++configured ceiling of 1,024 tokens. The service withheld metadata
++for an otherwise callable predecessor alias without a target
++snapshot and an alias bound to a deployment revision that did not
++exist. It preserved cross-workspace and cross-tenant not-found
++responses and Portal's hidden paused-alias behavior. After retarget
++and resume it returned the replacement deployment identity. The
++existing Portal HTTPS detail still conformed to `ModelAliasResponse`.
++Deployment observations were synthetic. Recipe selection was tested
++separately for unknown inputs and the approved derived recipe.
++The candidate has no public discovery route yet.
++
++With the protected fixture DSN file in `PROJECT_ONE_TEST_DSN_FILE`,
++run this from the repository root.
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution   -run '^Test(PostgresAliasCapabilitiesFollowVerifiedScopedTarget|AliasContextCeilingRequiresRecognizedSource|ActualAliasCutoverTLSNullableContractCSRFHistoryAndExactReplay)$' -count=1
++```
+diff --git a/services/control/internal/modules/distribution/alias_capabilities.go b/services/control/internal/modules/distribution/alias_capabilities.go
+new file mode 100644
+index 00000000..0eb69380
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_capabilities.go
+@@ -0,0 +1,95 @@
++package distribution
++
++import (
++	"context"
++	"database/sql"
++	"errors"
++
++	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
++	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// AliasCapabilityMetadata is a server-side projection of a verified target.
++// The tokenizer can impose a lower limit than ContextTokenCeiling.
++type AliasCapabilityMetadata struct {
++	AliasID                string
++	AliasRevision          int64
++	DeploymentID           string
++	DeploymentRevision     int64
++	VerifiedTextGeneration bool
++	ContextTokenCeiling    int
++}
++
++// AliasCapabilities returns evidence for the same alias visible to Admin or Portal.
++// A nil result means no verified capability metadata for that visible alias.
++func (s *Service) AliasCapabilities(ctx context.Context, a identity.Auth, workspace, id string) (*AliasCapabilityMetadata, error) {
++	if !wire.ValidID(id) {
++		return nil, fail("VALIDATION_FAILED")
++	}
++	var out *AliasCapabilityMetadata
++	err := s.transaction(ctx, a, workspace, false, nil, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
++		alias, err := visibleAliasWithin(ctx, tx, a, w, id)
++		if err != nil || tx.Dialect() != transaction.PostgreSQL || w.Status != "active" {
++			return err
++		}
++		if err := s.aliasReadiness(ctx, tx, w, &alias); err != nil || !alias.Available {
++			return err
++		}
++		var kind, catalog string
++		var recipe *string
++		err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
++			SELECT h.model_kind,h.catalog_digest,h.serving_recipe_sha256
++			FROM model_aliases a
++			JOIN model_alias_target_versions h ON h.tenant_id=a.tenant_id AND h.workspace_id=a.workspace_id
++				AND h.site_id=a.site_id AND h.cell_id=a.cell_id AND h.alias_id=a.id AND h.revision=a.revision
++				AND h.deployment_id=a.deployment_id AND h.deployment_revision=a.deployment_revision
++			JOIN deployments d ON d.tenant_id=h.tenant_id AND d.workspace_id=h.workspace_id
++				AND d.site_id=h.site_id AND d.cell_id=h.cell_id AND d.node_id=a.node_id
++				AND d.id=h.deployment_id AND d.revision=h.deployment_revision AND d.model_id=h.model_id
++				AND d.model_kind=h.model_kind AND d.catalog_digest=h.catalog_digest
++				AND d.serving_recipe_sha256 IS NOT DISTINCT FROM h.serving_recipe_sha256
++			JOIN model_versions m ON m.tenant_id=d.tenant_id AND m.workspace_id=d.workspace_id
++				AND m.site_id=d.site_id AND m.cell_id=d.cell_id AND m.id=d.model_id
++				AND m.kind=d.model_kind AND m.catalog_digest=d.catalog_digest AND m.state='ready'
++			WHERE a.tenant_id=$1 AND a.workspace_id=$2 AND a.id=$3 AND a.revision=$4
++				AND a.site_id=local_site_id() AND a.cell_id=local_cell_id()`,
++			w.TenantID, w.ID, id, alias.Revision)).Scan(&kind, &catalog, &recipe)
++		if errors.Is(err, sql.ErrNoRows) {
++			return nil
++		}
++		if err != nil {
++			return err
++		}
++		ceiling := aliasContextCeiling(kind, catalog, recipe, s.Identity.Config.Policy().Distribution.ContextTokens)
++		if ceiling > 0 {
++			out = &AliasCapabilityMetadata{
++				AliasID: alias.ID, AliasRevision: alias.Revision, DeploymentID: alias.DeploymentID,
++				DeploymentRevision: alias.DeploymentRevision, VerifiedTextGeneration: true, ContextTokenCeiling: ceiling,
++			}
++		}
++		return nil
++	})
++	if err != nil {
++		return nil, err
++	}
++	return out, nil
++}
++
++func aliasContextCeiling(kind, catalog string, recipe *string, policy int) int {
++	switch kind {
++	case "approved_base":
++		if recipe == nil && catalog == agentwire.ModelCatalogDigest() {
++			return min(agentwire.ApprovedModel().MaxContext, agentwire.ApprovedInferenceRecipe().MaximumContext, policy)
++		}
++	case agentwire.DerivedModelKind:
++		if recipe != nil && *recipe == agentwire.DerivedServingRecipeDigest() {
++			// Readiness has verified the exact derived catalogue, whose validator requires this limit.
++			return min(int(lifecycle.MaximumContextTokens), agentwire.ApprovedDerivedServingRecipe().MaximumContext, policy)
++		}
++	}
++	return 0
++}
+diff --git a/services/control/internal/modules/distribution/alias_capabilities_test.go b/services/control/internal/modules/distribution/alias_capabilities_test.go
+new file mode 100644
+index 00000000..b90c4c09
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_capabilities_test.go
+@@ -0,0 +1,120 @@
++package distribution_test
++
++import (
++	"net/http"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
++	"github.com/google/uuid"
++)
++
++func TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget(t *testing.T) {
++	c := setup(t)
++	ctx := t.Context()
++	policy := c.s.Identity.Config.Policy()
++	policy.Distribution.ContextTokens = 1024
++	c.s.Identity.Config.Runtime = &policy
++	access := c.access(t)
++	alias := access.alias
++	assertKnown := func(actor identity.Auth, expected distribution.Alias) {
++		t.Helper()
++		got, err := c.s.AliasCapabilities(ctx, actor, expected.WorkspaceID, expected.ID)
++		want := distribution.AliasCapabilityMetadata{
++			AliasID: expected.ID, AliasRevision: expected.Revision, DeploymentID: expected.DeploymentID,
++			DeploymentRevision: expected.DeploymentRevision, VerifiedTextGeneration: true, ContextTokenCeiling: policy.Distribution.ContextTokens,
++		}
++		if err != nil || got == nil || *got != want {
++			t.Fatalf("capability did not describe the verified target: got %+v, err %v, want %+v", got, err, want)
++		}
++	}
++	assertUnknown := func(id string) {
++		t.Helper()
++		for _, actor := range []identity.Auth{c.a, access.owner} {
++			got, err := c.s.AliasCapabilities(ctx, actor, alias.WorkspaceID, id)
++			if err != nil || got != nil {
++				t.Fatalf("unverified target exposed metadata: %+v, %v", got, err)
++			}
++		}
++	}
++	assertRefused := func(actor identity.Auth, workspace, id, code string) {
++		t.Helper()
++		got, err := c.s.AliasCapabilities(ctx, actor, workspace, id)
++		if got != nil || err == nil || err.Error() != code {
++			t.Fatalf("alias visibility changed: expected %s, got %+v, %v", code, got, err)
++		}
++	}
++	assertKnown(c.a, alias)
++	assertKnown(access.owner, alias)
++
++	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
++	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
++	portal := httpfixture.New(t, server, "portal", schemas)
++	portal.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, http.StatusOK, "")
++	portal.Call(http.MethodGet, "/api/v1/workspaces/"+alias.WorkspaceID+"/distribution/aliases/"+alias.ID, nil, http.StatusOK, "ModelAliasResponse")
++
++	other, err := c.s.Workspaces.Create(ctx, c.a, "Synthetic separate workspace", c.a.Me.User.ID, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	assertRefused(c.a, other.ID, alias.ID, "MODEL_ALIAS_NOT_FOUND")
++	assertRefused(access.owner, other.ID, alias.ID, "RESOURCE_NOT_FOUND")
++	foreignTenant, foreignWorkspace := uuid.NewString(), uuid.NewString()
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign synthetic tenant','active')", foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Foreign synthetic workspace','active')", foreignWorkspace, foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	assertRefused(c.a, foreignWorkspace, alias.ID, "RESOURCE_NOT_FOUND")
++	assertRefused(access.owner, foreignWorkspace, alias.ID, "RESOURCE_NOT_FOUND")
++
++	legacy := uuid.NewString()
++	if _, err := c.s.DB.Exec(ctx, `INSERT INTO model_aliases
++		(id,tenant_id,workspace_id,node_id,gateway_id,name,deployment_id,deployment_revision,created_by,idempotency_key,fingerprint)
++		SELECT $1,tenant_id,workspace_id,node_id,gateway_id,'legacy-without-snapshot',deployment_id,deployment_revision,created_by,$2,fingerprint
++		FROM model_aliases WHERE id=$3`, legacy, uuid.NewString(), alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	legacyAlias, err := c.s.Alias(ctx, access.owner, alias.WorkspaceID, legacy)
++	if err != nil || !legacyAlias.Available {
++		t.Fatal("legacy fixture needs an otherwise callable alias", err)
++	}
++	assertUnknown(legacy)
++
++	if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET deployment_revision=deployment_revision+1 WHERE id=$1", alias.ID); err != nil {
++		t.Fatal(err)
++	}
++	assertUnknown(alias.ID)
++	if _, err := c.s.DB.Exec(ctx, "UPDATE model_aliases SET deployment_revision=$2 WHERE id=$1", alias.ID, alias.DeploymentRevision); err != nil {
++		t.Fatal(err)
++	}
++
++	cutover := func(in distribution.CutoverRequest) distribution.Alias {
++		t.Helper()
++		in.Reason = "Synthetic capability qualification"
++		out, err := c.s.Cutover(ctx, c.a, alias.WorkspaceID, alias.ID, in, uuid.NewString(), uuid.NewString())
++		if err != nil {
++			t.Fatal(err)
++		}
++		return out.Alias
++	}
++	paused := cutover(distribution.CutoverRequest{Action: "pause", ExpectedRevision: alias.Revision})
++	if got, err := c.s.AliasCapabilities(ctx, c.a, alias.WorkspaceID, alias.ID); err != nil || got != nil {
++		t.Fatalf("paused alias exposed capability metadata: %+v, %v", got, err)
++	}
++	assertRefused(access.owner, alias.WorkspaceID, alias.ID, "MODEL_ALIAS_NOT_FOUND")
++	next := c.replaceBaseDeployment(t, alias.DeploymentID)
++	assertUnknown(legacy)
++	retargeted := cutover(distribution.CutoverRequest{
++		Action: "retarget", ExpectedRevision: paused.Revision, DeploymentID: &next.ID, DeploymentRevision: &next.Revision,
++	})
++	resumed := cutover(distribution.CutoverRequest{Action: "resume", ExpectedRevision: retargeted.Revision})
++	if resumed.DeploymentID != next.ID || resumed.DeploymentID == alias.DeploymentID {
++		t.Fatal("capability fixture did not change targets")
++	}
++	assertKnown(c.a, resumed)
++	assertKnown(access.owner, resumed)
++}
+diff --git a/services/control/internal/modules/distribution/alias_capability_recipe_test.go b/services/control/internal/modules/distribution/alias_capability_recipe_test.go
+new file mode 100644
+index 00000000..668386e1
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_capability_recipe_test.go
+@@ -0,0 +1,33 @@
++package distribution
++
++import (
++	"strings"
++	"testing"
++
++	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++)
++
++func TestAliasContextCeilingRequiresRecognizedSource(t *testing.T) {
++	catalog := agentwire.ModelCatalogDigest()
++	derivedRecipe := agentwire.DerivedServingRecipeDigest()
++	unknown := strings.Repeat("a", 64)
++	for _, test := range []struct {
++		name, kind, catalog string
++		recipe              *string
++		want                int
++	}{
++		{"approved base", "approved_base", catalog, nil, 1024},
++		{"unknown base catalogue", "approved_base", unknown, nil, 0},
++		{"unexpected base recipe", "approved_base", catalog, &unknown, 0},
++		{"verified derived recipe", agentwire.DerivedModelKind, unknown, &derivedRecipe, 1024},
++		{"unrecognized derived recipe", agentwire.DerivedModelKind, unknown, &unknown, 0},
++		{"missing derived recipe", agentwire.DerivedModelKind, unknown, nil, 0},
++		{"unrecognized kind", "unrecognized", catalog, nil, 0},
++	} {
++		t.Run(test.name, func(t *testing.T) {
++			if got := aliasContextCeiling(test.kind, test.catalog, test.recipe, 1024); got != test.want {
++				t.Fatalf("got %d, want %d", got, test.want)
++			}
++		})
++	}
++}
+diff --git a/services/control/internal/modules/distribution/history.go b/services/control/internal/modules/distribution/history.go
+index 3f45ad28..53d66a70 100644
+--- a/services/control/internal/modules/distribution/history.go
++++ b/services/control/internal/modules/distribution/history.go
+@@ -231,7 +231,7 @@ func (s *Service) Alias(ctx context.Context, a identity.Auth, workspace, id stri
+ 	var out Alias
+ 	e := s.transaction(ctx, a, workspace, false, nil, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+ 		var e error
+-		out, e = scanAlias(tx.QueryRow(ctx, distributionNativeStatement(tx, "SELECT "+nativeAliasFields+" FROM MODEL_ALIASES WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=? AND (?=1 OR DISABLED_AT IS NULL)", []any{w.TenantID, w.ID, id, admin(a)}, "SELECT "+aliasFields+" FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND ($4 OR disabled_at IS NULL)", `SELECT `+mysqlAliasFields+` FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND id=? AND (? OR disabled_at IS NULL)`, []any{w.TenantID, w.ID, id, admin(a)}, []any{w.TenantID, w.ID, id, admin(a)})))
++		out, e = visibleAliasWithin(ctx, tx, a, w, id)
+ 		if e != nil {
+ 			return e
+ 		}
+@@ -242,6 +242,10 @@ func (s *Service) Alias(ctx context.Context, a identity.Auth, workspace, id stri
+ 	}
+ 	return out, nil
+ }
++func visibleAliasWithin(ctx context.Context, tx transaction.Executor, a identity.Auth, w workspaces.Workspace, id string) (Alias, error) {
++	return scanAlias(tx.QueryRow(ctx, distributionNativeStatement(tx, "SELECT "+nativeAliasFields+" FROM MODEL_ALIASES WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=? AND (?=1 OR DISABLED_AT IS NULL)", []any{w.TenantID, w.ID, id, admin(a)}, "SELECT "+aliasFields+" FROM model_aliases WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND ($4 OR disabled_at IS NULL)", `SELECT `+mysqlAliasFields+` FROM model_aliases WHERE tenant_id=? AND workspace_id=? AND id=? AND (? OR disabled_at IS NULL)`, []any{w.TenantID, w.ID, id, admin(a)}, []any{w.TenantID, w.ID, id, admin(a)})))
++}
++
+ func (s *Service) Key(ctx context.Context, a identity.Auth, workspace, id string) (APIKey, error) {
+ 	if !wire.ValidID(id) {
+ 		return APIKey{}, fail("VALIDATION_FAILED")
+-- 
+2.43.0
+
+
+From cd2f58c797bf61536596d47c8fb719b775eb5aa8 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 11:32:57 +0000
+Subject: [PATCH 4/6] GW-109: Keep the authorized trace bound to its admitted
+ target
+
+Verify the published Admin request detail remains identical through retarget and rollback, and refuse a foreign tenant on disconnected TLS and PostgreSQL.
+---
+ docs/product/status.md                        |  2 +-
+ docs/research/gateway-request-tracing.md      | 25 +++++++++++++++++++
+ .../modules/distribution/cutovers_test.go     | 19 +++++++++++---
+ 3 files changed, 42 insertions(+), 4 deletions(-)
+
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 2fdf2521..8185c899 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -46,7 +46,7 @@ today and what is known to fail.
+ | Publishing to the gateway (GW-117): a deployment's On the gateway card publishes a running, verified deployment under a name checked as typed, registers the node's gateway when it has none and shows its credential, gateway ID and node ID once, keeps that credential on screen when publishing then fails and retries publishing only, replaces a gateway whose credential answer was lost; shows availability, base URL and a sample call, issues a key for the name, and stops publishing after the name is typed, naming the keys that stop | Yes | Live on an installation, 2026-11-08: from the browser a verified deployment on a scripted node was published, its new gateway's credential read from the dialog, a key issued from the card, two calls admitted over the real `/gateway/v1` protocol with that credential by a stand-in for the gateway process, then publishing stopped and the next call refused with `MODEL_ALIAS_UNAVAILABLE`; the audit trail holds the gateway, name, key and stop. No model ran | n/a | A gateway's lost credential cannot be replaced without retiring its names (GW-118) |
+ | Gateway alias continuity (GW-104, open) | Ready deployment revisions are published under a stable alias. The native gateway checks that the admitted request retains that alias identity before sending text to the engine | Disconnected Rust TLS rejected an inconsistent admission without tokenization or generation and accepted an updated target under the same alias. PostgreSQL verified scoped publication, cutover, and an internal capability projection that withheld metadata for an old or invalid target revision. [Acceptance](../research/gateway-alias-capabilities.md) | No | DEV capability discovery fields and the catalogue projection are pending |
+ | Gateway cutover preview (GW-111, open) | The Admin TLS preview route projects current and proposed alias state using the existing cutover authority and target validation | Disconnected PostgreSQL verified preview and apply parity for pause, resume, retarget and rollback, zero preview writes, CSRF, stale and foreign refusal, exact replay and pause/admission interleavings. [Acceptance](../research/gateway-cutover-preview.md) | No | The public preview contract and Admin CLI are available. The Console flow and native cutover and rollback between two authorized ready deployments are pending |
+-| Gateway request correlation (GW-109, open) | A gateway UUID links the caller, generation dispatch and admitted deployment revision. Existing Admin request and deployment details resolve the assigned GPU | Disconnected native Go/Rust and PostgreSQL matched JSON, SSE and cancellation dispatch to history and resolved the same synthetic GPU through Admin TLS | No | Real GPU execution and distributed trace collection are pending |
++| Gateway request correlation (GW-109, open) | A gateway UUID links the caller, generation dispatch and admitted deployment revision. Existing Admin request and deployment details resolve the assigned GPU | Disconnected native Go/Rust and PostgreSQL matched JSON, SSE and cancellation dispatch to history and resolved the same synthetic GPU through Admin TLS. Historical Admin request detail stayed bound to its admitted deployment after retarget and rollback | No | Real GPU execution and distributed trace collection are pending |
+ | Dataset source intake and cleaning (DAT-101 to DAT-103, open) | The import component streams JSONL, JSON, CSV and Parquet from uploads or authorized S3 objects. It validates training row formats and can return bounded before and after cleaning samples | The importer ran without an external route on Linux amd64 and arm64. With cleaning enabled, peak RSS was 22.95 MiB for 16 MiB input and 24.64 MiB for 128 MiB input on arm64. Existing workspace permission, publication and snapshot flows passed PostgreSQL regression tests. See [dataset intake verification](../research/dataset-import.md) and [cleaning verification](../research/dataset-cleaning.md) | No | Durable import registration, report readback, UI and release image integration remain open |
+ | Draft tokenizer preview (DAT-107, open) | Optional cell-scoped Admin and Portal HTTP operations with generated Go and Python clients | Disconnected PostgreSQL and scoped HTTPS exercised both entrances with the pinned Qwen tokenizer, exact fit and overflow, runtime absence, asset changes, rate limiting and session revocation. [Contract and acceptance](../research/training-tokenizer-preview.md#public-http-contract) | No | Release runtime injection and S-503 UI acceptance are pending |
+ | Tokenizer preview release inputs (DAT-107 and TRN-108, open) | A Linux amd64 fixture checker binds the projected training lock, wheel bytes and notices to the approved Qwen tokenizer files | Disconnected CPython 3.12.3 installed exactly 30 retained wheels, passed `pip check` and all 19 runtime tests with the cached base image's pip 25.0.1. The recorder saw only its three probes. The release checker rejected the incomplete retained wheelhouse before installation. [Evidence](../research/training-runtime-delivery.md#disconnected-release-side-replay) | No | The approved wheelhouse still needs the exact pip 26.2.1 installer and complete `tokenizers` binary notices. Production image composition and runtime injection remain open |
+diff --git a/docs/research/gateway-request-tracing.md b/docs/research/gateway-request-tracing.md
+index f97e90c4..e5b64e01 100644
+--- a/docs/research/gateway-request-tracing.md
++++ b/docs/research/gateway-request-tracing.md
+@@ -74,3 +74,28 @@ cancelled call reached the synthetic engine under the gateway-generated
+ UUID and appeared under the same UUID in the authorized history. The
+ Admin HTTPS request detail and deployment detail returned the same
+ node and revision and the deployment's fixture GPU assignment.
++
++## Historical trace through target changes
++
++The admitted request carries its own deployment ID and revision.
++The alias supplies its stable public name and can move to another
++deployment. Use the existing authorized request detail as the historical
++trace source. Resolving the current alias target for an older request
++would attribute it to the replacement. The engine correlation contract
++and its pinned vLLM source above still apply.
++
++In the existing disconnected cutover fixture, retain the actual Admin
++HTTPS request detail immediately after the canonical report. Read it
++again after retarget and after rollback. Require the same node, alias,
++deployment revision, actor, key and usage. Refuse the same request to
++an independently authenticated foreign tenant. The fixture's deployment
++observations are synthetic. This adds no runtime or dependency, and
++the existing Go and PostgreSQL licence terms above apply.
++
++The disconnected PostgreSQL and HTTPS run passed. The published
++`GatewayRequestResponse` body was identical before target changes,
++after retarget and resume, and after rollback and resume. The
++independently authenticated foreign Admin received RESOURCE_NOT_FOUND.
++The current alias and original key moved to the replacement while the
++record retained its original admission and outcome. The fixture
++verified admitted placement identity and did not execute a GPU workload.
+diff --git a/services/control/internal/modules/distribution/cutovers_test.go b/services/control/internal/modules/distribution/cutovers_test.go
+index f32e02bc..ae7f634e 100644
+--- a/services/control/internal/modules/distribution/cutovers_test.go
++++ b/services/control/internal/modules/distribution/cutovers_test.go
+@@ -175,6 +175,17 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
+ 	if _, e = c.s.Report(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, success(input.RequestID), uuid.NewString()); e != nil {
+ 		t.Fatal(e)
+ 	}
++	tracePath := "/api/v1/admin/distribution/workspaces/" + workspace + "/requests/" + admitted.RequestID
++	trace := admin.Call(http.MethodGet, tracePath, nil, http.StatusOK, "GatewayRequestResponse")
++	if trace["id"] != admitted.RequestID || trace["node_id"] != a.alias.NodeID ||
++		trace["deployment_id"] != a.alias.DeploymentID || trace["deployment_revision"] != float64(a.alias.DeploymentRevision) ||
++		trace["alias_id"] != a.alias.ID || trace["api_key_id"] != a.key.Key.ID || trace["actor_id"] != a.owner.Me.User.ID ||
++		trace["state"] != "reported" {
++		t.Fatal("request detail did not identify the original admitted target and owner")
++	}
++	if problem := foreignAdmin.Call(http.MethodGet, tracePath, nil, http.StatusNotFound, "Problem"); problem["code"] != "RESOURCE_NOT_FOUND" {
++		t.Fatal("historical request detail crossed tenant scope")
++	}
+ 	next := c.replaceBaseDeployment(t, a.alias.DeploymentID)
+ 	retarget := distribution.CutoverRequest{Action: "retarget", ExpectedRevision: 2, DeploymentID: &next.ID, DeploymentRevision: &next.Revision, Reason: "Same key explicit verified fresh target"}
+ 	changed, e := applyPreview(retarget, uuid.NewString())
+@@ -192,9 +203,8 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
+ 	if e != nil || models.Models[0].DeploymentID != next.ID {
+ 		t.Fatal("same original key changed binding", e)
+ 	}
+-	var retained string
+-	if e = c.s.DB.QueryRow(ctx, "SELECT deployment_id::text FROM gateway_requests WHERE id=$1", admitted.RequestID).Scan(&retained); e != nil || retained != a.alias.DeploymentID {
+-		t.Fatal("admitted snapshot mutated", e)
++	if current := admin.Call(http.MethodGet, tracePath, nil, http.StatusOK, "GatewayRequestResponse"); !reflect.DeepEqual(current, trace) {
++		t.Fatal("retarget rewrote the historical request detail")
+ 	}
+ 	pause.ExpectedRevision = 4
+ 	paused, e = c.s.Cutover(ctx, c.a, workspace, id, pause, uuid.NewString(), uuid.NewString())
+@@ -212,6 +222,9 @@ func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutable
+ 	if _, e = c.s.Cutover(ctx, c.a, workspace, id, resume, uuid.NewString(), uuid.NewString()); e != nil {
+ 		t.Fatal(e)
+ 	}
++	if current := admin.Call(http.MethodGet, tracePath, nil, http.StatusOK, "GatewayRequestResponse"); !reflect.DeepEqual(current, trace) {
++		t.Fatal("rollback rewrote the historical request detail")
++	}
+ 	history, e := c.s.TargetHistory(ctx, c.a, workspace, id, url.Values{"limit": {"2"}})
+ 	if e != nil || len(history.Items) != 2 || history.NextCursor == nil {
+ 		t.Fatal("history page", e)
+-- 
+2.43.0
+
+
+From 42efece0db9de4c2b7424a28cd39216414946a37 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 11:47:56 +0000
+Subject: [PATCH 5/6] GW-104: Verify published alias responses preserve the
+ capability boundary
+
+Cover Admin and Portal list, detail, paused visibility and unauthorized scopes over disconnected TLS and PostgreSQL. Record the exact DEV contract inputs.
+---
+ docs/research/gateway-alias-capabilities.md   |  51 +++++++++
+ docs/research/lane-g-questions.md             |   2 +-
+ .../alias_capability_http_test.go             | 106 ++++++++++++++++++
+ 3 files changed, 158 insertions(+), 1 deletion(-)
+ create mode 100644 services/control/internal/modules/distribution/alias_capability_http_test.go
+
+diff --git a/docs/research/gateway-alias-capabilities.md b/docs/research/gateway-alias-capabilities.md
+index fc5e69e1..aed07b8c 100644
+--- a/docs/research/gateway-alias-capabilities.md
++++ b/docs/research/gateway-alias-capabilities.md
+@@ -157,3 +157,54 @@ run this from the repository root.
+ ```sh
+ go -C services/control test -p 1 ./internal/modules/distribution   -run '^Test(PostgresAliasCapabilitiesFollowVerifiedScopedTarget|AliasContextCeilingRequiresRecognizedSource|ActualAliasCutoverTLSNullableContractCSRFHistoryAndExactReplay)$' -count=1
+ ```
++
++### Compatibility boundary and DEV inputs
++
++The sole positive capability source is `Service.AliasCapabilities`.
++It authorizes the alias with the same workspace and visibility rules
++as alias detail. In that transaction it requires the current alias
++ID and revision, node, deployment ID and revision, model ID and kind,
++catalogue digest and nullable recipe digest to agree across the
++local-cell alias, immutable target, live deployment and ready model.
++The deployment owner also requires a fresh generation observation.
++A valid alias with unavailable or unidentified evidence yields a nil
++projection. A paused alias yields no projection for Admin and the
++existing not-found result for Portal. A refusal keeps its existing
++problem code. The internal result carries the exact alias and
++deployment revisions to prevent attaching it to a stale view.
++
++The [OpenAPI Schema Object](https://spec.openapis.org/oas/v3.1.1.html#schema-object)
++and the released `ModelAlias` schema keep the current response closed.
++Test all four registered Admin and Portal list and detail operations
++against their released response schemas. Check that the existing
++payload never acquires a capability field and that a workspace without
++membership and a foreign tenant cannot read it. Admin still sees a
++paused alias in its normal representation. Portal omits it from the
++list and returns the existing not-found problem on detail.
++
++DEV can bind the optional object to these exact operations once the
++schema changes. Use the same authorization, page limit and cursor.
++For a projected result, require both proposed fields together.
++`text_generation_verified` is true and `context_token_ceiling` is a
++positive integer. Omit the entire object when the projection is nil.
++List and detail must both use the exact target in the same authorized
++transaction. Publish the schema and regenerate both clients before
++exposing the object. The public model list, machine binding and
++mutation responses retain their current fields. No runtime, dependency
++or product data changes are needed to verify this boundary.
++
++The versioned operation IDs are `adminListModelAlias`,
++`adminGetModelAlias`, `portalListModelAlias` and `portalGetModelAlias`.
++The disconnected `TestPostgresAliasCapabilityPublicContractBoundary`
++run checked all four through the real TLS dispatcher. Their published
++response schemas accepted the replies. Each authorized item retained
++its alias and deployment identity without a capability object. The
++Portal member could not read a separate workspace, and neither
++audience could read a foreign tenant. Admin could still read the
++paused alias, while Portal detail returned MODEL_ALIAS_NOT_FOUND
++and its list excluded the alias. This run used PostgreSQL 18.6 and
++synthetic deployment observations.
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution -run '^TestPostgresAliasCapabilityPublicContractBoundary$' -count=1
++```
+diff --git a/docs/research/lane-g-questions.md b/docs/research/lane-g-questions.md
+index 97991eff..be50d83d 100644
+--- a/docs/research/lane-g-questions.md
++++ b/docs/research/lane-g-questions.md
+@@ -9,7 +9,7 @@ open until the named integration is usable.
+ | GW-101 | The latest changes passed the native Go/Rust/PostgreSQL profile and Rust failure cases. The bounded offline vLLM rerun timed out at 361 seconds before model loading or socket readiness, with the running process repeatedly waiting on kernel file or buffer I/O. The changed path still needs a real-engine run. [Chat streaming research](gateway-chat-streaming.md). |
+ | GW-102 | The generation recipe and admission wire cover text chat. Embedding and rerank need an approved pooling deployment, explicit endpoint capability, and accounting for inputs without generated tokens. [vLLM scoring](https://docs.vllm.ai/en/latest/models/pooling_models/scoring/) uses a different request and result contract. Keep chat admissions bound to chat until serving and wire owners add the new operations. |
+ | GW-103 | Responses and Messages require their own lifecycle and streaming events plus structured tool calls. The current gateway strips unsupported fields and the engine path accepts a single text choice. Map the structured lifecycle when the public contract and serving recipe support it. [Responses streaming](https://developers.openai.com/api/reference/resources/responses/streaming-events), [Messages](https://platform.claude.com/docs/en/api/messages/create). |
+-| GW-104 | Distribution already persists alias-to-deployment bindings. Capability metadata needs a serving-owned source and a public discovery contract so an alias can advertise exactly which operations it supports. |
++| GW-104 | The PostgreSQL candidate projects verified text generation and a context ceiling from the exact authorized target. DEV owns the optional public object and same-transaction list and detail binding. WEB owns display. Individual gateway adapters and other tasks still require an authoritative capability source. |
+ | GW-105 | Workspace, alias, expiry, membership and revocation are enforced. An application binding must be persisted with the key and checked on admission, with lifecycle, console and contract support. Keep app identity server-owned. |
+ | GW-106 | Standalone and shared quota enforcement have a tested Rust path. Control-owned tenant and application mapping, policy management and installation delivery remain open. [Quota research](gateway-limits.md). |
+ | GW-107 | Distribution retains request and usage history. Export needs a documented, permission-checked interface for a consistent bounded range and the UI that reaches it. The retry spool deletes acknowledged outcomes and cannot serve as the ledger. |
+diff --git a/services/control/internal/modules/distribution/alias_capability_http_test.go b/services/control/internal/modules/distribution/alias_capability_http_test.go
+new file mode 100644
+index 00000000..f4695cd8
+--- /dev/null
++++ b/services/control/internal/modules/distribution/alias_capability_http_test.go
+@@ -0,0 +1,106 @@
++package distribution_test
++
++import (
++	"net/http"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/distribution"
++	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
++	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++)
++
++func TestPostgresAliasCapabilityPublicContractBoundary(t *testing.T) {
++	c := setup(t)
++	ctx := t.Context()
++	alias := c.published(t)
++	server := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
++	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
++	admin := httpfixture.New(t, server, "admin", schemas)
++	portal := httpfixture.New(t, server, "portal", schemas)
++
++	const member = "capability-member@example.invalid"
++	invitation, err := c.s.Identity.Invite(ctx, c.a, "", "createInvitation", uuid.NewString(), member, "en", 0, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	password := fixture.Password()
++	if err := c.s.Identity.Register(ctx, fixture.InvitationToken(t, c.s.Identity, invitation.ID), "Synthetic capability member", password, uuid.NewString()); err != nil {
++		t.Fatal(err)
++	}
++	login := func(client *httpfixture.Client, email, password string) {
++		t.Helper()
++		client.Write(http.MethodPost, "/api/v1/auth/login", map[string]any{"email": email, "password": password}, http.StatusOK, "")
++	}
++	login(admin, "admin@example.invalid", c.password)
++	login(portal, member, password)
++
++	adminPath := func(workspace string) string {
++		return "/api/v1/admin/distribution/workspaces/" + workspace + "/aliases"
++	}
++	portalPath := func(workspace string) string { return "/api/v1/workspaces/" + workspace + "/distribution/aliases" }
++	view := func(client *httpfixture.Client, path string, paused bool) {
++		t.Helper()
++		assertAlias := func(value map[string]any) {
++			t.Helper()
++			_, added := value["capabilities"]
++			if value["id"] != alias.ID || value["deployment_id"] != alias.DeploymentID ||
++				value["deployment_revision"] != float64(alias.DeploymentRevision) || (value["disabled_at"] != nil) != paused || added {
++				t.Fatal("published alias response changed identity, visibility or capability fields")
++			}
++		}
++		assertAlias(client.Call(http.MethodGet, path+"/"+alias.ID, nil, http.StatusOK, "ModelAliasResponse"))
++		items := client.Call(http.MethodGet, path, nil, http.StatusOK, "ModelAliasPageResponse")["items"].([]any)
++		if len(items) != 1 {
++			t.Fatal("alias list returned an unexpected scope")
++		}
++		assertAlias(items[0].(map[string]any))
++	}
++	view(admin, adminPath(alias.WorkspaceID), false)
++	view(portal, portalPath(alias.WorkspaceID), false)
++
++	assertNotFound := func(client *httpfixture.Client, path, code string) {
++		t.Helper()
++		body := client.Call(http.MethodGet, path, nil, http.StatusNotFound, "Problem")
++		if body["code"] != code {
++			t.Fatalf("expected %s for inaccessible alias path, got %v", code, body["code"])
++		}
++	}
++	separate, err := c.s.Workspaces.Create(ctx, c.a, "Synthetic separate workspace", c.a.Me.User.ID, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	assertNotFound(portal, portalPath(separate.ID), "RESOURCE_NOT_FOUND")
++	assertNotFound(portal, portalPath(separate.ID)+"/"+alias.ID, "RESOURCE_NOT_FOUND")
++	assertNotFound(admin, adminPath(separate.ID)+"/"+alias.ID, "MODEL_ALIAS_NOT_FOUND")
++	if items := admin.Call(http.MethodGet, adminPath(separate.ID), nil, http.StatusOK, "ModelAliasPageResponse")["items"].([]any); len(items) != 0 {
++		t.Fatal("Admin alias list returned an alias from a different workspace")
++	}
++
++	foreignTenant, foreignWorkspace := uuid.NewString(), uuid.NewString()
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign synthetic tenant','active')", foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	if _, err := c.s.DB.Exec(ctx, "INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Foreign synthetic workspace','active')", foreignWorkspace, foreignTenant); err != nil {
++		t.Fatal(err)
++	}
++	for _, probe := range []struct {
++		client *httpfixture.Client
++		path   string
++	}{{admin, adminPath(foreignWorkspace)}, {portal, portalPath(foreignWorkspace)}} {
++		assertNotFound(probe.client, probe.path, "RESOURCE_NOT_FOUND")
++		assertNotFound(probe.client, probe.path+"/"+alias.ID, "RESOURCE_NOT_FOUND")
++	}
++
++	if _, err := c.s.Cutover(ctx, c.a, alias.WorkspaceID, alias.ID, distribution.CutoverRequest{
++		Action: "pause", ExpectedRevision: alias.Revision, Reason: "Synthetic alias visibility qualification",
++	}, uuid.NewString(), uuid.NewString()); err != nil {
++		t.Fatal(err)
++	}
++	view(admin, adminPath(alias.WorkspaceID), true)
++	assertNotFound(portal, portalPath(alias.WorkspaceID)+"/"+alias.ID, "MODEL_ALIAS_NOT_FOUND")
++	if items := portal.Call(http.MethodGet, portalPath(alias.WorkspaceID), nil, http.StatusOK, "ModelAliasPageResponse")["items"].([]any); len(items) != 0 {
++		t.Fatal("Portal alias list disclosed the paused alias")
++	}
++}
+-- 
+2.43.0
+
+
+From 5b07be7261770c18bb948bbad649037e4424fedd Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 11:50:57 +0000
+Subject: [PATCH 6/6] GW-125: Verify downloads retain the previous issuer
+ during rollover
+
+Use disconnected TLS and PostgreSQL to prove both audiences can verify the still-active gateway leaf with a replacement and retained CA.
+---
+ docs/research/gateway-delivery.md             | 32 +++++++++++++++++
+ .../modules/distribution/delivery_test.go     | 34 ++++++++++++++-----
+ .../modules/distribution/trust_bundle_test.go | 32 +++++++++++++++++
+ 3 files changed, 89 insertions(+), 9 deletions(-)
+
+diff --git a/docs/research/gateway-delivery.md b/docs/research/gateway-delivery.md
+index aab92939..54111f02 100644
+--- a/docs/research/gateway-delivery.md
++++ b/docs/research/gateway-delivery.md
+@@ -203,3 +203,35 @@ Go/Rust shared and dedicated HTTPS gateway regressions also passed.
+ The HTTPS endpoint used to check the serving certificate was a Go
+ fixture. The [public CA download contract](gateway-trust-download-contract.md)
+ is published. Console and Portal links remain open.
++
++### Caller trust during issuer replacement
++
++[RFC 5280 path validation](https://www.rfc-editor.org/rfc/rfc5280.html#section-6.1)
++allows validation using a selected set of trust anchors. The existing
++model gateway authority uses the first certificate and matching private
++key for issuance. Its loaded bundle can also contain the previous
++public CA while existing leaves remain valid. Returning the issuer
++alone would strand callers that download trust during the overlap.
++Reading the configured file per request would let an unactivated edit
++change caller trust independently of the loaded authority.
++
++Use two generated fixture CAs and keep the original serving certificate
++live. Load a second control dispatcher with the replacement signing key
++and a bundle containing the replacement CA and the previous CA. Admin
++and Portal must receive the same ordered public certificate bundle.
++A client using only that download must still verify the original
++gateway hostname and leaf over TLS. The original dispatcher keeps the
++trust it loaded earlier. The existing Go, PostgreSQL and pgx licence
++terms apply. No dependency, model or data set is added.
++
++The disconnected Linux PostgreSQL and TLS run passed
++`TestModelGatewayCAForPublishedAliasOverTLS` with issuer overlap.
++Both audiences downloaded the replacement CA followed by the retained
++old CA. A fresh TLS client loaded only that attachment and verified the
++previously issued leaf against the published hostname. The original
++dispatcher still served its previously loaded CA. The endpoint and
++node observations were fixture data.
++
++```sh
++go -C services/control test -p 1 ./internal/modules/distribution -run '^TestModelGatewayCAForPublishedAliasOverTLS$' -count=1
++```
+diff --git a/services/control/internal/modules/distribution/delivery_test.go b/services/control/internal/modules/distribution/delivery_test.go
+index 3ecabed5..4b8649fc 100644
+--- a/services/control/internal/modules/distribution/delivery_test.go
++++ b/services/control/internal/modules/distribution/delivery_test.go
+@@ -32,15 +32,8 @@ const declaredOrigin = "https://gw.rack7.example:18443"
+ func deliveredScenario(t *testing.T) (scenario, *x509.CertPool) {
+ 	t.Helper()
+ 	c := setup(t)
+-	key, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+-	template := &x509.Certificate{SerialNumber: big.NewInt(7), Subject: pkix.Name{CommonName: "test model gateway CA"}, NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(48 * time.Hour), IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign}
+-	der, e := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
+-	if e != nil {
+-		t.Fatal(e)
+-	}
+-	keyDER, _ := x509.MarshalPKCS8PrivateKey(key)
+-	bundle := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+-	caKey := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER})
++	bundle, caKey := testGatewayCAMaterial(t, "test model gateway CA")
++	var e error
+ 	dir := t.TempDir()
+ 	certPath, keyPath := filepath.Join(dir, "certificate.pem"), filepath.Join(dir, "key.pem")
+ 	if e := os.WriteFile(certPath, bundle, 0600); e != nil {
+@@ -62,6 +55,29 @@ func deliveredScenario(t *testing.T) (scenario, *x509.CertPool) {
+ 	return c, roots
+ }
+ 
++func testGatewayCAMaterial(t *testing.T, name string) ([]byte, []byte) {
++	t.Helper()
++	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
++	if err != nil {
++		t.Fatal(err)
++	}
++	template := &x509.Certificate{
++		SerialNumber: big.NewInt(7), Subject: pkix.Name{CommonName: name},
++		NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(48 * time.Hour),
++		IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign,
++	}
++	der, err := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
++	if err != nil {
++		t.Fatal(err)
++	}
++	keyDER, err := x509.MarshalPKCS8PrivateKey(key)
++	if err != nil {
++		t.Fatal(err)
++	}
++	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}),
++		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER})
++}
++
+ func (c scenario) deliveredInput() distribution.ProvisionRequest {
+ 	in := c.input()
+ 	in.ClientOrigin = ""
+diff --git a/services/control/internal/modules/distribution/trust_bundle_test.go b/services/control/internal/modules/distribution/trust_bundle_test.go
+index 9873216f..86ff2b3d 100644
+--- a/services/control/internal/modules/distribution/trust_bundle_test.go
++++ b/services/control/internal/modules/distribution/trust_bundle_test.go
+@@ -159,6 +159,38 @@ func TestModelGatewayCAForPublishedAliasOverTLS(t *testing.T) {
+ 	if !bytes.Equal(bundle, portal.get(t, portalPath, http.StatusOK, "")) {
+ 		t.Fatal("the active CA download changed after an on-disk edit")
+ 	}
++	nextCA, nextKey := testGatewayCAMaterial(t, "replacement model gateway CA")
++	overlap := bytes.Join([][]byte{nextCA, cleanBundle}, nil)
++	setBundle(overlap)
++	if err := os.WriteFile(material.CAPrivateKeyFile, nextKey, 0600); err != nil {
++		t.Fatal(err)
++	}
++	reloaded := httpfixture.NewTLSServer(t, identityhttp.New(c.s.Identity))
++	rolloverAdmin, rolloverPortal := admin, portal
++	rolloverAdmin.server, rolloverPortal.server = reloaded, reloaded
++	downloaded := rolloverPortal.get(t, portalPath, http.StatusOK, "")
++	if !bytes.Equal(downloaded, overlap) || !bytes.Equal(downloaded, rolloverAdmin.get(t, adminPath, http.StatusOK, "")) {
++		t.Fatal("issuer overlap did not return both public CAs")
++	}
++	if !bytes.Equal(portal.get(t, portalPath, http.StatusOK, ""), bundle) {
++		t.Fatal("the original dispatcher replaced its loaded issuer")
++	}
++	overlapRoots := x509.NewCertPool()
++	if !overlapRoots.AppendCertsFromPEM(downloaded) {
++		t.Fatal("issuer overlap contained no trust anchors")
++	}
++	overlapTransport := transport.Clone()
++	defer overlapTransport.CloseIdleConnections()
++	overlapTransport.TLSClientConfig.RootCAs = overlapRoots
++	originalPeer, err := (&http.Client{Transport: overlapTransport}).Do(request.Clone(ctx))
++	if err != nil {
++		t.Fatal("the replacement download could not verify the old serving leaf", err)
++	}
++	originalPeer.Body.Close()
++	if originalPeer.StatusCode != http.StatusNoContent {
++		t.Fatal("unexpected old gateway response during issuer overlap", originalPeer.StatusCode)
++	}
++
+ 	if _, err := c.s.RevokeGateway(ctx, c.a, g.WorkspaceID, g.ID, "Retire synthetic gateway", uuid.NewString()); err != nil {
+ 		t.Fatal(err)
+ 	}
+-- 
+2.43.0
+

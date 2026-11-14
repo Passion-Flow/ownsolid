@@ -1,0 +1,5 @@
+#!/bin/sh
+# Lane B GW-114 helper: starts the protocol-1.6 scripted node; the token arrives on stdin, $1 is its name.
+token=$(cat)
+printf '%s' "$token" | nohup python3 /root/lane-b/gw114/live/scripted-gateway-node.py https://admin.lane-b.test:18443 /root/lane-b/install-iam117/config/ca.pem "$1" > /root/lane-b/gw114/live/scripted-gateway-node.log 2>&1 &
+echo $! > /root/lane-b/gw114/live/scripted-gateway-node.pid

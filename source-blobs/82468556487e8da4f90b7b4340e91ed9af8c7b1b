@@ -1,0 +1,7 @@
+{
+  "filename": "python-base-image.tar",
+  "image": "sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+  "sha256": "fcea6604f98e4fa22fef3a26197b5f1980260979e0e730051dce1794a5fa9ee9",
+  "size_bytes": 47894016,
+  "verification": "Completed image save and SHA-256 before the successful disconnected installation"
+}

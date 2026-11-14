@@ -1,0 +1,12 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "status": "prepared only; AST parsed; helper not built, container not started, no listener or four-root run",
+  "original_entry": "/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/run-native.py",
+  "original_sha256": "911c0bccb4d345999e5eb696119d1397a0e143d8b681dcb64178f0d0dc7af341",
+  "draft_sha256": "66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d",
+  "transport": "PostgreSQL network none; Go stdio helper over Docker exec; only native host loopback listener",
+  "entry": "/private/tmp/ownsolid-gw104-native-stdio.3i3mw2er/run-native-stdio.py",
+  "queue": "no new kernel wait; original one-time queue is finished",
+  "admission": "ordinary nonblocking guard returned busy before command dispatch; replacement entry has not executed",
+  "qualification_evidence_commit": "c4fd65c96b35d94e52166598346b78c7d730815d"
+}

@@ -1,0 +1,7 @@
+{
+  "scope": "Only owned filesystem permission reproduction; no CLI, host locks or namespace executed",
+  "umask": "077",
+  "requested_mkdir_mode": "0755",
+  "observed_mode": "0o700",
+  "explicit_chmod_mode": "0o755"
+}

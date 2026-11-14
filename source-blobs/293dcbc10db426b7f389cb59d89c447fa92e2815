@@ -1,0 +1,10 @@
+{
+  "memory_kib": {
+    "MemFree": 6166124,
+    "MemAvailable": 19918616
+  },
+  "full_io_psi_avg10": 0.76,
+  "disk_free_bytes": 801053822976,
+  "source": "59c9c86a432c8623ec6b68595bf575920ff89056",
+  "scope": "exact-source native CGO-free control and six existing e2e binaries; no container or test"
+}

@@ -1,0 +1,77 @@
+{
+  "scope": "Mac darwin/arm64 HTTP package and affected intrinsic-query validation pure units only",
+  "source_commit": "d8ad7e790e2d08a267df819ce8547225983fc08d",
+  "source_tree": "7ec015f2f87d362f1c943dcb811699f69f45856a",
+  "bundle_sha256": "9a633364f79e2b45ead0dc2fbf4c940cf1927e83c5bfc2fbb567ee6d4abaee03",
+  "lock_file": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "lock_device": 16777234,
+  "lock_inode": 50313339,
+  "memory_pressure": "The system has 38654705664 (2359296 pages with a page size of 16384).\nSystem-wide memory free percentage: 81%",
+  "test_started": true,
+  "passed": true,
+  "compiler": "go version go1.27.3 darwin/arm64",
+  "environment": {
+    "GOTOOLCHAIN": "local",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-p=2 -mod=readonly",
+    "CGO_ENABLED": "1",
+    "GOOS": "darwin",
+    "GOARCH": "arm64",
+    "GOWORK": "/private/tmp/obs110-http-unit-_wbpygdx/source/go.work"
+  },
+  "commands": [
+    [
+      "/Users/passion./.local/opt/go/bin/go",
+      "-C",
+      "services/control",
+      "test",
+      "-json",
+      "-race",
+      "-p",
+      "2",
+      "-count=1",
+      "-timeout=120s",
+      "./internal/modules/monitoring/http"
+    ],
+    [
+      "/Users/passion./.local/opt/go/bin/go",
+      "-C",
+      "services/control",
+      "test",
+      "-json",
+      "-race",
+      "-p",
+      "2",
+      "-count=1",
+      "-timeout=120s",
+      "-run",
+      "^TestSeriesCardinalityQueryValidation$",
+      "./internal/modules/monitoring"
+    ]
+  ],
+  "exits": [
+    0,
+    0
+  ],
+  "child_groups_empty": true,
+  "test_events": {
+    "pass": 49
+  },
+  "top_level_tests": {
+    "TestFleetHistoryRejectsAmbiguousInput": 0,
+    "TestFleetHistoryPublicProblemCodes": 0,
+    "TestExactDiagnosticRouteRejectsAmbiguousInputs": 0,
+    "TestSeriesCardinalityCanonicalHTTPQuery": 0,
+    "TestSeriesCardinalityRefusesAmbiguousHTTPQuery": 0,
+    "TestSeriesCardinalityRemainsOutsidePublicDispatch": 0,
+    "TestSeriesCardinalityQueryValidation": 0
+  },
+  "package_results": {
+    "github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring/http": "pass",
+    "github.com/Passion-Flow/ownsolid/services/control/internal/modules/monitoring": "pass"
+  },
+  "elapsed_seconds": 9.062,
+  "tests_sha256": "fc6712d61c151be59d4fa52202c6c10cf421dcc4afc81067692dbdcd088f14f2"
+}

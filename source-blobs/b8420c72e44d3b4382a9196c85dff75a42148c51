@@ -1,0 +1,72 @@
+{
+  "source_commit": "a446ec580cf6dffc63df5d8269518f1ef8175d40",
+  "source_tree": "b07ca16b496d4fbbdd2171140f8bf42169eb15ef",
+  "schema_version": 59,
+  "table_count": 119,
+  "postgresql_version": "18.6",
+  "pgvector_version": "0.8.7",
+  "runtime": "Linux arm64 container on Darwin arm64",
+  "network": "none",
+  "native_linux_amd64_rerun": false,
+  "catalogs": {
+    "fresh": "72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782",
+    "native58": "72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782",
+    "55": "8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069",
+    "56": "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc",
+    "57": "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc",
+    "58": "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc",
+    "59": "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc"
+  },
+  "unchanged_predecessor_entries": 58,
+  "passed_focused_roots": {
+    "distribution": [
+      "TestAliasDescriptionRollbackRejectsPriorIsolationSnapshot",
+      "TestAliasDescriptionRollbackFreshIsolationPreservesRetainedState",
+      "TestAliasDescriptionRollbackPreservesRetainedState",
+      "TestAliasDescriptionRollbackWaitsForCommittedWriter",
+      "TestAliasDescriptionPostgreSQLUpgradeAndHTTPS",
+      "TestAliasDescriptionInstalledSchemaAndHTTPS"
+    ],
+    "databaseaccess": [
+      "TestActualRuntimeAccessPreparationAccountWorkspaceDMLAndNoDDL",
+      "TestAliasDescriptionUpgradeResumesExistingRuntimePrincipal",
+      "TestUpgradeFromDeliveredPrefixPreservesRoleAndData",
+      "TestUpgradeResumesAfterSchemaCommittedAndUnknownGrantCommit",
+      "TestUpgradeResumesGrantsAfterSchemaCommitted",
+      "TestUpgradeRejectsForeignLedgerAndMissingRole",
+      "TestUpgradeRejectsMissingRole",
+      "TestUpgradeRejectsElevatedRoleBeforeDDL"
+    ]
+  },
+  "browser_results": {
+    "console": {
+      "passed": 1075,
+      "existing_live_skipped": 28,
+      "workers": 4
+    },
+    "portal": {
+      "passed": 389,
+      "existing_live_skipped": 9,
+      "workers": 1
+    },
+    "retries": 0
+  },
+  "root_gate_start": "Thu Nov 12 08:37:26 UTC 2026",
+  "root_gate_finish": "Thu Nov 12 08:56:46 UTC 2026",
+  "root_gate_exit": 0,
+  "matrix_exit": 0,
+  "raw_evidence_sha256": {
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-full-gate.78dwoujb/check.log": "2a6dec04e2d0ffc8feeb4fdfff4a1775a4e8ccecea1d8fa1701034818300e3df",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-full-gate.78dwoujb/build.log": "3c66bd2e42ab580965713a5b66ce30c4adbdfbd216527d96e82a3b33cb08b2f2",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-full-gate.78dwoujb/test.log": "f0ef757b361d51dd1f372e40d75d57af99518c0cb9a3453982f181db4e1d2910",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-full-gate.78dwoujb/focused.log": "9847788d40419fd37d2a13855219c5fe04f308eea992d3ba33c3dd27a09d044a",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-full-gate.78dwoujb/focused/distribution.log": "4614b2a53a55344ff4c3c3178f9e573dc2d209bc800ae94d0dc3686a9bb06596",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-full-gate.78dwoujb/focused/databaseaccess.log": "5b865e8420c2035d538ad3c51d6d3928d54ca8746d768e3b060582d5ee39cc9b",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-catalog-matrix.zem9ye4q/run.log": "b89471dd2e52982ffa6e1f687867fe82718d20fb5165af2640354c09566c34da",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-catalog-matrix.zem9ye4q/matrix.log": "069f70673f0764e6c16adb027488c53ed2d47aa32733d51ce0b01ed1c4e46a1d",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-catalog-matrix.zem9ye4q/binary-sha256": "82b4ec5a242bf657cdb9ad11e56a985f0bc1c99c5eeda41a7a20e5f05f1586bd",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-catalog-matrix.zem9ye4q/predecessor-input-sha256.json": "36b95ff24cdc14293e38bef2b57bf6453304a771a323619860f2da0bad501dd4"
+  },
+  "up_sha256": "399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab",
+  "down_sha256": "61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86"
+}

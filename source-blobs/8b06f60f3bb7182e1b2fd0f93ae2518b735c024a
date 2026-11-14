@@ -1,0 +1,10 @@
+import json,hashlib,os,subprocess,sys
+c=json.load(open("/root/lane-b/model-catalog.json"))
+for f in c["files"]:
+    p=f["path"]
+    for u in ["https://modelscope.cn/models/Qwen/Qwen3-0.6B/resolve/master/"+p,"https://huggingface.co/%s/resolve/%s/%s"%(c["repository"],c["revision"],p)]:
+        if subprocess.run(["curl","-fsSL","--retry","3","-o",p,u]).returncode==0:
+            h=hashlib.sha256(open(p,"rb").read()).hexdigest()
+            if h==f["sha256"]: print(p,"OK",flush=True);break
+            print(p,"hash differs from",u,flush=True)
+    else: print(p,"FAILED",flush=True); sys.exit(1)

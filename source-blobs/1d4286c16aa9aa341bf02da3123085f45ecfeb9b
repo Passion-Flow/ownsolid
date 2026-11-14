@@ -1,0 +1,86 @@
+package distribution_test
+
+import (
+	"fmt"
+	"os"
+	"testing"
+	"time"
+
+	wire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/metering"
+	"github.com/google/uuid"
+)
+
+func TestActualGatewayReportWithMeteringOverlay(t *testing.T) {
+	c := setup(t)
+	a := c.access(t)
+	ctx := t.Context()
+	old, recent, unknown := a.input(), a.input(), a.input()
+	for _, admission := range []wire.AdmissionRequest{old, recent, unknown} {
+		if _, err := c.s.Admit(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, admission, uuid.NewString()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cutover := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)
+	if _, err := c.s.DB.Exec(ctx, "UPDATE gateway_requests SET admitted_at=$2 WHERE id=$1", old.RequestID, cutover.Add(-time.Microsecond)); err != nil {
+		t.Fatal(err)
+	}
+	older, newer := success(old.RequestID), success(recent.RequestID)
+	older.Usage = &wire.Usage{PromptTokens: 4, CompletionTokens: 0, TotalTokens: 4}
+	report := func(outcome wire.Outcome) (wire.Acknowledgment, error) {
+		return c.s.Report(ctx, a.gateway.Gateway.ID, *a.gateway.Secret, outcome, uuid.NewString())
+	}
+	if _, err := report(newer); err == nil {
+		t.Fatal("reported a receipt when the owning ledger insert failed")
+	}
+	var state string
+	if err := c.s.DB.QueryRow(ctx, "SELECT state FROM gateway_requests WHERE id=$1", recent.RequestID).Scan(&state); err != nil || state != "admitted" {
+		t.Fatal("failed intake did not roll back the real gateway outcome", state, err)
+	}
+
+	schema, err := os.ReadFile("../metering/testdata/ledger.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.s.DB.Exec(ctx, string(schema)); err != nil {
+		t.Fatal(err)
+	}
+	code := "client_cancelled"
+	for _, outcome := range []wire.Outcome{newer, older, {RequestID: unknown.RequestID, Status: code, ErrorCode: &code}} {
+		accepted, err := report(outcome)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected, err := outcome.Digest()
+		if err != nil || accepted.CanonicalSHA256 != expected {
+			t.Fatal("gateway changed its canonical receipt", err)
+		}
+		replayed, err := report(outcome)
+		if err != nil || replayed != accepted {
+			t.Fatal("gateway did not return the same receipt", err)
+		}
+	}
+	var rows, tokens, requests, missing int64
+	if err := c.s.DB.QueryRow(ctx, "SELECT count(*),sum(tokens),sum(requests),sum(unmeasured_token_requests) FROM usage_ledger").Scan(&rows, &tokens, &requests, &missing); err != nil ||
+		rows != 3 || tokens != 13 || requests != 3 || missing != 1 {
+		t.Fatal("real receipt totals changed", rows, tokens, requests, missing, err)
+	}
+
+	from, to := cutover.Add(-time.Minute), time.Now().UTC().Add(time.Minute)
+	card, err := metering.DecodeRateCard([]byte(fmt.Sprintf(`{"currency":"XTS","versions":[
+ {"id":"old","effective_at":"%s","rates":[{"meter":"tokens","units":1,"amount_micros":2},{"meter":"requests","units":1,"amount_micros":1}]},
+ {"id":"new","effective_at":"%s","rates":[{"meter":"tokens","units":1,"amount_micros":3},{"meter":"requests","units":1,"amount_micros":4}]}]}`,
+		from.Format(time.RFC3339), cutover.Format(time.RFC3339))))
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy := metering.BudgetPolicy{Currency: "XTS", LimitMicros: "100", WarningBasisPoints: 5000}
+	result, err := metering.ReadWorkspaceReport(ctx, c.s.Workspaces, c.a, c.a.Me.Workspace.ID, from, to, card, &policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Showback.KnownAmountMicros != "44" || result.Showback.UnmeasuredTokenRequests != "1" || result.Showback.FullyRated ||
+		result.Budget == nil || result.Budget.State != metering.BudgetUnmeasuredUsage || result.Budget.KnownAmountMicros != "44" {
+		t.Fatalf("authorized report and budget disagree: %+v, %+v", result.Showback, result.Budget)
+	}
+}

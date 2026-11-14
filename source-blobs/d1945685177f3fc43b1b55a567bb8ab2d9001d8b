@@ -1,0 +1,141 @@
+"""Run the prepared audit protocol fixture under an inherited Mac window FD."""
+
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import signal
+import stat
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parent
+WORK = ROOT / "work"
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def git(*args):
+    return subprocess.check_output(["git", "-C", str(WORK), *args], text=True).strip()
+
+
+def inherited_window():
+    carrier = Path("/private/tmp/ownsolid-workstation-full-gate.lock")
+    info = carrier.lstat()
+    assert stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid()
+    fd = int(os.environ["OWNSOLID_MAC_WINDOW_FD"])
+    opened = os.fstat(fd)
+    assert fd > 2 and (opened.st_dev, opened.st_ino) == (info.st_dev, info.st_ino)
+    # The parent alone acquired this open description. Never take an inner lock.
+    return fd
+
+
+def verify(prepared):
+    assert git("rev-parse", "HEAD") == prepared["source"]
+    assert not git("status", "--porcelain")
+    for name, expected in prepared["source_file_sha256"].items():
+        assert digest(WORK / name) == expected, name
+    for name, expected in prepared["sdk_file_sha256"].items():
+        assert digest(ROOT / "sdk" / name) == expected, name
+    assert digest(Path(prepared["go_binary"])) == prepared["go_binary_sha256"]
+
+
+def main():
+    os.umask(0o077)
+    child = None
+    proof = {"host": "darwin/arm64", "process_started": False, "passed": False,
+             "linux_qualification": False, "installed_qualification": False,
+             "repository_gate": False, "cli_qualification": False,
+             "started_utc": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+
+    def stop():
+        nonlocal child
+        if child is None:
+            return
+        try:
+            os.killpg(child.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        try:
+            child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            os.killpg(child.pid, signal.SIGKILL)
+            child.wait(timeout=5)
+        child = None
+
+    def interrupted(signum, _frame):
+        raise KeyboardInterrupt("Interrupted by signal " + str(signum))
+
+    signal.signal(signal.SIGTERM, interrupted)
+    signal.signal(signal.SIGINT, interrupted)
+    try:
+        fd = inherited_window()
+        assert sys.platform == "darwin" and os.uname().machine == "arm64"
+        prepared = json.loads((ROOT / "go-wire-mac-prepared.json").read_text())
+        verify(prepared)
+        proof.update(source=prepared["source"], transport_source=prepared["transport_source"],
+                     prepared_manifest_sha256=digest(ROOT / "go-wire-mac-prepared.json"))
+        disk = os.statvfs(ROOT)
+        assert disk.f_bavail * disk.f_frsize >= 15 * 1024**3
+        pressure = subprocess.check_output(["memory_pressure", "-Q"], text=True)
+        free = re.search(r"free percentage:\s*(\d+)%", pressure)
+        assert free and int(free[1]) >= 40
+        proof["memory_free_percent"] = int(free[1])
+        temp = ROOT / "go-wire-mac-temp"
+        temp.mkdir(mode=0o700, exist_ok=True)
+        env = os.environ.copy()
+        env.update(GOWORK="off", GOPROXY="off", GOSUMDB="off", GOTOOLCHAIN="local",
+                   GOMAXPROCS="2", GOFLAGS="-p=1 -mod=readonly", CGO_ENABLED="1",
+                   GOOS="darwin", GOARCH="arm64", CC="/usr/bin/clang",
+                   GOMODCACHE=prepared["gomodcache"], GOCACHE=prepared["gocache"],
+                   GOTMPDIR=str(temp.resolve()), TMPDIR=str(temp.resolve()) + "/")
+        fixture = WORK / "tools/codegen/sdk/tests/audit_read_wire_test.go"
+        command = [prepared["go_binary"], "test", "-json", "-race", "-count=1",
+                   "-timeout=90s", str(fixture)]
+        proof["command"] = command
+        log = ROOT / "go-wire-mac.log"
+        with log.open("w") as output:
+            child = subprocess.Popen(command, cwd=ROOT / "sdk/gen/go", env=env,
+                                     stdin=subprocess.DEVNULL, stdout=output,
+                                     stderr=subprocess.STDOUT, start_new_session=True,
+                                     pass_fds=(fd,))
+            proof.update(go_pid=child.pid, go_pgid=child.pid, inherited_fd=fd,
+                         window_parent_pid=int(os.environ["OWNSOLID_MAC_WINDOW_PARENT"]))
+            proof["process_started"] = True
+            code = child.wait(timeout=180)
+            child = None
+        proof["go_exit"] = code
+        events = []
+        for line in log.read_text().splitlines():
+            try:
+                events.append(json.loads(line))
+            except ValueError:
+                continue
+        passed = {event["Test"] for event in events
+                  if event.get("Action") == "pass" and event.get("Test")}
+        proof["passed_top_level_tests"] = sorted(name for name in passed if "/" not in name)
+        proof["passed_subtests"] = sorted(name for name in passed if "/" in name)
+        proof["skipped_tests"] = [event.get("Test") for event in events if event.get("Action") == "skip"]
+        proof["compilation_proven"] = any(event.get("Action") == "run" and event.get("Test") for event in events)
+        proof["log_sha256"] = digest(log)
+        verify(prepared)
+        proof["source_and_sdk_unchanged_after"] = True
+        proof["passed"] = (code == 0 and not proof["skipped_tests"]
+                           and set(proof["passed_top_level_tests"]) == set(prepared["top_level_tests"])
+                           and set(prepared["required_subtests"]) <= passed)
+    except BaseException as error:
+        proof["failure"] = type(error).__name__ + ": " + str(error)
+    finally:
+        stop()
+        proof["finished_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        (ROOT / "go-wire-mac-proof.json").write_text(json.dumps(proof, indent=2) + "\n")
+    print(json.dumps(proof, indent=2))
+    return 0 if proof["passed"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

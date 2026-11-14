@@ -1,0 +1,1652 @@
+diff --git a/api/openapi/v1/identity/openapi.json b/api/openapi/v1/identity/openapi.json
+index 2cd313d6..aad8cfea 100644
+--- a/api/openapi/v1/identity/openapi.json
++++ b/api/openapi/v1/identity/openapi.json
+@@ -1905,6 +1905,9 @@
+           "400": [
+             "INVALID_CURSOR",
+             "VALIDATION_FAILED"
++          ],
++          "409": [
++            "STORAGE_COMMIT_OUTCOME_UNKNOWN"
+           ]
+         },
+         "security": [
+@@ -1959,6 +1962,9 @@
+           },
+           "default": {
+             "$ref": "#/components/responses/Problem"
++          },
++          "409": {
++            "$ref": "#/components/responses/Problem"
+           }
+         },
+         "parameters": [
+@@ -1966,7 +1972,8 @@
+             "$ref": "#/components/parameters/Limit"
+           },
+           {
+-            "$ref": "#/components/parameters/Cursor"
++            "$ref": "#/components/parameters/Cursor",
++            "description": "Continue from the previous confirmed page. After a failed or lost response, retry the same filters, cursor and representation only explicitly. A retry records a new audited read; it does not confirm whether the earlier access was recorded. No page is returned unless its access audit transaction is confirmed."
+           },
+           {
+             "name": "action",
+@@ -2099,7 +2106,8 @@
+               ]
+             }
+           }
+-        ]
++        ],
++        "description": "Read one page under current platform-administrator authority. The server reads the page before recording this access as audit.events_read in the same transaction; a successful page cannot contain its own access event. No page or assistant attribution is released unless that transaction is confirmed. STORAGE_COMMIT_OUTCOME_UNKNOWN (409) means the access audit may or may not have committed. Do not retry automatically after that response or a lost reply. A deliberate retry with the same filters, cursor and representation is a new audited read, not a replay or proof that the earlier audit is absent. Preserve the earlier request ID for diagnosis. Use category=audit to select audit-family events; the exact action filter accepts only its declared enumeration."
+       }
+     },
+     "/api/v1/admin/mail-deliveries": {
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 172235ee..d1c11aa9 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -118,7 +118,9 @@ today and what is known to fail.
+ | Operator CLI (DEV-102, open) | Admin sessions, node and agent pacing maintenance, deployment lifecycle, resumable model import, exporter tasks, gateway registration and alias cutovers, scoped audit reads, sparse fleet history and paginated training attempts, metrics, checkpoints and recovery history. Output supports tables, JSON and YAML | Disconnected Admin TLS and PostgreSQL verified authorization, workspace isolation, stale revisions and recovery from lost write replies. The model verifier published a resumed Qwen3-0.6B import. The component fixture used both pinned archives and real VictoriaLogs with synthetic Agent reports. The native fleet history fixture preserved raw/rollup grids and sparse zero and verified session revocation, failed-tier retry and request-bound audits. The training fixture read attempt and metric pages, synthetic checkpoint metadata and actual recovery history, and refused cursors after role or session revocation. [CLI verification](../research/cli.md), [cutovers](../research/gateway-cutover-preview.md#admin-cli-dev-102) | No | Installed exporter lifecycle verification waits for FLT-109. The broader common-operation set remains open |
+ | Fleet history API publication (DEV-101, OBS-109, open) | Registered scoped Admin history read with matching OpenAPI, Go/Python SDK and Help projections, protected store policy and bilingual recovery details | Linux amd64 loopback TLS, CSRF/login/cookies, PostgreSQL and native raw/rollup stores exercised scope, Workspace/Logout revocation, request-bound audits, the complete response cap, failed tiers, retry and certificate replacement. All 28 public SDK domain clients generated offline and their wire checks passed. See [contract acceptance](../research/public-api-inventory.md#obs-109-fleet-history-publication-boundary) | No | Installed retention delivery, trust-update acceptance and the Console history view remain open |
+ | Authenticated fleet history module entry (OBS-109, open) | Registered Admin route with coordinated public API publication. The original identity dispatcher supplies cell scope, session, Origin and deadline; native stores supply raw or rollup data | Linux amd64 source 93f9ed8b with schema/Problems 9a56176e passed the raced small TLS/CSRF/login/issued-cookie/PostgreSQL/dual-VictoriaMetrics/vmalert profile. It verified sparse zero, empty data, cross-scope refusal, Workspace and Logout revocation during query, the complete response cap, failed or unconfigured tiers, no raw fallback, retry and per-request audit. The separate private-store TLS rotation profile passed on the same source. All fixture processes and containers stopped. [Evidence](../research/telemetry-retention-tiers.md#verified-authenticated-module-entry) | No | Public operation, SDK, Help and bilingual errors are coordinated with DEV/Web; installed delivery and Console remain open |
++| Audit-read commit outcome contract (DEV-101, AUD-108, open) | Local candidate declares the existing 409 Problem and generates a dedicated single-request Go transport for listAuditEvents; action enum and event projection are unchanged | Native Linux amd64 Go 1.27.3 passed ten raced protocol groups and six subtests with zero skips on frozen fixture 783567ea / transport 1e8f1fad. The composition on main 9975d769 passed 32 targeted checks and both private Web generators/checks; only the explicit 409 binding raises a source-review finding. [Exact transport scope](../research/public-api-inventory.md#native-linux-audit-transport-qualification) and [composition boundary](../research/public-api-inventory.md#composition-with-current-public-metadata-tooling) | No installed acceptance from this SDK run; actual scoped SQL and scripted Web recovery have separate owner evidence on main | Product generation for the five-file metadata relay and the actual integrated check/build/test remain pending. The independent history codecs did not start after the I/O gate refused; both locks and all owned resources were released. Main e9186ade/124520b9 qualifies explicit Web recovery and dc7feaf1 pairs the scoped writer. audit.events_read remains outside the server exact-action whitelist; category=audit stays valid |
+ | Generated Go and Python SDKs (DEV-103) | Yes, generated from the currently published public API domains | Two offline generations were identical. Both clients logged in, read a node and logged out against Admin TLS and PostgreSQL 18 without an external route. Wire tests covered binary upload and Python streaming, cancellation and failure. A Linux amd64 refresh generated all 28 domain clients offline and decoded five native monitoring transaction refusals through controlled HTTPX replies. See [SDK verification](../research/sdk.md#integration-evidence) | No | Public API coverage of the remaining product work is tracked in DEV-101 |
++| Offline public API compatibility review (DEV-204, open) | Local candidate extends operation and named-response checks with declared closed response object shapes | Linux offline targeted tests passed: nine shape cases, six named-model cases and seven inventory cases. The model-history revision-A old-field change is reported; revision B preserves its existing read shapes. Static inventory covered 430 public operations with no declaration conflicts. [Scope and evidence](../research/public-api-versioning.md#closed-response-object-shape-review) | No | The complete offline make test-tools target now passes all 13 layout and 57 SDK/tooling cases using the prepared pinned Node cache. Full check/build/test and main publication remain pending; a fresh-worktree dependency failure is retained separately. Release baselines, general directional Schema compatibility and runtime deprecation signaling remain open |
+ | Agent call cost rule: every call declares its server cost, a test measures every call on PostgreSQL on a small and a large fleet and fails on growth, a missing index or an exclusive lock on a row the fleet shares; agent calls lock only their own node and enrollment reads a counter (ADR 0020) | Yes, PostgreSQL only; node and training paths measured, the other operations in ARC-108 | Yes: 16 exchanges of all ten calls over real HTTPS on 50 and 3,000 nodes; with either fix undone the test fails. Load at fleet scale is ARC-015 | No | None |
+ | Liveness outside the database: a heartbeat that repeats the last written state runs one read, a worker writes last-seen times and the latest reports in batches, connectivity changes are stored with their time, NATS JetStream shares sightings between gateways (ADR 0022) | Yes, PostgreSQL only; the installer does not deploy the replicated store until REL-101 | Yes: real install with one real agent; replicated store on three real NATS servers with one stopped. Fleet load is ARC-015 | No | None |
+ | Task wakes through a transactional outbox: a task written on one gateway wakes a claim held on another after commit, read in batches below the oldest running transaction; expired tasks of silent nodes swept every 30 seconds (ADR 0028) | Yes, PostgreSQL only; other chains wake on one process until CMP-201 and CMP-202 | Yes: real install with one real agent; two services on one database in tests, and tasks woke claims held on two gateway processes in `TestAgentGateways` (ARC-102). Dispatch at load is ARC-015 | No | None |
+diff --git a/docs/research/public-api-inventory.md b/docs/research/public-api-inventory.md
+index 1c26cd29..ef4815de 100644
+--- a/docs/research/public-api-inventory.md
++++ b/docs/research/public-api-inventory.md
+@@ -718,3 +718,252 @@ exact Owns/Handle dispatch with the operation and reviewed locale files.
+ The existing protected monitoring policy supplies store origins and
+ retention settings. Installed retention delivery, trust distribution and
+ the Console history view remain with their owning modules.
++
++## Identity audit-read commit outcome (DEV-101 / AUD-108)
++
++Reviewed 2026-11-13 against identity runtime fcbb839a, its qualification in
++[identity audit-read access](identity-audit-read-access.md#qualification), and
++current main 8b17a295. The actual GET /api/v1/admin/audit-events reads its
++bounded page and appends audit.events_read in the same transaction. The shared
++Problem registry already maps STORAGE_COMMIT_OUTCOME_UNKNOWN to HTTP 409 and
++the Identity Problem enum already includes it. The operation lacks its explicit
++409 response and x-error-codes entry; reuse that existing Problem without a
++new error code, endpoint, receipt store or response field.
++
++[RFC 9110 safe methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.1)
++allows incidental request logging, while its
++[retry rules](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2)
++do not establish whether this particular access audit committed. A 409 or lost
++reply must not produce successful data or an automatic second access append.
++A deliberate later read is a new audited operation, not a replay or a rollback
++claim. Keep the same filters, cursor and representation when retrying. Preserve
++the earlier request ID for diagnosis rather than inventing an idempotency key.
++Read the page before its access event is appended, so the page cannot contain
++that same read's event.
++
++The current server auditActions whitelist does not include audit.events_read.
++Do not add it to the exact-action OpenAPI enum. category=audit already selects
++the family. The IAM owner must first admit and qualify the exact action before
++DEV can publish that enum value. Keep the thirteen standard response fields and
++the existing optional verified assistant pair unchanged.
++
++Add a per-operation cursor description so the current Help parameter projection
++can carry the recovery semantics. Operation descriptions are retained in the
++served OpenAPI but are not shown in today's Help operation summary. Web owns
++the required Simplified Chinese description and generated Web/Help files;
++prepare their exact inputs without editing that lane's source or locales.
++
++[Go Transport](https://pkg.go.dev/net/http#Transport) can transparently replay
++an eligible GET after a network error on a reused connection. The generated
++Go dispatch now uses an isolated single-use transport for this audited read;
++callers must disable any application/proxy retry policy. Python callers must also keep transport retries
++disabled. Merely calling GET does not establish one access append. Controlled
++409 codec tests prove one generated call and explicit retry; they do not
++qualify arbitrary caller transports, real commit faults or installed services.
++
++No dependency, model or dataset is added. The existing SDK generator/runtime
++licences in [sdk.md](sdk.md#licenses) permit commercial, redistribution and
++offline use with their existing notices; Go is BSD-3-Clause and HTTPX is BSD-3-Clause.
++Standards and upstream documentation are design references, not embedded code.
++
++Verify the explicit 409 mapping in the raw and projected contract, the unchanged
++Problem/standard fields and assistant pair, exact-action parity with the actual
++server whitelist, Help's recovery description and error metadata, and generated
++Go/Python 409 decoding without automatic retry. Explicit re-read must be a new
++call with the original selection. Retain the IAM owner's actual PostgreSQL and
++wire-fault qualification separately; none is rerun or inferred from codec tests.
++Public generation and whole-repository gates remain required before publication.
++
++The explicit 409 response creates a status-specific Go Problem accessor after
++SDK regeneration. Existing wire clients still receive the same Problem shape,
++but regenerated Go consumers must use GetApplicationproblemJSON409 rather than
++assuming every unspecified error uses the default accessor. Python retains its
++existing Problem model. Keep this source-review distinction visible; declaring
++the already-existing runtime status does not prove every consumer is unchanged.
++
++Ten lightweight Linux contract regressions passed in a network namespace
++without external networking: five audited-read cases, the existing assistant
++projection case and four existing browser-session cases. Pinned offline
++identity generation at metadata-only input 2426699b preserved all 25 public
++operations and produced 121 Go and Python files. Six controlled Python sync/async wire cases passed, including
++explicit 409 decoding, a new deliberate read after 409, unchanged selection,
++transport failure and permission refusal without an automatic extra call.
++
++A private filesystem projection, using the actual generators and cached pinned
++Node dependencies, produced all 29 Web contract types and 144 Help files. Both
++generator --check commands passed there. Only five Web paths differ from the
++baseline: Identity types, the Admin Help summary and raw contract, and the source
++and generated Chinese description catalogues. Admin Help retains the 409 and
++recovery description; Portal excludes the Admin operation. Product Web files
++were not edited. The Web owner must apply that relay and run product generation
++before this contract candidate can be published.
++
++The source comparison reports no operation-identity or closed-object changes.
++Its single named-response review signal is the added explicit 409 binding.
++All component definitions are unchanged. The metadata-only input's four private
++Go wire cases were not compiled: their nonblocking Linux admission exited 75.
++The SDK correction below supersedes that fixture with ten canonical protocol
++groups, now qualified on native Linux amd64 as described below. Whole repository
++gates and actual installed qualification remain separate; the CLI b967d7c8 gate
++is unchanged.
++
++### Browser consumer retry boundary
++
++Static review of main 726f2149 found a separate Web consumer gap, since fixed
++by the Web owner in e9186ade with the complete gate recorded at 124520b9.
++The shared [query client](../../web/packages/shell/src/session.ts) retries
++ApiProblems while failures is below two and retryable is true. The
++[problem classifier](../../web/packages/api/src/problem.ts) makes status-zero
++network and timeout failures retryable, and the
++[transport](../../web/packages/api/src/transport.ts) produces those failures
++when a reply is lost. Both the [audit page](../../web/apps/console/src/audit-page.tsx)
++and [resource activity](../../web/apps/console/src/resource-page.tsx) use
++listAuditEvents without a local retry override. This path can issue additional
++audited reads automatically after an uncertain reply. A 409 itself is outside
++the current retryable status set. No browser or SQL reproduction is claimed
++for this static review.
++
++The owner now scopes explicit retry and refetch behavior to both audit consumers,
++including initial and continuation recovery, uncertain replies, denied caches,
++reader/scope separation, focus, reconnect, invalidation and remount. Its built-in
++Help article explains the same recovery in both languages. The complete Web gate
++at c70e9f59 passed 1,191 Console and 410 Portal cases, with 28 and 10 existing
++conditional skips. The failing old six-request controls and corrected no-data
++invalidation failure remain separate evidence. See the owner's
++[explicit recovery and complete gate](identity-audit-read-access.md#explicit-web-read-recovery).
++These are owner-qualified scripted Web results, not a DEV installed or SQL run.
++The generated five-file public metadata relay remains a separate required change;
++the earlier two-consumer prototype patch is superseded and must not be applied.
++
++### Generated Go transport correction
++
++The standard shared Go transport can retry an eligible GET on a connection
++that was used before. Documentation alone leaves that SDK-owned default unsafe
++for an audited read whose reply was lost. Use the pinned generator's existing
++postprocessing boundary for only Identity listAuditEvents at its existing path.
++Emit a small private method with the generated Identity package. It clones a
++standard http.Transport for one HTTP/1 call, disables connection reuse, refuses
++redirects and retains the configured TLS trust/client certificate, cookie jar
++and timeout. It does not catch a failed call or issue a second request.
++
++[Go 1.27.3 Transport.Clone](https://pkg.go.dev/net/http@go1.27.3#Transport.Clone)
++keeps configuration separate from connection reuse; the
++[Client redirect contract](https://pkg.go.dev/net/http@go1.27.3#Client)
++allows the original redirect response to be returned without following it.
++Require an ordinary http.Client with a standard transport for this operation;
++a custom request executor or transport can hide its own retries, so reject it
++before dispatch with an actionable configuration error. Other operations retain
++their configured request executor. HTTP/1 admission is explicit for this read.
++No TLS verification, actor, scope or audit policy becomes optional.
++
++Reject generated output that no longer has the pinned method/dispatch shape,
++and reject an unnoticed operation rename, route move or domain move. A general retry
++framework, empty-body tricks and mutating a shared transport are not selected.
++Pinned [HTTPX 0.28.1](https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py)
++defaults to zero connection retries; its generated Python
++operation has no failure/retry loop. Keep that behavior and test both sync and
++async calls, including a lost reply and an explicit second read.
++
++Tests must cover the actual generated Go operation with a primed shared-client
++control, lost response, explicit 409, explicit retry, preserved TLS/cookie trust,
++redirect refusal, unsupported request executors and concurrent independent calls.
++Within those ten protocol test groups, retain consecutive lost replies across
++separate deliberate calls and caller cancellation before and during dispatch.
++[Go request context](https://pkg.go.dev/net/http@go1.27.3#Request.WithContext)
++controls connection establishment, sending and response reads. Check cancellation
++with the generated operation and an actual waiting HTTP handler, then show that
++only a new uncancelled call can dispatch again. Cancellation or timeout cannot
++establish whether an earlier server access was recorded.
++Use the existing SDK wire runner; no new service or qualification framework is
++needed. Generator unit/projection checks can run independently of Go compilation.
++No dependency, model, dataset or third-party implementation is added; existing
++Go BSD-3-Clause and SDK generator/runtime notice obligations remain unchanged.
++
++With no external network, 58 SDK tooling tests, 13 layout tests, the layout and
++roadmap checks passed. The pinned one-domain generation still has 25 public
++operations and now has 122 files: only the Go dispatch changed and its one
++helper was added; all 118 Python output files are byte-identical to the
++metadata-only generation. Gofmt reports no diff in the helper and ten-case Go
++fixture. Eight controlled Python scenarios pass across sync/async,
++standard/assistant and 409/lost-response cases, each followed by one explicit
++new call. These exercise generated Python dispatch with MockTransport, not a
++real server or PostgreSQL.
++
++### Native Linux audit transport qualification
++
++Frozen fixture source 783567ea4a2e19f3b2f7ca065d47dfe59886633e and transport
++source 1e8f1fadf8caff8d7b9ac771cd91641ba19d4287 passed all ten top-level
++protocol groups and all six subtests, with zero skips and exit 0. The generated
++Identity client ran over loopback HTTP/TLS with Go 1.27.3 linux/amd64,
++`-race -count=1 -p=2 -mod=readonly -timeout=90s`. Its network namespace had
++only loopback; module and checksum downloads were disabled. This covers the
++shared GET positive replay control, repeated lost audit replies, separate
++manual calls, 409, client timeout, caller cancellation, CA/cookie preservation,
++redirect refusal, unsupported executors and concurrent calls. It does not
++exercise the Control dispatcher, PostgreSQL or an installed user flow.
++
++The two-group parent exited 1 after 49.817 seconds because the resource check
++before the independent model-history codec group observed I/O full avg10
++27.29, above its maximum 5. That second group never started: its actual root
++count is zero, with no test exit or skip. The audit group remains a qualified
++pass; the combined segment is not a pass. No admission retry was attempted.
++Both inherited lock descriptors closed, their original carriers remained,
++the temporary directory was removed and a separate observation found neither
++the parent nor its child process group. The earlier Mac wait remains exit 75
++with zero Go roots; it is not native Linux evidence.
++
++The private evidence on ownsolid-cpu is
++`/root/lane-rel-tools/identity-audit-contract/go-native-linux-proof.json`
++(SHA-256 `cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1`)
++and `go-wire-native-linux.log`
++(SHA-256 `f391f6191c1293348969b862e005b7126f4245a300000d978276ef027e985d15`).
++The audit fixture SHA-256 is
++`6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821`.
++All 122 generated audit SDK files and all 81 independent history SDK files
++were verified before execution and after release; their hashes are unchanged.
++Whole repository check/build/test, product generation and Web/installed
++qualification remain open. No roadmap box is ticked by this transport run.
++
++### Composition with current public metadata tooling
++
++The audit candidate and DEV-204 closed-object review tooling were rebased and
++composed on main 9975d769 in input 4b1e5c99. The audit contract, SDK generator,
++Go helper and actual native wire fixture are byte-identical to the qualified
++783567ea input. Its Linux ten-root transport result remains bound to that
++original source; no native Go rerun or second resource admission was attempted.
++The Models contract still has SHA-256
++`7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc`;
++the private Model history draft and its unexecuted codecs are not composed here.
++
++Thirty-two targeted contract/generator/inventory tests passed on the composition.
++The actual 430-operation comparison against main 9975d769 has no declaration
++conflicts, operation identity changes or closed-object shape findings. Its one
++named-response review finding is the explicit 409 shared Problem binding for
++listAuditEvents. The generated Go 409 accessor change is intentional and
++documented in the SDK README; it must not be reported as a general compatibility
++pass or silently removed from the review report.
++
++A separate private projection used the current main Help articles and pinned
++parser dependencies. Both actual Web generators and both checks passed: 30
++TypeScript and 144 Help files. Exactly the original five generated/locale paths
++change; the updated relay patch SHA-256 is
++`a3def1685309d4a7609274852cbc17f0904f9477a8edcaa9d016b4ced085dea9`.
++No product Web file was changed. The owner must land that metadata generation
++before the new OpenAPI can pass the repository's generated-output gate.
++This projection does not qualify the separate shared Help URL assertion.
++
++Required remaining gates are the five-file product generation handoff and a
++complete check/build/test on their actual integrated source after the shared
++Help URL fix. CLI b967d7c8 whole make test and installed AUD-108 acceptance
++remain distinct. Existing native audit transport and owner Web recovery results
++cannot substitute for those gates. No roadmap checkbox moves here.
++
++SCI 8531226d supplies WriteScopedWithin for a caller-owned PostgreSQL transaction
++and performs no commit or retry itself. Main now pairs the actual workspace Go
++consumer with that writer; the owner's dc7feaf1 qualification covers exact scope,
++append refusal, cancellation and both real COMMIT wire-loss modes. The published
++installation-wide HTTP view still uses WriteWithin and gains no workspace query
++or route. These are owner-qualified SQL results, not this SDK's transport run.
++The current server exact-action whitelist still excludes audit.events_read;
++retain category=audit and do not extend that enumeration or change the thirteen
++standard response fields.
+diff --git a/docs/research/public-api-versioning.md b/docs/research/public-api-versioning.md
+index 96cc5cdb..d775391e 100644
+--- a/docs/research/public-api-versioning.md
++++ b/docs/research/public-api-versioning.md
+@@ -14,8 +14,8 @@ snapshot as well as handler and SDK tests.
+ Compare the audit's per-domain, per-audience operations against a
+ local baseline. Detect removed operation identities, audience removal
+ and operation ID changes, while accepting additional operations.
+-Keep the analysis bounded to operation identities and the named response
+-model references below. Full schema compatibility
++Keep the analysis bounded to operation identities, named response model
++references and closed response object shapes below. Full schema compatibility
+ needs direction-aware JSON Schema checks, and behavior needs real server
+ tests. A general diff such as [oasdiff](https://www.oasdiff.com/docs/breaking-changes)
+ can support deeper review, but introducing it solely for this check adds
+@@ -72,3 +72,59 @@ references. Run the audit offline against the actual GW-104 candidate and
+ its local published baseline. Keep DEV-204 open: release-baseline selection,
+ general directional schema compatibility and runtime deprecation signaling
+ still require their owning release and server paths.
++
++## Closed response object shape review
++
++The MOD-103 family-history prototype exposed a gap in the named-model check:
++adding family_id to the existing closed AdminModelDetail keeps its component
++name but gives old strict-schema consumers a field their schema rejects.
++The [JSON Schema object reference](https://json-schema.org/understanding-json-schema/reference/object#additionalproperties)
++defines additionalProperties=false, and the [required keyword](https://json-schema.org/understanding-json-schema/reference/object#required)
++distinguishes an optional field from an always-present field. The existing
++AIP-180 distinction between source, wire and semantic compatibility still
++applies; generated SDK source can change even when some decoders tolerate a
++wire change.
++
++Extend the existing offline response traversal with a small shape inventory:
++property names, required names and whether each reachable object is closed.
++Keep stable document-local reference locations and escaped inline JSON pointers,
++with the existing visited-reference guard. Compare an existing operation only
++when domain, method, path, audience and operation ID match. A changed or removed
++shape involving a previously or currently closed object requires review.
++Keep the named-model signal independently: changing a reference and changing
++the fields of the same reference are separate cases.
++
++This is a review signal, not a directional Schema-subset proof. A narrower
++response can still change a generated source type. Numeric/string constraints,
++property value schemas, requests, effective composition and runtime behavior
++remain outside this shape comparison. In particular, unchanged shape names do
++not establish compatibility. Do not solve arbitrary JSON Schema implication
++or add a second diff dependency for this focused regression.
++
++Tests must cover a newly optional field on a closed response, field removal,
++required-name changes, opening/closing an object, inline array items, recursive
++and escaped references, status/media separation and both audiences. Annotation
++and key/required ordering must be inert. Unchanged objects and new operations
++must not acquire findings. Retain invalid/local-reference refusal and existing
++named-model checks, and compare the actual isolated model-history revisions:
++revision A changes old closed metadata, while revision B leaves it unchanged.
++No dependency, model, dataset or third-party source is added. The existing
++Python PSF licence permits commercial and offline use and redistribution under
++its terms. DEV-204 remains open for release baselines, complete directional
++Schema review and runtime deprecation signaling.
++
++The targeted Linux tests passed in a network namespace without an external
++interface: nine shape cases, six named-model cases and seven inventory cases.
++The actual revision-A prototype produced one old AdminModelDetail field-shape
++finding while retaining its named response binding. Revision B produced no
++shape or named-model findings for its existing same-identity reads. The current
++430-operation inventory had no declaration conflicts, and self-comparison was
++empty. These results do not qualify the prototypes' new routes or missing
++non-prototype operations. Layout, roadmap and diff checks also passed. The
++complete offline make test-tools target also passed on Linux: 13 layout tests
++and all 57 SDK/tooling cases. It reused prepared pinned Node parser dependencies
++through a read-only cache path in an isolated network namespace. No assertion,
++case or expected result changed. A fresh worktree needs those Web dependencies
++before its Help projection cases; the first full-check attempt stopped at that
++missing prerequisite and its failed log is retained. Whole repository
++checks/build/test remain a separate publication boundary for this candidate.
+diff --git a/tools/codegen/sdk/README.md b/tools/codegen/sdk/README.md
+index 4a48568b..911a316d 100644
+--- a/tools/codegen/sdk/README.md
++++ b/tools/codegen/sdk/README.md
+@@ -93,6 +93,33 @@ with httpx.Client(
+     print(response.status_code)
+ ```
+ 
++## Read the audit log deliberately
++
++listAuditEvents records access before releasing its page. A 409
++STORAGE_COMMIT_OUTCOME_UNKNOWN or a lost response leaves that access audit
++uncertain. Do not automatically retry the read. An explicit retry with the same
++filters, cursor and X-Ownsolid-Audit-Actor preference records a new access; it
++neither replays the earlier operation nor proves that its audit was rolled back.
++Keep the earlier request ID for diagnosis. Use category=audit for audit-family
++events; exact action accepts only the published enumeration.
++
++The generated Go method requires a standard *http.Client with a standard
++*http.Transport (or its default). It clones that transport for one HTTP/1
++request, disables connection reuse and refuses redirects. Installation CA/client
++certificate configuration, the cookie jar and client timeout are retained;
++the caller's shared client is unchanged. A general shared Go transport can
++transparently replay an eligible GET after a network error on a reused
++connection. Custom request executors and transports are rejected before this
++read because their retry behavior cannot be inspected. Other operations keep
++their configured executor. Disable application, proxy and load-balancer retries
++for this path. Python's default HTTPX transport has zero connection retries;
++retain retries=0, verified TLS, trust_env=False and follow_redirects=False when
++configuring a transport. Keep any external retry wrapper disabled. Neither
++generated client's 409 decoder starts a retry.
++After regeneration, Go callers handle this status with
++GetApplicationproblemJSON409(); it is no longer decoded through the default
++Problem accessor. Python keeps the existing Problem model.
++
+ ## Stream and download responses
+ 
+ For model gateway chat with `stream=True`, use the raw response adapter. It
+@@ -114,13 +141,25 @@ client. For downloads, read `iter_bytes()` after checking the status and
+ media type. In Go, use the generated method without the `WithResponse`
+ suffix to read or close the HTTP response body directly.
+ 
++The Help projection tests also need the locked Web parser dependencies. In a
++new worktree, prepare them from the local pnpm store first:
++
++```sh
++(cd web && pnpm install --offline --frozen-lockfile --ignore-scripts)
++```
++
+ Run the projection checks with
+ `python3 -m unittest discover -s tools/codegen/sdk/tests`. With the SDK runtime
+ environment installed, run
+ `python tools/codegen/sdk/tests/wire_smoke.py "$SDK_DIR"` for the Go and Python
+ loopback checks. They exercise login, cookie reuse, typed node lists and a
+ binary dataset request with its declared media type. The same test verifies
+-Python streaming response ownership and error bodies.
++Python streaming response ownership and error bodies. Audit-read checks exercise
++Go's shared-connection replay control, lost replies, explicit retry, 409,
++TLS/cookies, timeouts, redirects, custom-executor refusal and concurrency.
++Python checks both sync and async audit reads after 409 or a lost reply with
++standard and assistant representations. These loopback/controlled-transport
++checks do not qualify server authorization, SQL commits or a browser flow.
+ 
+ ## Audit the public operation inventory
+ 
+@@ -130,8 +169,12 @@ IDs within a document, and duplicate method and path declarations in the
+ same audience. Exit 1 reports findings and exit 2 indicates unreadable or
+ invalid input. The audit runs from local files and uses the same audience
+ rules as SDK generation. With `--baseline`, it also reports named response
+-model reference changes for source review. These findings can describe a
+-wire-compatible change that still changes generated return types. The
+-comparison does not establish general schema or behavior compatibility.
++model reference changes and closed response object shape changes for review.
++The shape inventory records property names, required names and closure at local
++schema pointers. It catches a new optional field in an existing closed model,
++which named references alone cannot reveal. These findings can also describe a
++wire-compatible change that changes generated source types. Property value
++constraints, requests and effective composition remain outside this check;
++an empty finding list does not establish general schema or behavior compatibility.
+ It measures the published contracts. Verification
+ against running handlers remains the responsibility of each API owner.
+diff --git a/tools/codegen/sdk/audit.py b/tools/codegen/sdk/audit.py
+index 15c1e91a..2593994a 100644
+--- a/tools/codegen/sdk/audit.py
++++ b/tools/codegen/sdk/audit.py
+@@ -9,9 +9,23 @@ import re
+ from generate import CONTRACTS, METHODS, public_audiences, public_sources, read_contract
+ 
+ 
++def response_object_shape(schema):
++    """Return the declared object names and closure, independently of value constraints."""
++    object_keys = ("properties", "required", "additionalProperties")
++    if not any(key in schema for key in object_keys) and schema.get("type") != "object":
++        return None
++    properties, required = schema.get("properties", {}), schema.get("required", [])
++    if (not isinstance(properties, dict) or not isinstance(required, list)
++            or any(not isinstance(name, str) for name in required)):
++        raise ValueError("response object properties and required names must be valid")
++    return {
++        "properties": sorted(properties), "required": sorted(set(required)),
++        "closed": schema.get("additionalProperties") is False,
++    }
+ 
+-def response_models(document, operation):
+-    """Collect local named schema references for each typed response body."""
++
++def response_surface(document, operation):
++    """Collect named models and object shapes for each local response schema."""
+     def resolve(reference):
+         if not isinstance(reference, str) or not reference.startswith("#/"):
+             raise ValueError("response references must use local JSON pointers")
+@@ -23,7 +37,7 @@ def response_models(document, operation):
+             raise ValueError("response reference does not resolve in the local contract") from exc
+         return value
+ 
+-    result = {}
++    models, shapes = {}, {}
+     responses = operation.get("responses", {})
+     if not isinstance(responses, dict):
+         raise ValueError("responses must be an object")
+@@ -43,13 +57,16 @@ def response_models(document, operation):
+         for media_type, content in sorted(content_types.items()):
+             if not isinstance(content, dict):
+                 raise ValueError("response media type must be an object")
+-            references, seen = set(), set()
++            references, seen, objects = set(), set(), {}
+ 
+-            def visit(value):
++            def visit(value, location):
+                 if isinstance(value, list):
+-                    for item in value:
+-                        visit(item)
++                    for index, item in enumerate(value):
++                        visit(item, f"{location}/{index}")
+                 elif isinstance(value, dict):
++                    shape = response_object_shape(value)
++                    if shape is not None:
++                        objects[location] = shape
+                     if "$ref" in value:
+                         reference = value["$ref"]
+                         if not isinstance(reference, str):
+@@ -58,27 +75,35 @@ def response_models(document, operation):
+                             references.add(reference)
+                         if reference not in seen:
+                             seen.add(reference)
+-                            visit(resolve(reference))
++                            visit(resolve(reference), reference)
+                     # Annotation payloads such as examples can contain literal
+                     # "$ref" fields. Only schema-bearing keywords form type edges.
+                     for keyword in ("allOf", "anyOf", "oneOf", "prefixItems"):
+-                        visit(value.get(keyword))
++                        visit(value.get(keyword), f"{location}/{keyword}")
+                     for keyword in ("items", "contains", "not", "if", "then", "else",
+                                     "additionalProperties", "unevaluatedProperties",
+                                     "additionalItems", "unevaluatedItems", "propertyNames",
+                                     "contentSchema"):
+-                        visit(value.get(keyword))
++                        visit(value.get(keyword), f"{location}/{keyword}")
+                     for keyword in ("properties", "patternProperties", "dependentSchemas",
+                                     "dependencies"):
+                         children = value.get(keyword, {})
+                         if isinstance(children, dict):
+-                            for child in children.values():
+-                                visit(child)
++                            for name, child in sorted(children.items()):
++                                escaped = name.replace("~", "~0").replace("/", "~1")
++                                visit(child, f"{location}/{keyword}/{escaped}")
+ 
+-            visit(content.get("schema"))
++            visit(content.get("schema"), "#")
+             if references:
+-                result[f"{status} {media_type}"] = sorted(references)
+-    return result
++                models[f"{status} {media_type}"] = sorted(references)
++            if objects:
++                shapes[f"{status} {media_type}"] = dict(sorted(objects.items()))
++    return models, shapes
++
++
++def response_models(document, operation):
++    """Collect local named schema references for each typed response body."""
++    return response_surface(document, operation)[0]
+ 
+ 
+ def inventory(contracts):
+@@ -98,12 +123,13 @@ def inventory(contracts):
+                     operation_ids[(domain, operation_id)].append((method.upper(), path, audiences))
+                 if not audiences:
+                     continue
++                models, shapes = response_surface(document, operation)
+                 row = {
+                     "domain": domain, "method": method.upper(), "path": path, "audiences": audiences,
+                     "operation_id": operation_id, "summary": bool(operation.get("summary")),
+                     "description": bool(operation.get("description")),
+                     "deprecated": operation.get("deprecated", False) is True,
+-                    "response_models": response_models(document, operation),
++                    "response_models": models, "response_objects": shapes,
+                 }
+                 operations.append(row)
+                 if not isinstance(operation_id, str) or not operation_id.strip():
+@@ -177,6 +203,37 @@ def compare_response_models(baseline, current):
+     return findings
+ 
+ 
++def compare_response_objects(baseline, current):
++    """Flag closed response object shape changes without claiming wire safety."""
++    current_operations = {
++        (op["domain"], op["method"], op["path"], audience): op
++        for op in current["operations"] for audience in op["audiences"]
++    }
++    findings = []
++    for previous in baseline["operations"]:
++        for audience in previous["audiences"]:
++            key = previous["domain"], previous["method"], previous["path"], audience
++            candidate = current_operations.get(key)
++            if candidate is None or candidate["operation_id"] != previous["operation_id"]:
++                continue
++            before = previous.get("response_objects", {})
++            after = candidate.get("response_objects", {})
++            for body in sorted(before):
++                for location, old_shape in sorted(before[body].items()):
++                    new_shape = after.get(body, {}).get(location)
++                    was_or_is_closed = old_shape["closed"] or new_shape is not None and new_shape["closed"]
++                    if old_shape != new_shape and was_or_is_closed:
++                        findings.append({
++                            "code": "PUBLIC_RESPONSE_OBJECT_SHAPE_CHANGED",
++                            "domain": previous["domain"], "method": previous["method"],
++                            "path": previous["path"], "audience": audience,
++                            "operation_id": previous["operation_id"],
++                            "response": body, "schema_location": location,
++                            "previous_shape": old_shape, "current_shape": new_shape,
++                        })
++    return findings
++
++
+ def main():
+     """Print a deterministic report and fail when the audit finds conflicts."""
+     parser = argparse.ArgumentParser(description=__doc__)
+@@ -191,6 +248,7 @@ def main():
+             previous = inventory(args.baseline)
+             report["compatibility_findings"] = (
+                 compare_operations(previous, report) + compare_response_models(previous, report)
++                + compare_response_objects(previous, report)
+             )
+     except (ValueError, KeyError, TypeError, OSError) as exc:
+         parser.exit(2, f"OpenAPI audit failed: {exc}\n")
+diff --git a/tools/codegen/sdk/generate.py b/tools/codegen/sdk/generate.py
+index 37192b72..54d356f5 100644
+--- a/tools/codegen/sdk/generate.py
++++ b/tools/codegen/sdk/generate.py
+@@ -146,6 +146,25 @@ def serialize_python_uuid_headers(source):
+                 lines[index] = (line[:start] + b"str(" + line[start:end] + b")" + line[end:]).decode("utf-8")
+     return "".join(lines)
+ 
++def guard_go_audit_read(source):
++    """Replace only the pinned audit-read dispatch, refusing an unreviewed generator shape."""
++    matches = list(re.finditer(r"^func \(c \*Client\) ListAuditEvents\(", source, re.MULTILINE))
++    if len(matches) != 1:
++        raise ValueError("expected one generated ListAuditEvents method; review the pinned Go generator")
++    start = matches[0].start()
++    end = source.find("\n}", start)
++    if end < 0:
++        raise ValueError("generated ListAuditEvents method is incomplete")
++    end += 2
++    method = source[start:end]
++    ordinary, guarded = "\treturn c.Client.Do(req)\n", "\treturn c.doAuditedRead(req)\n"
++    if method.count(guarded) == 1 and ordinary not in method:
++        return source
++    if method.count(ordinary) != 1 or guarded in method:
++        raise ValueError("generated ListAuditEvents dispatch changed; review audit-read transport protection")
++    return source[:start] + method.replace(ordinary, guarded) + source[end:]
++
++
+ def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
+     """Generate both clients from the same projected contract."""
+     domain = source.parent.name.replace("-", "_")
+@@ -155,6 +174,16 @@ def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
+     contract = project_contract(document)
+     if not contract["paths"]:
+         return False
++    audited_read = contract["paths"].get("/api/v1/admin/audit-events", {}).get("get")
++    named_reads = [(path, method) for path, item in contract["paths"].items()
++                   for method, operation in item.items() if method in METHODS
++                   and operation.get("operationId") == "listAuditEvents"]
++    if (audited_read is not None or named_reads) and (
++        domain != "identity" or audited_read is None
++        or audited_read.get("operationId") != "listAuditEvents"
++        or named_reads != [("/api/v1/admin/audit-events", "get")]
++    ):
++        raise ValueError("the published audit read moved or was renamed; review its SDK transport protection")
+     local_contract = temp / f"{domain}.json"
+     local_contract.write_text(json.dumps(contract, sort_keys=True), encoding="utf-8")
+ 
+@@ -169,6 +198,10 @@ def generate_domain(source, temp, go_root, python_root, go_tool, python_tool):
+     with (go_out / "client.gen.go").open("wb") as output:
+         subprocess.run([go_tool, "-config", str(go_config), str(local_contract)],
+                        check=True, stdout=output)
++    if audited_read is not None:
++        client = go_out / "client.gen.go"
++        client.write_text(guard_go_audit_read(client.read_text(encoding="utf-8")), encoding="utf-8")
++        shutil.copyfile(TEMPLATES / "audit_read.go.template", go_out / "audit_read.gen.go")
+     python_out = python_root / domain
+     subprocess.run([
+         python_tool, "generate", "--path", str(local_contract), "--meta", "none",
+diff --git a/tools/codegen/sdk/templates/audit_read.go.template b/tools/codegen/sdk/templates/audit_read.go.template
+new file mode 100644
+index 00000000..3d9168cb
+--- /dev/null
++++ b/tools/codegen/sdk/templates/audit_read.go.template
+@@ -0,0 +1,45 @@
++// Code generated by ownsolid SDK generation. DO NOT EDIT.
++
++package identity
++
++import (
++	"errors"
++	"net/http"
++)
++
++// doAuditedRead prevents a lost reply from being replayed on a reused connection.
++// The caller's ordinary HTTP client remains available to other operations.
++func (c *Client) doAuditedRead(req *http.Request) (*http.Response, error) {
++	client, ok := c.Client.(*http.Client)
++	if !ok || client == nil {
++		return nil, errors.New("audit reads require a standard *http.Client; configure its verified installation transport and cookie jar")
++	}
++	configured := client.Transport
++	if configured == nil {
++		configured = http.DefaultTransport
++	}
++	transport, ok := configured.(*http.Transport)
++	if !ok || transport == nil {
++		return nil, errors.New("audit reads require a standard *http.Transport; custom transports can hide retries")
++	}
++	isolated := transport.Clone()
++	isolated.DisableKeepAlives = true
++	isolated.ForceAttemptHTTP2 = false
++	isolated.Protocols = new(http.Protocols)
++	isolated.Protocols.SetHTTP1(true)
++	isolated.TLSNextProto = nil
++	if isolated.TLSClientConfig != nil {
++		isolated.TLSClientConfig = isolated.TLSClientConfig.Clone()
++		isolated.TLSClientConfig.NextProtos = []string{"http/1.1"}
++	}
++	defer isolated.CloseIdleConnections()
++	once := &http.Client{
++		Transport: isolated,
++		Jar:       client.Jar,
++		Timeout:   client.Timeout,
++		CheckRedirect: func(*http.Request, []*http.Request) error {
++			return http.ErrUseLastResponse
++		},
++	}
++	return once.Do(req)
++}
+diff --git a/tools/codegen/sdk/tests/audit_read_wire_test.go b/tools/codegen/sdk/tests/audit_read_wire_test.go
+new file mode 100644
+index 00000000..35681953
+--- /dev/null
++++ b/tools/codegen/sdk/tests/audit_read_wire_test.go
+@@ -0,0 +1,429 @@
++package main
++
++import (
++	"context"
++	"crypto/tls"
++	"crypto/x509"
++	"errors"
++	"io"
++	"log"
++	"net/http"
++	"net/http/cookiejar"
++	"net/http/httptest"
++	"net/http/httptrace"
++	"net/url"
++	"strings"
++	"sync"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/sdk/go/identity"
++)
++
++const auditReadPath = "/api/v1/admin/audit-events"
++const auditReadProblem = `{"type":"about:blank","title":"STORAGE_COMMIT_OUTCOME_UNKNOWN","status":409,"code":"STORAGE_COMMIT_OUTCOME_UNKNOWN","request_id":"33333333-3333-4333-8333-333333333333"}`
++
++func auditReadParams(assistant bool) *identity.ListAuditEventsParams {
++	category, cursor, limit := "audit", identity.Cursor("opaque+/=%"), identity.Limit(2)
++	params := &identity.ListAuditEventsParams{Category: &category, Cursor: &cursor, Limit: &limit}
++	if assistant {
++		value := identity.ListAuditEventsParamsXOwnsolidAuditActor("true")
++		params.XOwnsolidAuditActor = &value
++	}
++	return params
++}
++
++func auditReadClient(t *testing.T, origin string, client *http.Client) *identity.ClientWithResponses {
++	t.Helper()
++	result, err := identity.NewClientWithResponses(origin, identity.WithHTTPClient(client))
++	if err != nil {
++		t.Fatal(err)
++	}
++	return result
++}
++
++func auditReadHTTPClient(t *testing.T) (*http.Client, *http.Transport) {
++	t.Helper()
++	transport := http.DefaultTransport.(*http.Transport).Clone()
++	transport.Proxy = nil
++	transport.MaxConnsPerHost = 1
++	transport.Protocols = new(http.Protocols)
++	transport.Protocols.SetHTTP1(true)
++	client := &http.Client{Transport: transport, Timeout: 5 * time.Second}
++	t.Cleanup(transport.CloseIdleConnections)
++	return client, transport
++}
++
++func writeAuditReadProblem(w http.ResponseWriter) {
++	w.Header().Set("Content-Type", "application/problem+json")
++	w.WriteHeader(http.StatusConflict)
++	io.WriteString(w, auditReadProblem)
++}
++
++func requireAuditReadProblem(t *testing.T, result *identity.ListAuditEventsHTTPResponse, err error) {
++	t.Helper()
++	if err != nil || result == nil || result.StatusCode() != 409 || result.GetJSON200() != nil || result.GetApplicationproblemJSON409() == nil {
++		t.Fatalf("audit 409 did not retain its dedicated Problem: %v", err)
++	}
++	if string(result.GetApplicationproblemJSON409().Code) != "STORAGE_COMMIT_OUTCOME_UNKNOWN" {
++		t.Fatal("audit Problem code changed")
++	}
++}
++
++func TestAuditRead409DoesNotRetry(t *testing.T) {
++	for _, assistant := range []bool{false, true} {
++		t.Run(map[bool]string{false: "standard", true: "assistant"}[assistant], func(t *testing.T) {
++			var calls atomic.Int32
++			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++				calls.Add(1)
++				expected := ""
++				if assistant {
++					expected = "true"
++				}
++				q := r.URL.Query()
++				if r.Method != http.MethodGet || r.URL.Path != auditReadPath || len(q) != 3 || q.Get("category") != "audit" || q.Get("cursor") != "opaque+/=%" || q.Get("limit") != "2" || r.ContentLength != 0 || r.Header.Get("X-Ownsolid-Audit-Actor") != expected || r.Header.Get("Idempotency-Key") != "" {
++					t.Error("audit selection, representation or bodyless request changed")
++				}
++				writeAuditReadProblem(w)
++			}))
++			defer server.Close()
++			client, _ := auditReadHTTPClient(t)
++			result, err := auditReadClient(t, server.URL, client).ListAuditEventsWithResponse(t.Context(), auditReadParams(assistant))
++			requireAuditReadProblem(t, result, err)
++			if calls.Load() != 1 {
++				t.Fatal("409 initiated an automatic second read")
++			}
++		})
++	}
++}
++
++func TestAuditReadExplicitRetryIsANewRequest(t *testing.T) {
++	var calls atomic.Int32
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if calls.Add(1) == 1 {
++			writeAuditReadProblem(w)
++			return
++		}
++		w.Header().Set("Content-Type", "application/json")
++		io.WriteString(w, `{"data":{"items":[],"next_cursor":null}}`)
++	}))
++	defer server.Close()
++	client, _ := auditReadHTTPClient(t)
++	sdk := auditReadClient(t, server.URL, client)
++	first, err := sdk.ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++	requireAuditReadProblem(t, first, err)
++	if calls.Load() != 1 {
++		t.Fatal("the first read replayed itself")
++	}
++	second, err := sdk.ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++	if err != nil || second.GetJSON200() == nil || calls.Load() != 2 {
++		t.Fatalf("explicit second read failed: %v", err)
++	}
++}
++
++func auditLostReplyFixture(t *testing.T) (*httptest.Server, *atomic.Int32) {
++	t.Helper()
++	calls := new(atomic.Int32)
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if r.URL.Path == "/prime" {
++			io.WriteString(w, "ok")
++			return
++		}
++		if r.URL.Path != auditReadPath {
++			t.Error("unexpected fixture path")
++			w.WriteHeader(404)
++			return
++		}
++		if calls.Add(1) == 1 {
++			conn, _, err := w.(http.Hijacker).Hijack()
++			if err != nil {
++				t.Error(err)
++				return
++			}
++			conn.Close()
++			return
++		}
++		writeAuditReadProblem(w)
++	}))
++	t.Cleanup(server.Close)
++	return server, calls
++}
++
++func primeAuditConnection(t *testing.T, client *http.Client, origin string) {
++	t.Helper()
++	response, err := client.Get(origin + "/prime")
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer response.Body.Close()
++	if _, err := io.Copy(io.Discard, response.Body); err != nil {
++		t.Fatal(err)
++	}
++}
++
++func TestStandardSharedGETCanReplayALostReply(t *testing.T) {
++	server, calls := auditLostReplyFixture(t)
++	client, _ := auditReadHTTPClient(t)
++	primeAuditConnection(t, client, server.URL)
++	response, err := client.Get(server.URL + auditReadPath)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer response.Body.Close()
++	io.Copy(io.Discard, response.Body)
++	if response.StatusCode != 409 || calls.Load() != 2 {
++		t.Fatal("the shared-connection control did not demonstrate the replay")
++	}
++}
++
++func TestAuditReadDoesNotReplayALostReplyOnASharedClient(t *testing.T) {
++	t.Run("reply_lost_once", auditReadLostReplyOnce)
++	t.Run("consecutive_replies_lost", func(t *testing.T) {
++		var calls atomic.Int32
++		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++			calls.Add(1)
++			conn, _, err := w.(http.Hijacker).Hijack()
++			if err != nil {
++				t.Error(err)
++				return
++			}
++			conn.Close()
++		}))
++		defer server.Close()
++		client, transport := auditReadHTTPClient(t)
++		sdk := auditReadClient(t, server.URL, client)
++		for attempt := range 3 {
++			result, err := sdk.ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++			if err == nil || result != nil || calls.Load() != int32(attempt+1) {
++				t.Fatal("a consecutive lost reply replayed or became success")
++			}
++		}
++		if transport.DisableKeepAlives {
++			t.Fatal("consecutive failures changed the shared transport")
++		}
++	})
++}
++
++func auditReadLostReplyOnce(t *testing.T) {
++	server, calls := auditLostReplyFixture(t)
++	client, transport := auditReadHTTPClient(t)
++	primeAuditConnection(t, client, server.URL)
++	var reused atomic.Bool
++	trace := &httptrace.ClientTrace{GotConn: func(info httptrace.GotConnInfo) { reused.Store(info.Reused) }}
++	ctx := httptrace.WithClientTrace(t.Context(), trace)
++	sdk := auditReadClient(t, server.URL, client)
++	result, err := sdk.ListAuditEventsWithResponse(ctx, auditReadParams(false))
++	if err == nil || result != nil || calls.Load() != 1 || reused.Load() {
++		t.Fatal("the generated audit read replayed the lost reply or reused a connection")
++	}
++	if transport.DisableKeepAlives {
++		t.Fatal("the generated read changed the caller's shared transport")
++	}
++	result, err = sdk.ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++	requireAuditReadProblem(t, result, err)
++	if calls.Load() != 2 {
++		t.Fatal("an explicit retry did not remain a separate request")
++	}
++}
++
++func TestAuditReadPreservesTLSAndCookies(t *testing.T) {
++	var calls atomic.Int32
++	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		calls.Add(1)
++		cookie, err := r.Cookie("synthetic_admin")
++		if err != nil || cookie.Value != "fixture" || r.ProtoMajor != 1 {
++			t.Error("verified HTTP/1 or the configured cookie jar was lost")
++		}
++		writeAuditReadProblem(w)
++	}))
++	server.Config.ErrorLog = log.New(io.Discard, "", 0)
++	server.StartTLS()
++	defer server.Close()
++	pool := x509.NewCertPool()
++	pool.AddCert(server.Certificate())
++	jar, err := cookiejar.New(nil)
++	if err != nil {
++		t.Fatal(err)
++	}
++	origin, _ := url.Parse(server.URL)
++	jar.SetCookies(origin, []*http.Cookie{{Name: "synthetic_admin", Value: "fixture", Path: "/", Secure: true}})
++	client, transport := auditReadHTTPClient(t)
++	transport.TLSClientConfig = &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12, NextProtos: []string{"h2", "http/1.1"}}
++	client.Jar = jar
++	result, err := auditReadClient(t, server.URL, client).ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++	requireAuditReadProblem(t, result, err)
++	if calls.Load() != 1 || transport.TLSClientConfig.RootCAs != pool || strings.Join(transport.TLSClientConfig.NextProtos, ",") != "h2,http/1.1" || client.Jar != jar {
++		t.Fatal("the original trust or cookie configuration changed")
++	}
++	bad := transport.Clone()
++	bad.TLSClientConfig = &tls.Config{RootCAs: x509.NewCertPool(), MinVersion: tls.VersionTLS12}
++	defer bad.CloseIdleConnections()
++	result, err = auditReadClient(t, server.URL, &http.Client{Transport: bad, Jar: jar, Timeout: 5 * time.Second}).ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++	if err == nil || result != nil || calls.Load() != 1 {
++		t.Fatal("an untrusted server received an audit request")
++	}
++}
++
++func TestAuditReadPreservesClientTimeout(t *testing.T) {
++	t.Run("client_timeout", auditReadClientTimeout)
++	t.Run("caller_cancellation", func(t *testing.T) {
++		var calls atomic.Int32
++		started, cancelled := make(chan struct{}), make(chan struct{})
++		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++			if calls.Add(1) > 1 {
++				writeAuditReadProblem(w)
++				return
++			}
++			close(started)
++			<-r.Context().Done()
++			close(cancelled)
++		}))
++		defer server.Close()
++		client, _ := auditReadHTTPClient(t)
++		sdk := auditReadClient(t, server.URL, client)
++		ctx, cancel := context.WithCancel(t.Context())
++		defer cancel()
++		type outcome struct {
++			result *identity.ListAuditEventsHTTPResponse
++			err    error
++		}
++		done := make(chan outcome, 1)
++		go func() {
++			result, err := sdk.ListAuditEventsWithResponse(ctx, auditReadParams(false))
++			done <- outcome{result, err}
++		}()
++		select {
++		case <-started:
++			cancel()
++		case <-time.After(5 * time.Second):
++			t.Fatal("the cancellation fixture did not receive a request")
++		}
++		select {
++		case received := <-done:
++			if !errors.Is(received.err, context.Canceled) || received.result != nil || calls.Load() != 1 {
++				t.Fatalf("caller cancellation was lost or replayed: %v", received.err)
++			}
++		case <-time.After(5 * time.Second):
++			t.Fatal("the generated request did not stop after caller cancellation")
++		}
++		select {
++		case <-cancelled:
++		case <-time.After(5 * time.Second):
++			t.Fatal("the server did not observe the cancelled connection")
++		}
++		result, err := sdk.ListAuditEventsWithResponse(ctx, auditReadParams(false))
++		if !errors.Is(err, context.Canceled) || result != nil || calls.Load() != 1 {
++			t.Fatal("an already cancelled context dispatched a new read")
++		}
++		result, err = sdk.ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++		requireAuditReadProblem(t, result, err)
++		if calls.Load() != 2 {
++			t.Fatal("an explicit uncancelled read was not a separate request")
++		}
++	})
++}
++
++func auditReadClientTimeout(t *testing.T) {
++	var calls atomic.Int32
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		calls.Add(1)
++		<-r.Context().Done()
++	}))
++	defer server.Close()
++	client, _ := auditReadHTTPClient(t)
++	client.Timeout = time.Second
++	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
++	defer cancel()
++	result, err := auditReadClient(t, server.URL, client).ListAuditEventsWithResponse(ctx, auditReadParams(false))
++	if !errors.Is(err, context.DeadlineExceeded) || result != nil || !strings.Contains(err.Error(), "Client.Timeout") || calls.Load() != 1 {
++		t.Fatalf("the caller's timeout was lost or retried: %v", err)
++	}
++}
++
++func TestAuditReadRefusesRedirects(t *testing.T) {
++	var audit, redirected atomic.Int32
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if r.URL.Path == "/again" {
++			redirected.Add(1)
++			writeAuditReadProblem(w)
++			return
++		}
++		audit.Add(1)
++		http.Redirect(w, r, "/again", http.StatusTemporaryRedirect)
++	}))
++	defer server.Close()
++	client, _ := auditReadHTTPClient(t)
++	result, err := auditReadClient(t, server.URL, client).ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++	if err != nil || result.StatusCode() != 307 || audit.Load() != 1 || redirected.Load() != 0 || client.CheckRedirect != nil {
++		t.Fatalf("audit redirect was followed or changed shared policy: %v", err)
++	}
++}
++
++type auditCountingDoer struct{ calls atomic.Int32 }
++
++func (d *auditCountingDoer) Do(r *http.Request) (*http.Response, error) {
++	d.calls.Add(1)
++	return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader("{}")), Header: make(http.Header), Request: r}, nil
++}
++
++type auditCountingTransport struct{ calls atomic.Int32 }
++
++func (d *auditCountingTransport) RoundTrip(*http.Request) (*http.Response, error) {
++	d.calls.Add(1)
++	return nil, errors.New("custom transport must not be reached")
++}
++
++func TestAuditReadRejectsUninspectableExecutorsBeforeDispatch(t *testing.T) {
++	doer, transport := new(auditCountingDoer), new(auditCountingTransport)
++	for _, executor := range []identity.HttpRequestDoer{doer, (*http.Client)(nil), &http.Client{Transport: transport}, &http.Client{Transport: (*http.Transport)(nil)}} {
++		client, err := identity.NewClient("https://unused.example.invalid", identity.WithHTTPClient(executor))
++		if err != nil {
++			t.Fatal(err)
++		}
++		result, err := client.ListAuditEvents(t.Context(), auditReadParams(false))
++		if err == nil || result != nil || !strings.Contains(err.Error(), "audit reads require") {
++			t.Fatal("an unsupported executor was not rejected clearly before dispatch")
++		}
++	}
++	if doer.calls.Load() != 0 || transport.calls.Load() != 0 {
++		t.Fatal("a custom executor received an audit request")
++	}
++}
++
++func TestOtherIdentityCallsRetainTheConfiguredExecutor(t *testing.T) {
++	doer := new(auditCountingDoer)
++	client, err := identity.NewClient("https://unused.example.invalid", identity.WithHTTPClient(doer))
++	if err != nil {
++		t.Fatal(err)
++	}
++	response, err := client.GetCsrf(t.Context())
++	if err != nil || doer.calls.Load() != 1 {
++		t.Fatal("the audit guard changed another operation's executor")
++	}
++	response.Body.Close()
++}
++
++func TestConcurrentAuditReadsRemainOneRequestEach(t *testing.T) {
++	var calls atomic.Int32
++	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		calls.Add(1)
++		writeAuditReadProblem(w)
++	}))
++	defer server.Close()
++	client, transport := auditReadHTTPClient(t)
++	sdk := auditReadClient(t, server.URL, client)
++	var group sync.WaitGroup
++	for range 8 {
++		group.Go(func() {
++			result, err := sdk.ListAuditEventsWithResponse(t.Context(), auditReadParams(false))
++			if err != nil || result.GetApplicationproblemJSON409() == nil {
++				t.Errorf("concurrent audit read failed: %v", err)
++			}
++		})
++	}
++	group.Wait()
++	if calls.Load() != 8 || transport.DisableKeepAlives {
++		t.Fatal("concurrent audit reads replayed or mutated the shared transport")
++	}
++}
+diff --git a/tools/codegen/sdk/tests/test_audit_read_codegen.py b/tools/codegen/sdk/tests/test_audit_read_codegen.py
+new file mode 100644
+index 00000000..2a818530
+--- /dev/null
++++ b/tools/codegen/sdk/tests/test_audit_read_codegen.py
+@@ -0,0 +1,98 @@
++"""Keep the audit transport correction limited to its reviewed generated method."""
++
++import json
++from pathlib import Path
++import sys
++import tempfile
++import unittest
++from unittest.mock import patch
++
++SDK = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(SDK))
++from generate import TEMPLATES, generate_domain, guard_go_audit_read
++
++
++AUDIT_PATH = "/api/v1/admin/audit-events"
++GO_SOURCE = """package identity
++
++func (c *Client) GetCsrf(ctx context.Context) (*http.Response, error) {
++	return c.Client.Do(req)
++}
++
++func (c *Client) ListAuditEvents(ctx context.Context, params *ListAuditEventsParams) (*http.Response, error) {
++	req, err := NewListAuditEventsRequest(c.Server, params)
++	if err != nil { return nil, err }
++	return c.Client.Do(req)
++}
++"""
++
++
++class AuditReadCodegenTests(unittest.TestCase):
++    def test_only_the_audit_dispatch_changes_and_reapplication_is_inert(self):
++        expected = GO_SOURCE.rsplit("return c.Client.Do(req)", 1)
++        expected = "return c.doAuditedRead(req)".join(expected)
++        guarded = guard_go_audit_read(GO_SOURCE)
++        self.assertEqual(guarded, expected)
++        self.assertEqual(guard_go_audit_read(guarded), guarded)
++
++    def test_missing_ambiguous_incomplete_or_changed_dispatch_fails_closed(self):
++        for source in (
++            GO_SOURCE.replace("ListAuditEvents(", "ListOtherEvents("),
++            GO_SOURCE + GO_SOURCE,
++            GO_SOURCE.rstrip()[:-1],
++            GO_SOURCE.replace("c.Client.Do(req)", "c.OtherClient.Do(req)"),
++            GO_SOURCE.replace("\treturn c.Client.Do(req)\n}", "\treturn c.Client.Do(req)\n\treturn c.Client.Do(req)\n}"),
++        ):
++            with self.subTest(source=source[-100:]):
++                with self.assertRaisesRegex(ValueError, "generated|ListAuditEvents"):
++                    guard_go_audit_read(source)
++
++    def generate_fixture(self, root, domain, path, operation_id, forbid_tools=False):
++        source = root / domain / "openapi.json"
++        source.parent.mkdir()
++        source.write_text(json.dumps({"paths": {path: {"get": {
++            "operationId": operation_id, "x-audiences": ["admin"], "responses": {},
++        }}}}))
++        temp, go, python = (root / name for name in ("temp", "go", "python"))
++        for directory in (temp, go, python):
++            directory.mkdir()
++
++        def tool(args, **kwargs):
++            if forbid_tools:
++                self.fail("an unreviewed audit operation reached a generator")
++            if args[0] == "prepared-go":
++                kwargs["stdout"].write(GO_SOURCE.encode())
++            else:
++                output = Path(args[args.index("--output-path") + 1])
++                output.mkdir()
++                (output / "__init__.py").write_text("")
++
++        with patch("generate.subprocess.run", side_effect=tool) as tools:
++            result = generate_domain(source, temp, go, python, "prepared-go", "prepared-python")
++        return result, go / domain, tools.call_count
++
++    def test_generation_installs_the_reviewed_helper_for_the_public_audit_read(self):
++        with tempfile.TemporaryDirectory() as scratch:
++            result, output, calls = self.generate_fixture(Path(scratch), "identity", AUDIT_PATH, "listAuditEvents")
++            self.assertTrue(result)
++            self.assertEqual(calls, 2)
++            self.assertEqual((output / "client.gen.go").read_text(), guard_go_audit_read(GO_SOURCE))
++            self.assertEqual((output / "audit_read.gen.go").read_bytes(),
++                             (TEMPLATES / "audit_read.go.template").read_bytes())
++
++    def test_other_contracts_do_not_get_the_helper_or_a_changed_executor(self):
++        with tempfile.TemporaryDirectory() as scratch:
++            result, output, _ = self.generate_fixture(Path(scratch), "models", "/models", "listModels")
++            self.assertTrue(result)
++            self.assertEqual((output / "client.gen.go").read_text(), GO_SOURCE)
++            self.assertFalse((output / "audit_read.gen.go").exists())
++
++    def test_route_move_or_rename_requires_review_before_invoking_generators(self):
++        for domain, path, operation in (
++            ("identity", AUDIT_PATH, "renamedAuditRead"),
++            ("other", AUDIT_PATH, "listAuditEvents"),
++            ("identity", "/moved", "listAuditEvents"),
++        ):
++            with self.subTest(domain=domain, path=path), tempfile.TemporaryDirectory() as scratch:
++                with self.assertRaisesRegex(ValueError, "moved or was renamed"):
++                    self.generate_fixture(Path(scratch), domain, path, operation, forbid_tools=True)
+diff --git a/tools/codegen/sdk/tests/test_audit_read_contract.py b/tools/codegen/sdk/tests/test_audit_read_contract.py
+new file mode 100644
+index 00000000..38daf8e3
+--- /dev/null
++++ b/tools/codegen/sdk/tests/test_audit_read_contract.py
+@@ -0,0 +1,86 @@
++"""Keep audited reads explicit without changing their public event projection."""
++
++import json
++from pathlib import Path
++import re
++import sys
++import unittest
++
++SDK = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(SDK))
++from generate import CONTRACTS, project_contract
++
++
++PATH = "/api/v1/admin/audit-events"
++
++
++class AuditReadContractTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.root = SDK.parents[2]
++        cls.raw = json.loads((CONTRACTS / "identity/openapi.json").read_text())
++        cls.projected = project_contract(cls.raw)
++
++    def test_commit_unknown_reuses_the_actual_shared_problem_and_status(self):
++        registry = (self.root / "services/control/internal/platform/httpserver/problem.go").read_text()
++        self.assertRegex(registry, r'"STORAGE_COMMIT_OUTCOME_UNKNOWN"\s*:\s*409')
++        for document in (self.raw, self.projected):
++            with self.subTest(projected=document is self.projected):
++                operation = document["paths"][PATH]["get"]
++                self.assertEqual(operation["operationId"], "listAuditEvents")
++                self.assertEqual(operation["x-audiences"], ["admin"])
++                self.assertEqual(operation["security"], [{"AdminSession": []}])
++                self.assertEqual(operation["x-error-codes"]["409"], ["STORAGE_COMMIT_OUTCOME_UNKNOWN"])
++                self.assertEqual(operation["responses"]["409"], {"$ref": "#/components/responses/Problem"})
++                problem = document["components"]["schemas"]["Problem"]
++                self.assertIn("STORAGE_COMMIT_OUTCOME_UNKNOWN", problem["properties"]["code"]["enum"])
++
++    def test_exact_action_publication_does_not_precede_server_admission(self):
++        source = (self.root / "services/control/internal/modules/identity/lists.go").read_text()
++        match = re.search(r'for _, a := range strings.Fields\("([^"]+)"\)', source)
++        self.assertIsNotNone(match, "Review the server's authoritative action catalogue")
++        admitted = set(match.group(1).split())
++        operation = self.raw["paths"][PATH]["get"]
++        action = next(value for value in operation["parameters"] if value.get("name") == "action")
++        self.assertLessEqual(set(action["schema"]["enum"]), admitted)
++        category = next(value for value in operation["parameters"] if value.get("name") == "category")
++        self.assertRegex("audit", category["schema"]["pattern"])
++
++    def test_recovery_is_explicit_and_reaches_the_existing_help_parameter_projection(self):
++        for document in (self.raw, self.projected):
++            operation = document["paths"][PATH]["get"]
++            self.assertIn("Do not retry automatically", operation["description"])
++            self.assertIn("new audited read", operation["description"])
++            cursor = next(value for value in operation["parameters"]
++                          if value.get("$ref") == "#/components/parameters/Cursor")
++            self.assertIn("only explicitly", cursor["description"])
++            self.assertIn("does not confirm whether the earlier access was recorded", cursor["description"])
++            self.assertNotIn("requestBody", operation)
++            self.assertFalse(any(value.get("name") == "Idempotency-Key" for value in operation["parameters"]))
++
++    def test_standard_fields_and_verified_assistant_pair_remain_closed(self):
++        standard = {
++            "id", "occurred_at", "actor_user_id", "actor_email", "subject_user_id",
++            "subject_email", "audience", "action", "outcome", "target_type",
++            "target_id", "reason", "request_id",
++        }
++        event = self.raw["components"]["schemas"]["AuditEvent"]
++        self.assertEqual(len(standard), 13)
++        self.assertFalse(event["additionalProperties"])
++        self.assertEqual(set(event["required"]), standard)
++        self.assertEqual(set(event["properties"]), standard | {"actor_kind", "actor_id"})
++        self.assertEqual(event["dependentRequired"], {"actor_kind": ["actor_id"], "actor_id": ["actor_kind"]})
++        for field in ("metadata", "identifier_digest", "tenant_id", "workspace_id"):
++            self.assertNotIn(field, event["properties"])
++
++    def test_success_still_has_the_original_noncacheable_page_and_representation_header(self):
++        operation = self.raw["paths"][PATH]["get"]
++        success = operation["responses"]["200"]
++        self.assertEqual(success["content"]["application/json"]["schema"],
++                         {"$ref": "#/components/schemas/AuditListResponse"})
++        self.assertEqual(success["headers"]["Cache-Control"]["schema"]["const"], "no-store")
++        self.assertIn("X-Ownsolid-Audit-Actor", success["headers"]["Vary"]["description"])
++        header = next(value for value in operation["parameters"]
++                      if value.get("name") == "X-Ownsolid-Audit-Actor")
++        self.assertEqual(header["schema"]["enum"], ["true"])
++        self.assertFalse(header.get("required", False))
+diff --git a/tools/codegen/sdk/tests/test_response_object_audit.py b/tools/codegen/sdk/tests/test_response_object_audit.py
+new file mode 100644
+index 00000000..7fdb9017
+--- /dev/null
++++ b/tools/codegen/sdk/tests/test_response_object_audit.py
+@@ -0,0 +1,163 @@
++"""Review closed response fields without presenting a general Schema safety proof."""
++
++import copy
++import json
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import unittest
++
++SDK = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(SDK))
++from audit import compare_response_objects, inventory, response_surface
++
++
++def contract():
++    return {
++        "paths": {"/models/{id}": {"get": {
++            "operationId": "readModel", "x-audiences": ["admin", "portal"],
++            "responses": {"200": {"description": "Model", "content": {
++                "application/json": {"schema": {"$ref": "#/components/schemas/Model"}},
++            }}},
++        }}},
++        "components": {"schemas": {"Model": {
++            "type": "object", "additionalProperties": False,
++            "properties": {"id": {"type": "string"}, "name": {"type": "string"}},
++            "required": ["id", "name"],
++        }}},
++    }
++
++
++def compare(before, after):
++    with tempfile.TemporaryDirectory() as scratch:
++        reports = []
++        for name, document in (("before", before), ("after", after)):
++            root = Path(scratch) / name
++            domain = root / "models"
++            domain.mkdir(parents=True)
++            (domain / "openapi.json").write_text(json.dumps(document))
++            reports.append(inventory(root))
++        return compare_response_objects(*reports)
++
++
++class ResponseObjectAuditTests(unittest.TestCase):
++    def test_new_optional_field_in_same_closed_model_requires_each_audience_review(self):
++        before, after = contract(), contract()
++        after["components"]["schemas"]["Model"]["properties"]["family_id"] = {"type": "string"}
++        findings = compare(before, after)
++        self.assertEqual([item["audience"] for item in findings], ["admin", "portal"])
++        self.assertEqual({item["code"] for item in findings}, {"PUBLIC_RESPONSE_OBJECT_SHAPE_CHANGED"})
++        self.assertEqual(findings[0]["schema_location"], "#/components/schemas/Model")
++        self.assertEqual(findings[0]["previous_shape"]["properties"], ["id", "name"])
++        self.assertEqual(findings[0]["current_shape"]["properties"], ["family_id", "id", "name"])
++        self.assertEqual(findings[0]["current_shape"]["required"], ["id", "name"])
++
++    def test_property_required_and_closure_changes_are_review_signals_in_both_directions(self):
++        for kind in ("property", "required", "closure"):
++            with self.subTest(kind=kind):
++                before, after = contract(), contract()
++                model = after["components"]["schemas"]["Model"]
++                if kind == "property":
++                    del model["properties"]["name"]
++                    model["required"].remove("name")
++                elif kind == "required":
++                    model["required"] = ["id"]
++                else:
++                    del model["additionalProperties"]
++                self.assertEqual(len(compare(before, after)), 2)
++                self.assertEqual(len(compare(after, before)), 2)
++
++    def test_inline_array_items_and_escaped_property_locations(self):
++        before = contract()
++        operation = before["paths"]["/models/{id}"]["get"]
++        operation["responses"]["200"]["content"]["application/json"]["schema"] = {
++            "type": "array", "items": {"type": "object", "properties": {
++                "a/b~": {"type": "object", "additionalProperties": False, "properties": {}},
++            }},
++        }
++        after = copy.deepcopy(before)
++        after["paths"]["/models/{id}"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]["items"]["properties"]["a/b~"]["properties"]["extra"] = {}
++        findings = compare(before, after)
++        self.assertEqual([item["schema_location"] for item in findings],
++                         ["#/items/properties/a~1b~0", "#/items/properties/a~1b~0"])
++
++    def test_recursive_escaped_refs_terminate_and_keep_response_object_ref_bindings(self):
++        value = contract()
++        model = value["components"]["schemas"].pop("Model")
++        reference = "#/components/schemas/Model~1Read~0"
++        value["components"]["schemas"]["Model/Read~"] = model
++        model["properties"]["next"] = {"$ref": reference}
++        operation = value["paths"]["/models/{id}"]["get"]
++        response = operation["responses"]["200"]
++        response["content"]["application/json"]["schema"] = {"$ref": reference}
++        value["components"]["responses"] = {"Read": response}
++        operation["responses"]["200"] = {"$ref": "#/components/responses/Read"}
++        names, shapes = response_surface(value, operation)
++        self.assertEqual(names, {"200 application/json": [reference]})
++        self.assertEqual(list(shapes["200 application/json"]), [reference])
++        self.assertEqual(compare(value, copy.deepcopy(value)), [])
++
++    def test_annotations_order_open_objects_and_value_constraints_are_outside_shape_review(self):
++        before, after = contract(), contract()
++        model = after["components"]["schemas"]["Model"]
++        model["required"].reverse()
++        model["properties"] = dict(reversed(list(model["properties"].items())))
++        model["description"] = "Changed documentation"
++        model["examples"] = [{"$ref": "https://example.invalid/literal"}]
++        model["properties"]["name"]["maxLength"] = 1
++        self.assertEqual(compare(before, after), [])
++        before["components"]["schemas"]["Model"]["additionalProperties"] = True
++        model["additionalProperties"] = True
++        model["properties"]["new"] = {}
++        self.assertEqual(compare(before, after), [])
++
++    def test_removed_response_body_requires_review_and_new_body_does_not(self):
++        before, after = contract(), contract()
++        response = after["paths"]["/models/{id}"]["get"]["responses"]["200"]
++        response["content"] = {"application/vnd.example+json": response["content"]["application/json"]}
++        findings = compare(before, after)
++        self.assertEqual([item["response"] for item in findings], ["200 application/json"] * 2)
++        self.assertTrue(all(item["current_shape"] is None for item in findings))
++        after["paths"]["/models/{id}"]["get"]["responses"]["200"] = copy.deepcopy(
++            before["paths"]["/models/{id}"]["get"]["responses"]["200"])
++        after["paths"]["/models/{id}"]["get"]["responses"]["201"] = response
++        self.assertEqual(compare(before, after), [])
++
++    def test_renamed_removed_and_added_operations_keep_operation_identity_boundary(self):
++        before, after = contract(), contract()
++        after["components"]["schemas"]["Model"]["properties"]["extra"] = {}
++        operation = after["paths"]["/models/{id}"]["get"]
++        operation["operationId"] = "newReadModel"
++        self.assertEqual(compare(before, after), [])
++        operation["operationId"] = "readModel"
++        operation["x-audiences"] = ["admin"]
++        self.assertEqual([item["audience"] for item in compare(before, after)], ["admin"])
++        after["paths"] = {"/other": {"get": operation}}
++        self.assertEqual(compare(before, after), [])
++
++    def test_command_exit_one_contains_shape_review_without_model_rename(self):
++        with tempfile.TemporaryDirectory() as scratch:
++            root = Path(scratch)
++            for name in ("before", "after"):
++                domain = root / name / "models"
++                domain.mkdir(parents=True)
++                value = contract()
++                if name == "after":
++                    value["components"]["schemas"]["Model"]["properties"]["family_id"] = {}
++                (domain / "openapi.json").write_text(json.dumps(value))
++            result = subprocess.run(
++                [sys.executable, str(SDK / "audit.py"), "--contracts", str(root / "after"),
++                 "--baseline", str(root / "before")], capture_output=True, text=True, check=False,
++            )
++            self.assertEqual(result.returncode, 1, result.stderr)
++            findings = json.loads(result.stdout)["compatibility_findings"]
++            self.assertEqual([item["code"] for item in findings], ["PUBLIC_RESPONSE_OBJECT_SHAPE_CHANGED"] * 2)
++
++    def test_malformed_object_shape_fails_before_a_compatibility_report(self):
++        for name, invalid in (("properties", []), ("required", "id"), ("required", [1])):
++            with self.subTest(name=name, invalid=invalid):
++                value = contract()
++                value["components"]["schemas"]["Model"][name] = invalid
++                with self.assertRaisesRegex(ValueError, "response object"):
++                    response_surface(value, value["paths"]["/models/{id}"]["get"])
+diff --git a/tools/codegen/sdk/tests/wire_smoke.py b/tools/codegen/sdk/tests/wire_smoke.py
+index 9c0b5d3f..dea8613a 100644
+--- a/tools/codegen/sdk/tests/wire_smoke.py
++++ b/tools/codegen/sdk/tests/wire_smoke.py
+@@ -231,9 +231,101 @@ def exercise_monitoring_problems():
+     print("Python SDK verified history transaction refusals and canonical timestamps")
+ 
+ 
++def exercise_audit_reads_python(sdk):
++    """Check the generated operation, without a retrying HTTP or application wrapper."""
++    sys.path.insert(0, str(sdk / "gen" / "python"))
++    import httpx
++    from ownsolid_sdk.identity import AuthenticatedClient
++    from ownsolid_sdk.identity.api.administration import list_audit_events
++    from ownsolid_sdk.identity.models.list_audit_events_x_ownsolid_audit_actor import ListAuditEventsXOwnsolidAuditActor
++    from ownsolid_sdk.identity.models.problem import Problem
++
++    selection = {"category": "audit", "cursor": "opaque+/=%", "limit": 2}
++    code = "STORAGE_COMMIT_OUTCOME_UNKNOWN"
++
++    def scenario(assistant, lost_reply):
++        calls = []
++
++        def respond(request):
++            calls.append(request)
++            assert request.method == "GET" and request.url.path == "/api/v1/admin/audit-events"
++            assert dict(request.url.params) == {key: str(value) for key, value in selection.items()}
++            assert request.content == b"" and "Idempotency-Key" not in request.headers
++            assert request.headers.get("X-Ownsolid-Audit-Actor") == ("true" if assistant else None)
++            if len(calls) == 1:
++                if lost_reply:
++                    raise httpx.ReadError("synthetic lost reply", request=request)
++                return httpx.Response(409, headers={"Content-Type": "application/problem+json"}, json={
++                    "type": "about:blank", "title": code, "status": 409, "code": code,
++                    "request_id": "33333333-3333-4333-8333-333333333333",
++                })
++            return httpx.Response(200, json={"data": {"items": [], "next_cursor": None}})
++
++        client = AuthenticatedClient(
++            base_url="https://admin.example.invalid", token="",
++            httpx_args={"transport": httpx.MockTransport(respond), "trust_env": False},
++        )
++        params = dict(selection)
++        if assistant:
++            params["x_ownsolid_audit_actor"] = ListAuditEventsXOwnsolidAuditActor.TRUE
++        return client, params, calls
++
++    def check_first(result, calls):
++        assert len(calls) == 1 and result.status_code == 409
++        assert isinstance(result.parsed, Problem) and result.parsed.code == code
++
++    def check_second(result, calls):
++        assert len(calls) == 2 and result.status_code == 200
++        assert result.parsed.data.items == [] and result.parsed.data.next_cursor is None
++
++    async def check_async(assistant, lost_reply):
++        client, params, calls = scenario(assistant, lost_reply)
++        async with client:
++            if lost_reply:
++                try:
++                    await list_audit_events.asyncio_detailed(client=client, **params)
++                except httpx.ReadError:
++                    assert len(calls) == 1
++                else:
++                    raise AssertionError("a lost reply became success")
++            else:
++                check_first(await list_audit_events.asyncio_detailed(client=client, **params), calls)
++            check_second(await list_audit_events.asyncio_detailed(client=client, **params), calls)
++
++    for assistant in (False, True):
++        for lost_reply in (False, True):
++            client, params, calls = scenario(assistant, lost_reply)
++            with client:
++                if lost_reply:
++                    try:
++                        list_audit_events.sync_detailed(client=client, **params)
++                    except httpx.ReadError:
++                        assert len(calls) == 1
++                    else:
++                        raise AssertionError("a lost reply became success")
++                else:
++                    check_first(list_audit_events.sync_detailed(client=client, **params), calls)
++                check_second(list_audit_events.sync_detailed(client=client, **params), calls)
++            asyncio.run(check_async(assistant, lost_reply))
++    print("Python SDK verified eight audit-read failure/manual-retry scenarios")
++
++
++def exercise_audit_reads_go(sdk):
++    """Run the actual generated Go operation against loopback protocol fixtures."""
++    subprocess.run(
++        ["go", "test", "-race", "-count=1", str(Path(__file__).with_name("audit_read_wire_test.go").resolve())],
++        cwd=sdk / "gen" / "go",
++        env={**os.environ, "GOWORK": "off", "GOPROXY": "off", "GOSUMDB": "off"},
++        check=True, timeout=120,
++    )
++
++
+ if __name__ == "__main__":
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("sdk", type=Path)
+-    exercise(parser.parse_args().sdk.resolve())
++    sdk = parser.parse_args().sdk.resolve()
++    exercise(sdk)
+     exercise_streaming()
+     exercise_monitoring_problems()
++    exercise_audit_reads_python(sdk)
++    exercise_audit_reads_go(sdk)

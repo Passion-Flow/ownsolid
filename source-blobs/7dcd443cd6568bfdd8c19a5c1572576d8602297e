@@ -1,0 +1,51 @@
+set -euo pipefail
+umask 077
+cd /root/lane-rel-history
+expected=7705c5a341458cb1be8ead80844198378d98c4e3
+source /root/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 CARGO_BUILD_JOBS=1 CARGO_NET_OFFLINE=true
+exec 8>/run/lock/ownsolid-heavy.lock
+exec 9>/root/lane-sci-tools/heavy-test.lock
+exec 7>/root/lane-rel-tools/heavy-test.lock
+ready=false
+for attempt in $(seq 1 20); do
+  if flock -n 8 && flock -n 9 && flock -n 7; then
+    disk=$(df -Pm / | awk 'NR==2 {print $4}')
+    memory=$(free -m | awk '/^Mem:/ {print $4}')
+    if [ "$disk" -ge 15360 ] && [ "$memory" -ge 2048 ]; then
+      ready=true
+      break
+    fi
+    echo "RESOURCE_FLOOR_PENDING disk_mib=$disk memfree_mib=$memory"
+  else
+    echo SHARED_HEAVY_LOCK_PENDING
+  fi
+  flock -u 7
+  flock -u 9
+  flock -u 8
+  sleep 30
+done
+test "$ready" = true || exit 75
+df -h /
+free -m
+ss -lntp
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+echo "SOURCE_COMMIT=$expected"
+unshare -n bash -ec '
+ip link set lo up
+test "$(ip -o link show | wc -l)" -eq 1
+test -z "$(ip route show default)"
+test -z "$(ip -6 route show default)"
+make generate
+make check
+echo MAKE_CHECK_PASSED
+GOFLAGS="-p=1 -overlay=/root/lane-rel-tools/gw104-contract.qgEXzK0n/native-overlay/overlay.json" make build
+echo OWNER_SOURCE_COMPOSITION_BUILD_PASSED
+pnpm --dir web --filter @ownsolid/help --filter @ownsolid/i18n test
+echo ACTUAL_HELP_I18N_PASSED
+'
+test ! -e tools/audit-verify/audit-verify || rm -- tools/audit-verify/audit-verify
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+echo EXACT_CONTRACT_COMPOSITION_GATE_PASSED

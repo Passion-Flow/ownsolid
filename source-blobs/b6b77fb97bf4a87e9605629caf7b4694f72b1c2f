@@ -1,0 +1,36 @@
+{
+  "state": "client-and-installed-acceptance-package-prepared",
+  "cli_source": "8f4dd72cb9c6c58c0860bb9125289986cfc180d1",
+  "cli_sha256": "2f16b65de0753601aea7088c24afec774111cd85c7d027952309e8d231d0ca2d",
+  "cli_build_manifest": "/root/lane-rel-tools/workspace-installed-8f4dd72c/client/client-manifest.json",
+  "entry": "/root/lane-rel-tools/workspace-installed-8f4dd72c/installed_workspaces.py",
+  "evidence_directory": "/root/lane-rel-tools/lane-del-combination-4463bbe6/runtime-evidence",
+  "expected_control_source": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "actual_control_source": null,
+  "installed_acceptance_run": false,
+  "dependencies": [
+    "Actual DEL installed-ready/provenance/extracted Control/CA/generated administrator credential/person/scope-state files",
+    "Existing installation network PID and configured loopback listener address",
+    "Linux root, Python 3.12 standard library, nsenter, unshare and mount",
+    "DEL's admitted shared Linux acceptance window and egress recorder"
+  ],
+  "validation": {
+    "native_offline_cli_build": "passed",
+    "vcs_modified": false,
+    "version_and_workspace_help": "passed",
+    "harness_guard_tests": 8,
+    "actual_installed_https_postgresql": "not run; installation inputs not ready"
+  },
+  "private_file_policy": "The report and package contain no credential or live session. Inputs stay protected at the installation owner's paths.",
+  "files": {
+    "RESEARCH.md": "f793a82b01dc62cdbb919206588bd75121c91d04924423b2c63e7ce990949a75",
+    "README.md": "09ee01300a5d84fa27cb5551c4dae544d41bac8501f336ed18fb7f78d6592494",
+    "build-client.sh": "3425d02d5c52fead754808a0b35b4a8fb61751efbdca45fb7202a8fddb133a05",
+    "installed_workspaces.py": "d5086a1c8806e1e0cc0e11655e408ee58891c9a1f198672328de13fc4c4b7b1a",
+    "test_installed_workspaces.py": "9cf845be18a2780a09c1709c49e033c08fd106257f4b538c00a4ee8300b06864",
+    "client/ownsolid": "2f16b65de0753601aea7088c24afec774111cd85c7d027952309e8d231d0ca2d",
+    "client/client-manifest.json": "0b0dc0fd21920a6e51aa6ba6ca953106adda3e5b5ce06a57a887b7f8c5ca4d74",
+    "client/build-info.txt": "2f3d218cc088c781130d6d6b13be5e28db0b75fa159d7da298f43046f5a4f404",
+    "client/version.json": "4a1504d1de57be43a9586350d1956e1d009c3eb88efada81cb29527123a31d01"
+  }
+}

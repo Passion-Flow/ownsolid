@@ -1,0 +1,72 @@
+--- executed-9be-1a5f519c
++++ prepared-2e64ab4c-4096mib
+@@ -1,9 +1,9 @@
+ import os,fcntl,stat,subprocess,json,time,signal,sys,hashlib,ctypes,shlex
+ from pathlib import Path
+ os.umask(0o077)
+-r=Path('/root/lane-rel-tools/api-compat');w=Path('/root/lane-rel-identity-audit-contract');source='9be01cbbf0144a2f2537667834539de31e40f58f'
++r=Path('/root/lane-rel-tools/api-compat');w=Path('/root/lane-rel-identity-audit-contract');source='2e64ab4c6c16bd84ae5c101b9de5444550760ff2'
+ locks=[Path('/run/lock/ownsolid-heavy.lock'),Path('/root/lane-sci-tools/heavy-test.lock')]
+-proof={'source':source,'base':'9e32b023a0a3deed6a8653a8878d52c2583fd6cf','host':'linux/amd64','check':False,'build':False,'whole_make_test':False,'cli_b967d7c8_qualified':False,'installed_acceptance':False,'locks':[]}
++proof={'source':source,'base':'bf448bcd070285e04ffec2474b3f32dcea998989','host':'linux/amd64','check':False,'build':False,'whole_make_test':False,'cli_b967d7c8_qualified':False,'installed_acceptance':False,'locks':[]}
+ fds=[];child=None;group=None;seen=set();started=time.monotonic();exit_code=1
+ deadline=started+1200;execution_deadline=deadline-20;finishing=False
+ proof['absolute_seconds_cap']=1200;proof['cleanup_reserve_seconds']=20;proof['owned_process_groups']=[]
+@@ -17,7 +17,7 @@
+  if proof.get('admitted') and not work_sum_preexisting and os.path.lexists(work_sum):
+   metadata=work_sum.lstat()
+   assert stat.S_ISREG(metadata.st_mode) and metadata.st_uid==os.geteuid()
+-  content=work_sum.read_bytes();archive=r/'joint-native-gate-9be01cbb-generated-go.work.sum'
++  content=work_sum.read_bytes();archive=r/'joint-native-gate-2e64ab4c-generated-go.work.sum'
+   with archive.open('xb') as output:output.write(content)
+   proof['generated_workspace_sum']={'path':'go.work.sum','archived':str(archive),'sha256':hashlib.sha256(content).hexdigest()}
+   work_sum.unlink();proof['generated_workspace_sum']['removed_from_source_checkout']=True
+@@ -26,10 +26,10 @@
+  pressure=next(line for line in Path('/proc/pressure/io').read_text().splitlines() if line.startswith('full '));avg10=float(pressure.split('avg10=',1)[1].split()[0])
+  v=os.statvfs('/root');proof['raw_memfree_mib']=values['MemFree']//1024;proof['memavailable_mib']=values['MemAvailable']//1024;proof['disk_free_bytes']=v.f_bavail*v.f_frsize;proof['io_full_avg10']=avg10
+  proof.setdefault('resource_snapshots',[]).append({'elapsed_seconds':round(time.monotonic()-started,3),**{name:proof[name] for name in ['raw_memfree_mib','memavailable_mib','disk_free_bytes','io_full_avg10']}})
+- if values['MemFree']<2048*1024 or values['MemAvailable']<8192*1024 or proof['disk_free_bytes']<30*1024**3 or avg10>5:raise ResourceRefused('Strict resource threshold not met')
++ if values['MemFree']<6144*1024 or values['MemAvailable']<12288*1024 or proof['disk_free_bytes']<30*1024**3 or avg10>5:raise ResourceRefused('Strict resource threshold not met')
+ def save():
+  if proof.get('evidence_already_exists'):return
+- proof['elapsed_seconds']=round(time.monotonic()-started,3);(r/'joint-native-gate-9be01cbb-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
++ proof['elapsed_seconds']=round(time.monotonic()-started,3);(r/'joint-native-gate-2e64ab4c-proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+ def budget(cleanup=False):
+  remaining=(deadline-8 if cleanup else execution_deadline)-time.monotonic()
+  if remaining<=0:raise GateTimeout('Absolute gate budget exhausted')
+@@ -94,12 +94,15 @@
+  if value<=0:raise ValueError('Invalid resource limit: '+name)
+  return str(min(value,maximum))
+ def node_options(value):
+- tokens=shlex.split(value);maximum=2048
++ tokens=shlex.split(value);maximum=4096
+  for index,token in enumerate(tokens):
+   name,separator,amount=token.partition('=')
+-  if name.replace('_','-')!='--max-old-space-size':continue
++  normalized=name.replace('_','-')
++  if normalized in ['--max-heap-size','--max-old-space-size-percentage']:raise ValueError('Bounded acceptance requires an absolute Node old-space limit')
++  if normalized!='--max-old-space-size':continue
++  if not separator and index+1==len(tokens):raise ValueError('Node heap limit requires a positive integer MiB value')
+   amount=amount if separator else tokens[index+1]
+-  if int(amount)<=0:raise ValueError('Invalid Node heap limit')
++  if not amount.isascii() or not amount.isdecimal() or int(amount)<=0:raise ValueError('Node heap limit requires a positive integer MiB value')
+   maximum=min(maximum,int(amount))
+  return value+' --max-old-space-size='+str(maximum)
+ def expired(signum,frame):
+@@ -112,7 +115,7 @@
+ signal.signal(signal.SIGTERM,interrupted);signal.signal(signal.SIGINT,interrupted)
+ signal.signal(signal.SIGALRM,expired);signal.setitimer(signal.ITIMER_REAL,max(0.001,execution_deadline-time.monotonic()))
+ try:
+- if (r/'joint-native-gate-9be01cbb-proof.json').exists():
++ if (r/'joint-native-gate-2e64ab4c-proof.json').exists():
+   proof['evidence_already_exists']=True
+   raise RuntimeError('The single joint-source attempt already has evidence; do not overwrite or retry it')
+  if sys.flags.optimize:raise RuntimeError('Gate requires source and ownership assertions enabled')
+@@ -148,6 +151,7 @@
+ """
+  (bindir/'pnpm').write_text(wrapper);(bindir/'pnpm').chmod(0o700)
+  env.update(PATH=str(bindir)+':'+env['PATH'],GOPROXY='off',GOSUMDB='off',GOTOOLCHAIN='local',GOMAXPROCS=positive_cap(env,'GOMAXPROCS',2),GOFLAGS=env.get('GOFLAGS','')+' -p=1',CARGO_BUILD_JOBS=positive_cap(env,'CARGO_BUILD_JOBS',1),CARGO_NET_OFFLINE='true',CARGO_TARGET_DIR=str(r/'native-rust-target'),NODE_OPTIONS=node_options(env.get('NODE_OPTIONS','')),PYTHONDONTWRITEBYTECODE='1',MAKEFLAGS='-j1',PLAYWRIGHT_BROWSERS_PATH='/root/lane-rel-tools/playwright-browsers')
++ proof['effective_node_old_space_mib']=int(env['NODE_OPTIONS'].rsplit('=',1)[1]);proof['effective_gomaxprocs']=int(env['GOMAXPROCS']);proof['effective_cargo_jobs']=int(env['CARGO_BUILD_JOBS'])
+  env['LD_LIBRARY_PATH']='/root/lane-rel-tools/playwright-libs.tUcBz3Xq/sysroot/usr/lib/x86_64-linux-gnu'
+  for target in ['web-install','check','build','test']:
+   resources()

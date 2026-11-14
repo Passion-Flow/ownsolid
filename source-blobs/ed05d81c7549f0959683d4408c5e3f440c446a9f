@@ -1,0 +1,483 @@
+From 4e8330240b9d5b9917da3998a2bf236e8a813a8a Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 14:11:29 +0800
+Subject: [PATCH 1/4] DEV-204: Record the exact higher-memory admission refusal
+
+Verify layout, roadmap and diff checks. Preserve exact2e64 source/entry/manifest and fresh MemFree3871 below6144 MiB, Available19812 MiB, disk788948389888 bytes and IO full avg10 0.00. Entry exit75 before shared carriers, all four Make targets and browser cases NOTRUN, final metadata group cleared, source clean and no retry. Do not replace the separate9be OOM,783 native scope,20e tests or430-operation audit exit1.
+---
+ docs/product/status.md                |  4 ++--
+ docs/research/public-api-inventory.md | 32 +++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 2 deletions(-)
+
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 83384569..5841d3ea 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -118,9 +118,9 @@ today and what is known to fail.
+ | Operator CLI (DEV-102, open) | Admin sessions, node and agent pacing maintenance, deployment lifecycle, resumable model import, exporter tasks, gateway registration and alias cutovers, scoped audit reads, sparse fleet history and paginated training attempts, metrics, checkpoints and recovery history. Output supports tables, JSON and YAML | Disconnected Admin TLS and PostgreSQL verified authorization, workspace isolation, stale revisions and recovery from lost write replies. The model verifier published a resumed Qwen3-0.6B import. The component fixture used both pinned archives and real VictoriaLogs with synthetic Agent reports. The native fleet history fixture preserved raw/rollup grids and sparse zero and verified session revocation, failed-tier retry and request-bound audits. The training fixture read attempt and metric pages, synthetic checkpoint metadata and actual recovery history, and refused cursors after role or session revocation. [CLI verification](../research/cli.md), [cutovers](../research/gateway-cutover-preview.md#admin-cli-dev-102) | No | Installed exporter lifecycle verification waits for FLT-109. The broader common-operation set remains open |
+ | Fleet history API publication (DEV-101, OBS-109, open) | Registered scoped Admin history read with matching OpenAPI, Go/Python SDK and Help projections, protected store policy and bilingual recovery details | Linux amd64 loopback TLS, CSRF/login/cookies, PostgreSQL and native raw/rollup stores exercised scope, Workspace/Logout revocation, request-bound audits, the complete response cap, failed tiers, retry and certificate replacement. All 28 public SDK domain clients generated offline and their wire checks passed. See [contract acceptance](../research/public-api-inventory.md#obs-109-fleet-history-publication-boundary) | No | Installed retention delivery, trust-update acceptance and the Console history view remain open |
+ | Authenticated fleet history module entry (OBS-109, open) | Registered Admin route with coordinated public API publication. The original identity dispatcher supplies cell scope, session, Origin and deadline; native stores supply raw or rollup data | Linux amd64 source 93f9ed8b with schema/Problems 9a56176e passed the raced small TLS/CSRF/login/issued-cookie/PostgreSQL/dual-VictoriaMetrics/vmalert profile. It verified sparse zero, empty data, cross-scope refusal, Workspace and Logout revocation during query, the complete response cap, failed or unconfigured tiers, no raw fallback, retry and per-request audit. The separate private-store TLS rotation profile passed on the same source. All fixture processes and containers stopped. [Evidence](../research/telemetry-retention-tiers.md#verified-authenticated-module-entry) | No | Public operation, SDK, Help and bilingual errors are coordinated with DEV/Web; installed delivery and Console remain open |
+-| Audit-read commit outcome contract (DEV-101, AUD-108, open) | Local candidate declares the existing 409 Problem and generates a dedicated single-request Go transport for listAuditEvents; action enum and event projection are unchanged | Native Linux amd64 Go 1.27.3 passed ten raced protocol groups and six subtests on frozen 783567ea / transport 1e8f1fad. Joint input 871e3df7 with DEV47fa and the original-author five-file Web projection passed actual offline make generate, generate:check, layout and roadmap checks without changing committed bytes. All 122 SDK files and 79 projection inputs match. [Native scope](../research/public-api-inventory.md#native-linux-audit-transport-qualification) and [actual joint generation](../research/public-api-inventory.md#original-author-joint-generation) | No new native or installed acceptance from joint generation; scoped SQL and scripted recovery retain separate owner evidence | The exact Linux 9be01cbb integrated attempt passed web-install and the 13/67 tooling cases but Web ESLint exhausted its 2048 MiB heap: check exit 2, parent exit 1; build and full make test were not started. All owned groups ended, both shared lock FDs closed and the source stayed clean. [Gate boundary](../research/public-api-inventory.md#linux-integrated-gate-boundary). The 2048 MiB ceiling was imposed by the acceptance wrapper; Web source/configuration fault is unproven. A higher bounded wrapper profile and new exact-source full qualification remain pending. The 430-operation audit exits 1 for its retained explicit 409 binding review, with no declaration conflict. History codecs remain unexecuted after the earlier I/O refusal; locks and owned resources were released. audit.events_read stays outside the exact-action whitelist; category=audit remains valid |
++| Audit-read commit outcome contract (DEV-101, AUD-108, open) | Local candidate declares the existing 409 Problem and generates a dedicated single-request Go transport for listAuditEvents; action enum and event projection are unchanged | Native Linux amd64 Go 1.27.3 passed ten raced protocol groups and six subtests on frozen 783567ea / transport 1e8f1fad. Joint input 871e3df7 with DEV47fa and the original-author five-file Web projection passed actual offline make generate, generate:check, layout and roadmap checks without changing committed bytes. All 122 SDK files and 79 projection inputs match. [Native scope](../research/public-api-inventory.md#native-linux-audit-transport-qualification) and [actual joint generation](../research/public-api-inventory.md#original-author-joint-generation) | No new native or installed acceptance from joint generation; scoped SQL and scripted recovery retain separate owner evidence | The exact Linux 9be01cbb integrated attempt passed web-install and the 13/67 tooling cases but Web ESLint exhausted its 2048 MiB heap: check exit 2, parent exit 1; build and full make test were not started. All owned groups ended, both shared lock FDs closed and the source stayed clean. [Gate boundary](../research/public-api-inventory.md#linux-integrated-gate-boundary). The 2048 MiB ceiling was imposed by the acceptance wrapper; Web source/configuration fault is unproven. The higher-profile exact 2e64ab4c attempt exited 75 before opening locks: MemFree 3871 MiB was below 6144 MiB. All four targets were NOTRUN; no retry was queued. [Admission boundary](../research/public-api-inventory.md#exact-higher-memory-admission-boundary). Full qualification remains pending. The 430-operation audit exits 1 for its retained explicit 409 binding review, with no declaration conflict. History codecs remain unexecuted after the earlier I/O refusal; locks and owned resources were released. audit.events_read stays outside the exact-action whitelist; category=audit remains valid |
+ | Generated Go and Python SDKs (DEV-103) | Yes, generated from the currently published public API domains | Two offline generations were identical. Both clients logged in, read a node and logged out against Admin TLS and PostgreSQL 18 without an external route. Wire tests covered binary upload and Python streaming, cancellation and failure. A Linux amd64 refresh generated all 28 domain clients offline and decoded five native monitoring transaction refusals through controlled HTTPX replies. See [SDK verification](../research/sdk.md#integration-evidence) | No | Public API coverage of the remaining product work is tracked in DEV-101 |
+-| Offline public API compatibility review (DEV-204, open) | Local candidate extends operation and named-response checks with declared closed response object shapes | Complete make test-tools passed 13 layout and 67 SDK/tooling cases on 2c20c8cc; the frozen 16300ee6 13/57 result remains separate. Joint 871e3df7 inventories 430 operations with no declaration conflicts, preserving its one explicit 409 source-review signal and exit 1. [Review scope](../research/public-api-versioning.md#closed-response-object-shape-review) and [joint evidence](../research/public-api-inventory.md#original-author-joint-generation) | No | Exact Linux 9be01cbb passed web-install, layout, roadmap and 13/67 tooling cases, then Web ESLint exhausted the 2048 MiB heap; integrated check exited 2 and parent exited 1. Build/full make test were not started. The acceptance wrapper imposed that heap ceiling; a Web defect is unproven. Revised bounded-profile and full exact-source qualification remain pending. [Gate boundary](../research/public-api-inventory.md#linux-integrated-gate-boundary). The initial missing-dependency failure is retained. The intended Go 409 accessor migration is documented, not hidden by changing the rule or runtime. Release baselines, general directional Schema compatibility and runtime deprecation signaling remain open |
++| Offline public API compatibility review (DEV-204, open) | Local candidate extends operation and named-response checks with declared closed response object shapes | Complete make test-tools passed 13 layout and 67 SDK/tooling cases on 2c20c8cc; the frozen 16300ee6 13/57 result remains separate. Joint 871e3df7 inventories 430 operations with no declaration conflicts, preserving its one explicit 409 source-review signal and exit 1. [Review scope](../research/public-api-versioning.md#closed-response-object-shape-review) and [joint evidence](../research/public-api-inventory.md#original-author-joint-generation) | No | Exact Linux 9be01cbb passed web-install, layout, roadmap and 13/67 tooling cases, then Web ESLint exhausted the 2048 MiB heap; integrated check exited 2 and parent exited 1. Build/full make test were not started. The acceptance wrapper imposed that heap ceiling; a Web defect is unproven. The exact 2e64ab4c higher-profile attempt was refused before locks with MemFree 3871 below 6144 MiB, exit 75; all four targets were NOTRUN and no retry was queued. [Admission boundary](../research/public-api-inventory.md#exact-higher-memory-admission-boundary). Full qualification remains pending. [Gate boundary](../research/public-api-inventory.md#linux-integrated-gate-boundary). The initial missing-dependency failure is retained. The intended Go 409 accessor migration is documented, not hidden by changing the rule or runtime. Release baselines, general directional Schema compatibility and runtime deprecation signaling remain open |
+ | Agent call cost rule: every call declares its server cost, a test measures every call on PostgreSQL on a small and a large fleet and fails on growth, a missing index or an exclusive lock on a row the fleet shares; agent calls lock only their own node and enrollment reads a counter (ADR 0020) | Yes, PostgreSQL only; node and training paths measured, the other operations in ARC-108 | Yes: 16 exchanges of all ten calls over real HTTPS on 50 and 3,000 nodes; with either fix undone the test fails. Load at fleet scale is ARC-015 | No | None |
+ | Liveness outside the database: a heartbeat that repeats the last written state runs one read, a worker writes last-seen times and the latest reports in batches, connectivity changes are stored with their time, NATS JetStream shares sightings between gateways (ADR 0022) | Yes, PostgreSQL only; the installer does not deploy the replicated store until REL-101 | Yes: real install with one real agent; replicated store on three real NATS servers with one stopped. Fleet load is ARC-015 | No | None |
+ | Task wakes through a transactional outbox: a task written on one gateway wakes a claim held on another after commit, read in batches below the oldest running transaction; expired tasks of silent nodes swept every 30 seconds (ADR 0028) | Yes, PostgreSQL only; other chains wake on one process until CMP-201 and CMP-202 | Yes: real install with one real agent; two services on one database in tests, and tasks woke claims held on two gateway processes in `TestAgentGateways` (ARC-102). Dispatch at load is ARC-015 | No | None |
+diff --git a/docs/research/public-api-inventory.md b/docs/research/public-api-inventory.md
+index c740d063..66df95fe 100644
+--- a/docs/research/public-api-inventory.md
++++ b/docs/research/public-api-inventory.md
+@@ -1106,3 +1106,35 @@ inherited heap-percentage/total-heap policies fail clearly instead of being
+ silently overridden. This is a prepared capacity proposal, not a measured
+ 4096 MiB pass or authorization to rerun. The next source also contains published
+ ARC runtime changes and needs its own full checks; the 9be result cannot qualify it.
++
++### Exact higher-memory admission boundary
++
++The assigned exact 2e64ab4c6c16bd84ae5c101b9de5444550760ff2 source, tree
++3bdf79d7d76f096c989884190c32e4c08de20356, passed live source, clean-tree,
++entry, manifest and asset fingerprint checks before its single invocation.
++The actual admission sample was MemFree 3871 MiB, MemAvailable 19812 MiB,
++free disk 788948389888 bytes and full I/O avg10 0.00. MemFree did not meet
++the unchanged 6144 MiB floor. The f08c440f entry exited 75 after 0.030 seconds,
++before opening either shared carrier. No resource sample from another lane
++or earlier source was used. The one-time marker and raw exclusive log remain.
++
++All four original Make targets were NOTRUN. Check, build, test and browser
++case counts are zero; no compiler, Node runtime, PostgreSQL or browser was
++started by this attempt. Only the final Git source-clean check created an
++owned process group, which exited with no inherited lock holders. The source
++remained clean. The 4096 MiB Node capacity proposal is still unmeasured.
++No wait, retry, threshold reduction, cleanup of another lane or publication
++was performed. The release condition is a newly assigned complete segment
++whose fresh live sample meets all of Free 6 GiB, Available 12 GiB, disk 30 GiB
++and full I/O avg10 at most 5; the consumed source/log cannot be replayed.
++
++The pinned Go, Node, Cargo, rustc and both Chromium asset bytes were verified
++without executing those tools. The old 9be 89.572-second OOM, the 783 native
++scope, the 20e thirty-one test result and the actual 430-operation audit
++exit 1 remain separate evidence. No qualified identity moves to this whole
++source. Exact entry SHA-256 is
++`f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a`,
++manifest SHA-256 is
++`60db5ee075c6b24e06d16a0453e851d140ffa44b88b2207310f911901b73f47c`,
++and the raw refusal result SHA-256 is
++`9beadce004f2217e249efbb79187feaa3a2683196a3e8d138e3183df4932d2ec`.
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 37cbb09c3d4933a53e4aea844a979d8b91d67b58 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 14:24:28 +0800
+Subject: [PATCH 2/4] DEV-103: Reject ambiguous JSON before SDK projection
+
+Use the standard JSON pair hook for primary contracts and the admitted Components alias owner, reject non-object documents and nonstandard numeric tokens, and report the source/key without member values. Verify 49 focused parser/projection/audit tests including 11 new cases. All 28 valid contract and projected serializations plus the 430-operation inventory stay unchanged. Preserve invalid-input exit 2 and the separate compatibility review exit 1. Generator source hash changed: no SDK regeneration, native client or whole-repository qualification is claimed.
+---
+ docs/research/sdk.md                          |  46 +++++++
+ tools/codegen/sdk/README.md                   |   5 +
+ tools/codegen/sdk/generate.py                 |  27 +++-
+ tools/codegen/sdk/tests/test_contract_json.py | 117 ++++++++++++++++++
+ 4 files changed, 193 insertions(+), 2 deletions(-)
+ create mode 100644 tools/codegen/sdk/tests/test_contract_json.py
+
+diff --git a/docs/research/sdk.md b/docs/research/sdk.md
+index c63dcd0f..f4542103 100644
+--- a/docs/research/sdk.md
++++ b/docs/research/sdk.md
+@@ -166,3 +166,49 @@ UUID and transmitted its canonical text. The generated Go clients compiled,
+ and the Python probe decoded the predecessor problem and the typed replay
+ result. The generator regression checks preserve omitted UUIDs and string
+ headers.
++
++## Unambiguous JSON contract inputs
++
++The contract reader uses Python's default last-member-wins decoding. A small
++local fixture with duplicate paths members silently lost its first public
++operation before projection. This does not claim that the currently published
++contracts contain duplicates. [RFC 8259 section 4](https://www.rfc-editor.org/rfc/rfc8259#section-4)
++recommends unique object names for interoperable interpretation. The
++[Python JSON decoder](https://docs.python.org/3.12/library/json.html#repeated-names-within-an-object)
++documents its default replacement behavior and the object_pairs_hook override.
++[Kubernetes strict field validation](https://kubernetes.io/docs/reference/using-api/api-concepts/#field-validation)
++also exposes duplicate-field refusal as an explicit policy.
++
++Reject duplicate members in SDK source contracts and the admitted Components
++alias owner, before generating from that domain. Treat this as ownsolid's
++unambiguous-source policy, not a claim that every JSON parser must reject them.
++Use the existing standard-library pair hook; regex scanning would mishandle
++nesting and escaped names, while a new parser dependency adds no value. Include
++the owning file and member name in the error, with no member values. Require a
++JSON object at the document root and retain useful syntax-error context. Keep
++all existing alias, audience and local-reference boundaries.
++
++Cover repeated path/method/schema names, escaped-equivalent names, the shared
++alias owner, malformed and non-object roots, and valid repeated names in
++separate objects or array values. A failed input must publish no partial SDK
++and invoke no external generator for its domain. Compare current valid contract
++and projected document values before and after the parser correction. Python's
++existing PSF licence permits commercial, offline and redistribution use under
++its notice terms; no dependency, model, data set or third-party implementation
++is added. A changed generator source hash requires its own regeneration and
++release qualification; old 783/122-file evidence cannot be relabeled for it.
++
++The same reader also rejects Python's accepted NaN and Infinity extensions:
++the standard JSON grammar excludes them, and JavaScript's JSON decoder does
++not accept them as portable contract input. Use the decoder's parse_constant
++hook and cover all three non-finite spellings. This remains input parsing;
++it is not a new general OpenAPI or JSON Schema validator.
++
++The targeted parser, projection and audit tests passed all forty-nine cases,
++including eleven new input cases. All twenty-eight current SDK source
++contracts retain the same normalized document, alias set and projected
++document. Their public inventory still has 430 operations and no declaration
++findings. Invalid-input audit errors retain exit 2; the separate existing
++explicit 409 compatibility review retains exit 1. No SDK regeneration, native
++client run or complete repository qualification is claimed for this new
++generator source hash. The exact 2e admission refusal remains unchanged.
+diff --git a/tools/codegen/sdk/README.md b/tools/codegen/sdk/README.md
+index 911a316d..b6cce27c 100644
+--- a/tools/codegen/sdk/README.md
++++ b/tools/codegen/sdk/README.md
+@@ -33,6 +33,11 @@ Use a Python 3.12 virtual environment for the generator:
+ Choose an output directory that does not exist. The generator reads local
+ contracts and invokes the prepared tools by absolute path.
+ 
++Source contracts must be JSON objects with unique member names at every depth.
++Duplicate names and the nonstandard NaN/Infinity tokens fail with the owning
++file in the error. The same rules apply to the Components alias owner. Correct
++that source and retry; a rejected input publishes no partial SDK output.
++
+ ```sh
+ python3 tools/codegen/sdk/generate.py --out "$SDK_DIR" \
+   --go-generator "$GO_GENERATOR" \
+diff --git a/tools/codegen/sdk/generate.py b/tools/codegen/sdk/generate.py
+index 54d356f5..74b9a037 100644
+--- a/tools/codegen/sdk/generate.py
++++ b/tools/codegen/sdk/generate.py
+@@ -38,9 +38,32 @@ def public_sources(contracts):
+             if source.parent.name not in UNLISTED)
+ 
+ 
++def _read_contract_json(source):
++    """Reject ambiguous JSON before a source contract can lose operations."""
++    def unique_object(pairs):
++        result = {}
++        for name, value in pairs:
++            if name in result:
++                raise ValueError(f"{source}: duplicate JSON member {json.dumps(name)}")
++            result[name] = value
++        return result
++
++    def reject_constant(value):
++        raise ValueError(f"{source}: non-finite JSON number {value} is not supported")
++
++    try:
++        document = json.loads(source.read_text(encoding="utf-8"),
++                              object_pairs_hook=unique_object, parse_constant=reject_constant)
++    except json.JSONDecodeError as exc:
++        raise ValueError(f"{source}: invalid JSON: {exc}") from exc
++    if not isinstance(document, dict):
++        raise ValueError(f"{source}: OpenAPI contract must be a JSON object")
++    return document
++
++
+ def read_contract(source):
+     """Resolve the supported local path aliases before client projection."""
+-    document = json.loads(source.read_text(encoding="utf-8"))
++    document = _read_contract_json(source)
+     aliases = set()
+     owner = None
+     for path, item in document.get("paths", {}).items():
+@@ -52,7 +75,7 @@ def read_contract(source):
+             raise ValueError(f"{source}: unsupported OpenAPI path reference for {path}")
+         if owner is None:
+             target = source.parent.parent / "components" / "openapi.json"
+-            owner = json.loads(target.read_text(encoding="utf-8"))
++            owner = _read_contract_json(target)
+         canonical = owner.get("paths", {}).get(path)
+         if not canonical or "$ref" in canonical or not METHODS.intersection(canonical):
+             raise ValueError(f"{source}: missing canonical OpenAPI path for {path}")
+diff --git a/tools/codegen/sdk/tests/test_contract_json.py b/tools/codegen/sdk/tests/test_contract_json.py
+new file mode 100644
+index 00000000..9b991967
+--- /dev/null
++++ b/tools/codegen/sdk/tests/test_contract_json.py
+@@ -0,0 +1,117 @@
++"""Keep source JSON from silently losing public SDK operations."""
++
++import json
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import unittest
++from unittest.mock import patch
++
++SDK = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(SDK))
++from generate import generate, read_contract
++
++
++def operation(name):
++    return json.dumps({"operationId": name, "x-audiences": ["admin"], "responses": {}})
++
++
++class ContractJSONTests(unittest.TestCase):
++    def refused(self, text, expected):
++        with tempfile.TemporaryDirectory() as scratch:
++            source = Path(scratch) / "openapi.json"
++            source.write_text(text, encoding="utf-8")
++            with self.assertRaisesRegex(ValueError, expected) as caught:
++                read_contract(source)
++            self.assertIn(str(source), str(caught.exception))
++            return str(caught.exception)
++
++    def test_duplicate_paths_cannot_hide_an_operation(self):
++        text = '{"paths":{"/lost":{"get":' + operation("lostRead") + '}},"paths":{"/kept":{"post":' + operation("keptWrite") + '}}}'
++        self.refused(text, 'duplicate JSON member "paths"')
++
++    def test_duplicate_methods_cannot_change_operation_identity(self):
++        text = '{"paths":{"/resources":{"get":' + operation("firstRead") + ',"get":' + operation("secondRead") + '}}}'
++        error = self.refused(text, 'duplicate JSON member "get"')
++        self.assertNotIn("firstRead", error)
++        self.assertNotIn("secondRead", error)
++
++    def test_escaped_equivalent_schema_names_are_duplicates(self):
++        text = r'{"paths":{},"components":{"schemas":{"Item":{"properties":{"id":{"type":"string"},"\u0069d":{"type":"integer"}}}}}}'
++        self.refused(text, 'duplicate JSON member "id"')
++
++    def test_alias_owner_uses_the_same_unambiguous_reader(self):
++        with tempfile.TemporaryDirectory() as scratch:
++            root = Path(scratch)
++            nodes, components = root / "nodes", root / "components"
++            nodes.mkdir()
++            components.mkdir()
++            source, owner = nodes / "openapi.json", components / "openapi.json"
++            source.write_text(json.dumps({"paths": {"/node": {
++                "$ref": "../components/openapi.json#/paths/~1node",
++            }}}))
++            owner.write_text('{"paths":{"/node":{"get":{"operationId":"first","operationId":"second","x-audiences":["admin"]}}}}')
++            with self.assertRaisesRegex(ValueError, 'duplicate JSON member "operationId"') as caught:
++                read_contract(source)
++            self.assertIn(str(owner), str(caught.exception))
++
++    def test_same_names_in_different_objects_and_array_values_are_allowed(self):
++        value = {"paths": {}, "components": {"schemas": {
++            "First": {"properties": {"id": {"type": "string"}}},
++            "Second": {"properties": {"id": {"type": "integer"}}},
++        }}, "x-values": ["id", "id", {"id": 1}, {"id": 2}]}
++        with tempfile.TemporaryDirectory() as scratch:
++            source = Path(scratch) / "openapi.json"
++            source.write_text(json.dumps(value))
++            document, aliases = read_contract(source)
++        self.assertEqual(document, value)
++        self.assertEqual(aliases, set())
++
++    def test_non_object_documents_have_an_actionable_error(self):
++        for value in ([], None, True, 42, "text"):
++            with self.subTest(value=value):
++                self.refused(json.dumps(value), "OpenAPI contract must be a JSON object")
++
++    def test_invalid_json_reports_the_file_and_location(self):
++        error = self.refused('{"paths":}', "invalid JSON")
++        self.assertIn("line 1 column", error)
++
++    def test_non_finite_numbers_are_not_portable_contract_input(self):
++        for token in ("NaN", "Infinity", "-Infinity"):
++            with self.subTest(token=token):
++                self.refused('{"paths":{},"x-bound":' + token + '}', "non-finite JSON number")
++
++    def test_duplicate_error_does_not_include_member_values(self):
++        error = self.refused('{"paths":{},"x-example":"private-first","x-example":"private-second"}', "duplicate JSON member")
++        self.assertNotIn("private-first", error)
++        self.assertNotIn("private-second", error)
++
++    def test_ambiguous_input_publishes_nothing_and_runs_no_generator(self):
++        with tempfile.TemporaryDirectory() as scratch:
++            root = Path(scratch)
++            domain = root / "contracts" / "example"
++            domain.mkdir(parents=True)
++            (domain / "openapi.json").write_text('{"paths":{},"paths":{}}')
++            output = root / "output"
++            with patch("generate.CONTRACTS", domain.parent), patch("generate.subprocess.run") as run:
++                with self.assertRaisesRegex(ValueError, "duplicate JSON member"):
++                    generate(output, "/unused/go-generator", "/unused/python-generator")
++                run.assert_not_called()
++            self.assertFalse(output.exists())
++            self.assertEqual(list(root.glob(".ownsolid-sdk-*")), [])
++
++    def test_inventory_command_refuses_ambiguity_without_an_incomplete_report(self):
++        with tempfile.TemporaryDirectory() as scratch:
++            root = Path(scratch)
++            domain = root / "example"
++            domain.mkdir()
++            (domain / "openapi.json").write_text('{"paths":{},"paths":{}}')
++            result = subprocess.run([sys.executable, str(SDK / "audit.py"), "--contracts", str(root)], capture_output=True, text=True, check=False)
++            self.assertEqual(result.returncode, 2)
++            self.assertEqual(result.stdout, "")
++            self.assertIn('duplicate JSON member "paths"', result.stderr)
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 71902626dda10e4a1b3c555a69e09487f49ea243 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 15:51:37 +0800
+Subject: [PATCH 3/4] DEV-103: Record the independent SDK admission boundary
+
+Preserve the consumed 37cbb09c generation refusal at Free 3432 MiB below the unchanged 6144 MiB preflight. No generator, native client or full gate ran. Distinguish the retained identity-only 122-file archive from the unrun 28-domain output comparison. Verified layout, roadmap consistency and diff whitespace.
+---
+ docs/product/status.md |  2 +-
+ docs/research/sdk.md   | 26 +++++++++++++++++++++++---
+ 2 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 5841d3ea..62ef9b08 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -119,7 +119,7 @@ today and what is known to fail.
+ | Fleet history API publication (DEV-101, OBS-109, open) | Registered scoped Admin history read with matching OpenAPI, Go/Python SDK and Help projections, protected store policy and bilingual recovery details | Linux amd64 loopback TLS, CSRF/login/cookies, PostgreSQL and native raw/rollup stores exercised scope, Workspace/Logout revocation, request-bound audits, the complete response cap, failed tiers, retry and certificate replacement. All 28 public SDK domain clients generated offline and their wire checks passed. See [contract acceptance](../research/public-api-inventory.md#obs-109-fleet-history-publication-boundary) | No | Installed retention delivery, trust-update acceptance and the Console history view remain open |
+ | Authenticated fleet history module entry (OBS-109, open) | Registered Admin route with coordinated public API publication. The original identity dispatcher supplies cell scope, session, Origin and deadline; native stores supply raw or rollup data | Linux amd64 source 93f9ed8b with schema/Problems 9a56176e passed the raced small TLS/CSRF/login/issued-cookie/PostgreSQL/dual-VictoriaMetrics/vmalert profile. It verified sparse zero, empty data, cross-scope refusal, Workspace and Logout revocation during query, the complete response cap, failed or unconfigured tiers, no raw fallback, retry and per-request audit. The separate private-store TLS rotation profile passed on the same source. All fixture processes and containers stopped. [Evidence](../research/telemetry-retention-tiers.md#verified-authenticated-module-entry) | No | Public operation, SDK, Help and bilingual errors are coordinated with DEV/Web; installed delivery and Console remain open |
+ | Audit-read commit outcome contract (DEV-101, AUD-108, open) | Local candidate declares the existing 409 Problem and generates a dedicated single-request Go transport for listAuditEvents; action enum and event projection are unchanged | Native Linux amd64 Go 1.27.3 passed ten raced protocol groups and six subtests on frozen 783567ea / transport 1e8f1fad. Joint input 871e3df7 with DEV47fa and the original-author five-file Web projection passed actual offline make generate, generate:check, layout and roadmap checks without changing committed bytes. All 122 SDK files and 79 projection inputs match. [Native scope](../research/public-api-inventory.md#native-linux-audit-transport-qualification) and [actual joint generation](../research/public-api-inventory.md#original-author-joint-generation) | No new native or installed acceptance from joint generation; scoped SQL and scripted recovery retain separate owner evidence | The exact Linux 9be01cbb integrated attempt passed web-install and the 13/67 tooling cases but Web ESLint exhausted its 2048 MiB heap: check exit 2, parent exit 1; build and full make test were not started. All owned groups ended, both shared lock FDs closed and the source stayed clean. [Gate boundary](../research/public-api-inventory.md#linux-integrated-gate-boundary). The 2048 MiB ceiling was imposed by the acceptance wrapper; Web source/configuration fault is unproven. The higher-profile exact 2e64ab4c attempt exited 75 before opening locks: MemFree 3871 MiB was below 6144 MiB. All four targets were NOTRUN; no retry was queued. [Admission boundary](../research/public-api-inventory.md#exact-higher-memory-admission-boundary). Full qualification remains pending. The 430-operation audit exits 1 for its retained explicit 409 binding review, with no declaration conflict. History codecs remain unexecuted after the earlier I/O refusal; locks and owned resources were released. audit.events_read stays outside the exact-action whitelist; category=audit remains valid |
+-| Generated Go and Python SDKs (DEV-103) | Yes, generated from the currently published public API domains | Two offline generations were identical. Both clients logged in, read a node and logged out against Admin TLS and PostgreSQL 18 without an external route. Wire tests covered binary upload and Python streaming, cancellation and failure. A Linux amd64 refresh generated all 28 domain clients offline and decoded five native monitoring transaction refusals through controlled HTTPX replies. See [SDK verification](../research/sdk.md#integration-evidence) | No | Public API coverage of the remaining product work is tracked in DEV-101 |
++| Generated Go and Python SDKs (DEV-103) | Yes, generated from the currently published public API domains | Two offline generations were identical. Both clients logged in, read a node and logged out against Admin TLS and PostgreSQL 18 without an external route. Wire tests covered binary upload and Python streaming, cancellation and failure. A Linux amd64 refresh generated all 28 domain clients offline and decoded five native monitoring transaction refusals through controlled HTTPX replies. See [SDK verification](../research/sdk.md#integration-evidence) | No | Public API coverage of the remaining product work is tracked in DEV-101. The strict JSON generator correction has 49 focused test passes and 28 unchanged projections, but its independent Linux regeneration was refused before launch (Free 3,432 MiB below 6,144 MiB). New generated-byte, native and full-repository qualification remain unrun; see the [source-input boundary](../research/sdk.md#unambiguous-json-contract-inputs) |
+ | Offline public API compatibility review (DEV-204, open) | Local candidate extends operation and named-response checks with declared closed response object shapes | Complete make test-tools passed 13 layout and 67 SDK/tooling cases on 2c20c8cc; the frozen 16300ee6 13/57 result remains separate. Joint 871e3df7 inventories 430 operations with no declaration conflicts, preserving its one explicit 409 source-review signal and exit 1. [Review scope](../research/public-api-versioning.md#closed-response-object-shape-review) and [joint evidence](../research/public-api-inventory.md#original-author-joint-generation) | No | Exact Linux 9be01cbb passed web-install, layout, roadmap and 13/67 tooling cases, then Web ESLint exhausted the 2048 MiB heap; integrated check exited 2 and parent exited 1. Build/full make test were not started. The acceptance wrapper imposed that heap ceiling; a Web defect is unproven. The exact 2e64ab4c higher-profile attempt was refused before locks with MemFree 3871 below 6144 MiB, exit 75; all four targets were NOTRUN and no retry was queued. [Admission boundary](../research/public-api-inventory.md#exact-higher-memory-admission-boundary). Full qualification remains pending. [Gate boundary](../research/public-api-inventory.md#linux-integrated-gate-boundary). The initial missing-dependency failure is retained. The intended Go 409 accessor migration is documented, not hidden by changing the rule or runtime. Release baselines, general directional Schema compatibility and runtime deprecation signaling remain open |
+ | Agent call cost rule: every call declares its server cost, a test measures every call on PostgreSQL on a small and a large fleet and fails on growth, a missing index or an exclusive lock on a row the fleet shares; agent calls lock only their own node and enrollment reads a counter (ADR 0020) | Yes, PostgreSQL only; node and training paths measured, the other operations in ARC-108 | Yes: 16 exchanges of all ten calls over real HTTPS on 50 and 3,000 nodes; with either fix undone the test fails. Load at fleet scale is ARC-015 | No | None |
+ | Liveness outside the database: a heartbeat that repeats the last written state runs one read, a worker writes last-seen times and the latest reports in batches, connectivity changes are stored with their time, NATS JetStream shares sightings between gateways (ADR 0022) | Yes, PostgreSQL only; the installer does not deploy the replicated store until REL-101 | Yes: real install with one real agent; replicated store on three real NATS servers with one stopped. Fleet load is ARC-015 | No | None |
+diff --git a/docs/research/sdk.md b/docs/research/sdk.md
+index f4542103..957ae669 100644
+--- a/docs/research/sdk.md
++++ b/docs/research/sdk.md
+@@ -209,6 +209,26 @@ including eleven new input cases. All twenty-eight current SDK source
+ contracts retain the same normalized document, alias set and projected
+ document. Their public inventory still has 430 operations and no declaration
+ findings. Invalid-input audit errors retain exit 2; the separate existing
+-explicit 409 compatibility review retains exit 1. No SDK regeneration, native
+-client run or complete repository qualification is claimed for this new
+-generator source hash. The exact 2e admission refusal remains unchanged.
++explicit 409 compatibility review retains exit 1.
++
++The independent Linux amd64 regeneration attempt used source 37cbb09c,
++including the original-author 2e joint DAG, a new output destination and the
++prepared oapi-codegen 2.8.2 and openapi-python-client 0.29.1 executables.
++Neither tool required installation or compilation. The file-only entry reused
++the existing strict resource preflight: at least 6 GiB raw free memory,
++12 GiB available memory, 30 GiB disk and I/O full avg10 no greater than 5.
++The prepared entry bounds execution to one CPU, at most 512 MiB Node
++old-space, a 60-second command limit and a 300-second overall limit.
++It opens no heavy-test carrier.
++
++Admission returned 75 before generation: raw Free was 3,432 MiB, Available
++19,826 MiB and I/O full avg10 0.20. The generator command did not start,
++no SDK output or generation log was created, no owned child remained,
++and the source stayed clean. This consumed attempt was not retried.
++The retained 122-file archive covers only identity, not all twenty-eight
++domains. Its byte comparison against a new output remains unrun; equal
++contract projections do not establish equal generated bytes. No SDK
++regeneration, native client run or complete repository qualification is
++claimed for the changed generator. A new allocated segment must satisfy
++the same admission and run the exact candidate before any such claim.
++The earlier 2e admission refusal and 783 native scope remain unchanged.
+-- 
+2.54.0 (Apple Git-157)
+
+
+From a62a63b5c116ecf0fb48e92d7c88853c8d3beb3d Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 16:23:35 +0800
+Subject: [PATCH 4/4] DEV-103: Document the complete offline generator process
+ graph
+
+Trace pinned oapi-codegen through x/tools to Go environment and module metadata queries, and verify the Python post-hook list is empty. Keep the lightweight plan separate from the immutable full-gate admission profile and distinguish soft Go memory limits from measured process RSS. Verified layout, 589-item roadmap consistency, unchanged 28 projected inputs and diff whitespace; no generator or carrier was started.
+---
+ docs/research/sdk.md        | 50 ++++++++++++++++++++++++++++++++++---
+ tools/codegen/sdk/README.md |  8 +++++-
+ 2 files changed, 54 insertions(+), 4 deletions(-)
+
+diff --git a/docs/research/sdk.md b/docs/research/sdk.md
+index 957ae669..c7bc9f50 100644
+--- a/docs/research/sdk.md
++++ b/docs/research/sdk.md
+@@ -229,6 +229,50 @@ The retained 122-file archive covers only identity, not all twenty-eight
+ domains. Its byte comparison against a new output remains unrun; equal
+ contract projections do not establish equal generated bytes. No SDK
+ regeneration, native client run or complete repository qualification is
+-claimed for the changed generator. A new allocated segment must satisfy
+-the same admission and run the exact candidate before any such claim.
+-The earlier 2e admission refusal and 783 native scope remain unchanged.
++claimed for the changed generator. That consumed attempt remains immutable.
++A distinct generator-only workload needs its own allocated segment and
++reviewed process graph. The earlier 2e full-gate admission refusal, its
++6 GiB Free threshold and the 783 native scope remain unchanged.
++
++## File-only generation process graph
++
++The pinned [oapi-codegen formatter](https://github.com/oapi-codegen/oapi-codegen/blob/v2.8.2/pkg/codegen/codegen.go#L933-L949)
++calls imports.Process with default options. Its linked x/tools v0.48.0
++[public entry](https://github.com/golang/tools/blob/v0.48.0/imports/forward.go#L44-L70)
++creates a ProcessEnv without an explicit environment map. The
++[initialization path](https://github.com/golang/tools/blob/v0.48.0/internal/imports/fix.go#L1002-L1033)
++therefore calls the Go executable for env -json; supplying OS environment
++variables does not fill that internal map. Module resolution can also call
++[list -m -e -json ...](https://github.com/golang/tools/blob/v0.48.0/internal/imports/mod.go#L239).
++The SDK supplies an explicit package name, so the separate CLI package-name
++detection branch does not need its go list -f call. These findings come from
++the pinned binary build metadata and matching cached source; they are not
++an executed descendant trace.
++
++The Python config has an empty post_hooks list. The
++[pinned Python generator](https://github.com/openapi-generators/openapi-python-client/blob/v0.29.1/openapi_python_client/__init__.py#L132-L148)
++iterates that list, so this configuration schedules no Ruff or shell hook.
++Keep the actual generator interpreter, package files and locked dependency
++versions in the input inventory, not only the short executable launcher.
++
++A file-only workload can use the separate Linux admission of 2 GiB Free,
++8 GiB Available, 30 GiB disk and I/O full avg10 no greater than 5,
++with both existing permanent carriers acquired once nonblocking. It must
++retain stricter inherited limits, use one CPU and serial domains, and have
++at most 300 seconds overall and 60 seconds per external command. Keep
++GOMAXPROCS at 1 and GOMEMLIMIT at most 512 MiB. The latter is a
++[Go runtime soft limit](https://pkg.go.dev/runtime#hdr-Environment_Variables),
++not a hard process RSS ceiling. Record existing OS limits and actual
++per-command peak RSS separately. RAYON_NUM_THREADS is 1 if a reviewed
++Rust-backed hook is used; no such hook is scheduled here. Mac admission
++would require at least 2 GiB Free and 15 GiB disk as well as its permanent
++carrier, but no prepared Mac oapi-codegen was found in the inspected paths.
++
++The current two-generator-only execution scope excludes the transitive Go
++metadata commands. No new generation is authorized by this process-graph
++review. Do not hide the extra executable, synthesize its answers, disable
++formatting, install tools or compile a replacement to fit the list. The
++next execution plan must explicitly account for that fixed Go executable
++and its metadata arguments before it takes a carrier. Until then, generated
++file counts, peak memory and byte comparisons for this candidate remain
++unmeasured. No dependency, model or data set is added by this review.
+diff --git a/tools/codegen/sdk/README.md b/tools/codegen/sdk/README.md
+index b6cce27c..a802d97f 100644
+--- a/tools/codegen/sdk/README.md
++++ b/tools/codegen/sdk/README.md
+@@ -31,7 +31,13 @@ Use a Python 3.12 virtual environment for the generator:
+ ## Generate and use the SDKs
+ 
+ Choose an output directory that does not exist. The generator reads local
+-contracts and invokes the prepared tools by absolute path.
++contracts and invokes the prepared tools by absolute path. Keep the prepared
++Go toolchain on PATH as well: the pinned Go formatter queries go env -json,
++and module resolution can query go list -m -e -json. These are metadata
++queries, so a command allowlist for disconnected generation must account
++for the fixed Go executable in addition to the two generator entrypoints.
++The current Python post_hooks list is empty; it runs no Ruff or shell hook.
++See the [process graph and resource boundary](../../../docs/research/sdk.md#file-only-generation-process-graph).
+ 
+ Source contracts must be JSON objects with unique member names at every depth.
+ Duplicate names and the nonstandard NaN/Infinity tokens fail with the owning
+-- 
+2.54.0 (Apple Git-157)
+

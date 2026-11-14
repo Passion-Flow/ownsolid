@@ -1,0 +1,105 @@
+name: Slack Notifier
+
+on:
+  issues:
+    types:
+      - opened
+      - closed
+  pull_request:
+    types:
+      - opened
+      - closed
+      - ready_for_review
+
+permissions:
+  contents: read
+
+jobs:
+  on-issue-opened:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    steps:
+      - name: notify
+        uses: actions/github-script@v9
+        env:
+          WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+        with:
+          script: |
+            const resp = await fetch(process.env.WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'issues_opened',
+                id: String(context.payload.issue.number),
+                title: context.payload.issue.title,
+              }),
+            });
+            if (!resp.ok) core.setFailed(`Slack webhook returned ${resp.status}`);
+
+  on-issue-closed:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'closed'
+    steps:
+      - name: notify
+        uses: actions/github-script@v9
+        env:
+          WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+        with:
+          script: |
+            const resp = await fetch(process.env.WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'issues_closed',
+                id: String(context.payload.issue.number),
+                title: context.payload.issue.title,
+              }),
+            });
+            if (!resp.ok) core.setFailed(`Slack webhook returned ${resp.status}`);
+
+  on-pr-opened:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' &&
+      (
+        (github.event.action == 'opened' && github.event.pull_request.draft == false) ||
+        github.event.action == 'ready_for_review'
+      )
+    steps:
+      - name: notify
+        uses: actions/github-script@v9
+        env:
+          WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+        with:
+          script: |
+            const resp = await fetch(process.env.WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'pullrequest_opened',
+                id: String(context.payload.pull_request.number),
+                title: context.payload.pull_request.title,
+              }),
+            });
+            if (!resp.ok) core.setFailed(`Slack webhook returned ${resp.status}`);
+
+  on-pr-closed:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    steps:
+      - name: notify
+        uses: actions/github-script@v9
+        env:
+          WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+        with:
+          script: |
+            const resp = await fetch(process.env.WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'pullrequest_closed',
+                id: String(context.payload.pull_request.number),
+                title: context.payload.pull_request.title,
+              }),
+            });
+            if (!resp.ok) core.setFailed(`Slack webhook returned ${resp.status}`);

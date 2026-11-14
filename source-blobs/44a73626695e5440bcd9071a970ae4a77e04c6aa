@@ -1,0 +1,174 @@
+# Agent simulator
+
+Runs thousands of simulated node agents in one process against a real ownsolid control
+plane, over the real agent protocol: the session stream with HTTPS fallback, heartbeats,
+held claims, acknowledgements, task progress and results. Faults are scripted, and every run
+writes a JSON report. Load tests use it ([ADR 0033](../../../docs/decisions/0033-agent-simulator.md),
+[research](../../../docs/research/agent-simulator.md)).
+
+Certificate-bearing agents use the Agent module's outgoing transport owner for
+optional authenticated connection-age handoff. Each keeps its own connection, and
+legacy multiplexed channels retain their existing behavior. The report records
+attempted handoffs as `connection_handoff`, including failed candidates, while the
+ordinary heartbeat and connection accounting remain unchanged. A replacement is
+adopted only after its heartbeat succeeds; no claim or result is retried by it.
+
+Simulated nodes enroll with the `read_only` profile and run `collect_facts.v1` tasks. They
+report the facts of a large GPU server and differ only in host name (`sim-000000` onwards).
+
+## Build
+
+```sh
+cd tools/dev/simulator && go build -o ../../../bin/simulator .
+# for a Linux test host
+cd tools/dev/simulator && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o ../../../bin/simulator .
+```
+
+`make e2e-binaries` builds it for the end-to-end run.
+
+## Use
+
+1. **Raise the limits a fleet meets** in the install configuration and run `apply`. All
+   simulated agents share the simulator's address and each holds a connection:
+
+   ```yaml
+   control_settings:
+     runtime:
+       http: {max_connections: 4096}
+       nodes: {maximum_live_nodes: 10000, maximum_live_join_tokens: 10000}
+       rates: {agent_enroll_ip_count: 10000, agent_enroll_rack_count: 100000}
+       agent_admission:
+         address: {per_minute: 60000, burst: 10000}
+   ```
+
+2. **Mint one read-only join token per agent** through the administrator API
+   (`POST /api/v1/sites/default/cells/default/admin/node-join-tokens`) and write them to a
+   file, one per line, mode 0600.
+
+3. **Enroll**, which writes the identities file and refuses to overwrite one:
+
+   ```sh
+   simulator enroll --config simulator.json
+   ```
+
+4. **Run**. SIGINT or SIGTERM ends the run early; the report and cursors are still written.
+
+   ```sh
+   simulator run --config simulator.json
+   ```
+
+   A summary is logged every `log_seconds`:
+   `simulator_fleet elapsed_seconds=30 agents=2000 connected=2000 on_stream=2000 ...`.
+
+A second `run` continues the same fleet from the saved cursors.
+
+## Configuration
+
+A JSON file; unknown fields are refused and paths are absolute.
+
+```json
+{
+  "control_origin": "https://admin.example.internal:8443",
+  "ca_file": "/srv/sim/ca.pem",
+  "dial_address": "127.0.0.1:8443",
+  "identities_file": "/srv/sim/identities.json",
+  "join_tokens_file": "/srv/sim/tokens",
+  "agents": 2000,
+  "duration_seconds": 600,
+  "start_seconds": 10,
+  "report_file": "/srv/sim/report.json",
+  "faults": [
+    {"kind": "disconnect", "at_seconds": 120, "percent": 100},
+    {"kind": "partition", "at_seconds": 240, "percent": 30, "duration_seconds": 60},
+    {"kind": "restart", "at_seconds": 420, "percent": 100}
+  ]
+}
+```
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `control_origin` | required | The origin agents use, as on a real node (`https`, no path) |
+| `ca_file` | system roots only | Extra CA that verifies control |
+| `dial_address` | the origin's host and port | Where connections go; TLS still verifies the origin's name |
+| `session_addresses` | none | Agent gateways, `host:port`, up to 16. Each agent opens its session stream on them in its own order and moves to the next when one fails, as a real agent does ([ADR 0048](../../../docs/decisions/0048-agent-gateways-beside-control.md)); HTTPS stays on `dial_address` |
+| `gateway_rebalance_seconds` | 60 | Minimum wait between jittered checks of higher-ranked gateways, as on a real agent. Applies with multiple gateways and one agent per connection |
+| `identities_file` | required | Written by `enroll`, read and updated by `run` |
+| `join_tokens_file` | required by `enroll` | One join token per line |
+| `agents` | required | Agents to enroll or run, 1 to 100,000 |
+| `agents_per_connection` | 1 | Agents sharing one session connection |
+| `https_connections` | 64 | Pooled HTTPS connections for enrollment and task traffic |
+| `enroll_concurrency` | 16 | Enrollments in flight |
+| `request_seconds` | 10 | Budget of one request, plus the claim wait for a claim |
+| `duration_seconds` | required by `run` | Length of the run |
+| `start_seconds` | 10 | First cycles are spread evenly over this window; 0 starts every agent at once |
+| `log_seconds` | 10 | Interval of the summary log line |
+| `window_seconds` | 60 | Length of the windows the report splits the run into |
+| `long_task_seconds` | 90 | How long a task runs under a `long_tasks` fault, at most 110 |
+| `report_file` | required by `run` | Where the report goes |
+| `faults` | none | Scripted faults, below |
+
+## Faults
+
+Each fault hits `percent` of the agents, chosen at random, `at_seconds` into the run. Lasting
+faults take `duration_seconds` and must end before the run does.
+
+| Kind | Lasts | What the chosen agents do |
+| --- | --- | --- |
+| `disconnect` | no | Their connections close; they reconnect on their own backoff |
+| `restart` | no | Their connections close and a new cycle starts at once, without backoff or old pacing |
+| `partition` | yes | Every call fails without reaching control, then all heal together |
+| `https_only` | yes | The stream cannot open, so they fall back to HTTPS long-polling |
+| `lose_replies` | yes | Control's reply to each acknowledgement on the stream and each result is lost; the agent sends it again as the real agent does |
+| `lose_cursor` | no | They forget their task cursor; control answers with a resync |
+| `long_tasks` | yes | Tasks they start in this time run for `long_task_seconds`. They renew their leases through an outage and deliver the result once control answers, and end only on a refusal control wrote, as the real agent does |
+
+With `agents_per_connection` above one, a connection fault reaches every agent on that
+connection.
+
+## Report
+
+The shape of the report, shortened, with example values:
+
+```json
+{
+  "agents": 2000, "connected_at_end": 2000, "on_stream_at_end": 2000, "revoked": 0,
+  "calls": {"heartbeat": {"succeeded": 120345, "failed": {"CONTROL_CONNECTION_FAILED": 612},
+            "latency_milliseconds": {"p50": 2.1, "p90": 4.7, "p99": 11.6, "max": 140.3}}},
+  "tasks": {"leases": 150, "acknowledged": 150, "succeeded": 150, "resyncs": 50, "lost_replies": 24},
+  "faults": [{"kind": "disconnect", "agents": 2000, "measured": true, "recovered_agents": 2000,
+              "full_recovery_seconds": 1.9, "p50_recovery_seconds": 0.7, "p99_recovery_seconds": 1.6}]
+}
+```
+
+- `gateways_at_end`, with `session_addresses`, counts the agents on a stream at the end by gateway.
+- `windows` repeats the counts for each `window_seconds` of the run, with the connected agents at
+  its end, so a steady stretch can be judged apart from the storms around it. Each also carries
+  `generator_lag_max_milliseconds`, the longest the simulator's own timers ran late, which tells a
+  stall of the simulator or its host apart from a slow reply.
+- `calls` covers `enroll`, `heartbeat`, `claim`, `acknowledge`, `renew`, `events` (progress),
+  `result` and `stream_open` (opening a stream with its first heartbeat). Latency covers successful calls;
+  a claim's includes the time control held it.
+- `gateway_rebalance` counts successful and refused preference checks. A refused
+  check leaves the fallback heartbeat on its current session, so it is counted
+  separately from heartbeat failures.
+- Recovery is measured for `disconnect`, `restart` and `partition`: from the fault (from the
+  heal for a partition) to each hit agent's next good heartbeat. `full_recovery_seconds` is set
+  only when every hit agent recovered.
+- The simulator measures; it does not pass or fail a run. Exit status 1 means it could not run
+  or write its files.
+
+## Tests
+
+`go test ./...` runs the simulator against a small fake control plane in the test files,
+including every fault. `tests/e2e` runs it against a real offline install
+(`OWNSOLID_E2E_SIMULATED_AGENTS`, default 2,000).
+
+
+The simulator shares the Agent contract's fallback delay. Initial unsupported
+stream paths retain the two probes and five-minute window. A previously usable
+stream becomes eligible to retry after the currently adopted maximum reconnect
+backoff, capped at that original window. The actual attempt still follows pacing
+and retry hints. An injected Agent-process restart forgets this
+transport history and keeps the acknowledged cursor. Failure and on-stream
+accounting are unchanged; HTTPS is never counted as a stream. The failed and
+qualified inputs belong in the [fleet load research](../../../docs/research/fleet-load-test.md).

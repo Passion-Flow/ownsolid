@@ -1,0 +1,114 @@
+package e2e
+
+import (
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/json"
+	"encoding/pem"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+)
+
+func TestTemporaryCombinedInstalledAcceptance(t *testing.T) {
+	e := loadEnvironment(t)
+	directory := "/evidence/install-inputs"
+	if err := os.Mkdir(directory, 0700); err != nil {
+		t.Fatal(err)
+	}
+	history, err := os.ReadFile("/evidence/history-ready.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ready struct {
+		Status         string `json:"status"`
+		MonitoringFile string `json:"monitoring_file"`
+	}
+	// The CLI records operation prose before its final JSON.
+	start := strings.LastIndex(string(history), "{\"format_version\"")
+	if start < 0 || json.Unmarshal(history[start:], &ready) != nil || ready.Status != "FLEET_HISTORY_READY" {
+		t.Fatal("History deployment did not publish ready output")
+	}
+	extra := fmt.Sprintf(`project: lane-del-installed
+network: {bind_address: 127.0.0.1, https_port: 8443, state_subnet: 172.31.254.0/26}
+telemetry: {metrics_retention: 2d, logs_retention: 2d, fleet_history_control_directory: %s}
+resources:
+  control_memory: 1g
+  control_cpus: "2"
+  postgres_memory: 768m
+  postgres_cpus: "2"
+  postgres_max_connections: 50
+  metrics_memory: 256m
+  metrics_cpus: "1"
+  logs_memory: 256m
+  logs_cpus: "1"
+`, filepath.Dir(ready.MonitoringFile))
+	config := e.configurationWith(t, directory, "single-node", e.controlImage, extra)
+	e.apply(t, config)
+	e.assertWebApplication(t, adminOrigin)
+	e.assertWebApplication(t, portalOrigin)
+	password := e.password(t)
+	admin, csrf := e.adminSession(t, password)
+	e.installLicense(t, admin, csrf)
+	write := func(name string, data []byte) {
+		if err := os.WriteFile(filepath.Join("/evidence", name), data, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	credential, err := os.ReadFile(filepath.Join(e.root, "operator/admin-credential"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	write("admin-credential", credential)
+	write("admin-password", []byte(password))
+	ca, err := os.ReadFile(filepath.Join(e.root, "config/ca.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	write("installation-ca.pem", ca)
+	cert, err := os.ReadFile(filepath.Join(e.root, "config/certificate.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	block, _ := pem.Decode(cert)
+	if block == nil {
+		t.Fatal("Missing installed leaf")
+	}
+	parsed, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pin := sha256.Sum256(parsed.RawSubjectPublicKeyInfo)
+	write("spki", []byte(base64.StdEncoding.EncodeToString(pin[:])))
+	write("install-config-path", []byte(config))
+	summary, _ := json.Marshal(map[string]any{"candidate": os.Getenv("COMBINED_SOURCE_SHA"), "control_image": e.controlImage, "admin_origin": adminOrigin, "portal_origin": portalOrigin, "installation_root": e.root, "history_root": "/srv/fleet-history", "schema": e.sql(t, "SELECT max(version) FROM schema_migrations"), "public_tables": e.sql(t, "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")})
+	write("installed-ready.json", summary)
+	output, err := run(t, "/bundle/scope.test", "-test.run=^TestTemporaryInstalledScopePreparation$", "-test.v", "-test.timeout=180s")
+	if err != nil {
+		t.Fatalf("Installed scope preparation failed: %v\n%s", err, output)
+	}
+	fmt.Println(output)
+	fmt.Println("COMBINED_INSTALLED_CONTROL_ADMIN_PORTAL_READY")
+	deadline := time.NewTimer(6 * time.Hour)
+	defer deadline.Stop()
+	tick := time.NewTicker(time.Second)
+	defer tick.Stop()
+	for {
+		select {
+		case <-deadline.C:
+			t.Fatal("Owner acceptance did not finish before the bounded environment deadline")
+		case <-tick.C:
+			if _, err := os.Stat("/evidence/owners-finished"); err == nil {
+				if err := verifyNoEgress(e.egress.log); err != nil {
+					t.Fatal(err)
+				}
+				fmt.Println("COMBINED_OWNER_ACCEPTANCE_FINISHED")
+				return
+			}
+		}
+	}
+}

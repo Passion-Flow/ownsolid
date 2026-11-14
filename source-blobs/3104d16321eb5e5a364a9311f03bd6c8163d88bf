@@ -1,0 +1,131 @@
+openapi: 3.1.0
+info:
+  title: Project-one MongoDB dataset source
+  version: 0.21.0
+  description: Authenticated M08 dataset subresources. Each server URL represents an existing tenant-scoped dataset resolved by the control service. Origin/CSRF and licensed business admission are inherited from that service.
+servers:
+  - url: /api/v1/workspaces/{workspace_id}/datasets/{dataset_id}/mongodb
+    variables:
+      workspace_id: {default: selected-workspace-uuid}
+      dataset_id: {default: selected-dataset-uuid}
+  - url: /api/v1/admin/datasets/{dataset_id}/mongodb
+    variables:
+      dataset_id: {default: selected-dataset-uuid}
+paths:
+  /sources:
+    get:
+      operationId: listMongoDBSources
+      responses:
+        '200':
+          description: Exact current tenant and Workspace grants; no connection addresses or secrets.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items: {$ref: '#/components/schemas/Source'}
+  /preflight:
+    post:
+      operationId: preflightMongoDBSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ImportRequest'}
+      responses:
+        '200':
+          description: At most one projected source record read in a snapshot session; response contains metadata only.
+        '403': {description: Current actor/scope or source database access denied.}
+        '409': {description: 'MONGODB_SOURCE_CHANGED when the source binding or current access changed; review before a new import.'}
+        '503': {description: Source unavailable or invalid protected configuration.}
+        '504': {description: Snapshot time budget exceeded.}
+  /imports:
+    get:
+      operationId: listMongoDBImports
+      responses:
+        '200':
+          description: Current actor's retained receipts, bounded by maximum_imports_per_dataset.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items: {$ref: '#/components/schemas/ImportReceipt'}
+    post:
+      operationId: importMongoDBSnapshot
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ImportRequest'}
+      responses:
+        '202':
+          description: Snapshot attached to one durable M08 draft; normal M08 validation and explicit publication remain required.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ImportReceipt'}
+        '409': {description: 'Active source slot/lease, changed intent, retired dataset, retained import/attempt limit, or MONGODB_SOURCE_CHANGED after source/access replacement.'}
+        '422': {description: Invalid BSON type, source record, ordering or unsupported snapshot capability.}
+        '413': {description: Dataset source exceeds configured row/byte limits.}
+        '503': {description: Read, durable storage or metadata acknowledgement failed. No success is asserted.}
+        '504': {description: Snapshot time budget exceeded.}
+  /imports/{id}:
+    get:
+      operationId: getMongoDBImport
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Current actor's scoped receipt after current source grant recheck.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ImportReceipt'}
+        '404': {description: Receipt unavailable in this actor/dataset/Workspace/tenant scope.}
+        '409': {description: 'MONGODB_SOURCE_CHANGED when the retained receipt no longer matches the current source/access binding.'}
+components:
+  schemas:
+    Source:
+      type: object
+      additionalProperties: false
+      required: [id, fields]
+      properties:
+        id: {type: string}
+        fields: {type: array, items: {type: string}}
+    ImportRequest:
+      type: object
+      additionalProperties: false
+      required: [source_id, prompt_field, completion_field, conversion, reason]
+      properties:
+        source_id: {type: string}
+        prompt_field: {type: string}
+        completion_field: {type: string}
+        conversion: {type: string, enum: [string, extended_json]}
+        reason: {type: string, minLength: 1, maxLength: 500}
+    ImportReceipt:
+      type: object
+      additionalProperties: false
+      required: [id, request, creation_key, source_id, state, attempt_count, source_sha256, source_bytes, source_rows, first_id, last_id, draft_id, error_code, updated_at, consistency]
+      properties:
+        id: {type: string, format: uuid}
+        request: {$ref: '#/components/schemas/ImportRequest'}
+        creation_key: {type: string, format: uuid}
+        source_id: {type: string}
+        state: {type: string, enum: [reading, exported, imported, failed]}
+        attempt_count: {type: integer, minimum: 1, maximum: 20}
+        source_sha256: {type: [string, 'null']}
+        source_bytes: {type: [integer, 'null']}
+        source_rows: {type: [integer, 'null']}
+        first_id: {type: [string, 'null']}
+        last_id: {type: [string, 'null']}
+        draft_id: {type: [string, 'null']}
+        error_code: {type: [string, 'null']}
+        updated_at: {type: string, format: date-time}
+        consistency: {type: string, const: snapshot-session}

@@ -1,0 +1,31 @@
+{
+  "input_contract_sha256": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+  "generator_sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2",
+  "public_operations": 25,
+  "generated_files": 122,
+  "added": [
+    "gen/go/identity/audit_read.gen.go"
+  ],
+  "changed": [
+    "gen/go/identity/client.gen.go"
+  ],
+  "removed": [],
+  "python_generated_files_byte_identical": true,
+  "python_generated_files_compared": 118,
+  "sdk_unit_tests_passed": 58,
+  "layout_unit_tests_passed": 13,
+  "layout_check_passed": true,
+  "roadmap_check_passed": true,
+  "gofmt_diff_empty": true,
+  "python_failure_manual_retry_scenarios_passed": 8,
+  "unit_log_sha256": "73d3c7650fd099b79bdc29af2a2562afeeb631636a907cf51c8c8242e2b2fad6",
+  "python_wire_log_sha256": "7bde40cc7d95260381a595dec36b0c8fb5d62f7dc9feaf369826a34648a9c1ed",
+  "network_namespace_no_external_network": true,
+  "native_go_wire_compiled": false,
+  "native_go_wire_run": false,
+  "new_heavy_admission_attempted": false,
+  "new_mac_queue_attempted": false,
+  "backend_or_installed_acceptance_run": false,
+  "repository_check_build_test_passed": false,
+  "source": "1e8f1fadf8caff8d7b9ac771cd91641ba19d4287"
+}

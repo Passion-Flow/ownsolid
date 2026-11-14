@@ -1,0 +1,30 @@
+{
+  "Config": {
+    "Labels": {
+      "io.ownsolid.prototype.run_id": "e74625ed-f2aa-49ab-a459-3184b3a4c470"
+    }
+  },
+  "HostConfig": {
+    "NetworkMode": "none",
+    "PortBindings": {},
+    "ReadonlyRootfs": true
+  },
+  "Image": "sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5",
+  "Mounts": [
+    {
+      "Destination": "/var/lib/docker",
+      "Driver": "local",
+      "Mode": "",
+      "Name": "1e9ed487b88ec033c6629b75696e66d0d5c1cace72cdb74cc62a59ee61d967bd",
+      "Propagation": "",
+      "RW": true,
+      "Source": "/var/lib/docker/volumes/1e9ed487b88ec033c6629b75696e66d0d5c1cace72cdb74cc62a59ee61d967bd/_data",
+      "Type": "volume"
+    }
+  ],
+  "State": {
+    "Pid": 0,
+    "Running": false,
+    "Status": "created"
+  }
+}

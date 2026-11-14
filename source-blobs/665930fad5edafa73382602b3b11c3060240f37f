@@ -1,0 +1,57 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "e4eddaf331467633e1523edcc4e6fe5b84267f8781ec102ad2edd3d953914e9a",
+  "after_step": 51,
+  "steps": [
+    {
+      "step": 52,
+      "file": "000052_datasets.sql",
+      "object": "datasets",
+      "kind": "create_table",
+      "source_sha256": "34db119bdd0a79ae88e9560ae4eea6868b7a38b165752345aeba5e3d9c00dec0"
+    },
+    {
+      "step": 53,
+      "file": "000053_dataset_drafts.sql",
+      "object": "dataset_drafts",
+      "kind": "create_table",
+      "source_sha256": "b5ca4119eea20e5f869dc87106364ebd0b4b4e2ab5d47c305dc3327ed15ae744"
+    },
+    {
+      "step": 54,
+      "file": "000054_dataset_rows.sql",
+      "object": "dataset_rows",
+      "kind": "create_table",
+      "source_sha256": "0b5067384db398ff20fa9ec5a4d8178efdec1a692fbe615dc3088beaddcc3d12"
+    },
+    {
+      "step": 55,
+      "file": "000055_dataset_row_history.sql",
+      "object": "dataset_row_history",
+      "kind": "create_table",
+      "source_sha256": "a1f2fe228fa299250a217cbc30ccaa3592743cbb42f0cd4c364cacf5ef458859"
+    },
+    {
+      "step": 56,
+      "file": "000056_dataset_jobs.sql",
+      "object": "dataset_jobs",
+      "kind": "create_table",
+      "source_sha256": "e44075577eb9d0aeba00e04367f66408c706b182a5394d5352514c87969a3c5f"
+    },
+    {
+      "step": 57,
+      "file": "000057_dataset_job_attempts.sql",
+      "object": "dataset_job_attempts",
+      "kind": "create_table",
+      "source_sha256": "90ca00f808c439fd90993ec13e955ab63cdd1b806a7412355948843bd196650e"
+    },
+    {
+      "step": 58,
+      "file": "000058_dataset_versions.sql",
+      "object": "dataset_versions",
+      "kind": "create_table",
+      "source_sha256": "ed77bb929077c6add46f50b682be32f894e501afbfa2e92f62a02c39e43665ee"
+    }
+  ]
+}

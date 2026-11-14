@@ -1,0 +1,7 @@
+{
+  "Replace": {
+    "/root/lane-gw/services/control/internal/modules/distribution/authorization.go": "/root/lane-gw-acceptance/gw105-purpose-compat.0X4h4kzT/source/services/control/internal/modules/distribution/authorization.go",
+    "/root/lane-gw/services/control/internal/modules/distribution/keys.go": "/root/lane-gw-acceptance/gw105-purpose-compat.0X4h4kzT/source/services/control/internal/modules/distribution/keys.go",
+    "/root/lane-gw/services/control/internal/modules/distribution/rotation.go": "/root/lane-gw-acceptance/gw105-purpose-compat.0X4h4kzT/source/services/control/internal/modules/distribution/rotation.go"
+  }
+}

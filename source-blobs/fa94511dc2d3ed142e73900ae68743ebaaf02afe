@@ -1,0 +1,19 @@
+{
+  "base": "e5c8484274e5b1ddf75eefc437750377318608c0",
+  "files": {
+    "deploy/offline/README.md": "ff0cc32d9b2b73c457d01dbb518e5df44ba85c132bfad8880d03dc21d5e18eda",
+    "deploy/offline/install.example.yaml": "c58a830623b92df575be6c55ce2942edf07c50aa073575e9127d97429e923473",
+    "deploy/offline/internal/install/apply.go": "0e94ff32c72fba04e5074e19b6b667be0ab9ec6fca47df9064f15702c8d52ca4",
+    "deploy/offline/internal/install/config.go": "561c0c8977a54c994bef05214ce1b9a7d2552378b2340446a905f62b1f978eba",
+    "deploy/offline/internal/install/materialize.go": "8d2bbdfc4150919867039d9c51cc60086e1fca9967363153d720ae491d388541",
+    "deploy/offline/internal/install/preflight.go": "9fffd1d8503a0662ca212917b52b0cdde6230030f545665fe6171020e5b80cd5",
+    "deploy/offline/internal/install/serving_transport.go": "2091cc7f519d33bd26e734c6b27966bafd1b6fcf4af13084a59e46bcab77e38e",
+    "deploy/offline/internal/install/serving_transport_test.go": "28160a4ae922ab533963a433df99d54903aae2e02d2f07023cb7525049621640",
+    "docs/research/installer-entrance-listeners.md": "0acf6a3f9b3496652e03b0a01e2927eeea47e41d2f584e9663679afc2b6c8068",
+    "deploy/offline/internal/install/entrance_listeners.go": "5e5c1126dc59ff553a34176f67b2fbc3bf27e0ce156c1e86c28e5d5fe69a2064",
+    "deploy/offline/internal/install/entrance_listeners_test.go": "bfca0b17e99ee96dd626723462d0ec4962ede18fb3b81772a8640fa446013d9b",
+    "deploy/offline/internal/install/listener_compatibility.go": "1691fb5a0a33c8bd5608f7319c2857f6f63fed4531804c091525614923942c05"
+  },
+  "binary_sha256": "40f20c25cd507983794454d68bf8c2cf187c0064cfdf8430fbec607bec5b572f",
+  "canonical_sha256": "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca"
+}

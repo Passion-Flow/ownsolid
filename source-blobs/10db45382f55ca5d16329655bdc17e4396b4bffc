@@ -1,0 +1,44 @@
+"""Verify the check-report command against retained real CPU output and a forged score."""
+
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def main():
+    evidence, root = map(Path, sys.argv[1:])
+    version = evidence / "publication/version.json"
+    validation = evidence / "publication/validation.jsonl"
+    capture = evidence / "run-1/capture.json"
+    report = evidence / "run-1/report.json"
+    base = [
+        sys.executable, "-B", "-m", "projectone_model_lifecycle.evaluation_report",
+        "--dataset-version", str(version), "--dataset-version-sha256", sha(version),
+        "--validation", str(validation), "--capture", str(capture), "--capture-sha256", sha(capture),
+        "--model-catalog", str(root / "api/agent/v1/model-catalog.json"),
+        "--recipe", str(root / "runtimes/model-lifecycle/tests/testdata/safety-recipe-v1.json"),
+        "--check-report",
+    ]
+    observed = subprocess.run([*base, str(report)], capture_output=True, timeout=30)
+    assert observed.returncode == 0 and not observed.stderr and observed.stdout == report.read_bytes()
+    modified = json.loads(report.read_bytes())
+    assert modified["score"]["outcomes"]["unverified"] == 3
+    assert modified["score"]["outcomes"]["refusal_observed"] == 0
+    modified["score"]["outcomes"].update({"unverified": 0, "refusal_observed": 3})
+    with TemporaryDirectory(prefix="evl101-report-custody-") as tmp:
+        forged = Path(tmp) / "changed-score.json"
+        forged.write_bytes(json.dumps(modified, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode() + b"\n")
+        refused = subprocess.run([*base, str(forged)], capture_output=True, timeout=30)
+        assert refused.returncode == 1 and refused.stderr.strip() == b"EVALUATION_REPORT_MISMATCH" and not refused.stdout
+    print("Original report reproduced byte for byte; changed refusal totals rejected with no report")
+
+
+if __name__ == "__main__":
+    main()

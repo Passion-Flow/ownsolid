@@ -1,0 +1,704 @@
+From 409db07d4832224a3981ed2e47f0bdac9d86eab2 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 09:54:16 +0000
+Subject: [PATCH] DAT-101: Verify restored Parquet draft custody
+
+Share scoped receipt verification with upload replay. Restore a real logical PostgreSQL archive, normalized snapshot and signed S3 original in a loopback-only fixture and verify renewed authorization, scope and both artifact digests.
+---
+ docs/research/dataset-import.md               |  47 +++
+ .../datasets/draft_source_candidate.go        |  94 +++++-
+ .../draft_source_restore_integration_test.go  | 269 ++++++++++++++++++
+ .../http_draft_source_integration_test.go     |  18 +-
+ .../datasets/source_import_object_test.go     |  75 ++---
+ .../datasets/testdata/draft_source_fixture.py |  10 +
+ .../datasets/testdata/replay_draft_import.sh  |  22 +-
+ 7 files changed, 465 insertions(+), 70 deletions(-)
+ create mode 100644 services/control/internal/modules/datasets/draft_source_restore_integration_test.go
+ create mode 100644 services/control/internal/modules/datasets/testdata/draft_source_fixture.py
+
+diff --git a/docs/research/dataset-import.md b/docs/research/dataset-import.md
+index 4dc15beb..3b27e096 100644
+--- a/docs/research/dataset-import.md
++++ b/docs/research/dataset-import.md
+@@ -442,3 +442,50 @@ independently scoped drafts and originals when the same request ran in a
+ second authorized workspace. Both replayed the report after inspection
+ and refused a modified original. An injected receipt constraint failure
+ rolled back the draft, job and audit rows and removed the private source.
++
++## Restore acceptance for the isolated Parquet receipt
++
++Use the existing owned PostgreSQL fixture's
++[custom dump](https://www.postgresql.org/docs/18/app-pgdump.html) and
++[restore](https://www.postgresql.org/docs/18/app-pgrestore.html) in a new
++database. The test script gives its network-none container a unique cluster
++name and passes its exact identity to the replay test. Reuse the dataset
++file snapshot for the normalized input and the signed S3 TLS fixture for
++the supplemental original. It provides the exact tenant, workspace, object
++and ETag expected by the object transport. Both streams and the SQL archive
++come from synthetic fixture data. PostgreSQL, the Go libraries, and the
++existing Apache-2.0 PyArrow and S3 libraries retain the licenses above.
++This test adds no runtime dependency or new dataset.
++
++A restored receipt is read by draft ID using the normal workspace and draft
++authorization. Verify the row's source format, both byte counts and SHA-256
++digests, and the existing draft's normalized receipt before returning any
++report. Share this verification with idempotent replay. Recover into a new
++store with the original namespace marker, invalidate the restored account
++sessions, and sign in again as the same person. Compare both the restored
++draft and report with the original and refuse a real second workspace.
++Require failure when either file or the report is missing or changed.
++The ordinary file snapshot omits Parquet originals, so test read refusal
++before the supplemental object has been restored as well.
++
++This remains a module acceptance fixture. It does not change the
++production backup manifest or apply restore operators for other domains.
++The restore owner must join `dataset_draft_import_candidates` to
++`dataset_drafts` by tenant, workspace, dataset and draft in the shared
++migration order, include both object paths in `snapshotReferences` and
++`referenceFiles`, and verify the pair with the receipt before marking the
++restored installation ready. Repeat the same missing and corrupt cases at
++the coordinated restore entry point, then bind the public S-503 report
++read to the same authorization and custody checks.
++
++On Linux amd64 with only loopback, the restored PostgreSQL 18.6 database
++and a fresh login returned the original editing draft and identical
++report. The fixture fetched the exact original through a signed S3 TLS
++GET after importing the normalized snapshot. The old session, another
++workspace, missing and same-length altered files, and missing and changed
++report rows were refused. To run only this acceptance:
++
++```sh
++bash services/control/internal/modules/datasets/testdata/replay_draft_import.sh \
++  '^TestActualParquetDraftAfterMetadataAndObjectRestore$'
++```
+diff --git a/services/control/internal/modules/datasets/draft_source_candidate.go b/services/control/internal/modules/datasets/draft_source_candidate.go
+index 26c8a5e5..2ac0e35a 100644
+--- a/services/control/internal/modules/datasets/draft_source_candidate.go
++++ b/services/control/internal/modules/datasets/draft_source_candidate.go
+@@ -77,15 +77,15 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
+ 	if input.Bytes > policy.Limits.MaximumBytes {
+ 		return DraftSourceResult{}, failure("DATASET_FILE_TOO_LARGE")
+ 	}
+-	var original, kind string
++	var kind string
+ 	switch format {
+ 	case SourceCSV:
+-		original, kind = "source.csv", "csv_utf8_draft_v1"
++		kind = "csv_utf8_draft_v1"
+ 	case SourceParquet:
+ 		if c.importer.parquet == nil {
+ 			return DraftSourceResult{}, failure("DATASET_STORAGE_UNAVAILABLE")
+ 		}
+-		original, kind = "source.parquet", "parquet_draft_v1"
++		kind = "parquet_draft_v1"
+ 	default:
+ 		return DraftSourceResult{}, failure("VALIDATION_FAILED")
+ 	}
+@@ -95,7 +95,7 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
+ 	}{kind, input}, a.Me.User.ID)
+ 	var authority *string
+ 	var result DraftSourceResult
+-	err := s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, original, input, intent,
++	err := s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, input, intent,
+ 		func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, previous DraftSourceResult) error {
+ 			result = previous
+ 			if previous.Draft.ID != "" {
+@@ -125,6 +125,7 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
+ 	if err != nil {
+ 		return DraftSourceResult{}, err
+ 	}
++	original := draftOriginalFile(format)
+ 	keepFiles := false
+ 	defer func() {
+ 		if !keepFiles {
+@@ -136,7 +137,7 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
+ 		return DraftSourceResult{}, err
+ 	}
+ 	draftID := uuid.NewString()
+-	err = s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, original, input, intent,
++	err = s.draftSourceTransaction(ctx, a, workspace, dataset, key, format, input, intent,
+ 		func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace, previous DraftSourceResult) error {
+ 			result = previous
+ 			if previous.Draft.ID != "" {
+@@ -189,7 +190,74 @@ func (c *DraftSourceCandidate) Import(ctx context.Context, a identity.Auth, work
+ 	return committed(result, err)
+ }
+ 
+-func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, workspace, dataset, key string, format SourceFormat, originalFile string, input DraftSourceRequest, intent []byte, apply func(context.Context, transaction.Executor, workspaces.Workspace, DraftSourceResult) error) error {
++// Read returns a scoped draft and its report only after verifying both
++// immutable artifacts. It does not need an upload body or an active decoder.
++func (c *DraftSourceCandidate) Read(ctx context.Context, a identity.Auth, workspace, dataset, id string) (DraftSourceResult, error) {
++	var result DraftSourceResult
++	s := c.service
++	err := s.transaction(ctx, a, workspace, false, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
++		if w.TenantID != s.Store.namespace.TenantID {
++			return failure("DATASET_NOT_FOUND")
++		}
++		if _, err := lockedDataset(ctx, tx, w, dataset); err != nil {
++			return err
++		}
++		draft, err := lockedDraft(ctx, tx, w, dataset, id)
++		if err != nil {
++			return err
++		}
++		if err = draftAccess(a, w, draft, false); err != nil {
++			return err
++		}
++		var object, format string
++		var raw []byte
++		err = tx.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `
++			SELECT d.source_object_id::text,c.source_format,c.report
++			FROM dataset_drafts d JOIN dataset_draft_import_candidates c
++			  ON (c.tenant_id,c.workspace_id,c.dataset_id,c.draft_id)=(d.tenant_id,d.workspace_id,d.dataset_id,d.id)
++			WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.dataset_id=$3 AND d.id=$4`,
++			w.TenantID, w.ID, dataset, id)).Scan(&object, &format, &raw)
++		if errors.Is(err, pgx.ErrNoRows) {
++			return failure("DATASET_NOT_FOUND")
++		}
++		if err != nil {
++			return err
++		}
++		result, err = s.Store.verifyDraftSource(draft, object, SourceFormat(format), raw)
++		return err
++	})
++	return committed(result, err)
++}
++
++func draftOriginalFile(format SourceFormat) string {
++	switch format {
++	case SourceCSV:
++		return "source.csv"
++	case SourceParquet:
++		return "source.parquet"
++	default:
++		return ""
++	}
++}
++
++func (s *Store) verifyDraftSource(draft Draft, object string, format SourceFormat, raw []byte) (DraftSourceResult, error) {
++	original := draftOriginalFile(format)
++	var report SourceImportReport
++	if original == "" || json.Unmarshal(raw, &report) != nil || draft.SourceReceivedAt == nil ||
++		report.SourceBytes < 1 || report.SourceBytes > wire.MaximumBytesCeiling || !wire.ValidDigest(report.SourceSHA256) ||
++		report.OutputBytes != draft.ExpectedBytes || report.OutputSHA256 != draft.SourceSHA256 {
++		return DraftSourceResult{}, failure("DATASET_DATA_INVALID")
++	}
++	if _, err := s.Source(object, report.OutputSHA256, report.OutputBytes); err != nil {
++		return DraftSourceResult{}, err
++	}
++	if err := s.verifyDraftOriginal(object, original, report); err != nil {
++		return DraftSourceResult{}, err
++	}
++	return DraftSourceResult{Draft: draft, Report: report}, nil
++}
++
++func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, workspace, dataset, key string, format SourceFormat, input DraftSourceRequest, intent []byte, apply func(context.Context, transaction.Executor, workspaces.Workspace, DraftSourceResult) error) error {
+ 	return s.transaction(ctx, a, workspace, true, func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) error {
+ 		if w.TenantID != s.Store.namespace.TenantID {
+ 			return failure("DATASET_STORAGE_UNAVAILABLE")
+@@ -228,19 +296,17 @@ func (s *Service) draftSourceTransaction(ctx context.Context, a identity.Auth, w
+ 		if err = draftAccess(a, w, draft, true); err != nil {
+ 			return err
+ 		}
+-		var report SourceImportReport
+-		if storedFormat != string(format) || json.Unmarshal(raw, &report) != nil || draft.SourceReceivedAt == nil ||
+-			report.SourceBytes != input.Bytes || report.SourceSHA256 != input.SHA256 ||
+-			report.OutputBytes != draft.ExpectedBytes || report.OutputSHA256 != draft.SourceSHA256 {
++		if storedFormat != string(format) {
+ 			return failure("DATASET_DATA_INVALID")
+ 		}
+-		if _, err = s.Store.Source(object, report.OutputSHA256, report.OutputBytes); err != nil {
++		result, err := s.Store.verifyDraftSource(draft, object, format, raw)
++		if err != nil {
+ 			return err
+ 		}
+-		if err = s.Store.verifyDraftOriginal(object, originalFile, report); err != nil {
+-			return err
++		if result.Report.SourceBytes != input.Bytes || result.Report.SourceSHA256 != input.SHA256 {
++			return failure("DATASET_DATA_INVALID")
+ 		}
+-		return apply(ctx, tx, w, DraftSourceResult{Draft: draft, Report: report})
++		return apply(ctx, tx, w, result)
+ 	})
+ }
+ 
+diff --git a/services/control/internal/modules/datasets/draft_source_restore_integration_test.go b/services/control/internal/modules/datasets/draft_source_restore_integration_test.go
+new file mode 100644
+index 00000000..3abbf6e1
+--- /dev/null
++++ b/services/control/internal/modules/datasets/draft_source_restore_integration_test.go
+@@ -0,0 +1,269 @@
++//go:build dataset_processor_integration
++
++package datasets
++
++import (
++	"bytes"
++	"context"
++	"crypto/sha256"
++	"fmt"
++	"io"
++	"net/http"
++	"os"
++	"os/exec"
++	"path/filepath"
++	"reflect"
++	"strconv"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/objectstore"
++	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5"
++	"github.com/jackc/pgx/v5/pgxpool"
++)
++
++func TestActualParquetDraftAfterMetadataAndObjectRestore(t *testing.T) {
++	if os.Getenv("OWNSOLID_TEST_DRAFT_RESTORE_CONTAINER") == "" {
++		t.Skip("use testdata/replay_draft_import.sh to bind a disposable logical-restore cluster")
++	}
++	python := os.Getenv("OWNSOLID_TEST_PARQUET_PYTHON")
++	if python == "" {
++		t.Fatal("locked Parquet interpreter required")
++	}
++	ctx, cancel := context.WithTimeout(t.Context(), 90*time.Second)
++	defer cancel()
++	account := fixture.New(t)
++	owned := ownedDraftRestoreFixture(t, ctx, account.DB)
++	password := fixture.Bootstrap(t, account)
++	admin := fixture.Login(t, account, "admin@example.invalid", password, "admin")
++	actor := fixture.Login(t, account, "admin@example.invalid", password, "portal")
++	workspace, tenant := actor.Me.Workspace.ID, actor.Me.Workspace.TenantID
++	processor, root := nativeProcessor(t)
++	account.Config.Datasets = processor.configuration
++	if err := InitializeStore(root, tenant, os.Geteuid(), os.Getegid()); err != nil {
++		t.Fatal(err)
++	}
++	store, err := OpenStore(root, tenant, 4096)
++	if err != nil {
++		t.Fatal(err)
++	}
++	t.Cleanup(func() { _ = store.Close() })
++	service := &Service{DB: account.DB, Identity: account, Workspaces: &workspaces.Service{DB: account.DB, Identity: account}, Store: store, Processor: processor}
++	schema, err := os.ReadFile("testdata/draft_import_candidate.sql")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if _, err = service.DB.Exec(ctx, string(schema)); err != nil {
++		t.Fatal(err)
++	}
++	parquet := &ParquetImportConfig{
++		PythonExecutable: python, DecoderFile: filepath.Join(filepath.Dir(processor.configuration.ProcessorFile), "import_parquet.py"),
++		BatchRows: 1, MetadataBytes: 1 << 20, RowGroupBytes: 8 << 20, MemoryBytes: 512 << 20,
++	}
++	candidate, err := NewDraftSourceCandidate(service, parquet)
++	if err != nil {
++		t.Fatal(err)
++	}
++	other, err := service.Workspaces.Create(ctx, admin, "Other restore workspace", actor.Me.User.ID, uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	data, err := service.Create(ctx, actor, CreateRequest{
++		WorkspaceID: workspace, Name: "Parquet restore fixture", Origin: "Synthetic fixture",
++		License: "Synthetic CC0", RightsAsserted: true, Reason: "Exercise scoped restoration",
++	}, uuid.NewString(), uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	script, err := filepath.Abs("testdata/draft_source_fixture.py")
++	if err != nil {
++		t.Fatal(err)
++	}
++	parquetBytes, err := exec.CommandContext(ctx, python, "-I", "-B", script, "valid").Output()
++	if err != nil {
++		t.Fatal(err)
++	}
++	digest := fmt.Sprintf("%x", sha256.Sum256(parquetBytes))
++	input := DraftSourceRequest{Name: "original.parquet", SHA256: digest, Bytes: int64(len(parquetBytes))}
++	intent := uuid.NewString()
++	uploaded, err := candidate.Import(ctx, actor, workspace, data.ID, SourceParquet, input, intent, bytes.NewReader(parquetBytes), uuid.NewString())
++	if err != nil {
++		t.Fatal(err)
++	}
++	process(t, service)
++	before, err := candidate.Read(ctx, actor, workspace, data.ID, uploaded.Draft.ID)
++	if err != nil || before.Draft.State != "editing" || before.Report.SourceSHA256 != digest || before.Report.OutputSHA256 != before.Draft.SourceSHA256 {
++		t.Fatal("source report was not readable before backup", err)
++	}
++	var object string
++	if err = service.DB.QueryRow(ctx, "SELECT source_object_id::text FROM dataset_drafts WHERE id=$1 AND workspace_id=$2",
++		before.Draft.ID, workspace).Scan(&object); err != nil {
++		t.Fatal(err)
++	}
++	original := filepath.Join(root, "objects", object, "source.parquet")
++	backedUp, err := os.ReadFile(original)
++	if err != nil || !bytes.Equal(backedUp, parquetBytes) {
++		t.Fatal("retained source differed before backup", err)
++	}
++	backup := filepath.Join(privateSnapshotDirectory(t), "files")
++	if err = service.ExportFiles(ctx, backup); err != nil {
++		t.Fatal("export existing normalized file inventory", err)
++	}
++	archive := owned.DumpSchema(t, ctx)
++	restored := owned.RestoreFresh(t, ctx, service.DB, archive)
++	if restored.Config().ConnConfig.Database == service.DB.Config().ConnConfig.Database {
++		t.Fatal("restore reused the live metadata database")
++	}
++
++	restoredRoot := privateSnapshotDirectory(t)
++	restoredAccount := &identity.Service{
++		DB: restored, Config: account.Config, Passwords: account.Passwords, HMACKey: account.HMACKey,
++	}
++	restoredAccount.Config.Datasets.ArtifactRoot = restoredRoot
++	restoredAccount.BusinessAdmission, err = licensing.FromConfig(restoredAccount)
++	if err != nil {
++		t.Fatal(err)
++	}
++	fresh := &Service{
++		DB: restored, Identity: restoredAccount,
++		Workspaces: &workspaces.Service{DB: restored, Identity: restoredAccount},
++	}
++	if err = pgx.BeginFunc(ctx, restored, func(tx pgx.Tx) error {
++		return restoredAccount.InvalidateAccountAuthorities(ctx, tx, "Synthetic Parquet recovery")
++	}); err != nil {
++		t.Fatal("invalidate sessions in the restored account database", err)
++	}
++	if err = fresh.ImportFiles(ctx, backup, restoredRoot); err != nil {
++		t.Fatal("restore normalized snapshot into the new store", err)
++	}
++	if err = fresh.OpenConfiguredStore(ctx); err != nil {
++		t.Fatal("open restored dataset store", err)
++	}
++	t.Cleanup(func() { _ = fresh.Store.Close() })
++	if fresh.Store.Namespace() != store.Namespace() {
++		t.Fatal("restore changed the dataset store namespace")
++	}
++	reader, err := NewDraftSourceCandidate(fresh, nil)
++	if err != nil {
++		t.Fatal(err)
++	}
++	expectFailure := func(a identity.Auth, w, expected string) {
++		t.Helper()
++		out, err := reader.Read(ctx, a, w, data.ID, before.Draft.ID)
++		if err == nil || !strings.HasPrefix(err.Error(), expected) || !reflect.DeepEqual(out, DraftSourceResult{}) {
++			t.Fatalf("expected a closed report read with %s, received %v", expected, err)
++		}
++	}
++	expectFailure(actor, workspace, "AUTH_")
++	reauth := fixture.Login(t, restoredAccount, "admin@example.invalid", password, "portal")
++	if reauth.Me.User.ID != actor.Me.User.ID {
++		t.Fatal("restored login did not recover the original subject")
++	}
++	expectFailure(reauth, other.ID, "DATASET_NOT_FOUND")
++	expectFailure(reauth, workspace, "DATASET_FILE_INVALID")
++
++	// The legacy snapshot restores only the normalized role. Replay the
++	// supplemental original from the existing signed S3 test transport.
++	const bucket, etag = "draft-restore-fixture", `"retained-parquet"`
++	ref := objectstore.Ref{Tenant: tenant, Workspace: workspace, Object: object}
++	key, err := ref.Key()
++	if err != nil {
++		t.Fatal(err)
++	}
++	client := newSourceFixtureS3(t, bucket, func(w http.ResponseWriter, r *http.Request) {
++		if r.Method != http.MethodGet || r.URL.Path != "/"+bucket+"/"+key ||
++			r.Header.Get("If-Match") != etag || !strings.HasPrefix(r.Header.Get("Authorization"), "AWS4-HMAC-SHA256 ") {
++			t.Error("restore did not request the exact signed retained object")
++			w.WriteHeader(http.StatusBadRequest)
++			return
++		}
++		w.Header().Set("Content-Length", strconv.Itoa(len(backedUp)))
++		w.Header().Set("ETag", etag)
++		_, _ = w.Write(backedUp)
++	})
++	body, err := openSourceObject(ctx, client, SourceObject{Ref: ref, ETag: etag, Bytes: before.Report.SourceBytes, SHA256: digest})
++	if err != nil {
++		t.Fatal("read the retained object through S3", err)
++	}
++	retained, err := io.ReadAll(io.LimitReader(body, before.Report.SourceBytes+1))
++	closeErr := body.Close()
++	if err != nil || closeErr != nil || int64(len(retained)) != before.Report.SourceBytes ||
++		fmt.Sprintf("%x", sha256.Sum256(retained)) != before.Report.SourceSHA256 {
++		t.Fatal("retained object does not match its durable receipt", err)
++	}
++	original = filepath.Join(restoredRoot, "objects", object, "source.parquet")
++	if err = writeNew(original, retained); err != nil {
++		t.Fatal(err)
++	}
++	got, err := reader.Read(ctx, reauth, workspace, data.ID, before.Draft.ID)
++	if err != nil || !reflect.DeepEqual(got, before) {
++		t.Fatal("restored read changed the authorized draft or report", err)
++	}
++	expectFailure(reauth, other.ID, "DATASET_NOT_FOUND")
++
++	normalized := filepath.Join(restoredRoot, filepath.FromSlash(objectPath(object)))
++	normalizedSHA, normalizedSize, err := contextFileDigest(ctx, normalized, got.Report.OutputBytes)
++	if err != nil || normalizedSHA != got.Report.OutputSHA256 || normalizedSize != got.Report.OutputBytes {
++		t.Fatal("restored normalized file is inconsistent with the report", err)
++	}
++	for _, file := range []string{original, normalized} {
++		raw, err := os.ReadFile(file)
++		if err != nil {
++			t.Fatal(err)
++		}
++		changed := bytes.Clone(raw)
++		changed[0] ^= 1
++		if err = os.WriteFile(file, changed, 0600); err != nil {
++			t.Fatal(err)
++		}
++		expectFailure(reauth, workspace, "DATASET_FILE_INVALID")
++		if err = os.Remove(file); err != nil {
++			t.Fatal(err)
++		}
++		expectFailure(reauth, workspace, "DATASET_FILE_INVALID")
++		if err = writeNew(file, raw); err != nil {
++			t.Fatal(err)
++		}
++	}
++	if _, err = restored.Exec(ctx, `UPDATE dataset_draft_import_candidates
++		SET report=jsonb_set(report,'{output_sha256}',to_jsonb(repeat('0',64))) WHERE draft_id=$1`, before.Draft.ID); err != nil {
++		t.Fatal(err)
++	}
++	expectFailure(reauth, workspace, "DATASET_DATA_INVALID")
++	if _, err = restored.Exec(ctx, "DELETE FROM dataset_draft_import_candidates WHERE draft_id=$1", before.Draft.ID); err != nil {
++		t.Fatal(err)
++	}
++	expectFailure(reauth, workspace, "DATASET_NOT_FOUND")
++	t.Log("logical archive, normalized file snapshot, retained S3 original, fresh authorization and digest refusals verified")
++}
++
++func ownedDraftRestoreFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool) fixture.PostgresFixture {
++	t.Helper()
++	container := os.Getenv("OWNSOLID_TEST_DRAFT_RESTORE_CONTAINER")
++	dockerContext := os.Getenv("OWNSOLID_TEST_DRAFT_RESTORE_DOCKER_CONTEXT")
++	expected := os.Getenv("OWNSOLID_TEST_DRAFT_RESTORE_CLUSTER")
++	conf := pool.Config().ConnConfig
++	if dockerContext == "" || !strings.HasPrefix(expected, "draft-import-") ||
++		conf.Host != "127.0.0.1" || conf.Port != 5432 || conf.User != "postgres" || conf.Database != "ownsolid_draft_import_test" {
++		t.Fatal("restore acceptance requires the exact disposable draft fixture")
++	}
++	info, err := exec.CommandContext(ctx, "docker", "--context", dockerContext, "inspect", "--type", "container", container,
++		"--format", `{{.State.Running}} {{.HostConfig.NetworkMode}} {{index .Config.Labels "ownsolid.fixture.cluster"}}`).Output()
++	if err != nil || strings.TrimSpace(string(info)) != "true none "+expected {
++		t.Fatal("restore fixture is not a live network-none container", err)
++	}
++	var cluster, version string
++	if err = pool.QueryRow(ctx, "SELECT current_setting('cluster_name'),current_setting('server_version_num')").Scan(&cluster, &version); err != nil ||
++		cluster != expected || version != "180006" {
++		t.Fatal("restore database does not match the declared isolated PostgreSQL 18.6 cluster", err)
++	}
++	return fixture.PostgresFixture{
++		Container: container, Context: dockerContext, Database: conf.Database, User: conf.User, Schema: conf.RuntimeParams["search_path"],
++	}
++}
+diff --git a/services/control/internal/modules/datasets/http_draft_source_integration_test.go b/services/control/internal/modules/datasets/http_draft_source_integration_test.go
+index 3035989f..3fd38c82 100644
+--- a/services/control/internal/modules/datasets/http_draft_source_integration_test.go
++++ b/services/control/internal/modules/datasets/http_draft_source_integration_test.go
+@@ -338,23 +338,15 @@ func parquetDraftFixtureConfig(t *testing.T, decoderDirectory string) *datasets.
+ 
+ func writeParquetDraftFixture(t *testing.T, python string, invalid bool) []byte {
+ 	t.Helper()
+-	const script = `
+-import sys
+-import pyarrow as pa
+-import pyarrow.parquet as pq
+-
+-prompt = None if sys.argv[1] == "invalid" else "Who, me?"
+-pq.write_table(pa.table({
+-    "source_id": ["first", "second"],
+-    "prompt": [prompt, "Color"],
+-    "completion": ["Yes.\nAgain.", "Blue"],
+-}), sys.stdout.buffer, row_group_size=1, write_page_checksum=True)
+-`
++	script, err := filepath.Abs("testdata/draft_source_fixture.py")
++	if err != nil {
++		t.Fatal(err)
++	}
+ 	mode := "valid"
+ 	if invalid {
+ 		mode = "invalid"
+ 	}
+-	output, err := exec.CommandContext(t.Context(), python, "-I", "-B", "-c", script, mode).Output()
++	output, err := exec.CommandContext(t.Context(), python, "-I", "-B", script, mode).Output()
+ 	if err != nil {
+ 		t.Fatalf("write real Parquet fixture: %v", err)
+ 	}
+diff --git a/services/control/internal/modules/datasets/source_import_object_test.go b/services/control/internal/modules/datasets/source_import_object_test.go
+index fcc36578..e28a697c 100644
+--- a/services/control/internal/modules/datasets/source_import_object_test.go
++++ b/services/control/internal/modules/datasets/source_import_object_test.go
+@@ -31,7 +31,7 @@ func TestSourceImportS3(t *testing.T) {
+ 	}
+ 	var mode atomic.Int32
+ 	var calls atomic.Int32
+-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++	client := newSourceFixtureS3(t, bucket, func(w http.ResponseWriter, r *http.Request) {
+ 		calls.Add(1)
+ 		if r.Method != http.MethodGet || r.URL.Path != "/"+bucket+"/"+key ||
+ 			r.Header.Get("If-Match") != etag || !strings.HasPrefix(r.Header.Get("Authorization"), "AWS4-HMAC-SHA256 ") {
+@@ -59,39 +59,7 @@ func TestSourceImportS3(t *testing.T) {
+ 			return
+ 		}
+ 		_, _ = io.WriteString(w, body)
+-	}))
+-	defer server.Close()
+-	root := privateImportDir(t)
+-	writeFixture := func(name string, value []byte) string {
+-		t.Helper()
+-		path := filepath.Join(root, name)
+-		if err := os.WriteFile(path, value, 0600); err != nil {
+-			t.Fatal(err)
+-		}
+-		return path
+-	}
+-	c := config.ObjectStorageConfiguration{
+-		Enabled: true, Backend: "seaweedfs_s3", Endpoint: server.URL, Transport: "https",
+-		Region: "private", Bucket: bucket, RefusalBucket: "dataset-refusal-fixture",
+-		AccessKeyFile: writeFixture("access", []byte(uuid.NewString())), SecretKeyFile: writeFixture("secret", []byte(uuid.NewString())),
+-		RefusalAccessKeyFile: writeFixture("refusal-access", []byte(uuid.NewString())), RefusalSecretKeyFile: writeFixture("refusal-secret", []byte(uuid.NewString())),
+-		CAFile:        writeFixture("ca.pem", pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})),
+-		DialAddresses: []string{"127.0.0.1"}, StagingRoot: filepath.Join(root, "stage"),
+-		PartBytes: 5 << 20, MaximumObjectBytes: 10 << 20, MinimumFreeBytes: 4096, OperationSeconds: 5, TransferSeconds: 10,
+-		UploadSeconds: 60, ObjectLifetimeSeconds: 3600, MaximumGrantSeconds: 300, MaximumConcurrentTransfers: 1,
+-		MaximumListPages: 1, WorkerPollSeconds: 1,
+-	}
+-	for index, kind := range []string{"s3_grpc", "master_grpc", "filer_grpc", "volume_grpc"} {
+-		c.Management = append(c.Management, config.ObjectStorageManagementProbe{
+-			Kind: kind, Authority: "management.example.invalid:" + strconv.Itoa(10443+index), DialAddresses: []string{"127.0.0.1"},
+-			CAFile: c.CAFile, ClientCertificateFile: filepath.Join(root, "client.pem"), ClientKeyFile: filepath.Join(root, "client.key"),
+-		})
+-	}
+-	client, err := objectstore.NewS3(c)
+-	if err != nil {
+-		t.Fatal(err)
+-	}
+-	defer client.Close()
++	})
+ 	importer := testImporter(t, testImportLimits(), nil)
+ 	receipt := SourceObject{Ref: ref, ETag: etag, Bytes: int64(len(body)), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(body)))}
+ 	for index, name := range []string{"valid", "changed-etag", "truncated", "wrong-digest", "cleaning"} {
+@@ -198,3 +166,42 @@ func TestSourceImportS3(t *testing.T) {
+ 		t.Fatalf("unexpected request count %d", got)
+ 	}
+ }
++
++// newSourceFixtureS3 uses the real signed client with an isolated TLS endpoint.
++func newSourceFixtureS3(t *testing.T, bucket string, handler http.HandlerFunc) *objectstore.S3 {
++	t.Helper()
++	server := httptest.NewTLSServer(handler)
++	t.Cleanup(server.Close)
++	root := privateImportDir(t)
++	writeFixture := func(name string, value []byte) string {
++		t.Helper()
++		path := filepath.Join(root, name)
++		if err := os.WriteFile(path, value, 0600); err != nil {
++			t.Fatal(err)
++		}
++		return path
++	}
++	c := config.ObjectStorageConfiguration{
++		Enabled: true, Backend: "seaweedfs_s3", Endpoint: server.URL, Transport: "https",
++		Region: "private", Bucket: bucket, RefusalBucket: "dataset-refusal-fixture",
++		AccessKeyFile: writeFixture("access", []byte(uuid.NewString())), SecretKeyFile: writeFixture("secret", []byte(uuid.NewString())),
++		RefusalAccessKeyFile: writeFixture("refusal-access", []byte(uuid.NewString())), RefusalSecretKeyFile: writeFixture("refusal-secret", []byte(uuid.NewString())),
++		CAFile:        writeFixture("ca.pem", pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})),
++		DialAddresses: []string{"127.0.0.1"}, StagingRoot: filepath.Join(root, "stage"),
++		PartBytes: 5 << 20, MaximumObjectBytes: 10 << 20, MinimumFreeBytes: 4096, OperationSeconds: 5, TransferSeconds: 10,
++		UploadSeconds: 60, ObjectLifetimeSeconds: 3600, MaximumGrantSeconds: 300, MaximumConcurrentTransfers: 1,
++		MaximumListPages: 1, WorkerPollSeconds: 1,
++	}
++	for index, kind := range []string{"s3_grpc", "master_grpc", "filer_grpc", "volume_grpc"} {
++		c.Management = append(c.Management, config.ObjectStorageManagementProbe{
++			Kind: kind, Authority: "management.example.invalid:" + strconv.Itoa(10443+index), DialAddresses: []string{"127.0.0.1"},
++			CAFile: c.CAFile, ClientCertificateFile: filepath.Join(root, "client.pem"), ClientKeyFile: filepath.Join(root, "client.key"),
++		})
++	}
++	client, err := objectstore.NewS3(c)
++	if err != nil {
++		t.Fatal(err)
++	}
++	t.Cleanup(func() { _ = client.Close() })
++	return client
++}
+diff --git a/services/control/internal/modules/datasets/testdata/draft_source_fixture.py b/services/control/internal/modules/datasets/testdata/draft_source_fixture.py
+new file mode 100644
+index 00000000..7d3beb00
+--- /dev/null
++++ b/services/control/internal/modules/datasets/testdata/draft_source_fixture.py
+@@ -0,0 +1,10 @@
++import sys
++import pyarrow as pa
++import pyarrow.parquet as pq
++
++prompt = None if sys.argv[1] == "invalid" else "Who, me?"
++pq.write_table(pa.table({
++    "source_id": ["first", "second"],
++    "prompt": [prompt, "Color"],
++    "completion": ["Yes.\nAgain.", "Blue"],
++}), sys.stdout.buffer, row_group_size=1, write_page_checksum=True)
+diff --git a/services/control/internal/modules/datasets/testdata/replay_draft_import.sh b/services/control/internal/modules/datasets/testdata/replay_draft_import.sh
+index 560ad979..d8ba6386 100755
+--- a/services/control/internal/modules/datasets/testdata/replay_draft_import.sh
++++ b/services/control/internal/modules/datasets/testdata/replay_draft_import.sh
+@@ -9,14 +9,16 @@ cd "$repo"
+ df -h .
+ free -m
+ ss -lntp
+-image=$(docker image inspect pgvector/pgvector:0.8.7-pg18-bookworm --format '{{.Id}}')
++docker_context=$(docker context show)
++image=$(docker --context "$docker_context" image inspect pgvector/pgvector:0.8.7-pg18-bookworm --format '{{.Id}}')
+ umask 077
+ scratch=$(mktemp -d "${TMPDIR:-/tmp}/ownsolid-draft-import.XXXXXXXX")
+ container=
++cluster="draft-import-${scratch##*.}"
+ cleanup() {
+     local stopped=0
+     if [[ -n "$container" ]]; then
+-        docker stop "$container" >/dev/null || stopped=$?
++        docker --context "$docker_context" stop "$container" >/dev/null || stopped=$?
+     fi
+     if [[ -f "$scratch/dsn" ]]; then
+         unlink "$scratch/dsn"
+@@ -28,12 +30,14 @@ trap cleanup EXIT
+ printf '%s\n' 'postgres://postgres@127.0.0.1:5432/ownsolid_draft_import_test?sslmode=disable' > "$scratch/dsn"
+ unset PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_NATIVE_POSTGRES_INPUT
+ export PROJECT_ONE_TEST_DSN_FILE="$scratch/dsn" GOPROXY=off
+-container=$(docker run --rm --detach --pull never --network none --memory 1g --cpus 2 \
+-    --name "ownsolid-${scratch##*.}-draft-import" \
+-    --env POSTGRES_HOST_AUTH_METHOD=trust --env POSTGRES_DB=ownsolid_draft_import_test "$image")
++container=$(docker --context "$docker_context" run --rm --detach --pull never --network none --memory 1g --cpus 2 \
++    --name "ownsolid-${scratch##*.}-draft-import" --label "ownsolid.fixture.cluster=$cluster" \
++    --env POSTGRES_HOST_AUTH_METHOD=trust --env POSTGRES_DB=ownsolid_draft_import_test "$image" -c "cluster_name=$cluster")
++export OWNSOLID_TEST_DRAFT_RESTORE_CONTAINER="$container" OWNSOLID_TEST_DRAFT_RESTORE_CLUSTER="$cluster"
++export OWNSOLID_TEST_DRAFT_RESTORE_DOCKER_CONTEXT="$docker_context"
+ ready=false
+ for ((attempt=0; attempt<35; attempt++)); do
+-    if docker exec "$container" pg_isready -h 127.0.0.1 -U postgres -d ownsolid_draft_import_test >/dev/null; then
++    if docker --context "$docker_context" exec "$container" pg_isready -h 127.0.0.1 -U postgres -d ownsolid_draft_import_test >/dev/null; then
+         ready=true
+         break
+     fi
+@@ -43,10 +47,10 @@ if [[ "$ready" != true ]]; then
+     echo 'The disposable PostgreSQL server did not become ready.' >&2
+     exit 1
+ fi
+-docker exec "$container" psql -h 127.0.0.1 -U postgres -d ownsolid_draft_import_test \
++docker --context "$docker_context" exec "$container" psql -h 127.0.0.1 -U postgres -d ownsolid_draft_import_test \
+     -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector WITH SCHEMA public'
+-pid=$(docker inspect --format '{{.State.Pid}}' "$container")
++pid=$(docker --context "$docker_context" inspect --format '{{.State.Pid}}' "$container")
+ nsenter -t "$pid" -n ip -br address
+-pattern=${1:-'^(TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness|TestSourceImportParquet)$'}
++pattern=${1:-'^(TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness|TestSourceImportParquet|TestActualParquetDraftAfterMetadataAndObjectRestore)$'}
+ nsenter -t "$pid" -n go -C services/control test -tags dataset_processor_integration \
+     -p 1 -count=1 -timeout 5m -v ./internal/modules/datasets/... -run "$pattern"
+-- 
+2.43.0
+

@@ -1,0 +1,179 @@
+{
+  "observed_utc": "2026-11-13T04:44:39.950651+00:00",
+  "receipt_sha256": "6de5dbfc7a5160fa2cb5e892ea43cbda63bfb895cf958a4e3e136f70019f92da",
+  "result_sha256": "b64bc5892bcf712be222c23bfdf158382414b07b38606cded3e12b6b314f3faf",
+  "platform": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "python": "3.12.3"
+  },
+  "carrier_stats": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "device": 29,
+      "inode": 82,
+      "uid": 0,
+      "mode": "0o644",
+      "bytes": 0
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "device": 64512,
+      "inode": 7508772,
+      "uid": 0,
+      "mode": "0o644",
+      "bytes": 0
+    }
+  ],
+  "both_carriers_acquired_then_released": true,
+  "carrier_release_errors_recorded": [],
+  "live_exact_entry_or_wrapper_processes": [],
+  "owned_child_group_audit": [
+    {
+      "phase": "source_head",
+      "pgid": 3773585,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "source_status",
+      "pgid": 3773586,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "original_admission",
+      "pgid": 3773597,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "docker_context",
+      "pgid": 3773599,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "cached_image",
+      "pgid": 3773610,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "pg_create",
+      "pgid": 3773632,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "pg_start",
+      "pgid": 3773653,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "pg_ready",
+      "pgid": 3773725,
+      "raw_exit_code": 2,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "cleanup_presence",
+      "pgid": 3773775,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "cleanup_identity",
+      "pgid": 3773786,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "cleanup_logs",
+      "pgid": 3773798,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "cleanup_stop",
+      "pgid": 3773809,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "cleanup_remove",
+      "pgid": 3773880,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "cleanup_container_readback",
+      "pgid": 3773891,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    },
+    {
+      "phase": "cleanup_volume_readback",
+      "pgid": 3773901,
+      "raw_exit_code": 0,
+      "recorded_reaped": true,
+      "group_absent": true
+    }
+  ],
+  "container_name": "lane-trn-reader-a7eebd7223234f779de2a8607e3b06d5",
+  "container_id": "a1a93e2e2e77805c998a9b99d71ede864c9023515fac5d2f2fa67023fc1c1183",
+  "exact_container_name_absent": true,
+  "wrapper_owned_volume_readback_exit": 0,
+  "wrapper_owned_container_and_volumes_removed": true,
+  "owned_volume_events_recovered": [
+    {
+      "action": "unmount",
+      "volume": "e22ae2a318efce7d269851b7353c674f4bdfc69728dcd53fe43619f611d74a68",
+      "container_id": "a1a93e2e2e77805c998a9b99d71ede864c9023515fac5d2f2fa67023fc1c1183"
+    }
+  ],
+  "owned_volume_names_recovered": [
+    "e22ae2a318efce7d269851b7353c674f4bdfc69728dcd53fe43619f611d74a68"
+  ],
+  "recovered_owned_volumes_present": [],
+  "protected_dsn_present": false,
+  "evidence_files": [
+    "admission.log",
+    "postgres.log",
+    "result.json"
+  ],
+  "actual_admission_observation": {
+    "disk_free_bytes": 789123780608,
+    "io_full_avg10": 0.0,
+    "io_full_avg60": 0.01,
+    "memory_available_bytes": 20741779456,
+    "memory_free_bytes": 4791730176,
+    "other_heavy_process_count": 0
+  },
+  "native_roots_started": 0,
+  "native_subtests_started": 0,
+  "native_packages_started": 0,
+  "native_skips": 0,
+  "schema_created": false,
+  "vector_extension_attempted": false,
+  "go_environment_applied": false,
+  "source_clean": "e639db9035b0b2c0229c90175493c605f328e295",
+  "repeat_attempts_in_this_opportunity": 0,
+  "post_run_cleanup_mutations_performed": 0,
+  "foreign_resources_touched": false
+}

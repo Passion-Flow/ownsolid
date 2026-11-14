@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "exact_root_inode",
+    "actual_immutable_bytes",
+    "writer_exclusion_preserved",
+    "create_refused_EROFS",
+    "write_refused_EROFS",
+    "unlink_refused_EROFS",
+    "chmod_refused_EROFS",
+    "writer_bytes_unchanged_after_namespace_exit",
+    "writer_exclusion_after_reader_shutdown"
+  ],
+  "passed": 9,
+  "child_maximum_rss_kib": 17280,
+  "seconds": 0.0898,
+  "source_sha256": "1211809b69db73c7557aaea1f19ca1c00f063b4016bc3f28ab937c9da4897a20",
+  "child_sha256": "24cca98c19c10bb43dff63ede2172c23e94c02f8e9990d3e1212e3f007a59309",
+  "platform": "linux/amd64",
+  "postgresql_processor_docker_started": false,
+  "scope": "private Linux same-host read-only bind mechanism; no Go product or installed qualification"
+}

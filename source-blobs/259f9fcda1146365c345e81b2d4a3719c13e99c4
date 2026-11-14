@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# SCI_OLD_ADMISSION_CLOSED_2026_11_13
+printf '%s\n' 'NOTRUN: SCI old admission is closed pending coordinator epoch activation.' >&2
+exit 78
+set -euo pipefail
+umask 077
+scratch="$(cd -- "$(dirname -- "$0")" && pwd)"
+root="$HOME/lane-sci"
+tools="$HOME/lane-sci-tools"
+export PATH="$tools/go/bin:$PATH" GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off
+export GOCACHE="$tools/go-cache" GOMODCACHE="$tools/go-mod" GOFLAGS=-p=1
+exec 9>"$tools/heavy-test.lock"
+flock 9
+while [ "$(free -m | awk '/^Mem:/ {print $4}')" -lt 2048 ] || pgrep -x 'cargo|rustc|compile|link' >/dev/null; do sleep 8; done
+df -h /
+free -m
+test "$(df --output=avail -BG / | tail -1 | tr -dc '0-9')" -ge 15
+cd "$root"
+git rev-parse HEAD
+python3 - "$root" "$scratch" <<'PY'
+import json, sys
+from pathlib import Path
+root, scratch = map(Path, sys.argv[1:])
+target = root/"services/control/internal/modules/datasets/evaluation_safety_publication_test.go"
+assert not target.exists()
+(scratch/"overlay.json").write_text(json.dumps({"Replace": {str(target): str(scratch/target.name)}}))
+PY
+ionice -c3 nice -n 15 unshare --net go -C services/control test -c -tags repository_integration -overlay="$scratch/overlay.json" -o "$scratch/evl106-publish.test" ./internal/modules/datasets
+ss -lntp '( sport = :5432 )'
+private="$(mktemp -d "$scratch/db.XXXXXXXX")"
+id=
+cleanup() {
+  if [ -n "$id" ]; then docker stop "$id" >/dev/null; fi
+  rm -f -- "$private/password" "$private/dsn" "$private/schema"
+  rmdir -- "$private"
+}
+trap cleanup EXIT
+python3 - "$private" <<'PY'
+from pathlib import Path
+import secrets, sys, uuid
+root=Path(sys.argv[1])
+password=secrets.token_hex(24)
+(root/"password").write_text(password+"\n")
+(root/"dsn").write_text("postgresql://postgres:"+password+"@127.0.0.1:5432/evl106_publication_test?sslmode=disable\n")
+(root/"schema").write_text("m20_repository_"+uuid.uuid4().hex+"\n")
+PY
+mkdir "$scratch/publication"
+image=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+id="$(docker run --pull never -d --rm --name lane-sci-evl106-publication --network none --shm-size 128m \
+  --tmpfs /var/lib/postgresql/data:size=256m \
+  -e PGDATA=/var/lib/postgresql/data/pgdata -e POSTGRES_PASSWORD_FILE=/fixture/password \
+  --mount "type=bind,source=$private/password,target=/fixture/password,readonly" "$image")"
+for ((i=0;i<60;i++)); do
+  if docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then break; fi
+  sleep 1
+done
+docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null
+docker exec "$id" createdb -U postgres evl106_publication_test
+docker exec "$id" psql -Xq -U postgres -d evl106_publication_test -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector'
+pid="$(docker inspect --format '{{.State.Pid}}' "$id")"
+test "$pid" -gt 1
+nsenter --target "$pid" --net -- env \
+  PROJECT_ONE_REPOSITORY_ENGINE=postgresql \
+  PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE="$private/dsn" \
+  PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA="$(cat "$private/schema")" \
+  PROJECT_ONE_DATA_PYTHON="$tools/evaluation/python/bin/python3.12" \
+  PROJECT_ONE_DATA_PROCESSOR_FILE="$root/runtimes/data-processing/process.py" \
+  OWNSOLID_EVL106_SOURCE="$root/runtimes/model-lifecycle/tests/testdata/safety-regression-v1.jsonl" \
+  OWNSOLID_EVL106_PUBLICATION="$scratch/publication" \
+  "$scratch/evl106-publish.test" -test.v -test.run '^TestSafetyRegressionAuthorizedFrozenPublication$' \
+  2>&1 | tee "$scratch/publication.log"

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$HOME/lane-trn"
+df -h /
+free -m
+awk '/^MemFree:/{if($2<2097152)exit 1}' /proc/meminfo
+available=$(df -Pk . | awk 'NR==2{print $4}')
+(( available >= 15*1024*1024 ))
+export PATH="$HOME/lane-trn-tools/go/bin:$HOME/lane-trn-tools/node/node_modules/.bin:/root/lane-gw-toolchain/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin:$PATH"
+export GOCACHE="$HOME/lane-trn-tools/go-cache" GOMODCACHE="$HOME/lane-trn-tools/go-mod"
+export GOMAXPROCS=2 GOFLAGS=-p=2 GOPROXY=off npm_config_offline=true
+export PROJECT_ONE_ACTUAL_TRAINING_OUTPUT=/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output
+export PROJECT_ONE_ACTUAL_DATASET_DIRECTORY=/root/lane-trn-experiment-evidence.8Zksewxc/published
+export PROJECT_ONE_APPROVED_MODEL_DIRECTORY=/root/lane-trn-experiment-evidence.8Zksewxc/model-input
+bash services/control/internal/modules/training/testdata/replay_accepted_experiment.sh

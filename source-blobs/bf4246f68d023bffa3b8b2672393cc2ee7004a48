@@ -1,0 +1,31 @@
+{
+  "leases": [
+    {
+      "acquired": true,
+      "device": 29,
+      "fd": 3,
+      "inode": 82,
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "wait_elapsed_seconds": 0.00012315099593251944,
+      "wait_limit_seconds": 60
+    },
+    {
+      "acquired": true,
+      "device": 64512,
+      "fd": 4,
+      "inode": 7508772,
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    }
+  ],
+  "parent": {
+    "pid": 2917081,
+    "start_ticks": "78479332"
+  },
+  "resources": {
+    "disk_free": 794965688320,
+    "io": "some avg10=0.42 avg60=0.39 avg300=5.70 total=31019720966\nfull avg10=0.42 avg60=0.39 avg300=5.51 total=29215786704\n",
+    "memavailable": 22930501632,
+    "memfree": 21758255104,
+    "swapfree": 184320
+  }
+}

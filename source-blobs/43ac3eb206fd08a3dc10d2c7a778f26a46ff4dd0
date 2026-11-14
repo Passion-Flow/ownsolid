@@ -1,0 +1,11 @@
+{
+  "source": "fff5a75af502c8ed9eb9ed595df641d6b6878b8e",
+  "platform": "darwin/arm64",
+  "compiled_repository_integration": true,
+  "test_bodies_executed": 0,
+  "native_acceptance": false,
+  "returncode": 0,
+  "seconds": 9.643,
+  "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/cost-tag-compile.log",
+  "sha256": "45165e5fba20e36825b48f835a63191aeb0b89259fa6b22fcdb82eb8845ae95b"
+}

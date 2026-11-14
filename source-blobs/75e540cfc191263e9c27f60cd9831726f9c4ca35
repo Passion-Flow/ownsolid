@@ -1,0 +1,18 @@
+{
+  "scope": "client self-tests only; no installed Control acceptance",
+  "go": "go1.27.3 linux/amd64",
+  "race_tests": "five top-level tests; passed in 1.182s",
+  "vet": "passed",
+  "build": "CGO_ENABLED=0; Linux amd64 ELF verified without PT_INTERP",
+  "network": "loopback-only fresh namespace; all mock listeners stopped",
+  "receipt": "/root/lane-obs-tools/installed-history-driver-check.qdtaKa",
+  "files": {
+    "/root/lane-obs-tools/installed-history-driver/main.go": "f0f994c6aa1bf399643f483699bd99cc0a880d6cbdf37bae43170f9318746626",
+    "/root/lane-obs-tools/installed-history-driver/main_test.go": "61499b624ddeca6338ec765ffa4ca22ceeb87eee3495040502f543febe473c23",
+    "/root/lane-obs-tools/installed-history-driver/installed-history": "ed9b93244fe665e019ac6b3e43981806a33b50252a21d201e3a972d16148c125",
+    "/root/lane-obs-tools/installed-history-driver-check.qdtaKa/check.log": "d29e319d29b1db775e74cf9c7df58373f00841f31de4c2db879ad7693000020c",
+    "/root/lane-obs-tools/installed-history-driver-check.qdtaKa/test.jsonl": "39e800afbdd0ea960b115ef650e16aacb8854f04f4e98623244f3c8b5151a67d"
+  },
+  "expected_installed_source": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "actual_installed_source_binding": "pending DEL manifest/image/BuildInfo"
+}

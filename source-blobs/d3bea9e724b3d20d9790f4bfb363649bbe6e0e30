@@ -1,0 +1,36 @@
+{
+  "scope": "Preparation only, no inherited qualification",
+  "source": "c6d5d1c1dbedef3774a7f8862f119ce464f3e240",
+  "tree": "634370468f8ddf05d74e3d3ac9355714d05ed4db",
+  "original_main": "9e32b023a0a3deed6a8653a8878d52c2583fd6cf",
+  "inputs": {
+    "5e764ea567b3613e96679cc3c0ea4d651707826c": {
+      "web": "d9da502cbd488c5576a73c909c2717621e677996",
+      "api": "1f1a9a34eabad1e590f8353d4acaa5dadf04e5c5",
+      "api/openapi": "45cb100db6504b80bf5418e2ffe0e8d993ced27c",
+      "pkg/capabilities": "43f7dd8fe28eed20c75b5f77a8d1442c5837bdac",
+      "tools/codegen": "287fb7926ba5ce92b93592b96e280309a31a5955",
+      "services/control/migrations": "81a700e9c679d1a6e88b8cc5878ce96010b76ffb"
+    },
+    "44ab52293e516128ba2efc0edc2cb2053acc3462": {
+      "web": "d9da502cbd488c5576a73c909c2717621e677996",
+      "api": "1f1a9a34eabad1e590f8353d4acaa5dadf04e5c5",
+      "api/openapi": "45cb100db6504b80bf5418e2ffe0e8d993ced27c",
+      "pkg/capabilities": "43f7dd8fe28eed20c75b5f77a8d1442c5837bdac",
+      "tools/codegen": "287fb7926ba5ce92b93592b96e280309a31a5955",
+      "services/control/migrations": "81a700e9c679d1a6e88b8cc5878ce96010b76ffb"
+    },
+    "c6d5d1c1dbedef3774a7f8862f119ce464f3e240": {
+      "web": "d9da502cbd488c5576a73c909c2717621e677996",
+      "api": "1f1a9a34eabad1e590f8353d4acaa5dadf04e5c5",
+      "api/openapi": "45cb100db6504b80bf5418e2ffe0e8d993ced27c",
+      "pkg/capabilities": "43f7dd8fe28eed20c75b5f77a8d1442c5837bdac",
+      "tools/codegen": "287fb7926ba5ce92b93592b96e280309a31a5955",
+      "services/control/migrations": "81a700e9c679d1a6e88b8cc5878ce96010b76ffb"
+    }
+  },
+  "bundle": {
+    "sha256": "f8f2a6cab039cb077aa3590b0ed5f071199dd4ac8cefe69f44247335396d40c9",
+    "bytes": 70944
+  }
+}

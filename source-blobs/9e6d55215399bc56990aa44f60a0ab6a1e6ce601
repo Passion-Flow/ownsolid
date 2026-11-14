@@ -1,0 +1,18 @@
+{
+  "gateway_id": "00000000-0000-0000-0000-000000000001",
+  "node_id": "00000000-0000-0000-0000-000000000002",
+  "listen_address": "127.0.0.1:18443",
+  "backend_address": "127.0.0.1:18000",
+  "control_origin": "https://admin.example.invalid:8443",
+  "control_ca_file": "/etc/projectone/gateway/ca.pem",
+  "gateway_credential_file": "/etc/projectone/gateway/credential",
+  "tls_certificate_file": "/etc/projectone/gateway/certificate.pem",
+  "tls_private_key_file": "/etc/projectone/gateway/private-key.pem",
+  "state_directory": "/var/lib/projectone/gateway",
+  "limits": {
+    "active_requests": 4,
+    "queued_requests": 8,
+    "request_seconds": 90,
+    "idle_seconds": 15
+  }
+}

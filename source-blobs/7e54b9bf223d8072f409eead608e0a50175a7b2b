@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+export PS1=''
+source /root/lane-rel-tools/env
+export GOMAXPROCS=2 GOFLAGS='-p=1 -mod=readonly' GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local GOWORK=off CGO_ENABLED=1 PYTHONDONTWRITEBYTECODE=1
+export NODE_OPTIONS='--max-old-space-size=512'
+export NODE_PATH='/root/lane-rel/web/packages/help/node_modules:/root/lane-rel/web/packages/api/node_modules:/root/lane-rel/web/node_modules'
+check_resources() {
+python3 - <<'CHECK'
+from pathlib import Path
+import os
+m=int(next(x.split()[1] for x in Path('/proc/meminfo').read_text().splitlines() if x.startswith('MemFree:')))//1024
+v=os.statvfs('/root')
+print('RAW_MEMFREE_MIB',m,flush=True)
+if m<2048 or v.f_bavail*v.f_frsize<15*1024**3:raise SystemExit(75)
+CHECK
+}
+export -f check_resources
+check_resources
+exec flock --nonblock --conflict-exit-code 75 /run/lock/ownsolid-heavy.lock flock --nonblock --conflict-exit-code 75 /root/lane-sci-tools/heavy-test.lock flock --nonblock --conflict-exit-code 75 /root/lane-rel-tools/heavy-test.lock unshare --net bash --noprofile --norc -euc '
+check_resources
+ip link set lo up
+cd /root/lane-rel-tools/identity-audit-contract/wire/go
+gofmt -w audit_wire_test.go
+timeout --signal=TERM --kill-after=5s 120s go test -race -count=1 -v ./...
+cd /root/lane-rel-api-compat
+python3 -m unittest discover -s tools/codegen/sdk/tests -p "test_*.py" -v
+'

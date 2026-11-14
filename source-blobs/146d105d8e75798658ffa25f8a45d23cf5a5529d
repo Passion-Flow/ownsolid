@@ -1,0 +1,235 @@
+type evl105Exchange struct {
+	request, response []byte
+}
+
+type evl105Pair struct {
+	client *http.Client
+	mu sync.Mutex
+	tokenizations []evl105Exchange
+	generations map[string]evl105Exchange
+	acks map[string][]byte
+}
+
+const evl105Backend = "http://127.0.0.1:18105"
+const evl105ChatPath = "/v1/chat/completions"
+const evl105BodyLimit = 1 << 20
+
+func newEVL105Pair(t *testing.T) *evl105Pair {
+	t.Helper()
+	transport := &http.Transport{DisableKeepAlives: true}
+	t.Cleanup(transport.CloseIdleConnections)
+	return &evl105Pair{
+		client: &http.Client{Transport: transport, Timeout: 60 * time.Second},
+		generations: make(map[string]evl105Exchange),
+		acks: make(map[string][]byte),
+	}
+}
+
+func (p *evl105Pair) fetch(ctx context.Context, method, path, id string, data []byte) (int, string, []byte, error) {
+	req, err := http.NewRequestWithContext(ctx, method, evl105Backend+path, bytes.NewReader(data))
+	if err != nil { return 0, "", nil, err }
+	if method == http.MethodPost { req.Header.Set("Content-Type", "application/json") }
+	if id != "" { req.Header.Set("X-Request-ID", id) }
+	response, err := p.client.Do(req)
+	if err != nil { return 0, "", nil, err }
+	defer response.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(response.Body, evl105BodyLimit+1))
+	if err != nil || len(body) > evl105BodyLimit { return 0, "", nil, fmt.Errorf("could not read bounded CPU response: %v", err) }
+	return response.StatusCode, response.Header.Get("Content-Type"), body, nil
+}
+
+func (p *evl105Pair) forward(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") != "" || r.Header.Get("Cookie") != "" {
+		http.Error(w, "unexpected authority at CPU backend", http.StatusBadGateway)
+		return
+	}
+	if !(r.Method == http.MethodGet && r.URL.Path == "/v1/models") &&
+		!(r.Method == http.MethodPost && (r.URL.Path == "/tokenize" || r.URL.Path == evl105ChatPath)) {
+		http.NotFound(w, r)
+		return
+	}
+	request, err := io.ReadAll(io.LimitReader(r.Body, evl105BodyLimit+1))
+	if err != nil || len(request) > evl105BodyLimit { http.Error(w, "CPU fixture request too large", http.StatusBadRequest); return }
+	id := r.Header.Get("X-Request-ID")
+	if r.URL.Path == evl105ChatPath && !gatewaywire.ValidID(id) {
+		http.Error(w, "missing gateway request identity", http.StatusBadGateway)
+		return
+	}
+	status, content, body, err := p.fetch(r.Context(), r.Method, r.URL.Path, id, request)
+	if err != nil { http.Error(w, "CPU engine unavailable", http.StatusBadGateway); return }
+	if status == http.StatusOK {
+		exchange := evl105Exchange{request: request, response: body}
+		p.mu.Lock()
+		switch r.URL.Path {
+		case "/tokenize": p.tokenizations = append(p.tokenizations, exchange)
+		case evl105ChatPath:
+			if _, duplicate := p.generations[id]; duplicate {
+				p.mu.Unlock()
+				http.Error(w, "duplicate gateway generation", http.StatusBadGateway)
+				return
+			}
+			p.generations[id] = exchange
+		}
+		p.mu.Unlock()
+	}
+	w.Header().Set("Content-Type", content)
+	w.WriteHeader(status)
+	_, _ = w.Write(body)
+}
+
+func (p *evl105Pair) observeReports(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || !strings.HasSuffix(r.URL.Path, "/outcomes") { next.ServeHTTP(w, r); return }
+		record := httptest.NewRecorder()
+		next.ServeHTTP(record, r)
+		var envelope struct { Data gatewaywire.Acknowledgment `json:"data"` }
+		if record.Code == http.StatusOK && json.Unmarshal(record.Body.Bytes(), &envelope) == nil && gatewaywire.ValidID(envelope.Data.RequestID) {
+			p.mu.Lock()
+			p.acks[envelope.Data.RequestID] = append([]byte(nil), record.Body.Bytes()...)
+			p.mu.Unlock()
+		}
+		for name, values := range record.Header() { for _, value := range values { w.Header().Add(name, value) } }
+		w.WriteHeader(record.Code)
+		_, _ = w.Write(record.Body.Bytes())
+	})
+}
+
+type evl105ChatReply struct {
+	ID, Model, Object string
+	Choices []struct {
+		Message struct { Content, Role string }
+		Finish string `json:"finish_reason"`
+	}
+	Usage gatewaywire.Usage
+}
+
+func decodeEVL105Reply(t *testing.T, body []byte) evl105ChatReply {
+	t.Helper()
+	var reply evl105ChatReply
+	if err := json.Unmarshal(body, &reply); err != nil || reply.Object != "chat.completion" || reply.ID == "" ||
+		len(reply.Choices) != 1 || reply.Choices[0].Message.Role != "assistant" || reply.Choices[0].Message.Content == "" ||
+		reply.Usage.PromptTokens == 0 || reply.Usage.TotalTokens != reply.Usage.PromptTokens + reply.Usage.CompletionTokens {
+		t.Fatal("malformed measured completion", err)
+	}
+	return reply
+}
+
+type evl105Archived struct {
+	Case string `json:"case"`
+	RequestSHA string `json:"request_sha256"`
+	OutputSHA string `json:"output_sha256"`
+	Prompt uint32 `json:"prompt_tokens"`
+	Completion uint32 `json:"completion_tokens"`
+	Finish string `json:"finish_reason"`
+}
+
+func evl105Write(t *testing.T, path string, data []byte) {
+	t.Helper()
+	if err := os.WriteFile(path, data, 0600); err != nil { t.Fatal(err) }
+}
+
+func (p *evl105Pair) verify(t *testing.T, c scenario, a access, request func(string, string, any) *http.Response) {
+	t.Helper()
+	inputs, output := os.Getenv("PROJECT_ONE_EVL105_INPUT_ROOT"), os.Getenv("PROJECT_ONE_EVIDENCE_ROOT")
+	if inputs == "" || output == "" { t.Fatal("private input and evidence paths required") }
+	archive, err := os.ReadFile(filepath.Join(inputs, "observations.json"))
+	if err != nil || fmt.Sprintf("%x", sha256.Sum256(archive)) != "ceace0a1253b196142fa739cf8766f930f85086dfe9ed06a0acf704a1d8911bc" { t.Fatal("direct evidence digest", err) }
+	var original struct { Runs []struct{ Samples []evl105Archived } }
+	if err := json.Unmarshal(archive, &original); err != nil || len(original.Runs) != 2 || len(original.Runs[0].Samples) < 2 { t.Fatal("direct evidence shape", err) }
+	seen := map[string]bool{}
+	for i, archived := range original.Runs[0].Samples[:2] {
+		prefix := filepath.Join(output, fmt.Sprintf("pair-%d", i+1))
+		directBody, err := os.ReadFile(filepath.Join(inputs, fmt.Sprintf("request-%d.json", i+1)))
+		if err != nil || fmt.Sprintf("%x", sha256.Sum256(directBody)) != archived.RequestSHA { t.Fatal("original request digest", err) }
+		evl105Write(t, prefix+"-direct-request.json", directBody)
+		status, _, directRaw, err := p.fetch(t.Context(), http.MethodPost, evl105ChatPath, "", directBody)
+		evl105Write(t, prefix+"-direct-response.json", directRaw)
+		if err != nil || status != http.StatusOK { t.Fatal("direct CPU call", status, err) }
+		direct := decodeEVL105Reply(t, directRaw)
+
+		var initial map[string]any
+		if err := json.Unmarshal(directBody, &initial); err != nil { t.Fatal(err) }
+		if initial["seed"] != float64(42) || initial["temperature"] != float64(0) { t.Fatal("original greedy profile changed") }
+		public := map[string]any{"model": a.alias.Name, "messages": initial["messages"], "max_completion_tokens": initial["max_completion_tokens"], "temperature": initial["temperature"], "stream": false}
+		publicBody, _ := json.Marshal(public)
+		evl105Write(t, prefix+"-gateway-request.json", publicBody)
+		response := request(evl105ChatPath, *a.key.Secret, public)
+		id := response.Header.Get("X-Request-ID")
+		publicRaw, err := io.ReadAll(io.LimitReader(response.Body, evl105BodyLimit+1))
+		response.Body.Close()
+		evl105Write(t, prefix+"-gateway-response.json", publicRaw)
+		if err != nil || response.StatusCode != http.StatusOK || !gatewaywire.ValidID(id) || seen[id] {
+			t.Fatal("authorized gateway call", response.StatusCode, id, err)
+		}
+		seen[id] = true
+		gateway := decodeEVL105Reply(t, publicRaw)
+		p.mu.Lock()
+		generation, found := p.generations[id]
+		var tokenize evl105Exchange
+		if len(p.tokenizations) == i+1 { tokenize = p.tokenizations[i] }
+		p.mu.Unlock()
+		if !found || tokenize.response == nil { t.Fatal("gateway did not reach real tokenizer and generation", id) }
+		evl105Write(t, prefix+"-backend-request.json", generation.request)
+		evl105Write(t, prefix+"-backend-response.json", generation.response)
+		evl105Write(t, prefix+"-tokenize-request.json", tokenize.request)
+		evl105Write(t, prefix+"-tokenize-response.json", tokenize.response)
+		var forwarded map[string]any
+		if err := json.Unmarshal(generation.request, &forwarded); err != nil { t.Fatal(err) }
+		want := map[string]any{"model": agentwire.InferenceModelName, "messages": initial["messages"], "max_tokens": initial["max_completion_tokens"], "temperature": initial["temperature"], "n": 1, "stream": false, "chat_template_kwargs": initial["chat_template_kwargs"]}
+		wantBytes, _ := json.Marshal(want)
+		actualBytes, _ := json.Marshal(forwarded)
+		if !bytes.Equal(wantBytes, actualBytes) { t.Fatal("gateway generation settings differ", string(actualBytes)) }
+		backend := decodeEVL105Reply(t, generation.response)
+		var tokenResult struct { Count uint32 }
+		if err := json.Unmarshal(tokenize.response, &tokenResult); err != nil || tokenResult.Count != direct.Usage.PromptTokens { t.Fatal("real tokenization differs", err) }
+		outputSHA := fmt.Sprintf("%x", sha256.Sum256([]byte(direct.Choices[0].Message.Content)))
+		if outputSHA != archived.OutputSHA || direct.Usage.PromptTokens != archived.Prompt || direct.Usage.CompletionTokens != archived.Completion || direct.Choices[0].Finish != archived.Finish ||
+			gateway.Model != a.alias.Name || backend.Model != agentwire.InferenceModelName || gateway.ID != backend.ID ||
+			gateway.Choices[0] != backend.Choices[0] || direct.Choices[0] != gateway.Choices[0] || direct.Usage != gateway.Usage || backend.Usage != gateway.Usage {
+			t.Fatal("direct, gateway, backend or archived completion differs", id, outputSHA, direct.Usage, gateway.Usage, backend.Usage)
+		}
+		p.verifyReceipt(t, c, a, prefix, id, gateway.Usage, archived.Case, outputSHA)
+	}
+}
+
+func (p *evl105Pair) verifyReceipt(t *testing.T, c scenario, a access, prefix, id string, usage gatewaywire.Usage, topic, outputSHA string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
+	defer cancel()
+	var tenant, workspace, node, gateway, key, alias, deployment, state, digest string
+	var revision int64
+	var maximum uint32
+	var held, stream bool
+	var raw, ack []byte
+	for {
+		err := c.s.DB.QueryRow(ctx, `SELECT tenant_id,workspace_id,node_id,gateway_id,api_key_id,alias_id,
+			deployment_id,deployment_revision,maximum_output_tokens,stream,state,capacity_held,outcome,COALESCE(outcome_sha256,'')
+			FROM gateway_requests WHERE id=$1`, id).Scan(&tenant, &workspace, &node, &gateway, &key, &alias, &deployment,
+			&revision, &maximum, &stream, &state, &held, &raw, &digest)
+		if err != nil { t.Fatal("read scoped receipt", err) }
+		p.mu.Lock()
+		ack = p.acks[id]
+		p.mu.Unlock()
+		if raw != nil && ack != nil { break }
+		select { case <-ctx.Done(): t.Fatal("durable outcome or HTTPS acknowledgment missing", id); case <-time.After(30*time.Millisecond): }
+	}
+	outcome, err := gatewaywire.DecodeOutcome(raw)
+	if err != nil { t.Fatal(err) }
+	canonical, err := outcome.Digest()
+	var envelope struct { Data gatewaywire.Acknowledgment `json:"data"` }
+	if decode := json.Unmarshal(ack, &envelope); decode != nil || err != nil || canonical != digest ||
+		envelope.Data.RequestID != id || envelope.Data.CanonicalSHA256 != digest || outcome.RequestID != id ||
+		outcome.Status != "succeeded" || outcome.Usage == nil || *outcome.Usage != usage || held || stream || maximum != 24 || state != "reported" ||
+		tenant != c.a.Me.Workspace.TenantID || workspace != a.alias.WorkspaceID || node != a.alias.NodeID || gateway != a.gateway.Gateway.ID ||
+		key != a.key.Key.ID || alias != a.alias.ID || deployment != a.alias.DeploymentID || revision != a.alias.DeploymentRevision {
+		t.Fatal("invalid persisted usage, scope or HTTPS acknowledgment", id, err, decode)
+	}
+	var audits int
+	if err := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM audit_events WHERE target_id=$1 AND action='gateway.request_reported'", id).Scan(&audits); err != nil || audits != 1 { t.Fatal("report audit correlation", audits, err) }
+	evl105Write(t, prefix+"-receipt.json", raw)
+	evl105Write(t, prefix+"-https-ack.json", ack)
+	summary, err := json.MarshalIndent(map[string]any{"request_id": id, "tenant_id": tenant, "workspace_id": workspace, "node_id": node, "gateway_id": gateway, "api_key_id": key, "alias_id": alias, "deployment_id": deployment, "deployment_revision": revision, "case": topic, "output_sha256": outputSHA, "usage": usage, "canonical_sha256": digest, "audit_count": audits}, "", "  ")
+	if err != nil { t.Fatal(err) }
+	evl105Write(t, prefix+"-summary.json", append(summary, '\n'))
+	t.Logf("paired case %s request=%s prompt=%d completion=%d receipt_sha256=%s", topic, id, usage.PromptTokens, usage.CompletionTokens, digest)
+}

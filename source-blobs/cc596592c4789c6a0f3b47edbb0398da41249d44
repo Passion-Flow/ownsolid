@@ -1,0 +1,67 @@
+# Installed Registry acceptance client
+
+This external prototype uses the existing Admin HTTP routes reviewed at
+38aad60337d3e696cd3536bab932b100c9013a45. It adds no product endpoint.
+It has passed gofmt only. Compilation, client units and installed execution
+have not run. A workstation flock refusal started no compiler or test process.
+
+Use this only as an optional input for a newly selected DEL fixture. The
+coordinator must supply an actually approved signed release asset, trust and
+license evidence, exact manifest/config/archive digests and archive size,
+the selected control source/binary and instance binding, and fresh local Admin
+credentials. Missing materials leave NET-102 open. Client-controlled replies
+do not qualify server authentication, PostgreSQL or installed release delivery.
+
+The configuration is a protected, owner-only JSON file. It contains:
+source_commit (40 lowercase hex characters), release_manifest_sha256 (64),
+admin {origin, dial_address, ca_file}, email, password_file, session_file,
+workspace_id, asset {id, manifest_digest, config_digest, archive_sha256,
+archive_bytes, licenses}, approve_licenses, request_seconds and phase_seconds.
+The two OCI digests use sha256: plus 64 hex characters; archive_sha256 is raw
+hex. The asset must match the normal release-images response exactly.
+Approval is explicit operator consent; the client does not manufacture trust
+or license evidence. The server's normal signed-release and license checks
+remain mandatory.
+
+The origin is HTTPS. Dialing uses one explicit private IP:port without DNS or
+proxy lookup, while certificate and hostname checks use the advertised origin.
+Provide the actual site CA. There is no insecure or redirect option.
+The session parent must already be a private directory owned by the caller.
+Use a new dedicated session_file; the driver refuses preexisting files during
+init and rejects other driver formats. Never use the old 4463 session.
+
+After source/unit/binary qualification and a new coordinator window:
+
+```sh
+installed-registry -config /path/to/protected-input.json -mode init
+installed-registry -config /path/to/protected-input.json -mode verify
+installed-registry -config /path/to/protected-input.json -mode cleanup
+installed-registry -config /path/to/protected-input.json -mode logout
+```
+
+Run all configuration, pin writes, readbacks and cleanup before the history
+driver's exclusive quiet-count phase. Never overlap that phase or start a
+second history actor. This optional client must not delay GW120/Help/Scope/CLI.
+
+verify requires an empty disposable Workspace before its first import. It
+records an intent and a mutation key before calling the normal import route,
+then records the acknowledged pin, reads it and replays the exact same key.
+After an unknown import outcome, another explicit verify resolves the same key;
+an intent is not proof that the HTTP request or provider write occurred.
+Do not generate a replacement key to hide that uncertainty.
+
+cleanup addresses only the acknowledged pin through the existing remove and
+reconcile-removal routes. It refuses held references and never deletes CAS
+files or guesses an identity. Each explicit observed recovery of a deleting
+pin receives a new reconciliation key, as the server contract requires.
+A failed cleanup retains the independent session for retry. logout verifies
+the acknowledged pin is deleted and removes only that owned session file.
+The private source receipt is absent from the public Pin response; the
+installer/Registry owner must verify it independently.
+
+Client tests use temporary TLS peers and controlled metadata only:
+`go test -race -p 2 -count=1 -timeout=120s ./...`.
+Run them under the existing workstation admission and resource bounds.
+They do not invoke Registry, PostgreSQL, installed Control or a browser.
+A Linux cross-build uses CGO_ENABLED=0, GOOS=linux and GOARCH=amd64;
+the result must receive its own source/binary binding before delivery.

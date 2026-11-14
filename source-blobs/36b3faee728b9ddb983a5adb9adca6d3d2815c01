@@ -1,0 +1,19 @@
+{
+  "source": "5055d774ec6941df008f21f7e69abd48bad3fab0",
+  "utc": "2026-11-12T16:10:52.916117+00:00",
+  "build_started": true,
+  "before": {
+    "mem_free_mib": 5796,
+    "disk_free_mib": 768244
+  },
+  "after_locks": {
+    "mem_free_mib": 5796,
+    "disk_free_mib": 768244
+  },
+  "build_exit": 0,
+  "binary": "/root/lane-rel-tools/workspace-operations/native-client-5055d774/ownsolid",
+  "binary_sha256": "676106019d2d0a044ce6f39a976c7f7fb4aba1ed7107dad19795b446a818d6e6",
+  "binary_bytes": 12112783,
+  "exit": 0,
+  "reason": "Native offline CLI build passed; startup and installed acceptance remain separate"
+}

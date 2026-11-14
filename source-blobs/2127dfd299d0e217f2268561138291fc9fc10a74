@@ -1,0 +1,62 @@
+# Workspace CLI installed acceptance handoff
+
+Client source: 8f4dd72cb9c6c58c0860bb9125289986cfc180d1 in /root/lane-rel-cloud.
+Do not change that clean tree until the client build is captured.
+The binary manifest is created only by a successful build-client.sh.
+A missing manifest or build.exit=75 is a blocked preparation, not a binary or acceptance result.
+
+## Entries
+
+- build-client.sh: nonblocking global/SCI/lane locks, disk and raw MemFree admission,
+  offline Linux amd64 static build with VCS metadata, startup/help checks and SHA-256.
+- client/ownsolid and client/client-manifest.json: successful build outputs only.
+- installed_workspaces.py: installed public API acceptance, no new services or database.
+- test_installed_workspaces.py: eight input/provenance/privacy/diagnostic guard tests.
+
+The acceptance driver needs Linux root, Python 3.12 standard library, util-linux
+nsenter/unshare/mount, the executable client and the existing DEL installation PID.
+Its input directory is the actual DEL runtime-evidence directory. It must contain:
+installed-ready.json, installed-provenance.json, installed-control.bin,
+installation-ca.pem, admin-credential, person.json and scope-state.json.
+All JSON and credential inputs retain owner-only mode 0600 in a mode 0700 directory.
+The administrator email is read from the generated credential request. No account,
+password, origin, CA or workspace identifier has a default in the runner.
+
+Run only in the installation owner's existing Linux window. The owner retains
+the heavy locks and recorder; the driver acquires no nested window lock. Supply
+the actual outer installation container PID and the configured listener address.
+The driver joins that existing network namespace and creates only a private
+mount namespace for hostname resolution. TLS still verifies the advertised
+origin against the exported installation CA. Host /etc/hosts is unchanged.
+
+Example parameter names (use actual paths, source and PID from that window):
+
+    python3 installed_workspaces.py \
+      --client /absolute/client/ownsolid \
+      --client-manifest /absolute/client/client-manifest.json \
+      --evidence /absolute/actual/runtime-evidence \
+      --expected-control-source ACTUAL_FROZEN_CONTROL_REVISION \
+      --network-pid ACTUAL_EXISTING_INSTALLATION_PID \
+      --connect-address ACTUAL_LOOPBACK_LISTENER_ADDRESS \
+      --result /absolute/new/private/result-directory
+
+The Control revision must match installed-ready and the installed image/binary
+provenance. The client revision is separate and may differ. The extracted installed
+Control binary and the CLI binary are each checked against their own manifest hash.
+
+CLI cases: list/get, table/JSON/YAML, bounded pages and replay, absent search,
+foreign-tenant refusal, search-bound cursor, actionable invalid-input and expired
+session messages, nonadministrator Admin login refusal and fresh login recovery.
+The runner creates and revokes only its own sessions. It changes no shared account,
+membership, workspace, service, database or installation lifecycle.
+
+Portal companion cases are separately labelled: the generated restricted member
+can read its own workspace, cannot read the other workspace or foreign tenant,
+and logs out. Admin is allowed to see every workspace in the installed tenant;
+the report does not call that authority a cross-workspace refusal.
+
+result.json records public provenance, case results, stable error codes and request
+IDs. It excludes raw HTTP/CLI output and credentials. It reports installed acceptance
+only after all cases and session cleanup pass. The full offline/zero-egress conclusion
+belongs to DEL's completed shared recorder window. This handoff itself is not an
+installed acceptance result and does not close DEV-102 or activate GW-104.

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+scratch="$(cd -- "$(dirname -- "$0")" && pwd)"
+root="$HOME/lane-sci"
+tools="$HOME/lane-sci-tools"
+export PATH="$tools/go/bin:$PATH" GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off
+export GOCACHE="$tools/go-cache" GOMODCACHE="$tools/go-mod" GOFLAGS=-p=1
+exec 9>"$tools/heavy-test.lock"
+flock 9
+while [ "$(free -m | awk '/^Mem:/ {print $4}')" -lt 2048 ] || pgrep -x 'cargo|rustc|compile|link' >/dev/null; do sleep 8; done
+df -h /
+free -m
+test "$(df --output=avail -BG / | tail -1 | tr -dc '0-9')" -ge 15
+cd "$root"
+git log -2 --oneline
+ionice -c3 nice -n 15 unshare --net go -C services/control test -c -o "$scratch/audit.test" ./internal/modules/audit
+ionice -c3 nice -n 15 unshare --net go -C tools/audit-verify build -o "$scratch/audit-verify" .
+ionice -c3 nice -n 15 unshare --net go -C services/control test -v -count=1 -run '^TestInstallationPolicyDeniesBeforeCommandDispatch$' ./internal/modules/productagent | tee "$scratch/policy-denial.log"
+ionice -c3 nice -n 15 unshare --net sh -c "ip link set dev lo up; exec go -C tools/audit-verify test ./... -count=1" | tee "$scratch/verifier.log"
+ss -lntp '( sport = :5432 )'
+private="$(mktemp -d "$scratch/db.XXXXXXXX")"
+id=
+cleanup() {
+  if [ -n "$id" ]; then docker stop "$id" >/dev/null; fi
+  rm -f -- "$private/password" "$private/dsn"
+  rmdir -- "$private"
+}
+trap cleanup EXIT
+python3 - "$private" <<'PY'
+from pathlib import Path
+import secrets
+import sys
+root=Path(sys.argv[1])
+password=secrets.token_hex(24)
+(root/"password").write_text(password+"\n")
+(root/"dsn").write_text("postgresql://postgres:"+password+"@127.0.0.1:5432/assistant_audit_test?sslmode=disable\n")
+PY
+image=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+id="$(docker run --pull never -d --rm --name lane-sci-agt112-audit --network none --shm-size 128m \
+  --tmpfs /var/lib/postgresql/data:size=512m \
+  -e PGDATA=/var/lib/postgresql/data/pgdata -e POSTGRES_PASSWORD_FILE=/private-fixture/password \
+  --mount "type=bind,source=$root,target=/repo,readonly" \
+  --mount "type=bind,source=$scratch,target=/fixture,readonly" \
+  --mount "type=bind,source=$private,target=/private-fixture,readonly" "$image")"
+for ((i=0;i<60;i++)); do
+  if docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then break; fi
+  sleep 1
+done
+docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null
+docker exec "$id" createdb -U postgres assistant_audit_test
+docker exec "$id" psql -Xq -U postgres -d assistant_audit_test -v ON_ERROR_STOP=1 \
+  -c "CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC; SHOW server_version;"
+docker exec -e PROJECT_ONE_TEST_DSN_FILE=/private-fixture/dsn -e OWNSOLID_TEST_AUDIT_VERIFY=/fixture/audit-verify \
+  -e GOMAXPROCS=2 -w /repo/services/control/internal/modules/audit "$id" /fixture/audit.test \
+  -test.v -test.parallel=1 -test.timeout=180s 2>&1 | tee "$scratch/audit.log"

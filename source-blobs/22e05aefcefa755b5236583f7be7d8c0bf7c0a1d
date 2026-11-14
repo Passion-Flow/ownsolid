@@ -1,0 +1,54 @@
+{
+  "source": "2e64ab4c6c16bd84ae5c101b9de5444550760ff2",
+  "tree": "3bdf79d7d76f096c989884190c32e4c08de20356",
+  "phase": "finished",
+  "execution_authorized": true,
+  "attempt_consumed": true,
+  "entry_started": true,
+  "entry_executed": true,
+  "entry_exit": 75,
+  "four_target_result": {
+    "web-install_exit": null,
+    "check_exit": null,
+    "build_exit": null,
+    "test_exit": null
+  },
+  "queue_created": false,
+  "retry": false,
+  "preflight_passed": true,
+  "entry_sha256": "f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a",
+  "manifest_sha256": "60db5ee075c6b24e06d16a0453e851d140ffa44b88b2207310f911901b73f47c",
+  "toolchain_environment_file_sha256": "a3e75d40234df8de95973db1e553f7860b0be0011bad195bfc5e4668a7ed9f8a",
+  "asset_fingerprints": {
+    "go": {
+      "path": "/root/lane-rel-tools/go/bin/go",
+      "sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b"
+    },
+    "node": {
+      "path": "/root/lane-rel-tools/node/bin/node",
+      "sha256": "0adde40d1b7dfa57c8bc83cbc319758c3ec6ebba21363bb2fa752ea6b267ad1b"
+    },
+    "cargo_native": {
+      "path": "/root/lane-rel-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af"
+    },
+    "rustc_native": {
+      "path": "/root/lane-rel-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853"
+    },
+    "chromium": {
+      "path": "/root/lane-rel-tools/playwright-browsers/chromium-1248/chrome-linux64/chrome",
+      "sha256": "377a9fc07b495c3b8d0ab8ec1fdfd153641759f9756fea34d8dfce4de82f5025"
+    },
+    "chromium_headless": {
+      "path": "/root/lane-rel-tools/playwright-browsers/chromium_headless_shell-1248/chrome-headless-shell-linux64/chrome-headless-shell",
+      "sha256": "4fa61f0ba0b4f89b7bec242c32ca16d3bccf69dbfef0651924a9ba8fede5f9d6"
+    }
+  },
+  "entry_pid": 3853467,
+  "gate_passed": false,
+  "admitted": false,
+  "entry_proof_sha256": "9beadce004f2217e249efbb79187feaa3a2683196a3e8d138e3183df4932d2ec",
+  "frozen_evidence_unchanged": true,
+  "transport_observed_seconds": 2.157
+}

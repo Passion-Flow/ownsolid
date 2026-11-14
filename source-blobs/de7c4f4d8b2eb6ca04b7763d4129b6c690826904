@@ -1,0 +1,21 @@
+# Workspace quota status owner handoff
+
+These are review artifacts, not installed product changes. The local scheduling
+source and tests remain unqualified until the Linux target gate runs.
+
+- iam-composition.review.patch adds only the scheduling dispatch import and
+  the authenticated read branch before general Workspace dispatch. It reuses
+  h.Workspaces.Service; there is no new cookie, authentication or pool.
+  It has not been applied or compiled against the identity owner.
+- openapi.review.json describes the module payload and both versioned routes,
+  including the existing data envelope, cookie entrances, decimal quantities
+  and storage outcome statuses. DEV owns publishing it under api/openapi and
+  regenerating the Web client in the same composed feature.
+- source-head identifies the current branch parent. New scheduling source is
+  still in this lane's worktree; this packet is not a replacement for its
+  eventual authored implementation commit.
+
+ARC must admit the quota and reservation tables and exact fresh/restored
+catalogs before activating this reader. Production readiness, IAM route tests,
+Web translation and UI tests remain open. The module never treats quota status
+as a current selected-job explanation or physical placement authority.

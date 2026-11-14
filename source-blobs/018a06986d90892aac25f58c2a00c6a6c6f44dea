@@ -1,0 +1,13 @@
+--- a/services/control/internal/platform/database/catalog.go
++++ b/services/control/internal/platform/database/catalog.go
+@@ -34,8 +34,8 @@
+    FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid WHERE t.tgrelid=o.oid AND NOT t.tgisinternal)) ORDER BY o.relname) FROM owned o))::text`
+ 
+ // Exact native fresh and logical dump/reparse forms from pinned PostgreSQL18.6.
+-const catalogFreshSHA256 = "8454a9e3039dfb669a532aaabd26419661c404d683cd9abfa45eb4ee2b25b4a4"
+-const catalogRestoredSHA256 = "c160dfad296f6a93ec88aa88cc63bd232cbfd5dca0518c22d390961b0593e7be"
++const catalogFreshSHA256 = "0bd2948ab067934a658502d56644571fd651f0e6296a2a2e25d6438e574a7f33"
++const catalogRestoredSHA256 = "6a58b24c139d2d4c3645b81598b13c4743878acc6a5a88a97a2b76821456699d"
+ 
+ func checkCatalogWithin(ctx context.Context, q transaction.Executor) error {
+ 	var raw string

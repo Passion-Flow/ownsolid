@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+proof=${1:?private prototype root required}
+cd "$proof"
+umask 077
+df -h .
+free -m
+python3 -B "$proof/preflight_cpu_prototype.py" "$proof"
+available=$(df -Pk . | awk 'NR==2{print $4}')
+((available >= 15*1024*1024))
+readarray -t policy < <(python3 - "$proof/cpu-prototype-inputs/prototype.json" <<'PY'
+import json,sys
+v=json.load(open(sys.argv[1]));p=v['install']
+for x in [v['base_image'],p['memory_bytes'],p['cpu_threads'],p['pids_limit'],p['timeout_seconds']]:print(x)
+PY
+)
+mkdir -m 700 cpu-prototype-install
+# Persist the exact cached base as a reviewable offline input; never remove it.
+docker image save "${policy[0]}" --output cpu-prototype-inputs/python-base-image.tar
+sha256sum cpu-prototype-inputs/python-base-image.tar
+container=lane-trn-cpu-install-${proof##*.}
+if docker container inspect "$container" >/dev/null 2>&1; then echo "Owned install name already exists" >&2; exit 1; fi
+container_id=$(docker create --pull never --name "$container" \
+  --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+  --memory "${policy[1]}" --cpus "${policy[2]}" --pids-limit "${policy[3]}" \
+  --env PIP_CONFIG_FILE=/dev/null --env PIP_DISABLE_PIP_VERSION_CHECK=1 --env PIP_NO_CACHE_DIR=1 \
+  --env HF_HUB_OFFLINE=1 --env TRANSFORMERS_OFFLINE=1 --env HF_HUB_DISABLE_TELEMETRY=1 \
+  --env HF_DATASETS_OFFLINE=1 --env DO_NOT_TRACK=1 --env TOKENIZERS_PARALLELISM=false \
+  --env PYTHONDONTWRITEBYTECODE=1 --env TMPDIR=/workspace/tmp --env HF_HOME=/workspace/hf --env OMP_NUM_THREADS="${policy[2]}" \
+  --mount "type=bind,source=$proof/cpu-prototype-inputs,target=/inputs,readonly" \
+  --mount "type=bind,source=$proof/cpu-prototype-install,target=/workspace" \
+  "${policy[0]}" sh -ec '
+    umask 077
+    mkdir /workspace/tmp
+    python3 -m venv --without-pip /workspace/venv
+    PYTHONPATH=/inputs/wheelhouse/pip-26.2.1-py3-none-any.whl python3 -m pip --python /workspace/venv/bin/python install \
+      --no-index --only-binary=:all: --find-links=/inputs/wheelhouse --require-hashes -r /inputs/installer.lock
+    /workspace/venv/bin/python -m pip install --no-index --only-binary=:all: --find-links=/inputs/wheelhouse \
+      --require-hashes --report=/workspace/pip-install-report.json -r /inputs/linux-amd64-cpu-prototype.lock
+    /workspace/venv/bin/python -m pip check
+    /workspace/venv/bin/python /inputs/verify_installed.py
+    /workspace/venv/bin/python /inputs/check_install_refusals.py
+  ')
+cleanup() { docker rm -f "$container_id" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+timeout --signal TERM --kill-after 10 "${policy[4]}" docker start --attach "$container_id"
+
+state=$(docker inspect --format '{{.State.ExitCode}} {{.State.OOMKilled}}' "$container_id")
+[[ "$state" == '0 false' ]]
+test -s cpu-prototype-install/installed.json
+test -s cpu-prototype-install/install-refusals.json

@@ -1,0 +1,10 @@
+from pathlib import Path
+import json,random,subprocess,sys,time
+p=Path(sys.argv[1])
+for attempt in range(1,121):
+ with (p/'queue.log').open('ab') as log:
+  code=subprocess.run(['python3','-I',str(p/'native-runner.py'),str(p)],stdout=log,stderr=subprocess.STDOUT).returncode
+  log.write((json.dumps({'attempt':attempt,'exit':code,'at':time.time()})+'\n').encode())
+ if code!=75:break
+ time.sleep(random.uniform(7,13))
+(p/'queue-exit').write_text(str(code)+'\n')

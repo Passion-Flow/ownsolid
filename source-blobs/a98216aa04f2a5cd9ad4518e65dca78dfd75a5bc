@@ -1,0 +1,50 @@
+# Dedicated installed session CLI acceptance
+
+Freeze the clean CLI source 0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c.
+Keep the 8f4dd72c workspace client, its hash and handoff immutable.
+
+Primary sources:
+- The published identity contract and registered browser_sessions.go handler:
+  list is scoped to the authenticated account and entrance. DELETE sends no
+  body/query, uses CSRF, and clears identity cookies for the caller's own session.
+- Identity.RevokeBrowserSession writes auth.logout on target_type=session.
+  The target UUID is the affected session. An acknowledged retry adds no second event.
+- The audit public operation already filters by actor, action, target and outcome.
+- https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/viewing-and-managing-your-sessions
+- https://pkg.go.dev/runtime/debug#BuildInfo
+- https://docs.python.org/3.12/library/ssl.html
+- https://docs.python.org/3.12/library/subprocess.html
+- https://docs.python.org/3.12/license.html
+
+Use only a fixture-owner-issued pair of dedicated disposable platform-admin
+accounts, with an exclusive fixture ID and protected file references. Reject
+the installation's bootstrap email and every declared DEL/OBS/Web protected
+identity before authentication. Recheck the live Me identity after each fresh
+login before any cleanup or session mutation. No fallback administrator exists.
+
+Create only fresh private CLI profiles. Track only the current session produced
+by each successful login in this run. Successful revocation is restricted to
+that run-created registry and the same canary account/entrance. Foreign-account
+and Portal targets are also new canary sessions, never existing shared sessions.
+Do not revoke an arbitrary ID obtained from a list or fixture input.
+
+Qualify owned-session revocation, idempotent retry, self-revocation/local cleanup,
+new-login recovery, foreign-account and cross-entrance refusal, live survival
+of each refused target and public audit readback. Storage/transport uncertainty
+remains covered by the committed race/TLS protocol tests; do not fault the shared
+database or add a proxy to force an installed failure. Label this boundary.
+
+Source, image and binary evidence for Control come from the actual DEL installed
+provenance. CLI source/build-info/hash are independent. Use only the original
+installed window, actual CA/origins and its network PID. Join its network
+namespace; isolate hostname mapping in a new private mount namespace. Do not
+start a server, database, container, account lifecycle or second installation.
+
+Existing CLI dependencies and notices remain as reviewed in docs/research/cli.md.
+The driver uses only Python 3.12 standard library, under the PSF licence.
+Go is BSD-3-Clause and Cobra Apache-2.0. These permit commercial/offline use and
+redistribution under their notices. No new dependency, model or dataset is added.
+
+Guard tests must refuse shared identities, fixture/source mismatch, unsafe
+credentials, unowned/pre-existing targets and source substitution. Those tests,
+a build or help run are not an installed end-to-end result.

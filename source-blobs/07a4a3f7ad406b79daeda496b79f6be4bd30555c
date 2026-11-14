@@ -1,0 +1,48 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+release=$(dirname "$(readlink -f "$0")")
+expected_base=${1:?Pass the freshly fetched, verified main commit SHA}
+base=$(git rev-parse origin/main)
+head=$(git rev-parse HEAD)
+test "$base" = "$expected_base"
+git merge-base --is-ancestor "$base" "$head"
+test -z "$(git status --porcelain)"
+git diff --check "$base" "$head"
+if ! git cat-file -e "$base:services/control/migrations/postgresql/000058_audit_chain_head_scope.up.sql"; then
+    echo 'The ARC 000058 migration is pending on the verified main baseline.'
+    exit 75
+fi
+exec 9>/run/lock/ownsolid-heavy.lock
+if ! flock -n 9; then
+    echo 'The shared heavy-work lock is occupied.'
+    exit 75
+fi
+df -h / /dev/shm
+free -m
+cat /proc/pressure/io
+ss -lntp
+if ! awk '$1=="full" {sub(/^avg10=/,"",$2); passed=($2+0<=5)} END{exit !passed}' /proc/pressure/io; then
+    echo 'I/O full PSI avg10 is above the five percent preflight limit.'
+    exit 75
+fi
+test "$(df -Pk / | awk 'NR==2 {print $4}')" -ge 15728640
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+if ps -eo comm,args | awk '$1=="rustc" || ($1=="make" && $0 ~ /(^|[[:space:]])(check|build|test)([[:space:]]|$)/){busy=1} END{exit !busy}'; then
+    echo 'Another heavy build is still running.'
+    exit 75
+fi
+run=$(mktemp -d "$release/gate.XXXXXXXX")
+printf 'base=%s\nhead=%s\n' "$base" "$head" | tee "$run/commits"
+git diff --stat "$base" "$head" > "$run/candidate.stat"
+python3 tools/dev/roadmap_progress.py
+git diff --exit-code
+bash /root/lane-gw-acceptance/gw107.ri6nhx80/published.sh "$run" | tee "$run/make.log"
+pattern='Test(RealGoRustPostgres(RestartAfterLostOutcomeReply|LostOutcomeReply|GatewayChainAndControlOutage)|PostgresGatewayOutcomeMeteringAtomicRetry|PostgresAliasCapabilit(yPublicContractBoundary|iesFollowVerifiedScopedTarget)|PostgresAliasReadCapabilitiesAtRegisteredEntrances|AliasContextCeilingRequiresRecognizedSource|ActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutableHistory|ModelGatewayCAForPublishedAliasOverTLS|ConsumedOperationKeyRefusedAtMachineEntrances|RotationAndCallLogOverHTTPSMatchTheContract|M19AcceptedOperationAcrossExpirySinglePoolAndConcurrentReplay)$'
+bash /root/lane-gw-acceptance/gw107.ri6nhx80/run-pg.sh "$run" release-gateway "^${pattern}" > "$run/pg.log" 2>&1
+bash /root/lane-gw-acceptance/gw104.tRqMfqpr/rust.sh green | tee "$run/rust.log"
+test "$(git rev-parse HEAD)" = "$head"
+test -z "$(git status --porcelain)"
+printf 'Gate evidence %s\n' "$run"

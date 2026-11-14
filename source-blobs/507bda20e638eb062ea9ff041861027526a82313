@@ -1,0 +1,30 @@
+--- a/web/apps/console/src/audit-page.tsx
++++ b/web/apps/console/src/audit-page.tsx
+@@ -317,6 +317,12 @@
+   const badWindow = custom ? windowProblem(from ?? '', to ?? '') : null;
+ 
+   const events = useInfiniteQuery({
++    // An uncertain audit read must wait for an explicit user action.
++    retry: false,
++    retryOnMount: false,
++    refetchOnMount: false,
++    refetchOnWindowFocus: false,
++    refetchOnReconnect: false,
+     queryKey: ['audit', category, outcome, actor, request, range, from, to],
+     queryFn: ({ pageParam, signal }) => {
+       // The clock is read here, once per first page; the cursor carries the window after that.
+--- a/web/apps/console/src/resource-page.tsx
++++ b/web/apps/console/src/resource-page.tsx
+@@ -174,6 +174,12 @@
+   const { t, format } = useI18n();
+   const limit = useQuery(runtimeConfigQuery()).data?.ui.pageSize ?? 20;
+   const events = useInfiniteQuery({
++    // An uncertain audit read must wait for an explicit user action.
++    retry: false,
++    retryOnMount: false,
++    refetchOnMount: false,
++    refetchOnWindowFocus: false,
++    refetchOnReconnect: false,
+     queryKey: ['resource-activity', target, actor, since, limit],
+     queryFn: ({ pageParam, signal }) =>
+       listAuditEvents(

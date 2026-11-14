@@ -1,0 +1,41 @@
+import copy
+import unittest
+
+from kwok import FLEET, generate, scope, verify
+
+
+class TestIdentityCoupling(unittest.TestCase):
+    def setUp(self):
+        self.ids = [f"00000000-0000-4000-8000-{i:012x}" for i in range(1, FLEET + 1)]
+        self.managed = {"cluster": "b997d974-5213-430f-8089-50b7a6683012",
+                        "server": "905b4f83-7764-4684-b0fb-36de3f6e68de",
+                        "worker": "fd53bf88-4fb4-4ae3-b457-9427b3a81663"}
+        self.request = dict(site="default", cell="default",
+                            cluster=self.managed["cluster"], nodes=self.ids)
+
+    def test_exact_thousand_and_actual_scheduler_assignment(self):
+        ids = scope(self.request, self.managed)
+        payload = generate(ids)
+        for node, pod, ident in zip(payload["nodes"], payload["pods"], ids):
+            self.assertNotIn("nodeName", pod["spec"])
+            node["status"]["conditions"] = [{"type": "Ready", "status": "True"}]
+            pod["spec"]["nodeName"] = ident
+            pod["status"] = {"phase": "Running", "conditions": [
+                {"type": "Ready", "status": "True"}, {"type": "PodScheduled", "status": "True"}]}
+        verify(ids, payload["nodes"], payload["pods"])
+        incorrect = copy.deepcopy(payload["pods"])
+        incorrect[0]["spec"]["nodeName"] = ids[-1]
+        with self.assertRaises(ValueError):
+            verify(ids, payload["nodes"], incorrect)
+        with self.assertRaises(ValueError):
+            verify(ids, payload["nodes"][:-1], payload["pods"])
+
+    def test_cross_scope_and_real_node_cannot_be_selected(self):
+        with self.assertRaises(ValueError):
+            scope(self.request | {"cell": "other"}, self.managed)
+        with self.assertRaises(ValueError):
+            scope(self.request, self.managed | {"server": self.ids[0]})
+
+
+if __name__ == "__main__":
+    unittest.main()

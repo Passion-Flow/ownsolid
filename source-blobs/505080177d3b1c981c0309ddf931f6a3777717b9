@@ -1,0 +1,873 @@
+diff --git a/api/configuration/v1/control-serving-expectation/schema.json b/api/configuration/v1/control-serving-expectation/schema.json
+index 28cceff7..47f10b83 100644
+--- a/api/configuration/v1/control-serving-expectation/schema.json
++++ b/api/configuration/v1/control-serving-expectation/schema.json
+@@ -10,6 +10,7 @@
+     "format_version": {"type": "integer", "const": 1},
+     "transport_mode": {"type": "string", "enum": ["http", "direct_https", "trusted_proxy_https"]},
+     "listen_address": {"type": "string", "minLength": 1},
++    "portal_listen_address": {"type": "string", "minLength": 1},
+     "portal_origin": {"type": "string", "minLength": 1},
+     "admin_origin": {"type": "string", "minLength": 1},
+     "tls_certificate_file": {"type": "string"},
+diff --git a/services/control/internal/platform/config/README.md b/services/control/internal/platform/config/README.md
+index 89217212..2542e75f 100644
+--- a/services/control/internal/platform/config/README.md
++++ b/services/control/internal/platform/config/README.md
+@@ -139,6 +139,24 @@ HTTPS may use the exact Admin HTTPS origin. Credentials remain separate.
+ 
+ `distribution_environment.go` maps every DistributionPolicy field through the existing protected policy input. Defaults/bounds stay in DistributionPolicy; distribution-policy.env.example documents units, ranges and restart/precedence. No additional environment reader is introduced.
+ 
++## Separate browser binds (ARC-110)
++
++Optional `server.portal_listen_address` / `PROJECT_ONE_PORTAL_LISTEN_ADDRESS`
++selects a dedicated Portal bind. `server.listen_address` then serves Admin only;
++omission preserves the shared browser listener. The value is a canonical host:port,
++distinct from the other browser, machine and agent-gateway binds. Structural
++validation compares exact identities; prebinding also refuses wildcard/address
++aliases. An explicitly empty, null, mistyped or invalid field fails before an
++environment override can repair it. Ambient values have no authority.
++
++Both browser sockets retain the same selected transport mode, trusted proxy policy
++and protected TLS pair. Origins remain explicit advertised addresses, independently
++configured from local binds. The certificate must still name both origins. A
++protected environment override requires restart and cannot unset the field with
++an empty value. Returning to shared serving requires omission in a valid snapshot.
++See the [operator flow](../../../../../docs/operations/entrance-listeners.md) and
++[compatibility and acceptance](../../../../../docs/research/entrance-listeners.md).
++
+ ## Current cumulative M11 source integration — 2026-10-26
+ 
+ All18 SSO policy fields plus enabled/keyring/provider-inventory inputs map through
+diff --git a/services/control/internal/platform/config/agent_gateway.go b/services/control/internal/platform/config/agent_gateway.go
+index 45b10442..79c8856b 100644
+--- a/services/control/internal/platform/config/agent_gateway.go
++++ b/services/control/internal/platform/config/agent_gateway.go
+@@ -50,7 +50,7 @@ func (c Config) validateAgentGateway() error {
+ 	if e := c.AgentGateway.Validate(); e != nil {
+ 		return e
+ 	}
+-	if c.AgentGateway.ListenAddress == c.Server.ListenAddress || c.MachineServer != nil && c.AgentGateway.ListenAddress == c.MachineServer.ListenAddress {
++	if c.AgentGateway.ListenAddress == c.Server.ListenAddress || c.AgentGateway.ListenAddress == c.Server.PortalListenAddress || c.MachineServer != nil && c.AgentGateway.ListenAddress == c.MachineServer.ListenAddress {
+ 		return errors.New("CONFIG_AGENT_GATEWAY_INVALID")
+ 	}
+ 	return nil
+diff --git a/services/control/internal/platform/config/entrance_listener_test.go b/services/control/internal/platform/config/entrance_listener_test.go
+new file mode 100644
+index 00000000..089b3501
+--- /dev/null
++++ b/services/control/internal/platform/config/entrance_listener_test.go
+@@ -0,0 +1,82 @@
++package config
++
++import (
++	"bytes"
++	"encoding/json"
++	"os"
++	"strings"
++	"testing"
++)
++
++func TestPortalListenerTypedSelectionAndProtectedEnvironment(t *testing.T) {
++	t.Setenv(portalListenAddressEnvironment, "127.0.0.1:31443")
++	base := validConfig()
++	for _, mode := range []TransportMode{TransportHTTP, TransportDirectHTTPS, TransportTrustedProxyHTTPS} {
++		t.Run(string(mode), func(t *testing.T) {
++			base.Server = transportTestServer(mode)
++			omitted, err := decodeWithEnvironment(transportConfigYAML(t, base), "")
++			if err != nil || omitted.Server.PortalListenAddress != "" {
++				t.Fatal("omission or ignored ambient configuration changed", err)
++			}
++			base.Server.PortalListenAddress = "[::1]:29443"
++			selected, err := decodeWithEnvironment(transportConfigYAML(t, base), "")
++			if err != nil || selected.Server.PortalListenAddress != base.Server.PortalListenAddress {
++				t.Fatal("explicit typed Portal listener lost", err)
++			}
++			override := workspaceEnvironmentFixture(t, portalListenAddressEnvironment+"=127.0.0.1:30443\n")
++			selected, err = decodeWithEnvironment(transportConfigYAML(t, base), override)
++			if err != nil || selected.Server.PortalListenAddress != "127.0.0.1:30443" || base.Server.PortalListenAddress != "[::1]:29443" {
++				t.Fatal("protected override failed or mutated its input", err)
++			}
++		})
++	}
++}
++
++func TestPortalListenerRejectsInvalidStructureAndCollisions(t *testing.T) {
++	base := validConfig()
++	raw := transportConfigYAML(t, base)
++	for _, value := range []string{"null", "''", "false", "[]", "{}", "127.0.0.1:0", "127.0.0.1:029443", ":29443", "https://sensitive-value", base.Server.ListenAddress} {
++		body := bytes.Replace(raw, []byte("server:\n"), []byte("server:\n    portal_listen_address: "+value+"\n"), 1)
++		if _, err := decodeWithEnvironment(body, workspaceEnvironmentFixture(t, portalListenAddressEnvironment+"=127.0.0.1:30443\n")); err == nil || strings.Contains(err.Error(), "sensitive-value") {
++			t.Fatal("invalid base listener was repaired or disclosed", value, err)
++		}
++	}
++	for _, body := range []string{portalListenAddressEnvironment + "=\n", portalListenAddressEnvironment + "=false\n", portalListenAddressEnvironment + "=" + base.Server.ListenAddress + "\n", portalListenAddressEnvironment + "=127.0.0.1:29443\n" + portalListenAddressEnvironment + "=127.0.0.1:30443\n"} {
++		if _, err := decodeWithEnvironment(raw, workspaceEnvironmentFixture(t, body)); err == nil {
++			t.Fatal("invalid explicit Portal listener environment accepted")
++		}
++	}
++	base.Server.PortalListenAddress = "127.0.0.1:29443"
++	base.MachineServer = &MachineServerConfiguration{ListenAddress: base.Server.PortalListenAddress, Origin: "https://machine.example.invalid", TLSCertificateFile: "/synthetic/certificate.pem", TLSPrivateKeyFile: "/synthetic/key.pem"}
++	if err := base.Validate(); err == nil || err.Error() != "CONFIG_MACHINE_SERVER_INVALID" {
++		t.Fatal("machine listener collision accepted", err)
++	}
++	base.MachineServer = nil
++	base.AgentGateway = &AgentGatewayConfiguration{ListenAddress: base.Server.PortalListenAddress, TLSCertificateFile: "/synthetic/certificate.pem", TLSPrivateKeyFile: "/synthetic/key.pem"}
++	if err := base.Validate(); err == nil || err.Error() != "CONFIG_AGENT_GATEWAY_INVALID" {
++		t.Fatal("gateway listener collision accepted", err)
++	}
++}
++
++func TestPortalListenerServingSchemaAndDocumentedEnvironment(t *testing.T) {
++	raw, err := os.ReadFile("../../../../../api/configuration/v1/control-serving-expectation/schema.json")
++	var schema struct {
++		Properties map[string]struct {
++			Type    string `json:"type"`
++			Minimum int    `json:"minLength"`
++		} `json:"properties"`
++		Required []string `json:"required"`
++	}
++	if err != nil || json.Unmarshal(raw, &schema) != nil || schema.Properties["portal_listen_address"].Type != "string" || schema.Properties["portal_listen_address"].Minimum != 1 {
++		t.Fatal("Portal listener intent schema differs from its typed owner", err)
++	}
++	for _, field := range schema.Required {
++		if field == "portal_listen_address" {
++			t.Fatal("optional listener became mandatory for old expectations")
++		}
++	}
++	example, err := os.ReadFile("../../../config/examples/control/transport.env.example")
++	if err != nil || !bytes.Contains(example, []byte("# "+portalListenAddressEnvironment+"=")) {
++		t.Fatal("optional protected mapping is not documented", err)
++	}
++}
+diff --git a/services/control/internal/platform/config/machine_server.go b/services/control/internal/platform/config/machine_server.go
+index 0044e770..a457769c 100644
+--- a/services/control/internal/platform/config/machine_server.go
++++ b/services/control/internal/platform/config/machine_server.go
+@@ -55,7 +55,7 @@ func (c Config) validateMachineServer() error {
+ 	if c.MachineServer == nil {
+ 		return nil
+ 	}
+-	if c.MachineServer.Validate() != nil || c.MachineServer.ListenAddress == c.Server.ListenAddress || c.MachineServer.Origin == c.Server.PortalOrigin || c.MachineServer.Origin == c.Server.AdminOrigin {
++	if c.MachineServer.Validate() != nil || c.MachineServer.ListenAddress == c.Server.ListenAddress || c.MachineServer.ListenAddress == c.Server.PortalListenAddress || c.MachineServer.Origin == c.Server.PortalOrigin || c.MachineServer.Origin == c.Server.AdminOrigin {
+ 		return errors.New("CONFIG_MACHINE_SERVER_INVALID")
+ 	}
+ 	return nil
+diff --git a/services/control/internal/platform/config/server_transport.go b/services/control/internal/platform/config/server_transport.go
+index a237ffb8..e293d1a0 100644
+--- a/services/control/internal/platform/config/server_transport.go
++++ b/services/control/internal/platform/config/server_transport.go
+@@ -27,26 +27,30 @@ const (
+ 	browserHTTPPort             uint16 = 80
+ 	browserHTTPSPort            uint16 = 443
+ 
+-	transportModeEnvironment  = "PROJECT_ONE_TRANSPORT_MODE"
+-	listenAddressEnvironment  = "PROJECT_ONE_LISTEN_ADDRESS"
+-	portalOriginEnvironment   = "PROJECT_ONE_PORTAL_ORIGIN"
+-	adminOriginEnvironment    = "PROJECT_ONE_ADMIN_ORIGIN"
+-	tlsCertificateEnvironment = "PROJECT_ONE_TLS_CERTIFICATE_FILE"
+-	tlsPrivateKeyEnvironment  = "PROJECT_ONE_TLS_PRIVATE_KEY_FILE"
+-	trustedProxyEnvironment   = "PROJECT_ONE_TRUSTED_PROXY_CIDRS"
++	transportModeEnvironment       = "PROJECT_ONE_TRANSPORT_MODE"
++	listenAddressEnvironment       = "PROJECT_ONE_LISTEN_ADDRESS"
++	portalListenAddressEnvironment = "PROJECT_ONE_PORTAL_LISTEN_ADDRESS"
++	portalOriginEnvironment        = "PROJECT_ONE_PORTAL_ORIGIN"
++	adminOriginEnvironment         = "PROJECT_ONE_ADMIN_ORIGIN"
++	tlsCertificateEnvironment      = "PROJECT_ONE_TLS_CERTIFICATE_FILE"
++	tlsPrivateKeyEnvironment       = "PROJECT_ONE_TLS_PRIVATE_KEY_FILE"
++	trustedProxyEnvironment        = "PROJECT_ONE_TRUSTED_PROXY_CIDRS"
+ )
+ 
+ // ServerConfiguration is the sole control authority for browser origins and transport.
+ type ServerConfiguration struct {
+-	ListenAddress      string        `yaml:"listen_address"`
+-	PortalOrigin       string        `yaml:"portal_origin"`
+-	AdminOrigin        string        `yaml:"admin_origin"`
+-	TLSCertificateFile string        `yaml:"tls_certificate_file"`
+-	TLSPrivateKeyFile  string        `yaml:"tls_private_key_file"`
+-	PortalAssets       string        `yaml:"portal_assets"`
+-	AdminAssets        string        `yaml:"admin_assets"`
+-	TransportMode      TransportMode `yaml:"transport_mode,omitempty"`
+-	TrustedProxyCIDRs  []string      `yaml:"trusted_proxy_cidrs,omitempty"`
++	ListenAddress string `yaml:"listen_address"`
++	// PortalListenAddress separates Portal from the Admin socket when present.
++	// Omission retains the shared browser listener; origins remain explicit.
++	PortalListenAddress string        `yaml:"portal_listen_address,omitempty" json:"portal_listen_address,omitempty"`
++	PortalOrigin        string        `yaml:"portal_origin"`
++	AdminOrigin         string        `yaml:"admin_origin"`
++	TLSCertificateFile  string        `yaml:"tls_certificate_file"`
++	TLSPrivateKeyFile   string        `yaml:"tls_private_key_file"`
++	PortalAssets        string        `yaml:"portal_assets"`
++	AdminAssets         string        `yaml:"admin_assets"`
++	TransportMode       TransportMode `yaml:"transport_mode,omitempty"`
++	TrustedProxyCIDRs   []string      `yaml:"trusted_proxy_cidrs,omitempty"`
+ 	// OperatorSocket is the Unix socket an operator on the host uses when nothing else reaches
+ 	// control (ADR 0043). Empty serves no socket.
+ 	OperatorSocket string `yaml:"operator_socket,omitempty"`
+@@ -220,6 +224,11 @@ func (s ServerConfiguration) ValidateTransport() error {
+ 	if e := validateServerListener(s.ListenAddress); e != nil {
+ 		return e
+ 	}
++	if s.PortalListenAddress != "" {
++		if validateServerListener(s.PortalListenAddress) != nil || s.PortalListenAddress == s.ListenAddress {
++			return bad
++		}
++	}
+ 	if s.OperatorSocket != "" && !serverReference(s.OperatorSocket) {
+ 		return bad
+ 	}
+@@ -284,6 +293,10 @@ func (s *ServerConfiguration) UnmarshalYAML(node *yaml.Node) error {
+ 	}
+ 	for i := 0; i < len(node.Content); i += 2 {
+ 		switch node.Content[i].Value {
++		case "portal_listen_address":
++			if value.PortalListenAddress == "" {
++				return bad
++			}
+ 		case "transport_mode":
+ 			if value.TransportMode == "" {
+ 				return bad
+@@ -323,7 +336,7 @@ func validateServerTransportYAML(raw []byte) error {
+ 
+ func serverTransportEnvironment(key string) bool {
+ 	switch key {
+-	case transportModeEnvironment, listenAddressEnvironment, portalOriginEnvironment, adminOriginEnvironment, tlsCertificateEnvironment, tlsPrivateKeyEnvironment, trustedProxyEnvironment:
++	case transportModeEnvironment, listenAddressEnvironment, portalListenAddressEnvironment, portalOriginEnvironment, adminOriginEnvironment, tlsCertificateEnvironment, tlsPrivateKeyEnvironment, trustedProxyEnvironment:
+ 		return true
+ 	}
+ 	return false
+@@ -339,6 +352,8 @@ func (s *ServerConfiguration) applyTransportEnvironment(key, value string) error
+ 		s.TransportMode = TransportMode(value)
+ 	case listenAddressEnvironment:
+ 		s.ListenAddress = value
++	case portalListenAddressEnvironment:
++		s.PortalListenAddress = value
+ 	case portalOriginEnvironment:
+ 		s.PortalOrigin = value
+ 	case adminOriginEnvironment:
+diff --git a/services/control/internal/platform/httpserver/README.md b/services/control/internal/platform/httpserver/README.md
+index d4a8e8aa..2eabdb9a 100644
+--- a/services/control/internal/platform/httpserver/README.md
++++ b/services/control/internal/platform/httpserver/README.md
+@@ -10,11 +10,11 @@ an explicitly configured plain HTTP/proxy backend while retaining connection,
+ header/request/idle deadlines and bounded shutdown. The historical `Serve`
+ entrypoint requires nonnil TLS; it cannot silently downgrade.
+ 
+-[ListenConfigured](server.go) prebinds the browser socket and optional dedicated
++[ListenConfigured](server.go) prebinds the browser sockets and optional dedicated
+ `config.MachineServerConfiguration` HTTPS socket before accepting requests. Its
+ owned `ListenerGroup.Serve(ctx)` starts once; `Close()` before Serve releases
+-both sockets, while Close during Serve cancels requests and joins both bounded
+-shutdown calls. A bind failure closes the earlier socket. Both listeners share
++all sockets, while Close during Serve cancels requests and joins every bounded
++shutdown call. A bind failure closes the earlier sockets. All listeners share
+ one `HTTPPolicy.MaxConnections` channel, rather than doubling the configured
+ budget. Handler active-request admission remains with the shared identity owner.
+ Caller composition must validate the actual browser and machine TLS material,
+@@ -22,6 +22,18 @@ retain both handlers and start business workers only after prebinding succeeds.
+ TLS configurations are cloned for the owned listeners and must not be mutated
+ after submission. This package does not select certificate files or create SQL.
+ 
++Optional `server.portal_listen_address` selects a Portal-only socket and makes
++`server.listen_address` Admin-only. `browserEntrance` resolves the original
++request with the existing transport owner and refuses the sibling audience
++before assets, health or business handling. It never rewrites Host or TLS. The
++same identity handler and active-request admission remain shared. Omission keeps
++the historical shared browser socket. `ServeConfigured` also honors this split
++through an owned listener group; it cannot silently ignore the extra bind.
++Refusals retain the correlated transport audit and fixed per-audience
++`ownsolid_http_entrance_rejections_total` counters from `ListenerGroup.Samples`;
++the production serving composition adds them to its existing metrics pusher.
++See [configuration and remaining qualification](../../../../../docs/research/entrance-listeners.md).
++
+ [machine_request.go](machine_request.go) resolves only real direct TLS, the
+ configured machine authority/SNI and the actual socket peer. It rejects all
+ forwarding headers and any Origin/Cookie header, including empty or differently
+diff --git a/services/control/internal/platform/httpserver/entrance_listener_test.go b/services/control/internal/platform/httpserver/entrance_listener_test.go
+new file mode 100644
+index 00000000..dc8fb517
+--- /dev/null
++++ b/services/control/internal/platform/httpserver/entrance_listener_test.go
+@@ -0,0 +1,408 @@
++package httpserver
++
++import (
++	"context"
++	"crypto/tls"
++	"crypto/x509"
++	"encoding/json"
++	"io"
++	"net"
++	"net/http"
++	"net/http/httptest"
++	"strings"
++	"sync"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++)
++
++func entranceInputs(t *testing.T, mode config.TransportMode) (config.ServerConfiguration, config.MachineServerConfiguration, *tls.Config, *x509.CertPool) {
++	t.Helper()
++	browser, machine, material, roots := machineListenerInputs(t)
++	browser.PortalListenAddress = machineUnusedAddress(t)
++	if browser.PortalListenAddress == browser.ListenAddress || browser.PortalListenAddress == machine.ListenAddress {
++		t.Fatal("fixture reused an owned address")
++	}
++	browser.TransportMode = mode
++	scheme := "https"
++	if mode == config.TransportHTTP {
++		scheme = "http"
++	}
++	_, adminPort, _ := net.SplitHostPort(browser.ListenAddress)
++	_, portalPort, _ := net.SplitHostPort(browser.PortalListenAddress)
++	browser.AdminOrigin, browser.PortalOrigin = scheme+"://admin.test:"+adminPort, scheme+"://portal.test:"+portalPort
++	if mode == config.TransportTrustedProxyHTTPS {
++		browser.TrustedProxyCIDRs = []string{"127.0.0.1/32"}
++	}
++	return browser, machine, material, roots
++}
++
++func entranceClient(t *testing.T, roots *x509.CertPool, forceAddress string) *http.Client {
++	t.Helper()
++	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12},
++		DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
++			host, port, err := net.SplitHostPort(address)
++			if err != nil || network != "tcp" || host != "admin.test" && host != "portal.test" && host != "localhost" {
++				return nil, context.Canceled
++			}
++			target := net.JoinHostPort("127.0.0.1", port)
++			if forceAddress != "" {
++				target = forceAddress
++			}
++			return (&net.Dialer{Timeout: time.Second}).DialContext(ctx, "tcp", target)
++		}}
++	t.Cleanup(transport.CloseIdleConnections)
++	return &http.Client{Transport: transport, Timeout: 3 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return context.Canceled }}
++}
++
++func entranceRequest(t *testing.T, client *http.Client, mode config.TransportMode, origin, path string) *http.Response {
++	t.Helper()
++	r, err := http.NewRequest(http.MethodGet, origin+path, nil)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if mode == config.TransportTrustedProxyHTTPS {
++		r.URL.Scheme = "http"
++		r.Header.Set("X-Forwarded-Proto", "https")
++		r.Header.Set("X-Forwarded-Host", r.Host)
++		r.Header.Set("X-Forwarded-For", "192.0.2.20")
++	}
++	out, err := client.Do(r)
++	if err != nil {
++		t.Fatal("actual local entrance request failed", err)
++	}
++	return out
++}
++
++func entranceDiscard(client *http.Client, address string) <-chan error {
++	done := make(chan error, 1)
++	go func() {
++		response, err := client.Get(address)
++		if response != nil {
++			_, _ = io.Copy(io.Discard, response.Body)
++			response.Body.Close()
++		}
++		done <- err
++	}()
++	return done
++}
++
++func TestSplitBrowserListenersActualAuthorityAndSiblingRefusal(t *testing.T) {
++	for _, mode := range []config.TransportMode{config.TransportHTTP, config.TransportDirectHTTPS, config.TransportTrustedProxyHTTPS} {
++		t.Run(string(mode), func(t *testing.T) {
++			browser, machine, material, roots := entranceInputs(t, mode)
++			var browserTLS *tls.Config
++			if mode == config.TransportDirectHTTPS {
++				browserTLS = material
++			}
++			var admitted atomic.Int32
++			echo := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++				value, err := ResolveBrowserRequest(r, browser)
++				if err != nil {
++					t.Error("listener admitted an invalid transport")
++					return
++				}
++				admitted.Add(1)
++				json.NewEncoder(w).Encode(struct {
++					Audience string
++					TLS      bool
++				}{value.Audience, r.TLS != nil})
++			})
++			group, err := ListenConfigured(browser, browserTLS, echo, &machine, material, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(204) }), config.DefaultRuntimePolicy().HTTP)
++			if err != nil {
++				t.Fatal(err)
++			}
++			cancel, done := machineStartGroup(t, group)
++			client := entranceClient(t, roots, "")
++			for _, entry := range []struct{ audience, origin, address string }{{"admin", browser.AdminOrigin, browser.ListenAddress}, {"portal", browser.PortalOrigin, browser.PortalListenAddress}} {
++				response := entranceRequest(t, client, mode, entry.origin, "/")
++				var got struct {
++					Audience string
++					TLS      bool
++				}
++				if json.Unmarshal(transportRead(t, response, 200), &got) != nil || got.Audience != entry.audience || got.TLS != (mode == config.TransportDirectHTTPS) {
++					t.Fatal("wrong actual browser entrance", got)
++				}
++				sibling := browser.PortalListenAddress
++				if entry.audience == "portal" {
++					sibling = browser.ListenAddress
++				}
++				wrongSocket := entranceClient(t, roots, sibling)
++				for _, path := range []string{"/", "/runtime-config.json", "/health/live", "/health/ready", "/api/v1/me"} {
++					response = entranceRequest(t, wrongSocket, mode, entry.origin, path)
++					var problem map[string]any
++					if response.Header.Get("X-Request-ID") == "" || response.Header.Get("Cache-Control") != "no-store" || json.Unmarshal(transportRead(t, response, 421), &problem) != nil || problem["code"] != "MISDIRECTED_REQUEST" {
++						t.Fatal("wrong-socket request lacked a correlated refusal")
++					}
++				}
++			}
++			if admitted.Load() != 2 {
++				t.Fatal("wrong-socket request reached the business handler")
++			}
++			metrics := group.Samples()
++			if len(metrics) != 2 {
++				t.Fatal("split rejection metrics are absent")
++			}
++			for index, audience := range []string{"admin", "portal"} {
++				metric := metrics[index]
++				if metric.Name != "ownsolid_http_entrance_rejections_total" || metric.Value != 5 || len(metric.Labels) != 1 || metric.Labels[0].Name != "audience" || metric.Labels[0].Value != audience {
++					t.Fatal("rejections were not counted on their actual listener", metric)
++				}
++			}
++			transportRead(t, entranceRequest(t, client, config.TransportDirectHTTPS, machine.Origin, "/"), 204)
++			cancel()
++			if err := machineAwaitServe(t, done); err != nil {
++				t.Fatal(err)
++			}
++			machineAssertReleased(t, browser.ListenAddress, browser.PortalListenAddress, machine.ListenAddress)
++		})
++	}
++}
++
++func TestSplitBrowserListenerRetainsForwardingAndSNIChecks(t *testing.T) {
++	for _, mode := range []config.TransportMode{config.TransportHTTP, config.TransportDirectHTTPS, config.TransportTrustedProxyHTTPS} {
++		server := transportFixture(mode)
++		next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { t.Error("confused transport reached the business handler") })
++		for _, change := range []func(*http.Request){
++			func(r *http.Request) { r.Host = "foreign.test" },
++			func(r *http.Request) {
++				if r.TLS != nil {
++					r.TLS.ServerName = "admin.test"
++				} else {
++					r.Header.Set("Forwarded", "host=portal.test")
++				}
++			},
++		} {
++			r := transportRequest(mode)
++			change(r)
++			w := httptest.NewRecorder()
++			var rejected atomic.Uint64
++			browserEntrance(server, "portal", next, config.DefaultHTTPPolicy(), &rejected).ServeHTTP(w, r)
++			if w.Code < 400 || w.Header().Get("X-Request-ID") == "" {
++				t.Fatal("transport confusion was not refused")
++			}
++			if rejected.Load() != 1 {
++				t.Fatal("transport refusal was not counted")
++			}
++		}
++	}
++}
++
++func TestSplitBrowserListenersReleaseEarlierBindsOnFailure(t *testing.T) {
++	for _, position := range []string{"portal", "machine", "portal_alias", "machine_alias"} {
++		t.Run(position, func(t *testing.T) {
++			browser, machine, material, _ := entranceInputs(t, config.TransportHTTP)
++			occupied := browser.PortalListenAddress
++			if position == "machine" || position == "machine_alias" {
++				occupied = machine.ListenAddress
++			}
++			foreign, err := net.Listen("tcp", occupied)
++			if err != nil {
++				t.Fatal(err)
++			}
++			defer foreign.Close()
++			if position == "machine_alias" {
++				_, port, _ := net.SplitHostPort(browser.PortalListenAddress)
++				machine.ListenAddress = "0.0.0.0:" + port
++			}
++			if position == "portal_alias" {
++				_, port, _ := net.SplitHostPort(browser.ListenAddress)
++				browser.PortalListenAddress = "0.0.0.0:" + port
++			}
++			group, err := ListenConfigured(browser, nil, http.NotFoundHandler(), &machine, material, http.NotFoundHandler(), config.DefaultHTTPPolicy())
++			if err == nil || !strings.Contains(err.Error(), "HTTP_LISTENER_BIND_FAILED") || group != nil {
++				if group != nil {
++					group.Close()
++				}
++				t.Fatal("occupied listener was admitted", err)
++			}
++			machineAssertReleased(t, browser.ListenAddress)
++			if position != "portal" {
++				machineAssertReleased(t, browser.PortalListenAddress)
++			}
++			if replacement, err := net.Listen("tcp", occupied); err == nil {
++				replacement.Close()
++				t.Fatal("failure closed the separately owned socket")
++			}
++		})
++	}
++}
++
++func TestSplitBrowserListenersShareOneConnectionBudget(t *testing.T) {
++	browser, machine, material, roots := entranceInputs(t, config.TransportHTTP)
++	entered := make(chan string, 3)
++	release := make(map[string]chan struct{})
++	for _, audience := range []string{"admin", "portal", "machine"} {
++		release[audience] = make(chan struct{})
++	}
++	var unblocked sync.Once
++	unblock := func() {
++		unblocked.Do(func() {
++			for _, c := range release {
++				close(c)
++			}
++		})
++	}
++	handler := func(machineIngress bool) http.Handler {
++		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++			audience := "machine"
++			if !machineIngress {
++				value, err := ResolveBrowserRequest(r, browser)
++				if err != nil {
++					t.Error(err)
++					return
++				}
++				audience = value.Audience
++			}
++			if r.URL.Path == "/hold" {
++				entered <- audience
++				select {
++				case <-release[audience]:
++				case <-r.Context().Done():
++				}
++			}
++		})
++	}
++	policy := config.DefaultHTTPPolicy()
++	policy.MaxConnections = 1
++	policy.MaxActiveRequests = 1
++	group, err := ListenConfigured(browser, nil, handler(false), &machine, material, handler(true), policy)
++	if err != nil {
++		t.Fatal(err)
++	}
++	cancel, done := machineStartGroup(t, group)
++	t.Cleanup(unblock)
++	client := entranceClient(t, roots, "")
++	held := entranceDiscard(client, browser.AdminOrigin+"/hold")
++	select {
++	case got := <-entered:
++		if got != "admin" {
++			t.Fatal("wrong holder")
++		}
++	case <-time.After(3 * time.Second):
++		t.Fatal("Admin did not hold its socket")
++	}
++	for _, origin := range []string{browser.PortalOrigin, machine.Origin} {
++		if response, err := client.Get(origin + "/"); err == nil {
++			response.Body.Close()
++			t.Fatal("sibling acquired an independent connection budget")
++		}
++	}
++	unblock()
++	if err := machineAwaitServe(t, held); err != nil {
++		t.Fatal(err)
++	}
++	budget := group.endpoints[0].listener.(*bounded).slots
++	for deadline := time.Now().Add(2 * time.Second); len(budget) != 0; time.Sleep(time.Millisecond) {
++		if time.Now().After(deadline) {
++			t.Fatal("connection budget was not returned")
++		}
++	}
++	for _, origin := range []string{browser.PortalOrigin, machine.Origin} {
++		response, err := client.Get(origin + "/")
++		if err != nil {
++			t.Fatal(err)
++		}
++		transportRead(t, response, 200)
++	}
++	cancel()
++	if err := machineAwaitServe(t, done); err != nil {
++		t.Fatal(err)
++	}
++}
++
++func TestSplitBrowserListenersJoinAllRequestCleanups(t *testing.T) {
++	for _, siblingFailure := range []bool{false, true} {
++		browser, machine, material, roots := entranceInputs(t, config.TransportHTTP)
++		entered, cancelled := make(chan struct{}, 3), make(chan struct{}, 3)
++		release := make(chan struct{})
++		var once sync.Once
++		unblock := func() { once.Do(func() { close(release) }) }
++		handler := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
++			entered <- struct{}{}
++			<-r.Context().Done()
++			cancelled <- struct{}{}
++			<-release
++		})
++		group, err := ListenConfigured(browser, nil, handler, &machine, material, handler, config.DefaultHTTPPolicy())
++		if err != nil {
++			t.Fatal(err)
++		}
++		cancel, done := machineStartGroup(t, group)
++		t.Cleanup(unblock)
++		client := entranceClient(t, roots, "")
++		requests := []<-chan error{}
++		for _, origin := range []string{browser.AdminOrigin, browser.PortalOrigin, machine.Origin} {
++			requests = append(requests, machineDiscardResponse(client, origin))
++			machineAwait(t, entered, "request did not enter")
++		}
++		if siblingFailure {
++			group.endpoints[1].listener.Close()
++		} else {
++			cancel()
++		}
++		for range 3 {
++			machineAwait(t, cancelled, "a sibling request was not cancelled")
++		}
++		select {
++		case <-done:
++			t.Fatal("Serve returned before request cleanup")
++		default:
++		}
++		unblock()
++		err = machineAwaitServe(t, done)
++		if (err != nil) != siblingFailure {
++			t.Fatal("wrong joined listener result", err)
++		}
++		for _, request := range requests {
++			if err := machineAwaitServe(t, request); err != nil {
++				t.Fatal(err)
++			}
++		}
++		machineAssertReleased(t, browser.ListenAddress, browser.PortalListenAddress, machine.ListenAddress)
++	}
++}
++
++func TestServeConfiguredHonorsSplitBrowserSelection(t *testing.T) {
++	browser, _, _, roots := entranceInputs(t, config.TransportHTTP)
++	ctx, cancel := context.WithCancel(context.Background())
++	defer cancel()
++	done := make(chan error, 1)
++	finished := make(chan struct{})
++	go func() {
++		defer close(finished)
++		done <- ServeConfigured(ctx, browser, nil, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(204) }), config.DefaultHTTPPolicy())
++	}()
++	t.Cleanup(func() {
++		cancel()
++		select {
++		case <-finished:
++		case <-time.After(4 * time.Second):
++			t.Error("configured server did not exit")
++		}
++	})
++	client := entranceClient(t, roots, "")
++	for _, origin := range []string{browser.AdminOrigin, browser.PortalOrigin} {
++		deadline := time.Now().Add(3 * time.Second)
++		for {
++			response, err := client.Get(origin + "/")
++			if err == nil {
++				transportRead(t, response, 204)
++				break
++			}
++			if time.Now().After(deadline) {
++				t.Fatal("configured split listener unavailable", err)
++			}
++			time.Sleep(time.Millisecond)
++		}
++	}
++	wrong := entranceClient(t, roots, browser.ListenAddress)
++	transportRead(t, entranceRequest(t, wrong, config.TransportHTTP, browser.PortalOrigin, "/"), 421)
++	cancel()
++	if err := machineAwaitServe(t, done); err != nil {
++		t.Fatal(err)
++	}
++	machineAssertReleased(t, browser.ListenAddress, browser.PortalListenAddress)
++}
+diff --git a/services/control/internal/platform/httpserver/server.go b/services/control/internal/platform/httpserver/server.go
+index ea678d6d..6f0a05c8 100644
+--- a/services/control/internal/platform/httpserver/server.go
++++ b/services/control/internal/platform/httpserver/server.go
+@@ -5,9 +5,12 @@ import (
+ 	"crypto/tls"
+ 	"errors"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
++	"github.com/google/uuid"
+ 	"net"
+ 	"net/http"
+ 	"sync"
++	"sync/atomic"
+ )
+ 
+ type bounded struct {
+@@ -52,6 +55,14 @@ func ServeConfigured(ctx context.Context, server config.ServerConfiguration, tls
+ 	if (server.EffectiveTransportMode() == config.TransportDirectHTTPS) != (tlsConfig != nil) {
+ 		return errors.New("CONFIG_TRANSPORT_INVALID")
+ 	}
++	if server.PortalListenAddress != "" {
++		group, err := ListenConfigured(server, tlsConfig, handler, nil, nil, nil, policy)
++		if err != nil {
++			return err
++		}
++		defer group.Close()
++		return group.Serve(ctx)
++	}
+ 	return serve(ctx, server.ListenAddress, tlsConfig, handler, policy)
+ }
+ 
+@@ -140,17 +151,60 @@ type listenerEndpoint struct {
+ 	tls      *tls.Config
+ }
+ 
++// BSD may allow overlapping wildcard binds. Inspect the owned actual addresses
++// before serving rather than relying on kernel refusal or resolving DNS twice.
++func listenersOverlap(left, right net.Addr) bool {
++	a, okA := left.(*net.TCPAddr)
++	b, okB := right.(*net.TCPAddr)
++	return okA && okB && a.Port == b.Port && (a.IP.IsUnspecified() || b.IP.IsUnspecified() || a.IP.Equal(b.IP))
++}
++
++// A split socket must not expose the sibling origin even with valid Host/SNI.
++// The unchanged dispatcher still owns sessions, CSRF and business authorization.
++func browserEntrance(server config.ServerConfiguration, audience string, next http.Handler, policy config.HTTPPolicy, rejected *atomic.Uint64) http.Handler {
++	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		connection, err := ResolveBrowserRequest(r, server)
++		if err == nil && connection.Audience != audience {
++			err = errors.New("MISDIRECTED_REQUEST")
++		}
++		if err == nil {
++			next.ServeHTTP(w, r)
++			return
++		}
++		requestID := uuid.NewString()
++		rejected.Add(1)
++		w.Header().Set("X-Request-ID", requestID)
++		w.Header().Set("Cache-Control", "no-store")
++		w.Header().Set("X-Content-Type-Options", "nosniff")
++		AuditTransport(r.Context(), requestID, connection, false)
++		ProblemWithPolicy(w, requestID, err, policy)
++	})
++}
++
+ // ListenerGroup owns every prebound socket. Its handlers share one connection
+ // budget; business request admission and authorization remain handler-owned.
+ type ListenerGroup struct {
+-	mu        sync.Mutex
+-	endpoints []listenerEndpoint
+-	policy    config.HTTPPolicy
+-	started   bool
+-	closed    bool
+-	cancel    context.CancelFunc
+-	done      chan struct{}
+-	result    error
++	mu           sync.Mutex
++	endpoints    []listenerEndpoint
++	policy       config.HTTPPolicy
++	started      bool
++	closed       bool
++	cancel       context.CancelFunc
++	done         chan struct{}
++	result       error
++	splitBrowser bool
++	rejected     [2]atomic.Uint64
++}
++
++// Samples exposes fixed per-browser rejection counters for the serving metrics owner.
++func (g *ListenerGroup) Samples() []telemetrystore.Sample {
++	if g == nil || !g.splitBrowser {
++		return nil
++	}
++	return []telemetrystore.Sample{
++		{Name: "ownsolid_http_entrance_rejections_total", Value: float64(g.rejected[0].Load()), Labels: []telemetrystore.Label{{Name: "audience", Value: "admin"}}},
++		{Name: "ownsolid_http_entrance_rejections_total", Value: float64(g.rejected[1].Load()), Labels: []telemetrystore.Label{{Name: "audience", Value: "portal"}}},
++	}
+ }
+ 
+ // ListenConfigured binds all selected sockets before any request is accepted.
+@@ -166,16 +220,22 @@ func ListenConfigured(server config.ServerConfiguration, browserTLS *tls.Config,
+ 		if machineTLS != nil || machineHandler != nil {
+ 			return nil, bad
+ 		}
+-	} else if machine.Validate() != nil || machineTLS == nil || machineHandler == nil || machine.ListenAddress == server.ListenAddress || machine.Origin == server.PortalOrigin || machine.Origin == server.AdminOrigin {
++	} else if machine.Validate() != nil || machineTLS == nil || machineHandler == nil || machine.ListenAddress == server.ListenAddress || machine.ListenAddress == server.PortalListenAddress || machine.Origin == server.PortalOrigin || machine.Origin == server.AdminOrigin {
+ 		return nil, bad
+ 	}
+-	group := &ListenerGroup{policy: policy, done: make(chan struct{})}
++	group := &ListenerGroup{policy: policy, done: make(chan struct{}), splitBrowser: server.PortalListenAddress != ""}
+ 	slots := make(chan struct{}, policy.MaxConnections)
+ 	bind := func(address string, tlsConfiguration *tls.Config, handler http.Handler) error {
+ 		listener, e := net.Listen("tcp", address)
+ 		if e != nil {
+ 			return e
+ 		}
++		for _, endpoint := range group.endpoints {
++			if listenersOverlap(listener.Addr(), endpoint.listener.Addr()) {
++				_ = listener.Close()
++				return errors.New("HTTP_LISTENER_BIND_FAILED")
++			}
++		}
+ 		var accepted net.Listener = &bounded{listener, slots}
+ 		if tlsConfiguration != nil {
+ 			tlsConfiguration = tlsConfiguration.Clone()
+@@ -184,9 +244,18 @@ func ListenConfigured(server config.ServerConfiguration, browserTLS *tls.Config,
+ 		group.endpoints = append(group.endpoints, listenerEndpoint{listener: accepted, handler: handler, tls: tlsConfiguration})
+ 		return nil
+ 	}
+-	if e := bind(server.ListenAddress, browserTLS, browserHandler); e != nil {
++	adminHandler := browserHandler
++	if server.PortalListenAddress != "" {
++		adminHandler = browserEntrance(server, "admin", browserHandler, policy, &group.rejected[0])
++	}
++	if e := bind(server.ListenAddress, browserTLS, adminHandler); e != nil {
+ 		return nil, errors.New("HTTP_LISTENER_BIND_FAILED")
+ 	}
++	if server.PortalListenAddress != "" {
++		if e := bind(server.PortalListenAddress, browserTLS, browserEntrance(server, "portal", browserHandler, policy, &group.rejected[1])); e != nil {
++			return nil, errors.Join(errors.New("HTTP_LISTENER_BIND_FAILED"), group.Close())
++		}
++	}
+ 	if machine != nil {
+ 		if e := bind(machine.ListenAddress, machineTLS, machineHandler); e != nil {
+ 			return nil, errors.Join(errors.New("HTTP_LISTENER_BIND_FAILED"), group.Close())
+@@ -196,7 +265,7 @@ func ListenConfigured(server config.ServerConfiguration, browserTLS *tls.Config,
+ }
+ 
+ // Close before Serve releases all prebound sockets. During Serve it cancels the
+-// common request context and waits for both bounded shutdowns. It is idempotent.
++// common request context and waits for every bounded shutdown. It is idempotent.
+ func (g *ListenerGroup) Close() error {
+ 	if g == nil {
+ 		return nil
+@@ -227,7 +296,7 @@ func (g *ListenerGroup) Close() error {
+ }
+ 
+ // Serve starts acceptance exactly once. A sibling failure or caller cancellation
+-// cancels every request, then concurrently drains both servers within one budget.
++// cancels every request, then concurrently drains every server within one budget.
+ // A handler that ignores cancellation can exceed that drain budget; forced socket
+ // closure is reported as failure, never as confirmation of handler cleanup.
+ func (g *ListenerGroup) Serve(ctx context.Context) error {
+@@ -235,7 +304,8 @@ func (g *ListenerGroup) Serve(ctx context.Context) error {
+ 		return errors.New("HTTP_LISTENER_CONTEXT_REQUIRED")
+ 	}
+ 	g.mu.Lock()
+-	if g.done == nil || len(g.endpoints) < 1 || len(g.endpoints) > 2 {
++	// Two browser entrances and the optional machine entrance share this owner.
++	if g.done == nil || len(g.endpoints) < 1 || len(g.endpoints) > 3 {
+ 		g.mu.Unlock()
+ 		return errors.New("HTTP_LISTENER_GROUP_INVALID")
+ 	}

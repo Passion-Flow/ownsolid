@@ -1,0 +1,18 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "recorded_at": "2026-11-12T19:57:24.094123+00:00",
+  "queue": "single kernel flock wait acquired; parent closed the same descriptor after child exit 1",
+  "preflight": "exact source, resources, cached Go/image platform and non-loopback outbound denial passed",
+  "compilation": "native darwin/arm64 test binary compiled successfully",
+  "result": "four roots not run: PostgreSQL was ready but Docker returned an empty published-port binding list; IndexError before test launch",
+  "cleanup": "original entry removed its container, internal network and credential files; no host port obtained",
+  "retry": "none; original native entry and failure preserved",
+  "database_scope": "PostgreSQL became ready and vector 0.8.7 was created; Go test setup and schema-60 migration were not executed",
+  "docker": "Desktop 4.94.0 / Engine 29.8.2, linux/arm64",
+  "admitted_resources": {
+    "disk_free_bytes": 190930698240,
+    "free_memory_bytes": 4137025536,
+    "available_memory_estimate": 18124537856
+  },
+  "expected_source_schema": "60 / 120 tables; not a migrated-database result"
+}

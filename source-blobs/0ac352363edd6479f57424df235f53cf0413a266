@@ -1,0 +1,191 @@
+diff --git a/docs/research/agent-gateway-rebalance.md b/docs/research/agent-gateway-rebalance.md
+index aa4d0223..599b6661 100644
+--- a/docs/research/agent-gateway-rebalance.md
++++ b/docs/research/agent-gateway-rebalance.md
+@@ -450,3 +450,40 @@ lines, including replacement-after-old-close, restart and observed retirement,
+ and refuse unrelated messages or attributes containing those same event words.
+ This changes the test observer only; transport, protocol, bounds and task/cursor
+ assertions remain unchanged. The existing Go BSD-3-Clause license applies.
++
++
++## Busy-agent reconnect boundary
++
++The corrected parser's installed run on 59c9c86a enrolled 500 agents in 2 seconds,
++connected every agent in 11 seconds and established 261/239 original sessions with
++25 acknowledged tasks. All 500 original transports retired without force. Gateway
++A's observed drain age was 54.002745–59.996931 seconds and completion 54.003984–68.886238;
++B's was 54.048568–59.963101 and 54.378634–68.933708. Maximum observed scheduling delay
++was 0.003435 and 0.001201 seconds respectively. No external attempt was recorded;
++one harness probe was seen. The run then failed the in-flight assertion after
++waiting 100.7 seconds for every replacement session. Retain this failure; it is
++not a completed lifecycle result. Its test-log SHA-256 is
++1e1f24e0bda0c767290f79794bbc71e714079fb597b5feaf1bd3374e66c8fd2d.
++
++The existing production runtime runs one cycle through acknowledged execution
++before its next session heartbeat/claim. Its long-task owner renews through HTTPS.
++The simulator follows the same serial cycle: work renews through HTTPS and the
++next heartbeat reopens its aged session only after execution and result delivery.
++Requiring every replacement session before checking that every 100-second task is
++still running therefore contradicts the existing execution contract. Increasing
++the task duration cannot make that serial condition hold and is rejected.
++
++Keep the 100-second task, all 500 original retirement and replacement assertions,
++both 25-task exact-attempt checks, the existing three-minute move and two-minute
++dispatch bounds, all 500 survivor/return checks, renewal reporting and cursors.
++Check all acknowledged tasks are still running immediately after retirement,
++with an unexpired lease as an additional renewal assertion. Then wait for their
++successful completion and all replacement sessions within the original absolute
++three-minute age deadline. During a gateway kill, require every idle agent to
++reach the survivor while all 25 busy tasks retain their current leases. After those
++tasks complete, require all 500 agents on the survivor within the original kill
++move deadline, before returning the first gateway. Finally require the original
++500-node preferred assignments and unchanged successful attempts. This preserves
++the real work/transport boundary instead of adding concurrent heartbeats to the
++agent solely to satisfy a fixture. No production protocol or execution behavior
++changes. The existing Go/gRPC licenses apply and no dependency or data is added.
+diff --git a/tests/e2e/agent_gateway_lifecycle_test.go b/tests/e2e/agent_gateway_lifecycle_test.go
+index 2156a2dc..28d4c805 100644
+--- a/tests/e2e/agent_gateway_lifecycle_test.go
++++ b/tests/e2e/agent_gateway_lifecycle_test.go
+@@ -213,7 +213,8 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
+ 	})
+ 	fleet.start(t, 2*time.Minute)
+ 	e.fleetOnline(t, fleet, "initial gateway lifecycle fleet", fleet.started, gatewayMove)
+-	tasks := createTasks(t, admin, csrf, fleet.targets())
++	targets := fleet.targets()
++	tasks := createTasks(t, admin, csrf, targets)
+ 	taskList := "'" + strings.Join(tasks, "','") + "'"
+ 	waitFor(t, "acknowledged work before gateway age", 15*time.Second, func() bool {
+ 		return e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND state='running' AND attempt=1 AND acknowledged_attempt=attempt") == strconv.Itoa(len(tasks))
+@@ -240,12 +241,12 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
+ 	}{{first, originalFirst}, {second, originalSecond}}
+ 	aged := time.Now()
+ 	observer.checkpoint(t, "automatic_age")
+-	waitFor(t, "every original transport retires at age and reconnects", gatewayMove, func() bool {
++	waitFor(t, "every original transport retires at age", gatewayMove, func() bool {
+ 		for _, pair := range pairs {
+ 			current := gatewayConnections(t, pair.gateway.name)
+-			for node, previousID := range pair.before.active {
++			for _, previousID := range pair.before.active {
+ 				retirement, ok := current.retired[previousID]
+-				if !ok || current.active[node] == "" || current.active[node] == previousID {
++				if !ok {
+ 					return false
+ 				}
+ 				if retirement.reason != "connection_age" || retirement.forced || !retirement.observed ||
+@@ -273,29 +274,64 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
+ 		}
+ 		t.Logf("gateway=%s original_transports=%d observed_drain_age_seconds_min=%.6f max=%.6f observed_retirement_age_seconds_min=%.6f max=%.6f drain_delay_seconds_max=%.6f", pair.gateway.name, len(pair.before.active), minimumStart, maximumStart, minimumRetirement, maximumRetirement, maximumDelay)
+ 	}
+-	t.Logf("all %d original connections replaced after %s", gatewayAgents, time.Since(aged).Round(100*time.Millisecond))
++	t.Logf("all %d original connections retired after %s", gatewayAgents, time.Since(aged).Round(100*time.Millisecond))
+ 	observer.checkpoint(t, "after_automatic_age")
+-	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1"); running != strconv.Itoa(len(tasks)) {
++	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1 AND lease_expires_at>clock_timestamp()"); running != strconv.Itoa(len(tasks)) {
+ 		t.Fatal("the age drill did not retain every acknowledged task in flight")
+ 	}
+-	e.fleetOnline(t, fleet, "after automatic age", aged, gatewayMove)
+-	e.waitForTasks(t, "acknowledged tasks retained through age", tasks, gatewayDispatch)
++	e.waitForTasks(t, "acknowledged tasks retained through age", tasks, min(gatewayDispatch, remainingGatewayMove(t, aged)))
++	waitFor(t, "every original transport reconnects after execution", remainingGatewayMove(t, aged), func() bool {
++		for _, pair := range pairs {
++			current := gatewayConnections(t, pair.gateway.name)
++			for node, previousID := range pair.before.active {
++				if current.active[node] == "" || current.active[node] == previousID {
++					return false
++				}
++			}
++		}
++		return true
++	})
++	t.Logf("all %d original transports replaced after %s", gatewayAgents, time.Since(aged).Round(100*time.Millisecond))
++	e.fleetOnline(t, fleet, "after automatic age", aged, remainingGatewayMove(t, aged))
+ 	if attempts := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+taskList+") AND attempt=1 AND acknowledged_attempt=1"); attempts != strconv.Itoa(len(tasks)) {
+ 		t.Fatal("connection age replaced an acknowledged task attempt")
+ 	}
+-	rolledTasks := createTasks(t, admin, csrf, fleet.targets())
++	rolledTasks := createTasks(t, admin, csrf, targets)
+ 	rolledList := "'" + strings.Join(rolledTasks, "','") + "'"
+ 	waitFor(t, "acknowledged work before gateway roll", 15*time.Second, func() bool {
+ 		return e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND state='running' AND attempt=1 AND acknowledged_attempt=attempt") == strconv.Itoa(len(rolledTasks))
+ 	})
++	busy := make(map[string]bool, len(targets))
++	for _, node := range targets {
++		busy[node] = true
++	}
++	killed := time.Now()
+ 	observer.checkpoint(t, "gateway_a_stopped")
+ 	if output, err := run(t, "docker", "kill", first.name); err != nil {
+ 		t.Fatalf("kill gateway: %v %s", err, output)
+ 	}
+-	waitFor(t, "all agents on surviving gateway", gatewayMove, func() bool {
+-		return len(gatewayConnections(t, second.name).active) == gatewayAgents
++	waitFor(t, "every idle agent on surviving gateway", remainingGatewayMove(t, killed), func() bool {
++		current := gatewayConnections(t, second.name)
++		for _, pair := range pairs {
++			for node := range pair.before.active {
++				if !busy[node] && current.active[node] == "" {
++					return false
++				}
++			}
++		}
++		return true
+ 	})
++	t.Logf("all %d idle agents on surviving gateway after %s", gatewayAgents-len(busy), time.Since(killed).Round(100*time.Millisecond))
+ 	observer.checkpoint(t, "gateway_a_stopped")
++	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1 AND lease_expires_at>clock_timestamp()"); running != strconv.Itoa(len(rolledTasks)) {
++		t.Fatal("the gateway kill did not retain every acknowledged task and current lease in flight")
++	}
++	e.waitForTasks(t, "acknowledged tasks retained through gateway kill", rolledTasks, min(gatewayDispatch, remainingGatewayMove(t, killed)))
++	waitFor(t, "all agents on surviving gateway after execution", remainingGatewayMove(t, killed), func() bool {
++		return len(gatewayConnections(t, second.name).active) == gatewayAgents
++	})
++	t.Logf("all %d agents on surviving gateway after %s", gatewayAgents, time.Since(killed).Round(100*time.Millisecond))
++	observer.checkpoint(t, "all_agents_on_survivor")
+ 	if output, err := run(t, "docker", "start", first.name); err != nil {
+ 		t.Fatalf("return gateway: %v %s", err, output)
+ 	}
+@@ -318,11 +354,10 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
+ 	})
+ 	t.Logf("original %d/%d distribution restored after %s", len(originalFirst.active), len(originalSecond.active), time.Since(returned).Round(100*time.Millisecond))
+ 	observer.checkpoint(t, "original_assignments_restored")
+-	if running := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND state='running' AND attempt=1 AND acknowledged_attempt=1"); running != strconv.Itoa(len(rolledTasks)) {
+-		t.Fatal("the gateway roll did not retain every acknowledged task in flight")
++	if completed := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND state='succeeded' AND attempt=1 AND acknowledged_attempt=1"); completed != strconv.Itoa(len(rolledTasks)) {
++		t.Fatal("the gateway return changed a completed acknowledged task")
+ 	}
+ 	e.fleetOnline(t, fleet, "after preferred gateways return", returned, gatewayMove)
+-	e.waitForTasks(t, "acknowledged tasks retained through gateway roll", rolledTasks, gatewayDispatch)
+ 	if attempts := e.sql(t, "SELECT count(*) FROM node_tasks WHERE id IN ("+rolledList+") AND attempt=1 AND acknowledged_attempt=1"); attempts != strconv.Itoa(len(rolledTasks)) {
+ 		t.Fatal("gateway roll replaced an acknowledged task attempt")
+ 	}
+@@ -335,6 +370,16 @@ func TestAgentGatewayConnectionLifecycle(t *testing.T) {
+ 	e.requireFleetCursors(t, fleet)
+ }
+ 
++// Separate retirement from a busy agent's next cycle without extending the move budget.
++func remainingGatewayMove(t *testing.T, since time.Time) time.Duration {
++	t.Helper()
++	remaining := gatewayMove - time.Since(since)
++	if remaining <= 0 {
++		t.Fatalf("gateway lifecycle exceeded its %s move budget", gatewayMove)
++	}
++	return remaining
++}
++
+ func TestGatewayObservedRetirementTiming(t *testing.T) {
+ 	for _, line := range []string{
+ 		`{"msg":"http_connection_retired","connection_id":"observed","reason":"connection_age","scheduled_age_seconds":58.5,"drain_started_age_seconds":58.6,"age_seconds":60.5,"forced":false}`,
+diff --git a/tests/e2e/agent_gateway_observation_test.go b/tests/e2e/agent_gateway_observation_test.go
+index dc2335d4..a0300400 100644
+--- a/tests/e2e/agent_gateway_observation_test.go
++++ b/tests/e2e/agent_gateway_observation_test.go
+@@ -178,7 +178,7 @@ func (o *gatewayObserver) sample() {
+ 		return cmd.CombinedOutput()
+ 	}
+ 	for index, gateway := range o.gateways {
+-		row, err := observeGateway(o.ctx, run, gateway.name, phase, phase == "gateway_a_stopped" && index == 0)
++		row, err := observeGateway(o.ctx, run, gateway.name, phase, (phase == "gateway_a_stopped" || phase == "all_agents_on_survivor") && index == 0)
+ 		o.mu.Lock()
+ 		if err != nil {
+ 			if o.ctx.Err() == nil {

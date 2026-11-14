@@ -1,0 +1,12 @@
+set -euo pipefail
+cd ~/lane-rel-usage-cli
+test "$(git rev-parse --short HEAD)" = e16b8595
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+unshare -n sh -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    make check-layout check-roadmap test-tools
+    python3 -B -m unittest discover -s tools/release/offline -p tokenizer_wheelhouse_test.py
+'
+git diff --exit-code

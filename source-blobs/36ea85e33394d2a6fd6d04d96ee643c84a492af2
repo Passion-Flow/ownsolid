@@ -1,0 +1,15 @@
+{
+  "actual_Go_license_HTTP_and_SQL": true,
+  "actual_native_Rust": true,
+  "denied_backend_tokenizer_and_completion_calls": 0,
+  "denied_durable_rows": 0,
+  "generations": 4,
+  "license_clock": "explicit_test_only_atomic_offset",
+  "model_and_tokenizer": "explicit_synthetic_HTTP_fixture_not_AI_hardware_execution",
+  "ordinary_expired_public_status": 403,
+  "private_operation_replay_public_status": 401,
+  "private_operation_revoked": true,
+  "qualification": "No production native control process, backup-restore, vLLM/NVIDIA/amd64/Xinchuang/cloud qualification.",
+  "reported_without_held_capacity": 4,
+  "status": "passed_actual_Go_Rust_PostgreSQL_license_expiry_and_accepted_operation"
+}

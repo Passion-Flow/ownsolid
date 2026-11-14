@@ -1,0 +1,41 @@
+{
+  "source": "47fa03253b0d2655be26925a7e4492547c3e9a42",
+  "base": "b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32",
+  "bundle_prerequisites": [
+    "b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32"
+  ],
+  "bundle_ref": "HEAD",
+  "bundle_sha256": "bdc554d5b3ec8c729dece360f2676d667fa59d45c8e29270d533f26296b8e7a6",
+  "bundle_bytes": 28353,
+  "independent_bare_import": true,
+  "alternate_object_directory": false,
+  "verified_owned_files": {
+    "api/openapi/v1/identity/openapi.json": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+    "docs/product/status.md": "b4c4a137b396464e3a21572a2564d4f91acb74086275f77a1aa6e0d07ac2d956",
+    "docs/research/public-api-inventory.md": "830aaef70b00028b74244920bfc4cb70e5e5db1a1721df7d0e3337c909de1dbf",
+    "docs/research/public-api-versioning.md": "3c69bf00e3d1076b8b9e31a874a0011414c88af1ddc1e8e28424c7412b6cfd70",
+    "tools/codegen/sdk/README.md": "e9d2832071a9e2eb1b6fb32c6b53fca9f0cdc800b31ab07335656e4fa1764d32",
+    "tools/codegen/sdk/audit.py": "dab60b175ccf3455650d00cf1c4d2e594701b839b5cd144e1cda1a5641484068",
+    "tools/codegen/sdk/generate.py": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2",
+    "tools/codegen/sdk/templates/audit_read.go.template": "81914fe9c6d17de6b2c3e5f95a4fade9e4322714d1c9446840a5f8f578c16c5d",
+    "tools/codegen/sdk/tests/audit_read_wire_test.go": "6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821",
+    "tools/codegen/sdk/tests/test_audit_read_codegen.py": "6155b9826399bb77753b9ad0a40816ae3d3b73dfb1c8d702dc0a39bee8c0c383",
+    "tools/codegen/sdk/tests/test_audit_read_contract.py": "ac1680bdfa37e51ef5bb53f8b7fc787b929d50f2e04516b4db21cb48875f7ab4",
+    "tools/codegen/sdk/tests/test_response_object_audit.py": "eaf4864ddfd058f4f065a756ecc71c799371aeba7182f4c4f9f3e777ee43357c",
+    "tools/codegen/sdk/tests/wire_smoke.py": "d6417bf20f1362a9349998580819eca149b6be3d5ccdaae221212a5001483022"
+  },
+  "product_web_or_model_history_changed": false,
+  "heavy_admission_or_test_started": false,
+  "source_only_not_publishable_before_web_and_gates": true,
+  "sdk_artifact": {
+    "path": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/identity-sdk-inputs.tar.gz",
+    "sha256": "6ba53a09b2f1fc3794f4f723366b05629ad7cc54a4dbecd81144f52a33365aa2",
+    "bytes": 68438,
+    "generated_files": 122,
+    "generator_sha256": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2",
+    "contract_sha256": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+    "new_generation_run": false,
+    "new_native_run": false,
+    "private_verification_inputs_only": true
+  }
+}

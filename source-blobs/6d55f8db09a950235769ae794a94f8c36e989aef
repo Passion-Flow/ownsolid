@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$HOME/lane-trn"
+proof=${1:?private prototype proof root required}
+phase=${2:-all}
+case "$phase" in all|check|build|modules|runtime) ;; *) echo 'Invalid repository gate phase' >&2; exit 2;; esac
+export PATH="$HOME/lane-trn-tools/go/bin:$HOME/lane-trn-tools/node/node_modules/.bin:/root/lane-gw-toolchain/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin:$PATH"
+export GOCACHE="$HOME/lane-trn-tools/go-cache" GOMODCACHE="$HOME/lane-trn-tools/go-mod"
+export GOMAXPROCS=2 GOFLAGS=-p=2 GOPROXY=off npm_config_offline=true
+export CARGO_HOME="$HOME/lane-trn-tools/cargo-home" CARGO_TARGET_DIR="$HOME/lane-trn-tools/cargo-target"
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2
+[[ ! -e tools/audit-verify/audit-verify ]]
+cleanup() { [[ ! -f tools/audit-verify/audit-verify ]] || unlink tools/audit-verify/audit-verify; }
+trap cleanup EXIT
+export proof
+run_phase() {
+    local selected=$1
+    python3 -B "$proof/preflight_cpu_prototype.py" "$proof"
+    printf 'phase=%s\n' "$selected"
+    unshare --net bash -ec '
+      ip link set lo up
+      case "$1" in
+        check) make check;;
+        build) make build;;
+        modules)
+          go -C services/control test -count=1 ./internal/modules/training ./internal/modules/datasets ./internal/modules/mongodatasets ./internal/modules/modelpreparations
+          ;;
+        runtime)
+          python3 -B /root/lane-trn-tools/run-exact-cpu-training-tests.py "$proof" "$PWD" /root/lane-gw-acceptance/model
+          ;;
+      esac
+    ' bash "$selected"
+}
+if [[ "$phase" == all ]]; then
+    for selected in check build modules runtime; do run_phase "$selected"; done
+else
+    run_phase "$phase"
+fi

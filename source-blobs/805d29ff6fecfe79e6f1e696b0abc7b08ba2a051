@@ -1,0 +1,56 @@
+{
+  "go_version": "go version go1.27.3 linux/amd64",
+  "go_binary": "/root/lane-rel-tools/go/bin/go",
+  "go_binary_sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b",
+  "host": "Linux/x86_64",
+  "go_environment": {
+    "CC": "gcc",
+    "CGO_ENABLED": "1",
+    "GOCACHE": "/root/lane-rel-tools/gocache",
+    "GOHOSTARCH": "amd64",
+    "GOHOSTOS": "linux",
+    "GOMODCACHE": "/root/lane-rel-tools/gomod"
+  },
+  "compiler_path_present": "/usr/bin/gcc",
+  "namespace_binary": "/usr/bin/unshare",
+  "loopback_config_binary": "/usr/sbin/ip",
+  "modules": {
+    "github.com/oapi-codegen/runtime": {
+      "version": "v1.8.0",
+      "cache_sha256": {
+        "/root/lane-rel-tools/gomod/cache/download/github.com/oapi-codegen/runtime/@v/v1.8.0.mod": "e3e873f00d4852855ec8284cddb9550c92f9e9721320ff4304a5be92920a801e",
+        "/root/lane-rel-tools/gomod/cache/download/github.com/oapi-codegen/runtime/@v/v1.8.0.zip": "7dbe256461d9fadedb547e0b7aa63a788f2874d7782781c376bfd20a5a78e068",
+        "/root/lane-rel-tools/gomod/cache/download/github.com/oapi-codegen/runtime/@v/v1.8.0.ziphash": "52502914fd05d03d7d74a9ddc1ade15aa0a5c906004fcd34f9685d1c78796aed"
+      }
+    },
+    "github.com/apapsch/go-jsonmerge/v2": {
+      "version": "v2.0.0",
+      "cache_sha256": {
+        "/root/lane-rel-tools/gomod/cache/download/github.com/apapsch/go-jsonmerge/v2/@v/v2.0.0.mod": "a33ed1d1b7ae4d5558b89be47e91fb598befc06f550e23b3aa3924ff05a26a9d",
+        "/root/lane-rel-tools/gomod/cache/download/github.com/apapsch/go-jsonmerge/v2/@v/v2.0.0.zip": "b5fbdf29dc23b3ce98f5215b125ccd324b7673f0e940bc122080fcf2c77bbaf7",
+        "/root/lane-rel-tools/gomod/cache/download/github.com/apapsch/go-jsonmerge/v2/@v/v2.0.0.ziphash": "346c241fab1bfe64c2aa632c5c99a699cdfc1eb820275bcf734b3461a79d906a"
+      }
+    },
+    "github.com/google/uuid": {
+      "version": "v1.6.0",
+      "cache_sha256": {
+        "/root/lane-rel-tools/gomod/cache/download/github.com/google/uuid/@v/v1.6.0.mod": "73da47b6338b00a082fd451aa35a3273d3adc09b8e9bba98dab01091e402af6e",
+        "/root/lane-rel-tools/gomod/cache/download/github.com/google/uuid/@v/v1.6.0.zip": "d0f02f377217f42702e259684e06441edbf5140dddcc34ba9bea56038b38a6ed",
+        "/root/lane-rel-tools/gomod/cache/download/github.com/google/uuid/@v/v1.6.0.ziphash": "da189739bfb89927b3fa0b5c332458bd197b639610db3fea6d51449a49094004"
+      }
+    }
+  },
+  "audit_source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+  "audit_transport_source": "1e8f1fadf8caff8d7b9ac771cd91641ba19d4287",
+  "audit_fixture_sha256": "6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821",
+  "audit_sdk_files_verified": 122,
+  "history_source": "6a2dd96fb392444de755db1cf5bfb771867064b0",
+  "history_draft_sha256": "112fd38ebe1fc00427bdebcb93686892d43ff8a14d079150b7c65007af5a258b",
+  "history_fixture_sha256": "66caf521ccef7b2aa1483f72465fe4d6b587459a818229f2b608164789cc3270",
+  "history_sdk_files_verified": 81,
+  "darwin_specific_test_dependency_found": false,
+  "review_basis": "Portable Go standard library and pinned SDK runtime imports; no Darwin build tags, native SDK imports or OS-specific test APIs in either fixture",
+  "compilation_or_test_run": false,
+  "host_admission_attempted": false,
+  "mac_result_reused_as_linux": false
+}

@@ -1,0 +1,1117 @@
+{
+  "arc_fixture_handles": [],
+  "arc_mounts": [],
+  "arc_runner_handles": [
+    {
+      "cgroup": "0::/user.slice/user-0.slice/session-7146.scope",
+      "comm": "bash",
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk",
+        "/root/lane-arc105-launch.XuP5zk/resource-audit.lock"
+      ],
+      "pid": "3817010"
+    },
+    {
+      "cgroup": "0::/user.slice/user-0.slice/session-7146.scope",
+      "comm": "python3",
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk",
+        "/root/lane-arc105-launch.XuP5zk/resource-attribution.V2Dg47/arc-inodes-and-namespaces.json",
+        "/root/lane-arc105-launch.XuP5zk/resource-audit.lock"
+      ],
+      "pid": "3817219"
+    }
+  ],
+  "distinct_mount_namespaces": 18,
+  "files": {
+    "64512:10485764": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 297,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/rke2/SHA256SUMS"
+      ]
+    },
+    "64512:10485765": {
+      "cached_bytes": 0,
+      "disk_bytes": 567525376,
+      "logical_bytes": 567518406,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/rke2-images-core.linux-amd64.tar.zst",
+        "/root/lane-arc-felix.e7LhQM/rke2-images-core.linux-amd64.tar.zst",
+        "/root/lane-arc-kwok.0DKaGD/rke2/rke2-images-core.linux-amd64.tar.zst"
+      ]
+    },
+    "64512:10485766": {
+      "cached_bytes": 0,
+      "disk_bytes": 41496576,
+      "logical_bytes": 41496182,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/rke2.linux-amd64.tar.gz",
+        "/root/lane-arc-felix.e7LhQM/rke2.linux-amd64.tar.gz",
+        "/root/lane-arc-kwok.0DKaGD/rke2/rke2.linux-amd64.tar.gz"
+      ]
+    },
+    "64512:10485767": {
+      "cached_bytes": 0,
+      "disk_bytes": 241217536,
+      "logical_bytes": 241211711,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/rke2-images-canal.linux-amd64.tar.zst",
+        "/root/lane-arc-felix.e7LhQM/rke2-images-canal.linux-amd64.tar.zst",
+        "/root/lane-arc-kwok.0DKaGD/rke2/rke2-images-canal.linux-amd64.tar.zst"
+      ]
+    },
+    "64512:10485768": {
+      "cached_bytes": 0,
+      "disk_bytes": 45056,
+      "logical_bytes": 42310,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/github-release.json"
+      ]
+    },
+    "64512:10485769": {
+      "cached_bytes": 110592,
+      "disk_bytes": 110592,
+      "logical_bytes": 108286,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/kwok.yaml"
+      ]
+    },
+    "64512:10485770": {
+      "cached_bytes": 8192,
+      "disk_bytes": 8192,
+      "logical_bytes": 7564,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/stage-fast.yaml"
+      ]
+    },
+    "64512:10485771": {
+      "cached_bytes": 12288,
+      "disk_bytes": 12288,
+      "logical_bytes": 11357,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/LICENSE"
+      ]
+    },
+    "64512:10485772": {
+      "cached_bytes": 0,
+      "disk_bytes": 8192,
+      "logical_bytes": 6327,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/upstream-go.mod"
+      ]
+    },
+    "64512:10485773": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 865,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/upstream-index.headers"
+      ]
+    },
+    "64512:10485774": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 1607,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/upstream-index.json"
+      ]
+    },
+    "64512:10485776": {
+      "cached_bytes": 110592,
+      "disk_bytes": 110592,
+      "logical_bytes": 108344,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/kwok-disconnected.yaml"
+      ]
+    },
+    "64512:10485777": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 174,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/fixture-SHA256SUMS"
+      ]
+    },
+    "64512:10485778": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 125,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/felix-offline.yaml"
+      ]
+    },
+    "64512:10485779": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 2524,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/setup-node.sh"
+      ]
+    },
+    "64512:10485780": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 3357,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/prototype.sh"
+      ]
+    },
+    "64512:10485781": {
+      "cached_bytes": 20480,
+      "disk_bytes": 4816896,
+      "logical_bytes": 4815726,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/site-dns",
+        "/root/lane-arc-felix.e7LhQM/site-dns"
+      ]
+    },
+    "64512:10485782": {
+      "cached_bytes": 2588672,
+      "disk_bytes": 4153344,
+      "logical_bytes": 4150120,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/egress-recorder",
+        "/root/lane-arc-felix.e7LhQM/egress-recorder"
+      ]
+    },
+    "64512:10485783": {
+      "cached_bytes": 0,
+      "disk_bytes": 7479296,
+      "logical_bytes": 7479232,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/baseline.test"
+      ]
+    },
+    "64512:10485785": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 2542,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/setup-node.sh"
+      ]
+    },
+    "64512:10485789": {
+      "cached_bytes": 0,
+      "disk_bytes": 8192,
+      "logical_bytes": 8162,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/run-final.sh"
+      ]
+    },
+    "64512:10485791": {
+      "cached_bytes": 4001792,
+      "disk_bytes": 7487488,
+      "logical_bytes": 7485772,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/agent-felix.test"
+      ]
+    },
+    "64512:10485793": {
+      "cached_bytes": 0,
+      "disk_bytes": 7536640,
+      "logical_bytes": 7535707,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/agent-felix.test"
+      ]
+    },
+    "64512:10485798": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 366,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/evidence/site-dns-positive-controls.jsonl"
+      ]
+    },
+    "64512:10485799": {
+      "cached_bytes": 0,
+      "disk_bytes": 66760704,
+      "logical_bytes": 66760622,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/control"
+      ]
+    },
+    "64512:10485800": {
+      "cached_bytes": 0,
+      "disk_bytes": 23498752,
+      "logical_bytes": 23495429,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/agent"
+      ]
+    },
+    "64512:10485801": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 222,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/proto-state/kubernetes.json"
+      ]
+    },
+    "64512:10485804": {
+      "cached_bytes": 0,
+      "disk_bytes": 13365248,
+      "logical_bytes": 13364444,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/ownsolid-install"
+      ]
+    },
+    "64512:10485805": {
+      "cached_bytes": 0,
+      "disk_bytes": 8437760,
+      "logical_bytes": 8435576,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/factory.test"
+      ]
+    },
+    "64512:10485809": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 278,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/evidence/site-dns-positive-controls.jsonl"
+      ]
+    },
+    "64512:10485810": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 3558,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/sha256sum-amd64.txt"
+      ]
+    },
+    "64512:10485811": {
+      "cached_bytes": 0,
+      "disk_bytes": 8192,
+      "logical_bytes": 5831,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/compose.yaml"
+      ]
+    },
+    "64512:10485812": {
+      "cached_bytes": 0,
+      "disk_bytes": 20480,
+      "logical_bytes": 17275,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/README.md"
+      ]
+    },
+    "64512:10485813": {
+      "cached_bytes": 2969600,
+      "disk_bytes": 4816896,
+      "logical_bytes": 4815726,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/site-dns"
+      ]
+    },
+    "64512:10485814": {
+      "cached_bytes": 0,
+      "disk_bytes": 4153344,
+      "logical_bytes": 4150120,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/egress-recorder"
+      ]
+    },
+    "64512:10485815": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 2320,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/manufacture.sh"
+      ]
+    },
+    "64512:10485822": {
+      "cached_bytes": 0,
+      "disk_bytes": 344064,
+      "logical_bytes": 342090,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/evidence/rke2-canal-9bxhc-felix.log"
+      ]
+    },
+    "64512:10485824": {
+      "cached_bytes": 0,
+      "disk_bytes": 221184,
+      "logical_bytes": 219104,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/evidence/rke2-canal-b6bpk-felix.log"
+      ]
+    },
+    "64512:10485825": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 175,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/evidence/site-dns.jsonl"
+      ]
+    },
+    "64512:10485828": {
+      "cached_bytes": 0,
+      "disk_bytes": 8192,
+      "logical_bytes": 4982,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/evidence/run.log"
+      ]
+    },
+    "64512:10485843": {
+      "cached_bytes": 22454272,
+      "disk_bytes": 4676038656,
+      "logical_bytes": 12884901888,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/media.ext4"
+      ]
+    },
+    "64512:10485844": {
+      "cached_bytes": 0,
+      "disk_bytes": 12320768,
+      "logical_bytes": 12319085,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/managed.test"
+      ]
+    },
+    "64512:10485845": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 2625,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/setup-node.sh"
+      ]
+    },
+    "64512:10485846": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 1969,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/control-inside.sh"
+      ]
+    },
+    "64512:10485847": {
+      "cached_bytes": 4096,
+      "disk_bytes": 12288,
+      "logical_bytes": 8767,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/run-managed.sh"
+      ]
+    },
+    "64512:10485848": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 3047,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/observe-managed.sh"
+      ]
+    },
+    "64512:10485863": {
+      "cached_bytes": 0,
+      "disk_bytes": 8192,
+      "logical_bytes": 6861,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/run-agent.sh"
+      ]
+    },
+    "64512:10486158": {
+      "cached_bytes": 0,
+      "disk_bytes": 49152,
+      "logical_bytes": 45293,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/proto-chart.tgz"
+      ]
+    },
+    "64512:10489672": {
+      "cached_bytes": 0,
+      "disk_bytes": 86016,
+      "logical_bytes": 85275,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/proto-felix-crd.yaml"
+      ]
+    },
+    "64512:10489673": {
+      "cached_bytes": 0,
+      "disk_bytes": 106496,
+      "logical_bytes": 105641,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/proto-felix-crd.json.orig"
+      ]
+    },
+    "64512:10489674": {
+      "cached_bytes": 0,
+      "disk_bytes": 65536,
+      "logical_bytes": 62914,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/proto-felix-crd.json"
+      ]
+    },
+    "64512:10489675": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 147,
+      "paths": [
+        "/root/lane-arc-felix.e7LhQM/proto-felix-policy.json"
+      ]
+    },
+    "64512:10490720": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 674,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/oci/blobs/sha256/28ee38abba19bd0b89600b1b367c32480da45f1d954c80d14db5fc74feee83f2"
+      ]
+    },
+    "64512:10490721": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 1161,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/oci/blobs/sha256/8b980198bbeeb7351c22f0a8ea4d4acd615911d101793c10355b8aafeaa29a13"
+      ]
+    },
+    "64512:10490722": {
+      "cached_bytes": 0,
+      "disk_bytes": 3846144,
+      "logical_bytes": 3844421,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/oci/blobs/sha256/e6f31ffc071e5560b82a8685fba8214954e5721e3e49269d00958316edbe89fe"
+      ]
+    },
+    "64512:10490724": {
+      "cached_bytes": 0,
+      "disk_bytes": 37392384,
+      "logical_bytes": 37390986,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/oci/blobs/sha256/aca6868e374ac683214c1f1839c942a7cd4aac6242e3c75264ce1a8dd84f17fe"
+      ]
+    },
+    "64512:10490726": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 31,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/oci/oci-layout"
+      ]
+    },
+    "64512:10490727": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 487,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/oci/index.json"
+      ]
+    },
+    "64512:10490728": {
+      "cached_bytes": 41246720,
+      "disk_bytes": 41246720,
+      "logical_bytes": 41246720,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/kwok-linux-amd64.oci.tar"
+      ]
+    },
+    "64512:10490729": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 409,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/kwok/SHA256SUMS"
+      ]
+    },
+    "64512:10503395": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 243,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/evidence/first-calico-containers.json"
+      ]
+    },
+    "64512:10503520": {
+      "cached_bytes": 0,
+      "disk_bytes": 372736,
+      "logical_bytes": 371091,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/evidence/rke2-canal-qk4d9-felix.log"
+      ]
+    },
+    "64512:10503521": {
+      "cached_bytes": 0,
+      "disk_bytes": 225280,
+      "logical_bytes": 222053,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/evidence/rke2-canal-qpd65-felix.log"
+      ]
+    },
+    "64512:10503522": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 175,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/evidence/site-dns.jsonl"
+      ]
+    },
+    "64512:10503525": {
+      "cached_bytes": 0,
+      "disk_bytes": 8192,
+      "logical_bytes": 5026,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/evidence/run.log"
+      ]
+    },
+    "64512:10503526": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 243,
+      "paths": [
+        "/root/lane-arc-felix-final.v1xoN1/evidence/final-calico-containers.json"
+      ]
+    },
+    "64512:10616840": {
+      "cached_bytes": 1515520,
+      "disk_bytes": 12320768,
+      "logical_bytes": 12319085,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/control-inputs/managed.test"
+      ]
+    },
+    "64512:10616841": {
+      "cached_bytes": 0,
+      "disk_bytes": 13365248,
+      "logical_bytes": 13364444,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/control-inputs/ownsolid-install"
+      ]
+    },
+    "64512:10616842": {
+      "cached_bytes": 327680,
+      "disk_bytes": 4153344,
+      "logical_bytes": 4150120,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/control-inputs/egress-recorder"
+      ]
+    },
+    "64512:10616843": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 1969,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/control-inputs/control-inside.sh"
+      ]
+    },
+    "64512:10616844": {
+      "cached_bytes": 2437120,
+      "disk_bytes": 23498752,
+      "logical_bytes": 23495429,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/node-inputs/agent"
+      ]
+    },
+    "64512:10616845": {
+      "cached_bytes": 1593344,
+      "disk_bytes": 4153344,
+      "logical_bytes": 4150120,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/node-inputs/egress-recorder"
+      ]
+    },
+    "64512:10616854": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 282,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/site-dns-positive-controls.jsonl"
+      ]
+    },
+    "64512:10616855": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 73,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/recorder.log"
+      ]
+    },
+    "64512:10616856": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 254,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/control-egress.jsonl"
+      ]
+    },
+    "64512:10616857": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 177,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/site-dns.jsonl"
+      ]
+    },
+    "64512:10616860": {
+      "cached_bytes": 0,
+      "disk_bytes": 28672,
+      "logical_bytes": 28041,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/dockerd.log"
+      ]
+    },
+    "64512:10624905": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 966,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/server-capture/agent.log"
+      ]
+    },
+    "64512:10624909": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 816,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/worker-capture/agent.log"
+      ]
+    },
+    "64512:10624917": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 207,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/server-image-checksums.txt"
+      ]
+    },
+    "64512:10624918": {
+      "cached_bytes": 0,
+      "disk_bytes": 25563136,
+      "logical_bytes": 25561404,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/node-inputs/artifact-refusal.test"
+      ]
+    },
+    "64512:10624919": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 207,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/worker-image-checksums.txt"
+      ]
+    },
+    "64512:10624920": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 348,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/artifact-refusals.log"
+      ]
+    },
+    "64512:10624921": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 687,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/manufacture-final.log"
+      ]
+    },
+    "64512:10624922": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 174,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/isolation.txt"
+      ]
+    },
+    "64512:10624923": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 245,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/first-calico-containers.json"
+      ]
+    },
+    "64512:10624924": {
+      "cached_bytes": 0,
+      "disk_bytes": 368640,
+      "logical_bytes": 366883,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/rke2-canal-sw26n-felix.log"
+      ]
+    },
+    "64512:10624925": {
+      "cached_bytes": 0,
+      "disk_bytes": 221184,
+      "logical_bytes": 220987,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/rke2-canal-wdrd6-felix.log"
+      ]
+    },
+    "64512:10624927": {
+      "cached_bytes": 0,
+      "disk_bytes": 147456,
+      "logical_bytes": 146396,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/arc104-managed-jfurp5-control-1.log"
+      ]
+    },
+    "64512:10624928": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 750,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/arc104-managed-jfurp5-gateway.log"
+      ]
+    },
+    "64512:10624929": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 245,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/final-calico-containers.json"
+      ]
+    },
+    "64512:10624930": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 439,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/egress-SHA256SUMS"
+      ]
+    },
+    "64512:10624931": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 1445,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/managed-test.log"
+      ]
+    },
+    "64512:10624932": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 856,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/managed-observation.log"
+      ]
+    },
+    "64512:10624933": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 203,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/capture-verification.log"
+      ]
+    },
+    "64512:10624934": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 2491,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/capture/verify-captures.py"
+      ]
+    },
+    "64512:10747906": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 229,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/observations/default-site-dns.jsonl"
+      ]
+    },
+    "64512:10766112": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 431,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/observations/felix-addon-events.txt"
+      ]
+    },
+    "64512:10766114": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 115,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/observations/gateway-egress.jsonl"
+      ]
+    },
+    "64512:10766119": {
+      "cached_bytes": 0,
+      "disk_bytes": 8192,
+      "logical_bytes": 5522,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/observations/gateway-simulator-report.json"
+      ]
+    },
+    "64512:10766132": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 88,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/observations/felix-probe-site-dns.jsonl"
+      ]
+    },
+    "64512:10766134": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 238,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/observations/felix-probe-result.txt"
+      ]
+    },
+    "64512:10766135": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 111,
+      "paths": [
+        "/root/lane-arc-kwok.0DKaGD/observations/felix-config-check.txt"
+      ]
+    },
+    "64512:10915348": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 125,
+      "paths": [
+        "/root/lane-arc-managed.JFUrp5/public-trust/release-trust.json"
+      ]
+    },
+    "64512:11272194": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 1383,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/RUNBOOK.md"
+      ]
+    },
+    "64512:11272195": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 41,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/source-head"
+      ]
+    },
+    "64512:11272196": {
+      "cached_bytes": 8192,
+      "disk_bytes": 8192,
+      "logical_bytes": 7273,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/admit.py"
+      ]
+    },
+    "64512:11272197": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 2339,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/admit_test.py"
+      ]
+    },
+    "64512:11272198": {
+      "cached_bytes": 8192,
+      "disk_bytes": 8192,
+      "logical_bytes": 4862,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/kwok.py"
+      ]
+    },
+    "64512:11272199": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 1863,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/kwok_test.py"
+      ]
+    },
+    "64512:11272200": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 907,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/build.sh"
+      ]
+    },
+    "64512:11272201": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 3726,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/launch.sh"
+      ]
+    },
+    "64512:11272202": {
+      "cached_bytes": 16384,
+      "disk_bytes": 16384,
+      "logical_bytes": 12879,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/run-managed.sh"
+      ]
+    },
+    "64512:11272203": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 2077,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/control-inside.sh"
+      ]
+    },
+    "64512:11272204": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 2612,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/setup-node.sh"
+      ]
+    },
+    "64512:11272205": {
+      "cached_bytes": 20480,
+      "disk_bytes": 20480,
+      "logical_bytes": 18233,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/managed_test.go"
+      ]
+    },
+    "64512:11272206": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 3767,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/scope_test.go"
+      ]
+    },
+    "64512:11272207": {
+      "cached_bytes": 12288,
+      "disk_bytes": 12288,
+      "logical_bytes": 10735,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/load_test.go"
+      ]
+    },
+    "64512:11272208": {
+      "cached_bytes": 8192,
+      "disk_bytes": 8192,
+      "logical_bytes": 5364,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/egress_test.go"
+      ]
+    },
+    "64512:11272209": {
+      "cached_bytes": 12382208,
+      "disk_bytes": 12382208,
+      "logical_bytes": 12381173,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/managed-load.test"
+      ]
+    },
+    "64512:11272210": {
+      "cached_bytes": 19582976,
+      "disk_bytes": 19582976,
+      "logical_bytes": 19579023,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/simulator"
+      ]
+    },
+    "64512:11272211": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 1341,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/SHA256SUMS"
+      ]
+    },
+    "64512:11272212": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 219,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/strict-replay.log"
+      ]
+    },
+    "64512:11272213": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 253,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/strict-negative.log"
+      ]
+    },
+    "64512:11272214": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 982,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/host-admission.json"
+      ]
+    },
+    "64512:11272215": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 1011,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/current-host-admission.json"
+      ]
+    },
+    "64512:11272217": {
+      "cached_bytes": 8192,
+      "disk_bytes": 8192,
+      "logical_bytes": 4351,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/__pycache__/admit_test.cpython-312.pyc"
+      ]
+    },
+    "64512:11272218": {
+      "cached_bytes": 12288,
+      "disk_bytes": 12288,
+      "logical_bytes": 12147,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/__pycache__/admit.cpython-312.pyc"
+      ]
+    },
+    "64512:11272219": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 3515,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/__pycache__/kwok_test.cpython-312.pyc"
+      ]
+    },
+    "64512:11272220": {
+      "cached_bytes": 8192,
+      "disk_bytes": 8192,
+      "logical_bytes": 8118,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/__pycache__/kwok.cpython-312.pyc"
+      ]
+    },
+    "64512:11272222": {
+      "cached_bytes": 4096,
+      "disk_bytes": 4096,
+      "logical_bytes": 764,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/prelaunch.json"
+      ]
+    },
+    "64512:11272223": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 3,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/prelaunch-exit"
+      ]
+    },
+    "64512:11272224": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 164,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/linux-strict-replay.log"
+      ]
+    },
+    "64512:11272225": {
+      "cached_bytes": 0,
+      "disk_bytes": 4096,
+      "logical_bytes": 765,
+      "paths": [
+        "/root/lane-arc105-launch.XuP5zk/post-del-first-admission.json"
+      ]
+    }
+  },
+  "scan_roots": [
+    "/root/lane-arc-felix-final.v1xoN1",
+    "/root/lane-arc-felix.e7LhQM",
+    "/root/lane-arc-kwok.0DKaGD",
+    "/root/lane-arc-managed.JFUrp5",
+    "/root/lane-arc105-launch.XuP5zk"
+  ],
+  "total_unique_file_cached_bytes": 111542272,
+  "total_unique_file_disk_bytes": 5891620864
+}

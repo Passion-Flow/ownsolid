@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /root/lane-obs
+candidate=${1:-/root/lane-obs-tools/obs110-node-scan-prototype.py}
+test -f "$candidate"
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -w 45 8 || exit 75
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+df -h /
+free -m
+ss -lntp
+test "$(free -m | awk '$1=="Mem:" {print $4}')" -ge 2048
+cat /proc/pressure/io
+python3 - <<'PY_IO'
+from pathlib import Path
+for line in Path('/proc/pressure/io').read_text().splitlines():
+    if float(line.split('avg10=')[1].split()[0]) > 5:
+        raise SystemExit(75)
+PY_IO
+printf 'PRODUCT_BASE_SOURCE=%s\n' "$(git rev-parse HEAD)"
+sha256sum "$candidate" /root/lane-obs-tools/victoria-metrics-prod
+unshare --net bash -ec 'ip link set lo up; exec python3 "$1" /root/lane-obs-tools/victoria-metrics-prod' bash "$candidate"

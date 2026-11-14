@@ -1,0 +1,150 @@
+# Installed history acceptance client
+
+This is an external acceptance driver, not product code or an installer. It calls
+an already installed Control through its public HTTPS API, using the actual local
+CA, normal CSRF/login cookies and the published audit API. It never receives a
+PostgreSQL DSN and does not start, stop or seed a product or telemetry store.
+
+## Build and client self-tests
+
+Use `/root/lane-obs-tools/check-installed-history-client-own-window.sh` only in
+its allocated queue window, after the preceding owner has explicitly completed
+and cleaned up. It makes one nonblocking attempt to acquire both real heavy
+locks in its own parent shell. A separate child verifies the inherited lock
+file descriptors and applies the unchanged disk, MemFree, Available and I/O
+pressure guards. Its timeout, including the kill grace, is at most 120 seconds.
+Do not loop for admission or borrow the stopped DEL parent's descriptors.
+
+The frozen input hashes are 48ed1588c41cd4ffca484849166ef558be632acafb142b40486fb56f479a856b
+for main.go and f77a6d8e1ae1983be5415a3d1937290b953ca664db18097f26f1305a1c933a2d
+for main_test.go. Seven standard-library-only race tests, vet and a CGO-disabled
+Linux amd64 build run with loopback-only networking, dependency resolution
+disabled and two Go workers. Output goes to a new CLIENT_RECEIPT directory:
+check.log, inputs.sha256, compiler.txt, tests.jsonl, vet.log, build.log,
+proof.json and installed-history-linux-amd64. Existing clients and partial
+transfers are not overwritten. Accept a binary only after exit zero, all seven
+passes, static x86-64 ELF verification and the receipt's complete SHA-256.
+A successful client self-test is not an installed-product acceptance result.
+OBS110 module tests, VM/PG services and real installed phases are outside this
+short window and require their own separately allocated windows.
+
+## Complete received client artifact
+
+The Mac-built Linux amd64 ELF has been received and independently checked at
+/root/lane-rel-tools/lane-del-combination-4463bbe6/artifact-preparation-91fc9bc6/installed-history-linux-amd64.
+Its complete length is 10505478 bytes and SHA-256 is
+91fc9bc6962a5829613fb0cb8d0913995cef856ff0832bce95f6cc587199b708.
+BuildInfo reports Go 1.27.3, linux/amd64, CGO disabled and trimpath. ELF inspection
+found static linking and no interpreter. The reception receipt binds source
+48ed1588c41cd4ffca484849166ef558be632acafb142b40486fb56f479a856b, test
+f77a6d8e1ae1983be5415a3d1937290b953ca664db18097f26f1305a1c933a2d and
+Mac proof 8f7c695ec66af39dce486aa49a96f17a0c6ece9dccbd48358851b99e413b7bd7.
+This is artifact reception, not Linux-native self-testing or installed acceptance.
+The older partials are not executable candidates. The storage directory name
+records where the artifact arrived, not which product version it qualifies.
+
+## Installed inputs
+
+Copy `input.example.json` to an owner-only input file. Its placeholders deliberately
+fail validation. Fill site/cell/Workspace from the actual installed Default scope;
+seed raw and rollup samples with the matching labels and supply the exact UTC
+whole-second windows and counts. A zero count is data. A missing point is absence.
+Do not declare cells that the installation does not contain. Set sparse and zero
+requirements only for the explicitly seeded acceptance data.
+
+The Admin endpoint retains `https://admin.ownsolid.test:8443` as HTTP origin and TLS
+identity. Choose exactly one dial override: an absolute `dial_unix_socket` for an
+opaque TLS relay, or `dial_address` such as `127.0.0.1:8443` inside its namespace.
+TLS is verified against `ca_file`; the driver never disables verification, follows
+redirects, uses an ambient proxy or loads ambient trust roots. Raw and long origins
+have their own CA references and no Admin cookie jar.
+
+Input, password and saved session files must be absolute regular owner-only files
+owned by the running account. Password files contain the exact password, optionally
+followed by one line ending. Do not put credential contents in shell arguments or
+logs. A pre-existing session file is never overwritten by init. For a new installed
+instance, use a distinct fresh session_file path in that instance's protected
+input and retain the previous input and session as separate evidence. Never
+point a new instance at the retained issued-cookie file or remove that file to
+make init succeed. A new actual installation needs its own explicit single-
+instance acceptance window, current source/image/SQL/scope provenance and raw
+seed window; an expired window's GO does not authorize a replacement run.
+
+`source_sha` is a declared expectation, not proof of the installed binary. Record
+the delivery manifest, image digest and actual Control BuildInfo for the same
+frozen source before interpreting these results. The expired installed attempt
+used 4463bbe628f60486bbdb92c15f72311fb53d076a. A new instance needs its own current
+Control source, image and SQL provenance; that old expectation is not approval
+to rerun an expired instance or to describe a newer product source as qualified.
+
+## Phases
+
+Run each command in the installation namespace, supplying the same protected input:
+
+```sh
+/path/to/installed-history -input /evidence/obs-history-input.json -mode init
+/path/to/installed-history -input /evidence/obs-history-input.json -mode read
+```
+
+`read` verifies seeded raw and rollup points, a real raw-query positive control and
+no raw fallback during rollup. Every successful history read must have exactly one
+committed request-bound monitoring audit; refusals must have none. Supplying a
+foreign Workspace is optional and must mean a different tenant, not another
+Workspace administrable by this Platform Admin. It expects the actual public
+`404 RESOURCE_NOT_FOUND` contract.
+
+The installation owner performs each fault or restoration between these commands:
+
+1. Stop only the owned long tier, run `long-unavailable`; restore it and run
+   `long-restored`.
+2. Serve the long tier with a certificate rejected by the configured CA or identity,
+   run `long-tls-refused`; restore its valid certificate and run
+   `long-tls-restored`. The direct long health failure must be an actual certificate
+   verification failure, not a connection refusal. Close old proxy connections.
+3. Disable the actual Workspace, run `workspace-disabled`; restore its active state
+   and run `workspace-restored`. The original issued session is reused.
+4. Run `logout-replay`. The client revokes its own session, replays the old issued
+   cookies expecting 401 and no data, then logs in as the same actor and verifies
+   recovery. No product or audit records are deleted.
+5. Run `finish` after all configured required phases pass. It checks remaining audit
+   expectations, logs out and removes only its own saved session file. On an
+   incomplete/failed run, `abort` logs out and removes this validated own state
+   without reporting the acceptance as passed.
+
+Native `vm_http_requests_total{path="/api/v1/query_range"}` and
+`process_start_time_seconds` are read from raw `/metrics`. Positive raw reads must
+increment the counter. Rollup/refused reads must leave both counter and process
+epoch unchanged; a reset or absent metric cannot prove no fallback. Store inspection
+has no Admin cookies. JSON evidence includes request IDs, counts and timings only.
+
+An optional `retention_window` requires five actual benchmark cells, ninety days of
+explicitly declared synthetic recording output and its independent Workspace.
+Only add `retention` to required phases when those inputs and resources exist.
+It performs 31 public reads; timings include client validation and public audit
+reads, retain host page cache, and do not represent production percentiles or
+10,000 enrolled raw agents. Do not delay the installed main-flow gate for this
+separate benchmark or invent a product topology for it.
+
+
+## Native exposition freshness
+
+VictoriaMetrics 1.155.0 appmetrics caches the complete /metrics exposition for one
+second. Its [pinned implementation](https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.155.0/lib/appmetrics/appmetrics.go)
+updates the cached body only after that lifetime. Before and after counter samples
+therefore poll for a strictly advancing cached vm_app_uptime_seconds after the
+preceding operation, within the configured observation deadline. The process
+epoch and monotone counter must remain valid throughout; a timer alone never
+confirms freshness. Evidence records raw values, both observation times and the
+uptime advance. Epoch changes and frozen/slow snapshots refuse judgement.
+This preserves both the required positive increment and the negative no-fallback assertion;
+a cached unchanged value is not evidence of no query. Process epochs still must
+match. The client timing for history excludes these observation waits.
+
+The original ed9b9324 client's installed raw positive-control check failed
+while using immediate samples. The cache makes that sampling unable to prove
+an increment reliably, and the two overlapping old readers also prevent isolated
+attribution. Retain those failed logs as indeterminate counter proofs; they are
+neither an installed pass nor a demonstrated product failure. The cache-aware
+client adds a real one-second cached TLS endpoint regression checking both a
+visible increment and detection of an increment that would invalidate a negative
+assertion. This changes acceptance instrumentation, not the frozen product.

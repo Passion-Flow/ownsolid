@@ -1,0 +1,34 @@
+from decimal import Decimal
+import hashlib
+import json
+from pathlib import Path
+from statistics import median
+
+captures = {
+    "initial-result.json": "0eff66dab1940c7b219b50dd3b7bf0976fbcff55c0ff526fbfb76e81ea4aaf78",
+    "result.json": "5b244e7c87060e0afab4c4dcd57387f46964d4e37506ad96827df82a0b5ecf47",
+}
+expected_cases = None
+for filename, digest in captures.items():
+    raw = Path(filename).read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == digest
+    result = json.loads(raw)
+    assert result["device_profile"] == "cpu_verification" and result["computation_dtype"] == "float32"
+    assert result["configuration"]["seed"] == 42 and result["configuration"]["threads"] == 2
+    assert result["heldout_sha256"] == "0fd36fecf2b79bfd5e23a09cf0c66d395304824d5ae18ca4be8d01a23f9b09af"
+    assert len(result["cases"]) == result["row_count"] == 3
+    cases = [
+        tuple(row[key] for key in ("source_id", "prompt_sha256", "expected_label"))
+        + tuple(row[model]["output_sha256"] for model in ("base", "candidate"))
+        for row in result["cases"]
+    ]
+    if expected_cases is None:
+        expected_cases = cases
+    assert cases == expected_cases
+    for name in ("base", "candidate"):
+        observations = [row[name] for row in result["cases"]]
+        times = [item["duration_milliseconds"] for item in observations]
+        tokens = [item["generated_tokens"] for item in observations]
+        assert all(type(value) is int and value > 0 for value in times + tokens)
+        rate = Decimal(sum(tokens)) * 1000 / Decimal(sum(times))
+        print(f"{filename} {name}: durations_ms={times} median_ms={median(times)} continuation_tokens={tokens} window_tokens_per_s={rate:.2f}")

@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+run=$1
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+export CARGO_BUILD_JOBS=2 CARGO_NET_OFFLINE=true
+df -h /root /dev/shm
+free -m
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+cargo build --manifest-path services/gateway/Cargo.toml --locked --offline
+exec bash /root/lane-gw-acceptance/gw107.ri6nhx80/run-pg.sh "$run" responses-items '^(TestRealGoRustPostgresForegroundResponses|TestGatewayUsageHistoryAuditExport|TestGatewayUsageHistoryRejectsAlteredReceipt)$'

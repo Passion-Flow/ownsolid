@@ -1,0 +1,26 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+test "$(git rev-parse --short HEAD)" = 60995351
+git diff --quiet
+git diff --check HEAD~3..HEAD
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 900 9
+test "$(cat ~/lane-rel-tools/checkpoint-help-final.CM200l0b/exit)" = 0
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+unshare -n sh -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    make check-layout check-roadmap test-tools
+    go -C services/control test ./internal/modules/scheduling ./internal/modules/metering ./internal/modules/identity/http
+    go -C services/control build ./...
+'
+git diff --exit-code

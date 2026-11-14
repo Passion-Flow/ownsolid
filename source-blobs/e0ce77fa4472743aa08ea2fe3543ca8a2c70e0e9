@@ -1,0 +1,365 @@
+{
+ "title": "ownsolid AWS read-only inventory",
+ "operations": [
+  {
+   "id": "get /sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws",
+   "method": "get",
+   "path": "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
+    },
+    {
+     "name": "after",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     },
+     "description": "At most configured runtime.ui.page_size"
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "InventoryResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "post /sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws/imports",
+   "method": "post",
+   "path": "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws/imports",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
+    }
+   ],
+   "body": {
+    "$ref": "ImportInput"
+   },
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ReceiptResponse"
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "get /sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws/imports/{key}",
+   "method": "get",
+   "path": "/sites/{site_id}/cells/{cell_id}/admin/workspaces/{workspace}/aws/imports/{key}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "workspace",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
+    },
+    {
+     "name": "key",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Canonical lowercase nonzero UUID."
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "ReceiptResponse"
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "Connection": {
+   "type": "object",
+   "required": [
+    "name",
+    "account_id",
+    "regions"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "account_id": {
+     "type": "string"
+    },
+    "regions": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "ImportInput": {
+   "type": "object",
+   "required": [
+    "connection",
+    "region",
+    "idempotency_key"
+   ],
+   "properties": {
+    "connection": {
+     "type": "string"
+    },
+    "region": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "idempotency_key": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    }
+   }
+  },
+  "Inventory": {
+   "type": "object",
+   "required": [
+    "enabled",
+    "can_import",
+    "connections",
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "can_import": {
+     "type": "boolean"
+    },
+    "connections": {
+     "type": "array",
+     "items": {
+      "$ref": "Connection"
+     }
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "$ref": "Resource"
+     }
+    },
+    "next_cursor": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "InventoryResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Inventory"
+    }
+   }
+  },
+  "Receipt": {
+   "type": "object",
+   "required": [
+    "idempotency_key",
+    "connection",
+    "account_id",
+    "region",
+    "started_at",
+    "completed_at",
+    "imported"
+   ],
+   "properties": {
+    "idempotency_key": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    },
+    "connection": {
+     "type": "string"
+    },
+    "account_id": {
+     "type": "string"
+    },
+    "region": {
+     "type": "string"
+    },
+    "started_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "completed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "imported": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "ReceiptResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "Receipt"
+    }
+   }
+  },
+  "Resource": {
+   "type": "object",
+   "required": [
+    "id",
+    "account_id",
+    "region",
+    "instance_id",
+    "instance_type",
+    "state",
+    "availability_zone",
+    "private_ip",
+    "public_ip",
+    "observed_at",
+    "missing"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid",
+     "description": "Canonical lowercase nonzero UUID."
+    },
+    "account_id": {
+     "type": "string"
+    },
+    "region": {
+     "type": "string"
+    },
+    "instance_id": {
+     "type": "string"
+    },
+    "instance_type": {
+     "type": "string"
+    },
+    "state": {
+     "type": "string"
+    },
+    "availability_zone": {
+     "type": "string"
+    },
+    "private_ip": {
+     "type": "string"
+    },
+    "public_ip": {
+     "type": "string"
+    },
+    "observed_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "missing": {
+     "type": "boolean"
+    }
+   }
+  }
+ }
+}

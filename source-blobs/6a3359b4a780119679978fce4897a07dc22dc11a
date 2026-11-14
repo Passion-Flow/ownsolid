@@ -1,0 +1,160 @@
+# Single-node topology. `ownsolid-install apply` renders the variables from the typed
+# install configuration and drives this file; see deploy/compose/README.md.
+# Every image must already be loaded: nothing here reaches a registry.
+name: ${OWNSOLID_PROJECT:?}
+services:
+    postgres:
+        image: ${OWNSOLID_POSTGRES_IMAGE:?}
+        pull_policy: never
+        environment:
+            POSTGRES_DB: ownsolid
+            POSTGRES_USER: ownsolid_migrator
+            POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+        secrets: [postgres_password]
+        volumes:
+            - type: bind
+              source: ${OWNSOLID_POSTGRES_DATA:?}
+              target: /var/lib/postgresql
+              bind: {create_host_path: false}
+        networks:
+            # A fixed address: clients connect by address and never look the database up.
+            state: {ipv4_address: "${OWNSOLID_POSTGRES_ADDRESS:?}"}
+        mem_limit: ${OWNSOLID_POSTGRES_MEMORY:?}
+        # A weight, not a quota: a quota stalls every backend once a burst has spent it (ADR 0038).
+        cpu_shares: ${OWNSOLID_POSTGRES_CPU_SHARES:?}
+        pids_limit: 256
+        command: [postgres, -c, "max_connections=${OWNSOLID_POSTGRES_MAX_CONNECTIONS:?}"]
+        healthcheck:
+            test: [CMD-SHELL, 'PGPASSWORD="$$(cat /run/secrets/postgres_password)" psql -X -h 127.0.0.1 -U ownsolid_migrator -d ownsolid -v ON_ERROR_STOP=1 -tAc "SELECT 1" >/dev/null']
+            interval: 2s
+            timeout: 3s
+            retries: 60
+        restart: unless-stopped
+    # Telemetry stores (ADR 0009). Telemetry never enters the control-plane database, and
+    # control does not depend on them: losing a store must not stop the platform.
+    metrics:
+        image: ${OWNSOLID_METRICS_IMAGE:?}
+        pull_policy: never
+        user: ${OWNSOLID_RUNTIME_UID:?}:${OWNSOLID_RUNTIME_GID:?}
+        command: [-storageDataPath=/data, "-retentionPeriod=${OWNSOLID_METRICS_RETENTION:?}"]
+        volumes:
+            - type: bind
+              source: ${OWNSOLID_METRICS_DATA:?}
+              target: /data
+              bind: {create_host_path: false}
+        networks:
+            state: {ipv4_address: "${OWNSOLID_METRICS_ADDRESS:?}"}
+        mem_limit: ${OWNSOLID_METRICS_MEMORY:?}
+        cpus: ${OWNSOLID_METRICS_CPUS:?}
+        pids_limit: 256
+        read_only: true
+        cap_drop: [ALL]
+        security_opt: ['no-new-privileges:true']
+        healthcheck:
+            test: [CMD, wget, -q, -T, "3", -O, /dev/null, "http://127.0.0.1:8428/health"]
+            interval: 5s
+            timeout: 5s
+            retries: 36
+        restart: unless-stopped
+    # The image has no shell, so `ownsolid-install` checks readiness from `metrics`.
+    logs:
+        image: ${OWNSOLID_LOGS_IMAGE:?}
+        pull_policy: never
+        user: ${OWNSOLID_RUNTIME_UID:?}:${OWNSOLID_RUNTIME_GID:?}
+        command: [-storageDataPath=/data, "-retentionPeriod=${OWNSOLID_LOGS_RETENTION:?}"]
+        volumes:
+            - type: bind
+              source: ${OWNSOLID_LOGS_DATA:?}
+              target: /data
+              bind: {create_host_path: false}
+        networks:
+            state: {ipv4_address: "${OWNSOLID_LOGS_ADDRESS:?}"}
+        mem_limit: ${OWNSOLID_LOGS_MEMORY:?}
+        cpus: ${OWNSOLID_LOGS_CPUS:?}
+        pids_limit: 256
+        read_only: true
+        cap_drop: [ALL]
+        security_opt: ['no-new-privileges:true']
+        restart: unless-stopped
+    control:
+        image: ${OWNSOLID_CONTROL_IMAGE:?}
+        pull_policy: never
+        user: ${OWNSOLID_RUNTIME_UID:?}:${OWNSOLID_RUNTIME_GID:?}
+        command: [serve, --config, /run/projectone/control.yaml]
+        environment:
+            SSL_CERT_FILE: ${OWNSOLID_CONTROL_CA_FILE:?}
+        depends_on:
+            postgres: {condition: service_healthy}
+        ports:
+            - target: 8443
+              published: "${OWNSOLID_HTTPS_PORT:?}"
+              host_ip: "${OWNSOLID_BIND_ADDRESS:?}"
+              protocol: tcp
+            - host_ip: 127.0.0.1
+              protocol: tcp
+              published: "19443"
+              target: 9443
+        volumes:
+            - type: bind
+              source: ${OWNSOLID_CONFIG_DIR:?}
+              target: /run/projectone
+              read_only: true
+              bind: {create_host_path: false}
+            - type: bind
+              source: ${OWNSOLID_MODEL_STORE:?}
+              target: /var/lib/ownsolid/models
+              bind: {create_host_path: false}
+            # The operator socket: how ownsolid-install reaches control when the network path is full.
+            - type: bind
+              source: ${OWNSOLID_SOCKET_DIR:?}
+              target: /run/projectone-socket
+              bind: {create_host_path: false}
+        networks: [state, edge]
+        mem_limit: ${OWNSOLID_CONTROL_MEMORY:?}
+        cpus: ${OWNSOLID_CONTROL_CPUS:?}
+        pids_limit: 256
+        read_only: true
+        cap_drop: [ALL]
+        security_opt: ['no-new-privileges:true']
+        healthcheck:
+            test: [CMD, /usr/local/bin/control, health-probe, --config, /run/projectone/control.yaml, --audience, admin, --kind, ready, --dial-address, "127.0.0.1:8443", --timeout-seconds, "5", --ca-file, /run/projectone/ca.pem]
+            interval: 5s
+            timeout: 8s
+            retries: 36
+        restart: unless-stopped
+    # Schema and first-run tasks. Holds the privileged database identity, which the
+    # serving container above never receives. Run only through `compose run`.
+    control-operator:
+        profiles: [operator]
+        image: ${OWNSOLID_CONTROL_IMAGE:?}
+        pull_policy: never
+        user: ${OWNSOLID_RUNTIME_UID:?}:${OWNSOLID_RUNTIME_GID:?}
+        volumes:
+            - type: bind
+              source: ${OWNSOLID_CONFIG_DIR:?}
+              target: /run/projectone
+              read_only: true
+              bind: {create_host_path: false}
+            - type: bind
+              source: ${OWNSOLID_OPERATOR_DIR:?}
+              target: /run/projectone-operator
+              bind: {create_host_path: false}
+        networks: [state]
+        read_only: true
+        cap_drop: [ALL]
+        security_opt: ['no-new-privileges:true']
+        restart: "no"
+networks:
+    # The database and telemetry network has no route out of the host. Containers without
+    # a fixed address draw from the dynamic range, which excludes the store addresses.
+    state:
+        internal: true
+        ipam:
+            config:
+                - subnet: "${OWNSOLID_STATE_SUBNET:?}"
+                  ip_range: "${OWNSOLID_STATE_DYNAMIC_RANGE:?}"
+    # Carries the published port and the configured SMTP relay.
+    edge: {}
+secrets:
+    postgres_password:
+        file: ${OWNSOLID_POSTGRES_PASSWORD_FILE:?}

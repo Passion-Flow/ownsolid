@@ -1,0 +1,1230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/contracts/localization/artifacts-v1",
+  "title": "Project-one offline localization artifacts",
+  "description": "Structural shapes plus generated required-field lists. Current-source identity, UTF-8 byte limits, semantic placeholders, cryptographic/asset hashes, ownership, exact plan/budget/time/review and policy bounds remain independently enforced. No schema result establishes provider/human provenance.",
+  "$defs": {
+    "Locale": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "projectone-offline-locale-v1"
+        },
+        "locale": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8}){0,3}$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "english_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 35,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8}){0,3}$"
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "direction": {
+          "enum": [
+            "ltr",
+            "rtl"
+          ]
+        },
+        "source_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "catalog_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "formatting": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "plural_categories": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "zero",
+                  "one",
+                  "two",
+                  "few",
+                  "many",
+                  "other"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 6
+            },
+            "plural_rules_supported": {
+              "type": "boolean"
+            },
+            "number_format_supported": {
+              "type": "boolean"
+            },
+            "date_format_supported": {
+              "type": "boolean"
+            },
+            "google_code": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200
+            },
+            "locale": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200
+            },
+            "likely_script": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200
+            },
+            "direction": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200
+            },
+            "resolved_plural_locale": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200
+            },
+            "resolved_number_locale": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200
+            },
+            "resolved_date_locale": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200
+            },
+            "metadata_status": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200
+            }
+          },
+          "required": [
+            "plural_categories",
+            "plural_rules_supported",
+            "number_format_supported",
+            "date_format_supported"
+          ]
+        },
+        "messages": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 65536
+          }
+        },
+        "mail": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "invitation": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                },
+                "html": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                }
+              },
+              "required": [
+                "subject",
+                "text",
+                "html"
+              ]
+            },
+            "password_reset": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                },
+                "html": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                }
+              },
+              "required": [
+                "subject",
+                "text",
+                "html"
+              ]
+            },
+            "password_changed": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                },
+                "html": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                }
+              },
+              "required": [
+                "subject",
+                "text",
+                "html"
+              ]
+            }
+          },
+          "required": [
+            "invitation",
+            "password_reset",
+            "password_changed"
+          ]
+        },
+        "plurals": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "argument": {
+                "const": "count"
+              },
+              "forms": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536
+                }
+              }
+            },
+            "required": [
+              "argument",
+              "forms"
+            ]
+          }
+        },
+        "fonts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "sha256": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "license_sha256": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "family": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 600
+              },
+              "format": {
+                "const": "truetype"
+              },
+              "weight": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "style": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              }
+            },
+            "required": [
+              "sha256",
+              "license_sha256",
+              "family",
+              "format",
+              "weight",
+              "style"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "font_coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required_codepoints": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "covered_required_codepoints": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "missing_codepoints": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 6,
+                "maxLength": 8,
+                "pattern": "^U\\+[A-F0-9]{4,6}$"
+              },
+              "minItems": 0,
+              "maxItems": 65536
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "qualification": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            }
+          },
+          "required": [
+            "required_codepoints",
+            "covered_required_codepoints",
+            "missing_codepoints",
+            "status",
+            "qualification"
+          ]
+        },
+        "translation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "enum": [
+                "canonical_English_source",
+                "first_party_seed_pending_Google_review",
+                "google_generated_human_reviewed",
+                "machine_generated_structure_checked"
+              ]
+            },
+            "review": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "state": {
+                  "enum": [
+                    "pending",
+                    "approved"
+                  ]
+                },
+                "review_sha256": {
+                  "type": "string",
+                  "minLength": 64,
+                  "maxLength": 64,
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "reviewed_at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 65536,
+                  "format": "date-time"
+                },
+                "reference_sha256": {
+                  "type": "string",
+                  "minLength": 64,
+                  "maxLength": 64,
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "reviewer_sha256": {
+                  "type": "string",
+                  "minLength": 64,
+                  "maxLength": 64,
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": [
+                "state"
+              ]
+            },
+            "provider": {
+              "enum": [
+                "Google Translate",
+                "Jayogo"
+              ]
+            },
+            "model": {
+              "const": "general/nmt"
+            },
+            "model_resource_sha256": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "plan_sha256": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "candidate_sha256": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "reviewed_sha256": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "attribution": {
+              "$ref": "#/$defs/Attribution"
+            },
+            "manufacturing_sha256": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "runtime_translation": {
+              "type": "boolean",
+              "const": false
+            },
+            "upstream_model_identity": {
+              "const": "not_independently_verified"
+            }
+          },
+          "required": [
+            "state",
+            "review"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "state": {
+                    "const": "machine_generated_structure_checked"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              },
+              "then": {
+                "required": [
+                  "provider",
+                  "plan_sha256",
+                  "candidate_sha256",
+                  "manufacturing_sha256",
+                  "runtime_translation",
+                  "upstream_model_identity"
+                ],
+                "properties": {
+                  "provider": {
+                    "const": "Jayogo"
+                  },
+                  "review": {
+                    "const": {
+                      "state": "pending"
+                    }
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "model"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "model_resource_sha256"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "reviewed_sha256"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "attribution"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "else": {
+                "properties": {
+                  "provider": {
+                    "const": "Google Translate"
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "manufacturing_sha256"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "runtime_translation"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "upstream_model_identity"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "google_translated_complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "locale",
+        "display_name",
+        "english_name",
+        "aliases",
+        "direction",
+        "source_sha256",
+        "formatting",
+        "messages",
+        "mail",
+        "plurals",
+        "fonts",
+        "translation",
+        "google_translated_complete"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "google_translated_complete": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "translation": {
+                "required": [
+                  "provider",
+                  "model",
+                  "model_resource_sha256",
+                  "plan_sha256",
+                  "candidate_sha256",
+                  "reviewed_sha256",
+                  "attribution"
+                ],
+                "properties": {
+                  "state": {
+                    "const": "google_generated_human_reviewed"
+                  },
+                  "review": {
+                    "required": [
+                      "state",
+                      "review_sha256",
+                      "reviewed_at",
+                      "reference_sha256",
+                      "reviewer_sha256"
+                    ],
+                    "properties": {
+                      "state": {
+                        "const": "approved"
+                      }
+                    }
+                  },
+                  "provider": {
+                    "const": "Google Translate"
+                  }
+                }
+              }
+            },
+            "required": [
+              "catalog_sha256",
+              "font_coverage"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "translation": {
+                "properties": {
+                  "state": {
+                    "const": "machine_generated_structure_checked"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "catalog_sha256",
+              "font_coverage"
+            ],
+            "properties": {
+              "locale": {
+                "not": {
+                  "const": "en"
+                }
+              },
+              "google_translated_complete": {
+                "const": false
+              },
+              "fonts": {
+                "minItems": 1
+              },
+              "font_coverage": {
+                "properties": {
+                  "status": {
+                    "const": "complete_cmap_for_exact_product_strings_only"
+                  },
+                  "required_codepoints": {
+                    "minimum": 1
+                  },
+                  "covered_required_codepoints": {
+                    "minimum": 1
+                  },
+                  "missing_codepoints": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "projectone-offline-localization-inventory-v1"
+        },
+        "source_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "catalog_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "locales": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "locale": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 35,
+                "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8}){0,3}$"
+              },
+              "file": {
+                "type": "string",
+                "minLength": 69,
+                "maxLength": 69,
+                "pattern": "^[a-f0-9]{64}\\.json$"
+              },
+              "sha256": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "locale",
+              "file",
+              "sha256"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "file": {
+                "type": "string",
+                "minLength": 68,
+                "maxLength": 69,
+                "pattern": "^[a-f0-9]{64}\\.(json|ttf|txt|png)$"
+              },
+              "sha256": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "size_bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 134217728
+              },
+              "media_type": {
+                "enum": [
+                  "application/json",
+                  "font/ttf",
+                  "text/plain; charset=utf-8",
+                  "image/png"
+                ]
+              }
+            },
+            "required": [
+              "file",
+              "sha256",
+              "size_bytes",
+              "media_type"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 1026
+        },
+        "delivery_status": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "source_sha256",
+        "catalog_sha256",
+        "locales",
+        "assets",
+        "delivery_status"
+      ]
+    },
+    "Attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "link": {
+          "const": "https://translate.google.com/"
+        },
+        "badges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "variant": {
+                "enum": [
+                  "color-regular.png",
+                  "white-regular.png"
+                ]
+              },
+              "sha256": {
+                "type": "string",
+                "minLength": 64,
+                "maxLength": 64,
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "variant",
+              "sha256"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "documentation_url": {
+          "const": "https://docs.cloud.google.com/translate/attribution"
+        }
+      },
+      "required": [
+        "link",
+        "badges",
+        "documentation_url"
+      ]
+    },
+    "HumanReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "projectone-human-localization-review-v1"
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "approved"
+          ]
+        },
+        "source_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "plan_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "candidate_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "target_locale": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8}){0,3}$"
+        },
+        "reviewer": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "reviewed_at": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 100
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "linguistic_quality": {
+              "type": "boolean"
+            },
+            "terminology": {
+              "type": "boolean"
+            },
+            "placeholders": {
+              "type": "boolean"
+            },
+            "mail_links_and_templates": {
+              "type": "boolean"
+            },
+            "plural_categories": {
+              "type": "boolean"
+            },
+            "direction_and_long_labels": {
+              "type": "boolean"
+            },
+            "font_rendering": {
+              "type": "boolean"
+            },
+            "offline_browser_and_mail": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "linguistic_quality",
+            "terminology",
+            "placeholders",
+            "mail_links_and_templates",
+            "plural_categories",
+            "direction_and_long_labels",
+            "font_rendering",
+            "offline_browser_and_mail"
+          ]
+        },
+        "reviewed_entries": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 65536
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "state",
+        "source_sha256",
+        "plan_sha256",
+        "candidate_sha256",
+        "target_locale",
+        "reviewer",
+        "reference",
+        "reviewed_at",
+        "display_name",
+        "checks",
+        "reviewed_entries"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "approved"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reviewer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "reference": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "display_name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "reviewed_at": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 65536,
+                "format": "date-time"
+              },
+              "checks": {
+                "properties": {
+                  "linguistic_quality": {
+                    "const": true
+                  },
+                  "terminology": {
+                    "const": true
+                  },
+                  "placeholders": {
+                    "const": true
+                  },
+                  "mail_links_and_templates": {
+                    "const": true
+                  },
+                  "plural_categories": {
+                    "const": true
+                  },
+                  "direction_and_long_labels": {
+                    "const": true
+                  },
+                  "font_rendering": {
+                    "const": true
+                  },
+                  "offline_browser_and_mail": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BudgetApproval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "projectone-translation-budget-approval-v1"
+        },
+        "approval_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "format": "uuid"
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "approver": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "created_at": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "format": "date-time"
+        },
+        "plan_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63
+        },
+        "model": {
+          "const": "general/nmt"
+        },
+        "target_locale": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8}){0,3}$"
+        },
+        "maximum_codepoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        },
+        "maximum_cost_minor_units": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        },
+        "price_per_million_codepoints_minor_units": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3,
+          "pattern": "^[A-Z]{3}$"
+        },
+        "shutdown_plan": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "approval_id",
+        "reference",
+        "approver",
+        "created_at",
+        "expires_at",
+        "plan_sha256",
+        "source_sha256",
+        "project_id",
+        "location",
+        "model",
+        "target_locale",
+        "maximum_codepoints",
+        "maximum_cost_minor_units",
+        "price_per_million_codepoints_minor_units",
+        "currency",
+        "shutdown_plan"
+      ]
+    },
+    "BuildConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "projectone-localization-build-v1"
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^(?:[a-z][a-z0-9-]{4,28}[a-z0-9]|[1-9][0-9]{5,19})$"
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "pattern": "^(?:global|[a-z][a-z0-9-]{1,62})$"
+        },
+        "model": {
+          "const": "general/nmt"
+        },
+        "target_locale": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8}){0,3}$",
+          "not": {
+            "const": "en"
+          }
+        },
+        "credential_directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "pattern": "^/"
+        },
+        "token_file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "pattern": "^/"
+        },
+        "authorization_file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "pattern": "^/"
+        },
+        "output_directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536,
+          "pattern": "^/"
+        },
+        "request_timeout_seconds": {
+          "type": "integer",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 120
+        },
+        "batch_items": {
+          "type": "integer",
+          "default": 64,
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "batch_codepoints": {
+          "type": "integer",
+          "default": 5000,
+          "minimum": 1,
+          "maximum": 30000
+        },
+        "maximum_total_codepoints": {
+          "type": "integer",
+          "default": 200000,
+          "minimum": 1,
+          "maximum": 10000000
+        }
+      },
+      "required": [
+        "authorization_file",
+        "credential_directory",
+        "kind",
+        "location",
+        "model",
+        "output_directory",
+        "project_id",
+        "schema_version",
+        "target_locale",
+        "token_file"
+      ]
+    }
+  }
+}

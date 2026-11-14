@@ -1,0 +1,18 @@
+{
+  "status": "prepared_not_executed",
+  "parent_sha256": "463b216824c437ccad5cd09444ed8c7594bcc3a33bca04b30ae87d6e16d77284",
+  "source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "plan_sha256": "7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874",
+  "binding_sha256": "f858093a1ee7b4f065dcdea76c9a7bcc885f8798bc5d62d779baf00024e2d3ab",
+  "pure_local_tests": 29,
+  "pure_local_seconds": 0.029,
+  "test_externals": "mocked processes, Docker, Go, SQL and permanent carriers",
+  "v3_native_invocations": 0,
+  "server_core_transfer_exit_code": 0,
+  "server_metadata_transfer": "not_attempted_after_transport_failure",
+  "remote_independent_hash_readback": "unconfirmed",
+  "linux_check_config": "passed_read_only_raw_exit_0",
+  "post_run_archive_and_evidence_transfer_raw_exit_code": 255,
+  "previous_v2_result_sha256": "b64bc5892bcf712be222c23bfdf158382414b07b38606cded3e12b6b314f3faf",
+  "remote_check_output_sha256": "not_independently_fetched"
+}

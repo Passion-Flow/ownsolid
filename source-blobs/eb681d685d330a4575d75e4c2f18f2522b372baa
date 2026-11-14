@@ -1,0 +1,28 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "status": "prepared correction only; original failed attempt preserved; no second queue/build/container/test started",
+  "original_entry": "/private/tmp/ownsolid-gw104-mac-native.uvmh_w4o/run-native.py",
+  "original_sha256": "911c0bccb4d345999e5eb696119d1397a0e143d8b681dcb64178f0d0dc7af341",
+  "draft_sha256": "66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d",
+  "transport": "PostgreSQL network none; Go stdio helper over Docker exec; only native host loopback listener",
+  "entry": "/private/tmp/ownsolid-gw104-native-wire-fix.uxm7uway/run-native-stdio.py",
+  "queue": "no new kernel wait; original one-time queue is finished",
+  "admission": "previous one-time opportunity ended with preflight exit 1; no further runtime admission",
+  "qualification_evidence_commit": "214ab9ccd2c47570f161227b2557a2db18e2e9e9",
+  "test_binary_reuse": "original 219af27e native binary, pinned SHA-256 and size; frozen source/overlay files checked before reuse",
+  "wire_preflight": "SSLRequest followed by native pinned pgx authenticated SELECT under the original sandbox",
+  "docker_scope": "capture local Unix context once; require Docker Desktop linux/arm64; pass explicit context to all owned commands",
+  "research_commit": "214ab9ccd2c47570f161227b2557a2db18e2e9e9",
+  "pending": "no current runtime admission; source-only correction awaits an independently assigned later window",
+  "static_checks": [
+    "Python AST",
+    "cached gofmt parser",
+    "product source diff review",
+    "frozen input manifest"
+  ],
+  "postgres_auth": "explicit SCRAM host auth; preflight must reject wrong password with 28P01 before successful pgx SQL",
+  "platform": "native Go darwin/arm64; explicit Docker --platform linux/arm64; no amd64 claim",
+  "previous_attempt": "/private/tmp/ownsolid-gw104-native-stdio.3i3mw2er",
+  "previous_gate_proof_sha256": "ae9721c781a79a23614c189efb0de5496b007bbf118b78d4b1770115fce2d234",
+  "sql_correction": "record raw inet text and canonical host(inet_server_addr()); distinguish SQL error from result mismatch"
+}

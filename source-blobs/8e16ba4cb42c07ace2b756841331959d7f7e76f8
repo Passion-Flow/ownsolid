@@ -1,0 +1,54 @@
+{
+  "status": "static composition/DTO/schema review passed; no new compilation or protocol execution",
+  "gateway_source": "229b5c687b80cfc0ee80b9e69cb80ec0399b53ae",
+  "unchanged_read_source_from": "a51c39455843b116b250465ad201c6c0181304ef",
+  "original_read_source": "5fb92e1d",
+  "published_schema59_baseline": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "DEV_contract": "7705c5a341458cb1be8ead80844198378d98c4e3",
+  "contract_version": "0.12.0",
+  "contract_sha256": "66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d",
+  "operations": {
+    "adminListModelAlias": {
+      "method": "get",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases"
+    },
+    "adminGetModelAlias": {
+      "method": "get",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/distribution/workspaces/{workspace_id}/aliases/{resource_id}"
+    },
+    "portalListModelAlias": {
+      "method": "get",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases"
+    },
+    "portalGetModelAlias": {
+      "method": "get",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/workspaces/{workspace_id}/distribution/aliases/{resource_id}"
+    }
+  },
+  "source_and_test_sha256": {
+    "services/control/internal/modules/distribution/alias_capabilities.go": "537cede53ec7bde37b7b31bb175c42acd06d01f06fec442265625adf064c52b1",
+    "services/control/internal/modules/distribution/alias_reads.go": "5307fd6a5e5d9d647f562dbe61e5b6cd7bf3c0a0de2f2f0facbfc93b1905c6c5",
+    "services/control/internal/modules/distribution/history.go": "61ff9d7a462f842fdd9611ed4cfc9a941cd2718bb5cd262faa86b21415481271",
+    "services/control/internal/modules/distribution/http/human.go": "60020c298d12f2cda4efdb5d4783c1c87fdef5c6e4fcc96c9f54e212252f87d2",
+    "services/control/internal/modules/distribution/model.go": "61247ae9f31fb521d902d19f20cf0f1d6101edb2d2601fc82e479834632986b6",
+    "services/control/internal/modules/distribution/alias_capabilities_test.go": "7ec4e732ebbd9593275be36008b98a9fed71a4ef8190415939e21da91f5cfb48",
+    "services/control/internal/modules/distribution/alias_capability_recipe_test.go": "747098b7b9352c404b1ce22fd88569bb2064b49ac5bb4f2d7c0c6c4efbbaad45",
+    "services/control/internal/modules/distribution/alias_capability_http_test.go": "d79dcd2efed5f481bc88f3071426baf2a35ae1518b59b049d6bfdc2fd1592a85",
+    "services/control/internal/modules/distribution/alias_read_http_test.go": "238259f90edea3f251f45eb4af843b9d5d6c74d43b584fa48aa9e83f09dab2d0"
+  },
+  "constructor": {
+    "path": "services/control/internal/modules/identity/http/handler.go",
+    "literal": "distributionService := &distribution.Service{DB: s.DB, Identity: s, Workspaces: w, Nodes: n, Deployments: d}",
+    "PublishAliasCapabilities": false,
+    "customer_configuration_selector": null
+  },
+  "DTO": "AliasReadView embeds the existing Alias, including paired schema59 description fields, with one optional non-null capabilities object; mutations and machine DTOs unchanged",
+  "evidence_behavior": {
+    "missing_or_stale": "omit object",
+    "paused_admin": "omit object",
+    "paused_portal": "existing hidden/not-found behavior",
+    "SQL_lookup_failure": "existing HTTP 503 / STORAGE_UNAVAILABLE"
+  },
+  "runtime_evidence": "retained predecessor registered-handler/PG execution; schema59 six description roots and one runtime-grant root qualified separately on 4f76102c",
+  "remaining": "execute the exact installed combined read source and DEV schema/SDK/Help before enabling production composition; full combined Gateway check/build gate and UI remain open"
+}

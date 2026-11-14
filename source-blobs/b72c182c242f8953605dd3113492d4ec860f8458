@@ -1,0 +1,39 @@
+database:
+    dsn_file: /run/projectone/runtime-dsn
+licensing:
+    trust_file: /run/projectone/license-trust.json
+security:
+    auth_hmac_key_file: /run/projectone/auth-hmac
+    mail_keyring_file: /run/projectone/mail-keyring.json
+    password_blocklist_file: /opt/projectone/security/password-blocklist.txt
+server:
+    admin_assets: /opt/projectone/admin
+    admin_origin: https://admin.lane-b.test:18443
+    listen_address: 0.0.0.0:8443
+    portal_assets: /opt/projectone/portal
+    portal_origin: https://portal.lane-b.test:18443
+    tls_certificate_file: /run/projectone/certificate.pem
+    tls_private_key_file: /run/projectone/private-key.pem
+smtp:
+    ca_file: /run/projectone/smtp-ca.pem
+    from_address: platform@lane-b.test
+    host: smtp.lane-b.test
+    port: 465
+    tls_mode: implicit_tls
+sso:
+    enabled: true
+    keyring_file: /run/projectone/sso-keyring.json
+    providers:
+        - ca_file: /run/projectone/gitea-ca.pem
+          dial_addresses:
+            - 172.31.250.30
+          issuer: https://git.lane-b.test:18444
+          origin: https://git.lane-b.test:18444
+telemetry:
+    logs_address: http://172.31.250.4:9428
+    metrics_address: http://172.31.250.3:8428
+    metrics_push_interval_seconds: 15
+    queue_capacity: 4096
+    request_timeout_seconds: 5
+topology:
+    size: single-node

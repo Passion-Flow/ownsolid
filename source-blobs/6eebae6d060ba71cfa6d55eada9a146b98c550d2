@@ -1,0 +1,19 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+test "$(cat ~/lane-rel-tools/checkpoint-help-final.CM200l0b/exit)" = 0
+test "$(cat ~/lane-rel-tools/checkpoint-help-delta.4hBkrMdm/exit)" = 0
+test -z "$(git status --porcelain)"
+test "$(git rev-parse --short HEAD)" = 60995351
+git rebase --onto refs/lane-rel/train-checkpoint-base-worker e47b4789
+git diff --exit-code 60995351..HEAD -- api/openapi tools/cli tools/codegen web docs/research/cli.md docs/research/public-api-inventory.md docs/research/in-product-help.md
+git diff --check refs/lane-rel/train-checkpoint-base-worker..HEAD
+git update-ref refs/lane-rel/checkpoint-help-worker-base HEAD
+git log -4 --oneline
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+unshare -n sh -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    make check-layout check-roadmap test-tools
+    go -C tools/cli test ./...
+'

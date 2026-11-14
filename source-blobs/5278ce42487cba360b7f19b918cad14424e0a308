@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:projectone:configuration:gateway:v1",
+  "title": "Gateway startup configuration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gateway_id",
+    "node_id",
+    "listen_address",
+    "backend_address",
+    "control_origin",
+    "control_ca_file",
+    "gateway_credential_file",
+    "tls_certificate_file",
+    "tls_private_key_file",
+    "state_directory"
+  ],
+  "properties": {
+    "gateway_id": {
+      "type": "string",
+      "format": "uuid",
+      "x-environment": "PROJECT_ONE_GATEWAY_GATEWAY_ID"
+    },
+    "node_id": {
+      "type": "string",
+      "format": "uuid",
+      "x-environment": "PROJECT_ONE_GATEWAY_NODE_ID"
+    },
+    "listen_address": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "description": "Numeric IPv4 loopback host:nonzero-port only; validated at startup.",
+      "x-environment": "PROJECT_ONE_GATEWAY_LISTEN_ADDRESS"
+    },
+    "backend_address": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "description": "Trusted operator configuration for the scoped colocated backend; numeric IPv4 loopback only. Never selected by a client request.",
+      "x-environment": "PROJECT_ONE_GATEWAY_BACKEND_ADDRESS"
+    },
+    "control_origin": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "format": "uri",
+      "description": "HTTPS origin only, no userinfo/path/query/fragment/trailing slash; private configured CA.",
+      "x-environment": "PROJECT_ONE_GATEWAY_CONTROL_ORIGIN"
+    },
+    "control_ca_file": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^/",
+      "x-environment": "PROJECT_ONE_GATEWAY_CONTROL_CA_FILE"
+    },
+    "gateway_credential_file": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^/",
+      "x-environment": "PROJECT_ONE_GATEWAY_GATEWAY_CREDENTIAL_FILE"
+    },
+    "tls_certificate_file": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^/",
+      "x-environment": "PROJECT_ONE_GATEWAY_TLS_CERTIFICATE_FILE"
+    },
+    "tls_private_key_file": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^/",
+      "x-environment": "PROJECT_ONE_GATEWAY_TLS_PRIVATE_KEY_FILE"
+    },
+    "state_directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^/",
+      "x-environment": "PROJECT_ONE_GATEWAY_STATE_DIRECTORY"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request_body_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576,
+          "default": 65536,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_REQUEST_BODY_BYTES"
+        },
+        "request_memory_budget_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 268435456,
+          "default": 67108864,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_REQUEST_MEMORY_BUDGET_BYTES"
+        },
+        "active_requests": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 4,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_ACTIVE_REQUESTS"
+        },
+        "queued_requests": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 512,
+          "default": 8,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_QUEUED_REQUESTS"
+        },
+        "queue_milliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 2000,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_QUEUE_MILLISECONDS"
+        },
+        "connect_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 2,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_CONNECT_SECONDS"
+        },
+        "control_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30,
+          "default": 5,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_CONTROL_SECONDS"
+        },
+        "request_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 90,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_REQUEST_SECONDS"
+        },
+        "idle_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 15,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_IDLE_SECONDS"
+        },
+        "shutdown_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30,
+          "default": 5,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_SHUTDOWN_SECONDS"
+        },
+        "response_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576,
+          "default": 1048576,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_RESPONSE_BYTES"
+        },
+        "stream_event_bytes": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 65536,
+          "default": 65536,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_STREAM_EVENT_BYTES"
+        },
+        "stream_total_bytes": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 16777216,
+          "default": 4194304,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_STREAM_TOTAL_BYTES"
+        },
+        "maximum_messages": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128,
+          "default": 32,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_MAXIMUM_MESSAGES"
+        },
+        "maximum_output_tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512,
+          "default": 512,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_MAXIMUM_OUTPUT_TOKENS"
+        },
+        "spool_max_entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536,
+          "default": 1000,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_SPOOL_MAX_ENTRIES"
+        },
+        "spool_max_bytes": {
+          "type": "integer",
+          "minimum": 4096,
+          "maximum": 268435456,
+          "default": 16777216,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_SPOOL_MAX_BYTES"
+        },
+        "outcome_retry_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 2,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_OUTCOME_RETRY_SECONDS"
+        },
+        "maximum_context_tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536,
+          "default": 2048,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_MAXIMUM_CONTEXT_TOKENS"
+        },
+        "control_idle_connections": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64,
+          "default": 2,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_CONTROL_IDLE_CONNECTIONS"
+        },
+        "minimum_free_disk_bytes": {
+          "type": "integer",
+          "minimum": 4096,
+          "maximum": 9007199254740991,
+          "default": 67108864,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_MINIMUM_FREE_DISK_BYTES"
+        },
+        "backend_idle_connections": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64,
+          "description": "Must not exceed active_requests; native startup enforces the relationship.",
+          "default": 4,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_BACKEND_IDLE_CONNECTIONS"
+        },
+        "runtime_threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 2,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_RUNTIME_THREADS"
+        },
+        "blocking_threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "default": 4,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_BLOCKING_THREADS"
+        },
+        "maximum_connections": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024,
+          "default": 64,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_MAXIMUM_CONNECTIONS"
+        },
+        "header_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30,
+          "default": 5,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_HEADER_SECONDS"
+        },
+        "header_bytes": {
+          "type": "integer",
+          "minimum": 8192,
+          "maximum": 65536,
+          "default": 16384,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_HEADER_BYTES"
+        },
+        "default_output_tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512,
+          "description": "Must not exceed maximum_output_tokens.",
+          "default": 128,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_DEFAULT_OUTPUT_TOKENS"
+        },
+        "default_temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 0.0,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_DEFAULT_TEMPERATURE"
+        },
+        "operator_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 30,
+          "x-environment": "PROJECT_ONE_GATEWAY_LIMIT_OPERATOR_SECONDS"
+        }
+      },
+      "description": "Omitted fields use the single owned Limits::default definition. Rust additionally validates memory-product, deadline, event/total and spool-entry relationships."
+    }
+  },
+  "description": "Protected JSON then optional explicit protected --env-file overrides. No ambient policy reads. Original JSON must validate; all overrides pass the same typed Configuration/Limits validation; restart required."
+}

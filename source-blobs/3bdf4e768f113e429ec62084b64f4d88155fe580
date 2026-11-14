@@ -1,0 +1,1061 @@
+From 5f0195fbb84d095e4517e5b92f6c87ffd4342af1 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 12:46:11 +0000
+Subject: [PATCH] SCH-108: Add authorized workspace quota status candidate
+
+Read live Workspace authority, quota policy and real held usage in one selected PostgreSQL transaction. Add Admin and Portal handler components without installing routes or changing the migration lineage. Preserve integral quantities and reject corrupt per-row usage before aggregation.
+
+Verify gofmt, diff hygiene, layout, roadmap and 61 tooling tests. Go, PostgreSQL and full repository gates are not yet qualified on this candidate; retain the resource window for DEL, TRN and OBS. No roadmap item is ticked.
+---
+ docs/product/status.md                        |   1 +
+ docs/research/lane-sch-questions.md           |   9 +
+ docs/research/scheduling-wait-reasons.md      |  51 +++
+ .../internal/modules/scheduling/README.md     |  44 +++
+ .../modules/scheduling/http/handler.go        |  80 +++++
+ .../scheduling/http/handler_postgres_test.go  | 101 ++++++
+ .../modules/scheduling/http/handler_test.go   |  60 ++++
+ .../modules/scheduling/reservation.go         |  10 +-
+ .../modules/scheduling/wait_reasons.go        |   2 +
+ .../scheduling/workspace_quota_status.go      | 175 ++++++++++
+ .../workspace_quota_status_postgres_test.go   | 328 ++++++++++++++++++
+ .../scheduling/workspace_quota_status_test.go |  63 ++++
+ 12 files changed, 920 insertions(+), 4 deletions(-)
+ create mode 100644 services/control/internal/modules/scheduling/http/handler.go
+ create mode 100644 services/control/internal/modules/scheduling/http/handler_postgres_test.go
+ create mode 100644 services/control/internal/modules/scheduling/http/handler_test.go
+ create mode 100644 services/control/internal/modules/scheduling/workspace_quota_status.go
+ create mode 100644 services/control/internal/modules/scheduling/workspace_quota_status_postgres_test.go
+ create mode 100644 services/control/internal/modules/scheduling/workspace_quota_status_test.go
+
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 6a11b483..a0fa8636 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -69,6 +69,7 @@ today and what is known to fail.
+ | Owner-transaction queue admission (SCH-103, open) | Candidate fair-share admission and exact replay through the workload owner's PostgreSQL write transaction | Disconnected Linux PostgreSQL 18.6 race tests with persistent owner fixture rows verified nine queue cases: current shares, dequeue after a lock wait, scope and reader refusal, cancellation, concurrent replay, owner rollback, atomic cancellation/release and a real committed dequeue whose wire acknowledgement was lost. Linux amd64 passed make check, make build and the Control module tests | No | Production migration and authenticated training readers and dispatch remain open. See the [training patch contract](../research/scheduling-queue-policy.md#training-owner-patch-contract) |
+ | Whole-job reservation and gang release (SCH-104, open) | One transactional hold for all replica groups and full exact slot evidence before release | Isolated Linux PostgreSQL 18.6 verified rollback of three provisional owner holds after quota refusal and a rejected COMMIT, replay after lost COMMIT acknowledgement, and refusal of partial, duplicate and stale stop evidence | No | Production migration, verified physical receipts, installed scheduler and the authenticated workload flow remain open. See [gang reservation and release](../research/scheduling-admission.md#atomic-gang-reservation-and-release) |
+ | Placement wait reasons (SCH-108, open) | Actionable guidance from the current queue, quota, reservation and reclaim decisions | Isolated Linux PostgreSQL 18.6 verified refreshed shortfalls after quota edits and release, exact reclaim evidence, replay and identical denial for foreign and missing scopes. Disconnected TLS returned guidance for the bound Workload UID and withheld it for stale conditions, replacement and forbidden reads. Disconnected PostgreSQL verified missing-policy guidance without a queue read or hold, then a successful retry without stale guidance after installing the policy | No | The authenticated caller needs the workload owner's durable controller UID binding. Live cell validation requires signed offline controller assets and scoped credentials. See the [installed workload handoff](../research/scheduling-wait-reasons.md#installed-workload-handoff) |
++| Authorized workspace quota status (SCH-108, open) | Local candidate reader and HTTP component; current Workspace authority, quota policy and held usage share one selected PostgreSQL transaction | New Go and PostgreSQL tests are written but have not run on this candidate. Layout, roadmap and 61 tooling tests passed | No | Production IAM dispatch, public OpenAPI generation and UI are not installed. Test execution requires the shared Linux resource window; this row does not qualify the candidate. See the [scope contract](../research/scheduling-wait-reasons.md#authorized-workspace-quota-status) |
+ | Borrowed quota and reclaim (SCH-109, open) | Exact per-attempt loans between sibling workspaces and ordered reclaim on a candidate PostgreSQL schema | Isolated Linux PostgreSQL 18.6 covered competing borrowers, the hard quota ceiling, waiting for exact release records, rollback, cancellation and lost commit acknowledgements. Foreign holds and claims were refused, a foreign victim release kept reclaim pending, and a foreign active hold preserved the quota-policy revision | No | Production schema, runtime stop delivery and audit, and the authenticated user flow remain open. See [borrowed quota research](../research/scheduling-quota-borrowing.md) |
+ | Live submission preflight (SCH-110, open) | Whole-job demand and safe workspace, borrowing and cell guidance from a read-only policy and reservation snapshot | Isolated Linux PostgreSQL 18.6 verified stable estimates within a snapshot, refreshed quota and release evidence in a new snapshot, scope denial and no premature hold or claim. The installed Workspace authority and fixture samples verified whole-job fit and refusal of expired, future, foreign or incomplete capacity | No | The TLS Workload/Job reader has no cell capacity producer. Registered cluster identity, common measurement time, complete totals/occupancy and the authorized offline submission flow remain open. See [production source boundary](../research/scheduling-admission.md#production-capacity-source-boundary) |
+ | Usage ledger transactions (TEN-106, open) | Append and cell-scoped totals on an unnumbered PostgreSQL migration candidate | PostgreSQL 18.6 with no external route recorded one event under 16 concurrent deliveries, retried a terminated backend transaction, replayed a committed transaction with its acknowledgement dropped and retained a valid event after timestamp rollback. Native and logically restored schema 55 upgrades preserved prior data and checksums. Foreign-cell receipt, local cell change and nonempty downgrade were refused. The installed SCRAM Control role passed append, report and bypass refusal under current and minimum ledger grants. The optional GW Report TLS patch passed with that role and candidate SQL | No | Formal migration, ledger grant and readiness policy, producer activation and operator access remain open. See [ledger research](../research/usage-ledger.md#serving-principal-and-ledger-grants) |
+diff --git a/docs/research/lane-sch-questions.md b/docs/research/lane-sch-questions.md
+index b43729b5..740fb130 100644
+--- a/docs/research/lane-sch-questions.md
++++ b/docs/research/lane-sch-questions.md
+@@ -59,6 +59,15 @@ database owner to land or authorize the exact fresh and restored fingerprints.
+   validation requires signed offline
+   controller assets and a ready isolated cell. See the
+   [installed workload handoff](scheduling-wait-reasons.md#installed-workload-handoff).
++  The owned quota-status reader and HTTP component now use the selected
++  Workspace authority and policy/usage locks in the same transaction.
++  The [quota status contract](scheduling-wait-reasons.md#authorized-workspace-quota-status)
++  contains no job-readiness or physical-capacity claim. IAM owns the installed
++  authenticated dispatcher; Web owns its contract generation and UI.
++  Their composition remains open. A job-specific explanation also needs a
++  workload-owner read on the caller's executor and its persisted cell/UID
++  binding. The current training Get opens a separate transaction and its
++  saved wait-code text cannot establish a fresh scheduling decision.
+ - SCH-105 requires a durable preemption attempt, explicit checkpoint support
+   from the workload owner, a bounded retry policy and cell confirmation before
+   resource release. Kueue [preemption](https://kueue.sigs.k8s.io/docs/concepts/preemption/)
+diff --git a/docs/research/scheduling-wait-reasons.md b/docs/research/scheduling-wait-reasons.md
+index 3e0c916c..14d663ad 100644
+--- a/docs/research/scheduling-wait-reasons.md
++++ b/docs/research/scheduling-wait-reasons.md
+@@ -148,3 +148,54 @@ Successful admission must have no lingering configuration reason.
+ This uses the same upstream decision/projection boundary and the
+ existing licensed Go/PostgreSQL stack above. No dependency, capacity
+ sample, model, dataset or production owner hook is added.
++
++## Authorized workspace quota status
++
++[Kueue ClusterQueue status](https://kueue.sigs.k8s.io/docs/concepts/cluster_queue/)
++distinguishes reserved quota from admitted and executing workloads. Expose the
++ownsolid workspace's configured guarantee, hard ceiling and aggregate held
++reservations as quota accounting. Hard ceiling minus held reservations is
++`unreserved_quota`; it is not physical availability, lendable capacity or a
++promise that a particular job can start. Borrowing, queue turn, topology and
++execution remain separate decisions.
++
++Use the selected repository and the existing Workspace owner's
++`ReadScopeWithin` in the same READ COMMITTED transaction as the quota read.
++The owner rechecks the live session and membership. Ignore cached actor
++workspace and role fields. Ordinary current workspace members may read this
++resource allocation; they gain no policy mutation or metering authority.
++Acquire the shared policy fence and existing workspace reservation lock before
++reading policy and held usage. PostgreSQL's
++[row and transaction advisory locks](https://www.postgresql.org/docs/18/explicit-locking.html)
++keep replacement, reserve and release ordered through the confirmed read
++transaction outcome. A separate authority transaction followed by a pool read
++would allow revoked authority or a mixed policy/usage result.
++
++An absent policy returns `unconfigured` with fixed operator configuration
++guidance and no quantities. An authorized workspace without an allocation
++returns `unallocated` with workspace allocation guidance; inaccessible and
++missing workspaces remain indistinguishable and reveal neither state nor
++revision. A configured allocation returns only its own resource rows, sorted
++by resource. Encode integral resource quantities as decimal strings so byte
++counts and aggregate reservations retain int64 precision through browser JSON.
++Fail closed on malformed, overflowing, foreign-cell or over-ceiling active
++usage. Validate each contributing demand as an integral, nonnegative JSON number
++before trusting SUM; a positive row must not conceal a negative, fractional or
++string-valued row. Return no payload on any transaction failure, including an uncertain
++commit. Never include reservation identities, other workspaces, ancestor
++amounts, raw database/controller messages or stored job wait text.
++
++Verify real authenticated PostgreSQL reads for Admin and Portal, current
++membership and session revocation, forged cached scope, foreign installation
++scope, absent policy and allocation, committed reserve/release and a rolled
++back reserve. Exercise a blocked reservation lock to show that a reader sees
++the committed usage after it waits, and verify data corruption produces no
++payload. Check uncertain transaction outcomes independently of payload
++projection. HTTP composition, the public OpenAPI contract, translations and
++the UI remain integrations owned by IAM and Web; an uninstalled module handler
++is not an end-to-end public entrance or completion of SCH-108.
++
++The Go, pgx and PostgreSQL licences above cover this addition. The existing
++google/uuid dependency uses the [BSD-3-Clause licence](https://github.com/google/uuid/blob/master/LICENSE),
++permitting commercial use, redistribution with notices and offline use.
++No new dependency, controller asset, model or dataset is introduced.
+diff --git a/services/control/internal/modules/scheduling/README.md b/services/control/internal/modules/scheduling/README.md
+index 5e9aa2a8..f317411f 100644
+--- a/services/control/internal/modules/scheduling/README.md
++++ b/services/control/internal/modules/scheduling/README.md
+@@ -101,3 +101,47 @@ go -C services/control test -p 1 -race -tags repository_integration ./internal/m
+ The wire fault test requires an isolated plaintext loopback endpoint and
+ skips a Unix-only or TLS endpoint. Check its explicit PASS when qualifying
+ unknown-commit replay.
++
++## Authorized workspace quota status
++
++`ReadWorkspaceQuotaStatus` uses the selected repository and
++`workspaces.Service.ReadScopeWithin` in one bounded transaction. It rechecks the
++current session, source and membership, then locks policy and workspace usage
++in the existing reservation order. Current members may read their workspace;
++Admin uses its installed tenant scope. Cached actor workspace fields do not
++select the tenant. A failed or uncertain transaction returns an empty result.
++
++The status distinguishes `unconfigured`, `unallocated` and `configured`.
++Only an actual allocation has resource rows. Each row contains the workspace's
++guarantee, hard limit, held reservations and `unreserved_quota`, encoded as
++decimal strings. CPU uses millicores, memory bytes and GPUs whole devices.
++Unreserved quota is accounting; queue turn, borrowing, placement and physical
++capacity can still prevent a job from starting. No job or sibling identity,
++ancestor amount, cell capacity or historical wait code is returned.
++
++The `http.Handler` component accepts:
++
++- `GET /api/v1/workspaces/{workspace}/scheduling/quota` for Portal.
++- `GET /api/v1/admin/scheduling/quota?workspace_id={workspace}` for Admin.
++
++Both reject request bodies, ambiguous or unknown selectors and the wrong
++audience, and set `Cache-Control: no-store`. They call the same authenticated
++reader and return no success payload on failure.
++
++These routes are **not installed** in the production dispatcher. IAM must
++import the scheduling HTTP package, construct its `Handler{Workspaces: w}`
++from the already installed Workspace authority, and dispatch
++`schedulinghttp.Owns(path)` **before** the general Workspace routes. Forward
++the same response writer, request, authenticated actor and request ID to
++`Handle`; retain the owner's session/CSRF/error-envelope processing. Web must
++publish the matching OpenAPI contract, generated client, translations and UI
++in the same composed feature. No alternate authentication or pool is needed.
++
++The PostgreSQL tests use the installed Workspace authority with candidate
++quota tables in their own disposable schema. They do not prove production
++router composition, native database role grants or an installed cell flow.
++With the protected loopback `PROJECT_ONE_TEST_DSN_FILE` configured:
++
++```sh
++go -C services/control test -p 1 -race ./internal/modules/scheduling/... -run '^(TestWorkspaceQuotaStatus|TestQuotaReadRejects|TestPostgresWorkspaceQuotaStatus|TestPostgresHTTPWorkspaceQuotaStatus)' -count=1 -v
++```
+diff --git a/services/control/internal/modules/scheduling/http/handler.go b/services/control/internal/modules/scheduling/http/handler.go
+new file mode 100644
+index 00000000..0eabb86b
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/http/handler.go
+@@ -0,0 +1,80 @@
++// Package http adapts authenticated scheduling reads to the versioned entrances.
++// The identity owner retains authentication, response encoding and composition.
++package http
++
++import (
++	"errors"
++	"net/http"
++	"net/url"
++	"strings"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/scheduling"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++)
++
++// Handler borrows the installed Workspace authority; it owns no authentication.
++type Handler struct {
++	Workspaces *workspaces.Service
++}
++
++// Owns identifies scheduling paths before the general Workspace dispatcher.
++func Owns(path string) bool {
++	parts := strings.Split(path, "/")
++	return len(parts) >= 5 && parts[0] == "" && parts[1] == "api" && parts[2] == "v1" &&
++		(parts[3] == "admin" && parts[4] == "scheduling" ||
++			len(parts) >= 6 && parts[3] == "workspaces" && parts[5] == "scheduling")
++}
++
++// Handle reads a quota status for a server-authenticated actor. The composition
++// owner encodes only a successful result and applies its standard error envelope.
++func (h *Handler) Handle(w http.ResponseWriter, r *http.Request, actor identity.Auth, _ string) (any, int, error) {
++	w.Header().Set("Cache-Control", "no-store")
++	missing := errors.New("RESOURCE_NOT_FOUND")
++	bad := errors.New("VALIDATION_FAILED")
++	if !Owns(r.URL.Path) || r.URL.EscapedPath() != r.URL.Path || r.Method != http.MethodGet {
++		return nil, 0, missing
++	}
++	query, err := url.ParseQuery(r.URL.RawQuery)
++	if err != nil || r.ContentLength != 0 || len(r.TransferEncoding) != 0 ||
++		r.Body != nil && r.Body != http.NoBody {
++		return nil, 0, bad
++	}
++	parts := strings.Split(r.URL.Path, "/")
++	var workspace string
++	if parts[3] == "admin" {
++		if actor.Me.Audience != "admin" || !actor.Me.User.IsPlatformAdmin {
++			return nil, 0, missing
++		}
++		if len(parts) != 6 || parts[5] != "quota" {
++			return nil, 0, missing
++		}
++		ids := query["workspace_id"]
++		if len(query) != 1 || len(ids) != 1 || !workspaces.ValidID(ids[0]) {
++			return nil, 0, bad
++		}
++		workspace = ids[0]
++	} else {
++		if actor.Me.Audience != "portal" {
++			return nil, 0, missing
++		}
++		if len(parts) != 7 || parts[6] != "quota" {
++			return nil, 0, missing
++		}
++		if len(query) != 0 || !workspaces.ValidID(parts[4]) {
++			return nil, 0, bad
++		}
++		workspace = parts[4]
++	}
++	if h == nil {
++		return nil, 0, errors.New("STORAGE_UNAVAILABLE")
++	}
++	out, err := scheduling.ReadWorkspaceQuotaStatus(r.Context(), h.Workspaces, actor, workspace)
++	if err != nil {
++		if errors.Is(err, scheduling.ErrQuotaPolicyUnavailable) || errors.Is(err, scheduling.ErrReservationTransaction) {
++			return nil, 0, errors.New("STORAGE_UNAVAILABLE")
++		}
++		return nil, 0, err
++	}
++	return out, http.StatusOK, nil
++}
+diff --git a/services/control/internal/modules/scheduling/http/handler_postgres_test.go b/services/control/internal/modules/scheduling/http/handler_postgres_test.go
+new file mode 100644
+index 00000000..fe9b5c99
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/http/handler_postgres_test.go
+@@ -0,0 +1,101 @@
++package http
++
++import (
++	"encoding/json"
++	"net/http/httptest"
++	"os"
++	"strings"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/scheduling"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/jackc/pgx/v5"
++)
++
++func TestPostgresHTTPWorkspaceQuotaStatus(t *testing.T) {
++	accounts := identityfixture.New(t)
++	password := identityfixture.Bootstrap(t, accounts)
++	admin := identityfixture.Login(t, accounts, "admin@example.invalid", password, "admin")
++	portal := identityfixture.Login(t, accounts, "admin@example.invalid", password, "portal")
++	for _, file := range []string{"../testdata/quota.sql", "../testdata/reservations.sql"} {
++		body, err := os.ReadFile(file)
++		if err != nil {
++			t.Fatal(err)
++		}
++		if _, err := accounts.DB.Exec(t.Context(), string(body)); err != nil {
++			t.Fatal(err)
++		}
++	}
++	h := &Handler{Workspaces: &workspaces.Service{DB: accounts.DB, Identity: accounts}}
++	scope := portal.Me.Workspace
++	paths := []string{"/api/v1/admin/scheduling/quota?workspace_id=" + scope.ID,
++		"/api/v1/workspaces/" + scope.ID + "/scheduling/quota"}
++	actors := []identity.Auth{admin, portal}
++	read := func(actor identity.Auth, path string) scheduling.WorkspaceQuotaStatus {
++		t.Helper()
++		w := httptest.NewRecorder()
++		value, status, err := h.Handle(w, httptest.NewRequest("GET", path, nil).WithContext(t.Context()), actor, "")
++		if err != nil || status != 200 || w.Header().Get("Cache-Control") != "no-store" {
++			t.Fatalf("authenticated handler: %+v, %d, %v", value, status, err)
++		}
++		out, ok := value.(scheduling.WorkspaceQuotaStatus)
++		if !ok || out.WorkspaceID != scope.ID {
++			t.Fatalf("incorrect public subject: %+v", value)
++		}
++		return out
++	}
++	for i, actor := range actors {
++		out := read(actor, paths[i])
++		if out.State != scheduling.WorkspaceQuotaUnconfigured || out.Reason == nil ||
++			out.Reason.Action != scheduling.ConfigureQuotaPolicy || out.Resources != nil {
++			t.Fatalf("missing policy became capacity: %+v", out)
++		}
++	}
++	limit := scheduling.Resources{scheduling.CPU: 2000, scheduling.NVIDIAGPU: 1}
++	policy := []scheduling.QuotaNode{
++		{ID: "platform", Level: scheduling.PlatformQuota, Limits: scheduling.Quota{Guaranteed: limit, Burst: limit}},
++		{ID: scope.TenantID, ParentID: "platform", TenantID: scope.TenantID, Level: scheduling.TenantQuota, Limits: scheduling.Quota{Guaranteed: limit, Burst: limit}},
++		{ID: "department", ParentID: scope.TenantID, TenantID: scope.TenantID, Level: scheduling.DepartmentQuota, Limits: scheduling.Quota{Guaranteed: limit, Burst: limit}},
++		{ID: scope.ID, ParentID: "department", TenantID: scope.TenantID, Level: scheduling.WorkspaceQuota, Limits: scheduling.Quota{Guaranteed: limit, Burst: limit}},
++	}
++	if err := pgx.BeginFunc(t.Context(), accounts.DB, func(tx pgx.Tx) error {
++		_, _, err := scheduling.ReplaceQuotaWithin(t.Context(), tx, 0, policy)
++		return err
++	}); err != nil {
++		t.Fatal(err)
++	}
++	for i, actor := range actors {
++		out := read(actor, paths[i])
++		body, err := json.Marshal(out)
++		if err != nil || out.State != scheduling.WorkspaceQuotaConfigured || out.PolicyRevision != 1 ||
++			len(out.Resources) != 2 || !strings.Contains(string(body), `"hard_limit":"2000"`) ||
++			strings.Contains(string(body), "tenant_id") || strings.Contains(string(body), "department") ||
++			strings.Contains(string(body), "available") || strings.Contains(string(body), "admitted") {
++			t.Fatalf("public payload is inaccurate or exposes another scope: %s, %v", body, err)
++		}
++	}
++	if _, err := accounts.DB.Exec(t.Context(), "UPDATE scheduling_quota_policy SET allocation='[]'::jsonb"); err != nil {
++		t.Fatal(err)
++	}
++	value, status, failure := h.Handle(httptest.NewRecorder(), httptest.NewRequest("GET", paths[0], nil), admin, "")
++	if value != nil || status != 0 || failure == nil || failure.Error() != "STORAGE_UNAVAILABLE" {
++		t.Fatalf("invalid installed policy exposed a success: %+v, %d, %v", value, status, failure)
++	}
++	problem := httptest.NewRecorder()
++	httpserver.Problem(problem, "quota-status-fixture", failure)
++	if problem.Code != 503 || strings.Contains(problem.Body.String(), "allocation") ||
++		!strings.Contains(problem.Body.String(), "STORAGE_UNAVAILABLE") {
++		t.Fatalf("unsafe or nonretryable public failure: %d, %s", problem.Code, problem.Body.String())
++	}
++	if _, err := accounts.DB.Exec(t.Context(),
++		"UPDATE sessions SET revoked_at=clock_timestamp(),revoke_reason='logout' WHERE id=$1", portal.SessionID); err != nil {
++		t.Fatal(err)
++	}
++	out, status, err := h.Handle(httptest.NewRecorder(), httptest.NewRequest("GET", paths[1], nil), portal, "")
++	if err == nil || err.Error() != "AUTH_SESSION_EXPIRED" || out != nil || status != 0 {
++		t.Fatalf("revoked actor received a success envelope: %+v, %d, %v", out, status, err)
++	}
++}
+diff --git a/services/control/internal/modules/scheduling/http/handler_test.go b/services/control/internal/modules/scheduling/http/handler_test.go
+new file mode 100644
+index 00000000..88d00b49
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/http/handler_test.go
+@@ -0,0 +1,60 @@
++package http
++
++import (
++	"bytes"
++	"net/http"
++	"net/http/httptest"
++	"strings"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/google/uuid"
++)
++
++func TestQuotaReadRejectsAmbiguousSelectorsAndWrongEntrance(t *testing.T) {
++	id := uuid.NewString()
++	portal := "/api/v1/workspaces/" + id + "/scheduling/quota"
++	admin := "/api/v1/admin/scheduling/quota"
++	for _, test := range []struct {
++		name, method, path, audience, body, code string
++		admin                                    bool
++	}{
++		{name: "wrong portal audience", path: portal, audience: "admin", admin: true, code: "RESOURCE_NOT_FOUND"},
++		{name: "wrong admin audience", path: admin + "?workspace_id=" + id, audience: "portal", code: "RESOURCE_NOT_FOUND"},
++		{name: "nonadmin", path: admin + "?workspace_id=" + id, audience: "admin", code: "RESOURCE_NOT_FOUND"},
++		{name: "mutation", method: "POST", path: portal, audience: "portal", code: "RESOURCE_NOT_FOUND"},
++		{name: "trailing slash", path: portal + "/", audience: "portal", code: "RESOURCE_NOT_FOUND"},
++		{name: "escaped selector", path: strings.Replace(portal, "/scheduling/", "/%73cheduling/", 1), audience: "portal", code: "RESOURCE_NOT_FOUND"},
++		{name: "invalid selector", path: "/api/v1/workspaces/invalid/scheduling/quota", audience: "portal", code: "VALIDATION_FAILED"},
++		{name: "unrelated route", path: "/api/v1/workspaces/" + id + "/notes", audience: "portal", code: "RESOURCE_NOT_FOUND"},
++		{name: "portal tenant selector", path: portal + "?tenant_id=" + id, audience: "portal", code: "VALIDATION_FAILED"},
++		{name: "portal workspace selector", path: portal + "?workspace_id=" + id, audience: "portal", code: "VALIDATION_FAILED"},
++		{name: "missing admin selector", path: admin, audience: "admin", admin: true, code: "VALIDATION_FAILED"},
++		{name: "duplicate selector", path: admin + "?workspace_id=" + id + "&workspace_id=" + id, audience: "admin", admin: true, code: "VALIDATION_FAILED"},
++		{name: "unknown selector", path: admin + "?workspace_id=" + id + "&tenant_id=" + id, audience: "admin", admin: true, code: "VALIDATION_FAILED"},
++		{name: "malformed query", path: portal + "?%zz=1", audience: "portal", code: "VALIDATION_FAILED"},
++		{name: "missing installed authority", path: portal, audience: "portal", code: "STORAGE_UNAVAILABLE"},
++		{name: "get body", path: portal, audience: "portal", body: "{}", code: "VALIDATION_FAILED"},
++	} {
++		t.Run(test.name, func(t *testing.T) {
++			method := test.method
++			if method == "" {
++				method = http.MethodGet
++			}
++			r := httptest.NewRequest(method, test.path, nil)
++			if test.body != "" {
++				r = httptest.NewRequest(method, test.path, bytes.NewBufferString(test.body))
++			}
++			actor := identity.Auth{}
++			actor.Me.Audience, actor.Me.User.IsPlatformAdmin = test.audience, test.admin
++			w := httptest.NewRecorder()
++			out, status, err := (&Handler{}).Handle(w, r, actor, "")
++			if err == nil || err.Error() != test.code || out != nil || status != 0 {
++				t.Fatalf("invalid request exposed data: %+v, %d, %v", out, status, err)
++			}
++			if w.Header().Get("Cache-Control") != "no-store" {
++				t.Fatal("private read may be cached")
++			}
++		})
++	}
++}
+diff --git a/services/control/internal/modules/scheduling/reservation.go b/services/control/internal/modules/scheduling/reservation.go
+index 6b944e4c..81df91d4 100644
+--- a/services/control/internal/modules/scheduling/reservation.go
++++ b/services/control/internal/modules/scheduling/reservation.go
+@@ -281,7 +281,9 @@ func readWorkspaceUsageWithin(ctx context.Context, q transaction.Executor, tenan
+ func readUsageByWorkspaceWithin(ctx context.Context, q transaction.Executor, tenant string, workspaces []string) (map[string]Resources, error) {
+ 	rows, err := q.Query(ctx, transaction.SQL(transaction.PostgreSQL,
+ 		`SELECT s.workspace_id::text,r.key,sum(r.value::numeric)::text,
+- bool_and((s.site_id=local_site_id() AND s.cell_id=local_cell_id()) IS TRUE)
++ bool_and((s.site_id=local_site_id() AND s.cell_id=local_cell_id()
++  AND jsonb_typeof(s.demand -> r.key)='number'
++  AND r.value::numeric >= 0 AND r.value::numeric=trunc(r.value::numeric)) IS TRUE)
+  FROM scheduling_reservations s CROSS JOIN LATERAL jsonb_each_text(s.demand) r
+  WHERE s.tenant_id=$1 AND s.workspace_id=ANY($2::uuid[]) AND s.released_at IS NULL
+  GROUP BY s.workspace_id,r.key`, tenant, workspaces))
+@@ -293,11 +295,11 @@ func readUsageByWorkspaceWithin(ctx context.Context, q transaction.Executor, ten
+ 	for rows.Next() {
+ 		var workspace, raw string
+ 		var resource Resource
+-		var local bool
+-		if err := rows.Scan(&workspace, &resource, &raw, &local); err != nil {
++		var valid bool
++		if err := rows.Scan(&workspace, &resource, &raw, &valid); err != nil {
+ 			return nil, err
+ 		}
+-		if !local {
++		if !valid {
+ 			return nil, ErrQuotaPolicyUnavailable
+ 		}
+ 		quantity, err := parseReservationUsage(resource, raw)
+diff --git a/services/control/internal/modules/scheduling/wait_reasons.go b/services/control/internal/modules/scheduling/wait_reasons.go
+index 097205bb..ae56e933 100644
+--- a/services/control/internal/modules/scheduling/wait_reasons.go
++++ b/services/control/internal/modules/scheduling/wait_reasons.go
+@@ -14,6 +14,8 @@ type WaitAction string
+ const (
+ 	// ConfigureQuotaPolicy asks the platform operator to install the admission quota policy.
+ 	ConfigureQuotaPolicy WaitAction = "configure_quota_policy"
++	// ConfigureWorkspaceQuota asks the operator to allocate quota to this workspace.
++	ConfigureWorkspaceQuota WaitAction = "configure_workspace_quota"
+ 	// ChangeRequestOrQuota applies when the request exceeds its quota ceiling.
+ 	ChangeRequestOrQuota WaitAction = "change_request_or_quota"
+ 	// ChangeRequestOrCell applies when the cell cannot meet the whole request.
+diff --git a/services/control/internal/modules/scheduling/workspace_quota_status.go b/services/control/internal/modules/scheduling/workspace_quota_status.go
+new file mode 100644
+index 00000000..806fa920
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/workspace_quota_status.go
+@@ -0,0 +1,175 @@
++package scheduling
++
++import (
++	"context"
++	"errors"
++	"slices"
++	"strconv"
++	"strings"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// WorkspaceQuotaState distinguishes missing configuration from a real allocation.
++type WorkspaceQuotaState string
++
++const (
++	// WorkspaceQuotaUnconfigured means no platform allocation policy is installed.
++	WorkspaceQuotaUnconfigured WorkspaceQuotaState = "unconfigured"
++	// WorkspaceQuotaUnallocated means this authorized workspace has no allocation.
++	WorkspaceQuotaUnallocated WorkspaceQuotaState = "unallocated"
++	// WorkspaceQuotaConfigured means the resource rows describe an actual allocation.
++	WorkspaceQuotaConfigured WorkspaceQuotaState = "configured"
++)
++
++// WorkspaceQuotaReason contains fixed guidance without private diagnostic text.
++type WorkspaceQuotaReason struct {
++	Code   string     `json:"code"`
++	Action WaitAction `json:"action"`
++}
++
++// WorkspaceQuotaResource accounts for one resource in its native integer units.
++// Quantities are decimal strings to preserve int64 precision in browser JSON.
++// UnreservedQuota does not establish physical availability or job admission.
++type WorkspaceQuotaResource struct {
++	Resource        Resource `json:"resource"`
++	Guaranteed      string   `json:"guaranteed"`
++	HardLimit       string   `json:"hard_limit"`
++	Reserved        string   `json:"reserved"`
++	UnreservedQuota string   `json:"unreserved_quota"`
++}
++
++// WorkspaceQuotaStatus contains only the subject workspace's configured quota
++// and held usage. Missing configuration has no resource rows.
++type WorkspaceQuotaStatus struct {
++	WorkspaceID    string                   `json:"workspace_id"`
++	PolicyRevision int64                    `json:"policy_revision"`
++	State          WorkspaceQuotaState      `json:"state"`
++	Resources      []WorkspaceQuotaResource `json:"resources,omitempty"`
++	Reason         *WorkspaceQuotaReason    `json:"reason,omitempty"`
++}
++
++// ReadWorkspaceQuotaStatus rechecks the authenticated actor and Workspace scope
++// through the selected repository, then reads quota and reservations under the
++// same transaction's policy/workspace fences. Only confirmed reads return data.
++func ReadWorkspaceQuotaStatus(ctx context.Context, authority *workspaces.Service, actor identity.Auth, workspace string) (WorkspaceQuotaStatus, error) {
++	if ctx == nil || authority == nil || authority.Identity == nil {
++		return WorkspaceQuotaStatus{}, ErrQuotaPolicyUnavailable
++	}
++	store, err := authority.Identity.Repository()
++	if err != nil {
++		return WorkspaceQuotaStatus{}, quotaStatusError(err)
++	}
++	if store.Dialect() != transaction.PostgreSQL {
++		return WorkspaceQuotaStatus{}, ErrReservationTransaction
++	}
++	ctx, cancel := context.WithTimeout(ctx, config.Seconds(authority.Identity.Config.Policy().HTTP.RequestSeconds))
++	defer cancel()
++
++	var out WorkspaceQuotaStatus
++	err = store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
++		scope, err := authority.ReadScopeWithin(ctx, q, actor, workspace)
++		if err != nil {
++			return err
++		}
++		out, err = readWorkspaceQuotaStatusWithin(ctx, q, scope.TenantID, scope.ID)
++		return err
++	})
++	if err != nil {
++		return WorkspaceQuotaStatus{}, quotaStatusError(err)
++	}
++	return out, nil
++}
++
++func readWorkspaceQuotaStatusWithin(ctx context.Context, q transaction.Executor, tenant, workspace string) (WorkspaceQuotaStatus, error) {
++	out := WorkspaceQuotaStatus{WorkspaceID: workspace}
++	revision, err := lockReservationPolicy(ctx, q)
++	if errors.Is(err, ErrQuotaUnconfigured) {
++		out.State = WorkspaceQuotaUnconfigured
++		out.Reason = &WorkspaceQuotaReason{Code: ErrQuotaUnconfigured.Error(), Action: ConfigureQuotaPolicy}
++		return out, nil
++	}
++	if err != nil {
++		return WorkspaceQuotaStatus{}, err
++	}
++	if err := lockReservationWorkspace(ctx, q, tenant, workspace); err != nil {
++		return WorkspaceQuotaStatus{}, err
++	}
++	readRevision, tree, err := readQuotaPolicyWithin(ctx, q)
++	if err != nil || tree == nil || revision != readRevision {
++		return WorkspaceQuotaStatus{}, ErrQuotaPolicyUnavailable
++	}
++	used, err := readWorkspaceUsageWithin(ctx, q, tenant, workspace)
++	if err != nil {
++		return WorkspaceQuotaStatus{}, err
++	}
++	out.PolicyRevision = revision
++	node, err := tree.workspace(tenant, workspace)
++	if errors.Is(err, ErrQuotaScopeNotFound) && len(used) == 0 {
++		out.State = WorkspaceQuotaUnallocated
++		out.Reason = &WorkspaceQuotaReason{Code: "SCHEDULING_QUOTA_UNALLOCATED", Action: ConfigureWorkspaceQuota}
++		return out, nil
++	}
++	if err != nil {
++		return WorkspaceQuotaStatus{}, ErrQuotaPolicyUnavailable
++	}
++	out.Resources, err = workspaceQuotaResources(node.Limits, used)
++	if err != nil {
++		return WorkspaceQuotaStatus{}, err
++	}
++	out.State = WorkspaceQuotaConfigured
++	return out, nil
++}
++
++func workspaceQuotaResources(quota Quota, used Resources) ([]WorkspaceQuotaResource, error) {
++	reserved, err := normalizeResources(used)
++	if err != nil || !reserved.fits(quota.Burst) {
++		return nil, ErrQuotaPolicyUnavailable
++	}
++	keys := make([]Resource, 0, len(quota.Burst))
++	for resource := range quota.Burst {
++		keys = append(keys, resource)
++	}
++	slices.SortFunc(keys, func(a, b Resource) int { return strings.Compare(string(a), string(b)) })
++	out := make([]WorkspaceQuotaResource, 0, len(keys))
++	for _, resource := range keys {
++		limit, held := quota.Burst[resource], reserved[resource]
++		out = append(out, WorkspaceQuotaResource{
++			Resource: resource, Guaranteed: strconv.FormatInt(quota.Guaranteed[resource], 10),
++			HardLimit: strconv.FormatInt(limit, 10), Reserved: strconv.FormatInt(held, 10),
++			UnreservedQuota: strconv.FormatInt(limit-held, 10),
++		})
++	}
++	return out, nil
++}
++
++func quotaStatusError(err error) error {
++	if kind, ok := transaction.CommitOutcome(err); ok {
++		return &transaction.Error{Kind: kind}
++	}
++	var storage *transaction.Error
++	if errors.As(err, &storage) {
++		switch storage.Kind {
++		case transaction.Cancelled, transaction.Timeout, transaction.LockTimeout, transaction.Deadlock:
++			return &transaction.Error{Kind: storage.Kind}
++		default:
++			return &transaction.Error{Kind: transaction.Unavailable}
++		}
++	}
++	switch {
++	case errors.Is(err, context.Canceled):
++		return &transaction.Error{Kind: transaction.Cancelled}
++	case errors.Is(err, context.DeadlineExceeded):
++		return &transaction.Error{Kind: transaction.Timeout}
++	}
++	switch err.Error() {
++	case "RESOURCE_NOT_FOUND", "ACCESS_DENIED", "AUTH_SESSION_EXPIRED",
++		"AUTH_ACCOUNT_DISABLED", "AUTH_SOURCE_DISABLED", "AUTH_REAUTHENTICATION_REQUIRED":
++		return errors.New(err.Error())
++	default:
++		return ErrQuotaPolicyUnavailable
++	}
++}
+diff --git a/services/control/internal/modules/scheduling/workspace_quota_status_postgres_test.go b/services/control/internal/modules/scheduling/workspace_quota_status_postgres_test.go
+new file mode 100644
+index 00000000..6e6c0345
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/workspace_quota_status_postgres_test.go
+@@ -0,0 +1,328 @@
++package scheduling
++
++import (
++	"context"
++	"errors"
++	"reflect"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5"
++)
++
++type authenticatedQuotaFixture struct {
++	accounts  *identity.Service
++	authority *workspaces.Service
++	admin     identity.Auth
++	portal    identity.Auth
++	store     transaction.Store
++	policy    []QuotaNode
++	attempt   Attempt
++	intent    JobIntent
++}
++
++func newAuthenticatedQuotaFixture(t *testing.T) authenticatedQuotaFixture {
++	t.Helper()
++	accounts := identityfixture.New(t)
++	password := identityfixture.Bootstrap(t, accounts)
++	admin := identityfixture.Login(t, accounts, "admin@example.invalid", password, "admin")
++	portal := identityfixture.Login(t, accounts, "admin@example.invalid", password, "portal")
++	store, err := accounts.Repository()
++	if err != nil {
++		t.Fatal(err)
++	}
++	if _, err := accounts.DB.Exec(t.Context(), testQuotaSQL+testReservationSQL); err != nil {
++		t.Fatal(err)
++	}
++	scope := portal.Me.Workspace
++	limit := Resources{CPU: 4000, NVIDIAGPU: 2}
++	policy := []QuotaNode{
++		{ID: "platform", Level: PlatformQuota, Limits: Quota{limit, limit}},
++		{ID: scope.TenantID, ParentID: "platform", TenantID: scope.TenantID, Level: TenantQuota, Limits: Quota{limit, limit}},
++		{ID: "department", ParentID: scope.TenantID, TenantID: scope.TenantID, Level: DepartmentQuota, Limits: Quota{limit, limit}},
++		{ID: scope.ID, ParentID: "department", TenantID: scope.TenantID, Level: WorkspaceQuota, Limits: Quota{limit, limit}},
++	}
++	attempt := Attempt{TenantID: scope.TenantID, WorkspaceID: scope.ID, ID: uuid.NewString(),
++		Number: 1, Kind: Training, SourceID: uuid.NewString()}
++	intent := JobIntent{Version: IntentVersion, Kind: attempt.Kind, SourceID: attempt.SourceID,
++		Groups: []ReplicaGroup{{Name: "worker", Replicas: 1, Requests: Resources{CPU: 1000, NVIDIAGPU: 1}}}}
++	return authenticatedQuotaFixture{accounts, &workspaces.Service{DB: accounts.DB, Identity: accounts},
++		admin, portal, store, policy, attempt, intent}
++}
++
++func (f authenticatedQuotaFixture) replace(t *testing.T, revision int64, policy []QuotaNode) {
++	t.Helper()
++	if err := pgx.BeginFunc(t.Context(), f.accounts.DB, func(tx pgx.Tx) error {
++		_, _, err := ReplaceQuotaWithin(t.Context(), tx, revision, policy)
++		return err
++	}); err != nil {
++		t.Fatal(err)
++	}
++}
++
++func (f authenticatedQuotaFixture) exec(t *testing.T, sql string, args ...any) {
++	t.Helper()
++	if _, err := f.accounts.DB.Exec(t.Context(), sql, args...); err != nil {
++		t.Fatal(err)
++	}
++}
++
++func (f authenticatedQuotaFixture) read(t *testing.T, actor identity.Auth) WorkspaceQuotaStatus {
++	t.Helper()
++	out, err := ReadWorkspaceQuotaStatus(t.Context(), f.authority, actor, f.attempt.WorkspaceID)
++	if err != nil {
++		t.Fatal(err)
++	}
++	return out
++}
++
++func TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting(t *testing.T) {
++	f := newAuthenticatedQuotaFixture(t)
++	workspace := f.attempt.WorkspaceID
++	want := WorkspaceQuotaStatus{WorkspaceID: workspace, State: WorkspaceQuotaUnconfigured,
++		Reason: &WorkspaceQuotaReason{Code: "SCHEDULING_QUOTA_UNCONFIGURED", Action: ConfigureQuotaPolicy}}
++	for _, actor := range []identity.Auth{f.admin, f.portal} {
++		if got := f.read(t, actor); !reflect.DeepEqual(got, want) {
++			t.Fatalf("missing policy invented allocation: %+v", got)
++		}
++	}
++
++	f.replace(t, 0, f.policy[:3])
++	want.PolicyRevision, want.State = 1, WorkspaceQuotaUnallocated
++	want.Reason = &WorkspaceQuotaReason{Code: "SCHEDULING_QUOTA_UNALLOCATED", Action: ConfigureWorkspaceQuota}
++	if got := f.read(t, f.portal); !reflect.DeepEqual(got, want) {
++		t.Fatalf("missing allocation: %+v", got)
++	}
++	f.replace(t, 1, f.policy)
++	want = WorkspaceQuotaStatus{WorkspaceID: workspace, PolicyRevision: 2, State: WorkspaceQuotaConfigured,
++		Resources: []WorkspaceQuotaResource{
++			{Resource: CPU, Guaranteed: "4000", HardLimit: "4000", Reserved: "0", UnreservedQuota: "4000"},
++			{Resource: NVIDIAGPU, Guaranteed: "2", HardLimit: "2", Reserved: "0", UnreservedQuota: "2"},
++		}}
++	for _, actor := range []identity.Auth{f.admin, f.portal} {
++		if got := f.read(t, actor); !reflect.DeepEqual(got, want) {
++			t.Fatalf("configured accounting: %+v", got)
++		}
++	}
++	// Roles come from current membership. Resource allocation is readable by
++	// ordinary members without granting them policy mutation authority.
++	f.exec(t, "UPDATE workspace_memberships SET role='viewer' WHERE tenant_id=$1 AND workspace_id=$2 AND user_id=$3",
++		f.attempt.TenantID, workspace, f.portal.Me.User.ID)
++	if got := f.read(t, f.portal); !reflect.DeepEqual(got, want) {
++		t.Fatalf("current viewer cannot read own allocation: %+v", got)
++	}
++
++	foreignTenant, foreignWorkspace := uuid.NewString(), uuid.NewString()
++	f.exec(t, "INSERT INTO tenants(id,name,status) VALUES($1,'Synthetic foreign tenant','active')", foreignTenant)
++	f.exec(t, "INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Synthetic foreign workspace','active')", foreignWorkspace, foreignTenant)
++	f.exec(t, "INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES($1,$2,$3,'owner')",
++		f.portal.Me.User.ID, foreignTenant, foreignWorkspace)
++	privateWorkspace := uuid.NewString()
++	f.exec(t, "INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Synthetic private workspace','active')",
++		privateWorkspace, f.attempt.TenantID)
++	for _, actor := range []identity.Auth{f.admin, f.portal} {
++		for _, selector := range []string{foreignWorkspace, uuid.NewString()} {
++			out, err := ReadWorkspaceQuotaStatus(t.Context(), f.authority, actor, selector)
++			if err == nil || err.Error() != "RESOURCE_NOT_FOUND" || !reflect.DeepEqual(out, WorkspaceQuotaStatus{}) {
++				t.Fatalf("foreign/missing scope exposed configuration: %+v, %v", out, err)
++			}
++		}
++	}
++	if out, err := ReadWorkspaceQuotaStatus(t.Context(), f.authority, f.portal, privateWorkspace); err == nil || err.Error() != "RESOURCE_NOT_FOUND" || !reflect.DeepEqual(out, WorkspaceQuotaStatus{}) {
++		t.Fatalf("nonmember exposed another allocation: %+v, %v", out, err)
++	}
++	spoofed := f.portal
++	cached := *f.portal.Me.Workspace
++	cached.ID, cached.TenantID, cached.Role = foreignWorkspace, foreignTenant, "owner"
++	spoofed.Me.Workspace = &cached
++	if got := f.read(t, spoofed); !reflect.DeepEqual(got, want) {
++		t.Fatalf("cached actor scope replaced live scope: %+v", got)
++	}
++
++	if changed, err := reserveInTransaction(t.Context(), f.store, f.attempt, f.intent); err != nil || !changed {
++		t.Fatalf("committed reservation: %v, %v", changed, err)
++	}
++	want.Resources[0].Reserved, want.Resources[0].UnreservedQuota = "1000", "3000"
++	want.Resources[1].Reserved, want.Resources[1].UnreservedQuota = "1", "1"
++	if got := f.read(t, f.portal); !reflect.DeepEqual(got, want) {
++		t.Fatalf("committed usage missing: %+v", got)
++	}
++	rolledBack := errors.New("SYNTHETIC_OWNER_ROLLBACK")
++	next := f.attempt
++	next.ID, next.SourceID = uuid.NewString(), uuid.NewString()
++	intent := f.intent
++	intent.SourceID = next.SourceID
++	if err := ownerTransaction(t.Context(), f.store, func(ctx context.Context, q transaction.Executor) error {
++		if _, err := ReserveWithin(ctx, q, next, intent); err != nil {
++			return err
++		}
++		return rolledBack
++	}); !errors.Is(err, rolledBack) {
++		t.Fatal(err)
++	}
++	if got := f.read(t, f.portal); !reflect.DeepEqual(got, want) {
++		t.Fatalf("rolled-back usage was counted: %+v", got)
++	}
++
++	// Run the real callback on the selected store. Inject only its outcome,
++	// never simulated scope or reservation rows.
++	for _, failure := range []error{errors.New("SYNTHETIC_PRIVATE_FAILURE"),
++		errors.Join(context.Canceled, &transaction.Error{Kind: transaction.CommitUnknown})} {
++		fault := &quotaStatusFaultStore{Store: f.store, failure: failure}
++		accountCopy := *f.accounts
++		accountCopy.DB, accountCopy.Storage = nil, fault
++		out, err := ReadWorkspaceQuotaStatus(t.Context(), &workspaces.Service{Identity: &accountCopy}, f.portal, workspace)
++		if err == nil || !fault.reached || !reflect.DeepEqual(out, WorkspaceQuotaStatus{}) {
++			t.Fatalf("failed selected transaction exposed payload: %+v, %v", out, err)
++		}
++		if _, unknown := transaction.CommitOutcome(failure); unknown && err.Error() != string(transaction.CommitUnknown) {
++			t.Fatalf("uncertain read became cancellation: %v", err)
++		}
++	}
++
++	if changed, err := reserveInTransaction(t.Context(), f.store, next, intent); err != nil || !changed {
++		t.Fatalf("second committed reservation: %v, %v", changed, err)
++	}
++	// A positive row must not hide a negative or fractional row in SUM.
++	for _, corrupt := range []string{
++		`{"cpu":5000}`, `{"cpu":-1000}`, `{"cpu":-0.5}`,
++		`{"cpu":"1000"}`, `{"cpu":9223372036854775808}`, `{"unknown":1}`,
++	} {
++		f.exec(t, "UPDATE scheduling_reservations SET demand=$1::jsonb WHERE attempt_id=$2", corrupt, f.attempt.ID)
++		out, err := ReadWorkspaceQuotaStatus(t.Context(), f.authority, f.portal, workspace)
++		if !errors.Is(err, ErrQuotaPolicyUnavailable) || !reflect.DeepEqual(out, WorkspaceQuotaStatus{}) {
++			t.Fatalf("invalid usage exposed quantities: %+v, %v", out, err)
++		}
++	}
++	f.exec(t, "UPDATE scheduling_reservations SET demand=$1::jsonb WHERE attempt_id=$2",
++		`{"cpu":1000,"nvidia.com/gpu":1}`, f.attempt.ID)
++	f.exec(t, "INSERT INTO cells(id,site_id,display_name) VALUES('foreign',local_site_id(),'Synthetic foreign cell')")
++	f.exec(t, "UPDATE scheduling_reservations SET cell_id='foreign' WHERE attempt_id=$1", f.attempt.ID)
++	if out, err := ReadWorkspaceQuotaStatus(t.Context(), f.authority, f.portal, workspace); !errors.Is(err, ErrQuotaPolicyUnavailable) || !reflect.DeepEqual(out, WorkspaceQuotaStatus{}) {
++		t.Fatalf("foreign-cell usage was treated as local: %+v, %v", out, err)
++	}
++	f.exec(t, "UPDATE scheduling_reservations SET cell_id=local_cell_id() WHERE attempt_id=$1", f.attempt.ID)
++	if changed, err := releaseInTransaction(t.Context(), f.store, next); err != nil || !changed {
++		t.Fatalf("second committed release: %v, %v", changed, err)
++	}
++
++	if changed, err := releaseInTransaction(t.Context(), f.store, f.attempt); err != nil || !changed {
++		t.Fatalf("committed release: %v, %v", changed, err)
++	}
++	want.Resources[0].Reserved, want.Resources[0].UnreservedQuota = "0", "4000"
++	want.Resources[1].Reserved, want.Resources[1].UnreservedQuota = "0", "2"
++	if got := f.read(t, f.portal); !reflect.DeepEqual(got, want) {
++		t.Fatalf("released quota remained held: %+v", got)
++	}
++	var reservations int
++	if err := f.accounts.DB.QueryRow(t.Context(), "SELECT count(*) FROM scheduling_reservations").Scan(&reservations); err != nil || reservations != 2 {
++		t.Fatalf("read or rolled-back reserve changed durable rows: %d, %v", reservations, err)
++	}
++	f.exec(t, "DELETE FROM workspace_memberships WHERE tenant_id=$1 AND workspace_id=$2 AND user_id=$3",
++		f.attempt.TenantID, workspace, f.portal.Me.User.ID)
++	if out, err := ReadWorkspaceQuotaStatus(t.Context(), f.authority, f.portal, workspace); err == nil || err.Error() != "RESOURCE_NOT_FOUND" || !reflect.DeepEqual(out, WorkspaceQuotaStatus{}) {
++		t.Fatalf("removed member retained cached authority: %+v, %v", out, err)
++	}
++	f.exec(t, "UPDATE sessions SET revoked_at=clock_timestamp(),revoke_reason='logout' WHERE id=$1", f.admin.SessionID)
++	if out, err := ReadWorkspaceQuotaStatus(t.Context(), f.authority, f.admin, workspace); err == nil || err.Error() != "AUTH_SESSION_EXPIRED" || !reflect.DeepEqual(out, WorkspaceQuotaStatus{}) {
++		t.Fatalf("revoked session exposed quota: %+v, %v", out, err)
++	}
++}
++
++type quotaStatusFaultStore struct {
++	transaction.Store
++	before  func(context.Context, transaction.Executor) error
++	failure error
++	reached bool
++}
++
++func (s *quotaStatusFaultStore) Within(ctx context.Context, read bool, fn func(context.Context, transaction.Executor) error) error {
++	return s.Store.Within(ctx, read, func(ctx context.Context, q transaction.Executor) error {
++		if s.before != nil {
++			if err := s.before(ctx, q); err != nil {
++				return err
++			}
++		}
++		if err := fn(ctx, q); err != nil {
++			return err
++		}
++		s.reached = true
++		return s.failure
++	})
++}
++
++func TestPostgresWorkspaceQuotaStatusWaitsForReservationCommit(t *testing.T) {
++	f := newAuthenticatedQuotaFixture(t)
++	f.replace(t, 0, f.policy)
++	ctx, cancel := context.WithTimeout(t.Context(), 15*time.Second)
++	defer cancel()
++	hold, err := f.accounts.DB.Begin(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer hold.Rollback(ctx)
++	if _, err := ReserveWithin(ctx, transaction.PostgreSQLTransaction(hold), f.attempt, f.intent); err != nil {
++		t.Fatal(err)
++	}
++	entered := make(chan int64, 1)
++	probe := &quotaStatusFaultStore{Store: f.store, before: func(ctx context.Context, q transaction.Executor) error {
++		var pid int64
++		if err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, "SELECT pg_backend_pid()")).Scan(&pid); err != nil {
++			return err
++		}
++		entered <- pid
++		return nil
++	}}
++	copy := *f.accounts
++	copy.DB, copy.Storage = nil, probe
++	type result struct {
++		out WorkspaceQuotaStatus
++		err error
++	}
++	done := make(chan result, 1)
++	go func() {
++		out, err := ReadWorkspaceQuotaStatus(ctx, &workspaces.Service{Identity: &copy}, f.portal, f.attempt.WorkspaceID)
++		done <- result{out, err}
++	}()
++	var pid int64
++	select {
++	case pid = <-entered:
++	case <-ctx.Done():
++		t.Fatal(ctx.Err())
++	}
++	ticker := time.NewTicker(10 * time.Millisecond)
++	defer ticker.Stop()
++	for {
++		var blockers int
++		if err := f.accounts.DB.QueryRow(ctx, "SELECT cardinality(pg_blocking_pids($1::integer))", pid).Scan(&blockers); err != nil {
++			t.Fatal(err)
++		}
++		if blockers > 0 {
++			break
++		}
++		select {
++		case got := <-done:
++			t.Fatalf("read bypassed reservation fence: %+v, %v", got.out, got.err)
++		case <-ctx.Done():
++			t.Fatal(ctx.Err())
++		case <-ticker.C:
++		}
++	}
++	if err := hold.Commit(ctx); err != nil {
++		t.Fatal(err)
++	}
++	select {
++	case got := <-done:
++		if got.err != nil || len(got.out.Resources) != 2 || got.out.Resources[0].Reserved != "1000" ||
++			got.out.Resources[1].Reserved != "1" {
++			t.Fatalf("read did not see the committed hold after waiting: %+v, %v", got.out, got.err)
++		}
++	case <-ctx.Done():
++		t.Fatal(ctx.Err())
++	}
++}
+diff --git a/services/control/internal/modules/scheduling/workspace_quota_status_test.go b/services/control/internal/modules/scheduling/workspace_quota_status_test.go
+new file mode 100644
+index 00000000..1dabcb11
+--- /dev/null
++++ b/services/control/internal/modules/scheduling/workspace_quota_status_test.go
+@@ -0,0 +1,63 @@
++package scheduling
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"math"
++	"reflect"
++	"strings"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++func TestWorkspaceQuotaStatusPreservesQuantitiesAndRejectsInvalidUsage(t *testing.T) {
++	const bytes = int64(9007199254740993)
++	rows, err := workspaceQuotaResources(Quota{
++		Guaranteed: Resources{CPU: 1000, Memory: bytes},
++		Burst:      Resources{CPU: 4000, Memory: math.MaxInt64, NVIDIAGPU: 2},
++	}, Resources{CPU: 1000, Memory: bytes, NVIDIAGPU: 2})
++	want := []WorkspaceQuotaResource{
++		{Resource: CPU, Guaranteed: "1000", HardLimit: "4000", Reserved: "1000", UnreservedQuota: "3000"},
++		{Resource: Memory, Guaranteed: "9007199254740993", HardLimit: "9223372036854775807", Reserved: "9007199254740993", UnreservedQuota: "9214364837600034814"},
++		{Resource: NVIDIAGPU, Guaranteed: "0", HardLimit: "2", Reserved: "2", UnreservedQuota: "0"},
++	}
++	if err != nil || !reflect.DeepEqual(rows, want) {
++		t.Fatalf("exact, sorted quota accounting: %+v, %v", rows, err)
++	}
++	body, err := json.Marshal(rows)
++	if err != nil || !strings.Contains(string(body), `"reserved":"9007199254740993"`) {
++		t.Fatalf("JSON lost integer precision: %s, %v", body, err)
++	}
++	for _, used := range []Resources{
++		{CPU: -1}, {CPU: 2}, {Memory: 1}, {Resource("unknown"): 0},
++	} {
++		if rows, err := workspaceQuotaResources(Quota{Burst: Resources{CPU: 1}}, used); !errors.Is(err, ErrQuotaPolicyUnavailable) || rows != nil {
++			t.Fatalf("invalid usage exposed quota: %+v, %v", rows, err)
++		}
++	}
++}
++
++func TestWorkspaceQuotaStatusFailurePreservesCommitUncertainty(t *testing.T) {
++	unknown := &transaction.Error{Kind: transaction.CommitUnknown}
++	for _, test := range []struct {
++		err  error
++		code string
++	}{
++		{errors.Join(context.Canceled, unknown, errors.New("private detail")), string(transaction.CommitUnknown)},
++		{&transaction.Error{Kind: transaction.CommitRolledBack}, string(transaction.CommitRolledBack)},
++		{&transaction.Error{Kind: transaction.CheckConflict, SQLState: "23514"}, string(transaction.Unavailable)},
++		{&transaction.Error{Kind: transaction.Cancelled}, string(transaction.Cancelled)},
++		{&transaction.Error{Kind: transaction.Timeout}, string(transaction.Timeout)},
++		{context.Canceled, string(transaction.Cancelled)},
++		{context.DeadlineExceeded, string(transaction.Timeout)},
++		{errors.New("RESOURCE_NOT_FOUND"), "RESOURCE_NOT_FOUND"},
++		{errors.New("AUTH_SESSION_EXPIRED"), "AUTH_SESSION_EXPIRED"},
++		{errors.New("private database message"), ErrQuotaPolicyUnavailable.Error()},
++	} {
++		if got := quotaStatusError(test.err); got.Error() != test.code {
++			t.Fatalf("unsafe or misclassified failure: %s", got)
++		}
++	}
++}
+-- 
+2.43.0
+

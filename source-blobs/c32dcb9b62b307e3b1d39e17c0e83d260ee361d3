@@ -1,0 +1,43 @@
+"""Explain every observed non-algorithmic checkpoint and summary difference."""
+from pathlib import Path
+from enum import Enum
+import hashlib,json
+import torch
+
+root=Path('/workspace');index=json.loads((root/'resume-index.json').read_bytes())
+paths={name:root/index['cases'][name]['relative_scope'] for name in ['baseline','resumed']}
+
+def plain(value,seen=None):
+ if seen is None:seen=set()
+ if value is None or type(value) in (str,bool,int):return value
+ if isinstance(value,float):return {'float':value.hex()}
+ if isinstance(value,Enum):return {'enum':type(value).__qualname__,'value':plain(value.value,seen)}
+ if isinstance(value,torch.device):return {'torch_device':str(value)}
+ if isinstance(value,(dict,list,tuple,set)) or hasattr(value,'__dict__'):
+  if id(value) in seen:return {'cycle':type(value).__qualname__}
+  seen=seen|{id(value)}
+  if isinstance(value,dict):return {str(k):plain(v,seen) for k,v in sorted(value.items(),key=lambda x:str(x[0]))}
+  if isinstance(value,(list,tuple)):return [plain(v,seen) for v in value]
+  if isinstance(value,set):return sorted([plain(v,seen) for v in value],key=lambda v:json.dumps(v,sort_keys=True))
+  return {'class':type(value).__module__+'.'+type(value).__qualname__,'attributes':plain(vars(value),seen)}
+ raise TypeError(type(value).__name__)
+
+values={};receipts={};results={}
+for name,scope in paths.items():
+ checkpoint=scope/'output/checkpoints/checkpoint-2'
+ receipt=json.loads((checkpoint/'projectone-checkpoint.json').read_bytes())
+ # The original independent comparison verified these exact complete seals.
+ for item in receipt['files']:
+  with (checkpoint/item['path']).open('rb') as stream:assert hashlib.file_digest(stream,'sha256').hexdigest()==item['sha256']
+ values[name]=torch.load(checkpoint/'training_args.bin',map_location='cpu',weights_only=False)
+ receipts[name]=receipt
+ results[name]=json.loads((scope/'output/result.json').read_bytes())
+fields={k:{name:plain(vars(value).get(k)) for name,value in values.items()} for k in sorted(set(vars(values['baseline']))|set(vars(values['resumed']))) if plain(vars(values['baseline']).get(k))!=plain(vars(values['resumed']).get(k))}
+public={k:{name:value.to_dict().get(k) for name,value in values.items()} for k in sorted(set(values['baseline'].to_dict())|set(values['resumed'].to_dict())) if values['baseline'].to_dict().get(k)!=values['resumed'].to_dict().get(k)}
+assert set(fields)<= {'output_dir','logging_dir','run_name'},fields
+assert receipts['baseline']['bindings']==receipts['resumed']['bindings']
+changed=[(a,b) for a,b in zip(receipts['baseline']['files'],receipts['resumed']['files']) if a!=b]
+assert len(changed)==1 and changed[0][0]['path']==changed[0][1]['path']=='training_args.bin'
+result={'training_arguments_differences':fields,'public_training_arguments_differences':public,'checkpoint_receipt_differences':changed,'training_loss':{name:value['training_loss'] for name,value in results.items()},'reported_step_losses':{name:[{'step':m['global_step'],'loss':m['values']['loss']} for m in value['metrics'] if 'loss' in m.get('values',{})] for name,value in results.items()}}
+output=root/'resume-differences.json';output.write_text(json.dumps(result,sort_keys=True,indent=2)+'\n')
+print(json.dumps(result,sort_keys=True),flush=True)

@@ -1,0 +1,36 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "draft": "7705c5a341458cb1be8ead80844198378d98c4e3 / 0.12.0",
+  "draft_sha256": "66449b506190e37330558a77721a35c541827b5bec4e8a421f0cc452df47e69d",
+  "parent_pid": 89817,
+  "child_pid": 91251,
+  "wait_seconds": 209.066,
+  "execution_seconds": 3.856,
+  "exit_code": 1,
+  "phase": "native pgx SQL preflight",
+  "wire_invocations": {
+    "SSLRequest": {
+      "count": 1,
+      "result": "passed"
+    },
+    "postgres-check": {
+      "count": 1,
+      "exit_code": 1,
+      "error": "PG_WIRE_QUERY_REFUSED",
+      "auth_guard_reachability": "executed source reached query after wrong-password 28P01 and successful connection guards; no SQL values were emitted"
+    }
+  },
+  "selected_roots": {
+    "TestPostgresAliasReadCapabilitiesAtRegisteredEntrances": 0,
+    "TestPostgresAliasCapabilityPublicContractBoundary": 0,
+    "TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget": 0,
+    "TestAliasContextCeilingRequiresRecognizedSource": 0
+  },
+  "migrations": "none of the Go test fixtures started; no new schema-60/120-table result",
+  "platform": "native Go 1.27.3 darwin/arm64; cached PostgreSQL linux/arm64 in Docker Desktop",
+  "isolation": "sandbox non-loopback connect denied; PostgreSQL network none with no Docker-published ports",
+  "cleanup": "child entry removed owned proxy/container/credentials; listener 54800 refused a post-exit probe; own process group exited, parent FD3 closed, carrier identity retained",
+  "gate_proof_sha256": "ae9721c781a79a23614c189efb0de5496b007bbf118b78d4b1770115fce2d234",
+  "fixture_manifest_sha256": "d76d9afff7b0f531ad2aa36f6ae27f70f4753c498c5ed471cedd038bacf523f1",
+  "correction": "prepared separately; inet::text includes netmask and cannot equal bare loopback address; use host() and retain safe observed SQL results. Runtime error versus result mismatch was not distinguished by the original checker. No rerun."
+}

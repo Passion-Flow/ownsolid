@@ -1,0 +1,123 @@
+//go:build repository_integration
+
+package datasets_test
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
+	"github.com/google/uuid"
+)
+
+func evl106Digest(raw []byte) string {
+	sum := sha256.Sum256(raw)
+	return hex.EncodeToString(sum[:])
+}
+
+func evl106Write(t *testing.T, dir, name string, raw []byte) {
+	t.Helper()
+	out, err := os.OpenFile(filepath.Join(dir, name), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		t.Fatal("write immutable fixture export", err)
+	}
+	if _, err := out.Write(raw); err != nil {
+		out.Close()
+		t.Fatal(err)
+	}
+	if err := out.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSafetyRegressionAuthorizedFrozenPublication(t *testing.T) {
+	source := os.Getenv("OWNSOLID_EVL106_SOURCE")
+	output := os.Getenv("OWNSOLID_EVL106_PUBLICATION")
+	raw, err := os.ReadFile(source)
+	if err != nil || len(raw) == 0 || len(raw) > 16384 {
+		t.Fatal("trusted safety corpus required")
+	}
+	g := runtimeSetup(t, true)
+	if g.f.PostgreSQL == nil {
+		t.Fatal("disconnected PostgreSQL fixture required")
+	}
+	d, err := g.s.Create(g.ctx, g.portal, datasets.CreateRequest{
+		WorkspaceID: g.f.Workspace, Name: "EVL-106 synthetic adversarial cases",
+		Origin: "Repository-authored safety regression fixture", License: "CC0-1.0",
+		RightsAsserted: true, Reason: "Freeze the existing six synthetic safety prompts",
+	}, uuid.NewString(), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	draft, err := g.s.CreateDraft(g.ctx, g.portal, g.f.Workspace, d.ID, datasets.DraftRequest{
+		SourceName: "safety-regression-v1.jsonl", SourceSHA256: evl106Digest(raw), ExpectedBytes: int64(len(raw)),
+		Reason: "Import the exact CC0 corpus",
+	}, uuid.NewString(), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	draft, err = g.s.Upload(g.ctx, g.portal, g.f.Workspace, d.ID, draft.ID,
+		draft.SourceSHA256, draft.ExpectedBytes, strings.NewReader(string(raw)), uuid.NewString())
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.process(t)
+	draft = g.draft(t, d.ID, draft.ID)
+	job, err := g.s.Publish(g.ctx, g.portal, g.f.Workspace, d.ID, draft.ID, datasets.PublicationRequest{
+		ExpectedRevision: draft.Revision, Seed: "00112233445566778899aabbccddeeff",
+		ValidationBasisPoints: 5000, Reason: "Freeze one complete safety group",
+	}, uuid.NewString(), uuid.NewString())
+	if err != nil || job.VersionID == nil {
+		t.Fatal("queue safety publication", err)
+	}
+	g.process(t)
+	version, err := g.s.GetVersion(g.ctx, g.portal, g.f.Workspace, d.ID, *job.VersionID)
+	if err != nil || version.PublishedBy != g.f.User || version.RawSourceSHA256 != evl106Digest(raw) ||
+		version.Manifest.ValidationRows != 3 || version.Manifest.TrainRows != 3 {
+		t.Fatal("authorized immutable safety publication", err)
+	}
+	var audited int
+	if err := g.f.PostgreSQL.QueryRow(g.ctx, "SELECT count(*) FROM audit_events WHERE tenant_id=$1 AND workspace_id=$2 AND actor_user_id=$3 AND action='dataset.version_published' AND target_id=$4", g.f.Tenant, g.f.Workspace, g.f.User, version.ID).Scan(&audited); err != nil || audited != 1 {
+		t.Fatal("missing scoped publication audit", err)
+	}
+	for _, asset := range []string{"validation.jsonl", "train.jsonl", "manifest.json"} {
+		f, metadata, err := g.s.VersionFile(g.ctx, g.portal, g.f.Workspace, d.ID, version.ID, asset)
+		if err != nil {
+			t.Fatal("scoped version asset", err)
+		}
+		data, readErr := io.ReadAll(io.LimitReader(f, 65536))
+		closeErr := f.Close()
+		if readErr != nil || closeErr != nil || int64(len(data)) != metadata.SizeBytes || evl106Digest(data) != metadata.SHA256 {
+			t.Fatal("immutable asset digest", asset)
+		}
+		if asset == "validation.jsonl" {
+			seen := map[string]bool{}
+			for _, line := range strings.Split(strings.TrimSuffix(string(data), "\n"), "\n") {
+				var row wire.Record
+				if err := json.Unmarshal([]byte(line), &row); err != nil || seen[row.Completion] {
+					t.Fatal("invalid validation group")
+				}
+				seen[row.Completion] = true
+			}
+			for _, category := range []string{"prompt_injection", "private_context_leakage", "unsupported_request"} {
+				if !seen[category] {
+					t.Fatal("validation category missing", category)
+				}
+			}
+		}
+		evl106Write(t, output, asset, data)
+	}
+	versionJSON, err := json.Marshal(version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	evl106Write(t, output, "version.json", versionJSON)
+	t.Logf("authorized safety publication froze three validation cases, version SHA-256 %s, manifest SHA-256 %s", evl106Digest(versionJSON), version.ManifestSHA256)
+}

@@ -1,0 +1,59 @@
+# AGT-112 independent audit integration recheck
+
+Original APP policy candidate `c2b1bb5ab94938633a63f2d3d9eb9dc5f39c1d24`.
+Original audit follow-up `3a6378a4f5be59dbc370b8c808b10c4cac53e5e3`.
+The archived patch SHA-256 is
+`8317346f5906c613caee40fffd25d98f7f75291bf8951ce47869c682c2089d18`.
+Its stable patch ID is `18636008909cfcce3fdb150717dc8404205eb869`.
+Applying the archived patch to the original APP candidate in a disposable
+Git index produced tree `fb8ce601e345a42aecfec567b68483cf2bb6264f`.
+
+The APP overlay, original audit commit and APP staged integration on base
+`e47b4789` had the identical fixture Git blob
+`37b45bb5d06faf77a12310d6ddcb75abe31f7a5c` and SHA-256
+`321612116c252364e953bff43e21e80db8f31bd03ba1a8b9a31eaeccca849a0b`.
+The two staged Audit-owned paths had the original stable patch ID and the
+identical research blob `1850c2524169ddb0316b1a47525bff9bcced3058`.
+The staged APP constructor took `*applications.Service` and `ExecutionPolicy`.
+The fixture passes an explicit constant enabled reader. The export query
+copied by the APP rehearsal was identical to the SCI query, with SHA-256
+`1342d9c23dce45d28540d0054c8613ed8a291abfee8b6ce81c1d7d4cc8b52877`.
+
+Read the retained disconnected Linux amd64 PostgreSQL 18.6 assertions from
+`audit.log` and `verifier.log` for the tracked pair at `3a6378a4` and
+`c90229f8`. The output proves both real assistant commands, distinct
+assistant actor and user subject, non-default workspace and request
+correlation, seven mixed V1/V2 export rows, unchanged chain hashes through
+actor disclosure, verification against the held tail, and rejection of all
+six scope and four targeted tamper cases. The verifier suite passed. The
+retained default-denial output covers missing, disabled and unreadable
+policy. The export rows were temporary in the original test and the
+assertion logs are the retained output. This recheck started no database and
+reused the earlier gate. The rebase's additional service changes are display
+name handling, separate from the constructor and policy. The staged APP
+integration still needed a committed candidate SHA when inspected.
+
+## Committed APP pair
+
+The APP candidate subsequently committed as
+`d521af0fca53a4417cec3af3e2b51398f6502649` on
+`f7a0df1b9d7a2f79310d97e76e386660e8fb3950`. Its Audit-owned diff retained
+the same stable patch ID and both reviewed blobs. APP's archived copy of
+`audit-followup.patch` is byte-identical to the original. Its export query
+is unchanged and `admission.go` is byte-identical to `c2b1bb5a`. The
+tracked fixture calls the paired two-argument constructor directly.
+
+The APP candidate log `paired-d521af0f.log` has SHA-256
+`cf567e6efc735b001306bfa571144aadad77681e493e13ed0453ce9762e0891f`.
+The paired runner compiled the tracked audit fixture and standalone verifier
+and used one PostgreSQL 18.6 container with network mode `none`. The
+retained log passed the real export fixture, all ten scope and tamper
+subtests, the authenticated HTTPS policy refusal and recovery suite,
+and the current-session offline command test. No new database, service or
+whole-repository build was started for this independent recheck.
+
+The archived APP policy patch has stable patch ID
+`953d536fe5c0be86f983f583bc81ae5d7f91798e`, equal to the original
+`c2b1bb5a` diff when the separately rewritten policy research note is
+excluded. This check preserves the distinction between the unchanged
+AUD patch and the refreshed APP evidence note.

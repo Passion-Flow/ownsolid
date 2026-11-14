@@ -1,0 +1,72 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+package=$(cd -- "$(dirname -- "$0")" && pwd -P)
+runner=$(dirname "$package")
+source="$runner/cell.QShAJf"
+archive=/root/lane-arc-managed.JFUrp5
+cd "$package"
+exec 8>"$runner/launch.lock"
+flock -n 8 || exit 75
+sha256sum -c SHA256SUMS
+test -s "$source/prepared.json"
+test -z "$(docker ps -aq --filter name=arc104-registry-)"
+! mountpoint -q "$source/media-mount"
+python3 "$package/guard.py" "$package" start | tee host-admission.json
+root=$(mktemp -d "$package/run.XXXXXX")
+printf '%s\n' "$root" > active-run
+cd "$root"
+net="arc104-registry-cold-$(basename "$root" | cut -d. -f2 | tr '[:upper:]' '[:lower:]')"
+install -d -m 0700 capture media-mount
+cp -p "$package/host-admission.json" capture/host-start.json
+printf '%s\n' host-preparation > capture/current-stage
+cleanup() {
+    local rc=$?
+    trap - EXIT
+    set +e
+    for role in plane server worker dns; do
+        if docker inspect "$net-$role" >/dev/null 2>&1; then
+            if [[ $role == plane ]]; then docker logs "$net-$role" > capture/control-container.log 2>&1 || true; fi
+            docker inspect -f '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}}' "$net-$role" > "capture/$role-exit.txt"
+            docker rm -f "$net-$role" >/dev/null || rc=1
+        fi
+    done
+    if docker network inspect "$net" >/dev/null 2>&1; then docker network rm "$net" >/dev/null || rc=1; fi
+    for role in server worker; do
+        if [[ -f $role-capture/egress.jsonl ]]; then cp -p "$role-capture/egress.jsonl" "capture/$role-egress.jsonl" || rc=1; fi
+    done
+    for name in exchange docker-data site-inputs site-runtime server-data server-state worker-data worker-state; do
+        local path="$root/$name"
+        if [[ -d $path ]]; then
+            if findmnt -rn -o TARGET | awk -v p="$path" '$0==p || index($0,p"/")==1{found=1} END{exit !found}'; then
+                printf 'Mount still present under %s\n' "$path" >&2
+                rc=1
+            else
+                find "$path" -xdev -depth -delete || rc=1
+            fi
+        fi
+    done
+    if mountpoint -q media-mount; then umount media-mount || rc=1; fi
+    printf '%s\n' "$rc" > capture/launcher.exit
+    printf 'Cold worker fixture stage=%s exit=%s evidence=%s\n' "$(cat capture/current-stage)" "$rc" "$root/capture"
+    exit "$rc"
+}
+trap cleanup EXIT
+trap 'exit 143' TERM
+sha256sum "$source/capture/"{control-egress,server-egress,worker-egress,site-dns.raw}.jsonl > capture/prior-capture.sha256
+mount -o loop,nosuid,nodev,noatime "$source/media.ext4" media-mount
+test -d media-mount/arc-prepared
+stat -c '%i %u:%a %n' media-mount/arc-prepared > capture/prior-preparation.stat
+test "$(df -B1 --output=avail media-mount | tail -1)" -ge $((7<<30))
+for file in agent egress-recorder ownsolid-install site-dns sha256sum-amd64.txt; do
+    install -m 0700 "$archive/$file" "$root/$file"
+done
+install -m 0700 "$runner/registry-install" "$root/registry-install"
+for file in managed.test guard.py host_admit.py site-files.py pull-proof.sh verify-captures.py run-managed.sh setup-node.sh control-inside.sh; do
+    install -m 0700 "$package/$file" "$root/$file"
+done
+printf '%s\n' container-cgroup-preflight > capture/current-stage
+bash "$root/run-managed.sh" "$root" "$net" 2>&1 | tee capture/run.log
+sha256sum -c capture/prior-capture.sha256 > capture/prior-capture-recheck.log
+stat -c '%i %u:%a %n' media-mount/arc-prepared | cmp - capture/prior-preparation.stat
+printf '%s\n' accepted > capture/current-stage

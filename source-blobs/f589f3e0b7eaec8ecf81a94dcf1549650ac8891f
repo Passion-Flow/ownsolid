@@ -1,0 +1,149 @@
+package distribution_test
+
+import (
+	"context"
+	"errors"
+	"net"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/operations/databaseaccess"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"go.yaml.in/yaml/v3"
+)
+
+const meteringInsertColumns = "producer,event_id,tenant_id,workspace_id,occurred_at,gpu_microseconds,tokens,storage_byte_seconds,requests,unmeasured_token_requests"
+
+func removeOwnedMeteringRole(t *testing.T, operator *pgxpool.Pool, role string) {
+	t.Helper()
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		var exists bool
+		if err := operator.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=$1)", role).Scan(&exists); err != nil {
+			t.Errorf("inspect owned fixture role: %v", err)
+			return
+		}
+		if !exists {
+			return
+		}
+		roleID := pgx.Identifier{role}.Sanitize()
+		if _, err := operator.Exec(ctx, "DROP OWNED BY "+roleID); err != nil {
+			t.Errorf("revoke owned fixture role grants: %v", err)
+		}
+		if _, err := operator.Exec(ctx, "DROP ROLE IF EXISTS "+roleID); err != nil {
+			t.Errorf("drop owned fixture role: %v", err)
+		}
+	})
+}
+
+func prepareMeteringRuntime(t *testing.T, accounts *identity.Service) *pgxpool.Pool {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+	defer cancel()
+	operator := accounts.DB
+	role := "metering_runtime_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	secret, err := databaseaccess.NewCredential()
+	if err != nil {
+		t.Fatal(err)
+	}
+	removeOwnedMeteringRole(t, operator, role)
+	cfg := operator.Config().Copy()
+	cfg.ConnConfig.User, cfg.ConnConfig.Password = role, secret
+	cfg.MaxConns, cfg.MinConns = 4, 1
+	query := url.Values{"sslmode": {"disable"}}
+	for key, value := range cfg.ConnConfig.RuntimeParams {
+		query.Set(key, value)
+	}
+	dsn := url.URL{Scheme: "postgres", User: url.UserPassword(role, secret),
+		Host: net.JoinHostPort(cfg.ConnConfig.Host, strconv.Itoa(int(cfg.ConnConfig.Port))),
+		Path: "/" + cfg.ConnConfig.Database, RawQuery: query.Encode()}
+
+	dir := t.TempDir()
+	if err := os.Chmod(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	policy := accounts.Config
+	policy.Server.ListenAddress = "127.0.0.1:18443"
+	policy.Database.DSNFile = filepath.Join(dir, "runtime-dsn")
+	policy.Database.MaxOpenConnections, policy.Database.MaxIdleConnections = cfg.MaxConns, cfg.MinConns
+	policy.Database.StatementTimeoutSeconds = 5
+	policy.SMTP.Host, policy.SMTP.Port, policy.SMTP.TLSMode = "smtp.example.invalid", 587, "starttls_required"
+	policy.SMTP.ConnectTimeoutSeconds, policy.SMTP.OperationTimeoutSeconds = 5, 20
+	if err := os.WriteFile(policy.Database.DSNFile, []byte(dsn.String()), 0600); err != nil {
+		t.Fatal(err)
+	}
+	settings, err := yaml.Marshal(policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configPath := filepath.Join(dir, "runtime.yaml")
+	if err := os.WriteFile(configPath, settings, 0600); err != nil {
+		t.Fatal(err)
+	}
+	input, err := databaseaccess.LoadRuntime(configPath)
+	if err != nil {
+		t.Fatal("load protected serving policy:", err)
+	}
+
+	lease, err := operator.Acquire(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer lease.Release()
+	var locked bool
+	if err := lease.QueryRow(ctx, "SELECT pg_try_advisory_lock($1)", database.InstallationLockID).Scan(&locked); err != nil || !locked {
+		t.Fatal("acquire fixture installation lock", err)
+	}
+	defer lease.Exec(context.WithoutCancel(ctx), "SELECT pg_advisory_unlock($1)", database.InstallationLockID)
+	if status, err := databaseaccess.Prepare(ctx, operator, lease, input); err != nil || status != databaseaccess.Verified {
+		t.Fatalf("prepare current serving role: %s, %v", status, err)
+	}
+
+	wrong := cfg.Copy()
+	wrong.ConnConfig.Password, err = databaseaccess.NewCredential()
+	if err != nil {
+		t.Fatal(err)
+	}
+	unauthenticated, err := pgxpool.NewWithConfig(ctx, wrong)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = unauthenticated.Ping(ctx)
+	unauthenticated.Close()
+	var authenticationFailure *pgconn.PgError
+	if !errors.As(err, &authenticationFailure) || authenticationFailure.Code != "28P01" {
+		t.Fatal("a wrong serving credential was not refused")
+	}
+
+	runtime, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(runtime.Close)
+	store, err := transaction.FromPostgreSQL(runtime)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := database.CheckRuntimeReady(ctx, store); err != nil {
+		t.Fatal("predecessor serving readiness:", err)
+	}
+	var current, session string
+	if err := runtime.QueryRow(ctx, "SELECT current_user, session_user").Scan(&current, &session); err != nil ||
+		current != role || session != role {
+		t.Fatal("expected a direct login by the installed serving role", err)
+	}
+	accounts.Config = policy
+	return runtime
+}

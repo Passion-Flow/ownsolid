@@ -1,0 +1,6 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "tree": "32d6c6be09a93c4528f4a4b2e446713306f763ce",
+  "platform": "Go darwin/arm64; Docker PostgreSQL linux/arm64",
+  "status": "prepared source/overlay only; no compile or container start"
+}

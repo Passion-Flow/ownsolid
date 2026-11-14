@@ -1,0 +1,19 @@
+{
+  "canonical_sha256": "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca",
+  "files": {
+    "shared-again/.env": "5d79ed98daa2aebf7e950125c1e718397b9c6143d317e7074feae7af0c605686",
+    "shared-again/compose.yaml": "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca",
+    "shared-again/desired-serving-intent.json": "14d9e8661e47ebf590495dc0c96aaa4717d9827c0946ae53e7e4fadf847b6699",
+    "shared/.env": "5d79ed98daa2aebf7e950125c1e718397b9c6143d317e7074feae7af0c605686",
+    "shared/compose.yaml": "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca",
+    "shared/desired-serving-intent.json": "14d9e8661e47ebf590495dc0c96aaa4717d9827c0946ae53e7e4fadf847b6699",
+    "split-override/.env": "5d79ed98daa2aebf7e950125c1e718397b9c6143d317e7074feae7af0c605686",
+    "split-override/compose.override.yaml": "fc8dc4091d9f6c053d73ef571a63f68518640bf534a43266711c69f91dac6ffc",
+    "split-override/compose.yaml": "eb00992f5c9977b3683046a91cd99b1c2debf8d0b14d73422260d3ee60405fb6",
+    "split-override/desired-serving-intent.json": "a7014813952a2de1f38e45c4d727a4a3149152cbc64c5dd80e9e4683afb05ded",
+    "split/.env": "5d79ed98daa2aebf7e950125c1e718397b9c6143d317e7074feae7af0c605686",
+    "split/compose.yaml": "eb00992f5c9977b3683046a91cd99b1c2debf8d0b14d73422260d3ee60405fb6",
+    "split/desired-serving-intent.json": "a7014813952a2de1f38e45c4d727a4a3149152cbc64c5dd80e9e4683afb05ded"
+  },
+  "scope": "Synthetic public Compose parser inputs only; controlled recorder, no Docker or Control execution, no real credentials"
+}

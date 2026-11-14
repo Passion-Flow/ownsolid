@@ -1,0 +1,8 @@
+{
+  "base": "a182bf9a29d283b30695b156058fd92e91367363",
+  "files": {
+    "internal/install/backup.go": "0a3d211673544d7b8b2e61ceba0d98688c37ada0b178cd1593d6bb43f017eb66",
+    "internal/install/backup_test.go": "c82c58990d7a72f390628afc6537b15cdc54cdd8ffc82b294f7adfd6a0fd65aa"
+  },
+  "scope": "Actual install package; original implementation plus filesystem regression tests"
+}

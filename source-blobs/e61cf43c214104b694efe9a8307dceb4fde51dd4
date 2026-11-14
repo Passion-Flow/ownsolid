@@ -1,0 +1,20 @@
+{
+  "base": "c6d5d1c1dbedef3774a7f8862f119ce464f3e240",
+  "files": {
+    "deploy/offline/README.md": "b733bcc8dff7d9667bf67c35869ae98dbf0cc895e1047a2e730e4461d60b6301",
+    "deploy/offline/internal/install/apply.go": "cad52245efbc62010a7a4f595b456c0082261c459581e7e11cb449484f285ec6",
+    "deploy/offline/internal/install/entrance_listeners_test.go": "6e9887a3ba12a82db8ad5832e1eeb8dfd190471c324ac87605eabbc80b0c29c6",
+    "deploy/offline/internal/install/listener_compatibility.go": "b4b90ac821cbd9da1646a56f9dbbfd1798dfed726e6ec8ce6c644b933d21721c",
+    "deploy/offline/internal/install/materialize.go": "25f82b001438c897ea5450e276b46418b38bf9edb37e557150b7bc8db2b7372e",
+    "deploy/offline/internal/install/serving_transport.go": "3200288d926652c7864f689d0d5b52260fa8b29aee44fcf29c9baf40c27a3b86",
+    "deploy/offline/internal/install/tls.go": "21d87ebcb603f9d7f46e0893f6e51e6d69e8a4fcbb4df0aad9b615798585152b",
+    "docs/research/installer-entrance-listeners.md": "03c88ae7db60ff2e75fddf9e834f85990ba2a8887112b6fde50dfa9a74e4dab6",
+    "deploy/offline/internal/install/listener_tls_preview_test.go": "0cf528f0d9faa4df61bba68dfeda5d121b056dc2a3e197347cf3b0eec5c56cfb"
+  },
+  "binary_sha256": "de5d6635221c2b377742a1a70f520b91dce869cc6ab0f38b701c22919d869309",
+  "installer_sha256": "cef8df1e450583dd9c23d6b0f1d237ec7e707b27a722ddcc8913213e72936b32",
+  "canonical_sha256": "3c753f781471272963ec2fcfd7b88dff19fdb484c0e7242054ca79fa817f0dca",
+  "scope": "Own installer source only; no changed Control source, image or installed qualification",
+  "candidate": "d2ca13940b9d224fb35ed6ac295dbe56ba08b17f",
+  "tree": "f063ce8ef5338dd559a0b7e24d64eb722f2376cd"
+}

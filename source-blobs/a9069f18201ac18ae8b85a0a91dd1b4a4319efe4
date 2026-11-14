@@ -1,0 +1,9 @@
+{
+  "prepared.json": "b3d0420937ad626c1dd69c80647e586b2d0cbb79324a9b968cdf0675efdcac9d",
+  "README.txt": "e22cf7eeec217d9864cf2a31df5a46f63b94e940785fbb97fcf99059a50bd7d2",
+  "qualify.py": "9d2a6119327c9200dded1bfcac3aeae6ed0416535907f7d3fedce4d571d5e927",
+  "run-native-stdio.py": "43909a862559f7209dba3a082ed005cb27ad6de8f3da3c47ffa5a95d63d15159",
+  "pg_proxy.py": "dc9f56274473d25d8b603bdbecb2e9975bf293548d30415ba248b413c5776d5b",
+  "postgres-stdio.go": "5fd25e5271ff0d29fa1a6aecec8b19df4cf640538449b47db8fdca3db4045d17",
+  "postgres-check.go": "92a97498f28aa817bb6e8986d44bf2ca568290c8fb443a3538069c42fdf8510c"
+}

@@ -1,0 +1,2 @@
+FROM ownsolid/control:lane-b
+COPY dist/ /opt/projectone/portal/

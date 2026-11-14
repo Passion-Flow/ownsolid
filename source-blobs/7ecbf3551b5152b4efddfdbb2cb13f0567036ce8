@@ -1,0 +1,6 @@
+{
+  "acceptance": "passed",
+  "original_harness_exit": 1,
+  "owned_container_removed": true,
+  "cleanup_diagnostic": "immediate removal check failed; later exact-container readback confirms absence"
+}

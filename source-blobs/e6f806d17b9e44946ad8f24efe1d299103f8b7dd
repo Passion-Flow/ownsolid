@@ -1,0 +1,11 @@
+{
+  "client_source": "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+  "client_sha256": "c6504aad053bd76a4c1fe159b49cfe3e778d526b7c33e6ca6a50f0143cdb943d",
+  "control_source": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "control_sha256": "7043016165d47c9b5d8ea3d2bab3a2b7efe111a4dd27acd45db2895ca878ddb2",
+  "control_image": "sha256:e9afd5e427254b77d71bed5c4f6edceb30b8fb994b6bf924f49d6d81e29be791",
+  "schema": "58",
+  "public_tables": "138",
+  "proof_scope": "Source and extracted-binary input checks only; no dedicated account authentication or installed session acceptance",
+  "installed_acceptance_run": false
+}

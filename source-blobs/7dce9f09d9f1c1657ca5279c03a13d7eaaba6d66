@@ -1,0 +1,8 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "binary_sha256": "5cf63c1335fabe4a994105ace8649f9e8e500474c87f374a134bea8f50388dc1",
+  "binary_bytes": 62959442,
+  "platform": "darwin/arm64",
+  "compile_log_bytes": 0,
+  "execution": "test binary not launched"
+}

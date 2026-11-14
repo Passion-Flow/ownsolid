@@ -1,0 +1,28 @@
+# EVL-105 direct CPU serving experiment
+
+Use the locally approved Qwen3-0.6B artifact inventory and the pinned vLLM
+0.29.0 CPU image used in the existing gateway qualification. The upstream
+[serving guide](https://docs.vllm.ai/en/v0.29.0/serving/online_serving/)
+provides the actual Chat Completions endpoint. The [benchmark CLI](https://docs.vllm.ai/en/v0.29.0/benchmarking/cli/)
+separates completed throughput and end-to-end client latency. A short local
+standard-library client preserves the measurements without the benchmark CLI's
+dataset loader or a separate tokenizer configuration. The [CPU instructions](https://docs.vllm.ai/en/v0.29.0/getting_started/installation/cpu/)
+cover the CPU thread and KV-cache controls. Use the exact same model,
+request settings and four-CPU container limit at both concurrency levels.
+
+[vLLM](https://github.com/vllm-project/vllm/blob/v0.29.0/LICENSE) and the
+[pinned Qwen model](https://huggingface.co/Qwen/Qwen3-0.6B/blob/c1899de289a04d12100db370d81485cdf75e47ca/LICENSE)
+are Apache-2.0, permitting offline commercial use and redistribution subject
+to their notices. The preapproved image is used as-is. Existing PyTorch,
+Transformers, tokenizers and safetensors licenses are documented in the EVL-106
+research. The measurement client uses CPython under the PSF license and
+repository-authored synthetic prompts. No new dependency or artifact is shipped.
+
+Bind vLLM to loopback inside a network-none container and issue nonstreaming
+requests from inside that namespace. Preverify the nine model files and reject
+malformed completions, non-200 status, and inconsistent usage. Include warm-up
+separately, retain elapsed time to full body and reported prompt and completion
+tokens for every measured request. Recalculate both percentiles and rates from
+the archived samples. Keep retries and startup separate from measurements.
+No GPU, gateway admission, receipt, signed usage or cost is observed on this
+path. Report a small CPU-only serving sample without a capacity claim.

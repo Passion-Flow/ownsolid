@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+# Lane B test helper: mints a join token for a named node and prints its secret.
+import json, ssl, sys, socket, urllib.request, urllib.error, http.cookiejar
+root, name = sys.argv[1], sys.argv[2]
+base = "https://admin.lane-b.test:18443"
+ctx = ssl.create_default_context(cafile=root + "/config/ca.pem")
+real = socket.getaddrinfo
+socket.getaddrinfo = lambda h, *a, **k: real("127.0.0.1" if h.endswith("lane-b.test") else h, *a, **k)
+jar = http.cookiejar.CookieJar()
+op = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx), urllib.request.HTTPCookieProcessor(jar))
+def call(method, path, body=None, csrf=None):
+    h = {"Origin": base, "Accept": "application/json"}
+    if body is not None: h["Content-Type"] = "application/json"
+    if csrf: h["X-CSRF-Token"] = csrf; h["Idempotency-Key"] = __import__("uuid").uuid4().hex
+    r = urllib.request.Request(base + path, method=method, headers=h, data=None if body is None else json.dumps(body).encode())
+    try:
+        with op.open(r) as x: return x.status, json.loads(x.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")
+cred = json.load(open(root + "/operator/admin-credential"))
+tok = call("GET", "/api/v1/auth/csrf")[1]["data"]["token"]
+status, body = call("POST", "/api/v1/auth/login", {"email": "admin@lane-b.test", "password": cred["password"]}, tok)
+if status >= 300: sys.exit("login %s %s" % (status, body.get("code") or body))
+tok = call("GET", "/api/v1/auth/csrf")[1]["data"]["token"]
+print("license", call("GET", "/api/v1/admin/license")[1].get("data", {}).get("state"), file=sys.stderr)
+ws = call("GET", "/api/v1/admin/workspaces?limit=1")[1]["data"]["items"][0]["id"]
+status, body = call("POST", "/api/v1/sites/default/cells/default/admin/node-join-tokens", {"workspace_id": ws, "node_name": name}, tok)
+if status >= 300: sys.exit("mint %s %s" % (status, body))
+d = body["data"]
+print(d.get("token") or d.get("secret") or d.get("join_token"))

@@ -1,0 +1,15 @@
+# EVL-105 direct and gateway receipt evidence
+
+Keep the frozen direct CPU capture and the real Rust/Go/PostgreSQL
+transport profile as separate evidence. Verify their retained digests and
+reconstruct two original direct requests without model or network access.
+Exercise the checked-in Rust chat parser using the exact request bytes.
+Test each extra field independently and inspect the backend rewrite of a
+parser-accepted control. Read the Go wire and database admission contract
+for the tenant, workspace, gateway and request binding. A parser probe
+cannot establish authorization, a terminal receipt or a model response.
+
+Use the existing Rust/Serde and CPython toolchains with cached dependencies.
+No new dependency, model, data, credential or service is needed. The two
+inputs are original synthetic prompts already qualified in the direct run.
+Preserve the existing gateway profile and CPU observations byte for byte.

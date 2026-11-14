@@ -1,0 +1,34 @@
+{
+  "egress-recorder": {
+    "bytes": 4137102,
+    "sha256": "c02faab13d2b198dcd597c56e909012a6f9b6d3c240b8bc113ca92af6fd50f38"
+  },
+  "control": {
+    "bytes": 49815712,
+    "sha256": "0f74d06a204ea5461ca927d4afc467ac7877f7055809541bc224e565fa24ce95"
+  },
+  "inference-egress.test": {
+    "bytes": 16308183,
+    "sha256": "f9e0fb79c0109bc44122d5cc3e71e8c438956781a19e0f72e4a8d528e743227b"
+  },
+  "simulator": {
+    "bytes": 19644135,
+    "sha256": "e205b12643cc19394c334e375791494054b3bd40f8b49b7ffa7c7439528c5bb6"
+  },
+  "agent": {
+    "bytes": 23616642,
+    "sha256": "5207db6d8d869c8dc3bf4c255e0ece263358d7ba97efc56a8e119c851a44f9ba"
+  },
+  "compose.yaml": {
+    "bytes": 5831,
+    "sha256": "7f7df1dbe10bea9be4beee11db34a35a667a4e66e00001c5689388396fbf4285"
+  },
+  "ownsolid-install": {
+    "bytes": 14439943,
+    "sha256": "c47d70953eb8a49e6981bd2ee1ad0b568a63183e0f5c156acffc69a1260aa467"
+  },
+  "e2e.test": {
+    "bytes": 12314618,
+    "sha256": "0b4e160c5076b2df7f23644f24be81bd3c23e1224e9906d734485c95635e4b8d"
+  }
+}

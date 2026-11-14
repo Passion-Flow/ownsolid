@@ -1,0 +1,23 @@
+{
+  "status": "prepared_not_executed",
+  "source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "plan_sha256": "7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874",
+  "binding_sha256": "f858093a1ee7b4f065dcdea76c9a7bcc885f8798bc5d62d779baf00024e2d3ab",
+  "pure_local_tests": 25,
+  "pure_local_seconds": 0.019,
+  "test_externals": "mocked permanent carriers, processes, Docker, Go and SQL",
+  "bash_syntax": "passed",
+  "linux_check_config": {
+    "config_valid": true,
+    "source": "e639db9035b0b2c0229c90175493c605f328e295",
+    "native_lock_attempts": 0,
+    "native_bodies_executed": 0,
+    "input_count": 4
+  },
+  "linux_lock_attempts": 0,
+  "native_go_or_sql_bodies_executed": 0,
+  "new_native_compilation": false,
+  "new_processor_gpu_or_fleet": false,
+  "native_opportunity_used": false,
+  "runtime_resources_started": 0
+}

@@ -1,0 +1,45 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+test "$(git rev-parse --short HEAD)" = fb27e6a9
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 npm_config_offline=true CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=1
+export PLAYWRIGHT_BROWSERS_PATH=$HOME/lane-rel-tools/playwright-browsers
+export LD_LIBRARY_PATH="$HOME/lane-rel-tools/chromium-full-libs.lVH9Ch7H/sysroot/usr/lib/x86_64-linux-gnu:$HOME/lane-rel-tools/browser-root/usr/lib/x86_64-linux-gnu"
+export OWNSOLID_PLAYWRIGHT_PORT_OFFSET=15000 CI=1 LANE_REL_TEST_JOB=$1
+unset PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_DSN_FILE
+while IFS= read -r name; do unset "$name"; done < <(compgen -e | grep '^OWNSOLID_LIVE_' || true)
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 2100 9
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+test "$(df -Pm / | awk 'NR==2 {print $4}')" -ge 15360
+available_cpus=$(python3 -c 'import os; print(",".join(map(str, sorted(os.sched_getaffinity(0))[:4])))')
+ionice -c2 -n7 nice -n10 taskset -c "$available_cpus" unshare -n bash -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    ldd "$PLAYWRIGHT_BROWSERS_PATH/chromium-1248/chrome-linux64/chrome" > "$LANE_REL_TEST_JOB/browser-libraries"
+    if grep -q "not found" "$LANE_REL_TEST_JOB/browser-libraries"; then exit 1; fi
+    live=0
+    portal=0
+    other=0
+    timeout --kill-after=30s 3m pnpm -C web/apps/console exec playwright test e2e/live-nodes.spec.ts --workers=1 \
+        > "$LANE_REL_TEST_JOB/console-live.log" 2>&1 || live=$?
+    printf "%s\n" "$live" > "$LANE_REL_TEST_JOB/console-live-exit"
+    timeout --kill-after=30s 18m bash -ec "cd web/apps/portal && pnpm exec vite build && pnpm exec playwright test --workers=2" \
+        > "$LANE_REL_TEST_JOB/portal.log" 2>&1 || portal=$?
+    printf "%s\n" "$portal" > "$LANE_REL_TEST_JOB/portal-exit"
+    timeout --kill-after=30s 18m unshare --user --map-user=1000 make -o test-web-browser test \
+        > "$LANE_REL_TEST_JOB/nonbrowser.log" 2>&1 || other=$?
+    printf "%s\n" "$other" > "$LANE_REL_TEST_JOB/nonbrowser-exit"
+    tail -8 "$LANE_REL_TEST_JOB/console-live.log"
+    tail -8 "$LANE_REL_TEST_JOB/portal.log"
+    tail -16 "$LANE_REL_TEST_JOB/nonbrowser.log"
+    test "$live" -eq 0 && test "$portal" -eq 0 && test "$other" -eq 0
+'
+git diff --exit-code

@@ -1,0 +1,75 @@
+{
+  "audit_source_sha256": "dab60b175ccf3455650d00cf1c4d2e594701b839b5cd144e1cda1a5641484068",
+  "draft_a_old_closed_model_findings": [
+    {
+      "code": "PUBLIC_RESPONSE_OBJECT_SHAPE_CHANGED",
+      "domain": "models",
+      "method": "GET",
+      "path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/models/{model_id}",
+      "audience": "admin",
+      "operation_id": "getAdminModel",
+      "response": "200 application/json",
+      "schema_location": "#/components/schemas/AdminModelDetail",
+      "previous_shape": {
+        "properties": [
+          "catalog_digest",
+          "created_at",
+          "dataset_lineage",
+          "id",
+          "kind",
+          "manifest",
+          "model_key",
+          "name",
+          "state",
+          "workspace_id"
+        ],
+        "required": [
+          "catalog_digest",
+          "created_at",
+          "id",
+          "kind",
+          "manifest",
+          "model_key",
+          "name",
+          "state",
+          "workspace_id"
+        ],
+        "closed": true
+      },
+      "current_shape": {
+        "properties": [
+          "catalog_digest",
+          "created_at",
+          "dataset_lineage",
+          "family_id",
+          "id",
+          "kind",
+          "manifest",
+          "model_key",
+          "name",
+          "state",
+          "workspace_id"
+        ],
+        "required": [
+          "catalog_digest",
+          "created_at",
+          "id",
+          "kind",
+          "manifest",
+          "model_key",
+          "name",
+          "state",
+          "workspace_id"
+        ],
+        "closed": true
+      }
+    }
+  ],
+  "draft_b_common_operation_shape_findings": [],
+  "draft_b_common_operation_named_model_findings": [],
+  "current_public_operations": 430,
+  "current_inventory_findings": [],
+  "comparison_scope": "Existing same-identity read operations only; missing non-prototype operations are not qualified",
+  "network_namespace": "No external networking; no services started",
+  "runtime_authorization_or_full_schema_proof": false
+}

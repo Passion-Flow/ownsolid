@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Preparation artifact. Execution requires a reviewed native opportunity.
+set -euo pipefail
+here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+[[ $# == 1 && ( $1 == --check-config || $1 == --execute ) ]] || exit 64
+if [[ $1 == --check-config ]]; then
+    exec /usr/bin/python3 -B "$here/reader_native_bounded.py" --config "$here/config.json" --check-config
+fi
+# 295 s TERM + at most 5 s to KILL; inner work ends at 270 s.
+# No foreground flag: timeout retains control of the parent process group.
+exec /usr/bin/timeout --signal=TERM --kill-after=5s 295s \
+    /usr/bin/python3 -B "$here/reader_native_bounded.py" --config "$here/config.json" --execute

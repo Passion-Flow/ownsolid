@@ -1,0 +1,66 @@
+{
+  "source": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+  "base": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+  "source_clean": true,
+  "bundle_sha256": "58ed19344aa42c7b70fd33182e5f037680dd7ee811cc0bab7f575ac172c8f6ab",
+  "file_sha256": {
+    "tools/codegen/sdk/audit.py": "dab60b175ccf3455650d00cf1c4d2e594701b839b5cd144e1cda1a5641484068",
+    "tools/codegen/sdk/tests/test_response_object_audit.py": "eaf4864ddfd058f4f065a756ecc71c799371aeba7182f4c4f9f3e777ee43357c",
+    "tools/codegen/sdk/README.md": "2d2064c19ecc9d34365c0ff59ced2b96c2f2fda99bc0a3bd5cc02d693e499957",
+    "docs/research/public-api-versioning.md": "3c69bf00e3d1076b8b9e31a874a0011414c88af1ddc1e8e28424c7412b6cfd70",
+    "docs/product/status.md": "589b599c4f298fe2953ea93fcabcac41e60fbdf3bcf9686d4687e187344fb7ee"
+  },
+  "targeted_tests_passed": 22,
+  "network": "Isolated network namespace without external interfaces",
+  "whole_make_check": false,
+  "whole_make_build": false,
+  "whole_make_test": false,
+  "published_main": false,
+  "roadmap_ticked": false,
+  "self_review": {
+    "result": "No actionable defect found in the declared review scope",
+    "compared_paths": 5,
+    "all_existing_audit_consumers_tested": [
+      "test_audit.py",
+      "test_response_audit.py",
+      "test_response_object_audit.py"
+    ],
+    "tests_passed": 22,
+    "upstream_main_reviewed": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+    "upstream_codegen_or_openapi_inputs_changed_since_base": false,
+    "limits": "Declared field names, required names and closure only; no property-value, request or effective-composition compatibility claim",
+    "unblock": "An admitted repository gate window, required checks/build/test and fast-forward publication; CLI remains a separate candidate"
+  },
+  "original_source": "ff0f32389760cf2868402cdc9a3630658beae237",
+  "tooling_input_source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+  "tooling_tests": {
+    "layout": 13,
+    "sdk_and_codegen": 57,
+    "exit": 0,
+    "log_sha256": "51d2779763d78b7d407b71e002e622bd8c10e54359fdc93ec7f2d83cf291d7ab"
+  },
+  "only_documentation_changed_after_tooling_tests": [
+    "tools/codegen/sdk/README.md",
+    "docs/research/public-api-versioning.md",
+    "docs/product/status.md"
+  ],
+  "cli_b967d7c8_qualified": false,
+  "initial_sdk_heavy_admission_exit": 75,
+  "targeted_tests_log_sha256": "d47ff2465b98bfba6862a01f037aaf8ecceae914d1e7cce0e7c4279161d0508e",
+  "sdk_tooling_suite_exit": 0,
+  "native_gate_entry": "/root/lane-rel-tools/api-compat/full_native_gate.py",
+  "native_gate_scope": "make web-install, make check and make build only; no CLI full make test or IAM wire qualification",
+  "native_gate_status": {
+    "first_input_source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+    "first_check_exit": 2,
+    "first_failure": "Missing prepared Help parser dependency in a fresh checkout",
+    "failed_log": "/root/lane-rel-tools/api-compat/failed-missing-dependencies-native-gate.log",
+    "failed_log_sha256": "cba0f17f284247f03bb6c722c9d69d6bf3240a7fabdc84a5db71c34fb5d73b41",
+    "tooling_recovery_passed": true,
+    "retry_admission_exit": 75,
+    "current_entry_source": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+    "make_check_passed": false,
+    "make_build_run": false,
+    "whole_make_test_run": false
+  }
+}

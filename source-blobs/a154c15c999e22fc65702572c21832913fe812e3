@@ -1,0 +1,988 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"math"
+	"net"
+	"net/http"
+	"net/http/cookiejar"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"syscall"
+	"time"
+)
+
+const stateFormat = "ownsolid-installed-history-v1"
+const maximumReply = 1 << 20
+const counterMetric = "vm_http_requests_total{path=\"/api/v1/query_range\"}"
+
+var uuidPattern = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+var scopePattern = regexp.MustCompile("^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$")
+var shaPattern = regexp.MustCompile("^[0-9a-f]{40}$")
+var codePattern = regexp.MustCompile("^[A-Z][A-Z0-9_]{0,119}$")
+
+type endpoint struct {
+	Origin         string `json:"origin"`
+	CAFile         string `json:"ca_file"`
+	DialAddress    string `json:"dial_address,omitempty"`
+	DialUnixSocket string `json:"dial_unix_socket,omitempty"`
+}
+type cellExpectation struct {
+	SiteID    string  `json:"site_id"`
+	CellID    string  `json:"cell_id"`
+	Observed  *uint64 `json:"observed"`
+	Reachable *uint64 `json:"reachable,omitempty"`
+}
+type window struct {
+	WorkspaceID         string            `json:"workspace_id,omitempty"`
+	From                string            `json:"from"`
+	To                  string            `json:"to"`
+	Cells               []cellExpectation `json:"cells"`
+	RequireSparse       bool              `json:"require_sparse"`
+	RequireZero         bool              `json:"require_zero"`
+	SyntheticNinetyDays bool              `json:"synthetic_ninety_days,omitempty"`
+}
+type input struct {
+	SourceSHA          string   `json:"source_sha"`
+	Admin              endpoint `json:"admin"`
+	Raw                endpoint `json:"raw"`
+	Long               endpoint `json:"long"`
+	Email              string   `json:"email"`
+	PasswordFile       string   `json:"password_file"`
+	SessionFile        string   `json:"session_file"`
+	SiteID             string   `json:"site_id"`
+	CellID             string   `json:"cell_id"`
+	WorkspaceID        string   `json:"workspace_id"`
+	TimeoutSeconds     int      `json:"timeout_seconds"`
+	ForeignWorkspaceID string   `json:"foreign_workspace_id,omitempty"`
+	RawWindow          window   `json:"raw_window"`
+	RollupWindow       window   `json:"rollup_window"`
+	RetentionWindow    *window  `json:"retention_window,omitempty"`
+	RequiredCommands   []string `json:"required_commands"`
+}
+type auditExpectation struct {
+	RequestID   string `json:"request_id"`
+	WorkspaceID string `json:"workspace_id"`
+	Count       int    `json:"count"`
+}
+type savedState struct {
+	Format    string             `json:"format"`
+	SourceSHA string             `json:"source_sha"`
+	Origin    string             `json:"origin"`
+	ActorID   string             `json:"actor_id"`
+	Cookies   []*http.Cookie     `json:"cookies"`
+	Completed map[string]bool    `json:"completed"`
+	Pending   []auditExpectation `json:"pending"`
+}
+type apiReply struct {
+	Status    int
+	Body      []byte
+	RequestID string
+	Headers   http.Header
+}
+type driver struct {
+	cfg              input
+	state            savedState
+	admin, raw, long *http.Client
+	origin           *url.URL
+}
+type point struct {
+	At        time.Time `json:"at"`
+	Observed  *uint64   `json:"observed"`
+	Reachable *uint64   `json:"reachable"`
+}
+type history struct {
+	Tier  string    `json:"tier"`
+	Step  int64     `json:"step_seconds"`
+	From  time.Time `json:"from"`
+	To    time.Time `json:"to"`
+	Cells []struct {
+		SiteID string  `json:"site_id"`
+		CellID string  `json:"cell_id"`
+		Points []point `json:"points"`
+	} `json:"cells"`
+}
+
+func validID(id string) bool {
+	return uuidPattern.MatchString(id) && id != "00000000-0000-0000-0000-000000000000"
+}
+func protectedRead(path string, maximum int) ([]byte, error) {
+	if !filepath.IsAbs(path) {
+		return nil, errors.New("private file reference must be absolute")
+	}
+	info, err := os.Lstat(path)
+	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 {
+		return nil, errors.New("private input must be a regular owner-only file")
+	}
+	if stat, ok := info.Sys().(*syscall.Stat_t); !ok || stat.Uid != uint32(os.Geteuid()) {
+		return nil, errors.New("private input must belong to the current account")
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, errors.New("private input is unreadable")
+	}
+	defer file.Close()
+	body, err := io.ReadAll(io.LimitReader(file, int64(maximum+1)))
+	if err != nil || len(body) > maximum {
+		return nil, errors.New("private input exceeds its byte budget")
+	}
+	return body, nil
+}
+func strictDecode(body []byte, out any) error {
+	decoder := json.NewDecoder(bytes.NewReader(body))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(out); err != nil {
+		return errors.New("invalid structured input or response")
+	}
+	if decoder.Decode(new(any)) != io.EOF {
+		return errors.New("unexpected trailing structured data")
+	}
+	return nil
+}
+func timeValue(raw string) (time.Time, error) {
+	const layout = "2006-01-02T15:04:05Z"
+	value, err := time.Parse(layout, raw)
+	if err != nil || value.Format(layout) != raw || value.Unix() < 0 {
+		return time.Time{}, errors.New("range must use canonical UTC seconds")
+	}
+	return value, nil
+}
+func (w window) validate() error {
+	from, e1 := timeValue(w.From)
+	to, e2 := timeValue(w.To)
+	if e1 != nil || e2 != nil || !from.Before(to) || len(w.Cells) == 0 {
+		return errors.New("known range and cell expectations are required")
+	}
+	if w.WorkspaceID != "" && !validID(w.WorkspaceID) {
+		return errors.New("invalid range Workspace")
+	}
+	seen := map[string]bool{}
+	for _, cell := range w.Cells {
+		key := cell.SiteID + "/" + cell.CellID
+		if cell.SiteID == "" || cell.CellID == "" || seen[key] || cell.Observed == nil || *cell.Observed == 0 {
+			return errors.New("invalid cell expectation")
+		}
+		seen[key] = true
+		if w.SyntheticNinetyDays {
+			if len(w.Cells) != 5 || *cell.Observed != 2000 || to.Sub(from) != 90*24*time.Hour || from.Second() != 0 {
+				return errors.New("retention requires the declared five-cell ninety-day dataset")
+			}
+		} else if cell.Reachable == nil || *cell.Reachable > *cell.Observed {
+			return errors.New("explicit reachable expectation is required")
+		}
+	}
+	return nil
+}
+func checkOrigin(raw string) (*url.URL, error) {
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil ||
+		u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || u.Opaque != "" || u.RawPath != "" ||
+		u.Path != "" && u.Path != "/" {
+		return nil, errors.New("an explicit private HTTPS origin is required")
+	}
+	u.Path = ""
+	return u, nil
+}
+func clientFor(ep endpoint, seconds int, withJar bool) (*http.Client, *url.URL, error) {
+	origin, err := checkOrigin(ep.Origin)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !filepath.IsAbs(ep.CAFile) {
+		return nil, nil, errors.New("a local CA file is required")
+	}
+	pem, err := os.ReadFile(ep.CAFile)
+	if err != nil || len(pem) > 4<<20 {
+		return nil, nil, errors.New("local CA file is unreadable or oversized")
+	}
+	roots := x509.NewCertPool()
+	if !roots.AppendCertsFromPEM(pem) {
+		return nil, nil, errors.New("local CA file has no certificates")
+	}
+	timeout := time.Duration(seconds) * time.Second
+	transport := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12},
+		ForceAttemptHTTP2: true, MaxIdleConns: 2, MaxIdleConnsPerHost: 2, MaxConnsPerHost: 2,
+		IdleConnTimeout: timeout, TLSHandshakeTimeout: timeout, ResponseHeaderTimeout: timeout}
+	if ep.DialAddress != "" && ep.DialUnixSocket != "" {
+		return nil, nil, errors.New("select one explicit dial override")
+	}
+	if ep.DialUnixSocket != "" {
+		if !filepath.IsAbs(ep.DialUnixSocket) {
+			return nil, nil, errors.New("Unix socket reference must be absolute")
+		}
+		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
+			return (&net.Dialer{Timeout: timeout}).DialContext(ctx, "unix", ep.DialUnixSocket)
+		}
+	} else if ep.DialAddress != "" {
+		host, port, err := net.SplitHostPort(ep.DialAddress)
+		if err != nil || net.ParseIP(host) == nil || port == "" {
+			return nil, nil, errors.New("dial override must be an explicit IP and port")
+		}
+		transport.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
+			return (&net.Dialer{Timeout: timeout}).DialContext(ctx, "tcp", ep.DialAddress)
+		}
+	}
+	client := &http.Client{Timeout: timeout, Transport: transport,
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	if withJar {
+		client.Jar, _ = cookiejar.New(nil)
+	}
+	return client, origin, nil
+}
+func newDriver(cfg input) (*driver, error) {
+	if !shaPattern.MatchString(cfg.SourceSHA) || !validID(cfg.WorkspaceID) ||
+		!scopePattern.MatchString(cfg.SiteID) || !scopePattern.MatchString(cfg.CellID) ||
+		cfg.TimeoutSeconds < 1 || cfg.TimeoutSeconds > 120 || cfg.Email == "" ||
+		!filepath.IsAbs(cfg.SessionFile) || len(cfg.RequiredCommands) == 0 {
+		return nil, errors.New("source, scope, timeout, session file and required commands must be explicit")
+	}
+	if cfg.ForeignWorkspaceID != "" && (!validID(cfg.ForeignWorkspaceID) || cfg.ForeignWorkspaceID == cfg.WorkspaceID) {
+		return nil, errors.New("foreign Workspace must be a distinct fixture reference")
+	}
+	for _, w := range []window{cfg.RawWindow, cfg.RollupWindow} {
+		if err := w.validate(); err != nil {
+			return nil, err
+		}
+	}
+	if cfg.RetentionWindow != nil {
+		if !cfg.RetentionWindow.SyntheticNinetyDays {
+			return nil, errors.New("retention must select the declared dataset")
+		}
+		if err := cfg.RetentionWindow.validate(); err != nil {
+			return nil, err
+		}
+	}
+	allowed := map[string]bool{"read": true, "long-unavailable": true, "long-restored": true,
+		"long-tls-refused": true, "long-tls-restored": true, "workspace-disabled": true,
+		"workspace-restored": true, "logout-replay": true, "retention": true}
+	seenCommands := map[string]bool{}
+	for _, name := range cfg.RequiredCommands {
+		if !allowed[name] || seenCommands[name] {
+			return nil, errors.New("unknown or duplicate required command")
+		}
+		if name == "retention" && cfg.RetentionWindow == nil {
+			return nil, errors.New("required retention input is absent")
+		}
+		seenCommands[name] = true
+	}
+	admin, origin, err := clientFor(cfg.Admin, cfg.TimeoutSeconds, true)
+	if err != nil {
+		return nil, err
+	}
+	raw, _, err := clientFor(cfg.Raw, cfg.TimeoutSeconds, false)
+	if err != nil {
+		admin.CloseIdleConnections()
+		return nil, err
+	}
+	long, _, err := clientFor(cfg.Long, cfg.TimeoutSeconds, false)
+	if err != nil {
+		admin.CloseIdleConnections()
+		raw.CloseIdleConnections()
+		return nil, err
+	}
+	return &driver{cfg: cfg, admin: admin, raw: raw, long: long, origin: origin}, nil
+}
+func (d *driver) close() {
+	d.admin.CloseIdleConnections()
+	d.raw.CloseIdleConnections()
+	d.long.CloseIdleConnections()
+}
+func (d *driver) request(client *http.Client, method, path string, payload []byte, csrf string) (apiReply, error) {
+	request, err := http.NewRequest(method, d.origin.String()+path, bytes.NewReader(payload))
+	if err != nil {
+		return apiReply{}, errors.New("invalid public request")
+	}
+	request.Header.Set("Origin", d.origin.String())
+	if payload != nil {
+		request.Header.Set("Content-Type", "application/json")
+	}
+	if csrf != "" {
+		request.Header.Set("X-CSRF-Token", csrf)
+	}
+	response, err := client.Do(request)
+	if err != nil {
+		return apiReply{}, errors.New("public HTTPS request failed; verify the endpoint, CA and readiness")
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(response.Body, maximumReply+1))
+	if err != nil || len(body) > maximumReply {
+		return apiReply{}, errors.New("public response is incomplete or exceeds one MiB")
+	}
+	id := response.Header.Get("X-Request-ID")
+	if response.TLS == nil || len(response.TLS.VerifiedChains) == 0 || !validID(id) ||
+		response.Header.Get("Cache-Control") != "no-store" || response.Header.Get("X-Content-Type-Options") != "nosniff" {
+		return apiReply{}, errors.New("public TLS or response policy did not match")
+	}
+	return apiReply{response.StatusCode, body, id, response.Header.Clone()}, nil
+}
+func problem(reply apiReply, code string, status int) error {
+	var value map[string]json.RawMessage
+	if reply.Status != status || reply.Headers.Get("Content-Type") != "application/problem+json" || json.Unmarshal(reply.Body, &value) != nil {
+		return errors.New("expected public refusal was not returned")
+	}
+	var actual, id string
+	if json.Unmarshal(value["code"], &actual) != nil || json.Unmarshal(value["request_id"], &id) != nil ||
+		actual != code || id != reply.RequestID {
+		return errors.New("public Problem code or request ID did not match")
+	}
+	if _, ok := value["data"]; ok {
+		return errors.New("a refused read released a data member")
+	}
+	return nil
+}
+func (d *driver) csrf() (string, error) {
+	reply, err := d.request(d.admin, http.MethodGet, "/api/v1/auth/csrf", nil, "")
+	if err != nil {
+		return "", err
+	}
+	var out struct {
+		Data struct {
+			Token string `json:"token"`
+		} `json:"data"`
+	}
+	if reply.Status != 200 || json.Unmarshal(reply.Body, &out) != nil || out.Data.Token == "" || len(out.Data.Token) > 256 {
+		return "", errors.New("CSRF bootstrap failed")
+	}
+	return out.Data.Token, nil
+}
+func (d *driver) login() error {
+	secret, err := protectedRead(d.cfg.PasswordFile, 4097)
+	if err != nil {
+		return err
+	}
+	password := strings.TrimSuffix(strings.TrimSuffix(string(secret), "\n"), "\r")
+	if password == "" || len(password) > 4096 {
+		return errors.New("password file is empty or oversized")
+	}
+	token, err := d.csrf()
+	if err != nil {
+		return err
+	}
+	body, _ := json.Marshal(map[string]string{"email": d.cfg.Email, "password": password})
+	reply, err := d.request(d.admin, http.MethodPost, "/api/v1/auth/login", body, token)
+	if err != nil {
+		return err
+	}
+	var out struct {
+		Data struct {
+			User struct {
+				ID    string `json:"id"`
+				Admin bool   `json:"is_platform_admin"`
+			} `json:"user"`
+			Audience string `json:"audience"`
+		} `json:"data"`
+	}
+	if reply.Status != 200 || json.Unmarshal(reply.Body, &out) != nil || !validID(out.Data.User.ID) || !out.Data.User.Admin || out.Data.Audience != "admin" {
+		return errors.New("installed Admin login failed; verify bootstrap and local credentials")
+	}
+	d.state.ActorID = out.Data.User.ID
+	return nil
+}
+func (d *driver) logout() error {
+	token, err := d.csrf()
+	if err != nil {
+		return err
+	}
+	reply, err := d.request(d.admin, http.MethodPost, "/api/v1/auth/logout", nil, token)
+	if err != nil {
+		return err
+	}
+	if reply.Status != 204 || len(reply.Body) != 0 {
+		return errors.New("own session logout failed")
+	}
+	return nil
+}
+func (d *driver) load() error {
+	body, err := protectedRead(d.cfg.SessionFile, 65536)
+	if err != nil {
+		return err
+	}
+	if strictDecode(body, &d.state) != nil || d.state.Format != stateFormat || d.state.SourceSHA != d.cfg.SourceSHA ||
+		d.state.Origin != d.origin.String() || !validID(d.state.ActorID) || d.state.Completed == nil {
+		return errors.New("session state is outside this driver, source or origin")
+	}
+	for _, cookie := range d.state.Cookies {
+		if cookie == nil || cookie.Name == "" {
+			return errors.New("invalid saved session")
+		}
+		cookie.Path = "/"
+		cookie.Secure = true
+		cookie.Domain = ""
+	}
+	d.admin.Jar.SetCookies(d.origin, d.state.Cookies)
+	return nil
+}
+func (d *driver) save(create bool) error {
+	d.state.Cookies = d.admin.Jar.Cookies(d.origin)
+	body, err := json.Marshal(d.state)
+	if err != nil {
+		return errors.New("session state could not be encoded")
+	}
+	if create {
+		file, err := os.OpenFile(d.cfg.SessionFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+		if err != nil {
+			return errors.New("session file already exists or cannot be created")
+		}
+		_, err = file.Write(body)
+		if err == nil {
+			err = file.Sync()
+		}
+		closeErr := file.Close()
+		if err != nil || closeErr != nil {
+			os.Remove(d.cfg.SessionFile)
+			return errors.New("session state could not be persisted")
+		}
+		return nil
+	}
+	file, err := os.CreateTemp(filepath.Dir(d.cfg.SessionFile), ".obs-history-state-")
+	if err != nil {
+		return errors.New("session state could not be staged")
+	}
+	name := file.Name()
+	defer os.Remove(name)
+	_, err = file.Write(body)
+	if err == nil {
+		err = file.Sync()
+	}
+	closeErr := file.Close()
+	if err != nil || closeErr != nil {
+		return errors.New("session state could not be written")
+	}
+	if os.Rename(name, d.cfg.SessionFile) != nil {
+		return errors.New("session state could not be published")
+	}
+	return nil
+}
+func (d *driver) workspace(w window) string {
+	if w.WorkspaceID != "" {
+		return w.WorkspaceID
+	}
+	return d.cfg.WorkspaceID
+}
+func (d *driver) historyRequest(client *http.Client, w window) (apiReply, error) {
+	query := url.Values{"workspace_id": {d.workspace(w)}, "from": {w.From}, "to": {w.To}}
+	path := "/api/v1/sites/" + d.cfg.SiteID + "/cells/" + d.cfg.CellID + "/admin/monitoring/fleet-history?" + query.Encode()
+	return d.request(client, http.MethodGet, path, nil, "")
+}
+func verifyHistory(body []byte, w window, tier string) (int, bool, bool, error) {
+	var envelope struct {
+		Data *history `json:"data"`
+	}
+	if err := strictDecode(body, &envelope); err != nil || envelope.Data == nil {
+		return 0, false, false, errors.New("history response shape is invalid")
+	}
+	out := envelope.Data
+	from, _ := timeValue(w.From)
+	to, _ := timeValue(w.To)
+	cadence := int64(15)
+	if tier == "rollup" {
+		cadence = 60
+	}
+	if out.Tier != tier || out.Step < cadence || out.Step%cadence != 0 || out.From.Before(from) || out.To.After(to) ||
+		out.From.After(out.To) || out.Cells == nil || len(out.Cells) != len(w.Cells) {
+		return 0, false, false, errors.New("history tier, scope, range or cells did not match")
+	}
+	grid := int(out.To.Sub(out.From)/(time.Duration(out.Step)*time.Second)) + 1
+	if grid < 1 || grid > 1440 {
+		return 0, false, false, errors.New("history grid exceeds its point budget")
+	}
+	expectations := map[string]int{}
+	for i, cell := range w.Cells {
+		expectations[cell.SiteID+"/"+cell.CellID] = i
+	}
+	seen := map[string]bool{}
+	total := 0
+	sawZero := false
+	sawGap := false
+	for _, cell := range out.Cells {
+		key := cell.SiteID + "/" + cell.CellID
+		index, ok := expectations[key]
+		if !ok || seen[key] || len(cell.Points) == 0 || len(cell.Points) > grid {
+			return 0, false, false, errors.New("history included unexpected, duplicate or absent cell points")
+		}
+		seen[key] = true
+		sawGap = sawGap || len(cell.Points) < grid
+		expected := w.Cells[index]
+		previous := out.From.Add(-time.Second)
+		for _, point := range cell.Points {
+			if point.Observed == nil || point.Reachable == nil || !point.At.After(previous) ||
+				point.At.Before(out.From) || point.At.After(out.To) ||
+				point.At.Sub(out.From)%(time.Duration(out.Step)*time.Second) != 0 ||
+				*point.Observed != *expected.Observed {
+				return 0, false, false, errors.New("history timestamp or observed count did not match")
+			}
+			reachable := uint64(0)
+			if w.SyntheticNinetyDays {
+				minute := int64(point.At.Sub(from) / time.Minute)
+				reachable = 2000 - uint64((minute+int64(index))%9)
+				if index == 0 && minute%240 < 60 {
+					reachable = 0
+				}
+				if !point.At.Before(to) {
+					return 0, false, false, errors.New("retention fabricated an input-end sample")
+				}
+			} else {
+				reachable = *expected.Reachable
+			}
+			if *point.Reachable != reachable || *point.Reachable > *point.Observed {
+				return 0, false, false, errors.New("history reachable count or measured zero did not match")
+			}
+			previous = point.At
+			sawZero = sawZero || reachable == 0
+			total++
+		}
+		if w.SyntheticNinetyDays {
+			points := 0
+			for at := out.From; !at.After(out.To) && at.Before(to); at = at.Add(time.Duration(out.Step) * time.Second) {
+				points++
+			}
+			if len(cell.Points) != points {
+				return 0, false, false, errors.New("retention lost a declared grid point")
+			}
+		}
+	}
+	if w.RequireZero && !sawZero || w.RequireSparse && !sawGap {
+		return 0, false, false, errors.New("measured zero or sparse absence was not demonstrated")
+	}
+	return total, sawZero, sawGap, nil
+}
+func (d *driver) verifyAudits() error {
+	for _, expected := range d.state.Pending {
+		cursor := ""
+		count := 0
+		for page := 0; page < 10; page++ {
+			q := url.Values{"request_id": {expected.RequestID}, "target_id": {expected.WorkspaceID}}
+			if cursor != "" {
+				q.Set("cursor", cursor)
+			}
+			reply, err := d.request(d.admin, http.MethodGet, "/api/v1/admin/audit-events?"+q.Encode(), nil, "")
+			if err != nil {
+				return err
+			}
+			var out struct {
+				Data *struct {
+					Items *[]struct {
+						ID, Action, Outcome, Audience string
+						Actor                         *string `json:"actor_user_id"`
+						TargetType                    *string `json:"target_type"`
+						TargetID                      *string `json:"target_id"`
+						RequestID                     string  `json:"request_id"`
+					} `json:"items"`
+					Next json.RawMessage `json:"next_cursor"`
+				} `json:"data"`
+			}
+			if reply.Status != 200 || json.Unmarshal(reply.Body, &out) != nil || out.Data == nil || out.Data.Items == nil ||
+				len(*out.Data.Items) > 100 || out.Data.Next == nil {
+				return errors.New("public request-audit query failed")
+			}
+			for _, event := range *out.Data.Items {
+				if event.RequestID != expected.RequestID {
+					return errors.New("audit request filter leaked another event")
+				}
+				if event.Action == "monitoring.snapshot" {
+					if !validID(event.ID) || event.Outcome != "success" || event.Audience != "admin" || event.Actor == nil || *event.Actor != d.state.ActorID ||
+						event.TargetType == nil || *event.TargetType != "workspace" || event.TargetID == nil || *event.TargetID != expected.WorkspaceID {
+						return errors.New("diagnostic audit identity or scope did not match")
+					}
+					count++
+				}
+			}
+			if string(out.Data.Next) == "null" {
+				cursor = ""
+				break
+			}
+			if json.Unmarshal(out.Data.Next, &cursor) != nil || cursor == "" || len(cursor) > 512 {
+				return errors.New("invalid audit cursor")
+			}
+			if page == 9 {
+				return errors.New("request audit exceeded its page budget")
+			}
+		}
+		if count != expected.Count {
+			return errors.New("committed diagnostic audit count did not match the served result")
+		}
+	}
+	d.state.Pending = nil
+	return nil
+}
+func (d *driver) positive(w window, tier string) (time.Duration, error) {
+	started := time.Now()
+	reply, err := d.historyRequest(d.admin, w)
+	if err != nil {
+		return 0, err
+	}
+	if reply.Status != 200 {
+		return 0, errors.New("expected installed history success was refused")
+	}
+	points, zero, sparse, err := verifyHistory(reply.Body, w, tier)
+	if err != nil {
+		return 0, err
+	}
+	d.state.Pending = append(d.state.Pending, auditExpectation{reply.RequestID, d.workspace(w), 1})
+	if err = d.verifyAudits(); err != nil {
+		return 0, err
+	}
+	elapsed := time.Since(started)
+	emit(map[string]any{"event": "history", "request_id": reply.RequestID, "tier": tier, "points": points,
+		"measured_zero": zero, "sparse": sparse, "bytes": len(reply.Body), "client_ms": float64(elapsed) / float64(time.Millisecond)})
+	return elapsed, nil
+}
+
+type counterSample struct {
+	Count uint64
+	Epoch float64
+}
+
+func (d *driver) rawCounter() (counterSample, error) {
+	origin, _ := checkOrigin(d.cfg.Raw.Origin)
+	response, err := d.raw.Get(origin.String() + "/metrics")
+	if err != nil {
+		return counterSample{}, errors.New("raw metrics HTTPS observation failed")
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(response.Body, (4<<20)+1))
+	if err != nil || len(body) > 4<<20 || response.StatusCode != 200 || response.TLS == nil || len(response.TLS.VerifiedChains) == 0 {
+		return counterSample{}, errors.New("raw metrics observation is incomplete")
+	}
+	var result counterSample
+	found, epoch := false, false
+	for _, line := range strings.Split(string(body), "\n") {
+		for _, field := range []struct {
+			Prefix  string
+			Counter bool
+		}{{counterMetric, true}, {"process_start_time_seconds", false}} {
+			if !strings.HasPrefix(line, field.Prefix) {
+				continue
+			}
+			suffix := strings.TrimPrefix(line, field.Prefix)
+			if suffix == "" || suffix[0] != ' ' && suffix[0] != '\t' {
+				continue
+			}
+			values := strings.Fields(suffix)
+			if len(values) == 0 {
+				continue
+			}
+			value, e := strconv.ParseFloat(values[0], 64)
+			if e != nil || math.IsNaN(value) || math.IsInf(value, 0) || value < 0 {
+				return counterSample{}, errors.New("raw observation is not a finite count")
+			}
+			if field.Counter {
+				if found || value > 1<<53-1 || math.Trunc(value) != value {
+					return counterSample{}, errors.New("raw range counter is invalid")
+				}
+				result.Count = uint64(value)
+				found = true
+			} else {
+				if epoch || value == 0 {
+					return counterSample{}, errors.New("raw process epoch is invalid")
+				}
+				result.Epoch = value
+				epoch = true
+			}
+		}
+	}
+	if !found || !epoch {
+		return counterSample{}, errors.New("native raw counter or process epoch is absent; no fallback claim can be made")
+	}
+	return result, nil
+}
+func sameCounter(a, b counterSample) bool { return a.Epoch == b.Epoch && a.Count == b.Count }
+func (d *driver) rawPositive() error {
+	before, err := d.rawCounter()
+	if err != nil {
+		return err
+	}
+	if _, err = d.positive(d.cfg.RawWindow, "raw"); err != nil {
+		return err
+	}
+	after, err := d.rawCounter()
+	if err != nil {
+		return err
+	}
+	if before.Epoch != after.Epoch || after.Count <= before.Count {
+		return errors.New("raw positive control did not increment the native range counter")
+	}
+	return nil
+}
+func (d *driver) refused(w window, code string, status int, noRaw bool) error {
+	before, err := d.rawCounter()
+	if err != nil {
+		return err
+	}
+	reply, err := d.historyRequest(d.admin, w)
+	if err != nil {
+		return err
+	}
+	if err = problem(reply, code, status); err != nil {
+		return err
+	}
+	after, err := d.rawCounter()
+	if err != nil {
+		return err
+	}
+	if noRaw && !sameCounter(before, after) {
+		return errors.New("refused read reached raw query_range or changed its process")
+	}
+	d.state.Pending = append(d.state.Pending, auditExpectation{reply.RequestID, d.workspace(w), 0})
+	emit(map[string]any{"event": "refusal", "request_id": reply.RequestID, "code": code, "no_raw_query_range": noRaw})
+	return nil
+}
+func (d *driver) longHealth(expectFailure bool) error {
+	origin, _ := checkOrigin(d.cfg.Long.Origin)
+	response, err := d.long.Get(origin.String() + "/health")
+	if expectFailure {
+		if response != nil {
+			response.Body.Close()
+		}
+		var verification *tls.CertificateVerificationError
+		var unknown x509.UnknownAuthorityError
+		var hostname x509.HostnameError
+		var invalid x509.CertificateInvalidError
+		if err == nil || !(errors.As(err, &verification) || errors.As(err, &unknown) || errors.As(err, &hostname) || errors.As(err, &invalid)) {
+			return errors.New("long TLS refusal was not a certificate verification failure")
+		}
+		return nil
+	}
+	if err != nil {
+		return errors.New("trusted long TLS health failed")
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 || response.TLS == nil || len(response.TLS.VerifiedChains) == 0 {
+		return errors.New("long TLS health is not verified")
+	}
+	return nil
+}
+func (d *driver) logoutReplay() error {
+	staleJar, _ := cookiejar.New(nil)
+	cookies := d.admin.Jar.Cookies(d.origin)
+	if len(cookies) == 0 {
+		return errors.New("no issued cookies are available for stale-session replay")
+	}
+	staleJar.SetCookies(d.origin, cookies)
+	stale := *d.admin
+	stale.Jar = staleJar
+	if err := d.logout(); err != nil {
+		return err
+	}
+	reply, err := d.historyRequest(&stale, d.cfg.RawWindow)
+	if err != nil {
+		return err
+	}
+	var body struct {
+		Code string `json:"code"`
+	}
+	if json.Unmarshal(reply.Body, &body) != nil || !codePattern.MatchString(body.Code) ||
+		body.Code != "AUTH_SESSION_EXPIRED" && body.Code != "AUTH_REQUIRED" {
+		return errors.New("stale issued session did not return an authentication refusal")
+	}
+	if err = problem(reply, body.Code, 401); err != nil {
+		return err
+	}
+	d.state.Pending = append(d.state.Pending, auditExpectation{reply.RequestID, d.workspace(d.cfg.RawWindow), 0})
+	previous := d.state.ActorID
+	d.admin.Jar, _ = cookiejar.New(nil)
+	if err = d.login(); err != nil {
+		return err
+	}
+	if d.state.ActorID != previous {
+		return errors.New("fresh login changed the actor")
+	}
+	if err = d.rawPositive(); err != nil {
+		return err
+	}
+	return d.verifyAudits()
+}
+func (d *driver) run(mode string) error {
+	switch mode {
+	case "read":
+		if err := d.rawPositive(); err != nil {
+			return err
+		}
+		before, err := d.rawCounter()
+		if err != nil {
+			return err
+		}
+		if _, err = d.positive(d.cfg.RollupWindow, "rollup"); err != nil {
+			return err
+		}
+		after, err := d.rawCounter()
+		if err != nil {
+			return err
+		}
+		if !sameCounter(before, after) {
+			return errors.New("rollup success queried raw or changed its process")
+		}
+		if d.cfg.ForeignWorkspaceID != "" {
+			foreign := d.cfg.RawWindow
+			foreign.WorkspaceID = d.cfg.ForeignWorkspaceID
+			if err = d.refused(foreign, "RESOURCE_NOT_FOUND", 404, true); err != nil {
+				return err
+			}
+			return d.verifyAudits()
+		}
+	case "long-unavailable", "long-tls-refused":
+		if !d.state.Completed["read"] {
+			return errors.New("run the positive read phase first")
+		}
+		if mode == "long-tls-refused" {
+			if err := d.longHealth(true); err != nil {
+				return err
+			}
+		}
+		if err := d.refused(d.cfg.RollupWindow, "MONITORING_LONG_TIER_UNAVAILABLE", 503, true); err != nil {
+			return err
+		}
+		return d.rawPositive()
+	case "long-restored", "long-tls-restored":
+		if mode == "long-tls-restored" {
+			if err := d.longHealth(false); err != nil {
+				return err
+			}
+		}
+		if _, err := d.positive(d.cfg.RollupWindow, "rollup"); err != nil {
+			return err
+		}
+		return d.verifyAudits()
+	case "workspace-disabled":
+		return d.refused(d.cfg.RawWindow, "ACCESS_DENIED", 403, true)
+	case "workspace-restored":
+		if err := d.rawPositive(); err != nil {
+			return err
+		}
+		return d.verifyAudits()
+	case "logout-replay":
+		return d.logoutReplay()
+	case "retention":
+		if d.cfg.RetentionWindow == nil {
+			return errors.New("retention input is absent")
+		}
+		before, err := d.rawCounter()
+		if err != nil {
+			return err
+		}
+		times := make([]time.Duration, 0, 30)
+		var first time.Duration
+		for i := 0; i < 31; i++ {
+			elapsed, err := d.positive(*d.cfg.RetentionWindow, "rollup")
+			if err != nil {
+				return err
+			}
+			if i == 0 {
+				first = elapsed
+			} else {
+				times = append(times, elapsed)
+			}
+		}
+		after, err := d.rawCounter()
+		if err != nil {
+			return err
+		}
+		if !sameCounter(before, after) {
+			return errors.New("ninety-day reads queried raw or changed its process")
+		}
+		sort.Slice(times, func(i, j int) bool { return times[i] < times[j] })
+		emit(map[string]any{"event": "retention_client_measurement", "first_ms": float64(first) / float64(time.Millisecond),
+			"subsequent_reads": 30, "nearest_rank_median_ms": float64(times[14]) / float64(time.Millisecond),
+			"p95_ms": float64(times[28]) / float64(time.Millisecond), "maximum_ms": float64(times[29]) / float64(time.Millisecond),
+			"scope": "declared synthetic dataset; validation and public audit reads included; not production percentiles"})
+	default:
+		return errors.New("unknown command")
+	}
+	return nil
+}
+func emit(value any) { json.NewEncoder(os.Stdout).Encode(value) }
+func execute(configFile, mode string) error {
+	body, err := protectedRead(configFile, 65536)
+	if err != nil {
+		return err
+	}
+	var cfg input
+	if strictDecode(body, &cfg) != nil {
+		return errors.New("driver configuration is invalid")
+	}
+	d, err := newDriver(cfg)
+	if err != nil {
+		return err
+	}
+	defer d.close()
+	if mode == "init" {
+		d.state = savedState{Format: stateFormat, SourceSHA: cfg.SourceSHA, Origin: d.origin.String(), Completed: map[string]bool{}}
+		if err = d.login(); err != nil {
+			_ = d.logout()
+			return err
+		}
+		if err = d.save(true); err != nil {
+			d.logout()
+			return err
+		}
+	} else {
+		if err = d.load(); err != nil {
+			return err
+		}
+		if mode == "abort" {
+			if err = d.logout(); err != nil {
+				return err
+			}
+			if err = os.Remove(cfg.SessionFile); err != nil {
+				return errors.New("owned session file could not be removed")
+			}
+			emit(map[string]any{"event": "cleanup", "status": "aborted", "declared_source_sha": cfg.SourceSHA})
+			return nil
+		}
+		if mode == "finish" {
+			for _, required := range cfg.RequiredCommands {
+				if !d.state.Completed[required] {
+					return errors.New("a required installed acceptance phase has not completed")
+				}
+			}
+			if err = d.verifyAudits(); err != nil {
+				return err
+			}
+			if err = d.logout(); err != nil {
+				return err
+			}
+			if err = os.Remove(cfg.SessionFile); err != nil {
+				return errors.New("owned session file could not be removed")
+			}
+		} else {
+			runError := d.run(mode)
+			if runError == nil {
+				d.state.Completed[mode] = true
+			}
+			if err = d.save(false); err != nil {
+				return err
+			}
+			if runError != nil {
+				return runError
+			}
+		}
+	}
+	emit(map[string]any{"event": "command", "command": mode, "status": "passed", "declared_source_sha": cfg.SourceSHA})
+	return nil
+}
+func main() {
+	config := flag.String("input", "", "protected installed-fixture input JSON")
+	mode := flag.String("mode", "", "init, read, fault/recovery, retention, finish or abort")
+	flag.Parse()
+	if *config == "" || *mode == "" || flag.NArg() != 0 {
+		fmt.Fprintln(os.Stderr, "Supply -input <protected file> and -mode <command>")
+		os.Exit(2)
+	}
+	if err := execute(*config, *mode); err != nil {
+		fmt.Fprintln(os.Stderr, "Installed history acceptance failed:", err)
+		os.Exit(1)
+	}
+}

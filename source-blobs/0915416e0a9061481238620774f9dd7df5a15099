@@ -1,0 +1,11 @@
+{
+  "pid": 3502270,
+  "start_ticks": "80394609",
+  "cmdline_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "time": 1794539431.9273815,
+  "reason": "Only the first admission loop exited 75; no source copy or selected test began",
+  "scripts": {
+    "native-prepare.py": "2209f090a05f0fda1e9db9ad6045ba800178876aef6714a5020838f8ca6b7382",
+    "native-admission-loop.py": "3dace38947630d4bbf6ebc9ea34c50f29ac18fa79616349b4e81a1b95be8bc82"
+  }
+}

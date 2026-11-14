@@ -1,0 +1,747 @@
+From d521af0fca53a4417cec3af3e2b51398f6502649 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 20:50:00 +0800
+Subject: [PATCH] AGT-112: Pair fail-closed assistant policy with the audit
+ fixture
+
+Integrate SCI 3a6378a4 with APP c2b1bb5a. Verify the typed constructor, three refusal cases, authenticated HTTPS, real PostgreSQL export and standalone audit verification in one disconnected fixture.
+---
+ docs/research/app-lane-questions.md           |  11 ++
+ docs/research/audit-assistant-disclosure.md   |  31 ++++++
+ docs/research/product-assistant-audit.md      |  49 ++++-----
+ .../product-assistant-execution-policy.md     | 100 ++++++++++++++++++
+ .../assistant_disclosure_integration_test.go  |   2 +-
+ .../internal/modules/productagent/README.md   |  13 ++-
+ .../modules/productagent/admission.go         |  27 ++++-
+ .../modules/productagent/admission_test.go    |  37 ++++++-
+ .../modules/productagent/commands_test.go     |   2 +-
+ .../dispatch_repository_integration_test.go   |  72 ++++++++++++-
+ .../modules/productagent/http/handler_test.go |   4 +-
+ .../http/testdata/dispatch_overlay.py         |   2 +-
+ .../internal/modules/productagent/service.go  |  22 ++--
+ .../service_repository_integration_test.go    |   2 +-
+ .../testdata/replay_audit_fixture.py          |  49 +++------
+ 15 files changed, 337 insertions(+), 86 deletions(-)
+ create mode 100644 docs/research/product-assistant-execution-policy.md
+
+diff --git a/docs/research/app-lane-questions.md b/docs/research/app-lane-questions.md
+index 595f132a..cd94254b 100644
+--- a/docs/research/app-lane-questions.md
++++ b/docs/research/app-lane-questions.md
+@@ -118,6 +118,17 @@ actor. The offline export needs separate attribution acceptance.
+ Workspace-free navigation requires a shared global-scope decision. See the
+ [registration handoff and acceptance cases](product-assistant-audit.md#authenticated-http-handoff).
+ 
++## Installation execution handoff for AGT-112
++
++`productagent.New` accepts the trusted local `ExecutionPolicy` reader.
++The configuration owner supplies a validated installation setting that
++preserves absence separately from explicit disable. The identity HTTP owner
++binds the reader during the shared route registration. The same gate covers
++Admin navigation and Portal navigation and reads. Keep AGT-112 open until
++the actual setting and its management authority, per-user budgets and
++disable policy, loop limits and both browser entrances pass together. See
++[execution policy acceptance](product-assistant-execution-policy.md).
++
+ ## Repository test gate
+ 
+ The previous console run on isolated ports had 18 failures, 1013 passes and 23
+diff --git a/docs/research/audit-assistant-disclosure.md b/docs/research/audit-assistant-disclosure.md
+index 968f1b8b..1850c252 100644
+--- a/docs/research/audit-assistant-disclosure.md
++++ b/docs/research/audit-assistant-disclosure.md
+@@ -65,3 +65,34 @@ or commitment, and reject a one-field disclosure or one attached to an unrelated
+ event. Check that strict disclosure verification detects removed fields and
+ that ordinary verification accepts historical exports. Verify that unrelated
+ metadata remains redacted even when it contains the two assistant keys.
++
++## AGT-112 explicit audit fixture policy
++
++The APP candidate `c2b1bb5a` passes a typed
++`productagent.ExecutionPolicy` into `productagent.New`. Missing or failed
++policy returns `SERVICE_NOT_READY`. Explicit disable returns
++`ACCESS_DENIED`. The local APP replay overlay for this test supplies one
++constant enable in the synthetic audit fixture. Carry the same explicit
++reader into the tracked constructor call when the two changes are paired.
++Keep policy selection at the existing constructor boundary and use the
++unchanged production denial and authorized command paths. A fallback
++enable would bypass the trusted installation decision.
++
++Use the existing audit module fixture and standalone verifier on
++disconnected PostgreSQL. Dispatch both commands with the synthetic
++enable, verify the V1/V2 export against its held checkpoint, and retain
++the redaction and tamper refusals. No dependency, model, data or public
++contract is added. The [APP policy qualification](product-assistant-execution-policy.md)
++records the Go, PostgreSQL, pgvector and Python license conditions and
++the default-denial acceptance.
++
++The tracked fixture matched the APP overlay byte for byte. With the policy
++candidate replayed as `c90229f8` on `f83a9fde`, the complete audit module
++passed against PostgreSQL 18.6 and pgvector 0.8.7 in a disconnected Linux
++amd64 container with no published ports. The two real assistant commands
++produced the expected audit events. The standalone verifier accepted the
++export and held checkpoint, and the scope and tamper cases were refused.
++The standalone verifier suite and the APP missing, disabled and unreadable
++policy tests passed. Disconnected `make check && make build` passed on the
++paired sources. The one-argument constructor on `f83a9fde` requires the
++policy change to land together with this fixture update.
+diff --git a/docs/research/product-assistant-audit.md b/docs/research/product-assistant-audit.md
+index 69f41576..7e42c799 100644
+--- a/docs/research/product-assistant-audit.md
++++ b/docs/research/product-assistant-audit.md
+@@ -123,8 +123,10 @@ and the [OWASP CSRF guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cro
+ Do not put command text in the URL or echo it in a problem response.
+ 
+ Construct `productagent.New` with the same application service used by the
+-ordinary portal routes in `identity/http.New`, join its error into startup
+-initialization, and store the resulting adapter on `identity/http.Handler`.
++ordinary portal routes in `identity/http.New` and the
++[installation execution policy](product-assistant-execution-policy.md).
++Join the constructor error into startup initialization and store the adapter
++on `identity/http.Handler`.
+ In `identity/http.Handler.api`, dispatch `productagenthttp.Owns(path)` beside
+ the existing application branch after the shared origin, CSRF and license guards.
+ Call `Authenticate(ctx, session, audience)` and pass its result and the
+@@ -192,20 +194,16 @@ The policy reads the current local decision from `context.Context`. It returns
+ error rejects execution with `SERVICE_NOT_READY`. Explicit `false, nil` rejects
+ with `ACCESS_DENIED`.
+ 
+-SCI owns the constructor call in
+-[`runProductAssistantAuditCommands`](../../services/control/internal/modules/audit/assistant_disclosure_integration_test.go#L29).
+-When integrating the candidate, pass
+-`func(context.Context) (bool, error) { return true, nil }` as the second argument
+-in that synthetic fixture. The test already imports `context`. Keep the
+-fixture and constructor updates in the same integration change. The identity
+-dispatcher binds the real trusted configuration when it mounts the route.
+-
+-The [Go build overlay](https://pkg.go.dev/cmd/go#hdr-Compile_packages_and_dependencies)
+-replaces only the fixture's legacy constructor line in a temporary file. It
+-checks that the original line occurs exactly once. No dispatcher, production
+-source or audit writer changes in this rehearsal. Build the real audit test
+-and standalone verifier with dependency downloads disabled. Run both with
+-PostgreSQL 18.6 and pgvector 0.8.7 on a disposable
++SCI's reviewed fixture in
++[`runProductAssistantAuditCommands`](../../services/control/internal/modules/audit/assistant_disclosure_integration_test.go#L29)
++passes `func(context.Context) (bool, error) { return true, nil }` for its
++synthetic installation. Keep the fixture and constructor updates together.
++The identity dispatcher binds the real trusted configuration when it
++mounts the route.
++
++The replay compiles the tracked audit fixture and standalone verifier
++with dependency downloads disabled. Run both with PostgreSQL 18.6 and
++pgvector 0.8.7 on a disposable
+ [Docker none network](https://docs.docker.com/engine/network/drivers/none/).
+ The container has loopback only and exposes no ports. The verified fixture
+ exports the mixed V1/V2 chain, discloses the assistant subject and actor,
+@@ -221,21 +219,14 @@ under Apache 2.0. The pinned fixture uses
+ PostgreSQL License. These terms allow commercial use, offline use and
+ redistribution with the applicable notices. The test uses synthetic rows.
+ 
+-Run the replay with the AGT-112 candidate checked out. The script may be
+-copied from the APP checkout if the candidate does not yet contain it. Use
+-the local image and the warmed Go module cache described in the development
+-environment guide.
++Run from the integrated checkout with the local image and warmed Go module
++cache described in the development environment guide.
+ 
+ ```sh
+-python3 /path/to/replay_audit_fixture.py /path/to/agt-112-candidate-checkout
++python3 services/control/internal/modules/productagent/testdata/replay_audit_fixture.py .
+ ```
+ 
+ The [replay script](../../services/control/internal/modules/productagent/testdata/replay_audit_fixture.py)
+-creates and removes its own container and scratch directory. After SCI has
+-updated the tracked fixture, the regular `TestProductAssistantAuditWithin`
+-test with the same protected DSN and verifier inputs proves the integrated
+-tree directly.
+-
+-The replay passed on the installation policy candidate with PostgreSQL 18.6,
+-pgvector 0.8.7 and the Linux arm64 verifier. It exercised both real assistant
+-commands and all ten scope and export tamper subtests with no external route.
++creates and removes its own container and scratch directory. The regular
++`TestProductAssistantAuditWithin` test accepts the same protected DSN and
++standalone verifier inputs.
+diff --git a/docs/research/product-assistant-execution-policy.md b/docs/research/product-assistant-execution-policy.md
+new file mode 100644
+index 00000000..9d15628a
+--- /dev/null
++++ b/docs/research/product-assistant-execution-policy.md
+@@ -0,0 +1,100 @@
++# Product assistant installation execution policy (AGT-112)
++
++## References
++
++GitHub documents [enterprise controls for blocking agentic features](https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/manage-agents/block-agentic-features) and a
++[disabled default for unconfigured features](https://docs.github.com/en/copilot/concepts/enterprise/default-availability).
++An installation-level denial takes precedence over a user's access to a feature.
++[OWASP LLM06](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/) calls for
++complete mediation at the action boundary. That applies to navigation and reads as
++well as confirmed actions when they share an assistant execution policy.
++
++No new dependencies, models or datasets are required. The new boundary uses the
++[Go standard library](https://go.dev/LICENSE), whose BSD-style terms allow
++commercial use, offline use and redistribution with notices. The existing test
++fixture uses [PostgreSQL](https://www.postgresql.org/about/licence/) and
++[pgvector](https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE), both under
++the permissive PostgreSQL License, and [Python](https://docs.python.org/3.12/license.html)
++under the PSF license for the build overlay. Those licenses allow commercial use,
++offline use and redistribution with notices. The test uses synthetic records and
++requires no models or customer data.
++
++## Decision
++
++Resolve the installation policy on each otherwise-admitted command in
++`RunForRequest`, before calling a read adapter or returning a navigation result.
++`Run` delegates to the same method. The decision takes only the server context.
++The existing authenticated dispatcher supplies the current identity, and the
++operation still rechecks session, workspace and permission in its own transaction.
++Only a successful operation may commit a success audit event. Command discovery
++continues to describe the static grammar for the authenticated entrance.
++
++A trusted local source must distinguish an explicitly enabled installation,
++an explicitly disabled installation and an unavailable decision. Explicit denial
++uses the existing `ACCESS_DENIED` response (403). Missing or unreadable policy
++uses `SERVICE_NOT_READY` (503), with no private reader error in the response.
++The service holds no policy cache. A later request rechecks the source. This
++boundary admits new commands and does not cancel actions already admitted.
++
++The control plane's [typed configuration](../../services/control/internal/platform/config/config.go)
++rejects unknown fields and currently has no assistant policy. Reuse the typed
++configuration and startup validation model for the production source. The
++configuration owner must preserve the distinction between an absent setting
++and explicit false. The identity HTTP owner binds that source at `productagent.New`
++when registering the staged route. The source must be local and honor request
++cancellation. A nil source denies execution until integration exists. Reusing
++`workflows.enabled` would bind independent capabilities together. An environment
++variable, request flag or assistant-owned configuration parser would create a
++second policy authority. Enforcement only in the browser or gateway would miss
++model-independent commands.
++
++User budgets, loop bounds, user-scoped policy, privileged management and an
++operator-facing control remain separate acceptance requirements. Future model
++and confirmed-action entry points must pass through the same installation
++policy before any assistant tool action.
++
++## Acceptance
++
++- In a network-isolated PostgreSQL fixture using the real HTTPS dispatcher,
++  confirm Admin navigation and Portal reads succeed with an explicit enable,
++  using current session and workspace, and emit correlated success audit events.
++- Use both entrances to verify explicit disable, absent source and source read
++  failure. Expect the status and code above, no result data or private error text,
++  and no event for the rejected request in PostgreSQL or the Admin audit API.
++- Verify both service entry methods deny navigation and reads before any tool or
++  storage call. Retry the same eligible command after policy recovery to show
++  that a previous decision is never reused. Retain the existing authentication,
++  scope, CSRF, risk-tier and audit failure tests.
++
++The boundary passed the focused race tests and
++`TestAuthenticatedAssistantHTTP` through the real TLS dispatcher with temporary
++registration. `TestOfflineCommandsWithCurrentSessionAndWorkspace` also passed.
++Both integration runs used PostgreSQL 18.6 with pgvector 0.8.7 in a Docker
++container with no external network. This verifies the policy boundary with a
++fixture source. Production configuration and browser acceptance remain open.
++
++## Paired integration
++
++Apply the APP constructor and dispatch changes from `c2b1bb5a` together
++with the reviewed [SCI follow-up](audit-assistant-disclosure.md#agt-112-explicit-audit-fixture-policy)
++from `3a6378a4`. The tracked audit fixture must explicitly enable its
++synthetic installation. This preserves the existing real export test
++while a nil production policy remains unavailable. The audit replay
++runner compiles the tracked fixture directly. Only the separate HTTPS
++fixture still stages registration in the identity dispatcher.
++
++The pairing adds no new dependencies or public API. Exercise the native
++audit export and standalone verifier on the same disconnected PostgreSQL
++installation as the authenticated HTTPS and repository policy cases. The
++production configuration, privileged policy controls and both browser
++entrances still require acceptance. Keep AGT-112 open for those controls,
++the user allowance and loop bounds.
++
++The paired tree passed a targeted build, race tests and vet for the
++assistant and audit packages. One disconnected PostgreSQL 18.6 container
++with pgvector 0.8.7 ran `TestProductAssistantAuditWithin`,
++`TestAuthenticatedAssistantHTTP` and
++`TestOfflineCommandsWithCurrentSessionAndWorkspace` in sequence.
++The tracked audit fixture exercised the real export and independent verifier.
++The HTTPS test passed explicit enable, disable, absence, read failure and
++recovery, including the audit and response checks on both entrances.
+diff --git a/services/control/internal/modules/audit/assistant_disclosure_integration_test.go b/services/control/internal/modules/audit/assistant_disclosure_integration_test.go
+index cc5f588a..37b45bb5 100644
+--- a/services/control/internal/modules/audit/assistant_disclosure_integration_test.go
++++ b/services/control/internal/modules/audit/assistant_disclosure_integration_test.go
+@@ -26,7 +26,7 @@ func runProductAssistantAuditCommands(t *testing.T, ctx context.Context, store t
+ 	owner.Config.Workflows.Enabled = true
+ 	spaces := &workspaces.Service{Identity: owner}
+ 	flow := &workflows.Service{Identity: owner, Workspaces: spaces}
+-	assistant, err := productagent.New(&applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow})
++	assistant, err := productagent.New(&applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow}, func(context.Context) (bool, error) { return true, nil })
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/services/control/internal/modules/productagent/README.md b/services/control/internal/modules/productagent/README.md
+index 806d84ce..2ebb3fe9 100644
+--- a/services/control/internal/modules/productagent/README.md
++++ b/services/control/internal/modules/productagent/README.md
+@@ -1,7 +1,8 @@
+ # Product assistant command service
+ 
+ `New` binds the deterministic command service to the control plane's existing
+-application projection and session owner. `Run` takes a server-authenticated
++application projection, session owner and trusted local execution policy.
++`Run` takes a server-authenticated
+ identity, a complete command and an optional cursor, and generates a request
+ ID. `RunForRequest` accepts the ID assigned by the trusted HTTP dispatcher.
+ Navigation, application reads and conversation reads resolve the authenticated
+@@ -19,6 +20,12 @@ works offline with fixed routes and typed reads. See the
+ [entry-point and audit handoff](../../../../../docs/research/app-lane-questions.md)
+ for the remaining browser, HTTP and confirmed mutation work.
+ 
++Every admitted command reads the installation decision before dispatch.
++An explicit disable returns `ACCESS_DENIED`. A missing source or failed read
++returns `SERVICE_NOT_READY`. Both leave the result empty and produce no success
++audit. Later commands read policy again. Production binding requires the
++[typed configuration and dispatcher handoff](../../../../../docs/research/product-assistant-execution-policy.md).
++
+ The reviewed tool overlay selects only the typed read adapters. The generated
+ catalog derives HTTP metadata from the applications OpenAPI contract and checks
+ the exact reviewed paths and portal cookie scheme. Regenerate
+@@ -91,5 +98,7 @@ entrance cookies and the standard CSRF route. It checks that an application
+ cursor cannot cross workspace boundaries and a failed audit append suppresses
+ the response data. It correlates real command requests with the Admin audit
+ list in its legacy and opt-in forms, and checks that denied commands leave no
+-audit event. Once the shared dispatcher mounts the adapter, run the same test
++audit event. It also exercises an enabled, explicitly disabled, absent and
++unreadable installation policy on both entrances and retries after recovery.
++Once the shared dispatcher mounts the adapter, exercise the real policy source
+ without the overlay.
+diff --git a/services/control/internal/modules/productagent/admission.go b/services/control/internal/modules/productagent/admission.go
+index 40bc6179..b2730409 100644
+--- a/services/control/internal/modules/productagent/admission.go
++++ b/services/control/internal/modules/productagent/admission.go
+@@ -1,6 +1,31 @@
+ package productagent
+ 
+-import "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++import (
++	"context"
++	"errors"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++)
++
++// ExecutionPolicy reads the current installation decision from a trusted local
++// source and honors cancellation. A missing decision must return an error.
++type ExecutionPolicy func(context.Context) (enabled bool, err error)
++
++var errExecutionPolicyUnavailable = errors.New("SERVICE_NOT_READY")
++
++func (s *Service) admitExecution(ctx context.Context) error {
++	if s.executionPolicy == nil {
++		return errExecutionPolicyUnavailable
++	}
++	enabled, err := s.executionPolicy(ctx)
++	if err != nil {
++		return errExecutionPolicyUnavailable
++	}
++	if !enabled {
++		return ErrCommandDenied
++	}
++	return nil
++}
+ 
+ type riskTier string
+ 
+diff --git a/services/control/internal/modules/productagent/admission_test.go b/services/control/internal/modules/productagent/admission_test.go
+index 489830d3..d5ebfd56 100644
+--- a/services/control/internal/modules/productagent/admission_test.go
++++ b/services/control/internal/modules/productagent/admission_test.go
+@@ -1,10 +1,13 @@
+ package productagent
+ 
+ import (
++	"context"
+ 	"errors"
+ 	"net/http"
+ 	"testing"
+ 
++	"github.com/google/uuid"
++
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ )
+@@ -28,7 +31,7 @@ func TestCommandDispatchRejectsConflictingOrUnavailableRisk(t *testing.T) {
+ 		{name: "read label with write method", command: riskRead, catalog: riskRead, method: http.MethodPost},
+ 	} {
+ 		t.Run(tt.name, func(t *testing.T) {
+-			service, err := New(&applications.Service{Identity: &identity.Service{}})
++			service, err := New(&applications.Service{Identity: &identity.Service{}}, nil)
+ 			if err != nil {
+ 				t.Fatal(err)
+ 			}
+@@ -50,3 +53,35 @@ func TestCommandDispatchRejectsConflictingOrUnavailableRisk(t *testing.T) {
+ 		})
+ 	}
+ }
++
++func TestInstallationPolicyDeniesBeforeCommandDispatch(t *testing.T) {
++	for _, tc := range []struct {
++		name   string
++		policy ExecutionPolicy
++		want   error
++	}{
++		{"no source", nil, errExecutionPolicyUnavailable},
++		{"disabled", func(context.Context) (bool, error) { return false, nil }, ErrCommandDenied},
++		{"read failed", func(context.Context) (bool, error) { return true, errors.New("private reader error") }, errExecutionPolicyUnavailable},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			service, err := New(&applications.Service{Identity: &identity.Service{}}, tc.policy)
++			if err != nil {
++				t.Fatal(err)
++			}
++			// Any navigation or read dispatch would require these dependencies.
++			service.identity, service.applications = nil, nil
++			actor := identity.Auth{Me: identity.Me{Audience: "portal", Workspace: &identity.Workspace{}}}
++			for _, input := range []string{"open home", "show applications", "show conversations"} {
++				result, err := service.Run(t.Context(), actor, input, "")
++				if result != (Result{}) || err != tc.want {
++					t.Fatalf("Run(%q) returned %#v, %v; want empty result and %v", input, result, err, tc.want)
++				}
++				result, err = service.RunForRequest(t.Context(), actor, input, "", uuid.NewString())
++				if result != (Result{}) || err != tc.want {
++					t.Fatalf("RunForRequest(%q) returned %#v, %v; want empty result and %v", input, result, err, tc.want)
++				}
++			}
++		})
++	}
++}
+diff --git a/services/control/internal/modules/productagent/commands_test.go b/services/control/internal/modules/productagent/commands_test.go
+index dab7dc1d..286e30ef 100644
+--- a/services/control/internal/modules/productagent/commands_test.go
++++ b/services/control/internal/modules/productagent/commands_test.go
+@@ -36,7 +36,7 @@ func TestLocalizedCommandDestinations(t *testing.T) {
+ }
+ 
+ func TestCommandRejection(t *testing.T) {
+-	service, err := New(&applications.Service{Identity: &identity.Service{}})
++	service, err := New(&applications.Service{Identity: &identity.Service{}}, nil)
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go b/services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go
+index cc900404..3da05843 100644
+--- a/services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go
++++ b/services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go
+@@ -5,9 +5,11 @@ package http_test
+ import (
+ 	"context"
+ 	"encoding/json"
++	"errors"
+ 	"net/http"
+ 	"net/url"
+ 	"strings"
++	"sync/atomic"
+ 	"testing"
+ 	"time"
+ 
+@@ -87,14 +89,32 @@ func TestAuthenticatedAssistantHTTP(t *testing.T) {
+ SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_by FROM workflows WHERE id=$2`, version, workflow.ID)
+ 		exec(t, `UPDATE workflows SET current_version_id=$1 WHERE id=$2`, version, workflow.ID)
+ 	}
++	const (
++		enabled int32 = iota
++		disabled
++		unreadable
++	)
++	const privatePolicyError = "fixture private policy detail"
++	var policyMode atomic.Int32
++	assistant, err := productagent.New(dispatcher.Applications.Service, func(ctx context.Context) (bool, error) {
++		mode := policyMode.Load()
++		if mode == unreadable {
++			return false, errors.New(privatePolicyError)
++		}
++		return mode == enabled, ctx.Err()
++	})
++	if err != nil {
++		t.Fatal(err)
++	}
++	dispatcher.ProductAssistant.Service = assistant
+ 	server := httpfixture.NewTLSServer(t, dispatcher)
+ 	policyCookies, err := httpserver.NewCookiePolicy(owner.Config.Server.EffectiveTransportMode())
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	client := func(audience, origin, token string) assistantClient {
++	client := func(t *testing.T, transport *http.Client, audience, origin, token string) assistantClient {
+ 		t.Helper()
+-		c := assistantClient{http: server.Client(), origin: origin, session: &http.Cookie{
++		c := assistantClient{http: transport, origin: origin, session: &http.Cookie{
+ 			Name: policyCookies.Name(audience, httpserver.SessionCookie), Value: token,
+ 		}}
+ 		response := c.call(t, http.MethodGet, "/api/v1/auth/csrf", "", nil)
+@@ -113,8 +133,8 @@ SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_
+ 		}
+ 		return c
+ 	}
+-	admin := client("admin", httpfixture.AdminOrigin, adminToken)
+-	portal := client("portal", httpfixture.PortalOrigin, portalToken)
++	admin := client(t, server.Client(), "admin", httpfixture.AdminOrigin, adminToken)
++	portal := client(t, server.Client(), "portal", httpfixture.PortalOrigin, portalToken)
+ 
+ 	readAudit := func(t *testing.T, id string, includeActor bool) []map[string]any {
+ 		t.Helper()
+@@ -258,7 +278,7 @@ FROM audit_events WHERE request_id=$1`, id, tenant, workspace).Scan(&metadataOnl
+ 	assertAudit(t, conversations.id, "portal", "list_conversations")
+ 
+ 	// Mint CSRF for the re-labeled cookie to exercise audience verification itself.
+-	wrongSession := client("portal", httpfixture.PortalOrigin, adminToken)
++	wrongSession := client(t, server.Client(), "portal", httpfixture.PortalOrigin, adminToken)
+ 	for _, tt := range []struct {
+ 		name, path, body, code string
+ 		client                 assistantClient
+@@ -297,6 +317,48 @@ FROM audit_events WHERE request_id=$1`, id, tenant, workspace).Scan(&metadataOnl
+ 		})
+ 	}
+ 
++	t.Run("installation execution policy", func(t *testing.T) {
++		missingServer := httpfixture.NewTLSServer(t, identityhttp.New(owner))
++		missingAdmin := client(t, missingServer.Client(), "admin", httpfixture.AdminOrigin, adminToken)
++		missingPortal := client(t, missingServer.Client(), "portal", httpfixture.PortalOrigin, portalToken)
++		for _, tc := range []struct {
++			name, code    string
++			mode          int32
++			status        int
++			admin, portal assistantClient
++		}{
++			{"disabled", "ACCESS_DENIED", disabled, http.StatusForbidden, admin, portal},
++			{"unreadable", "SERVICE_NOT_READY", unreadable, http.StatusServiceUnavailable, admin, portal},
++			{"missing", "SERVICE_NOT_READY", enabled, http.StatusServiceUnavailable, missingAdmin, missingPortal},
++		} {
++			t.Run(tc.name, func(t *testing.T) {
++				policyMode.Store(tc.mode)
++				for _, attempt := range []struct {
++					client assistantClient
++					body   string
++				}{
++					{tc.admin, `{"command":"open nodes"}`},
++					{tc.portal, `{"command":"open keys"}`},
++					{tc.portal, applications},
++					{tc.portal, `{"command":"show conversations"}`},
++				} {
++					response := attempt.client.call(t, http.MethodPost, commandPath, attempt.body, nil)
++					response.problem(t, tc.status, tc.code)
++					if strings.Contains(response.raw, privatePolicyError) {
++						t.Fatal("policy failure disclosed private source details")
++					}
++					assertNoAudit(t, response.id)
++				}
++			})
++		}
++		policyMode.Store(enabled)
++		retry := portal.call(t, http.MethodPost, commandPath, applications, nil)
++		if page := retry.result(t).Applications; page == nil || len(page.Items) != 1 || page.Items[0].WorkspaceID != workspace {
++			t.Fatal("the read did not recover after the installation policy was enabled")
++		}
++		assertAudit(t, retry.id, "portal", "list_applications")
++	})
++
+ 	t.Run("audit append failure", func(t *testing.T) {
+ 		exec(t, `CREATE FUNCTION reject_assistant_http_fixture() RETURNS trigger LANGUAGE plpgsql AS $$
+ BEGIN RAISE EXCEPTION 'fixture private audit detail' USING ERRCODE = '23514'; END
+diff --git a/services/control/internal/modules/productagent/http/handler_test.go b/services/control/internal/modules/productagent/http/handler_test.go
+index ea2b8873..0f6bac0f 100644
+--- a/services/control/internal/modules/productagent/http/handler_test.go
++++ b/services/control/internal/modules/productagent/http/handler_test.go
+@@ -14,7 +14,7 @@ import (
+ )
+ 
+ func TestCommandRequestBoundary(t *testing.T) {
+-	service, err := productagent.New(&applications.Service{Identity: &identity.Service{}})
++	service, err := productagent.New(&applications.Service{Identity: &identity.Service{}}, nil)
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+@@ -48,7 +48,7 @@ func TestCommandRequestBoundary(t *testing.T) {
+ }
+ 
+ func TestCommandRequiresDispatcherContext(t *testing.T) {
+-	service, err := productagent.New(&applications.Service{Identity: &identity.Service{}})
++	service, err := productagent.New(&applications.Service{Identity: &identity.Service{}}, nil)
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/services/control/internal/modules/productagent/http/testdata/dispatch_overlay.py b/services/control/internal/modules/productagent/http/testdata/dispatch_overlay.py
+index 82fdbddc..87d14dd5 100644
+--- a/services/control/internal/modules/productagent/http/testdata/dispatch_overlay.py
++++ b/services/control/internal/modules/productagent/http/testdata/dispatch_overlay.py
+@@ -33,7 +33,7 @@ def main():
+                           "ProductAssistant: &productagenthttp.Handler{Service: assistant}")
+     constructor = "return &Handler{TelemetryLogs:"
+     source = replace_once(source, constructor, f"appService := {app_service}\n\t"
+-                          f"assistant, assistantError := productagent.New(appService)\n\t{constructor}")
++                          f"assistant, assistantError := productagent.New(appService, nil)\n\t{constructor}")
+     startup_errors = "errors.Join(licenseError, ssoError, localeError, p.err)"
+     source = replace_once(source, startup_errors, startup_errors[:-1] + ", assistantError)")
+     dispatch = "if applicationhttp.Owns(path) {"
+diff --git a/services/control/internal/modules/productagent/service.go b/services/control/internal/modules/productagent/service.go
+index 55009ed3..75bd3463 100644
+--- a/services/control/internal/modules/productagent/service.go
++++ b/services/control/internal/modules/productagent/service.go
+@@ -48,14 +48,16 @@ type Result struct {
+ 
+ // Service dispatches only fixed destinations and scoped, typed reads.
+ type Service struct {
+-	catalog      commandCatalog
+-	tools        map[string]tool
+-	identity     *identity.Service
+-	applications *applications.Service
++	catalog         commandCatalog
++	tools           map[string]tool
++	identity        *identity.Service
++	applications    *applications.Service
++	executionPolicy ExecutionPolicy
+ }
+ 
+-// New binds the command layer to the application projection's identity owner.
+-func New(apps *applications.Service) (*Service, error) {
++// New binds the command layer to the application projection's identity owner
++// and the installation's execution policy. A nil policy denies execution.
++func New(apps *applications.Service, policy ExecutionPolicy) (*Service, error) {
+ 	if apps == nil || apps.Identity == nil {
+ 		return nil, errors.New("PRODUCT_AGENT_IDENTITY_REQUIRED")
+ 	}
+@@ -67,7 +69,10 @@ func New(apps *applications.Service) (*Service, error) {
+ 	if err != nil {
+ 		return nil, err
+ 	}
+-	return &Service{catalog: catalog, tools: tools, identity: apps.Identity, applications: apps}, nil
++	return &Service{
++		catalog: catalog, tools: tools, identity: apps.Identity, applications: apps,
++		executionPolicy: policy,
++	}, nil
+ }
+ 
+ // Commands lists the exact phrases for the authenticated entrance and the
+@@ -123,6 +128,9 @@ func (s *Service) RunForRequest(ctx context.Context, actor identity.Auth, input,
+ 	if err != nil {
+ 		return Result{}, err
+ 	}
++	if err := s.admitExecution(ctx); err != nil {
++		return Result{}, err
++	}
+ 	switch cmd.risk {
+ 	case riskRead:
+ 		return s.readApplications(ctx, actor, cmd.id, cursor, requestID)
+diff --git a/services/control/internal/modules/productagent/service_repository_integration_test.go b/services/control/internal/modules/productagent/service_repository_integration_test.go
+index 6871d69f..9fbd5725 100644
+--- a/services/control/internal/modules/productagent/service_repository_integration_test.go
++++ b/services/control/internal/modules/productagent/service_repository_integration_test.go
+@@ -35,7 +35,7 @@ func TestOfflineCommandsWithCurrentSessionAndWorkspace(t *testing.T) {
+ 	spaces := &workspaces.Service{Identity: owner}
+ 	flow := &workflows.Service{Identity: owner, Workspaces: spaces}
+ 	apps := &applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow}
+-	service, err := New(apps)
++	service, err := New(apps, func(context.Context) (bool, error) { return true, nil })
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/services/control/internal/modules/productagent/testdata/replay_audit_fixture.py b/services/control/internal/modules/productagent/testdata/replay_audit_fixture.py
+index 31f4dd82..486acafc 100644
+--- a/services/control/internal/modules/productagent/testdata/replay_audit_fixture.py
++++ b/services/control/internal/modules/productagent/testdata/replay_audit_fixture.py
+@@ -1,20 +1,12 @@
+ """Run the SCI assistant audit fixture offline against the AGT-112 candidate."""
+ 
+ import argparse
+-import json
+ import os
+ from pathlib import Path
+ import subprocess
+ import tempfile
+ import time
+ 
+-FIXTURE = Path(
+-    "services/control/internal/modules/audit/assistant_disclosure_integration_test.go"
+-)
+-CONSTRUCTOR = (
+-    "productagent.New(&applications.Service{Identity: owner, Workspaces: spaces, Workflows: flow})"
+-)
+-ENABLE = "func(context.Context) (bool, error) { return true, nil }"
+ AUDIT_DIR = "/tmp/audit-fixture"
+ TEST_DIR = AUDIT_DIR + "/services/control/internal/modules/audit"
+ DSN_FILE = AUDIT_DIR + "/postgres.dsn"
+@@ -25,26 +17,7 @@ def run(*args, **kwargs):
+     return subprocess.run(args, check=True, text=True, **kwargs)
+ 
+ 
+-def write_overlay(repo, scratch):
+-    fixture = repo / FIXTURE
+-    source = fixture.read_text(encoding="utf-8")
+-    if source.count(CONSTRUCTOR) != 1:
+-        raise SystemExit("Expected one legacy constructor in the SCI audit fixture")
+-    replacement = scratch / fixture.name
+-    replacement.write_text(
+-        source.replace(CONSTRUCTOR, CONSTRUCTOR[:-1] + f", {ENABLE})", 1),
+-        encoding="utf-8",
+-    )
+-    overlay = scratch / "overlay.json"
+-    overlay.write_text(
+-        json.dumps({"Replace": {str(fixture): str(replacement)}}) + "\n",
+-        encoding="utf-8",
+-    )
+-    return overlay
+-
+-
+ def build(repo, scratch, arch):
+-    overlay = write_overlay(repo, scratch)
+     env = os.environ | {
+         "CGO_ENABLED": "0",
+         "GOOS": "linux",
+@@ -53,7 +26,7 @@ def build(repo, scratch, arch):
+         "GOSUMDB": "off",
+     }
+     run(
+-        "go", "-C", "services/control", "test", "-p=1", "-overlay", str(overlay),
++        "go", "-C", "services/control", "test", "-p=1",
+         "-c", "-o", str(scratch / "audit.test"), "./internal/modules/audit",
+         cwd=repo, env=env,
+     )
+@@ -86,7 +59,7 @@ def exercise(container, repo, scratch):
+         "REVOKE CREATE ON SCHEMA public FROM PUBLIC; SHOW server_version;",
+     )
+     run(
+-        "docker", "exec", container, "install", "-d", "-m", "0700", TEST_DIR,
++        "docker", "exec", container, "install", "-d", "-m", "0700", AUDIT_DIR, TEST_DIR,
+         AUDIT_DIR + "/tools/audit-verify",
+     )
+     run(
+@@ -100,13 +73,19 @@ def exercise(container, repo, scratch):
+         (repo / "tools/audit-verify/export.sql", AUDIT_DIR + "/tools/audit-verify/export.sql"),
+     ):
+         run("docker", "cp", str(source), f"{container}:{target}")
+-    run(
+-        "docker", "exec", "-w", TEST_DIR, "-e", "GOMAXPROCS=2",
+-        "-e", f"PROJECT_ONE_TEST_DSN_FILE={DSN_FILE}",
+-        "-e", f"OWNSOLID_TEST_AUDIT_VERIFY={AUDIT_DIR}/audit-verify",
+-        container, AUDIT_DIR + "/audit.test", "-test.v", "-test.parallel=1",
+-        "-test.timeout=180s", "-test.run", "^TestProductAssistantAuditWithin$",
++    result = subprocess.run(
++        ["docker", "exec", "-w", TEST_DIR, "-e", "GOMAXPROCS=2",
++         "-e", f"PROJECT_ONE_TEST_DSN_FILE={DSN_FILE}",
++         "-e", f"OWNSOLID_TEST_AUDIT_VERIFY={AUDIT_DIR}/audit-verify",
++         container, AUDIT_DIR + "/audit.test", "-test.v", "-test.parallel=1",
++         "-test.timeout=180s", "-test.run", "^TestProductAssistantAuditWithin$"],
++        text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+     )
++    print(result.stdout, end="")
++    result.check_returncode()
++    if not any(line.startswith("--- PASS: TestProductAssistantAuditWithin (")
++               for line in result.stdout.splitlines()):
++        raise SystemExit("The audit fixture did not complete")
+ 
+ 
+ def main():
+-- 
+2.54.0 (Apple Git-157)
+

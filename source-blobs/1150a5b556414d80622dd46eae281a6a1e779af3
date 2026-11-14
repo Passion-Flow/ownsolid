@@ -1,0 +1,36 @@
+set -euo pipefail
+df -h .
+free -m
+ss -lnt
+docker_context=$(docker context show)
+image=$(docker --context "$docker_context" image inspect pgvector/pgvector:0.8.7-pg18-bookworm --format '{{.Id}}')
+umask 077
+container=
+dsn="$OWNSOLID_TRN104_PROOF/dsn"
+cleanup() {
+  if [[ -n "$container" ]]; then docker --context "$docker_context" stop "$container" >/dev/null; fi
+  if [[ -f "$dsn" ]]; then unlink "$dsn"; fi
+  if [[ -f tools/audit-verify/audit-verify ]]; then unlink tools/audit-verify/audit-verify; fi
+}
+trap cleanup EXIT
+database=ownsolid_checkpoint_worker_test
+printf '%s\n' "postgres://postgres@127.0.0.1:5432/$database?sslmode=disable" > "$dsn"
+export PROJECT_ONE_TEST_DSN_FILE="$dsn"
+container=$(docker --context "$docker_context" run --rm --detach --pull never --network none --memory 1g --cpus 2   --name "lane-trn-checkpoint-worker-${OWNSOLID_TRN104_PROOF##*.}" --env POSTGRES_HOST_AUTH_METHOD=trust   --env "POSTGRES_DB=$database" "$image")
+ready=false
+for ((attempt=0; attempt<35; attempt++)); do
+  if docker --context "$docker_context" exec "$container" pg_isready -h 127.0.0.1 -U postgres -d "$database" >/dev/null; then
+    ready=true
+    break
+  fi
+  sleep 1
+done
+test "$ready" = true
+docker --context "$docker_context" exec "$container" psql -h 127.0.0.1 -U postgres -d "$database"   -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector WITH SCHEMA public'
+pid=$(docker --context "$docker_context" inspect --format '{{.State.Pid}}' "$container")
+nsenter -t "$pid" -n ip -br address
+nsenter -t "$pid" -n go -C services/control test -tags training_artifact_integration -p 1 -count=1 -timeout 5m   -v ./internal/modules/training -run '^TestActualCpuAcceptedCheckpointRecoveryFreezesNewAttemptAndPrivateRanges$'
+docker --context "$docker_context" stop "$container" >/dev/null
+container=
+unlink "$dsn"
+unshare --net go -C services/control test -count=1 ./internal/modules/training/...

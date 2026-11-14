@@ -1,0 +1,13 @@
+{
+  "contract_sha256": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+  "source": "2426699bfad4c1a4e4ee6999cfc14f264c4cda12",
+  "run": false,
+  "passed": false,
+  "actual_backend_or_installed_run": false,
+  "cli_b967d7c8_qualified": false,
+  "locks": [],
+  "raw_memfree_mib": 3237,
+  "attempted_lock": "/run/lock/ownsolid-heavy.lock",
+  "failure": "Shared file lock busy before compilation",
+  "exit": 75
+}

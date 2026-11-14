@@ -1,0 +1,41 @@
+"""Small offline refusal tests; no installation or training is started."""
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+root=Path(__file__).resolve().parent;original=root/'cpu-prototype-inputs'
+expected='57cc07d9ab616399b3ff5f7e09437292ac5ee0e811282c686d6b658594a110dc'
+
+class InputRefusals(unittest.TestCase):
+ def setUp(self):
+  self.temporary=tempfile.TemporaryDirectory(prefix='input-refusal-',dir=root)
+  self.addCleanup(self.temporary.cleanup);self.media=Path(self.temporary.name)
+  for name in ['inventory.json','wheel-sources.json','linux-amd64-cpu-prototype.lock','installer.lock']:
+   shutil.copyfile(original/name,self.media/name)
+ def refused(self,message,cache=None):
+  command=[sys.executable,str(root/'portable_cpu_inputs.py'),'--media',str(self.media),'--inventory-sha256',expected]
+  if cache:command+=['--wheel-cache',str(cache)]
+  result=subprocess.run(command,capture_output=True,timeout=30)
+  self.assertNotEqual(result.returncode,0);self.assertIn(message.encode(),result.stderr)
+ def test_changed_inventory_fails_before_parsing_or_opening_wheels(self):
+  p=self.media/'inventory.json';raw=bytearray(p.read_bytes());raw[0]^=1;p.write_bytes(raw)
+  self.refused('input inventory digest changed')
+ def test_missing_wheel_cannot_trigger_online_resolution(self):
+  self.refused('exact offline wheel unavailable')
+ def test_changed_complete_archive_is_refused(self):
+  item=json.loads((original/'inventory.json').read_bytes())['packages']['accelerate']
+  cache=self.media/'cache';cache.mkdir();raw=bytearray((original/'wheelhouse'/item['filename']).read_bytes());raw[len(raw)//2]^=1
+  (cache/item['filename']).write_bytes(raw);self.refused('AssertionError: accelerate',cache)
+ def test_changed_original_notice_is_not_silently_replaced(self):
+  item=json.loads((original/'inventory.json').read_bytes())['packages']['accelerate']
+  notice=next(v for v in item['files'] if v['notice'])
+  path=self.media/'notices/accelerate'/notice['path'];path.parent.mkdir(parents=True)
+  data=bytearray((original/'notices/accelerate'/notice['path']).read_bytes());data[0]^=1;path.write_bytes(data)
+  self.refused('AssertionError',original/'wheelhouse')
+  self.assertEqual(path.read_bytes(),bytes(data))
+
+if __name__=='__main__':unittest.main()

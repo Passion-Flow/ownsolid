@@ -1,0 +1,34 @@
+{
+  "source": "37cbb09c3d4933a53e4aea844a979d8b91d67b58",
+  "tree": "6f8edee01936c8e43ab2ffb2a943ddd50c41ea2e",
+  "scope": "file-only SDK generation",
+  "absolute_seconds_cap": 300,
+  "per_command_seconds_cap": 60,
+  "cpu_limit": 1,
+  "heavy_carriers_opened": false,
+  "native_tests_run": false,
+  "full_gates_run": false,
+  "external_generators_started": false,
+  "admitted": false,
+  "commands": [],
+  "strict_preflight_source_sha256": "f08c440fa6a53054ef08da78b7ca2e3a13fb5a5409edbc7d3e2f62348790fe9a",
+  "raw_memfree_mib": 3432,
+  "memavailable_mib": 19826,
+  "disk_free_bytes": 788924444672,
+  "io_full_avg10": 0.2,
+  "resource_snapshots": [
+    {
+      "elapsed_seconds": 0.543,
+      "raw_memfree_mib": 3432,
+      "memavailable_mib": 19826,
+      "disk_free_bytes": 788924444672,
+      "io_full_avg10": 0.2
+    }
+  ],
+  "resource_refusal": true,
+  "error": "Strict resource threshold not met",
+  "exit": 75,
+  "elapsed_seconds": 0.543,
+  "owned_children_remaining": [],
+  "output_exists": false
+}

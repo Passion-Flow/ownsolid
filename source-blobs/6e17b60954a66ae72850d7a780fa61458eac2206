@@ -1,0 +1,84 @@
+From efa91de5ec62e5922d31f91e435c13d49a53d31b Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Thu, 12 Nov 2026 13:41:58 +0000
+Subject: [PATCH 8/9] SCH-108: Match quota status errors to current identity
+ owners
+
+Remove unused account/source/reauthentication labels that the current recheck does not produce. Retain the existing owner codes, fail unknown failures closed and document the complete owned HTTP failure set. Extend the pending outcome projection test.
+
+Verify current owner source, gofmt and diff hygiene. Go and PostgreSQL qualification remain pending the shared resource windows; do not expose or publish this candidate.
+---
+ docs/research/scheduling-wait-reasons.md      | 26 +++++++++++++++++++
+ .../scheduling/workspace_quota_status.go      |  3 +--
+ .../scheduling/workspace_quota_status_test.go |  3 +++
+ 3 files changed, 30 insertions(+), 2 deletions(-)
+
+diff --git a/docs/research/scheduling-wait-reasons.md b/docs/research/scheduling-wait-reasons.md
+index 14d663ad..47c7d4c6 100644
+--- a/docs/research/scheduling-wait-reasons.md
++++ b/docs/research/scheduling-wait-reasons.md
+@@ -199,3 +199,29 @@ The Go, pgx and PostgreSQL licences above cover this addition. The existing
+ google/uuid dependency uses the [BSD-3-Clause licence](https://github.com/google/uuid/blob/master/LICENSE),
+ permitting commercial use, redistribution with notices and offline use.
+ No new dependency, controller asset, model or dataset is introduced.
++
++## Public quota-status failure contract
++
++The current [identity recheck](../../services/control/internal/modules/identity/session_repository.go)
++reports expired, revoked, disabled-user, removed-admin and invalid-source
++sessions through `AUTH_SESSION_EXPIRED`. The
++[Workspace authority](../../services/control/internal/modules/workspaces/scope.go)
++hides absent and inaccessible scope behind `RESOURCE_NOT_FOUND`. Preserve
++these real owner codes and the established `ACCESS_DENIED` boundary.
++Do not invent additional account/source/reauthentication codes or publish
++unregistered error names. Unknown owner or policy failures become
++`STORAGE_UNAVAILABLE` at the HTTP boundary, with no payload.
++
++The owned HTTP component produces `VALIDATION_FAILED` (400),
++`AUTH_SESSION_EXPIRED` (401), `ACCESS_DENIED` (403),
++`RESOURCE_NOT_FOUND` (404), `STORAGE_COMMIT_OUTCOME_UNKNOWN` (409),
++and these retryable 503 codes: `STORAGE_UNAVAILABLE`,
++`STORAGE_CANCELLED`, `STORAGE_TIMEOUT`, `STORAGE_LOCK_TIMEOUT`,
++`STORAGE_DEADLOCK` and `STORAGE_COMMIT_ROLLED_BACK`. This is the complete
++owned failure set; IAM retains entrance authentication, origin, capacity
++and readiness failures. Configuration guidance remains a successful
++status with its fixed reason, not an HTTP error.
++
++Test the real owner codes, storage and uncertain-outcome projection, and
++refuse an unregistered equal-text identity label. This contract uses only
++the existing source interfaces and licensed stack described above.
+diff --git a/services/control/internal/modules/scheduling/workspace_quota_status.go b/services/control/internal/modules/scheduling/workspace_quota_status.go
+index 806fa920..d49bb88f 100644
+--- a/services/control/internal/modules/scheduling/workspace_quota_status.go
++++ b/services/control/internal/modules/scheduling/workspace_quota_status.go
+@@ -166,8 +166,7 @@ func quotaStatusError(err error) error {
+ 		return &transaction.Error{Kind: transaction.Timeout}
+ 	}
+ 	switch err.Error() {
+-	case "RESOURCE_NOT_FOUND", "ACCESS_DENIED", "AUTH_SESSION_EXPIRED",
+-		"AUTH_ACCOUNT_DISABLED", "AUTH_SOURCE_DISABLED", "AUTH_REAUTHENTICATION_REQUIRED":
++	case "RESOURCE_NOT_FOUND", "ACCESS_DENIED", "AUTH_SESSION_EXPIRED":
+ 		return errors.New(err.Error())
+ 	default:
+ 		return ErrQuotaPolicyUnavailable
+diff --git a/services/control/internal/modules/scheduling/workspace_quota_status_test.go b/services/control/internal/modules/scheduling/workspace_quota_status_test.go
+index 1dabcb11..d00f09c1 100644
+--- a/services/control/internal/modules/scheduling/workspace_quota_status_test.go
++++ b/services/control/internal/modules/scheduling/workspace_quota_status_test.go
+@@ -50,10 +50,13 @@ func TestWorkspaceQuotaStatusFailurePreservesCommitUncertainty(t *testing.T) {
+ 		{&transaction.Error{Kind: transaction.CheckConflict, SQLState: "23514"}, string(transaction.Unavailable)},
+ 		{&transaction.Error{Kind: transaction.Cancelled}, string(transaction.Cancelled)},
+ 		{&transaction.Error{Kind: transaction.Timeout}, string(transaction.Timeout)},
++		{&transaction.Error{Kind: transaction.LockTimeout}, string(transaction.LockTimeout)},
++		{&transaction.Error{Kind: transaction.Deadlock}, string(transaction.Deadlock)},
+ 		{context.Canceled, string(transaction.Cancelled)},
+ 		{context.DeadlineExceeded, string(transaction.Timeout)},
+ 		{errors.New("RESOURCE_NOT_FOUND"), "RESOURCE_NOT_FOUND"},
+ 		{errors.New("AUTH_SESSION_EXPIRED"), "AUTH_SESSION_EXPIRED"},
++		{errors.New("AUTH_SOURCE_DISABLED"), ErrQuotaPolicyUnavailable.Error()},
+ 		{errors.New("private database message"), ErrQuotaPolicyUnavailable.Error()},
+ 	} {
+ 		if got := quotaStatusError(test.err); got.Error() != test.code {
+-- 
+2.43.0
+

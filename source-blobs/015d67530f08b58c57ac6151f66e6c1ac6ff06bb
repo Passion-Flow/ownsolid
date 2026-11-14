@@ -1,0 +1,19 @@
+# Verified fast-forward publication
+
+Repository: https://github.com/Passion-Flow/ownsolid.git
+Branch: main
+Accepted prior main: 38aad60337d3e696cd3536bab932b100c9013a45
+Published and independently observed remote main:
+8b17a2954260e517b434906e95740a39ecdd4a9a
+
+The non-force push succeeded from 38aad603 to 8b17a295. A subsequent credentialed
+ls-remote returned that exact main SHA; the server origin/main tracking ref
+was then fast-forwarded to the same SHA. One permanent same-UID regular carrier
+and atomic flock FD protected fresh fetch, input review, rebase, current-base
+Mac gates, push and readback. The lease was released promptly after completion.
+The carrier was never unlinked, replaced or truncated.
+
+No production owner selector, priority management, queued-admission write
+implementation, migration or UI was activated. The original lane-sch and
+broad candidate remain unchanged. Quota's separately sealed packet remains
+/root/lane-sch-tools/sch108-quota-release.nFvy67Md at its actual b87f3388 merge.

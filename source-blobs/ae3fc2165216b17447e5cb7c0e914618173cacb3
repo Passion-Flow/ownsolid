@@ -1,0 +1,30 @@
+{
+  "candidate": "2b4aaae5f8c690df9943b7dd7a7e4b5004aa421b",
+  "domain": "343cdd9d9a69572b77021baec5383b8acb4bfe64",
+  "public-models-contract-sha256": "7a27e07d45fd56640e96a26fa1f7a3b74635af13fb9cc463d420518ac006d9bc",
+  "source-file-sha256": {
+    "services/control/internal/modules/models/README.md": "62dca5c2612c9a5e117f4a8de1c461b6f67bbfd2c4bde730bb36aef6392a8f9c",
+    "services/control/internal/modules/models/family.go": "e29e4da5be850872cd71ba5eddd29545a41c383338456101dc613c7deb4dc5f1",
+    "services/control/internal/modules/models/history.go": "bbed7113f8ea4b769b680e85aef592aa311d175b9db770d7bd5ce11729a6373f",
+    "services/control/internal/modules/models/history_cursor.go": "a6aa9cba375e7558755ba461bcb89e603224d5fbf87ac1972f7ab72d93cc38e9",
+    "services/control/internal/modules/models/repository.go": "53d62400e653619f1cd2011e7670ceda84169794a764734785f6504e3a01986d",
+    "services/control/internal/modules/models/reads_repository.go": "e420dd677636a089c53c61bf61546fbe9b5c8f9aad865ae9330940bd7a489e18",
+    "services/control/internal/modules/models/testdata/model_family_candidate.up.sql": "03f8c26e190bc16e01a9905c45cb13be1eef8835056d29e86e761ff70ae2c49c",
+    "services/control/internal/modules/models/testdata/model_family_candidate.down.sql": "0dc0c6c0c2821a0eead8399db277ab5de2538bf4b2b6ff6b3b8b73dcd8159cb6",
+    "docs/research/training-dataset-lineage.md": "1233715a5c0b471b14081cdb60a04a7fbb5668fbe382fdb7e8bd9214a961cc23",
+    "services/control/internal/platform/httpserver/problem.go": "858606d9c8968a1314fc72bd5c8c16975c22d7e517318fa5c0c5d9dac036b625"
+  },
+  "domain-codes-without-http-mapping": [
+    "MODEL_HISTORY_UNAVAILABLE",
+    "MODEL_HISTORY_INVALID",
+    "MODEL_FAMILY_INVALID",
+    "MODEL_IDENTITY_REQUIRED",
+    "MODEL_STORAGE_MISMATCH"
+  ],
+  "default-limit-policy": "runtime.ui.page_size",
+  "maximum-limit": 100,
+  "maximum-cursor-bytes": 512,
+  "maximum-item-bytes": 4096,
+  "maximum-page-bytes": 524288,
+  "maximum-detail-bytes": 131072
+}

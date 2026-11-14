@@ -1,0 +1,303 @@
+diff --git a/deploy/offline/README.md b/deploy/offline/README.md
+index 3c199298..5211556b 100644
+--- a/deploy/offline/README.md
++++ b/deploy/offline/README.md
+@@ -419,6 +419,20 @@ the current writer and database fence. An unreadable or unknown intent
+ produces a fixed collection issue. The installer excludes operation details, container output, raw configuration files, environment values,
+ addresses, credentials and database records.
+ 
++Before collecting, the installer durably records a diagnostic attempt in the
++installation's protected operator/operations.log. It uses the executing
++process's real and effective numeric user IDs. A completed record includes the
++archive's SHA-256 and byte length. A failed or incomplete attempt remains in the
++log; an explicit retry creates a new attempt. Keep this log with the installation
++and do not truncate it to bypass a recording error. It contains local operator
++records and has not been imported into the Control audit trail.
++
++The operator directory must belong to the executing user at mode 0700, and
++operations.log must be an owned regular file at mode 0600. An unsafe or
++unwritable log stops collection. If the terminal record cannot be confirmed,
++the installer withdraws its new archive and returns an error. Preserve the
++operator log and inspect the selected output path if cleanup is unconfirmed.
++
+ ### Collect managed cluster information
+ 
+ On a workstation with access to the private management endpoints, use
+@@ -447,7 +461,9 @@ one or both sources and a total collection budget of 1 to 60 seconds.
+ ```
+ 
+ Run as the owner of the files and keep the JSON and referenced files at
+-mode 0600. Use private HTTPS origins with their own trusted CA files. The
++mode 0600. The JSON input's directory also holds this collector's
++operations.log; it must belong to the executing user and must not be writable
++by other users. The same durable admission and archive-result rules apply. Use private HTTPS origins with their own trusted CA files. The
+ management credential is the value of an active platform Admin session.
+ You can point `credential_file` directly at the protected session file from
+ [the operator CLI](../../tools/cli/README.md#configure-and-sign-in).
+diff --git a/deploy/offline/internal/install/support.go b/deploy/offline/internal/install/support.go
+index c567d2b9..565561b0 100644
+--- a/deploy/offline/internal/install/support.go
++++ b/deploy/offline/internal/install/support.go
+@@ -5,6 +5,8 @@ import (
+ 	"compress/gzip"
+ 	"context"
+ 	"crypto/rand"
++	"crypto/sha256"
++	"encoding/hex"
+ 	"encoding/json"
+ 	"errors"
+ 	"fmt"
+@@ -83,16 +85,21 @@ type supportService struct {
+ 
+ // SupportBundle saves a redacted snapshot on the installation host, even when control is down.
+ func SupportBundle(ctx context.Context, c Config, runner Runner, output string, out io.Writer) error {
+-	return publishSupportBundle(ctx, output, time.Duration(c.StepSeconds)*time.Second, out, func(collection context.Context) (any, int) {
+-		report := collectSupport(collection, c, runner)
+-		if errors.Is(collection.Err(), context.DeadlineExceeded) {
+-			report.Issues = append(report.Issues, "COLLECTION_TIMEOUT")
+-		}
+-		return report, len(report.Issues)
+-	})
++	return publishSupportBundle(ctx, output, time.Duration(c.StepSeconds)*time.Second, out,
++		func(admission context.Context) (*supportAccess, error) {
++			return installationSupportAccess(admission, c)
++		},
++		func(collection context.Context, access *supportAccess) (any, int) {
++			report := collectSupport(collection, c, runner, access.priorSize)
++			if errors.Is(collection.Err(), context.DeadlineExceeded) {
++				report.Issues = append(report.Issues, "COLLECTION_TIMEOUT")
++			}
++			return report, len(report.Issues)
++		})
+ }
+ 
+-func publishSupportBundle(ctx context.Context, output string, timeout time.Duration, out io.Writer, collect func(context.Context) (any, int)) error {
++func publishSupportBundle(ctx context.Context, output string, timeout time.Duration, out io.Writer,
++	admit func(context.Context) (*supportAccess, error), collect func(context.Context, *supportAccess) (any, int)) (result error) {
+ 	if !canonicalPath(output) || !strings.HasSuffix(output, ".tar.gz") {
+ 		return errors.New("INSTALL_SUPPORT_OUTPUT_INVALID: supply an absolute path ending in .tar.gz")
+ 	}
+@@ -111,24 +118,50 @@ func publishSupportBundle(ctx context.Context, output string, timeout time.Durat
+ 	}
+ 	collection, cancel := context.WithTimeout(ctx, timeout)
+ 	defer cancel()
+-	report, issues := collect(collection)
++	access, err := admit(collection)
++	if err != nil {
++		return err
++	}
++	defer access.close()
++	terminalAttempted := false
++	defer func() {
++		if result == nil || terminalAttempted {
++			return
++		}
++		failure := "INSTALL_SUPPORT_COLLECTION_FAILED"
++		if errors.Is(ctx.Err(), context.Canceled) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
++			failure = "INSTALL_SUPPORT_CANCELLED"
++		}
++		completion, cancel := context.WithTimeout(context.WithoutCancel(ctx), timeout)
++		defer cancel()
++		result = errors.Join(result, access.append(completion, "failed", supportArchive{}, failure))
++	}()
++	report, issues := collect(collection, access)
+ 	if err := ctx.Err(); err != nil {
+ 		return fmt.Errorf("INSTALL_SUPPORT_CANCELLED: %w", err)
+ 	}
+-	if err := writeSupport(parent, name, report); err != nil {
+-		return err
++	archive, err := writeSupport(parent, name, report)
++	if err != nil {
++		return errors.Join(err, removeSupportArchive(parent, name, archive))
++	}
++	// Never retry an uncertain terminal append or release a successful payload.
++	terminalAttempted = true
++	completion, stop := context.WithTimeout(context.WithoutCancel(ctx), timeout)
++	defer stop()
++	if err := access.append(completion, "complete", archive, ""); err != nil {
++		return errors.Join(err, removeSupportArchive(parent, name, archive))
+ 	}
+ 	_, err = fmt.Fprintf(out, "INSTALL_SUPPORT_COMPLETE collection_issues=%d\n", issues)
+ 	return err
+ }
+ 
+-func collectSupport(ctx context.Context, c Config, runner Runner) supportReport {
++func collectSupport(ctx context.Context, c Config, runner Runner, operationEnd int64) supportReport {
+ 	report := supportReport{
+ 		FormatVersion: 1, CollectedAt: time.Now().UTC(), Topology: c.Topology.Size,
+ 		Host:          supportHost{OS: runtime.GOOS, Architecture: runtime.GOARCH},
+ 		Configuration: supportConfig(c), Issues: []string{},
+ 	}
+-	operations, err := collectSupportOperations(c)
++	operations, err := collectSupportOperationsBefore(c, operationEnd)
+ 	report.Operations = operations
+ 	if err != nil {
+ 		report.Issues = append(report.Issues, "OPERATION_LOG_UNAVAILABLE")
+@@ -240,37 +273,43 @@ func readSupportServices(raw string, services []supportService) error {
+ 	return nil
+ }
+ 
+-func writeSupport(parent *os.Root, name string, report any) error {
++func writeSupport(parent *os.Root, name string, report any) (published supportArchive, result error) {
+ 	raw, err := json.MarshalIndent(report, "", "  ")
+ 	if err != nil {
+-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot encode the support report")
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot encode the support report")
+ 	}
+ 	raw = append(raw, '\n')
+ 	temporary := ".ownsolid-support-" + rand.Text()
+ 	file, err := parent.OpenFile(temporary, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+ 	if err != nil {
+-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: check the output directory's permissions and free space")
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: check the output directory's permissions and free space")
+ 	}
+ 	defer parent.Remove(temporary)
+-	compressed := gzip.NewWriter(file)
++	digest := sha256.New()
++	compressed := gzip.NewWriter(io.MultiWriter(file, digest))
+ 	archive := tar.NewWriter(compressed)
+ 	if err = archive.WriteHeader(&tar.Header{Name: "support.json", Mode: 0o600, Size: int64(len(raw))}); err == nil {
+ 		_, err = archive.Write(raw)
+ 	}
+ 	if err = errors.Join(err, archive.Close(), compressed.Close(), file.Sync(), file.Close()); err != nil {
+-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot finish the archive; check free space and retry")
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot finish the archive; check free space and retry")
+ 	}
+ 	if err := parent.Link(temporary, name); errors.Is(err, os.ErrExist) {
+-		return errors.New("INSTALL_SUPPORT_OUTPUT_EXISTS: use an unused output path")
++		return published, errors.New("INSTALL_SUPPORT_OUTPUT_EXISTS: use an unused output path")
+ 	} else if err != nil {
+-		return errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot publish the archive in this directory")
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot publish the archive in this directory")
+ 	}
++	info, err := parent.Lstat(name)
++	if err != nil {
++		return published, errors.New("INSTALL_SUPPORT_WRITE_FAILED: cannot identify the published private archive")
++	}
++	published = supportArchive{sha256: hex.EncodeToString(digest.Sum(nil)), bytes: info.Size(), info: info}
+ 	directory, err := parent.Open(".")
+ 	if err != nil {
+-		return errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
++		return published, errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
+ 	}
+ 	if err := errors.Join(directory.Sync(), directory.Close()); err != nil {
+-		return errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
++		return published, errors.New("INSTALL_SUPPORT_SYNC_FAILED: the archive was written but the directory could not be synchronized")
+ 	}
+-	return nil
++	return published, nil
+ }
+diff --git a/deploy/offline/internal/install/support_cluster.go b/deploy/offline/internal/install/support_cluster.go
+index b8b1ffdb..b89ed11f 100644
+--- a/deploy/offline/internal/install/support_cluster.go
++++ b/deploy/offline/internal/install/support_cluster.go
+@@ -75,10 +75,14 @@ func ClusterSupportBundle(ctx context.Context, input, output string, out io.Writ
+ 	if h := c.Helm; h != nil && (!h.valid() || !clusterLabel(h.Namespace, 63) || !clusterLabel(h.Release, 53)) {
+ 		return errors.New("INSTALL_CLUSTER_SUPPORT_HELM_INVALID: set the Kubernetes HTTPS origin, namespace, release and protected files")
+ 	}
+-	return publishSupportBundle(ctx, output, time.Duration(c.TimeoutSeconds)*time.Second, out, func(collection context.Context) (any, int) {
+-		report := collectClusterSupport(collection, c)
+-		return report, len(report.Issues)
+-	})
++	return publishSupportBundle(ctx, output, time.Duration(c.TimeoutSeconds)*time.Second, out,
++		func(admission context.Context) (*supportAccess, error) {
++			return clusterSupportAccess(admission, input, raw)
++		},
++		func(collection context.Context, _ *supportAccess) (any, int) {
++			report := collectClusterSupport(collection, c)
++			return report, len(report.Issues)
++		})
+ }
+ 
+ type clusterSupportReport struct {
+diff --git a/deploy/offline/internal/install/support_operations.go b/deploy/offline/internal/install/support_operations.go
+index 72c0cc1f..fd2efd1b 100644
+--- a/deploy/offline/internal/install/support_operations.go
++++ b/deploy/offline/internal/install/support_operations.go
+@@ -23,6 +23,11 @@ type supportOperation struct {
+ }
+ 
+ func collectSupportOperations(c Config) ([]supportOperation, error) {
++	return collectSupportOperationsBefore(c, -1)
++}
++
++// collectSupportOperationsBefore projects history at admission, before this read's new records.
++func collectSupportOperationsBefore(c Config, end int64) ([]supportOperation, error) {
+ 	events := []supportOperation{}
+ 	root, err := os.OpenRoot(c.InstallRoot)
+ 	if errors.Is(err, fs.ErrNotExist) {
+@@ -49,8 +54,12 @@ func collectSupportOperations(c Config) ([]supportOperation, error) {
+ 	if !info.Mode().IsRegular() {
+ 		return events, errors.New("operation log is not a regular file")
+ 	}
+-	start := max(0, info.Size()-supportOperationLogBytes)
+-	raw := make([]byte, info.Size()-start)
++	size := info.Size()
++	if end >= 0 {
++		size = min(size, end)
++	}
++	start := max(0, size-supportOperationLogBytes)
++	raw := make([]byte, size-start)
+ 	if len(raw) > 0 {
+ 		if _, err := f.ReadAt(raw, start); err != nil {
+ 			return events, err
+diff --git a/docs/research/support-diagnostics.md b/docs/research/support-diagnostics.md
+index 38992299..56ed70a0 100644
+--- a/docs/research/support-diagnostics.md
++++ b/docs/research/support-diagnostics.md
+@@ -180,3 +180,55 @@ mode 0600 archives contained the fixed unconfirmed state for a valid
+ record and the fixed collection issue for an unknown version. The raw
+ record remained byte-identical and its source identifiers were absent.
+ The recorder saw only the three IPv4, IPv6 and DNS probes.
++
++
++## Durable local operator access before diagnostic collection
++
++[OWASP event data sources and exclusions](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
++place access capture with the consumer that knows the action and actor and exclude
++credentials and payloads. The two real installer consumers are `SupportBundle`
++and `ClusterSupportBundle`. Neither a credential file nor an offline log is a
++browser identity or a server-authorized audit event. Preserve collection while
++Control and Docker are down.
++
++Reuse `operations.log`, with failure-propagating admission before the collector
++can run and a terminal record tied to the exact private archive bytes. Record
++only an opaque attempt ID, kernel real/effective UID, fixed collector kind,
++input digest, UTC time, outcome and archive digest/length. Do not trust SUDO_UID,
++USER, arbitrary reasons, remote identities or raw collector errors. A managed
++collector uses the protected input file's directory as its operator directory;
++a local installation uses its existing operator directory. Both directories
++and the log must belong to the executing effective UID and refuse unsafe modes,
++symlinks and special files. Every explicit retry is a new attempt.
++
++[Go File.Sync](https://pkg.go.dev/os#File.Sync) flushes file contents; synchronize
++the containing directory as well for a newly created log.
++[Linux flock](https://man7.org/linux/man-pages/man2/flock.2.html) attaches the lock
++to the open file description. Keep that descriptor for an attempt, serialize
++bounded append/sync operations, and refuse a replaced carrier. A missing legacy newline is separated without\nchanging its bytes; record its incompleteness and snapshot history only up to\nthe pre-admission byte boundary. Never adopt an older attempt.
++Do not truncate, rotate or replace the existing operation log. Preserve prior
++backup/restore events and existing diagnostic redaction projections. A failed
++admission must run no collector. Failed archive publication records failure;
++a failed terminal record must release neither a success message nor a newly
++published archive. A killed collector leaves an admitted, incomplete attempt.
++
++The existing operator append is warning-only after mutation and cannot provide
++this admission. A second access ledger, fake SQL append and automatic retry of
++an uncertain remote audit commit were rejected. Server reconciliation requires
++an actual authorized, installation-bound, idempotent consumer for retained local
++attempts. No such support receipt consumer is present in the inspected contracts.
++Keep receipts local and unreconciled until that owner contract exists; do not
++claim AUD-108 complete or claim that a future database import occurred. Recovery
++must preserve attempt IDs, exact input/archive digests and duplicate semantics;
++explicit retry collects a new attempt without overwriting an uncertain one.
++
++No dependency, model or dataset is added. The existing Go standard library's
++BSD-3-Clause terms permit commercial, redistributed and offline use with notices.
++OWASP and man-pages are references and are not embedded product content.
++
++Test both actual collector entry points: durable admission before any protected
++read, actual numeric operator identity, concurrent attempts, retry and restart
++readback, Control/Docker unavailable, sentinel redaction, unsafe/unwritable or
++replaced log, cancellation, failed archive publication and terminal recording.
++Run the native CLI and protocol fixtures on disconnected Linux amd64 with the
++existing egress recorder; a unit pass alone does not qualify an offline flow.

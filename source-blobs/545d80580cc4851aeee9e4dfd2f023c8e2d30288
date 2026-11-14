@@ -1,0 +1,8 @@
+{
+  "pid": 3508932,
+  "start_ticks": "80422292",
+  "cmdline_sha256": "d9227cee9bd9b8f819db5252e8499025951dd8abd22087e7dc5ea5bc81062437",
+  "at": 1794539708.7543962,
+  "mode": "installed",
+  "source": "3ae6bfebb67b47d684de4651cc597c26f104d725"
+}

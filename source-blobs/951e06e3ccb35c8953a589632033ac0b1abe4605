@@ -1,0 +1,50 @@
+{
+  "contract_sha256": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+  "commands": [
+    {
+      "tool": "web-api.mjs",
+      "arguments": [],
+      "exit": 0,
+      "stdout": "wrote 30 files to web/packages/api/src/gen\n",
+      "stderr": ""
+    },
+    {
+      "tool": "web-help.mjs",
+      "arguments": [],
+      "exit": 0,
+      "stdout": "wrote 144 files to web/packages/help/src/gen\n",
+      "stderr": ""
+    },
+    {
+      "tool": "web-api.mjs",
+      "arguments": [
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "generated API types match 29 contracts\n",
+      "stderr": ""
+    },
+    {
+      "tool": "web-help.mjs",
+      "arguments": [
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "changed_web_paths": [
+    "web/packages/api/src/gen/identity.ts",
+    "web/packages/help/locales/zh-cn/api-descriptions.json",
+    "web/packages/help/src/gen/api/console/identity.json",
+    "web/packages/help/src/gen/contracts/console/identity.json",
+    "web/packages/help/src/gen/locales/zh-cn/api-descriptions.json"
+  ],
+  "patch_sha256": "5e304e699d80b940eb684b76d8d46cd8fe9ba607d4e3d242847d2c07d16cc7dc",
+  "product_web_changed": false,
+  "private_projection_only": true,
+  "admin_409_and_description_verified": true,
+  "portal_exclusion_verified": true,
+  "make_generate_in_product_run": false
+}

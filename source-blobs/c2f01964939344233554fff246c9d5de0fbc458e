@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+# Lane B test helper: asks every deployment of the first workspace to be removed, through the API.
+import json, ssl, socket, sys, urllib.request, urllib.error, http.cookiejar, uuid
+root = "/root/lane-b/install-iam117"
+base = "https://admin.lane-b.test:18443"
+ctx = ssl.create_default_context(cafile=root + "/config/ca.pem")
+real = socket.getaddrinfo
+socket.getaddrinfo = lambda h, *a, **k: real("127.0.0.1" if h.endswith("lane-b.test") else h, *a, **k)
+op = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx), urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+def call(method, path, body=None, csrf=None):
+    h = {"Origin": base, "Accept": "application/json"}
+    if body is not None: h["Content-Type"] = "application/json"
+    if csrf: h["X-CSRF-Token"] = csrf; h["Idempotency-Key"] = str(uuid.uuid4())
+    r = urllib.request.Request(base + path, method=method, headers=h, data=None if body is None else json.dumps(body).encode())
+    try:
+        with op.open(r) as x: return x.status, json.loads(x.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"{}")
+cred = json.load(open(root + "/operator/admin-credential"))
+tok = call("GET", "/api/v1/auth/csrf")[1]["data"]["token"]
+print(call("POST", "/api/v1/auth/login", {"email": "admin@lane-b.test", "password": cred["password"]}, tok)[0])
+tok = call("GET", "/api/v1/auth/csrf")[1]["data"]["token"]
+ws = call("GET", "/api/v1/admin/workspaces?limit=1")[1]["data"]["items"][0]["id"]
+p = "/api/v1/sites/default/cells/default/admin/deployments"
+for d in call("GET", p + "?retained=true&workspace_id=" + ws)[1]["data"]["items"]:
+    print(d["id"], d["desired_state"], d["observed_state"], d["task_state"], d["revision"])
+    print(call("POST", p + "/" + d["id"] + "/actions", {"action": "remove", "revision": d["revision"], "reason": "Clean up after a live run"}, tok)[0])

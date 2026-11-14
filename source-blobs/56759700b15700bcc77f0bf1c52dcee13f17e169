@@ -1,0 +1,16 @@
+{
+  "source_files": {
+    "services/control/internal/modules/training/export.go": "3c304f374d1256557129c3bb673b68633585c62e574533592d34789f985fa5f9"
+  },
+  "base": "af5cefcda4d9f9be196ca59d12c7c91dc8489b71",
+  "returncode": 0,
+  "platform": "darwin/arm64",
+  "phase": "modules",
+  "seconds": 12.496,
+  "actions": {
+    "pass": 253,
+    "skip": 86,
+    "fail": 0
+  },
+  "log_sha256": "d4e43d264ab3ef449c78957acb97b7de62665aab8048b8073eeb3d6553cd1da5"
+}

@@ -1,0 +1,42 @@
+{
+  "expiry": {
+    "passed_roots": [
+      "TestActualAbandonedImportExpiryRacesWithUpload",
+      "TestActualAbandonedImportExpiryRecoversCommittedIntent",
+      "TestActualAbandonedImportExpiryKeepsOtherScopesAndStates"
+    ]
+  },
+  "https": {
+    "passed_roots": [
+      "TestModelImportHTTPSExpiryIsScopedAndDistinctFromCancellation",
+      "TestModelImportHTTPSIntentResolutionStrictScopeAndNoMutation",
+      "TestStrictModelImportHTTPChunksCSRFAndPortalBoundary",
+      "TestModelImportHTTPNondefaultAdmissionAndRetryPolicy"
+    ]
+  },
+  "tls": {
+    "passed_roots": [
+      "TestRealTLSInferenceAPICSRFSchemaAndLeasedModelTransfer"
+    ]
+  },
+  "borrowed": {
+    "passed_roots": [
+      "TestActualBorrowedModelAccess"
+    ]
+  },
+  "archive": {
+    "passed_roots": [
+      "TestActualModelImportFileSafety"
+    ]
+  },
+  "publication": {
+    "passed_roots": [
+      "TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery"
+    ]
+  },
+  "source_gate": "a3b3747ddb31577529a0bd0907adfc70f49e72ee",
+  "original_harness_exit": 1,
+  "harness_reconciliation": "All selected Go commands passed. The explicit publication snapshot-and-retirement exclusion emitted a no-subtests warning. The old blanket warning check caused the harness-only exit. Raw logs and the original harness exit are retained.",
+  "excluded_subtest": "TestActualModelImportPublicationAuditRollbackAndFreshWorkerRecovery/snapshot-and-retirement",
+  "cleanup": "The owned PostgreSQL container, generated archive, temporary model store and private credentials were removed."
+}

@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+run=$1
+exec 9>/run/lock/ownsolid-heavy.lock
+flock -n 9 || { echo SHARED_HEAVY_LOCK_BUSY; exit 75; }
+exec 8>/root/lane-sci-tools/heavy-test.lock
+flock -n 8 || { echo SCI_REPLAY_LOCK_BUSY; exit 75; }
+df -h / /dev/shm
+free -m
+cat /proc/pressure/io
+ss -lntp
+test "$(df -Pk / | awk 'NR==2 {print $4}')" -ge 31457280
+test "$(awk '/MemFree:/ {print $2}' /proc/meminfo)" -ge 2097152
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 8388608
+awk '/^full / {split($2,a,"="); if(a[2]>5) exit 1}' /proc/pressure/io
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+export CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2 CARGO_NET_OFFLINE=true
+git rev-parse HEAD origin/main > "$run/base-and-head"
+git status --porcelain > "$run/status-before"
+test ! -s "$run/status-before"
+unshare -n -- bash -ec 'ip link set lo up; cargo build --locked --offline --manifest-path services/gateway/Cargo.toml' > "$run/cargo-build.log" 2>&1
+bash /root/lane-gw-acceptance/gw104.tRqMfqpr/rust.sh green > "$run/rust.log" 2>&1
+pattern='^Test(RealGoRustPostgres(RestartAfterLostOutcomeReply|LostOutcomeReply|GatewayChainAndControlOutage)|PostgresGatewayOutcomeMeteringAtomicRetry|PostgresAliasCapabilit(yPublicContractBoundary|iesFollowVerifiedScopedTarget)|PostgresAliasReadCapabilitiesAtRegisteredEntrances|AliasContextCeilingRequiresRecognizedSource|ActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutableHistory|ModelGatewayCAForPublishedAliasOverTLS|ConsumedOperationKeyRefusedAtMachineEntrances|RotationAndCallLogOverHTTPSMatchTheContract|M19AcceptedOperationAcrossExpirySinglePoolAndConcurrentReplay)$'
+bash /root/lane-gw-acceptance/gw107.ri6nhx80/run-pg.sh "$run" schema58-regression "$pattern" > "$run/pg.log" 2>&1
+git status --porcelain > "$run/status-after"
+test ! -s "$run/status-after"
+echo schema58-gateway-regression=passed

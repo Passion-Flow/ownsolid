@@ -1,0 +1,61 @@
+{
+  "source_sha": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "admin": {
+    "origin": "https://admin.ownsolid.test:8443",
+    "ca_file": "/evidence/installation-ca.pem",
+    "dial_unix_socket": "/evidence/REPLACE_WITH_OPAQUE_TLS_RELAY.sock"
+  },
+  "raw": {
+    "origin": "https://10.77.0.1:18428",
+    "ca_file": "/evidence/history-inputs/REPLACE_WITH_RAW_CA.pem"
+  },
+  "long": {
+    "origin": "https://10.77.0.1:28428",
+    "ca_file": "/evidence/history-inputs/REPLACE_WITH_LONG_CA.pem"
+  },
+  "email": "admin@ownsolid.test",
+  "password_file": "/evidence/admin-password",
+  "session_file": "/evidence/obs-history-session.json",
+  "site_id": "REPLACE_WITH_INSTALLED_SITE",
+  "cell_id": "REPLACE_WITH_INSTALLED_CELL",
+  "workspace_id": "REPLACE_WITH_INSTALLED_DEFAULT_WORKSPACE_UUID",
+  "timeout_seconds": 30,
+  "raw_window": {
+    "from": "REPLACE_WITH_SEEDED_UTC_SECONDS",
+    "to": "REPLACE_WITH_SEEDED_UTC_SECONDS",
+    "cells": [
+      {
+        "site_id": "REPLACE_WITH_INSTALLED_SITE",
+        "cell_id": "REPLACE_WITH_INSTALLED_CELL",
+        "observed": 2,
+        "reachable": 0
+      }
+    ],
+    "require_sparse": true,
+    "require_zero": true
+  },
+  "rollup_window": {
+    "from": "REPLACE_WITH_SEEDED_UTC_SECONDS",
+    "to": "REPLACE_WITH_SEEDED_UTC_SECONDS",
+    "cells": [
+      {
+        "site_id": "REPLACE_WITH_INSTALLED_SITE",
+        "cell_id": "REPLACE_WITH_INSTALLED_CELL",
+        "observed": 2,
+        "reachable": 0
+      }
+    ],
+    "require_sparse": true,
+    "require_zero": true
+  },
+  "required_commands": [
+    "read",
+    "long-unavailable",
+    "long-restored",
+    "long-tls-refused",
+    "long-tls-restored",
+    "workspace-disabled",
+    "workspace-restored",
+    "logout-replay"
+  ]
+}

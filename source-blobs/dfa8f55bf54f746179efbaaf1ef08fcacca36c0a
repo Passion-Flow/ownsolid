@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$HOME/lane-sch"
+. "$HOME/lane-sch-tools/env"
+export GOMAXPROCS=2 GOFLAGS="-p=1 -buildvcs=false" GOTOOLCHAIN=local GOPROXY=off GOTELEMETRY=off
+unset PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_DSN_FILE PROJECT_ONE_TEST_NATIVE_POSTGRES_INPUT OWNSOLID_SCHEDULING_TEST_DSN_FILE
+preflight() {
+ df -h /
+ free -m
+ cat /proc/pressure/io
+ test "$(df -Pk / | awk 'END {print $4}')" -ge 15728640 || return 75
+ test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 3072 || return 75
+ test "$(free -m | awk '/^Mem:/ {print $7}')" -ge 12288 || return 75
+ awk '/^full / {for(i=2;i<=NF;i++){split($i,a,"="); if((a[1]=="avg10"||a[1]=="avg60") && a[2]>5) exit 1}}' /proc/pressure/io || return 75
+ if ps -eo comm=,args= | awk '$1 ~ /^(cargo|rustc|compile|link|chrome-headless)$/ || /[v]llm serve/ {print; found=1} END {exit !found}'; then return 75; fi
+}
+preflight
+exec 8>>/run/lock/ownsolid-heavy.lock
+flock -n 8 || exit 75
+exec 9>>"$HOME/lane-sch-tools/heavy-test.lock"
+flock -n 9 || exit 75
+preflight
+test "$(git branch --show-current)" = codex/sch-queue-executor
+test -z "$(git status --porcelain --untracked-files=all)"
+umask 077
+fixture="$(mktemp -d "$HOME/lane-sch-tools/selectedqueue-unit.XXXXXXXX")"
+printf '%s\n' "$fixture" >"$HOME/lane-sch-tools/selectedqueue-unit-fixture"
+git rev-parse HEAD >"$fixture/source-head"
+git write-tree >"$fixture/source-tree"
+git diff --binary HEAD >"$fixture/source.diff"
+git ls-files services/control/internal/modules/scheduling docs/research/scheduling-queue-policy.md | sort | xargs sha256sum >"$fixture/source-files.sha256"
+if ! unshare --net bash -s 8>&- 9>&- >"$fixture/unit.log" 2>&1 <<'OFFLINE'
+set -euo pipefail
+ip link set lo up
+test -z "$(ip route show default)"
+test -z "$(ip -6 route show default)"
+go -C services/control test -p 1 -race ./internal/modules/scheduling -run '^TestQueueExecutorSnapshotRejectsUnborrowedInputs$' -count=1 -v
+OFFLINE
+then
+ tail -80 "$fixture/unit.log"
+ exit 1
+fi
+test "$(git rev-parse HEAD)" = "$(cat "$fixture/source-head")"
+test "$(git write-tree)" = "$(cat "$fixture/source-tree")"
+git diff --quiet
+sha256sum --check --status "$fixture/source-files.sha256"
+printf 'PASS\n' >"$fixture/unit.passed"
+cat "$fixture/unit.log"
+printf 'PASS native offline boundary test; evidence %s\n' "$fixture"

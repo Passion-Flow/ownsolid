@@ -1,0 +1,21 @@
+{
+  "base_source": "cf93c92ee0a7f57ca74ad16d91e9ef3dad23f1ae",
+  "external_overlay_sha256": "095997d301860ea4afa816e00826f355ebd475ec1596730b4a5d222ee05d704a",
+  "results": {
+    "compile": {
+      "exit": 0,
+      "seconds": 2.476240396499634,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "race": {
+      "exit": 0,
+      "seconds": 5.192713737487793,
+      "log_sha256": "eb3368dc05d440c28d57bc8017ba004925085ccd46c89c495b7429611da259aa"
+    },
+    "vet": {
+      "exit": 0,
+      "seconds": 4.83482551574707,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

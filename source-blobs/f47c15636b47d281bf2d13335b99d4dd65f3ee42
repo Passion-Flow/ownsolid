@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -euo pipefail
+scratch="$(cd -- "$(dirname -- "$0")" && pwd)"
+root="$HOME/lane-sci"
+tools="$HOME/lane-sci-tools"
+export PATH="$tools/go/bin:$PATH" GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off
+export GOCACHE="$tools/go-cache" GOMODCACHE="$tools/go-mod" GOFLAGS=-p=1
+exec 9>"$tools/heavy-test.lock"
+flock 9
+while [ "$(free -m | awk '/^Mem:/ {print $4}')" -lt 2048 ] || pgrep -x 'cargo|rustc|compile|link' >/dev/null; do
+  sleep 8
+done
+df -h /
+free -m
+test "$(df --output=avail -BG / | tail -1 | tr -dc '0-9')" -ge 15
+cd "$root"
+test "$(git rev-parse HEAD^)" = df1ec219e6206a7a303b272e9661369f61d42c5f
+python3 "$scratch/prepare-overlay.py"
+python3 - "$scratch" <<'PY'
+import json
+import sys
+from pathlib import Path
+scratch = Path(sys.argv[1])
+overlay = json.loads((scratch / "overlay.json").read_text())
+overlay["Replace"] = {
+    key: value for key, value in overlay["Replace"].items()
+    if key.endswith("audit_candidate_restore_matrix_test.go")
+}
+(scratch / "baseline-overlay.json").write_text(json.dumps(overlay))
+PY
+unshare --net go -C services/control list -overlay="$scratch/overlay.json" -f '{{range .EmbedFiles}}{{println .}}{{end}}' ./migrations \
+  | grep -Fx 'postgresql/000058_audit_chain_head_scope.up.sql'
+ionice -c3 nice -n 15 unshare --net go -C services/control test -c -overlay="$scratch/baseline-overlay.json" -o "$scratch/database-57.test" ./internal/platform/database
+ionice -c3 nice -n 15 unshare --net go -C services/control test -c -overlay="$scratch/overlay.json" -o "$scratch/database-58.test" ./internal/platform/database
+ionice -c3 nice -n 15 unshare --net go -C services/control test -c -o "$scratch/audit.test" ./internal/modules/audit
+ionice -c3 nice -n 15 unshare --net go -C tools/audit-verify build -o "$scratch/audit-verify" .
+ss -lntp '( sport = :5432 )'
+name=lane-sci-aud-postarc
+image=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+id="$(docker run --pull never -d --rm --name "$name" --network none --shm-size 128m \
+  --tmpfs /var/lib/postgresql/data:size=512m \
+  -e PGDATA=/var/lib/postgresql/data/pgdata -e POSTGRES_PASSWORD_FILE=/fixture/pg-password \
+  --mount "type=bind,source=$root,target=/repo,readonly" \
+  --mount "type=bind,source=$scratch,target=/fixture" "$image")"
+trap 'docker stop "$id" >/dev/null' EXIT
+for ((i=0;i<60;i++)); do
+  if docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+docker exec "$id" pg_isready -h 127.0.0.1 -U postgres >/dev/null
+docker exec "$id" createdb -U postgres audit_scope_test
+docker exec "$id" psql -Xq -U postgres -d audit_scope_test -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector'
+docker exec "$id" sh /fixture/verify-db.sh 2>&1 | tee "$scratch/post-arc-restore.log"
+diff -u <(grep '^catalog ' "$scratch/restore-matrix.log") <(grep '^catalog ' "$scratch/post-arc-restore.log")
+for prefix in baseline integrated; do
+  docker exec "$id" createdb -U postgres "${prefix}_fresh_test"
+  docker exec "$id" psql -Xq -U postgres -d "${prefix}_fresh_test" -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION vector'
+  versions=(55 56 57)
+  if [ "$prefix" = integrated ]; then
+    versions+=(58)
+  fi
+  for version in "${versions[@]}"; do
+    target="${prefix}_${version}_test"
+    docker exec "$id" createdb -U postgres "$target"
+    docker exec "$id" pg_restore -U postgres --exit-on-error --dbname "$target" "/fixture/schema${version}.dump"
+  done
+done
+docker exec -e PROJECT_ONE_TEST_DSN_FILE=/fixture/test-dsn -e AUDIT_FIXTURE_PREFIX=baseline \
+  "$id" /fixture/database-57.test -test.v -test.run '^TestAuditCandidateProductionMigratorAfterRestore$' \
+  2>&1 | tee "$scratch/post-arc-baseline.log"
+docker exec -e PROJECT_ONE_TEST_DSN_FILE=/fixture/test-dsn -e AUDIT_FIXTURE_PREFIX=integrated \
+  "$id" /fixture/database-58.test -test.v \
+  -test.run '^(TestAuditCandidateProductionMigratorAfterRestore|TestEveryCellOwnedTableCarriesScope|TestNewRowsTakeTheLocalCell|TestCheckRefusesAnotherCellIdentity)$' \
+  2>&1 | tee "$scratch/post-arc-integrated.log"
+docker exec -e PROJECT_ONE_TEST_DSN_FILE=/fixture/test-dsn -e OWNSOLID_TEST_AUDIT_VERIFY=/fixture/audit-verify \
+  -w /repo/services/control/internal/modules/audit "$id" /fixture/audit.test -test.v \
+  2>&1 | tee "$scratch/post-arc-audit.log"
+printf 'Merged ARC baseline and candidate qualification passed\n'

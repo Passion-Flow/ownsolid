@@ -1,0 +1,62 @@
+{
+  "observed_at": "2026-11-12T13:14:31.307131+00:00",
+  "source_sha": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "installed_exit": 1,
+  "reason": "Retained parent hard deadline reached before new client artifact could be validated; no new actual phase started",
+  "outer_present": false,
+  "original_process_present": {
+    "1879013": false,
+    "1879134": false,
+    "1879105": false
+  },
+  "lock_records": {
+    "/run/lock/ownsolid-heavy.lock": {
+      "inode": 82,
+      "records": []
+    },
+    "/root/lane-sci-tools/heavy-test.lock": {
+      "inode": 7508772,
+      "records": []
+    }
+  },
+  "final_egress_file_exists": false,
+  "last_observed_egress": {
+    "utc": "2026-11-12T12:52:10Z",
+    "packets": 5,
+    "sha256": "d0e41a71778c626a3b2d7cccd30463e07bf83bbcbd37491ebd08a8dc52fdc76a",
+    "boundary": "Last observed capture only; final capture not retained by forced outer cleanup; no final zero-egress pass"
+  },
+  "native_client_compile_receipts": [],
+  "files": {
+    "installed-history-fixed-91fc9bc6.gz.partial": {
+      "bytes": 2752512,
+      "sha256": "787c00f459fff500dd3563fb84a054f412e998c333527fcac7fb5af35db58b97",
+      "mode": "0o600"
+    },
+    "runtime-evidence/obs-history-session.json": {
+      "bytes": 785,
+      "sha256": "e33bf1986e531fd40a9eb97ed2840cde3e324068bc8902eec3700f7da81e2991",
+      "mode": "0o600"
+    },
+    "runtime-evidence/obs-history-input.json": {
+      "bytes": 1623,
+      "sha256": "0d7346d66fc37c39838de3d6296ef5d53b9f5592d3157be0136cbe93fd3f0658",
+      "mode": "0o600"
+    },
+    "runtime-evidence/acceptance-ready.json": {
+      "bytes": 8619,
+      "sha256": "d6465c0eae589dd1858609160271bf65db163002ac75ca1045335d62bb3e5573",
+      "mode": "0o600"
+    },
+    "installed-host.log": {
+      "bytes": 3219,
+      "sha256": "dd6770390c94dc6847980eb7835d0b922767f3f0999f8a0ef8f1875a305e232d",
+      "mode": "0o644"
+    },
+    "installed-container.log": {
+      "bytes": 1766,
+      "sha256": "2de746a8e15751078a51ca15a1a0ec050571d7de861d998bd2eed25d69d927e6",
+      "mode": "0o644"
+    }
+  }
+}

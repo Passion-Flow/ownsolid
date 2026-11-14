@@ -1,0 +1,46 @@
+{
+  "source": "2e64ab4c6c16bd84ae5c101b9de5444550760ff2",
+  "base": "bf448bcd070285e04ffec2474b3f32dcea998989",
+  "host": "linux/amd64",
+  "check": false,
+  "build": false,
+  "whole_make_test": false,
+  "cli_b967d7c8_qualified": false,
+  "installed_acceptance": false,
+  "locks": [],
+  "absolute_seconds_cap": 1200,
+  "cleanup_reserve_seconds": 20,
+  "owned_process_groups": [
+    {
+      "pgid": 3853468,
+      "phase": "final-source-clean",
+      "inherited_lock_fd_count": 0,
+      "group_cleared": true,
+      "owned_children_remaining": 0,
+      "inherited_lock_holders_remaining": 0,
+      "leader_exit": 0
+    }
+  ],
+  "entry_scope": "Exact original-author audit/SDK/tool and Web projection joint source; web-install/check/build/test. Strict live admission is required.",
+  "raw_memfree_mib": 3871,
+  "memavailable_mib": 19812,
+  "disk_free_bytes": 788948389888,
+  "io_full_avg10": 0.0,
+  "resource_snapshots": [
+    {
+      "elapsed_seconds": 0.001,
+      "raw_memfree_mib": 3871,
+      "memavailable_mib": 19812,
+      "disk_free_bytes": 788948389888,
+      "io_full_avg10": 0.0
+    }
+  ],
+  "failure_kind": "resource_refusal",
+  "passed": false,
+  "failure": "Strict resource threshold not met",
+  "phase": "final-source-clean",
+  "source_clean_after": true,
+  "all_owned_process_groups_cleared": true,
+  "exit": 75,
+  "elapsed_seconds": 0.03
+}

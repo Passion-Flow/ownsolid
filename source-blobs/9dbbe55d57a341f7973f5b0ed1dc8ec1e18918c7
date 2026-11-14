@@ -1,0 +1,555 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/gateway",
+     "children": [
+      {
+       "type": "text",
+       "value": "Gateway and keys"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " lists the keys that call the models of the workspace in the switcher.\nA key calls exactly one model, the name the gateway serves it under, and nothing else. It belongs\nto the person who issued it: it stops working when it expires, when it is revoked, or when that\nperson loses access to the workspace."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The tiles above the list count keys that expire within a week and keys never used, and filter the\nlist. Open a key to see its details and every call made with it, newest first."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Publishing a model to the gateway"
+    }
+   ],
+   "data": {
+    "id": "publishing-a-model-to-the-gateway"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A key calls a model by the name it is published under. Publish a deployment from its page in\n"
+    },
+    {
+     "type": "link",
+     "url": "/services",
+     "children": [
+      {
+       "type": "text",
+       "value": "Model services"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": ": the "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "On the gateway"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " card offers "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Publish to the gateway"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " once the\ndeployment is running and a test generation has verified its answer."
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose the name callers send as the model. It is made from the model's name; it uses lower-case\nletters, digits, dots and hyphens, and a name is used only once in a workspace."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "If no gateway serves the deployment's node yet, give the HTTPS address callers reach it at and a\nname for it. Publishing registers that gateway and shows its credential, gateway ID and node ID\nonce: configure the gateway on that node with them."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Give a reason, then choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Publish"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The card then shows the base URL, a sample call and "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Issue a key"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " for that name. If publishing\nfails after the gateway was registered, its credential stays on screen and "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Try again"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " publishes\nonly. If the answer that carried the credential was lost, revoke that gateway from the dialog and\nregister another."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Stop publishing"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " refuses calls to the name from then on and lists the keys that stop working;\nyou type the name to confirm. The name cannot be published again, and the deployment keeps running."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Issuing a key"
+    }
+   ],
+   "data": {
+    "id": "issuing-a-key"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Issue a key"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ", or press "
+        },
+        {
+         "type": "inlineCode",
+         "value": "k"
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Name it after whoever will use it, choose the model, and choose how long it lasts. The longest\nlifetime is set by the installation."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Give a reason, then choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Issue"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Copy the key. It is shown only this once and is never stored in a form anyone can read back."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Choose "
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Done"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": ". The key opens with its base URL and a sample call in cURL, Python and Node.js."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Send the key as a bearer token. If the answer is lost on the way, choosing "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Try again"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " returns\nthe same key, but its secret cannot be shown again: revoke it and issue another."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Rotating a key"
+    }
+   ],
+   "data": {
+    "id": "rotating-a-key"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Rotate"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " gives a key a new secret, shown once, and keeps its name, model and owner. Choose how\nlong the old secret keeps working, up to seven days, so whoever uses it can switch without an\noutage. Choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Not at all"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " when the secret leaked. A key can be rotated once; afterwards rotate\nthe key that replaced it."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Revoking a key"
+    }
+   ],
+   "data": {
+    "id": "revoking-a-key"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Revoke"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " stops a key at once and for good. You type the key's name to confirm. Calls with it\nfail from then on."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "What is not ready"
+    }
+   ],
+   "data": {
+    "id": "what-is-not-ready"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "A key cannot have rate or token limits of its own yet; it uses the workspace's limits, and the\n"
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Over limit"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " tile says so."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "The installer does not start the model gateway yet, so no call is made through it on an\ninstallation until it does."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "A gateway's lost credential cannot be replaced yet: revoking the gateway retires every name it\nserves."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Every publication, issue, rotation and revocation is in the "
+    },
+    {
+     "type": "link",
+     "url": "help:audit-trail",
+     "children": [
+      {
+       "type": "text",
+       "value": "audit trail"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "."
+    }
+   ]
+  }
+ ]
+}

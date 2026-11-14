@@ -1,0 +1,1176 @@
+//go:build gateway_integration
+
+package distribution_test
+
+import (
+	"bufio"
+	"bytes"
+	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/json"
+	"encoding/pem"
+	"fmt"
+	"io"
+	"math/big"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"syscall"
+	"testing"
+	"time"
+
+	agentwire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	gatewaywire "github.com/Passion-Flow/ownsolid/api/gateway/v1"
+	identityhttp "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/licensing"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+	"github.com/google/uuid"
+)
+
+type gatewayChainMode int
+
+const (
+	sharedHTTPS gatewayChainMode = iota
+	dedicatedHTTPS
+	licenseExpiry
+	foregroundResponses
+	foregroundMessages
+	applicationBudget
+	evl105AuthorizedPair
+	promptCapacityRelease
+	lostOutcomeReply
+)
+
+// Actual Go/Rust/PostgreSQL transport and persistence; backend replies are explicitly synthetic.
+func TestRealGoRustPostgresGatewayChainAndControlOutage(t *testing.T) {
+	root := os.Getenv("PROJECT_ONE_EVIDENCE_ROOT")
+	for _, mode := range []string{"shared-https", "dedicated-machine-https"} {
+		t.Run(mode, func(t *testing.T) {
+			output := filepath.Join(root, mode)
+			if e := os.Mkdir(output, 0700); e != nil {
+				t.Fatal(e)
+			}
+			t.Setenv("PROJECT_ONE_EVIDENCE_ROOT", output)
+			chain := sharedHTTPS
+			if mode == "dedicated-machine-https" {
+				chain = dedicatedHTTPS
+			}
+			realGatewayChain(t, chain)
+		})
+	}
+}
+
+func TestM19RealGoRustLicenseExpiryAndAcceptedOperation(t *testing.T) {
+	realGatewayChain(t, licenseExpiry)
+}
+
+func TestRealGoRustPostgresForegroundResponses(t *testing.T) {
+	realGatewayChain(t, foregroundResponses)
+}
+
+func TestRealGoRustPostgresForegroundMessages(t *testing.T) {
+	realGatewayChain(t, foregroundMessages)
+}
+
+func TestRealGoRustPostgresPromptCapacityRelease(t *testing.T) {
+	realGatewayChain(t, promptCapacityRelease)
+}
+
+func TestEVL105AuthorizedCPUPair(t *testing.T) {
+	realGatewayChain(t, evl105AuthorizedPair)
+}
+
+func realGatewayChain(t *testing.T, mode gatewayChainMode) {
+	t.Helper()
+	binary := os.Getenv("PROJECT_ONE_GATEWAY_BINARY")
+	if binary == "" {
+		t.Fatal("explicit compiled native gateway binary required for gateway_integration profile")
+	}
+	if resolved, e := filepath.EvalSymlinks(binary); e != nil || resolved != binary {
+		t.Fatal("canonical native binary required")
+	}
+	c := setup(t)
+	ctx := context.Background()
+	control := httptest.NewUnstartedServer(nil)
+	caKey, e := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if e != nil {
+		t.Fatal(e)
+	}
+	ca := &x509.Certificate{SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "Project-one isolated gateway test CA"}, NotBefore: time.Now().Add(-time.Minute), NotAfter: time.Now().Add(time.Hour), IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageCRLSign}
+	caDER, e := x509.CreateCertificate(rand.Reader, ca, ca, &caKey.PublicKey, caKey)
+	if e != nil {
+		t.Fatal(e)
+	}
+	leafKey, e := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if e != nil {
+		t.Fatal(e)
+	}
+	leaf := &x509.Certificate{SerialNumber: big.NewInt(2), Subject: pkix.Name{CommonName: "Isolated gateway loopback"}, NotBefore: ca.NotBefore, NotAfter: ca.NotAfter, IPAddresses: []net.IP{net.ParseIP("127.0.0.1")}, KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}, BasicConstraintsValid: true}
+	leafDER, e := x509.CreateCertificate(rand.Reader, leaf, ca, &leafKey.PublicKey, caKey)
+	if e != nil {
+		t.Fatal(e)
+	}
+	certificate := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: leafDER})
+	authority := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caDER})
+	privateDER, e := x509.MarshalPKCS8PrivateKey(leafKey)
+	if e != nil {
+		t.Fatal(e)
+	}
+	private := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateDER})
+	pair, e := tls.X509KeyPair(certificate, private)
+	if e != nil {
+		t.Fatal(e)
+	}
+	control.TLS = &tls.Config{Certificates: []tls.Certificate{pair}, MinVersion: tls.VersionTLS12}
+	controlOrigin := "https://" + control.Listener.Addr().String()
+	machine := mode == dedicatedHTTPS
+	licensePath := mode == licenseExpiry || mode == evl105AuthorizedPair
+	c.s.Identity.Config.Server.AdminOrigin = controlOrigin
+	if machine {
+		material := t.TempDir()
+		certPath, keyPath := filepath.Join(material, "certificate.pem"), filepath.Join(material, "key.pem")
+		for name, data := range map[string][]byte{certPath: certificate, keyPath: private} {
+			if e := os.WriteFile(name, data, 0600); e != nil {
+				t.Fatal(e)
+			}
+		}
+		c.s.Identity.Config.Server.TransportMode = config.TransportHTTP
+		c.s.Identity.Config.Server.ListenAddress = "127.0.0.1:18081"
+		c.s.Identity.Config.Server.AdminOrigin = "http://127.0.0.1:18081"
+		c.s.Identity.Config.Server.PortalOrigin = "http://localhost:18081"
+		c.s.Identity.Config.MachineServer = &config.MachineServerConfiguration{ListenAddress: control.Listener.Addr().String(), Origin: controlOrigin, TLSCertificateFile: certPath, TLSPrivateKeyFile: keyPath}
+	}
+	access := c.access(t)
+	var storedOrigin string
+	if e := c.s.DB.QueryRow(ctx, "SELECT control_origin_sha256 FROM gateway_instances WHERE id=$1", access.gateway.Gateway.ID).Scan(&storedOrigin); e != nil || storedOrigin != fmt.Sprintf("%x", sha256.Sum256([]byte(controlOrigin))) {
+		t.Fatal("gateway bound the wrong transport origin", e)
+	}
+	handler := identityhttp.New(c.s.Identity)
+	control.Config.Handler = handler
+	if machine {
+		control.Config.Handler = handler.MachineHandler()
+	}
+	var lostReply *outcomeReplyLoss
+	if mode == lostOutcomeReply {
+		lostReply = newOutcomeReplyLoss(access.gateway.Gateway.ID)
+		control.Config.Handler = lostReply.wrap(t, control.Config.Handler)
+	}
+	var licenseOffset atomic.Int64
+	if licensePath {
+		trust, e := c.s.Identity.Config.LicenseTrust()
+		if e != nil {
+			t.Fatal(e)
+		}
+		licensed, e := licensing.New(c.s.Identity, trust, c.s.Identity.Config.LicensePolicy(), func() time.Time { return time.Now().UTC().Add(time.Duration(licenseOffset.Load())) })
+		if e != nil {
+			t.Fatal(e)
+		}
+		c.s.Identity.BusinessAdmission = licensed
+	}
+	ownedSecrets := []string{*access.gateway.Secret, *access.key.Secret}
+	var quota *applicationQuotaFixture
+	if mode == applicationBudget {
+		quota = newApplicationQuotaFixture(t, c, access)
+		ownedSecrets = append(ownedSecrets, *quota.sibling.Secret, *quota.independent.Secret)
+	}
+	var cpuPair *evl105Pair
+	if mode == evl105AuthorizedPair {
+		cpuPair = newEVL105Pair(t)
+		control.Config.Handler = cpuPair.observeReports(control.Config.Handler)
+	}
+	control.StartTLS()
+	defer control.Close()
+	foreground := mode == foregroundResponses || mode == foregroundMessages
+	var generationIDs sync.Map
+	callerID := uuid.NewString()
+	var generations, backendCalls atomic.Int32
+	var paused atomic.Bool
+	resume := make(chan struct{}, 1)
+	defer close(resume)
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if cpuPair != nil {
+			cpuPair.forward(w, r)
+			return
+		}
+		backendCalls.Add(1)
+		if r.Header.Get("Authorization") != "" || r.Header.Get("Cookie") != "" {
+			t.Error("upstream received authority secrets")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == "/v1/models" {
+			json.NewEncoder(w).Encode(map[string]any{"object": "list", "data": []any{map[string]any{"object": "model", "id": agentwire.InferenceModelName}}})
+			return
+		}
+		var body map[string]any
+		if e := json.NewDecoder(r.Body).Decode(&body); e != nil {
+			t.Error(e)
+			w.WriteHeader(400)
+			return
+		}
+		if body["model"] != agentwire.InferenceModelName {
+			t.Error("backend model alias was not normalized")
+		}
+		if r.URL.Path == "/tokenize" {
+			json.NewEncoder(w).Encode(map[string]any{"count": 7, "tokens": []int{1, 2, 3, 4, 5, 6, 7}, "max_model_len": 2048})
+			return
+		}
+		if r.URL.Path != "/v1/chat/completions" {
+			w.WriteHeader(404)
+			return
+		}
+		generations.Add(1)
+		if foreground {
+			id := r.Header.Get("X-Request-ID")
+			if !gatewaywire.ValidID(id) || id == callerID {
+				t.Error("backend did not receive a gateway-generated request ID")
+			}
+			generationIDs.Store(id, struct{}{})
+		}
+		usage := map[string]any{"prompt_tokens": 7, "completion_tokens": 2, "total_tokens": 9}
+		if body["stream"] == false {
+			json.NewEncoder(w).Encode(map[string]any{"id": "chatcmpl-synthetic", "object": "chat.completion", "created": 1, "model": agentwire.InferenceModelName, "choices": []any{map[string]any{"index": 0, "message": map[string]any{"role": "assistant", "content": "Synthetic local completion \u4e2d\u6587"}, "finish_reason": "stop"}}, "usage": usage, "private_diagnostic": "must not forward"})
+			return
+		}
+		w.Header().Set("Content-Type", "text/event-stream")
+		flusher := w.(http.Flusher)
+		event := func(choices any, usage any) {
+			b, _ := json.Marshal(map[string]any{"id": "chatcmpl-synthetic", "object": "chat.completion.chunk", "created": 1, "model": agentwire.InferenceModelName, "choices": choices, "usage": usage})
+			w.Write(append(append([]byte("data: "), b...), []byte("\n\n")...))
+			flusher.Flush()
+		}
+		event([]any{map[string]any{"index": 0, "delta": map[string]any{"role": "assistant", "content": "Synthetic streaming \u4e2d\u6587"}, "finish_reason": nil}}, nil)
+		if paused.Load() {
+			select {
+			case <-resume:
+			case <-r.Context().Done():
+				return
+			}
+		}
+		event([]any{map[string]any{"index": 0, "delta": map[string]any{}, "finish_reason": "stop"}}, nil)
+		event([]any{}, usage)
+		w.Write([]byte("data: [DONE]\n\n"))
+		flusher.Flush()
+	}))
+	defer backend.Close()
+	root := t.TempDir()
+	if e := os.Chmod(root, 0700); e != nil {
+		t.Fatal(e)
+	}
+	root, e = filepath.EvalSymlinks(root)
+	if e != nil {
+		t.Fatal(e)
+	}
+	state := filepath.Join(root, "state")
+	if e := os.Mkdir(state, 0700); e != nil {
+		t.Fatal(e)
+	}
+	for name, data := range map[string][]byte{"ca.pem": authority, "certificate.pem": certificate, "key.pem": private, "credential": []byte(*access.gateway.Secret + "\n")} {
+		if e = os.WriteFile(filepath.Join(root, name), data, 0600); e != nil {
+			t.Fatal(e)
+		}
+	}
+	listener := httptest.NewUnstartedServer(nil)
+	listen := listener.Listener.Addr().String()
+	listener.Close()
+	limits := map[string]any{"active_requests": 2, "queued_requests": 2, "backend_idle_connections": 2, "connect_seconds": 1, "control_seconds": 1, "request_seconds": 5, "idle_seconds": 2, "header_seconds": 1, "shutdown_seconds": 2, "outcome_retry_seconds": 1}
+	configuration := map[string]any{"gateway_id": access.gateway.Gateway.ID, "node_id": c.node.NodeID, "listen_address": listen, "backend_address": strings.TrimPrefix(backend.URL, "http://"), "control_origin": control.URL, "control_ca_file": filepath.Join(root, "ca.pem"), "gateway_credential_file": filepath.Join(root, "credential"), "tls_certificate_file": filepath.Join(root, "certificate.pem"), "tls_private_key_file": filepath.Join(root, "key.pem"), "state_directory": state, "limits": limits}
+	if mode == promptCapacityRelease {
+		limits["outcome_retry_seconds"] = 30
+	}
+	if cpuPair != nil {
+		limits["active_requests"] = 1
+		limits["request_seconds"] = 60
+		limits["idle_seconds"] = 30
+	}
+	if lostReply != nil {
+		limits["control_seconds"] = 4
+	}
+	if quota != nil {
+		configuration["quota_policy"] = quota.policy
+	}
+	configBytes, e := json.Marshal(configuration)
+	if e != nil {
+		t.Fatal(e)
+	}
+	configPath := filepath.Join(root, "gateway.json")
+	if e = os.WriteFile(configPath, configBytes, 0600); e != nil {
+		t.Fatal(e)
+	}
+	logPath := filepath.Join(root, "gateway.log")
+	log, e := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0600)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer log.Close()
+	command := exec.Command(binary, "serve", "--config", configPath)
+	command.Stdout = log
+	command.Stderr = log
+	if e = command.Start(); e != nil {
+		t.Fatal(e)
+	}
+	exited := make(chan error, 1)
+	go func() { exited <- command.Wait() }()
+	defer func() {
+		command.Process.Signal(syscall.SIGTERM)
+		select {
+		case e := <-exited:
+			if e != nil {
+				t.Error("native gateway exit", e)
+			}
+		case <-time.After(8 * time.Second):
+			command.Process.Kill()
+			<-exited
+			t.Error("native gateway shutdown timeout")
+		}
+		if output := os.Getenv("PROJECT_ONE_EVIDENCE_ROOT"); output != "" {
+			data, e := os.ReadFile(logPath)
+			if e != nil {
+				t.Error(e)
+				return
+			}
+			for _, secret := range ownedSecrets {
+				data = bytes.ReplaceAll(data, []byte(secret), []byte("[redacted-synthetic-secret]"))
+			}
+			if e = os.WriteFile(filepath.Join(output, "native-gateway.log"), data, 0600); e != nil {
+				t.Error(e)
+			}
+		}
+	}()
+	pool := x509.NewCertPool()
+	if !pool.AppendCertsFromPEM(authority) {
+		t.Fatal("private CA")
+	}
+	transport := &http.Transport{Proxy: nil, TLSClientConfig: &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}, MaxIdleConnsPerHost: 1, DisableKeepAlives: true}
+	defer transport.CloseIdleConnections()
+	client := &http.Client{Transport: transport, Timeout: 8 * time.Second}
+	if cpuPair != nil {
+		client.Timeout = 75 * time.Second
+	}
+	origin := "https://" + listen
+	startupBegan := time.Now()
+	startupLimit := 3 * time.Second
+	if cpuPair != nil {
+		startupLimit = 30 * time.Second
+	}
+	deadline := time.Now().Add(startupLimit)
+	for {
+		response, e := client.Get(origin + "/health/ready")
+		if e == nil {
+			response.Body.Close()
+			if response.StatusCode == 200 {
+				break
+			}
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("native gateway startup timeout", e)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if cpuPair != nil {
+		t.Logf("native gateway ready after %s", time.Since(startupBegan))
+	}
+	request := func(path, key string, body any) *http.Response {
+		t.Helper()
+		var reader io.Reader
+		method := http.MethodGet
+		if body != nil {
+			method = http.MethodPost
+			b, e := json.Marshal(body)
+			if e != nil {
+				t.Fatal(e)
+			}
+			reader = bytes.NewReader(b)
+		}
+		r, e := http.NewRequest(method, origin+path, reader)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if foreground {
+			r.Header.Set("X-Request-ID", callerID)
+		}
+		if path == "/v1/messages" {
+			r.Header.Set("Anthropic-Version", "2026-10-21")
+			r.Header.Set("X-Api-Key", key)
+		} else {
+			r.Header.Set("Authorization", "Bearer "+key)
+		}
+		if body != nil {
+			r.Header.Set("Content-Type", "application/json")
+		}
+		response, e := client.Do(r)
+		if e != nil {
+			t.Fatal(e)
+		}
+		return response
+	}
+	if cpuPair != nil {
+		cpuPair.verify(t, c, access, request)
+		return
+	}
+	if mode == promptCapacityRelease {
+		verifyPromptCapacityRelease(t, c, access, request)
+		return
+	}
+	if mode == foregroundMessages {
+		foreignKey := foreignFixtureKey(t, c.a.Me.Workspace.TenantID)
+		ownedSecrets = append(ownedSecrets, foreignKey)
+		for _, probe := range []struct {
+			path string
+			body any
+		}{
+			{"/v1/responses", map[string]any{"model": access.alias.Name, "input": "Synthetic foreign request"}},
+			{"/v1/messages", map[string]any{"model": access.alias.Name, "max_tokens": 16,
+				"messages": []any{map[string]any{"role": "user", "content": "Synthetic foreign request"}}}},
+		} {
+			denied := request(probe.path, foreignKey, probe.body)
+			body, err := io.ReadAll(io.LimitReader(denied.Body, 16385))
+			denied.Body.Close()
+			if err != nil || denied.StatusCode != 401 || !bytes.Contains(body, []byte(`"code":"invalid_api_key"`)) {
+				t.Fatal("foreign tenant credential was not refused", probe.path, denied.StatusCode, err)
+			}
+		}
+		var admissions int
+		if err := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM gateway_requests").Scan(&admissions); err != nil ||
+			admissions != 0 || backendCalls.Load() != 0 {
+			t.Fatal("foreign credential reached backend or created a local admission", err)
+		}
+	}
+	if foreground {
+		verifyForegroundText(t, mode, c, access, request, &paused, &backendCalls, &generations, &generationIDs)
+		return
+	}
+	if quota != nil {
+		quota.verify(t, c, access, request, &generations)
+		return
+	}
+	chat := func(stream bool) map[string]any {
+		body := map[string]any{"model": access.alias.Name, "messages": []any{map[string]any{"role": "user", "content": "Synthetic coupled request \u4e2d\u6587"}}, "max_tokens": 16, "stream": stream}
+		if stream {
+			body["stream_options"] = map[string]any{"include_usage": true}
+		}
+		return body
+	}
+	if lostReply != nil {
+		lostReply.verify(t, c, access, state, request("/v1/chat/completions", *access.key.Secret, chat(false)), &generations)
+		return
+	}
+	response := request("/v1/models", *access.key.Secret, nil)
+	modelBytes, _ := io.ReadAll(response.Body)
+	response.Body.Close()
+	if response.StatusCode != 200 || !bytes.Contains(modelBytes, []byte(access.alias.Name)) || bytes.Contains(modelBytes, []byte(agentwire.InferenceModelName)) {
+		t.Fatal("actual coupled models", response.StatusCode, string(modelBytes))
+	}
+	response = request("/v1/chat/completions", *access.key.Secret, chat(false))
+	var completion map[string]any
+	e = json.NewDecoder(response.Body).Decode(&completion)
+	response.Body.Close()
+	if e != nil || response.StatusCode != 200 || completion["model"] != access.alias.Name || completion["private_diagnostic"] != nil {
+		t.Fatal("actual coupled completion", response.StatusCode, e)
+	}
+	response = request("/v1/chat/completions", *access.key.Secret, chat(true))
+	streamBytes, e := io.ReadAll(response.Body)
+	response.Body.Close()
+	if e != nil || response.StatusCode != 200 || !bytes.HasSuffix(streamBytes, []byte("data: [DONE]\n\n")) || !bytes.Contains(streamBytes, []byte(`"total_tokens":9`)) {
+		t.Fatal("actual coupled SSE", response.StatusCode, e, string(streamBytes))
+	}
+	deadline = time.Now().Add(4 * time.Second)
+	for {
+		var count int
+		if e = c.s.DB.QueryRow(ctx, "SELECT count(*) FROM gateway_requests WHERE state='reported' AND NOT capacity_held").Scan(&count); e != nil {
+			t.Fatal(e)
+		}
+		if count == 2 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("real outcome delivery timeout")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if licensePath {
+		paused.Store(true)
+		heldStream := request("/v1/chat/completions", *access.key.Secret, chat(true))
+		defer heldStream.Body.Close()
+		heldReader := bufio.NewReader(heldStream.Body)
+		first, e := heldReader.ReadString('\n')
+		if e != nil || heldStream.StatusCode != 200 || !strings.HasPrefix(first, "data: ") {
+			t.Fatal("actual licensed inflight stream", e)
+		}
+		licenseOffset.Store(int64(26 * time.Hour))
+		callsBefore, generationsBefore := backendCalls.Load(), generations.Load()
+		refused := request("/v1/chat/completions", *access.key.Secret, chat(false))
+		denial, e := io.ReadAll(io.LimitReader(refused.Body, 16385))
+		refused.Body.Close()
+		if e != nil || refused.StatusCode != 403 || !bytes.Contains(denial, []byte(`"code":"license_unavailable"`)) || backendCalls.Load() != callsBefore || generations.Load() != generationsBefore {
+			t.Fatal("actual expired license reached backend or wrong public denial", refused.StatusCode, e)
+		}
+		var requests int
+		if e = c.s.DB.QueryRow(ctx, "SELECT count(*) FROM gateway_requests").Scan(&requests); e != nil || requests != 3 {
+			t.Fatal("license denial inserted/held a request", e, requests)
+		}
+		discovery := request("/v1/models", *access.key.Secret, nil)
+		discovered, e := io.ReadAll(io.LimitReader(discovery.Body, 16385))
+		discovery.Body.Close()
+		if e != nil || discovery.StatusCode != 200 || !bytes.Contains(discovered, []byte(access.alias.Name)) {
+			t.Fatal("expired scoped discovery", e)
+		}
+		resume <- struct{}{}
+		rest, e := io.ReadAll(heldReader)
+		heldStream.Body.Close()
+		if e != nil || !bytes.HasSuffix(rest, []byte("data: [DONE]\n\n")) {
+			t.Fatal("existing stream could not finish after license expiry", e)
+		}
+		paused.Store(false)
+		waitReported := func(want int) {
+			t.Helper()
+			end := time.Now().Add(4 * time.Second)
+			for {
+				var count int
+				if e := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM gateway_requests WHERE state='reported' AND NOT capacity_held").Scan(&count); e != nil {
+					t.Fatal(e)
+				}
+				if count == want {
+					return
+				}
+				if time.Now().After(end) {
+					t.Fatal("actual expiry outcome timeout", want, count)
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+		}
+		waitReported(3)
+		var operationID string
+		e = c.s.WithTransientKey(ctx, access.owner, keyInput(access.alias), 2*time.Second, uuid.NewString(), func(raw string) error {
+			ownedSecrets = append(ownedSecrets, raw)
+			operationID = strings.Split(raw, ".")[1]
+			response := request("/v1/chat/completions", raw, chat(false))
+			var answer map[string]any
+			err := json.NewDecoder(response.Body).Decode(&answer)
+			response.Body.Close()
+			if err != nil || response.StatusCode != 200 || answer["model"] != access.alias.Name {
+				t.Fatal("real private accepted operation failed after expiry", response.StatusCode, err)
+			}
+			before := backendCalls.Load()
+			again := request("/v1/chat/completions", raw, chat(false))
+			repeat, e := io.ReadAll(io.LimitReader(again.Body, 16385))
+			again.Body.Close()
+			if e != nil || again.StatusCode != 401 || !bytes.Contains(repeat, []byte("invalid_api_key")) || backendCalls.Load() != before {
+				t.Fatal("private operation replay reached backend", again.StatusCode, e)
+			}
+			waitReported(4)
+			return nil
+		})
+		if e != nil {
+			t.Fatal("actual expired operation cleanup", e)
+		}
+		var revoked bool
+		if e = c.s.DB.QueryRow(ctx, "SELECT revoked_at IS NOT NULL FROM api_keys WHERE id=$1", operationID).Scan(&revoked); e != nil || !revoked {
+			t.Fatal("private operation key remained active", e)
+		}
+		if generations.Load() != 4 {
+			t.Fatal("unexpected license generation effects", generations.Load())
+		}
+		if output := os.Getenv("PROJECT_ONE_EVIDENCE_ROOT"); output != "" {
+			summary, _ := json.MarshalIndent(map[string]any{"status": "passed_actual_Go_Rust_PostgreSQL_license_expiry_and_accepted_operation", "license_clock": "explicit_test_only_atomic_offset", "model_and_tokenizer": "explicit_synthetic_HTTP_fixture_not_AI_hardware_execution", "actual_native_Rust": true, "actual_Go_license_HTTP_and_SQL": true, "ordinary_expired_public_status": 403, "denied_backend_tokenizer_and_completion_calls": 0, "denied_durable_rows": 0, "reported_without_held_capacity": 4, "private_operation_replay_public_status": 401, "private_operation_revoked": true, "generations": 4, "qualification": "No production native control process, backup-restore, vLLM/NVIDIA/amd64/Xinchuang/cloud qualification."}, "", "  ")
+			if e = os.WriteFile(filepath.Join(output, "go-rust-license-chain.json"), summary, 0600); e != nil {
+				t.Fatal(e)
+			}
+		}
+		return
+	}
+	if _, e = c.s.RevokeKey(ctx, access.owner, access.alias.WorkspaceID, access.key.Key.ID, "Synthetic coupled revoke", uuid.NewString()); e != nil {
+		t.Fatal(e)
+	}
+	response = request("/v1/models", *access.key.Secret, nil)
+	denied, _ := io.ReadAll(response.Body)
+	response.Body.Close()
+	if response.StatusCode != 401 || !bytes.Contains(denied, []byte("invalid_api_key")) || generations.Load() != 2 {
+		t.Fatal("real Go revocation did not reach Rust", response.StatusCode, string(denied))
+	}
+	replacement, e := c.s.MintKey(ctx, access.owner, keyInput(access.alias), uuid.NewString(), uuid.NewString())
+	if e != nil {
+		t.Fatal(e)
+	}
+	ownedSecrets = append(ownedSecrets, *replacement.Secret)
+	paused.Store(true)
+	response = request("/v1/chat/completions", *replacement.Secret, chat(true))
+	reader := bufio.NewReader(response.Body)
+	first, e := reader.ReadString('\n')
+	if e != nil || !strings.HasPrefix(first, "data: ") {
+		t.Fatal("in-flight admission", e)
+	}
+	control.Close()
+	resume <- struct{}{}
+	rest, e := io.ReadAll(reader)
+	response.Body.Close()
+	if e != nil || !bytes.HasSuffix(rest, []byte("data: [DONE]\n\n")) {
+		t.Fatal("bounded admitted stream could not finish during real control outage", e, string(rest))
+	}
+	response = request("/v1/chat/completions", *replacement.Secret, chat(false))
+	failure, _ := io.ReadAll(response.Body)
+	response.Body.Close()
+	if response.StatusCode != 503 || !bytes.Contains(failure, []byte("gateway_unavailable")) || generations.Load() != 3 {
+		t.Fatal("control outage admitted new backend effects", response.StatusCode, string(failure))
+	}
+	pending, e := os.ReadDir(filepath.Join(state, "outcomes"))
+	if e != nil || len(pending) != 1 {
+		t.Fatal("outage did not preserve exact pending metadata", e, len(pending))
+	}
+	metadata, e := os.ReadFile(filepath.Join(state, "outcomes", pending[0].Name()))
+	if e != nil || bytes.Contains(metadata, []byte("Synthetic coupled request")) || bytes.Contains(metadata, []byte(*replacement.Secret)) {
+		t.Fatal("invalid private metadata", e)
+	}
+	var held int
+	if e = c.s.DB.QueryRow(ctx, "SELECT count(*) FROM gateway_requests WHERE capacity_held AND state='admitted'").Scan(&held); e != nil || held != 1 {
+		t.Fatal("outage falsely acknowledged capacity", e, held)
+	}
+	if output := os.Getenv("PROJECT_ONE_EVIDENCE_ROOT"); output != "" {
+		summary, _ := json.MarshalIndent(map[string]any{"status": "passed_real_go_rust_postgresql_chain", "scope": "Actual native gateway binary/private TLS/Go/PostgreSQL. Model/tokenizer HTTP replies are explicitly synthetic; no GPU or vLLM API execution.", "generations": generations.Load(), "reported_before_outage": 2, "pending_metadata_during_outage": 1, "assertions": []string{"models/completion/SSE preserve scoped aliases", "canonical usage receipt matches across Go/Rust", "fresh Go revocation reaches Rust", "actual Go server outage denies new generations", "already admitted stream completes after durable local metadata", "unknown Go capacity and private pending metadata remain"}}, "", "  ")
+		if e = os.WriteFile(filepath.Join(output, "go-rust-chain.json"), summary, 0600); e != nil {
+			t.Fatal(e)
+		}
+	}
+}
+
+// Mint a real key in an independent PostgreSQL installation fixture and
+// establish that its own control authority accepts it before using it on this site.
+func foreignFixtureKey(t *testing.T, localTenant string) string {
+	t.Helper()
+	foreign := setup(t)
+	if foreign.a.Me.Workspace.TenantID == localTenant {
+		t.Fatal("expected independent tenant scope")
+	}
+	access := foreign.access(t)
+	key := *access.key.Secret
+	allowed, err := foreign.s.AuthorizeModels(t.Context(), access.gateway.Gateway.ID, *access.gateway.Secret, key)
+	if err != nil || allowed.WorkspaceID != access.alias.WorkspaceID ||
+		len(allowed.Models) != 1 || allowed.Models[0].Name != access.alias.Name {
+		t.Fatal("foreign credential did not work in its own installation", err)
+	}
+	return key
+}
+
+func verifyForegroundText(
+	t *testing.T,
+	mode gatewayChainMode,
+	c scenario,
+	access access,
+	request func(string, string, any) *http.Response,
+	paused *atomic.Bool,
+	backendCalls, generations *atomic.Int32,
+	generationIDs *sync.Map,
+) {
+	t.Helper()
+	path, prefix, delta, terminal := "/v1/responses", "resp_", "response.output_text.delta", "response.completed"
+	body := func(stream bool) map[string]any {
+		var input any = "Synthetic foreground input"
+		if stream {
+			input = []any{map[string]any{"type": "message", "role": "user",
+				"content": []any{map[string]any{"type": "input_text", "text": "Synthetic foreground input"}}}}
+		}
+		return map[string]any{"model": access.alias.Name, "input": input, "max_output_tokens": 16, "stream": stream, "store": false}
+	}
+	if mode == foregroundMessages {
+		path, prefix, delta, terminal = "/v1/messages", "msg_", "content_block_delta", "message_stop"
+		body = func(stream bool) map[string]any {
+			return map[string]any{"model": access.alias.Name, "max_tokens": 16, "stream": stream,
+				"system":   "Synthetic system instructions",
+				"messages": []any{map[string]any{"role": "user", "content": "Synthetic foreground input"}}}
+		}
+	}
+	key := *access.key.Secret
+	reported := map[string]gatewaywire.Outcome{}
+	assertReported := func(id, status string, stream bool, usage *gatewaywire.Usage) {
+		t.Helper()
+		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+		defer cancel()
+		for {
+			var data []byte
+			var held, streamed bool
+			var workspace, keyID string
+			err := c.s.DB.QueryRow(ctx, "SELECT outcome, capacity_held, stream, workspace_id, api_key_id FROM gateway_requests WHERE id=$1", id).Scan(&data, &held, &streamed, &workspace, &keyID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if data != nil {
+				receipt, err := gatewaywire.DecodeOutcome(data)
+				if err != nil || receipt.RequestID != id || receipt.Status != status || held || streamed != stream ||
+					workspace != access.alias.WorkspaceID || keyID != access.key.Key.ID ||
+					(usage == nil && receipt.Usage != nil) ||
+					(usage != nil && (receipt.Usage == nil || *receipt.Usage != *usage)) {
+					t.Fatal("foreground text receipt mismatch", receipt, err)
+				}
+				reported[id] = receipt
+				return
+			}
+			select {
+			case <-ctx.Done():
+				t.Fatal("foreground text outcome was not reported")
+			case <-time.After(10 * time.Millisecond):
+			}
+		}
+	}
+	usage := &gatewaywire.Usage{PromptTokens: 7, CompletionTokens: 2, TotalTokens: 9}
+	answer := request(path, key, body(false))
+	id := answer.Header.Get("X-Request-Id")
+	var value struct {
+		ID, Model, Status, Type, Role string
+		StopReason                    string `json:"stop_reason"`
+		Usage                         struct {
+			Input  int `json:"input_tokens"`
+			Output int `json:"output_tokens"`
+			Total  int `json:"total_tokens"`
+		}
+	}
+	err := json.NewDecoder(answer.Body).Decode(&value)
+	answer.Body.Close()
+	if err != nil || answer.StatusCode != 200 || !gatewaywire.ValidID(id) || value.ID != prefix+id ||
+		value.Model != access.alias.Name || value.Usage.Input != 7 || value.Usage.Output != 2 {
+		t.Fatal("foreground text JSON failed", answer.StatusCode, err)
+	}
+	if mode == foregroundMessages {
+		if value.Type != "message" || value.Role != "assistant" || value.StopReason != "end_turn" ||
+			answer.Header.Get("Request-Id") != "req_"+id {
+			t.Fatal("Messages JSON shape did not match the local protocol")
+		}
+	} else if value.Status != "completed" || value.Usage.Total != 9 {
+		t.Fatal("Responses JSON terminal or usage did not match")
+	}
+	assertReported(id, "succeeded", false, usage)
+	stream := request(path, key, body(true))
+	events, err := io.ReadAll(stream.Body)
+	stream.Body.Close()
+	if err != nil || stream.StatusCode != 200 ||
+		!bytes.Contains(events, []byte("event: "+delta+"\n")) ||
+		!bytes.Contains(events, []byte("event: "+terminal+"\n")) {
+		t.Fatal("foreground text SSE failed", stream.StatusCode, err)
+	}
+	assertReported(stream.Header.Get("X-Request-Id"), "succeeded", true, usage)
+
+	paused.Store(true)
+	cancelled := request(path, key, body(true))
+	defer cancelled.Body.Close()
+	reader := bufio.NewReader(cancelled.Body)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			t.Fatal("foreground text delta missing", err)
+		}
+		if line == "event: "+delta+"\n" {
+			break
+		}
+	}
+	cancelled.Body.Close()
+	assertReported(cancelled.Header.Get("X-Request-Id"), "client_cancelled", true, nil)
+	history, err := c.s.RequestPage(t.Context(), access.owner, access.alias.WorkspaceID,
+		url.Values{"api_key_id": {access.key.Key.ID}, "limit": {"3"}})
+	if err != nil || len(history.Items) != len(reported) || history.NextCursor != nil {
+		t.Fatal("native gateway history did not return exactly the reported calls", err)
+	}
+	for _, row := range history.Items {
+		expected, ok := reported[row.ID]
+		if _, dispatched := generationIDs.LoadAndDelete(row.ID); !dispatched ||
+			row.NodeID != access.alias.NodeID || row.DeploymentID != access.alias.DeploymentID ||
+			row.DeploymentRevision != access.alias.DeploymentRevision {
+			t.Fatal("gateway request ID did not match the engine dispatch and admitted placement")
+		}
+		if !ok || row.Outcome == nil {
+			t.Fatal("native gateway history missing a reported receipt")
+		}
+		actualDigest, actualErr := row.Outcome.Digest()
+		expectedDigest, expectedErr := expected.Digest()
+		if actualErr != nil || expectedErr != nil || actualDigest != expectedDigest {
+			t.Fatal("native gateway history changed usage, latency or cancellation")
+		}
+		delete(reported, row.ID)
+	}
+	adminIdentity := *c.s.Identity
+	adminIdentity.Config.Server.AdminOrigin = httpfixture.AdminOrigin
+	adminServer := httpfixture.NewTLSServer(t, identityhttp.New(&adminIdentity))
+	schemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/distribution/openapi.json")
+	deploymentSchemas := httpfixture.Schemas(t, "../../../../../api/openapi/v1/deployments/openapi.json")
+	schemas["DeploymentResponse"] = deploymentSchemas["DeploymentResponse"]
+	admin := httpfixture.New(t, adminServer, "admin", schemas)
+	admin.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": c.password}, 200, "")
+	trace := admin.Call("GET", "/api/v1/admin/distribution/workspaces/"+access.alias.WorkspaceID+"/requests/"+id, nil, 200, "GatewayRequestResponse")
+	if trace["id"] != id || trace["node_id"] != access.alias.NodeID || trace["deployment_id"] != access.alias.DeploymentID ||
+		trace["deployment_revision"] != float64(access.alias.DeploymentRevision) {
+		t.Fatal("authorized detail did not identify the admitted deployment revision")
+	}
+	deployment := admin.Call("GET", "/api/v1/admin/deployments/"+access.alias.DeploymentID, nil, 200, "DeploymentResponse")
+	if deployment["id"] != trace["deployment_id"] || deployment["node_id"] != trace["node_id"] ||
+		deployment["revision"] != trace["deployment_revision"] || deployment["gpu_uuid"] != syntheticGatewayGPU {
+		t.Fatal("authorized deployment detail did not resolve the same fixture placement")
+	}
+	if _, err := c.s.RevokeKey(context.Background(), access.owner, access.alias.WorkspaceID, access.key.Key.ID, "Synthetic foreground text revocation", uuid.NewString()); err != nil {
+		t.Fatal(err)
+	}
+	before := backendCalls.Load()
+	denied := request(path, key, body(false))
+	denied.Body.Close()
+	if denied.StatusCode != 401 || backendCalls.Load() != before || generations.Load() != 3 {
+		t.Fatal("revoked key reached the text backend", denied.StatusCode)
+	}
+}
+
+// A second call must also release its hold well before the reporter's retry interval.
+func verifyPromptCapacityRelease(t *testing.T, c scenario, access access, request func(path, key string, body any) *http.Response) {
+	t.Helper()
+	chat := map[string]any{
+		"model": access.alias.Name, "max_tokens": 16,
+		"messages": []any{map[string]any{"role": "user", "content": "Synthetic capacity release"}},
+	}
+	for attempt := 1; attempt <= 2; attempt++ {
+		response := request("/v1/chat/completions", *access.key.Secret, chat)
+		var completion struct {
+			Model string            `json:"model"`
+			Usage gatewaywire.Usage `json:"usage"`
+		}
+		err := json.NewDecoder(io.LimitReader(response.Body, 16384)).Decode(&completion)
+		response.Body.Close()
+		id := response.Header.Get("X-Request-ID")
+		if err != nil || response.StatusCode != http.StatusOK || !gatewaywire.ValidID(id) ||
+			completion.Model != access.alias.Name || completion.Usage.TotalTokens != 9 {
+			t.Fatal("unexpected completion in capacity release fixture", response.StatusCode, err)
+		}
+		start := time.Now()
+		deadline := start.Add(4 * time.Second)
+		for {
+			var released bool
+			err := c.s.DB.QueryRow(t.Context(), `SELECT state='reported' AND NOT capacity_held
+				AND outcome->>'status'='succeeded' AND outcome->'usage'->>'total_tokens'='9'
+				FROM gateway_requests WHERE id=$1`, id).Scan(&released)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if released {
+				t.Logf("reported call %d released capacity after %v", attempt, time.Since(start))
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatalf("call %d retained its deployment capacity until the retry timer", attempt)
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+}
+
+type evl105Exchange struct {
+	request, response []byte
+}
+
+type evl105Pair struct {
+	client        *http.Client
+	mu            sync.Mutex
+	tokenizations []evl105Exchange
+	generations   map[string]evl105Exchange
+	acks          map[string][]byte
+}
+
+const evl105Backend = "http://127.0.0.1:18105"
+const evl105ChatPath = "/v1/chat/completions"
+const evl105BodyLimit = 1 << 20
+
+func newEVL105Pair(t *testing.T) *evl105Pair {
+	t.Helper()
+	transport := &http.Transport{DisableKeepAlives: true}
+	t.Cleanup(transport.CloseIdleConnections)
+	return &evl105Pair{
+		client:      &http.Client{Transport: transport, Timeout: 60 * time.Second},
+		generations: make(map[string]evl105Exchange),
+		acks:        make(map[string][]byte),
+	}
+}
+
+func (p *evl105Pair) fetch(ctx context.Context, method, path, id string, data []byte) (int, string, []byte, error) {
+	req, err := http.NewRequestWithContext(ctx, method, evl105Backend+path, bytes.NewReader(data))
+	if err != nil {
+		return 0, "", nil, err
+	}
+	if method == http.MethodPost {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if id != "" {
+		req.Header.Set("X-Request-ID", id)
+	}
+	response, err := p.client.Do(req)
+	if err != nil {
+		return 0, "", nil, err
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(response.Body, evl105BodyLimit+1))
+	if err != nil || len(body) > evl105BodyLimit {
+		return 0, "", nil, fmt.Errorf("could not read bounded CPU response: %v", err)
+	}
+	return response.StatusCode, response.Header.Get("Content-Type"), body, nil
+}
+
+func (p *evl105Pair) forward(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") != "" || r.Header.Get("Cookie") != "" {
+		http.Error(w, "unexpected authority at CPU backend", http.StatusBadGateway)
+		return
+	}
+	if !(r.Method == http.MethodGet && r.URL.Path == "/v1/models") &&
+		!(r.Method == http.MethodPost && (r.URL.Path == "/tokenize" || r.URL.Path == evl105ChatPath)) {
+		http.NotFound(w, r)
+		return
+	}
+	request, err := io.ReadAll(io.LimitReader(r.Body, evl105BodyLimit+1))
+	if err != nil || len(request) > evl105BodyLimit {
+		http.Error(w, "CPU fixture request too large", http.StatusBadRequest)
+		return
+	}
+	id := r.Header.Get("X-Request-ID")
+	if r.URL.Path == evl105ChatPath && !gatewaywire.ValidID(id) {
+		http.Error(w, "missing gateway request identity", http.StatusBadGateway)
+		return
+	}
+	status, content, body, err := p.fetch(r.Context(), r.Method, r.URL.Path, id, request)
+	if err != nil {
+		http.Error(w, "CPU engine unavailable", http.StatusBadGateway)
+		return
+	}
+	if status == http.StatusOK {
+		exchange := evl105Exchange{request: request, response: body}
+		p.mu.Lock()
+		switch r.URL.Path {
+		case "/tokenize":
+			p.tokenizations = append(p.tokenizations, exchange)
+		case evl105ChatPath:
+			if _, duplicate := p.generations[id]; duplicate {
+				p.mu.Unlock()
+				http.Error(w, "duplicate gateway generation", http.StatusBadGateway)
+				return
+			}
+			p.generations[id] = exchange
+		}
+		p.mu.Unlock()
+	}
+	w.Header().Set("Content-Type", content)
+	w.WriteHeader(status)
+	_, _ = w.Write(body)
+}
+
+func (p *evl105Pair) observeReports(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || !strings.HasSuffix(r.URL.Path, "/outcomes") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		record := httptest.NewRecorder()
+		next.ServeHTTP(record, r)
+		var envelope struct {
+			Data gatewaywire.Acknowledgment `json:"data"`
+		}
+		if record.Code == http.StatusOK && json.Unmarshal(record.Body.Bytes(), &envelope) == nil && gatewaywire.ValidID(envelope.Data.RequestID) {
+			p.mu.Lock()
+			p.acks[envelope.Data.RequestID] = append([]byte(nil), record.Body.Bytes()...)
+			p.mu.Unlock()
+		}
+		for name, values := range record.Header() {
+			for _, value := range values {
+				w.Header().Add(name, value)
+			}
+		}
+		w.WriteHeader(record.Code)
+		_, _ = w.Write(record.Body.Bytes())
+	})
+}
+
+type evl105ChatReply struct {
+	ID, Model, Object string
+	Choices           []struct {
+		Message struct{ Content, Role string }
+		Finish  string `json:"finish_reason"`
+	}
+	Usage gatewaywire.Usage
+}
+
+func decodeEVL105Reply(t *testing.T, body []byte) evl105ChatReply {
+	t.Helper()
+	var reply evl105ChatReply
+	if err := json.Unmarshal(body, &reply); err != nil || reply.Object != "chat.completion" || reply.ID == "" ||
+		len(reply.Choices) != 1 || reply.Choices[0].Message.Role != "assistant" || reply.Choices[0].Message.Content == "" ||
+		reply.Usage.PromptTokens == 0 || reply.Usage.TotalTokens != reply.Usage.PromptTokens+reply.Usage.CompletionTokens {
+		t.Fatal("malformed measured completion", err)
+	}
+	return reply
+}
+
+type evl105Archived struct {
+	Case       string `json:"case"`
+	RequestSHA string `json:"request_sha256"`
+	OutputSHA  string `json:"output_sha256"`
+	Prompt     uint32 `json:"prompt_tokens"`
+	Completion uint32 `json:"completion_tokens"`
+	Finish     string `json:"finish_reason"`
+}
+
+func evl105Write(t *testing.T, path string, data []byte) {
+	t.Helper()
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func (p *evl105Pair) verify(t *testing.T, c scenario, a access, request func(string, string, any) *http.Response) {
+	t.Helper()
+	inputs, output := os.Getenv("PROJECT_ONE_EVL105_INPUT_ROOT"), os.Getenv("PROJECT_ONE_EVIDENCE_ROOT")
+	if inputs == "" || output == "" {
+		t.Fatal("private input and evidence paths required")
+	}
+	archive, err := os.ReadFile(filepath.Join(inputs, "observations.json"))
+	if err != nil || fmt.Sprintf("%x", sha256.Sum256(archive)) != "ceace0a1253b196142fa739cf8766f930f85086dfe9ed06a0acf704a1d8911bc" {
+		t.Fatal("direct evidence digest", err)
+	}
+	var original struct {
+		Runs []struct{ Samples []evl105Archived }
+	}
+	if err := json.Unmarshal(archive, &original); err != nil || len(original.Runs) != 2 || len(original.Runs[0].Samples) < 2 {
+		t.Fatal("direct evidence shape", err)
+	}
+	seen := map[string]bool{}
+	for i, archived := range original.Runs[0].Samples[:2] {
+		prefix := filepath.Join(output, fmt.Sprintf("pair-%d", i+1))
+		directBody, err := os.ReadFile(filepath.Join(inputs, fmt.Sprintf("request-%d.json", i+1)))
+		if err != nil || fmt.Sprintf("%x", sha256.Sum256(directBody)) != archived.RequestSHA {
+			t.Fatal("original request digest", err)
+		}
+		evl105Write(t, prefix+"-direct-request.json", directBody)
+		status, _, directRaw, err := p.fetch(t.Context(), http.MethodPost, evl105ChatPath, "", directBody)
+		evl105Write(t, prefix+"-direct-response.json", directRaw)
+		if err != nil || status != http.StatusOK {
+			t.Fatal("direct CPU call", status, err)
+		}
+		direct := decodeEVL105Reply(t, directRaw)
+
+		var initial map[string]any
+		if err := json.Unmarshal(directBody, &initial); err != nil {
+			t.Fatal(err)
+		}
+		if initial["seed"] != float64(42) || initial["temperature"] != float64(0) {
+			t.Fatal("original greedy profile changed")
+		}
+		public := map[string]any{"model": a.alias.Name, "messages": initial["messages"], "max_completion_tokens": initial["max_completion_tokens"], "temperature": initial["temperature"], "stream": false}
+		publicBody, _ := json.Marshal(public)
+		evl105Write(t, prefix+"-gateway-request.json", publicBody)
+		response := request(evl105ChatPath, *a.key.Secret, public)
+		id := response.Header.Get("X-Request-ID")
+		publicRaw, err := io.ReadAll(io.LimitReader(response.Body, evl105BodyLimit+1))
+		response.Body.Close()
+		evl105Write(t, prefix+"-gateway-response.json", publicRaw)
+		if err != nil || response.StatusCode != http.StatusOK || !gatewaywire.ValidID(id) || seen[id] {
+			t.Fatal("authorized gateway call", response.StatusCode, id, err)
+		}
+		seen[id] = true
+		gateway := decodeEVL105Reply(t, publicRaw)
+		p.mu.Lock()
+		generation, found := p.generations[id]
+		var tokenize evl105Exchange
+		if len(p.tokenizations) == i+1 {
+			tokenize = p.tokenizations[i]
+		}
+		p.mu.Unlock()
+		if !found || tokenize.response == nil {
+			t.Fatal("gateway did not reach real tokenizer and generation", id)
+		}
+		evl105Write(t, prefix+"-backend-request.json", generation.request)
+		evl105Write(t, prefix+"-backend-response.json", generation.response)
+		evl105Write(t, prefix+"-tokenize-request.json", tokenize.request)
+		evl105Write(t, prefix+"-tokenize-response.json", tokenize.response)
+		var forwarded map[string]any
+		if err := json.Unmarshal(generation.request, &forwarded); err != nil {
+			t.Fatal(err)
+		}
+		want := map[string]any{"model": agentwire.InferenceModelName, "messages": initial["messages"], "max_tokens": initial["max_completion_tokens"], "temperature": initial["temperature"], "n": 1, "stream": false, "chat_template_kwargs": initial["chat_template_kwargs"]}
+		wantBytes, _ := json.Marshal(want)
+		actualBytes, _ := json.Marshal(forwarded)
+		if !bytes.Equal(wantBytes, actualBytes) {
+			t.Fatal("gateway generation settings differ", string(actualBytes))
+		}
+		backend := decodeEVL105Reply(t, generation.response)
+		var tokenResult struct{ Count uint32 }
+		if err := json.Unmarshal(tokenize.response, &tokenResult); err != nil || tokenResult.Count != direct.Usage.PromptTokens {
+			t.Fatal("real tokenization differs", err)
+		}
+		outputSHA := fmt.Sprintf("%x", sha256.Sum256([]byte(direct.Choices[0].Message.Content)))
+		if outputSHA != archived.OutputSHA || direct.Usage.PromptTokens != archived.Prompt || direct.Usage.CompletionTokens != archived.Completion || direct.Choices[0].Finish != archived.Finish ||
+			gateway.Model != a.alias.Name || backend.Model != agentwire.InferenceModelName || gateway.ID != backend.ID ||
+			gateway.Choices[0] != backend.Choices[0] || direct.Choices[0] != gateway.Choices[0] || direct.Usage != gateway.Usage || backend.Usage != gateway.Usage {
+			t.Fatal("direct, gateway, backend or archived completion differs", id, outputSHA, direct.Usage, gateway.Usage, backend.Usage)
+		}
+		p.verifyReceipt(t, c, a, prefix, id, gateway.Usage, archived.Case, outputSHA)
+	}
+}
+
+func (p *evl105Pair) verifyReceipt(t *testing.T, c scenario, a access, prefix, id string, usage gatewaywire.Usage, topic, outputSHA string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
+	defer cancel()
+	var tenant, workspace, node, gateway, key, alias, deployment, state, digest string
+	var revision int64
+	var maximum uint32
+	var held, stream bool
+	var raw, ack []byte
+	for {
+		err := c.s.DB.QueryRow(ctx, `SELECT tenant_id,workspace_id,node_id,gateway_id,api_key_id,alias_id,
+			deployment_id,deployment_revision,maximum_output_tokens,stream,state,capacity_held,outcome,COALESCE(outcome_sha256,'')
+			FROM gateway_requests WHERE id=$1`, id).Scan(&tenant, &workspace, &node, &gateway, &key, &alias, &deployment,
+			&revision, &maximum, &stream, &state, &held, &raw, &digest)
+		if err != nil {
+			t.Fatal("read scoped receipt", err)
+		}
+		p.mu.Lock()
+		ack = p.acks[id]
+		p.mu.Unlock()
+		if raw != nil && ack != nil {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal("durable outcome or HTTPS acknowledgment missing", id)
+		case <-time.After(30 * time.Millisecond):
+		}
+	}
+	outcome, err := gatewaywire.DecodeOutcome(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	canonical, err := outcome.Digest()
+	var envelope struct {
+		Data gatewaywire.Acknowledgment `json:"data"`
+	}
+	if decode := json.Unmarshal(ack, &envelope); decode != nil || err != nil || canonical != digest ||
+		envelope.Data.RequestID != id || envelope.Data.CanonicalSHA256 != digest || outcome.RequestID != id ||
+		outcome.Status != "succeeded" || outcome.Usage == nil || *outcome.Usage != usage || held || stream || maximum != 24 || state != "reported" ||
+		tenant != c.a.Me.Workspace.TenantID || workspace != a.alias.WorkspaceID || node != a.alias.NodeID || gateway != a.gateway.Gateway.ID ||
+		key != a.key.Key.ID || alias != a.alias.ID || deployment != a.alias.DeploymentID || revision != a.alias.DeploymentRevision {
+		t.Fatal("invalid persisted usage, scope or HTTPS acknowledgment", id, err, decode)
+	}
+	var audits int
+	if err := c.s.DB.QueryRow(ctx, "SELECT count(*) FROM audit_events WHERE target_id=$1 AND action='gateway.request_reported'", id).Scan(&audits); err != nil || audits != 1 {
+		t.Fatal("report audit correlation", audits, err)
+	}
+	evl105Write(t, prefix+"-receipt.json", raw)
+	evl105Write(t, prefix+"-https-ack.json", ack)
+	summary, err := json.MarshalIndent(map[string]any{"request_id": id, "tenant_id": tenant, "workspace_id": workspace, "node_id": node, "gateway_id": gateway, "api_key_id": key, "alias_id": alias, "deployment_id": deployment, "deployment_revision": revision, "case": topic, "output_sha256": outputSHA, "usage": usage, "canonical_sha256": digest, "audit_count": audits}, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	evl105Write(t, prefix+"-summary.json", append(summary, '\n'))
+	t.Logf("paired case %s request=%s prompt=%d completion=%d receipt_sha256=%s", topic, id, usage.PromptTokens, usage.CompletionTokens, digest)
+}

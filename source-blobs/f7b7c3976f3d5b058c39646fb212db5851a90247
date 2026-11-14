@@ -1,0 +1,58 @@
+#!/bin/bash
+set -euo pipefail
+cd "$1"
+root=$PWD
+net=$2
+dns="$net-dns"
+node="$net-proto"
+df -h /
+free -m
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+docker network create --internal "$net" >/dev/null
+image=$(docker image ls --no-trunc --format '{{.ID}}' ownsolid-proto/lane-a-node:24.04)
+docker run -d --name "$dns" --network "$net" --read-only \
+    --mount "type=bind,src=$root/site-dns,dst=/site-dns,readonly" --entrypoint /site-dns "$image" >/dev/null
+addr() { docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$1"; }
+export ARC_SITE_DNS
+ARC_SITE_DNS=$(addr "$dns")
+bash setup-node.sh proto
+docker exec "$node" sh -ceu 'dir=/var/lib/rancher/rke2/server/manifests; mkdir -p "$dir"; touch "$dir/rke2-canal.yaml.skip"'
+docker exec -e ARC104_MODE=server -e "ARC104_NODE_ADDRESS=$(addr "$node")" "$node" /fixture-artifacts/baseline.test -test.run '^TestARC104RealRKE2$' -test.v -test.timeout=6m &
+probe=$!
+k() { docker exec "$node" /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml --request-timeout=5s "$@"; }
+chartfile=/var/lib/rancher/rke2/server/manifests/rke2-canal.yaml
+for i in $(seq 1 160); do
+    if docker exec "$node" test -s "$chartfile" && k -n kube-system get helmcharts >/dev/null 2>&1; then break; fi
+    sleep 1
+done
+test -z "$(k -n kube-system get helmcharts -o name | grep rke2-canal || true)"
+test -z "$(k -n kube-system get ds -o name | grep rke2-canal || true)"
+k create --dry-run=client --validate=false -f "$chartfile" -o jsonpath='{.spec.chartContent}' | base64 -d > "$root/proto-chart.tgz"
+sha256sum "$root/proto-chart.tgz"
+tar -xOzf "$root/proto-chart.tgz" rke2-canal/templates/crds/crd.projectcalico.org_felixconfigurations.yaml > "$root/proto-felix-crd.yaml"
+k create --dry-run=client --validate=false -f /fixture-artifacts/proto-felix-crd.yaml -o json > "$root/proto-felix-crd.json.orig"
+python3 - "$root" <<'PY'
+import json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+p = json.loads((root / "proto-felix-crd.json.orig").read_text())
+md = p["metadata"]
+md.setdefault("labels", {})["app.kubernetes.io/managed-by"] = "Helm"
+md.setdefault("annotations", {}).update({"meta.helm.sh/release-name": "rke2-canal", "meta.helm.sh/release-namespace": "kube-system"})
+(root / "proto-felix-crd.json").write_text(json.dumps(p))
+(root / "proto-felix-policy.json").write_text(json.dumps({"apiVersion":"crd.projectcalico.org/v1","kind":"FelixConfiguration","metadata":{"name":"default"},"spec":{"usageReportingEnabled":False}}))
+PY
+k create -f /fixture-artifacts/proto-felix-crd.json
+k wait --for=condition=Established --timeout=30s crd/felixconfigurations.crd.projectcalico.org
+k create -f /fixture-artifacts/proto-felix-policy.json
+test "$(k get felixconfigurations.crd.projectcalico.org default -o jsonpath='{.spec.usageReportingEnabled}')" = false
+test -z "$(k -n kube-system get ds -o name | grep rke2-canal || true)"
+docker exec "$node" unlink "$chartfile.skip"
+for i in $(seq 1 65); do
+    if k -n kube-system get ds/rke2-canal >/dev/null 2>&1; then break; fi
+    sleep 1
+done
+k -n kube-system rollout status ds/rke2-canal --timeout=60s
+wait "$probe"
+k -n kube-system get helmchart/rke2-canal -o name
+k get nodes
+k -n kube-system logs ds/rke2-canal -c calico-node | grep -Eo 'UsageReportingEnabled[[:space:]:="]+(false|true)|Waiting before first check-in' | sort | uniq -c

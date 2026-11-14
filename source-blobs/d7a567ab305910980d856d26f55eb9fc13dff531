@@ -1,0 +1,9 @@
+{
+  "scope": "pure extracted PSI and nontruncating carrier open only; no real carrier or flock touched",
+  "entry_sha256": "cf228b0c48865bec1775841181d7a256c4d8d06deb233ad605a7653970b068a3",
+  "tests_run": 6,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "passed": true
+}

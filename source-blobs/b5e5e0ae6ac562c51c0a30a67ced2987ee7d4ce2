@@ -1,0 +1,1 @@
+{"model": "ownsolid-evl105-qwen3-0.6b", "messages": [{"role": "user", "content": "Explain photosynthesis in one short sentence."}], "max_completion_tokens": 24, "seed": 42, "stream": false, "temperature": 0, "chat_template_kwargs": {"enable_thinking": false}}

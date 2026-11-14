@@ -1,0 +1,69 @@
+# Qualification of the independent quota-status slice
+
+## Exact source and preserved work
+
+Accepted base: f726e56b9d07bb162b45c57409f91ab74d691ba3.
+Runtime/test candidate: 5271790d0e1ec2717f69e8462c1845e01744387c.
+Documentation-only qualification commit: 26aa861c89e0fd4c59cb92354045e8cccb1784d2.
+The latter changes only docs/product/status.md; runtime/test inputs are unchanged.
+The independent diff contains exactly the 12 paths in slice-paths.
+The original lane-sch remains at 7b29f0f625735557474907d3d4da50a000a03a00,
+including the unqualified selected-Executor candidate. No history was rewritten.
+Do not cherry-pick that broader branch to integrate this component.
+
+## Linux amd64
+
+Evidence directory: /root/lane-sch-tools/quotarelease.wPUOhNZn.
+Go 1.27.3; PostgreSQL 18.6. The six selected repository-integration tests
+ran with -race against an isolated PostgreSQL container with network none,
+using a socket relay in a route-free namespace:
+
+- TestPostgresConcurrentBorrowersCannotDoubleLend
+- TestPostgresReservationAndReleaseReplay
+- TestPostgresWorkspaceQueueUsesLiveCommittedShares
+- TestPostgresWorkspaceQuotaStatusAuthorityAndAccounting
+- TestPostgresWorkspaceQuotaStatusWaitsForReservationCommit
+- TestPostgresHTTPWorkspaceQuotaStatus
+
+All six passed. quotarelease-offline.passed records completion. source-head,
+empty source.diff and verified source-files.sha256 pin the actual source.
+check-head and build-head equal the same candidate, with check.passed and
+build.passed, empty source diffs and complete logs for make check/make build.
+The owned fixture container was stopped and removed; container-stop.log records it.
+
+The Linux complete-module phase did not start: resource preflight exited 75
+on full I/O pressure (avg10 21.27%, avg60 24.42%). This is not a failing test
+or a Linux module-suite pass. No old 934a2ec5/24c58905 result is relabelled.
+
+## macOS arm64 supplementary full-module gate
+
+Native Go 1.27.3 ran:
+  go -C <exact detached candidate>/services/control test -p 1 ./internal/modules/...
+
+Evidence: /private/tmp/ownsolid-sch-quota-modules.SBNyMX1R on the workstation;
+source-head, platform.log, modules.log and modules.passed are copied here.
+The complete 71-package output passed on the exact 5271790d source.
+GOPROXY=off, GOTOOLCHAIN=local, GOMAXPROCS=2, one build package, a resolved
+owned TMPDIR and no PostgreSQL fixture inputs. The permanent same-UID regular
+workstation lock carrier was held with an atomic flock and the same FD for
+the actual invocation, then released. The detached source had an empty diff.
+This gate is Darwin arm64, not evidence of Linux execution or PostgreSQL.
+
+## Deliberate integration limits
+
+No production authentication dispatcher, OpenAPI/gen, UI, formal migration,
+catalog fingerprint, serving-role proof, capacity producer or workload-controller
+activation is included. Existing unnumbered DDL is copied solely for ARC review.
+The public constructor, exact DTO and eleven owned errors are in the companion
+files. IAM/DEV/Web/ARC retain their respective ownership; the roadmap remains open.
+The review patch applies to the accepted base but has not been applied.
+
+## New accepted-base qualification pending
+
+Upstream DAT-101 advanced the accepted base to 8123466c (schema 60 / 120 tables).
+The slice is rebased at 460a9db7a15612e20e1b836fce7000fee876df9f.
+Scheduling production/test files are byte-identical to 5271790d.
+The evidence above remains evidence of its actual schema-59 inputs; it is not
+a schema-60 gate. New base-dependent checks are required before publication.
+
+main-head must be written only after an actual verified fast-forward push.

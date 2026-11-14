@@ -1,0 +1,89 @@
+# Installed history acceptance client
+
+This is an external acceptance driver, not product code or an installer. It calls
+an already installed Control through its public HTTPS API, using the actual local
+CA, normal CSRF/login cookies and the published audit API. It never receives a
+PostgreSQL DSN and does not start, stop or seed a product or telemetry store.
+
+## Build and client self-tests
+
+Run `/root/lane-obs-tools/check-installed-history-driver.sh` on the Linux host.
+It admits work only when both shared heavy locks, disk, free-memory and I/O
+pressure guards allow it. Standard-library-only Go tests, vet and build run with
+loopback networking only, dependency resolution disabled and two Go workers.
+A successful client self-test is not an installed-product acceptance result.
+The binary is `installed-history` next to `main.go`.
+
+## Installed inputs
+
+Copy `input.example.json` to an owner-only input file. Its placeholders deliberately
+fail validation. Fill site/cell/Workspace from the actual installed Default scope;
+seed raw and rollup samples with the matching labels and supply the exact UTC
+whole-second windows and counts. A zero count is data. A missing point is absence.
+Do not declare cells that the installation does not contain. Set sparse and zero
+requirements only for the explicitly seeded acceptance data.
+
+The Admin endpoint retains `https://admin.ownsolid.test:8443` as HTTP origin and TLS
+identity. Choose exactly one dial override: an absolute `dial_unix_socket` for an
+opaque TLS relay, or `dial_address` such as `127.0.0.1:8443` inside its namespace.
+TLS is verified against `ca_file`; the driver never disables verification, follows
+redirects, uses an ambient proxy or loads ambient trust roots. Raw and long origins
+have their own CA references and no Admin cookie jar.
+
+Input, password and saved session files must be absolute regular owner-only files
+owned by the running account. Password files contain the exact password, optionally
+followed by one line ending. Do not put credential contents in shell arguments or
+logs. A pre-existing session file is never overwritten by init.
+
+`source_sha` is a declared expectation, not proof of the installed binary. Record
+the delivery manifest, image digest and actual Control BuildInfo for the same
+frozen source before interpreting these results. The requested source is
+`4463bbe628f60486bbdb92c15f72311fb53d076a`; older native fixtures remain separate.
+
+## Phases
+
+Run each command in the installation namespace, supplying the same protected input:
+
+```sh
+/path/to/installed-history -input /evidence/obs-history-input.json -mode init
+/path/to/installed-history -input /evidence/obs-history-input.json -mode read
+```
+
+`read` verifies seeded raw and rollup points, a real raw-query positive control and
+no raw fallback during rollup. Every successful history read must have exactly one
+committed request-bound monitoring audit; refusals must have none. Supplying a
+foreign Workspace is optional and must mean a different tenant, not another
+Workspace administrable by this Platform Admin. It expects the actual public
+`404 RESOURCE_NOT_FOUND` contract.
+
+The installation owner performs each fault or restoration between these commands:
+
+1. Stop only the owned long tier, run `long-unavailable`; restore it and run
+   `long-restored`.
+2. Serve the long tier with a certificate rejected by the configured CA or identity,
+   run `long-tls-refused`; restore its valid certificate and run
+   `long-tls-restored`. The direct long health failure must be an actual certificate
+   verification failure, not a connection refusal. Close old proxy connections.
+3. Disable the actual Workspace, run `workspace-disabled`; restore its active state
+   and run `workspace-restored`. The original issued session is reused.
+4. Run `logout-replay`. The client revokes its own session, replays the old issued
+   cookies expecting 401 and no data, then logs in as the same actor and verifies
+   recovery. No product or audit records are deleted.
+5. Run `finish` after all configured required phases pass. It checks remaining audit
+   expectations, logs out and removes only its own saved session file. On an
+   incomplete/failed run, `abort` logs out and removes this validated own state
+   without reporting the acceptance as passed.
+
+Native `vm_http_requests_total{path="/api/v1/query_range"}` and
+`process_start_time_seconds` are read from raw `/metrics`. Positive raw reads must
+increment the counter. Rollup/refused reads must leave both counter and process
+epoch unchanged; a reset or absent metric cannot prove no fallback. Store inspection
+has no Admin cookies. JSON evidence includes request IDs, counts and timings only.
+
+An optional `retention_window` requires five actual benchmark cells, ninety days of
+explicitly declared synthetic recording output and its independent Workspace.
+Only add `retention` to required phases when those inputs and resources exist.
+It performs 31 public reads; timings include client validation and public audit
+reads, retain host page cache, and do not represent production percentiles or
+10,000 enrolled raw agents. Do not delay the installed main-flow gate for this
+separate benchmark or invent a product topology for it.

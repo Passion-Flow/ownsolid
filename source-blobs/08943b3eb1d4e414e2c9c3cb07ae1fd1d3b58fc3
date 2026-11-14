@@ -1,0 +1,12 @@
+{
+  "source": "620f76daef06b0028112022b652281bc61bfdae0",
+  "scope": "Actual internal installer method through temporary test overlay; local calibration and Linux cross-build only until a separate native opportunity",
+  "files": {
+    "deploy/offline/internal/install/apply.go": "b29b3ea06fdf98e708d5af2fc428a63e2c0c9099a09329aec4814abddaf265a8",
+    "deploy/offline/internal/install/backup.go": "0a3d211673544d7b8b2e61ceba0d98688c37ada0b178cd1593d6bb43f017eb66"
+  },
+  "prototype_files": {
+    "probe_test.go": "b4288db1b14851315678c224b71e2cad3b4f3033cdfa6472e6c072775480c5d4",
+    "overlay.json": "e8c685861166dafdaeda40a0c816e30b8877b47e9fd8f357fd1dd2f83f28ac2d"
+  }
+}

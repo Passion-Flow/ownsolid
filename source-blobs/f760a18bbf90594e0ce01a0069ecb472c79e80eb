@@ -1,0 +1,58 @@
+--- original
++++ routes-variant
+@@ -1,12 +1,25 @@
+ """Isolated, unprivileged synthetic Compose parser; no network or daemon access."""
+ import ctypes
+ import errno
++import hashlib
+ import json
+ import os
+ from pathlib import Path
+ import resource
+ import sys
+ import subprocess
++
++def route_observation(raw):
++    if len(raw) > 4096:
++        raise ValueError('Route observation exceeds the bounded guard input')
++    lines = raw.decode('ascii').splitlines()
++    rows = [line.split() for line in lines if line.strip()]
++    header = 'Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT'.split()
++    state = ('absent-table' if not rows else 'header-only' if rows == [header]
++             else 'routes-present' if rows[0] == header else 'unrecognized')
++    return {'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(),
++            'line_count': len(lines), 'blank_line_count': sum(not line.strip() for line in lines),
++            'nonblank_rows': len(rows), 'format': state, 'no_ipv4_routes': state in ['absent-table', 'header-only']}
+ 
+ config = json.loads(Path(sys.argv[1]).read_text())
+ assert sys.platform == 'linux' and os.uname().machine == 'x86_64'
+@@ -16,9 +29,17 @@
+ subprocess.run(['/usr/bin/mount', '-t', 'sysfs', '-o', 'ro,nosuid,nodev,noexec', 'sysfs', '/sys'], check=True)
+ assert sorted(os.listdir('/sys/class/net')) == ['lo']
+ assert Path('/sys/class/net/lo/operstate').read_text().strip() == 'down'
+-assert len(Path('/proc/net/route').read_text().splitlines()) == 1
+ network = os.stat('/proc/self/ns/net').st_ino
+ assert network != config['host_network_inode']
++# A namespace without RT_TABLE_MAIN emits no header (Linux v6.8 fib_trie.c).
++# Preserve bounded public diagnostics before refusing any unexpected route data.
++with Path('/proc/net/route').open('rb') as stream:
++    route = route_observation(stream.read(4097))
++proof = {'stage': 'route-observed', 'network_inode': network, 'only_loopback_down': True,
++         'ipv4_route_observation': route, 'docker_exec_attempted': False}
++Path(config['proof']).write_text(json.dumps(proof, indent=2) + '\n')
++os.chown(config['proof'], 65534, 65534)
++assert route['no_ipv4_routes'], 'Private namespace contains route rows or an unrecognized header' 
+ resource.setrlimit(resource.RLIMIT_CPU, (config['cpu_seconds'], config['cpu_seconds']))
+ resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
+ resource.setrlimit(resource.RLIMIT_NPROC, (64, 64))
+@@ -47,8 +68,8 @@
+     raise OSError(ctypes.get_errno(), 'Parser syscall restriction could not be installed')
+ status = dict(line.split(':', 1) for line in Path('/proc/self/status').read_text().splitlines() if ':' in line)
+ assert status['NoNewPrivs'].strip() == '1' and status['Seccomp'].strip() == '2'
+-proof = {'uid': os.geteuid(), 'gid': os.getegid(), 'home_preserved': os.environ['HOME'] == config['original_home'],
++proof.update({'stage': 'exec-prepared', 'docker_exec_attempted': True, 'uid': os.geteuid(), 'gid': os.getegid(), 'home_preserved': os.environ['HOME'] == config['original_home'],
+          'network_inode': network, 'only_loopback_down': True, 'ipv4_routes': [], 'no_new_privileges': True,
+-         'seccomp_filter_installed': True, 'scope': 'Socket syscalls denied; this is not an egress-attempt capture'}
++         'seccomp_filter_installed': True, 'scope': 'Socket syscalls denied; this is not an egress-attempt capture'})
+ Path(config['proof']).write_text(json.dumps(proof, indent=2) + '\n')
+ os.execv('/usr/bin/docker', ['/usr/bin/docker', 'compose', 'config', '--format', 'json'])

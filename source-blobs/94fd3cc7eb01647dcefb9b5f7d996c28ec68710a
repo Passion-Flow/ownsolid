@@ -1,0 +1,284 @@
+{
+  "opportunity": "explicit_reviewed_v3_after_readiness_fix",
+  "source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "entry_invoked": true,
+  "retry_count": 0,
+  "created_utc": "2026-11-13T05:11:06.212200+00:00",
+  "run_input_manifest_sha256": "e124c36536be9712b88be74babd90dbdf35640cac2fd60b845dbc5a324b512e8",
+  "pre_entry_raw_exit_code": 0,
+  "pre_entry_seconds": 0.074834,
+  "pre_entry_admission_sha256": "0de4566a26d24ed68701278edc63402f8277042d78fe66bd356b1c427d6ebed2",
+  "pre_entry_observation": {
+    "disk_free_bytes": 789123280896,
+    "io_full_avg10": 0.66,
+    "io_full_avg60": 1.53,
+    "memory_available_bytes": 20791308288,
+    "memory_free_bytes": 4833808384,
+    "other_heavy_process_count": 0
+  },
+  "entry": [
+    "bash",
+    "/root/lane-trn-tools/reader-native-bounded-v3/entry.sh",
+    "--execute"
+  ],
+  "outer_raw_exit_code": 0,
+  "entry_wall_seconds": 138.486532,
+  "outer_log_sha256": "069f54be1ad586391146ac67535392eb30c1d934f099e99eaf9bda8ceb377071",
+  "new_evidence_directories": [
+    "/root/lane-trn-reader-native.lyc08aa5"
+  ],
+  "result_sha256": "e83e8265b8d64f7d3c8a442da6d3f39f03cd9e6a5adb44ad8807b5d98a40d4f8",
+  "result": {
+    "source": "e639db9035b0b2c0229c90175493c605f328e295",
+    "run_id": "fe0210a21b7f4554a475a1d3fbbd9c2e",
+    "container_name": "lane-trn-reader-fe0210a21b7f4554a475a1d3fbbd9c2e",
+    "native_started": true,
+    "locks_acquired": true,
+    "qualification": true,
+    "plan_sha256": "7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874",
+    "binding_sha256": "f858093a1ee7b4f065dcdea76c9a7bcc885f8798bc5d62d779baf00024e2d3ab",
+    "input_hashes": {
+      "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/result.json": {
+        "bytes": 7405,
+        "sha256": "42f0790680294637f8248a37a405cec920ee6d1d6c3b678248946b769781796f"
+      },
+      "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/adapter_model.safetensors": {
+        "bytes": 4602248,
+        "sha256": "a46897f648b94c94a3fe55dff81c15a082e1a427126f958e3075a8feee2bf06b"
+      },
+      "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/adapter_config.json": {
+        "bytes": 1092,
+        "sha256": "4ed67247993152de870045c4551f54de48a5fb0b65d61118bf95acb2c15dfe67"
+      },
+      "/root/lane-trn-experiment-evidence.8Zksewxc/training/e7dd796c-d674-4234-8d50-897395ac97ab/1aa45113-c264-4b56-8a82-b64ed8492472/output/adapter/README.md": {
+        "bytes": 248,
+        "sha256": "a6e9d9c398894029e948df596fe712e77bdd25f3e1a53f3dc51344b2f7d7a341"
+      }
+    },
+    "source_hashes": {
+      "docs/research/training-published-file-readers.md": {
+        "sha256": "9e4632bd65746e19cc888c2338823f232c562be1f470bf828ff522db8c52923f",
+        "bytes": 22580
+      },
+      "services/control/internal/modules/datasets/published_reader_repository_integration_test.go": {
+        "sha256": "28872e65701f152917e3ddb205af78399285d8c41d7d4751796bc817ee6bdf5d",
+        "bytes": 4370
+      },
+      "services/control/internal/modules/training/accepted_adapter_repository_integration_test.go": {
+        "sha256": "e835a9565c6ee8f0851fc4457a4f2cf5f2e9d57aec9dc875dd71f8c1c20404ce",
+        "bytes": 31721
+      }
+    },
+    "children": [
+      {
+        "phase": "source_head",
+        "deadline_offset": 10.016,
+        "owned_process_group": 3802178,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 0.02
+      },
+      {
+        "phase": "source_status",
+        "deadline_offset": 10.02,
+        "owned_process_group": 3802179,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 0.053
+      },
+      {
+        "phase": "original_admission",
+        "deadline_offset": 10.054,
+        "owned_process_group": 3802190,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 0.168
+      },
+      {
+        "phase": "docker_context",
+        "deadline_offset": 10.169,
+        "owned_process_group": 3802192,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 0.201
+      },
+      {
+        "phase": "cached_image",
+        "deadline_offset": 10.201,
+        "owned_process_group": 3802202,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 0.316
+      },
+      {
+        "phase": "pg_create",
+        "deadline_offset": 10.317,
+        "owned_process_group": 3802212,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 0.483
+      },
+      {
+        "phase": "pg_start",
+        "deadline_offset": 10.484,
+        "owned_process_group": 3802223,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 0.702
+      },
+      {
+        "phase": "pg_ready",
+        "deadline_offset": 2.703,
+        "owned_process_group": 3802322,
+        "raw_exit_code": 2,
+        "reaped": true,
+        "ended_offset": 0.868
+      },
+      {
+        "phase": "pg_ready",
+        "deadline_offset": 3.069,
+        "owned_process_group": 3802366,
+        "raw_exit_code": 2,
+        "reaped": true,
+        "ended_offset": 1.235
+      },
+      {
+        "phase": "pg_ready",
+        "deadline_offset": 3.435,
+        "owned_process_group": 3802398,
+        "raw_exit_code": 2,
+        "reaped": true,
+        "ended_offset": 1.6
+      },
+      {
+        "phase": "pg_ready",
+        "deadline_offset": 3.8,
+        "owned_process_group": 3802446,
+        "raw_exit_code": 2,
+        "reaped": true,
+        "ended_offset": 1.965
+      },
+      {
+        "phase": "pg_ready",
+        "deadline_offset": 4.166,
+        "owned_process_group": 3802485,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 2.331
+      },
+      {
+        "phase": "pg_extension",
+        "deadline_offset": 12.331,
+        "owned_process_group": 3802515,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 2.496
+      },
+      {
+        "phase": "pg_identity",
+        "deadline_offset": 12.497,
+        "owned_process_group": 3802545,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 2.529
+      },
+      {
+        "phase": "source_head",
+        "deadline_offset": 12.529,
+        "owned_process_group": 3802556,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 2.533
+      },
+      {
+        "phase": "source_status",
+        "deadline_offset": 12.533,
+        "owned_process_group": 3802557,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 2.565
+      },
+      {
+        "phase": "go_reader_owners",
+        "deadline_offset": 172.566,
+        "owned_process_group": 3802568,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 137.614
+      },
+      {
+        "phase": "cleanup_presence",
+        "deadline_offset": 140.615,
+        "owned_process_group": 3805448,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 137.648
+      },
+      {
+        "phase": "cleanup_identity",
+        "deadline_offset": 140.648,
+        "owned_process_group": 3805459,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 137.68
+      },
+      {
+        "phase": "cleanup_logs",
+        "deadline_offset": 140.68,
+        "owned_process_group": 3805470,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 137.713
+      },
+      {
+        "phase": "cleanup_stop",
+        "deadline_offset": 143.713,
+        "owned_process_group": 3805480,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 138.18
+      },
+      {
+        "phase": "cleanup_remove",
+        "deadline_offset": 142.18,
+        "owned_process_group": 3805519,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 138.346
+      },
+      {
+        "phase": "cleanup_container_readback",
+        "deadline_offset": 140.346,
+        "owned_process_group": 3805529,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 138.379
+      },
+      {
+        "phase": "cleanup_volume_readback",
+        "deadline_offset": 140.379,
+        "owned_process_group": 3805539,
+        "raw_exit_code": 0,
+        "reaped": true,
+        "ended_offset": 138.412
+      }
+    ],
+    "container_create_attempted": true,
+    "container_id": "3946a370cd69e00f372efd02583468ec200c83e59386685c3f4dbb08cd605cf3",
+    "go_raw_exit_code": 0,
+    "test_pass_actions": 3,
+    "required_roots_and_subcase": [
+      "TestActualAcceptedExperimentRead",
+      "TestActualAcceptedExperimentRead/independent_published_reader_with_real_accepted_bytes",
+      "TestActualPublishedReaderTrainingSnapshotAndRetirement"
+    ],
+    "pg_logs_raw_exit_code": 0,
+    "pg_stop_raw_exit_code": 0,
+    "owned_container_and_volumes_removed": true,
+    "parent_elapsed_seconds": 138.412,
+    "driver_exit_code": 0,
+    "native.log_sha256": "d2505b74b0b997e31c1c826216277403cd2a7ed32f4ea501f8069f24c13ee3dd",
+    "postgres.log_sha256": "2e9664130f539cab7a1e2886bc914e90ce62a59883775be73c8b75ee1af894da",
+    "admission.log_sha256": "084f6b5bb440419a7e101247f59bcc4367f4f9c0659cf98cd82ee8506fbda191"
+  }
+}

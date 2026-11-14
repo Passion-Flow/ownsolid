@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# SCI_OLD_ADMISSION_CLOSED_2026_11_13
+printf '%s\n' 'NOTRUN: SCI old admission is closed pending coordinator epoch activation.' >&2
+exit 78
+set -euo pipefail
+umask 077
+scratch="$(cd -- "$(dirname -- "$0")" && pwd)"
+root="$HOME/lane-sci"
+tools="$HOME/lane-sci-tools"
+model="$HOME/lane-gw-acceptance/model"
+image=sha256:66064cf683152e60eff2e5b18ec2d4ace236fb063c0a241f918691db9caddcf4
+exec 9>"$tools/heavy-test.lock"
+flock 9
+test -s "$scratch/publication/version.json"
+test -s "$scratch/publication/manifest.json"
+test -s "$scratch/publication/validation.jsonl"
+(cd "$scratch"; sha256sum -c publication.sha256)
+id=
+cleanup() {
+  if [ -n "$id" ]; then docker rm -f "$id" >/dev/null; fi
+}
+trap cleanup EXIT
+if [ "$#" -eq 0 ]; then set -- 1 2; fi
+for index; do
+    [[ "$index" =~ ^[1-9][0-9]*$ ]]
+    while [ "$(free -m | awk '/^Mem:/ {print $4}')" -lt 3072 ] ||
+          [ "$(free -m | awk '/^Mem:/ {print $7}')" -lt 8192 ] ||
+          awk '/^full / {split($2,v,"="); exit !(v[2] > 30)}' /proc/pressure/io ||
+          pgrep -x 'cargo|rustc|compile|link' >/dev/null; do sleep 8; done
+    df -h /
+    free -m
+    test "$(df --output=avail -BG / | tail -1 | tr -dc '0-9')" -ge 15
+    output="$scratch/run-$index"
+    mkdir "$output"
+    id="$(docker create --pull never --name "lane-sci-evl106-inference-$index" --network none --read-only \
+      --memory 6g --memory-swap 6g --cpus 2 --pids-limit 128 --cap-drop ALL --security-opt no-new-privileges \
+      --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+      --mount "type=bind,source=$model,target=/model,readonly" \
+      --mount "type=bind,source=$root,target=/repo,readonly" \
+      --mount "type=bind,source=$scratch/generate.py,target=/generate.py,readonly" \
+      --mount "type=bind,source=$scratch/publication,target=/publication,readonly" \
+      --mount "type=bind,source=$output,target=/out" \
+      -e HF_HOME=/tmp/hf -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -e HF_HUB_DISABLE_TELEMETRY=1 \
+      -e VLLM_NO_USAGE_STATS=1 -e DO_NOT_TRACK=1 -e TOKENIZERS_PARALLELISM=false \
+      -e OMP_NUM_THREADS=2 -e MKL_NUM_THREADS=2 \
+      -e PYTHONPATH=/repo/runtimes/training:/repo/runtimes/data-processing \
+      -e "OWNSOLID_EVL106_IMAGE=$image" --entrypoint python3 "$image" \
+      -B /generate.py --model /model --catalog /repo/api/agent/v1/model-catalog.json \
+      --recipe /repo/runtimes/model-lifecycle/tests/testdata/safety-recipe-v1.json \
+      --publication /publication --output /out)"
+    rc=0
+    timeout --signal=TERM 720 docker start -a "$id" 2>&1 | tee "$output/generation.log" || rc=$?
+    docker inspect --format 'container status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} network={{.HostConfig.NetworkMode}}' "$id" | tee -a "$output/generation.log"
+    if [ "$rc" -ne 0 ] || [ "$(docker inspect --format '{{.State.ExitCode}}' "$id")" != 0 ] ||
+       [ ! -s "$output/capture.json" ]; then exit 1; fi
+    docker rm "$id" >/dev/null
+    id=
+done

@@ -1,0 +1,47 @@
+{
+  "status": "prepared-only; no native parser invocation",
+  "linux_directory": "/root/lane-rel-tools/compose-parser-inputs.uRofpIWk",
+  "allowed_docker_argv": [
+    "/usr/bin/docker",
+    "compose",
+    "config",
+    "--format",
+    "json"
+  ],
+  "namespace_setup": [
+    "unshare mount/net/pid + mount-proc",
+    "make mount propagation private",
+    "mount read-only sysfs in that private mount namespace before observing namespace loopback"
+  ],
+  "protection": [
+    "Only generated synthetic fixtures; empty dummy secret file has zero bytes",
+    "private network only loopback down; UID/GID65534; HOME unchanged; original root home private",
+    "empty owned0700 DOCKER_CONFIG; fixed absent daemon socket; no inherited Docker/SSH/auth environment",
+    "seccomp checks x86_64 ABI, rejects x32 and socket/connect/bind/listen/message syscalls through plugin exec",
+    "one worker; 128MiB Go soft heap; CPU5s; nofile/nproc64; stdout4MiB; whole30s with cleanup10s",
+    "raw stdout model kept only in owned fixture, compared in memory and hashed; no environment/configuration values printed or retained as logs"
+  ],
+  "cases": [
+    "shared",
+    "split",
+    "shared-again",
+    "split-override"
+  ],
+  "cleanup": [
+    "join each namespace launcher; kill only its process group on timeout",
+    "remove only the owned fixture and empty Docker config after identity check",
+    "retain actual exit/elapsed/stdout hash/stderr/protection readbacks under unique evidence directory",
+    "no heavy locks, processor, Docker daemon, container, image resolve/build/pull/run/exec, Control, database or host port"
+  ],
+  "unqualified": [
+    "historical actual Control CLI",
+    "installed split listener/upgrade/rollback/UI",
+    "zero-egress attempt capture",
+    "production release/license inventory"
+  ],
+  "primary_sources": [
+    "https://docs.docker.com/reference/cli/docker/compose/config/",
+    "https://github.com/compose-spec/compose-spec/blob/main/workload_spec.md#ports",
+    "https://docs.kernel.org/6.8/userspace-api/seccomp_filter.html"
+  ]
+}

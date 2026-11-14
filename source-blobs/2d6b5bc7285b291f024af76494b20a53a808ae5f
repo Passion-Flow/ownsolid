@@ -1,0 +1,78 @@
+# Authenticated quota-status composition
+
+## Actual construction and signatures
+
+There is no scheduling service constructor or alternate authentication stack.
+Reuse the already installed Workspace authority, with its selected repository:
+
+```go
+quota := &schedulinghttp.Handler{Workspaces: workspaceAuthority}
+```
+
+The actual exported signatures are:
+
+```go
+func schedulinghttp.Owns(path string) bool
+func (*schedulinghttp.Handler) Handle(
+    w http.ResponseWriter, r *http.Request,
+    actor identity.Auth, requestID string,
+) (any, int, error)
+func scheduling.ReadWorkspaceQuotaStatus(
+    ctx context.Context, authority *workspaces.Service,
+    actor identity.Auth, workspace string,
+) (scheduling.WorkspaceQuotaStatus, error)
+```
+
+IAM owns the trusted route assembly. Resolve the audience from the installed
+entrance, authenticate its session cookie, and pass the resulting server actor.
+Dispatch schedulinghttp.Owns before the general Workspace dispatcher. The
+existing h.Workspaces.Service is the installed authority; do not construct a
+second DB pool or infer tenant/member/admin authority from request input.
+The earlier iam-composition.review.patch is a review aid, not applied code;
+regenerate/review its context on IAM's exact accepted source.
+
+The handler checks the entrance and canonical workspace selector. The reader
+then rechecks the live user/source/session and Workspace membership under the
+selected repository's same READ COMMITTED transaction. Identity fences precede
+the shared Workspace fence, policy FOR SHARE, workspace reservation lock and
+owned aggregate read. Current Portal members, including viewers, may read
+their own allocation. Admin is limited by the existing installed tenant.
+Cached actor workspace and role fields cannot select the tenant or grant
+Workspace membership. Foreign and missing scope both return RESOURCE_NOT_FOUND.
+
+## Routes and exact payload
+
+- GET /api/v1/admin/scheduling/quota?workspace_id={canonical-workspace-uuid}
+- GET /api/v1/workspaces/{canonical-workspace-uuid}/scheduling/quota
+
+Unknown/duplicate selectors, malformed escapes and bodies are refused.
+Non-GET, unsupported shape and wrong entrance return RESOURCE_NOT_FOUND.
+The component sets Cache-Control: no-store and returns a Go DTO only on
+success. IAM retains the data envelope, problem response and request tracing.
+
+WorkspaceQuotaStatus has these JSON fields:
+
+- workspace_id: server-resolved canonical Workspace UUID.
+- policy_revision: exact decimal string; "0" only for unconfigured policy.
+- state: unconfigured, unallocated or configured.
+- resources: optional sorted array, only for an actual allocation; an
+  all-zero allocation omits the empty array.
+- reason: optional object of code and action, only for the two missing
+  configuration states.
+
+Each resource row contains resource, guaranteed, hard_limit, reserved and
+unreserved_quota. All quantities are nonnegative decimal strings. CPU is
+millicores, memory bytes and GPU devices integral. The policy revision also
+remains a string, including values above binary64 precision and MaxInt64.
+
+No tenant/sibling/job ID, ancestor quantity, cell capacity, topology,
+admitted/ready flag or saved wait-code text is returned. Unreserved quota is
+hard limit minus real held reservations. Queue turn, loans, placement and
+physical availability remain independent decisions. This read never reserves,
+releases or admits a workload.
+
+See errors.md for all eleven real module error codes. The review OpenAPI
+includes the actual data envelope and owned failure set; DEV must merge IAM's
+current entrance failures when publishing the final contract, generated SDK
+and Help. Web owns the UI and translations. None of those integrations is
+installed by this packet.

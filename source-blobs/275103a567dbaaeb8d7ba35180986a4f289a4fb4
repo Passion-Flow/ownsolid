@@ -1,0 +1,36 @@
+{
+  "scope": "Fresh read-only post-refusal resource snapshot; no lock acquisition or new test attempt; never substitute for the missing failed sample",
+  "observed_at": "2026-11-13T03:46:44.192557+00:00",
+  "memory": {
+    "MemTotal_bytes": 33606377472,
+    "MemFree_bytes": 1233235968,
+    "MemAvailable_bytes": 18845257728,
+    "Cached_bytes": 25597128704,
+    "SwapTotal_bytes": 8589930496,
+    "SwapFree_bytes": 249856,
+    "Shmem_bytes": 10400100352
+  },
+  "io": "some avg10=0.45 avg60=0.17 avg300=0.21 total=31922321971\nfull avg10=0.45 avg60=0.16 avg300=0.16 total=30090066780\n",
+  "carriers": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "device": 29,
+      "inode": 82,
+      "uid": 0,
+      "kernel_lock_rows": [
+        "22: FLOCK  ADVISORY  WRITE 3553614 00:1d:82 0 EOF"
+      ]
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "device": 64512,
+      "inode": 7508772,
+      "uid": 0,
+      "kernel_lock_rows": [
+        "21: FLOCK  ADVISORY  WRITE 3553614 fc:00:7508772 0 EOF"
+      ]
+    }
+  ],
+  "df -h /root": "Filesystem                         Size  Used Avail Use% Mounted on\n/dev/mapper/ubuntu--vg-ubuntu--lv 1005G  230G  734G  24% /\n",
+  "free -m": "               total        used        free      shared  buff/cache   available\nMem:           32049       14077        1176        9918       27177       17972\nSwap:           8191        8191           0\n"
+}

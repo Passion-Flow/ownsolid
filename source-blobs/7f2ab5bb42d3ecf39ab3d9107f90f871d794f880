@@ -1,0 +1,35 @@
+{
+  "source": "c90744abe25129181d21e8287d9403677090f299",
+  "go_platform": "darwin/arm64",
+  "database_platform": "linux/arm64",
+  "native_linux_amd64_acceptance": false,
+  "sql_cost_measured": false,
+  "network_namespace_egress_isolation": false,
+  "host_memory_pressure": "The system has 38654705664 (2359296 pages with a page size of 16384).\nSystem-wide memory free percentage: 78%\n",
+  "docker_memory": {
+    "total": 8318976000,
+    "reported_container_used": 0
+  },
+  "image_id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+  "container_id": "ca0ee8dd8641239238b62297c36dc7ea3b2d3dface7a38af8086ff56942926da",
+  "postgresql": "postgres (PostgreSQL) 18.6 (Debian 18.6-1.pgdg12+2)",
+  "expected_roots": [
+    "TestActualTrainingResumedFinalCheckpointBatchAndReplay"
+  ],
+  "returncode": 0,
+  "seconds": 4.619,
+  "test_actions": {
+    "pass": 1,
+    "skip": 0,
+    "fail": 0
+  },
+  "passed_roots": [
+    "TestActualTrainingResumedFinalCheckpointBatchAndReplay"
+  ],
+  "go_log_sha256": "bc3121410cab45f97be50217aea8e20465af95bd1c384007a4be1dc58035f129",
+  "pg_log_sha256": "ff2f1f610b9dcb7d211a389ebc7ac28276f4386e9b6941b9af4ee289fa147363",
+  "owned_container_removed": true,
+  "anonymous_volumes_removed": true,
+  "owned_ram_removed": true,
+  "qualified_protocol_result": true
+}

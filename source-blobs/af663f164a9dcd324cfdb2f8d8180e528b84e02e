@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+base=/root/lane-obs-tools/installed-history-driver
+receipt=$(mktemp -d /root/lane-obs-tools/installed-history-driver-check.XXXXXX)
+exec > >(tee "$receipt/check.log") 2>&1
+trap 'code=$?; printf "EXIT_CODE=%s\nRECEIPT=%s\n" "$code" "$receipt"' EXIT
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -n 8 || exit 75
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+df -h /
+free -m
+ss -lntp
+cat /proc/pressure/io
+test "$(df --output=avail -B1 / | tail -1)" -ge 16106127360 || exit 75
+test "$(free -m | awk '$1=="Mem:" {print $4}')" -ge 2048 || exit 75
+python3 - <<'PY_IO'
+from pathlib import Path
+for line in Path('/proc/pressure/io').read_text().splitlines():
+    if float(line.split('avg10=')[1].split()[0]) > 5:
+        raise SystemExit(75)
+p=Path('/root/lane-obs-tools/installed-history-driver/main_test.go')
+assert p.is_file() and p.read_text().count('\nfunc Test') == 7
+PY_IO
+sha256sum "$base/main.go" "$base/main_test.go"
+export PATH=/root/lane-obs-tools/go/bin:$PATH
+export GOMAXPROCS=2 GOFLAGS=-p=2 GO111MODULE=off GOWORK=off GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local
+unshare --net bash -ec '
+    set -o pipefail
+    ip link set lo up
+    cd "$1"
+    go test -json -race -count=1 -timeout=60s | tee "$2/test.jsonl"
+    go vet ./...
+    CGO_ENABLED=0 go build -trimpath -o installed-history main.go
+' bash "$base" "$receipt"
+python3 - "$receipt/test.jsonl" <<'PY_TEST'
+import json,sys
+expected={'TestVerifyMeasuredZeroAndSparseAbsence','TestPublicTLSCookieAuditAndStaleSessionLifecycle','TestNullAuditItemsCannotProveNoAudit','TestCreateSessionStateDoesNotOverwrite','TestOpaqueUnixRelayPreservesTLSIdentity','TestNativeCachedMetricsSnapshotIsRefreshed','TestCounterFreshnessRejectsEpochChangeAndTimeout'}
+passed=set()
+for line in open(sys.argv[1]):
+    v=json.loads(line)
+    if v.get('Action')=='pass' and v.get('Test') in expected: passed.add(v['Test'])
+assert passed==expected,(passed,expected)
+print('ALL_SEVEN_CLIENT_SELF_TESTS_PASSED')
+PY_TEST
+sha256sum "$base/installed-history"

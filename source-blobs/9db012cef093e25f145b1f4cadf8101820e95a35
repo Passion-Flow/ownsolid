@@ -1,0 +1,263 @@
+package e2e
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
+	"slices"
+	"strings"
+	"testing"
+	"time"
+)
+
+const (
+	arcFleet          = 1000
+	arcInterval       = 5
+	arcWindow         = 60
+	arcSteadyWindows  = 10
+	arcFactsPerWindow = 100
+	arcDuration       = 2100
+)
+
+type arcScopeProof struct {
+	Site    string   `json:"site"`
+	Cell    string   `json:"cell"`
+	Cluster string   `json:"cluster"`
+	Nodes   []string `json:"nodes"`
+}
+
+func arcPublish(t *testing.T, path string, value any) {
+	t.Helper()
+	raw, err := json.Marshal(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writePrivate(t, path+".tmp", raw)
+	if err = os.Rename(path+".tmp", path); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func arcWaitFile(t *testing.T, path string, within time.Duration) []byte {
+	t.Helper()
+	var data []byte
+	waitFor(t, path, within, func() bool {
+		if reason, err := os.ReadFile("/exchange/admission-failed"); err == nil {
+			t.Fatalf("fixture resource gate: %s", reason)
+		}
+		var err error
+		data, err = os.ReadFile(path)
+		if err != nil && !os.IsNotExist(err) {
+			t.Fatal(err)
+		}
+		return err == nil
+	})
+	return data
+}
+
+func arcSessions(t *testing.T, gateway agentGateway, fleet *simulatedRun) map[string]bool {
+	t.Helper()
+	all := gatewayNodes(t, gateway.name)
+	sessions := map[string]bool{}
+	for _, n := range fleet.nodes {
+		if all[n.NodeID] {
+			sessions[n.NodeID] = true
+		}
+	}
+	return sessions
+}
+
+func arcPacing(t *testing.T, e environment, admin *browser) {
+	t.Helper()
+	e.setPacing(t, admin, admin.csrfToken(t), arcInterval, 10, 1, 60, "ARC-105 twice the planned rate")
+}
+
+func runARC105Load(t *testing.T, e environment, admin *browser, first, second agentGateway, cName, cluster string) {
+	t.Helper()
+	if e.simulator == "" {
+		t.Fatal("simulator path missing")
+	}
+	arcPacing(t, e, admin)
+	fleet := e.enrollFleet(t, admin, admin.csrfToken(t), arcFleet, map[string]any{
+		"duration_seconds": arcDuration, "window_seconds": arcWindow, "log_seconds": 5,
+		"gateway_rebalance_seconds": 5, "session_addresses": []string{first.address, second.address},
+	})
+	assertARC105Scope(t, e, first, fleet)
+	ids := make([]string, 0, arcFleet)
+	for _, n := range fleet.nodes {
+		ids = append(ids, n.NodeID)
+	}
+	slices.Sort(ids)
+	proof := arcScopeProof{Site: "default", Cell: "default", Cluster: cluster, Nodes: ids}
+	arcPublish(t, "/exchange/fleet-request.json", proof)
+	arcWaitFile(t, "/exchange/kwok-nodes-ready", 8*time.Minute)
+	arcWaitFile(t, "/exchange/fleet-arm", time.Minute)
+	arcPublish(t, "/exchange/fleet-starting", proof)
+	t.Cleanup(func() {
+		if raw, err := os.ReadFile(filepath.Join(fleet.directory, "report.json")); err == nil {
+			if err := os.WriteFile("/capture/simulator-report.json", raw, 0o600); err != nil {
+				t.Error(err)
+			}
+		}
+	})
+	fleet.start(t, 2*time.Minute)
+	raw := arcWaitFile(t, "/exchange/kwok-pods-ready.json", 5*time.Minute)
+	var ready arcScopeProof
+	if json.Unmarshal(raw, &ready) != nil || !reflect.DeepEqual(proof, ready) {
+		t.Fatal("KWOK proof did not match the enrolled fleet and managed cell")
+	}
+	e.fleetOnline(t, fleet, "fresh scoped heartbeats after KWOK scheduling", time.Now(), time.Minute)
+	beforeA, beforeB := arcSessions(t, first, fleet), arcSessions(t, second, fleet)
+	if len(beforeA)+len(beforeB) != arcFleet || len(beforeA) < arcFleet/3 || len(beforeB) < arcFleet/3 {
+		t.Fatalf("initial streams %d/%d, expected two real gateways for %d agents", len(beforeA), len(beforeB), arcFleet)
+	}
+	for id := range beforeA {
+		if beforeB[id] {
+			t.Fatal("simulator identity had two initial streams")
+		}
+	}
+	from := (int(time.Since(fleet.started).Seconds())/arcWindow + 1) * arcWindow
+	to := from + arcWindow*arcSteadyWindows
+	if to+2*int(loadReconnect.Seconds())+240 >= arcDuration {
+		t.Fatal("insufficient simulator time after workload warmup")
+	}
+	t.Logf("ARC-105 steady window %d..%d seconds after simulator start, %d agents and %d KWOK Pods, %d/%d gateway streams", from, to, arcFleet, len(ready.Nodes), len(beforeA), len(beforeB))
+
+	type rate struct {
+		Start     int     `json:"start_seconds"`
+		End       int     `json:"end_seconds"`
+		Elapsed   float64 `json:"elapsed_seconds"`
+		Commits   float64 `json:"commits_per_second"`
+		RowWrites float64 `json:"row_writes_per_second"`
+		WALBytes  float64 `json:"wal_bytes_per_second"`
+	}
+	var rates []rate
+	var tasks []string
+	var recoverySamples []map[string]any
+	t.Cleanup(func() {
+		if len(recoverySamples) != 0 {
+			arcPublish(t, "/capture/reconnect-samples.json", recoverySamples)
+		}
+	})
+	fleet.at(from)
+	baseline := e.sampleDatabase(t)
+	logResources(t, "start of ARC-105 steady window")
+	for i := 0; i < arcSteadyWindows; i++ {
+		start := from + i*arcWindow
+		fleet.at(start + 30)
+		batch := createTasks(t, admin, admin.csrfToken(t), ids[i*arcFactsPerWindow:(i+1)*arcFactsPerWindow])
+		e.waitForTasks(t, fmt.Sprintf("steady batch %d", i+1), batch, 30*time.Second)
+		tasks = append(tasks, batch...)
+		fleet.at(start + arcWindow)
+		end := e.sampleDatabase(t)
+		dt := end.at.Sub(baseline.at).Seconds()
+		if dt <= 0 || end.commits < baseline.commits || end.inserted < baseline.inserted || end.updated < baseline.updated ||
+			end.deleted < baseline.deleted || end.walBytes < baseline.walBytes {
+			t.Fatal("PostgreSQL counters reset or the sample interval was invalid")
+		}
+		rates = append(rates, rate{Start: start, End: start + arcWindow, Elapsed: dt, Commits: float64(end.commits-baseline.commits) / dt,
+			RowWrites: float64(end.inserted-baseline.inserted+end.updated-baseline.updated+end.deleted-baseline.deleted) / dt,
+			WALBytes:  float64(end.walBytes-baseline.walBytes) / dt})
+		baseline = end
+		arcPublish(t, "/capture/database-windows.json", rates)
+	}
+	count, dispatchP99 := arcDispatch(t, e, tasks)
+	logResources(t, "end of ARC-105 steady window")
+	faultStart := baseline
+	// Timestamp before sending the kill, then observe the complete fleet on the survivor.
+	killed := time.Now()
+	if output, err := run(t, "docker", "kill", second.name); err != nil {
+		t.Fatalf("gateway kill: %v %s", err, output)
+	}
+	waitFor(t, "all simulator streams recovered on survivor", loadReconnect, func() bool {
+		count := len(arcSessions(t, first, fleet))
+		recoverySamples = append(recoverySamples, map[string]any{"phase": "survivor", "elapsed_seconds": time.Since(killed).Seconds(), "on_stream": count})
+		return count == arcFleet
+	})
+	reconnect := time.Since(killed)
+	if reconnect > loadReconnect {
+		t.Fatalf("full reconnect %.3fs exceeded %s", reconnect.Seconds(), loadReconnect)
+	}
+	e.fleetOnline(t, fleet, "fresh persisted heartbeats after gateway loss", killed, time.Minute)
+	heartbeatRecovery := time.Since(killed)
+	if output, err := run(t, "docker", "start", second.name); err != nil {
+		t.Fatalf("gateway start: %v %s", err, output)
+	}
+	second.waitReady(t, e, time.Minute)
+	recoveryStarted := time.Now()
+	waitFor(t, "simulator streams returned to the original two gateways", loadReconnect, func() bool {
+		a, b := arcSessions(t, first, fleet), arcSessions(t, second, fleet)
+		recoverySamples = append(recoverySamples, map[string]any{"phase": "restore", "elapsed_seconds": time.Since(recoveryStarted).Seconds(),
+			"gateway_a_streams": len(a), "gateway_b_streams": len(b)})
+		return reflect.DeepEqual(a, beforeA) && reflect.DeepEqual(b, beforeB)
+	})
+	rebalance := time.Since(recoveryStarted)
+	e.fleetOnline(t, fleet, "fresh persisted heartbeats after gateway restoration", recoveryStarted, time.Minute)
+	faultEnd := e.sampleDatabase(t)
+	logRates(t, "gateway failure and restoration", faultStart, faultEnd)
+	direct := gatewayNodes(t, cName)
+	for _, id := range ids {
+		if direct[id] {
+			t.Fatal("simulator stream opened on the Control listener")
+		}
+	}
+	fleet.stop(t, 30*time.Second)
+	if fleet.exit != nil {
+		t.Fatalf("simulator exit: %v", fleet.exit)
+	}
+	report := fleet.report(t)
+	simulatorRaw, err := os.ReadFile(filepath.Join(fleet.directory, "report.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	writePrivate(t, "/capture/simulator-report.json", simulatorRaw)
+	if report.Agents != arcFleet || report.OnStream != arcFleet || report.Revoked != 0 || report.Tasks.Succeeded != int64(len(tasks)) {
+		t.Errorf("incomplete final simulator state: agents=%d on-stream=%d revoked=%d tasks=%d", report.Agents, report.OnStream, report.Revoked, report.Tasks.Succeeded)
+	}
+	windows := 0
+	for _, window := range report.Windows {
+		if window.EndSeconds <= from || window.EndSeconds > to {
+			continue
+		}
+		windows++
+		heartbeat, claim := window.Calls["heartbeat"], window.Calls["claim"]
+		if window.EndSeconds != from+windows*arcWindow || window.OnStream != arcFleet || window.Connected != arcFleet ||
+			heartbeat.Failed != 0 || claim.Failed != 0 || heartbeat.Succeeded == 0 || claim.Succeeded == 0 || heartbeat.P99 > loadHeartbeatP99 {
+			t.Errorf("failed steady window end=%d connected=%d stream=%d heartbeat=%+v claim=%+v", window.EndSeconds, window.Connected, window.OnStream, heartbeat, claim)
+		}
+	}
+	if windows != arcSteadyWindows {
+		t.Errorf("only %d complete steady windows", windows)
+	}
+
+	output, err := run(t, "docker", "logs", cName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, failure := range []string{"node_task_wakes_read_failed", "node_task_wake_trim_failed", "node_liveness_flush_failed", "node_task_sweep_failed"} {
+		if strings.Contains(output, failure) {
+			t.Errorf("Control logged %s", failure)
+		}
+	}
+	arcPublish(t, "/capture/kpis.json", map[string]any{"agents": arcFleet, "site": proof.Site, "cell": proof.Cell, "cluster": cluster,
+		"heartbeat_interval_seconds": arcInterval, "steady_start_seconds": from, "steady_end_seconds": to, "steady_window_count": windows,
+		"dispatch_samples": count, "dispatch_p99_seconds": dispatchP99, "reconnect_all_streams_seconds": reconnect.Seconds(),
+		"rebalance_from_ready_seconds": rebalance.Seconds(), "reconnect_all_persisted_heartbeats_seconds": heartbeatRecovery.Seconds(), "database_windows": rates, "facts_tasks_per_window": arcFactsPerWindow})
+	arcPublish(t, "/exchange/fleet-finished", proof)
+}
+
+func arcDispatch(t *testing.T, e environment, tasks []string) (int, float64) {
+	t.Helper()
+	row := e.sql(t, "SELECT count(*)||' '||percentile_cont(0.99) WITHIN GROUP (ORDER BY extract(epoch FROM completed_at-created_at)) FROM node_task_history WHERE id IN ('"+strings.Join(tasks, "','")+"') AND state='succeeded' AND completed_at IS NOT NULL")
+	var count int
+	var dispatchP99 float64
+	if _, err := fmt.Sscan(row, &count, &dispatchP99); err != nil || count != len(tasks) || dispatchP99 > loadDispatchP99 {
+		t.Errorf("dispatch p99 sample %q expected %d tasks within threshold %.1fs: %v", row, len(tasks), loadDispatchP99, err)
+	}
+	arcPublish(t, "/capture/dispatch.json", map[string]any{
+		"samples": count, "p99_seconds": dispatchP99, "task": "collect_facts.v1",
+	})
+	return count, dispatchP99
+}

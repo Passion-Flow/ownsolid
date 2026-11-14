@@ -1,0 +1,52 @@
+# PostgreSQL readiness correction: review only
+
+The v3 parent differs from the frozen v2 parent in one conditional only:
+pg_ready raw 1 and 2 continue the existing bounded startup probe. Raw 0 is
+still mandatory before the extension and exact Go owner roots; raw 3 and all
+other codes remain fatal. Every numeric bound, source/input/image binding,
+carrier rule, resource floor, test assertion and cleanup rule is unchanged.
+
+PostgreSQL defines 2 as no response, 1 as rejecting, 0 as accepting and 3 as
+no connection attempt:
+https://www.postgresql.org/docs/18/app-pg-isready.html
+The actual v2 log was still in initdb when its first status 2 caused immediate
+failure. Its receipt/result are preserved with no relabelling or retry.
+This preparation does not establish that PostgreSQL would have become ready
+or that either owner root would pass.
+
+Frozen source: e639db9035b0b2c0229c90175493c605f328e295.
+Plan: 7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874.
+Binding: f858093a1ee7b4f065dcdea76c9a7bcc885f8798bc5d62d779baf00024e2d3ab.
+Original v2 parent: a9b7a943abcf7c615906f6b71401ff34cf5490a6da7aaf6879007af9606f8589.
+New v3 parent: 463b216824c437ccad5cd09444ed8c7594bcc3a33bca04b30ae87d6e16d77284.
+Configuration and entry retain their v2 SHA-256 values.
+
+v2-to-v3.diff is the exact one-line parent delta. parent.diff compares the
+original event parent with v3, while the original shell entry comparisons
+are unchanged. No original parent, fixture, plan, binding or source was edited.
+
+The 300-second outer bound, 270-second work cutoff, cleanup reserve, single
+first kernel wait <=60 seconds, second nonblocking acquisition, Go <=170
+seconds, serial packages and 75-second package timeouts all remain unchanged.
+PG remains <=2 CPUs/1 GiB, cached pull-never image, network none and no ports.
+The startup loop retains its original 25-second guard, 2-second child cap and
+0.2-second spacing; this is a readiness probe, not a native-body retry.
+
+29 pure local mock/file checks passed in 0.029 seconds. Added cases exercise
+2/1/0 followed by required-root success, raw 3 remaining fatal, and persistent
+2 exhausting the existing window without Go while removing the mocked owned
+fixture. No real Docker, Go, SQL or permanent carrier call is used by these
+checks. The preserved prior-v2-input-check.log is explicitly historical.
+
+No v3 --execute was invoked. Only the core three files have transferred to
+/root/lane-trn-tools/reader-native-bounded-v3/ so far; post-run SSH archive and
+evidence transfers hit transport 502/raw255. The single v3 read-only --check-config returned 0; its raw output was not
+independently fetched. Final server metadata delivery and remote SHA readback
+remain unconfirmed. validation.json records these scopes separately. The consumed native v2
+opportunity grants no v3 execution. A later reviewed entry would be:
+
+    bash /root/lane-trn-tools/reader-native-bounded-v3/entry.sh --execute
+
+This is a prepared command, not an invocation or a native qualification.
+Previous source/platform qualifications and all owner/ARC/Model/Node/SQL
+boundaries remain separate. No dependency, model or data was added.

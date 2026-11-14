@@ -1,0 +1,125 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "5c45ff6e777139e0727ebe0bf9221019335890bf4151bf38809f72b690953625",
+  "after_step": 72,
+  "steps": [
+    {
+      "step": 73,
+      "file": "000073_training_job_inputs_immutable.sql",
+      "object": "training_job_inputs_immutable",
+      "kind": "create_trigger",
+      "source_sha256": "915c817c8be641801f4bb1d502bc6456e34231a57ed7c7edbb487ef75aa8b52c",
+      "table": "training_jobs",
+      "event": "UPDATE"
+    },
+    {
+      "step": 74,
+      "file": "000074_training_attempt_inputs_immutable.sql",
+      "object": "training_attempt_inputs_immutable",
+      "kind": "create_trigger",
+      "source_sha256": "c4285990b2737ef3e0ffcb74adf2d87bf45b223200aead9e5355cb891e165cd5",
+      "table": "training_attempts",
+      "event": "UPDATE"
+    },
+    {
+      "step": 75,
+      "file": "000075_training_checkpoint_immutable_update.sql",
+      "object": "training_checkpoint_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "8620cfda8a945566d72ed4e727c510d85c4cb8f78683b836799ec240bc3fa0a4",
+      "table": "training_checkpoints",
+      "event": "UPDATE"
+    },
+    {
+      "step": 76,
+      "file": "000076_training_checkpoint_immutable_delete.sql",
+      "object": "training_checkpoint_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "9efa59cf4c1f076cab330eb4686e84c845e84fee283cf3304f30ee538e8dd8c7",
+      "table": "training_checkpoints",
+      "event": "DELETE"
+    },
+    {
+      "step": 77,
+      "file": "000077_training_artifact_immutable_update.sql",
+      "object": "training_artifact_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "57a3b87af653e00da0a12dddf2fa56b76af39f0b568f0b19120583bac0b13a32",
+      "table": "training_artifacts",
+      "event": "UPDATE"
+    },
+    {
+      "step": 78,
+      "file": "000078_training_artifact_immutable_delete.sql",
+      "object": "training_artifact_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "74a5138f64a9582dbb82ccbcae9dbde21f1a5908968841ac3c77692fe1c87739",
+      "table": "training_artifacts",
+      "event": "DELETE"
+    },
+    {
+      "step": 79,
+      "file": "000079_training_event_immutable_update.sql",
+      "object": "training_event_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "1721d3b2b2ee83174055e2f9a208adfa1b1286c0bea43476cf7c55c3b35a841d",
+      "table": "training_events",
+      "event": "UPDATE"
+    },
+    {
+      "step": 80,
+      "file": "000080_training_event_immutable_delete.sql",
+      "object": "training_event_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "90e298c7ede7c589239567b2530b7dfa25f983952acbaa886a8dbd4a5ff52e2c",
+      "table": "training_events",
+      "event": "DELETE"
+    },
+    {
+      "step": 81,
+      "file": "000081_training_chunk_immutable_update.sql",
+      "object": "training_chunk_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "a7ababd762c55d00307b4e942236d3b132b328fdfeed5e3239b40842415fdee5",
+      "table": "training_upload_chunks",
+      "event": "UPDATE"
+    },
+    {
+      "step": 82,
+      "file": "000082_training_chunk_immutable_delete.sql",
+      "object": "training_chunk_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "4732bf2ad1cca62aebaab101629ba99b0b273f270ac4608727279e0046396ddb",
+      "table": "training_upload_chunks",
+      "event": "DELETE"
+    },
+    {
+      "step": 83,
+      "file": "000083_training_upload_inputs_immutable.sql",
+      "object": "training_upload_inputs_immutable",
+      "kind": "create_trigger",
+      "source_sha256": "5a38bc2a805ecb3dee092371f98c4edaff1957bbd60437f71866d8cc5cc5d5ce",
+      "table": "training_uploads",
+      "event": "UPDATE"
+    },
+    {
+      "step": 84,
+      "file": "000084_training_recovery_inputs_immutable.sql",
+      "object": "training_recovery_inputs_immutable",
+      "kind": "create_trigger",
+      "source_sha256": "86b9450b5ed20cd5e301532171c58c7fe045f7eeff9e0511a63f987327b6f242",
+      "table": "training_recoveries",
+      "event": "UPDATE"
+    },
+    {
+      "step": 85,
+      "file": "000085_training_recovery_immutable_delete.sql",
+      "object": "training_recovery_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "d87dadfc79e8a29afbfc96b5d0697cb36035ffb934b48db3073e358200840897",
+      "table": "training_recoveries",
+      "event": "DELETE"
+    }
+  ]
+}

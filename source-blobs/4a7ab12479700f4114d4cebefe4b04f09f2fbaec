@@ -1,0 +1,22 @@
+from pathlib import Path
+import hashlib,json,os,stat,subprocess,sys,tempfile
+root=Path(__file__).resolve().parent
+record=json.loads((root/'staged.json').read_bytes())
+wheel=Path(record['wheel']);pip=Path(record['bootstrap_pip']['path'])
+assert hashlib.sha256(wheel.read_bytes()).hexdigest()==record['sha256']
+assert hashlib.sha256(pip.read_bytes()).hexdigest()==record['bootstrap_pip']['sha256']
+venv=root/'venv';assert not venv.exists()
+subprocess.run(['/usr/bin/python3.12','-I','-B','-m','venv','--copies','--without-pip',str(venv)],check=True)
+python=venv/'bin/python3.12'
+assert python.resolve(strict=True)==python and stat.S_ISREG(python.stat().st_mode) and python.stat().st_nlink==1
+launcher='import runpy,sys;sys.path.insert(0,sys.argv.pop(1));runpy.run_module("pip",run_name="__main__")'
+base=[str(python),'-I','-B','-c',launcher,str(pip),'--isolated','--disable-pip-version-check']
+with tempfile.TemporaryDirectory(prefix='install-',dir=root) as scratch:
+ env={'PATH':'/usr/bin:/bin','LANG':'C.UTF-8','PIP_CONFIG_FILE':'/dev/null','TMPDIR':scratch}
+ subprocess.run(base+['install','--no-index','--only-binary=:all:','--require-hashes','--no-cache-dir','--find-links',str(root/'wheels'),'-r','/root/lane-trn/runtimes/data-processing/requirements/linux-amd64-parquet.lock'],env=env,check=True,timeout=180)
+ subprocess.run(base+['check'],env=env,check=True,timeout=30)
+ code='import importlib.metadata as m,json,pyarrow,sys; ds=list(m.distributions()); assert [(d.metadata["Name"].lower(),d.version) for d in ds]==[("pyarrow","26.0.1")]; d=ds[0]; ns=[str(f) for f in d.files if f.name.lower() in ("license.txt","notice.txt")]; assert len(ns)>=2; print(json.dumps({"python":sys.version.split()[0],"pyarrow":pyarrow.__version__,"notices":ns}))'
+ observed=json.loads(subprocess.check_output([str(python),'-I','-B','-c',code],env=env,text=True,timeout=60))
+record['installed']={'interpreter':str(python),'observed':observed,'network_namespace':'none'}
+(root/'installed.json').write_text(json.dumps(record,indent=2)+'\n')
+print(json.dumps(record['installed']),flush=True)

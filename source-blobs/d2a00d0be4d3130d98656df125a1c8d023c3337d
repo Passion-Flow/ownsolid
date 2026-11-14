@@ -1,0 +1,10 @@
+{
+  "scope": "Independent complete receiver/source readback before the allocated one-shot parent call",
+  "files_verified": 6,
+  "elf_bytes": 18027355,
+  "elf_sha256": "de5d6635221c2b377742a1a70f520b91dce869cc6ab0f38b701c22919d869309",
+  "source": "d2ca13940b9d224fb35ed6ac295dbe56ba08b17f",
+  "tree": "f063ce8ef5338dd559a0b7e24d64eb722f2376cd",
+  "source_files_verified": 9,
+  "source_clean": true
+}

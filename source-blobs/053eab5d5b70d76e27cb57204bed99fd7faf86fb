@@ -1,0 +1,57 @@
+# Platform probe budget-burn prototype
+
+This external prototype is not installed product code or an admission runner.
+It must run only inside an allocated Linux amd64 resource window, using the
+existing shared locks and their actual inherited descriptors. The admitting
+parent owns the resource checks, port snapshot, deadline and custody until the
+namespace and all its children have exited. This prototype opens no lock and
+must never be launched beside an unadmitted compiler or native service.
+
+Use Python 3.9 or newer from the existing host and the checksum-qualified
+VictoriaMetrics 1.155.0 binary. No package installation or download is needed.
+The two source files are `observe-probe-slo.py` and `probe-slo.metricsql`.
+
+The admitted namespace must have only loopback, no default route and a private
+proc mount, with Python as PID 1. Bring loopback up before replacing the
+namespace shell with Python. Within that existing admitted caller, the final
+command is:
+
+```sh
+exec python3 /absolute/path/observe-probe-slo.py \
+  --metrics-binary /absolute/path/to/victoria-metrics-prod \
+  --output /absolute/fresh/private/output-directory
+```
+
+The source refuses a mismatching native checksum, redirects and an existing
+output path. It uses ephemeral IPv4 loopback ports and disables HTTP proxies.
+Its 120-second bound includes two sequential store instances, each with
+GOMAXPROCS=2 and a 256 MB cache budget. Both stores receive termination and are
+reaped; SIGTERM and SIGINT enter the same cleanup path. A forced shutdown is a
+failure. Keep the resulting private logs and store directories for inspection;
+the prototype never deletes preexisting data.
+
+The first instance checks exact production windows at one fixed historical
+query time, including explicitly observed failure zeros and an empty store.
+It verifies native input series before evaluating the expression, requires the
+exact expected firing set and projects only site_id and endpoint. Multiple burn
+windows produce one result for their shared endpoint.
+
+The second instance uses an explicit 10,000-node inventory calculation: five
+cells with two platform readiness endpoints per cell. It imports one day of
+40 series and 115,200 samples from four selected metric families, verifies the native sample counts, and times
+twenty queries requesting nocache=1. One endpoint burns quickly. It stops the
+store before measuring regular data files' apparent and allocated bytes.
+Report that synthetic shape and quiet-store scope exactly. It does not create
+10,000 endpoint probes, simulate node requests, exercise concurrent ingestion
+or establish performance against the existing 17-million-series workload.
+Additional collector self-metrics and other telemetry are outside this shape.
+
+The measured signal is this private observer's binary readiness outcome. It
+does not define a request SLO. Coverage below 90 percent, stale data, nonbinary
+samples or duplicate endpoint series are unknown and cannot establish healthy
+service. Telemetry loss needs the separate pipeline-health capability.
+
+Passing native queries does not qualify live vmalert/Alertmanager delivery,
+installer wiring, server authorization, user-facing SLO selection or OBS-111.
+Those remain separate product requirements. The prototype adds no telemetry
+database in PostgreSQL, model, dataset or dependency.

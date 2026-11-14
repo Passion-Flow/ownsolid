@@ -1,0 +1,50 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "0a787732ba628f17af7328794b36dfd1ed73adcb609f17caf45f3bfd6a5b5f21",
+  "after_step": 45,
+  "steps": [
+    {
+      "step": 46,
+      "file": "000046_model_versions.sql",
+      "object": "model_versions",
+      "kind": "create_table",
+      "source_sha256": "c7b261f49920f34a22189af26cbfc09646b43cf491a6332cc5ed5cfad1b22a22"
+    },
+    {
+      "step": 47,
+      "file": "000047_model_imports.sql",
+      "object": "model_imports",
+      "kind": "create_table",
+      "source_sha256": "f8986e301b2e8e1ff9923213e1bd05308605d919e41df5f0807b5c2a11acb06a"
+    },
+    {
+      "step": 48,
+      "file": "000048_model_import_chunks.sql",
+      "object": "model_import_chunks",
+      "kind": "create_table",
+      "source_sha256": "8f61905a2257d12049cabb6364a396de2ac58c5654c1b5c3f4869221ba41cd7b"
+    },
+    {
+      "step": 49,
+      "file": "000049_inference_nodes.sql",
+      "object": "inference_nodes",
+      "kind": "create_table",
+      "source_sha256": "b1d3ed9ab52cfb8ec3b3679325b9e65961a9f20316c4101aa014893b800ef62f"
+    },
+    {
+      "step": 50,
+      "file": "000050_deployments.sql",
+      "object": "deployments",
+      "kind": "create_table",
+      "source_sha256": "5cc1be8d42a93b8116b4905c48d79d55b14181a6cd76b44db5560241fbef0c57"
+    },
+    {
+      "step": 51,
+      "file": "000051_gpu_leases.sql",
+      "object": "gpu_leases",
+      "kind": "create_table",
+      "source_sha256": "7624eb83978cca3f5a151aab20b3c74c6c0425ca9bf0f09696028262e6cce372"
+    }
+  ]
+}

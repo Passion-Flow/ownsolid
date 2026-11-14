@@ -1,0 +1,21 @@
+use projectone_gateway::configuration::Limits;
+
+fn main() {
+    let mut limits = Limits {
+        active_requests: 1,
+        queued_requests: 2,
+        backend_idle_connections: 2,
+        connect_seconds: 1,
+        control_seconds: 1,
+        request_seconds: 60,
+        idle_seconds: 30,
+        header_seconds: 1,
+        shutdown_seconds: 2,
+        outcome_retry_seconds: 1,
+        ..Limits::default()
+    };
+    assert_eq!(limits.validate(), Err("GATEWAY_LIMITS_INVALID"));
+    limits.backend_idle_connections = 1;
+    limits.validate().expect("matching single-request pool");
+    println!("The real gateway validator refused idle pool 2 with active limit 1 and accepted pool 1 with active limit 1");
+}

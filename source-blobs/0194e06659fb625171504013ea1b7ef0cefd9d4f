@@ -1,0 +1,338 @@
+"""Observe a private MetricsQL prototype; requires an already admitted Linux namespace."""
+from pathlib import Path
+import argparse
+import hashlib
+import json
+import math
+import os
+import signal
+import socket
+import stat
+import subprocess
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+VM_SHA256 = "aca3c49816db88c0e48012772fcf2a94eb66aaccd925b35d397b8b6f7f40fb43"
+REPLY_LIMIT = 2 * 1024 * 1024
+SAMPLE_INTERVAL = 30
+WINDOW_SECONDS = 6 * 60 * 60
+
+
+def sha(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def require_namespace():
+    if os.getpid() != 1 or not Path("/proc/self/ns/net").exists():
+        raise RuntimeError("Run as the PID-namespace init with a private proc mount")
+    if os.readlink("/proc/self") != str(os.getpid()):
+        raise RuntimeError("The proc mount must belong to this PID namespace")
+    links = json.loads(subprocess.check_output(["ip", "-j", "link"], timeout=5))
+    if not links or any(link.get("ifname") != "lo" for link in links):
+        raise RuntimeError("Only loopback may exist in the admitted network namespace")
+    for family in ["-4", "-6"]:
+        routes = json.loads(subprocess.check_output(["ip", family, "-j", "route"], timeout=5))
+        if any(route.get("dst") == "default" for route in routes):
+            raise RuntimeError("A default route is forbidden")
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *_):
+        raise RuntimeError("The private fixture must never redirect")
+
+
+class Store:
+    def __init__(self, binary, directory):
+        self.directory = directory
+        self.directory.mkdir(mode=0o700)
+        self.started = self.ready = self.stopped = False
+        self.forced_stop = False
+        self.pid = None
+        self.process = None
+        self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+        with socket.socket(socket.AF_INET) as reserve:
+            reserve.bind(("127.0.0.1", 0))
+            self.address = reserve.getsockname()
+        self.origin = "http://%s:%d" % self.address
+        self.argv = [str(binary), "-httpListenAddr=%s:%d" % self.address,
+                     "-storageDataPath=" + str(directory / "data"),
+                     "-search.latencyOffset=0s", "-memory.allowedBytes=256MB",
+                     "-search.maxConcurrentRequests=2", "-search.maxQueryDuration=5s",
+                     "-retentionPeriod=2d"]
+        self.native_sha256 = None
+        self.actual_argv = None
+
+    def start(self):
+        with (self.directory / "native.log").open("xb") as log:
+            self.process = subprocess.Popen(self.argv, stdout=log, stderr=subprocess.STDOUT,
+                                            env={**os.environ, "GOMAXPROCS": "2"})
+        self.started = True
+        self.pid = self.process.pid
+        self.native_sha256 = sha(Path("/proc/%d/exe" % self.pid))
+        if self.native_sha256 != VM_SHA256:
+            raise RuntimeError("The actual native process does not match the pinned artifact")
+        self.actual_argv = Path("/proc/%d/cmdline" % self.pid).read_bytes().rstrip(b"\0").decode().split("\0")
+        if self.actual_argv != self.argv:
+            raise RuntimeError("The actual native arguments differ from the selected fixture")
+        until = time.monotonic() + 15
+        while time.monotonic() < until:
+            if self.process.poll() is not None:
+                raise RuntimeError("The private store exited before readiness")
+            try:
+                self.request("/health")
+                self.ready = True
+                return
+            except (urllib.error.URLError, TimeoutError):
+                time.sleep(0.1)
+        raise TimeoutError("Private store readiness timed out")
+
+    def request(self, path, payload=None):
+        if not path.startswith("/") or path.startswith("//"):
+            raise ValueError("Invalid local fixture path")
+        request = urllib.request.Request(self.origin + path, data=payload)
+        if payload is not None:
+            request.add_header("Content-Type", "text/plain")
+        with self.opener.open(request, timeout=8) as response:
+            if response.status not in [200, 204]:
+                raise RuntimeError("Unexpected local status")
+            body = response.read(REPLY_LIMIT + 1)
+            if len(body) > REPLY_LIMIT:
+                raise RuntimeError("Oversized local fixture response")
+            return body
+
+    def query(self, expression, observed_at):
+        parameters = urllib.parse.urlencode(dict(query=expression, time=observed_at,
+                                                nocache="1", step="30s"))
+        started = time.monotonic()
+        body = json.loads(self.request("/api/v1/query?" + parameters))
+        elapsed = (time.monotonic() - started) * 1000
+        if body.get("status") != "success" or body.get("data", {}).get("resultType") != "vector":
+            raise RuntimeError("The native query was not a successful vector")
+        result = {}
+        for row in body["data"]["result"]:
+            labels = row.get("metric", {})
+            if set(labels) != {"site_id", "endpoint"}:
+                raise RuntimeError("The prototype leaked a source label")
+            key = labels["site_id"], labels["endpoint"]
+            value = row.get("value", [])
+            if key in result or len(value) != 2 or not math.isfinite(float(value[1])):
+                raise RuntimeError("Invalid or repeated scoped result")
+            result[key] = float(value[1])
+        return result, elapsed
+
+    def stop(self):
+        if self.process is not None:
+            if self.process.poll() is None:
+                self.process.send_signal(signal.SIGTERM)
+                try:
+                    self.process.wait(timeout=15)
+                except subprocess.TimeoutExpired:
+                    self.forced_stop = True
+                    self.process.kill()
+                    self.process.wait(timeout=5)
+                    self.stopped = True
+                    raise RuntimeError("The owned store required a forced stop")
+            else:
+                self.process.wait(timeout=1)
+            self.stopped = True
+            if self.process.returncode != 0:
+                raise RuntimeError("The owned store did not exit cleanly")
+
+    def facts(self):
+        return dict(native_started=self.started, native_ready=self.ready,
+                    native_stopped=self.stopped, native_pid=self.pid,
+                    pid_namespace=os.readlink("/proc/self/ns/pid"),
+                    native_exit_code=None if self.process is None else self.process.returncode,
+                    forced_stop=self.forced_stop,
+                    actual_binary_sha256=self.native_sha256,
+                    argv=self.argv, actual_argv=self.actual_argv, origin=self.origin)
+
+
+def sample(metric, labels, value, timestamp):
+    encoded = ",".join(key + "=" + json.dumps(value) for key, value in sorted(labels.items()))
+    return "%s{%s} %s %d\n" % (metric, encoded, value, timestamp * 1000)
+
+
+def series(labels, anchor, failures=(), value_override=None, skip=1, end_age=0):
+    rows = []
+    for age in range(end_age, WINDOW_SECONDS, SAMPLE_INTERVAL * skip):
+        value = 0 if age in failures else 1
+        if value_override is not None and age == 0:
+            value = value_override
+        rows.append(sample("probe_success", labels, value, anchor - age))
+    return "".join(rows)
+
+
+def correctness_data(anchor):
+    base = dict(job="ownsolid-platform-readiness", site_id="site-a", instance="private-address",
+                target="private-target-must-not-leak")
+    cases = {}
+    rows = []
+
+    def add(endpoint, expected, site="site-a", **options):
+        labels = {**base, "site_id": site, "endpoint": endpoint}
+        rows.append(series(labels, anchor, **options))
+        cases[(site, endpoint)] = expected
+
+    add("healthy", False)
+    add("fast", True, failures=[0, 30])
+    add("slower", True, failures=[600, 660, 720, 780, 840])
+    add("overlap", True, failures=range(0, 360, SAMPLE_INTERVAL))
+    add("short-recovered", False, failures=[360, 390])
+    add("below-threshold", False, failures=[0])
+    add("observed-zero", True, failures=range(0, WINDOW_SECONDS, SAMPLE_INTERVAL))
+    add("sparse", False, failures=[0], skip=10)
+    add("stale", False, failures=range(120, WINDOW_SECONDS, SAMPLE_INTERVAL), end_age=120)
+    add("nonbinary", False, failures=[30, 60], value_override=0.5)
+    add("missing-site", False, site="", failures=[0, 30])
+    add("same-name", True, site="site-a", failures=[0, 30])
+    add("same-name", False, site="site-b")
+    add("duplicate", False, failures=[0, 30])
+    rows.append(series({**base, "endpoint": "duplicate", "instance": "second-series"},
+                       anchor, failures=[0, 30]))
+    rows.append(series({**base, "endpoint": "", "site_id": "site-a"}, anchor, failures=[0, 30]))
+    cases[("site-a", "absent")] = False
+    return "".join(rows), cases
+
+
+def shape_data(anchor):
+    # Explicit fixture: 10,000 nodes, five cells, two readiness endpoints per cell.
+    for cell in range(5):
+        for entrance in ["admin", "portal"]:
+            labels = dict(job="ownsolid-platform-readiness", site_id="shape-10000",
+                          endpoint="cell-%d-%s" % (cell, entrance))
+            for age in range(0, 24 * 60 * 60, SAMPLE_INTERVAL):
+                failed = cell == 0 and entrance == "admin" and age in [0, 30]
+                for metric, value in [("probe_success", 0 if failed else 1),
+                                      ("probe_duration_seconds", 0.01),
+                                      ("probe_http_status_code", 503 if failed else 200), ("up", 1)]:
+                    yield sample(metric, labels, value, anchor - age)
+
+
+def directory_bytes(directory):
+    apparent = allocated = files = 0
+    for path in directory.rglob("*"):
+        info = path.lstat()
+        if stat.S_ISREG(info.st_mode):
+            apparent += info.st_size
+            allocated += info.st_blocks * 512
+            files += 1
+        elif not stat.S_ISDIR(info.st_mode):
+            raise RuntimeError("Unexpected native storage entry")
+    return dict(apparent_bytes=apparent, allocated_bytes=allocated, files=files)
+
+
+def main():
+    if not __debug__:
+        raise SystemExit("Assertions must remain enabled")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--metrics-binary", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args()
+    require_namespace()
+    binary = args.metrics_binary
+    if not binary.is_absolute() or not stat.S_ISREG(binary.lstat().st_mode) or sha(binary) != VM_SHA256:
+        raise RuntimeError("Use the pinned existing Linux amd64 VictoriaMetrics 1.155.0 binary")
+    if not args.output.is_absolute():
+        raise RuntimeError("Use a fresh absolute output directory")
+    args.output.mkdir(mode=0o700)
+    expression_file = Path(__file__).with_name("probe-slo.metricsql")
+    expression = expression_file.read_text()
+    proof = dict(scope=__doc__, completed=False, sources={Path(__file__).name: sha(Path(__file__)),
+                 expression_file.name: sha(expression_file)}, native_binary_sha256=VM_SHA256,
+                 phases=[], no_installed_requests=True, live_notifier_qualified=False)
+    store = None
+    try:
+        anchor = int(time.time()) // SAMPLE_INTERVAL * SAMPLE_INTERVAL - 3600
+        proof["query_time"] = anchor
+        store = Store(binary, args.output / "correctness")
+        phase = dict(kind="exact-window-correctness")
+        proof["phases"].append(phase)
+        try:
+            store.start()
+            empty, _ = store.query(expression, anchor)
+            if empty:
+                raise RuntimeError("Missing observations produced an alert")
+            data, cases = correctness_data(anchor)
+            phase["import_bytes"] = len(data.encode())
+            phase["case_expectations"] = [{"site": key[0], "endpoint": key[1], "firing": value}
+                                          for key, value in sorted(cases.items())]
+            store.request("/api/v1/import/prometheus", data.encode())
+            store.request("/internal/force_flush")
+            observed, _ = store.query('count by (site_id, endpoint) (count_over_time('
+                                      'probe_success{job="ownsolid-platform-readiness",'
+                                      'site_id!="",endpoint!=""}[6h]))', anchor)
+            expected_series = {key: 2 if key[1] == "duplicate" else 1
+                               for key in cases if key[0] and key[1] != "absent"}
+            if observed != expected_series:
+                raise RuntimeError("The native store did not retain every selected input series")
+            phase["native_observed_series"] = sum(observed.values())
+            expected = {key for key, firing in cases.items() if firing}
+            result, elapsed = store.query(expression, anchor)
+            phase["actual_firing"] = [list(key) for key in sorted(result)]
+            phase["query_milliseconds"] = elapsed
+            if set(result) != expected:
+                raise RuntimeError("The exact native query did not match scoped case expectations")
+            phase["passed"] = True
+        finally:
+            try:
+                store.stop()
+            finally:
+                phase["facts"] = store.facts()
+        store = Store(binary, args.output / "shape-10000")
+        phase = dict(kind="one-day-ten-endpoint-shape", simulated_nodes=10000,
+                     cells=5, endpoints=10, metric_series=40, scrape_seconds=SAMPLE_INTERVAL,
+                     input_samples=115200, concurrent_ingestion=False, requests=20)
+        proof["phases"].append(phase)
+        try:
+            store.start()
+            payload = "".join(shape_data(anchor)).encode()
+            phase["import_bytes"] = len(payload)
+            store.request("/api/v1/import/prometheus", payload)
+            store.request("/internal/force_flush")
+            observed, _ = store.query('sum by (site_id, endpoint) (count_over_time('
+                                      '{job="ownsolid-platform-readiness",site_id="shape-10000"}[24h]))',
+                                      anchor)
+            expected_counts = {("shape-10000", "cell-%d-%s" % (cell, entrance)): 11520
+                               for cell in range(5) for entrance in ["admin", "portal"]}
+            if observed != expected_counts:
+                raise RuntimeError("The native store did not retain the exact one-day input counts")
+            phase["native_observed_input_samples"] = sum(observed.values())
+            durations = []
+            for _ in range(20):
+                result, elapsed = store.query(expression, anchor)
+                if set(result) != {("shape-10000", "cell-0-admin")}:
+                    raise RuntimeError("The scale shape did not retain exactly one fast-burn endpoint")
+                durations.append(elapsed)
+            ordered = sorted(durations)
+            phase.update(query_milliseconds=durations, p50_milliseconds=ordered[9],
+                         p95_milliseconds=ordered[18], max_milliseconds=ordered[-1],
+                         query_parameters=dict(nocache="1", step="30s"), passed=True)
+        finally:
+            try:
+                store.stop()
+            finally:
+                phase["facts"] = store.facts()
+                phase["store_bytes_after_stop"] = directory_bytes(store.directory / "data")
+        proof["completed"] = True
+    except BaseException as error:
+        proof.update(failure_type=type(error).__name__, failure=str(error))
+        raise
+    finally:
+        (args.output / "result.json").write_text(json.dumps(proof, indent=2, allow_nan=False) + "\n")
+
+
+if __name__ == "__main__":
+    os.umask(0o077)
+    def interrupted(number, _):
+        raise InterruptedError("Native prototype interrupted by signal %d" % number)
+    for number in [signal.SIGTERM, signal.SIGINT, signal.SIGALRM]:
+        signal.signal(number, interrupted)
+    signal.alarm(120)
+    main()

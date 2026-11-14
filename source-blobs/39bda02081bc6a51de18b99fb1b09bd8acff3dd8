@@ -1,0 +1,29 @@
+{
+  "scope": "focused metadata-only package/cache check; no compiler, locks or services",
+  "source": "5f83cfbf9c1c24b8efae927f76a69912d52c7c68",
+  "command": [
+    "/root/lane-obs-tools/go/bin/go",
+    "list",
+    "-e",
+    "-deps",
+    "-test",
+    "-tags=repository_integration,monitoring_integration",
+    "-f",
+    "{{if .Error}}{{printf \"%s: %s\" .ImportPath .Error.Err}}{{end}}",
+    "./internal/modules/monitoring"
+  ],
+  "raw_exit": 0,
+  "package_errors": [],
+  "stderr": "",
+  "expanded_graph_diagnostic": {
+    "command": [
+      "go",
+      "list",
+      "-m",
+      "all"
+    ],
+    "raw_exit": 1,
+    "stderr_excerpt": "go: module lookup disabled by GOPROXY=off",
+    "scope": "expanded workspace graph; not focused-package compilation"
+  }
+}

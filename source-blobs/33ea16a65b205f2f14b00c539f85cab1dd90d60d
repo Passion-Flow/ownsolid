@@ -1,0 +1,22 @@
+{
+  "cleanup_seconds": 20,
+  "evidence_parent": "/root/lane-rel-tools",
+  "fixture_parent": "/tmp",
+  "gid": 65534,
+  "go": "/root/lane-rel-tools/go/bin/go",
+  "go_memory_bytes": 1073741824,
+  "hard_seconds": 300,
+  "locks": [
+    "/run/lock/ownsolid-heavy.lock",
+    "/root/lane-sci-tools/heavy-test.lock"
+  ],
+  "maximum_full_io_avg10": 20,
+  "minimum_available_memory_bytes": 8589934592,
+  "minimum_disk_bytes": 21474836480,
+  "minimum_free_memory_bytes": 2147483648,
+  "probe": "/root/lane-rel-tools/lane-del-combination-4463bbe6/probe",
+  "recorder": "/root/lane-rel-tools/lane-del-combination-4463bbe6/egress-recorder",
+  "source": "/root/lane-del-acceptance-guard",
+  "uid": 65534,
+  "workers": 2
+}

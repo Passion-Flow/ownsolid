@@ -1,0 +1,32 @@
+{
+  "raw": {
+    "workspace_id": "a0bb19a4-1de5-44b7-b453-1284c1aec44e",
+    "from": "2026-11-12T12:35:00Z",
+    "to": "2026-11-12T12:43:00Z",
+    "cells": [
+      {
+        "site_id": "default",
+        "cell_id": "default",
+        "observed": 2,
+        "reachable": 0
+      }
+    ],
+    "require_sparse": true,
+    "require_zero": true
+  },
+  "rollup": {
+    "workspace_id": "a0bb19a4-1de5-44b7-b453-1284c1aec44e",
+    "from": "2026-11-12T10:00:00Z",
+    "to": "2026-11-12T10:08:00Z",
+    "cells": [
+      {
+        "site_id": "default",
+        "cell_id": "default",
+        "observed": 2,
+        "reachable": 0
+      }
+    ],
+    "require_sparse": true,
+    "require_zero": true
+  }
+}

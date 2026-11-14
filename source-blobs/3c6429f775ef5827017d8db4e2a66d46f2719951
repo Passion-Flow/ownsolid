@@ -1,0 +1,21 @@
+#!/bin/sh
+# Prepared only. Launch solely inside the later assigned original parent guard.
+set -eu
+: "${OWNSOLID_GW_GATE_SCRATCH:?the admitted parent must provide owned suitable scratch}"
+: "${OWNSOLID_GW_GATE_GO_TMP:?the admitted parent must provide owned Go build temporary space}"
+export TMPDIR="$OWNSOLID_GW_GATE_SCRATCH/"
+export GOTMPDIR="$OWNSOLID_GW_GATE_GO_TMP"
+export PATH=/Users/passion./.local/opt/go/bin:/Users/passion./.local/opt/node/bin:/Users/passion./.cargo/bin:/usr/bin:/bin:/usr/sbin:/sbin
+export PYTHON=/Users/passion./.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12
+export GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOFLAGS=-p=2
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2
+export npm_config_offline=true COREPACK_ENABLE_NETWORK=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+cd /private/tmp/ownsolid-gw104-full-gate-prepared.wv4gssal/src
+test "$(git rev-parse HEAD)" = 1e4035b1fe60de6a377d5cba8251349a5c16c504
+test "$(git rev-parse 'HEAD^{tree}')" = 0d7d3afde4fb0748f0a834b27924b57d51672af4
+test -z "$(git status --porcelain)"
+make check
+make build
+make test
+cd services/gateway
+cargo clippy --locked -- -D warnings

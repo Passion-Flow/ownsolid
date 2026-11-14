@@ -1,0 +1,16 @@
+from pathlib import Path
+import hashlib,json,os,sys
+root=Path(sys.argv[1]);entries=json.loads(Path(sys.argv[2]).read_text())
+expected={v['path'] for v in entries}
+actual={str(p.relative_to(root)) for p in root.rglob('*') if p.is_file() or p.is_symlink()}
+if 'go.work.sum' in actual-expected:
+ (root/'go.work.sum').unlink();actual.remove('go.work.sum')
+assert actual==expected,('source file set mismatch',sorted(actual^expected))
+for entry in entries:
+ p=root/entry['path']
+ if entry['kind']=='symlink':assert p.is_symlink();data=os.readlink(p).encode()
+ else:
+  assert not p.is_symlink() and p.is_file();data=p.read_bytes()
+  assert bool(p.stat().st_mode&0o111)==entry['executable'],entry['path']
+ assert hashlib.sha256(data).hexdigest()==entry['sha256'],entry['path']
+print('Verified exact 4631e3091ee1870657d76d91d68a2b4677b85785 source:',len(entries),'files, modes and symlinks')

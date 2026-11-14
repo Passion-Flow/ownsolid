@@ -1,0 +1,35 @@
+{
+  "source": "219af27e3d9f73c78acc1b8ab8324e086a6a2f62",
+  "source_schema_version": 60,
+  "source_expected_table_count": 120,
+  "go_platform": "darwin/arm64",
+  "postgres_platform": "linux/arm64 in Docker Desktop",
+  "contract": "7705c5a3 / 0.12.0 exact draft",
+  "binary_sha256": "5cf63c1335fabe4a994105ace8649f9e8e500474c87f374a134bea8f50388dc1",
+  "wire_preflight": {
+    "authenticated": true,
+    "database": "gw_read_test",
+    "driver": "pgx 5.11.0",
+    "phase": "passed",
+    "server_address": "127.0.0.1",
+    "server_address_raw": "127.0.0.1/32",
+    "server_port": 5432,
+    "server_version_num": 180006,
+    "wrong_password_rejected": "28P01"
+  },
+  "observed_disposal_table_counts": [
+    "120",
+    "120",
+    "120"
+  ],
+  "formal_runtime_principal_admission": false,
+  "roots": [
+    "TestPostgresAliasReadCapabilitiesAtRegisteredEntrances",
+    "TestPostgresAliasCapabilityPublicContractBoundary",
+    "TestPostgresAliasCapabilitiesFollowVerifiedScopedTarget",
+    "TestAliasContextCeilingRequiresRecognizedSource"
+  ],
+  "result": "passed without skips",
+  "scope": "registered human TLS and real PostgreSQL through network-none stdio transport with synthetic deployment observations; no actual model/GPU or production activation",
+  "cleanup": "owned proxy children/container/credentials removed; loopback listener closed before lock release"
+}

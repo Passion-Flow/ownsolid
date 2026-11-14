@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+gate=$LANE_REL_CHROME_GATE
+for attempt in $(seq 1 90); do
+  if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+  sleep 5
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+test -z "$(ss -H -lnt '( sport = :5250 )')"
+rc=0
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  pnpm -C web/apps/console exec playwright test e2e/live-nodes.spec.ts --workers=1
+' > "$gate/run.log" 2>&1 || rc=$?
+echo "$rc" > "$gate/exit"
+test "$rc" = 0
+grep -q '3 skipped' "$gate/run.log"

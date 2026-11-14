@@ -1,0 +1,21 @@
+{
+  "source": "b967d7c8824b0efc00f8e5df0c50fa28ab3d8b68",
+  "base": "38aad60337d3e696cd3536bab932b100c9013a45",
+  "cli_tree": "652ebc07fd797be5e2c88988850690fa9a488186",
+  "prior_admission": 75,
+  "mac_gate_admission_exit": 75,
+  "whole_make_test_run": false,
+  "checks_started_on_publication_source": false,
+  "published": false,
+  "entry": "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/full_gate.py",
+  "logs": [
+    "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/full-gate-admission-busy.log",
+    "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/full-gate-admission-busy-second.log",
+    "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/full-gate.log"
+  ],
+  "boundary": "New main source admission busy; no full-target child or scratch volume started.",
+  "bundle": "/root/lane-rel-tools/cli-delivery/publication-b967d7c8.bundle",
+  "bundle_sha256": "4a98944a6119851b3dae2013183d9b51f9c03587bf362b71a9f1b58ae7a8fd43",
+  "reference": "refs/lane-rel/cli-publication-b967d7c8",
+  "full_gate_attempts": 4
+}

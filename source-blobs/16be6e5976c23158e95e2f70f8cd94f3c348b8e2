@@ -1,0 +1,35 @@
+# Current scheduling resume boundary
+
+Worktree /root/lane-sch is clean at b9705abccd4361ee08efb7ed445fefddbc22ab34.
+It adds the selected-executor queue rank entry and tests. Its qualification
+is pending: Linux early checks exited on resource preflight, and the Mac
+shared flock carrier was busy. No compile/test/PG process is left by them.
+
+Qualified prior runtime source: 934a2ec5bb922955abf0fcb17d0fcbba172e6f7a.
+Quota-status evidence /root/lane-sch-tools/quotastatus.RyDHvIck:
+six real disconnected PG race flows plus make check, make build and all
+Control module tests passed, with exact HEAD and empty source diffs.
+Three new native pure tests separately passed at 48de6a9e in
+/root/lane-sch-tools/quotastatus-unit.yes3w781.
+24c58905 changes only status documentation to record that qualification.
+The new b9705abc snapshot validation/rank code is not covered by those passes.
+
+Immutable minimal public packet: sch108-public.d1Boy6XA and its separate
+qualification companion. Preserve original checksums. New additive queue
+patch/signature/commands: sch103-b9705abc.patch and -handoff.md.
+
+Next commands: queue-executor-unit.sh, queue-executor-target.sh, then
+queue-executor-remaining-gate.sh check/build/modules. Respect common fd8
+then own fd9 lock, resource thresholds, other running owners and publication
+order. Do not repeat the unchanged old quota-status target solely for this
+new entry; the new PG target covers the changed queue/preflight inputs.
+
+Mac wrapper remains /private/tmp/ownsolid-sch-lock-1fxoq5r0/workstation-lock.py.
+It uses the permanent same-uid regular-file fcntl.flock carrier and never
+truncates/replaces/unlinks it. The retained fallback runner is pinned to
+b9705abc and selects only the one new pure test; it has not extracted source.
+No old environment was rebuilt. Own cache advice deleted no files.
+
+Everything remains local. No main push, roadmap tick, production route,
+formal scheduler DDL/grants or installed UI/E2E claim was made. The separate
+native serving-role and owner-consumer work remains open.

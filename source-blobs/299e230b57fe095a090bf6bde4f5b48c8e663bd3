@@ -1,0 +1,112 @@
+set -euo pipefail
+cd ~/lane-rel
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 npm_config_offline=true CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=1
+export PLAYWRIGHT_BROWSERS_PATH=$HOME/lane-rel-tools/playwright-browsers
+export LD_LIBRARY_PATH=$HOME/lane-rel-tools/browser-root/usr/lib/x86_64-linux-gnu
+export LANE_REL_HELP_SCRATCH=$1
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 2100 9
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+test "$(df -Pm / | awk 'NR==2 {print $4}')" -ge 15360
+cat > "$LANE_REL_HELP_SCRATCH/check.mjs" <<'JS'
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const [repo, app, origin] = process.argv.slice(2);
+const require = createRequire(resolve(repo, 'web/apps/console/package.json'));
+const { chromium, expect } = require('@playwright/test');
+const { mockControlPlane } = await import(pathToFileURL(resolve(repo, 'web/packages/shell/testing/control-plane.ts')));
+const tokenizer = {
+  404: ['DATASET_NOT_FOUND'],
+  409: ['DATASET_FILE_INVALID'],
+  422: ['DATASET_EMPTY_SOURCE', 'DATASET_VALIDATION_FAILED'],
+  503: ['DATASET_PROCESSOR_TIMEOUT', 'DATASET_PROCESSOR_MEMORY_EXCEEDED', 'DATASET_DATA_INVALID', 'DATASET_STORAGE_UNAVAILABLE'],
+};
+const operations = app === 'console'
+  ? [
+      ['distribution', 'adminPreviewAliasCutover', { 409: [
+        'ALIAS_PAUSE_REQUIRED', 'ALIAS_ALREADY_PAUSED', 'ALIAS_NOT_PAUSED',
+        'ALIAS_REQUESTS_UNDRAINED', 'ALIAS_ROLLBACK_TARGET_INVALID',
+      ] }],
+      ['datasets', 'adminPreviewDatasetTokenizer', tokenizer],
+    ]
+  : [['datasets', 'portalPreviewDatasetTokenizer', tokenizer]];
+const browser = await chromium.launch({ headless: true });
+try {
+  for (const [locale, file] of [['en', 'en.json'], ['zh-CN', 'zh-cn.json']]) {
+    const messages = JSON.parse(readFileSync(resolve(repo, 'web/packages/i18n/locales', file)));
+    const page = await browser.newPage({ baseURL: origin, viewport: { width: 390, height: 844 } });
+    const requests = [];
+    page.on('request', request => requests.push(request.url()));
+    const control = await mockControlPlane(page, app === 'console' ? 'admin' : 'portal');
+    control.signedIn = true;
+    control.preferences.locale = locale;
+    for (const [domain, id, groups] of operations) {
+      await page.goto('/help/api?q=' + encodeURIComponent(id) + '#' + domain + '.' + id);
+      await expect(page.getByRole('button', { name: new RegExp(id) })).toHaveAttribute('aria-expanded', 'true');
+      for (const [status, codes] of Object.entries(groups)) {
+        for (const code of codes) {
+          const row = page.getByRole('listitem').filter({ has: page.getByText(code, { exact: true }) });
+          await expect(row).toHaveCount(1);
+          await expect(row.getByText(status, { exact: true })).toBeVisible();
+          await expect(row).toContainText(messages['problem.' + code + '.title']);
+          await expect(row).toContainText(messages['problem.' + code + '.detail']);
+        }
+      }
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+      console.log(app, locale, id, 'verified');
+    }
+    if (app === 'portal') {
+      await page.goto('/help/api?q=adminPreviewAliasCutover');
+      await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
+      await expect(page.getByRole('button', { name: /adminPreviewAliasCutover/ })).toHaveCount(0);
+    }
+    assert.ok(requests.length > 0);
+    assert.deepEqual(requests.filter(url => new URL(url).origin !== origin), []);
+    await page.close();
+  }
+} finally {
+  await browser.close();
+}
+JS
+cat > "$LANE_REL_HELP_SCRATCH/inside.sh" <<'SH'
+set -euo pipefail
+ip link set lo up
+test "$(wc -l < /proc/net/route)" -eq 1
+make check && make build
+pnpm -C web/packages/help exec vitest run src/help.test.ts --maxWorkers=1
+repo=$PWD
+pid=
+trap 'if test -n "$pid"; then kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; fi' EXIT
+for entry in console:19312 portal:19313; do
+    IFS=: read -r app port <<< "$entry"
+    origin=http://127.0.0.1:$port
+    (cd "$repo/web/apps/$app" && exec node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port "$port" --strictPort) \
+        > "$LANE_REL_HELP_SCRATCH/$app-preview.log" 2>&1 &
+    pid=$!
+    ready=no
+    for attempt in $(seq 1 35); do
+        if curl --noproxy '*' -fsS "$origin/help/api" >/dev/null 2>&1; then ready=yes; break; fi
+        if ! kill -0 "$pid" 2>/dev/null; then break; fi
+        sleep 1
+    done
+    test "$ready" = yes || { cat "$LANE_REL_HELP_SCRATCH/$app-preview.log"; exit 1; }
+    node "$LANE_REL_HELP_SCRATCH/check.mjs" "$repo" "$app" "$origin"
+    kill "$pid"
+    wait "$pid" 2>/dev/null || true
+    pid=
+done
+SH
+ionice -c2 -n7 nice -n10 unshare -n bash "$LANE_REL_HELP_SCRATCH/inside.sh"
+git diff --check

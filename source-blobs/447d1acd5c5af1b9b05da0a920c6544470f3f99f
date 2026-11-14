@@ -1,0 +1,147 @@
+"""Acceptance-only synthetic samples on the installation's existing local cell."""
+import argparse
+import datetime as dt
+import hashlib
+import json
+import os
+from pathlib import Path
+import ssl
+import subprocess
+import time
+import urllib.parse
+import urllib.request
+import uuid
+
+SOURCE = '4463bbe628f60486bbdb92c15f72311fb53d076a'
+OUTER = 'lane-del-installed-4463bbe6'
+
+
+def command(*args, timeout=30):
+    return subprocess.run(args, check=True, timeout=timeout, capture_output=True, text=True).stdout
+
+
+def utc(value):
+    return dt.datetime.fromtimestamp(value, dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def load(path):
+    info = path.lstat()
+    if not path.is_file() or path.is_symlink() or info.st_uid != os.geteuid() or info.st_mode & 0o077:
+        raise ValueError('Use an owned protected regular input')
+    return json.loads(path.read_text())
+
+
+def save(path, value):
+    temp = path.with_name(path.name+'.stage')
+    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, 'w') as stream:
+        json.dump(value, stream, indent=2)
+        stream.write('\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(temp, path)
+
+
+def main(root):
+    if root.resolve() != root or root.name != 'lane-del-combination-4463bbe6':
+        raise ValueError('Use the owned final acceptance directory')
+    route = command('ip', 'route', 'show', 'default').strip().splitlines()
+    if len(route) != 1 or ' dev egress0' not in ' '+route[0] or ' via ' in ' '+route[0]:
+        raise ValueError('Run in the existing outer network namespace with only the recorder default')
+    evidence = root/'runtime-evidence'
+    provenance = load(evidence/'installed-provenance.json')
+    if provenance['build_revision'] != SOURCE or provenance['build_modified'] != 'false':
+        raise ValueError('Installed Control is not the frozen clean build')
+    scope = load(evidence/'scope-state.json')
+    tenant, workspace = scope['primary_tenant'], scope['primary_workspace']
+    if str(uuid.UUID(tenant)) != tenant or str(uuid.UUID(workspace)) != workspace:
+        raise ValueError('Invalid installed scope UUID')
+    prefix = ['docker','exec',OUTER,'docker','compose','--env-file','/srv/ownsolid/compose.env','-f','/srv/ownsolid/compose.yaml']
+    cell = command(*prefix,'exec','--no-TTY','postgres','psql','-X','-tA','-v','ON_ERROR_STOP=1','-U','ownsolid_migrator','-d','ownsolid','-c',
+                   "SELECT site_id||'|'||id FROM cells WHERE is_local").strip().split('|')
+    if cell != ['default','default']:
+        raise ValueError('The observed existing local cell differs from the declared fixture')
+    site, cell_id = cell
+    policy = load(evidence/'history-inputs/monitoring.json')['fleet_history']
+    clients = {}
+    for tier in ('raw','long'):
+        context = ssl.create_default_context(cafile=str(evidence/f'history-inputs/{tier}-ca.pem'))
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
+        clients[tier] = urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=context))
+
+    def request(tier, path, data=None):
+        req = urllib.request.Request(policy[tier+'_origin']+path, data=data,
+                                     headers={'Content-Type':'text/plain'} if data is not None else {})
+        with clients[tier].open(req, timeout=15) as response:
+            return response.read(2 << 20)
+
+    seed_file = evidence/'history-seed.json'
+    if seed_file.exists():
+        seed = load(seed_file)
+        if seed['source_sha'] != SOURCE or seed['workspace_id'] != workspace:
+            raise ValueError('Existing seed belongs to another source or scope')
+    else:
+        now = int(time.time())//60*60
+        seed = {'source_sha':SOURCE,'tenant_id':tenant,'workspace_id':workspace,
+                'site_id':site,'cell_id':cell_id,'nodes':[str(uuid.uuid4()),str(uuid.uuid4())],
+                'raw_from':now-600,'raw_to':now-120,'rollup_from':now-7200,'rollup_to':now-6720,
+                'status':'prepared','scope':'synthetic up samples; one existing installed cell; no physical-node or five-cell claim'}
+        save(seed_file,seed)
+    lines=[]
+    for tier in ('raw','rollup'):
+        start,end = seed[tier+'_from'],seed[tier+'_to']
+        for at in range(start-60,end+1,15):
+            if start+180 <= at < start+420:
+                continue
+            for node in seed['nodes']:
+                labels={'job':'ownsolid-node','tenant_id':tenant,'workspace_id':workspace,
+                        'site_id':site,'cell_id':cell_id,'node_id':node}
+                encoded=','.join(k+'='+json.dumps(v) for k,v in labels.items())
+                lines.append('up{'+encoded+'} 0 '+str(at*1000))
+    payload=('\n'.join(lines)+'\n').encode()
+    request('raw','/api/v1/import/prometheus',payload)
+    request('raw','/internal/resetRollupResultCache')
+    actual = json.loads(command('docker','exec',OUTER,'docker','compose','-f','/srv/fleet-history/compose.yaml','config','--format','json'))
+    evaluator = actual['services']['evaluator']['command']
+    replay = ['docker','exec',OUTER,'docker','compose','-f','/srv/fleet-history/compose.yaml',
+              'run','--rm','--no-deps','--no-TTY','--pull','never','--name','lane-del-history-replay-4463bbe6','evaluator',
+              *evaluator,'-replay.timeFrom='+utc(seed['rollup_from']),'-replay.timeTo='+utc(seed['rollup_to']),'-datasource.queryStep=1m']
+    try:
+        result=subprocess.run(replay,check=True,timeout=120,capture_output=True,text=True)
+        (evidence/'history-replay.log').write_text(result.stdout+result.stderr)
+        (evidence/'history-replay.log').chmod(0o600)
+    except BaseException:
+        subprocess.run(['docker','exec',OUTER,'docker','rm','--force','lane-del-history-replay-4463bbe6'],capture_output=True)
+        raise
+    for tier in ('raw','long'):
+        request(tier,'/internal/resetRollupResultCache')
+    # This native read is complete before the independent driver's query-counter baseline.
+    labels=','.join(k+'='+json.dumps(v) for k,v in {'tenant_id':tenant,'workspace_id':workspace,'site_id':site,'cell_id':cell_id}.items())
+    expr='last_over_time(ownsolid:workspace_cell_nodes_observed:count{'+labels+'}[1m])'
+    query=urllib.parse.urlencode({'query':expr,'start':seed['rollup_from'],'end':seed['rollup_to'],'step':60,'nocache':1})
+    deadline=time.monotonic()+15
+    while True:
+        result=json.loads(request('long','/api/v1/query_range?'+query))
+        series=result.get('data',{}).get('result',[])
+        if len(series)==1 and series[0].get('values'):
+            if any(float(value)!=2 for _,value in series[0]['values']):
+                raise ValueError('Replay did not produce the exact declared observed count')
+            break
+        if time.monotonic()>=deadline:
+            raise ValueError('The real evaluator did not persist the replayed aggregate')
+        time.sleep(.2)
+    seed.update(status='native_replay_verified',samples=len(lines),raw_input_sha256=hashlib.sha256(payload).hexdigest(),
+                evaluator_command=evaluator,replay_observed_points=len(series[0]['values']))
+    save(seed_file,seed)
+    windows={tier:{'workspace_id':workspace,'from':utc(seed[tier+'_from']),'to':utc(seed[tier+'_to']),
+                   'cells':[{'site_id':site,'cell_id':cell_id,'observed':2,'reachable':0}],
+                   'require_sparse':True,'require_zero':True} for tier in ('raw','rollup')}
+    save(evidence/'history-windows.json',windows)
+    print(json.dumps({'event':'INSTALLED_NATIVE_REPLAY_SEED_VERIFIED','source_sha':SOURCE,
+                      'workspace_id':workspace,'site_id':site,'cell_id':cell_id,'samples':len(lines),'windows':windows}))
+
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser()
+    parser.add_argument('root',type=Path)
+    main(parser.parse_args().root)

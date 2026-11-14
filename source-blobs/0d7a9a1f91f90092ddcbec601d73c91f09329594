@@ -1,0 +1,13 @@
+{
+  "entry_sha256": "1a5f519cbbc52dec3b7dd4c31b199486a14674e7310f92678765a8e9bd04a15c",
+  "manifest_sha256": "9a5e296cd3612ae6f9bdd36294148a83dfc4110e4319e837552f76975d096843",
+  "source": "9be01cbbf0144a2f2537667834539de31e40f58f",
+  "tree": "b8aea641ecd1b79be71270ad80ab03c1e131df31",
+  "reviewed_scope": "Absolute1200 includes metadata, all four original targets, cleanup and FD release;20 seconds reserved. Normal/exception cleanup verifies created group plus adopted owned descendants and inherited FDs; lower inherited limits retained. Same9be source, strict2/8/30/PSI5, two permanent NB carriers. No third lock, overlay, target skip, admission wait/queue/retry.",
+  "sources": [
+    "https://man7.org/linux/man-pages/man2/PR_SET_CHILD_SUBREAPER.2const.html",
+    "https://man7.org/linux/man-pages/man2/waitpid.2.html"
+  ],
+  "diff": "/Users/passion./.local/state/ownsolid/lane-rel/api-compat/full-native-gate-absolute-deadline.diff",
+  "actual_gate_invoked": false
+}

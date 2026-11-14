@@ -1,0 +1,73 @@
+{
+  "base_source": "e3bbbeaf62d17c83a13930278e32212a004f16b9",
+  "operations": 430,
+  "declaration_findings": [],
+  "inventory_byte_identical_to_old_resolver": true,
+  "inventory_sha256": "f1fb2f5127d130ba64834853e125b2714adc54e90c40b1ba338759052f89ecee",
+  "focused_tests": 31,
+  "focused_test_log_sha256": "f0505ff4dbe96b4a394311826a1671af505bdcf6c742689f94754c655d48d2b1",
+  "whole_repository_gate_passed": false,
+  "network_test_scope": "No socket opened by missing/external/invalid reference tests",
+  "source_scope": "Response auditor only; no OpenAPI, SDK runtime, Web, agent or server path changed",
+  "baseline_source": "9e32b023a0a3deed6a8653a8878d52c2583fd6cf",
+  "audit_exit": 1,
+  "compatibility_findings": [
+    {
+      "code": "PUBLIC_RESPONSE_MODELS_CHANGED",
+      "domain": "identity",
+      "method": "GET",
+      "path": "/api/v1/admin/audit-events",
+      "audience": "admin",
+      "operation_id": "listAuditEvents",
+      "previous_response_models": {
+        "200 application/json": [
+          "#/components/schemas/AuditEvent",
+          "#/components/schemas/AuditListResponse"
+        ],
+        "400 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "401 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "403 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "503 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "default application/problem+json": [
+          "#/components/schemas/Problem"
+        ]
+      },
+      "current_response_models": {
+        "200 application/json": [
+          "#/components/schemas/AuditEvent",
+          "#/components/schemas/AuditListResponse"
+        ],
+        "400 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "401 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "403 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "409 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "503 application/problem+json": [
+          "#/components/schemas/Problem"
+        ],
+        "default application/problem+json": [
+          "#/components/schemas/Problem"
+        ]
+      }
+    }
+  ],
+  "audit_raw_sha256": "910a412a5bef5071ac9a0409adc5388b7507001cf4bef306fc4f8803df240422",
+  "source": "20e30dac8196548561b6fccca2bed19dd33068d9",
+  "tree": "f23e6e2ea999c88ad0195b712170a60b19be2aa8",
+  "base": "e3bbbeaf62d17c83a13930278e32212a004f16b9"
+}

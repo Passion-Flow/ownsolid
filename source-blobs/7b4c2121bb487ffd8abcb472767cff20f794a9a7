@@ -1,0 +1,102 @@
+# Bounded native reader fixture: review only
+
+This is one invocation of the existing private PostgreSQL fixture, selecting the
+prepared dataset and accepted-adapter reader roots. It is not a queue, scheduler,
+retry service or product change. Nothing here has been executed with --execute.
+The e639db9035b0b2c0229c90175493c605f328e295 worktree is clean and unchanged.
+
+## Frozen inputs
+
+- Plan SHA-256: 7e3a02017f214a264ae37e9b83524aab7a7cb58ddfaa81618b505d08eb3f6874
+- Binding SHA-256: f858093a1ee7b4f065dcdea76c9a7bcc885f8798bc5d62d779baf00024e2d3ab
+- Original parent SHA-256: dc3f6f5eb9d35dc421e06101a7ce1cdab1adfe329b283901948a0c949b6dc3a1
+- Original accepted fixture SHA-256: 8293475c3bdbeed24733c81d0a96e8ad9b5b4dffe8c0ff998753c1a54091656b
+- Original event fixture SHA-256: 35b4f4381ae5b3c7a052d952d3fd38876db5d2632d9432513895e05357431925
+
+Those artifacts and all source assertions remain unchanged. parent.diff compares
+the original parent with the new one-shot wrapper. accepted-fixture.diff and
+event-fixture.diff compare the two original shell entry points with entry.sh.
+The shared PostgreSQL setup now lives directly in the wrapper so every child and
+cleanup call uses the same deadline; these diffs are review comparisons, not
+patches to apply over the preserved c527fb68 event driver.
+
+## Exact entry and deadline ledger
+
+Read-only input check (already run once):
+
+```sh
+bash /root/lane-trn-tools/reader-native-bounded-v1/entry.sh --check-config
+```
+
+Prepared native entry, for the separately reviewed native opportunity ONLY:
+
+```sh
+bash /root/lane-trn-tools/reader-native-bounded-v1/entry.sh --execute
+```
+
+Use entry.sh, not a direct --execute Python invocation: the entry adds a kernel-
+handled outer timeout (TERM at 295 seconds, KILL after 5 more). All durations
+include startup, input checks, wait, fixture, Go, cleanup and evidence. The
+Python work cutoff is 270 seconds; its owned cleanup calls end by 295 seconds,
+leaving the final 5 seconds for records. A Go child including termination/reap
+has at most min(170 seconds, the remaining work budget); its normal wait reserves
+5 seconds for TERM/KILL/reap. Each package has a 75-second test timeout, serial
+-p 1 and GOMAXPROCS=2. No compilation or worker starts after the work cutoff.
+Python signals alone cannot guarantee timely handling of an uninterruptible
+kernel/daemon operation; outer termination is a backstop, not native evidence.
+The whole-lifetime bounds have arithmetic/mock validation only at this stage.
+
+The first original carrier has one blocking kernel acquisition, at most 60
+seconds; the second has one nonblocking acquisition. A second busy result closes
+the first before writing evidence. Both are opened O_NOFOLLOW, without create,
+truncate or unlink, and checked by regular type, UID, device, inode and path/fd
+identity. Their immutable device/inode pairs remain 29/82 and 64512/7508772.
+No workstation compilation is part of this artifact; the workstation busy rule
+remains nonblocking exit 75 without another queue.
+
+## Fixture and results
+
+The exact original preflight/policy still checks Free >=3 GiB, Available >=12
+GiB, disk >=15 GiB, full PSI avg10/avg60 <=5, and no competing heavy process.
+A supplemental parser requires one complete valid full PSI row, rejecting
+nonfinite, missing or duplicate values. PostgreSQL uses only the cached pinned
+image, pull never, network none, loopback namespace, no host ports, 2 CPUs and
+1 GiB. Both fixture families receive the same O_EXCL 0600 DSN file; inherited
+fixture and processor overrides are cleared. Both test roots and the independent
+real-reader subcase must pass, with both packages passing and no skips/failures.
+The real reader/current-role/export/writer-exclusion assertions are unchanged.
+
+Only a container with this invocation's exact name, ID, image, labels and limits
+can be stopped/removed. Anonymous volumes are removed with that container and
+read back; foreign scope, unresolved presence, remaining group/container/volume,
+cleanup timeout or unreaped child prevents qualification. Every child has its
+own process group, TERM/KILL/reap bounds and raw exit status. Go and PG logs use
+files, inputs are hashed in blocks, and parsing is bounded. On a hard kill,
+records may be partial; retain the outer raw status and inspect only the named
+owned resources before making any cleanup claim. Permanent carriers are never
+deleted. The private evidence directory and nonsecret logs are retained; its
+DSN is removed on the normal bounded cleanup path.
+
+Exit classifications: first carrier busy 73; second busy 74; resource refusal
+78; child/test/timeout/cleanup failure 1 with distinct kind, phase and raw child
+status. A child returning 75 is CHILD_FAILED, not a lock classification. No
+in-round reacquisition or body retry occurs. The bounded readiness probe is the
+existing fixture's startup check, not a native-body retry.
+
+## Validation and limits
+
+25 pure local unittest cases passed in 0.019 s. All process, Docker, Go, SQL and
+permanent-carrier calls were replaced; only small private local files were
+created. Bash syntax passed. The single Linux --check-config passed against the
+real clean e639db90 source, unchanged original artifacts and four streamed input
+hashes; that path only stats the permanent carriers and runs bounded Git reads.
+server-input-check.log preserves its actual output. manifest.json binds the
+review artifacts; validation.json records the observed scope.
+
+Zero Linux carrier acquisitions, zero new native compilation/Go/SQL bodies and
+zero processor/GPU/fleet runs occurred. The single native opportunity is unused.
+No container, worker or service was started and no owned runtime resource was
+left running. No P1 box, restricted-role/gateway qualification or fleet budget
+changes follow from this preparation. Earlier exact-source qualifications remain
+separate. The shared Help failure remains with WEB; no unchanged complete suite
+was rerun. Python stdlib licensing is PSF-2.0; no dependency or data was fetched.

@@ -1,0 +1,14 @@
+{
+  "base": "cdd3c8ac30b66faa69e290d7df88ae335f3fb30a",
+  "files": {
+    "apply.go": "45e32dfe09741d0b28626846a6cb0ea7ae03f3df067d4e9ee576de5e7d6abc5e",
+    "config.go": "1c4fb23c373852993c2626e4a647e97559d032d8c6aa10a7eb963053c08584b7",
+    "install_test.go": "987de2519344e877dac8f22229e50eb07c38bc889438b77797ab5ca1adfae14f",
+    "rollback.go": "da59667aca33fc949a65b2d6a16e37293c3316ad34dc229b8da6a7b526406b00",
+    "upgrade.go": "366bfe75128981aa91271ef2c9ea5e4b5cc9c2a92a9acfb8009f53356ed27666",
+    "serving_transport.go": "057212bbb482ae41ccc26498157dbd35ca33fa50591d08a93737b80f253d7ed5",
+    "serving_transport_test.go": "e41809b42212489a96eda13807a2bba4e96b469169d65990875460537ee8bde2"
+  },
+  "binary_sha256": "9a8f06336af1bf3e543b388c29bd9b241e88343acc3bdbe53c64e017d853995d",
+  "bundle_sha256": "fc58047f7ef6284470b9045f2e3061a7548a004b9ab2f7631c9857063fca7f59"
+}

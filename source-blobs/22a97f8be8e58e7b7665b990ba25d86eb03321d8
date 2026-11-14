@@ -1,0 +1,14 @@
+--- original
++++ routes-variant
+@@ -147,6 +147,11 @@
+             raw = (work / 'stdout.json').read_bytes()
+             record['stdout_sha256'], record['stdout_bytes'] = hashlib.sha256(raw).hexdigest(), len(raw)
+             record['stderr_sha256'] = digest(output / (case + '-stderr.log'))
++            if proof_path.exists():
++                proof = json.loads(proof_path.read_text())
++                save(output / (case + '-guard.json'), proof)
++                record['guard_stage'] = proof.get('stage')
++                record['docker_exec_attempted'] = proof.get('docker_exec_attempted', False)
+             if record['exit'] != 0:
+                 raise RuntimeError('Native parser refused case ' + case)
+             proof = json.loads(proof_path.read_text())

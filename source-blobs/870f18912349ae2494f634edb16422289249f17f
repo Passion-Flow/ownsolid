@@ -1,0 +1,523 @@
+{
+  "format_version": 1,
+  "purpose": "DEV-102 current client and acceptance handoff",
+  "installed_control_source": null,
+  "frozen_workspace": {
+    "source": "8f4dd72cb9c6c58c0860bb9125289986cfc180d1",
+    "binary": "/root/lane-rel-tools/workspace-installed-8f4dd72c/client/ownsolid",
+    "binary_sha256": "2f16b65de0753601aea7088c24afec774111cd85c7d027952309e8d231d0ca2d",
+    "handoff": "/root/lane-rel-tools/workspace-installed-8f4dd72c/handoff.json",
+    "handoff_sha256": "473b9a44c3b16531566259a918b3e87d578ee3103531465e04d825b6d663f4e8",
+    "changed": false
+  },
+  "session": {
+    "source": "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+    "binary": "/root/lane-rel-tools/session-installed-0d262a8a/client/ownsolid",
+    "binary_sha256": "c6504aad053bd76a4c1fe159b49cfe3e778d526b7c33e6ca6a50f0143cdb943d",
+    "handoff": "/root/lane-rel-tools/session-installed-0d262a8a/handoff.json",
+    "handoff_sha256": "cca484799213ec290850822412ce7ca17000fd5f5577c3fc82a51f0d06b5fd0f",
+    "entry": "/root/lane-rel-tools/session-installed-0d262a8a/installed_sessions.py",
+    "build_manifest": "/root/lane-rel-tools/session-installed-0d262a8a/client/client-manifest.json",
+    "guard_tests": 12,
+    "cli_race_and_vet": "passed",
+    "actual_installed_session_acceptance_run": false,
+    "required_inputs": [
+      "Owner-qualified complete original installation readiness and exact Control provenance/CA/origins",
+      "Existing network PID and configured loopback listener, supplied by DEL",
+      "Private fixture JSON with purpose dev102-session-cli, exclusive=true, distinct disposable owner/foreign platform-admin accounts and private password-file references",
+      "Nonempty shared-account/session denylist including actual bootstrap administrator; no DEL/OBS/Web active identity may be a canary",
+      "Explicit DEL handoff after OBS, Web/SQL and frozen 8f workspace flow, only if enough parent-window time remains"
+    ],
+    "protection": "The shared bootstrap credential is read for its deny-fence email only, never login. Only newly created, live-Me-verified and registered canary sessions can be revoked or logged out. Failed current-session proof never triggers logout.",
+    "command_template": [
+      "python3",
+      "/root/lane-rel-tools/session-installed-0d262a8a/installed_sessions.py",
+      "--client",
+      "/root/lane-rel-tools/session-installed-0d262a8a/client/ownsolid",
+      "--client-manifest",
+      "/root/lane-rel-tools/session-installed-0d262a8a/client/client-manifest.json",
+      "--evidence",
+      "/root/lane-rel-tools/lane-del-combination-4463bbe6/runtime-evidence",
+      "--fixture",
+      "REQUIRED_PRIVATE_DEDICATED_FIXTURE_FILE",
+      "--expected-cli-source",
+      "0d262a8acc237bba2d7b1f3ef87b8fa23b911f7c",
+      "--expected-control-source",
+      "4463bbe628f60486bbdb92c15f72311fb53d076a",
+      "--network-pid",
+      "REQUIRED_EXISTING_INSTALLATION_PID",
+      "--connect-address",
+      "REQUIRED_CONFIGURED_LOOPBACK_ADDRESS",
+      "--result",
+      "REQUIRED_NEW_PRIVATE_RESULT_DIRECTORY"
+    ],
+    "full_linux_gate": "Not started; short native CLI build passed under all three locks. Whole-repository Linux gate remains separately queued."
+  },
+  "members": {
+    "source": "7055df31f10d23a3a237601c6e781eceaaa8397b",
+    "handoff": "/root/lane-rel-tools/workspace-members/handoff.json",
+    "handoff_sha256": "1f1217cb02ac0cf2fed48298c6d9060fb64cf1e85e05107a0420d57979224385",
+    "complete_gate_and_installed_qualification": "Included in 410ed356 Darwin check/build and native Linux startup; installed qualification pending"
+  },
+  "users": {
+    "format_version": 1,
+    "source_revision": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+    "worktree": "/root/lane-rel-users",
+    "parent": "7055df31f10d23a3a237601c6e781eceaaa8397b",
+    "source_bundle": "/root/lane-rel-tools/user-reads-candidate.bundle",
+    "bundle_sha256": "ff67499202ac7055ba24b5c52804228ecb83b644ed63bc1ab75c11446e4aabd7",
+    "ref": "refs/lane-rel/user-reads-candidate",
+    "cli_race": "Complete CLI suite passed offline, 2.655s",
+    "cli_vet": "passed",
+    "race_vet_log": "/root/lane-rel-tools/user-reads/cli-race-vet.log",
+    "race_vet_log_sha256": "ef0355c8350c4f222602b0698ddff9e69669184d2711b68b6ee089720cfb101b",
+    "layout": "passed",
+    "roadmap": "589 items, consistent",
+    "binary_built": true,
+    "binary_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+    "full_repository_check_build_run": true,
+    "installed_acceptance_run": false,
+    "published_to_main": false,
+    "roadmap_ticked": false,
+    "commands": [
+      "ownsolid user list --query research --status active --limit 20 --output json",
+      "ownsolid user get <user-id> --output yaml"
+    ],
+    "qualification_boundary": "Native artifact and eleven startup checks passed. Real Admin/PostgreSQL authorization, exact-source whole Linux gate and whole make test remain unrun.",
+    "binary_build_scope": "Native offline Linux amd64 clean 410ed356; SHA identical to independent Darwin cross-build",
+    "full_repository_gate_host": "darwin/arm64",
+    "full_repository_gate_source": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+    "native_linux_startup_passed": true,
+    "receiving_file_admitted": false,
+    "status_commit": "79f218f9c19ae6808b54adffc249bc5fb2c694a3",
+    "binary": "/root/lane-rel-tools/user-reads/native-client-410ed356/ownsolid",
+    "native_startup_proof": "/root/lane-rel-tools/user-reads/native-client-410ed356/native-startup.json",
+    "qualified_native_artifact_available": true,
+    "status_bundle": "/root/lane-rel-tools/user-reads-native-status.bundle",
+    "status_bundle_sha256": "5609cd0bde2b330dd744130171fcbf205c78f946b144794583ed564366fd52cb"
+  },
+  "mac_combined_gate": {
+    "source": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+    "host": "darwin/arm64",
+    "started": true,
+    "exit_code": 0,
+    "make_check_passed": true,
+    "make_build_passed": true,
+    "full_make_test_run": false,
+    "local_qualification": "/Users/passion./.local/state/ownsolid/lane-rel/gate-native-410ed356/qualification.json",
+    "linux_binary_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+    "native_linux_startup_passed": true,
+    "installed_acceptance": false,
+    "retained_failures": [
+      "7055 Mac preflight busy exit75, no gate started",
+      "Initial 410 Node heap cap1536 MiB failed at ESLint; corrected cap4096 and complete check/build passed",
+      "Native SHA admission refused while SCP was incomplete; no client execution. Transfer remains unqualified until full hash passes"
+    ],
+    "protocol": "Permanent same-UID regular carrier; O_NOFOLLOW, LOCK_EX|LOCK_NB, same FD, no unlink/replace/truncate",
+    "receiving_state": {
+      "expected_source": "410ed356ffaf9c5a54a32d9b19e20ea457090f7b",
+      "expected_sha256": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+      "receiving_file_sha256": "b068c9f4f1a29a9a476cb21f8583e28c160eabcb8615b0ab234cd29f9be55a25",
+      "receiving_file_executable": false,
+      "verified_parts": 2,
+      "total_parts": 26,
+      "native_startup_run": false,
+      "installed_acceptance": false,
+      "reason": "Partial transfer is unqualified; use separately admitted byte-identical native build.",
+      "transfer_abandoned_for_verified_native_build": true,
+      "artifact_execution": false
+    },
+    "native_linux_artifact": "/root/lane-rel-tools/user-reads/native-client-410ed356/ownsolid"
+  },
+  "dispatch_boundaries": [
+    "Frozen 8f/0d binaries and handoffs unchanged",
+    "Qualified native 410ed356 client is separate from partial reception",
+    "No new installation, account, shared session, schema or main publication",
+    "GW-104 activation and OBS-110 publication remain independent"
+  ],
+  "status_commit": "79f218f9c19ae6808b54adffc249bc5fb2c694a3",
+  "status_commit_scope": "docs/product/status.md and docs/research/cli.md only; runtime CLI remains exact 410ed356",
+  "legacy_control_source": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "current_installed_acceptance": {
+    "ready": false,
+    "required_schema": 59,
+    "boundary": "Await a newly qualified DEL original installation source and dedicated disposable accounts. Frozen session driver remains legacy-source-bound; adapt a separate package for schema59."
+  },
+  "obs110_private_review": {
+    "path": "/root/lane-rel-tools/obs110-review-3cebfcef",
+    "review_sha256": "c9abac06ea6bb42988d551889ce7d96ea2bafca90704d24915aa66e6b836e598",
+    "public_changes": false,
+    "validation_status": 400
+  },
+  "artifact_files_sha256": {
+    "ownsolid": "e630d9ff65172d6e127a7aa055a5979d2f434abe13eb085cfc1d0ef5d3ece257",
+    "client-manifest.json": "18b3e329d6d116155d966c935931bc9d94c4eaac2fe42cf1837b838d5d8c3b99",
+    "build-metadata.txt": "3145660df2769aa70301d0b4764daccdf5f1c68d0671abafc433a7bb7bbace17",
+    "native-startup.json": "a3284c3456ce68c005b2cacfcbb7c185e1a52cb22a602b4723f60ad52ad454ee",
+    "native-startup.stdout": "3a9ebfa78212595cc75b57005e67522814f2e84a36576a0a5f4caa9f04035d94",
+    "native-startup.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "receipt.json": "3bd86bfa042501f7fa59d7c2a8dbb5ae49a190b1ed35ebb4f6bf8d1c739dbed1"
+  },
+  "updated_utc": "2026-11-13T02:11:27.776153+00:00",
+  "workspace_operation_candidate": {
+    "format_version": 1,
+    "source": "5055d774ec6941df008f21f7e69abd48bad3fab0",
+    "cli_product_tree": "652ebc07fd797be5e2c88988850690fa9a488186",
+    "parent": "79f218f9c19ae6808b54adffc249bc5fb2c694a3",
+    "worktree": "/root/lane-rel-workspace-operations",
+    "bundle": "/root/lane-rel-tools/workspace-operation-candidate.bundle",
+    "bundle_sha256": "b30fe8d4a448ca6ac547e37f8adb360ef070fb8c12334e1e2e0f84b307ae3e76",
+    "ref": "refs/lane-rel/workspace-operation-candidate",
+    "cli_full_race": "passed, Linux amd64, 3.416s, loopback-only network namespace",
+    "cli_vet": "passed",
+    "layout": "passed",
+    "roadmap": "589 items, consistent",
+    "log": "/root/lane-rel-tools/workspace-operations/qualification.log",
+    "log_sha256": "abfb6f3850504d17e32b509234f82077de880967abb2e0f8585e2c653ff7c4ea",
+    "command": "ownsolid workspace operation get <request-id> --output json",
+    "standalone_client_built": true,
+    "whole_repository_check_build_passed": true,
+    "installed_acceptance": false,
+    "published": false,
+    "roadmap_ticked": false,
+    "boundary": "Complete offline client artifact and startup qualified. Real Admin HTTPS/PostgreSQL same-actor receipts/revoked authority, whole Linux gate and whole make test remain unrun. Preserve source-bound frozen 8f/0d packages.",
+    "status_commit": "557717247127dc5f3da208a13b6f3ffd82bbb90b",
+    "status_bundle": "/root/lane-rel-tools/workspace-operation-native-status.bundle",
+    "status_bundle_sha256": "99c42478c8aa697a754808d713ac4c2b9744a934bcdf1c324e9dd5d4e3184bf8",
+    "binary": "/root/lane-rel-tools/workspace-operations/native-client-5055d774/ownsolid",
+    "binary_sha256": "676106019d2d0a044ce6f39a976c7f7fb4aba1ed7107dad19795b446a818d6e6",
+    "native_startup_proof": "/root/lane-rel-tools/workspace-operations/native-client-5055d774/native-startup.json",
+    "native_startup_checks": 13,
+    "whole_repository_gate_host": "darwin/arm64",
+    "whole_linux_gate_run": false,
+    "whole_make_test_run": false
+  },
+  "publication_candidate": {
+    "source": "b967d7c8824b0efc00f8e5df0c50fa28ab3d8b68",
+    "base": "38aad60337d3e696cd3536bab932b100c9013a45",
+    "cli_tree": "652ebc07fd797be5e2c88988850690fa9a488186",
+    "prior_admission": 75,
+    "mac_gate_admission_exit": 75,
+    "whole_make_test_run": false,
+    "checks_started_on_publication_source": false,
+    "published": false,
+    "entry": "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/full_gate.py",
+    "logs": [
+      "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/full-gate-admission-busy.log",
+      "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/full-gate-admission-busy-second.log",
+      "/Users/passion./.local/state/ownsolid/lane-rel/cli-delivery/full-gate.log"
+    ],
+    "boundary": "New main source admission busy; no full-target child or scratch volume started.",
+    "bundle": "/root/lane-rel-tools/cli-delivery/publication-b967d7c8.bundle",
+    "bundle_sha256": "4a98944a6119851b3dae2013183d9b51f9c03587bf362b71a9f1b58ae7a8fd43",
+    "reference": "refs/lane-rel/cli-publication-b967d7c8",
+    "full_gate_attempts": 4
+  },
+  "model_history_contract": {
+    "source": "6a2dd96fb392444de755db1cf5bfb771867064b0",
+    "base": "38aad60337d3e696cd3536bab932b100c9013a45",
+    "producer_source": "2b4aaae5f8c690df9943b7dd7a7e4b5004aa421b",
+    "domain_source": "343cdd9d9a69572b77021baec5383b8acb4bfe64",
+    "handoff": "/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/domain-draft/handoff.json",
+    "handoff_server": "/root/lane-rel-tools/model-history-prototype/domain-draft/handoff.json",
+    "handoff_sha256": "6a701eaa778645ea30b5e60b0973b97f9f9ddaf52ab2e81b7baf5dc1839b173f",
+    "source_bundle": "/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/domain-draft/candidate.bundle",
+    "source_bundle_sha256": "be50930438c8544369a2c8f227c245f136d7d45e0b0cf8a17b95c66b3f339dda",
+    "draft_sha256": "112fd38ebe1fc00427bdebcb93686892d43ff8a14d079150b7c65007af5a258b",
+    "draft_revision": 3,
+    "new_unregistered_reads": 2,
+    "sdk_generated_files": 81,
+    "unit_tests_passed": 7,
+    "controlled_python_codec_tests_passed": 9,
+    "go_codec_groups_prepared": 3,
+    "go_codec_compiled": false,
+    "go_codec_run": false,
+    "private_projection_checks_passed": true,
+    "public_contract_or_route_published": false,
+    "formal_schema_role_catalog_installed": false,
+    "real_dispatcher_or_installed_qualified": false,
+    "shared_help_browser_failure_resolved": false,
+    "owner_handoff": "/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/model-owner-decisions.json",
+    "legacy_revision_b_evidence": "/Users/passion./.local/state/ownsolid/lane-rel/model-history-contract/revision-b-proof/handoff.json",
+    "original_research_source": "38aad60337d3e696cd3536bab932b100c9013a45",
+    "mac_go_subset_prepared": true,
+    "mac_go_subset_files": 3,
+    "last_assigned_mac_window_exit": 75,
+    "linux_native_replay": "/root/lane-rel-tools/identity-audit-contract/linux-native-replay.json",
+    "linux_preparation_complete": true,
+    "linux_native_executed": false,
+    "error_semantics_reference": {
+      "commit": "3ba500410ae66b25f781b018bad42c0d6f91130d",
+      "path": "docs/research/training-dataset-lineage.md",
+      "section": "service-and-wire-policy-handoff",
+      "reference": "3ba500410ae66b25f781b018bad42c0d6f91130d:docs/research/training-dataset-lineage.md#service-and-wire-policy-handoff",
+      "five_codes_match_current_draft": true,
+      "runtime_diff_from_2b4aaae5": false,
+      "http_mapping_still_owned_by": "IAM",
+      "adr_reference": "3ba500410ae66b25f781b018bad42c0d6f91130d:docs/decisions/0077-retain-explicit-model-family-membership.md",
+      "adr_rename_commit": "f85e6512851dfd4c6fbfedd07f5f7cc17703b385",
+      "adr_contents_unchanged": true,
+      "existing_semantics_reused_without_duplicate_note": true
+    },
+    "status_commit": "6a4c354ddbbf6064bc26e03b5ac86c717a6dcfe3",
+    "linux_host_admission_attempted": true,
+    "linux_native_result": {
+      "source": "6a2dd96fb392444de755db1cf5bfb771867064b0",
+      "expected_roots": [
+        "TestHistoryQueryAndExactRows",
+        "TestReadyCompatibilityAndRetiredDetail",
+        "TestExplicitInvalidValuesAndProblemCodec"
+      ],
+      "actual_roots": [],
+      "actual_root_count": 0,
+      "skipped": [],
+      "skip_count": 0,
+      "test_exit": null,
+      "compiled": false,
+      "run": false,
+      "reason": "IO full avg10 27.29 > maximum5 at pre-group resource check",
+      "log_created": false
+    }
+  },
+  "api_compatibility_candidate": {
+    "source": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+    "base": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+    "original_source": "ff0f32389760cf2868402cdc9a3630658beae237",
+    "handoff": "/root/lane-rel-tools/api-compat/handoff.json",
+    "bundle": "/root/lane-rel-tools/api-compat/candidate.bundle",
+    "bundle_sha256": "58ed19344aa42c7b70fd33182e5f037680dd7ee811cc0bab7f575ac172c8f6ab",
+    "tooling_tests": {
+      "layout": 13,
+      "sdk_and_codegen": 57,
+      "exit": 0,
+      "log_sha256": "51d2779763d78b7d407b71e002e622bd8c10e54359fdc93ec7f2d83cf291d7ab"
+    },
+    "native_gate_status": {
+      "first_input_source": "16300ee60eace0eaa485588c055b4f8f9dabcebd",
+      "first_check_exit": 2,
+      "first_failure": "Missing prepared Help parser dependency in a fresh checkout",
+      "failed_log": "/root/lane-rel-tools/api-compat/failed-missing-dependencies-native-gate.log",
+      "failed_log_sha256": "cba0f17f284247f03bb6c722c9d69d6bf3240a7fabdc84a5db71c34fb5d73b41",
+      "tooling_recovery_passed": true,
+      "retry_admission_exit": 75,
+      "make_check_passed": false,
+      "make_build_run": false,
+      "whole_make_test_run": false,
+      "historical_entry_source": "89c1610e8de03ea8151153f3cbd740e34ac6cb32",
+      "prepared_entry_source": "a27ac7e441bfeeb2c89b23442a240842c4b56132",
+      "prepared_entry_executed": false
+    },
+    "published_main": false,
+    "whole_repository_gates_passed": false,
+    "cli_b967d7c8_qualified": false,
+    "composition_candidate_source": "a27ac7e441bfeeb2c89b23442a240842c4b56132",
+    "composition_targeted_tests_passed": 32,
+    "current_entry": "/root/lane-rel-tools/api-compat/full_native_gate.py",
+    "handoff_sha256": "b979181ccd30f42151e59434738158e23c1316ce96082b4987312b6ddd758600"
+  },
+  "current_work_boundary": "Final jointa27ac7e4 on main6ed5c627 retains original DEV47fa and WEBc7 source evidence. The actualc7 parent is unpublished researchf1; only the five authorized leaf paths were replayed as original-authora84 with identical stable patch ID, excludingf1. Genuine offline make generate on871e passed (414 reused/0 downloaded,30 API/144 Help), generate:check passed,122 SDK/79 projection inputs and all five protected consumers/helper hashes match. Complete bounded make test-tools on2c20 passed13 layout+67 SDK/tooling cases; finala27 changes only qualification docs. Actual430 audit retains one explicit409 source-review finding and exit1 with concrete same-default/shared-Problem and existing server/SDK evidence; no rule/runtime change. Native auditGo10+6 remains bound783 and history6a2 stays actual0/NOTRUN. Exact-source native entry and single-attempt manifest are prepared fora27 with unchanged strict thresholds, but unexecuted/unadmitted/no queue. MODEL actual release and TRN result/release plus root platform/resource assignment precede full check/build/test and current-main alignment/one FF. Frozen8f/0d, CLIb967, raw failures and installed boundaries remain unchanged.",
+  "identity_audit_contract_candidate": {
+    "source": "a27ac7e441bfeeb2c89b23442a240842c4b56132",
+    "base": "6ed5c627a04a52b97d273f6782fdb0733d8703c4",
+    "handoff": "/root/lane-rel-tools/identity-audit-contract/handoff.json",
+    "handoff_sha256": "a3fc2907567f80d978f84f0939bc1fccdeb4c4775aeb0dbbb83c929405eb057a",
+    "bundle": "/root/lane-rel-tools/identity-audit-contract/joint-source.bundle",
+    "bundle_sha256": "824ab72dacf3387e756ee543e761c5ab592589dd9318c3e99d947faaf91a72b8",
+    "bundle_prerequisites": [
+      "6ed5c627a04a52b97d273f6782fdb0733d8703c4"
+    ],
+    "original_author_inputs": {
+      "DEV": {
+        "original_commit": "47fa03253b0d2655be26925a7e4492547c3e9a42",
+        "base": "b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32",
+        "bundle": "/root/lane-rel-tools/identity-audit-contract/dev-source.bundle",
+        "bundle_sha256": "bdc554d5b3ec8c729dece360f2676d667fa59d45c8e29270d533f26296b8e7a6",
+        "original_commit_is_joint_ancestor": true
+      },
+      "WEB": {
+        "original_commit": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+        "actual_parent": "f1ccc065f76008076786d54e2603f6db25756318",
+        "advertised_baseline": "b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32",
+        "bundle": "/root/lane-rel-tools/identity-audit-contract/web-owner-c7ba6271.bundle",
+        "bundle_sha256": "2ec837b665b15d914f42a705de4b799176ad5cd0e46a688dd196b851f8644749",
+        "original_author_patch": "/root/lane-rel-tools/identity-audit-contract/web-owner-c7ba6271.patch",
+        "original_author_patch_sha256": "5af6de21b88544860f8dc6fe679f1abc0a9cc9abdcc70e15dd879405fc7320f3",
+        "replayed_commit": "a84c4eb0e2653a8a0b326d1aca8913175cfb0536",
+        "replayed_commit_is_joint_ancestor": true,
+        "original_object_retained": true,
+        "original_commit_is_joint_ancestor": false,
+        "unpublished_research_ancestor_included": false,
+        "author_and_author_time_preserved": true,
+        "stable_patch_id": "6b5926cf6cab24baa02564c25a0a823a9784d017",
+        "only_five_agreed_paths": true
+      }
+    },
+    "native_runtime_bindings": {
+      "fixture_source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+      "transport_source": "1e8f1fadf8caff8d7b9ac771cd91641ba19d4287",
+      "actual_roots": 10,
+      "actual_subtests": 6,
+      "skips": 0,
+      "audit_test_exit": 0,
+      "combined_parent_exit": 1,
+      "combined_parent_pid": 3053332,
+      "history_actual_roots": 0,
+      "history_test_exit": null,
+      "toolchain": "go version go1.27.3 linux/amd64",
+      "go_binary": "/root/lane-rel-tools/go/bin/go",
+      "go_binary_sha256": "5f5eb6d0b2fb6aa0bb5d5f8c5f1c944e0de955c925f0111af92a9d8f79680b5b",
+      "test_executable_retained": false,
+      "test_executable_boundary": "The owned Go temporary directory was removed after the run; no test executable digest is claimed",
+      "raw_proof": "/root/lane-rel-tools/identity-audit-contract/go-native-linux-proof.json",
+      "raw_proof_sha256": "cd648aa45ce2ab13f08838b9254a18b2151ca93c56f0201a3f1f9ca1d5e13cd1",
+      "raw_log_sha256": "f391f6191c1293348969b862e005b7126f4245a300000d978276ef027e985d15",
+      "locks_released": true,
+      "temp_and_owned_processes_ended": true,
+      "second_admission_attempted": false
+    },
+    "current_delivery_native_test_run": false,
+    "actual_product_generation": {
+      "source": "871e3df7df9ea0f0f5adb8f3bd91a226a52b44af",
+      "platform": "darwin/arm64",
+      "command": [
+        "make",
+        "generate"
+      ],
+      "exit": 0,
+      "offline": true,
+      "packages_reused": 414,
+      "downloaded": 0,
+      "install_scripts": "disabled",
+      "node": "v26.13.0",
+      "pnpm": "12.16.1",
+      "generated_api_files": 30,
+      "generated_help_files": 144,
+      "committed_bytes_changed": false,
+      "raw_log": "/root/lane-rel-tools/identity-audit-contract/joint-make-generate.log",
+      "raw_log_sha256": "f31e16572e849ad9bfdf7eb02d8cdc9963311bc953dd25c19e80c3f96039ca23",
+      "proof": "/root/lane-rel-tools/identity-audit-contract/joint-make-generate-proof.json",
+      "real_generate_check_passed": true,
+      "final_source_code_and_gen_inputs_unchanged": true
+    },
+    "current_tooling_tests": {
+      "source": "2c20c8cccc360f3345126a5c36fc3de3c3363732",
+      "platform": "darwin/arm64",
+      "command": [
+        "make",
+        "test-tools",
+        "PYTHON=/Users/passion./.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12"
+      ],
+      "exit": 0,
+      "layout_cases": 13,
+      "sdk_tooling_cases": 67,
+      "raw_log": "/root/lane-rel-tools/identity-audit-contract/joint-test-tools.log",
+      "raw_log_sha256": "67ee41a072ef515a7d67a4e54114078c86f169620f18aec91dd3a775f1983fd5",
+      "whole_repository_gate": false,
+      "compiler_browser_container_started": false,
+      "final_source_code_inputs_unchanged": true
+    },
+    "public_inventory": {
+      "source": "871e3df7df9ea0f0f5adb8f3bd91a226a52b44af",
+      "baseline": "6ed5c627a04a52b97d273f6782fdb0733d8703c4",
+      "operations": 430,
+      "exit": 1,
+      "declaration_findings": [],
+      "compatibility_findings": [
+        {
+          "code": "PUBLIC_RESPONSE_MODELS_CHANGED",
+          "domain": "identity",
+          "method": "GET",
+          "path": "/api/v1/admin/audit-events",
+          "audience": "admin",
+          "operation_id": "listAuditEvents",
+          "previous_response_models": {
+            "200 application/json": [
+              "#/components/schemas/AuditEvent",
+              "#/components/schemas/AuditListResponse"
+            ],
+            "400 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "401 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "403 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "503 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "default application/problem+json": [
+              "#/components/schemas/Problem"
+            ]
+          },
+          "current_response_models": {
+            "200 application/json": [
+              "#/components/schemas/AuditEvent",
+              "#/components/schemas/AuditListResponse"
+            ],
+            "400 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "401 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "403 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "409 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "503 application/problem+json": [
+              "#/components/schemas/Problem"
+            ],
+            "default application/problem+json": [
+              "#/components/schemas/Problem"
+            ]
+          }
+        }
+      ],
+      "raw_report": "/root/lane-rel-tools/identity-audit-contract/joint-inventory.json",
+      "raw_report_sha256": "910a412a5bef5071ac9a0409adc5388b7507001cf4bef306fc4f8803df240422",
+      "explicit_409_review": {
+        "finding_code": "PUBLIC_RESPONSE_MODELS_CHANGED",
+        "retained_exit": 1,
+        "existing_server_status": "STORAGE_COMMIT_OUTCOME_UNKNOWN:409",
+        "existing_default_response_and_new_explicit_response_same_shared_problem": true,
+        "component_definitions_unchanged": true,
+        "operation_identity_unchanged": true,
+        "server_runtime_changed": false,
+        "regenerated_go_accessor": "GetApplicationproblemJSON409()",
+        "old_generated_clients_wire_binding": "The existing default schema permits the same409 Problem body. This is source inspection, not a fresh old-client native run.",
+        "evidence": {
+          "services/control/internal/platform/httpserver/problem.go": {
+            "sha256": "858606d9c8968a1314fc72bd5c8c16975c22d7e517318fa5c0c5d9dac036b625",
+            "scope": "Existing shared409 registration, line156"
+          },
+          "services/control/internal/modules/identity/http/audit_read_repository_integration_test.go": {
+            "sha256": "e66b34409d1a48e7bdb3cd92036cd037b41236c14a538997908829dba5a3b9d7",
+            "scope": "Existing actual COMMIT drop/suppressed-ACK and explicit-new-read assertions; not rerun this turn"
+          },
+          "tools/codegen/sdk/README.md": {
+            "sha256": "e9d2832071a9e2eb1b6fb32c6b53fca9f0cdc800b31ab07335656e4fa1764d32",
+            "scope": "Intentional Go409 accessor migration and explicit retry guidance"
+          },
+          "tools/codegen/sdk/tests/audit_read_wire_test.go": {
+            "sha256": "6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821",
+            "scope": "Retained783 native fixture exercises explicit409 decoding and no automatic retry"
+          }
+        },
+        "review_conclusion": "Accurate explicit binding for an existing shared Problem outcome; retain the source-review signal and client migration. No rule, exit code or server runtime change is needed; no general compatibility pass is claimed."
+      },
+      "rule_or_exit_suppressed": false
+    },
+    "web_relay": "/root/lane-rel-tools/identity-audit-contract/relay/handoff.json",
+    "web_relay_sha256": "b240db17fb15d92f8b14acc707a65d3c7317c9b66e3982c8971304757233c451",
+    "whole_repository_gates_passed": false,
+    "published_main": false,
+    "private_model_history_included": false,
+    "full_gate_manifest": "/root/lane-rel-tools/identity-audit-contract/joint-full-gate-manifest.json",
+    "full_gate_manifest_sha256": "8766bedc1371f323ca4634e1eb00d1ed1837870cf33f927c22299a242df16e6c",
+    "new_heavy_admission_attempted": false
+  }
+}

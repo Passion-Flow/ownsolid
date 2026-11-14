@@ -1,0 +1,32 @@
+set -euo pipefail
+cd ~/lane-rel
+git diff --quiet
+git diff --cached --quiet
+git switch --detach refs/lane-rel/training-cursor-candidate
+test "$(git rev-parse --short HEAD)" = 95cb652b
+git rebase --onto refs/lane-rel/trn-cursor-base-newer 5bb7d21c
+git diff --exit-code 95cb652b..HEAD -- api/openapi tools/codegen web services/control/internal/modules/training services/control/internal/platform/pagination
+git diff --check refs/lane-rel/trn-cursor-base-newer..HEAD
+git update-ref refs/lane-rel/training-cursor-landing-new HEAD
+git log -2 --oneline
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 900 9
+test "$(cat ~/lane-rel-tools/trn-cursor-gate.BHGNY6t4/exit)" = 0
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+unshare -n sh -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    make check-layout check-roadmap
+    go -C services/control test ./internal/modules/monitoring/...
+    go -C services/control build ./...
+'
+git diff --exit-code

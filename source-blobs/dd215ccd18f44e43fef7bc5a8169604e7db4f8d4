@@ -1,0 +1,41 @@
+{
+  "scope": "Only a disposable path-chain permission preflight, not the support CLI or native parent fixture",
+  "actual_uid": 65534,
+  "actual_gid": 65534,
+  "directory_chain": [
+    {
+      "path": "/",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0
+    },
+    {
+      "path": "/tmp",
+      "mode": "0o1777",
+      "uid": 0,
+      "gid": 0
+    },
+    {
+      "path": "/tmp/lane-del-support-path-_7ka5t93",
+      "mode": "0o711",
+      "uid": 0,
+      "gid": 0
+    },
+    {
+      "path": "/tmp/lane-del-support-path-_7ka5t93/bin",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0
+    },
+    {
+      "path": "/tmp/lane-del-support-path-_7ka5t93/bin/check",
+      "mode": "0o555",
+      "uid": 0,
+      "gid": 0
+    }
+  ],
+  "private_tmp_mode": "0700",
+  "private_evidence_mode": "0700",
+  "public_binary": "copy of host /usr/bin/true, no network activity",
+  "exit": 0
+}

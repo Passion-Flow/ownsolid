@@ -1,0 +1,57 @@
+import base64
+import csv
+import email.parser
+import hashlib
+import io
+import json
+from pathlib import Path, PurePosixPath
+import zipfile
+
+root = Path(__file__).resolve().parent
+name = 'torch-2.14.1+cpu-cp312-cp312-manylinux_2_28_x86_64.whl'
+wheel = root / name
+partial = root / (name + '.origin-partial')
+expected = '5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f'
+if not wheel.exists():
+    with partial.open('rb') as stream:
+        assert hashlib.file_digest(stream, 'sha256').hexdigest() == expected
+    partial.rename(wheel)
+with wheel.open('rb') as stream:
+    assert hashlib.file_digest(stream, 'sha256').hexdigest() == expected
+assert wheel.stat().st_size == 196253677
+with zipfile.ZipFile(wheel) as archive:
+    names = archive.namelist()
+    assert len(names) == len(set(names))
+    metadata_path = 'torch-2.14.1+cpu.dist-info/METADATA'
+    metadata_bytes = archive.read(metadata_path)
+    metadata_sha = hashlib.sha256(metadata_bytes).hexdigest()
+    assert metadata_sha == 'a3fd232f82dcc389c6dab2665dfc17649c03ffb72cb641e96a76a0690177b918'
+    metadata = email.parser.BytesParser().parsebytes(metadata_bytes)
+    assert metadata['Version'] == '2.14.1+cpu'
+    assert metadata_bytes == (root / 'metadata' / 'torch-cpu.metadata').read_bytes()
+    records = {}
+    for path, digest, size in csv.reader(io.StringIO(archive.read('torch-2.14.1+cpu.dist-info/RECORD').decode())):
+        assert path not in records
+        records[path] = (digest, size)
+    license_files = metadata.get_all('License-File')
+    assert len(license_files) == len(set(license_files)) == 86
+    selected = [metadata_path, 'torch-2.14.1+cpu.dist-info/WHEEL']
+    selected += ['torch-2.14.1+cpu.dist-info/licenses/' + path for path in license_files]
+    inventory = []
+    for path in selected:
+        assert not PurePosixPath(path).is_absolute() and '..' not in PurePosixPath(path).parts
+        payload = archive.read(path)
+        digest = hashlib.sha256(payload).digest()
+        record_digest, size = records[path]
+        assert record_digest == 'sha256=' + base64.urlsafe_b64encode(digest).decode().rstrip('=')
+        assert size == str(len(payload))
+        destination = root / 'wheel-evidence' / path
+        destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        destination.write_bytes(payload)
+        destination.chmod(0o600)
+        inventory.append({'path':path, 'size':len(payload), 'sha256':digest.hex()})
+    result = {'filename':name,'size':wheel.stat().st_size,'sha256':expected,'metadata_sha256':metadata_sha,'license_expression':metadata['License-Expression'],'declared_license_count':len(license_files),'files':inventory}
+    output = root / 'wheel-audit.json'
+    output.write_text(json.dumps(result, sort_keys=True, indent=2) + '\n')
+    output.chmod(0o600)
+    print(json.dumps({'wheel_sha256':expected, 'metadata_sha256':metadata_sha,'license_files':len(license_files),'inventory_sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'notice_bytes':sum(x['size'] for x in inventory[2:])}))

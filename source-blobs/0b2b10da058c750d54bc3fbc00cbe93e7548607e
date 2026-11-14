@@ -1,0 +1,55 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+run=$1
+trap 'echo "stage-exit=$?"' EXIT
+for n in $(seq 1 360); do
+    if grep -q '^stage-exit=' "$run/repository.log"; then break; fi
+    sleep 2
+done
+grep '^stage-exit=' "$run/repository.log"
+cd /root/lane-gw
+. /root/lane-gw-toolchain/env
+export CARGO_BUILD_JOBS=2 GOMAXPROCS=2 GOFLAGS=-p=2 CARGO_NET_OFFLINE=true npm_config_cache=/root/lane-gw-toolchain/npm-cache
+test -z "$(git status --porcelain=v1)"
+tested=$(git rev-parse HEAD)
+test "$(git rev-parse --short=7 "$tested")" = 74ee5ee
+git fetch --no-tags "$run/upstream-latest.bundle" refs/remotes/origin/main
+known=$(git rev-parse FETCH_HEAD)
+base=$(git rev-parse origin/main)
+if git merge-base --is-ancestor "$base" "$known"; then
+    base=$known
+else
+    git merge-base --is-ancestor "$known" "$base"
+fi
+git -c user.name=Codex -c user.email=codex@users.noreply.github.com rebase "$base"
+git diff --exit-code "$tested" HEAD -- services/gateway services/control/internal/modules/distribution api/gateway services/control/migrations
+python3 tools/dev/roadmap_progress.py
+git diff --exit-code
+git log -1 --format='verified-candidate=%H'
+git log -1 --format='tested-base=%P'
+df -h /root
+free -m
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 2097152
+scratch=$(mktemp -d /dev/shm/lane-gw-gobuild.XXXXXXXX)
+export GOTMPDIR="$scratch"
+cleanup() {
+    status=$?
+    if test -f tools/audit-verify/audit-verify &&
+       ! git ls-files --error-unmatch -- tools/audit-verify/audit-verify >/dev/null 2>&1; then
+        mv -- tools/audit-verify/audit-verify "$run/final-build-audit-verify"
+    fi
+    find "$scratch" -depth -delete
+    echo "stage-exit=$status"
+}
+trap cleanup EXIT
+make check >"$run/final-make-check.log" 2>&1
+echo 'make check passed'
+make build >"$run/final-make-build.log" 2>&1
+echo 'make build passed'
+if test -f tools/audit-verify/audit-verify &&
+   ! git ls-files --error-unmatch -- tools/audit-verify/audit-verify >/dev/null 2>&1; then
+    mv -- tools/audit-verify/audit-verify "$run/final-build-audit-verify"
+fi
+git diff --check
+test -z "$(git status --porcelain=v1)"

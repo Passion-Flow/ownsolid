@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+proof=${1:?private prototype root required}
+model=${2:?approved model directory required}
+publication=${3:?original published dataset export required}
+template=${4:?original retained CPU request required}
+start_case=${5:-baseline}
+case "$start_case" in baseline|interrupted|resumed|optimizer-changed|horizon-changed) ;; *) echo 'Invalid starting case' >&2; exit 2;; esac
+umask 077
+preflight() {
+    df -h "$proof"
+    free -m
+    python3 -B "$proof/preflight_cpu_prototype.py" "$proof"
+    available=$(df -Pk "$proof" | awk 'NR==2{print $4}')
+    ((available >= 15*1024*1024))
+}
+started=false
+for case_name in baseline interrupted resumed optimizer-changed horizon-changed; do
+    if [[ "$case_name" == "$start_case" ]]; then started=true; fi
+    if [[ "$started" != true ]]; then continue; fi
+    preflight
+    python3 -B "$proof/run_cpu_resume.py" "$proof" "$model" "$publication" "$template" --case "$case_name"
+done
+preflight
+readarray -t policy < <(python3 - "$proof/cpu-prototype-inputs/prototype.json" <<'PY'
+import json,sys
+v=json.load(open(sys.argv[1]));p=v['install']
+for x in [v['base_image'],p['memory_bytes'],p['cpu_threads'],p['pids_limit'],v['worker']['wall_seconds']]:print(x)
+PY
+)
+container_id=$(docker create --pull never --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+  --memory "${policy[1]}" --cpus "${policy[2]}" --pids-limit "${policy[3]}" \
+  --env PYTHONDONTWRITEBYTECODE=1 --env PYTHONHASHSEED=0 --env OMP_NUM_THREADS="${policy[2]}" \
+  --env HF_HUB_OFFLINE=1 --env HF_HUB_DISABLE_TELEMETRY=1 --env TMPDIR=/workspace/tmp \
+  --mount "type=bind,source=$proof/cpu-prototype-source,target=/source,readonly" \
+  --mount "type=bind,source=$proof/cpu-prototype-inputs,target=/inputs,readonly" \
+  --mount "type=bind,source=$proof/cpu-prototype-install,target=/workspace" \
+  "${policy[0]}" /workspace/venv/bin/python -B /inputs/compare_cpu_resume.py)
+cleanup() { docker rm -f "$container_id" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+timeout --signal TERM --kill-after 10 "${policy[4]}" docker start --attach "$container_id"

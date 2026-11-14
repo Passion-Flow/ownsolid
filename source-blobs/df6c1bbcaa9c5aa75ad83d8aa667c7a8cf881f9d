@@ -1,0 +1,30 @@
+# ARC-105 signed managed load fixture
+
+Run on ownsolid-cpu as root from this private runner directory. The
+launcher never starts work without the explicit run flag and its capacity
+check. It checks the host again after staging and checks live cgroups
+before releasing the simulator.
+
+```sh
+bash launch.sh --check
+bash launch.sh --run
+```
+
+Exit 75 means resource admission refused the launch. Read `prelaunch.json`
+for the recorded host snapshot and reason. The launcher uses the signed
+test media and staged KWOK inputs from the prior ARC-only fixtures. It
+copies the signed archive and public trust to separate test media after
+admission. No release signer is needed.
+
+The run creates its own `run.*` directory and internal Docker network.
+It records the exact test process exit, resource admission and samples,
+managed API output, the unchanged packet and DNS records, the KWOK
+Node and Pod proof, simulator report, database windows and dispatch and
+reconnect samples under that directory. Cleanup removes the isolated
+containers and per-run node credentials. It leaves evidence and test
+media on the host.
+
+The five-second pacing and the one hundred facts tasks per minute are
+fixed. Measure ten full one-minute windows after both the gateway fleet
+and KWOK workload are ready. The two real RKE2 members stay outside the
+1,000 synthetic UUIDs. The process must exit zero to pass.

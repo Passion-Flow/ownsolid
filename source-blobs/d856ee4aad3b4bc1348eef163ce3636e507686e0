@@ -1,0 +1,328 @@
+diff --git a/docs/decisions/0071-retain-explicit-model-family-membership.md b/docs/decisions/0071-retain-explicit-model-family-membership.md
+index 108a2ea2..698a12fc 100644
+--- a/docs/decisions/0071-retain-explicit-model-family-membership.md
++++ b/docs/decisions/0071-retain-explicit-model-family-membership.md
+@@ -42,3 +42,5 @@ execution references retain their shapes. Candidate DDL stays unnumbered and out
+ the installed migration chain until ARC admits numbering, roles, catalog, backup and
+ restore. DEV owns public contract generation and Web owns S-202. See the
+ [domain contract](../research/training-dataset-lineage.md#durable-family-domain-contract).
++Candidate downgrade is allowed only while no family rows exist. Once identities
++have been adopted, the migration owner must retain them or refuse downgrade.
+diff --git a/docs/research/training-dataset-lineage.md b/docs/research/training-dataset-lineage.md
+index 95e994ff..712028c5 100644
+--- a/docs/research/training-dataset-lineage.md
++++ b/docs/research/training-dataset-lineage.md
+@@ -467,6 +467,19 @@ transaction, rechecks Admin/session/workspace authority, records an existing aud
+ event and never commits on its own. Different concurrent choices fail rather than
+ reassigning membership. Deferred constraints refuse an orphan staged selection.
+ 
++Backfill must not alter a table while its deferred foreign-key events are pending.
++A real PostgreSQL minimal transaction reproduced that failure in the initial DDL.
++Create the cyclic constraints before population, add the predecessor version's
++required-membership FK as `NOT VALID`, populate both maps, then use named
++[SET CONSTRAINTS IMMEDIATE](https://www.postgresql.org/docs/18/sql-set-constraints.html)
++to finish this domain's checks before [validating the predecessor FK](https://www.postgresql.org/docs/18/sql-altertable.html).
++Restore only these named constraints to deferred mode. No invalid FK is left after
++admission, and unrelated owners' constraint modes are unchanged. Candidate downgrade
++refuses after any family has been adopted; formal rollback must retain those UUIDs.
++An isolated PostgreSQL transaction verified this ordering with an existing version,
++the complete candidate DDL, a new default registration and forced constraint checks.
++It observed two distinct families and rolled the entire prototype back successfully.
++
+ History resolves an exact anchor, uses the existing retained catalogue and lineage
+ checks, and orders by PostgreSQL [row comparison](https://www.postgresql.org/docs/18/functions-comparisons.html#ROW-WISE-COMPARISON)
+ on `(created_at,id)` descending. Fetch at most `limit+1` entries and validate the
+diff --git a/services/control/internal/modules/models/family.go b/services/control/internal/modules/models/family.go
+index 1748acd5..facfc621 100644
+--- a/services/control/internal/modules/models/family.go
++++ b/services/control/internal/modules/models/family.go
+@@ -92,6 +92,13 @@ func (s *Service) StageVersionFamilyWithin(ctx context.Context, q transaction.Ex
+ 	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+ 		`SELECT family_id::text,anchor_version_id::text FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND version_id=$3`, w.TenantID, w.ID, version)).Scan(&previous, &previousAnchor)
+ 	if err == nil {
++		established, checkError := versionFamilyWithin(ctx, q, w.TenantID, w.ID, version)
++		if checkError != nil {
++			return "", checkError
++		}
++		if previous != established {
++			return "", fail("MODEL_FAMILY_INVALID")
++		}
+ 		matches := anchor == "" && previousAnchor == nil || previousAnchor != nil && *previousAnchor == anchor && previous == family
+ 		if !matches {
+ 			return "", fail("MODEL_FAMILY_CONFLICT")
+@@ -112,14 +119,14 @@ func (s *Service) StageVersionFamilyWithin(ctx context.Context, q transaction.Ex
+ 		`INSERT INTO model_family_members(version_id,tenant_id,workspace_id,family_id,anchor_version_id) VALUES($1,$2,$3,$4,NULLIF($5,'')::uuid)`, version, w.TenantID, w.ID, family, anchor)); err != nil {
+ 		return "", modelReadError(err)
+ 	}
+-	err = workerFamilyAudit(ctx, q, a, w.TenantID, w.ID, version, reason, request)
++	err = auditFamilySelection(ctx, q, a, w.TenantID, w.ID, version, reason, request)
+ 	if err != nil {
+ 		return "", modelReadError(err)
+ 	}
+ 	return family, nil
+ }
+ 
+-func workerFamilyAudit(ctx context.Context, q transaction.Executor, a identity.Auth, tenant, workspace, version, reason, request string) error {
++func auditFamilySelection(ctx context.Context, q transaction.Executor, a identity.Auth, tenant, workspace, version, reason, request string) error {
+ 	_, err := modelExecOne(ctx, q, transaction.SQL(transaction.PostgreSQL, `
+ INSERT INTO audit_events(id,occurred_at,actor_user_id,tenant_id,workspace_id,audience,action,outcome,target_type,target_id,reason,request_id)
+ VALUES($1,clock_timestamp(),$2,$3,$4,'admin','model.version_family_selected','success','model_version',$5,$6,$7)`,
+diff --git a/services/control/internal/modules/models/family_repository_integration_test.go b/services/control/internal/modules/models/family_repository_integration_test.go
+index d19df484..e4b41152 100644
+--- a/services/control/internal/modules/models/family_repository_integration_test.go
++++ b/services/control/internal/modules/models/family_repository_integration_test.go
+@@ -21,6 +21,7 @@ import (
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
+ 	"github.com/google/uuid"
+ 	"github.com/jackc/pgx/v5"
+ )
+@@ -114,6 +115,18 @@ func familyDenied(t *testing.T, x modelReadFixture, a identity.Auth, workspace,
+ }
+ 
+ func TestActualModelFamilyCandidateBackfillAndLifecycle(t *testing.T) {
++	t.Run("empty_candidate_rollback", func(t *testing.T) {
++		ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
++		defer cancel()
++		x := modelReadFixture{f: repositoryfixture.New(t), ctx: ctx}
++		familyInstall(t, x)
++		if err := x.f.Store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
++			_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateDown))
++			return err
++		}); err != nil {
++			t.Fatal("empty candidate downgrade", err)
++		}
++	})
+ 	x := modelReadSetup(t)
+ 	old := uuid.NewString()
+ 	if err := familyInsert(x.ctx, x.f.Store, x, old, "deleted", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
+@@ -153,20 +166,20 @@ func TestActualModelFamilyCandidateBackfillAndLifecycle(t *testing.T) {
+ 	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+ 		_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateDown))
+ 		return err
+-	}); err != nil {
+-		t.Fatal("candidate rollback DDL", err)
++	}); err == nil {
++		t.Fatal("adopted family identities were removable")
+ 	}
+ 	var retained string
+ 	if err := x.f.Store.QueryRow(x.ctx, transaction.SQL(transaction.PostgreSQL, `SELECT model_id::text FROM deployments WHERE id=$1`, dep)).Scan(&retained); err != nil || retained != x.model {
+ 		t.Fatal("deployment reference changed", err)
+ 	}
+ 	if value, err := x.s.Get(x.ctx, x.admin, x.f.Workspace, newID); err != nil || value.ID != newID {
+-		t.Fatal("legacy read after DDL removal", err)
++		t.Fatal("legacy read alongside retained family identities", err)
+ 	}
+ }
+ 
+ func TestActualModelFamilyHistoryPagesAndAuthority(t *testing.T) {
+-	for _, name := range []string{"pages_filters_and_exact_ids", "invalid_inputs", "revoked_session", "disabled_user", "demoted_admin", "disabled_workspace", "foreign_scope", "unknown_outcome", "damaged_page"} {
++	for _, name := range []string{"pages_filters_and_exact_ids", "invalid_inputs", "revoked_session", "disabled_user", "demoted_admin", "changed_epoch", "disabled_workspace", "foreign_scope", "unknown_outcome", "damaged_page"} {
+ 		t.Run(name, func(t *testing.T) {
+ 			x := familySetup(t)
+ 			ids := []string{uuid.NewString(), uuid.NewString(), uuid.NewString()}
+@@ -264,6 +277,9 @@ func TestActualModelFamilyHistoryPagesAndAuthority(t *testing.T) {
+ 			case "demoted_admin":
+ 				x.exec(t, `UPDATE users SET is_platform_admin=false WHERE id=$1`, "", x.f.User)
+ 				familyDenied(t, x, x.admin, x.f.Workspace, x.model, query, "AUTH_SESSION_EXPIRED")
++			case "changed_epoch":
++				x.exec(t, `UPDATE users SET auth_epoch=auth_epoch+1 WHERE id=$1`, "", x.f.User)
++				familyDenied(t, x, x.admin, x.f.Workspace, x.model, query, "AUTH_SESSION_EXPIRED")
+ 			case "disabled_workspace":
+ 				x.exec(t, `UPDATE workspaces SET status='disabled' WHERE id=$1`, "", x.f.Workspace)
+ 				familyDenied(t, x, x.admin, x.f.Workspace, x.model, query, "ACCESS_DENIED")
+@@ -298,7 +314,7 @@ func TestActualModelFamilyHistoryPagesAndAuthority(t *testing.T) {
+ }
+ 
+ func TestActualModelFamilySelectionTransactions(t *testing.T) {
+-	for _, name := range []string{"rollback", "orphan", "audit_rollback", "immutable", "matching_concurrency", "conflicting_concurrency"} {
++	for _, name := range []string{"rollback", "default_rollback", "orphan", "audit_rollback", "immutable", "matching_concurrency", "conflicting_concurrency"} {
+ 		t.Run(name, func(t *testing.T) {
+ 			x := familySetup(t)
+ 			id := uuid.NewString()
+@@ -310,6 +326,17 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
+ 				if !errors.Is(err, fault) || family != "" || familyCount(t, x, "model_family_members") != 1 || x.audits(t) != before {
+ 					t.Fatal("publication rollback", err)
+ 				}
++			case "default_rollback":
++				fault := errors.New("synthetic default publication rollback")
++				err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
++					if err := familyInsert(ctx, q, x, id, "deleted", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
++						return err
++					}
++					return fault
++				})
++				if !errors.Is(err, fault) || familyCount(t, x, "model_families") != 1 || familyCount(t, x, "model_family_members") != 1 {
++					t.Fatal("default publication rollback", err)
++				}
+ 			case "orphan":
+ 				err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+ 					_, err := x.s.StageVersionFamilyWithin(ctx, q, x.admin, x.f.Workspace, id, "", "Synthetic orphan", uuid.NewString())
+diff --git a/services/control/internal/modules/models/history.go b/services/control/internal/modules/models/history.go
+index faa366b4..904f3da9 100644
+--- a/services/control/internal/modules/models/history.go
++++ b/services/control/internal/modules/models/history.go
+@@ -8,6 +8,7 @@ import (
+ 
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations/snapshot"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+ )
+ 
+@@ -131,6 +132,34 @@ func (s *Service) retainedVersionWithin(ctx context.Context, q transaction.Execu
+ 	return out, nil
+ }
+ 
++type historyAnchor struct {
++	workspace workspaces.Workspace
++	version   Version
++	family    string
++}
++
++func (s *Service) historyAnchorWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace, anchor string) (historyAnchor, error) {
++	w, err := s.modelScope(ctx, q, a, workspace)
++	if err != nil {
++		return historyAnchor{}, err
++	}
++	if w.Status != "active" {
++		return historyAnchor{}, fail("ACCESS_DENIED")
++	}
++	if err = historyAvailable(ctx, q); err != nil {
++		return historyAnchor{}, err
++	}
++	selected, err := s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, anchor)
++	if err != nil {
++		return historyAnchor{}, err
++	}
++	family, err := versionFamilyWithin(ctx, q, w.TenantID, w.ID, anchor)
++	if err != nil {
++		return historyAnchor{}, err
++	}
++	return historyAnchor{workspace: w, version: selected, family: family}, nil
++}
++
+ // History resolves the family from an exact anchor under current Admin authority.
+ // It returns a keyset page without scanning physical files or granting execution.
+ func (s *Service) History(ctx context.Context, a identity.Auth, workspace, anchor string, input HistoryQuery) (VersionHistory, error) {
+@@ -142,23 +171,11 @@ func (s *Service) History(ctx context.Context, a identity.Auth, workspace, ancho
+ 		return out, fail("RESOURCE_NOT_FOUND")
+ 	}
+ 	err := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
+-		w, err := s.modelScope(ctx, q, a, workspace)
+-		if err != nil {
+-			return err
+-		}
+-		if w.Status != "active" {
+-			return fail("ACCESS_DENIED")
+-		}
+-		if err = historyAvailable(ctx, q); err != nil {
+-			return err
+-		}
+-		if _, err = s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, anchor); err != nil {
+-			return err
+-		}
+-		family, err := versionFamilyWithin(ctx, q, w.TenantID, w.ID, anchor)
++		frame, err := s.historyAnchorWithin(ctx, q, a, workspace, anchor)
+ 		if err != nil {
+ 			return err
+ 		}
++		w, family := frame.workspace, frame.family
+ 		policy := s.VersionHistoryPolicy()
+ 		limit, state := policy.DefaultLimit, ""
+ 		if limit < 1 || limit > policy.MaximumLimit || !historyKeyValid(s.Identity.HMACKey) {
+@@ -248,24 +265,11 @@ func (s *Service) HistoricalVersion(ctx context.Context, a identity.Auth, worksp
+ 		return out, fail("RESOURCE_NOT_FOUND")
+ 	}
+ 	err := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
+-		w, err := s.modelScope(ctx, q, a, workspace)
+-		if err != nil {
+-			return err
+-		}
+-		if w.Status != "active" {
+-			return fail("ACCESS_DENIED")
+-		}
+-		if err = historyAvailable(ctx, q); err != nil {
+-			return err
+-		}
+-		selected, err := s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, anchor)
+-		if err != nil {
+-			return err
+-		}
+-		family, err := versionFamilyWithin(ctx, q, w.TenantID, w.ID, anchor)
++		frame, err := s.historyAnchorWithin(ctx, q, a, workspace, anchor)
+ 		if err != nil {
+ 			return err
+ 		}
++		w, family, selected := frame.workspace, frame.family, frame.version
+ 		if version != anchor {
+ 			selected, err = s.retainedVersionWithin(ctx, q, w.TenantID, w.ID, version)
+ 			if err != nil {
+diff --git a/services/control/internal/modules/models/testdata/model_family_candidate.down.sql b/services/control/internal/modules/models/testdata/model_family_candidate.down.sql
+index b11c9965..f86884c3 100644
+--- a/services/control/internal/modules/models/testdata/model_family_candidate.down.sql
++++ b/services/control/internal/modules/models/testdata/model_family_candidate.down.sql
+@@ -1,4 +1,9 @@
+--- Remove only unregistered family metadata; immutable versions and references stay intact.
++-- Only an empty candidate can be removed without losing established identities.
++DO $$ BEGIN
++ IF EXISTS(SELECT 1 FROM model_families) THEN
++  RAISE EXCEPTION 'MODEL_FAMILY_DOWNGRADE_REQUIRES_RETENTION' USING ERRCODE='0A000';
++ END IF;
++END $$;
+ DROP TRIGGER model_family_version_insert ON model_versions;
+ DROP FUNCTION model_family_before_version();
+ DROP INDEX model_version_history_order_idx;
+diff --git a/services/control/internal/modules/models/testdata/model_family_candidate.up.sql b/services/control/internal/modules/models/testdata/model_family_candidate.up.sql
+index bf4cc620..9b75a7c0 100644
+--- a/services/control/internal/modules/models/testdata/model_family_candidate.up.sql
++++ b/services/control/internal/modules/models/testdata/model_family_candidate.up.sql
+@@ -7,7 +7,7 @@ CREATE TABLE model_families (
+  CHECK (id<>initial_version_id),
+  UNIQUE (tenant_id,workspace_id,id),
+  FOREIGN KEY (tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id),
+- FOREIGN KEY (tenant_id,workspace_id,initial_version_id)
++ CONSTRAINT model_family_initial_version_fk FOREIGN KEY (tenant_id,workspace_id,initial_version_id)
+   REFERENCES model_versions(tenant_id,workspace_id,id) DEFERRABLE INITIALLY DEFERRED
+ );
+ CREATE TABLE model_family_members (
+@@ -18,23 +18,30 @@ CREATE TABLE model_family_members (
+  anchor_version_id uuid,
+  CHECK (anchor_version_id IS NULL OR anchor_version_id<>version_id),
+  UNIQUE (tenant_id,workspace_id,family_id,version_id),
+- FOREIGN KEY (tenant_id,workspace_id,version_id)
++ CONSTRAINT model_family_member_version_fk FOREIGN KEY (tenant_id,workspace_id,version_id)
+   REFERENCES model_versions(tenant_id,workspace_id,id) DEFERRABLE INITIALLY DEFERRED,
+  FOREIGN KEY (tenant_id,workspace_id,family_id) REFERENCES model_families(tenant_id,workspace_id,id),
+- FOREIGN KEY (tenant_id,workspace_id,family_id,anchor_version_id)
++ CONSTRAINT model_family_member_anchor_fk FOREIGN KEY (tenant_id,workspace_id,family_id,anchor_version_id)
+   REFERENCES model_family_members(tenant_id,workspace_id,family_id,version_id) DEFERRABLE INITIALLY DEFERRED
+ );
+ 
++ALTER TABLE model_families ADD CONSTRAINT model_family_initial_member_fk
++ FOREIGN KEY (tenant_id,workspace_id,id,initial_version_id)
++ REFERENCES model_family_members(tenant_id,workspace_id,family_id,version_id) DEFERRABLE INITIALLY DEFERRED;
++ALTER TABLE model_versions ADD CONSTRAINT model_version_family_member_fk
++ FOREIGN KEY (id) REFERENCES model_family_members(version_id) DEFERRABLE INITIALLY DEFERRED NOT VALID;
++
+ -- No established grouping exists in the predecessor. Persist one mapping per ID.
+ INSERT INTO model_families(id,tenant_id,workspace_id,initial_version_id)
+  SELECT gen_random_uuid(),tenant_id,workspace_id,id FROM model_versions;
+ INSERT INTO model_family_members(version_id,tenant_id,workspace_id,family_id)
+  SELECT initial_version_id,tenant_id,workspace_id,id FROM model_families;
+-ALTER TABLE model_families ADD CONSTRAINT model_family_initial_member_fk
+- FOREIGN KEY (tenant_id,workspace_id,id,initial_version_id)
+- REFERENCES model_family_members(tenant_id,workspace_id,family_id,version_id) DEFERRABLE INITIALLY DEFERRED;
+-ALTER TABLE model_versions ADD CONSTRAINT model_version_family_member_fk
+- FOREIGN KEY (id) REFERENCES model_family_members(version_id) DEFERRABLE INITIALLY DEFERRED;
++-- Finish only this domain's pending checks before further catalog alterations.
++SET CONSTRAINTS model_family_initial_version_fk,model_family_member_version_fk,
++ model_family_member_anchor_fk,model_family_initial_member_fk,model_version_family_member_fk IMMEDIATE;
++ALTER TABLE model_versions VALIDATE CONSTRAINT model_version_family_member_fk;
++SET CONSTRAINTS model_family_initial_version_fk,model_family_member_version_fk,
++ model_family_member_anchor_fk,model_family_initial_member_fk,model_version_family_member_fk DEFERRED;
+ 
+ CREATE INDEX model_family_scope_idx ON model_family_members(tenant_id,workspace_id,family_id,version_id);
+ CREATE INDEX model_version_history_order_idx ON model_versions(tenant_id,workspace_id,created_at DESC,id DESC);

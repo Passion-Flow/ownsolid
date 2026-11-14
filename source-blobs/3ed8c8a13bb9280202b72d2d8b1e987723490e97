@@ -1,0 +1,6 @@
+{
+  "observed_at": "2026-11-12T13:17:09.674662+00:00",
+  "owned_socket_removed": false,
+  "owned_socket_absent": true,
+  "boundary": "Only the DEL-created dead pathname socket; original relay and outer confirmed absent"
+}

@@ -1,0 +1,18 @@
+# Merge into the complete protected workflow/knowledge configuration.
+# This fail-closed example needs an explicitly reviewed manufacturer public key.
+# There is no default trusted key or customer-runtime signing private key.
+plugins:
+  enabled: true
+  trusted_keys: []
+runtime:
+  plugins:
+    capsule_bytes: 65536
+    manifest_bytes: 4096
+    result_bytes: 32768
+    maximum_models: 10
+    maximum_versions: 10
+    maximum_grants: 50
+    maximum_references: 200
+    commit_seconds: 10
+    maintenance_batch: 25
+    maintenance_seconds: 45

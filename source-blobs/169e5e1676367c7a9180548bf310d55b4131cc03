@@ -1,0 +1,104 @@
+package http_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+	transport "github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/http"
+	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/httpfixture"
+	fixture "github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
+	"github.com/google/uuid"
+)
+
+func TestLaneRelKubernetesEnrollmentContract(t *testing.T) {
+	service := fixture.New(t)
+	var handler http.Handler
+	var unicast atomic.Bool
+	server := httpfixture.NewTLSServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/agent/v1/enroll" && unicast.Load() {
+			r.RemoteAddr = "192.0.2.20:40000"
+		}
+		handler.ServeHTTP(w, r)
+	}))
+	defer server.Close()
+	password := fixture.Bootstrap(t, service)
+	session := fixture.Login(t, service, "admin@example.invalid", password, "admin")
+	dispatch := transport.New(service)
+	if err := dispatch.LicenseInitializationError(); err != nil {
+		t.Fatal(err)
+	}
+	if err := dispatch.Licensing.Service.VerifyStored(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	handler = dispatch
+	schemas := httpfixture.Schemas(t, "../../../../../../api/openapi/v1/nodes/openapi.json")
+	admin := httpfixture.New(t, server, "admin", schemas)
+	admin.Write("POST", "/api/v1/auth/login", map[string]any{"email": "admin@example.invalid", "password": password}, 200, "")
+	tokenPath := "/api/v1/admin/node-join-tokens"
+	admin.Headers = map[string]string{"Idempotency-Key": uuid.NewString()}
+	mint := map[string]any{"workspace_id": session.Me.Workspace.ID, "node_name": "Contract fixture",
+		"execution_profile": wire.KubernetesNodeProfile}
+	if err := schemas["CreateJoinToken"].Validate(mint); err != nil {
+		t.Fatal("mint schema rejected supported profile", err)
+	}
+	token := admin.Write("POST", tokenPath, mint, 201, "MintedTokenResponse")
+	admin.Headers = nil
+	if token["execution_profile"] != wire.KubernetesNodeProfile {
+		t.Fatal("the minted token did not retain its profile")
+	}
+	input := wire.Enrollment{JoinToken: token["token"].(string), Handshake: wire.Handshake{
+		ProtocolVersion: wire.KubernetesVersion, ExecutionProfile: wire.KubernetesNodeProfile,
+		Capabilities: wire.Capabilities(wire.KubernetesNodeProfile),
+		Facts: wire.Facts{OSID: "ubuntu", OSVersion: "24.04", Architecture: "amd64", Hostname: "contract",
+			LogicalCPUs: 8, MemoryTotalBytes: 16 << 30, DiskPath: "/", DiskTotalBytes: 200 << 30,
+			DiskAvailableBytes: 150 << 30, ObservedAt: time.Now().UTC(), AgentVersion: wire.AgentVersion},
+	}}
+	body, err := json.Marshal(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var value map[string]any
+	if err = json.Unmarshal(body, &value); err != nil {
+		t.Fatal(err)
+	}
+	if err = schemas["Enrollment"].Validate(value); err != nil {
+		t.Fatal("enrollment schema rejected supported profile")
+	}
+	enroll := func(want int) map[string]any {
+		t.Helper()
+		response, err := server.Client().Post(httpfixture.AdminOrigin+"/agent/v1/enroll", "application/json", bytes.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer response.Body.Close()
+		var data map[string]any
+		if err = json.NewDecoder(response.Body).Decode(&data); err != nil {
+			t.Fatal(err)
+		}
+		if response.StatusCode != want {
+			t.Fatalf("enroll HTTP %d, want %d, code %v", response.StatusCode, want, data["code"])
+		}
+		return data
+	}
+	if rejected := enroll(409); rejected["code"] != "KUBERNETES_NODE_ADDRESS_INVALID" {
+		t.Fatal("invalid peer did not receive address error")
+	}
+	unicast.Store(true)
+	accepted := enroll(201)
+	if err := schemas["EnrolledResponse"].Validate(accepted); err != nil {
+		t.Fatal("the enrollment response violates the OpenAPI contract")
+	}
+	registered := accepted["data"].(map[string]any)
+	node := admin.Call("GET", "/api/v1/admin/nodes/"+registered["node_id"].(string), nil, 200, "NodeResponse")
+	page := admin.Call("GET", tokenPath, nil, 200, "JoinTokenListResponse")
+	list := page["items"].([]any)
+	if node["execution_profile"] != wire.KubernetesNodeProfile || len(list) != 1 ||
+		list[0].(map[string]any)["execution_profile"] != wire.KubernetesNodeProfile {
+		t.Fatal("the persisted node or token lost the registered profile")
+	}
+}

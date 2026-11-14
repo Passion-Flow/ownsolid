@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+run=$1
+exec 9>/run/lock/ownsolid-heavy.lock
+flock -n 9 || { echo SHARED_HEAVY_LOCK_BUSY; exit 75; }
+exec 8>/root/lane-sci-tools/heavy-test.lock
+flock -n 8 || { echo SCI_REPLAY_LOCK_BUSY; exit 75; }
+df -h / /dev/shm
+free -m
+cat /proc/pressure/io
+ss -lntp
+test "$(df -Pk / | awk 'NR==2 {print $4}')" -ge 31457280
+test "$(awk '/MemFree:/ {print $2}' /proc/meminfo)" -ge 2097152
+test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 8388608
+awk '/^full / {split($2,a,"="); if(a[2]>5) exit 1}' /proc/pressure/io
+cd /root/lane-gw
+git rev-parse HEAD origin/main > "$run/test-commits"
+sha256sum services/control/internal/modules/distribution/alias_description.go services/control/internal/modules/distribution/alias_description_test.go services/control/internal/modules/distribution/alias_description_migration_test.go services/control/internal/modules/distribution/testdata/alias_description_candidate.up.sql services/control/internal/modules/distribution/testdata/alias_description_candidate.down.sql > "$run/source-manifest.sha256"
+nice -n 10 ionice -c 3 bash /root/lane-gw-acceptance/gw107.ri6nhx80/run-pg.sh "$run" gw120-schema58 '^TestAliasDescription(PostgreSQLUpgradeAndHTTPS|InstalledSchemaAndHTTPS|RollbackPreservesRetainedState|RollbackWaitsForCommittedWriter)$' > "$run/pg.log" 2>&1
+awk '/^=== RUN|^--- PASS|^--- FAIL|^--- SKIP|^PASS$|^FAIL$|stage-exit|alias_description.*test.go/' "$run/pg.log"

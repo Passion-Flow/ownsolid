@@ -1,0 +1,139 @@
+{
+  "parent_pid": 3053332,
+  "started_utc": "2026-11-12T23:36:09.888080+00:00",
+  "platform": "linux/amd64",
+  "admitted": true,
+  "groups": [
+    {
+      "name": "audit-wire",
+      "source": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+      "platform": "linux/amd64",
+      "fixture_sha256": "6aace94f201533adf7a79cb8115ed5bf1f30052b260d99910fb0fa3fd7fa7821",
+      "cwd": "/root/lane-rel-tools/identity-audit-contract/sdk/gen/go",
+      "command": [
+        "/usr/bin/unshare",
+        "--net",
+        "/bin/bash",
+        "--noprofile",
+        "--norc",
+        "-euc",
+        "/usr/sbin/ip link set lo up\nexec /root/lane-rel-tools/go/bin/go test -json -race -count=1 -p=2 -mod=readonly -timeout=90s /root/lane-rel-identity-audit-contract/tools/codegen/sdk/tests/audit_read_wire_test.go"
+      ],
+      "started_utc": "2026-11-12T23:36:10.511482+00:00",
+      "inherited_fds": [
+        3,
+        4
+      ],
+      "run": true,
+      "passed": true,
+      "pid": 3053350,
+      "pgid": 3053350,
+      "exit": 0,
+      "actual_roots": [
+        "TestAuditRead409DoesNotRetry",
+        "TestAuditReadDoesNotReplayALostReplyOnASharedClient",
+        "TestAuditReadExplicitRetryIsANewRequest",
+        "TestAuditReadPreservesClientTimeout",
+        "TestAuditReadPreservesTLSAndCookies",
+        "TestAuditReadRefusesRedirects",
+        "TestAuditReadRejectsUninspectableExecutorsBeforeDispatch",
+        "TestConcurrentAuditReadsRemainOneRequestEach",
+        "TestOtherIdentityCallsRetainTheConfiguredExecutor",
+        "TestStandardSharedGETCanReplayALostReply"
+      ],
+      "passed_roots": [
+        "TestAuditRead409DoesNotRetry",
+        "TestAuditReadDoesNotReplayALostReplyOnASharedClient",
+        "TestAuditReadExplicitRetryIsANewRequest",
+        "TestAuditReadPreservesClientTimeout",
+        "TestAuditReadPreservesTLSAndCookies",
+        "TestAuditReadRefusesRedirects",
+        "TestAuditReadRejectsUninspectableExecutorsBeforeDispatch",
+        "TestConcurrentAuditReadsRemainOneRequestEach",
+        "TestOtherIdentityCallsRetainTheConfiguredExecutor",
+        "TestStandardSharedGETCanReplayALostReply"
+      ],
+      "passed_subtests": [
+        "TestAuditRead409DoesNotRetry/assistant",
+        "TestAuditRead409DoesNotRetry/standard",
+        "TestAuditReadDoesNotReplayALostReplyOnASharedClient/consecutive_replies_lost",
+        "TestAuditReadDoesNotReplayALostReplyOnASharedClient/reply_lost_once",
+        "TestAuditReadPreservesClientTimeout/caller_cancellation",
+        "TestAuditReadPreservesClientTimeout/client_timeout"
+      ],
+      "skipped": [],
+      "log": "/root/lane-rel-tools/identity-audit-contract/go-wire-native-linux.log",
+      "log_sha256": "f391f6191c1293348969b862e005b7126f4245a300000d978276ef027e985d15",
+      "ended_utc": "2026-11-12T23:36:59.704270+00:00"
+    }
+  ],
+  "carriers": [
+    {
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "fd": 3,
+      "device": 29,
+      "inode": 82,
+      "uid": 0,
+      "acquired": true,
+      "acquired_utc": "2026-11-12T23:36:09.888556+00:00",
+      "fd_closed": true,
+      "closed_utc": "2026-11-12T23:36:59.705107+00:00",
+      "carrier_preserved": true
+    },
+    {
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "fd": 4,
+      "device": 64512,
+      "inode": 7508772,
+      "uid": 0,
+      "acquired": true,
+      "acquired_utc": "2026-11-12T23:36:09.888591+00:00",
+      "fd_closed": true,
+      "closed_utc": "2026-11-12T23:36:59.705078+00:00",
+      "carrier_preserved": true
+    }
+  ],
+  "global_wait_seconds_limit": 60,
+  "total_seconds_limit": 300,
+  "mac_wait_outcome_reused": false,
+  "installed_or_repository_qualification": false,
+  "legacy_entry_preserved": "/root/lane-rel-tools/identity-audit-contract/run_go_wire.py",
+  "legacy_third_carrier": "/root/lane-rel-tools/heavy-test.lock",
+  "legacy_third_reason": "Former lane-local heavy-job serialization, not a distinct physical/service resource; current host dual lock replaces that protocol.",
+  "resources": [
+    {
+      "phase": "before_locks",
+      "memfree_mib": 16525,
+      "memavailable_mib": 21875,
+      "disk_free_bytes": 793085456384,
+      "io_full_avg10": 0.85
+    },
+    {
+      "phase": "after_dual_lock",
+      "memfree_mib": 16525,
+      "memavailable_mib": 21875,
+      "disk_free_bytes": 793085456384,
+      "io_full_avg10": 0.85
+    },
+    {
+      "phase": "before_audit-wire",
+      "memfree_mib": 16499,
+      "memavailable_mib": 21849,
+      "disk_free_bytes": 793085452288,
+      "io_full_avg10": 0.85
+    },
+    {
+      "phase": "before_history-codec",
+      "memfree_mib": 16256,
+      "memavailable_mib": 21780,
+      "disk_free_bytes": 793074003968,
+      "io_full_avg10": 27.29
+    }
+  ],
+  "failure": "RuntimeError: Strict native resource profile refused",
+  "owned_temp_removed": true,
+  "exit": 1,
+  "passed": false,
+  "elapsed_seconds": 49.817,
+  "ended_utc": "2026-11-12T23:36:59.705127+00:00"
+}

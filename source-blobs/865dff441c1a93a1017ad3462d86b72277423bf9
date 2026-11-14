@@ -1,0 +1,6 @@
+{
+  "href": "https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl#sha256=5a6363570c753812540a05eb82380e329469cbe668643e88111414c12627711f",
+  "data-dist-info-metadata": "sha256=a3fd232f82dcc389c6dab2665dfc17649c03ffb72cb641e96a76a0690177b918",
+  "data-core-metadata": "sha256=a3fd232f82dcc389c6dab2665dfc17649c03ffb72cb641e96a76a0690177b918",
+  "data-upload-time": "2026-09-30T19:47:44Z"
+}

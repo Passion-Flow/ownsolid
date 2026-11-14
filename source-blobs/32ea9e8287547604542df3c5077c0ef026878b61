@@ -1,0 +1,294 @@
+{
+  "active_stage": "fixture",
+  "admitted": true,
+  "all_source_paths_and_migration_inputs_verified": true,
+  "cleanup_reserve_seconds": 120,
+  "cleanup_seconds": 1.7047866620123386,
+  "container_absent": true,
+  "container_id": "d99b551b50db944643be2f1b68b407cd334fd819bf21ae00b3eb1d2f94afb262",
+  "credential_paths_absent": true,
+  "decoded_frame": {
+    "bytes": 50145280,
+    "sha256": "d377f3c233893ec451448f4b26a3505dbeec1c8fe473aea209745a435f8e88c6"
+  },
+  "elapsed_seconds": 14.698804819956422,
+  "error": "[Errno 111] Connection refused",
+  "error_type": "ConnectionRefusedError",
+  "first_failure_stage": "fixture",
+  "fixture_uuid": "1012929a-86ef-4526-a957-ca32406cd3b9",
+  "go_compilers_started": 0,
+  "image": {
+    "architecture": "amd64",
+    "id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "os": "linux",
+    "volume_target": "/var/lib/postgresql"
+  },
+  "lock_fd_closure": [
+    {
+      "closed": true,
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    },
+    {
+      "closed": true,
+      "path": "/run/lock/ownsolid-heavy.lock"
+    }
+  ],
+  "lock_identities_retained": true,
+  "lock_nb_attempts": [
+    {
+      "identity": {
+        "dev": 29,
+        "ino": 82,
+        "mode": 420,
+        "nlink": 1,
+        "regular": true,
+        "size": 0,
+        "uid": 0
+      },
+      "path": "/run/lock/ownsolid-heavy.lock"
+    },
+    {
+      "identity": {
+        "dev": 64512,
+        "ino": 7508772,
+        "mode": 420,
+        "nlink": 1,
+        "regular": true,
+        "size": 0,
+        "uid": 0
+      },
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    }
+  ],
+  "loopback_port": 45001,
+  "metadata": [],
+  "native_binaries_locally_verified_not_executed": {
+    "database-linux-amd64.test": "2bc2623083210a5265dd215647f4762a9959ada8a3d1be13f102820e05da0124",
+    "databaseaccess-linux-amd64.test": "293ab7afe7db552a9c450634394a013fc5bbc856ff19915c199a12707b3a7be5",
+    "models-linux-amd64.test": "6ff49492f7a535dd1a1d67880aa3d6b330ac9538eb6a2376456ba4d90dc80947"
+  },
+  "network_absent": true,
+  "network_created": "arc111-formal61-1012929a86ef4526a957ca32406cd3b9",
+  "payload_receive": {
+    "elapsed_seconds": 5.825986198033206,
+    "eof_observed": true,
+    "expected_bytes": 5952828,
+    "expected_sha256": "2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773",
+    "received_bytes": 5952828,
+    "received_sha256": "2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773"
+  },
+  "preflight": {
+    "disk_free_bytes": 788843974656,
+    "foreign_heavy": [],
+    "full_io_psi_avg10": 0.0,
+    "memory_bytes": {
+      "MemAvailable": 20768088064,
+      "MemFree": 3084759040
+    }
+  },
+  "remaining_owned_groups": [],
+  "remote_budget_seconds": 1000,
+  "remote_root": "/root/lane-arc111-formal61-e1.7bcpj0qt",
+  "runner_pid": 558642,
+  "runtime_profiles_executed": [],
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "source_reconstruction": {
+    "canonical_mode_counts": {
+      "0o644": 5090,
+      "0o755": 12
+    },
+    "elapsed_seconds": 2.3183046500198543,
+    "every_byte_mode_type_uid_nlink_and_git_blob_verified": true,
+    "old_cache_dependency": false,
+    "original_gzip_transferred": false,
+    "source_tar_bytes": 46325760,
+    "source_tar_sha256": "ac3c3fefbee06749bf75ba00187dfd49e631b6bf73cd5f3d8cab5794b56c9e44",
+    "target_bytes": 42132271,
+    "target_input_map_bytes": 1693530,
+    "target_input_map_sha256": "ecb971a94663dccb5672d174e6ce202bae797946b9a141f595d99e4710986b63",
+    "target_paths": 5102
+  },
+  "stages": [
+    {
+      "elapsed_seconds": 0.08863237092737108,
+      "exit": 0,
+      "name": "image-inspect",
+      "pid": 558644,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "b7801d4afafa4ae1450ae7b260bdb4bff3b0f67ff121ae8e9fbbd1f4aa109dd0"
+    },
+    {
+      "elapsed_seconds": 0.026407837052829564,
+      "exit": 1,
+      "name": "volume-precreate-inspect",
+      "pid": 558784,
+      "stderr_sha256": "a2a06da258b3e8915fb5be3bbc9b8fe19021d113910a7977a1817431f1f29721",
+      "stdout_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "elapsed_seconds": 0.06766134197823703,
+      "exit": 0,
+      "name": "network-create",
+      "pid": 558794,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "16d5de90e6e7d3bd7fa1a5a1c1c6a5884314f030636fcb9023685205922d338b"
+    },
+    {
+      "elapsed_seconds": 0.026841752929612994,
+      "exit": 0,
+      "name": "volume-create",
+      "pid": 558837,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "2f2656ab9d4ad74df535ba55f340c4a0a02c8e08bc2b22abd516357122661769"
+    },
+    {
+      "elapsed_seconds": 1.1534132569795474,
+      "exit": 0,
+      "name": "container-create",
+      "pid": 558849,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "01f94d3c9d0258172214b893755d7b27164509f5e05ab0f0182a91d683aec1d8"
+    },
+    {
+      "elapsed_seconds": 0.02928739704657346,
+      "exit": 0,
+      "name": "container-postgres-identity",
+      "pid": 558884,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "6e0f7ea4d69d14de414781a409fa09aaad679480403ad050dabc557ef9fa59bc"
+    },
+    {
+      "elapsed_seconds": 0.196206268039532,
+      "exit": 0,
+      "name": "container-start",
+      "pid": 558895,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "2f2656ab9d4ad74df535ba55f340c4a0a02c8e08bc2b22abd516357122661769"
+    },
+    {
+      "elapsed_seconds": 0.11170145496726036,
+      "exit": 2,
+      "name": "readiness-7",
+      "pid": 559012,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "7c926b87e40b26ec6ffb4c78f403571ac977ece539b51f52b4a58a6943d143ea"
+    },
+    {
+      "elapsed_seconds": 0.11167056893464178,
+      "exit": 2,
+      "name": "readiness-8",
+      "pid": 559079,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "7c926b87e40b26ec6ffb4c78f403571ac977ece539b51f52b4a58a6943d143ea"
+    },
+    {
+      "elapsed_seconds": 0.1136844209395349,
+      "exit": 2,
+      "name": "readiness-9",
+      "pid": 559109,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "7c926b87e40b26ec6ffb4c78f403571ac977ece539b51f52b4a58a6943d143ea"
+    },
+    {
+      "elapsed_seconds": 0.11679411493241787,
+      "exit": 1,
+      "name": "readiness-10",
+      "pid": 559178,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "f18ee442b4cf890ac7577d29803f90a1d9c7e41b2d22bb807c482e8e2ec952a8"
+    },
+    {
+      "elapsed_seconds": 0.14049087394960225,
+      "exit": 0,
+      "name": "readiness-11",
+      "pid": 559242,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "6e168fc3b5a0662104b5e5da92e87b870e8b7c65fec827d267115b5123d18614"
+    },
+    {
+      "elapsed_seconds": 0.022749664029106498,
+      "exit": 0,
+      "name": "container-scope-inspect",
+      "pid": 559273,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "689f9e3febf687ef47a1cf051d327fc182f31ea3ce8bb05b6229072744c0b556"
+    },
+    {
+      "elapsed_seconds": 0.02645734592806548,
+      "exit": 0,
+      "name": "network-scope-inspect",
+      "pid": 559284,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "cdcf95d0a07895895ec1d0cc1db4f468ac3faaa95cd12d60efd8bf2635e5680e"
+    },
+    {
+      "elapsed_seconds": 0.08880408096592873,
+      "exit": 0,
+      "name": "container-routes",
+      "pid": 559295,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "b10dcea7c2f6cac7b7d0a016a3bab65f4cb5081c1ec9b0c332318daab7900591"
+    },
+    {
+      "elapsed_seconds": 0.02471915096975863,
+      "exit": 0,
+      "name": "cleanup-postgres-logs",
+      "pid": 559353,
+      "stderr_sha256": "b684c4013a27eb4d783f8ae646898f58d7caf3121d62a9682683ced5a6297124",
+      "stdout_sha256": "2c99415a9baf2a49b7682846a640728afad0227962387ab71d97ae7ba7018a30"
+    },
+    {
+      "elapsed_seconds": 0.49070243793539703,
+      "exit": 0,
+      "name": "cleanup-container-remove",
+      "pid": 559364,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "01f94d3c9d0258172214b893755d7b27164509f5e05ab0f0182a91d683aec1d8"
+    },
+    {
+      "elapsed_seconds": 0.06384072010405362,
+      "exit": 1,
+      "name": "cleanup-container-absence",
+      "pid": 559433,
+      "stderr_sha256": "035bb98a57df8928706f1440705fa6c71140557a781564f1c6b21c903693c0d4",
+      "stdout_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "elapsed_seconds": 0.056980871013365686,
+      "exit": 0,
+      "name": "cleanup-volume-remove",
+      "pid": 559450,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "2f2656ab9d4ad74df535ba55f340c4a0a02c8e08bc2b22abd516357122661769"
+    },
+    {
+      "elapsed_seconds": 0.022496558958664536,
+      "exit": 1,
+      "name": "cleanup-volume-absence",
+      "pid": 559461,
+      "stderr_sha256": "a2a06da258b3e8915fb5be3bbc9b8fe19021d113910a7977a1817431f1f29721",
+      "stdout_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "elapsed_seconds": 0.12409398797899485,
+      "exit": 0,
+      "name": "cleanup-network-remove",
+      "pid": 559472,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "2f2656ab9d4ad74df535ba55f340c4a0a02c8e08bc2b22abd516357122661769"
+    },
+    {
+      "elapsed_seconds": 0.02299605100415647,
+      "exit": 1,
+      "name": "cleanup-network-absence",
+      "pid": 559508,
+      "stderr_sha256": "1b89c741d734dfd84d1c957455cdb1161190c044ef25c4bb97085cfdb162a828",
+      "stdout_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  ],
+  "state": "FAILED_OR_INCOMPLETE",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "volume_absent": true,
+  "volume_created": "arc111-formal61-1012929a86ef4526a957ca32406cd3b9",
+  "within_remote_budget": true
+}

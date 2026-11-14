@@ -1,0 +1,78 @@
+from pathlib import Path
+
+p=Path("services/control/internal/modules/distribution/cutovers_test.go")
+s=p.read_text()
+start=s.index("func TestActualAliasCutoverPauseDrainSameKeyRetargetRecordedRollbackAndImmutableHistory(")
+end=s.index("func TestActualAliasCutoverRejectsMixedStaleForeignAndRollsBackAudit(",start)
+test=s[start:end]
+
+def edit(old,new):
+    global test
+    assert test.count(old)==1,old
+    test=test.replace(old,new,1)
+
+edit("\tid := a.alias.ID\n\tinput := a.input()", """	id := a.alias.ID
+	type durableCutover struct {
+		state distribution.CutoverState
+		intents, versions, audits int
+	}
+	read := func() durableCutover {
+		t.Helper()
+		var out durableCutover
+		err := c.s.DB.QueryRow(ctx, `SELECT revision,deployment_id::text,deployment_revision,disabled_at IS NOT NULL,
+			(SELECT count(*) FROM model_alias_cutover_intents WHERE alias_id=$1),
+			(SELECT count(*) FROM model_alias_target_versions WHERE alias_id=$1),
+			(SELECT count(*) FROM audit_events WHERE target_id=$1)
+			FROM model_aliases WHERE id=$1`, id).Scan(
+			&out.state.Revision, &out.state.DeploymentID, &out.state.DeploymentRevision, &out.state.Paused,
+			&out.intents, &out.versions, &out.audits,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	applyPreview := func(in distribution.CutoverRequest, key string) (distribution.CutoverResult, error) {
+		t.Helper()
+		before := read()
+		preview, err := c.s.PreviewCutover(ctx, c.a, workspace, id, in)
+		if err != nil {
+			t.Fatal("preview", in.Action, err)
+		}
+		if before != read() || preview.Before != before.state || preview.After.Revision != before.state.Revision+1 {
+			t.Fatal("preview changed durable state or projected the wrong revision", in.Action)
+		}
+		applied, err := c.s.Cutover(ctx, c.a, workspace, id, in, key, uuid.NewString())
+		if err == nil && preview.After != read().state {
+			t.Fatal("preview and committed cutover disagree", in.Action)
+		}
+		return applied, err
+	}
+	input := a.input()""")
+edit("""	key := uuid.NewString()
+	paused, e := c.s.Cutover(ctx, c.a, workspace, id, pause, key, uuid.NewString())
+""","""	key := uuid.NewString()
+	_, e = c.s.PreviewCutover(ctx, a.owner, workspace, id, pause)
+	check(t, e, "ACCESS_DENIED")
+	foreign := setup(t)
+	if foreign.a.Me.Workspace.TenantID == c.a.Me.Workspace.TenantID {
+		t.Fatal("expected a separate tenant")
+	}
+	_, e = foreign.s.PreviewCutover(ctx, foreign.a, workspace, id, pause)
+	check(t, e, "RESOURCE_NOT_FOUND")
+	paused, e := applyPreview(pause, key)
+""")
+edit("""	replay, e := c.s.Cutover(ctx, c.a, workspace, id, pause, key, uuid.NewString())
+""","""	_, e = c.s.PreviewCutover(ctx, c.a, workspace, id, pause)
+	check(t, e, "VERSION_CONFLICT")
+	replay, e := c.s.Cutover(ctx, c.a, workspace, id, pause, key, uuid.NewString())
+""")
+edit("""	resume := distribution.CutoverRequest{Action: "resume", ExpectedRevision: 2, Reason: "Do not clear an unknown physical request by waiting"}
+""","""	resume := distribution.CutoverRequest{Action: "resume", ExpectedRevision: 2, Reason: "Do not clear an unknown physical request by waiting"}
+	_, e = c.s.PreviewCutover(ctx, c.a, workspace, id, resume)
+	check(t, e, "ALIAS_REQUESTS_UNDRAINED")
+""")
+edit("changed, e := c.s.Cutover(ctx, c.a, workspace, id, retarget, uuid.NewString(), uuid.NewString())","changed, e := applyPreview(retarget, uuid.NewString())")
+edit("resumed, e := c.s.Cutover(ctx, c.a, workspace, id, resume, uuid.NewString(), uuid.NewString())","resumed, e := applyPreview(resume, uuid.NewString())")
+edit("rolled, e := c.s.Cutover(ctx, c.a, workspace, id, rollback, uuid.NewString(), uuid.NewString())","rolled, e := applyPreview(rollback, uuid.NewString())")
+p.write_text(s[:start]+test+s[end:])

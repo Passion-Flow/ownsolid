@@ -1,0 +1,32 @@
+set -euo pipefail
+cd ~/lane-rel-usage-cli
+test "$(cat ~/lane-rel-tools/train-gpu-gate.oX33ymCU/exit)" = 0
+test "$(cat ~/lane-rel-tools/train-gpu-delta.Kwf0Vm41/exit)" = 0
+test "$(git rev-parse --short HEAD)" = e324b20e
+git diff --quiet
+git diff --cached --quiet
+git rebase --onto refs/lane-rel/train-gpu-base-latest 57b84c17
+git diff --exit-code e324b20e..HEAD -- api/openapi tools services/agent services/control/internal/modules/training web
+git diff --check refs/lane-rel/train-gpu-base-latest..HEAD
+git update-ref refs/lane-rel/train-gpu-landing HEAD
+git log -3 --oneline
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 900 9
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+    if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+    sleep 4
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+unshare -n sh -ec '
+    ip link set lo up
+    test "$(wc -l < /proc/net/route)" -eq 1
+    make check-layout check-roadmap
+    go -C services/control test ./internal/modules/metering ./internal/modules/scheduling ./internal/modules/scheduling/celladapter
+    go -C services/control build ./...
+'
+git diff --exit-code

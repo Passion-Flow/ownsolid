@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+expected=${1:?exact source required}
+cd /root/lane-trn
+[[ $(git rev-parse HEAD) == "$expected" ]]
+[[ -z $(git status --porcelain) ]]
+export PATH="/root/lane-trn-tools/go/bin:$PATH"
+export GOCACHE=/root/lane-trn-tools/go-cache GOMODCACHE=/root/lane-trn-tools/go-mod
+export GOMAXPROCS=2 GOFLAGS=-p=2 GOPROXY=off
+export PROJECT_ONE_DATA_PYTHON=/usr/bin/python3.12
+export OWNSOLID_TEST_PARQUET_PYTHON=/root/lane-trn-data-decoder.xgweuk5f/venv/bin/python3.12
+export OWNSOLID_DATA_REPLAY_REPOSITORY="$PWD"
+unset OWNSOLID_TEST_DRAFT_RESTORE_PREDECESSOR_SQL PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_NATIVE_POSTGRES_INPUT
+export OWNSOLID_DATA_PG_LOG="/root/lane-trn-dat-schema60-current.pyqqwi5i/postgres.log"
+printf 'dataset_inventory_candidate=%s\n' "$expected"
+exec bash "/root/lane-trn-dat-schema60-current.pyqqwi5i/replay.sh" '^(TestActualDatasetTLSContractsLargeUnicodeRowsCSRFExportAndReadiness|TestSourceImportParquet|TestActualParquetDraftAfterMetadataAndObjectRestore|TestActualCSVDraftFileSnapshotAndRestore|TestActualDatasetFileSnapshotExactReferencesPrivateRestoreAndCorruption)$'

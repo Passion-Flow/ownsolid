@@ -1,0 +1,27 @@
+package main
+
+import "testing"
+
+func TestMissingContinuationDoesNotProveAnEmptyWorkspace(t *testing.T) {
+	f, api := fixture(t)
+	f.set(func() { f.omitCursor = true })
+	if err := phase(t, api, "init"); err != nil {
+		t.Fatal(err)
+	}
+	if err := phase(t, api, "verify"); err == nil {
+		t.Fatal("missing continuation was treated as an empty Workspace")
+	}
+	if f.count("POST "+registryRoot+"/pins") != 0 {
+		t.Fatal("malformed inventory admitted a mutation")
+	}
+	if err := phase(t, api, "logout"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestInvalidUTF8IsRejectedBeforeDecoding(t *testing.T) {
+	raw := []byte{'{', '"', 'x', '"', ':', '"', 0xff, '"', '}'}
+	if rejectDuplicateJSON(raw) == nil {
+		t.Fatal("invalid JSON bytes were repaired")
+	}
+}

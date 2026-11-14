@@ -1,0 +1,62 @@
+# Qualification companion for the immutable public-entry packet
+
+Candidate: 48de6a9ea5c9f8bddbb372df769c2eb30b3defb3.
+Accepted base: 4f76102ca99328e0b9063eb05b0352e62501e154, schema 59 / 119 tables.
+
+The native Linux amd64 Go 1.27.3 compile and three new nonintegration tests
+passed with -race. Evidence:
+  /root/lane-sch-tools/quotastatus-unit.yes3w781
+  source-head, source.diff (empty), platform.log, unit.log, unit.passed.
+
+Explicit top-level PASS results:
+  TestWorkspaceQuotaStatusPreservesQuantitiesAndRejectsInvalidUsage
+  TestWorkspaceQuotaStatusFailurePreservesCommitUncertainty
+  TestQuotaReadRejectsAmbiguousSelectorsAndWrongEntrance
+
+All scheduling test files typechecked under the normal build. This is Linux
+evidence; the Mac runner never acquired the shared lock or extracted source,
+and must not be described as a successful Mac check. Do not rerun those
+unchanged host tests merely to obtain a Mac label.
+
+The first PG runner invocation stopped at its first resource preflight
+(full I/O avg60=5.19%, above 5%). It acquired no test lock and created no
+database fixture or test result. This was not a failing Go/PG test.
+The wrapper now reports resource/lock refusal as exit 75 without weakening
+the thresholds. PG, whole-repository gates, native role/catalog, installed
+public route, UI and end-to-end acceptance remain unqualified.
+
+The original packet bytes/checksums remain unchanged. This companion updates
+only the precise verification status for the same source.
+
+The current local HEAD is 934a2ec5bb922955abf0fcb17d0fcbba172e6f7a.
+It changes only docs/product/status.md to record the above native unit passes.
+A diff against 48de6a9e is empty for services/control, api, pkg and go.work.
+Apply sch108-934a2ec5-status.patch after the packet only to carry that status row.
+
+The pending PG target was narrowed to the six actual PostgreSQL flows because
+the three pure tests already passed on unchanged Go inputs. It retains
+repository_integration, -race, the route-free namespace, source/hash checks
+and the same resource/dual-lock preflight. No host pure tests will be rerun in
+that target. The mandatory Control module gate remains a separate full check.
+
+Native PostgreSQL qualification now passed at 934a2ec5 (same runtime code as
+48de6a9e). Evidence /root/lane-sch-tools/quotastatus.RyDHvIck:
+quotastatus-offline.log and .passed confirm all six selected PostgreSQL flows
+with -race and repository_integration in a route-free network namespace.
+It covers the three authenticated status flows and three affected
+reservation/share/borrowing regressions. The source manifest remained valid.
+The private container, password and DSN were confirmed absent afterward.
+
+make check and make build passed at the same exact 934a2ec5 HEAD; their source
+diff records are empty. The Control module gate has not run yet: its first
+attempt exited 75 at resource preflight (full I/O avg60=13.88%, above 5%).
+There is no failing module test in that attempt and no background retry.
+Native serving-role/catalog and installed IAM/UI/E2E remain open.
+
+The mandatory Control module suite subsequently passed at exact 934a2ec5.
+check.passed, build.passed and modules.passed are PASS, each records that HEAD
+and an empty source diff; the original source-file manifest still verifies.
+All three required gates and the six actual PG flows are green for this
+source. No Mac result, native serving-role/catalog proof or installed
+public/UI/E2E completion is implied. The final status-only follow-up records
+these facts without changing runtime inputs or roadmap boxes.

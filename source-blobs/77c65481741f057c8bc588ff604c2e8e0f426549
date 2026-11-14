@@ -1,0 +1,25 @@
+set -euo pipefail
+source /root/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 CARGO_BUILD_JOBS=1 CARGO_NET_OFFLINE=true
+exec 8>/run/lock/ownsolid-heavy.lock
+flock -w 45 8 || exit 75
+exec 9>/root/lane-sci-tools/heavy-test.lock
+flock -n 9 || exit 75
+exec 7>/root/lane-rel-tools/heavy-test.lock
+flock -n 7 || exit 75
+df -h /
+free -m
+test "$(df -Pm / | awk 'NR==2 {print $4}')" -ge 15360
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+cat /proc/pressure/io
+unshare -n bash -ec '
+ip link set lo up
+test "$(ip -o link show | wc -l)" -eq 1
+test -z "$(ip route show default)"
+test -z "$(ip -6 route show default)"
+/root/lane-rel-tools/obs109-contract.Psjaj7Gp/python/bin/python /root/lane-rel-tools/gw104-contract.qgEXzK0n/generate.py
+for variant in baseline candidate; do
+  GOWORK=off go -C "/root/lane-rel-tools/gw104-contract.qgEXzK0n/$variant/sdk/gen/go" test ./...
+done
+'
+echo PROTOTYPE_GENERATION_PASSED

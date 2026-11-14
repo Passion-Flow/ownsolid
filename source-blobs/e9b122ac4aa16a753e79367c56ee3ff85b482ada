@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# SCI_OLD_ADMISSION_CLOSED_2026_11_13
+printf '%s\n' 'NOTRUN: SCI old admission is closed pending coordinator epoch activation.' >&2
+exit 78
+set -euo pipefail
+umask 077
+scratch="$(cd -- "$(dirname -- "$0")" && pwd)"
+root="$HOME/lane-sci"
+python="$HOME/lane-sci-tools/evaluation/python/bin/python3.12"
+recipe="$root/runtimes/model-lifecycle/tests/testdata/safety-recipe-v1.json"
+version="$scratch/publication/version.json"
+validation="$scratch/publication/validation.jsonl"
+export PYTHONPATH="$root/runtimes/model-lifecycle:$root/runtimes/data-processing:$root/runtimes/training"
+export PYTHONDONTWRITEBYTECODE=1
+(cd "$scratch"; sha256sum -c publication.sha256)
+set -o noclobber
+for index in 1 2; do
+  output="$scratch/run-$index"
+  capture="$output/capture.json"
+  version_sha="$(sha256sum "$version" | cut -d ' ' -f 1)"
+  capture_sha="$(sha256sum "$capture" | cut -d ' ' -f 1)"
+  flags=(--dataset-version "$version" --dataset-version-sha256 "$version_sha" \
+    --validation "$validation" --capture "$capture" --capture-sha256 "$capture_sha" \
+    --model-catalog "$root/api/agent/v1/model-catalog.json" --recipe "$recipe")
+  PYTHONHASHSEED=0 unshare --net "$python" -m projectone_model_lifecycle.evaluation_report "${flags[@]}" > "$output/report.json"
+  PYTHONHASHSEED=937 unshare --net "$python" -m projectone_model_lifecycle.evaluation_report "${flags[@]}" \
+    --check-report "$output/report.json" | cmp "$output/report.json" -
+done
+unshare --net "$python" "$scratch/verify.py" "$scratch" "$recipe" | tee "$scratch/independent.log"

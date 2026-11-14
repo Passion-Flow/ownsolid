@@ -1,0 +1,18 @@
+{
+  "observer_pid": 60734,
+  "script_sha256": "5d7ffd2bbeaae46f8e0c1e3a7e9173f077e2ffc243ef51523ce5c3e1887c4db0",
+  "started_unix": 1794531983.9684422,
+  "wrapper_pid": 60735,
+  "wrapper_exit_code": 75,
+  "wrapper_absent": true,
+  "stdout_sha256": "d54f5dcab80ddcf8bbcd148f7441c2307f2be40be484d34b10ee8b2f32bfe822",
+  "result_path": "/private/tmp/obs110-main-integration-pb1qgf_t/obs110-producer-logic-v4.ow8h3efd/result.json",
+  "result_sha256": "624b5255be4804212613fd5ff4971281ae7d2dbe3e8d7afdeb8f8d5387213e98",
+  "carrier_after": {
+    "device": 16777234,
+    "inode": 50313339,
+    "bytes": 0,
+    "regular": true
+  },
+  "ended_unix": 1794531984.101215
+}

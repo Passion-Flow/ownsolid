@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /root/lane-obs-cardinality
+mode=${1:-unit}
+expected=${2:-3cebfcef9f321364862a11d8b773c714facb6f68}
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+case "$mode" in unit|native) ;; *) exit 2 ;; esac
+receipt=$(mktemp -d /root/lane-obs-tools/obs110-unit-diagnostic.XXXXXX)
+exec > >(tee "$receipt/check.log") 2>&1
+trap 'code=$?; printf "EXIT_CODE=%s\nRECEIPT=%s\n" "$code" "$receipt"' EXIT
+# BEGIN_OBS110_FLOCK_DIAGNOSTICS
+diagnostic_flock() {
+    local label=$1 fd=$2 lock_path=$3 raw_rc executable kind stderr_path
+    stderr_path="$receipt/$label-flock.stderr"
+    executable=$(command -v flock) || executable=
+    kind=$(type -t flock) || kind=
+    if flock -n "$fd" 2>"$stderr_path"; then
+        raw_rc=0
+    else
+        raw_rc=$?
+    fi
+    python3 - "$receipt/$label-flock.json" "$label" "$fd" "$lock_path" "$raw_rc" "$executable" "$kind" "$stderr_path" "$BASHPID" "$expected" <<'PY_FLOCK' || printf 'FLOCK_DIAGNOSTIC_FAILED=%s\n' "$label"
+from pathlib import Path
+import datetime as dt,hashlib,json,os,re,sys,time
+out,label,fd,path,rc,executable,kind,stderr,parent,source=sys.argv[1:]
+fd,parent=int(fd),int(parent)
+began=time.monotonic()
+data={'scope':'OBS110 lock attempt diagnostics only','label':label,'raw_return_code':int(rc),
+      'executable_resolution':executable,'command_kind':kind,'argv':['-n',str(fd)],
+      'lock_path':path,'caller_pid':parent,'source':source,
+      'snapshot_started_at':dt.datetime.now(dt.timezone.utc).isoformat()}
+def identity(s):
+ return {'device':s.st_dev,'major':os.major(s.st_dev),'minor':os.minor(s.st_dev),
+         'inode':s.st_ino,'mode':s.st_mode,'links':s.st_nlink}
+def observe(fn):
+ try:return fn()
+ except (OSError,ValueError) as error:return {'unavailable':type(error).__name__}
+data['inherited_fd_fstat']=observe(lambda:identity(os.fstat(fd)))
+data['caller_fd_stat']=observe(lambda:identity(Path('/proc',str(parent),'fd',str(fd)).stat()))
+data['path_stat']=observe(lambda:identity(Path(path).stat()))
+data['caller_fdinfo']=observe(lambda:Path('/proc',str(parent),'fdinfo',str(fd)).read_text())
+if kind=='file' and executable:
+ data['resolved_executable']=observe(lambda:str(Path(executable).resolve()))
+ data['executable_sha256']=observe(lambda:hashlib.sha256(Path(executable).read_bytes()).hexdigest())
+raw=Path(stderr).read_bytes()
+data['stderr_file']=stderr
+data['stderr_bytes']=len(raw)
+data['stderr_sha256']=hashlib.sha256(raw).hexdigest()
+data['ancestry']=[]
+ancestors=set();pid=parent
+while pid>0 and pid not in ancestors:
+ ancestors.add(pid);p=Path('/proc')/str(pid)
+ try:
+  lines=(p/'status').read_text().splitlines()
+  pp=int(next(line.split()[1] for line in lines if line.startswith('PPid:')))
+  data['ancestry'].append({'pid':pid,'ppid':pp,'comm':(p/'comm').read_text().strip()})
+  pid=pp
+ except (OSError,StopIteration):break
+key=data['caller_fd_stat']
+data['matching_kernel_locks']=[]
+data['matching_live_fds']=[]
+data['scan_incomplete']=False
+data['unreadable_or_vanished_entries']=0
+if 'device' in key:
+ for line in Path('/proc/locks').read_text().splitlines():
+  for token in line.split():
+   m=re.fullmatch(r'([0-9a-fA-F]+):([0-9a-fA-F]+):(\d+)',token)
+   if m and (int(m[1],16),int(m[2],16),int(m[3]))==(key['major'],key['minor'],key['inode']):
+    data['matching_kernel_locks'].append(line)
+ for p in Path('/proc').iterdir():
+  if time.monotonic()-began>2:
+   data['scan_incomplete']=True;break
+  if not p.name.isdecimal():continue
+  try:entries=list((p/'fd').iterdir())
+  except (FileNotFoundError,PermissionError):
+   data['unreadable_or_vanished_entries']+=1;continue
+  for entry in entries:
+   try:
+    s=entry.stat()
+    if (s.st_dev,s.st_ino)!=(key['device'],key['inode']):continue
+    info=(p/'fdinfo'/entry.name).read_text().splitlines()
+    data['matching_live_fds'].append({'pid':int(p.name),'fd':int(entry.name),
+     'comm':(p/'comm').read_text().strip(),'in_caller_ancestry':int(p.name) in ancestors,
+     'lock_lines':[line for line in info if line.startswith('lock:')]})
+   except (FileNotFoundError,ProcessLookupError,PermissionError):
+    data['unreadable_or_vanished_entries']+=1
+data['snapshot_ended_at']=dt.datetime.now(dt.timezone.utc).isoformat()
+Path(out).write_text(json.dumps(data,indent=2)+'\n')
+print('FLOCK_RAW_RETURN_CODE='+str(rc)+' LABEL='+label+' DIAGNOSTIC='+out,flush=True)
+PY_FLOCK
+    return "$raw_rc"
+}
+# END_OBS110_FLOCK_DIAGNOSTICS
+exec 8>/run/lock/ownsolid-heavy.lock
+diagnostic_flock global 8 /run/lock/ownsolid-heavy.lock || { printf "ADMISSION_BLOCKED=global-heavy-lock\n"; exit 75; }
+exec 9>/root/lane-sci-tools/heavy-test.lock
+diagnostic_flock sci 9 /root/lane-sci-tools/heavy-test.lock || { printf "ADMISSION_BLOCKED=sci-heavy-lock\n"; exit 75; }
+df -h /
+free -m
+ss -lntp
+cat /proc/pressure/io
+test "$(df --output=avail -B1 / | tail -1)" -ge 16106127360 || exit 75
+test "$(free -m | awk '$1=="Mem:" {print $4}')" -ge 2048 || exit 75
+python3 - <<'PY_IO'
+from pathlib import Path
+for line in Path('/proc/pressure/io').read_text().splitlines():
+    if float(line.split('avg10=')[1].split()[0]) > 5:
+        raise SystemExit(75)
+PY_IO
+printf 'CANDIDATE_SOURCE_COMMIT=%s\n' "$expected"
+git status --short
+git diff --check
+find services/control/internal/modules/monitoring -type f \( -name '*.go' -o -name 'check-fleet-history.sh' \) -print0 | sort -z | xargs -0 sha256sum > "$receipt/source-inputs.sha256"
+export PATH=/root/lane-obs-tools/go/bin:$PATH
+export GOMAXPROCS=2 GOFLAGS='-p=2 -race' GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local
+if [[ $mode = unit ]]; then
+    unshare --net bash -ec 'ip link set lo up; go -C services/control test -race -p 2 -count=1 ./internal/modules/monitoring/... ./internal/platform/monitoringmetrics'
+else
+    export OWNSOLID_TEST_POSTGRES_IMAGE=sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47
+    export OWNSOLID_TEST_VICTORIA_METRICS=/root/lane-obs-tools/victoria-metrics-prod
+    export OWNSOLID_TEST_VMALERT=/root/lane-obs-tools/vmalert-prod
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh cardinality
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-tls
+    bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-retention
+fi
+sha256sum --check --quiet "$receipt/source-inputs.sha256"
+test "$(git rev-parse HEAD)" = "$expected"
+test -z "$(git status --porcelain)"
+printf 'CANDIDATE_%s_PASSED\n' "$mode"

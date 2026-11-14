@@ -1,0 +1,56 @@
+{
+  "source": "5b73fa05305c2c5d8178a256683ede8b4e9ef99f",
+  "platform": "darwin/arm64",
+  "offline_dependency_resolution": true,
+  "network_namespace_isolation": false,
+  "phases": {
+    "reader-main-modules": {
+      "returncode": 0,
+      "seconds": 9.735,
+      "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/reader-main-modules.log",
+      "sha256": "021c13cc95b9ab704e0e008fa32427e02d0438bd7e546979e11fcb67b017c724",
+      "test_actions": {
+        "pass": 253,
+        "skip": 86,
+        "fail": 0
+      },
+      "packages": {
+        "github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets": "pass",
+        "github.com/Passion-Flow/ownsolid/services/control/internal/modules/training": "pass"
+      }
+    },
+    "reader-main-tag-compile": {
+      "returncode": 0,
+      "seconds": 2.964,
+      "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/reader-main-tag-compile.log",
+      "sha256": "5d1219950ce8590fb05d5454e79cbdcde78bff3294b3fa1ae56d9763d2705a63"
+    },
+    "reader-main-check": {
+      "returncode": 0,
+      "seconds": 32.0,
+      "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/reader-main-check.log",
+      "sha256": "d79d308eff230a74b2648f247388b09632c616cd3ebca638e610d391aa518856"
+    },
+    "reader-main-build": {
+      "returncode": 0,
+      "seconds": 13.235,
+      "log": "/private/tmp/ownsolid-trn-qualification.knvee3h8/reader-main-build.log",
+      "sha256": "4738b2ea3ff95fad0d2d98a470a3f5bc3965748577108329c919269c4dc923f4"
+    }
+  },
+  "memory_pressure_before": "The system has 38654705664 (2359296 pages with a page size of 16384).\nSystem-wide memory free percentage: 78%\n",
+  "metadata_clock_probe": {
+    "hfs_ram": {
+      "ctime_before_ns": 1794527679000000000,
+      "ctime_after_ns": 1794527679000000000,
+      "changed": false,
+      "mtime_restored": true
+    },
+    "apfs": {
+      "ctime_before_ns": 1794527679490008463,
+      "ctime_after_ns": 1794527679505835946,
+      "changed": true,
+      "mtime_restored": true
+    }
+  }
+}

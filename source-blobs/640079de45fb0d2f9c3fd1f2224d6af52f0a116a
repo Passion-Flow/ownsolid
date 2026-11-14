@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+nodes=$1
+rounds=$2
+df -h /
+free -m
+ss -lntp
+test -z "$(ss -Hlnt 'sport = :58428')"
+if (( nodes == 10000 )); then
+  test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048 || { echo "Under 2 GiB free RAM; full scale run postponed."; exit 1; }
+fi
+export obs_tools="$HOME/lane-obs-tools" nodes rounds
+unshare --net bash -eu <<'EOS'
+ip link set lo up
+ip -brief address
+test -z "$(ip route show default)"
+test -z "$(ip -6 route show default)"
+work=$(mktemp -d /tmp/lane-obs-scale.XXXXXX)
+cleanup() {
+  if [[ -n ${pid:-} ]]; then
+    kill -TERM "$pid" 2>/dev/null || true
+    wait "$pid" || true
+  fi
+  if [[ -d "$work/data" ]]; then
+    printf 'VictoriaMetrics data directory allocated bytes after shutdown: '
+    du -s -B 1 "$work/data" | cut -f 1
+  fi
+  tail -8 "$work/store.log"
+  find "$work" -type f -delete
+  find "$work" -depth -type d -empty -delete
+  echo 'VictoriaMetrics stopped'
+}
+trap cleanup EXIT
+GOMAXPROCS=6 "$obs_tools/victoria-metrics-prod" -memory.allowedBytes=8GB -storageDataPath="$work/data" \
+  -httpListenAddr=127.0.0.1:58428 >"$work/store.log" 2>&1 &
+pid=$!
+for _ in $(seq 1 30); do
+  if curl -fsS http://127.0.0.1:58428/health >/dev/null 2>&1; then break; fi
+  sleep 1
+done
+GOMAXPROCS=6 OWNSOLID_SCALE_METRICS_ADDRESS=http://127.0.0.1:58428 \
+  OWNSOLID_SCALE_NODES="$nodes" OWNSOLID_SCALE_ROUNDS="$rounds" "$obs_tools/telemetry-scale-standalone.test" \
+  -test.v -test.run '^TestVictoriaMetricsFleetScale$' -test.timeout 20m
+EOS

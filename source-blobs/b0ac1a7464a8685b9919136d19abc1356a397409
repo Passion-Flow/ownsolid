@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+# Lane B test helper, not product code. person <name> invites a new non-administrator through the
+# real invitation path, reads the mail sink, registers, adds them to the first workspace as a
+# member, creates a workspace they do not belong to, and prints what the live spec needs.
+import base64, email, glob, importlib.util, json, os, re, sys, time, uuid
+spec = importlib.util.spec_from_file_location("fx", "/root/lane-b/gateway-fixture.py"); fx = importlib.util.module_from_spec(spec); spec.loader.exec_module(fx)
+root = fx.root_default
+name = sys.argv[1]
+call = fx.admin(root)
+address = "%s@lane-b.test" % name
+password = "Portal keys %s correct horse" % uuid.uuid4().hex
+ws = fx.served_workspace(call)[0]
+fx.must(call("POST", "/api/v1/admin/invitations", {"email": address, "locale": "en"}), "invite")
+def token():
+    for f in sorted(glob.glob("/root/lane-b/mail-sink/out/*.eml"), reverse=True)[:40]:
+        m = email.message_from_bytes(open(f, "rb").read())
+        if m.get("To", "").strip() != address: continue
+        for part in m.walk():
+            if part.get_content_maintype() != "text": continue
+            found = re.search(r"/register#token=([\w-]{43})(?![\w-])", part.get_payload(decode=True).decode("utf8", "replace"))
+            if found: return found.group(1)
+    return None
+tok = fx.wait("the invitation mail", token, 150)
+# Registration belongs to the portal entrance; the admin address answers 404.
+admin_base, fx.base = fx.base, "https://portal.lane-b.test:18443"
+op = fx.opener(root)
+csrf = fx.request(op, "GET", "/api/v1/auth/csrf")[1]["data"]["token"]
+fx.must(fx.request(op, "POST", "/api/v1/auth/register", {"token": tok, "display_name": name, "password": password}, {"Origin": fx.base, "X-CSRF-Token": csrf}), "register")
+fx.base = admin_base
+# Registration normally adds the person to the default workspace already.
+status, body = call("POST", "/api/v1/admin/workspaces/%s/members" % ws, {"email": address, "role": "member"})
+if status >= 300 and body.get("code") != "MEMBERSHIP_EXISTS": sys.exit("add member: %s %s" % (status, body.get("code")))
+other = fx.must(call("POST", "/api/v1/admin/workspaces", {"name": "Other " + name, "owner_user_id": fx.must(call("GET", "/api/v1/me"), "me")["user"]["id"]}), "other workspace")
+print(json.dumps({"email": address, "password": password, "workspace": ws, "other_workspace": other["id"]}))

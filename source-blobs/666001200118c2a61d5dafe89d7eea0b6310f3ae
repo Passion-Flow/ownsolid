@@ -1,0 +1,60 @@
+{
+  "attempt_id": "86c2fabb-9d59-48a4-973c-aacd224a05ca",
+  "configuration": {
+    "alpha": 16,
+    "batch_size": 1,
+    "checkpoint_steps": 1,
+    "device": "cpu_verification",
+    "dropout": "0",
+    "gradient_accumulation_steps": 1,
+    "learning_rate": "0.0005",
+    "maximum_steps": 2,
+    "maximum_tokens": 96,
+    "rank": 8,
+    "seed": 42,
+    "threads": 2
+  },
+  "data_limits": {
+    "maximum_bytes": 1048576,
+    "maximum_errors": 10,
+    "maximum_line_bytes": 65536,
+    "maximum_rows": 100,
+    "maximum_source_bytes": 512,
+    "maximum_text_bytes": 16384
+  },
+  "dataset_manifest_sha256": "134bedd3dd44e53bf1ed10f1eae0ac5638ebb3395218cc586604b8eb695a936d",
+  "dataset_version_id": "6b7a10c5-59ef-40e4-85cc-3751c4bd71e4",
+  "execution_identity": {
+    "profile": "native_cpu_verification",
+    "python": "3.12.15",
+    "worker_source_sha256": "a518edc41f8e9621c84a43e97df079b5dcc00c7f5f7ca061341a5d919e6f20d7"
+  },
+  "fixture_catalog_file": null,
+  "job_id": "045b3e03-a79e-4ed9-acee-d0078423d958",
+  "model_catalog_sha256": "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc",
+  "model_directory": "/model",
+  "operation": "train",
+  "output_directory": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/86c2fabb-9d59-48a4-973c-aacd224a05ca/output",
+  "resources": {
+    "cpu_seconds": 210,
+    "maximum_event_bytes": 1048576,
+    "maximum_output_bytes": 67108864,
+    "maximum_output_files": 4096,
+    "maximum_result_bytes": 8388608,
+    "memory_bytes": 6442450944,
+    "open_files": 256,
+    "wall_seconds": 240
+  },
+  "resume_checkpoint": {
+    "directory": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/86c2fabb-9d59-48a4-973c-aacd224a05ca/inputs/checkpoint",
+    "receipt_sha256": "49c8ff1ab797aa70681cb8fe0f34c97d906f0c275c554b54ecefa44bc2a4ac1c"
+  },
+  "schema_version": 1,
+  "scope_directory": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/86c2fabb-9d59-48a4-973c-aacd224a05ca",
+  "tenant_id": "1947f4e8-9fb8-4a9d-b955-54c491c233f3",
+  "train_file": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/86c2fabb-9d59-48a4-973c-aacd224a05ca/inputs/train.jsonl",
+  "train_sha256": "3eeeb12fe713677b1394fdd1aed5c52a721f2be74c52abd34feae63b4a5a8089",
+  "validation_file": "/workspace/runs/045b3e03-a79e-4ed9-acee-d0078423d958/86c2fabb-9d59-48a4-973c-aacd224a05ca/inputs/validation.jsonl",
+  "validation_sha256": "a35d91989ab8a6defa821375306c7dcaaefb1397eb8355d606395f3f6e307d05",
+  "workspace_id": "dd0f5195-9654-44e8-b57c-9308d495f6a3"
+}

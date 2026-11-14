@@ -1,0 +1,34 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+source ~/lane-rel-tools/env
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1 npm_config_offline=true CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=1
+fixture=~/lane-rel-tools/dat107-fixture-run.HDmRwhgT
+for attempt in $(seq 1 140); do
+  if test -f "$fixture/exit"; then break; fi
+  sleep 4
+done
+test "$(cat "$fixture/exit")" = 0
+exec 9>~/lane-rel-tools/heavy-test.lock
+flock -w 300 9
+df -h /
+free -m
+cat /proc/pressure/io
+for attempt in $(seq 1 120); do
+  if test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048; then break; fi
+  sleep 5
+done
+test "$(free -m | awk '/^Mem:/ {print $4}')" -ge 2048
+baseline=$(mktemp -d ~/lane-rel-tools/dat107-inventory.XXXXXXXX)
+git archive 8ee92f8c api/openapi/v1 | tar -xf - -C "$baseline"
+export LANE_REL_DAT107_BASELINE=$baseline
+unset PROJECT_ONE_TEST_DSN PROJECT_ONE_TEST_DSN_FILE
+ionice -c2 -n7 nice -n10 unshare -n sh -ec '
+  ip link set lo up
+  test "$(wc -l < /proc/net/route)" -eq 1
+  python3 tools/codegen/sdk/audit.py --baseline "$LANE_REL_DAT107_BASELINE/api/openapi/v1" > "$LANE_REL_DAT107_BASELINE/report.json"
+  make check && make build &&
+  pnpm -C web/packages/help exec vitest run src/help.test.ts --maxWorkers=1 &&
+  go -C services/control test ./internal/modules/datasets/...
+'
+git diff --check
+printf '%s\n' "$baseline"

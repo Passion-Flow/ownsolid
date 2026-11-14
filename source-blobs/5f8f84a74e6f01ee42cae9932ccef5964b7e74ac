@@ -1,0 +1,99 @@
+package e2e
+
+import (
+	"bytes"
+	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+)
+
+func assertARC105Scope(t *testing.T, e environment, gateway agentGateway, fleet *simulatedRun) {
+	t.Helper()
+	query := "SELECT count(*) FROM managed_nodes WHERE id IN (" + fleet.nodeList() + ") AND site_id='default' AND cell_id='default'"
+	if got := e.sql(t, query); got != fmt.Sprint(len(fleet.nodes)) {
+		t.Fatalf("persisted default site/cell count %s", got)
+	}
+	var credentials struct {
+		Agents []struct {
+			Node, Site, Cell string
+			Credential       string `json:"credential"`
+			Certificate      string `json:"certificate"`
+			PrivateKey       string `json:"private_key"`
+			NodeID           string `json:"node_id"`
+			SiteID           string `json:"site_id"`
+			CellID           string `json:"cell_id"`
+		} `json:"agents"`
+	}
+	raw, err := os.ReadFile(filepath.Join(fleet.directory, "identities.json"))
+	if err != nil || json.Unmarshal(raw, &credentials) != nil || len(credentials.Agents) != len(fleet.nodes) {
+		t.Fatal("could not read enrolled simulator identities")
+	}
+	for _, id := range credentials.Agents {
+		if id.SiteID != "default" || id.CellID != "default" {
+			t.Fatal("simulator did not persist the issued scope")
+		}
+	}
+	ca, err := os.ReadFile(filepath.Join(e.root, "config", "ca.pem"))
+	roots := x509.NewCertPool()
+	if err != nil || !roots.AppendCertsFromPEM(ca) {
+		t.Fatal("could not load test CA")
+	}
+	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: roots}
+	id := credentials.Agents[0]
+	if id.Certificate != "" {
+		peer, err := tls.X509KeyPair([]byte(id.Certificate), []byte(id.PrivateKey))
+		if err != nil {
+			t.Fatal("could not load enrolled test certificate")
+		}
+		tlsConfig.Certificates = []tls.Certificate{peer}
+	}
+	transport := &http.Transport{TLSClientConfig: tlsConfig, ForceAttemptHTTP2: true,
+		DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
+			return (&net.Dialer{Timeout: 3 * time.Second}).DialContext(ctx, network, gateway.address)
+		},
+	}
+	defer transport.CloseIdleConnections()
+	client := &http.Client{Transport: transport, Timeout: 8 * time.Second}
+	for _, scope := range [][2]string{{"other-site", "default"}, {"default", "other-cell"}} {
+		msg := []byte(`{"id":1,"heartbeat":{}}`)
+		frame := make([]byte, 5, 5+len(msg))
+		binary.BigEndian.PutUint32(frame[1:5], uint32(len(msg)))
+		frame = append(frame, msg...)
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodPost,
+			adminOrigin+"/ownsolid.agent.v1.AgentSession/Connect", bytes.NewReader(frame))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/grpc+json")
+		req.Header.Set("TE", "trailers")
+		req.Header.Set("Authorization", "Bearer "+id.Credential)
+		req.Header.Set("Ownsolid-Node-Id", id.NodeID)
+		req.Header.Set("Ownsolid-Site-Id", scope[0])
+		req.Header.Set("Ownsolid-Cell-Id", scope[1])
+		response, err := client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = io.Copy(io.Discard, response.Body)
+		response.Body.Close()
+		status, message := response.Trailer.Get("Grpc-Status"), response.Trailer.Get("Grpc-Message")
+		if status == "" {
+			status, message = response.Header.Get("Grpc-Status"), response.Header.Get("Grpc-Message")
+		}
+		if err != nil || response.ProtoMajor != 2 || response.StatusCode != http.StatusOK || status != "5" || strings.TrimSpace(message) != "RESOURCE_NOT_FOUND" {
+			t.Fatalf("wrong scope %q was not refused by the TLS gRPC gateway: HTTP/%d status=%d grpc=%q message=%q err=%v", scope, response.ProtoMajor, response.StatusCode, status, message, err)
+		}
+		t.Logf("real gateway refused %s/%s with gRPC NotFound", scope[0], scope[1])
+	}
+}

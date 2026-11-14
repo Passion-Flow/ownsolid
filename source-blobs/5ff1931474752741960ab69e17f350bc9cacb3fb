@@ -1,0 +1,27 @@
+groups:
+  - name: ownsolid-node-exporter-journal
+    type: vlogs
+    interval: 1m
+    rules:
+      - alert: OwnsolidNodeExporterJournalErrors
+        # VictoriaLogs counts nanoseconds when subtracting RFC3339 fields.
+        expr: >-
+          _time:5m {component="node_exporter"} NOT tenant_id:="" NOT workspace_id:="" NOT node_id:=""
+          | stats by (tenant_id, workspace_id, node_id, component) field_max(_time, _msg) as snapshot, field_max(_time, _time) as collected_at
+          | unpack_json from snapshot fields (source, available, entries) result_prefix "snapshot_"
+          | filter snapshot_source:="systemd_journal" snapshot_available:="true"
+          | unroll snapshot_entries
+          | unpack_json from snapshot_entries fields (timestamp, priority) result_prefix "journal_"
+          | filter journal_priority:in("0","1","2","3")
+          | math collected_at - journal_timestamp as journal_age_ns
+          | filter journal_age_ns:>=0 journal_age_ns:<=300000000000
+          | stats by (tenant_id, workspace_id, node_id, component) count() as matches
+          | stats by (tenant_id, workspace_id, component) count() as affected_nodes
+          | filter affected_nodes:>=3
+        labels:
+          severity: warning
+        annotations:
+          summary: Recent node exporter journal errors
+          description: >-
+            {{ $value }} nodes in workspace {{ $labels.workspace_id }} have
+            error-or-higher entries in their latest collected journal snapshots.

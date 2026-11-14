@@ -1,0 +1,14 @@
+{
+  "staged": true,
+  "source": "37cbb09c3d4933a53e4aea844a979d8b91d67b58",
+  "tree": "6f8edee01936c8e43ab2ffb2a943ddd50c41ea2e",
+  "packet_sha256": "21a4f1e69463605bbcd10384f20375cdd30af3103e7ea95b412ec5053606f943",
+  "files_sha256": {
+    "base_generate_2e64.py": "999dffae3c311c4e56da9c131c5ac9f4c83e4ad652e3ab60c815322e61c36bc2",
+    "run_sdk_generation_once.py": "5c31a1fb5fafe2761d63af4eb0ca2702d2a76f716abd645129032c3149a0ae14",
+    "strict-contract-json-37cbb09c.bundle": "4ec88f67e99591e6e0a2eac04dc850d7714a73b48b19604c344fbe8cb60c447b",
+    "sdk-generation-plan.json": "9dc1f7725376eba3354112e150a0d09ef70128a4d775a3f52ed1f11c368f568b"
+  },
+  "attempt_started": false,
+  "native_or_full_entry_started": false
+}

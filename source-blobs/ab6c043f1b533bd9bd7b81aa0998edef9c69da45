@@ -1,0 +1,148 @@
+{
+  "owning_lane": "OBS",
+  "combination_scope": "Confirmed retention qualification and HTTP route correction only",
+  "required_main": "106ca52dd867bcb38f142948a52a1f4af41d1d8e",
+  "minimal_tip": "f345076aa43b184eceaa5a5b3f85b668e894ff0d",
+  "ordered_original_commits": [
+    {
+      "sha": "f4afbbe1de0a2b57f811a6012685252cf9b08c5d",
+      "author_name": "Passion.",
+      "author_email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "OBS-109: Include preserved transaction problems in the API handoff"
+    },
+    {
+      "sha": "71640403632b94ab90d0900593755a5e8d188dbd",
+      "author_name": "Passion.",
+      "author_email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "OBS-109: Add a bounded ninety-day aggregate qualification profile"
+    },
+    {
+      "sha": "5a350aa15905eb067648de498b86b3f34ae96dff",
+      "author_name": "Passion.",
+      "author_email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "OBS-109: Record ninety-day aggregate storage and query measurements"
+    },
+    {
+      "sha": "dada46a23dfe0238066bb5983b12b5b33e5cced3",
+      "author_name": "Passion.",
+      "author_email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "OBS-106: Classify the current health and machine request routes"
+    },
+    {
+      "sha": "620f53892d8efc19bb479ba45fc08b9d0b45b4cf",
+      "author_name": "Passion.",
+      "author_email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "OBS-106: Record bounded route classification regressions"
+    },
+    {
+      "sha": "d8246ebe8a8d9f35c3795f009fe1c7cf00a11ff8",
+      "author_name": "Passion.",
+      "author_email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "OBS-109: Reconcile acceptance with the published history contract"
+    },
+    {
+      "sha": "f345076aa43b184eceaa5a5b3f85b668e894ff0d",
+      "author_name": "Passion.",
+      "author_email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "OBS-109 OBS-106: Record combined offline acceptance"
+    }
+  ],
+  "bundle": "/root/lane-obs-tools/obs-del-minimal-f345076a.bundle",
+  "bundle_sha256": "085cbdcbce356f7d8787d4eb537be6dbcf71ff88c1bc9cb8a6ead3b7afa41b73",
+  "published_core_do_not_replay": [
+    "096c50b818429fc089398112c21fd5bf624facae",
+    "495e4056ac9ad60a7c4b48a77c334edde4f83880"
+  ],
+  "excluded_followup": "The two later OBS-110 research/native-prototype commits are independent and are not requested for this combination.",
+  "verification": {
+    "exact_tested_source": "9a1d4a303104ea85c40ccc3482dd5075b4d44491",
+    "exit_code": 0,
+    "raw_log": "/root/lane-obs-tools/obs109-schema58.APx0TA",
+    "raw_log_sha256": "d2660069012498173f4d1f0775e40eeaff56a0bc3b9c239b25ffa9df69e903a8",
+    "passed": [
+      "make check",
+      "make build",
+      "all owned-module race tests",
+      "history-http",
+      "history-tls",
+      "history-retention"
+    ],
+    "all_owned_fixtures_stopped": true,
+    "subset_input_difference": [
+      "docs/product/roadmap/observability-and-alerting.md",
+      "docs/product/status.md",
+      "docs/research/series-cardinality-scope.md",
+      "services/control/internal/platform/monitoringmetrics/README.md",
+      "services/control/internal/platform/monitoringmetrics/testdata/check_cardinality_scope.py"
+    ],
+    "subset_scope": "These five differences are only OBS-110 docs and the independent Python fixture; product Go and native history inputs match. The integrated installation must be tested on its own frozen source."
+  },
+  "native_inputs": {
+    "postgres_image": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "victoria_metrics_file": "/root/lane-obs-tools/victoria-metrics-prod",
+    "victoria_metrics_sha256": "aca3c49816db88c0e48012772fcf2a94eb66aaccd925b35d397b8b6f7f40fb43",
+    "vmalert_file": "/root/lane-obs-tools/vmalert-prod",
+    "vmalert_sha256": "d1d1a8d2b04c2f9f32c37934b498ae1e5f031cb55fdf89ffb94eeaef57742171",
+    "versions": "PostgreSQL 18.6 / pgvector 0.8.7 / VictoriaMetrics and vmalert 1.155.0",
+    "toolchain_path": "/root/lane-obs-tools/go/bin"
+  },
+  "native_command_sequence": [
+    "GOFLAGS='-p=2 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-http",
+    "GOFLAGS='-p=2 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-tls",
+    "GOFLAGS='-p=2 -race' bash services/control/internal/modules/monitoring/testdata/check-fleet-history.sh history-retention"
+  ],
+  "native_runner_scope": "The runners create their own network=none PostgreSQL and TLS application fixtures. They do not attach to an installed Control process and cannot alone establish installed-entry acceptance.",
+  "installed_configuration": {
+    "control_reference": "Owning Control typed MonitoringConfigFile points to an owner-only protected JSON file; monitoring.LoadEnvironment consumes that reference.",
+    "minimum_policy": {
+      "format_version": 1,
+      "operation_seconds": 10,
+      "fleet_history": {
+        "raw_origin": "<private raw HTTPS origin>",
+        "long_origin": "<different private long HTTPS authority>",
+        "raw_horizon_seconds": 3600,
+        "max_range_seconds": 7776000,
+        "settling_seconds": 30
+      }
+    },
+    "store_horizons": "At least the declared raw horizon and a long horizon exceeding the settled 90-day profile; the qualified native profile uses raw 2d and long 100d.",
+    "rule_file": "services/control/internal/modules/monitoring/alerting/fleet-rollup-rules.yaml",
+    "trusted_labels": [
+      "job=ownsolid-node",
+      "tenant_id",
+      "workspace_id",
+      "site_id",
+      "cell_id",
+      "node_id"
+    ],
+    "trust_file_reference": "Set the Control process trust pool (for example SSL_CERT_FILE) before startup to the bundle containing both store CAs. No insecure TLS or redirects.",
+    "evaluator_reference": "Raw datasource and long remoteWrite origins; independent datasource/remoteWrite CA-file references; pinned local recording-rule file.",
+    "private_file_references": [
+      "Control monitoring JSON",
+      "Control store CA bundle",
+      "raw TLS certificate and private-key files",
+      "long TLS certificate and private-key files",
+      "vmalert raw/long CA files",
+      "CLI installation CA file",
+      "operator login password file",
+      "CLI owner-only config/session directory"
+    ],
+    "acl": "Control only needs store query_range. The evaluator needs raw query and long remote write. Import/admin listeners remain private.",
+    "cli": [
+      "OWNSOLID_CONFIG_DIR=<owned mode-0700 config directory>",
+      "OWNSOLID_SERVER=<installed private Admin origin>",
+      "ownsolid login --email <fixture-admin-email> --password-file <owner-only password file>",
+      "ownsolid monitoring history --workspace <current workspace UUID> --from <UTC-seconds-Z> --to <UTC-seconds-Z> --output json"
+    ],
+    "public_path": "/api/v1/sites/{site_id}/cells/{cell_id}/admin/monitoring/fleet-history",
+    "installed_assertions": [
+      "raw and rollup reads with sparse zero and missing samples",
+      "cross-workspace, expired session and active-Workspace refusal",
+      "long failure and retry without raw fallback",
+      "request-bound committed monitoring.snapshot audit",
+      "private certificate failure/recovery using explicit trust",
+      "90-day aggregate count/grid and bytes/query measurements with their exact synthetic scope"
+    ],
+    "boundary": "The TLS profile uses a preloaded trust pool and replacement certificates. It does not establish live CA-distribution or graceful-drain acceptance. No new Console page is included."
+  }
+}

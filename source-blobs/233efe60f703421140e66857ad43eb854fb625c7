@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "repository": "/root/lane-trn",
+  "evidence_parent": "/root",
+  "plan_file": "/root/lane-trn-tools/reader-native-qualification-plan.json",
+  "binding_file": "/root/lane-trn-tools/reader-native-plan-source-binding.json",
+  "policy_file": "/root/lane-trn-cpu-admission.RaaYxrR7/cpu-prototype-inputs/prototype.json",
+  "preflight_file": "/root/lane-trn-cpu-admission.RaaYxrR7/preflight_cpu_prototype.py",
+  "proof_root": "/root/lane-trn-cpu-admission.RaaYxrR7",
+  "docker_context": "default",
+  "docker_endpoint": "unix:///var/run/docker.sock",
+  "image_id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+  "go_bin": "/root/lane-trn-tools/go/bin/go",
+  "go_cache": "/root/lane-trn-tools/go-cache",
+  "go_mod_cache": "/root/lane-trn-tools/go-mod",
+  "parent_seconds": 300,
+  "cleanup_seconds": 30,
+  "first_lock_seconds": 60,
+  "go_seconds": 170,
+  "package_seconds": 75
+}

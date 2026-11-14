@@ -1,0 +1,30 @@
+{
+  "format_version": 2,
+  "transport": "linux_unixsocket",
+  "native_manifest_file": "/srv/project-one/dameng/connector/native-manifest.json",
+  "native_configuration_directory": "/srv/project-one/dameng/native-config",
+  "socket_file": "/srv/project-one/dameng/socket/dm.sock",
+  "socket_owner_uid": 1000,
+  "user": "P1_CONNECTOR",
+  "schema": "P1_CONNECTOR",
+  "password_file": "/srv/project-one/dameng/connector/password",
+  "operation_seconds": 30,
+  "transaction_seconds": 30,
+  "cleanup_seconds": 10,
+  "policy": {
+    "login_seconds": 5,
+    "connection_seconds": 10,
+    "query_seconds": 10,
+    "maximum_parameter_bytes": 1048576,
+    "maximum_cell_bytes": 65536,
+    "maximum_rows": 1000,
+    "maximum_columns": 16,
+    "maximum_result_bytes": 16777216,
+    "maximum_sql_bytes": 8192,
+    "maximum_open_connections": 2,
+    "maximum_physical_connections": 2,
+    "maximum_long_value_bytes": 8388608,
+    "transfer_chunk_bytes": 16384,
+    "maximum_retained_bytes": 67108864
+  }
+}

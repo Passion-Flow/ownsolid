@@ -1,0 +1,196 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The portal is where you use what your administrators set up for you. Its home page shows what\nneeds you, where you left off and what has been published to your workspace."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Your workspace"
+    }
+   ],
+   "data": {
+    "id": "your-workspace"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Everything you see belongs to one workspace. The switcher at the top shows which one; choose\nanother there if you belong to several. If you belong to none, ask an administrator to add you."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "The home page"
+    }
+   ],
+   "data": {
+    "id": "the-home-page"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Needs you"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " lists your runs that failed, were cancelled or were interrupted, until you mark them\nas read."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Pick up where you left off"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " lists your five newest conversations."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Published to you"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " lists the applications an administrator published to the workspace."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "Usage"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": " will show the tokens, calls and GPU hours you use; this release does not measure them\nyet."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "If one part cannot be read, it says so and offers "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Try again"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "; the rest of the page still shows."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Notifications"
+    }
+   ],
+   "data": {
+    "id": "notifications"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The bell at the top counts your unread notices. Open it to read them and mark them as read."
+    }
+   ]
+  }
+ ]
+}

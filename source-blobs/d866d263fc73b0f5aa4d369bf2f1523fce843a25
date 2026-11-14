@@ -1,0 +1,13 @@
+{
+  "source_unchanged_clean": true,
+  "parent_gone": true,
+  "launchers_gone": [
+    {
+      "pid": 3264264,
+      "gone": true
+    }
+  ],
+  "fixture_absent": true,
+  "docker_config_absent": true,
+  "scope": "Guard refused before child exec of Docker; not a native Compose parse"
+}

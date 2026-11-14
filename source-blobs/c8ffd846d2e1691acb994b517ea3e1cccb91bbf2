@@ -1,0 +1,37 @@
+{
+  "actions": [],
+  "actual_metadata_records": 0,
+  "carrier_path_identities": {
+    "/root/lane-sci-tools/heavy-test.lock": {
+      "dev": 64512,
+      "inode": 7508772,
+      "regular": true,
+      "same": true,
+      "uid": 0
+    },
+    "/run/lock/ownsolid-heavy.lock": {
+      "dev": 29,
+      "inode": 82,
+      "regular": true,
+      "same": true,
+      "uid": 0
+    }
+  },
+  "credential_paths_absent": true,
+  "elapsed_seconds": 0.0004134300397709012,
+  "no_fixture_uuid_or_creation_record": true,
+  "original_last_error": "PAYLOAD_REFUSAL",
+  "original_last_stages": [
+    {
+      "exit": 0,
+      "name": "image-inspect"
+    }
+  ],
+  "original_last_state": "FAILED_OR_INCOMPLETE",
+  "original_runner_absent_or_reaped": true,
+  "original_runner_lock_fds": [],
+  "original_runner_pid": 358460,
+  "purpose": "cleanup only",
+  "remote_root": "/root/lane-arc111-formal61-e1.bx9t4g36",
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6"
+}

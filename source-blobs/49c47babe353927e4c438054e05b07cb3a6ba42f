@@ -1,0 +1,82 @@
+import errno
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import resource
+import shutil
+import subprocess
+import tempfile
+import time
+
+resource.setrlimit(resource.RLIMIT_AS, (128 * 1024**2, 128 * 1024**2))
+resource.setrlimit(resource.RLIMIT_CPU, (5, 5))
+root = Path(tempfile.mkdtemp(prefix='lane-trn-reader-bind.', dir='/root'))
+fixture, readonly = root / 'writer', root / 'readonly'
+fixture.mkdir(mode=0o700)
+readonly.mkdir(mode=0o700)
+raw = b'generated immutable reader bind fixture\n'
+for name, data in [('owner.lock', b''), ('asset.jsonl', raw)]:
+    (fixture / name).write_bytes(data)
+    (fixture / name).chmod(0o600)
+writer = os.open(fixture / 'owner.lock', os.O_RDWR | os.O_NOFOLLOW)
+fcntl.flock(writer, fcntl.LOCK_EX | fcntl.LOCK_NB)
+child = root / 'child.py'
+child.write_text('''import errno,fcntl,hashlib,json,os,resource,subprocess,sys
+from pathlib import Path
+source,target=map(Path,sys.argv[1:3]);expected=sys.argv[3];checks=[]
+subprocess.run(['mount','--bind',str(source),str(target)],check=True)
+try:
+ subprocess.run(['mount','-o','remount,bind,ro',str(target)],check=True)
+ a,b=source.stat(),target.stat()
+ assert (a.st_dev,a.st_ino)==(b.st_dev,b.st_ino);checks.append('exact_root_inode')
+ data=(target/'asset.jsonl').read_bytes()
+ assert hashlib.sha256(data).hexdigest()==expected;checks.append('actual_immutable_bytes')
+ fd=os.open(target/'owner.lock',os.O_RDONLY|os.O_NOFOLLOW)
+ try:
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except OSError as err:assert err.errno in (errno.EAGAIN,errno.EACCES)
+  else:raise AssertionError('writer lock lost')
+ finally:os.close(fd)
+ checks.append('writer_exclusion_preserved')
+ for name,op in [
+  ('create',lambda:os.open(target/'generated-new',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)),
+  ('write',lambda:os.open(target/'asset.jsonl',os.O_WRONLY)),
+  ('unlink',lambda:os.unlink(target/'asset.jsonl')),
+  ('chmod',lambda:os.chmod(target/'asset.jsonl',0o644))]:
+  try:op()
+  except OSError as err:assert err.errno==errno.EROFS,(name,err.errno)
+  else:raise AssertionError('read-only mutation accepted: '+name)
+  checks.append(name+'_refused_EROFS')
+ print(json.dumps({'checks':checks,'passed':len(checks),'child_maximum_rss_kib':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}))
+finally:subprocess.run(['umount',str(target)],check=True)
+''')
+start = time.monotonic()
+try:
+    run = subprocess.run(['unshare', '--mount', '--net', '--propagation', 'private', 'python3', '-I', str(child), str(fixture), str(readonly), hashlib.sha256(raw).hexdigest()], capture_output=True, text=True, timeout=8)
+    (root / 'child.log').write_text(run.stdout + run.stderr)
+    assert run.returncode == 0, 'private mount prototype failed; see retained child.log'
+    record = json.loads(run.stdout)
+    assert (fixture / 'asset.jsonl').read_bytes() == raw
+    assert not list(readonly.iterdir())
+    record['checks'].append('writer_bytes_unchanged_after_namespace_exit')
+    other = os.open(fixture / 'owner.lock', os.O_RDWR | os.O_NOFOLLOW)
+    try:
+        try:
+            fcntl.flock(other, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as err:
+            assert err.errno in (errno.EAGAIN, errno.EACCES)
+        else:
+            raise AssertionError('reader shutdown released writer ownership')
+    finally:
+        os.close(other)
+    record['checks'].append('writer_exclusion_after_reader_shutdown')
+    record.update({'passed': len(record['checks']), 'seconds': round(time.monotonic()-start, 4), 'source_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), 'child_sha256': hashlib.sha256(child.read_bytes()).hexdigest(), 'platform': 'linux/amd64', 'postgresql_processor_docker_started': False, 'scope': 'private Linux same-host read-only bind mechanism; no Go product or installed qualification'})
+finally:
+    os.close(writer)
+    shutil.rmtree(fixture)
+    readonly.rmdir()
+(root / 'result.json').write_text(json.dumps(record, indent=2)+'\n')
+shutil.copyfile(__file__, root / 'prototype.py')
+print(json.dumps({'evidence': str(root), **record}))

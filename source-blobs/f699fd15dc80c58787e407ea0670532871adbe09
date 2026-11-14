@@ -1,0 +1,22 @@
+{
+  "source": "871e3df7df9ea0f0f5adb8f3bd91a226a52b44af",
+  "platform": "darwin/arm64",
+  "started_utc": "2026-11-13T01:37:16.253979+00:00",
+  "command": [
+    "make",
+    "generate"
+  ],
+  "offline_config": true,
+  "update_notifier": false,
+  "install_scripts": "ignored by unchanged Makefile",
+  "makefile_overridden": false,
+  "targets_skipped": [],
+  "full_gate_run": false,
+  "heavy_admission_requested": false,
+  "node": "v26.13.0",
+  "pnpm": "12.16.1",
+  "exit": 0,
+  "ended_utc": "2026-11-13T01:37:18.011002+00:00",
+  "log_sha256": "f31e16572e849ad9bfdf7eb02d8cdc9963311bc953dd25c19e80c3f96039ca23",
+  "git_status_after": ""
+}

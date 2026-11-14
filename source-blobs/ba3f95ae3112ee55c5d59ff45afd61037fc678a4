@@ -1,0 +1,12 @@
+{
+  "scope": "Preparation only; no native invocation",
+  "synthetic_guard_cases_passed": 9,
+  "failure_cause_original": "Unknown; no original raw route data was recorded",
+  "kernel_source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/net/ipv4/fib_trie.c",
+  "decision": "Accept only absent main-table output or recognized header without data; preserve count/hash/stage before refusal. Source shows absent RT_TABLE_MAIN emits no header; not a claim about the previous run.",
+  "parser_child_routes.py": "dbebfc6cefb15e27155830b4a49be0beb45aada17f7f5a765367e8af76ee8769",
+  "parser_parent_routes.py": "86ada56ca6bc07253918c7404278b94cda5c551f98a3039f927322d5048d3a41",
+  "runtime-routes.json": "f976355ce39819b80f9270c878d8d30e82b084ac53be6edbb8891d63e405ddd4",
+  "child-routes.diff": "7bd14a533c07979cfbd8cb7755e699f984c9422c9589a1954195c0ed92cfa71b",
+  "parent-routes.diff": "38eff38c793fffb50869871bc27e5dafb5a368114b0b5d46fc53c57016fec0a0"
+}

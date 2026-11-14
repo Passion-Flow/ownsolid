@@ -1,0 +1,34 @@
+{
+  "baseline": "106ca52dd867bcb38f142948a52a1f4af41d1d8e",
+  "gateway_commit": "b7059e5bfed366607819a7428d6cd067fb424760",
+  "migration_number": null,
+  "production_go_patch_required": false,
+  "minimal_patch_applies_to_main": true,
+  "excluded_commit_paths": [
+    "docs/product/status.md",
+    "docs/product/roadmap/gateway.md"
+  ],
+  "table_count_delta": 1,
+  "schema58_table_count": 118,
+  "candidate_table_count": 119,
+  "catalogues": {
+    "fresh": "72aa05f9653316c589fd79c12ba43580b589f019a35b09b2569754b91d1ee782",
+    "restored": "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc",
+    "restored-at-58-upgraded": "18bc8279d46bf95454b7fd0236b9ab6ee54b073eb12551a87968d2a545db59dc",
+    "restored-at-55": "8c2f55bab0055c374d9083cfa993fc9986cf9b3ebb7e8fd6b06c0adfdd415069"
+  },
+  "up_sha256": "399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab",
+  "down_sha256": "4180f1bf9791fd545163f29a49840727c7b9a20693d6fcd4356888f450da3ac2",
+  "rollback_refusal": {
+    "sqlstate": "55000",
+    "code": "MODEL_ALIAS_DESCRIPTION_DOWNGRADE_REQUIRES_RESTORE",
+    "conditions": [
+      "nonempty description",
+      "description revision other than 1",
+      "any retained description intent"
+    ]
+  },
+  "focused_log": "/root/lane-gw-acceptance/gw120-schema58._65ygj2r/pg.log",
+  "catalog_log": "/root/lane-gw-acceptance/gw120-schema58._65ygj2r/catalog-current.log",
+  "installed_schema_test": "TestAliasDescriptionInstalledSchemaAndHTTPS (pending formal migration)"
+}

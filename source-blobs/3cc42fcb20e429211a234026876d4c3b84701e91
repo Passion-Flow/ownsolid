@@ -1,0 +1,67 @@
+APP_NAME = Gitea: Git with a cup of tea
+RUN_USER = git
+RUN_MODE = prod
+WORK_PATH = /var/lib/gitea
+
+[repository]
+ROOT = /var/lib/gitea/git/repositories
+
+[repository.local]
+LOCAL_COPY_PATH = /tmp/gitea/local-repo
+
+[repository.upload]
+TEMP_PATH = /tmp/gitea/uploads
+
+[server]
+APP_DATA_PATH = /var/lib/gitea
+SSH_DOMAIN = localhost
+HTTP_PORT = 18444
+ROOT_URL = https://git.lane-b.test:18444/
+DISABLE_SSH = false
+; In rootless gitea container only internal ssh server is supported
+START_SSH_SERVER = true
+SSH_PORT = 2222
+SSH_LISTEN_PORT = 
+BUILTIN_SSH_SERVER_USER = git
+LFS_START_SERVER = 
+PROTOCOL = https
+KEY_FILE = /var/lib/gitea/key.pem
+DOMAIN = git.lane-b.test
+CERT_FILE = /var/lib/gitea/cert.pem
+OFFLINE_MODE = true
+
+[database]
+PATH = /var/lib/gitea/data/gitea.db
+DB_TYPE = sqlite3
+HOST = localhost:3306
+NAME = gitea
+USER = root
+PASSWD = 
+
+[session]
+PROVIDER_CONFIG = /var/lib/gitea/data/sessions
+
+[picture]
+AVATAR_UPLOAD_PATH = /var/lib/gitea/data/avatars
+REPOSITORY_AVATAR_UPLOAD_PATH = /var/lib/gitea/data/repo-avatars
+
+[attachment]
+PATH = /var/lib/gitea/data/attachments
+
+[log]
+ROOT_PATH = /var/lib/gitea/data/log
+
+[security]
+INSTALL_LOCK = true
+SECRET_KEY = 
+INTERNAL_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE3OTM5OTc3NDZ9.6fNNcqLesCPlNJyObSJ0HtFKKC19eV1N0L15iv3xDXk
+
+[service]
+DISABLE_REGISTRATION = true
+REQUIRE_SIGNIN_VIEW = false
+
+[lfs]
+PATH = /var/lib/gitea/git/lfs
+
+[oauth2]
+JWT_SECRET = SJ9GZtF8iC2iCoP_21Gk2JOkg5lJVY7G5OWXZsGqZSA

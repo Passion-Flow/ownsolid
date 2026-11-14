@@ -1,0 +1,22 @@
+{
+  "docker_exec_attempted": true,
+  "gid": 65534,
+  "home_preserved": true,
+  "ipv4_route_observation": {
+    "blank_line_count": 0,
+    "bytes": 0,
+    "format": "absent-table",
+    "line_count": 0,
+    "no_ipv4_routes": true,
+    "nonblank_rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "ipv4_routes": [],
+  "network_inode": 4026532588,
+  "no_new_privileges": true,
+  "only_loopback_down": true,
+  "scope": "Socket syscalls denied; this is not an egress-attempt capture",
+  "seccomp_filter_installed": true,
+  "stage": "exec-prepared",
+  "uid": 65534
+}

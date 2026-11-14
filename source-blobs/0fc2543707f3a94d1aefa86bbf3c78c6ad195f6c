@@ -1,0 +1,38 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "442a24571cc04224b75d3c0c2f1a268706b2932deec7d0456470dd2b03f93df2",
+  "after_step": 41,
+  "steps": [
+    {
+      "step": 42,
+      "file": "000042_managed_nodes.sql",
+      "object": "managed_nodes",
+      "kind": "create_table",
+      "source_sha256": "04cd866200f8fcd23e12dc1aa521859a3a3ffcfb4d84a621f607de6456ec5436"
+    },
+    {
+      "step": 43,
+      "file": "000043_node_join_tokens.sql",
+      "object": "node_join_tokens",
+      "kind": "create_table",
+      "source_sha256": "dc243007d0e3a9b559a7372b251d5b5361e133c048726bc88596e04370b8adc8"
+    },
+    {
+      "step": 44,
+      "file": "000044_node_tasks.sql",
+      "object": "node_tasks",
+      "kind": "create_table",
+      "source_sha256": "5e689c09b1b279011ced56ad43eee800ac9b154c591d2c867f2106fee915a4de"
+    },
+    {
+      "step": 45,
+      "file": "000045_node_derived_inference_immutable.sql",
+      "object": "node_derived_inference_immutable",
+      "kind": "create_trigger",
+      "source_sha256": "fccab83639fe8fabf5f18c66705b468dabf972e8f233e7fd5e10666d96a23ac5",
+      "table": "node_tasks",
+      "event": "UPDATE"
+    }
+  ]
+}

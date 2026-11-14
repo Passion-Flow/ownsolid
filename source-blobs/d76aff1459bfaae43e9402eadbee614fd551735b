@@ -1,0 +1,86 @@
+{
+  "contract_source": "2426699bfad4c1a4e4ee6999cfc14f264c4cda12",
+  "contract_unchanged_through": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+  "contract_path": "api/openapi/v1/identity/openapi.json",
+  "contract_sha256": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+  "patch_base": "0b570a8392a3d86f9a7637883355e223c94e76bd",
+  "static_review_main": "0b570a8392a3d86f9a7637883355e223c94e76bd",
+  "source_bundle": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/candidate.bundle",
+  "source_bundle_sha256": "a8dd04f259f7186b285fd498587261d7d1b37e64ba24653d81d25863160a8ea5",
+  "server_source_bundle": "/root/lane-rel-tools/identity-audit-contract/candidate.bundle",
+  "generated_patch": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/relay/web-owner-current-main.patch",
+  "generated_patch_sha256": "a3def1685309d4a7609274852cbc17f0904f9477a8edcaa9d016b4ced085dea9",
+  "generated_paths": [
+    "web/packages/api/src/gen/identity.ts",
+    "web/packages/help/locales/zh-cn/api-descriptions.json",
+    "web/packages/help/src/gen/api/console/identity.json",
+    "web/packages/help/src/gen/contracts/console/identity.json",
+    "web/packages/help/src/gen/locales/zh-cn/api-descriptions.json"
+  ],
+  "consumer_patch": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/relay/web-consumer-retry.patch",
+  "consumer_patch_sha256": "41d1f2339aa81cf9b8c3a8f92d863295f65b73c48f7d49fd2a86bd0f96803fb6",
+  "consumer_paths": [
+    "web/apps/console/src/audit-page.tsx",
+    "web/apps/console/src/resource-page.tsx"
+  ],
+  "consumer_source_sha256": {
+    "web/apps/console/src/audit-page.tsx": "9f49274fb47a013bf9c4d574b7a2ef841a2de1e8b196958090f6e48ab9774b15",
+    "web/apps/console/src/resource-page.tsx": "729bbe3e2c8d9c5632481340d7619294250d39fa41d874e78fdbddf38b41e94e"
+  },
+  "existing_shared_policy": "web/packages/shell/src/session.ts",
+  "problem_classifier": "web/packages/api/src/problem.ts",
+  "status_409_automatically_retryable": false,
+  "lost_reply_or_timeout_status_0_inherits_automatic_retry": false,
+  "other_query_defaults_changed": false,
+  "product_web_edited_by_lane_d": false,
+  "consumer_patch_browser_test_run": false,
+  "minimal_recheck_commands_argv": [
+    [
+      "node",
+      "tools/codegen/web-api.mjs",
+      "--check"
+    ],
+    [
+      "node",
+      "tools/codegen/web-help.mjs",
+      "--check"
+    ],
+    [
+      "pnpm",
+      "--dir",
+      "web",
+      "--filter",
+      "@ownsolid/console",
+      "typecheck"
+    ],
+    [
+      "pnpm",
+      "--dir",
+      "web/apps/console",
+      "test:browser",
+      "--workers=1",
+      "e2e/audit.spec.ts",
+      "e2e/resource-pages.spec.ts"
+    ]
+  ],
+  "recheck_cwd": "Original Web author checkout root, inside its admitted resource window",
+  "owner_acceptance": [
+    "Land and verify only the five generated/locale metadata files against the actual published contract",
+    "Preserve owner-qualified explicit recovery from e9186ade and its Help articles",
+    "Do not apply the old two-consumer prototype patch",
+    "Shared Help URL fix and exact integrated full gate remain required"
+  ],
+  "preserved_web_owner_assets": {
+    "main_reference_from_coordinator": "c864",
+    "installed_reference_from_coordinator": "be62",
+    "these_assets_requalified_by_lane_d": false,
+    "patch_matches_these_assets_assumed": false
+  },
+  "qualification_scope": "Private generation/checks and static apply checks; not installed or SQL qualification",
+  "historical_generated_patch": "/Users/passion./.local/state/ownsolid/lane-rel/identity-audit-contract/relay/web-owner.patch",
+  "generated_patch_server": "/root/lane-rel-tools/identity-audit-contract/relay/web-owner-current-main.patch",
+  "composition_source": "d16d7f11699ef00e1d26fa576be2db76a8d640af",
+  "consumer_patch_superseded_by": "e9186ade",
+  "consumer_patch_must_not_apply": true,
+  "current_owner_recovery_gate": "124520b9 records c70e9f59 complete1191/410"
+}

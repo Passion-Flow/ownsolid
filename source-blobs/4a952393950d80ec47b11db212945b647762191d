@@ -1,0 +1,72 @@
+{
+  "status": "prepared-not-executed",
+  "scope": "synthetic Alertmanager expiry/resumption observation only; no product grouping, escalation, persistence or delivery acceptance",
+  "execution_authorized_now": false,
+  "command": [
+    "timeout",
+    "--signal=TERM",
+    "--kill-after=10s",
+    "240s",
+    "python3",
+    "/root/lane-obs-tools/run-alertmanager-expiry-v2.py",
+    "--observer",
+    "/root/lane-obs-tools/observe-alertmanager-expiry-v2.py",
+    "--observer-sha256",
+    "b2240790e1c5ca172af7c4f033ca8ae2a4e65041daec3bd719d27f1c5b98d152",
+    "--binary",
+    "/root/lane-obs-tools/alertmanager",
+    "--binary-sha256",
+    "65b77b431acf07fe0df45158a0a6f3060e53e0b592f641d971fb3a745c34f432",
+    "--output-parent",
+    "/root/lane-obs-tools",
+    "--global-lock",
+    "/run/lock/ownsolid-heavy.lock",
+    "--lane-lock",
+    "/root/lane-sci-tools/heavy-test.lock",
+    "--deadline-seconds",
+    "180"
+  ],
+  "sources": {
+    "observer": "b2240790e1c5ca172af7c4f033ca8ae2a4e65041daec3bd719d27f1c5b98d152",
+    "runner": "0c8b843cde6b8c39bfd447d9569f011f0462633c84c4c4d9bba67b14fca0fb8c",
+    "pure_tests": "89526232c065f0e6df07b8e7ceda89aaa9aaadafdcca6a53fcdba34e27dc6ee4",
+    "pure_test_path": "/root/lane-obs-tools/test-alertmanager-expiry-facts.py"
+  },
+  "preserved_originals": {
+    "observer": "aea19520431f474d5c3cfd273eed78be8c0842a2bc1a343e0e2921226a93dc06",
+    "runner": "f192668b28b94c1811693b580c7ea4065a7d6d1283af8d77305172533ad2f4ac"
+  },
+  "native_binary": {
+    "path": "/root/lane-obs-tools/alertmanager",
+    "version": "0.34.2",
+    "sha256": "65b77b431acf07fe0df45158a0a6f3060e53e0b592f641d971fb3a745c34f432"
+  },
+  "facts": {
+    "native_started": "true only after actual service Popen returns, with positive child PID; version output is independent",
+    "native_ready": "true only after native /-/ready returns HTTP 200",
+    "native_stopped": "true only after service process exit is observed/reaped",
+    "missing_observation": "startup unknown; do not infer from a namespace wrapper or version marker",
+    "optimized_python": "explicitly refused before argument parsing; assert __debug__ alone is removed by -O"
+  },
+  "bounds": {
+    "native_child_deadline_seconds": 180,
+    "caller_deadline_seconds": 240,
+    "caller_forced_stop_grace_seconds": 10,
+    "free_memory_mib_floor": 2048,
+    "disk_gib_floor": 15,
+    "io_some_and_full_avg10_maximum": 5,
+    "GOMAXPROCS": 2,
+    "synthetic_members": 40,
+    "maximum_webhook_bytes": 262144,
+    "maximum_notifications": 32,
+    "maximum_observation_bytes": 16777216,
+    "network": "isolated loopback-only network and child PID namespaces; no default route; cluster listener disabled",
+    "lock_lifetime": "two actual nonblocking file locks; passed descriptors; close after child group exits; no explicit unlock if survivors remain"
+  },
+  "verification": {
+    "syntax": "AST parsed only; new runner/observer main never invoked on Linux",
+    "pure_units": "nine tests prepared; two Mac flock-busy refusals started no test process; pending",
+    "native_run": false,
+    "created_services": []
+  }
+}

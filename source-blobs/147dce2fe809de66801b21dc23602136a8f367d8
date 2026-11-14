@@ -1,0 +1,171 @@
+package main
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type combinedScope struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Application string `json:"application"`
+}
+type combinedScopeState struct {
+	Members            []string `json:"members"`
+	ForeignTenant      string   `json:"foreign_tenant"`
+	ForeignWorkspace   string   `json:"foreign_workspace"`
+	ForeignApplication string   `json:"foreign_application"`
+	Marker             string   `json:"marker"`
+}
+
+func combinedFixtureDB(t *testing.T) *pgxpool.Pool {
+	t.Helper()
+	raw, err := os.ReadFile("/srv/ownsolid/operator/operator-dsn")
+	if err != nil {
+		t.Fatal("Installed operator file unavailable")
+	}
+	pool, err := pgxpool.New(t.Context(), strings.TrimSpace(string(raw)))
+	if err != nil {
+		t.Fatal("Installed database configuration refused")
+	}
+	t.Cleanup(pool.Close)
+	if err := pool.Ping(t.Context()); err != nil {
+		t.Fatal("Installed database unavailable")
+	}
+	return pool
+}
+
+func TestTemporaryInstalledScopePreparation(t *testing.T) {
+	if os.Getenv("COMBINED_SOURCE_SHA") != "1389de2895831f44cff9706561a969f336dde722" {
+		t.Fatal("Frozen source identity missing")
+	}
+	pool := combinedFixtureDB(t)
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	defer cancel()
+	passwords, err := security.NewPasswords("/bundle/password-blocklist.txt")
+	if err != nil {
+		t.Fatal("Password policy unavailable")
+	}
+	type person struct {
+		ID        string        `json:"-"`
+		PHC       string        `json:"-"`
+		Email     string        `json:"email"`
+		Password  string        `json:"password"`
+		Workspace combinedScope `json:"workspace"`
+	}
+	var first combinedScope
+	var tenant, admin string
+	if err := pool.QueryRow(ctx, "SELECT id,tenant_id,name FROM workspaces ORDER BY created_at,id LIMIT 1").Scan(&first.ID, &tenant, &first.Name); err != nil {
+		t.Fatal("Installed workspace unavailable")
+	}
+	if err := pool.QueryRow(ctx, "SELECT id FROM users WHERE email_canonical='admin@ownsolid.test'").Scan(&admin); err != nil {
+		t.Fatal("Installed administrator unavailable")
+	}
+	first.Application = "First workspace application"
+	second := combinedScope{uuid.NewString(), "Second member workspace", "Second workspace application"}
+	state := combinedScopeState{ForeignTenant: uuid.NewString(), ForeignWorkspace: uuid.NewString(), Marker: "Foreign-tenant-application-" + uuid.NewString()}
+	people := make([]person, 2)
+	for i := range people {
+		p := &people[i]
+		p.ID = uuid.NewString()
+		p.Email = fmt.Sprintf("scope-member-%d-%s@example.invalid", i, uuid.NewString())
+		p.Password = "Fixture-Portal-Scope-" + uuid.NewString()
+		p.Workspace = second
+		if i == 0 {
+			p.Workspace = first
+		}
+		p.PHC, err = passwords.Hash(ctx, p.Password)
+		if err != nil {
+			t.Fatal("Fixture password hashing refused")
+		}
+		state.Members = append(state.Members, p.ID)
+	}
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatal("Scope fixture transaction unavailable")
+	}
+	defer tx.Rollback(ctx)
+	exec := func(query string, args ...any) {
+		if _, err := tx.Exec(ctx, query, args...); err != nil {
+			t.Fatal("Scope fixture SQL refused", err)
+		}
+	}
+	exec("INSERT INTO tenants(id,name,status) VALUES($1,'Synthetic foreign tenant','active')", state.ForeignTenant)
+	exec("INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,$3,'active'),($4,$5,'Synthetic foreign scope','active')", second.ID, tenant, second.Name, state.ForeignWorkspace, state.ForeignTenant)
+	for _, p := range people {
+		exec("INSERT INTO users(id,email_canonical,email_display,display_name,locale,status,email_verified_at) VALUES($1,$2,$2,'Scope member','en','active',clock_timestamp())", p.ID, p.Email)
+		exec("INSERT INTO password_credentials(user_id,password_phc) VALUES($1,$2)", p.ID, p.PHC)
+		exec("INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES($1,$2,$3,'member')", p.ID, tenant, second.ID)
+		if p.ID == people[0].ID {
+			exec("INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role) VALUES($1,$2,$3,'member')", p.ID, tenant, first.ID)
+		}
+	}
+	graph := []byte(`{"schema_version":1,"nodes":[],"edges":[]}`)
+	digest := fmt.Sprintf("%x", sha256.Sum256(graph))
+	for _, item := range []struct{ tenant, workspace, name string }{{tenant, first.ID, first.Application}, {tenant, second.ID, second.Application}, {state.ForeignTenant, state.ForeignWorkspace, state.Marker}} {
+		workflow, version := uuid.NewString(), uuid.NewString()
+		if item.tenant == state.ForeignTenant {
+			state.ForeignApplication = workflow
+		}
+		exec(`INSERT INTO workflows(id,tenant_id,workspace_id,name,name_key,enabled,execution_authority,draft_graph,draft_sha256,created_by) VALUES($1,$2,$3,$4::text,lower($4::text),true,$5,$6::jsonb,$7,$8)`, workflow, item.tenant, item.workspace, item.name, uuid.NewString(), graph, digest, admin)
+		exec(`INSERT INTO workflow_versions(id,tenant_id,workspace_id,workflow_id,version_number,draft_revision,graph,graph_sha256,published_by) SELECT $1,tenant_id,workspace_id,id,1,revision,draft_graph,draft_sha256,created_by FROM workflows WHERE id=$2`, version, workflow)
+		exec("UPDATE workflows SET current_version_id=$1 WHERE id=$2", version, workflow)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		t.Fatal("Scope fixture commit refused")
+	}
+	write := func(path string, value any) {
+		raw, err := json.Marshal(value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, raw, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("/evidence/person.json", map[string]any{"people": people, "second": second, "foreign": map[string]string{"workspace": state.ForeignWorkspace, "marker": state.Marker}})
+	write("/evidence/scope-state.json", state)
+	fmt.Println("INSTALLED_PORTAL_SCOPE_FIXTURE_READY")
+}
+
+func TestTemporaryInstalledScopeProof(t *testing.T) {
+	pool := combinedFixtureDB(t)
+	var state combinedScopeState
+	raw, err := os.ReadFile("/evidence/scope-state.json")
+	if err != nil || json.Unmarshal(raw, &state) != nil {
+		t.Fatal("Scope fixture identity unavailable")
+	}
+	var proof struct {
+		Refused []string `json:"refused_request_ids"`
+	}
+	raw, err = os.ReadFile("/evidence/scope-proof.json")
+	if err != nil || json.Unmarshal(raw, &proof) != nil || len(proof.Refused) != 2 {
+		t.Fatal("Two browser refusal correlations required")
+	}
+	for _, id := range proof.Refused {
+		if uuid.Validate(id) != nil {
+			t.Fatal("Invalid browser request UUID")
+		}
+	}
+	var canary, memberships, success int
+	if err := pool.QueryRow(t.Context(), `SELECT count(*) FROM workflows w JOIN workflow_versions v ON v.id=w.current_version_id AND v.workflow_id=w.id WHERE w.id=$1 AND w.tenant_id=$2 AND w.workspace_id=$3 AND w.name=$4 AND w.enabled AND v.version_number=1`, state.ForeignApplication, state.ForeignTenant, state.ForeignWorkspace, state.Marker).Scan(&canary); err != nil || canary != 1 {
+		t.Fatal("Foreign projection changed", canary, err)
+	}
+	if err := pool.QueryRow(t.Context(), "SELECT count(*) FROM workspace_memberships WHERE user_id=ANY($1::uuid[]) AND (tenant_id=$2 OR workspace_id=$3)", state.Members, state.ForeignTenant, state.ForeignWorkspace).Scan(&memberships); err != nil || memberships != 0 {
+		t.Fatal("Foreign membership created", memberships, err)
+	}
+	if err := pool.QueryRow(t.Context(), "SELECT count(*) FROM audit_events WHERE outcome IN ('success','accepted') AND (request_id=ANY($1::uuid[]) OR (actor_user_id=ANY($2::uuid[]) AND (tenant_id=$3 OR workspace_id=$4)))", proof.Refused, state.Members, state.ForeignTenant, state.ForeignWorkspace).Scan(&success); err != nil || success != 0 {
+		t.Fatal("Refused request recorded success", success, err)
+	}
+	fmt.Printf("INSTALLED_SCOPE_DB_PROOF foreign_projection=%d foreign_memberships=%d refused_success_audits=%d request_ids=%v\n", canary, memberships, success, proof.Refused)
+}

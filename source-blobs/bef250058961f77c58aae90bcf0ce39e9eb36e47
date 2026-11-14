@@ -1,0 +1,26 @@
+groups:
+  - name: fleet-reachability
+    interval: 15s
+    rules:
+      - alert: OwnsolidRackUnreachable
+        expr: |
+          (
+            max by (site_id, cell_id, rack_id)
+              (last_over_time(up{job="ownsolid-node",site_id!="",cell_id!="",rack_id!="",node_id!=""}[45s])) == 0
+          ) and on (site_id, cell_id, rack_id)
+          (
+            count by (site_id, cell_id, rack_id)
+              (last_over_time(up{job="ownsolid-node",site_id!="",cell_id!="",rack_id!="",node_id!=""}[45s])) >= 2
+          )
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: All monitored nodes in the rack are unreachable
+      - alert: OwnsolidNodeUnreachable
+        expr: last_over_time(up{job="ownsolid-node",site_id!="",cell_id!="",node_id!=""}[45s]) == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: The node exporter is unreachable

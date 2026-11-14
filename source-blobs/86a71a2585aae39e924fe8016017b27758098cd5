@@ -1,0 +1,35 @@
+set -euo pipefail
+cd ~/lane-rel-cloud
+source ~/lane-rel-tools/env
+scratch=$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp
+export GOPROXY=off GOMAXPROCS=2 GOFLAGS=-p=1
+unshare -n bash -ec '
+ip link set lo up
+test "$(wc -l < /proc/net/route)" -eq 1
+"$HOME/lane-rel-tools/obs109-contract.Psjaj7Gp/python/bin/python" - <<'PY'
+import json
+from pathlib import Path
+import shutil
+import sys
+
+sys.path.insert(0, str(Path("tools/codegen/sdk").resolve()))
+from generate import generate_domain
+scratch = Path.home() / "lane-rel-tools/obs109-contract.Psjaj7Gp"
+root = scratch / "sdk"
+go_root = root / "gen/go"
+python_root = root / "gen/python/ownsolid_sdk"
+go_root.mkdir(parents=True)
+python_root.mkdir(parents=True)
+(python_root / "__init__.py").write_text("")
+generate_domain(
+    Path("api/openapi/v1/monitoring/openapi.json").resolve(), scratch,
+    go_root, python_root, str(scratch / "bin/oapi-codegen"),
+    str(scratch / "python/bin/openapi-python-client"),
+)
+for name in ("go.mod", "go.sum"):
+    shutil.copyfile(Path("tools/codegen/sdk/templates") / (name + ".template"), go_root / name)
+print("Generated the monitoring Go and Python clients without an external route")
+PY
+'
+grep -n -A 16 "def _get_kwargs" "$scratch/sdk/gen/python/ownsolid_sdk/monitoring/api/default/admin_fleet_history.py"
+

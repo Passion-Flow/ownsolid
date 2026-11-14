@@ -1,0 +1,51 @@
+from pathlib import Path
+import datetime,hashlib,json,os,re,shutil,signal,subprocess,tempfile,time
+stage=Path('/root/lane-rel-tools/serving-precheck-inputs._oswmm7b')
+source=Path('/root/lane-del-entrance-projection')
+manifest=json.loads((stage/'source.json').read_text())
+assert os.geteuid()==0 and os.uname().machine=='x86_64'
+assert subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True).strip()==manifest['base']
+changed=subprocess.check_output(['git','-C',str(source),'status','--porcelain'],text=True)
+expected={'deploy/offline/internal/install/'+name for name in manifest['files']}
+assert {line[3:] for line in changed.splitlines()}==expected
+for name,digest in manifest['files'].items():
+ assert hashlib.sha256((source/'deploy/offline/internal/install'/name).read_bytes()).hexdigest()==digest
+assert hashlib.sha256((stage/'installer.test').read_bytes()).hexdigest()==manifest['binary_sha256']
+header=(stage/'installer.test').read_bytes()[:20]
+assert header[:6]==b'\x7fELF\x02\x01' and int.from_bytes(header[18:20],'little')==62
+output=Path(tempfile.mkdtemp(prefix='serving-filesystem-native.',dir='/root/lane-rel-tools'))
+result={'scope':'Three installer unit/filesystem roots on actual Linux amd64; no Docker command, image execution, database, host port, actual Control CLI or installed acceptance','source':manifest,'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'parent_pid':os.getpid(),'heavy_leases':'Not requested for lightweight pure filesystem unit tests','resources':{'meminfo':Path('/proc/meminfo').read_text(),'io':Path('/proc/pressure/io').read_text(),'disk_free':shutil.disk_usage('/tmp').free}}
+shutil.copyfile(__file__,output/'parent.py')
+subprocess.run(['free','-m'],check=True);subprocess.run(['df','-h','/tmp'],check=True)
+fixture=None;child=None;started=time.monotonic()
+try:
+ fixture=Path(tempfile.mkdtemp(prefix='lane-del-serving-fs-',dir='/tmp'));fixture.chmod(0o711)
+ bindir=fixture/'bin';bindir.mkdir();bindir.chmod(0o755)
+ private=fixture/'tmp';private.mkdir();private.chmod(0o700);os.chown(private,65534,65534)
+ binary=bindir/'installer.test';shutil.copyfile(stage/'installer.test',binary);binary.chmod(0o555)
+ argv=['unshare','--mount','--net','--pid','--fork','--kill-child=KILL','--mount-proc','/bin/sh','-c',
+       'set -eu; ip -brief link; ip route show; ip -6 route show; exec "$@"','serving-filesystem-native',
+       'setpriv','--reuid','65534','--regid','65534','--clear-groups',str(binary),
+       '-test.run=^(TestServing|TestApplyServing)','-test.v','-test.timeout=15s']
+ environment={'PATH':'/usr/sbin:/usr/bin:/sbin:/bin','TMPDIR':str(private)+'/', 'GOMAXPROCS':'1','GOMEMLIMIT':'134217728B'}
+ with (output/'tests.log').open('w') as log:
+  child=subprocess.Popen(argv,env=environment,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+  try:status=child.wait(timeout=17)
+  finally:
+   if child.poll() is None:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=2)
+ text=(output/'tests.log').read_text()
+ result.update(exit=status,child_pid=child.pid,test_run_count=len(re.findall(r'^=== RUN   ',text,re.M)),root_count=len(re.findall(r'^=== RUN   Test[^/\n]+$',text,re.M)))
+ assert status==0,text
+ assert '--- SKIP:' not in text and '[no tests to run]' not in text and result['root_count']==3
+ for name in ['TestServingIntentUsesOnlyThePublicContract','TestApplyServingRefusalPreservesTheWriterAndCanRetry','TestServingImageCheckKeepsInstalledFilesAndRemovesItsOverride']:
+  assert re.search(r'^--- PASS: '+name+r' \(',text,re.M)
+ result['passed']=True
+finally:
+ if child is not None and child.poll() is None:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=2)
+ if fixture is not None:shutil.rmtree(fixture)
+ result['elapsed_seconds']=time.monotonic()-started
+ result['children_joined']=child is None or child.poll() is not None
+ result['owned_fixture_removed']=fixture is None or not fixture.exists()
+ result['packet_capture']='Not used; no new egress-detector qualification'
+ (output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+ print(output,flush=True);print(json.dumps({k:result[k] for k in ['passed','exit','elapsed_seconds','test_run_count','root_count','children_joined','owned_fixture_removed'] if k in result}),flush=True)

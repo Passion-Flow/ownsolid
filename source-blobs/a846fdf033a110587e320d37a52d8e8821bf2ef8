@@ -1,0 +1,181 @@
+diff --git a/docs/research/agent-gateway-rebalance.md b/docs/research/agent-gateway-rebalance.md
+index b6c5c404..b94249da 100644
+--- a/docs/research/agent-gateway-rebalance.md
++++ b/docs/research/agent-gateway-rebalance.md
+@@ -858,3 +858,32 @@ control and simulator race log SHA-256 values are
+ `1f754eabbb4703f7411773e53b252ba9abb0e8e0997887c4cc6855f30294d526`.
+ Native package execution and installed lifecycle acceptance remain pending. Keep
+ both original native failures; the earlier full Mac result does not erase them.
++
++
++## Instance-owned gateway idle baseline
++
++The corrected native client and outgoing transport suites passed on cf93c92e with
++proper package working directories. The next native gateway race run exposed an
++existing test-only global mutation: TestSlowlyPacedSessionOutlivesTheDefaultIdleTime
++restored idleTimeout while an HTTP/2 session handler still read it. Preserve the
++strict race report, SHA-256 `342d1d84d19a3cab60ae1d5cd5328f523ca4a668cb20c6b71b302962cc1b9909`.
++A successful Mac suite does not erase this native failure.
++
++Replace the mutable package default with the unchanged protocol constant captured
++by each Gateway at construction. A private constructor supplies the explicitly
++bounded baseline for the existing short-clock fixtures. Production New always
++uses the same version-1 default; runtime pacing can still extend the idle window.
++Do not add a configuration switch, change the 200 ms fixture clocks or relax the
++silence and held-claim assertions. Add an actual two-gateway independence test.
++An external source overlay passed all native gateway race tests and vet, including
++that test, before adoption. Its archive SHA-256 is
++`095997d301860ea4afa816e00826f355ebd475ec1596730b4a5d222ee05d704a`
++and race log SHA-256 is
++`eb3368dc05d440c28d57bc8017ba004925085ccd46c89c495b7429611da259aa`.
++The native race command finished in 5.193 seconds with no skips. No dependency,
++wire frame, server age enforcement or retry policy changes.
++
++Complete Mac check/build/test also passed cf93c92e with 1,191/410 browser cases and
++the existing 28/10 environment skips. The native fixture race still prevented
++installed acceptance at that input. Requalify the adopted immutable baseline and
++retain the unchanged installed 500-agent assertions.
+diff --git a/services/control/internal/platform/agentgateway/gateway.go b/services/control/internal/platform/agentgateway/gateway.go
+index e5a43f2c..a23b0afa 100644
+--- a/services/control/internal/platform/agentgateway/gateway.go
++++ b/services/control/internal/platform/agentgateway/gateway.go
+@@ -68,6 +68,7 @@ type Gateway struct {
+ 	sessions               map[string]*session
+ 	connectionHints        atomic.Uint64
+ 	connectionHintFailures atomic.Uint64
++	idleTimeout            time.Duration
+ 	// draining ends when Drain is called, and every session with it.
+ 	draining context.Context
+ 	drain    context.CancelFunc
+@@ -85,8 +86,7 @@ var errReplaced = errors.New("AGENT_SESSION_REPLACED")
+ // errDraining ends the sessions of a gateway that is stopping; agents move to another one.
+ var errDraining = errors.New("SERVICE_NOT_READY")
+ 
+-// idleTimeout closes a session that sends nothing; tests shorten it.
+-var idleTimeout = time.Duration(wire.SessionIdleSeconds) * time.Second
++const defaultIdleTimeout = time.Duration(wire.SessionIdleSeconds) * time.Second
+ 
+ // The session codec is selected by the "application/grpc+json" content type. A stream in
+ // any other encoding fails to decode its first message.
+@@ -95,10 +95,14 @@ func init() { encoding.RegisterCodec(wire.SessionCodec{}) }
+ // New builds a gateway. The gRPC server is never bound to a socket; ServeHTTP hands it
+ // streams from the control HTTPS listener.
+ func New(backend Backend, policy Policy, problem Problem) (*Gateway, error) {
+-	if backend == nil || problem == nil || policy.MaxSessions < 1 || policy.ExchangeSeconds < 1 {
++	return newGateway(backend, policy, problem, defaultIdleTimeout)
++}
++
++func newGateway(backend Backend, policy Policy, problem Problem, idle time.Duration) (*Gateway, error) {
++	if backend == nil || problem == nil || policy.MaxSessions < 1 || policy.ExchangeSeconds < 1 || idle <= 0 {
+ 		return nil, errors.New("AGENT_GATEWAY_CONFIGURATION_INVALID")
+ 	}
+-	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}}
++	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}, idleTimeout: idle}
+ 	g.draining, g.drain = context.WithCancel(context.Background())
+ 	g.server = grpc.NewServer(
+ 		grpc.MaxRecvMsgSize(wire.MaxSessionMessageBytes),
+@@ -234,7 +238,7 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
+ 		}
+ 	}()
+ 	// A session may stay silent for as long as its pacing allows (ADR 0013).
+-	idleAfter := idleTimeout
++	idleAfter := g.idleTimeout
+ 	idle := time.NewTimer(idleAfter)
+ 	defer idle.Stop()
+ 	var aged <-chan time.Time
+@@ -307,7 +311,7 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
+ 			return nil
+ 		}
+ 		if reply.Disposition != nil && reply.Disposition.Pacing != nil {
+-			idleAfter = max(idleTimeout, time.Duration(reply.Disposition.Pacing.IdleSeconds())*time.Second)
++			idleAfter = max(g.idleTimeout, time.Duration(reply.Disposition.Pacing.IdleSeconds())*time.Second)
+ 		}
+ 		// Silence counts from the reply: a held claim is control's time, not the agent's.
+ 		idle.Reset(idleAfter)
+diff --git a/services/control/internal/platform/agentgateway/gateway_test.go b/services/control/internal/platform/agentgateway/gateway_test.go
+index 22ff25cd..32536a1a 100644
+--- a/services/control/internal/platform/agentgateway/gateway_test.go
++++ b/services/control/internal/platform/agentgateway/gateway_test.go
+@@ -122,7 +122,12 @@ func start(t *testing.T, backend Backend, sessions int) (*Gateway, *grpc.ClientC
+ 
+ func startWith(t *testing.T, backend Backend, policy Policy) (*Gateway, *grpc.ClientConn) {
+ 	t.Helper()
+-	g, e := New(backend, policy, problem)
++	return startWithIdle(t, backend, policy, defaultIdleTimeout)
++}
++
++func startWithIdle(t *testing.T, backend Backend, policy Policy, idle time.Duration) (*Gateway, *grpc.ClientConn) {
++	t.Helper()
++	g, e := newGateway(backend, policy, problem, idle)
+ 	if e != nil {
+ 		t.Fatal(e)
+ 	}
+@@ -429,15 +434,13 @@ func TestNewRefusesIncompletePolicy(t *testing.T) {
+ // A session is as long-lived as its pacing asks for: a slow agent is not closed between
+ // two heartbeats even though it stays silent longer than the default.
+ func TestSlowlyPacedSessionOutlivesTheDefaultIdleTime(t *testing.T) {
+-	saved := idleTimeout
+-	idleTimeout = 200 * time.Millisecond
+-	t.Cleanup(func() { idleTimeout = saved })
+-	_, conn := start(t, &fakeBackend{pacing: &wire.Pacing{HeartbeatSeconds: wire.MaxHeartbeatSeconds, ReconnectBaseSeconds: 1, ReconnectMaxSeconds: 1}}, 4)
++	const idle = 200 * time.Millisecond
++	_, conn := startWithIdle(t, &fakeBackend{pacing: &wire.Pacing{HeartbeatSeconds: wire.MaxHeartbeatSeconds, ReconnectBaseSeconds: 1, ReconnectMaxSeconds: 1}}, Policy{MaxSessions: 4, ExchangeSeconds: 5}, idle)
+ 	stream := open(t, conn)
+ 	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
+ 		t.Fatal(e)
+ 	}
+-	time.Sleep(4 * idleTimeout)
++	time.Sleep(4 * idle)
+ 	if _, e := exchange(t, stream, heartbeat(2)); e != nil {
+ 		t.Fatalf("session closed while its pacing allowed the silence: %v", e)
+ 	}
+@@ -446,11 +449,9 @@ func TestSlowlyPacedSessionOutlivesTheDefaultIdleTime(t *testing.T) {
+ // Silence counts from the reply, so a claim held for longer than the idle time is not
+ // the agent's silence.
+ func TestHeldClaimDoesNotCountAsSilence(t *testing.T) {
+-	saved := idleTimeout
+-	idleTimeout = 200 * time.Millisecond
+-	t.Cleanup(func() { idleTimeout = saved })
+-	b := &fakeBackend{hold: 3 * idleTimeout}
+-	_, conn := start(t, b, 4)
++	const idle = 200 * time.Millisecond
++	b := &fakeBackend{hold: 3 * idle}
++	_, conn := startWithIdle(t, b, Policy{MaxSessions: 4, ExchangeSeconds: 5}, idle)
+ 	stream := open(t, conn)
+ 	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
+ 		t.Fatal(e)
+@@ -464,10 +465,8 @@ func TestHeldClaimDoesNotCountAsSilence(t *testing.T) {
+ }
+ 
+ func TestSilentSessionIsClosed(t *testing.T) {
+-	saved := idleTimeout
+-	idleTimeout = 200 * time.Millisecond
+-	t.Cleanup(func() { idleTimeout = saved })
+-	g, conn := start(t, &fakeBackend{}, 4)
++	const idle = 200 * time.Millisecond
++	g, conn := startWithIdle(t, &fakeBackend{}, Policy{MaxSessions: 4, ExchangeSeconds: 5}, idle)
+ 	stream := open(t, conn)
+ 	if _, e := exchange(t, stream, heartbeat(1)); e != nil {
+ 		t.Fatal(e)
+@@ -542,3 +541,21 @@ func TestDrainEndsSessionsAndRefusesNewOnes(t *testing.T) {
+ 		t.Fatalf("open sessions %d", g.Sessions())
+ 	}
+ }
++
++func TestIndependentGatewayIdlePolicies(t *testing.T) {
++	_, fast := startWithIdle(t, &fakeBackend{}, Policy{MaxSessions: 4, ExchangeSeconds: 5}, 200*time.Millisecond)
++	_, ordinary := start(t, &fakeBackend{}, 4)
++	early, normal := open(t, fast), open(t, ordinary)
++	for _, stream := range []grpc.ClientStream{early, normal} {
++		if _, err := exchange(t, stream, heartbeat(1)); err != nil {
++			t.Fatal(err)
++		}
++	}
++	var reply wire.ControlMessage
++	if err := early.RecvMsg(&reply); status.Code(err) != codes.DeadlineExceeded {
++		t.Fatalf("short idle did not close: %v", err)
++	}
++	if _, err := exchange(t, normal, heartbeat(2)); err != nil {
++		t.Fatalf("another gateway's short idle changed the ordinary session: %v", err)
++	}
++}
