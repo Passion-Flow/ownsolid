@@ -1,0 +1,522 @@
+{
+  "api/openapi/v1/monitoring/openapi.json": {
+    "git_blob": "f63720c984b831a38ce4e7172a8ad08fa0dddd13",
+    "mode": "100644",
+    "sha256": "92a72afd45c90a1c5345c8d2aebad6e72b2ab4eed024d48f0b1c864facd9a834"
+  },
+  "api/openapi/v1/monitoring/problem-statuses.json": {
+    "git_blob": "134013769fb982dee5f852533446b327a9ca299c",
+    "mode": "100644",
+    "sha256": "71e877d4e4b53a0aa265d1c3c1e95dfbef7324fd2e1b9937dbf750ba97fc64af"
+  },
+  "go.work": {
+    "git_blob": "d0e2df76840e2c97c489a74e45278be49e271251",
+    "mode": "100644",
+    "sha256": "d2da06271b98cf27596a65743b8f6f39504cc5557c95b8842c1c97c861b593b8"
+  },
+  "services/control/go.mod": {
+    "git_blob": "2ec528f764a61c0514611bae70b9123d4493bf16",
+    "mode": "100644",
+    "sha256": "384a9c7d04202ffc3f973efdd69789b6a36c7a31fa86dec5dcff3c49035efca5"
+  },
+  "services/control/go.sum": {
+    "git_blob": "38cefaf00fe5005a23e3fd3f1fb74bc672c27974",
+    "mode": "100644",
+    "sha256": "69958a2e9c376ea245a76ed1577a823a7f20b56ed64468c5a188b12fb092e307"
+  },
+  "services/control/internal/modules/monitoring/README.md": {
+    "git_blob": "41195420de38fc44dbbb5305c9462099da9d238c",
+    "mode": "100644",
+    "sha256": "2111d76700e269ee2597b8c82e68135e2c0b9fbe3b843deba9a33d1bf70d341f"
+  },
+  "services/control/internal/modules/monitoring/alerting/alertmanager-matrix.example.yaml": {
+    "git_blob": "e3f7e4cc5eb3b460320bbd29fd09fe30f5ff2260",
+    "mode": "100644",
+    "sha256": "033fd1315ab692f5603dd18d541c9cc2904aab398311e2fd424bd4ef75733887"
+  },
+  "services/control/internal/modules/monitoring/alerting/alertmanager-smtp.example.yaml": {
+    "git_blob": "6ff2605880519b21abcb8d131102a7e6d72a9f17",
+    "mode": "100644",
+    "sha256": "235eccfef82867e5819524759c66357f653bc602b1bc73db15b08a31cbced3da"
+  },
+  "services/control/internal/modules/monitoring/alerting/alertmanager.example.yaml": {
+    "git_blob": "61ba270ed86bc54d2193c1772b0a0fae6cd828bc",
+    "mode": "100644",
+    "sha256": "8b1cb188f51dea7fe0c77ddc1afb2a3a37bd031289585c65122b352b40739400"
+  },
+  "services/control/internal/modules/monitoring/alerting/bot_integration_test.go": {
+    "git_blob": "a29301cf715d9e82871d20c813fe2a3205cd82a0",
+    "mode": "100644",
+    "sha256": "3553f0ecf9256696b206ee80f4068dd5d9cc17f3cc1cb560042dddb97a76bbda"
+  },
+  "services/control/internal/modules/monitoring/alerting/cmd/dingtalk-relay/main.go": {
+    "git_blob": "51885f38aaf58ec955b50bada560d3bb5b56059f",
+    "mode": "100644",
+    "sha256": "f53488e70b25a1e4890c4b60997aa5f3da3faba0d34360d6fe8ba5dc5e3b91d3"
+  },
+  "services/control/internal/modules/monitoring/alerting/cmd/feishu-relay/main.go": {
+    "git_blob": "a65ac2628fd2920d77bd505bb2e7af1718e68de9",
+    "mode": "100644",
+    "sha256": "b39b641b7cb70f56794bed83656d87de2402ce59913f4aa6faf889cbab9ff618"
+  },
+  "services/control/internal/modules/monitoring/alerting/cmd/matrix-relay/main.go": {
+    "git_blob": "8eb3a005359dddd3e4095d799983b6b88dd4d271",
+    "mode": "100644",
+    "sha256": "466cb7858ac99d461643447b27d0d55f4f8477d6225d307e3a984f5bdcd4f603"
+  },
+  "services/control/internal/modules/monitoring/alerting/cmd/wecom-relay/main.go": {
+    "git_blob": "4fd50db7556d41f97c506b9af72948b30df2c769",
+    "mode": "100644",
+    "sha256": "c8420dc490e0df52c4cfaa714a55212c9cfde83375d58603c641847ca331e253"
+  },
+  "services/control/internal/modules/monitoring/alerting/dingtalk-relay.example.json": {
+    "git_blob": "7d1039736a45b2bb979ebf2171df8393993e8297",
+    "mode": "100644",
+    "sha256": "6a6ce9a35d1d80b63cc853a908a65b9afab6934b814cae357efc6a88fdddbfff"
+  },
+  "services/control/internal/modules/monitoring/alerting/dingtalk.go": {
+    "git_blob": "3a6bb0720857f61b268a256a89f0bad8457f675d",
+    "mode": "100644",
+    "sha256": "49cf2dd9eefa2b71dfa5845dc0b069dd566964d36be30988b6a32fbed32d4ebe"
+  },
+  "services/control/internal/modules/monitoring/alerting/dingtalk_test.go": {
+    "git_blob": "a013a7b1ed4820b3d85bdce21ae8b1677d52a4fe",
+    "mode": "100644",
+    "sha256": "666f91bb4507926ea4f450a145b121e5ef6404907e853f0be022b98a1d6d6caa"
+  },
+  "services/control/internal/modules/monitoring/alerting/durable_bot.go": {
+    "git_blob": "897954099b280199a2aad3dd9bd4627c04debf64",
+    "mode": "100644",
+    "sha256": "ee26c1d3a6271591f17b8ef8183046e7a9dee08c154985e564eeeca3a35f2951"
+  },
+  "services/control/internal/modules/monitoring/alerting/escalation_candidate.go": {
+    "git_blob": "a074c8b67e3aa4a394d2a21091254103b0f06078",
+    "mode": "100644",
+    "sha256": "a7947b85d718efea20124d338bb946baae7729037c9c4073e4cd848279618218"
+  },
+  "services/control/internal/modules/monitoring/alerting/escalation_candidate_integration_test.go": {
+    "git_blob": "8ab4df0e2752283b4b9c1c9371c1ad2ab967213b",
+    "mode": "100644",
+    "sha256": "30fbc36d5e701a60093c3568e79ec96ff65b70de11aa2d6f80ac9ca5d680df53"
+  },
+  "services/control/internal/modules/monitoring/alerting/escalation_store_candidate.go": {
+    "git_blob": "30b7c0b1be80caccb4858a634528bb73a3b0b536",
+    "mode": "100644",
+    "sha256": "d26f810dda70a7655476c3ffad29d74c9a256fde693c922eec80f89ddab20d60"
+  },
+  "services/control/internal/modules/monitoring/alerting/feishu-relay.example.json": {
+    "git_blob": "466e1dc96608453f28832aad19c2f76f79c3e937",
+    "mode": "100644",
+    "sha256": "a16e1c287f954cf556956ae7a0a6b324eaa7c7ed63c615e24318a68a2fd8a0bb"
+  },
+  "services/control/internal/modules/monitoring/alerting/feishu.go": {
+    "git_blob": "1e07b5a32e043b6060038ae419dac66b8f9cfb2c",
+    "mode": "100644",
+    "sha256": "c3f75f48475b9c28c87855f942a55ef50a13cec5e11aafd25fa5dce4e114f51b"
+  },
+  "services/control/internal/modules/monitoring/alerting/feishu_test.go": {
+    "git_blob": "7ba41e4ab91636127840a5b30d242b911bd9b32a",
+    "mode": "100644",
+    "sha256": "740324bd991ebba6ab06b3b6175b3ef418ba87a877c73e50ff2107676a55b93e"
+  },
+  "services/control/internal/modules/monitoring/alerting/fleet-rollup-rules.yaml": {
+    "git_blob": "3cbe6b3a47f56a6af8826f8e2cb936e99a41b190",
+    "mode": "100644",
+    "sha256": "19a7afd1e14abff3c5777cf32406cddd5726ab3bd098de0210d3991d241a73c3"
+  },
+  "services/control/internal/modules/monitoring/alerting/fleet-rules.yaml": {
+    "git_blob": "bef250058961f77c58aae90bcf0ce39e9eb36e47",
+    "mode": "100644",
+    "sha256": "cd3e52484dd4a595517d17fb59bc003c570fb3dbbfc68b7fbe7caaef658f91fa"
+  },
+  "services/control/internal/modules/monitoring/alerting/journal_integration_test.go": {
+    "git_blob": "185ae1e85c1dfd9966e3bcbf04103697c6c32669",
+    "mode": "100644",
+    "sha256": "688cb2eab936ea048b6ff1d245de1ee2dbf3991040dcca3a57e2d376ac5f8329"
+  },
+  "services/control/internal/modules/monitoring/alerting/matrix-relay.example.json": {
+    "git_blob": "7732d6d482ec57eb9dcb259298594cbc524b944a",
+    "mode": "100644",
+    "sha256": "74ab2ddcc46144226312a661b6138561a6e0a4331efd74a17496678944b07630"
+  },
+  "services/control/internal/modules/monitoring/alerting/matrix_integration_test.go": {
+    "git_blob": "69d46c9aaad2f4a6c8ac2b3e0904ed9c1d794f66",
+    "mode": "100644",
+    "sha256": "9c158099afeb60da8a2beb8225987fa24b2a5c40ce7ebb5b7e81a067659cd51b"
+  },
+  "services/control/internal/modules/monitoring/alerting/node-journal-rules.yaml": {
+    "git_blob": "5ff1931474752741960ab69e17f350bc9cacb3fb",
+    "mode": "100644",
+    "sha256": "d6d080af476e1fb0382b0ca39db823dd405e0a2d83c4b04b7e58192f949fb068"
+  },
+  "services/control/internal/modules/monitoring/alerting/node-scrape.example.yaml": {
+    "git_blob": "203579fe37cf20426550050e385c9731c4db08ab",
+    "mode": "100644",
+    "sha256": "cb9b4a011fa6a456a2a29d1b89800fa82fad2224ee178d65aff8377652cf33d0"
+  },
+  "services/control/internal/modules/monitoring/alerting/platform-probe-modules.example.yaml": {
+    "git_blob": "840cd543a692f140fe22205dea2c63fe31ba59f3",
+    "mode": "100644",
+    "sha256": "34462251d135b8f49cea12a93bf8e4024e5ca70e07a957e231580d1e7508653c"
+  },
+  "services/control/internal/modules/monitoring/alerting/platform-probe-scrape.example.yaml": {
+    "git_blob": "fe19c25da7e6b7c61adcb9fb51d666ad14636edb",
+    "mode": "100644",
+    "sha256": "aa6f39e573da1f1abcb98e8a2e0ded11f1a28d90b31ed94b2eff22486bfab6ad"
+  },
+  "services/control/internal/modules/monitoring/alerting/probe_integration_test.go": {
+    "git_blob": "1679561e176eb4692c402e1f601c0e31f66c7a88",
+    "mode": "100644",
+    "sha256": "da3c99df5132c0fbb89de8cd610396acd768b0c5cfd0377c3ff5093d36db1de6"
+  },
+  "services/control/internal/modules/monitoring/alerting/relay.go": {
+    "git_blob": "8450fb52f2946339157d1581019be4777ba630f3",
+    "mode": "100644",
+    "sha256": "666a9ae1d908e0615d8f8972a9729a24e4ea54d8b48e9230f522cd26efde8af1"
+  },
+  "services/control/internal/modules/monitoring/alerting/relay_config.go": {
+    "git_blob": "a85432edaa75444f9c8ca83eb9d8a088cf07d5de",
+    "mode": "100644",
+    "sha256": "02fd9ca9d44df02a4805ef9fea1881575f56fe18e05dc15247f6688c0fd9ab42"
+  },
+  "services/control/internal/modules/monitoring/alerting/relay_event.go": {
+    "git_blob": "c9ce7681feea9c4c9851606b79b5f6f0a65d7a18",
+    "mode": "100644",
+    "sha256": "0357e67b0d2a28a887a33ee8374740e040a1d600e904ededc33f752743351287"
+  },
+  "services/control/internal/modules/monitoring/alerting/relay_event_test.go": {
+    "git_blob": "6f28836659e4987aa7155c9723942cb327eac8af",
+    "mode": "100644",
+    "sha256": "d26669472b94fedf8f4eb8ed3e7f7e4389f79541c902ee4c2f5ea5c7086cdd5f"
+  },
+  "services/control/internal/modules/monitoring/alerting/relay_test.go": {
+    "git_blob": "169d0be0819bb4ab01bc1bc1c1113e648e12b6a4",
+    "mode": "100644",
+    "sha256": "a555bf295e7b268613507de314ae9fb540bb14f15cf6e5f7f560ca2cc8356c9b"
+  },
+  "services/control/internal/modules/monitoring/alerting/routing_integration_test.go": {
+    "git_blob": "8de73c7f6b25449e94f41b86d890fabdfc7f5421",
+    "mode": "100644",
+    "sha256": "8018010d2138d1cd0086b24a321ea4cba85cca82b49213f76b569d3d7c032ec6"
+  },
+  "services/control/internal/modules/monitoring/alerting/scrape_budget_integration_test.go": {
+    "git_blob": "af31b0768e76b644fd18515d7b0ec37ae74568b3",
+    "mode": "100644",
+    "sha256": "ea2683fcb2ff26859d156eb000ea7b1ee4c69280803de2580abe555ef98e4225"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-bot.sh": {
+    "git_blob": "ec99f446966b561988936d5d9d2137a14772fb3d",
+    "mode": "100644",
+    "sha256": "25b9a01ffb0cc231b63a562bfeac9315c64c605db7d60159e4f3295d6aed0cca"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-dingtalk.sh": {
+    "git_blob": "f2d6df6f39147da1ee19359cc81114253420f30e",
+    "mode": "100644",
+    "sha256": "a22913f122813a3226d73ea594b5ff5e9e034750ae62da7df3e50097255fd701"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-escalation.sh": {
+    "git_blob": "676ba6dfff4f0261f269b4f9edcbdc9d94fb0738",
+    "mode": "100644",
+    "sha256": "3aa5e3024db68155c80ea0d32f61a2e25d3fff8ff9da7952a62cc4b7dcaa62f9"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-feishu.sh": {
+    "git_blob": "d2d5aa150598cc0564b47b156f0fc8b1ddf9ba5c",
+    "mode": "100644",
+    "sha256": "a61482345a37b9d448be706b98c42d637b78eece595350be34f1d76110c006ac"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-journal-alerts.sh": {
+    "git_blob": "0f5488e3a161ee9fe65e890366858d6204c6b73a",
+    "mode": "100644",
+    "sha256": "64d9569f38e43cb86b4fd313c20c7597855778977e056f351cd66bb9239eb253"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-matrix.sh": {
+    "git_blob": "56e4614cc50c3ffcb1dd6e73f09f4bc4d03c87ee",
+    "mode": "100644",
+    "sha256": "8410f2705e61adc06a0f5847f8d964d764553789f7c55dbfb5f14d3474a4b6ac"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-platform-probes.sh": {
+    "git_blob": "aaa7bc1e04790826ae13bcfb3e1f00d9cf98ef00",
+    "mode": "100644",
+    "sha256": "cb0715c992d20936b8a14b63614b1088c7471f7aa016144e3f0a6ae27d1e6922"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-smtp.sh": {
+    "git_blob": "10801b8ed3e2570572127b79be3997fec029c185",
+    "mode": "100644",
+    "sha256": "18be90b7b8e9d3ee3c0a5c8caac46dfdbf9b8d52e0ed8878d3a40d89f4cd16c9"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/check-local-wecom.sh": {
+    "git_blob": "4f81a3436ab41bef1c461a8d6e7eec9dfcc748bb",
+    "mode": "100644",
+    "sha256": "e6c995ebbb19175eb76f7e454b7c99411b9ff03e3f4336c5a9504a373e7af4cf"
+  },
+  "services/control/internal/modules/monitoring/alerting/testdata/escalation-candidate.sql": {
+    "git_blob": "4fa05a63fce4fce954f00cfe0eb977700ae79e9f",
+    "mode": "100644",
+    "sha256": "1f89c08259db71bc4b9dc7866edd8ac6d8502fab03194958310575a129283391"
+  },
+  "services/control/internal/modules/monitoring/alerting/wecom-relay.example.json": {
+    "git_blob": "3e8afbbea3814a6f5be04b71718b321fad69d3cf",
+    "mode": "100644",
+    "sha256": "dc66892fac998b76cf522fd769dc912a3c32668348d6affe0a56d1207a691a90"
+  },
+  "services/control/internal/modules/monitoring/alerting/wecom.go": {
+    "git_blob": "a253cc3f2e3164a988c2730d1912434907af1960",
+    "mode": "100644",
+    "sha256": "397bfa95cabd473958097ac62227643cb1d680dc24c54bbcf4211d0d47355dca"
+  },
+  "services/control/internal/modules/monitoring/alerting/wecom_test.go": {
+    "git_blob": "7d6f452c1f9d7b344dfc116b468f3fdff67fc453",
+    "mode": "100644",
+    "sha256": "40d775c62538d58416a5d6a5e3e5d1639f28fe6d6811d124db022e52b421a9c3"
+  },
+  "services/control/internal/modules/monitoring/capacity_integration_test.go": {
+    "git_blob": "ae51bd6d7f7a31a8a09dcdbd9e392d85b25907dc",
+    "mode": "100644",
+    "sha256": "3a27ea8b622b1d60a4c12b9d62d216a7442101c7adf212b6dd714cb8f81387a0"
+  },
+  "services/control/internal/modules/monitoring/config.go": {
+    "git_blob": "a65d854315208620b2817b868a63e3983d605213",
+    "mode": "100644",
+    "sha256": "e99c07c150e76eef6f1b852cb0497819b4e5349d704b1467b5b3cef1ce1cb8ca"
+  },
+  "services/control/internal/modules/monitoring/config_test.go": {
+    "git_blob": "0373b54a42c4d3b5687673a502ebcb47accee731",
+    "mode": "100644",
+    "sha256": "28920d631e7077b559f5575e40fde6a8b662ad6a8300f78c9bfd01651de3f79d"
+  },
+  "services/control/internal/modules/monitoring/fleet_history.go": {
+    "git_blob": "6658df297039968272a08d49c43c128f8651f529",
+    "mode": "100644",
+    "sha256": "aad6cef1cf5acb709edfad3ad7e31750730ef2c80d2846b782064a2e1e3efb2b"
+  },
+  "services/control/internal/modules/monitoring/fleet_history_http_integration_test.go": {
+    "git_blob": "002f6baae4d4c3eae6b86295be7cdc071c2b5614",
+    "mode": "100644",
+    "sha256": "cad19cd49bfcce603f236e97206064f945eb0bc9f43a3af09a64c23b76b6bf24"
+  },
+  "services/control/internal/modules/monitoring/fleet_history_integration_test.go": {
+    "git_blob": "3dfe1bc9e775cfa0fe62fed7832efc93fedd24ca",
+    "mode": "100644",
+    "sha256": "2fe232b4a8ccf02cb35cd2b6b85bd31b3725c47145adb4f10a8be475fa41a788"
+  },
+  "services/control/internal/modules/monitoring/fleet_history_retention_integration_test.go": {
+    "git_blob": "cfd39f505515d54bd556a6cec5c671467aa74f41",
+    "mode": "100644",
+    "sha256": "bb3e481d4ad7d9bdf92aab6bee9b965d9fd40097c627ced89142252f2d1964be"
+  },
+  "services/control/internal/modules/monitoring/fleet_history_store.go": {
+    "git_blob": "67cbead03cc1991b85370c24bded85b8bd875f72",
+    "mode": "100644",
+    "sha256": "56f73fcc9767dbdeb467003db3a97af71e0acd8b6038b1747d8813d7a7894d41"
+  },
+  "services/control/internal/modules/monitoring/fleet_history_test.go": {
+    "git_blob": "b80b747534ed258f7f7d45bd87757da6c7590431",
+    "mode": "100644",
+    "sha256": "7d725b7ddb02bd19665665d63a17e607862b96c70f537ae55fa9a683f2ee58ba"
+  },
+  "services/control/internal/modules/monitoring/fleet_history_tls_integration_test.go": {
+    "git_blob": "1dd06aa12e82fd6e969787415c94d6622ab3c994",
+    "mode": "100644",
+    "sha256": "bc731d29df12bde534fe5d05956c8ead9a8cbe78ef9f74a7f963a2a58b1a90fd"
+  },
+  "services/control/internal/modules/monitoring/http/fleet_history.go": {
+    "git_blob": "f1b32b7850acc976c5befff17ad6f4b7a7461352",
+    "mode": "100644",
+    "sha256": "1ed549bde96546a6702065517ab721887a32f52dc4eba65917683c5cc4e650fd"
+  },
+  "services/control/internal/modules/monitoring/http/fleet_history_test.go": {
+    "git_blob": "591c57816f907be611d7a25539d4dfb7520339a0",
+    "mode": "100644",
+    "sha256": "df3fea1d64d5f17b100ce50807731b3e378c4018687b5384572e83bbdf2614de"
+  },
+  "services/control/internal/modules/monitoring/http/handler.go": {
+    "git_blob": "f2bc6bdd51d89e982ad3f998fce9cb18a5c49ec9",
+    "mode": "100644",
+    "sha256": "46aed48697ab894eeaade4e6b5f7e4804c85fe74427954f39da16806693f7023"
+  },
+  "services/control/internal/modules/monitoring/http/handler_test.go": {
+    "git_blob": "ac3e8e3be41a3f8a32de300cf0215049f1bc1eff",
+    "mode": "100644",
+    "sha256": "5a1f8acee314c1b53d22471c89768b96fc1d7972d5cdca3f50430ea6116eead1"
+  },
+  "services/control/internal/modules/monitoring/http/series_cardinality.go": {
+    "git_blob": "0ecc74bef6e73e6447562d07c58040c7186467bd",
+    "mode": "100644",
+    "sha256": "b37304e545604699908b782a835c6763a12147545cc42b5ed9c85e5df833187b"
+  },
+  "services/control/internal/modules/monitoring/http/series_cardinality_test.go": {
+    "git_blob": "b29f8ce515349637dece12ec7890334dcf7e78d4",
+    "mode": "100644",
+    "sha256": "411a6939638e744a2f99361bbcfab6127d87d49e3c1bae136c7b654dc45978b2"
+  },
+  "services/control/internal/modules/monitoring/metrics_observation.go": {
+    "git_blob": "e5cdb693e6174fdec124c5dad7787894223f7752",
+    "mode": "100644",
+    "sha256": "8ec3a9a8bc85b925372914d89ff2deee9e4d964a629d136146907149e6db39bb"
+  },
+  "services/control/internal/modules/monitoring/metrics_query.go": {
+    "git_blob": "e2abe1989d8d7d5f2dcf0c0f2f32a4fede963f32",
+    "mode": "100644",
+    "sha256": "aed1247d3f29c1819c92d9d602a0fc0c8f6ab83074bacfa97c5dd331914ef1ad"
+  },
+  "services/control/internal/modules/monitoring/native_repository.go": {
+    "git_blob": "8575039b156233577abf3f022e76ea82928df3f2",
+    "mode": "100644",
+    "sha256": "0af35fe0a229a367575046d853b093ae9476eadcae1144c7b6847e16248b164d"
+  },
+  "services/control/internal/modules/monitoring/native_repository_integration_test.go": {
+    "git_blob": "2a423f3281a6f9e99c6aec0806ba4f7087e4fbb8",
+    "mode": "100644",
+    "sha256": "28f722893cb25fac8e47a47534689b05cf7fc1d8c40a71943743864fb139f31c"
+  },
+  "services/control/internal/modules/monitoring/native_repository_test.go": {
+    "git_blob": "7fed332dadeb23da16f0b518649a1cdcd7db9523",
+    "mode": "100644",
+    "sha256": "912c137059afca690bd8401fd18ea87a4799f82c3bf4395587c5b3c701913a4f"
+  },
+  "services/control/internal/modules/monitoring/repository_integration_test.go": {
+    "git_blob": "a951e3f503ae4bebc3c0ae4a47aeca09de08f74c",
+    "mode": "100644",
+    "sha256": "b5c42f7d6a5389cbc5738a5d83e58fbf5a4869fc301e91f5608db9019377dadd"
+  },
+  "services/control/internal/modules/monitoring/scrape_inventory.go": {
+    "git_blob": "316286c931e8d916f3a6779f9227251e93fcfa2d",
+    "mode": "100644",
+    "sha256": "47dc9b5aeb787502ea5c1f645dc2b70d379f8a944d838ff1d8baf7732a748e6f"
+  },
+  "services/control/internal/modules/monitoring/scrape_inventory_files.go": {
+    "git_blob": "34aaffeb0f6fb0b1c9d11f41013b55a47e831797",
+    "mode": "100644",
+    "sha256": "d15f48598ceee9e6a143db022dd713dd8795a30a42ef92a30dd5536482bb60e2"
+  },
+  "services/control/internal/modules/monitoring/scrape_inventory_integration_test.go": {
+    "git_blob": "575f380ef42a2de48ec04c573a5812b049c7fbec",
+    "mode": "100644",
+    "sha256": "183016f05fc1bd909555a2e6581764e2d8c74160f5bfcfd58e251d2296881310"
+  },
+  "services/control/internal/modules/monitoring/scrape_inventory_test.go": {
+    "git_blob": "3ac15f341e61a13dac9baa153d122da825521f4f",
+    "mode": "100644",
+    "sha256": "2e3c8f543c6537bc3d7959969057894c96264f8955d1dfd1defbff069a9101fa"
+  },
+  "services/control/internal/modules/monitoring/scrape_lease.go": {
+    "git_blob": "fe167e8baaa8862d020bbd47126f559a304ae8ff",
+    "mode": "100644",
+    "sha256": "606bddb7fb22b5762ffdd0ec4787c82c6b665a493fa22d7e5a5a3e3806c3ca10"
+  },
+  "services/control/internal/modules/monitoring/series_cardinality.go": {
+    "git_blob": "09e607235203cfcdd91417f36e5a4867c764da30",
+    "mode": "100644",
+    "sha256": "c81103f05ab8182c7c50799b6275a4882ea3086970c0746ce10125fc5392ce97"
+  },
+  "services/control/internal/modules/monitoring/series_cardinality_fixture_test.go": {
+    "git_blob": "59117b82d96f8dc757d0b06eb5f6ab1f47ec548a",
+    "mode": "100644",
+    "sha256": "7c83d22f99a72f17535d139f1fb17966ea38b581118ca5b0116c69540075a5d0"
+  },
+  "services/control/internal/modules/monitoring/series_cardinality_integration_test.go": {
+    "git_blob": "d2a27f199fcf9bc73aee2494cca2910945d155ff",
+    "mode": "100644",
+    "sha256": "4f86dcd6d0d08322ba8c3aff465680d0b07868459184942042cea61dca775233"
+  },
+  "services/control/internal/modules/monitoring/series_cardinality_source.go": {
+    "git_blob": "e8c1941b44b64453f0b38bf5b9a985621ba86655",
+    "mode": "100644",
+    "sha256": "f4540582c9b6d53df1fb68a886513248f620e37a4a9da500bc1684d02caf3739"
+  },
+  "services/control/internal/modules/monitoring/series_cardinality_source_integration_test.go": {
+    "git_blob": "111f935e400a82df2a018ef8d83c9d25845c32cf",
+    "mode": "100644",
+    "sha256": "cb3462f7feb9ab73c8ca8e686d849d2be05f4c44e3b3e5f2f0e798324d8ba2bb"
+  },
+  "services/control/internal/modules/monitoring/series_cardinality_source_test.go": {
+    "git_blob": "ab416e1bff5fe4dfc21192fd18d5b584baf2582d",
+    "mode": "100644",
+    "sha256": "feab59ebe125bfb864fab0211852e9a74765f1c292513647fe493ec63e2f6c6a"
+  },
+  "services/control/internal/modules/monitoring/series_cardinality_store.go": {
+    "git_blob": "46a64d03213a082282ee1c6067e8b1b593691f7a",
+    "mode": "100644",
+    "sha256": "c09ed97f47fb872d8dc267906c84a231bd8a7d2ea778e5b2d7ab8f102c6ede53"
+  },
+  "services/control/internal/modules/monitoring/series_cardinality_test.go": {
+    "git_blob": "a63141840c76ece14f5d0530c278a911beba4dbc",
+    "mode": "100644",
+    "sha256": "aec1b47b88c6e52f89f5c173cb37d2196eee52469d863a76538de7203f6f3dea"
+  },
+  "services/control/internal/modules/monitoring/service.go": {
+    "git_blob": "5de16d89ab60996418658b8c23cd480a33a49230",
+    "mode": "100644",
+    "sha256": "b52b39f8b8eda2aabac27855a85a7d5301ae13163a72bc2ccc4bf31cccf66173"
+  },
+  "services/control/internal/modules/monitoring/service_test.go": {
+    "git_blob": "f787c19fb570f645a13d91d1ee0e50a588c47f43",
+    "mode": "100644",
+    "sha256": "1a5d4757f6b2ad43a402a6deae66e2510876e190b26d3cb4eebffcdc073b9807"
+  },
+  "services/control/internal/modules/monitoring/testdata/check-fleet-history.sh": {
+    "git_blob": "d57de8fae74beb220c0bc0e9c0905150fe056c89",
+    "mode": "100644",
+    "sha256": "8f7793a44427a377ac8903f2fccffe3365b836773a4ad09aab6877e7f8068aec"
+  },
+  "services/control/internal/modules/monitoring/testdata/check-telemetry-restore.sh": {
+    "git_blob": "a2404a759f49b321ae0aae6544858dac807b2fd5",
+    "mode": "100644",
+    "sha256": "0225032b168a76441bbac271efa3c9373aae72bf80eb63eb7d70f7f5aaa67ad4"
+  },
+  "services/control/internal/platform/monitoringmetrics/README.md": {
+    "git_blob": "2f4c85f97159fee8fcf260fb1fc0cb0b89b17384",
+    "mode": "100644",
+    "sha256": "0783961642c4168645fcb5b994b09863107b8a3828b060999618d0a73de1fc98"
+  },
+  "services/control/internal/platform/monitoringmetrics/policy.go": {
+    "git_blob": "42cb58e48a2c9444ccdca5f38599ddfd5a95bd44",
+    "mode": "100644",
+    "sha256": "1c2a10fcbc84696381efeff48e852a33391d66d40ea61caeeded5c463e91cfd5"
+  },
+  "services/control/internal/platform/monitoringmetrics/process_test.go": {
+    "git_blob": "0a99b51d12fba82beaf719fc81937700e2e680c3",
+    "mode": "100644",
+    "sha256": "4ebada5ad15acf2677c19bf8d1747336ae51a778452f5d085c437d868238eebf"
+  },
+  "services/control/internal/platform/monitoringmetrics/recorder.go": {
+    "git_blob": "c46f0be0fa5b16ba7c337cd2068460e631876c21",
+    "mode": "100644",
+    "sha256": "df02fef7c1cbb2b68965968f92733e512ec3f45ceaa1dc54c99491f4d0866dbb"
+  },
+  "services/control/internal/platform/monitoringmetrics/recorder_test.go": {
+    "git_blob": "32d675334efdd54deaf985a1c8c768ebfe013dc2",
+    "mode": "100644",
+    "sha256": "f9a138f93857d878685839a6d81a65a696580ccaa05b5d5a7efde39f02934994"
+  },
+  "services/control/internal/platform/monitoringmetrics/routes_test.go": {
+    "git_blob": "a87db6ef017f9a2772b8f9584f776a6104589857",
+    "mode": "100644",
+    "sha256": "1aed7cfd552582f5f7e219c0890e115ff341a42e77ad279a60a8a48eac91c158"
+  },
+  "services/control/internal/platform/monitoringmetrics/runtime.go": {
+    "git_blob": "0cca3fc962b37ea984ac340b9bcb7af699f02482",
+    "mode": "100644",
+    "sha256": "32e18e29a34bf7d0878bf17dcbcaf80e637c6f654541e0ce3539d965e8e833a5"
+  },
+  "services/control/internal/platform/monitoringmetrics/scale_integration_test.go": {
+    "git_blob": "c9cd64c47840986e0e7b4c0eabe4873644df018f",
+    "mode": "100644",
+    "sha256": "14fb8c131fe9b6e1e14831cb86987a589e8dbc0adad2856c84072d73bb2c1922"
+  },
+  "services/control/internal/platform/monitoringmetrics/testdata/check_cardinality_scope.py": {
+    "git_blob": "bbaa8f61dd707c3b63a557672f565ac5eecb1ce9",
+    "mode": "100644",
+    "sha256": "2b8a4037631adbaf7bab54275871e7cd4aad7424256932a5ce2a40de1d1f5bcb"
+  },
+  "services/control/internal/platform/monitoringmetrics/testdata/run-scale.sh": {
+    "git_blob": "d01035f7d23d1d32c310f716367351e00633b955",
+    "mode": "100644",
+    "sha256": "17aed65ab3c50e793b24ea65652ac1a9674baaca068fdb4893a242e30a2bc9ab"
+  },
+  "services/control/internal/platform/monitoringmetrics/transport_test.go": {
+    "git_blob": "fa94ec51f9505b46800ae3ac08f325d1c92307ca",
+    "mode": "100644",
+    "sha256": "134e3d55c3c9d084e5c5b82a7b30315936af5b1e5b0dbfcef2799fec0306c0bf"
+  }
+}

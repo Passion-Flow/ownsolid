@@ -1,0 +1,39 @@
+{
+  "source": "66a3cafdbe1280d9b319f78077e89671253b5463",
+  "module": [
+    "TestSeriesCardinalityConfiguration",
+    "TestSeriesCardinalityQueryValidation",
+    "TestSeriesCardinalityScopedNativeProjection",
+    "TestSeriesCardinalityRejectsMalformedAndIncompleteSource",
+    "TestSeriesCardinalityDateAndRankAdmission",
+    "TestSeriesCardinalityRedirectAndCancellation",
+    "TestSeriesCardinalityEmptyAndRankOrdering",
+    "TestSeriesCardinalitySourceRejectsUntrustedObservation",
+    "TestSeriesCardinalitySourceNativeProfile",
+    "TestSeriesCardinalitySourceRequiresCompositionOwner",
+    "TestSeriesCardinalitySourceLossRecoveryAndCleanup",
+    "TestSeriesCardinalitySourceCancelsInFlightLease",
+    "TestSeriesCardinalitySourceStartupAndPolicyBinding",
+    "TestSeriesCardinalitySourceRevalidatesEveryLease",
+    "TestFleetHistoryConfiguration",
+    "TestFleetHistoryValidatesNativeSeries",
+    "TestFleetHistoryDoesNotFollowStoreRedirects",
+    "TestFleetHistoryJSONIncludesServingEnvelopeInBudget"
+  ],
+  "http": [
+    "TestFleetHistoryRejectsAmbiguousInput",
+    "TestFleetHistoryPublicProblemCodes",
+    "TestSeriesCardinalityCanonicalHTTPQuery",
+    "TestSeriesCardinalityRefusesAmbiguousHTTPQuery",
+    "TestSeriesCardinalityRemainsOutsidePublicDispatch",
+    "TestExactDiagnosticRouteRejectsAmbiguousInputs"
+  ],
+  "routes": [
+    "TestActualHealthRoutesKeepBoundedClassesOverTLS",
+    "TestCanonicalMachineFamiliesKeepIdentityOutOfLabels"
+  ],
+  "total": 26,
+  "runtime": "NOTRUN",
+  "linux_integration_tag_compile": "NOTRUN",
+  "epoch": "NOT_ACTIVATED"
+}

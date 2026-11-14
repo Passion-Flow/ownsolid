@@ -1,0 +1,265 @@
+{
+  "original_refs": {
+    "refs/obs/recovery-q9_bn42t/delivery": {
+      "original_sha": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3",
+      "covered_by_original_tip": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3"
+    },
+    "refs/remotes/obs/main-integration-20261113": {
+      "original_sha": "ecab4c9824c534ba24823a3ed56f388a796db872",
+      "covered_by_original_tip": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3"
+    },
+    "refs/remotes/obs/producer-0080": {
+      "original_sha": "5d65f599f09b6f4b66f6570e90dbdf021b03a700",
+      "covered_by_original_tip": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3"
+    },
+    "refs/remotes/obs/producer-d8a28bc4": {
+      "original_sha": "d8a28bc4335eefd3e39884b04337dea5d395f4ca",
+      "covered_by_original_tip": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3"
+    },
+    "refs/remotes/obs/producer-native-import": {
+      "original_sha": "66a3cafdbe1280d9b319f78077e89671253b5463",
+      "covered_by_original_tip": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3"
+    }
+  },
+  "original_tip_refs": {
+    "salvage/mac/obs/net102-before-schema59-aa4ba5534e08": "aa4ba5534e08736e5055d21a4b343a4b532279af",
+    "salvage/mac/obs/obs-876f9c5b-876f9c5b2692": "876f9c5b26926d29c47e0bbf3ad572c137073816",
+    "salvage/mac/obs/recovery-delivery-dda4e8c317bd": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3"
+  },
+  "source_files": {
+    "source/check-source-logic-v4.py.frozen-epoch50313339": {
+      "original": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/raw/check-source-logic-v4.py.frozen-epoch50313339",
+      "sha256": "5d7ffd2bbeaae46f8e0c1e3a7e9173f077e2ffc243ef51523ce5c3e1887c4db0",
+      "bytes": 8508,
+      "projection": "full original bytes"
+    },
+    "source/test-source-logic-v4.py": {
+      "original": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/raw/test-source-logic-v4.py",
+      "sha256": "49e2d824bd23aec0cf5d37a3cccf27b06cab52b63050001e0102be3793881ef7",
+      "bytes": 5471,
+      "projection": "full original bytes"
+    },
+    "source/source-logic-v4.json": {
+      "original": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/raw/source-logic-v4.json",
+      "sha256": "4e9ab201a940157e600bcdc20a8655ae2791bb09f73b723b6f425a465c6ac985",
+      "bytes": 202,
+      "projection": "full original bytes"
+    },
+    "handoff/source-recovery.json": {
+      "original": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/source-recovery.json",
+      "sha256": "a83f75e6e23f14087c86168111f859a475b727d4001a165b9dedc3b82d7ebcb0",
+      "bytes": 1012,
+      "projection": "full original bytes"
+    },
+    "handoff/source-inputs.json": {
+      "original": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/source-inputs.json",
+      "sha256": "bc229d408067fab2895eb8a6c3cf6563f1563cdab382ee4084f32e354aa833d8",
+      "bytes": 25790,
+      "projection": "full original bytes"
+    },
+    "handoff/pending-roots.json": {
+      "original": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/pending-roots.json",
+      "sha256": "27e476b6908295a41c033005a0d4cb3ec84a897f8989cbc4e603640064420f1e",
+      "bytes": 1573,
+      "projection": "full original bytes"
+    },
+    "handoff/recovery-summary.json": {
+      "original": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/recovery-summary.json",
+      "sha256": "986aa210f3045b4373cc1e566cad47c644dee7319cae9d3ecdb77b96542aa957",
+      "bytes": 1580,
+      "projection": "full original bytes"
+    },
+    "handoff/recovered-evidence.json": {
+      "original": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/recovered-evidence.json",
+      "sha256": "247f7aaf8736a2abdca4a0c6a545ab673578c0f1a7cc5bbe3eaec9885902bd76",
+      "bytes": 1321,
+      "projection": "full original bytes"
+    }
+  },
+  "exclusions": [
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/source-and-evidence.bundle",
+      "reason": "Git binary bundle; head preserved by original-tip refs, file retained",
+      "sha256": "4afe34474fb6e2850d9b30c8510f332ab631d1b78da83771bc2b72c95cf0c43c",
+      "retained": true
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/inventory.json",
+      "reason": "recovery inventory duplicated by migration handoff mapping; original retained",
+      "sha256": "035736b7205e5989450229b3f3a05534ff4903f9439337b0437fba578ae31cdc",
+      "retained": true
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/49f03d45.commit.raw",
+      "reason": "duplicate of preserved Git commit/object; original retained",
+      "sha256": "34fed8eaab61a37a439b2a5f13ebac61c955bc89dbd72de091d19c7c6c5da5bb",
+      "retained": true
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/docs/research/series-cardinality-scope.md",
+      "reason": "duplicate of preserved Git commit/object; original retained",
+      "sha256": "3ab640856c166af93645278e0cecfb354f816bba63e18e31e1d2013e11976446",
+      "retained": true
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/docs/product/status.md",
+      "reason": "duplicate of preserved Git commit/object; original retained",
+      "sha256": "545bd12cb7010e18a62b813abaeff25eae8f42a1fd356a21a04a7e5946a596b5",
+      "retained": true
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/raw/schema59-native-result.json",
+      "reason": "runtime verification output retained in place; not source",
+      "sha256": "87f30f963481f61fa531ad6c15a8355f5c62ad32fd4ef555d012fae7f49a391e",
+      "retained": true
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/raw/result.json",
+      "reason": "runtime verification output retained in place; not source",
+      "sha256": "624b5255be4804212613fd5ff4971281ae7d2dbe3e8d7afdeb8f8d5387213e98",
+      "retained": true
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/raw/observation.json",
+      "reason": "runtime verification output retained in place; not source",
+      "sha256": "d02934d148d51160cf70248f9c02977652e2599e3634f5cd63bfef2b7c3e67f9",
+      "retained": true
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/raw/stdout.log",
+      "reason": "runtime verification output retained in place; not source",
+      "sha256": "d54f5dcab80ddcf8bbcd148f7441c2307f2be40be484d34b10ee8b2f32bfe822",
+      "retained": true
+    },
+    {
+      "path": "/private/tmp/obs110-main-integration-pb1qgf_t/source",
+      "reason": "directory already absent before migration; registration/index retained; source tip mapping preserved",
+      "retained_registration": true
+    },
+    {
+      "path": "/private/tmp/obs110-main-integration-pb1qgf_t/producer-source",
+      "reason": "directory already absent before migration; registration/index retained; source tip mapping preserved",
+      "retained_registration": true
+    },
+    {
+      "path": "/private/tmp/obs110-main-integration-pb1qgf_t/producer-source-0080",
+      "reason": "directory already absent before migration; registration/index retained; source tip mapping preserved",
+      "retained_registration": true
+    },
+    {
+      "path": "/private/tmp/obs110-main-integration-pb1qgf_t/producer-source-native-import",
+      "reason": "directory already absent before migration; registration/index retained; source tip mapping preserved",
+      "retained_registration": true
+    }
+  ],
+  "retained_index": {
+    "path": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/source/index",
+    "sha256": "fdb2724a96971030fa5b3f73605b918fa6adea277b4cfbf7a5dc2bc3df3934c6",
+    "paths": [
+      "services/control/internal/modules/monitoring/README.md",
+      "services/control/internal/modules/monitoring/config.go",
+      "services/control/internal/modules/monitoring/fleet_history.go",
+      "services/control/internal/modules/monitoring/fleet_history_http_integration_test.go",
+      "services/control/internal/modules/monitoring/fleet_history_integration_test.go",
+      "services/control/internal/modules/monitoring/fleet_history_retention_integration_test.go",
+      "services/control/internal/modules/monitoring/fleet_history_store.go",
+      "services/control/internal/modules/monitoring/fleet_history_test.go",
+      "services/control/internal/modules/monitoring/http/handler.go",
+      "services/control/internal/modules/monitoring/http/series_cardinality.go",
+      "services/control/internal/modules/monitoring/http/series_cardinality_test.go",
+      "services/control/internal/modules/monitoring/metrics_observation.go",
+      "services/control/internal/modules/monitoring/metrics_query.go",
+      "services/control/internal/modules/monitoring/series_cardinality.go",
+      "services/control/internal/modules/monitoring/series_cardinality_fixture_test.go",
+      "services/control/internal/modules/monitoring/series_cardinality_integration_test.go",
+      "services/control/internal/modules/monitoring/series_cardinality_store.go",
+      "services/control/internal/modules/monitoring/series_cardinality_test.go",
+      "services/control/internal/modules/monitoring/service.go",
+      "services/control/internal/modules/monitoring/testdata/check-fleet-history.sh",
+      "services/control/internal/platform/monitoringmetrics/README.md",
+      "services/control/internal/platform/monitoringmetrics/recorder.go",
+      "services/control/internal/platform/monitoringmetrics/routes_test.go",
+      "services/control/internal/platform/monitoringmetrics/testdata/check_cardinality_scope.py"
+    ],
+    "covered_by_commit": "5ef9c4e8e0094e8cd28d193aae17fac63b6e5acd",
+    "blob_ids": {
+      "services/control/internal/modules/monitoring/README.md": "a532fc1231ff46ba1d391f3d2216b6154aa8d142",
+      "services/control/internal/modules/monitoring/config.go": "a65d854315208620b2817b868a63e3983d605213",
+      "services/control/internal/modules/monitoring/fleet_history.go": "6658df297039968272a08d49c43c128f8651f529",
+      "services/control/internal/modules/monitoring/fleet_history_http_integration_test.go": "002f6baae4d4c3eae6b86295be7cdc071c2b5614",
+      "services/control/internal/modules/monitoring/fleet_history_integration_test.go": "0ef65b67d0ddff28580f883aba29fe79e5157715",
+      "services/control/internal/modules/monitoring/fleet_history_retention_integration_test.go": "cfd39f505515d54bd556a6cec5c671467aa74f41",
+      "services/control/internal/modules/monitoring/fleet_history_store.go": "67cbead03cc1991b85370c24bded85b8bd875f72",
+      "services/control/internal/modules/monitoring/fleet_history_test.go": "b80b747534ed258f7f7d45bd87757da6c7590431",
+      "services/control/internal/modules/monitoring/http/handler.go": "f2bc6bdd51d89e982ad3f998fce9cb18a5c49ec9",
+      "services/control/internal/modules/monitoring/http/series_cardinality.go": "0ecc74bef6e73e6447562d07c58040c7186467bd",
+      "services/control/internal/modules/monitoring/http/series_cardinality_test.go": "b29f8ce515349637dece12ec7890334dcf7e78d4",
+      "services/control/internal/modules/monitoring/metrics_observation.go": "e5cdb693e6174fdec124c5dad7787894223f7752",
+      "services/control/internal/modules/monitoring/metrics_query.go": "e2abe1989d8d7d5f2dcf0c0f2f32a4fede963f32",
+      "services/control/internal/modules/monitoring/series_cardinality.go": "75f501c9618dc73cf8aff3672343316f42b1e094",
+      "services/control/internal/modules/monitoring/series_cardinality_fixture_test.go": "59117b82d96f8dc757d0b06eb5f6ab1f47ec548a",
+      "services/control/internal/modules/monitoring/series_cardinality_integration_test.go": "9112e78dddeae5a33d0c71024d2a6756e8ebc1cd",
+      "services/control/internal/modules/monitoring/series_cardinality_store.go": "2801d5c1446c64938e7c9633fda9025af73ffdce",
+      "services/control/internal/modules/monitoring/series_cardinality_test.go": "3fc939bba0a4ba84c175bbfd2cb8a4b47630a66a",
+      "services/control/internal/modules/monitoring/service.go": "9e63168e382ed15cb6be4e2c4c21ace8b4f82ddd",
+      "services/control/internal/modules/monitoring/testdata/check-fleet-history.sh": "d57de8fae74beb220c0bc0e9c0905150fe056c89",
+      "services/control/internal/platform/monitoringmetrics/README.md": "2f4c85f97159fee8fcf260fb1fc0cb0b89b17384",
+      "services/control/internal/platform/monitoringmetrics/recorder.go": "c46f0be0fa5b16ba7c337cd2068460e631876c21",
+      "services/control/internal/platform/monitoringmetrics/routes_test.go": "a87db6ef017f9a2772b8f9584f776a6104589857",
+      "services/control/internal/platform/monitoringmetrics/testdata/check_cardinality_scope.py": "bbaa8f61dd707c3b63a557672f565ac5eecb1ce9"
+    }
+  },
+  "own_head_reflogs": [
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/producer-source-0080/logs/HEAD",
+      "commit_count": 1,
+      "uncovered_known_commits": []
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/source/logs/HEAD",
+      "commit_count": 1,
+      "uncovered_known_commits": []
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/producer-source-native-import/logs/HEAD",
+      "commit_count": 1,
+      "uncovered_known_commits": []
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/producer-source/logs/HEAD",
+      "commit_count": 1,
+      "uncovered_known_commits": []
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/source1/logs/HEAD",
+      "commit_count": 1,
+      "uncovered_known_commits": []
+    }
+  ],
+  "stash_review": "Three IAM stashes are not OBS-owned and were not touched",
+  "shared_reflog_only_history": "Coordinator preservation covers remaining global history; no duplicate global scan",
+  "bundle_review": [
+    {
+      "path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/evidence/source-and-evidence.bundle",
+      "sha256": "4afe34474fb6e2850d9b30c8510f332ab631d1b78da83771bc2b72c95cf0c43c",
+      "list_heads_exit_code": 0,
+      "heads": [
+        {
+          "sha": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3",
+          "name": "refs/heads/codex/obs-110-main-integration",
+          "covered_by_planned_original_refs": [
+            {
+              "planned_remote_ref": "refs/heads/salvage/mac/obs/recovery-delivery-dda4e8c317bd",
+              "covering_tip": "dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3"
+            }
+          ]
+        }
+      ],
+      "retained": true,
+      "file_excluded_from_git_archive": true
+    }
+  ],
+  "embedded_binary_bundle_in_private_scripts": false,
+  "verification": "Source preservation only; 26 Go roots/native compile and installed-source acceptance remain NOTRUN",
+  "main_admission": "RESOURCE_NOT_READY"
+}

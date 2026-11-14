@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-11-13T19:46:35.221743+08:00",
+  "source_path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/source",
+  "head": "66a3cafdbe1280d9b319f78077e89671253b5463",
+  "tree": "7971f52e403e879d1861d916adeb4262d9eb117b",
+  "clean": true,
+  "evidence_commit": "49f03d458f0af72c8e9774ee84548369753d28a6",
+  "evidence_tree": "b18c7719a06870c9376e31e941a9161550a1d278",
+  "preserved_files": {
+    "source-recovery.json": "a83f75e6e23f14087c86168111f859a475b727d4001a165b9dedc3b82d7ebcb0",
+    "source-inputs.json": "bc229d408067fab2895eb8a6c3cf6563f1563cdab382ee4084f32e354aa833d8",
+    "pending-roots.json": "27e476b6908295a41c033005a0d4cb3ec84a897f8989cbc4e603640064420f1e",
+    "evidence/source-and-evidence.bundle": "4afe34474fb6e2850d9b30c8510f332ab631d1b78da83771bc2b72c95cf0c43c",
+    "evidence/recovered-evidence.json": "247f7aaf8736a2abdca4a0c6a545ab673578c0f1a7cc5bbe3eaec9885902bd76",
+    "evidence/49f03d45.commit.raw": "34fed8eaab61a37a439b2a5f13ebac61c955bc89dbd72de091d19c7c6c5da5bb"
+  },
+  "selected_go_roots": 26,
+  "execution": "NOTRUN",
+  "new_epoch": "NOT_ACTIVATED",
+  "old_entry_canonical_absent": true,
+  "scope_limits": [
+    "Seven raw files and the source/evidence commit chain preserved; no product qualification was run.",
+    "Schema-59 result belongs only to the old 5f83 native profile; full native log/binary inventory was not migrated in this recovery.",
+    "The old pure wrapper check source and its recorded research are preserved; no separate raw pure-check execution log was located or fabricated."
+  ]
+}

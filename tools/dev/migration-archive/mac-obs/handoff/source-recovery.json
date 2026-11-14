@@ -1,0 +1,18 @@
+{
+  "private_root": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t",
+  "source_path": "/Users/passion./.local/state/ownsolid/lane-obs/restore-66a3cafd-q9_bn42t/source",
+  "head": "66a3cafdbe1280d9b319f78077e89671253b5463",
+  "tree": "7971f52e403e879d1861d916adeb4262d9eb117b",
+  "status": "",
+  "original_commit_bytes_sha256": "92a02279337c322b5232e534751b7935eb9fb332b1f219f2ccb64458918af728",
+  "unchanged_missing_registry_count": 4,
+  "missing_registry_paths": [
+    "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/producer-source-0080",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/source",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/producer-source-native-import",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/producer-source"
+  ],
+  "source_restoration_only": true,
+  "tests": "NOTRUN",
+  "epoch": "NOT_ACTIVATED"
+}

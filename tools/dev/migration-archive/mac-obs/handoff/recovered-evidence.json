@@ -1,0 +1,21 @@
+{
+  "evidence_commit": "49f03d458f0af72c8e9774ee84548369753d28a6",
+  "tree": "b18c7719a06870c9376e31e941a9161550a1d278",
+  "parent": "66a3cafdbe1280d9b319f78077e89671253b5463",
+  "commit_bytes_sha256": "34fed8eaab61a37a439b2a5f13ebac61c955bc89dbd72de091d19c7c6c5da5bb",
+  "private_ref": "refs/obs/recovery-q9_bn42t/delivery",
+  "local_raw_files": {
+    "result.json": "624b5255be4804212613fd5ff4971281ae7d2dbe3e8d7afdeb8f8d5387213e98",
+    "observation.json": "d02934d148d51160cf70248f9c02977652e2599e3634f5cd63bfef2b7c3e67f9",
+    "stdout.log": "d54f5dcab80ddcf8bbcd148f7441c2307f2be40be484d34b10ee8b2f32bfe822",
+    "source-logic-v4.json": "4e9ab201a940157e600bcdc20a8655ae2791bb09f73b723b6f425a465c6ac985",
+    "test-source-logic-v4.py": "49e2d824bd23aec0cf5d37a3cccf27b06cab52b63050001e0102be3793881ef7",
+    "check-source-logic-v4.py.frozen-epoch50313339": "5d7ffd2bbeaae46f8e0c1e3a7e9173f077e2ffc243ef51523ce5c3e1887c4db0",
+    "schema59-native-result.json": "87f30f963481f61fa531ad6c15a8355f5c62ad32fd4ef555d012fae7f49a391e"
+  },
+  "source_still_clean": true,
+  "typed_producer_scope": "66a3cafd; 26 roots and Linux integration-tag compile NOTRUN",
+  "schema59_scope": "5f83cfbf native result only; does not qualify schema60 or installed source",
+  "active_old_entry_restored": false,
+  "epoch": "NOT_ACTIVATED"
+}

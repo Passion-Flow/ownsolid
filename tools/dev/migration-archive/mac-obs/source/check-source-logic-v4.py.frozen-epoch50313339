@@ -1,0 +1,191 @@
+"""Prepared OBS-only opportunity. Run once only after coordinator allocation."""
+import sys
+if sys.flags.optimize:
+    raise SystemExit("OPTIMIZED_PYTHON_FORBIDDEN")
+
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import signal
+import stat
+import subprocess
+import tempfile
+import time
+
+CONFIG_PATH = Path(__file__).with_name("source-logic-v4.json")
+CONFIG_SHA256 = "4e9ab201a940157e600bcdc20a8655ae2791bb09f73b723b6f425a465c6ac985"
+config_bytes = CONFIG_PATH.read_bytes()
+if hashlib.sha256(config_bytes).hexdigest() != CONFIG_SHA256:
+    raise SystemExit("CONFIGURATION_IDENTITY_CHANGED")
+config = json.loads(config_bytes)
+ROOT = Path(config["root"])
+SOURCE = config["source"]
+TREE = config["tree"]
+CARRIER = "/private/tmp/ownsolid-workstation-full-gate.lock"
+IDENTITY = (16777234, 50313339)
+GO = "/Users/passion./.local/opt/go/bin/go"
+
+
+class AdmissionBusy(Exception):
+    """Only the single fcntl.flock refusal can create this category."""
+
+
+def acquire_once(fd):
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError as error:
+        raise AdmissionBusy(str(error)) from error
+
+
+def captured(args, env=None):
+    budget = max(0.1, min(5, end-time.monotonic()))
+    return subprocess.check_output(args, cwd=ROOT, env=env, timeout=budget, text=True).strip()
+
+
+def source_identity():
+    return (captured(["git", "rev-parse", "HEAD"]),
+            captured(["git", "rev-parse", "HEAD^{tree}"]),
+            captured(["git", "status", "--porcelain", "--untracked-files=all"]))
+
+
+def group_exists(group):
+    try:
+        os.killpg(group, 0)
+        return True
+    except ProcessLookupError:
+        return False
+
+
+def stop_owned(proc, end):
+    if group_exists(proc.pid):
+        os.killpg(proc.pid, signal.SIGTERM)
+        until = min(end, time.monotonic() + 5)
+        while group_exists(proc.pid) and time.monotonic() < until:
+            proc.poll()
+            time.sleep(0.05)
+        if group_exists(proc.pid):
+            os.killpg(proc.pid, signal.SIGKILL)
+    if proc.poll() is None:
+        proc.wait(timeout=max(0.1, end-time.monotonic()))
+    return not group_exists(proc.pid)
+
+
+started = time.monotonic()
+end = started + 300  # Includes admission, checks, subprocesses and owned cleanup.
+receipt = Path(tempfile.mkdtemp(prefix="obs110-producer-logic-v4.", dir=ROOT.parent))
+result = {"source": SOURCE, "tree": TREE, "config_sha256": CONFIG_SHA256,
+          "wrapper_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), "receipt": str(receipt),
+          "scope": "Mac pure targeted race tests plus Linux integration-tag compile only",
+          "lock_acquired": False, "stages": [], "passed": False,
+          "native_execution": False, "started_at_unix": time.time()}
+fd = None
+children = []
+exit_code = 1
+try:
+    assert source_identity() == (SOURCE, TREE, ""), "source changed or dirty"
+    before = os.stat(CARRIER, follow_symlinks=False)
+    assert stat.S_ISREG(before.st_mode) and before.st_size == 0
+    assert (before.st_dev, before.st_ino) == IDENTITY
+    fd = os.open(CARRIER, os.O_RDWR | os.O_NOFOLLOW)
+    opened = os.fstat(fd)
+    assert (opened.st_dev, opened.st_ino) == IDENTITY
+    assert stat.S_ISREG(opened.st_mode) and opened.st_size == 0
+    acquire_once(fd)  # Exactly one immediate attempt; no wait or retry.
+    result["lock_acquired"] = True
+    space = os.statvfs(ROOT)
+    result["available_bytes"] = space.f_bavail * space.f_frsize
+    assert result["available_bytes"] >= 15 * 1024**3, "insufficient disk"
+    pressure = captured(["memory_pressure"])
+    match = re.search(r"System-wide memory free percentage: (\d+)%", pressure)
+    assert match, "missing memory observation"
+    result["memory_free_percent"] = int(match[1])
+    assert int(match[1]) >= 20, "insufficient workstation memory"
+    env = {k: v for k, v in os.environ.items()
+           if not k.startswith(("GO", "CGO_", "PROJECT_ONE_", "OWNSOLID_TEST_"))
+           and k not in ("CC", "CXX", "AR")}
+    env.update(GOTOOLCHAIN="local", GOPROXY="off", GOSUMDB="off", GOMAXPROCS="2",
+               GOWORK=str(ROOT / "go.work"), GOFLAGS="", GOENV="off",
+               GOOS="darwin", GOARCH="arm64", CGO_ENABLED="1")
+    result["toolchain"] = captured([GO, "version"], env=env)
+    assert "go1.27.3 darwin/arm64" in result["toolchain"]
+    binary = receipt / "monitoring-linux-amd64.test"
+    tests = [
+        ("module", ["-run", "^(TestSeriesCardinality|TestFleetHistory)", "./internal/modules/monitoring"], 18),
+        ("http", ["./internal/modules/monitoring/http"], 6),
+        ("routes", ["-run", "^(TestActualHealthRoutesKeepBoundedClassesOverTLS|TestCanonicalMachineFamiliesKeepIdentityOutOfLabels)$", "./internal/platform/monitoringmetrics"], 2),
+        ("native-tag-compile", [], None),
+    ]
+    for name, selection, roots in tests:
+        stage_env = env.copy()
+        cmd = [GO, "-C", "services/control", "test"]
+        if roots is None:
+            stage_env.update(GOOS="linux", GOARCH="amd64", CGO_ENABLED="0")
+            cmd += ["-c", "-p", "2", "-tags=repository_integration,monitoring_integration", "-o", str(binary), "./internal/modules/monitoring"]
+        else:
+            cmd += ["-json", "-race", "-p", "2", "-count=1", "-timeout=60s"] + selection
+        stage = {"name": name, "command": cmd}
+        result["stages"].append(stage)
+        log = receipt / (name + ".log")
+        remaining = end - time.monotonic() - 30
+        assert remaining > 0, "cleanup reserve reached"
+        with log.open("xb") as output:
+            proc = subprocess.Popen(cmd, cwd=ROOT, env=stage_env, stdout=output,
+                                    stderr=subprocess.STDOUT, start_new_session=True,
+                                    pass_fds=(fd,))
+            children.append(proc)
+            stage["exit_code"] = proc.wait(timeout=min(120, remaining))
+        stage["log_sha256"] = hashlib.sha256(log.read_bytes()).hexdigest()
+        assert stage["exit_code"] == 0, (name, stage["exit_code"])
+        assert not group_exists(proc.pid), "owned child group remains"
+        if roots is not None:
+            events = [json.loads(line) for line in log.read_text().splitlines()]
+            top = [e["Test"] for e in events if e.get("Action") == "pass" and "Test" in e and "/" not in e["Test"]]
+            stage["top_level_passes"] = top
+            stage["passing_test_events"] = sum(e.get("Action") == "pass" and "Test" in e for e in events)
+            assert len(top) == roots, "missing selected test roots"
+            assert not any(e.get("Action") in ("fail", "skip") for e in events)
+        else:
+            binary.chmod(0o400)  # A compile artifact, never executed here.
+            stage["artifact_sha256"] = hashlib.sha256(binary.read_bytes()).hexdigest()
+            stage["artifact_bytes"] = binary.stat().st_size
+    result["passed"] = True
+    exit_code = 0
+except AdmissionBusy as error:
+    exit_code = 75
+    result["failure"] = {"type": type(error).__name__, "message": str(error)}
+except Exception as error:
+    result["failure"] = {"type": type(error).__name__, "message": str(error)}
+finally:
+    result["owned_groups_exited"] = True
+    result["cleanup_errors"] = []
+    try:
+        for proc in children:
+            try:
+                if not stop_owned(proc, min(end-15, time.monotonic()+5)):
+                    result["owned_groups_exited"] = False
+            except Exception as error:
+                result["owned_groups_exited"] = False
+                result["cleanup_errors"].append(str(error))
+    finally:
+        if fd is not None:
+            os.close(fd)
+        result["fd_closed"] = True
+    try:
+        after = os.stat(CARRIER, follow_symlinks=False)
+        result["carrier_identity_unchanged"] = (after.st_dev, after.st_ino) == IDENTITY and after.st_size == 0 and stat.S_ISREG(after.st_mode)
+        result["source_unchanged"] = source_identity() == (SOURCE, TREE, "")
+    except Exception as error:
+        result["carrier_identity_unchanged"] = False
+        result["source_unchanged"] = False
+        result["cleanup_errors"].append(str(error))
+    if not all(result[k] for k in ("owned_groups_exited", "carrier_identity_unchanged", "source_unchanged")):
+        result["passed"] = False
+        exit_code = 1
+    result["exit_code"] = exit_code
+    result["elapsed_seconds"] = time.monotonic() - started
+    (receipt / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+    print(json.dumps(result))
+raise SystemExit(exit_code)
