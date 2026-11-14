@@ -1,0 +1,28 @@
+{
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "commandExit": 0,
+  "reporterObserved": "Pinned Node default spec output",
+  "actualMetrics": {
+    "tests": 7,
+    "pass": 7,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "actualCases": [
+    "covers root, containers, every workspace and new hidden/non-workspace directories",
+    "matches original diagnostics and rejects errors in root, e2e, shared and config files",
+    "fails on a warning even when no partition has an error",
+    "retains fatal syntax diagnostics and a failing exit",
+    "does not replace an all-ignored original failure with a successful empty lint",
+    "refuses malformed configuration and a terminated lint process",
+    "does not follow directory symlinks when planning partitions"
+  ],
+  "stdoutSha256": "1373abb17009f27694c41ffd00c4e723d77db94d6f72369202e0059219d3b5e9",
+  "stderrSha256": "cf41c3245291761c35a0a772f53ef1277dcd24d623b5dbe17b0c5340a381010f",
+  "unitFixturesOnly": true,
+  "privateSummaryAssertionFailedAfterCommand": true,
+  "originalGateExitUnchanged": 1,
+  "completeLintEquivalenceOrPeakClaim": false
+}

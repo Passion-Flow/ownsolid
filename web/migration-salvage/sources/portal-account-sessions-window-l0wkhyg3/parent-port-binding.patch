@@ -1,0 +1,11 @@
+--- reviewed-e6-parent
++++ same-parent-with-owned-portal-preview
+@@ -129,7 +129,7 @@
+      except (ValueError,OSError) as error:code=cleanup_failure('cleanup-registry-unreadable',error)
+     info=json.loads((root/'preparation.json').read_text())
+     check_budget()
+-    for port,cwd in [(31036,info['worktree']+'/web/apps/console'),(31037,info['oldWorktree']+'/web/apps/console')]:
++    for port,cwd in [(31036,info['worktree']+'/web/apps/console'),(31037,info['worktree']+'/web/apps/portal')]:
+      listeners=subprocess.run(['lsof','-t','-nP','-iTCP:'+str(port),'-sTCP:LISTEN'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=budget(2))
+      for raw in listeners.stdout.splitlines():
+       check_budget()

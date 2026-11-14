@@ -1,0 +1,241 @@
+{
+  "epoch": "ownsolid-2-20261113-e1",
+  "scope": "One independently granted A-only original complete gate",
+  "handoffHead": "45344aab8048c5b36747fe43af0697371f72c857",
+  "handoffTree": "5a300f572f318fd4e43469c4d96d1a39185806c2",
+  "handoffWebTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "branch": "codex/portal-account-sessions-joint",
+  "sourceClean": true,
+  "testedSource": "82c602d32b2d957459b3a742499de96867da27a9",
+  "testedTree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+  "testedWebTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "originalMerge": "9e7404f63fe7587ace0decb34fd01b6214977181",
+  "originalMergeParents": [
+    "379aab980485df41b1a66c6fb5e6af65814f886f",
+    "2e64ab4c6c16bd84ae5c101b9de5444550760ff2"
+  ],
+  "postGateChanges": [
+    "docs/product/roadmap/portal.md",
+    "docs/research/portal-account-sessions.md"
+  ],
+  "runtimeWebBytesUnchangedSinceTest": true,
+  "originalUnsplitLint": true,
+  "serialLint56OrPeakCandidateIncluded": false,
+  "newStrictJson37Included": false,
+  "all5099HashesVerifiedBeforeAndAfter": true,
+  "admission": {
+    "rawFreeBytes": 6530170880,
+    "diskFreeBytes": 165614211072,
+    "oneNb": true,
+    "sameOpenDescriptionThroughCleanup": true,
+    "absoluteSeconds": 1800,
+    "finalCleanupReserveSeconds": 120,
+    "nodeMaximumOldSpaceMiB": 4096,
+    "GoP": 1,
+    "gomaxprocs": 2,
+    "cargoJobs": 1,
+    "workers": 1,
+    "retries": 0,
+    "coreBytes": 0
+  },
+  "parentActualExit": 1,
+  "parentActualTotalSeconds": 1190.9769669999987,
+  "commands": [
+    {
+      "name": "scratch-create",
+      "argv": [
+        "hdiutil",
+        "create",
+        "-size",
+        "12g",
+        "-type",
+        "SPARSE",
+        "-fs",
+        "APFS",
+        "-volname",
+        "ownsolid-por112-joint",
+        "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/scratch"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 1.048715999999331
+    },
+    {
+      "name": "scratch-attach",
+      "argv": [
+        "hdiutil",
+        "attach",
+        "-nobrowse",
+        "-owners",
+        "on",
+        "-mountpoint",
+        "/private/tmp/ownsolid-por112-joint-92949",
+        "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/scratch.sparseimage"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 0.3493479999997362
+    },
+    {
+      "name": "web-install",
+      "argv": [
+        "make",
+        "web-install"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 2.6614300000001094
+    },
+    {
+      "name": "check",
+      "argv": [
+        "make",
+        "check"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 35.73019800000111
+    },
+    {
+      "name": "build",
+      "argv": [
+        "make",
+        "build"
+      ],
+      "exit": 0,
+      "elapsedSeconds": 101.0466860000015
+    },
+    {
+      "name": "test",
+      "argv": [
+        "make",
+        "test"
+      ],
+      "exit": 2,
+      "elapsedSeconds": 1048.4680819999994
+    }
+  ],
+  "consoleChromium": {
+    "selected": 1250,
+    "passed": 1141,
+    "failed": 81,
+    "existingConditionalSkips": 28,
+    "retryAttempts": 0,
+    "flakySuccesses": 0,
+    "firstFailurePosition": 909,
+    "lastFailurePosition": 989,
+    "accountSessionCasesPassed": 11,
+    "accountSkippedOrRetried": 0,
+    "rawListLog": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/test.log",
+    "parsedCases": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/actual-console-case-results.json"
+  },
+  "failure": {
+    "first": "models.spec.ts:701 en pending-expiry/recovery; final page.reload at744 net::ERR_TIMED_OUT",
+    "later": "80 consecutive local-preview navigation ERR_SOCKET_NOT_CONNECTED; positions910..989",
+    "savedContexts": 81,
+    "savedTraceFiles": 81,
+    "traceCodeCounts": {
+      "ERR_TIMED_OUT": 1,
+      "ERR_SOCKET_NOT_CONNECTED": 80
+    },
+    "subsequentPassesDoNotEraseFailure": true,
+    "rootCause": "UNPROVEN; no product/configuration correction inferred and no rerun authorized",
+    "review": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/trace-error-event-review.json"
+  },
+  "notRun": [
+    "Portal Chromium",
+    "Go tests",
+    "Rust tests",
+    "Web unit tests",
+    "installed peer-revocation acceptance",
+    "independent persistent PostgreSQL audit",
+    "real SSO acceptance",
+    "disconnected installed acceptance"
+  ],
+  "fullGatePassed": false,
+  "knownIndependentDevPublicationGap": "Original430-operation compatibility audit retains explicit409 source review and actual exit1; passing generator checks does not clear it. DEV original owner must resolve.",
+  "cleanup": {
+    "parentConfirmed": true,
+    "fullResourceProof": {
+      "confirmed": true,
+      "errors": [],
+      "scratchDetached": true,
+      "scratchRemoved": true,
+      "generatedAuditBinarySha256": "16caf968223ef0d8d2a066d2b2eac59a31d396f8aab175f58b537d14161632e9",
+      "sourceClean": true
+    },
+    "epochResourceProof": {
+      "confirmed": true,
+      "negativeFilesRemoved": [],
+      "errors": []
+    },
+    "groupsRemaining": [],
+    "postExitReadback": {
+      "carrier": {
+        "device": 16777231,
+        "inode": 53377467,
+        "uid": 501,
+        "mode": "0o600",
+        "regular": true,
+        "nlink": 1,
+        "size": 0
+      },
+      "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+      "fdReadback": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      "parentRunnerReadback": {
+        "exit": 1,
+        "stdout": ""
+      },
+      "sourceClean": true
+    },
+    "knownPidReadback": {
+      "knownInvocationAndWorkerPidsChecked": 100,
+      "psExit": 1,
+      "currentRows": "",
+      "identityLimit": "PID-only readback is not a global quiescence statement; no unrelated process was killed."
+    },
+    "sourceAndOldStubProof": {
+      "source": "82c602d32b2d957459b3a742499de96867da27a9",
+      "sourceHashesVerified": 5099,
+      "mismatches": [],
+      "operationalInputsUnchanged": 8,
+      "oldClosedEntriesChecked": 89,
+      "oldClosedEntriesChanged": []
+    }
+  },
+  "artifacts": {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/failed-full-gate-assets-and-tests.tar.gz",
+    "sha256": "4ed1e4cda02cc2b771b0087024b3f9a000f5afffa22a2816e77d189952fac5f9",
+    "files": 1424,
+    "assetFiles": 1233,
+    "testResultFiles": 191,
+    "verifiedEveryArchivedByte": true,
+    "source": "82c602d32b2d957459b3a742499de96867da27a9",
+    "completeGatePassed": false
+  },
+  "visualReadback": {
+    "newConsoleRawImages": 28,
+    "actuallyReadThisAttempt": 10,
+    "unreadNewImages": 18,
+    "report": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/visual-readback.json",
+    "earlierTwoEntrance56ImageQualificationRemainsSeparate": true,
+    "archetype": "Settings, saved per section",
+    "sevenStates": "Defined; filtered-empty explicitly not applicable without filtering. Current-only and unexpectedly empty live list have distinct explanations and recovery.",
+    "pagePrimaryAction": "Change password; end-session is the destructive action inside its section",
+    "representativeScreenshot": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/22-end-confirmation-narrow-dark.png"
+  },
+  "evidenceOnlyChecks": {
+    "layout": "PASS",
+    "roadmap589": "PASS",
+    "gitDiffWhitespace": "PASS"
+  },
+  "published": false,
+  "roadmapTicked": false,
+  "automaticRetryOrQueue": false,
+  "carrierOrManifestOrLegacyStubModified": false,
+  "BOrSamplerPrototypeWorkInThisGrant": false,
+  "nextUnblock": "Diagnose and correct local-preview navigation failure, then a separately admitted original complete gate; resolve original DEV compatibility review before original-author-first FF publication. Installed authority/SQL/offline/SSO evidence remains separate.",
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/por112-original-joint-full-gate-evidence.bundle",
+  "bundleSha256": "f9e23c94ed3244bd157235e966ed702db9f04e71f64944024f2e9d5f698d436e",
+  "bundlePrerequisite": "82c602d32b2d957459b3a742499de96867da27a9"
+}

@@ -1,0 +1,18 @@
+{
+  "web/apps/console/tsconfig.json": "4398b8e01b200a30dda2e9900fe0ffd8a2fdef9bd50c2ed9035a6d128b7fdcb8",
+  "web/apps/portal/tsconfig.json": "4398b8e01b200a30dda2e9900fe0ffd8a2fdef9bd50c2ed9035a6d128b7fdcb8",
+  "web/package.json": "45b224442e750969397d48f3ff26b9db0e2a3c45cb88610c4d5a8c47abf5ac95",
+  "web/packages/api/tsconfig.json": "c616039aac5cf9fe39746302286f25827eb58bf5e198b3e584cfea22d52261cf",
+  "web/packages/config/eslint.config.js": "5cdc090ff19e48ce394fbc7b55379b89d5d2ed662510aa7e44cb5e58bb6f3b72",
+  "web/packages/config/lint.js": "147bd7329e8de3d71b8d10e25ffde4e49822d95afe859ac320c5eec3758ef694",
+  "web/packages/config/lint.test.js": "38e151fe602478f8512bae3312801cc73633b7ceab2e3c064bfa22e1e9545510",
+  "web/packages/config/package.json": "608314e610e4aa221cf6ba41dc6f96126cbd140a64e6abecd8bd7e425e97e6ca",
+  "web/packages/config/tsconfig.json": "2dbeea106fd58cbc827ce4450695940f1ee9124c6fbbe15593301d2cac002571",
+  "web/packages/help/tsconfig.json": "e401cf3b3c2d5e1838d3d2652d6c7883f8cba9db106dc3b3439be0f4dba58800",
+  "web/packages/i18n/tsconfig.json": "c616039aac5cf9fe39746302286f25827eb58bf5e198b3e584cfea22d52261cf",
+  "web/packages/shell/tsconfig.json": "2a812fabbc91262fd9404f0d4f7b3768546663d4ba5a83ce42def7bcc4df0063",
+  "web/packages/ui/tsconfig.json": "6b3848b49917ee861635cbe5da5e3663ffb7068cd7fb5bc4f187270c17ef025e",
+  "web/pnpm-lock.yaml": "de9a5caf8f5dc63c0aa16e2789a8ef828a139e91bf4293b80f9d63ed263fcd08",
+  "web/pnpm-workspace.yaml": "644a245ab5a3b750ae4f124bd621e595af7fd161528a5d592f0f12574febf4a4",
+  "web/tsconfig.base.json": "ceab4e857f23dcf8f30f5b6231c219f7a464745eab0c605b9cc8a67d75073f4d"
+}

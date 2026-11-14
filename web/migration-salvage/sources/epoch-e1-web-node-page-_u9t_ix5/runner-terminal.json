@@ -1,0 +1,28 @@
+{
+  "errorClass": "SystemExit",
+  "detail": "0",
+  "stagesCompleted": 1,
+  "actualResults": [
+    {
+      "name": "01-complete-node-page",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "(?:^|/)e2e/node-page[.]spec[.]ts$",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--output",
+        "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-node-page-_u9t_ix5/node-page-results"
+      ],
+      "exit": 0,
+      "seconds": 12.00296100000196,
+      "capturedBytes": 3038,
+      "rawStreamSha256": "fa11be045356510aa9d9dbfb8e9acf3fb1b9fb1fbb239b9791db1caccd89b467",
+      "outputRedactedBeforePersistence": true
+    }
+  ],
+  "observationErrors": 0
+}

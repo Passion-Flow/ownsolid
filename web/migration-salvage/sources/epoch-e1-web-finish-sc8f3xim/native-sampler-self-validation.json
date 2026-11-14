@@ -1,0 +1,27 @@
+{
+  "nativeSelfRead": {
+    "pid": 48046,
+    "ppid": 12984,
+    "pgid": 48046,
+    "uid": 501,
+    "startTime": [
+      1794576083,
+      867667
+    ],
+    "rssBytes": 17137664,
+    "status": 2
+  },
+  "abiSizes": [
+    136,
+    96,
+    232
+  ],
+  "nativeChildList": [],
+  "noChildCreated": true,
+  "noNewGateOrFd": true,
+  "actualHistoricalIncompleteSamplesRejected": true,
+  "historicalTreePeakPromoted": false,
+  "sourceSha256": "e279d9ec5211c7026a3f715a81a07e23443bd4b365d6a6a43e84911ed49ed7c0",
+  "primarySource": "https://github.com/apple-oss-distributions/xnu/blob/main/libsyscall/wrappers/libproc/libproc.c",
+  "sdkHeaderSha256": "e427fa96b348537b21552b9de71e01039410bcad2cedee5584c5e5fddafd70fc"
+}

@@ -1,0 +1,7 @@
+{
+  "exit": 1,
+  "stage": "post-success qualification input comparison",
+  "cause": "The initial focused-input allowlist rejected an upstream optional installation-schema property. No evidence commit or publication ran.",
+  "reviewedProof": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/reviewed-nonbrowser-contract.json",
+  "fullGateExit": 0
+}

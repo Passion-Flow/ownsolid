@@ -1,0 +1,423 @@
+{
+  "branch": "codex/portal-account-sessions",
+  "head": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+  "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282",
+  "base": "6f785818156ff5e827ccc86923b7cfa0b4c0185d",
+  "clean": true,
+  "currentRuntimeCandidate": "6d3d6b8c6e2641dea8d2d750eda3121e4263b6ca",
+  "currentCandidateQualified": false,
+  "passedScopedSource": "763169e3f1600efed40071ee7f1812d2d6199e69",
+  "passedScopedWebTree": "7bab205eb4942575843dfb628f13538ff5265178",
+  "focused": {
+    "shellSessionAccountTests": 33,
+    "uiTests": 34,
+    "changedFileLint": "all five groups passed",
+    "shellTypes": "passed",
+    "format": "passed"
+  },
+  "browserFinal": {
+    "consolePassed": 11,
+    "portalPassed": 11,
+    "skipped": 0,
+    "retries": 0,
+    "flaky": 0,
+    "source": "763169e3"
+  },
+  "browserFirst": {
+    "consolePassed": 10,
+    "consoleFailed": 1,
+    "portalPassed": 10,
+    "portalFailed": 1,
+    "reason": "Premature navigation cancelled CSRF before login. One test synchronization fix, no assertion removed.",
+    "source": "5152f6f0"
+  },
+  "assets": {
+    "assets-2-console.json": {
+      "sha256": "3abb3a17b4a95c0cd14a8c5738f4d594e0315a13d63e901ace8afccacebb9503",
+      "source": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "fileCount": 697
+    },
+    "assets-2-portal.json": {
+      "sha256": "63c6038436a04a50f672896fe38dfb5ae0ea162e0b535217c0d144b823c2896d",
+      "source": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "fileCount": 536
+    }
+  },
+  "images": {
+    "allWindowGenerated": 70,
+    "finalRoundGenerated": 36,
+    "finalRoundRead": 36,
+    "firstRoundRead": 0,
+    "review": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/visual-review.json"
+  },
+  "gate": {
+    "parentPID": 39337,
+    "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+    "expectedInode": 50313339,
+    "kernelWaitBudgetSeconds": 0,
+    "executionBudgetSeconds": 600,
+    "childStarted": true,
+    "entryMonotonic": 63858.962781,
+    "hardDeadlineMonotonic": 64458.962781,
+    "workCutoffMonotonic": 64428.962781,
+    "cleanupReserveSeconds": 30,
+    "cleanupConfirmed": true,
+    "cleanupEvidenceFailed": false,
+    "groupsConfirmed": true,
+    "awakeConfirmed": true,
+    "phaseHistory": [
+      {
+        "phase": "one-nonblocking-attempt",
+        "descriptor": 3,
+        "device": 16777234,
+        "inode": 50313339
+      },
+      {
+        "phase": "held",
+        "descriptor": 3
+      },
+      {
+        "phase": "executing",
+        "childStarted": true,
+        "childPID": 39350,
+        "childGroup": 39350
+      },
+      {
+        "phase": "finished",
+        "exit": 0,
+        "executionSeconds": 183.65702800000145
+      },
+      {
+        "phase": "cleanup-evidence",
+        "exit": 0,
+        "cleanupConfirmed": true
+      }
+    ],
+    "descriptor": 3,
+    "device": 16777234,
+    "inode": 50313339,
+    "phase": "cleanup-evidence",
+    "updatedUTC": "2026-11-13T05:38:28.802533+00:00",
+    "childPID": 39350,
+    "childGroup": 39350,
+    "exit": 0,
+    "executionSeconds": 183.65702800000145
+  },
+  "actualProcessExit": 0,
+  "elapsedSeconds": 184.0108229999969,
+  "carrier": {
+    "inode": 50313339,
+    "uid": 501,
+    "regular": true,
+    "size": 0,
+    "replacedOrTruncated": false
+  },
+  "cleanupReadback": {
+    "ports31036And31037": "no listeners",
+    "parentAndRunner": "gone",
+    "carrierHolders": "none at readback"
+  },
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/portal-account-sessions-after-review.bundle",
+  "bundleSha256": "7ecad92fb601e62fb01ba3a9d9d072826e8cc20a95495b6378ec3eb3da34d527",
+  "commits": [
+    "b3c37bba304167b09c5763993da8c54fe24fcbda",
+    "6d0b7776fa3eb1ceb155bc62024a313b0b5a6543",
+    "ad84c61f6c677c9617b64079e9222bb506a08879",
+    "2efbdfaac288c16ab774271fed7ed58821a1797a",
+    "91d36706641515a7697937b11adf8b23dc7ada4c",
+    "5152f6f0119f1b900a82e212e516850d26912daf",
+    "763169e3f1600efed40071ee7f1812d2d6199e69",
+    "6d3d6b8c6e2641dea8d2d750eda3121e4263b6ca",
+    "84a39194c824e5ad0074dafa4a3f78401fe5b757",
+    "0a50a0405b4841e8117d40ce65b000a2344ceaea"
+  ],
+  "pending": [
+    "focused/source check and rebuilt capture for 6d3d6b8c",
+    "actual narrow/loading/relogin target images and readable shortcut heading",
+    "full make check && make build && make test",
+    "disconnected installed acceptance",
+    "real same-account target refusal and independent PostgreSQL durable audit",
+    "cross-account/entrance/no-workspace/license-blocked and real SSO session acceptance"
+  ],
+  "nextOwnWork": "84a39194 records POR-114 Account personal-scope exception and concrete installed request/audit acceptance. Existing live-workspace-scope requires private real fixture; no installed/native opportunity was granted. S-302 remains a draft requiring the formal screen entry.",
+  "roadmapTicked": false,
+  "mainPush": false,
+  "resourcesQueued": false,
+  "servicesLeftRunning": [],
+  "ux127Frozen": {
+    "branch": "codex/web-resource-history-ui",
+    "head": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+    "qualificationTransferred": false
+  },
+  "previousInstalledAssets": "44ab/1230 and old UX127 evidence preserved. The current ignored dist is source 763169e3, not current 6d3d6b8c; never relabel it.",
+  "stages": [
+    {
+      "name": "format",
+      "label": "01-format",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/01-format.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/01-format.stderr.log"
+    },
+    {
+      "name": "lint-api",
+      "label": "02-lint-api",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/02-lint-api.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/02-lint-api.stderr.log"
+    },
+    {
+      "name": "lint-shell",
+      "label": "03-lint-shell",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/03-lint-shell.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/03-lint-shell.stderr.log"
+    },
+    {
+      "name": "lint-ui",
+      "label": "04-lint-ui",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/04-lint-ui.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/04-lint-ui.stderr.log"
+    },
+    {
+      "name": "lint-console",
+      "label": "05-lint-console",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/05-lint-console.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/05-lint-console.stderr.log"
+    },
+    {
+      "name": "lint-portal",
+      "label": "06-lint-portal",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/06-lint-portal.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/06-lint-portal.stderr.log"
+    },
+    {
+      "name": "shell-types",
+      "label": "07-shell-types",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/07-shell-types.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/07-shell-types.stderr.log"
+    },
+    {
+      "name": "session-units",
+      "label": "08-session-units",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/08-session-units.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/08-session-units.stderr.log"
+    },
+    {
+      "name": "ui-units",
+      "label": "09-ui-units",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/09-ui-units.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/09-ui-units.stderr.log"
+    },
+    {
+      "name": "format-check",
+      "label": "10-format-check",
+      "exit": 0,
+      "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/10-format-check.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/10-format-check.stderr.log"
+    },
+    {
+      "name": "build-console",
+      "label": "11-build-console",
+      "exit": 0,
+      "head": "5152f6f0119f1b900a82e212e516850d26912daf",
+      "webTree": "ff49ed32dd8a9ee2ef5c192cb63450ff1d9e297e",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/11-build-console.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/11-build-console.stderr.log"
+    },
+    {
+      "name": "build-portal",
+      "label": "12-build-portal",
+      "exit": 0,
+      "head": "5152f6f0119f1b900a82e212e516850d26912daf",
+      "webTree": "ff49ed32dd8a9ee2ef5c192cb63450ff1d9e297e",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/12-build-portal.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/12-build-portal.stderr.log"
+    },
+    {
+      "name": "collect-console",
+      "label": "13-collect-console",
+      "exit": 0,
+      "head": "5152f6f0119f1b900a82e212e516850d26912daf",
+      "webTree": "ff49ed32dd8a9ee2ef5c192cb63450ff1d9e297e",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/13-collect-console.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/13-collect-console.stderr.log"
+    },
+    {
+      "name": "collect-portal",
+      "label": "14-collect-portal",
+      "exit": 0,
+      "head": "5152f6f0119f1b900a82e212e516850d26912daf",
+      "webTree": "ff49ed32dd8a9ee2ef5c192cb63450ff1d9e297e",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/14-collect-portal.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/14-collect-portal.stderr.log"
+    },
+    {
+      "name": "browser-console",
+      "label": "15-browser-console",
+      "exit": 1,
+      "head": "5152f6f0119f1b900a82e212e516850d26912daf",
+      "webTree": "ff49ed32dd8a9ee2ef5c192cb63450ff1d9e297e",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/15-browser-console.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/15-browser-console.stderr.log",
+      "stats": {
+        "startTime": "2026-11-13T05:36:40.555Z",
+        "duration": 13968.023,
+        "expected": 10,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      }
+    },
+    {
+      "name": "browser-portal",
+      "label": "16-browser-portal",
+      "exit": 1,
+      "head": "5152f6f0119f1b900a82e212e516850d26912daf",
+      "webTree": "ff49ed32dd8a9ee2ef5c192cb63450ff1d9e297e",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/16-browser-portal.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/16-browser-portal.stderr.log",
+      "stats": {
+        "startTime": "2026-11-13T05:36:54.868Z",
+        "duration": 12985.357,
+        "expected": 10,
+        "skipped": 0,
+        "unexpected": 1,
+        "flaky": 0
+      }
+    },
+    {
+      "name": "lint-shell",
+      "label": "17-lint-shell",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/17-lint-shell.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/17-lint-shell.stderr.log"
+    },
+    {
+      "name": "shell-types",
+      "label": "18-shell-types",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/18-shell-types.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/18-shell-types.stderr.log"
+    },
+    {
+      "name": "session-units",
+      "label": "19-session-units",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/19-session-units.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/19-session-units.stderr.log"
+    },
+    {
+      "name": "format-check",
+      "label": "20-format-check",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/20-format-check.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/20-format-check.stderr.log"
+    },
+    {
+      "name": "build-console",
+      "label": "21-build-console",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/21-build-console.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/21-build-console.stderr.log"
+    },
+    {
+      "name": "build-portal",
+      "label": "22-build-portal",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/22-build-portal.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/22-build-portal.stderr.log"
+    },
+    {
+      "name": "collect-console",
+      "label": "23-collect-console",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/23-collect-console.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/23-collect-console.stderr.log"
+    },
+    {
+      "name": "collect-portal",
+      "label": "24-collect-portal",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/24-collect-portal.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/24-collect-portal.stderr.log"
+    },
+    {
+      "name": "browser-console",
+      "label": "25-browser-console",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/25-browser-console.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/25-browser-console.stderr.log",
+      "stats": {
+        "startTime": "2026-11-13T05:38:12.257Z",
+        "duration": 8231.691,
+        "expected": 11,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    },
+    {
+      "name": "browser-portal",
+      "label": "26-browser-portal",
+      "exit": 0,
+      "head": "763169e3f1600efed40071ee7f1812d2d6199e69",
+      "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/26-browser-portal.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/26-browser-portal.stderr.log",
+      "stats": {
+        "startTime": "2026-11-13T05:38:20.827Z",
+        "duration": 7735.201,
+        "expected": 11,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    }
+  ]
+}

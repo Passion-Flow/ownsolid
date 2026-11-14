@@ -1,0 +1,23 @@
+{
+  "preparedSourceSha256": "8e97e1bcf98b8ef1d8fb1f87920dd120ca64dade312e69beee85a52ee539b675",
+  "offlineTopologyChecksPassed": [
+    "Transitive descendant with a different PGID is included",
+    "Grandchild in a third PGID is included",
+    "Previously observed reparented child retains ownership for the same start time",
+    "Reused PID with a changed start time is excluded",
+    "Unrelated process sharing the original PGID is excluded",
+    "Duplicate ownership routes produce one row",
+    "Raw command argv and environment are unnecessary"
+  ],
+  "validationScope": "Synthetic ownership-topology unit data only; no historical or live RSS is fabricated.",
+  "runtimeMeasurementWithRepair": "NOTRUN",
+  "noNewJobOrNb": true,
+  "futureMonitorFields": [
+    "pid",
+    "ppid",
+    "pgid",
+    "rss",
+    "startTime"
+  ],
+  "remainingRequirement": "A separately authorized focused actual measurement must use PPID-transitive descendants, retain start-time identity for reparented observed children, and include the guard/coordinator. Existing coverage/negative cases need no repetition if source/tool bytes are unchanged."
+}

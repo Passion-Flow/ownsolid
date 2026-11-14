@@ -1,0 +1,26 @@
+{
+  "preparedOnly": true,
+  "requiresNewGrant": true,
+  "executedAgain": false,
+  "corrections": [
+    "Anchor CLI file regexes to exclude accidental live-prefix matches",
+    "Include omitted node-page.spec.ts only in a newly authorized plan, not in current consumed four-file grant"
+  ],
+  "expressions": [
+    "(?:^|/)e2e/models[.]spec[.]ts$",
+    "(?:^|/)e2e/navigation[.]spec[.]ts$",
+    "(?:^|/)e2e/node-page[.]spec[.]ts$",
+    "(?:^|/)e2e/nodes[.]spec[.]ts$",
+    "(?:^|/)e2e/overview[.]spec[.]ts$"
+  ],
+  "offlineFilenameMatches": [
+    "web/apps/console/e2e/models.spec.ts",
+    "web/apps/console/e2e/navigation.spec.ts",
+    "web/apps/console/e2e/node-page.spec.ts",
+    "web/apps/console/e2e/nodes.spec.ts",
+    "web/apps/console/e2e/overview.spec.ts"
+  ],
+  "offlineCoversAllPrevious81CasePaths": true,
+  "originalFourFileInputsUnchanged": true,
+  "currentMissingTenNotRequalified": true
+}

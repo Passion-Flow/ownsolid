@@ -1,0 +1,92 @@
+{
+  "status": "prepared-only, not executed, no waiter or queued resource opportunity",
+  "requiredHead": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+  "runtimeSource": "2efbdfaac288c16ab774271fed7ed58821a1797a",
+  "requiredWebTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282",
+  "inputManifest": "files.json",
+  "scope": "One new authorized <=600s visual-correction window: only two changed inputs, applicable Shell/UI units, same-source two builds and both eleven-case browser selections. No API/i18n/Help units, repository full/native/installed.",
+  "admission": "Existing shared Mac single nonblocking attempt, inode 50313339. Preserve >=2 GiB free memory, >=15 GiB disk, Node 512 MiB, one worker, 45 seconds per command. No browser/build/full/native/installed permission implied. Do not launch while preflight stays below the floor. No retry loop.",
+  "env": {
+    "NODE_OPTIONS": "--max-old-space-size=512"
+  },
+  "steps": [
+    {
+      "name": "format",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "prettier",
+        "--write",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/account-session-flows.ts"
+      ]
+    },
+    {
+      "name": "lint-shell",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/account-session-flows.ts"
+      ]
+    },
+    {
+      "name": "shell-types",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell",
+      "argv": [
+        "pnpm",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ]
+    },
+    {
+      "name": "session-units",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "src/use-account-sessions.test.tsx",
+        "src/account-sessions.test.tsx",
+        "src/session.test.ts",
+        "--maxWorkers=1"
+      ]
+    },
+    {
+      "name": "ui-units",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "src/components/components.test.tsx",
+        "--maxWorkers=1"
+      ]
+    },
+    {
+      "name": "format-check",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "prettier",
+        "--check",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/account-session-flows.ts"
+      ]
+    }
+  ],
+  "afterFormatting": "Record actual output hashes. If formatting changes files, review and commit only those own paths, bind all results to that new source; do not label the input Web tree as tested output.",
+  "expectedCasesPerEntrance": 11,
+  "newWindowScope": "One <=600s parent entry, >=30s cleanup reserve, reviewed parent/ports rebound for own Console+Portal; final focused then same-source builds/collection/browser only; no full/native/installed."
+}

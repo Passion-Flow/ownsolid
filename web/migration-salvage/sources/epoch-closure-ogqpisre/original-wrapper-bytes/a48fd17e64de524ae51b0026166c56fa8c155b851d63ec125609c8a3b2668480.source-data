@@ -1,0 +1,20 @@
+import os,select,subprocess,sys
+carrier='/private/tmp/ownsolid-workstation-full-gate.lock'
+result=subprocess.run(['lsof','-Fpc',carrier],capture_output=True,text=True)
+if result.returncode != 0: raise SystemExit(0)
+parents=[]
+pid=None
+for line in result.stdout.splitlines():
+ if line.startswith('p'): pid=int(line[1:])
+ if line.startswith('c') and line[1:].lower().startswith('python') and pid: parents.append(pid)
+if not parents: raise SystemExit('No Python lock owner found; no client command started')
+queue=select.kqueue()
+try:
+ watched=0
+ for pid in parents:
+  event=select.kevent(pid,filter=select.KQ_FILTER_PROC,flags=select.KQ_EV_ADD|select.KQ_EV_ONESHOT,fflags=select.KQ_NOTE_EXIT)
+  try: queue.control([event],0,0);watched+=1
+  except ProcessLookupError: pass
+ if not watched: raise SystemExit(0)
+ if not queue.control([],len(parents),55): raise SystemExit('Mac owner remains active; no client command started')
+finally:queue.close()

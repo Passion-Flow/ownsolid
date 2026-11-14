@@ -1,0 +1,48 @@
+{
+  "ownHead": "379aab980485df41b1a66c6fb5e6af65814f886f",
+  "devHead": "2e64ab4c6c16bd84ae5c101b9de5444550760ff2",
+  "bundleSha256": "c5e4f1cbb7812b841de739c1524e6f3700d1e3aadfd5ddc5a2852784cda74a52",
+  "bundlePrerequisitesVerified": [
+    "9be01cbbf0144a2f2537667834539de31e40f58f",
+    "9e32b023a0a3deed6a8653a8878d52c2583fd6cf"
+  ],
+  "originalAuthorPathsVerified": 19,
+  "projectionInputsVerifiedAtAuthor": 79,
+  "projectionInputsEqualInCombination": 77,
+  "ownHelpInputsChanged": {
+    "web/packages/help/locales/en/shared/account.md": {
+      "author": "e9d52aee74ff3e8774de50bb68fe9af1a9ce5c6454dfe880c8943314633c0ca5",
+      "combined": "6c98dbf8a820c86100039d4389da18a6635f222a84f60a8ae3b28c2390430adb",
+      "ownSource": "6c98dbf8a820c86100039d4389da18a6635f222a84f60a8ae3b28c2390430adb"
+    },
+    "web/packages/help/locales/zh-cn/shared/account.md": {
+      "author": "090dfb68cc36b9eecb8bb0bd0567995eeeedc4fa71de727f463bac30dd57c203",
+      "combined": "5cf2a9be80c456eacf392cc5a9873ba7a826324c958f5282e75d377cbb6376d3",
+      "ownSource": "5cf2a9be80c456eacf392cc5a9873ba7a826324c958f5282e75d377cbb6376d3"
+    }
+  },
+  "sdkArchiveFilesVerified": 122,
+  "protectedConsumerHelperFilesVerified": 5,
+  "extraAncestorPaths": [
+    "docs/decisions/0084-bind-saml-results-to-request-and-browser-authority.md",
+    "docs/research/group-role-mapping.md",
+    "docs/research/iam-questions.md",
+    "docs/research/saml-sign-in.md"
+  ],
+  "compatibilityAudit": {
+    "operations": 430,
+    "actualOriginalExit": 1,
+    "explicit409ReviewPreserved": true,
+    "notReexecutedYet": true
+  },
+  "mergeConflicts": false,
+  "manualFilePatchApplied": false,
+  "source": "9e7404f63fe7587ace0decb34fd01b6214977181",
+  "tree": "6c5938e198745062ba5a14e1f952cb4593797ccd",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "parents": [
+    "379aab980485df41b1a66c6fb5e6af65814f886f",
+    "2e64ab4c6c16bd84ae5c101b9de5444550760ff2"
+  ],
+  "sourceClean": true
+}

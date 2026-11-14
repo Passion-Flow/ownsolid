@@ -1,0 +1,165 @@
+from pathlib import Path
+import ast
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import time
+import types
+
+root = Path(__file__).parent
+parent_path = root / 'mac-browser-once.py'
+runner_path = root / 'browser-run.py'
+parent = ast.parse(parent_path.read_text())
+runner = ast.parse(runner_path.read_text())
+results = []
+
+def check(name, fn):
+    try:
+        fn()
+    except BaseException as error:
+        results.append({'name': name, 'passed': False, 'error': repr(error)})
+    else:
+        results.append({'name': name, 'passed': True})
+
+def extract(tree, names, namespace):
+    nodes = [node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and node.name in names]
+    assert {node.name for node in nodes} == set(names)
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), '<pure-selected-functions>', 'exec'), namespace)
+    return namespace
+
+clock = {'now': 0.0}
+ns = extract(parent, ['DeadlineExpired', 'budget', 'deadline_expired', 'arm_backstop', 'require_runtime'], {
+    'time': types.SimpleNamespace(clock_gettime=lambda clock_id: clock['now'], CLOCK_MONOTONIC=6),
+    'TOTAL_DEADLINE': 600.0, 'WORK_DEADLINE': 570.0, 'cleaning': False,
+})
+
+def syntax():
+    compile(parent_path.read_text(), str(parent_path), 'exec')
+    compile(runner_path.read_text(), str(runner_path), 'exec')
+check('both proposed sources compile without execution', syntax)
+
+def arithmetic():
+    assignments = [node for node in parent.body if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id in {'TOTAL_DEADLINE', 'WORK_DEADLINE'} for target in node.targets)]
+    values = {'ENTRY_STARTED': 100.0}
+    exec(compile(ast.Module(body=assignments, type_ignores=[]), '<deadline-origin>', 'exec'), values)
+    assert values['TOTAL_DEADLINE'] == 700.0
+    assert values['WORK_DEADLINE'] == 670.0
+    clock['now'] = 100.0
+    assert ns['budget'](565) == 470.0
+    clock['now'] = 569.5
+    assert ns['budget'](70) == 0.5
+    ns['cleaning'] = True
+    clock['now'] = 599.75
+    assert ns['budget'](2) == 0.25
+    clock['now'] = 600.0
+    try:
+        ns['budget'](2)
+    except ns['DeadlineExpired']:
+        pass
+    else:
+        raise AssertionError('Expired cleanup was given a new budget')
+    ns['cleaning'] = False
+check('preflight, work wait and cleanup deduct one clock without reset', arithmetic)
+
+def alarm():
+    calls = []
+    ns['signal'] = types.SimpleNamespace(SIGALRM=14, ITIMER_REAL=0, signal=lambda *args: calls.append(('handler', args)), setitimer=lambda *args: calls.append(('timer', args)))
+    clock['now'] = 117.0
+    ns['arm_backstop'](600.0)
+    assert calls[1] == ('timer', (0, 483.0))
+    try:
+        calls[0][1][1](14, None)
+    except ns['DeadlineExpired']:
+        pass
+    else:
+        raise AssertionError('Absolute backstop did not interrupt')
+check('backstop uses the original remaining deadline with a fake signal interface', alarm)
+
+def shared_clock():
+    before = time.clock_gettime(time.CLOCK_MONOTONIC)
+    code = 'import json,time; print(json.dumps({"shared":time.clock_gettime(time.CLOCK_MONOTONIC),"process":time.monotonic()}))'
+    completed = subprocess.run([sys.executable, '-I', '-c', code], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=5, check=True)
+    after = time.clock_gettime(time.CLOCK_MONOTONIC)
+    child = json.loads(completed.stdout)
+    assert before <= child['shared'] <= after
+    proof = {'python': sys.version, 'clock': 'clock_gettime(CLOCK_MONOTONIC)', 'clockId': time.CLOCK_MONOTONIC, 'before': before, 'child': child['shared'], 'after': after, 'childProcessRelativeMonotonic': child['process'], 'lockAttempts': 0, 'workChildren': 0}
+    (root / 'shared-clock-probe.json').write_text(json.dumps(proof, indent=2) + '\n')
+check('actual isolated processes share the selected CLOCK_MONOTONIC reference', shared_clock)
+
+def no_disarm():
+    for tree in [parent, runner]:
+        calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in {'setitimer', 'alarm'}]
+        assert calls
+        for call in calls:
+            assert not any(isinstance(arg, ast.Constant) and arg.value == 0 for arg in call.args[1:]), 'Timer disabled before cleanup/evidence ended'
+        for call in [node for node in ast.walk(tree) if isinstance(node, ast.Call)]:
+            for keyword in call.keywords:
+                if keyword.arg == 'timeout':
+                    assert isinstance(keyword.value, ast.Call) and isinstance(keyword.value.func, ast.Name) and keyword.value.func.id == 'budget', ast.unparse(call)
+check('all timed subprocess waits use remaining budget and no timer is disabled', no_disarm)
+
+def runtime_helpers():
+    for tree in [parent, runner]:
+        scope = extract(tree, ['require_runtime'], {})
+        scope['require_runtime'](types.SimpleNamespace(isolated=True, optimize=0))
+        for isolated, optimize in [(False, 0), (True, 1), (True, 2)]:
+            try:
+                scope['require_runtime'](types.SimpleNamespace(isolated=isolated, optimize=optimize))
+            except SystemExit:
+                pass
+            else:
+                raise AssertionError((isolated, optimize))
+    popens = [node for node in ast.walk(parent) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == 'Popen']
+    assert any(isinstance(node.args[0], ast.List) and len(node.args[0].elts) > 1 and isinstance(node.args[0].elts[1], ast.Constant) and node.args[0].elts[1].value == '-I' for node in popens)
+    assert 'exec python3 -I ' in (root / 'run-browser-once.sh').read_text()
+check('parent and child runtime refusal remains explicit before assertion contracts', runtime_helpers)
+
+def actual_rejection(flags, target, label):
+    nonexistent = root / ('does-not-exist-' + label)
+    assert not nonexistent.exists()
+    env = dict(os.environ)
+    env['PYTHONOPTIMIZE'] = '0'
+    completed = subprocess.run([sys.executable, *flags, str(target), str(nonexistent), '1', '2'], env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=5)
+    (root / (label + '.log')).write_text(completed.stdout)
+    assert completed.returncode != 0
+    assert 'Run with python3 -I and without -O' in completed.stdout, completed.stdout
+    assert not nonexistent.exists()
+    assert not (root / 'attempted').exists()
+    assert not (root / 'gate-state.json').exists()
+check('optimized isolated parent refuses before a lock-capable path', lambda: actual_rejection(['-I', '-O'], parent_path, 'parent-optimized-refusal'))
+check('nonisolated parent refuses before a lock-capable path', lambda: actual_rejection([], parent_path, 'parent-nonisolated-refusal'))
+check('optimized isolated runner refuses before source or browser reads', lambda: actual_rejection(['-I', '-O'], runner_path, 'runner-optimized-refusal'))
+
+def registry_failure():
+    fixtures = root / 'pure-fixtures'
+    fixtures.mkdir(exist_ok=True)
+    malformed = fixtures / 'malformed-registry.json'
+    malformed.write_text('{')
+    missing = fixtures / 'missing-registry.json'
+    assert not missing.exists()
+    branch = next(node for node in ast.walk(parent) if isinstance(node, ast.Try) and any('groups.update(json.loads(registry.read_text()))' == ast.unparse(statement) for statement in node.body))
+    for registry in [malformed, missing]:
+        events = []
+        scope = {'json': json, 'registry': registry, 'groups': {123}, 'code': 0, 'state': {'cleanupConfirmed': True, 'cleanupEvidenceFailed': False}, 'record': lambda phase, **kw: events.append((phase, kw))}
+        extract(parent, ['cleanup_failure'], scope)
+        exec(compile(ast.Module(body=[branch], type_ignores=[]), '<actual-registry-branch>', 'exec'), scope)
+        assert scope['code'] == 1
+        assert scope['state']['cleanupConfirmed'] is False
+        assert scope['state']['cleanupEvidenceFailed'] is True
+        assert events[0][0] == 'cleanup-registry-unreadable' and events[0][1]['exit'] == 1
+check('actual malformed/missing registry branches return nonzero and deny cleanup confirmation', registry_failure)
+
+def input_preservation():
+    original = Path('/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7')
+    for rel, digest in json.loads((root / 'predecessor-files.json').read_text()).items():
+        assert hashlib.sha256((original / rel).read_bytes()).hexdigest() == digest, rel
+    for rel in ['stage-plan.json', 'negative.config.ts', 'old-console-assets.json', 'negative-probe/resource-activity.spec.ts', 'negative-probe/resource-activity-fixture.ts']:
+        assert (original / rel).read_bytes() == (root / rel).read_bytes(), rel
+check('all predecessor files and unchanged stage/negative inputs retain their bytes', input_preservation)
+
+report = {'parentSha256': hashlib.sha256(parent_path.read_bytes()).hexdigest(), 'runnerSha256': hashlib.sha256(runner_path.read_bytes()).hexdigest(), 'planSha256': hashlib.sha256((root / 'stage-plan.json').read_bytes()).hexdigest(), 'scope': 'syntax, fake-clock/fake-signal arithmetic, actual invalid-runtime refusals against nonexistent packet paths, isolated registry fixtures and byte preservation only', 'checks': results, 'passed': sum(item['passed'] for item in results), 'failed': sum(not item['passed'] for item in results), 'lockAcquisitionAttempts': 0, 'workRunnerStarted': False, 'buildStarted': False, 'browserStarted': False}
+(root / 'pure-boundary-result.json').write_text(json.dumps(report, indent=2) + '\n')
+print(json.dumps(report, indent=2))
+raise SystemExit(1 if report['failed'] else 0)

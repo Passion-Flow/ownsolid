@@ -1,0 +1,49 @@
+{
+  "publishedCode": "44ab52293e516128ba2efc0edc2cb2053acc3462",
+  "publishedEvidence": "f11aa11fc298c3eefed696a6f05db9e637ab0e05",
+  "focusedSource": "2b983dbf75feaf36f6ac3423f4d1b0a1ecf0fc52",
+  "targetedPositive": 4,
+  "negativeOldAssertionControls": 2,
+  "imagesRead": 12,
+  "newClientSelftests": {
+    "typescript": "passed",
+    "inputGuards": 18,
+    "outputPreservation": 4,
+    "discovery": {
+      "GW120": 1,
+      "Help": 1,
+      "Scope": 1
+    },
+    "browserStarted": false,
+    "serverUsed": false,
+    "realCredentialUsed": false
+  },
+  "clientArchive": {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "fileCount": 23
+  },
+  "assetArchive": {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/installed-aud108-inputs-1qccyd72/qualified-aud108-web-build.tar.gz",
+    "sha256": "642226cd65bab85f67a8c571bd582540ed57e60fdf3cbc13fd0735f343b01380",
+    "fileCount": 1230,
+    "source": "124520b94be27f673bdb32a3c5d825d1d337f75d",
+    "runtimeInputDelta": [],
+    "reviewedNonRuntimeDelta": "web/packages/shell/testing/help-flows.ts"
+  },
+  "fullAdmission": {
+    "exit": 1,
+    "fullChildStarted": false,
+    "createsWaiter": false,
+    "repeatAttempt": false,
+    "raw": "Shared Mac window occupied; no command started\n"
+  },
+  "completeCorrectedHelperGate": "not started; original nonblocking window refused; no loop or waiter",
+  "actualInstalledBrowser": false,
+  "actualIndependentSQL": false,
+  "runtimeFactsInvented": false,
+  "ownedSourceWorktreesClean": true,
+  "ownedPreviewPortsClosed": true,
+  "carrierInodeUnchanged": 50313339,
+  "futureFullEntry": "Run the existing mac-window.py once with bash /Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/run-full-once.sh /Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7 only in its later qualified window; the narrow execution is finished"
+}

@@ -1,0 +1,87 @@
+{
+  "scope": "Offline review and private observation preparation only; A grant ended before this work",
+  "handoffHead": "78deaf5a86f5e05c3b591e422f76e74219d3ae11",
+  "handoffTree": "f98f57b0973ff93b2b153b203a452b576e5e39e6",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "branch": "codex/portal-account-sessions-joint",
+  "clean": true,
+  "testedSourceStill": "82c602d32b2d957459b3a742499de96867da27a9",
+  "productSourceChanged": false,
+  "docsChanged": [
+    "docs/research/portal-account-sessions.md"
+  ],
+  "diagnosis": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/diagnosis.json",
+  "firstFailure": {
+    "url": "http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075",
+    "source": "web/apps/console/e2e/models.spec.ts:744",
+    "startUTC": "2026-11-13T14:29:43.747849Z",
+    "errorUTC": "2026-11-13T14:30:01.815951Z",
+    "durationMilliseconds": 18068.102,
+    "error": "net::ERR_TIMED_OUT"
+  },
+  "followOnIncident": {
+    "cases": "910..989",
+    "count": 80,
+    "origin": "http://localhost:31036",
+    "lastErrorUTC": "2026-11-13T14:31:01.650413Z",
+    "error": "net::ERR_SOCKET_NOT_CONNECTED",
+    "sameConfiguredDestinationProven": true,
+    "sameHistoricalKernelListenerProven": false,
+    "independentProductBugsClaimed": false,
+    "firstTestCausedOthersProven": false,
+    "case990PassedDoesNotEraseFailures": true
+  },
+  "historicalProcessLimits": [
+    "Receipt PID17612 and Vite warningPID17613, no recorded parent-edge or exact birth",
+    "Readiness200 at14:16:30.967Z, teardown request14:33:54.762Z and completion14:33:54.765Z",
+    "No retained actual preview intermediate exit/status/signal or timestamped separate stderr",
+    "Pinned Playwright launcher log sink discards PID/exit; startup exit promise is not a suite-wide liveness check"
+  ],
+  "correctionPrepared": {
+    "kind": "Opt-in private passive observation; no product or original test edit",
+    "file": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/preview-lifecycle-observer.cjs",
+    "sha256": "ca777d7173d0ce88efde51f93c77c1b64362041153a2903da91ae5f073311ad4",
+    "controlsFile": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/preview-lifecycle-observer.test.cjs",
+    "controlsSha256": "1fbac1bcc315b56ffc04d0168225e4ec6b873f647d0046e1068149d0d95de296",
+    "controlsPrepared": 6,
+    "controlsRun": false,
+    "syntaxCheckedWithNode": false,
+    "executed": false,
+    "rootCauseFixed": false,
+    "whatItAdds": "Launch-handle spawn/exit/signal, Vite bootstrap identity/lifetime nonce, actual listening address and timestamped raw output; no memory sampling, extra HTTP probe or signal handler",
+    "preserves": "Original command/config/host/port, assertion, timeout, retry/skip and stdin/stdout/stderr APIs and error defaults",
+    "remainingActualValidation": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/focused-verification-plan.json"
+  },
+  "nextFocusedOriginalFiles": [
+    "models.spec.ts",
+    "navigation.spec.ts",
+    "nodes.spec.ts",
+    "overview.spec.ts"
+  ],
+  "focusedPassingWouldNotReplaceFullGate": true,
+  "original82EvidenceFilesUnchanged": true,
+  "elevenAffectedInputsUnchanged": true,
+  "originalMakeTestExit": 2,
+  "originalCounts": {
+    "pass": 1141,
+    "fail": 81,
+    "skip": 28,
+    "retry": 0
+  },
+  "noNewNodeGoRustCompilation": true,
+  "noNewPreviewChromiumDependencyInstall": true,
+  "noNewLockAttemptOrWait": true,
+  "noQueueOrBackgroundWork": true,
+  "noPeakSamplerWork": true,
+  "allExistingFullGateDev430InstalledSqlSsoOfflineGapsRetained": true,
+  "roadmapTicked": false,
+  "published": false,
+  "lightDocumentationChecks": {
+    "layout": "PASS",
+    "roadmap": "PASS589",
+    "whitespace": "PASS"
+  },
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/por112-preview-diagnosis.bundle",
+  "bundleSha256": "d46de179553ec16e2528a97b077d18f0385368391a1f2221442bd0fefb7f525a",
+  "bundlePrerequisite": "45344aab8048c5b36747fe43af0697371f72c857"
+}

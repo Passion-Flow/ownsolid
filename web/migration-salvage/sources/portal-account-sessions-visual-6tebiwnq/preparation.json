@@ -1,0 +1,12 @@
+{
+  "source": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+  "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "reviewedParentTemplate": "e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a",
+  "parentChange": "Same previously reviewed own Portal preview binding; no deadline/carrier/cleanup change.",
+  "preparedFiles": {
+    "mac-browser-once.py": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+    "browser-run.py": "21a5ab30139ceb109d0995492eed7b020e0963b29524b8fe63e799cb863ab847",
+    "stage-plan.json": "c0a4ada4f3350cc2d0fa644e554266b9d833ff5e79d4f25664ea39329e9b66e6"
+  }
+}

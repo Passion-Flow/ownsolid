@@ -1,0 +1,12 @@
+{
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "fileCount": 372,
+  "newExactInventoryMatch": true,
+  "allEffectiveConfigsMatch": true,
+  "originalExit": -6,
+  "newExit": 0,
+  "completeDiagnosticEquality": false,
+  "originalIncompleteOrFailed": true,
+  "originalFailureRetained": true,
+  "reason": "The original complete command failed; no complete diagnostic equality is claimed."
+}

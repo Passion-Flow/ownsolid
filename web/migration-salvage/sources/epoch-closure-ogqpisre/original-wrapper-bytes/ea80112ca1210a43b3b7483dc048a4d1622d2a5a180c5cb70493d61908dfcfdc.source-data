@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+export npm_config_offline=true OWNSOLID_PLAYWRIGHT_PORT_OFFSET=12666
+run="$1"
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web"
+pnpm exec prettier --write packages/i18n/locales/en.json packages/i18n/locales/zh-cn.json apps/console/e2e/alias-description.spec.ts apps/console/e2e/pages.ts apps/portal/e2e/pages.ts apps/console/src/alias-description-dialog.tsx apps/console/src/deployment-gateway.tsx packages/ui/src/components/toast.tsx packages/ui/src/components/dialog.tsx packages/ui/src/components/components.test.tsx packages/api/src/distribution.ts packages/api/src/index.ts packages/shell/testing/gateway.ts > "$run/format.log" 2>&1
+pnpm exec eslint --config packages/config/eslint.config.js --max-warnings 0 apps/console/e2e/alias-description.spec.ts apps/console/e2e/pages.ts apps/portal/e2e/pages.ts apps/console/src/alias-description-dialog.tsx apps/console/src/deployment-gateway.tsx packages/ui/src/components/toast.tsx packages/ui/src/components/dialog.tsx packages/ui/src/components/components.test.tsx packages/api/src/distribution.ts packages/api/src/index.ts packages/shell/testing/gateway.ts > "$run/lint.log" 2>&1
+pnpm --filter @ownsolid/ui test > "$run/ui-unit.log" 2>&1
+pnpm build > "$run/build.log" 2>&1
+(cd apps/console && PLAYWRIGHT_JSON_OUTPUT_FILE="$run/console-report.json" pnpm exec playwright test e2e/alias-description.spec.ts --grep 'a lost Undo answer|dark theme|permits an edit|keeps a conflicting draft|Undo refuses|unavailable predecessor' --workers=1 --output "$run/console-results" --reporter=line,json > "$run/console.log" 2>&1)
+(cd apps/console && PLAYWRIGHT_JSON_OUTPUT_FILE="$run/console-states-report.json" pnpm exec playwright test --grep 'gateway description' --workers=1 --output "$run/console-states-results" --reporter=line,json > "$run/console-states.log" 2>&1)
+(cd apps/portal && PLAYWRIGHT_JSON_OUTPUT_FILE="$run/portal-states-report.json" pnpm exec playwright test --grep 'model description|catalogue permission' --workers=1 --output "$run/portal-states-results" --reporter=line,json > "$run/portal-states.log" 2>&1)

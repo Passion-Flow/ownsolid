@@ -1,0 +1,7 @@
+{
+  "complete": false,
+  "countAsPass": false,
+  "operatorInterrupted": true,
+  "rawCleanupExitStatus": "0",
+  "reason": "The owned preview listener disappeared at browser case 267; later requests were refused. The first run was interrupted and is retained as failed/incomplete."
+}

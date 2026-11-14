@@ -1,0 +1,200 @@
+From 2f2b1a08ec722456b017b038d6c94f783958b475 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 08:02:20 +0800
+Subject: [PATCH 1/2] UX-111: Define stable API filter restoration checks
+
+Preserve the existing remembered-filter intent and both reported MODEL full-suite failures. Specify deterministic saved-query, article navigation, operation links, reload and explicit-clear controls before changing the shared browser flow.
+---
+ docs/research/in-product-help.md | 68 ++++++++++++++++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+
+diff --git a/docs/research/in-product-help.md b/docs/research/in-product-help.md
+index 811beb3d..4b521e4a 100644
+--- a/docs/research/in-product-help.md
++++ b/docs/research/in-product-help.md
+@@ -483,3 +483,71 @@ page-route attempt remains a failed fault-injection result and is not
+ counted as download-failure coverage. Actual installed login, entrance
+ boundaries and workspace isolation remain open until a new same-source
+ installation is available.
++
++
++## API reference filter restoration
++
++Reviewed 2026-11-13 for the shared UX-111 / POR-113 browser flow. MODEL reported
++Portal failures at `684f07ef` on `db7ee24a` and `b4e222a7` on `d0ab719a`:
++the article's API-reference link was expected to end at `/help/api`, but the
++observed final address included `q=changePassword`. A focused pass or the later
++complete `c70e9f59` Web pass does not erase either failed full invocation. Their
++native reports and traces remain with the original owner. A new source must be
++checked independently rather than presumed to fail or pass.
++
++### Product intent and source evidence
++
++The [list design](console-list-pattern.md#shareable-links-ux-114) makes an explicit
++list query authoritative. A destination without list parameters restores this
++browser's remembered screen and writes it into the address. The current
++[useListView](../../web/packages/shell/src/list/use-list-view.ts) implements that
++choice in its restoration effect; `linksList` also recognizes an explicitly empty
++`q` as a supplied filter. API reference uses this same list behavior. The real
++getting-started articles link to `/help/api` without a filter.
++
++The existing download-recovery test changes the API search to `changePassword`
++before following that article link. Expecting an unfiltered final URL contradicts
++the remembered-filter behavior. This is a source-based diagnosis until the seeded
++browser control runs. React's [effect reference](https://react.dev/reference/react/useEffect)
++describes synchronization after a commit, including possible paint before an
++effect. Playwright's [URL assertion](https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-url)
++waits for its predicate to match; a bare URL alone is not evidence that restored
++filter state, input and content have settled together.
++
++### Chosen verification and rejected changes
++
++Preserve remembered filters. Explicitly establish and verify this account's stored
++`help-api` query through the existing search UI before leaving the reference.
++Follow the actual article link, then assert the restored input, exact query and
++matching operation, including absence of the operation excluded by that filter.
++Open the real operation, reload it, and verify the query, anchor, expanded state
++and published detail. A different explicit operation link must override the prior
++remembered query. An explicit Clear search must empty the input and query while
++showing both operations; a later bare article link must then retain that empty
++state. Run both entrances and both languages using their normal isolated contexts.
++
++Keep an old-assertion control that waits for the restored input before checking
++the former bare URL. Record its exact source, test patch, output, exit and trace;
++expectation failures are not browser-runner failures. Keep all original offline,
++503/no-store, failed native download, retry, audience and keyboard checks.
++
++Reject changing production restoration to discard remembered filters, accepting
++any final URL, clearing global storage, disabling concurrency, retrying cases or
++adding sleeps. These change product intent or mask the transition without proving
++the final screen. Runtime code and generated inputs need no change if the seeded
++control confirms the diagnosis. The correction belongs in the shared assertion.
++
++### Licences, failure coverage and completion
++
++No dependency, model or dataset is added. Existing React/TanStack MIT and
++Playwright Apache-2.0 licences permit commercial use, redistribution and offline
++execution with their required notices. The test uses the current built reference
++and isolated preview control plane, never a replacement API index or external site.
++
++A missing saved query must fail before article navigation. A transient bare URL
++must not satisfy the final result check. Stale content, a wrong operation anchor,
++a lost filter on reload, a remembered query overriding an explicit link, or an
++explicit clear being ignored must fail their own assertions. EN desktop and ZH
++390px retain screenshots for inspection. Completion requires accurate-source
++focused results, then the required complete gate in a separately qualified window.
++New installation-client checks and actual installed acceptance remain separate.
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 44ab52293e516128ba2efc0edc2cb2053acc3462 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 08:07:57 +0800
+Subject: [PATCH 2/2] UX-111: Assert settled API reference filters
+
+Keep remembered-filter navigation and verify its persisted query, exact URL, input and content before operation navigation. Cover reload, explicit operation links, explicit clear and an unfiltered return without sleeps, storage resets or retries. Targeted Prettier, ESLint and shell TypeScript checks pass; browser qualification follows separately.
+---
+ web/packages/shell/testing/help-flows.ts | 67 +++++++++++++++++++++++-
+ 1 file changed, 66 insertions(+), 1 deletion(-)
+
+diff --git a/web/packages/shell/testing/help-flows.ts b/web/packages/shell/testing/help-flows.ts
+index 230b9be0..ae66fc01 100644
+--- a/web/packages/shell/testing/help-flows.ts
++++ b/web/packages/shell/testing/help-flows.ts
+@@ -6,11 +6,20 @@ import { article } from '@ownsolid/help/catalog';
+ import { previewDownloadFailureCookie } from '@ownsolid/config/preview-download-failure';
+ import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
+ import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
+-import { expect, test } from '@playwright/test';
++import { expect, test, type Page } from '@playwright/test';
+ import { expectContractAudience } from './contract-download.ts';
+ import { mockControlPlane, type ControlPlane } from './control-plane.ts';
+ import { expectFocusVisible } from './keyboard-flows.ts';
+ 
++async function rememberedApiQuery(page: Page, userId: string): Promise<string | undefined> {
++  return page.evaluate((key) => {
++    const stored = JSON.parse(localStorage.getItem(key) ?? 'null') as {
++      state?: { filters?: { q?: string } };
++    } | null;
++    return stored?.state?.filters?.q;
++  }, `ownsolid.list.help-api.${userId}`);
++}
++
+ /** Registers the help flows for one entrance. */
+ export function helpFlows(audience: ControlPlane['audience']): void {
+   test.describe('help', () => {
+@@ -150,6 +159,8 @@ export function helpFlows(audience: ControlPlane['audience']): void {
+         const retry = page.waitForEvent('download');
+         await save.click();
+         await expectContractAudience(await retry, audience);
++        // Establish the remembered query before following a link that supplies no filter.
++        await expect.poll(() => rememberedApiQuery(page, control.user.id)).toBe('changePassword');
+         await page.goto('/help/getting-started');
+         const reference = page
+           .getByRole('main')
+@@ -162,7 +173,61 @@ export function helpFlows(audience: ControlPlane['audience']): void {
+         await page.emulateMedia({ reducedMotion: 'reduce' });
+         await expectFocusVisible(page);
+         await reference.click();
++        const search = page.getByLabel(messages['help.api.search']);
++        const password = page.getByRole('button', { name: / changePassword$/ });
++        const workspace = page.getByRole('button', { name: new RegExp(` ${operation}$`) });
++        await expect(search).toHaveValue('changePassword');
++        await expect(page).toHaveURL(/\/help\/api\?q=changePassword$/);
++        await expect(password).toBeVisible();
++        await expect(workspace).toHaveCount(0);
++        await info.attach(`contract-restored-search-${locale}`, {
++          body: await page.screenshot({ animations: 'disabled' }),
++          contentType: 'image/png',
++        });
++        await password.click();
++        await expect(page).toHaveURL(/\/help\/api\?q=changePassword#identity\.changePassword$/);
++        await expect(password).toHaveAttribute('aria-expanded', 'true');
++        await page.reload();
++        await expect(search).toHaveValue('changePassword');
++        await expect(page).toHaveURL(/\/help\/api\?q=changePassword#identity\.changePassword$/);
++        await expect(password).toHaveAttribute('aria-expanded', 'true');
++        await expect(page.getByRole('heading', { name: messages['help.api.body'] })).toBeVisible();
++
++        // An explicit operation link wins over the remembered password filter.
++        await page.goto(`/help/api?q=${operation}#workspaces.${operation}`);
++        await expect(search).toHaveValue(operation);
++        await expect(page).toHaveURL(
++          (url) =>
++            url.pathname === '/help/api' &&
++            url.search === `?q=${operation}` &&
++            url.hash === `#workspaces.${operation}`,
++        );
++        await expect(workspace).toHaveAttribute('aria-expanded', 'true');
++        await expect(password).toHaveCount(0);
++        await expect.poll(() => rememberedApiQuery(page, control.user.id)).toBe(operation);
++
++        // Clearing is deliberate; it must not restore the query that was just cleared.
++        await search.fill('nothing-has-this-operation');
++        await expect(
++          page.getByRole('heading', { name: messages['help.api.empty.title'] }),
++        ).toBeVisible();
++        await page.getByRole('button', { name: messages['help.empty.clear'] }).click();
++        await expect(search).toHaveValue('');
++        await expect(page).toHaveURL(
++          (url) =>
++            url.pathname === '/help/api' &&
++            url.search === '' &&
++            url.hash === `#workspaces.${operation}`,
++        );
++        await expect(password).toBeVisible();
++        await expect(workspace).toHaveAttribute('aria-expanded', 'true');
++        await expect.poll(() => rememberedApiQuery(page, control.user.id)).toBeUndefined();
++        await page.goto('/help/getting-started');
++        await reference.click();
++        await expect(search).toHaveValue('');
+         await expect(page).toHaveURL(/\/help\/api$/);
++        await expect(password).toBeVisible();
++        await expect(workspace).toBeVisible();
+       });
+ 
+       test(`the published operation explains its error in ${locale}`, async ({ page }, info) => {
+-- 
+2.54.0 (Apple Git-157)
+

@@ -1,0 +1,41 @@
+--- previous-consumed-attempt
++++ B-remaining-attempt
+@@ -1,6 +1,6 @@
+ import time
+ from pathlib import Path
+-import hashlib,json,os,re,resource,shlex,signal,subprocess,sys
++import hashlib,importlib.util,json,os,re,resource,shlex,signal,subprocess,sys
+ assert sys.flags.isolated and not sys.flags.optimize
+ root=Path(sys.argv[1]);deadline=float(sys.argv[2]);hard=float(sys.argv[3]);info=json.loads((root/'preparation.json').read_text());selected=json.loads((root/'selected-scope.json').read_text());work=Path(info['worktree']);web=work/'web';fd=int(os.environ['OWNSOLID_GATE_FD']);guard=int(os.environ['OWNSOLID_GATE_PARENT'])
+ resource.setrlimit(resource.RLIMIT_CORE,(0,0));results=[]
+@@ -61,8 +61,14 @@
+  if row['exit']!=code:raise RuntimeError(row['name']+' exited '+str(row['exit'])+'; expected '+str(code))
+ def read_json(row):return json.loads(Path(row['stdout']).read_text())
+ source_check();assert subprocess.check_output(['git','status','--porcelain'],cwd=work,timeout=budget(3))==b''
+-row=execute('01-seven-cli-regressions',['node','--test','--test-concurrency=1','lint.test.js'],web/'packages/config');require(row)
+-tap=Path(row['stdout']).read_text();assert re.search(r'# (?:tests|pass) 7\b',tap) and re.search(r'# fail 0\b',tap),tap[-3000:]
++reuse=json.loads((root/'prior-seven-cli-reuse-proof.json').read_text());prior=Path(reuse['priorAttempt'])
++assert reuse['source']==selected['source'] and reuse['invocationArgumentsUnchanged']
++assert sha(prior/'01-seven-cli-regressions.stdout')==reuse['priorStdoutSha256'] and sha(prior/'01-seven-cli-regressions.stderr')==reuse['priorStderrSha256']
++spec=importlib.util.spec_from_file_location('cli_summary',root/'cli-summary.py');summary_module=importlib.util.module_from_spec(spec);spec.loader.exec_module(summary_module)
++parsed=summary_module.parse_node_summary((prior/'01-seven-cli-regressions.stdout').read_text(),reuse['priorRealCommandExit']);assert parsed==reuse['actualParsedSummary']
++for path,expected in reuse['candidateRuntimeAndTestsByteUnchanged'].items():assert sha(work/path)==expected,path
++save('01-seven-cli-retained.json',{'source':selected['source'],'priorAttempt':str(prior),'actualPriorSummary':parsed,'actualPriorCommandExit':0,'priorParentExitRetained':1,'reexecutedThisAttempt':False,'inputAndInvocationBytesUnchanged':True,'crossAttemptBoundary':reuse['crossAttemptBoundary']})
++
+ row=execute('02-file-config-proof',['node',str(root/'coverage.mjs'),str(web)]);require(row);proof=read_json(row);assert proof['exactDisjointUnion'] and proof['allCalculatedConfigsEqual'] and proof['unionCount']==len(proof['originalFiles'])
+ old=execute('03-original-complete-lint',['node',cli,'--config','packages/config/eslint.config.js','--max-warnings','0','--format','json','.'])
+ new=execute('04-new-complete-lint',['pnpm','--silent','lint','--format','json']);require(new)
+@@ -84,9 +90,11 @@
+  finally:os.close(created)
+ negative=[]
+ for i,control in enumerate(controls):
+- row=execute('05-original-negative-%02d'%i,['node',cli,'--config','packages/config/eslint.config.js','--max-warnings','0','--format','json','--stdin','--stdin-filename',control['path']],input_bytes=control['source'].encode());require(row,1);data=read_json(row);rules={m.get('ruleId') for r in data for m in r['messages']};assert set(control['rules'])<=rules,(control['path'],control['rules'],sorted(r for r in rules if r));negative.append({'path':control['path'],'expectedRules':control['rules'],'originalExit':1,'actualOriginalRules':sorted(r for r in rules if r)})
++ row=execute('05-original-negative-%02d'%i,['node',cli,'--config','packages/config/eslint.config.js','--max-warnings','0','--format','json','--stdin','--stdin-filename',control['path']],input_bytes=control['source'].encode());require(row,1);data=read_json(row);rules={m.get('ruleId') for r in data for m in r['messages']};assert set(control['rules'])<=rules,(control['path'],control['rules'],sorted(r for r in rules if r));negative.append({'path':control['path'],'expectedRules':control['rules'],'originalExit':1,'actualOriginalRules':sorted(r for r in rules if r),'originalDiagnostics':data[0]})
+ row=execute('06-new-whole-negative',['pnpm','--silent','lint','--format','json']);require(row,1);data=read_json(row);by_file={r['filePath']:r for r in data}
+ for result,control in zip(negative,controls):
+- matches=by_file[str(web/control['path'])];rules={m.get('ruleId') for m in matches['messages']};assert set(control['rules'])<=rules,(control['path'],control['rules'],rules);result.update(newExit=1,actualNewRules=sorted(r for r in rules if r))
++ matches=by_file[str(web/control['path'])];rules={m.get('ruleId') for m in matches['messages']};assert set(control['rules'])<=rules,(control['path'],control['rules'],rules);
++ for key in ['messages','suppressedMessages','errorCount','warningCount','fatalErrorCount']:assert matches[key]==result['originalDiagnostics'][key],(control['path'],key)
++ result.update(newExit=1,actualNewRules=sorted(r for r in rules if r),exactControlDiagnosticsEqual=True)
+ assert len(by_file)==len(proof['originalFiles'])+len(controls),'Negative run lost original coverage'
+ save('negative-control-results.json',negative);source_check();save('benchmark-result.json',{'source':selected['source'],'tree':selected['tree'],'webTree':selected['webTree'],'sevenCliPassed':True,'fileConfigProofPassed':True,'positiveNewLintPassed':True,'originalExit':old['exit'],'completeDiagnosticEquality':comparison['completeDiagnosticEquality'],'negativeControls':len(negative),'allOriginalAndNewNegativeRulesRejected':True,'workCompleted':True,'cleanupStillRequired':True,'peakActuallyLower':new['sampledOwnerTreePeakRssBytes']<old['sampledOwnerTreePeakRssBytes'],'fullGate':'NOTRUN','installedAcceptance':False});(root/'stage').write_text('complete\n')

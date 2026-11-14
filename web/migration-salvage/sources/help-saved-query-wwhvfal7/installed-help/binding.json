@@ -1,0 +1,6 @@
+{
+  "source": "44ab52293e516128ba2efc0edc2cb2053acc3462",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-44ab5229",
+  "dependencies": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-44ab5229/web/apps/console/node_modules",
+  "state": "candidate binding; rebind to the new clean frozen checkout before an installed run"
+}

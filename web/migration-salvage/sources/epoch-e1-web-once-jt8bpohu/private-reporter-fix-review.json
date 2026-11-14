@@ -1,0 +1,13 @@
+{
+  "originalSourceSha256": "38070e6b8e85a8390373c552a594e8f2b69d019eda936604a7274b9e55c07f16",
+  "preparedFixedSourceSha256": "cb4e71b194560c8abb714c527f8d851b66c7ed533baafe7a1e44caf9f1357d6c",
+  "originalAttemptInputsNotModified": true,
+  "fix": "Select supported TAP reporter explicitly and validate all six actual suite counters. Test selection, rules, fixture assertions and resource caps are unchanged.",
+  "syntaxCheck": "passed",
+  "pinnedNodeHelpSupportsTestReporter": true,
+  "runtimeOfRepairedReporter": "NOTRUN",
+  "newGateInvocation": false,
+  "newNB": 0,
+  "automaticRetry": false,
+  "requiresNewCoordinatorJobGrant": true
+}

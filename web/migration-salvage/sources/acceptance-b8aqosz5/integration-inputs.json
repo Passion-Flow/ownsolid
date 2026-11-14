@@ -1,0 +1,87 @@
+{
+  "base": "096c50b818429fc089398112c21fd5bf624facae",
+  "commits_in_order": [
+    {
+      "sha": "db8fe58c38ce02503f22e2a254dfab01eb9bf7ab",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "subject": "POR-114: Prepare live scope recovery across Portal navigation",
+      "paths": [
+        "docs/research/portal-home.md",
+        "web/apps/portal/e2e/live-workspace-scope.spec.ts"
+      ]
+    },
+    {
+      "sha": "40fa3f5b49371d2b7d2dad1aec469ed99b659189",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "subject": "S-108: Check published parameters and apply-cutover recovery",
+      "paths": [
+        "docs/research/in-product-help.md",
+        "web/packages/shell/testing/help-flows.ts"
+      ]
+    },
+    {
+      "sha": "54614882d91f56d3c1bb02cbd8857b459f2818f1",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "subject": "POR-114: Capture selected scope and narrow recovery views",
+      "paths": [
+        "web/apps/portal/e2e/live-workspace-scope.spec.ts"
+      ]
+    },
+    {
+      "sha": "342c556a6d5d2bd2c133205912e02ca928d60ed1",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "subject": "POR-114: Observe refused scope responses before checking their status",
+      "paths": [
+        "web/apps/portal/e2e/live-workspace-scope.spec.ts"
+      ]
+    }
+  ],
+  "status": "Local candidates with formatting, lint, type and unit checks. New installation/browser/database acceptance remains pending.",
+  "plan": [
+    "S-301 Portal home",
+    "S-304 Models",
+    "S-108 API reference",
+    "POR-114 current session/workspace authority"
+  ],
+  "shared_installation_requirements": {
+    "people[0]": "Ordinary account, memberships in A and B. Fixture workspace object identifies A.",
+    "people[1]": "Different ordinary account, membership only in B. Fixture workspace object identifies B.",
+    "second": "B workspace id, name and published application name.",
+    "foreign": "Workspace of a different tenant, no membership for either account, with an enabled published workflow whose unique name is foreign.marker.",
+    "credential_file": "DEL provisions the private fixture JSON on the Mac and supplies OWNSOLID_LIVE_PORTAL_SCOPE_FILE as a file reference. No real credential file exists in this handoff."
+  },
+  "scope_command": "cd web/apps/portal && pnpm exec playwright test e2e/live-workspace-scope.spec.ts --workers=1 --reporter=line,json",
+  "scope_environment": [
+    "OWNSOLID_LIVE_ORIGIN",
+    "OWNSOLID_LIVE_PORTAL_SCOPE_FILE",
+    "OWNSOLID_LIVE_SPKI",
+    "OWNSOLID_LIVE_HOST_RULES",
+    "PLAYWRIGHT_JSON_OUTPUT_FILE"
+  ],
+  "scope_outputs": [
+    "scope-proof.json beside the credential fixture",
+    "Home/Models refusal, navigation, selected-workspace and second-person screenshots",
+    "Recorded refusal request IDs for independent DB checks"
+  ],
+  "database_checks": [
+    "Foreign published workflow and its published version remain present.",
+    "Neither ordinary account has a membership in the foreign tenant/workspace.",
+    "Recorded refusal request IDs have zero success or accepted audit events.",
+    "No success or accepted audit event by either ordinary account belongs to the foreign tenant/workspace."
+  ],
+  "help_commands": [
+    "cd web/apps/console && pnpm exec playwright test e2e/help.spec.ts --workers=1 --reporter=line,json",
+    "cd web/apps/portal && pnpm exec playwright test e2e/help.spec.ts --workers=1 --reporter=line,json"
+  ],
+  "help_scope": "Current mocked authentication fixtures with the exact generated Web build. The real-installation live-help flow uses actual TLS/login. Additional real bilingual checks are being prepared.",
+  "help_live_command": "cd web/apps/{console|portal} && pnpm exec playwright test e2e/live-help.spec.ts --workers=1 --reporter=line,json",
+  "help_live_environment": [
+    "OWNSOLID_LIVE_ORIGIN",
+    "OWNSOLID_LIVE_EMAIL",
+    "OWNSOLID_LIVE_PASSWORD_FILE",
+    "OWNSOLID_LIVE_SPKI",
+    "OWNSOLID_LIVE_HOST_RULES"
+  ],
+  "focus_issue": "APP trace at /Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/portal-failure/keyboard-keyboard-a-key-s--24cf0-s-reachable-and-shows-focus-chromium/trace.zip. Download CSV was focused and indicated while the sampled rectangle was outside the viewport. Investigation remains open.",
+  "gw120": "Description projection requires a formally upgraded installation with the registered GW-120 migration. Existing live-models description case consumes OWNSOLID_LIVE_MODEL_DESCRIPTION_FILE. Candidate-SQL evidence is not an installed-upgrade result."
+}

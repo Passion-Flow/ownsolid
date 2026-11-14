@@ -1,0 +1,21 @@
+{
+  "docs/development/design-system.md": "023c2c26bec8d7c3658657da56d630b48506621ef42674319d1aeddb89765a82",
+  "docs/product/roadmap/index.md": "a48c56477fc543794d108ac279a1c2bfb92113baf86a4916b0dd2ee43fa80a4c",
+  "docs/product/roadmap/usability-and-localization.md": "d3f5be85d618f5b1421286d71ffaf0e76d06ae6947585bd680737a675b3b1e78",
+  "docs/product/status.md": "9a58800378a25b673b953f9f3c25cbd8d37c17e6c077fac8219775bacd1c8a4d",
+  "docs/research/resource-detail-pages.md": "2622cf89e94126358a337a6d177220d41211509d7f579cdba16a5ba6478ce3d3",
+  "web/apps/console/e2e/node-page.spec.ts": "fab4ffe72643513155444b42fa2aaa788c8c90ba4225bb559b5ec6348334865e",
+  "web/apps/console/e2e/resource-actions.spec.ts": "e0206ef9242f8c688074b21be95d1f541edd5d2def3cf9ddd1472f04dd508c05",
+  "web/apps/console/e2e/resource-activity.spec.ts": "b5db274b6192651e6f65afba884af1bc619462a984ddd43799912c4419594422",
+  "web/apps/console/e2e/services.spec.ts": "b9cbf1f5d58efb37e494320dae58c486548df4b114a31e911be721d4f0506096",
+  "web/apps/console/src/deployment-actions.tsx": "be0728cfe1812e590bfbe5156f81c0ff9de54dd8fb8c4532df3f094aba79f29d",
+  "web/apps/console/src/deployment-page.tsx": "13cb2531be48d18782296455f8faeb2166859e2b57844a2b96b4548ba5d3a155",
+  "web/apps/console/src/model-page.tsx": "64643ba8c5b16818a84d6f9842d46837ed06ac5000ee774826faf8386f441b9f",
+  "web/apps/console/src/node-actions.tsx": "46bdadb2e033e42dfdb73efa358311e89ebdb96017f82ce00aa330d247d308a9",
+  "web/apps/console/src/node-page.tsx": "f2683c0a97c7ab2901bf506c1a5ba68b894285479160c15bc1a057bd5e5268c3",
+  "web/apps/console/src/resource-page.tsx": "6f442aa69e5427ac45c54c68f2cf32b814dc7975112a81a1bed8f1cfe931143a",
+  "web/packages/api/src/audit.test.ts": "173afaf501f9a1fa32ff10469d2228fa506070cf806b67d033a7ab515c6a731b",
+  "web/packages/api/src/audit.ts": "b24577d1d1177b9cf2af93facc477028322f6de4eb2bc1d49ab6ddadd28bf126",
+  "web/packages/i18n/locales/en.json": "293c4f971419c639cfe7f48fda8417cdc79132dffa5050beb98ea6be28e6d112",
+  "web/packages/i18n/locales/zh-cn.json": "4318860dd38e6603b5225a323f3d4af171c4db976a9c835745caf4c9619fb44e"
+}

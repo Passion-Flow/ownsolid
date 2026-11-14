@@ -1,0 +1,56 @@
+[
+  {
+    "name": "01-original-six",
+    "argv": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "--test-concurrency=1",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/preview-lifecycle-observer.test.cjs"
+    ],
+    "exit": 0,
+    "seconds": 0.06775199999901815,
+    "capturedBytes": 1277,
+    "rawStreamSha256": "0fbe9633d881488f98363586d91d2a5e8b16dd737a276828d88226de10f65037",
+    "outputRedactedBeforePersistence": true
+  },
+  {
+    "name": "02-current-observer-controls",
+    "argv": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "--test-concurrency=1",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/preview-lifecycle-observer.test.cjs",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/observer-metadata.test.cjs"
+    ],
+    "exit": 0,
+    "seconds": 0.09520999999949709,
+    "capturedBytes": 1705,
+    "rawStreamSha256": "ac174225ae0111e36d6bdabc9b7bcd78ed1e64301f50d0742a58c9e9bdd4c868",
+    "outputRedactedBeforePersistence": true
+  },
+  {
+    "name": "03-four-original-browser-files",
+    "argv": [
+      "pnpm",
+      "exec",
+      "playwright",
+      "test",
+      "models.spec.ts",
+      "navigation.spec.ts",
+      "nodes.spec.ts",
+      "overview.spec.ts",
+      "--workers=1",
+      "--retries=0",
+      "--trace=off",
+      "--output",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/test-results"
+    ],
+    "exit": 0,
+    "seconds": 99.97744599999714,
+    "capturedBytes": 18878,
+    "rawStreamSha256": "78bd4d9c96c2c48ba799967ef712a8f33472303400634bfd9c8ccc2738f2b783",
+    "outputRedactedBeforePersistence": true
+  }
+]

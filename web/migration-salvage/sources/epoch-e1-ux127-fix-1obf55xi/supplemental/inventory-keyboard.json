@@ -1,0 +1,477 @@
+{
+  "config": {
+    "argv": [
+      "/Users/passion./.local/opt/node/bin/node",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "e2e/keyboard.spec.ts",
+      "--grep",
+      "(?:a\\ node\\ with\\ its\\ activity|resource\\ activity\\ with\\ no\\ recent\\ events|resource\\ activity\\ with\\ no\\ events\\ in\\ a\\ selected\\ period|resource\\ activity\\ with\\ invalid\\ selected\\ dates|resource\\ activity\\ with\\ access\\ refused|resource\\ activity\\ waiting\\ for\\ the\\ initial\\ read|audit\\ trail\\ with\\ uncertain\\ read\\ recovery|audit\\ trail\\ with\\ partial\\ read\\ recovery|audit\\ activity\\ with\\ uncertain\\ read\\ recovery|audit\\ activity\\ with\\ partial\\ read\\ recovery)(?:: every control is reachable and shows focus)?$",
+      "--workers=1",
+      "--retries=0",
+      "--trace=off",
+      "--reporter=json",
+      "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-fix-1obf55xi/supplemental/inventory-keyboard-results"
+    ],
+    "configFile": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/playwright.config.ts",
+    "rootDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-fix-1obf55xi/supplemental/inventory-keyboard-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-fix-1obf55xi/supplemental/inventory-keyboard-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e",
+        "snapshotDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://localhost:31036",
+          "trace": "off",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": {
+      "command": "pnpm exec vite preview --port 31036 --strictPort",
+      "url": "http://localhost:31036",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "keyboard.spec.ts",
+      "file": "keyboard.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "keyboard",
+          "file": "../../../packages/shell/testing/keyboard-flows.ts",
+          "line": 128,
+          "column": 8,
+          "specs": [
+            {
+              "title": "a node with its activity: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1284,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:06.966Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-3cf52b8691df275e5adf",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "resource activity with no recent events: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1347,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:08.327Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-fd3cd83c6bb5a1e11ebe",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "resource activity with no events in a selected period: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1279,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:09.679Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-3bd8f3157c9a47b0f557",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "resource activity with invalid selected dates: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1199,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:10.964Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-37f4b9ebc3dd66614701",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "resource activity with access refused: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1399,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:12.169Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-8ce564cbb98daa5c07cb",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "resource activity waiting for the initial read: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1951,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:13.575Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-d832194ceccb92b58711",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "audit trail with uncertain read recovery: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1465,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:15.533Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-7ad8b55e01fc9ad4e8e5",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "audit trail with partial read recovery: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2287,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:17.006Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-34d82d1edb02f76da5a7",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "audit activity with uncertain read recovery: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1431,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:19.301Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-febd9c329e23805ba73a",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            },
+            {
+              "title": "audit activity with partial read recovery: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2249,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-13T18:35:20.740Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-d241224a4bfe8e7dd4a9",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-13T18:35:06.295Z",
+    "duration": 16724.387,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

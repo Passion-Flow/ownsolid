@@ -1,0 +1,9 @@
+{
+  "root": "/Users/passion./.local/state/ownsolid/web-scopes",
+  "regularEntriesChecked": 3444,
+  "matches": [],
+  "errors": [],
+  "timeBoundReached": false,
+  "knownOwnedSameIdentityHardlinksCreated": 0,
+  "unscanned": "Dependency/build directories and paths outside this owner namespace; no global absence asserted."
+}

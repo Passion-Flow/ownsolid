@@ -1,0 +1,31 @@
+{
+  "source": "60b85e037aa24fc0d30ae0195e6dffe8f59a6946",
+  "images": {
+    "console-description-dark": "b1cabda76513ef8371784bd8c0c5d0488a35ced430242c10b1cb1f59dd8bd7cc",
+    "console-description-edit-en": "5b98e85fa4820e7ab37826f86b594eb71ac3d47a0b58127c28507b0aa5ade91f",
+    "console-description-conflict-en": "438891bfc681a112468be2602913b7d134e5c39c4a91463bd55533102b642957",
+    "console-description-edit-zh-CN": "5b514161ebbc02a37a47b4dfc27c92f74c6d9d80737d83e67ed268c6140734d3",
+    "console-description-conflict-zh-CN": "7e8e9d455c1c23716886070d19d7dcbfee64147ff8729e55bdfd122beb4f4189",
+    "portal-description-denied-en": "097cca2dabf81e2d34e44007f97083c9004df5ba8705852b67710124d0206b42",
+    "portal-description-read-en": "2797c53e84fa8792e43f14a2948febead11a2489a60ee1bac45c3d5f1fa1fe9c",
+    "portal-description-denied-zh-CN": "24db13baa1833932bc69716b2086318ae94853f9b77a6fe95c480c43e0105af2",
+    "portal-description-read-zh-CN": "f045f80579c797bb941fc8d3b6718aaf25d54938744aee33137a6fbe494f488a"
+  },
+  "console": {
+    "startTime": "2026-11-12T16:18:24.936Z",
+    "duration": 239692.78100000002,
+    "expected": 1112,
+    "skipped": 28,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "portal": {
+    "startTime": "2026-11-12T16:22:24.951Z",
+    "duration": 342510.433,
+    "expected": 410,
+    "skipped": 10,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "image_directory": "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/gw120-description/qualified-60b85e03"
+}

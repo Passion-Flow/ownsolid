@@ -1,0 +1,35 @@
+--- a/web/packages/shell/testing/help-flows.ts
++++ b/web/packages/shell/testing/help-flows.ts
+@@ -88,7 +88,6 @@
+       ['en', english],
+       ['zh-CN', chinese],
+     ] as const) {
+-<<<<<<< HEAD
+       test(`keeps a contract discoverable offline and retries its download in ${locale}`, async ({
+         page,
+         context,
+@@ -166,8 +165,6 @@
+         await expect(page).toHaveURL(/\/help\/api$/);
+       });
+ 
+-=======
+->>>>>>> codex/del-acceptance-guard
+       test(`the published operation explains its error in ${locale}`, async ({ page }, info) => {
+         control.preferences.locale = locale;
+         await page.goto('/help/api');
+--- a/docs/research/in-product-help.md
++++ b/docs/research/in-product-help.md
+@@ -348,7 +348,6 @@
+ the end of the button's accessible name before checking its expanded
+ state. Keep the referenced parameter assertions on the exact detail
+ panel; a broader search result must not change which contract is checked.
+-<<<<<<< HEAD
+ 
+ The corrected consumer passed all 13 Console and 17 Portal Help cases in
+ local Chromium with one worker and no retries, at Web revision 5d595469.
+@@ -484,5 +483,3 @@
+ counted as download-failure coverage. Actual installed login, entrance
+ boundaries and workspace isolation remain open until a new same-source
+ installation is available.
+-=======
+->>>>>>> codex/del-acceptance-guard

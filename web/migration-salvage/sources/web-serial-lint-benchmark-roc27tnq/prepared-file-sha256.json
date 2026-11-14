@@ -1,0 +1,12 @@
+{
+  "benchmark-plan.json": "9e7de30341f556a2fb137c266fbddcea560a8243f0ee61c6c3f12b7b0265d6ae",
+  "coverage.mjs": "27105713fc4f697fa31319e493afbef811806f8c365054b7aa04454466591ae4",
+  "negative-controls.json": "754c2363099d26ce5daffdc3b17fbf121e2fab87fb769a4d4241b2f947dc2833",
+  "owner-handoff.json": "27332295567c3caf8ab0a864fa8e4db60daf1755d361ef43c15960d398d3904a",
+  "pinned-discovery-sha256.json": "144fa7e1e5de569431b3e2591ffcfd57808e2156e661c24967ab90e58bac3eff",
+  "reviewed-entry-template.py": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+  "source-input-sha256.json": "f492695a1d6feba84e03763e81b454dc8fcef65e44423f29b9b429cb88d1b03e",
+  "static-partitions.json": "ef6ceb6b98a6873c228af48fdca95c72e169765533b0b281106e2ed827c4a770",
+  "tracked-source-sha256.json": "de114228f2470305de76378beb071fe3e27795d7d74261f2bfdb3361611de953",
+  "web-serial-lint-prepared.bundle": "e548779bb5dd283f7bd85e4c99b5de990e8fb1fa7afc0673d38344038057b036"
+}

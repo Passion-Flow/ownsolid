@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+printf '%s\n' 'Old Mac admission epoch is closed; await coordinated activation.' >&2
+exit 78
+set -euo pipefail
+run="$1"
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web"
+export PYTHON="$(uv python find 3.12)" PYTHONDONTWRITEBYTECODE=1
+export VITEST_MAX_WORKERS=2 npm_config_offline=true OWNSOLID_PLAYWRIGHT_PORT_OFFSET=12666
+pnpm exec prettier --write apps/console/src/model-state.ts apps/console/src/model-upload.ts apps/console/src/model-upload.test.ts apps/console/src/model-import-page.tsx apps/console/src/model-library-page.tsx apps/console/e2e/models.spec.ts apps/console/e2e/pages.ts packages/i18n/locales/en.json packages/i18n/locales/zh-cn.json packages/shell/testing/models.ts packages/shell/testing/index.ts packages/help/locales/en/console/model-library.md packages/help/locales/zh-cn/console/model-library.md > "$run/format.log" 2>&1
+pnpm generate > "$run/generate.log" 2>&1
+make -C .. check > "$run/check.log" 2>&1
+pnpm --filter @ownsolid/console test > "$run/unit.log" 2>&1
+pnpm --filter @ownsolid/i18n --filter @ownsolid/help test > "$run/catalog.log" 2>&1
+pnpm --filter @ownsolid/console build > "$run/build.log" 2>&1
+cd apps/console
+PLAYWRIGHT_JSON_OUTPUT_NAME="$run/models.json" pnpm exec playwright test models.spec.ts --workers=2 --reporter=json > "$run/models.log" 2>&1
+PLAYWRIGHT_JSON_OUTPUT_NAME="$run/states.json" pnpm exec playwright test -g 'an expired import|an import awaiting expiry cleanup' --workers=2 --reporter=json > "$run/states.log" 2>&1
+printf 'MOD121 focused checks and screens passed.\n'

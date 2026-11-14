@@ -1,0 +1,21 @@
+{
+  "source": "1a2344cad8a48eb3397fdc3692b142a1c82f09f0",
+  "tree": "66bf75784491910c54403fd277aec5639e0f5b7f",
+  "webTree": "30836729a0cd62148925bda04d8b24dfa3617c8b",
+  "inputs": {
+    "web/apps/console/e2e/node-page.spec.ts": "fab4ffe72643513155444b42fa2aaa788c8c90ba4225bb559b5ec6348334865e",
+    "web/apps/console/e2e/resource-actions.spec.ts": "e0206ef9242f8c688074b21be95d1f541edd5d2def3cf9ddd1472f04dd508c05",
+    "web/apps/console/e2e/resource-activity.spec.ts": "b5db274b6192651e6f65afba884af1bc619462a984ddd43799912c4419594422",
+    "web/apps/console/e2e/services.spec.ts": "b9cbf1f5d58efb37e494320dae58c486548df4b114a31e911be721d4f0506096",
+    "web/apps/console/src/deployment-actions.tsx": "5ed1de1bb3ee4466022ca1b79aabaf6196cb40b9dc9527a2f03813bc945462c9",
+    "web/apps/console/src/deployment-page.tsx": "13cb2531be48d18782296455f8faeb2166859e2b57844a2b96b4548ba5d3a155",
+    "web/apps/console/src/model-page.tsx": "64643ba8c5b16818a84d6f9842d46837ed06ac5000ee774826faf8386f441b9f",
+    "web/apps/console/src/node-actions.tsx": "f1e809099817c9855b9fb7b5ab02abe8c02e2a987c9ac63eb73f223325112f2b",
+    "web/apps/console/src/node-page.tsx": "f2683c0a97c7ab2901bf506c1a5ba68b894285479160c15bc1a057bd5e5268c3",
+    "web/packages/api/src/audit.test.ts": "c41931a6de1bb2fa6460870011d54a344c980b0c5f05b98338d55ebffeb523f1",
+    "web/packages/api/src/audit.ts": "b24577d1d1177b9cf2af93facc477028322f6de4eb2bc1d49ab6ddadd28bf126",
+    "web/packages/i18n/locales/en.json": "293c4f971419c639cfe7f48fda8417cdc79132dffa5050beb98ea6be28e6d112",
+    "web/packages/i18n/locales/zh-cn.json": "4318860dd38e6603b5225a323f3d4af171c4db976a9c835745caf4c9619fb44e",
+    "docs/research/resource-detail-pages.md": "4fa28f02c70d95c44b6cdc9f005cc309a2805ab46e3a15d552951af900e604b4"
+  }
+}

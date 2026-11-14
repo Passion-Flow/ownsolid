@@ -1,0 +1,241 @@
+{
+  "config": {
+    "argv": [
+      "/Users/passion./.local/opt/node/bin/node",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "e2e/keyboard.spec.ts",
+      "--grep",
+      "focused control|a key's drawer with its sample calls",
+      "--workers=1",
+      "--output",
+      "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/focus-current-results",
+      "--reporter=line,json"
+    ],
+    "configFile": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/portal/playwright.config.ts",
+    "rootDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/portal/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/focus-current-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/portal/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/focus-current-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/portal/e2e",
+        "snapshotDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/portal/e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://localhost:16977",
+          "trace": "retain-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": {
+      "command": "pnpm exec vite preview --port 16977 --strictPort",
+      "url": "http://localhost:16977",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "keyboard.spec.ts",
+      "file": "keyboard.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "keyboard",
+          "file": "../../../packages/shell/testing/keyboard-flows.ts",
+          "line": 128,
+          "column": 8,
+          "specs": [
+            {
+              "title": "waits for the focused control to enter the viewport before sampling",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 275,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-12T06:57:12.830Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-b8a4c206aa4ba1529497",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 136,
+              "column": 5
+            },
+            {
+              "title": "still refuses a focused control that stays outside the viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 292,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-12T06:57:13.383Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-346eef2f61130e3d1ca3",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 172,
+              "column": 5
+            },
+            {
+              "title": "a key's drawer with its sample calls: every control is reachable and shows focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 532,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-12T06:57:13.679Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "866d5cea7c69e902a1e2-7d6fbef4da4d544c4697",
+              "file": "../../../packages/shell/testing/keyboard-flows.ts",
+              "line": 189,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-12T06:57:12.096Z",
+    "duration": 2147.2999999999997,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "parentPID": 49796,
+  "entryMonotonic": 37524.979068,
+  "workCutoffMonotonic": 38064.979068,
+  "hardDeadlineMonotonic": 38124.979068,
+  "totalSeconds": 600,
+  "cleanupReserve": 60,
+  "childStarted": true,
+  "phaseHistory": [
+    {
+      "phase": "one-nonblocking-attempt",
+      "descriptor": 3,
+      "device": 16777231,
+      "inode": 53377467
+    },
+    {
+      "phase": "held"
+    },
+    {
+      "phase": "preflight",
+      "rawFreeBytes": 4826398720,
+      "diskFreeBytes": 161266491392
+    },
+    {
+      "phase": "executing",
+      "childStarted": true,
+      "childPID": 49802,
+      "childPGID": 49802
+    },
+    {
+      "phase": "cleanup-evidence",
+      "exit": 0,
+      "wrapperOperationalExit": 0,
+      "childExit": 0,
+      "cleanupExit": 0,
+      "cleanupConfirmed": true,
+      "cleanupErrors": [],
+      "elapsedSeconds": 418.8157030000002
+    }
+  ],
+  "phase": "cleanup-evidence",
+  "descriptor": 3,
+  "device": 16777231,
+  "inode": 53377467,
+  "rawFreeBytes": 4826398720,
+  "diskFreeBytes": 161266491392,
+  "childPID": 49802,
+  "childPGID": 49802,
+  "exit": 0,
+  "wrapperOperationalExit": 0,
+  "childExit": 0,
+  "cleanupExit": 0,
+  "cleanupConfirmed": true,
+  "cleanupErrors": [],
+  "elapsedSeconds": 418.8157030000002
+}

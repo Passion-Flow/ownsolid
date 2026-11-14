@@ -1,0 +1,43 @@
+{
+  "scope": "Current reviewer process only; no workload/child/lock created",
+  "bsdBefore": {
+    "pid": 26804,
+    "ppid": 12984,
+    "pgid": 26804,
+    "uid": 501,
+    "startTime": [
+      1794578265,
+      163553
+    ],
+    "rssBytes": 17596416,
+    "status": 2
+  },
+  "usage": {
+    "return": 0,
+    "errno": 0,
+    "startAbstime": 293739696376,
+    "exitAbstime": 0,
+    "residentBytes": 17596416
+  },
+  "bsdAfter": {
+    "pid": 26804,
+    "ppid": 12984,
+    "pgid": 26804,
+    "uid": 501,
+    "startTime": [
+      1794578265,
+      163553
+    ],
+    "rssBytes": 17596416,
+    "status": 2
+  },
+  "usageAfter": {
+    "return": 0,
+    "errno": 0,
+    "startAbstime": 293739696376,
+    "exitAbstime": 0,
+    "residentBytes": 17596416
+  },
+  "abiBytes": 96,
+  "passed": true
+}

@@ -1,0 +1,81 @@
+{
+  "phase": "preparation-only-original-entry-boundary-mismatch",
+  "executionReady": false,
+  "acquisitionAttempted": false,
+  "childStarted": false,
+  "busy": false,
+  "source": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+  "webTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "oldSource": "44ab52293e516128ba2efc0edc2cb2053acc3462",
+  "oldWorktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-44ab5229",
+  "oldRuntimeWebTree": "8deed02cddb981a00c88d70a16bc841d4637be89",
+  "oldConsoleFiles": 696,
+  "oldAssetMapSha256": "ee688e7b66cf1ede87504878d99568df6a64af2c87d362cfa04e88a797076983",
+  "oldBindingReference": "/Users/passion./.local/state/ownsolid/web-scopes/installed-aud108-inputs-1qccyd72/qualified-assets.json",
+  "originalGuard": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/mac-narrow-once.py",
+  "originalGuardSha256": "351c64eabb4b07bb09d50ca873bde460884e30a297f227e1013c4df4af493bdc",
+  "originalNbEntry": "/Users/passion./.local/state/ownsolid/web-scopes/mac-window.py",
+  "carrier": {
+    "path": "/private/tmp/ownsolid-workstation-full-gate.lock",
+    "inode": 50313339,
+    "uid": 501,
+    "sameParentFD": true,
+    "createOrTruncate": false
+  },
+  "bounds": {
+    "oneNonblockingAttempt": true,
+    "kernelWait": false,
+    "retryAcquisition": false,
+    "wholeMaximumSeconds": 600,
+    "executionMaximumSeconds": 565,
+    "buildCommandMaximumSeconds": 60,
+    "discoveryMaximumSeconds": 30,
+    "browserCommandMaximumSeconds": 70,
+    "workers": 2,
+    "proposedNodeHeapMiB": 512,
+    "minimumFreeDiskGiB": 15,
+    "proposedMinimumFreeMemoryGiB": 2
+  },
+  "heapBoundary": "The original local guard/runner declares no heap limit, and the inherited environment has no heap flag. Proposed 512 MiB per Node process is explicit; original stricter coordinator limit, if any, must be retained before execution.",
+  "releaseConditions": [
+    "Review the minimal original-guard delta and its fixed source-bound runner before a fresh short opportunity",
+    "Carry any stricter coordinator heap cap; the original local entry had no declared heap cap",
+    "Original 43eaa0cb source and 44ab old assets must match their manifests at execution",
+    "DEV/GW complete gate order and all existing frozen artifacts remain unchanged"
+  ],
+  "discovery": {
+    "executed": false,
+    "newExpectedOnly": 21,
+    "recoveryExpectedOnly": 41,
+    "imagesPlannedOnly": 27,
+    "imagesGenerated": 0,
+    "imagesRead": 0
+  },
+  "noNewFramework": true,
+  "noFullNativeOrInstalledEntry": true,
+  "noSourceMutationOrPublishInPlan": true,
+  "proceduralRunner": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/browser-run.py",
+  "stagePlan": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/stage-plan.json",
+  "privateNegativeProbeHasNoDependencyCopy": true,
+  "preparedFiles": {
+    "mac-browser-once.py": "db17deecf99a5a3da381db0b8139c35c08e44da332cb50aa87925c6d0c43c2d4",
+    "guard-minimal-extension.patch": "b1c70ab962d41723ce0a159609a400bf5360cd82d5e97be498a295e90f81a30f",
+    "browser-run.py": "a81fb5dc07b42eaaf5d2d141ebb7764aa07394ffa294a225ad91e176bf00f35a",
+    "stage-plan.json": "96002e8d3914a2c130a64fabedfaa3b4e102c5de991eedb3886c332d02477d1e",
+    "negative.config.ts": "e9c9a2b2fbdf944bb41a369b144b859832392e1246af42f8212c78ef63ea1fe8",
+    "old-console-assets.json": "ee688e7b66cf1ede87504878d99568df6a64af2c87d362cfa04e88a797076983",
+    "negative-probe/resource-activity.spec.ts": "efbc00f4daf54efb3f21dba1858e577f34f3f19a1c42c12e5abac13cbf14a926",
+    "negative-probe/resource-activity-fixture.ts": "81e8b105204bcda34a631b3948e16559b4439a5d923838774f1c8e4b6ab96e0c"
+  },
+  "syntaxOnly": "Both proposed Python files compiled in memory; neither was invoked. No Playwright discovery, build or browser stage executed.",
+  "staticReview": {
+    "sourcePinned": true,
+    "oldConsoleAssetMapCompared": 696,
+    "newGuardInvoked": false,
+    "runnerInvoked": false,
+    "stageCoverageAndTimeoutsInspected": true,
+    "allCleanupPathsCloseOriginalFD": true,
+    "originalFilesChanged": false
+  }
+}

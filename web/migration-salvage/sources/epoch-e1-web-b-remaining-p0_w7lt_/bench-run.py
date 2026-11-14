@@ -1,0 +1,100 @@
+import time
+from pathlib import Path
+import hashlib,importlib.util,json,os,re,resource,shlex,signal,subprocess,sys
+assert sys.flags.isolated and not sys.flags.optimize
+root=Path(sys.argv[1]);deadline=float(sys.argv[2]);hard=float(sys.argv[3]);info=json.loads((root/'preparation.json').read_text());selected=json.loads((root/'selected-scope.json').read_text());work=Path(info['worktree']);web=work/'web';fd=int(os.environ['OWNSOLID_GATE_FD']);guard=int(os.environ['OWNSOLID_GATE_PARENT'])
+resource.setrlimit(resource.RLIMIT_CORE,(0,0));results=[]
+def now():return time.clock_gettime(time.CLOCK_MONOTONIC)
+def budget(cap=600):
+ left=deadline-now()
+ if left<=0:raise TimeoutError('Absolute benchmark cutoff reached')
+ return min(left,cap)
+def expire(s,f):raise TimeoutError('Absolute benchmark backstop reached')
+signal.signal(signal.SIGALRM,expire);signal.setitimer(signal.ITIMER_REAL,budget());signal.signal(signal.SIGTERM,lambda s,f:sys.exit(143))
+def save(name,value):budget();(root/name).write_text(json.dumps(value,indent=2)+'\n')
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def source_check():
+ assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=work,text=True,timeout=budget(3)).strip()==selected['source']
+ for p,h in json.loads((root/selected['manifest']).read_text()).items():budget();assert sha(work/p)==h,p
+def node_options(value):
+ tokens=shlex.split(value);cap=2048
+ for i,token in enumerate(tokens):
+  key,sep,amount=token.partition('=');key=key.replace('_','-')
+  if key in ['--max-heap-size','--max-old-space-size-percentage']:raise ValueError('An absolute old-space limit is required')
+  if key=='--max-old-space-size':
+   amount=amount if sep else tokens[i+1];assert amount.isascii() and amount.isdecimal() and int(amount)>0;cap=min(cap,int(amount))
+ return value+' --max-old-space-size='+str(cap),cap
+env=os.environ.copy();options,cap=node_options(env.get('NODE_OPTIONS',''));env.update(NODE_OPTIONS=options,npm_config_offline='true',CI='1',VITEST_MAX_WORKERS='1',PYTHONDONTWRITEBYTECODE='1')
+save('effective-controls.json',{'scope':'B','nodeOldSpaceMaximumMiB':cap,'serialCommands':True,'coreLimitBytes':0,'sampleIntervalSeconds':.25,'monitoredFields':['pid','ppid','pgid','rss'],'environmentOrArgvDumped':False,'fullProfileUnchanged':True})
+manifest=json.loads((root/'pinned-discovery-sha256.json').read_text())
+for p,h in manifest.items():assert sha(Path(p))==h,p
+cli=next(p for p in manifest if p.endswith('/bin/eslint.js'))
+def sample():
+ lines=subprocess.check_output(['ps','-axo','pid=,ppid=,pgid=,rss='],text=True,timeout=budget(2)).splitlines();owned=[]
+ for line in lines:
+  values=line.split()
+  if len(values)!=4:continue
+  pid,ppid,pgid,rss=map(int,values)
+  if pgid==os.getpgrp() or pid==guard:owned.append({'pid':pid,'ppid':ppid,'pgid':pgid,'rssBytes':rss*1024})
+ return owned
+
+def execute(name,args,cwd=web,input_bytes=None):
+ source_check();budget();(root/'stage').write_text(name+'\n');print('LINT_BENCH_STAGE',name,flush=True);started=now();peak_total=0;peaks={}
+ stdout=root/(name+'.stdout');stderr=root/(name+'.stderr');input_file=root/(name+'.stdin')
+ if input_bytes is not None:input_file.write_bytes(input_bytes)
+ with stdout.open('xb') as out,stderr.open('xb') as err:
+  stream=input_file.open('rb') if input_bytes is not None else subprocess.DEVNULL
+  try:
+   child=subprocess.Popen(['/usr/bin/time','-l',*args],cwd=cwd,env=env,stdin=stream,stdout=out,stderr=err,pass_fds=(fd,),umask=0o022)
+   (root/'owned-stage-groups.json').write_text(json.dumps([os.getpgrp()])+'\n')
+   while True:
+    values=sample();peak_total=max(peak_total,sum(v['rssBytes'] for v in values))
+    for v in values:peaks[v['pid']]=max(peaks.get(v['pid'],0),v['rssBytes'])
+    try:code=child.wait(timeout=budget(.25));break
+    except subprocess.TimeoutExpired:pass
+  finally:
+   if input_bytes is not None:stream.close()
+ data=stderr.read_text(errors='replace');match=re.search(r'^\s*(\d+)\s+maximum resident set size',data,re.MULTILINE)
+ row={'name':name,'exit':code,'seconds':now()-started,'stdout':str(stdout),'stderr':str(stderr),'timeMaximumRssBytes':int(match.group(1)) if match else None,'sampledOwnerTreePeakRssBytes':peak_total,'sampledSingleProcessPeakRssBytes':max(peaks.values(),default=0),'sampledPerPidPeakRssBytes':peaks,'source':selected['source']};results.append(row);save('stage-results.json',results);print(json.dumps({k:row[k] for k in ['name','exit','seconds','timeMaximumRssBytes','sampledOwnerTreePeakRssBytes']}),flush=True);return row
+
+def require(row,code=0):
+ if row['exit']!=code:raise RuntimeError(row['name']+' exited '+str(row['exit'])+'; expected '+str(code))
+def read_json(row):return json.loads(Path(row['stdout']).read_text())
+source_check();assert subprocess.check_output(['git','status','--porcelain'],cwd=work,timeout=budget(3))==b''
+reuse=json.loads((root/'prior-seven-cli-reuse-proof.json').read_text());prior=Path(reuse['priorAttempt'])
+assert reuse['source']==selected['source'] and reuse['invocationArgumentsUnchanged']
+assert sha(prior/'01-seven-cli-regressions.stdout')==reuse['priorStdoutSha256'] and sha(prior/'01-seven-cli-regressions.stderr')==reuse['priorStderrSha256']
+spec=importlib.util.spec_from_file_location('cli_summary',root/'cli-summary.py');summary_module=importlib.util.module_from_spec(spec);spec.loader.exec_module(summary_module)
+parsed=summary_module.parse_node_summary((prior/'01-seven-cli-regressions.stdout').read_text(),reuse['priorRealCommandExit']);assert parsed==reuse['actualParsedSummary']
+for path,expected in reuse['candidateRuntimeAndTestsByteUnchanged'].items():assert sha(work/path)==expected,path
+save('01-seven-cli-retained.json',{'source':selected['source'],'priorAttempt':str(prior),'actualPriorSummary':parsed,'actualPriorCommandExit':0,'priorParentExitRetained':1,'reexecutedThisAttempt':False,'inputAndInvocationBytesUnchanged':True,'crossAttemptBoundary':reuse['crossAttemptBoundary']})
+
+row=execute('02-file-config-proof',['node',str(root/'coverage.mjs'),str(web)]);require(row);proof=read_json(row);assert proof['exactDisjointUnion'] and proof['allCalculatedConfigsEqual'] and proof['unionCount']==len(proof['originalFiles'])
+old=execute('03-original-complete-lint',['node',cli,'--config','packages/config/eslint.config.js','--max-warnings','0','--format','json','.'])
+new=execute('04-new-complete-lint',['pnpm','--silent','lint','--format','json']);require(new)
+new_results=read_json(new);assert sorted(r['filePath'] for r in new_results)==proof['originalFiles'];assert not any(r['errorCount'] or r['warningCount'] for r in new_results)
+comparison={'source':selected['source'],'fileCount':len(new_results),'newExactInventoryMatch':True,'allEffectiveConfigsMatch':True,'originalExit':old['exit'],'newExit':new['exit'],'completeDiagnosticEquality':False,'originalIncompleteOrFailed':old['exit']!=0}
+if old['exit']==0:
+ original_results=read_json(old);assert sorted(r['filePath'] for r in original_results)==proof['originalFiles'];assert sorted(original_results,key=lambda r:r['filePath'])==sorted(new_results,key=lambda r:r['filePath']);comparison['completeDiagnosticEquality']=True
+else:
+ comparison['originalFailureRetained']=True;comparison['reason']='The original complete command failed; no complete diagnostic equality is claimed.'
+save('positive-equivalence.json',comparison)
+controls=json.loads((root/'negative-controls.json').read_text())['controls'];owned=[]
+# Record each exclusive-created inode before writing, so interrupted partial writes
+# remain owned and removable without touching a pre-existing or replaced path.
+for control in controls:
+ p=web/control['path'];assert not os.path.lexists(p),str(p)
+for control in controls:
+ p=web/control['path'];created=os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600);s=os.fstat(created);owned.append({'path':str(p),'device':s.st_dev,'inode':s.st_ino,'uid':s.st_uid,'expectedSha256':hashlib.sha256(control['source'].encode()).hexdigest()});save('owned-negative-files.json',owned)
+ try:os.write(created,control['source'].encode())
+ finally:os.close(created)
+negative=[]
+for i,control in enumerate(controls):
+ row=execute('05-original-negative-%02d'%i,['node',cli,'--config','packages/config/eslint.config.js','--max-warnings','0','--format','json','--stdin','--stdin-filename',control['path']],input_bytes=control['source'].encode());require(row,1);data=read_json(row);rules={m.get('ruleId') for r in data for m in r['messages']};assert set(control['rules'])<=rules,(control['path'],control['rules'],sorted(r for r in rules if r));negative.append({'path':control['path'],'expectedRules':control['rules'],'originalExit':1,'actualOriginalRules':sorted(r for r in rules if r),'originalDiagnostics':data[0]})
+row=execute('06-new-whole-negative',['pnpm','--silent','lint','--format','json']);require(row,1);data=read_json(row);by_file={r['filePath']:r for r in data}
+for result,control in zip(negative,controls):
+ matches=by_file[str(web/control['path'])];rules={m.get('ruleId') for m in matches['messages']};assert set(control['rules'])<=rules,(control['path'],control['rules'],rules);
+ for key in ['messages','suppressedMessages','errorCount','warningCount','fatalErrorCount']:assert matches[key]==result['originalDiagnostics'][key],(control['path'],key)
+ result.update(newExit=1,actualNewRules=sorted(r for r in rules if r),exactControlDiagnosticsEqual=True)
+assert len(by_file)==len(proof['originalFiles'])+len(controls),'Negative run lost original coverage'
+save('negative-control-results.json',negative);source_check();save('benchmark-result.json',{'source':selected['source'],'tree':selected['tree'],'webTree':selected['webTree'],'sevenCliPassed':True,'fileConfigProofPassed':True,'positiveNewLintPassed':True,'originalExit':old['exit'],'completeDiagnosticEquality':comparison['completeDiagnosticEquality'],'negativeControls':len(negative),'allOriginalAndNewNegativeRulesRejected':True,'workCompleted':True,'cleanupStillRequired':True,'peakActuallyLower':new['sampledOwnerTreePeakRssBytes']<old['sampledOwnerTreePeakRssBytes'],'fullGate':'NOTRUN','installedAcceptance':False});(root/'stage').write_text('complete\n')

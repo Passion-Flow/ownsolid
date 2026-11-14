@@ -1,0 +1,71 @@
+{
+  "parentPID": 64612,
+  "carrier": "/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock",
+  "expectedInode": 53377467,
+  "expectedDevice": 16777231,
+  "epoch": "ownsolid-2-20261113-e1",
+  "coreLimitBytes": 0,
+  "kernelWaitBudgetSeconds": 0,
+  "executionBudgetSeconds": 600,
+  "childStarted": true,
+  "entryMonotonic": 11459.446875,
+  "hardDeadlineMonotonic": 12059.446875,
+  "workCutoffMonotonic": 11939.446875,
+  "cleanupReserveSeconds": 120,
+  "cleanupConfirmed": true,
+  "cleanupEvidenceFailed": false,
+  "groupsConfirmed": true,
+  "awakeConfirmed": true,
+  "phaseHistory": [
+    {
+      "phase": "one-nonblocking-attempt",
+      "descriptor": 3,
+      "device": 16777231,
+      "inode": 53377467
+    },
+    {
+      "phase": "held",
+      "descriptor": 3
+    },
+    {
+      "phase": "scope-selected",
+      "chosenScope": "B",
+      "selectedSource": "56a19799bfec788170d71680b4f0663c23073107",
+      "selectedTree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+      "rawFreeBytes": 4864524288,
+      "diskFreeBytes": 165640785920,
+      "unselectedScope": "NOTRUN"
+    },
+    {
+      "phase": "executing",
+      "childStarted": true,
+      "childPID": 64630,
+      "childGroup": 64630
+    },
+    {
+      "phase": "child-failed",
+      "exit": 1,
+      "executionSeconds": 46.394734999999855
+    },
+    {
+      "phase": "cleanup-evidence",
+      "exit": 1,
+      "cleanupConfirmed": true
+    }
+  ],
+  "descriptor": 3,
+  "device": 16777231,
+  "inode": 53377467,
+  "phase": "cleanup-evidence",
+  "updatedUTC": "2026-11-13T13:45:39.079001+00:00",
+  "chosenScope": "B",
+  "selectedSource": "56a19799bfec788170d71680b4f0663c23073107",
+  "selectedTree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "rawFreeBytes": 4864524288,
+  "diskFreeBytes": 165640785920,
+  "unselectedScope": "NOTRUN",
+  "childPID": 64630,
+  "childGroup": 64630,
+  "exit": 1,
+  "executionSeconds": 46.394734999999855
+}

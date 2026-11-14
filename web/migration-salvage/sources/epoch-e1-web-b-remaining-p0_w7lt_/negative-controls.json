@@ -1,0 +1,86 @@
+{
+  "preparedOnly": true,
+  "filesCreated": false,
+  "controls": [
+    {
+      "path": "lint-negative-fixture.js",
+      "source": "unresolvedRootLintControl;\n",
+      "rules": [
+        "no-undef"
+      ]
+    },
+    {
+      "path": ".lint-negative-fixture.js",
+      "source": "unresolvedDotLintControl;\n",
+      "rules": [
+        "no-undef"
+      ]
+    },
+    {
+      "path": "apps/console/src/lint-negative-fixture.tsx",
+      "source": "import { useState } from 'react';\nexport function LintControl({ active }: { active: boolean }) {\n  if (active) useState(false);\n  return <button>Untranslated control</button>;\n}\nexport function unsafeControl(value: any) { return value.member; }\n",
+      "rules": [
+        "react-hooks/rules-of-hooks",
+        "no-restricted-syntax",
+        "@typescript-eslint/no-unsafe-member-access"
+      ]
+    },
+    {
+      "path": "apps/portal/src/lint-negative-fixture.tsx",
+      "source": "export function LintControl() { return <img src=\"/lint-control\" />; }\n",
+      "rules": [
+        "jsx-a11y-x/alt-text"
+      ]
+    },
+    {
+      "path": "apps/console/e2e/lint-negative-fixture.ts",
+      "source": "export function lintControl() { Promise.resolve(1); }\n",
+      "rules": [
+        "@typescript-eslint/no-floating-promises"
+      ]
+    },
+    {
+      "path": "packages/shell/testing/lint-negative-fixture.ts",
+      "source": "export function lintControl() { Promise.resolve(1); }\n",
+      "rules": [
+        "@typescript-eslint/no-floating-promises"
+      ]
+    },
+    {
+      "path": "packages/config/src/lint-negative-fixture.ts",
+      "source": "export function lintControl() { Promise.resolve(1); }\n",
+      "rules": [
+        "@typescript-eslint/no-floating-promises"
+      ]
+    }
+  ],
+  "originalPerControlArgv": [
+    "node",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/eslint@10.14.0_jiti@2.7.0_supports-color@10.2.2/node_modules/eslint/bin/eslint.js",
+    "--config",
+    "packages/config/eslint.config.js",
+    "--max-warnings",
+    "0",
+    "--format",
+    "json",
+    "--stdin",
+    "--stdin-filename",
+    "<control path>"
+  ],
+  "newWholeScopeArgv": [
+    "pnpm",
+    "--silent",
+    "lint",
+    "--format",
+    "json"
+  ],
+  "requirements": [
+    "All control paths absent before exclusive creation",
+    "Create only these owned fixture files under the real original cwd and tsconfig; record owned file identities",
+    "Original stdin check must return exit 1 and name each expected rule for that real filename",
+    "Entire new lint must return exit 1 and name each expected rule at each control path",
+    "No disabled rule, narrowed target, warning cap change, cache or retry",
+    "Remove only the created owned fixtures in guarded cleanup; verify tracked hashes and clean source before releasing the carrier"
+  ],
+  "additionalWarningControl": "The real-CLI fixture test verifies original and new zero-warning failure without weakening the product configuration."
+}

@@ -1,0 +1,46 @@
+{
+  "source": "6a77bcdbc372a0aa7fac24b3f21a83105c246c86",
+  "run": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/expiry-help-discovery-tzmrh6j8/full",
+  "stage": "complete",
+  "exitStatus": 0,
+  "stats": {
+    "console": {
+      "startTime": "2026-11-12T19:40:43.238Z",
+      "duration": 237408.421,
+      "expected": 1134,
+      "skipped": 28,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "portal": {
+      "startTime": "2026-11-12T19:44:40.946Z",
+      "duration": 336653.716,
+      "expected": 410,
+      "skipped": 10,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "imagesRead": {
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/aud108-action-display/audit-read-details-en.png": "8cb44ca370623d44bc9a6f065bb1e2a963cfd1e73db2ba7f3ef5af40d90759d0",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/aud108-action-display/audit-read-details-zh-CN.png": "813762a4c57dd69e04b318f6b17b9012a35eb61ec85990bf327c5b3c6ba4702c",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/aud108-action-display/audit-read-list-en.png": "3076bc776d568c1fa78440a9ef236b8b6564bbbe4a5ac5d9f254d29c8c702a64",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/aud108-action-display/audit-read-list-zh-CN.png": "05293e74e29e54330e152fb4ddde5fccbdad49840383d34d23629d375303d063",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/mod121-import-expiry/qualified-discovery/model-import-expired-en.png": "2d2a15f0c95a29614ecc796170dd68080a0e482a41092b28eefaad29f0f9e9b5",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/mod121-import-expiry/qualified-discovery/model-import-expired-zh-CN.png": "7f9b6d9ca699e39040821828db6c18dd67826c6149c7c5b06f6333bae8cba0c5",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/mod121-import-expiry/qualified-discovery/model-import-expiring-en.png": "bdf90044c51f4d2ef65caf3249e2e5fd998f7fd9368b5bced43861f4e6862f89",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/mod121-import-expiry/qualified-discovery/model-import-expiring-zh-CN.png": "df11d9ed397dc8b3c3aff3bec6c142160cba4526ca1a436fee2c47fda330f2c7",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/mod121-import-expiry/qualified-discovery/model-import-expiry-help-en.png": "7af26f7cbaf72c82d053f52e8a5cdb7d4b6f8cc3756536b722859d07e60ee224",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/mod121-import-expiry/qualified-discovery/model-import-expiry-help-zh-CN.png": "e96b481beec3c9178b0c26fcea43b640d78ce37b0bd9c3f2bc4cfc4428c75e2f"
+  },
+  "installedRun": false,
+  "SQLRun": false,
+  "originalSources": {
+    "AUD108": "178a5a64",
+    "MOD121": "6a80e122",
+    "licenseDocumentation": "7401ff67",
+    "helpDiscovery": "2ed381c1"
+  },
+  "entry": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry.md",
+  "manifest": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-manifest.json"
+}

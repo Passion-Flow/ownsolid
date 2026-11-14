@@ -1,0 +1,47 @@
+{
+  "source": "30a6fd576102358581eabd1efe6f51098538f8c9",
+  "tree": "723a7126525c28e478b727b123a703eb0152f6c4",
+  "webTree": "106e168248871fbd3f6cbd280c3dd949aa3517b1",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "oldWorktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-44ab5229",
+  "referencePacket": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck",
+  "formatPaths": [
+    "web/apps/console/e2e/node-page.spec.ts",
+    "web/apps/console/e2e/resource-actions.spec.ts",
+    "web/apps/console/e2e/resource-activity.spec.ts",
+    "web/apps/console/e2e/services.spec.ts",
+    "web/apps/console/src/deployment-actions.tsx",
+    "web/apps/console/src/deployment-page.tsx",
+    "web/apps/console/src/model-page.tsx",
+    "web/apps/console/src/node-actions.tsx",
+    "web/apps/console/src/node-page.tsx",
+    "web/packages/api/src/audit.test.ts",
+    "web/packages/api/src/audit.ts",
+    "web/packages/i18n/locales/en.json",
+    "web/packages/i18n/locales/zh-cn.json",
+    "docs/research/resource-detail-pages.md"
+  ],
+  "lintPaths": [
+    "apps/console/e2e/node-page.spec.ts",
+    "apps/console/e2e/resource-actions.spec.ts",
+    "apps/console/e2e/resource-activity.spec.ts",
+    "apps/console/e2e/services.spec.ts",
+    "apps/console/src/deployment-actions.tsx",
+    "apps/console/src/deployment-page.tsx",
+    "apps/console/src/model-page.tsx",
+    "apps/console/src/node-actions.tsx",
+    "apps/console/src/node-page.tsx",
+    "packages/api/src/audit.test.ts",
+    "packages/api/src/audit.ts"
+  ],
+  "preparedFiles": {
+    "ux-browser-run.py": "e33ec23c008da837ff0c2585fe16f72072a66d21fcb98243db2c62d2a4d7e82d",
+    "mac-epoch-once.py": "9d71fcc3382d61175f0ec2e650a81496383022042e6c14f4b8c8126d718ed46f",
+    "cleanup-epoch-owned.py": "28154f8480aa76cccfd8aebcc61696cea988202cc76e490a7b5e75c263b5e892",
+    "stage-plan.json": "795f4ad251dd43762f20a8674d999f3c9b5fe35ecfadf26f52763b03f3cc6088",
+    "source-file-sha256.json": "77e1b595b110f75060939a5092937daca7082cc0f21d70c6a323c031a06d4f6e",
+    "scope-inputs.json": "ea7fc75039f7755d1e257c0497884790f1f5de134deb7d15819d9c4a5ac4653f",
+    "authorization.json": "e9166ad4daebdeba0a17ee6199919248db3909b900f3abd08ec109ac2808c452",
+    "initial-candidate.json": "8caf1df3063103b4e688bbb48b3452f984d399a516e7599bb435be920552c3d3"
+  }
+}

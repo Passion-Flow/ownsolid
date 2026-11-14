@@ -1,0 +1,68 @@
+{
+  "phase": "prepared-module-boundary-correction-only",
+  "consumedPacket": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf",
+  "originalPacket": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7",
+  "oldEntry": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative-probe/resource-activity.spec.ts",
+  "correctedEntry": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe/resource-activity.spec.ts",
+  "mainEntry": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e/resource-activity.spec.ts",
+  "consolePackage": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/package.json",
+  "source": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+  "webTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "files": {
+    "negative-probe/package.json": "609158e6c5fbc237939fa3ddf7faab80ab690bdc0c8d584414a885130103c4e8",
+    "negative-probe/resource-activity.spec.ts": "efbc00f4daf54efb3f21dba1858e577f34f3f19a1c42c12e5abac13cbf14a926",
+    "negative-probe/resource-activity-fixture.ts": "81e8b105204bcda34a631b3948e16559b4439a5d923838774f1c8e4b6ab96e0c",
+    "negative.config.ts": "9df7fdd08c6df1bc8457886d67538c006ae205c0ca9ae5508e151d4dfc27ea11",
+    "module-boundary-check.mjs": "c153cbbb578b79dc4e83c09f605e7f20c6441a10e7aa9e37b58958febecdc42e",
+    "module-boundary-result.json": "4abdba5b645b959047ff62af391fc5f933b5a3ebac29a4b979a431984f1ebc68",
+    "module-boundary-correction.patch": "047fa79f94991fd9f3a4ced4b957fc54b419ee0799e64157a438e97794d36e02"
+  },
+  "testAndFixtureBytesUnchanged": true,
+  "newDependencies": false,
+  "newProductSourceChanges": false,
+  "newGuardEntryOrQueue": false,
+  "playwrightDiscoveryRerun": false,
+  "browserRerun": false,
+  "buildRerun": false,
+  "retryAttempted": false,
+  "consumedMarkerKept": true,
+  "plannedNegativeDiscoveryArgs": [
+    "pnpm",
+    "exec",
+    "playwright",
+    "test",
+    "resource-activity.spec.ts",
+    "--config",
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative.config.ts",
+    "--grep",
+    "reads current activity for a 400-day-old resource with a (?:1|31)-day policy",
+    "--list",
+    "--reporter=json"
+  ],
+  "negativeExpectedCasesOnly": 4,
+  "primaryReferences": [
+    "https://nodejs.org/api/packages.html#type",
+    "https://nodejs.org/api/typescript.html#determining-module-system"
+  ],
+  "currentEvidenceCommit": "d4bfec1cd66cd7b4160fd900eeeb2e165d47dd3b",
+  "testedBuildSource": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+  "currentWebTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "testedWebTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "webTreesEqual": true,
+  "moduleClassificationResult": {
+    "scope": "Pinned upstream module-classification helper only; no tests loaded, no Playwright collection, browser or preview",
+    "version": "1.64.1",
+    "selectorSource": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/playwright@1.64.1/node_modules/playwright/lib/util.js",
+    "selectorSha256": "874c55495773da8c5a2ec46551c2265937bf08446231c09a8b5966e8bea2b1f7",
+    "actual": {
+      "oldExternalEntry": false,
+      "correctedExternalEntry": true,
+      "mainConsoleEntry": true
+    },
+    "passed": true,
+    "browserExecuted": false,
+    "discoveryExecuted": false,
+    "buildExecuted": false
+  },
+  "correctionStillUncollectedInPlaywright": true
+}

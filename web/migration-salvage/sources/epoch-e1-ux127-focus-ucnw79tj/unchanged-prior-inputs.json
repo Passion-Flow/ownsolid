@@ -1,0 +1,50 @@
+{
+  "web/apps/console/src/audit-read.tsx": {
+    "sameAs1a2344ca": true,
+    "sha256": "062ca93291190048e19a2c1aa7a6603a709c718915e179c4a1cdfb69c3446a18"
+  },
+  "web/apps/console/src/activity-window.ts": {
+    "sameAs1a2344ca": true,
+    "sha256": "c503a3f97b8ddadf0c73b74c0c26a86f33bc8d7ebb6ebc446bbe6462da82178d"
+  },
+  "web/apps/console/src/resource-activity.tsx": {
+    "sameAs1a2344ca": true,
+    "sha256": "516e63f8f94dba31452f1ef473aced5719420f1099b7d9d65078cef77f2658ff"
+  },
+  "web/apps/console/e2e/audit-read-recovery.spec.ts": {
+    "sameAs1a2344ca": true,
+    "sha256": "6d37859ef3bb0688b2997b8721992555d425c8fa4fbdf32f5006dc936139d7c3"
+  },
+  "web/apps/console/src/audit-read.test.tsx": {
+    "sameAs1a2344ca": true,
+    "sha256": "82eee873ea31ecd06d8ac4352d5a15a9242a5726dcdf07e856ef842c6f05a8a7"
+  },
+  "web/apps/console/src/activity-window.test.ts": {
+    "sameAs1a2344ca": true,
+    "sha256": "4a337acf2f8cb7dafaee16967ed8243562e0fd0b7d9aa55fd14f12583de31360"
+  },
+  "web/apps/console/src/deployment-state.test.ts": {
+    "sameAs1a2344ca": true,
+    "sha256": "43641b3f89f2009d307d4f4d94118cde6c193ce82f8bc3b54f2ebc805c048de6"
+  },
+  "web/packages/i18n/src/catalogs.test.ts": {
+    "sameAs1a2344ca": true,
+    "sha256": "f977e6ef0a335bb767d80e039758812a655f654ef74feb961af18ecd7f21edcc"
+  },
+  "web/packages/i18n/src/format.test.ts": {
+    "sameAs1a2344ca": true,
+    "sha256": "c2e79487104191b3976189b74bcf79fc8e61a49549c43e3a941c2192a7d3ebd1"
+  },
+  "web/packages/i18n/locales/en.json": {
+    "sameAs1a2344ca": true,
+    "sha256": "293c4f971419c639cfe7f48fda8417cdc79132dffa5050beb98ea6be28e6d112"
+  },
+  "web/packages/i18n/locales/zh-cn.json": {
+    "sameAs1a2344ca": true,
+    "sha256": "4318860dd38e6603b5225a323f3d4af171c4db976a9c835745caf4c9619fb44e"
+  },
+  "web/pnpm-lock.yaml": {
+    "sameAs1a2344ca": true,
+    "sha256": "de9a5caf8f5dc63c0aa16e2789a8ef828a139e91bf4293b80f9d63ed263fcd08"
+  }
+}

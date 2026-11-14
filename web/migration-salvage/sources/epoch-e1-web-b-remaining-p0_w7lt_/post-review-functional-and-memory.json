@@ -1,0 +1,49 @@
+{
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "functional": {
+    "originalEffectiveFiles": 372,
+    "newEffectiveFiles": 372,
+    "exactDisjointUnion": true,
+    "all372EffectiveConfigsEqual": true,
+    "originalIgnoresPreserved": 5,
+    "positiveNewLintErrors": 0,
+    "positiveNewLintWarnings": 0,
+    "newNegativeFiles": 379,
+    "originalPlusExactlySevenControls": true,
+    "allSevenOriginalVsNewControlDiagnosticsEqual": true,
+    "unchangedRealCliCasesRetainedFromPreviousAttempt": 7,
+    "realCliCasesRerunThisAttempt": 0
+  },
+  "oldCompleteCommand": {
+    "exit": -6,
+    "seconds": 15.766399000000092,
+    "actualOom": true,
+    "timeMaximumRssBytes": 2566897664,
+    "completeResultEquality": "NOT PROVEN: old complete command OOM"
+  },
+  "newCompleteCommand": {
+    "exit": 0,
+    "seconds": 28.14731699999993,
+    "timeMaximumRssBytes": 2075901952
+  },
+  "timeCommandReportedMaxRssReductionPercent": 19.12798156646731,
+  "ownerTreeSampling": {
+    "validForCompleteTree": false,
+    "reason": "The private sampler selected only the original runner process group and admission parent. It did not follow all descendant PPIDs across process groups; the new-command raw sampled value omits large descendants and cannot be interpreted as an owner-tree maximum.",
+    "rawValuesPreserved": true,
+    "rawBenchmarkPeakActuallyLowerFlagAcceptedAsTreeConclusion": false,
+    "originalSampledBytes": 2598076416,
+    "newSampledBytes": 73629696,
+    "newSampledPerPidMaxBytes": 28098560,
+    "timeCommandMaxIsSeparateEvidence": true,
+    "exactMissingDescendantTopology": "Not retained; no historical process tree is fabricated."
+  },
+  "qualificationBoundary": {
+    "fileConfigCoverageAndRealNegativeControlsPassed": true,
+    "newWholeLintPassedAt2048MiBHeap": true,
+    "comparativeFullOwnerTreePeak": "UNQUALIFIED: sampler scope defect",
+    "newFullGateOrInstalledAcceptance": false,
+    "full6GiBFloorUnchanged": true,
+    "noSecondNbOrAutomaticRetry": true
+  }
+}

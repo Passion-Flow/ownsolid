@@ -1,0 +1,87 @@
+{
+  "branch": "codex/portal-account-sessions",
+  "head": "91d36706641515a7697937b11adf8b23dc7ada4c",
+  "runtimeSource": "2efbdfaac288c16ab774271fed7ed58821a1797a",
+  "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+  "base": "6f785818",
+  "specCommit": "ad84c61f",
+  "commits": [
+    "b3c37bba304167b09c5763993da8c54fe24fcbda",
+    "6d0b7776fa3eb1ceb155bc62024a313b0b5a6543",
+    "ad84c61f6c677c9617b64079e9222bb506a08879",
+    "2efbdfaac288c16ab774271fed7ed58821a1797a",
+    "91d36706641515a7697937b11adf8b23dc7ada4c"
+  ],
+  "clean": true,
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-handoff-mz3j52a8/portal-account-sessions.bundle",
+  "bundleSha256": "cd741ebb143f330331b6cbaa1ca65b8a2b58a4bc0a24c790ee27f9fecf5e74a5",
+  "bundlePrerequisite": "6f785818156ff5e827ccc86923b7cfa0b4c0185d",
+  "changedFileManifest": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-handoff-mz3j52a8/files.json",
+  "finalSourceQualified": false,
+  "passedEarlierDevelopmentChecks": {
+    "apiTransport": 30,
+    "shellSessionAndAccount": 31,
+    "uiComponents": 33,
+    "internationalization": 49,
+    "help": 19,
+    "types": [
+      "api",
+      "shell",
+      "console",
+      "portal"
+    ],
+    "changedFileLint": "five sequential groups passed",
+    "format": "passed before final additions"
+  },
+  "evidencePackets": [
+    "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-light-31yk8_07",
+    "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-fix-z5ckf6nz",
+    "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-verify-fbcnbrbj",
+    "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-tests-0ke2krav",
+    "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-qualification-2f0h8l7o",
+    "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-bounded-50d0idsh",
+    "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-final-6sy_pxm8"
+  ],
+  "pendingFocused": [
+    "final same-account SignInPage callback test",
+    "final late password result after sign-out and same-account remount test",
+    "null-recovery generic retry suppression and its regression test",
+    "final-source formatter/lint/types/focused unit rerun"
+  ],
+  "browser": {
+    "definitionsPerEntrance": 9,
+    "collectionRun": false,
+    "casesRun": 0,
+    "screenshotsGenerated": 0,
+    "screenshotsRead": 0,
+    "entries": [
+      "web/apps/console/e2e/account-sessions.spec.ts",
+      "web/apps/portal/e2e/account-sessions.spec.ts"
+    ],
+    "sharedFlows": "web/packages/shell/testing/account-session-flows.ts"
+  },
+  "stillRequired": [
+    "final focused rerun",
+    "new-source built-browser screenshots actually opened and reviewed",
+    "make check && make build && make test",
+    "disconnected-network acceptance",
+    "same-source installed UI persistence/authority and independent durable audit acceptance"
+  ],
+  "ux127FrozenBranch": {
+    "branch": "codex/web-resource-history-ui",
+    "head": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+    "itsQualificationIsNotTransferred": true
+  },
+  "runtimeAssets": "No new POR-112 build exists. Ignored dist from previous UX-127 development must never be served or relabelled as this candidate. Frozen 44ab Help/audit archives are untouched.",
+  "carrier": {
+    "inode": 50313339,
+    "uid": 501,
+    "regular": true,
+    "modifiedOrDeleted": false
+  },
+  "mainPush": false,
+  "roadmapTicked": false,
+  "servicesStarted": [],
+  "servicesLeftRunning": [],
+  "queueOrWaiterCreated": false
+}

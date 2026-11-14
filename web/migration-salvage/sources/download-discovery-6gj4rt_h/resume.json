@@ -1,0 +1,35 @@
+{
+  "development_revision": "b49514bf6b34689e754533c86ec5a5d65d10749a",
+  "development_checkout": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web",
+  "installed_acceptance_revision": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "new_candidates": [
+    "fd3231fe",
+    "9d666bb6",
+    "0978d95c",
+    "b49514bf"
+  ],
+  "published": false,
+  "verified": {
+    "old_loader": "Controlled Chromium failure: identity contract link disappears after disconnected filtering; baseline-test-exit=1 is expected",
+    "9d666bb6": "make check and both Web builds passed; offline lookup rendered the link in English and Chinese; intended page-route download failure was ineffective, so the two tests failed as recorded",
+    "static_current": "Help 19 and config 17 unit tests; affected formatting/lint/type checks passed",
+    "visual": "Read the old missing-link screenshot and the two partial Console before-retry screenshots"
+  },
+  "pending": [
+    "Native HTTP 503 and retry browser cases for both entrances and locales",
+    "New guide-section screenshots and keyboard checks",
+    "Final integration gates and installed validation before publication"
+  ],
+  "next_command": [
+    "python3",
+    "/Users/passion./.local/state/ownsolid/web-scopes/mac-window.py",
+    "bash",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/qualification-window.sh",
+    "<fresh output directory>",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web",
+    "/Users/passion./.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12"
+  ],
+  "mac_protocol": "Resident same-uid regular file; reject symlink; LOCK_EX|LOCK_NB; retain FD; never unlink/truncate/replace. Current higher-priority lane holds the window. No background retry is running.",
+  "live_client_readiness": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/acceptance-readiness-4463bbe6.json",
+  "live_status": "Not run. The last DEL transmission window expired; await stable current-instance handoff and private TLS/account references. Nonempty retained ready metadata is not a live acceptance result."
+}

@@ -1,0 +1,18 @@
+--- /dev/null
++++ /Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe/package.json
+@@ -0,0 +1,4 @@
++{
++  "private": true,
++  "type": "module"
++}
+--- /Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative.config.ts
++++ /Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative.config.ts
+@@ -2,7 +2,7 @@
+ const require = createRequire("/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/package.json");
+ const { defineConfig, devices } = require('@playwright/test');
+ export default defineConfig({
+-  testDir: "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative-probe",
++  testDir: "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe",
+   testMatch: 'resource-activity.spec.ts',
+   fullyParallel: true,
+   retries: 0,

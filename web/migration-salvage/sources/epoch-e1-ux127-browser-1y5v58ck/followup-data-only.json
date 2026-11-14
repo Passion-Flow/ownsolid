@@ -1,0 +1,48 @@
+{
+  "status": "DATA_ONLY_NOT_EXECUTED",
+  "candidate": {
+    "source": "31fe39e974400f80efb82ef68e5d33e80d5dd64b",
+    "tree": "220e9e881e350c659e3aef7476a07a10f1b52172",
+    "webTree": "da6882b8d6d0510323fd9ed50d080c8ca72876eb",
+    "status": ""
+  },
+  "qualifiedCurrentCandidate": false,
+  "sourceChanges": [
+    "web/packages/api/src/audit.test.ts",
+    "web/packages/api/src/audit.ts"
+  ],
+  "mustPreserve": [
+    "Original policy-faithful fixture and all original assertions.",
+    "All original failed, busy and cutoff results.",
+    "Same current epoch/carrier identity; no legacy guard reactivation.",
+    "No skip, retry, worker or timeout weakening."
+  ],
+  "privateHarnessCorrectionsPending": [
+    "Include owned web/packages/api/src corrections in review path validation without permitting test/fixture weakening.",
+    "Extract inline reporter PNG bodies as well as external attachment paths before reporting image counts.",
+    "Record cutoff cleanup PermissionError with actual parent exit and preserve the error; do not relabel the run successful."
+  ],
+  "sourceQualificationPending": [
+    "API audit.test.ts two cases",
+    "Affected API/Console typechecks and lint",
+    "Console build bound to corrected source",
+    "Original resource activity 21",
+    "Original explicit recovery 19/19/3",
+    "Original resource-pages 9 and node-page 10",
+    "Affected inventory a11y 20 and keyboard 10",
+    "Read every actual generated image including two previously missing partial states"
+  ],
+  "visualCorrectionsPending": [
+    "Node/model competing primary actions",
+    "Node/deployment visible header action count",
+    "Unavailable deployment action reasons expose roadmap IDs",
+    "Narrow filtered-empty remedy requires scroll/keyboard qualification"
+  ],
+  "notAuthorizedByThisFile": [
+    "Any new lock attempt or execution",
+    "Full make gates",
+    "Native or installed qualification",
+    "Publication"
+  ],
+  "originalStagePlanUnchanged": true
+}

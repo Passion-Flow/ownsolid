@@ -1,0 +1,187 @@
+[
+  {
+    "name": "B-old-complete-cli-memory",
+    "argv": [
+      "node",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/eslint@10.14.0_jiti@2.7.0_supports-color@10.2.2/node_modules/eslint/bin/eslint.js",
+      "--config",
+      "packages/config/eslint.config.js",
+      "--max-warnings",
+      "0",
+      "--format",
+      "json",
+      "."
+    ],
+    "exit": -6,
+    "seconds": 16.673130999999557,
+    "validSnapshots": 313,
+    "samplerFailures": 0,
+    "sampledWholeOwnerTreePeakRssBytes": 2600534016,
+    "sampledSingleProcessPeakRssBytes": 2536177664,
+    "samplerPeakRssBytes": 20643840,
+    "samplerCpuSeconds": 0.06358499999999959,
+    "samplerWallSeconds": 0.0641167479999813,
+    "monitorTotalCpuSeconds": 0.192167,
+    "maximumObservedSampleGapSeconds": 0.05469699999957811,
+    "commandCrossPgidEdges": [],
+    "crossPgidEdgesObserved": 1,
+    "crossPgidEdgeIds": [
+      [
+        64612,
+        64630,
+        64612,
+        64630
+      ]
+    ],
+    "timeReportedMaximumRssBytes": 2560540672,
+    "peakFrame": {
+      "sample": 314,
+      "sampleMonotonic": 11476.669803,
+      "rows": [
+        {
+          "pid": 64612,
+          "ppid": 12984,
+          "pgid": 64612,
+          "uid": 501,
+          "startTime": [
+            1794577492,
+            311458
+          ],
+          "rssBytes": 21544960,
+          "status": 2
+        },
+        {
+          "pid": 64630,
+          "ppid": 64612,
+          "pgid": 64630,
+          "uid": 501,
+          "startTime": [
+            1794577492,
+            454691
+          ],
+          "rssBytes": 18989056,
+          "status": 2
+        },
+        {
+          "pid": 64629,
+          "ppid": 64612,
+          "pgid": 64612,
+          "uid": 501,
+          "startTime": [
+            1794577492,
+            453095
+          ],
+          "rssBytes": 1998848,
+          "status": 2
+        },
+        {
+          "pid": 64634,
+          "ppid": 64630,
+          "pgid": 64630,
+          "uid": 501,
+          "startTime": [
+            1794577492,
+            727833
+          ],
+          "rssBytes": 20643840,
+          "status": 2
+        },
+        {
+          "pid": 64637,
+          "ppid": 64634,
+          "pgid": 64630,
+          "uid": 501,
+          "startTime": [
+            1794577492,
+            954634
+          ],
+          "rssBytes": 1179648,
+          "status": 2
+        },
+        {
+          "pid": 64638,
+          "ppid": 64637,
+          "pgid": 64630,
+          "uid": 501,
+          "startTime": [
+            1794577492,
+            957394
+          ],
+          "rssBytes": 2536177664,
+          "status": 2
+        }
+      ],
+      "edges": [
+        {
+          "parent": 64612,
+          "parentStart": [
+            1794577492,
+            311458
+          ],
+          "child": 64630,
+          "childStart": [
+            1794577492,
+            454691
+          ]
+        },
+        {
+          "parent": 64612,
+          "parentStart": [
+            1794577492,
+            311458
+          ],
+          "child": 64629,
+          "childStart": [
+            1794577492,
+            453095
+          ]
+        },
+        {
+          "parent": 64630,
+          "parentStart": [
+            1794577492,
+            454691
+          ],
+          "child": 64634,
+          "childStart": [
+            1794577492,
+            727833
+          ]
+        },
+        {
+          "parent": 64634,
+          "parentStart": [
+            1794577492,
+            727833
+          ],
+          "child": 64637,
+          "childStart": [
+            1794577492,
+            954634
+          ]
+        },
+        {
+          "parent": 64637,
+          "parentStart": [
+            1794577492,
+            954634
+          ],
+          "child": 64638,
+          "childStart": [
+            1794577492,
+            957394
+          ]
+        }
+      ],
+      "retired": [],
+      "pidReuse": [],
+      "completeOwnedSnapshot": true,
+      "sumRssBytes": 2600534016,
+      "samplerRssBytes": 20643840,
+      "samplerCpuSeconds": 0.00019099999999999673,
+      "samplerWallSeconds": 0.0001918330000023616,
+      "crossPgidEdges": 1
+    },
+    "source": "56a19799bfec788170d71680b4f0663c23073107"
+  }
+]

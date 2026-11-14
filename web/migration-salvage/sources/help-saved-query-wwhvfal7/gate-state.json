@@ -1,0 +1,17 @@
+{
+  "parentPID": 49685,
+  "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "expectedInode": 50313339,
+  "kernelWaitBudgetSeconds": 900,
+  "executionBudgetSeconds": 300,
+  "childStarted": true,
+  "descriptor": 3,
+  "device": 16777234,
+  "inode": 50313339,
+  "phase": "finished",
+  "updatedUTC": "2026-11-13T00:24:58.174806+00:00",
+  "childPID": 51640,
+  "childGroup": 51640,
+  "exit": 0,
+  "executionSeconds": 27.583893791001174
+}

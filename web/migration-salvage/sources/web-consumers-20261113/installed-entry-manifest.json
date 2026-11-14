@@ -1,0 +1,58 @@
+{
+  "source": "be62f58e846dcc654dafee65cba6cc7480890570",
+  "currentBinding": "qualified frozen source; rebind a copy to DEL final source before real run",
+  "actualInstallationRun": false,
+  "actualSQLRun": false,
+  "minimumInputState": "Pending new DEL runtime URLs/objects/dedicated credential references; never substitute historical ready or preview",
+  "client": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62",
+  "files": {
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/README.md": "41fb53cc09cf0060854cdb6faf4e6d16f0c5588357bdf289314570300b67ad07",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/bind.py": "59aa2554a5a60d1fca222ab27badb0080c48a1534f7b7a1d1564a28023c292dc",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/binding.json": "6c9f5196b39b2a5bb56bee0b7875bff6434af6e1d2b81b69d5ac4b9660f2ea64",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/bound-source.ts": "ef108e99e6bcf1c5c2ae0af298688b0367e80d11d812049191f314f14ce30196",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/checks.sh": "9226201be02b2e07d9492f225377574b3334b77b746faae8af9ecc9dea8e0da1",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/description.spec.ts": "1a72d9e8fa01c1db92fc10da278d4a2146f82f7eb203c61e0b32a6d2c4f180f5",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/discovery.log": "80ac1859713f1478fb47c15d0ab0522acd9db2150ca0479c682c606f4bacfa45",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/fixture.template.json": "08d4a7850f86fbf873fa01dd30c776bbb5be6f2ce8ac36f56b068e631e2978a6",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/fixture.ts": "12ac9f4ffb8394ae4a157974c64387a3fd28a5fef53a46e02f87a1e1647bb01f",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/help-discovery.log": "3f6d1379db4b4b78dad44efa89ac453b74afdc95adbbdb1079d85fee0b3fa5e1",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/help.config.ts": "b53265fb9950365d638ecc9baa13da1c1335def0dd51f7ae0e49f869b5289f34",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/input-selftest.log": "f08ccf8fb09367811add09561c4a34230ca0ec5be79b2a44999ed57771ea85b9",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/input-selftest.mjs": "40494234484bdc65936fcdcd7c3c7d7017504686e98d2f49fd8460d789cb5130",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/output-selftest.log": "ccac2b9135cc4a0f4d12000b011d9e2cfe6707013efc3476056ccff1ddca4290",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/package.json": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/parameters.spec.ts": "8951e024420f238b3a4edb834fec43d2b4f80e4b6655d8f9a7699941983555bf",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/playwright.config.ts": "701b5bdf2aa761a9ed1326143ba4d68c804f4def6fb5007fefb345fba3802861",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/report.json": "dbcbaa124e013e2ae24b12b67ea2932c99421bda2df8ce0c360e459f9db4ffa5",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/run.py": "7263ad2ecd129e1e777aac8007e29af3eac68610c63d4a862f9488bb52b4ec29",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/runtime-source.ts": "f1b98550864eb688bb81cd9b738f4ee0e5f6347b15c7f4da6950248de0be6bae",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/scope-discovery.log": "614b61b763dd78caf06ca8f647fd90b94d30f1c7b9e86d653e42cd3e02d9f1ca",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/scope.config.ts": "54ab68c294073f36759b2bf694fc555c92f0544eae33d085bff5600226d14081",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/tsconfig.json": "853998e2862080743862c0d2022a02b513da04659130ffe8a1765604c1e0bb63",
+    "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-be62/typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "entry": {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry.md",
+    "sha256": "082c76f583fc3d58d2cd4e0f58d6c5a798ff528deb8df930891169723676dd48"
+  },
+  "assetManifest": {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/qualified-be62-build-manifest.json",
+    "sha256": "ef6184ae01ac426b7d69d7ca2e53a20c3e4eb9089fa10ba97f06120532292276"
+  },
+  "bundle": {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4"
+  },
+  "selftests": {
+    "typecheck": "passed",
+    "inputGuardCases": 18,
+    "outputPreservationCases": 4,
+    "discoveredTests": {
+      "GW120": 1,
+      "Help": 1,
+      "Scope": 1
+    },
+    "browserRuns": 0,
+    "SQLRuns": 0
+  }
+}

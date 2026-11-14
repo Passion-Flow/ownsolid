@@ -1,0 +1,67 @@
+{
+  "observedUTC": "2026-11-13T03:20:17.374714+00:00",
+  "guardActualExitCode": 1,
+  "guardTerminalFromExec": {
+    "phase": "cleanup-evidence",
+    "exit": 1,
+    "childStarted": true,
+    "cleanupConfirmed": true,
+    "elapsedSeconds": 15.755728000003728
+  },
+  "unifiedExecSession": 47008,
+  "actualStage": "negative-old-runtime collection/module-load",
+  "failureKind": "ESM module boundary outside the web package; two collection errors, zero cases executed",
+  "busy": false,
+  "retryAttempted": false,
+  "markerRetained": true,
+  "source": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+  "webTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "newAssetFiles": 696,
+  "newAssetManifestSha256": "31ecbbae60314b2cc5a6ae229cc1efeafc802734df85ac1e29d9993842fee9e0",
+  "buildExit": 0,
+  "discovered": {
+    "counts": {
+      "audit-read-recovery.spec.ts": 41,
+      "node-page.spec.ts": 10,
+      "resource-activity.spec.ts": 21,
+      "resource-pages.spec.ts": 9
+    },
+    "auditPartitions": [
+      19,
+      19,
+      3
+    ],
+    "inventory": 30
+  },
+  "negativeStats": {
+    "startTime": "2026-11-13T03:16:59.049Z",
+    "duration": 3014.2290000000003,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "negativeGlobalErrors": [
+    "SyntaxError: Cannot use 'import.meta' outside a module",
+    "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
+  ],
+  "negativeCaseCountExecuted": 0,
+  "positiveCaseCountExecuted": 0,
+  "imagesGenerated": 0,
+  "imagesRead": 0,
+  "carrier": {
+    "inode": 50313339,
+    "uid": 501,
+    "regular": true
+  },
+  "cleanupReadback": {
+    "parentAndRunnerPsExit": 1,
+    "parentAndRunnerOutput": "",
+    "listenerCheckExit": 1,
+    "listenerOutput": "",
+    "ownAwakeMatches": [],
+    "originalParentPresentInCarrierHolders": false,
+    "carrierHoldersReadbackExit": 1
+  },
+  "noFullNativeOrInstalledRun": true
+}

@@ -1,0 +1,29 @@
+{
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "priorAttempt": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-once-jt8bpohu",
+  "actualPriorSummary": {
+    "reporter": "spec",
+    "metrics": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cases": [
+      "covers root, containers, every workspace and new hidden/non-workspace directories",
+      "matches original diagnostics and rejects errors in root, e2e, shared and config files",
+      "fails on a warning even when no partition has an error",
+      "retains fatal syntax diagnostics and a failing exit",
+      "does not replace an all-ignored original failure with a successful empty lint",
+      "refuses malformed configuration and a terminated lint process",
+      "does not follow directory symlinks when planning partitions"
+    ]
+  },
+  "actualPriorCommandExit": 0,
+  "priorParentExitRetained": 1,
+  "reexecutedThisAttempt": false,
+  "inputAndInvocationBytesUnchanged": true,
+  "crossAttemptBoundary": "Reuse only the unchanged original seven real CLI case results; this attempt executes remaining B checks separately. No original parent exit or incomplete benchmark result is overwritten."
+}

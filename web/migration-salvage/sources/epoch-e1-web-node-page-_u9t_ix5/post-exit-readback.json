@@ -1,0 +1,20 @@
+{
+  "observedOwnedPids": 20,
+  "sameLifetimeLive": [],
+  "reusedExcluded": [],
+  "knownPidReadbackExit": 1,
+  "knownPidRows": "",
+  "fdReadbackExit": 1,
+  "fdReadback": "",
+  "carrier": {
+    "dev": 16777231,
+    "inode": 53377467,
+    "uid": 501,
+    "mode": "0o600",
+    "regular": true,
+    "nlink": 1,
+    "size": 0
+  },
+  "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+  "sourceClean": true
+}

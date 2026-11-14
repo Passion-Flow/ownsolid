@@ -1,0 +1,13 @@
+{
+  "executedFullBranch": false,
+  "actualFullNotrunReason": "Fresh rawFree5059379200B below6442450944B",
+  "staticDefect": "Unentered full branch inherited budget() default600 when rearming its worker alarm, which would prematurely cap a full run rather than use the admitted full cutoff.",
+  "actualTargetedResultAffected": false,
+  "executedSourcePreserved": true,
+  "fixedCandidate": "continuation-full-timer-fix.py",
+  "fixedCandidateSha256": "ab3be53ee970a548ac5306f720b14940d9832badd577a5f93f0f9d5ff74c39ad",
+  "fix": "Use budget(1800) for full-phase worker alarm; retain hard=phaseStart+1800/combined2400 and final120 cleanup",
+  "pythonSyntax": "PASS",
+  "actualFullExecutionValidation": "NOTRUN",
+  "candidateActivatedOrQueued": false
+}

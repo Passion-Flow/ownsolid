@@ -1,0 +1,42 @@
+[
+  {
+    "name": "01-seven-cli-regressions",
+    "exit": 0,
+    "seconds": 2.9984590000003664,
+    "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-once-jt8bpohu/01-seven-cli-regressions.stdout",
+    "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-once-jt8bpohu/01-seven-cli-regressions.stderr",
+    "timeMaximumRssBytes": 94142464,
+    "sampledOwnerTreePeakRssBytes": 262094848,
+    "sampledSingleProcessPeakRssBytes": 92487680,
+    "sampledPerPidPeakRssBytes": {
+      "83977": 21561344,
+      "83984": 19562496,
+      "84136": 1179648,
+      "84137": 1916928,
+      "84138": 59129856,
+      "84139": 67420160,
+      "84140": 89833472,
+      "84141": 1900544,
+      "84144": 86802432,
+      "84145": 1900544,
+      "84149": 4292608,
+      "84150": 1900544,
+      "84174": 92160000,
+      "84240": 1916928,
+      "84296": 622592,
+      "84297": 1916928,
+      "84302": 82231296,
+      "84303": 1916928,
+      "84306": 92487680,
+      "84307": 1916928,
+      "84311": 57835520,
+      "84312": 1916928,
+      "84315": 82903040,
+      "84316": 1916928,
+      "84328": 1916928,
+      "84339": 76644352,
+      "84340": 1900544
+    },
+    "source": "56a19799bfec788170d71680b4f0663c23073107"
+  }
+]

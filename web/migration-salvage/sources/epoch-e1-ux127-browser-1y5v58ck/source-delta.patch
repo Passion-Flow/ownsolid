@@ -1,0 +1,204 @@
+diff --git a/docs/product/roadmap/index.md b/docs/product/roadmap/index.md
+index babf04a7..06ead4e8 100644
+--- a/docs/product/roadmap/index.md
++++ b/docs/product/roadmap/index.md
+@@ -109,7 +109,7 @@ Work modules in this order inside a phase. Update the counts when you tick items
+ | 1 | Architecture and scale | [architecture-and-scale.md](architecture-and-scale.md) | 16/16 | 3/16 | 0/7 | 0/4 | - |
+ | 2 | Delivery and upgrades | [delivery-and-upgrades.md](delivery-and-upgrades.md) | 3/3 | 8/17 | 0/4 | 0/1 | 0/1 |
+ | 3 | Identity and access | [identity-and-access.md](identity-and-access.md) | - | 5/19 | 0/6 | 0/1 | 0/1 |
+-| 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 26/30 | 0/4 | - | 0/2 |
++| 4 | Usability and localization | [usability-and-localization.md](usability-and-localization.md) | 5/5 | 25/30 | 0/4 | - | 0/2 |
+ | 5 | Fleet and infrastructure | [fleet-and-infrastructure.md](fleet-and-infrastructure.md) | - | 2/15 | 0/11 | 0/2 | - |
+ | 6 | GPU operations | [gpu-operations.md](gpu-operations.md) | - | 0/9 | 0/9 | - | 0/2 |
+ | 7 | Scheduling and quota | [scheduling-and-quota.md](scheduling-and-quota.md) | - | 0/11 | 0/9 | 0/2 | 0/1 |
+diff --git a/docs/product/roadmap/usability-and-localization.md b/docs/product/roadmap/usability-and-localization.md
+index e51faebe..b5c8afbe 100644
+--- a/docs/product/roadmap/usability-and-localization.md
++++ b/docs/product/roadmap/usability-and-localization.md
+@@ -51,7 +51,7 @@ the newest releases are in ADR 0010. The review added UX-113 to UX-120.
+ - [x] UX-124 Pinned destinations, chosen by the person and kept per person (P1) - Evidence: 7a36453; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, with the pin reaching a second browser
+ - [x] UX-125 One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1) - Evidence: 6210c2e; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48
+ - [x] UX-126 Summary tiles above a list filter the list instead of decorating it (P1) - Evidence: feff70a; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48
+-- [x] UX-127 Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1) - Evidence: 39cc736, cdf7ee9; real Chromium on an installation on `ownsolid-cpu` at schema 48, on a joined node, the administrator and a connector with a real Gitea
++- [ ] UX-127 Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1). Reopened: the earlier schema-48 installed flows remain historical evidence, but current resource-window acceptance found four real cursor-pagination failures. The API correction at 3f614d69 has not been revalidated; header action hierarchy and unavailable-action copy also fail visual review. See the [current acceptance boundary](../../research/resource-detail-pages.md#cursor-transport-regression-and-visual-acceptance-boundary).
+ - [x] UX-128 Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1) - Evidence: 5823524; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, two runs
+ - [x] UX-129 English strings load as their own chunk like the other languages, so the first download stops growing with every page, and its limit comes back down (P1) - Evidence: 04e6554; real Chromium on an installation on `ownsolid-cpu` at schema 48, first download 141.8 kB
+ - [ ] UX-130 Message catalogs split by page, so a page downloads only its own strings, once a catalog is large enough to repay the key-to-page map ([research](../../research/message-catalogs.md)) (P2)
+diff --git a/docs/product/status.md b/docs/product/status.md
+index f00e036a..178e5645 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -92,6 +92,7 @@ today and what is known to fail.
+ | My API keys in the portal (POR-106): a person's own keys in the workspace in the switcher, with name, prefix, model, last use and expiry and no owner column; tiles for keys expiring within a week and never used; issuing with the secret shown once, then the key's base URL, model and a sample in cURL, Python and Node.js, with what a private certificate authority needs; rotation with an overlap, revocation by typing the name, and each key's own calls. The console's drawer shows the same usage panel | Yes | Yes, a non-administrator on an installation: issue, rotate, revoke and read calls, admitted over the real gateway protocol by a stand-in for the gateway process; another person's key is not found and another workspace is refused. Samples run against a local HTTPS stub with the real OpenAI SDKs and curl; no model ran | No | The installer starts no model gateway (GW-114), so no call reaches a model on an installed product |
+ | Models in the portal (POR-104, open): the names the gateway serves in the workspace in the switcher, disabled ones left out, each joined through its deployment to its model: where it came from, context length, its base, license, base URL and what it is good for; tiles for can be called and not available, search by name or model, filters in the address; a name stays on screen when its model's facts fail to load, with a retry; price and trying a model shown as not ready with the reason; Issue a key opens the issue dialog | Yes | Yes, a non-administrator on an installation: a deployment published on a scripted node read with its model and context length, the way on to a key, and another workspace's three reads refused; no request left the installation or reached an administrator path | No | No price exists (TEN-107), no administrator's description (GW-120), and the playground waits for the gateway (POR-105, GW-114) |
+ | Resource pages: a node, a person and a single sign-on connector each have a page linked from their drawer, with tabs in the address, the same actions, and an Activity tab from the audit trail over the resource's whole life; a person also lists what they did | Yes, with the audit filter by target indexed on PostgreSQL | Real Chromium on an installation on `ownsolid-cpu` at schema 48 opened a joined node's page with the task it ran and its enrolment, the administrator's page with their actions, and a connector's page with its creation, after adding it and signing in with a real Gitea 28.1.0 | No | None |
++| Resource activity windows (UX-127, reopened) | Candidate recent and absolute periods with explicit reads; cursor transport correction at 3f614d69 remains unverified | Source ce177336 built the frozen 696-file Console. The corrected ESM old-runtime control produced four expected policy assertion failures. Positive Chromium: 17 passed, four failed, zero skipped/retried; 25 original PNGs were extracted and visually read. No corrected-source browser run | No | Explicit cursor bounds were dropped by the API adapter, breaking four pagination cases. Two API regression tests and the correction have not run; 90 planned browser cases remain unrun. Header action hierarchy and roadmap-ID copy fail visual review, and two partial-state images are missing. Full/native/installed qualification remains open. See the [acceptance boundary](../research/resource-detail-pages.md#cursor-transport-regression-and-visual-acceptance-boundary) |
+ | Global search in the command menu: part of a name finds nodes, people by address or name, tasks by their node or a pasted ID, and workspaces, each opening its detail, with "See all" opening the page filtered the same way; a failed source retries while the others keep their rows; Nodes, People, Tasks and Workspaces pages search with the same `q` parameter | Yes for those four, run on PostgreSQL only; models and applications are not searched because their pages have not shipped (UX-106 stays open) | Real Chromium on an installation on `ownsolid-cpu`, six runs, found and opened a real joined node, a task it ran, the administrator and a workspace, with no request leaving the installation; query cost measured on PostgreSQL 18.6 with 10,003 nodes and 2,000,000 tasks ([research](../research/global-search.md)) | No | None |
+ | Sidebar: groups that open and close with only the current one open, a filter that finds any page, an icon-only mode that follows the account and keeps every name, with the name shown on hover and focus, and pages pinned to the top per entrance | Yes, PostgreSQL only for the account's choices; the portal has nothing to pin yet | Real Chromium on an installation on `ownsolid-cpu`, upgraded in place to schema 48, opened and filtered the sidebar, pinned a page, collapsed it and found both choices in a second browser, four runs, under the installation's Content-Security-Policy with no request leaving it | No | None |
+ | Single sign-on page: connectors with their state, adding one for an approved Gitea with the callback URLs to register, a connection check that names which of the client ID, secret or callback Gitea refused or that it cannot be reached or trusted, editing, replacing credentials, turning on, and turning off with a typed confirmation; the installation's own state explained | Yes, for Gitea, the only provider the connector API has; turning single sign-on on is by hand under `control_settings` until IAM-113 | Real Chromium on an offline install on `ownsolid-cpu` with a real Gitea 28.1.0 over TLS added a connector, was told of a wrong secret and of a callback not registered, passed the check, turned it on, linked an account, signed in through Gitea, and turning the connector off from another browser ended that session, three runs in a row | No | A keyring that cannot open a stored secret stops control at startup, password sign-in included, and connectors cannot be deleted, so the keyring must be restored (IAM-119) |
+diff --git a/docs/research/resource-detail-pages.md b/docs/research/resource-detail-pages.md
+index 662dad5e..670f4d68 100644
+--- a/docs/research/resource-detail-pages.md
++++ b/docs/research/resource-detail-pages.md
+@@ -245,7 +245,83 @@ describe that boundary. The pinned Playwright 1.64.1 `fileIsModule` helper retur
+ false for the original external entry and true for both the Console entry and a
+ new probe copy with `package.json` declaring `type: module`. The test and fixture
+ bytes remain unchanged. That isolated classification check passed; collection
+-and browser execution of the corrected probe remain unrun. Keep the original
+-failed operation intact, discover the corrected negative selection before a
+-future build, and require its four actual policy failures before treating the
+-negative control as accepted.
++and browser execution were still unrun at that prerequisite boundary. The
++subsequent execution below retains that original failed operation and the
++separate nonblocking-busy outcome without relabelling either as browser evidence.
++
++### Cursor transport regression and visual acceptance boundary
++
++The bounded Chromium execution on source `ce177336` used Web tree
++`0c70c6e25706594d17de574e1bae2f5989855a10`. Its Console build passed in
++7.652 seconds; all 696 asset hashes matched the earlier frozen runtime map.
++The corrected external ESM probe actually collected and ran four old-runtime
++cases. All four failed at the unchanged policy row assertion (expected two rows,
++received zero), with no collection errors, skips, retries or flaky results. This
++is the intended negative control, not a positive product pass.
++
++The positive resource-window file actually ran 21 cases: 17 passed and four
++failed, with no skips or retries. In both languages, next-page recovery expected
++41 rows but retained 21, and returning after a cancelled page expected 26 rows
++but retained 21. The tab and hook retained the successful first page's exact
++bounds, but `web/packages/api/src/audit.ts` omitted explicit `from` and `to`
++whenever a cursor was present. The policy-faithful fixture correctly refused the
++changed query fingerprint. No test assertion, fixture or cursor protocol was
++weakened.
++
++`f655af2b` preserves explicitly supplied bounds on cursor requests. `3f614d69`
++adds two transport regression cases: first-page and cursor query fingerprints
++must match, and cursor-only callers must not acquire invented time bounds.
++This follows the existing server contract described above and introduces no
++dependency, API field, permission or licence change. These two tests and the
++corrected source have **not run** through unit tests, typechecks, lint, a new
++build or browser acceptance. The existing 696 built assets still represent
++`ce177336`; they cannot qualify the corrected Web tree
++`da6882b8d6d0510323fd9ed50d080c8ca72876eb`.
++
++The remaining 90 planned positive browser cases did not run: the original
++41-case explicit-recovery suite, 19 resource/node-page cases, and 30 affected
++accessibility/keyboard cases. The private review runner also omitted the owned
++API source directory from its permitted correction paths. No supplemental
++executor or rerun started. Its absolute work cutoff expired while awaiting
++review; the parent then recorded a `PermissionError` during deadline handling,
++exit 1 after 540.278 seconds, and confirmed cleanup. A later read-only check found neither
++known parent/worker PID nor a listener on the two owned preview ports. Retain the
++cutoff and wrapper error as failures; this is not a clean successful guard run.
++
++#### Screenshot review
++
++The reporter embedded 25 PNG bodies in its JSON. The initial file-only collector
++reported zero images because those bodies were not separate PNG files. All 25
++were extracted without changing their bytes, hashed, opened and visually read.
++The original zero-image collector record remains intact. Two planned EN/ZH
++partial-page screenshots were never generated because pagination assertions
++failed. There are no screenshots of the corrected source.
++
++The actual images show five resources in English at desktop width and Simplified
++Chinese at 390 pixels, plus recent-empty, refused-range, historical,
++filtered-empty, loading, error and denied states in both languages, and one
++English invalid-local-date state. They establish the following review result:
++
++- **Archetype:** Detail, with breadcrumb/back link, name and textual status,
++  resource actions and an Activity tab. Node headers show four actions and
++  deployment headers six, exceeding the required two most-used visible actions.
++  The overall detail pages therefore fail visual acceptance.
++- **Seven states:** loading, the two different empty states, error and denied are
++  visible. Recent-empty offers earlier dates; filtered-empty explains the selected
++  period and offers to clear it. Partial has prepared assertions but its two
++  images are missing. Existing unready deployment actions remain visible with
++  reasons, but those reasons expose roadmap IDs rather than useful product guidance.
++  The Chinese filtered-empty image ends below the viewport before its remedy;
++  that image alone does not establish the remedy's keyboard or scroll access.
++- **One primary action:** the tab's intended action is Read activity. Node and
++  model pages also emphasize Collect facts or Deploy a model, creating competing
++  primary buttons in both desktop and narrow views. Connector and account images
++  show only the activity primary. Statuses include words as well as colour.
++
++Keep UX-127 open. Qualification requires the two new API tests, affected types
++and lint, a source-bound Console rebuild, the original 21 resource-window and
++41 recovery cases, resource/node pages, accessibility and keyboard coverage,
++new partial screenshots and actual review of every generated image. Fix the
++observed header hierarchy and unavailable-action explanations before accepting
++the detail screens. Full `make check`, `make build`, `make test`, native and
++installed SQL/authority/offline/SSO acceptance remain separate requirements.
+diff --git a/web/packages/api/src/audit.test.ts b/web/packages/api/src/audit.test.ts
+new file mode 100644
+index 00000000..9298b296
+--- /dev/null
++++ b/web/packages/api/src/audit.test.ts
+@@ -0,0 +1,41 @@
++import { afterEach, expect, it, vi } from 'vitest';
++import { listAuditEvents } from './audit.ts';
++
++afterEach(() => {
++  vi.unstubAllGlobals();
++});
++
++it('preserves the first-page query fingerprint with an opaque cursor', async () => {
++  const fetch = vi.fn((_url: string) =>
++    Promise.resolve(new Response(JSON.stringify({ data: { items: [], next_cursor: null } }))),
++  );
++  vi.stubGlobal('fetch', fetch);
++  const query = {
++    limit: 20,
++    targetId: 'node-1',
++    from: '2026-11-11T00:00:00.000Z',
++    to: '2026-11-12T00:00:00.000Z',
++  };
++  await listAuditEvents(query);
++  await listAuditEvents({ ...query, cursor: 'opaque-next' });
++  const parameters = fetch.mock.calls.map(([url]) => new URL(url, 'http://example.test').searchParams);
++  expect(parameters[1]?.get('cursor')).toBe('opaque-next');
++  for (const params of parameters) {
++    params.delete('cursor');
++    params.delete('limit');
++    params.sort();
++  }
++  expect(parameters[1]?.toString()).toBe(parameters[0]?.toString());
++});
++
++it('does not invent explicit bounds when a caller only has a cursor', async () => {
++  const fetch = vi.fn((_url: string) =>
++    Promise.resolve(new Response(JSON.stringify({ data: { items: [], next_cursor: null } }))),
++  );
++  vi.stubGlobal('fetch', fetch);
++  await listAuditEvents({ limit: 20, cursor: 'opaque-next' });
++  const params = new URL(fetch.mock.calls[0]?.[0] ?? '', 'http://example.test').searchParams;
++  expect(params.get('cursor')).toBe('opaque-next');
++  expect(params.has('from')).toBe(false);
++  expect(params.has('to')).toBe(false);
++});
+diff --git a/web/packages/api/src/audit.ts b/web/packages/api/src/audit.ts
+index 88d1ce44..38fa1056 100644
+--- a/web/packages/api/src/audit.ts
++++ b/web/packages/api/src/audit.ts
+@@ -17,8 +17,8 @@ export type AuditPage = Schemas['AuditListResponse']['data'];
+ const client = createClient<identityContract.paths>();
+ 
+ /**
+- * Lists events, newest first. The first page sets the window, which its cursor then carries, so
+- * later pages pass only the cursor and the filters and the list cannot shift while it is read.
++ * Lists events, newest first. A cursor pins its window; callers that supplied explicit
++ * bounds must preserve them and the filters on later pages for the query fingerprint.
+  */
+ export function listAuditEvents(
+   query: {
+@@ -40,7 +40,10 @@ export function listAuditEvents(
+     ...options,
+     query: {
+       limit,
+-      ...(cursor ? { cursor } : { ...(from ? { from } : {}), ...(to ? { to } : {}) }),
++      ...(cursor ? { cursor } : {}),
++      // Explicit bounds are part of the server's cursor query fingerprint.
++      ...(from ? { from } : {}),
++      ...(to ? { to } : {}),
+       ...(category ? { category } : {}),
+       ...(outcome ? { outcome } : {}),
+       ...(actorUserId ? { actor_user_id: actorUserId } : {}),

@@ -1,0 +1,130 @@
+{
+  "config": {
+    "argv": [
+      "/Users/passion./.local/opt/node/bin/node",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "resource-activity.spec.ts",
+      "--config",
+      "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative.config.ts",
+      "--grep",
+      "reads current activity for a 400-day-old resource with a (?:1|31)-day policy",
+      "--workers=2",
+      "--retries=0",
+      "--reporter=json",
+      "--output=/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/negative-old-runtime-results"
+    ],
+    "configFile": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative.config.ts",
+    "rootDir": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative-probe",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/negative-old-runtime-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative-probe",
+        "testIgnore": [],
+        "testMatch": [
+          "resource-activity.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/negative-old-runtime-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "name": "chromium",
+        "testDir": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative-probe",
+        "snapshotDir": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative-probe",
+        "testIgnore": [],
+        "testMatch": "resource-activity.spec.ts",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://localhost:31037",
+          "trace": "retain-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 2,
+    "webServer": {
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-44ab5229/web/apps/console",
+      "command": "pnpm exec vite preview --port 31037 --strictPort",
+      "url": "http://localhost:31037",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "SyntaxError: Cannot use 'import.meta' outside a module",
+      "stack": "SyntaxError: Cannot use 'import.meta' outside a module\n    at Object.<anonymous> (/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/accessibility-flows.ts:6:1)\n    at Object.<anonymous> (/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/index.ts:1:1)\n    at Object.<anonymous> (/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative-probe/resource-activity.spec.ts:3:1)",
+      "location": {
+        "file": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/accessibility-flows.ts",
+        "column": 1,
+        "line": 6
+      },
+      "snippet": "\u001b[90m   at \u001b[39m../../../../../../Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/accessibility-flows.ts:6\n\n  4 | import AxeBuilder from '@axe-core/playwright';\n  5 | import { expect, test, type Page } from '@playwright/test';\n> 6 | import { mockControlPlane, type ControlPlane } from './control-plane.ts';\n    | ^\n  7 | import type { PageState } from './pages.ts';\n  8 |\n  9 | /** The WCAG levels the console and the portal meet. */"
+    },
+    {
+      "message": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments.",
+      "stack": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
+    }
+  ],
+  "stats": {
+    "startTime": "2026-11-13T03:16:59.049Z",
+    "duration": 3014.2290000000003,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

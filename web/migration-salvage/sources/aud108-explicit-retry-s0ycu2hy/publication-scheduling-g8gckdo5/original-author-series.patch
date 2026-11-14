@@ -1,0 +1,1787 @@
+From c5c658670884cc6cccf743b3f20ee027ce533552 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 05:07:39 +0800
+Subject: [PATCH 1/5] AUD-108: Define explicit recovery for audited reads
+
+Review the implemented 409 outcome, pinned TanStack behavior and HTTP logging semantics. Define manual request counts, partial-page recovery, permission-cache refusal and bilingual browser acceptance. Implementation gates remain pending.
+---
+ docs/research/identity-audit-read-access.md | 92 +++++++++++++++++++++
+ 1 file changed, 92 insertions(+)
+
+diff --git a/docs/research/identity-audit-read-access.md b/docs/research/identity-audit-read-access.md
+index d7dde9e8..64164d89 100644
+--- a/docs/research/identity-audit-read-access.md
++++ b/docs/research/identity-audit-read-access.md
+@@ -204,3 +204,95 @@ The actual identity workspace reader is paired with SCI's `8531226d` writer on q
+ Two actual scoped COMMIT wire-loss subcases exposed no page, cursor or assistant map. Withheld COMMIT left zero events; a suppressed server acknowledgement left one. Each attempt issued one COMMIT, and an explicit retry appended one new event. The installation-wide HTTPS regressions, including their four wire-loss subcases, passed on the same source. No private chain-head read privilege was added.
+ 
+ Repository checks, builds and all test stages passed in current stage `current-stage-yfzgkb7_`; Chromium passed 1134 Console and 410 Portal cases, with 38 installation-dependent cases skipped. These browser results are retained from byte-identical recorded inputs; the continuation used `make -o test-web-browser test`. Fixtures used pinned PostgreSQL 18.6/pgvector 0.8.7 on owned network-none Linux arm64 containers with protected SCRAM input files and no host ports. They were removed. This qualifies the existing Go consumer and preserves the published installation-wide route; it creates no workspace HTTP route or new rendered UI/amd64 claim. The complete AUD-108 item remains open for DEV public-contract metadata, installed-flow qualification and Delivery collector admission/reconciliation.
++
++## Explicit Web read recovery
++
++Reviewed 2026-11-13 against the implemented identity reader and TanStack Query
++5.105.3. Both the installation list and resource activity call the existing
++`GET /api/v1/admin/audit-events`. A successful read also appends an access event.
++Loss of the response cannot establish whether that append committed. The current
++server's uncertain transaction outcome is HTTP 409 with
++`STORAGE_COMMIT_OUTCOME_UNKNOWN`, no page and no Retry-After. The standard thirteen
++event fields and `category` filter remain unchanged. DEV owns the public contract
++annotation; this consumer must not import an unqualified candidate projection.
++
++### Sources and selected approach
++
++- [TanStack query options](https://tanstack.com/query/latest/docs/framework/react/reference/functions/useQuery)
++  document retry, retry-on-mount, window focus, reconnect and network-mode controls.
++  The installed source confirms that `networkMode: always` does not queue a read
++  until connectivity returns. Disable retries and every background refetch trigger
++  for this audited endpoint only; retain the application's normal policy elsewhere.
++- [TanStack infinite queries](https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries)
++  refetch every cached page sequentially. A recovery action must instead retry the
++  failed next cursor once, or read only the first page when restarting an invalid
++  cursor. The pinned QueryClient `infiniteQuery` implementation accepts `pages: 1`;
++  failed fetches retain previous data until a successful replacement arrives.
++- [HTTP semantics, section 9.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2)
++  permit incidental logging for safe methods. GET alone is not evidence that the
++  access record was absent after response loss. This product deliberately requires
++  a person to start another audit read, including after an uncertain GET result.
++- The primary product implementation is `identity/audit_read.go`, its HTTP
++  dispatcher and the real SQL/wire integration tests. Each explicit successful
++  read has a new server request ID and access event. Browser fixtures can establish
++  consumer dispatch counts, not durable commit outcomes or actual SQL authority.
++
++Use one shared Console query policy and recovery notice for the two consumers.
++Do not treat the existing 409 as automatically retried: `ApiProblem.retryable`
++includes status 0/429/502/503/504, not 409. The actual regression is automatic
++retry after network/timeout (status 0), plus implicit refetches. Mark these cached
++pages as manually refreshed, disable retry-on-mount/focus/reconnect/polling, and
++execute each chosen request immediately rather than queuing it offline.
++
++An initial error replaces loading with an inline Problem. An uncertain result
++explains that the read may already have been recorded and that Read again starts
++a new request. Never call it a rollback, an absent access or an empty list. Keep
++the server Problem and request ID available. A partial pagination failure keeps
++previous pages, says they are the pages already read and offers one explicit
++recovery action. Busy recovery cannot start a second overlapping request.
++Retry-After remains enforced by the shared Problem notice.
++
++A current 403/404 refusal removes all cached event rows and any open event preview
++from the rendered consumer; it offers no retry against the same denied authority.
++Discard inactive cached audit filters/resource views on that refusal, retaining
++the active failure so remounting cannot retry it. A different filter must not
++resurface events cached before access was refused. Other query families remain.
++Session-expiry handling remains with the existing session owner. When page reload,
++deliberate filter change or route navigation needs another read, it is user
++initiated. Merely focusing a tab, reconnecting, remounting a failed cached query or
++invalidating cached data must not issue another read. No background status poll
++or new server operation is introduced.
++
++Rejected: changing the global retry policy (unrelated consumers need it), assuming
++409 already retries, relabeling network loss as a definitely failed append,
++generic whole-page reload recovery that discards reader context, an ordinary
++infinite-query refetch that re-reads every cached page, silently
++discarding older pages before a replacement succeeds, and fabricating a new
++Problem or exact-action enum. Keep ordinary initial/filtered empty text distinct.
++
++### Dependencies, failure checks and acceptance
++
++No dependency, model or dataset is added. Existing React and TanStack Query are
++MIT, Lucide is ISC and Playwright is Apache-2.0. Commercial use, redistribution
++and offline execution remain allowed with their existing notices. All production
++assets and messages remain local to the installation.
++
++Cover both actual UI consumers in English and Simplified Chinese: a response lost
++after a fixture has observed the request, 409 commit-unknown, network refusal,
++configured transport timeout, transient 503, and malformed response. Count all
++attempts including failed ones. Wait beyond the old retry delay, exercise actual
++focus/visibility and offline/reconnect events, and remount a cached failed query;
++none may silently issue another read. Explicit recovery increments the count by
++exactly one. Recover a failed next cursor without re-reading previous pages;
++recover an invalid cursor by one first-page request and replace history only on
++success. Cover permission revocation after a loaded page and an open preview,
++the Portal refusal, fresh page reload and keyboard activation. Retain request IDs,
++verify no `action` parameter and read desktop/narrow screenshots. Add the new
++uncertain and partial states to the existing accessibility/localization inventory.
++Update the existing built-in audit article in both languages and verify its new
++recovery section can be found through a settled filtered Help search.
++
++Finished consumer behavior requires targeted checks plus a new exact-source full
++repository gate. The older 1,134/410 browser result is not evidence for this
++change. Actual installed access accounting and independent SQL remain separate;
++AUD-108 and installed acceptance stay open until their owners' requirements hold.
+-- 
+2.54.0 (Apple Git-157)
+
+
+From e9186ade97c617697d05c8165b5f832e2e1aa616 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 05:36:34 +0800
+Subject: [PATCH 2/5] AUD-108: Require explicit recovery for audited reads
+
+Prevent automatic retries, focus/reconnect reads and no-data invalidation replays in both Console consumers. Bind cached snapshots to authenticated identity and scope, preserve partial pages, remove refused cached views and keep recovery to one request. Explain uncertain access and recovery in both languages. Verify make check, 54 Console/54 UI/49 locale/19 Help unit tests, 70 Chromium flows and 16 state checks; read desktop/narrow screenshots. Retain the old six-request negative controls and corrected draft failures. Full repository and installed acceptance remain separate.
+---
+ docs/research/identity-audit-read-access.md   |  51 +++
+ web/README.md                                 |   7 +
+ .../console/e2e/audit-read-recovery.spec.ts   | 397 ++++++++++++++++++
+ web/apps/console/e2e/audit.spec.ts            |   8 +-
+ web/apps/console/e2e/pages.ts                 |  33 +-
+ web/apps/console/src/audit-page.tsx           |  39 +-
+ web/apps/console/src/audit-read.test.tsx      | 248 +++++++++++
+ web/apps/console/src/audit-read.tsx           | 149 +++++++
+ web/apps/console/src/resource-page.tsx        |  34 +-
+ web/packages/api/src/problem.ts               |   2 +-
+ .../help/locales/en/console/audit-trail.md    |  11 +
+ .../help/locales/zh-cn/console/audit-trail.md |   6 +
+ .../help/src/gen/locales/en/console.json      |   4 +
+ .../gen/locales/en/console/audit-trail.json   |  31 ++
+ .../help/src/gen/locales/zh-cn/console.json   |   4 +
+ .../locales/zh-cn/console/audit-trail.json    |  31 ++
+ web/packages/i18n/locales/en.json             |   6 +
+ web/packages/i18n/locales/zh-cn.json          |   6 +
+ web/packages/shell/testing/audit.ts           |   4 +-
+ web/packages/shell/testing/control-plane.ts   |   4 +
+ .../ui/src/components/components.test.tsx     |  42 ++
+ .../ui/src/components/problem-notice.tsx      |  26 +-
+ 22 files changed, 1097 insertions(+), 46 deletions(-)
+ create mode 100644 web/apps/console/e2e/audit-read-recovery.spec.ts
+ create mode 100644 web/apps/console/src/audit-read.test.tsx
+ create mode 100644 web/apps/console/src/audit-read.tsx
+
+diff --git a/docs/research/identity-audit-read-access.md b/docs/research/identity-audit-read-access.md
+index 64164d89..b7c3f818 100644
+--- a/docs/research/identity-audit-read-access.md
++++ b/docs/research/identity-audit-read-access.md
+@@ -243,6 +243,11 @@ includes status 0/429/502/503/504, not 409. The actual regression is automatic
+ retry after network/timeout (status 0), plus implicit refetches. Mark these cached
+ pages as manually refreshed, disable retry-on-mount/focus/reconnect/polling, and
+ execute each chosen request immediately rather than queuing it offline.
++The pinned Query `isStatic` check returns false until data exists. Therefore an
++initial failed query must additionally become ineligible for automatic execution;
++otherwise invalidation refetches it despite static stale time. Imperative manual
++recovery remains available. Retain the failing invalidation control and verify
++the fix without changing the global scheduler or removing that assertion.
+ 
+ An initial error replaces loading with an inline Problem. An uncertain result
+ explains that the read may already have been recorded and that Read again starts
+@@ -257,6 +262,9 @@ from the rendered consumer; it offers no retry against the same denied authority
+ Discard inactive cached audit filters/resource views on that refusal, retaining
+ the active failure so remounting cannot retry it. A different filter must not
+ resurface events cached before access was refused. Other query families remain.
++Bind snapshots to the authenticated session's reader, audience, tenant and
++Workspace in the cache key; none is sent as a new API input. A later sign-in or
++Workspace change cannot reuse a previous reader's successful cached page.
+ Session-expiry handling remains with the existing session owner. When page reload,
+ deliberate filter change or route navigation needs another read, it is user
+ initiated. Merely focusing a tab, reconnecting, remounting a failed cached query or
+@@ -296,3 +304,46 @@ Finished consumer behavior requires targeted checks plus a new exact-source full
+ repository gate. The older 1,134/410 browser result is not evidence for this
+ change. Actual installed access accounting and independent SQL remain separate;
+ AUD-108 and installed acceptance stay open until their owners' requirements hold.
++
++### Consumer states and focused checks
++
++| State | Audit list and resource Activity |
++| --- | --- |
++| Loading | Retain the list-shaped initial skeleton; recovery keeps its notice/old rows and names the in-flight read. |
++| First-time empty | A successful empty trail says nothing was recorded in the window; Activity says no activity yet. |
++| Filtered empty | The trail says no events match and offers Clear filters, distinct from its first empty. An Activity detail has no collection filter. |
++| Partial | Keep every page already read, identify the result as incomplete and offer one failed-cursor recovery. |
++| Error | An unknown response is not an empty list or a rollback. Explain the possible recorded read, retain correlation and require a new explicit request. |
++| Denied | Hide current rows/preview, discard inactive audited views and offer no same-authority recovery. Cache keys separate current readers and scopes. |
++| Not ready | Busy recovery remains visible as Reading; Retry-After keeps its countdown and disabled action. No implicit deferred read follows reconnection. |
++
++The list retains title/filter/table and its existing preview drawer. Resource
++Activity retains its detail header/tabs/table; neither gains a new surface.
++The immediate recovery action is Read again, or Read from the start for an
++invalid cursor. The existing Help article remains reference detail: a built-in
++first empty is inapplicable, and a filtered index has No article matches.
++Its immediate task is finding the recovery answer.
++
++Focused Mac arm64 checks passed make check, the Console production build,
++54 Console unit tests, 54 UI tests, 49 locale tests and 19 Help tests.
++Chromium passed 70 consumer flows, 12 new accessibility/keyboard checks and
++four new localization checks. The two Help flows also passed a second check
++through the settled search and native section link. No case skipped, retried
++or became flaky. Eighteen desktop/narrow screenshots were opened, including
++the full recovery section after scrolling; long IDs stay within the notice
++and partial tables retain their contained horizontal scroll.
++
++The old c864fbb1 production assets remained unchanged during the controlled
++response-loss comparison. A single opening plus focus/reconnect, with no
++manual retry, produced six requests in each consumer. Both controls failed
++the expected one-request assertion. This establishes dispatch behavior, not
++six durable database appends. Raw reports and the exact old asset manifest
++remain separate from the new passing browser result.
++
++The first check rejected untyped test mocks/assertion callbacks; the next unit
++run caught the real no-data invalidation hole plus four assertions observing
++React before its query notification arrived. Typed mocks, settled state checks
++and the explicit failed-query eligibility guard fixed them without weakening
++an assertion or the shared scheduler. Both failed runs remain retained.
++The complete exact-source repository gate and actual installed/SQL acceptance
++are separate from these focused results; AUD-108 remains open.
+diff --git a/web/README.md b/web/README.md
+index c0e654f1..561e7ed8 100644
+--- a/web/README.md
++++ b/web/README.md
+@@ -110,3 +110,10 @@ explains that it cannot resume and opens a new bundle upload. Pending expiry
+ cleanup blocks continuation until it finishes. A new import uses a new request
+ key; replaying an old key only reads the original import. The UI does not enable
+ the optional expiry worker, whose startup binding belongs to Control.
++
++The audit list and resource activity record each access on the server. They do not
++retry or refresh on focus, reconnect or cache invalidation. A lost answer may
++already have produced an access record; Read again is a new explicit read. Failed
++pagination retains earlier pages and retries only its cursor. An invalid cursor
++offers one first-page restart, retaining history until that read succeeds. A
++current permission refusal removes cached event rows and any preview from view.
+diff --git a/web/apps/console/e2e/audit-read-recovery.spec.ts b/web/apps/console/e2e/audit-read-recovery.spec.ts
+new file mode 100644
+index 00000000..dc73ec11
+--- /dev/null
++++ b/web/apps/console/e2e/audit-read-recovery.spec.ts
+@@ -0,0 +1,397 @@
++// Scripted transport faults establish UI dispatch and recovery, not durable audit commits.
++import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
++import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
++import {
++  licenseEvent,
++  memberUser,
++  mockControlPlane,
++  type ControlPlane,
++} from '@ownsolid/shell/testing';
++import { expect, test, type Page, type Route } from '@playwright/test';
++
++const endpoint = '**/api/v1/admin/audit-events?*';
++const requestId = '6f1c7a1e-0000-4000-8000-0000000000fa';
++const paths = {
++  trail: '/audit',
++  activity: `/users/${memberUser.id}?tab=activity`,
++} as const;
++type Fault =
++  'none' | 'lost-response' | 'network' | 'timeout' | 'unknown' | 'unavailable' | 'invalid-response';
++
++async function refuse(route: Route, status: number, code: string) {
++  await route.fulfill({
++    status,
++    contentType: 'application/problem+json',
++    headers: { 'X-Request-ID': requestId },
++    body: JSON.stringify({ code, status, request_id: requestId }),
++  });
++}
++
++function history(count: number) {
++  return Array.from({ length: count }, (_, index) => ({
++    ...licenseEvent,
++    id: `6f1c7a1e-0000-4000-8000-${String(index).padStart(12, '0')}`,
++    action: 'account.updated',
++    target_type: 'user',
++    target_id: memberUser.id,
++    actor_user_id: memberUser.id,
++    actor_email: memberUser.email,
++    reason: null,
++  }));
++}
++
++async function configure(page: Page, locale: 'en' | 'zh-CN'): Promise<ControlPlane> {
++  const control = await mockControlPlane(page, 'admin');
++  control.signedIn = true;
++  control.preferences.locale = locale;
++  control.users = [memberUser];
++  control.auditEvents = history(1);
++  await page.setViewportSize(
++    locale === 'en' ? { width: 1440, height: 900 } : { width: 390, height: 844 },
++  );
++  return control;
++}
++
++async function focusAndReconnect(page: Page) {
++  const other = await page.context().newPage();
++  await other.bringToFront();
++  await page.bringToFront();
++  await other.close();
++  await page.context().setOffline(true);
++  await page.context().setOffline(false);
++  await page.evaluate(() => {
++    document.dispatchEvent(new Event('visibilitychange'));
++    window.dispatchEvent(new Event('focus'));
++    window.dispatchEvent(new Event('online'));
++  });
++  // The old global policy retries after one then two seconds. Observe that whole window.
++  await page.waitForTimeout(3_500);
++}
++
++for (const [locale, messages] of [
++  ['en', english],
++  ['zh-CN', chinese],
++] as const) {
++  test(`finds explicit audit recovery in Help in ${locale}`, async ({ page }, info) => {
++    await configure(page, locale);
++    await page.goto('/help');
++    const search = page.getByLabel(messages['help.search'], { exact: true });
++    await search.fill('no-audit-answer-matches-this');
++    await expect(
++      page.getByRole('heading', { name: messages['help.empty.title'], exact: true }),
++    ).toBeVisible();
++    const term = locale === 'en' ? 'confirmed' : '\u65e0\u6cd5\u786e\u8ba4';
++    await search.fill(term);
++    await expect(page).toHaveURL(new RegExp(`[?&]q=${encodeURIComponent(term)}(?:&|$)`));
++    await page
++      .getByRole('main')
++      .getByRole('link', { name: new RegExp(`^${messages['audit.title']}`) })
++      .click();
++    const heading = page.getByRole('heading', {
++      name: messages['audit.read.unknown.title'],
++      exact: true,
++    });
++    await expect(heading).toBeVisible();
++    await expect(page.getByRole('main')).toContainText(messages['audit.read.again']);
++    await heading.scrollIntoViewIfNeeded();
++    await info.attach(`audit-read-help-${locale}`, {
++      body: await page.screenshot({ animations: 'disabled', fullPage: true }),
++      contentType: 'image/png',
++    });
++    await page.getByRole('link', { name: messages['audit.read.unknown.title'], exact: true }).click();
++    await expect(page.getByRole('main').locator('p').last()).toBeInViewport({ ratio: 1 });
++    await info.attach(`audit-read-help-section-${locale}`, {
++      body: await page.screenshot({ animations: 'disabled' }),
++      contentType: 'image/png',
++    });
++  });
++  for (const surface of ['trail', 'activity'] as const) {
++    for (const initial of [
++      'lost-response',
++      'network',
++      'timeout',
++      'unknown',
++      'unavailable',
++      'invalid-response',
++    ] as const) {
++      test(`${surface} waits for deliberate recovery after ${initial} in ${locale}`, async ({
++        page,
++      }, info) => {
++        const control = await configure(page, locale);
++        if (initial === 'timeout') control.requestTimeoutMilliseconds = 1_000;
++        let fault: Fault = initial;
++        const attempts: URLSearchParams[] = [];
++        const held: (() => void)[] = [];
++        let fixtureAcceptedReads = 0;
++        await page.route(endpoint, async (route) => {
++          attempts.push(new URL(route.request().url()).searchParams);
++          switch (fault) {
++            case 'lost-response':
++              fixtureAcceptedReads += 1;
++              await route.abort('failed');
++              return;
++            case 'network':
++              await route.abort('connectionrefused');
++              return;
++            case 'timeout':
++              await new Promise<void>((resolve) => {
++                held.push(resolve);
++              });
++              await route.abort('failed').catch(() => undefined);
++              return;
++            case 'unknown':
++              await refuse(route, 409, 'STORAGE_COMMIT_OUTCOME_UNKNOWN');
++              return;
++            case 'unavailable':
++              await refuse(route, 503, 'STORAGE_UNAVAILABLE');
++              return;
++            case 'invalid-response':
++              await route.fulfill({ status: 200, body: 'not-json' });
++              return;
++            case 'none':
++              await route.fallback();
++          }
++        });
++        try {
++          await page.goto(paths[surface]);
++          const alert = page.getByRole('alert');
++          await expect(alert).toBeVisible();
++          await focusAndReconnect(page);
++          expect(attempts).toHaveLength(1);
++          if (initial !== 'unavailable') {
++            await expect(alert).toContainText(messages['audit.read.unknown.title']);
++            await expect(alert).toContainText(messages['audit.read.unknown.detail']);
++          }
++          if (initial === 'unknown') await expect(alert).toContainText(requestId);
++          if (initial === 'lost-response') expect(fixtureAcceptedReads).toBe(1);
++          await expect(page.getByRole('table')).toBeHidden();
++          await expect(page.getByText(messages['audit.empty.title'], { exact: true })).toBeHidden();
++          await expect(
++            page.getByText(messages['resource.activity.empty.title'], { exact: true }),
++          ).toBeHidden();
++          if (initial === 'unknown') {
++            await info.attach(`audit-${surface}-uncertain-${locale}`, {
++              body: await page.screenshot({ animations: 'disabled' }),
++              contentType: 'image/png',
++            });
++          }
++          fault = 'none';
++          held.splice(0).forEach((release) => {
++            release();
++          });
++          const retry = page.getByRole('button', {
++            name: messages['audit.read.again'],
++            exact: true,
++          });
++          await retry.focus();
++          await page.keyboard.press('Enter');
++          await expect(
++            page.getByRole('row').filter({ hasText: messages['audit.action.account.updated'] }),
++          ).toHaveCount(1);
++          expect(attempts).toHaveLength(2);
++          expect(attempts.every((query) => !query.has('action'))).toBe(true);
++          if (surface === 'activity') expect(attempts[1]?.get('target_id')).toBe(memberUser.id);
++          await expect(alert).toBeHidden();
++          const beforeReload = attempts.length;
++          await page.reload();
++          await expect(page.getByRole('table')).toBeVisible();
++          expect(attempts).toHaveLength(beforeReload + 1);
++          expect(control.auditQueries).toHaveLength(2);
++        } finally {
++          held.splice(0).forEach((release) => {
++            release();
++          });
++        }
++      });
++    }
++
++    test(`${surface} preserves two pages and retries only the failed cursor in ${locale}`, async ({
++      page,
++    }, info) => {
++      const control = await configure(page, locale);
++      control.auditEvents = history(45);
++      await page.goto(paths[surface]);
++      const rows = page.getByRole('row');
++      const more = page.getByRole('button', { name: messages['audit.loadMore'], exact: true });
++      await expect(rows).toHaveCount(21);
++      await more.click();
++      await expect(rows).toHaveCount(41);
++      control.auditProblem = { status: 409, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN' };
++      await more.click();
++      await expect(page.getByRole('alert')).toContainText(messages['audit.read.unknown.title']);
++      await expect(rows).toHaveCount(41);
++      await expect(page.getByText(messages['audit.read.partial'], { exact: true })).toBeVisible();
++      await expect(more).toBeHidden();
++      await page.getByRole('alert').scrollIntoViewIfNeeded();
++      await info.attach(`audit-${surface}-partial-${locale}`, {
++        body: await page.screenshot({ animations: 'disabled' }),
++        contentType: 'image/png',
++      });
++      const before = control.auditQueries.length;
++      control.auditProblem = null;
++      let release: () => void = () => undefined;
++      const retryReply = new Promise<void>((resolve) => {
++        release = resolve;
++      });
++      await page.route(endpoint, async (route) => {
++        await retryReply;
++        await route.fallback();
++      });
++      try {
++        await page.getByRole('button', { name: messages['audit.read.again'], exact: true }).click();
++        await expect(
++          page.getByRole('button', { name: messages['audit.read.pending'], exact: true }),
++        ).toBeDisabled();
++        await expect(rows).toHaveCount(41);
++      } finally {
++        release();
++      }
++      await expect(rows).toHaveCount(46);
++      expect(control.auditQueries).toHaveLength(before + 1);
++      expect(control.auditQueries.at(-1)?.get('cursor')).toBe('40');
++    });
++
++    test(`${surface} restarts an invalid cursor once and retains history until success in ${locale}`, async ({
++      page,
++    }) => {
++      const control = await configure(page, locale);
++      control.auditEvents = history(45);
++      await page.goto(paths[surface]);
++      const rows = page.getByRole('row');
++      const more = page.getByRole('button', { name: messages['audit.loadMore'], exact: true });
++      await expect(rows).toHaveCount(21);
++      await more.click();
++      await expect(rows).toHaveCount(41);
++      control.auditProblem = { status: 400, code: 'INVALID_CURSOR' };
++      await more.click();
++      await expect(
++        page.getByRole('button', { name: messages['audit.read.restart'], exact: true }),
++      ).toBeVisible();
++      const before = control.auditQueries.length;
++      control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
++      await page.getByRole('button', { name: messages['audit.read.restart'], exact: true }).click();
++      await expect(page.getByRole('alert')).toContainText(
++        messages['problem.STORAGE_UNAVAILABLE.title'],
++      );
++      expect(control.auditQueries).toHaveLength(before + 1);
++      expect(control.auditQueries.at(-1)?.has('cursor')).toBe(false);
++      await expect(rows).toHaveCount(41);
++      control.auditProblem = null;
++      await page.getByRole('button', { name: messages['audit.read.again'], exact: true }).click();
++      await expect(rows).toHaveCount(21);
++      expect(control.auditQueries).toHaveLength(before + 2);
++      expect(control.auditQueries.at(-1)?.has('cursor')).toBe(false);
++    });
++
++    test(`${surface} removes cached events after a current permission refusal in ${locale}`, async ({
++      page,
++    }) => {
++      const control = await configure(page, locale);
++      control.auditEvents = history(25);
++      let revoking = false;
++      let reads = 0;
++      let release: () => void = () => undefined;
++      const permissionReply = new Promise<void>((resolve) => {
++        release = resolve;
++      });
++      await page.route(endpoint, async (route) => {
++        reads += 1;
++        if (!revoking) {
++          await route.fallback();
++          return;
++        }
++        await permissionReply;
++        await refuse(route, 403, 'ACCESS_DENIED');
++      });
++      await page.goto(paths[surface]);
++      await expect(page.getByRole('row')).toHaveCount(21);
++      const revisit = async () => {
++        if (surface === 'trail') {
++          await page
++            .getByLabel(messages['audit.filter.category'], { exact: true })
++            .selectOption('account');
++          await expect(page).toHaveURL(/category=account/);
++        } else {
++          await page
++            .getByRole('tab', { name: messages['resource.tab.actions'], exact: true })
++            .click();
++          await expect(page).toHaveURL(/tab=actions/);
++        }
++      };
++      await revisit();
++      await expect(page.getByRole('row')).toHaveCount(21);
++      if (surface === 'trail') {
++        await page.getByLabel(messages['audit.filter.category'], { exact: true }).selectOption('');
++        await expect(page).toHaveURL(/\/audit$/);
++      } else {
++        await page
++          .getByRole('tab', { name: messages['resource.tab.activity'], exact: true })
++          .click();
++        await expect(page).toHaveURL(/tab=activity/);
++      }
++      await expect(page.getByRole('row')).toHaveCount(21);
++      revoking = true;
++      await page.getByRole('button', { name: messages['audit.loadMore'], exact: true }).click();
++      if (surface === 'trail') {
++        await page.getByRole('row').nth(1).getByRole('button').click();
++        await expect(page.getByRole('dialog')).toBeVisible();
++      }
++      release();
++      await expect(page.getByRole('alert')).toContainText(messages['problem.ACCESS_DENIED.title']);
++      await expect(page.getByRole('table')).toBeHidden();
++      await expect(page.getByRole('dialog')).toBeHidden();
++      await expect(
++        page.getByRole('button', { name: messages['audit.read.again'], exact: true }),
++      ).toBeHidden();
++      const before = reads;
++      await focusAndReconnect(page);
++      expect(reads).toBe(before);
++      await revisit();
++      await expect.poll(() => reads).toBe(before + 1);
++      await expect(page.getByRole('alert')).toContainText(messages['problem.ACCESS_DENIED.title']);
++      await expect(page.getByRole('table')).toBeHidden();
++    });
++  }
++}
++
++for (const path of Object.values(paths)) {
++  test(`does not expose an audit consumer to a Portal session at ${path}`, async ({ page }) => {
++    const control = await configure(page, 'en');
++    control.auditEvents = history(25);
++    await page.goto(path);
++    await expect(page.getByRole('row')).toHaveCount(21);
++    control.audience = 'portal';
++    await page.getByRole('button', { name: english['audit.loadMore'], exact: true }).click();
++    await expect(page.getByRole('alert')).toContainText(
++      english['problem.RESOURCE_NOT_FOUND.title'],
++    );
++    await expect(
++      page.getByText(english['audit.action.account.updated'], { exact: true }),
++    ).toHaveCount(0);
++    expect(control.auditQueries).toHaveLength(2);
++    await expect(
++      page.getByRole('button', { name: english['audit.read.again'], exact: true }),
++    ).toBeHidden();
++  });
++}
++
++test('does not queue an offline audit retry for the next reconnect', async ({ page }) => {
++  await configure(page, 'en');
++  let attempts = 0;
++  page.on('request', (request) => {
++    if (new URL(request.url()).pathname === '/api/v1/admin/audit-events') attempts += 1;
++  });
++  await page.route(endpoint, async (route) => {
++    await route.abort('connectionrefused');
++  });
++  await page.goto('/audit');
++  const retry = page.getByRole('button', { name: english['audit.read.again'], exact: true });
++  await expect(retry).toBeVisible();
++  await page.context().setOffline(true);
++  await retry.click();
++  await expect.poll(() => attempts).toBe(2);
++  await expect(retry).toBeEnabled();
++  await page.context().setOffline(false);
++  await focusAndReconnect(page);
++  expect(attempts).toBe(2);
++});
+diff --git a/web/apps/console/e2e/audit.spec.ts b/web/apps/console/e2e/audit.spec.ts
+index a37ff68f..fd58fe4b 100644
+--- a/web/apps/console/e2e/audit.spec.ts
++++ b/web/apps/console/e2e/audit.spec.ts
+@@ -185,7 +185,7 @@ test('says when nothing is recorded and when filters hide everything', async ({
+ test('a list that cannot load offers a retry', async ({ page }) => {
+   control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+   await page.goto('/audit');
+-  const retry = page.getByRole('button', { name: 'Try again' });
++  const retry = page.getByRole('button', { name: 'Read again' });
+   await expect(retry).toBeVisible();
+   control.auditProblem = null;
+   await retry.click();
+@@ -212,7 +212,9 @@ test('hides a column and keeps it hidden', async ({ page }) => {
+ test('is not part of the portal', async ({ page }) => {
+   control.audience = 'portal';
+   await page.goto('/audit');
++  await expect(page.getByRole('alert')).toContainText(english['problem.RESOURCE_NOT_FOUND.title']);
+   await expect(page.getByText('License imported')).toHaveCount(0);
++  expect(control.auditQueries).toHaveLength(1);
+ });
+ 
+ test.describe('in Chinese', () => {
+@@ -297,11 +299,11 @@ for (const [locale, messages] of [
+     control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+     await page.reload();
+     await expect(
+-      page.getByRole('button', { name: messages['action.retry'], exact: true }),
++      page.getByRole('button', { name: messages['audit.read.again'], exact: true }),
+     ).toBeVisible();
+     control.auditProblem = null;
+     control.auditEvents = [auditReadEvent];
+-    await page.getByRole('button', { name: messages['action.retry'], exact: true }).click();
++    await page.getByRole('button', { name: messages['audit.read.again'], exact: true }).click();
+     await expect(row).toBeVisible();
+     expect(control.auditQueries.at(-1)?.get('category')).toBe('audit');
+     expect(control.auditQueries.every((query) => !query.has('action'))).toBe(true);
+diff --git a/web/apps/console/e2e/pages.ts b/web/apps/console/e2e/pages.ts
+index 85bdfeb9..bf816090 100644
+--- a/web/apps/console/e2e/pages.ts
++++ b/web/apps/console/e2e/pages.ts
+@@ -1099,9 +1099,36 @@ export const consolePages: readonly PageState[] = [
+     open: async (page, control) => {
+       control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+       await openAudit(page, control);
+-      await page.getByRole('button', { name: 'Try again' }).waitFor();
+-    },
+-  },
++      await page.getByRole('button', { name: 'Read again' }).waitFor();
++    },
++  },
++  ...(['trail', 'activity'] as const).flatMap((surface): PageState[] =>
++    (['uncertain', 'partial'] as const).map((state) => ({
++      name: `audit ${surface} with ${state} read recovery`,
++      path: surface === 'trail' ? '/audit' : '/users/$userId',
++      open: async (page, control) => {
++        control.signedIn = true;
++        control.users = [memberUser];
++        control.auditEvents = Array.from({ length: 25 }, (_, index) => ({
++          ...licenseEvent,
++          id: `6f1c7a1e-0000-4000-8000-${String(index).padStart(12, '0')}`,
++          action: 'account.updated',
++          target_type: 'user',
++          target_id: memberUser.id,
++          reason: null,
++        }));
++        if (state === 'uncertain')
++          control.auditProblem = { status: 409, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN' };
++        await page.goto(surface === 'trail' ? '/audit' : `/users/${memberUser.id}?tab=activity`);
++        if (state === 'partial') {
++          await page.getByRole('table').waitFor();
++          control.auditProblem = { status: 409, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN' };
++          await page.getByRole('button', { name: 'Load more', exact: true }).click();
++        }
++        await page.getByRole('button', { name: 'Read again', exact: true }).waitFor();
++      },
++    })),
++  ),
+   {
+     name: 'license in force',
+     path: '/license',
+diff --git a/web/apps/console/src/audit-page.tsx b/web/apps/console/src/audit-page.tsx
+index 79731aec..6e324da4 100644
+--- a/web/apps/console/src/audit-page.tsx
++++ b/web/apps/console/src/audit-page.tsx
+@@ -1,6 +1,6 @@
+ // The audit trail: what happened, who did it and how it ended, from a shareable link. Action names
+ // stay the codes an auditor quotes (docs/research/audit-trail-page.md).
+-import { isProblem, listAuditEvents, type AuditEvent, type AuditOutcome } from '@ownsolid/api';
++import { listAuditEvents, type AuditEvent, type AuditOutcome } from '@ownsolid/api';
+ import { useI18n, type TranslationKey } from '@ownsolid/i18n';
+ import {
+   ColumnChooser,
+@@ -22,7 +22,6 @@ import {
+   EmptyState,
+   FilterSelect,
+   Notice,
+-  ProblemNotice,
+   SearchField,
+   Skeleton,
+   StatusPill,
+@@ -34,11 +33,12 @@ import {
+   Tr,
+   type StatusTone,
+ } from '@ownsolid/ui';
+-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
++import { useQuery } from '@tanstack/react-query';
+ import { ScrollText, X } from 'lucide-react';
+ import { useMemo } from 'react';
+ import { auditEventSearch, customRange } from './audit-link.ts';
+ import { ActionName, TargetName, useAuditNames } from './audit-names.tsx';
++import { AuditReadFailure, useAuditRead } from './audit-read.tsx';
+ 
+ const categories = [
+   'account',
+@@ -317,16 +317,16 @@ export function AuditPage() {
+   const badActor = actor !== undefined && !identifier.test(actor);
+   const badWindow = custom ? windowProblem(from ?? '', to ?? '') : null;
+ 
+-  const events = useInfiniteQuery({
++  const events = useAuditRead({
+     queryKey: ['audit', category, outcome, actor, request, range, from, to],
+-    queryFn: ({ pageParam, signal }) => {
++    read: (cursor, signal) => {
+       // The clock is read here, once per first page; the cursor carries the window after that.
+       const end = new Date();
+       const hours = ranges[range] ?? 0;
+       return listAuditEvents(
+         {
+           limit,
+-          cursor: pageParam ?? undefined,
++          cursor: cursor ?? undefined,
+           category,
+           outcome: outcome as AuditOutcome | undefined,
+           actorUserId: actor,
+@@ -337,8 +337,6 @@ export function AuditPage() {
+         { signal },
+       );
+     },
+-    initialPageParam: null as string | null,
+-    getNextPageParam: (last) => last.next_cursor,
+     enabled: !badRequest && !badActor && badWindow === null,
+   });
+   const items = useMemo(
+@@ -369,14 +367,9 @@ export function AuditPage() {
+       </div>
+     );
+   } else if (events.error && items.length === 0) {
+-    body = isProblem(events.error) ? (
+-      <ProblemNotice
+-        problem={events.error}
+-        onRetry={() => {
+-          void events.refetch();
+-        }}
+-      />
+-    ) : null;
++    body = (
++      <AuditReadFailure error={events.error} busy={events.isFetching} onRetry={events.readAgain} />
++    );
+   } else if (items.length === 0) {
+     body = (
+       <Card>
+@@ -394,13 +387,21 @@ export function AuditPage() {
+   } else {
+     body = (
+       <>
++        {events.error ? (
++          <AuditReadFailure
++            error={events.error}
++            partial
++            busy={events.isFetching}
++            onRetry={events.readAgain}
++          />
++        ) : null}
+         <Rows items={items} list={list} />
+-        {events.hasNextPage ? (
++        {events.hasNextPage && !events.error ? (
+           <Button
+             className="mt-4"
+-            disabled={events.isFetchingNextPage}
++            disabled={events.isFetching}
+             onClick={() => {
+-              void events.fetchNextPage();
++              void events.fetchNextPage({ cancelRefetch: false });
+             }}
+           >
+             {t('audit.loadMore')}
+diff --git a/web/apps/console/src/audit-read.test.tsx b/web/apps/console/src/audit-read.test.tsx
+new file mode 100644
+index 00000000..bcca2072
+--- /dev/null
++++ b/web/apps/console/src/audit-read.test.tsx
+@@ -0,0 +1,248 @@
++import { ApiProblem, type AuditPage, type Me } from '@ownsolid/api';
++import { createQueryClient, sessionKey } from '@ownsolid/shell';
++import { act, renderHook, waitFor } from '@testing-library/react';
++import { focusManager, onlineManager, QueryClientProvider } from '@tanstack/react-query';
++import type { ReactNode } from 'react';
++import { afterEach, describe, expect, it, vi } from 'vitest';
++import { useAuditRead } from './audit-read.tsx';
++
++type AuditReader = (cursor: string | null, signal: AbortSignal) => Promise<AuditPage>;
++
++const first: AuditPage = { items: [], next_cursor: 'next' };
++const workspace: NonNullable<Me['workspace']> = {
++  id: '6f1c7a1e-0000-4000-8000-000000000002',
++  tenant_id: '6f1c7a1e-0000-4000-8000-000000000003',
++  name: 'Research Lab',
++  role: 'owner',
++};
++const me: Me = {
++  audience: 'admin',
++  workspace,
++  user: {
++    id: '6f1c7a1e-0000-4000-8000-000000000001',
++    email: 'reader@example.test',
++    display_name: 'Audit reader',
++    locale: 'en',
++    status: 'active',
++    is_platform_admin: true,
++    email_verified_at: null,
++    version: 1,
++    created_at: '2026-11-04T00:00:00Z',
++    updated_at: '2026-11-04T00:00:00Z',
++  },
++};
++
++function setup(read: AuditReader) {
++  const client = createQueryClient({ onSignedOut: () => undefined });
++  client.setQueryData(sessionKey, me);
++  const wrapper = ({ children }: { children: ReactNode }) => (
++    <QueryClientProvider client={client}>{children}</QueryClientProvider>
++  );
++  const mount = () => renderHook(() => useAuditRead({ queryKey: ['audit'], read }), { wrapper });
++  return { client, mount };
++}
++
++afterEach(() => {
++  focusManager.setFocused(undefined);
++  onlineManager.setOnline(true);
++});
++
++describe('explicit audit reads', () => {
++  it.each(['reader', 'workspace', 'tenant'] as const)(
++    'does not reuse another %s snapshot after a session change',
++    async (scope) => {
++      const read = vi
++        .fn<AuditReader>()
++        .mockResolvedValueOnce(first)
++        .mockRejectedValueOnce(new ApiProblem('ACCESS_DENIED', { status: 403 }));
++      const { client, mount } = setup(read);
++      const { result, unmount } = mount();
++      await waitFor(() => {
++        expect(result.current.isSuccess).toBe(true);
++      });
++      const changed: Me =
++        scope === 'reader'
++          ? { ...me, user: { ...me.user, id: '6f1c7a1e-0000-4000-8000-000000000070' } }
++          : {
++              ...me,
++              workspace: {
++                ...workspace,
++                ...(scope === 'workspace'
++                  ? { id: '6f1c7a1e-0000-4000-8000-000000000004' }
++                  : { tenant_id: '6f1c7a1e-0000-4000-8000-000000000005' }),
++              },
++            };
++      act(() => {
++        client.setQueryData(sessionKey, changed);
++      });
++      await waitFor(() => {
++        expect(result.current.isError).toBe(true);
++      });
++      expect(result.current.data).toBeUndefined();
++      expect(read).toHaveBeenCalledTimes(2);
++      unmount();
++      client.clear();
++    },
++  );
++  it('keeps a failed cached read through remount, focus, reconnect and invalidation', async () => {
++    const read = vi.fn<AuditReader>().mockRejectedValue(new ApiProblem('NETWORK_UNAVAILABLE'));
++    const { client, mount } = setup(read);
++    const initial = mount();
++    await waitFor(() => {
++      expect(initial.result.current.isError).toBe(true);
++    });
++    initial.unmount();
++    const again = mount();
++    await act(async () => {
++      focusManager.setFocused(false);
++      focusManager.setFocused(true);
++      onlineManager.setOnline(false);
++      onlineManager.setOnline(true);
++      await client.invalidateQueries({ queryKey: ['audit'] });
++    });
++    expect(read).toHaveBeenCalledTimes(1);
++    expect(again.result.current.isError).toBe(true);
++    again.unmount();
++    client.clear();
++  });
++
++  it('does not queue an offline attempt for reconnect and explicitly recovers once', async () => {
++    onlineManager.setOnline(false);
++    const read = vi
++      .fn<AuditReader>()
++      .mockRejectedValueOnce(new ApiProblem('REQUEST_TIMEOUT'))
++      .mockResolvedValue(first);
++    const { client, mount } = setup(read);
++    const { result, unmount } = mount();
++    await waitFor(() => {
++      expect(result.current.isError).toBe(true);
++    });
++    expect(result.current.fetchStatus).toBe('idle');
++    await act(async () => {
++      onlineManager.setOnline(true);
++      await Promise.resolve();
++    });
++    expect(read).toHaveBeenCalledTimes(1);
++    act(() => {
++      result.current.readAgain();
++      result.current.readAgain();
++    });
++    await waitFor(() => {
++      expect(result.current.isSuccess).toBe(true);
++    });
++    expect(read).toHaveBeenCalledTimes(2);
++    unmount();
++    client.clear();
++  });
++
++  it('retries only the failed next page and keeps existing pages after failure', async () => {
++    const read = vi
++      .fn<AuditReader>()
++      .mockResolvedValueOnce(first)
++      .mockRejectedValueOnce(new ApiProblem('STORAGE_COMMIT_OUTCOME_UNKNOWN', { status: 409 }))
++      .mockResolvedValueOnce({ items: [], next_cursor: null });
++    const { client, mount } = setup(read);
++    const { result, unmount } = mount();
++    await waitFor(() => {
++      expect(result.current.isSuccess).toBe(true);
++    });
++    await act(async () => {
++      await result.current.fetchNextPage({ cancelRefetch: false });
++    });
++    await waitFor(() => {
++      expect(result.current.isFetchNextPageError).toBe(true);
++    });
++    expect(result.current.data?.pages).toEqual([first]);
++    act(() => {
++      result.current.readAgain();
++    });
++    await waitFor(() => {
++      expect(result.current.data?.pages).toHaveLength(2);
++    });
++    expect(read.mock.calls.map(([cursor]) => cursor)).toEqual([null, 'next', 'next']);
++    unmount();
++    client.clear();
++  });
++
++  it('restarts an invalid cursor with one page and keeps history until that read succeeds', async () => {
++    const second: AuditPage = { items: [], next_cursor: 'last' };
++    const read = vi
++      .fn<AuditReader>()
++      .mockResolvedValueOnce(first)
++      .mockResolvedValueOnce(second)
++      .mockRejectedValueOnce(new ApiProblem('INVALID_CURSOR', { status: 400 }))
++      .mockRejectedValueOnce(new ApiProblem('STORAGE_UNAVAILABLE', { status: 503 }))
++      .mockResolvedValueOnce(first);
++    const { client, mount } = setup(read);
++    const { result, unmount } = mount();
++    await waitFor(() => {
++      expect(result.current.isSuccess).toBe(true);
++    });
++    await act(async () => {
++      await result.current.fetchNextPage({ cancelRefetch: false });
++    });
++    await act(async () => {
++      await result.current.fetchNextPage({ cancelRefetch: false });
++    });
++    act(() => {
++      result.current.readAgain();
++    });
++    await waitFor(() => {
++      expect(read).toHaveBeenCalledTimes(4);
++    });
++    await waitFor(() => {
++      expect(result.current.fetchStatus).toBe('idle');
++    });
++    expect(result.current.data?.pages).toEqual([first, second]);
++    act(() => {
++      result.current.readAgain();
++    });
++    await waitFor(() => {
++      expect(result.current.isSuccess).toBe(true);
++    });
++    expect(result.current.data?.pages).toEqual([first]);
++    expect(read.mock.calls.map(([cursor]) => cursor)).toEqual([null, 'next', 'last', null, null]);
++    unmount();
++    client.clear();
++  });
++
++  it.each([
++    ['ACCESS_DENIED', 403],
++    ['RESOURCE_NOT_FOUND', 404],
++    ['FUTURE_REFUSAL', 403],
++  ] as const)(
++    'removes cached pages on current %s (%i) and refuses a retry',
++    async (code, status) => {
++      const read = vi
++        .fn<AuditReader>()
++        .mockResolvedValueOnce(first)
++        .mockRejectedValueOnce(new ApiProblem(code, { status }));
++      const { client, mount } = setup(read);
++      const { result, unmount } = mount();
++      await waitFor(() => {
++        expect(result.current.isSuccess).toBe(true);
++      });
++      client.setQueryData(['audit', 'earlier-filter'], { pages: [first], pageParams: [null] });
++      client.setQueryData(['resource-activity', 'earlier-resource'], {
++        pages: [first],
++        pageParams: [null],
++      });
++      client.setQueryData(['nodes'], 'unrelated');
++      await act(async () => {
++        await result.current.fetchNextPage({ cancelRefetch: false });
++      });
++      await waitFor(() => {
++        expect(result.current.data).toBeUndefined();
++      });
++      expect(client.getQueryData(['audit', 'earlier-filter'])).toBeUndefined();
++      expect(client.getQueryData(['resource-activity', 'earlier-resource'])).toBeUndefined();
++      expect(client.getQueryData(['nodes'])).toBe('unrelated');
++      act(() => {
++        result.current.readAgain();
++      });
++      expect(read).toHaveBeenCalledTimes(2);
++      unmount();
++      client.clear();
++    },
++  );
++});
+diff --git a/web/apps/console/src/audit-read.tsx b/web/apps/console/src/audit-read.tsx
+new file mode 100644
+index 00000000..faf36b3e
+--- /dev/null
++++ b/web/apps/console/src/audit-read.tsx
+@@ -0,0 +1,149 @@
++import { isProblem, type AuditPage } from '@ownsolid/api';
++import { useI18n } from '@ownsolid/i18n';
++import { useSession } from '@ownsolid/shell';
++import { Button, Notice, ProblemNotice } from '@ownsolid/ui';
++import {
++  infiniteQueryOptions,
++  useInfiniteQuery,
++  useQueryClient,
++  type QueryKey,
++} from '@tanstack/react-query';
++
++interface AuditReadOptions {
++  queryKey: QueryKey;
++  read: (cursor: string | null, signal: AbortSignal) => Promise<AuditPage>;
++  enabled?: boolean;
++}
++
++function deniedRead(error: unknown): boolean {
++  return (
++    isProblem(error) &&
++    (error.status === 401 ||
++      error.status === 403 ||
++      error.status === 404 ||
++      isProblem(
++        error,
++        'ACCESS_DENIED',
++        'RESOURCE_NOT_FOUND',
++        'AUTH_REQUIRED',
++        'AUTH_SESSION_EXPIRED',
++      ))
++  );
++}
++
++/** Audit access is recorded: another attempt must be the person's explicit choice. */
++export function useAuditRead({ queryKey, read, enabled = true }: AuditReadOptions) {
++  const client = useQueryClient();
++  const session = useSession();
++  const key = [
++    ...queryKey,
++    {
++      reader: session?.user.id,
++      audience: session?.audience,
++      tenant: session?.workspace?.tenant_id,
++      workspace: session?.workspace?.id,
++    },
++  ];
++  const canRead = enabled && session !== null;
++  const options = infiniteQueryOptions({
++    queryKey: key,
++    queryFn: async ({ pageParam, signal }) => {
++      try {
++        return await read(pageParam, signal);
++      } catch (error) {
++        if (deniedRead(error)) {
++          // Keep the active refusal cached so remounting cannot retry it. Discard
++          // older inactive views so changing a filter cannot reveal their events.
++          client.removeQueries({
++            predicate: (query) =>
++              query.getObserversCount() === 0 &&
++              (query.queryKey[0] === 'audit' || query.queryKey[0] === 'resource-activity'),
++          });
++        }
++        throw error;
++      }
++    },
++    initialPageParam: null as string | null,
++    getNextPageParam: (last) => last.next_cursor,
++    // Static data blocks invalidation refetches only after a page exists. A failed
++    // initial read must also become manual-only; imperative recovery still works.
++    enabled: (query) => canRead && query.state.status !== 'error',
++    retry: false,
++    retryOnMount: false,
++    refetchOnMount: false,
++    refetchOnWindowFocus: false,
++    refetchOnReconnect: false,
++    refetchInterval: false,
++    staleTime: 'static',
++    // An offline read must fail now, not be queued for an implicit reconnect attempt.
++    networkMode: 'always',
++  });
++  const events = useInfiniteQuery(options);
++  const denied = deniedRead(events.error);
++  const readAgain = () => {
++    if (!canRead || denied || client.getQueryState(key)?.fetchStatus !== 'idle') return;
++    if (events.isFetchNextPageError && !isProblem(events.error, 'INVALID_CURSOR')) {
++      void events.fetchNextPage({ cancelRefetch: false });
++    } else {
++      // A normal infinite refetch re-reads every cached page. Restart only one page and
++      // let the cache replace the old pages after success, never before a failed read.
++      void client.infiniteQuery({ ...options, pages: 1, staleTime: 0 }).catch(() => undefined);
++    }
++  };
++  return { ...events, data: denied ? undefined : events.data, readAgain };
++}
++
++/** An audit-specific recovery that preserves the server's Problem and correlation ID. */
++export function AuditReadFailure({
++  error,
++  partial = false,
++  busy,
++  onRetry,
++}: {
++  error: unknown;
++  partial?: boolean;
++  busy: boolean;
++  onRetry: () => void;
++}) {
++  const { t } = useI18n();
++  const problem = isProblem(error) ? error : null;
++  const uncertain =
++    !problem ||
++    problem.status === 0 ||
++    isProblem(problem, 'STORAGE_COMMIT_OUTCOME_UNKNOWN', 'RESPONSE_INVALID');
++  const noRecovery = deniedRead(problem) || isProblem(problem, 'VALIDATION_FAILED');
++  const label = t(
++    busy
++      ? 'audit.read.pending'
++      : isProblem(problem, 'INVALID_CURSOR')
++        ? 'audit.read.restart'
++        : 'audit.read.again',
++  );
++  return (
++    <div className="mb-4" aria-busy={busy}>
++      {problem ? (
++        <ProblemNotice
++          problem={problem}
++          title={uncertain ? t('audit.read.unknown.title') : undefined}
++          detail={uncertain ? t('audit.read.unknown.detail') : undefined}
++          recovery={noRecovery ? undefined : { label, onClick: onRetry, disabled: busy }}
++        />
++      ) : (
++        <Notice
++          tone="critical"
++          title={t('audit.read.unknown.title')}
++          actions={
++            <Button disabled={busy} onClick={onRetry}>
++              {label}
++            </Button>
++          }
++        >
++          {t('audit.read.unknown.detail')}
++        </Notice>
++      )}
++      {partial ? (
++        <p className="mb-0 mt-2 text-[13px] text-text-2">{t('audit.read.partial')}</p>
++      ) : null}
++    </div>
++  );
++}
+diff --git a/web/apps/console/src/resource-page.tsx b/web/apps/console/src/resource-page.tsx
+index a2ff256f..967a09b3 100644
+--- a/web/apps/console/src/resource-page.tsx
++++ b/web/apps/console/src/resource-page.tsx
+@@ -17,12 +17,13 @@ import {
+   cn,
+   type StatusTone,
+ } from '@ownsolid/ui';
+-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
++import { useQuery } from '@tanstack/react-query';
+ import { Link, useRouter, useRouterState } from '@tanstack/react-router';
+ import { ArrowLeft, History, SearchX } from 'lucide-react';
+ import type { ReactNode } from 'react';
+ import { auditEventSearch } from './audit-link.ts';
+ import { ActionName } from './audit-names.tsx';
++import { AuditReadFailure, useAuditRead } from './audit-read.tsx';
+ 
+ const outcomeTones: Record<AuditOutcome, StatusTone> = {
+   success: 'good',
+@@ -173,32 +174,25 @@ export function ResourceActivity({
+ }) {
+   const { t, format } = useI18n();
+   const limit = useQuery(runtimeConfigQuery()).data?.ui.pageSize ?? 20;
+-  const events = useInfiniteQuery({
++  const events = useAuditRead({
+     queryKey: ['resource-activity', target, actor, since, limit],
+-    queryFn: ({ pageParam, signal }) =>
++    read: (cursor, signal) =>
+       listAuditEvents(
+         // The minute covers the moment it began, whose event may carry a slightly earlier time.
+         {
+           limit,
+-          cursor: pageParam ?? undefined,
++          cursor: cursor ?? undefined,
+           targetId: target,
+           actorUserId: actor,
+           from: new Date(Date.parse(since) - 60_000).toISOString(),
+         },
+         { signal },
+       ),
+-    initialPageParam: null as string | null,
+-    getNextPageParam: (last) => last.next_cursor,
+   });
+   if (events.isPending) return <Skeleton className="h-11 w-full" />;
+-  if (events.isError && !events.data) {
++  if (!events.data) {
+     return (
+-      <ResourceFailure
+-        error={events.error}
+-        onRetry={() => {
+-          void events.refetch();
+-        }}
+-      />
++      <AuditReadFailure error={events.error} busy={events.isFetching} onRetry={events.readAgain} />
+     );
+   }
+   const items = events.data.pages.flatMap((page) => page.items);
+@@ -213,6 +207,14 @@ export function ResourceActivity({
+   }
+   return (
+     <>
++      {events.error ? (
++        <AuditReadFailure
++          error={events.error}
++          partial
++          busy={events.isFetching}
++          onRetry={events.readAgain}
++        />
++      ) : null}
+       <Card className="overflow-hidden">
+         <Table>
+           <thead>
+@@ -251,12 +253,12 @@ export function ResourceActivity({
+           </tbody>
+         </Table>
+       </Card>
+-      {events.hasNextPage ? (
++      {events.hasNextPage && !events.error ? (
+         <Button
+           className="mt-4"
+-          disabled={events.isFetchingNextPage}
++          disabled={events.isFetching}
+           onClick={() => {
+-            void events.fetchNextPage();
++            void events.fetchNextPage({ cancelRefetch: false });
+           }}
+         >
+           {t('audit.loadMore')}
+diff --git a/web/packages/api/src/problem.ts b/web/packages/api/src/problem.ts
+index ae465a18..50e638ed 100644
+--- a/web/packages/api/src/problem.ts
++++ b/web/packages/api/src/problem.ts
+@@ -2,7 +2,7 @@
+ 
+ /** Codes the client raises when no usable answer arrived from the server. */
+ export const clientProblemCodes = [
+-  /** The request did not reach the server: network down, server stopped, DNS failure. */
++  /** No usable response arrived; the request may already have reached the server. */
+   'NETWORK_UNAVAILABLE',
+   /** No answer within the configured request timeout. */
+   'REQUEST_TIMEOUT',
+diff --git a/web/packages/help/locales/en/console/audit-trail.md b/web/packages/help/locales/en/console/audit-trail.md
+index ac6f84c8..fb40885e 100644
+--- a/web/packages/help/locales/en/console/audit-trail.md
++++ b/web/packages/help/locales/en/console/audit-trail.md
+@@ -12,3 +12,14 @@ from where and with what outcome.
+ - Each event has its own link that keeps working.
+ - The list names each action in your language. Its details keep the action's identifier for scripts
+   and support, and a reason as it was recorded.
++
++## Audit read not confirmed
++
++Successful reads of this trail and a resource's Activity also record access. If an answer is lost,
++the read may already be recorded. Keep the request ID when one is shown. Read again starts a new
++request. The page does not retry by itself when you return to the tab or the connection comes back.
++
++When another page cannot load, the events already read stay visible with a warning that the result
++is incomplete. Read again retries that page. If its cursor is no longer valid, Read from the start
++opens a new first page; the old pages stay until that read succeeds. A permission refusal removes
++the earlier events from view. Ask an administrator to check access before trying a new read.
+diff --git a/web/packages/help/locales/zh-cn/console/audit-trail.md b/web/packages/help/locales/zh-cn/console/audit-trail.md
+index eaa5f496..ce2ea0fb 100644
+--- a/web/packages/help/locales/zh-cn/console/audit-trail.md
++++ b/web/packages/help/locales/zh-cn/console/audit-trail.md
+@@ -8,3 +8,9 @@
+ - 打开事件可以查看详情，并跳转到相关人员，或查看同一请求的所有事件。
+ - 每个事件都有自己的链接，并且一直有效。
+ - 列表用你的语言显示每个操作的名称。详情中保留操作标识供脚本和技术支持使用，原因按记录时的原文显示。
++
++## 无法确认此次审计读取
++
++成功读取审计记录或资源的活动记录时，也会记录此次访问。如果响应丢失，此次读取可能已经被记录。请保留提示中的请求编号。“重新读取”会发起一个新请求。返回标签页或网络恢复时，页面不会自行重试。
++
++后续页面读取失败时，已经读取的事件会保留，并提示结果不完整。“重新读取”只重试该页。如果分页位置已失效，“从头读取”会打开新的第一页；读取成功前仍保留旧页面。权限被拒绝时，旧事件会从界面移除。请先联系管理员核对访问权限，再决定是否发起新的读取。
+diff --git a/web/packages/help/src/gen/locales/en/console.json b/web/packages/help/src/gen/locales/en/console.json
+index 32735a64..da8d08b4 100644
+--- a/web/packages/help/src/gen/locales/en/console.json
++++ b/web/packages/help/src/gen/locales/en/console.json
+@@ -178,6 +178,10 @@
+    {
+     "title": "Finding an event",
+     "anchor": "finding-an-event"
++   },
++   {
++    "title": "Audit read not confirmed",
++    "anchor": "audit-read-not-confirmed"
+    }
+   ]
+  },
+diff --git a/web/packages/help/src/gen/locales/en/console/audit-trail.json b/web/packages/help/src/gen/locales/en/console/audit-trail.json
+index fe9f92ca..b6113b72 100644
+--- a/web/packages/help/src/gen/locales/en/console/audit-trail.json
++++ b/web/packages/help/src/gen/locales/en/console/audit-trail.json
+@@ -103,6 +103,37 @@
+      ]
+     }
+    ]
++  },
++  {
++   "type": "heading",
++   "depth": 2,
++   "children": [
++    {
++     "type": "text",
++     "value": "Audit read not confirmed"
++    }
++   ],
++   "data": {
++    "id": "audit-read-not-confirmed"
++   }
++  },
++  {
++   "type": "paragraph",
++   "children": [
++    {
++     "type": "text",
++     "value": "Successful reads of this trail and a resource's Activity also record access. If an answer is lost,\nthe read may already be recorded. Keep the request ID when one is shown. Read again starts a new\nrequest. The page does not retry by itself when you return to the tab or the connection comes back."
++    }
++   ]
++  },
++  {
++   "type": "paragraph",
++   "children": [
++    {
++     "type": "text",
++     "value": "When another page cannot load, the events already read stay visible with a warning that the result\nis incomplete. Read again retries that page. If its cursor is no longer valid, Read from the start\nopens a new first page; the old pages stay until that read succeeds. A permission refusal removes\nthe earlier events from view. Ask an administrator to check access before trying a new read."
++    }
++   ]
+   }
+  ]
+ }
+diff --git a/web/packages/help/src/gen/locales/zh-cn/console.json b/web/packages/help/src/gen/locales/zh-cn/console.json
+index 599c3d44..ef0c587a 100644
+--- a/web/packages/help/src/gen/locales/zh-cn/console.json
++++ b/web/packages/help/src/gen/locales/zh-cn/console.json
+@@ -178,6 +178,10 @@
+    {
+     "title": "查找事件",
+     "anchor": "查找事件"
++   },
++   {
++    "title": "无法确认此次审计读取",
++    "anchor": "无法确认此次审计读取"
+    }
+   ]
+  },
+diff --git a/web/packages/help/src/gen/locales/zh-cn/console/audit-trail.json b/web/packages/help/src/gen/locales/zh-cn/console/audit-trail.json
+index b44f0132..0ada2cc0 100644
+--- a/web/packages/help/src/gen/locales/zh-cn/console/audit-trail.json
++++ b/web/packages/help/src/gen/locales/zh-cn/console/audit-trail.json
+@@ -103,6 +103,37 @@
+      ]
+     }
+    ]
++  },
++  {
++   "type": "heading",
++   "depth": 2,
++   "children": [
++    {
++     "type": "text",
++     "value": "无法确认此次审计读取"
++    }
++   ],
++   "data": {
++    "id": "无法确认此次审计读取"
++   }
++  },
++  {
++   "type": "paragraph",
++   "children": [
++    {
++     "type": "text",
++     "value": "成功读取审计记录或资源的活动记录时，也会记录此次访问。如果响应丢失，此次读取可能已经被记录。请保留提示中的请求编号。“重新读取”会发起一个新请求。返回标签页或网络恢复时，页面不会自行重试。"
++    }
++   ]
++  },
++  {
++   "type": "paragraph",
++   "children": [
++    {
++     "type": "text",
++     "value": "后续页面读取失败时，已经读取的事件会保留，并提示结果不完整。“重新读取”只重试该页。如果分页位置已失效，“从头读取”会打开新的第一页；读取成功前仍保留旧页面。权限被拒绝时，旧事件会从界面移除。请先联系管理员核对访问权限，再决定是否发起新的读取。"
++    }
++   ]
+   }
+  ]
+ }
+diff --git a/web/packages/i18n/locales/en.json b/web/packages/i18n/locales/en.json
+index e5aad760..f070e0bc 100644
+--- a/web/packages/i18n/locales/en.json
++++ b/web/packages/i18n/locales/en.json
+@@ -193,6 +193,12 @@
+   "audit.range.31d": "Last 31 days",
+   "audit.range.7d": "Last 7 days",
+   "audit.range.custom": "Choose dates",
++  "audit.read.again": "Read again",
++  "audit.read.partial": "Showing only the pages already read. This is not a complete result.",
++  "audit.read.pending": "Reading…",
++  "audit.read.restart": "Read from the start",
++  "audit.read.unknown.detail": "We could not confirm this read. It may already be recorded in the audit trail. Read again starts a new request; nothing is retried automatically.",
++  "audit.read.unknown.title": "Audit read not confirmed",
+   "audit.request": "Find by request ID",
+   "audit.request.invalid": "That is not a request ID. Copy one from an error notice or an event.",
+   "audit.request.placeholder": "Paste a request ID",
+diff --git a/web/packages/i18n/locales/zh-cn.json b/web/packages/i18n/locales/zh-cn.json
+index 7d285685..72858ee3 100644
+--- a/web/packages/i18n/locales/zh-cn.json
++++ b/web/packages/i18n/locales/zh-cn.json
+@@ -193,6 +193,12 @@
+   "audit.range.31d": "过去 31 天",
+   "audit.range.7d": "过去 7 天",
+   "audit.range.custom": "选择日期",
++  "audit.read.again": "重新读取",
++  "audit.read.partial": "仅显示已经读取的页面，这不是完整结果。",
++  "audit.read.pending": "正在读取…",
++  "audit.read.restart": "从头读取",
++  "audit.read.unknown.detail": "无法确认此次读取的结果，它可能已经记入审计记录。重新读取会发起一个新请求，系统不会自动重试。",
++  "audit.read.unknown.title": "无法确认此次审计读取",
+   "audit.request": "按请求 ID 查找",
+   "audit.request.invalid": "这不是请求 ID。请从错误提示或事件中复制。",
+   "audit.request.placeholder": "粘贴请求 ID",
+diff --git a/web/packages/shell/testing/audit.ts b/web/packages/shell/testing/audit.ts
+index 6db2241e..2f02c314 100644
+--- a/web/packages/shell/testing/audit.ts
++++ b/web/packages/shell/testing/audit.ts
+@@ -89,12 +89,12 @@ export async function routeAudit(
+   problem: Refuse,
+ ): Promise<void> {
+   await page.route('**/api/v1/admin/audit-events?*', (route) => {
++    const query = new URL(route.request().url()).searchParams;
++    state.auditQueries.push(query);
+     if (state.audience !== 'admin') {
+       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+     }
+     if (state.auditProblem) return problem(route, state.auditProblem);
+-    const query = new URL(route.request().url()).searchParams;
+-    state.auditQueries.push(query);
+     const category = query.get('category');
+     const outcome = query.get('outcome');
+     const actor = query.get('actor_user_id');
+diff --git a/web/packages/shell/testing/control-plane.ts b/web/packages/shell/testing/control-plane.ts
+index a57df34b..797c5edf 100644
+--- a/web/packages/shell/testing/control-plane.ts
++++ b/web/packages/shell/testing/control-plane.ts
+@@ -232,6 +232,8 @@ export interface ControlPlane
+   notificationPolls: boolean[];
+   /** Fails `/runtime-config.json` with a dropped connection while true. */
+   unreachable: boolean;
++  /** The validated runtime timeout used by transport-failure browser flows. */
++  requestTimeoutMilliseconds: number;
+   /** Answers the next sign-in with this failure instead of checking credentials. */
+   nextSignIn: ScriptedProblem | null;
+   /** Fails sign-out with this problem while set. */
+@@ -330,6 +332,7 @@ export async function mockControlPlane(
+     audience,
+     sessionWorkspace: workspace,
+     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
++    requestTimeoutMilliseconds: runtimeConfig.request_timeout_milliseconds,
+     signedIn: false,
+     user: { ...user },
+     password: account.password,
+@@ -392,6 +395,7 @@ export async function mockControlPlane(
+       ? route.abort('connectionrefused')
+       : data(route, {
+           ...runtimeConfig,
++          request_timeout_milliseconds: state.requestTimeoutMilliseconds,
+           default_locale: state.tenantSettings.default_locale,
+           ui: { ...runtimeConfig.ui, poll_milliseconds: state.pollMilliseconds },
+         }),
+diff --git a/web/packages/ui/src/components/components.test.tsx b/web/packages/ui/src/components/components.test.tsx
+index 5a0f92a0..3718ae01 100644
+--- a/web/packages/ui/src/components/components.test.tsx
++++ b/web/packages/ui/src/components/components.test.tsx
+@@ -217,6 +217,48 @@ describe('ProblemNotice', () => {
+     expect(screen.getByRole('button', { name: 'Reload the page' })).toBeInTheDocument();
+     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+   });
++
++  it('uses explicit operation recovery for an uncertain outcome and preserves its request ID', async () => {
++    const onClick = vi.fn();
++    inEnglish(
++      <ProblemNotice
++        problem={{ ...base, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN', retryable: false }}
++        recovery={{ label: 'Read again', onClick }}
++      />,
++    );
++    expect(screen.queryByRole('button', { name: 'Reload the page' })).not.toBeInTheDocument();
++    expect(screen.getByRole('alert')).toHaveTextContent('req-1');
++    await userEvent.click(screen.getByRole('button', { name: 'Read again' }));
++    expect(onClick).toHaveBeenCalledOnce();
++  });
++
++  it('honors Retry-After and an in-flight operation for custom recovery', () => {
++    vi.useFakeTimers();
++    try {
++      const onClick = vi.fn();
++      const problem = { ...base, code: 'RATE_LIMITED', retryAfterSeconds: 2 };
++      const { rerender } = inEnglish(
++        <ProblemNotice problem={problem} recovery={{ label: 'Read again', onClick }} />,
++      );
++      expect(screen.getByRole('button', { name: 'Read again' })).toBeDisabled();
++      act(() => {
++        vi.advanceTimersByTime(2_100);
++      });
++      expect(screen.getByRole('button', { name: 'Read again' })).toBeEnabled();
++      rerender(
++        <I18nProvider locale="en">
++          <ProblemNotice
++            problem={problem}
++            recovery={{ label: 'Read again', onClick, disabled: true }}
++          />
++        </I18nProvider>,
++      );
++      expect(screen.getByRole('button', { name: 'Read again' })).toBeDisabled();
++      expect(onClick).not.toHaveBeenCalled();
++    } finally {
++      vi.useRealTimers();
++    }
++  });
+ });
+ 
+ describe('Dialog', () => {
+diff --git a/web/packages/ui/src/components/problem-notice.tsx b/web/packages/ui/src/components/problem-notice.tsx
+index f8711dd0..689959c0 100644
+--- a/web/packages/ui/src/components/problem-notice.tsx
++++ b/web/packages/ui/src/components/problem-notice.tsx
+@@ -23,6 +23,14 @@ export interface ProblemNoticeProps {
+   title?: string | undefined;
+   /** A next step that depends on where the failure happened. */
+   detail?: string | undefined;
++  /** Operation-specific recovery, honoring Retry-After instead of the generic reload/retry. */
++  recovery?:
++    | {
++        label: string;
++        onClick: () => void;
++        disabled?: boolean;
++      }
++    | undefined;
+   className?: string | undefined;
+ }
+ 
+@@ -71,7 +79,15 @@ export function ProblemNotice(props: ProblemNoticeProps) {
+   return <Explained key={`${code}:${requestId}:${String(retryAfterSeconds)}`} {...props} />;
+ }
+ 
+-function Explained({ problem, onRetry, titleAs, title, detail, className }: ProblemNoticeProps) {
++function Explained({
++  problem,
++  onRetry,
++  titleAs,
++  title,
++  detail,
++  recovery,
++  className,
++}: ProblemNoticeProps) {
+   const { t, format, knows } = useI18n();
+   const wait = useWait(problem.retryAfterSeconds);
+   const base = `problem.${problem.code}`;
+@@ -80,7 +96,13 @@ function Explained({ problem, onRetry, titleAs, title, detail, className }: Prob
+   const known = knows(titleKey) && knows(detailKey);
+   const reload = fixedByReload.has(problem.code);
+   let action = null;
+-  if (reload) {
++  if (recovery) {
++    action = (
++      <Button size="sm" disabled={wait > 0 || recovery.disabled} onClick={recovery.onClick}>
++        {recovery.label}
++      </Button>
++    );
++  } else if (reload) {
+     action = (
+       <Button
+         size="sm"
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 3470b0b8a78e2bc7c9b745d9ca704b617d117ca1 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 06:03:06 +0800
+Subject: [PATCH 3/5] AUD-108: Format the verified Help recovery flow
+
+Apply the formatter to the added native-section assertion. The complete gate rejected this test formatting before build or test; retain that run separately and rerun the exact-source gate.
+---
+ web/apps/console/e2e/audit-read-recovery.spec.ts | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/web/apps/console/e2e/audit-read-recovery.spec.ts b/web/apps/console/e2e/audit-read-recovery.spec.ts
+index dc73ec11..e1c64f6a 100644
+--- a/web/apps/console/e2e/audit-read-recovery.spec.ts
++++ b/web/apps/console/e2e/audit-read-recovery.spec.ts
+@@ -98,7 +98,9 @@ for (const [locale, messages] of [
+       body: await page.screenshot({ animations: 'disabled', fullPage: true }),
+       contentType: 'image/png',
+     });
+-    await page.getByRole('link', { name: messages['audit.read.unknown.title'], exact: true }).click();
++    await page
++      .getByRole('link', { name: messages['audit.read.unknown.title'], exact: true })
++      .click();
+     await expect(page.getByRole('main').locator('p').last()).toBeInViewport({ ratio: 1 });
+     await info.attach(`audit-read-help-section-${locale}`, {
+       body: await page.screenshot({ animations: 'disabled' }),
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 84bc55ca58fdb1acb898312a979c7d575cb633e7 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 06:38:09 +0800
+Subject: [PATCH 4/5] AUD-108: Verify node activity recovers with one read
+
+Update the existing shared-activity assertion to the explicit Read again action and count the failed read plus the single requested retry. Retain the 1190-pass full Console run and its stale-label failure; rerun the exact-source gate.
+---
+ web/apps/console/e2e/node-page.spec.ts | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/web/apps/console/e2e/node-page.spec.ts b/web/apps/console/e2e/node-page.spec.ts
+index c922036c..3ecade83 100644
+--- a/web/apps/console/e2e/node-page.spec.ts
++++ b/web/apps/console/e2e/node-page.spec.ts
+@@ -107,12 +107,15 @@ test('Activity says when there is none, and a failure can be retried', async ({
+   control.auditEvents = [];
+   await page.goto(`${path}?tab=activity`);
+   await expect(page.getByText('No activity yet')).toBeVisible();
++  const before = control.auditQueries.length;
+   control.auditProblem = { status: 503, code: 'INTERNAL_ERROR' };
+   await page.reload();
+-  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
++  await expect(page.getByRole('button', { name: 'Read again' })).toBeVisible();
++  expect(control.auditQueries).toHaveLength(before + 1);
+   control.auditProblem = null;
+-  await page.getByRole('button', { name: 'Try again' }).click();
++  await page.getByRole('button', { name: 'Read again' }).click();
+   await expect(page.getByText('No activity yet')).toBeVisible();
++  expect(control.auditQueries).toHaveLength(before + 2);
+ });
+ 
+ test('renaming stays on the page and can be undone', async ({ page }) => {
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 124520b94be27f673bdb32a3c5d825d1d337f75d Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 07:04:17 +0800
+Subject: [PATCH 5/5] AUD-108: Record complete audit recovery gates
+
+Qualify exact source c70e9f5950f421e7bef194ae5f5ced0efaf1ca7f with 1191 Console/410 Portal Chromium passes and 38 existing conditional skips. Retain precise scripted/installed boundaries and reviewed screenshot inputs.
+---
+ docs/research/identity-audit-read-access.md | 28 +++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/docs/research/identity-audit-read-access.md b/docs/research/identity-audit-read-access.md
+index b7c3f818..b2e4617b 100644
+--- a/docs/research/identity-audit-read-access.md
++++ b/docs/research/identity-audit-read-access.md
+@@ -347,3 +347,31 @@ and the explicit failed-query eligibility guard fixed them without weakening
+ an assertion or the shared scheduler. Both failed runs remain retained.
+ The complete exact-source repository gate and actual installed/SQL acceptance
+ are separate from these focused results; AUD-108 remains open.
++
++### Complete Web recovery gate
++
++The exact integrated source c70e9f5950f421e7bef194ae5f5ced0efaf1ca7f passed make check,
++make build and make test on Mac arm64, including every Go module, Rust,
++Web unit targets and both complete Chromium suites. Console passed
++1,191 cases with 28 existing conditional skips;
++Portal passed 410 with 10 existing skips.
++There were no unexpected/flaky cases or retries. All 41 explicit-recovery
++cases passed. The private Make overlay capped Console at four workers
++and Portal at one, reused the production assets just built, selected no
++subset and introduced no skip.
++
++The eighteen screenshots read during focused verification share exactly
++the same product Web, OpenAPI, fixture, generator, capability and Makefile
++inputs as this complete gate. The reviewed test-only differences are Help-action formatting and
++strengthened node-activity retry assertions; neither changes a product or
++screenshot actuator. A separate reviewed installation expectation schema adds
++only the optional portal_listen_address string; no Web, generator or Makefile
++consumer references it. The complete gate covers that newer schema as well. Old six-request controls, the initial lint rejection
++the no-data invalidation failure and the first full check's Help-test format
++rejection plus the old node-activity retry-label failure remain separate
++raw artifacts.
++This is a scripted Web consumer qualification, not an installed commit-loss,
++collector, workspace-scope SQL or GPU result. The frozen be62 acceptance
++inputs remain unchanged. AUD-108 and actual installation acceptance remain
++open for their other owners. Source, native logs, full browser reports,
++patches and image hashes remain in the source-qualified Web evidence.
+-- 
+2.54.0 (Apple Git-157)
+

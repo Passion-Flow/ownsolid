@@ -1,0 +1,53 @@
+{
+  "state": "Web code and independent research fast-forward published; immutable new asset archive ready; newest native/client qualification blocked by occupied Mac guard",
+  "fullSource": "c70e9f5950f421e7bef194ae5f5ced0efaf1ca7f",
+  "fullRun": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/full-ciUf9T",
+  "fullExit": 0,
+  "qualification": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/final-qualification.json",
+  "stats": {
+    "console": {
+      "startTime": "2026-11-12T22:46:12.463Z",
+      "duration": 262504.776,
+      "expected": 1191,
+      "skipped": 28,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "portal": {
+      "startTime": "2026-11-12T22:50:35.281Z",
+      "duration": 334783.277,
+      "expected": 410,
+      "skipped": 10,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "publication": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/publication-scheduling-g8gckdo5",
+  "rebasedSource": "4b432dbf249e01ff9af447b3e5efc354a8682403",
+  "newInputsPreparation": "/Users/passion./.local/state/ownsolid/web-scopes/installed-aud108-inputs-1qccyd72",
+  "oldA4fPackageImmutable": true,
+  "installedRun": false,
+  "SQLRun": false,
+  "publishedSource": "124520b94be27f673bdb32a3c5d825d1d337f75d",
+  "latestNativeIntegration": "not started; guard occupied and no command/waiter started",
+  "preservedFullNativeRun": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/publication-i3bv8bf9",
+  "nextResearch": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/next-resource-history-design.md",
+  "worktrees": {
+    "lane-web": {
+      "source": "124520b94be27f673bdb32a3c5d825d1d337f75d",
+      "status": ""
+    },
+    "lane-web-history": {
+      "source": "ecab4c9824c534ba24823a3ed56f388a796db872",
+      "status": ""
+    }
+  },
+  "assetPreparation": "/Users/passion./.local/state/ownsolid/web-scopes/installed-aud108-inputs-1qccyd72/asset-preparation.json",
+  "assetArchiveSha256": "642226cd65bab85f67a8c571bd582540ed57e60fdf3cbc13fd0735f343b01380",
+  "fresh124NativeCombination": "not started",
+  "newClientSelftests": "not started",
+  "oldEightArchiveMetadataDigests": "rechecked unchanged",
+  "ownPreviewPortsListening": false,
+  "ownMountsRemaining": [],
+  "researchPrototype": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/resource-history-prototype/result.json"
+}

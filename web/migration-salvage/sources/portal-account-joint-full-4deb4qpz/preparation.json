@@ -1,0 +1,21 @@
+{
+  "source": "9e7404f63fe7587ace0decb34fd01b6214977181",
+  "tree": "6c5938e198745062ba5a14e1f952cb4593797ccd",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "parents": [
+    "379aab980485df41b1a66c6fb5e6af65814f886f",
+    "2e64ab4c6c16bd84ae5c101b9de5444550760ff2"
+  ],
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "preparedFiles": {
+    "mac-browser-once.py": "7b3a458a3c358049d869e3fa6ad9bc262ccd1aa39f1b7853973a7b17c55a3fed",
+    "full-run.py": "adbc0542c179f52143353eed4d48e869ed89769b7398d6e156cc48ac8dd99e21",
+    "cleanup-owned.py": "fa5276a2fe6e7d0dd4cb5fd8443a4c37ab9cab421366e054c8df20492dc3d40e",
+    "stage-plan.json": "b468c440c7a4004c869108cc4cd22400c3366ed4f588925b67c6364380b7cd5e",
+    "source-file-sha256.json": "ef5bf610d817809f2f524146688639f0556dc77393ee67187bc88af78f4de05e",
+    "import-receipt.json": "5c9ff57b137b80f7f219d60dc3816bead6f959056fb550ceebf2bec497d1da90",
+    "bin/pnpm": "28ed6f5207d4547563005a2df49d7df011c491a23593fea02c746726184d8103"
+  },
+  "guardParentSha256": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+  "authorDAG": "2e64ab4c6c16bd84ae5c101b9de5444550760ff2"
+}

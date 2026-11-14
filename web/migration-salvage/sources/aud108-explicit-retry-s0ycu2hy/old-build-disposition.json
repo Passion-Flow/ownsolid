@@ -1,0 +1,12 @@
+{
+  "expectedRegression": true,
+  "stats": {
+    "startTime": "2026-11-12T21:21:02.115Z",
+    "duration": 8023.245,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  },
+  "failure": "More than one audited request after a lost response; no new UI-message assertion was needed"
+}

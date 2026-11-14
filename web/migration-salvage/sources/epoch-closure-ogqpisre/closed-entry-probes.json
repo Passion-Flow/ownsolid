@@ -1,0 +1,30 @@
+[
+  {
+    "kind": "admission-helper",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/mac-window.py",
+    "exit": 78,
+    "denialMessageMatched": true,
+    "workOrCarrierCodeReached": false
+  },
+  {
+    "kind": "full-entry",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-joint-full-4deb4qpz/mac-browser-once.py",
+    "exit": 78,
+    "denialMessageMatched": true,
+    "workOrCarrierCodeReached": false
+  },
+  {
+    "kind": "direct-work-payload",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-joint-full-4deb4qpz/full-run.py",
+    "exit": 78,
+    "denialMessageMatched": true,
+    "workOrCarrierCodeReached": false
+  },
+  {
+    "kind": "shell-entry",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/run-browser-once.sh",
+    "exit": 78,
+    "denialMessageMatched": true,
+    "workOrCarrierCodeReached": false
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "source": "a4f1120d5d90a892cca21c991f7d68f0b13c500b",
+  "preparedSource": "28f76a320692d7d13cf8fab8e06bedc227025608",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-a4f1120d",
+  "originalQualifiedSource": "6a77bcdbc372a0aa7fac24b3f21a83105c246c86",
+  "publishedSource": "c864fbb10294fa36bdbf4256fe1601f8358ad1f8",
+  "webTree": "e5c48f8a13c9e552dbaa261f0873d724d9f1bd54",
+  "openapiTree": "45cb100db6504b80bf5418e2ffe0e8d993ced27c",
+  "browserInputDiff": [],
+  "codeOnlyClientFiles": [
+    "README.md",
+    "bind.py",
+    "checks.sh",
+    "description.spec.ts",
+    "fixture.template.json",
+    "fixture.ts",
+    "input-selftest.mjs",
+    "package.json",
+    "parameters.spec.ts",
+    "run.py"
+  ],
+  "state": "Prepared source code only. No dependency install, build or selftests run in this new binding. No installed input or session copied."
+}

@@ -1,0 +1,45 @@
+{
+  "source": "44ab52293e516128ba2efc0edc2cb2053acc3462",
+  "focusedSource": "2b983dbf75feaf36f6ac3423f4d1b0a1ecf0fc52",
+  "inputManifestSha256": "414149162483be2fb754e2b0d1e01a4661560c09b501f74633b0a6ba840be884",
+  "imagesRead": {
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/console-contract-discovery-offline-en.png": "97396a2f9e378dbd66c00032c51cd6b7e957bcdabcd0e4ed50532c4102de7bf1",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/console-contract-help-en.png": "6a29f890e8378219a2938b684b3cb317c81f5960639c74a5f8ac4218bae44362",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/console-contract-restored-search-en.png": "d5991190282d75207e70cb859a7ec86475f0e85d72ea75f230c90f38e7e5a20d",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/console-contract-discovery-offline-zh-CN.png": "660a14b21723b3e4b784338c60eac7c1ef7476845bb40eedb81ce9b6f1fbe342",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/console-contract-help-zh-CN.png": "67dfd107e678e672bd0243457474e4e70d7822a626845b8014cac8a7c772c4ac",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/console-contract-restored-search-zh-CN.png": "7d8d172a03f04e44807aa49119d5ef62685379121e4a7c3811ebf730c3442b42",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/portal-contract-discovery-offline-en.png": "e22da9835d84d94b305b6e2eed6695952e239984a539939e9e4aa58cd880e7a9",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/portal-contract-help-en.png": "0f4c8f007cff939c8f53525faab8ecee68a4959fa5bf38c7592648057d230616",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/portal-contract-restored-search-en.png": "fba0d555960679f4136b9ead1b81fc6a67b3e9ff180782794e25aeae8caf1ab5",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/portal-contract-discovery-offline-zh-CN.png": "660a14b21723b3e4b784338c60eac7c1ef7476845bb40eedb81ce9b6f1fbe342",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/portal-contract-help-zh-CN.png": "1193bf43e05be40eb97e1fb4f701e8f93fb3a25a3b3a1ff33b2693e5ae76df58",
+    "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/help-api-restoration/qualified-2b983dbf/portal-contract-restored-search-zh-CN.png": "7d8d172a03f04e44807aa49119d5ef62685379121e4a7c3811ebf730c3442b42"
+  },
+  "negativeTraces": [
+    "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/negative-portal-results/help-help-keeps-a-contract-46c46--retries-its-download-in-en-chromium/trace.zip",
+    "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/negative-portal-results/help-help-keeps-a-contract-612d5-tries-its-download-in-zh-CN-chromium/trace.zip"
+  ],
+  "visualFindings": [
+    "API reference preserves back link, heading, search and one matching operation card",
+    "Search input visibly restores changePassword; contract remains available offline",
+    "The390px path wraps inside its card without horizontal clipping",
+    "Article screenshots use the actual scroll position that exposes the API reference link",
+    "No image crop, overlay, edit or production layout change was made"
+  ],
+  "archetypes": {
+    "S108": "reference list with inline operation details",
+    "S107": "reference detail with sections and links"
+  },
+  "primaryActions": {
+    "S108": "find an operation; saving a contract is secondary",
+    "S107": "find the explanation, then follow its real product/API link"
+  },
+  "states": "Existing seven-state definitions remain; bundled first-time content is distinct from filtered-empty recovery. No new runtime option or surface is introduced.",
+  "scopeClarification": "Asset byte-equivalence means Web runtime, generated Web inputs and build configuration. It does not claim the backend code is unchanged or a fresh complete native gate passed.",
+  "completeCorrectedHelperGate": false,
+  "installedRun": false,
+  "oldArtifactsUnchanged": true,
+  "carrierInodeAfterRelease": 50313339,
+  "newWaiterCreatedAfterRelease": false
+}

@@ -1,0 +1,11 @@
+{
+  "observerRawOutputOrHeaderFields": [],
+  "networkTraceFiles": 0,
+  "healthResponseBodiesStored": false,
+  "outputLogsRedactedBeforePersistence": true,
+  "outputLogSha256EqualsRawDigest": {
+    "01-original-six": true,
+    "02-current-observer-controls": true,
+    "03-four-original-browser-files": true
+  }
+}

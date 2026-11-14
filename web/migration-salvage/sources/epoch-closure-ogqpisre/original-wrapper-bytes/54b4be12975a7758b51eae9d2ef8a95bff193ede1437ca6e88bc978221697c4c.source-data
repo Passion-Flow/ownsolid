@@ -1,0 +1,74 @@
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path(__file__).resolve().parent
+repo=Path("/Users/passion./Documents/Passion's WorkSpace/Development/lane-web")
+run=Path((root/'heading-run-path').read_text().strip())/'full'
+assert (run/'stage').read_text().strip()=='complete' and (run/'exit-status').read_text().strip()=='0'
+source=(run/'source').read_text().strip()
+assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()==source
+assert not subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True).strip()
+reports={name:json.loads((run/(name+'-report.json')).read_text()) for name in ['console','portal']}
+for name,data in reports.items():
+ assert data['stats']['unexpected']==0 and data['stats']['flaky']==0
+ def walk(value):
+  if isinstance(value,dict):
+   if 'results' in value and isinstance(value['results'],list):assert len(value['results'])<=1
+   for child in value.values():walk(child)
+  elif isinstance(value,list):
+   for child in value:walk(child)
+ walk(data)
+assert reports['console']['stats']['expected']==1134 and reports['console']['stats']['skipped']==28
+assert reports['portal']['stats']['expected']==410 and reports['portal']['stats']['skipped']==10
+mod=repo/'docs/research/model-import-cleanup.md'
+with mod.open('a') as out:out.write(f"""
+### Complete Web consumer gate
+
+The exact integrated source {source} passed make check,
+make build and make test, including all Go modules, Rust, Web unit targets
+and both full browser suites. Console passed 1,134 cases with 28 existing
+installation-dependent skips; Portal passed 410 with 10 existing skips.
+There were zero unexpected/flaky cases and no retries. The private Make
+overlay only capped workers at four for Console and one for Portal and
+reused the same production assets just built. It selected no subset and
+introduced no skip. No installed expiry worker or GPU run is claimed.
+
+The old 7401ff67 production asset manifest was kept unchanged during the
+controlled discovery check. English expired search failed with the old
+expires heading; Chinese remained a passing positive control. The new
+heading and consumer passed both languages, all 44 model cases with
+three existing skips, eight state checks, and the unit/catalog checks.
+Six final screenshots were read again, including the answer reached
+through the settled search. The first comparison that clicked an article
+before filtering settled is retained as a false-positive test, not as
+regression evidence.
+
+The earlier interactive-preview full run at be1e7339 lost its listener
+about 60 seconds after startup. It was interrupted and remains failed;
+its raw cleanup status alone is not a successful gate. A noninteractive
+rerun with clean shell environment and separate owned ports passed at
+7401ff67 and again at the exact source above. The final runner requires
+both complete stage and zero exit status. No product assertion or limit
+was weakened. Raw reports, asset/image hashes and failed controls remain
+outside Git in the source-qualified Web artifacts.
+
+AUD-108's action/family consumer is included in this same gate. Actual
+same-source installed audit reads, expiry, GW120/Help/Scope and independent
+SQL remain separate. MOD-121 and AUD-108 stay open with their owner work.
+""")
+audit=repo/'docs/research/identity-audit-read-access.md'
+t=audit.read_text();old='Full gate evidence follows'+chr(10)+'only after the exact committed source has passed it.'
+assert old in t
+new=(f'The complete integrated gate passed at {source};'+chr(10)+'see the [shared Web gate](model-import-cleanup.md#complete-web-consumer-gate).'+chr(10)+'This retains the exact-action and thirteen-field boundaries; installed AUD-108'+chr(10)+'acceptance is still separate.')
+t=t.replace(old,new)
+audit.write_text(t)
+images={}
+for folder in ['aud108-action-display','mod121-import-expiry/qualified-discovery']:
+ base=Path('/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235')/folder
+ for p in sorted(base.glob('*.png')):images[str(p)]=hashlib.sha256(p.read_bytes()).hexdigest()
+assert len(images)==10
+record={'source':source,'run':str(run),'stage':'complete','exitStatus':0,'stats':{name:data['stats'] for name,data in reports.items()},'imagesRead':images,'installedRun':False,'SQLRun':False,'originalSources':{'AUD108':'178a5a64','MOD121':'6a80e122','licenseDocumentation':'7401ff67','helpDiscovery':'2ed381c1'},'entry':str(root/'installed-entry.md'),'manifest':str(root/'installed-entry-manifest.json')}
+(root/'final-qualification.json').write_text(json.dumps(record,indent=2)+'\n')
+subprocess.run(['git','update-ref','refs/archive/web-consumers-final-qualified',source],cwd=repo,check=True)
+subprocess.run(['git','update-ref','refs/archive/web-consumers-original','6a80e122'],cwd=repo,check=True)
+subprocess.run(['git','diff','--check'],cwd=repo,check=True)
+print(json.dumps(record['stats'],indent=2))

@@ -1,0 +1,13 @@
+{
+  "epoch": "ownsolid-2-20261113-e1",
+  "singleNbJob": true,
+  "grant": "Prefer original A at fresh 6GiB/30GiB. Otherwise B memory-only at 3GiB/15GiB. After valid B, one immediate fresh A may follow on same FD if original floors hold; never wait or retry.",
+  "AAbsoluteSeconds": 1800,
+  "BAbsoluteSeconds": 600,
+  "combinedAbsoluteSeconds": 2400,
+  "finalCleanupReserveSeconds": 120,
+  "AHeapMaximumMiB": 4096,
+  "BHeapMaximumMiB": 2048,
+  "oldFunctionalCaseResultsPreservedNotRecounted": true,
+  "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+}

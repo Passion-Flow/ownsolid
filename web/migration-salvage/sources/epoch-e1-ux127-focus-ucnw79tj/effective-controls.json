@@ -1,0 +1,11 @@
+{
+  "NodeOldSpaceMiB": 512,
+  "workers": 1,
+  "retries": 0,
+  "offlineDependencies": true,
+  "sameInheritedFD": 3,
+  "separateStageGroups": true,
+  "commandCapsUnchanged": true,
+  "noFullNativeInstalled": true,
+  "workCutoff": 38064.979068
+}

@@ -1,0 +1,72 @@
+{
+  "prototypeOnly": true,
+  "actualSelfReadPassed": true,
+  "actualExitLifecycleObserved": false,
+  "syntheticControls": [
+    {
+      "name": "Historical gap lacks exit and kernel-start proof",
+      "passed": true
+    },
+    {
+      "name": "Task ESRCH alone is not process exit",
+      "passed": true
+    },
+    {
+      "name": "Usage permission error plus visible PID",
+      "passed": true
+    },
+    {
+      "name": "Usage failure plus visible PID",
+      "passed": true
+    },
+    {
+      "name": "Same live kernel lifetime without exit",
+      "passed": true
+    },
+    {
+      "name": "Reused PID with different kernel start",
+      "passed": true
+    },
+    {
+      "name": "Exit precedes start",
+      "passed": true
+    },
+    {
+      "name": "Same-lifetime kernel exit creates event only",
+      "passed": true
+    },
+    {
+      "name": "Kernel PID absence creates event only",
+      "passed": true
+    },
+    {
+      "name": "Same-lifetime zombie creates event only",
+      "passed": true
+    },
+    {
+      "name": "Reject changed BSD startTime",
+      "passed": true
+    },
+    {
+      "name": "Reject changed BSD uid",
+      "passed": true
+    },
+    {
+      "name": "Reject changed BSD ruid",
+      "passed": true
+    },
+    {
+      "name": "Reject changed BSD pid",
+      "passed": true
+    },
+    {
+      "name": "Unbound usage cannot repair historical frame",
+      "passed": true
+    }
+  ],
+  "count": 15,
+  "historicalMeasurementStillInvalid": true,
+  "installedInExecutedSampler": false,
+  "jobEntryPreparedOrExecuted": false,
+  "candidateSha256": "ff9dd073c8f99dc79856ab5fd8e583efb15c91706f3ac0a3e63d7f9ed95c6eda"
+}

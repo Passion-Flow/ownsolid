@@ -1,0 +1,13 @@
+{
+  "nodeOldSpaceMiB": 4096,
+  "gomaxprocs": 2,
+  "goParallel": 1,
+  "cargoJobs": 1,
+  "rustTestThreads": 1,
+  "vitestWorkers": 1,
+  "playwrightWorkers": 1,
+  "workspaceConcurrency": 1,
+  "networkIsolation": "Mac offline tool caches only; no OS namespace or installed acceptance",
+  "preexistingAuditBinary": false,
+  "preexistingWorkspaceSum": false
+}

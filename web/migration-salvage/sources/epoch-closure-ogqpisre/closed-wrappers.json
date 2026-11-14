@@ -1,0 +1,805 @@
+[
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/focus-window.sh",
+    "originalSha256": "f41a88f83a2daf97cc3b9e2bf6865e419d853e17d076b0239e328074c202af05",
+    "closedSha256": "61dd32187fecf13d7480890115130d5529d8b5fa0bbe73f6a0d998d8f6f1d9ce",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/f41a88f83a2daf97cc3b9e2bf6865e419d853e17d076b0239e328074c202af05.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/help-window.sh",
+    "originalSha256": "37b85715037030fc04ff146d1b2bfd7d72251bc95afe6334d2909255a1f00fd0",
+    "closedSha256": "6493b09ca6bad949e805fcaeea71239b3f17206e006aa0120bba437390954bc6",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/37b85715037030fc04ff146d1b2bfd7d72251bc95afe6334d2909255a1f00fd0.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/run.sh",
+    "originalSha256": "cdafd1b687f3c9be2ee7d0033eaac5390038ff1ffe4b49de4ce90a2f53c45c82",
+    "closedSha256": "fdd4bcad2fabb8324c72c5c5f4a7ccb92685afb3d48a7998ae11baa722f1d5aa",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/cdafd1b687f3c9be2ee7d0033eaac5390038ff1ffe4b49de4ce90a2f53c45c82.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/window.sh",
+    "originalSha256": "98f2af8129be09dd0b34f35133e11cd36e1abd14f710096f1333442152eb02b4",
+    "closedSha256": "b1d15180d585281af8a0161d911745fc131ca94d9dc974f50180f8b5893c259e",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/98f2af8129be09dd0b34f35133e11cd36e1abd14f710096f1333442152eb02b4.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/finish-full.py",
+    "originalSha256": "ab0867cfb8e29330d0e460187044b88254abe31b3fdfbbed597b30652d537402",
+    "closedSha256": "d6401dbf3d38185c804d14cbf6442ae484d6280f62a17fa20f053878e1816f96",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/ab0867cfb8e29330d0e460187044b88254abe31b3fdfbbed597b30652d537402.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/full-gate.sh",
+    "originalSha256": "bfc9640a942d7ef5c2437c3250f1d3e546f9be41b5f7e6b9674454b3e393e389",
+    "closedSha256": "a4f7dda8a9a56ecf29b38acc7cdc1fbb181e892faa4504f231618d24bfd45260",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/bfc9640a942d7ef5c2437c3250f1d3e546f9be41b5f7e6b9674454b3e393e389.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/publication-check.sh",
+    "originalSha256": "323d61a2ea29ee3213d00ebf4f69bbe462cae786c7372cf3c28ce7192a551006",
+    "closedSha256": "f698d6d933df5177f2e28d386c72a4976e0f5df497ebb13d3eddd1f03ca728a8",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/323d61a2ea29ee3213d00ebf4f69bbe462cae786c7372cf3c28ce7192a551006.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/qualify-published-and-prepare.sh",
+    "originalSha256": "8829fb8209be6a3e039c7ff3ebead998cec22b0960c58f5f87e57f219fedb2f7",
+    "closedSha256": "a60e698c15e6ac3500938c7d5a675c7ad767a40897245e75d6ece6238c8e7437",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/8829fb8209be6a3e039c7ff3ebead998cec22b0960c58f5f87e57f219fedb2f7.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/retry-doc-only-publish.py",
+    "originalSha256": "ddb36b4c3dbe37698b7762d415e965634d06cadac07e28944ba21554373ed166",
+    "closedSha256": "8365ccc2ad08e561a0c1b951e56488a11f60b098b522605bfd2dbe948c610a9c",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/ddb36b4c3dbe37698b7762d415e965634d06cadac07e28944ba21554373ed166.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/run-corrected-target.sh",
+    "originalSha256": "ad37cdfbee6c098233d524112397242b317ad10d53fdeeb7cf30e7c0784e0aff",
+    "closedSha256": "3f6b5a44cd09804ffd00bd460a3a9f40843062f44fa902f1e850f2bbe05eeb55",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/ad37cdfbee6c098233d524112397242b317ad10d53fdeeb7cf30e7c0784e0aff.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/run-discovery-localization.sh",
+    "originalSha256": "50cb84ac028d2989a8680741d713598ca1a6c4aca88429e33eafe747a9d3ce2d",
+    "closedSha256": "ce81c18bb43a0bb72cc6a93c04ffd044aa8192edb1ae8bba9b050d092340b31f",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/50cb84ac028d2989a8680741d713598ca1a6c4aca88429e33eafe747a9d3ce2d.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/run-fixed-target.sh",
+    "originalSha256": "b58aba4d89c7e880b94ca01e9aee5b767b12242f0c6334b5e92aa9949559e1a4",
+    "closedSha256": "9e686546576ea99b6edeaeec887e58783a7e9b9ab9c6784cb7d9831915ecc9df",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/b58aba4d89c7e880b94ca01e9aee5b767b12242f0c6334b5e92aa9949559e1a4.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/run-localization.sh",
+    "originalSha256": "e83768d623406c4e25ef86f230a580fd008caef3b1196cc3bc67b545c3a7a619",
+    "closedSha256": "6d54c47d3cee51fea0e21d0ebe4ce512aeab4427ad11e9e724ab83dbf28e54ce",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/e83768d623406c4e25ef86f230a580fd008caef3b1196cc3bc67b545c3a7a619.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/run-node-then-full.sh",
+    "originalSha256": "802e4cfd41242c424974c0486e3c54a69a880f10aa01ce7d672349ccea8a3f22",
+    "closedSha256": "1f63ab25b2ab45675a896fb658be72ae38cd500c204224c464c7c5cf557c703f",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/802e4cfd41242c424974c0486e3c54a69a880f10aa01ce7d672349ccea8a3f22.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/run-target.sh",
+    "originalSha256": "fc565ad3c91544007f8615532c577b26251b22e26662052ffa03985968c7934c",
+    "closedSha256": "a208407ffa81ee19f8f9c003bc2267fd2f8d14f422c578e82a3581428757b346",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/fc565ad3c91544007f8615532c577b26251b22e26662052ffa03985968c7934c.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/baseline-window.sh",
+    "originalSha256": "2a5895b4e24a5a876645e88cbbb2ef8a17f8b162e75bb2c9d2c1b42e6c394501",
+    "closedSha256": "b756ac82e8cf04afe2317cc081efc7f27a2f496da55b577b49bfda24722139e2",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/2a5895b4e24a5a876645e88cbbb2ef8a17f8b162e75bb2c9d2c1b42e6c394501.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/browser-retry.sh",
+    "originalSha256": "f05df4b376dd25f9cbc2d5b9f9acf3660e0503ef693f90336077c6336766c422",
+    "closedSha256": "0291530c126a66b530e0e35358b55d3350488db5bd942988f92bda7b0a71e6b4",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/f05df4b376dd25f9cbc2d5b9f9acf3660e0503ef693f90336077c6336766c422.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/browser-window.sh",
+    "originalSha256": "584862e7f2f9e05e04778d8be4abe5262e4786de123af73b3dfc0592ad950253",
+    "closedSha256": "b66788e66323b6a3004d48c436a351f34800c33f7727340d8c485f7718b7e5c2",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/584862e7f2f9e05e04778d8be4abe5262e4786de123af73b3dfc0592ad950253.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/focused-checks.sh",
+    "originalSha256": "37988af6b468daef4f811444165277dab7f18892820401bb61c57f18acb1f53e",
+    "closedSha256": "0de70444d7832a0ea59ddbfccf2a664c4c813bab7280b44751ea1e3378b9b0ca",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/37988af6b468daef4f811444165277dab7f18892820401bb61c57f18acb1f53e.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/full-window-v2.sh",
+    "originalSha256": "a4ab33cd194d8bc3f87fd5e0f2a6c519043f656848caab11c1de3112b3559872",
+    "closedSha256": "8aa308ff87e370d2a6ef52f0b54ac0991c9e7a4069e355f080810dbd3357576a",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/a4ab33cd194d8bc3f87fd5e0f2a6c519043f656848caab11c1de3112b3559872.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/full-window.sh",
+    "originalSha256": "adfe661ac4c887a8b35d64d06a94044c01009b3698fa3b4a881cdb7f34d6f3d0",
+    "closedSha256": "aa7ccaa311f7d3b6c721ce04b7f3574d1fc4a87c130487bdf2cedff41a45cda6",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/adfe661ac4c887a8b35d64d06a94044c01009b3698fa3b4a881cdb7f34d6f3d0.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/post-dialog-window.sh",
+    "originalSha256": "ea80112ca1210a43b3b7483dc048a4d1622d2a5a180c5cb70493d61908dfcfdc",
+    "closedSha256": "1ab99768c7a8aec27c59a2595cbc5ddaea5f643fd7de09d1c004897f657322b5",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/ea80112ca1210a43b3b7483dc048a4d1622d2a5a180c5cb70493d61908dfcfdc.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/post-undo-final-window.sh",
+    "originalSha256": "1993ed3c0d086999aee5756c362f6a2315f547160c9db79e214213f6974403a2",
+    "closedSha256": "07dffd53a9ddacb7d63d00a099a30828426c5df7be882b4aacc38fb6d48d5497",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/1993ed3c0d086999aee5756c362f6a2315f547160c9db79e214213f6974403a2.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/post-undo-window.sh",
+    "originalSha256": "8631458f80bbb86fc9813aa34621e9320adcc4512e0aebd145647f9998ff8346",
+    "closedSha256": "22ee20b5ff6d3fe845bb3c4bb91eb5de57fd7dbbf7c35b8fe950dc7f9edaa678",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/8631458f80bbb86fc9813aa34621e9320adcc4512e0aebd145647f9998ff8346.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/publish-window-physical.sh",
+    "originalSha256": "e662a5b240613a213d86155b85e46fb9e88cec279e9e73d53d2910a92107c87c",
+    "closedSha256": "c354f0efb7b51954486f219d8cab896fa06091f3b827f236a8c204a264ee2afe",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/e662a5b240613a213d86155b85e46fb9e88cec279e9e73d53d2910a92107c87c.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/publish-window.sh",
+    "originalSha256": "816a25e42a44e7c1ba4f6238a773a18038cac6257e8886ef2f08a125a8d02a1e",
+    "closedSha256": "01b0c36eb90f73dc6fc82c4b3418a1665413b62c9ababd29a057a9d2fb1bc4d8",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/816a25e42a44e7c1ba4f6238a773a18038cac6257e8886ef2f08a125a8d02a1e.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/undo-baseline.sh",
+    "originalSha256": "664b28b5b004cd5fcefc159bd6a659a7d08a1272448373f9bb2d06a87169e0a3",
+    "closedSha256": "41a2355fb8dde2430362972983939f083cdaec259ad7b5c53468cb970155018b",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/664b28b5b004cd5fcefc159bd6a659a7d08a1272448373f9bb2d06a87169e0a3.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/wait-window-owner.py",
+    "originalSha256": "a48fd17e64de524ae51b0026166c56fa8c155b851d63ec125609c8a3b2668480",
+    "closedSha256": "4a7e4c13fa5b1956353880afd3bc2c2feda8c51e1c3dd6162ae3180a8793eecc",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/a48fd17e64de524ae51b0026166c56fa8c155b851d63ec125609c8a3b2668480.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/qualification-window.sh",
+    "originalSha256": "48081a9dd744624ed1628a33e75695faa87ad53376bfb7f0b6f026415f7d28d1",
+    "closedSha256": "57053f826898eccae757078fb554185ceb0f1ed670e9061c3986c5e8c81a569c",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/48081a9dd744624ed1628a33e75695faa87ad53376bfb7f0b6f026415f7d28d1.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/concurrent-full-browser.py",
+    "originalSha256": "6c1b12a36fc122bafeab15479f83cc9f2ff945fa3b3dc28570961b1049ef9c33",
+    "closedSha256": "b36b501e27943a5f07c65d45bc00766e7edc2692f624dabfd65761eb30a3b5ba",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/6c1b12a36fc122bafeab15479f83cc9f2ff945fa3b3dc28570961b1049ef9c33.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/full-attempt.py",
+    "originalSha256": "8abf1b68feb9e5d5f4855c4a0473f14480146c42b0d9ee3357199c064d91151a",
+    "closedSha256": "d7a66708dd1897cc71d48d464dda75a89ba374261bdef12670f577cc434d31c8",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/8abf1b68feb9e5d5f4855c4a0473f14480146c42b0d9ee3357199c064d91151a.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/full-gate.sh",
+    "originalSha256": "b3e4b3a0901f7749cc5f8d48276324545f4a3fdbced8a574b02cf83e024de1e3",
+    "closedSha256": "305bd90eb8d009ab1c59057055ef60b09a58be6776800484fa76dce8a82aae31",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/b3e4b3a0901f7749cc5f8d48276324545f4a3fdbced8a574b02cf83e024de1e3.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/mac-narrow-once.py",
+    "originalSha256": "351c64eabb4b07bb09d50ca873bde460884e30a297f227e1013c4df4af493bdc",
+    "closedSha256": "aa4e794f7df0238111e63d3bf74a18cc4b1f1f2fbe94b92fd63a2d66dd396352",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/351c64eabb4b07bb09d50ca873bde460884e30a297f227e1013c4df4af493bdc.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/narrow-run.py",
+    "originalSha256": "9b3021f42ef81717768b160a113946c47b1a5a3088fdc8543681e88e0a36c940",
+    "closedSha256": "8d5899e13d2f6f618a4233e73a328d195a2fbfc97b420d74fe7e0e67aceaf50a",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/9b3021f42ef81717768b160a113946c47b1a5a3088fdc8543681e88e0a36c940.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/build-inputs.sh",
+    "originalSha256": "2be34756b8d4c993f2e3535fac9239a018745d087904e67acc487f727b7a58f2",
+    "closedSha256": "2029c7a82438232644f6b3c5b257e411f6b125834d523e5c8d5d42ad05c409d2",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/2be34756b8d4c993f2e3535fac9239a018745d087904e67acc487f727b7a58f2.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/installed-aud108-inputs-1qccyd72/build-inputs.sh",
+    "originalSha256": "6af1c8202f6a60b08a420dfd2e8c68086c6e4ed65bc43669a13db8b3ab9426c2",
+    "closedSha256": "43c902fdf4b36d4508b62cd04bf50e76e9d61fb3af2863c02e812f666a842c89",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/6af1c8202f6a60b08a420dfd2e8c68086c6e4ed65bc43669a13db8b3ab9426c2.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/mac-window.py",
+    "originalSha256": "8da4bbb66fd33b705392338bbae6c047af2ccc5f8622e1fdd7beddf4c7803473",
+    "closedSha256": "2e22dc3da0b8d75939de6387d3dee0be2ba2a3eca7a272ae6662da5439979651",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/8da4bbb66fd33b705392338bbae6c047af2ccc5f8622e1fdd7beddf4c7803473.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-full-post-update-g6pivtlb/reviewed-full-run.py",
+    "originalSha256": "adbc0542c179f52143353eed4d48e869ed89769b7398d6e156cc48ac8dd99e21",
+    "closedSha256": "cd910904c9f0113a81630826cbaa3a9d47b356ae3de0c474ba2f97f10043928c",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/adbc0542c179f52143353eed4d48e869ed89769b7398d6e156cc48ac8dd99e21.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-full-post-update-g6pivtlb/reviewed-mac-browser-once.py",
+    "originalSha256": "7b3a458a3c358049d869e3fa6ad9bc262ccd1aa39f1b7853973a7b17c55a3fed",
+    "closedSha256": "524494ac9efacbe9dcd96ebb4ac5b69cded16c5b6e2e9ac355edc06877628a7d",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/7b3a458a3c358049d869e3fa6ad9bc262ccd1aa39f1b7853973a7b17c55a3fed.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-joint-full-4deb4qpz/full-run.py",
+    "originalSha256": "adbc0542c179f52143353eed4d48e869ed89769b7398d6e156cc48ac8dd99e21",
+    "closedSha256": "cd910904c9f0113a81630826cbaa3a9d47b356ae3de0c474ba2f97f10043928c",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/adbc0542c179f52143353eed4d48e869ed89769b7398d6e156cc48ac8dd99e21.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-joint-full-4deb4qpz/mac-browser-once.py",
+    "originalSha256": "7b3a458a3c358049d869e3fa6ad9bc262ccd1aa39f1b7853973a7b17c55a3fed",
+    "closedSha256": "524494ac9efacbe9dcd96ebb4ac5b69cded16c5b6e2e9ac355edc06877628a7d",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/7b3a458a3c358049d869e3fa6ad9bc262ccd1aa39f1b7853973a7b17c55a3fed.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-bounded-50d0idsh/run.py",
+    "originalSha256": "c24b819561ffbbeaa10bc6a117eb28a10802328815736e775eacbeba8bbb0399",
+    "closedSha256": "86fec5772d494921a1525b863fba7abe9c754027a2f24f22129622ed8b7e7649",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/c24b819561ffbbeaa10bc6a117eb28a10802328815736e775eacbeba8bbb0399.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-final-6sy_pxm8/run.py",
+    "originalSha256": "48c98b8601a70ef913b404225563bd4925fbf339155ca7f1e66d96c6afffc66e",
+    "closedSha256": "83ffa07a531fba01fe9072a3350eceae4288e58ac0606f4969774e979fd59679",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/48c98b8601a70ef913b404225563bd4925fbf339155ca7f1e66d96c6afffc66e.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-fix-z5ckf6nz/run.py",
+    "originalSha256": "1c468454a1ff122b54637e9844b6cb7bb7d4beda29c1d990af7c5b8cfd989be8",
+    "closedSha256": "10509e06dc058e7ab32a0f1254044a3265252ba12fcd01175e1ff429a9099776",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/1c468454a1ff122b54637e9844b6cb7bb7d4beda29c1d990af7c5b8cfd989be8.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-light-31yk8_07/run.py",
+    "originalSha256": "16727859eab5f63fb2546fac3b4c2d4ee8da105a77f411290dd8319ec78873c3",
+    "closedSha256": "1bb38910ea876ad6deb6a7bce1678207784b3cd4b8969929ec8c3d9f7e9eb978",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/16727859eab5f63fb2546fac3b4c2d4ee8da105a77f411290dd8319ec78873c3.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-qualification-2f0h8l7o/run.py",
+    "originalSha256": "2415e48addacbd40f3bb56ec3a94eec959d5cbb9375d059cdf493bb6e0fd4bfa",
+    "closedSha256": "69b03f277eb0a62fbf007bb017ddac3f803636887a1675feb3ae446b92c2f91e",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/2415e48addacbd40f3bb56ec3a94eec959d5cbb9375d059cdf493bb6e0fd4bfa.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-tests-0ke2krav/run.py",
+    "originalSha256": "1cc469726608c60f5f1cb9cea8654d216f1f464df8106e7b470b797b08a6dfeb",
+    "closedSha256": "827f695d4adac13280a8d4aa21a287ed20368de2a291e4ac045e6e8e5a1cc73b",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/1cc469726608c60f5f1cb9cea8654d216f1f464df8106e7b470b797b08a6dfeb.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-verify-fbcnbrbj/run.py",
+    "originalSha256": "16727859eab5f63fb2546fac3b4c2d4ee8da105a77f411290dd8319ec78873c3",
+    "closedSha256": "1bb38910ea876ad6deb6a7bce1678207784b3cd4b8969929ec8c3d9f7e9eb978",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/16727859eab5f63fb2546fac3b4c2d4ee8da105a77f411290dd8319ec78873c3.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/browser-run.py",
+    "originalSha256": "21a5ab30139ceb109d0995492eed7b020e0963b29524b8fe63e799cb863ab847",
+    "closedSha256": "db567c3fb43f974750892c7c8c70d4007dc21a97d48cb4f09c4a79339293f9f5",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/21a5ab30139ceb109d0995492eed7b020e0963b29524b8fe63e799cb863ab847.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/mac-browser-once.py",
+    "originalSha256": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+    "closedSha256": "36a9ffec9986edb83a1ea99e92865b2a1c19a39d8544f2568a7283d379c9e2f7",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/run-browser-once.sh",
+    "originalSha256": "5dd28b3a92fc0356f85ecf0412c32aad1625051a53484eea04e325b45549a639",
+    "closedSha256": "380d656c7e59a8808c24d4cfa85818584cdbf899d8df0e432bd06e32153e151e",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/5dd28b3a92fc0356f85ecf0412c32aad1625051a53484eea04e325b45549a639.source-data",
+    "originalMode": "0o700",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-run.py",
+    "originalSha256": "21a5ab30139ceb109d0995492eed7b020e0963b29524b8fe63e799cb863ab847",
+    "closedSha256": "db567c3fb43f974750892c7c8c70d4007dc21a97d48cb4f09c4a79339293f9f5",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/21a5ab30139ceb109d0995492eed7b020e0963b29524b8fe63e799cb863ab847.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/mac-browser-once.py",
+    "originalSha256": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+    "closedSha256": "36a9ffec9986edb83a1ea99e92865b2a1c19a39d8544f2568a7283d379c9e2f7",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/run-browser-once.sh",
+    "originalSha256": "63811e89b8a8b5768f5413301ab6aaef9e8492b7cbe1817817a04c68237ef440",
+    "closedSha256": "310242a8dca0f07bbc0080dab02506e1f98920e37c3469e6ec94cbae1590a50f",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/63811e89b8a8b5768f5413301ab6aaef9e8492b7cbe1817817a04c68237ef440.source-data",
+    "originalMode": "0o700",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/before-system-clock-review/browser-run.py",
+    "originalSha256": "3a72c4afd203852bce6c3eadc555866e6ff8368096b3dddb2fd54213ef5400b3",
+    "closedSha256": "42af109a7937cf89996c44cb91f316a9949d9be1e4fde5660ea325dd0964018f",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/3a72c4afd203852bce6c3eadc555866e6ff8368096b3dddb2fd54213ef5400b3.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/before-system-clock-review/mac-browser-once.py",
+    "originalSha256": "10680db79a0bd77109c1798aa4b7f3824bfba1cde5eabec4bc93027750362f4b",
+    "closedSha256": "3ad90851617206434e0dd4e96f70a7671b2e4db8b0950a4dc08ddd12bcad3cae",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/10680db79a0bd77109c1798aa4b7f3824bfba1cde5eabec4bc93027750362f4b.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/browser-run.py",
+    "originalSha256": "fc2492b985775e7c59b5ae420a514f0a3666faaf4bd3874bfcca0f338ff8905c",
+    "closedSha256": "037097086c3cb2e932db7a8b9a146f41b386d14951437be8e8c4cf8174775f9b",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/fc2492b985775e7c59b5ae420a514f0a3666faaf4bd3874bfcca0f338ff8905c.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/mac-browser-once.py",
+    "originalSha256": "e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a",
+    "closedSha256": "51cfefa5eea366b3c03b1931f330ba969f20368c9fe3974c6be8829edd30c69c",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/pure-boundary-checks.py",
+    "originalSha256": "6b3e67f2435ee1c34956b904c7d8961c445109a3ec8c2275b0f89138b52915b7",
+    "closedSha256": "e39978000cc4e980aca708a27d376fe6f35f7ae2c6ba8b6c4efc8aef925361c5",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/6b3e67f2435ee1c34956b904c7d8961c445109a3ec8c2275b0f89138b52915b7.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/run-browser-once.sh",
+    "originalSha256": "fcaffb9fe3a4e3ff96701e02d0e48d6ff473a3f994a5534c3339359c75520670",
+    "closedSha256": "33aee31d8061c135d41d5e299f054effccc6d0ea998491eda791c2b17710c66d",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/fcaffb9fe3a4e3ff96701e02d0e48d6ff473a3f994a5534c3339359c75520670.source-data",
+    "originalMode": "0o700",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/browser-run.py",
+    "originalSha256": "36b6b3b32d0c882e5c1666a9adf0d6e9c36bb6962a3df87082c541367c63e5ba",
+    "closedSha256": "82ce15a3eed25d2243f9acaeaa7e8f70ddae69f98d559a424de412b706b4c178",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/36b6b3b32d0c882e5c1666a9adf0d6e9c36bb6962a3df87082c541367c63e5ba.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/mac-browser-once.py",
+    "originalSha256": "e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a",
+    "closedSha256": "51cfefa5eea366b3c03b1931f330ba969f20368c9fe3974c6be8829edd30c69c",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/run-browser-once.sh",
+    "originalSha256": "f4222d1479b6e68a39a8c1217ec571959a5816c37d95a172e62b39eca6081ceb",
+    "closedSha256": "b7c2670daa93b9f7b8cda31f78c671348811f5b027e5e4e2198241fe12876250",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/f4222d1479b6e68a39a8c1217ec571959a5816c37d95a172e62b39eca6081ceb.source-data",
+    "originalMode": "0o700",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/browser-run.py",
+    "originalSha256": "a81fb5dc07b42eaaf5d2d141ebb7764aa07394ffa294a225ad91e176bf00f35a",
+    "closedSha256": "5d1b654f95170e2d2413d4a4ef16f64dd453617538e9d34c0ab269a46209fafe",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/a81fb5dc07b42eaaf5d2d141ebb7764aa07394ffa294a225ad91e176bf00f35a.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/mac-browser-once.py",
+    "originalSha256": "db17deecf99a5a3da381db0b8139c35c08e44da332cb50aa87925c6d0c43c2d4",
+    "closedSha256": "59836391bc036c4494454270d8d46f0e655cc557a5aab01efecb3124567047ae",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/db17deecf99a5a3da381db0b8139c35c08e44da332cb50aa87925c6d0c43c2d4.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-check.sh",
+    "originalSha256": "562aa92e603b1ff6b12d885b7bfd56d1ff48b19363975344f5c5a94563b803e2",
+    "closedSha256": "8b225c28c54c01400b1e06a41e11df706b66b8cd426872df7e02d39c633beb15",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/562aa92e603b1ff6b12d885b7bfd56d1ff48b19363975344f5c5a94563b803e2.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-validation-all-consumers.sh",
+    "originalSha256": "12ea8c0a783dc6eb3648849ba17a550c75d3d08a1932354fecaf134ac6c19482",
+    "closedSha256": "20f87c54e489fad5cfb7e935504c848026db592c1b544db59ad6c1b9bcf11de7",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/12ea8c0a783dc6eb3648849ba17a550c75d3d08a1932354fecaf134ac6c19482.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-validation-once.sh",
+    "originalSha256": "d519eb31d33576379eae001001db2fac4c7b45ba4982adc412dacb59543c4c89",
+    "closedSha256": "6aad3a94f3b0689e4213bcda1e95552a96a61c27c69020089f90b8ca29c81eaa",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/d519eb31d33576379eae001001db2fac4c7b45ba4982adc412dacb59543c4c89.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/audit-target.sh",
+    "originalSha256": "25e59782a19943331bb577364261215eaf6276076d527e466cab709dafcb58dc",
+    "closedSha256": "9575cc3913a37e4c2e26c75ed9386915cd1c68422ff1a9fd25a8d905a21d04a9",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/25e59782a19943331bb577364261215eaf6276076d527e466cab709dafcb58dc.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/bounded-audit-target.py",
+    "originalSha256": "cdc8b4f99881ea21bca38a704159102ba9d6bc3c6a5871e853ae66e83310903c",
+    "closedSha256": "2af369d3da41104e4281a2d43573a020c0fdd2bd7a8a8084d42cacc39be1962b",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/cdc8b4f99881ea21bca38a704159102ba9d6bc3c6a5871e853ae66e83310903c.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/bounded-expiry-target.py",
+    "originalSha256": "63d96e092002612d0c025e8a5ba9c856ce5c58e7fe41ce7940fdc12b9cc588c4",
+    "closedSha256": "0d273228419f7a1d7f5fbde1681ef221b3da450581ca3d5a4f73ccd67611d374",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/63d96e092002612d0c025e8a5ba9c856ce5c58e7fe41ce7940fdc12b9cc588c4.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/consumer-full-clean.sh",
+    "originalSha256": "b2b10b1cd3f088e9ebc7b4ed97601c8d35f2a6103c9c253b2904cff085e3d441",
+    "closedSha256": "f7bf698ab7b7605833851fd8d4f30636732acfc3f1db7054d8d8426f06b756c9",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/b2b10b1cd3f088e9ebc7b4ed97601c8d35f2a6103c9c253b2904cff085e3d441.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/consumer-full.sh",
+    "originalSha256": "b7e9735a471ead00660c3d5004f3f27a0cbabbfb045e48ae4600ae18ccb02422",
+    "closedSha256": "aae1ecec4540ea2bddac66dd422bd3829a7108d7df0f7bd7d0ace04dfd9d8b69",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/b7e9735a471ead00660c3d5004f3f27a0cbabbfb045e48ae4600ae18ccb02422.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/event-wait-full.py",
+    "originalSha256": "f5afa784719c21bfd96d810b4bc69d269f264a25a30906d893e60b2bab95b7ba",
+    "closedSha256": "4eec5a4119c886b4071c0fb77636ac8e4cc22d397e0f6aba9ab52d126b272320",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/f5afa784719c21bfd96d810b4bc69d269f264a25a30906d893e60b2bab95b7ba.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/event-wait-heading-resume.py",
+    "originalSha256": "e72aaed4c234bb50c8062f475b6dd3c1273e5655f190235094fb92046598cab2",
+    "closedSha256": "b4ba9cc9fdb499f4027acee74e20f4e39d26c52c4f5bfa923218bdf423f6f1d3",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/e72aaed4c234bb50c8062f475b6dd3c1273e5655f190235094fb92046598cab2.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/event-wait-heading.py",
+    "originalSha256": "03bb66b1932d6099f2b18247c40921a5c9bac075c2d4e378ad1189aa736f646a",
+    "closedSha256": "2ae23b3599ff831a77daf72545871929970fda21dfc6263609e8f686106b942f",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/03bb66b1932d6099f2b18247c40921a5c9bac075c2d4e378ad1189aa736f646a.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/event-wait-publish.py",
+    "originalSha256": "3e03b5559748f8d25e284cca8c3975b5ccc505df5acc09117b7b091affd7e2e3",
+    "closedSha256": "57d3b12dc94862e73dedc4e3de6360d5ff248ab3d7ff0a0f1ca3dc709e439c8d",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/3e03b5559748f8d25e284cca8c3975b5ccc505df5acc09117b7b091affd7e2e3.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/expiry-help-discovery.sh",
+    "originalSha256": "626d3e39121cc9db46c0193b056a0e65e60fe9cd484f3f8455e7d0e6918e832c",
+    "closedSha256": "3b9d8940511faacb55f4815440e70bbc576fb517f4cba379d2c01c5ca5c43b48",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/626d3e39121cc9db46c0193b056a0e65e60fe9cd484f3f8455e7d0e6918e832c.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/expiry-help-resume.sh",
+    "originalSha256": "95221cb4b25b2438a901d99333c90aaaaffc8d45bd487d186acf9a90bca471a4",
+    "closedSha256": "d51426641d679c034438a907ef3d723e5ca82f30b89deb2226212fd6eae120ab",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/95221cb4b25b2438a901d99333c90aaaaffc8d45bd487d186acf9a90bca471a4.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/expiry-target.sh",
+    "originalSha256": "62125bdd4f811677241a42535964b2dbc34685bea66df0fb873e87903c40b889",
+    "closedSha256": "cc7124bdeb8fa50f4200931a62b84ddfbb0860720763cbfc9c7f11fe4d697420",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/62125bdd4f811677241a42535964b2dbc34685bea66df0fb873e87903c40b889.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/freeze-client.sh",
+    "originalSha256": "942201d9d6a8a23a8c503277a5d2b3681ccc8af44c1a0b6f0a2836b1bfd11b63",
+    "closedSha256": "fc893d39b5d6e28ee6f5be30d34e28728e594ad0df21eba1ba916ba311dd240b",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/942201d9d6a8a23a8c503277a5d2b3681ccc8af44c1a0b6f0a2836b1bfd11b63.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/publication-check.sh",
+    "originalSha256": "7d2ea6a505d05593bfe38bce132933d536282c6971c56ef4cfdfe28bffbd992c",
+    "closedSha256": "cbaef97e3b515d6b1285e0561c64d33701e48348eaa7ec71ad90fc46bcf592e7",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/7d2ea6a505d05593bfe38bce132933d536282c6971c56ef4cfdfe28bffbd992c.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/wait-one-owner-and-test.py",
+    "originalSha256": "12c503d879337284adbfdba6170a16ba91b22568668c332cda71d6f56aba41f8",
+    "closedSha256": "1c9a9f7fbbcf415f9d3ad31a8342734128b23a9d947d01ebb578a49a87e47fb9",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/12c503d879337284adbfdba6170a16ba91b22568668c332cda71d6f56aba41f8.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/wait-owner-full-clean.py",
+    "originalSha256": "64397d5d74bab87d9764fb673ce1d96201e1f5f1c456126e3b997c5bd4ab7e6a",
+    "closedSha256": "a3ff9d1259e14315356216fb6f1154e606d6bdb851171a6a460403a04ae206d6",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/64397d5d74bab87d9764fb673ce1d96201e1f5f1c456126e3b997c5bd4ab7e6a.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/wait-owner-open-window.py",
+    "originalSha256": "b03695eb167d047c5e2a5503f657f38a7568cc62378b8e3929e3c98a6f05217f",
+    "closedSha256": "1c3535870011ce13802b61da2ca1627f50600c3aa7bb065c889696839558744d",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/b03695eb167d047c5e2a5503f657f38a7568cc62378b8e3929e3c98a6f05217f.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-benchmark-roc27tnq/reviewed-entry-template.py",
+    "originalSha256": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+    "closedSha256": "36a9ffec9986edb83a1ea99e92865b2a1c19a39d8544f2568a7283d379c9e2f7",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-release-review-m631mpbk/reviewed-entry-template.py",
+    "originalSha256": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+    "closedSha256": "36a9ffec9986edb83a1ea99e92865b2a1c19a39d8544f2568a7283d379c9e2f7",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/prepare-client.py",
+    "originalSha256": "034c5a95219a676fc1051c3771610561e8bbaed5769996f87de228d401c898cb",
+    "closedSha256": "3b2cd12f92ad68783538caddcbc465e8f1c69afc46c32a937ffd45b5f051ff0d",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/034c5a95219a676fc1051c3771610561e8bbaed5769996f87de228d401c898cb.source-data",
+    "originalMode": "0o644",
+    "exit": 78,
+    "originalKnownLinkCount": 1,
+    "additionalReason": "Close old installation bootstrap or source-ref updater as part of the old admission pipeline."
+  },
+  {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/record-final-gate.py",
+    "originalSha256": "54b4be12975a7758b51eae9d2ef8a95bff193ede1437ca6e88bc978221697c4c",
+    "closedSha256": "30f14f480d05f5bf164c7535da9efa95cd6b6086c348bee4aaa6ac14de7647f8",
+    "originalSourceData": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-closure-ogqpisre/original-wrapper-bytes/54b4be12975a7758b51eae9d2ef8a95bff193ede1437ca6e88bc978221697c4c.source-data",
+    "originalMode": "0o600",
+    "exit": 78,
+    "originalKnownLinkCount": 1,
+    "additionalReason": "Close old installation bootstrap or source-ref updater as part of the old admission pipeline."
+  }
+]

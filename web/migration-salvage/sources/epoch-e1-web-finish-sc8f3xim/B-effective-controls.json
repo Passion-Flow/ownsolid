@@ -1,0 +1,20 @@
+{
+  "nodeOldSpaceMiB": 2048,
+  "coreBytes": 0,
+  "commandsSerial": true,
+  "intervalSeconds": 0.05,
+  "ownerTreeDefinition": "Admission guard plus all transitive descendants, including awake guard, controller and sampler; retain known same-lifetime reparented descendants. Sum of resident bytes at each validated snapshot, including repeated shared pages.",
+  "continuousMaximumClaimed": false,
+  "samplingLimit": "50ms sampled, non-atomic per-process reads; shorter lived processes or intersample peaks are not guaranteed. Any failed/truncated/unattributed sample refuses the owner-tree conclusion.",
+  "monitorFields": [
+    "pid",
+    "ppid",
+    "pgid",
+    "uid",
+    "startTimeSecondsAndMicroseconds",
+    "rssBytes",
+    "status"
+  ],
+  "argvOrEnvironmentDumped": false,
+  "functionalSevenCli372CoverageAndSevenNegativeControls": "Retained unchanged from prior exact-source qualification; not counted again here."
+}

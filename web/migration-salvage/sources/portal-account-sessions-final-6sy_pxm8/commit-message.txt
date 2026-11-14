@@ -1,0 +1,19 @@
+POR-112: Add shared account session controls and explicit recovery
+
+Implement the existing S-308 Account section on both entrances with typed
+pagination and bodyless 204 revocation, localized Help, irreversible typed
+confirmation, authoritative current markers and no automatic DELETE replay.
+Keep cached rows hidden after denial until a fresh authorized read succeeds.
+Synchronously isolate same-account sign-in and confirmed password rotation;
+ignore results owned by a previous mount, including StrictMode cleanup.
+
+Passed focused API/transport (30), Shell/session (31), UI (33), locale (49)
+and Help (19) tests on the earlier candidate, plus grouped changed-file lint,
+formatter checks and API/Shell/Console/Portal types. Preserve the earlier
+failed same-account integration and 512 MiB lint OOM evidence.
+
+The final attempt stopped before work children at the 2 GiB memory preflight.
+The added real-sign-in/late-password tests, null-recovery regression and small
+generic-retry suppression fix still require the final focused rerun.
+Browser/visual, full gates, offline installation and installed authority/audit
+acceptance are unrun. Do not tick POR-112 or publish this candidate as qualified.

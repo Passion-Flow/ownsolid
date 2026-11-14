@@ -1,0 +1,10 @@
+{
+  "scope": "Current Console loopback31036 only; cannot establish historical cause",
+  "netstatExit": 0,
+  "matchedRows": 247,
+  "states": {
+    "ESTABLISHED": 12,
+    "LISTEN": 1,
+    "TIME_WAIT": 234
+  }
+}

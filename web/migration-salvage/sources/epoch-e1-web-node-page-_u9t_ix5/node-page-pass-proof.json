@@ -1,0 +1,61 @@
+{
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "exit": 0,
+  "actualCases": [
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:27:1 \u203a opens from the drawer, and the sidebar still marks Nodes"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:39:1 \u203a its tabs work from the keyboard and live in the address"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:60:1 \u203a Tasks lists this node and links each task"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:67:1 \u203a Tasks says when there are none, and a failure can be retried"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:86:1 \u203a Activity shows what people did to this node over its whole life"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:106:1 \u203a Activity says when there is none, and a failure can be retried"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:121:1 \u203a renaming stays on the page and can be undone"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:132:1 \u203a removing goes back to the list"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:143:1 \u203a a node that does not exist says so, and a failure can be retried"
+    },
+    {
+      "status": "passed",
+      "case": "e2e/node-page.spec.ts:171:3 \u203a in Chinese \u203a names its tabs"
+    }
+  ],
+  "expectedOldFailedCases": [
+    "e2e/node-page.spec.ts:27:1 \u203a opens from the drawer, and the sidebar still marks Nodes",
+    "e2e/node-page.spec.ts:39:1 \u203a its tabs work from the keyboard and live in the address",
+    "e2e/node-page.spec.ts:60:1 \u203a Tasks lists this node and links each task",
+    "e2e/node-page.spec.ts:67:1 \u203a Tasks says when there are none, and a failure can be retried",
+    "e2e/node-page.spec.ts:86:1 \u203a Activity shows what people did to this node over its whole life",
+    "e2e/node-page.spec.ts:106:1 \u203a Activity says when there is none, and a failure can be retried",
+    "e2e/node-page.spec.ts:121:1 \u203a renaming stays on the page and can be undone",
+    "e2e/node-page.spec.ts:132:1 \u203a removing goes back to the list",
+    "e2e/node-page.spec.ts:143:1 \u203a a node that does not exist says so, and a failure can be retried",
+    "e2e/node-page.spec.ts:171:3 \u203a in Chinese \u203a names its tabs"
+  ],
+  "missingOldFailedCases": [],
+  "onlyExactFile": true,
+  "newSkipsOrRetries": false
+}

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+printf '%s\n' 'Old Mac admission epoch is closed; await coordinated activation.' >&2
+exit 78
+set -euo pipefail
+root="$1"
+run="$2"
+frozen="$3"
+bash "$root/freeze-client.sh" "$root" "$frozen" > "$run/frozen-client.log" 2>&1
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web"
+export PYTHON="$(uv python find 3.12)" PYTHONDONTWRITEBYTECODE=1
+export VITEST_MAX_WORKERS=2 npm_config_offline=true OWNSOLID_PLAYWRIGHT_PORT_OFFSET=12666
+pnpm exec prettier --write apps/console/e2e/audit.spec.ts apps/console/e2e/pages.ts apps/console/src/audit-page.tsx packages/i18n/locales/en.json packages/i18n/locales/zh-cn.json packages/i18n/src/audit-coverage.test.ts packages/shell/testing/audit.ts packages/shell/testing/index.ts > "$run/format.log" 2>&1
+make -C .. check > "$run/check.log" 2>&1
+pnpm --filter @ownsolid/i18n test > "$run/i18n.log" 2>&1
+pnpm --filter @ownsolid/console build > "$run/build.log" 2>&1
+cd apps/console
+PLAYWRIGHT_JSON_OUTPUT_NAME="$run/audit.json" pnpm exec playwright test audit.spec.ts --workers=2 --reporter=json > "$run/audit.log" 2>&1
+PLAYWRIGHT_JSON_OUTPUT_NAME="$run/states.json" pnpm exec playwright test -g 'audit read event details' --workers=2 --reporter=json > "$run/states.log" 2>&1
+printf 'AUD108 focused checks and screens passed.\n'

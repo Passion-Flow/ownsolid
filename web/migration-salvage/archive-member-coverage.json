@@ -1,0 +1,562 @@
+[
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/README.md",
+    "bytes": 5605,
+    "sha256": "64fc0146c17b71f2a7b3c0c9aff7e0f31a49081a0b9d0a69c4b2196ea94f3833",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/installed-a4f/README.md"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/bind.py",
+    "bytes": 3706,
+    "sha256": "59aa2554a5a60d1fca222ab27badb0080c48a1534f7b7a1d1564a28023c292dc",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/bind.py"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/binding.json",
+    "bytes": 398,
+    "sha256": "ea70574612866fa58ac90938a3ea8e62068d3d353740eda38788a2610a93e8a5",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/installed-a4f/binding.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/bound-source.ts",
+    "bytes": 182,
+    "sha256": "98ed309c048441d3d951111bb52ff32c6925e7770a1a7032ef4a0115f43bc7ce",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/installed-a4f/bound-source.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/checks.sh",
+    "bytes": 757,
+    "sha256": "9226201be02b2e07d9492f225377574b3334b77b746faae8af9ecc9dea8e0da1",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/checks.sh"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/description.spec.ts",
+    "bytes": 14405,
+    "sha256": "1a72d9e8fa01c1db92fc10da278d4a2146f82f7eb203c61e0b32a6d2c4f180f5",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/description.spec.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/fixture.template.json",
+    "bytes": 867,
+    "sha256": "08d4a7850f86fbf873fa01dd30c776bbb5be6f2ce8ac36f56b068e631e2978a6",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.template.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/fixture.ts",
+    "bytes": 6224,
+    "sha256": "12ac9f4ffb8394ae4a157974c64387a3fd28a5fef53a46e02f87a1e1647bb01f",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/help.config.ts",
+    "bytes": 1415,
+    "sha256": "ccf3045a91c3a4e0a9804005d201163724c14ef46b81f3ef8edd9dbb538565b8",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/installed-a4f/help.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/input-selftest.mjs",
+    "bytes": 3692,
+    "sha256": "40494234484bdc65936fcdcd7c3c7d7017504686e98d2f49fd8460d789cb5130",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/input-selftest.mjs"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/package.json",
+    "bytes": 33,
+    "sha256": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/package.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/parameters.spec.ts",
+    "bytes": 9789,
+    "sha256": "8951e024420f238b3a4edb834fec43d2b4f80e4b6655d8f9a7699941983555bf",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/parameters.spec.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/playwright.config.ts",
+    "bytes": 1416,
+    "sha256": "e6f4e4fdd21fd0abc72448f35a882fca3c8de583257410baf105efc10a78b2d4",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/installed-a4f/playwright.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/run.py",
+    "bytes": 3947,
+    "sha256": "c2bee8945df8273fb2ed787a84f2e0d41aef16642619b87889d508c6518f416e",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/run.py"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/runtime-source.ts",
+    "bytes": 881,
+    "sha256": "55d482ba3d0970a15886343d8cfc611b75c19e46926ad9a69b3d3b33941e96a0",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/installed-a4f/runtime-source.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/scope.config.ts",
+    "bytes": 1439,
+    "sha256": "bc9fa44719e8cbf1c5649dbd0d84326584fd112a777fe4c9c6dde5c5f6a0fb07",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/installed-a4f/scope.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-a4f-inputs-etzldaaq/installed-entry-a4f-inputs.tar.gz",
+    "archive_sha256": "e8f02e4410a8aae42697bb34685ba9c80a48cb1497c98721fa55d1dcc95dd2de",
+    "member": "installed-entry/tsconfig.json",
+    "bytes": 380,
+    "sha256": "17e2e01a97cc3267565c8555c1de87dc47adee30da0d7b267e8c18e1b6a25a63",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/installed-a4f/tsconfig.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/README.md",
+    "bytes": 5313,
+    "sha256": "41fb53cc09cf0060854cdb6faf4e6d16f0c5588357bdf289314570300b67ad07",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/README.md"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/bind.py",
+    "bytes": 3706,
+    "sha256": "59aa2554a5a60d1fca222ab27badb0080c48a1534f7b7a1d1564a28023c292dc",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/bind.py"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/binding.json",
+    "bytes": 398,
+    "sha256": "6c9f5196b39b2a5bb56bee0b7875bff6434af6e1d2b81b69d5ac4b9660f2ea64",
+    "covered_by_archive_path": "web/migration-salvage/sources/web-consumers-20261113/installed-be62/binding.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/bound-source.ts",
+    "bytes": 182,
+    "sha256": "ef108e99e6bcf1c5c2ae0af298688b0367e80d11d812049191f314f14ce30196",
+    "covered_by_archive_path": "web/migration-salvage/sources/web-consumers-20261113/installed-be62/bound-source.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/checks.sh",
+    "bytes": 757,
+    "sha256": "9226201be02b2e07d9492f225377574b3334b77b746faae8af9ecc9dea8e0da1",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/checks.sh"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/description.spec.ts",
+    "bytes": 14405,
+    "sha256": "1a72d9e8fa01c1db92fc10da278d4a2146f82f7eb203c61e0b32a6d2c4f180f5",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/description.spec.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/fixture.template.json",
+    "bytes": 867,
+    "sha256": "08d4a7850f86fbf873fa01dd30c776bbb5be6f2ce8ac36f56b068e631e2978a6",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.template.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/fixture.ts",
+    "bytes": 6224,
+    "sha256": "12ac9f4ffb8394ae4a157974c64387a3fd28a5fef53a46e02f87a1e1647bb01f",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/help.config.ts",
+    "bytes": 1403,
+    "sha256": "b53265fb9950365d638ecc9baa13da1c1335def0dd51f7ae0e49f869b5289f34",
+    "covered_by_archive_path": "web/migration-salvage/sources/web-consumers-20261113/installed-be62/help.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/input-selftest.mjs",
+    "bytes": 3692,
+    "sha256": "40494234484bdc65936fcdcd7c3c7d7017504686e98d2f49fd8460d789cb5130",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/input-selftest.mjs"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/package.json",
+    "bytes": 33,
+    "sha256": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/package.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/parameters.spec.ts",
+    "bytes": 9789,
+    "sha256": "8951e024420f238b3a4edb834fec43d2b4f80e4b6655d8f9a7699941983555bf",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/parameters.spec.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/playwright.config.ts",
+    "bytes": 1404,
+    "sha256": "701b5bdf2aa761a9ed1326143ba4d68c804f4def6fb5007fefb345fba3802861",
+    "covered_by_archive_path": "web/migration-salvage/sources/web-consumers-20261113/installed-be62/playwright.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/report.json",
+    "bytes": 4484,
+    "sha256": "dbcbaa124e013e2ae24b12b67ea2932c99421bda2df8ce0c360e459f9db4ffa5",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/report.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/run.py",
+    "bytes": 3927,
+    "sha256": "7263ad2ecd129e1e777aac8007e29af3eac68610c63d4a862f9488bb52b4ec29",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/failures/run.py.strict-umask"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/runtime-source.ts",
+    "bytes": 881,
+    "sha256": "f1b98550864eb688bb81cd9b738f4ee0e5f6347b15c7f4da6950248de0be6bae",
+    "covered_by_archive_path": "web/migration-salvage/sources/web-consumers-20261113/installed-be62/runtime-source.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/scope.config.ts",
+    "bytes": 1433,
+    "sha256": "54ab68c294073f36759b2bf694fc555c92f0544eae33d085bff5600226d14081",
+    "covered_by_archive_path": "web/migration-salvage/sources/web-consumers-20261113/installed-be62/scope.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-be62-inputs.tar.gz",
+    "archive_sha256": "c2cd577bb55a89ae57f4c542c26f8ffc187b0948f70406ac661ba3a7b0747ba4",
+    "member": "installed-entry/tsconfig.json",
+    "bytes": 380,
+    "sha256": "853998e2862080743862c0d2022a02b513da04659130ffe8a1765604c1e0bb63",
+    "covered_by_archive_path": "web/migration-salvage/sources/web-consumers-20261113/installed-be62/tsconfig.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/README.md",
+    "bytes": 5605,
+    "sha256": "77fbe8aac3501c71ea9455131526db538404481d3976bbc45382c50593fd6b83",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/README.md"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/bind.py",
+    "bytes": 3706,
+    "sha256": "59aa2554a5a60d1fca222ab27badb0080c48a1534f7b7a1d1564a28023c292dc",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/bind.py"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/binding.json",
+    "bytes": 408,
+    "sha256": "aaac34337bf3c85d04641999bc337aa0dec0dc9adb3abb36b3d6842be912586a",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/binding.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/bound-source.ts",
+    "bytes": 187,
+    "sha256": "1fa0c9fc5bc85e81b814974a14071f02479a2f014984f21d7b4735c0c29e02fe",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/bound-source.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/checks.sh",
+    "bytes": 757,
+    "sha256": "9226201be02b2e07d9492f225377574b3334b77b746faae8af9ecc9dea8e0da1",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/checks.sh"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/description.spec.ts",
+    "bytes": 14405,
+    "sha256": "1a72d9e8fa01c1db92fc10da278d4a2146f82f7eb203c61e0b32a6d2c4f180f5",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/description.spec.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/fixture.template.json",
+    "bytes": 867,
+    "sha256": "08d4a7850f86fbf873fa01dd30c776bbb5be6f2ce8ac36f56b068e631e2978a6",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.template.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/fixture.ts",
+    "bytes": 6224,
+    "sha256": "12ac9f4ffb8394ae4a157974c64387a3fd28a5fef53a46e02f87a1e1647bb01f",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/help.config.ts",
+    "bytes": 1414,
+    "sha256": "33dac99c9a82273920e73d40216a6e0030b9fe8efaaa5b826d5d5fd576d93b45",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/help.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/input-selftest.mjs",
+    "bytes": 3692,
+    "sha256": "40494234484bdc65936fcdcd7c3c7d7017504686e98d2f49fd8460d789cb5130",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/input-selftest.mjs"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/package.json",
+    "bytes": 33,
+    "sha256": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/package.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/parameters.spec.ts",
+    "bytes": 9789,
+    "sha256": "8951e024420f238b3a4edb834fec43d2b4f80e4b6655d8f9a7699941983555bf",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/parameters.spec.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/playwright.config.ts",
+    "bytes": 1415,
+    "sha256": "5cf6f9f2eb0d49f9991d2e643385e8323283345e6b7bcda168f2294f45f9f5cb",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/playwright.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/run.py",
+    "bytes": 3947,
+    "sha256": "c2bee8945df8273fb2ed787a84f2e0d41aef16642619b87889d508c6518f416e",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/run.py"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/runtime-source.ts",
+    "bytes": 906,
+    "sha256": "51088f5aa8466b112b017070282dc64d0c52107e6b63313a62ca85309eba7f48",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/runtime-source.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/scope.config.ts",
+    "bytes": 1446,
+    "sha256": "6388213f5719157ce5daf79f235e8c9f326d370d922918961bb96c0b63a5d5fa",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/scope.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/installed-entry-help-44ab5229-inputs.tar.gz",
+    "archive_sha256": "d4d7be69514c49847e118cee179c67b4362b43f152b84074112cb7bce76a9954",
+    "member": "installed-entry/tsconfig.json",
+    "bytes": 390,
+    "sha256": "40d216f905d1acbda77fd77ad3a63ea2cd5c2b0cfc14cd6542235bb26725b99f",
+    "covered_by_archive_path": "web/migration-salvage/sources/help-saved-query-wwhvfal7/installed-help/tsconfig.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/README.md",
+    "bytes": 5313,
+    "sha256": "41fb53cc09cf0060854cdb6faf4e6d16f0c5588357bdf289314570300b67ad07",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/README.md"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/bind.py",
+    "bytes": 3706,
+    "sha256": "59aa2554a5a60d1fca222ab27badb0080c48a1534f7b7a1d1564a28023c292dc",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/bind.py"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/binding.json",
+    "bytes": 358,
+    "sha256": "97ca3828ef12639b5fe6b33bda2174d8d76565f574722d183d34c1232177c00c",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/binding.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/bound-source.ts",
+    "bytes": 162,
+    "sha256": "70ae778fd9724bb629ad38cb5e7e7c58894a661c9b30a2e89ac5bd8808782c43",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/bound-source.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/checks.sh",
+    "bytes": 757,
+    "sha256": "9226201be02b2e07d9492f225377574b3334b77b746faae8af9ecc9dea8e0da1",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/checks.sh"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/description.spec.ts",
+    "bytes": 14405,
+    "sha256": "1a72d9e8fa01c1db92fc10da278d4a2146f82f7eb203c61e0b32a6d2c4f180f5",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/description.spec.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/fixture.template.json",
+    "bytes": 867,
+    "sha256": "08d4a7850f86fbf873fa01dd30c776bbb5be6f2ce8ac36f56b068e631e2978a6",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.template.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/fixture.ts",
+    "bytes": 6224,
+    "sha256": "12ac9f4ffb8394ae4a157974c64387a3fd28a5fef53a46e02f87a1e1647bb01f",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/help.config.ts",
+    "bytes": 1417,
+    "sha256": "256b75012fb025adb96a268bea3061fd72c35ca3c5e71975ff86fe3ec90a8012",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/help.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/input-selftest.mjs",
+    "bytes": 3692,
+    "sha256": "40494234484bdc65936fcdcd7c3c7d7017504686e98d2f49fd8460d789cb5130",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/input-selftest.mjs"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/package.json",
+    "bytes": 33,
+    "sha256": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/package.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/parameters.spec.ts",
+    "bytes": 9789,
+    "sha256": "8951e024420f238b3a4edb834fec43d2b4f80e4b6655d8f9a7699941983555bf",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/parameters.spec.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/playwright.config.ts",
+    "bytes": 1418,
+    "sha256": "e2662eb28ef398cba39112b033d2b843e50ca6090c1f5d72a364b82d2f2466c0",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/playwright.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/report.json",
+    "bytes": 4484,
+    "sha256": "dbcbaa124e013e2ae24b12b67ea2932c99421bda2df8ce0c360e459f9db4ffa5",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/report.json"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/run.py",
+    "bytes": 3927,
+    "sha256": "7263ad2ecd129e1e777aac8007e29af3eac68610c63d4a862f9488bb52b4ec29",
+    "covered_by_archive_path": "web/migration-salvage/sources/installed-a4f-inputs-etzldaaq/failures/run.py.strict-umask"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/runtime-source.ts",
+    "bytes": 781,
+    "sha256": "0e25eb0951b738a668ab16b86bf43b0eef7c37aafceb2460d88eef596dcd0372",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/runtime-source.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/scope.config.ts",
+    "bytes": 1410,
+    "sha256": "2dabb52c0d7ffd091c1994b6e7fbd17a4bd99897769a56756d22e72528f3d93d",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/scope.config.ts"
+  },
+  {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-web-client-candidate-be62f58e.tar.gz",
+    "archive_sha256": "49368bd7dcfa0a9b1c72843bab8cdba9686739e6fdc60a2b4548669c20f70c72",
+    "member": "installed-web/tsconfig.json",
+    "bytes": 340,
+    "sha256": "7ef29d1f9b7f1bd6cd7b1b956ff4f14ffa91f473c4f90192d193e151c3072fee",
+    "covered_by_archive_path": "web/migration-salvage/sources/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/tsconfig.json"
+  }
+]

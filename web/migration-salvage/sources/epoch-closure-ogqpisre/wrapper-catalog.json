@@ -1,0 +1,842 @@
+[
+  {
+    "path": "mac-window.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "installed-a4f-inputs-etzldaaq/build-inputs.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "installed-a4f-inputs-etzldaaq/installed-a4f/run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "installed-a4f-inputs-etzldaaq/installed-a4f/bind.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "installed-a4f-inputs-etzldaaq/installed-a4f/checks.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "portal-account-sessions-window-l0wkhyg3/browser-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-window-l0wkhyg3/run-browser-once.sh",
+    "carrierReference": false,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-window-l0wkhyg3/mac-browser-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-esm-f5_p19jk/browser-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-esm-f5_p19jk/run-browser-once.sh",
+    "carrierReference": false,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-esm-f5_p19jk/mac-browser-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/expiry-help-discovery.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/record-final-gate.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": false
+  },
+  {
+    "path": "web-consumers-20261113/wait-one-owner-and-test.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/freeze-client.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/expiry-target.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/expiry-help-resume.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/consumer-full-clean.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/event-wait-heading-resume.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/consumer-full.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/publication-check.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/event-wait-heading.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/bounded-audit-target.py",
+    "carrierReference": false,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/write-consumer-handoff.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": false
+  },
+  {
+    "path": "web-consumers-20261113/event-wait-publish.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/wait-owner-full-clean.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/event-wait-full.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/audit-target.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/bounded-expiry-target.py",
+    "carrierReference": false,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/wait-owner-open-window.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-consumers-20261113/installed-be62/run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "web-consumers-20261113/installed-be62/bind.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "web-consumers-20261113/installed-be62/checks.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "web-serial-lint-release-review-m631mpbk/reviewed-entry-template.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-deadline-ecdhheaf/browser-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-deadline-ecdhheaf/pure-boundary-checks.py",
+    "carrierReference": false,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-deadline-ecdhheaf/run-browser-once.sh",
+    "carrierReference": false,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-deadline-ecdhheaf/mac-browser-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-deadline-ecdhheaf/before-system-clock-review/browser-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-deadline-ecdhheaf/before-system-clock-review/mac-browser-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-light-31yk8_07/run.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/concurrent-full-browser.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/full-attempt.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/narrow-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/mac-narrow-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/prepare-client.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": false
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/full-gate.sh",
+    "carrierReference": true,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/installed-help/run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/installed-help/bind.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "help-saved-query-wwhvfal7/installed-help/checks.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "portal-account-sessions-fix-z5ckf6nz/run.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-verify-fbcnbrbj/run.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/run-discovery-localization.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/run-node-then-full.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/finish-full.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/run-corrected-target.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/retry-doc-only-publish.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/run-fixed-target.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/publication-check.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/run-localization.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/qualify-published-and-prepare.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/full-gate.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "aud108-explicit-retry-s0ycu2hy/run-target.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-final-6sy_pxm8/run.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-visual-6tebiwnq/browser-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-visual-6tebiwnq/run-browser-once.sh",
+    "carrierReference": false,
+    "admissionReference": true,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-visual-6tebiwnq/mac-browser-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-full-post-update-g6pivtlb/reviewed-mac-browser-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-full-post-update-g6pivtlb/reviewed-full-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "web-serial-lint-benchmark-roc27tnq/reviewed-entry-template.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-ui-fu_3h31a/light-validation-once.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-ui-fu_3h31a/light-check.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-ui-fu_3h31a/light-validation-all-consumers.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/qualification-window.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/baseline-window.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/post-undo-window.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/post-dialog-window.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/full-window-v2.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/finish-evidence.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": false
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/browser-retry.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/focused-checks.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/publish-window-physical.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/full-window.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/undo-baseline.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/post-undo-final-window.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/publish-window.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/wait-window-owner.py",
+    "carrierReference": true,
+    "admissionReference": false,
+    "workReference": false,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/browser-window.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/installed-gw120/run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/installed-gw120/bind.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "download-discovery-6gj4rt_h/gw120-edit/installed-gw120/checks.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": true,
+    "selectedForClosure": false
+  },
+  {
+    "path": "portal-account-sessions-qualification-2f0h8l7o/run.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "acceptance-b8aqosz5/focus-window.sh",
+    "carrierReference": true,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "acceptance-b8aqosz5/run.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "acceptance-b8aqosz5/window.sh",
+    "carrierReference": true,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "acceptance-b8aqosz5/help-window.sh",
+    "carrierReference": true,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "acceptance-b8aqosz5/extract.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": false
+  },
+  {
+    "path": "portal-account-sessions-bounded-50d0idsh/run.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-preparation-w5jpf3m7/browser-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "resource-history-browser-preparation-w5jpf3m7/mac-browser-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "installed-aud108-inputs-1qccyd72/materialize.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": false
+  },
+  {
+    "path": "installed-aud108-inputs-1qccyd72/build-inputs.sh",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-joint-full-4deb4qpz/full-run.py",
+    "carrierReference": false,
+    "admissionReference": false,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-joint-full-4deb4qpz/mac-browser-once.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  },
+  {
+    "path": "portal-account-sessions-tests-0ke2krav/run.py",
+    "carrierReference": true,
+    "admissionReference": true,
+    "workReference": true,
+    "frozenClientPreserved": false,
+    "selectedForClosure": true
+  }
+]

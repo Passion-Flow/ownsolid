@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+printf '%s\n' 'Old Mac admission epoch is closed; await coordinated activation.' >&2
+exit 78
+set -euo pipefail
+umask 022
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web"
+root="$1"
+export GIT_TERMINAL_PROMPT=0 npm_config_offline=true GOPROXY=off GOSUMDB=off GOMAXPROCS=3 GOFLAGS=-p=1
+export PYTHON="$(uv python find 3.12)"
+test -z "$(git status --porcelain)"
+if ! git show-ref --verify --quiet refs/heads/archive/web-gate-60b85e03; then git branch archive/web-gate-60b85e03 60b85e03; fi
+git -c http.proxy=http://127.0.0.1:1082 -c http.version=HTTP/1.1 -c http.lowSpeedLimit=100 -c http.lowSpeedTime=15 fetch origin
+base="$(git rev-parse origin/main)"
+git rebase origin/main
+if ! git diff --quiet 60b85e03 HEAD -- web/ api/openapi/; then
+  printf 'UI_INPUT_CHANGED: qualify affected inputs before publishing.\n'
+  exit 1
+fi
+make check > "$root/publication-check.log" 2>&1
+(cd services/control && go test ./internal/modules/scheduling/... -count=1) > "$root/publication-scheduling.log" 2>&1
+git diff --check
+test -z "$(git status --porcelain)"
+git -c http.proxy=http://127.0.0.1:1082 -c http.version=HTTP/1.1 -c http.lowSpeedLimit=100 -c http.lowSpeedTime=15 fetch origin
+test "$(git rev-parse origin/main)" = "$base"
+git -c http.proxy=http://127.0.0.1:1082 -c http.version=HTTP/1.1 -c http.lowSpeedLimit=100 -c http.lowSpeedTime=15 push origin HEAD:main
+git rev-parse HEAD > "$root/published-source"
+git rev-parse HEAD
+printf 'PUBLICATION_COMPLETE\n'

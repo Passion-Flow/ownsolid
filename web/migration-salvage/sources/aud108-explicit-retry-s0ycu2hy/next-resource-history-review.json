@@ -1,0 +1,21 @@
+{
+  "state": "Read-only source mismatch; no implementation or end-to-end claim",
+  "sources": {
+    "consumer": "web/apps/console/src/resource-page.tsx:162-192",
+    "server": "services/control/internal/modules/identity/lists.go:320-350",
+    "policy": "services/control/internal/platform/config/policy.go:297-304"
+  },
+  "finding": "Activity requests from creation minus one minute, while the server rejects any window beyond the configured AuditMaxDays. Default maximum31 days, configurable1 through366. The current whole-lifetime claim is invalid for older resources.",
+  "upstreamPatterns": [
+    "https://grafana.com/docs/grafana/latest/visualizations/dashboards/use-dashboards/",
+    "https://www.elastic.co/docs/explore-analyze/query-filter/filtering"
+  ],
+  "researchConstraints": [
+    "Preserve access to older history via bounded windows; do not silently claim all-time data from a recent window",
+    "Avoid hardcoding a deployment-dependent audit maximum",
+    "Cursor pins both times; subsequent-page filters must preserve its exact window",
+    "Window changes, retries and navigation must preserve AUD108 explicit-request semantics",
+    "No API/service/plan files are owned by WEB",
+    "A proven implementation and installed evidence have not been produced for this issue"
+  ]
+}

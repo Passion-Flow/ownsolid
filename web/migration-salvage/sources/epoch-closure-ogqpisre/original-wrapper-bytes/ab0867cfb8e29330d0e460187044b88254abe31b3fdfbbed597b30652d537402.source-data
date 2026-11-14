@@ -1,0 +1,115 @@
+from pathlib import Path
+import hashlib,json,re,shutil,subprocess,sys,tempfile
+root=Path(sys.argv[1]);run=Path(sys.argv[2])
+worktree=Path("/Users/passion./Documents/Passion's WorkSpace/Development/lane-web")
+def git(*args):
+ return subprocess.check_output(['git',*args],cwd=worktree,text=True).strip()
+def invoke(args,log):
+ with Path(log).open('w') as out:
+  subprocess.run(args,cwd=worktree,stdout=out,stderr=subprocess.STDOUT,check=True)
+def cases(suites):
+ for suite in suites:
+  for spec in suite.get('specs',[]):
+   for test in spec.get('tests',[]):yield spec,test
+  yield from cases(suite.get('suites',[]))
+source=(run/'source').read_text().strip()
+assert git('rev-parse','HEAD')==source
+assert not git('status','--porcelain')
+assert (run/'stage').read_text().strip()=='complete'
+assert (run/'exit-status').read_text().strip()=='0'
+reports={name:json.loads((run/(name+'-report.json')).read_text()) for name in ['console','portal']}
+for name,report in reports.items():
+ stats=report['stats']
+ assert stats['unexpected']==0 and stats['flaky']==0 and stats['expected']>0,stats
+ assert not report.get('errors'),report.get('errors')
+ for spec,test in cases(report['suites']):
+  assert len(test.get('results',[]))==1,(spec['title'],test.get('results'))
+  assert all(result.get('retry',0)==0 for result in test['results'])
+assert reports['console']['stats']['expected']==1191,reports['console']['stats']
+assert reports['console']['stats']['skipped']==28,reports['console']['stats']
+assert reports['portal']['stats']['expected']==410,reports['portal']['stats']
+assert reports['portal']['stats']['skipped']==10,reports['portal']['stats']
+new_cases=[(spec,test) for spec,test in cases(reports['console']['suites']) if spec.get('file','').endswith('audit-read-recovery.spec.ts')]
+assert len(new_cases)==41,len(new_cases)
+assert all(test['results'][0]['status']=='passed' for spec,test in new_cases)
+browser_paths=['web','api','pkg/capabilities/declaration.json','tests/fixtures','tools/codegen/web-api.mjs','tools/codegen/web-help.mjs','Makefile']
+focused_diff=git('diff','--name-only','7aa8b068',source,'--',*browser_paths)
+reviewed_contract=json.loads((root/'reviewed-nonbrowser-contract.json').read_text())
+allowed={'web/apps/console/e2e/audit-read-recovery.spec.ts','web/apps/console/e2e/node-page.spec.ts',reviewed_contract['path']}
+assert set(focused_diff.splitlines())<=allowed,focused_diff
+for path in focused_diff.splitlines():
+ old_test=git('show','7aa8b068:'+path)
+ new_test=git('show',source+':'+path)
+ if path==reviewed_contract['path']:
+  assert hashlib.sha256(old_test.encode()+b'\n').hexdigest()==reviewed_contract['oldSha256']
+  raw=subprocess.check_output(['git','show',source+':'+path],cwd=worktree)
+  assert hashlib.sha256(raw).hexdigest()==reviewed_contract['newSha256']
+ elif path.endswith('audit-read-recovery.spec.ts'):
+  assert re.sub(r'\s+','',old_test)==re.sub(r'\s+','',new_test)
+ else:
+  reviewed=json.loads((root/'reviewed-node-recovery-test.json').read_text())
+  raw=subprocess.check_output(['git','show',source+':'+path],cwd=worktree)
+  assert hashlib.sha256(raw).hexdigest()==reviewed['sha256']
+ (run/(Path(path).stem+'-reviewed-test.diff')).write_text(git('diff','7aa8b068',source,'--',path)+'\n')
+images=json.loads((root/'images-read.json').read_text())
+assert len(images)==18,len(images)
+for path,digest in images.items():assert hashlib.sha256(Path(path).read_bytes()).hexdigest()==digest,path
+qualified={'source':source,'run':str(run),'stats':{n:r['stats'] for n,r in reports.items()},'imagesRead':images,'installedRun':False,'SQLRun':False,'focusedProductSource':'7aa8b068','focusedTestDifference':'Reviewed Help-action formatting and strengthened node-activity recovery assertions; Web/OpenAPI product inputs unchanged','nonBrowserContractDifference':reviewed_contract,'newRecoveryCases':len(new_cases)}
+(root/'final-qualification.json').write_text(json.dumps(qualified,indent=2)+'\n')
+console=reports['console']['stats'];portal=reports['portal']['stats']
+text=f'''
+### Complete Web recovery gate
+
+The exact integrated source {source} passed make check,
+make build and make test on Mac arm64, including every Go module, Rust,
+Web unit targets and both complete Chromium suites. Console passed
+{console['expected']:,} cases with {console['skipped']} existing conditional skips;
+Portal passed {portal['expected']:,} with {portal['skipped']} existing skips.
+There were no unexpected/flaky cases or retries. All 41 explicit-recovery
+cases passed. The private Make overlay capped Console at four workers
+and Portal at one, reused the production assets just built, selected no
+subset and introduced no skip.
+
+The eighteen screenshots read during focused verification share exactly
+the same product Web, OpenAPI, fixture, generator, capability and Makefile
+inputs as this complete gate. The reviewed test-only differences are Help-action formatting and
+strengthened node-activity retry assertions; neither changes a product or
+screenshot actuator. A separate reviewed installation expectation schema adds
+only the optional portal_listen_address string; no Web, generator or Makefile
+consumer references it. The complete gate covers that newer schema as well. Old six-request controls, the initial lint rejection
+the no-data invalidation failure and the first full check's Help-test format
+rejection plus the old node-activity retry-label failure remain separate
+raw artifacts.
+This is a scripted Web consumer qualification, not an installed commit-loss,
+collector, workspace-scope SQL or GPU result. The frozen be62 acceptance
+inputs remain unchanged. AUD-108 and actual installation acceptance remain
+open for their other owners. Source, native logs, full browser reports,
+patches and image hashes remain in the source-qualified Web evidence.
+'''
+note=worktree/'docs/research/identity-audit-read-access.md'
+old=note.read_text();assert '### Complete Web recovery gate' not in old
+note.write_text(old+text)
+assert git('diff','--name-only')=='docs/research/identity-audit-read-access.md'
+(run/'evidence.diff').write_text(git('diff','--','docs/research/identity-audit-read-access.md')+'\n')
+assert note.read_text().startswith(old)
+subprocess.run(['git','diff','--check'],cwd=worktree,check=True)
+subprocess.run(['git','add','docs/research/identity-audit-read-access.md'],cwd=worktree,check=True)
+subprocess.run(['git','commit','-m','AUD-108: Record complete audit recovery gates','-m',f'Qualify exact source {source} with {console["expected"]} Console/{portal["expected"]} Portal Chromium passes and 38 existing conditional skips. Retain precise scripted/installed boundaries and reviewed screenshot inputs.'],cwd=worktree,check=True)
+pub=Path(tempfile.mkdtemp(prefix='publication-',dir=root));(root/'publication-current-path').write_text(str(pub)+'\n')
+(pub/'before').write_text(git('rev-parse','HEAD')+'\n')
+invoke(['git','fetch','origin'],pub/'fetch.log')
+invoke(['git','rebase','origin/main'],pub/'rebase.log')
+(pub/'base').write_text(git('rev-parse','origin/main')+'\n')
+(pub/'rebased-source').write_text(git('rev-parse','HEAD')+'\n')
+diff=git('diff','--name-only',source,'HEAD','--',*browser_paths)
+(pub/'browser-input-diff').write_text(diff+'\n' if diff else '')
+if diff:raise SystemExit('Browser inputs changed after rebase; no push. A fresh complete gate is required.')
+shutil.copy2(root/'workers.mk',pub/'workers.mk')
+invoke(['bash',str(root/'publication-check.sh'),str(pub)],pub/'publication-check-output.log')
+assert (pub/'stage').read_text().strip()=='complete' and (pub/'exit-status').read_text().strip()=='0'
+assert not git('status','--porcelain')
+(pub/'original-author-series').write_text(git('log','--reverse','--format=%H %an <%ae> %s','origin/main..HEAD')+'\n')
+(pub/'original-author-series.patch').write_bytes(subprocess.check_output(['git','format-patch','--stdout','origin/main..HEAD'],cwd=worktree))
+invoke(['git','push','origin','HEAD:main'],pub/'push.log')
+(root/'published-source').write_text(git('rev-parse','HEAD')+'\n')
+print('Fresh complete recovery gate and fast-forward publication completed.',flush=True)

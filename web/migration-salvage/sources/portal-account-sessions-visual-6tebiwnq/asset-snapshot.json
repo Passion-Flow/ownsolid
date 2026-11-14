@@ -1,0 +1,12 @@
+{
+  "archive": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/scoped-frontend-assets-0a50a040.tar.gz",
+  "sha256": "0c337cf30eefd79576729b1fed0288b5b3e2deb872b74ec01ba8126c48c7f774",
+  "bytes": 5820080,
+  "regularFileCount": 1233,
+  "source": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+  "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282",
+  "scope": "immutable snapshot of the scoped frontend build only",
+  "fullReleaseQualified": false,
+  "installed": false,
+  "doNotRebindToLaterDevComposition": true
+}

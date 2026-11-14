@@ -1,0 +1,10 @@
+{
+  "source": "314a133a1d635d5403efff6974a296d11054bad4",
+  "started": "2026-11-13T02:05:48.734990+00:00",
+  "finished": "2026-11-13T02:06:02.754561+00:00",
+  "exitCode": 0,
+  "busy": false,
+  "childStarted": true,
+  "trigger": "Fix both legacy resource consumers reported by typecheck, retaining the preceding failures",
+  "scope": "read-only focused lint/types/units; no browser, build, native or full gate"
+}

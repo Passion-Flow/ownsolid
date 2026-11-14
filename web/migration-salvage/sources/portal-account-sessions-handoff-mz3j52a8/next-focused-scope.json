@@ -1,0 +1,212 @@
+{
+  "status": "prepared-only, not executed, no waiter or queued resource opportunity",
+  "requiredHead": "91d36706641515a7697937b11adf8b23dc7ada4c",
+  "runtimeSource": "2efbdfaac288c16ab774271fed7ed58821a1797a",
+  "requiredWebTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+  "inputManifest": "files.json",
+  "scope": "focused formatter, grouped changed-file lint, Shell types and session/UI unit tests only",
+  "admission": "Existing shared Mac single nonblocking attempt, inode 50313339. Preserve >=2 GiB free memory, >=15 GiB disk, Node 512 MiB, one worker, 45 seconds per command. No browser/build/full/native/installed permission implied. Do not launch while preflight stays below the floor. No retry loop.",
+  "env": {
+    "NODE_OPTIONS": "--max-old-space-size=512"
+  },
+  "steps": [
+    {
+      "name": "format",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "prettier",
+        "--write",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/README.md",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e/account-sessions.spec.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/e2e/account-sessions.spec.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/browser-sessions.test.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/client.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/identity.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/index.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/transport.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/help/locales/en/shared/account.md",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/help/locales/zh-cn/shared/account.md",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/i18n/locales/en.json",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/i18n/locales/zh-cn.json",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-sessions.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-sessions.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/session.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/sign-in-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/use-account-sessions.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/use-account-sessions.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/account-session-flows.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/browser-sessions.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/control-plane.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/index.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/pages.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/components.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/problem-notice.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/typed-confirmation.tsx"
+      ]
+    },
+    {
+      "name": "lint-api",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/browser-sessions.test.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/client.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/identity.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/index.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/transport.ts"
+      ]
+    },
+    {
+      "name": "lint-shell",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-sessions.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-sessions.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/session.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/sign-in-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/use-account-sessions.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/use-account-sessions.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/account-session-flows.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/browser-sessions.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/control-plane.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/index.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/pages.ts"
+      ]
+    },
+    {
+      "name": "lint-ui",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/components.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/problem-notice.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/typed-confirmation.tsx"
+      ]
+    },
+    {
+      "name": "lint-console",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e/account-sessions.spec.ts"
+      ]
+    },
+    {
+      "name": "lint-portal",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/e2e/account-sessions.spec.ts"
+      ]
+    },
+    {
+      "name": "shell-types",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell",
+      "argv": [
+        "pnpm",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ]
+    },
+    {
+      "name": "session-units",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "src/use-account-sessions.test.tsx",
+        "src/account-sessions.test.tsx",
+        "src/session.test.ts",
+        "--maxWorkers=1"
+      ]
+    },
+    {
+      "name": "ui-units",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "src/components/components.test.tsx",
+        "--maxWorkers=1"
+      ]
+    },
+    {
+      "name": "format-check",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "exec",
+        "prettier",
+        "--check",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/README.md",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e/account-sessions.spec.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/e2e/account-sessions.spec.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/browser-sessions.test.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/client.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/identity.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/index.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/transport.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/help/locales/en/shared/account.md",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/help/locales/zh-cn/shared/account.md",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/i18n/locales/en.json",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/i18n/locales/zh-cn.json",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-sessions.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/account-sessions.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/session.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/sign-in-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/use-account-sessions.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/src/use-account-sessions.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/account-session-flows.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/browser-sessions.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/control-plane.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/index.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/pages.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/components.test.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/problem-notice.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/typed-confirmation.tsx"
+      ]
+    }
+  ],
+  "afterFormatting": "Record actual output hashes. If formatting changes files, review and commit only those own paths, bind all results to that new source; do not label the input Web tree as tested output."
+}

@@ -1,0 +1,48 @@
+{
+  "status": "DATA_ONLY_NOT_EXECUTED",
+  "candidate": {
+    "source": "63e2baea823524d4b20e8e429d689644265736d7",
+    "tree": "a1890957ccbb6a263ae2c9cd6686aedc3d9f163b",
+    "webTree": "527b3bd6aee6004d4cd1e5ee324566489200cec4",
+    "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+    "clean": true
+  },
+  "knownCurrentCorrectionsUnverified": [
+    "API mock audit-path assertions",
+    "Node menu/dialog close focus",
+    "Narrow ResourceHeader stacking",
+    "Unavailable deployment menu styling"
+  ],
+  "qualificationNeeded": [
+    "Focused formatter/lint including the latest API test and changed source files",
+    "API cursor regression tests and related unit/type checks",
+    "Source-bound new Console build; current assets still represent 1a2344ca",
+    "Original node/service mutation and undo/typed-confirmation flows",
+    "All four original new menu-focus failures without changing assertions",
+    "Affected a11y/keyboard inventory",
+    "EN/ZH desktop/390px header/menu screenshots and narrow selected-tab visibility",
+    "Inspect every actual generated image"
+  ],
+  "sourceBoundPriorEvidence": {
+    "source": "1a2344cad8a48eb3397fdc3692b142a1c82f09f0",
+    "browser": {
+      "ran": 138,
+      "passed": 134,
+      "failed": 4,
+      "skipped": 0,
+      "flaky": 0,
+      "retry": 0
+    },
+    "units": {
+      "API": 43,
+      "Console": 30,
+      "i18n": 22
+    },
+    "assetsManifestSha256": "6c2f186f379ceaed64ecfa118ec9232e8e5fcc0aa978721dfb9b58afcd90b569"
+  },
+  "noNewAdmissionGrantedByThisFile": true,
+  "nextMacSlot": "DEV SDK/client validation; this WEB job must not reacquire automatically",
+  "UX127": "OPEN",
+  "POR112": "OPEN",
+  "fullNativeInstalled": "OPEN_NOTRUN"
+}

@@ -1,0 +1,37 @@
+{
+  "recordedUTC": "2026-11-13T18:43:16.715420+00:00",
+  "carrier": {
+    "dev": 16777231,
+    "inode": 53377467,
+    "uid": 501,
+    "mode": "0o600",
+    "regular": true,
+    "nlink": 1,
+    "size": 0,
+    "readOnlySameIdentity": true,
+    "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+  },
+  "preparedFilesUnchanged": true,
+  "previewPorts": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "knownPIDs": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "builtAssetFiles": 697,
+  "builtAssetMismatches": [],
+  "assetsSource": "1a2344cad8a48eb3397fdc3692b142a1c82f09f0",
+  "assetsManifestSha256": "6c2f186f379ceaed64ecfa118ec9232e8e5fcc0aa978721dfb9b58afcd90b569",
+  "noNewLockAfterOriginalNB": true,
+  "noNodeBuildBrowserStartedAfterWorkCutoff": true,
+  "finalExecutorReachedNoNodeCommand": true,
+  "oldClosedWrappers": {
+    "count": 89,
+    "stubsUnchanged": true,
+    "sourceDataUnchanged": true
+  }
+}

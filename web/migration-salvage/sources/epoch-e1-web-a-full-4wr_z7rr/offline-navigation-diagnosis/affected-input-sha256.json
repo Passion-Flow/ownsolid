@@ -1,0 +1,13 @@
+{
+  "web/packages/config/src/playwright.ts": "dd5e2e5b4f7f4c353261d83e0449879fcf4c84d88094ff0f3b1fa460fabc5bee",
+  "web/apps/console/playwright.config.ts": "0bfaa1192e8776c293e67e3cb5f8e265ee2e33266e24c068293f527fe5f2f261",
+  "web/apps/console/e2e/models.spec.ts": "4bb9e00370f1e95f73c16a04258902ddea125e8404f6abd2e1fd086b51a8aa5c",
+  "web/apps/console/e2e/navigation.spec.ts": "96d66efa58e5ecbe3e3264d2aa57f15efcaa9ae1b69f07984ecd4f62c5a9692e",
+  "web/apps/console/e2e/nodes.spec.ts": "fba929149aa3a94c0d3251d19a3dc78bd4e28ae81e723cbb726e1556f847a522",
+  "web/apps/console/e2e/overview.spec.ts": "b56c2d832fe422add3b6b553bef42d1d91d221aa9d5fc60f05aea29245b7b967",
+  "web/packages/shell/testing/models.ts": "103a1255657fb440f183e15a3464a557bb445f11a79313e80c5306426b03e640",
+  "web/packages/shell/testing/control-plane.ts": "7e6348e87eceb88a2d07a067eb33cd318efb6e3bda1ce259a65bbe5aafc1670b",
+  "web/package.json": "a220f65bce6b074e88246327b2fb37b2e12f667c363ba9f27af2a17d83438179",
+  "web/pnpm-lock.yaml": "de9a5caf8f5dc63c0aa16e2789a8ef828a139e91bf4293b80f9d63ed263fcd08",
+  "Makefile": "f6078f4b28aca143f680055c106fa31abf252415d99519caffa012f24ed2fe89"
+}

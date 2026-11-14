@@ -1,0 +1,35 @@
+{
+  "actualGuardExitCode": 75,
+  "terminal": {
+    "phase": "cleanup-evidence",
+    "exit": 75,
+    "childStarted": false,
+    "cleanupConfirmed": true,
+    "elapsedSeconds": 0.05731500000547385
+  },
+  "busy": true,
+  "oneNonblockingAttempt": true,
+  "retryAttempted": false,
+  "queueCreated": false,
+  "attemptMarkerRetained": true,
+  "workChildrenStarted": 0,
+  "freshResourcePreflightExecuted": false,
+  "actualDiscoveryExecuted": false,
+  "actualBuildExecuted": false,
+  "actualBrowserExecuted": false,
+  "actualTestCasesExecuted": 0,
+  "imagesGenerated": 0,
+  "imagesRead": 0,
+  "parentPID": 93536,
+  "parentPsExit": 1,
+  "parentPsOutput": "",
+  "originalParentPresentInCarrierHolders": false,
+  "carrier": {
+    "regular": true,
+    "uid": 501,
+    "inode": 50313339
+  },
+  "source": "d4bfec1cd66cd7b4160fd900eeeb2e165d47dd3b",
+  "webTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "observedUTC": "2026-11-13T03:45:22.245944+00:00"
+}

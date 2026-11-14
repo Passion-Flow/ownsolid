@@ -1,0 +1,25 @@
+{
+  "base": "9975d76902a777abd4fa75c04c265b7194d04214",
+  "webTree": "8deed02cddb981a00c88d70a16bc841d4637be89",
+  "openapiTree": "45cb100db6504b80bf5418e2ffe0e8d993ced27c",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "knownFailedModelRuns": [
+    "684f07ef on db7ee24a",
+    "b4e222a7 on d0ab719a"
+  ],
+  "previousFullWebPass": "c70e9f5950f421e7bef194ae5f5ced0efaf1ca7f",
+  "preserveFailures": true,
+  "focusedSource": "2b983dbf75feaf36f6ac3423f4d1b0a1ecf0fc52",
+  "frozenWorktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-2b983dbf",
+  "testPath": "web/packages/shell/testing/help-flows.ts",
+  "fixedTestSha256": "de309e95ea595eed027c8b4c9b67e69de97eab1e24dd6061cfe707aa9d4d3d18",
+  "negativeTestSha256": "3132b113f26480454519c6f9faf74fe2c8a00c851112b8bc0ec19df841a48669",
+  "reviewedRuntimeInputDiff": [
+    "web/packages/shell/testing/help-flows.ts"
+  ],
+  "assetSource": "124520b94be27f673bdb32a3c5d825d1d337f75d",
+  "assetArchive": "/Users/passion./.local/state/ownsolid/web-scopes/installed-aud108-inputs-1qccyd72/qualified-aud108-web-build.tar.gz",
+  "assetArchiveSha256": "642226cd65bab85f67a8c571bd582540ed57e60fdf3cbc13fd0735f343b01380",
+  "assetFiles": 1230,
+  "productAndGeneratedInputsChanged": false
+}

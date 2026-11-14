@@ -1,0 +1,285 @@
+{
+  "scope": "One exact complete node-page run with conditional full admission; full resource check refused",
+  "handoffHead": "bfeea90cd5adb082b77047b0c97fcea7c7654c51",
+  "handoffTree": "d3e1a8f3aa48e0a8eaf17b3224ecf26ab081a041",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "branch": "codex/portal-account-sessions-joint",
+  "clean": true,
+  "testedProductSource": "82c602d32b2d957459b3a742499de96867da27a9",
+  "testedTree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+  "testedWebTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "sourceAndOriginalTestChanged": false,
+  "parentActualExit": 0,
+  "parentActualTotalSeconds": 13.141694000001735,
+  "actualStages": [
+    {
+      "name": "01-complete-node-page",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "(?:^|/)e2e/node-page[.]spec[.]ts$",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--output",
+        "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-node-page-_u9t_ix5/node-page-results"
+      ],
+      "exit": 0,
+      "seconds": 12.00296100000196,
+      "capturedBytes": 3038,
+      "rawStreamSha256": "fa11be045356510aa9d9dbfb8e9acf3fb1b9fb1fbb239b9791db1caccd89b467",
+      "outputRedactedBeforePersistence": true
+    }
+  ],
+  "directed": {
+    "file": "web/apps/console/e2e/node-page.spec.ts",
+    "pattern": "(?:^|/)e2e/node-page[.]spec[.]ts$",
+    "completeFileCases": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "retries": 0,
+    "flaky": 0,
+    "expectedOldTenMatched": true,
+    "extraFilenameMatches": false,
+    "sourceTestAssertionsTimeoutsUnchanged": true
+  },
+  "coverage": {
+    "oldFailedIds": 81,
+    "priorSourceIdenticalDirected": 71,
+    "currentDirected": 10,
+    "uncovered": 0,
+    "proof": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-node-page-_u9t_ix5/all81-failure-id-reconciliation.json",
+    "notCombinedCompleteSuiteQualification": true
+  },
+  "noRepeatedPassedCollectorOr129Tests": true,
+  "admission": {
+    "freshRawFreeBytes": 5313921024,
+    "freshDiskFreeBytes": 163487207424,
+    "nodeMaximumOldSpaceMiB": 512,
+    "workers": 1,
+    "absoluteDirectedSeconds": 600,
+    "cleanupReserveSeconds": 60,
+    "oneNbOnly": true,
+    "sameOpenDescriptionThroughWorkCleanupFreshFullCheck": true,
+    "fullMaximumAndCombinedBudgetsPreparedOnly": "1800/120;2400combined, not entered"
+  },
+  "fullAdmission": {
+    "rawFreeBytes": 5059379200,
+    "diskFreeBytes": 163487219712,
+    "requiredRawFreeBytes": 6442450944,
+    "requiredDiskFreeBytes": 32212254720,
+    "singleImmediateSampleAfterOwnedTargetedCleanup": true
+  },
+  "fullStage": {
+    "status": "NOTRUN",
+    "reason": "Fresh original full resource floor not met; no wait or full child",
+    "rawFreeBytes": 5059379200,
+    "diskFreeBytes": 163487219712,
+    "directedExit": 0
+  },
+  "fullMakeTest": "NOTRUN",
+  "fullInstallCheckBuild": "NOTRUN_THIS_ENTRY",
+  "retainedOriginalThreeCommandBindings": [
+    {
+      "name": "web-install",
+      "exit": 0,
+      "seconds": 2.6614300000001094,
+      "source": "82c602d32b2d957459b3a742499de96867da27a9",
+      "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+      "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+      "logSha256": "2b57e582126265c61c3f6c20c3b0e0326090c05fb9292f94b340b5d23f181e10",
+      "currentTransferredWholeQualification": false,
+      "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+    },
+    {
+      "name": "check",
+      "exit": 0,
+      "seconds": 35.73019800000111,
+      "source": "82c602d32b2d957459b3a742499de96867da27a9",
+      "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+      "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+      "logSha256": "5cc599ebfc664dc86550f45716d404523c303004fc9e6d9e08a702275717635f",
+      "currentTransferredWholeQualification": false,
+      "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+    },
+    {
+      "name": "build",
+      "exit": 0,
+      "seconds": 101.0466860000015,
+      "source": "82c602d32b2d957459b3a742499de96867da27a9",
+      "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+      "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+      "logSha256": "f6eb663b253e021f8d004324b98b4e72ab9e327f597e1f4b8f2bd5190e10a1a1",
+      "currentTransferredWholeQualification": false,
+      "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+    }
+  ],
+  "historicalToolchainByteContinuity": "Complete historical manifest not recorded; no unconditional transferred whole qualification. Matching source/assets retained; full stage not admitted.",
+  "observation": {
+    "identitySnapshots": 12,
+    "listenerObservations": 11,
+    "pid": 50418,
+    "kernelStart": [
+      1794588481,
+      222942
+    ],
+    "fd": "17",
+    "address": "[::1]:31036",
+    "healthSamples": 11,
+    "healthStatuses": {
+      "200": 11
+    },
+    "healthFirstUTC": "2026-11-13T16:48:02.157895+00:00",
+    "healthLastUTC": "2026-11-13T16:48:12.924096+00:00",
+    "bsdLookupErrors": 0,
+    "knownUnavailableMarked": 6,
+    "noProductFailureInferredFromObservation": true,
+    "launcherExit": [
+      {
+        "sequence": 5,
+        "utc": "2026-11-13T16:48:12.978Z",
+        "monotonicNs": "22466958736375",
+        "pid": 50399,
+        "ppid": 50397,
+        "nonce": "7aed7701-2935-4782-97cd-386b5a5dfa48",
+        "role": "playwright-runner",
+        "event": "preview-launcher-exit",
+        "execution": "e6f20aa2-3965-4107-a79e-edaf84df9dd9",
+        "childPid": 50417,
+        "code": null,
+        "signal": "SIGKILL"
+      }
+    ],
+    "viteOwnFinalExitStatus": "NOT_OBSERVED; not replaced with launcher SIGKILL",
+    "continuousLivenessClaimed": false,
+    "oldIncidentCauseKnown": false,
+    "networkTraceFiles": 0,
+    "originalPrivateControlsAndPrior129Rerun": false
+  },
+  "privacy": "Metadata-only collector and safe redacted/digested output; no network trace, credentials/headers/body/query/fragment stored by collector. Artifact policy only, no product/test assertion change.",
+  "cleanup": {
+    "parentConfirmed": true,
+    "targetedBeforeFullCheck": {
+      "confirmed": true,
+      "remaining": [],
+      "signalsRequestedNotExitStatuses": [],
+      "portsExit": 1,
+      "seconds": 0.03179699999964214
+    },
+    "epoch": {
+      "confirmed": true,
+      "negativeFilesRemoved": [],
+      "errors": []
+    },
+    "groupsRemaining": [],
+    "postExit": {
+      "observedOwnedPids": 20,
+      "sameLifetimeLive": [],
+      "reusedExcluded": [],
+      "knownPidReadbackExit": 1,
+      "knownPidRows": "",
+      "fdReadbackExit": 1,
+      "fdReadback": "",
+      "carrier": {
+        "dev": 16777231,
+        "inode": 53377467,
+        "uid": 501,
+        "mode": "0o600",
+        "regular": true,
+        "nlink": 1,
+        "size": 0
+      },
+      "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+      "sourceClean": true
+    }
+  },
+  "integrity": {
+    "sourceHashesVerified": 5099,
+    "assetHashesVerified": 1233,
+    "originalFullEvidenceUnchanged": 82,
+    "priorDirectedEvidenceUnchanged": 50,
+    "closedStubsUnchanged": 89,
+    "executedPreparedInputsUnchanged": 16,
+    "retainedOriginalCommands": [
+      {
+        "name": "web-install",
+        "exit": 0,
+        "seconds": 2.6614300000001094,
+        "source": "82c602d32b2d957459b3a742499de96867da27a9",
+        "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+        "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+        "logSha256": "2b57e582126265c61c3f6c20c3b0e0326090c05fb9292f94b340b5d23f181e10",
+        "currentTransferredWholeQualification": false,
+        "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+      },
+      {
+        "name": "check",
+        "exit": 0,
+        "seconds": 35.73019800000111,
+        "source": "82c602d32b2d957459b3a742499de96867da27a9",
+        "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+        "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+        "logSha256": "5cc599ebfc664dc86550f45716d404523c303004fc9e6d9e08a702275717635f",
+        "currentTransferredWholeQualification": false,
+        "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+      },
+      {
+        "name": "build",
+        "exit": 0,
+        "seconds": 101.0466860000015,
+        "source": "82c602d32b2d957459b3a742499de96867da27a9",
+        "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+        "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+        "logSha256": "f6eb663b253e021f8d004324b98b4e72ab9e327f597e1f4b8f2bd5190e10a1a1",
+        "currentTransferredWholeQualification": false,
+        "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+      }
+    ]
+  },
+  "unenteredFullBranchDefect": {
+    "executedFullBranch": false,
+    "actualFullNotrunReason": "Fresh rawFree5059379200B below6442450944B",
+    "staticDefect": "Unentered full branch inherited budget() default600 when rearming its worker alarm, which would prematurely cap a full run rather than use the admitted full cutoff.",
+    "actualTargetedResultAffected": false,
+    "executedSourcePreserved": true,
+    "fixedCandidate": "continuation-full-timer-fix.py",
+    "fixedCandidateSha256": "ab3be53ee970a548ac5306f720b14940d9832badd577a5f93f0f9d5ff74c39ad",
+    "fix": "Use budget(1800) for full-phase worker alarm; retain hard=phaseStart+1800/combined2400 and final120 cleanup",
+    "pythonSyntax": "PASS",
+    "actualFullExecutionValidation": "NOTRUN",
+    "candidateActivatedOrQueued": false
+  },
+  "unenteredFullTimerFix": {
+    "file": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-node-page-_u9t_ix5/continuation-full-timer-fix.py",
+    "sha256": "ab3be53ee970a548ac5306f720b14940d9832badd577a5f93f0f9d5ff74c39ad",
+    "offlineChecks": {
+      "isolatedBudgetChecks": 5,
+      "passed": 5,
+      "fullRearmAstUsesBudget1800": true,
+      "runtimeSignalOrTimerStarted": false,
+      "actualFullRun": "NOTRUN",
+      "originalTargetedResultChanged": false
+    },
+    "actualFullRun": "NOTRUN",
+    "originalExecutedRunnerUnchanged": true,
+    "readyAsRuntimeQualifiedFullBranch": false
+  },
+  "oldFullTestFailureAndOldIncidentCauseStillOpen": true,
+  "oldDev430AuditAndInstalledSqlSsoOfflineGapsRetained": true,
+  "fullGateQualified": false,
+  "roadmapTicked": false,
+  "published": false,
+  "noSecondNbResourceWaitRetryOrQueue": true,
+  "noPeakWork": true,
+  "documentationChecks": {
+    "layout": "PASS",
+    "roadmap": "PASS589",
+    "whitespace": "PASS"
+  },
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-node-page-_u9t_ix5/por112-node-page-coverage.bundle",
+  "bundleSha256": "c104dc833852ea358e3eaf4b3402064ad6db5744c7cc301b1d6b0a3dd067e422",
+  "bundlePrerequisite": "a0a29dae5b68dfa78c2951973ea198209e3e7833"
+}

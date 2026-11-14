@@ -1,0 +1,13 @@
+{
+  "confirmed": true,
+  "negativeFilesRemoved": [
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/lint-negative-fixture.js",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/.lint-negative-fixture.js",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/src/lint-negative-fixture.tsx",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/src/lint-negative-fixture.tsx",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e/lint-negative-fixture.ts",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/lint-negative-fixture.ts",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/config/src/lint-negative-fixture.ts"
+  ],
+  "errors": []
+}

@@ -1,0 +1,53 @@
+{
+  "parentPID": 39337,
+  "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "expectedInode": 50313339,
+  "kernelWaitBudgetSeconds": 0,
+  "executionBudgetSeconds": 600,
+  "childStarted": true,
+  "entryMonotonic": 63858.962781,
+  "hardDeadlineMonotonic": 64458.962781,
+  "workCutoffMonotonic": 64428.962781,
+  "cleanupReserveSeconds": 30,
+  "cleanupConfirmed": true,
+  "cleanupEvidenceFailed": false,
+  "groupsConfirmed": true,
+  "awakeConfirmed": true,
+  "phaseHistory": [
+    {
+      "phase": "one-nonblocking-attempt",
+      "descriptor": 3,
+      "device": 16777234,
+      "inode": 50313339
+    },
+    {
+      "phase": "held",
+      "descriptor": 3
+    },
+    {
+      "phase": "executing",
+      "childStarted": true,
+      "childPID": 39350,
+      "childGroup": 39350
+    },
+    {
+      "phase": "finished",
+      "exit": 0,
+      "executionSeconds": 183.65702800000145
+    },
+    {
+      "phase": "cleanup-evidence",
+      "exit": 0,
+      "cleanupConfirmed": true
+    }
+  ],
+  "descriptor": 3,
+  "device": 16777234,
+  "inode": 50313339,
+  "phase": "cleanup-evidence",
+  "updatedUTC": "2026-11-13T05:38:28.802533+00:00",
+  "childPID": 39350,
+  "childGroup": 39350,
+  "exit": 0,
+  "executionSeconds": 183.65702800000145
+}

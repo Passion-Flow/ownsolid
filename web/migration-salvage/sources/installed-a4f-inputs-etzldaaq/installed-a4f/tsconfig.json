@@ -1,0 +1,14 @@
+{
+  "extends": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-a4f1120d/web/tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-a4f1120d/web/apps/console/node_modules/@types"
+    ]
+  },
+  "include": [
+    "*.ts"
+  ]
+}

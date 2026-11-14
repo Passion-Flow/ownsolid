@@ -1,0 +1,30 @@
+{
+  "status": "DATA_ONLY_NO_NEW_ADMISSION",
+  "candidate": {
+    "source": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+    "tree": "c9204e90adf296a68f80ba0877b4bf52baa473f7",
+    "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+    "clean": true
+  },
+  "verifiedRuntime": {
+    "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+    "tree": "69030b656ce87905d50cd912d9bb36cd740719ed",
+    "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c"
+  },
+  "directedScope": "PASS: 56 unit, 97 browser, 57 images read, related types/lint/build.",
+  "remaining": [
+    "Joint Portal build and gateway-key usage Tabs consumer",
+    "Whole-platform make check/build/test on the joint source",
+    "Installed authority and durable SQL",
+    "Disconnected installation/delivery and real SSO"
+  ],
+  "priorNotRerun": [
+    "Original 41 request recovery cases",
+    "Other prior API/Console/i18n units",
+    "Four unchanged old-runtime policy negatives"
+  ],
+  "nextMacOwner": "DEV full SDK / joint gate",
+  "noAutomaticReacquisition": true,
+  "UX127": "OPEN",
+  "POR112": "OPEN_UNCHANGED"
+}

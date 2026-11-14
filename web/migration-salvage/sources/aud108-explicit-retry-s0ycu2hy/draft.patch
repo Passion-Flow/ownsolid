@@ -1,0 +1,530 @@
+diff --git a/docs/research/identity-audit-read-access.md b/docs/research/identity-audit-read-access.md
+index d420a8fc..17124c47 100644
+--- a/docs/research/identity-audit-read-access.md
++++ b/docs/research/identity-audit-read-access.md
+@@ -166,3 +166,89 @@ at 6a77bcdbc372a0aa7fac24b3f21a83105c246c86;
+ see the [shared Web gate](model-import-cleanup.md#complete-web-consumer-gate).
+ This retains the exact-action and thirteen-field boundaries; installed AUD-108
+ acceptance is still separate.
++
++## Explicit Web read recovery
++
++Reviewed 2026-11-13 against the implemented identity reader and TanStack Query
++5.105.3. Both the installation list and resource activity call the existing
++`GET /api/v1/admin/audit-events`. A successful read also appends an access event.
++Loss of the response cannot establish whether that append committed. The current
++server's uncertain transaction outcome is HTTP 409 with
++`STORAGE_COMMIT_OUTCOME_UNKNOWN`, no page and no Retry-After. The standard thirteen
++event fields and `category` filter remain unchanged. DEV owns the public contract
++annotation; this consumer must not import an unqualified candidate projection.
++
++### Sources and selected approach
++
++- [TanStack query options](https://tanstack.com/query/latest/docs/framework/react/reference/functions/useQuery)
++  document retry, retry-on-mount, window focus, reconnect and network-mode controls.
++  The installed source confirms that `networkMode: always` does not queue a read
++  until connectivity returns. Disable retries and every background refetch trigger
++  for this audited endpoint only; retain the application's normal policy elsewhere.
++- [TanStack infinite queries](https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries)
++  refetch every cached page sequentially. A recovery action must instead retry the
++  failed next cursor once, or read only the first page when restarting an invalid
++  cursor. The pinned QueryClient `infiniteQuery` implementation accepts `pages: 1`;
++  failed fetches retain previous data until a successful replacement arrives.
++- [HTTP semantics, section 9.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2)
++  permit incidental logging for safe methods. GET alone is not evidence that the
++  access record was absent after response loss. This product deliberately requires
++  a person to start another audit read, including after an uncertain GET result.
++- The primary product implementation is `identity/audit_read.go`, its HTTP
++  dispatcher and the real SQL/wire integration tests. Each explicit successful
++  read has a new server request ID and access event. Browser fixtures can establish
++  consumer dispatch counts, not durable commit outcomes or actual SQL authority.
++
++Use one shared Console query policy and recovery notice for the two consumers.
++Do not treat the existing 409 as automatically retried: `ApiProblem.retryable`
++includes status 0/429/502/503/504, not 409. The actual regression is automatic
++retry after network/timeout (status 0), plus implicit refetches. Mark these cached
++pages as manually refreshed, disable retry-on-mount/focus/reconnect/polling, and
++execute each chosen request immediately rather than queuing it offline.
++
++An initial error replaces loading with an inline Problem. An uncertain result
++explains that the read may already have been recorded and that Read again starts
++a new request. Never call it a rollback, an absent access or an empty list. Keep
++the server code and request ID available. A partial pagination failure keeps
++previous pages, says they are the pages already read and offers one explicit
++recovery action. Busy recovery cannot start a second overlapping request.
++Retry-After remains enforced by the shared Problem notice.
++
++A current 403/404 refusal removes all cached event rows and any open event preview
++from the rendered consumer; it offers no retry against the same denied authority.
++Session-expiry handling remains with the existing session owner. Browser reload,
++selecting another filter and deliberately opening a different route are new user
++reads. Merely focusing a tab, reconnecting, remounting a failed cached query or
++invalidating cached data must not issue another read. No background status poll
++or new server operation is introduced.
++
++Rejected: changing the global retry policy (unrelated consumers need it), assuming
++409 already retries, relabeling network loss as a definitely failed append,
++generic whole-page reload recovery that replays every cached page, silently
++discarding older pages before a replacement succeeds, and fabricating a new
++Problem or exact-action enum. Keep ordinary initial/filtered empty text distinct.
++
++### Dependencies, failure checks and acceptance
++
++No dependency, model or dataset is added. Existing React and TanStack Query are
++MIT, Lucide is ISC and Playwright is Apache-2.0. Commercial use, redistribution
++and offline execution remain allowed with their existing notices. All production
++assets and messages remain local to the installation.
++
++Cover both actual UI consumers in English and Simplified Chinese: a response lost
++after a fixture has observed the request, 409 commit-unknown, network refusal,
++configured transport timeout, transient 503, and malformed response. Count all
++attempts including failed ones. Wait beyond the old retry delay, exercise actual
++focus/visibility and offline/reconnect events, and remount a cached failed query;
++none may silently issue another read. Explicit recovery increments the count by
++exactly one. Recover a failed next cursor without re-reading previous pages;
++recover an invalid cursor by one first-page request and replace history only on
++success. Cover permission revocation after a loaded page and an open preview,
++the Portal refusal, fresh page reload and keyboard activation. Retain request IDs,
++verify no `action` parameter and read desktop/narrow screenshots. Add the new
++uncertain and partial states to the existing accessibility/localization inventory.
++
++Finished consumer behavior requires targeted checks plus a new exact-source full
++repository gate. The older 1,134/410 browser result is not evidence for this
++change. Actual installed access accounting and independent SQL remain separate;
++AUD-108 and installed acceptance stay open until their owners' requirements hold.
+diff --git a/web/README.md b/web/README.md
+index c0e654f1..561e7ed8 100644
+--- a/web/README.md
++++ b/web/README.md
+@@ -110,3 +110,10 @@ explains that it cannot resume and opens a new bundle upload. Pending expiry
+ cleanup blocks continuation until it finishes. A new import uses a new request
+ key; replaying an old key only reads the original import. The UI does not enable
+ the optional expiry worker, whose startup binding belongs to Control.
++
++The audit list and resource activity record each access on the server. They do not
++retry or refresh on focus, reconnect or cache invalidation. A lost answer may
++already have produced an access record; Read again is a new explicit read. Failed
++pagination retains earlier pages and retries only its cursor. An invalid cursor
++offers one first-page restart, retaining history until that read succeeds. A
++current permission refusal removes cached event rows and any preview from view.
+diff --git a/web/apps/console/e2e/audit.spec.ts b/web/apps/console/e2e/audit.spec.ts
+index a37ff68f..3e831a4a 100644
+--- a/web/apps/console/e2e/audit.spec.ts
++++ b/web/apps/console/e2e/audit.spec.ts
+@@ -185,7 +185,7 @@ test('says when nothing is recorded and when filters hide everything', async ({
+ test('a list that cannot load offers a retry', async ({ page }) => {
+   control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+   await page.goto('/audit');
+-  const retry = page.getByRole('button', { name: 'Try again' });
++  const retry = page.getByRole('button', { name: 'Read again' });
+   await expect(retry).toBeVisible();
+   control.auditProblem = null;
+   await retry.click();
+@@ -297,11 +297,11 @@ for (const [locale, messages] of [
+     control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+     await page.reload();
+     await expect(
+-      page.getByRole('button', { name: messages['action.retry'], exact: true }),
++      page.getByRole('button', { name: messages['audit.read.again'], exact: true }),
+     ).toBeVisible();
+     control.auditProblem = null;
+     control.auditEvents = [auditReadEvent];
+-    await page.getByRole('button', { name: messages['action.retry'], exact: true }).click();
++    await page.getByRole('button', { name: messages['audit.read.again'], exact: true }).click();
+     await expect(row).toBeVisible();
+     expect(control.auditQueries.at(-1)?.get('category')).toBe('audit');
+     expect(control.auditQueries.every((query) => !query.has('action'))).toBe(true);
+diff --git a/web/apps/console/e2e/pages.ts b/web/apps/console/e2e/pages.ts
+index 85bdfeb9..b7135a20 100644
+--- a/web/apps/console/e2e/pages.ts
++++ b/web/apps/console/e2e/pages.ts
+@@ -1099,9 +1099,32 @@ export const consolePages: readonly PageState[] = [
+     open: async (page, control) => {
+       control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
+       await openAudit(page, control);
+-      await page.getByRole('button', { name: 'Try again' }).waitFor();
+-    },
+-  },
++      await page.getByRole('button', { name: 'Read again' }).waitFor();
++    },
++  },
++  ...(['trail', 'activity'] as const).flatMap((surface): PageState[] =>
++    (['uncertain', 'partial'] as const).map((state) => ({
++      name: `audit ${surface} with ${state} read recovery`,
++      path: surface === 'trail' ? '/audit' : '/users/$userId',
++      open: async (page, control) => {
++        control.signedIn = true;
++        control.users = [memberUser];
++        control.auditEvents = Array.from({ length: 25 }, (_, index) => ({
++          ...licenseEvent,
++          id: `6f1c7a1e-0000-4000-8000-${String(index).padStart(12, '0')}`,
++          target_id: memberUser.id,
++        }));
++        if (state === 'uncertain') control.auditProblem = { status: 409, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN' };
++        await page.goto(surface === 'trail' ? '/audit' : `/users/${memberUser.id}?tab=activity`);
++        if (state === 'partial') {
++          await page.getByRole('table').waitFor();
++          control.auditProblem = { status: 409, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN' };
++          await page.getByRole('button', { name: 'Load more', exact: true }).click();
++        }
++        await page.getByRole('button', { name: 'Read again', exact: true }).waitFor();
++      },
++    })),
++  ),
+   {
+     name: 'license in force',
+     path: '/license',
+diff --git a/web/apps/console/src/audit-page.tsx b/web/apps/console/src/audit-page.tsx
+index 79731aec..ebe46680 100644
+--- a/web/apps/console/src/audit-page.tsx
++++ b/web/apps/console/src/audit-page.tsx
+@@ -1,6 +1,6 @@
+ // The audit trail: what happened, who did it and how it ended, from a shareable link. Action names
+ // stay the codes an auditor quotes (docs/research/audit-trail-page.md).
+-import { isProblem, listAuditEvents, type AuditEvent, type AuditOutcome } from '@ownsolid/api';
++import { listAuditEvents, type AuditEvent, type AuditOutcome } from '@ownsolid/api';
+ import { useI18n, type TranslationKey } from '@ownsolid/i18n';
+ import {
+   ColumnChooser,
+@@ -22,7 +22,6 @@ import {
+   EmptyState,
+   FilterSelect,
+   Notice,
+-  ProblemNotice,
+   SearchField,
+   Skeleton,
+   StatusPill,
+@@ -34,11 +33,12 @@ import {
+   Tr,
+   type StatusTone,
+ } from '@ownsolid/ui';
+-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
++import { useQuery } from '@tanstack/react-query';
+ import { ScrollText, X } from 'lucide-react';
+ import { useMemo } from 'react';
+ import { auditEventSearch, customRange } from './audit-link.ts';
+ import { ActionName, TargetName, useAuditNames } from './audit-names.tsx';
++import { AuditReadFailure, useAuditRead } from './audit-read.tsx';
+ 
+ const categories = [
+   'account',
+@@ -317,16 +317,16 @@ export function AuditPage() {
+   const badActor = actor !== undefined && !identifier.test(actor);
+   const badWindow = custom ? windowProblem(from ?? '', to ?? '') : null;
+ 
+-  const events = useInfiniteQuery({
++  const events = useAuditRead({
+     queryKey: ['audit', category, outcome, actor, request, range, from, to],
+-    queryFn: ({ pageParam, signal }) => {
++    read: (cursor, signal) => {
+       // The clock is read here, once per first page; the cursor carries the window after that.
+       const end = new Date();
+       const hours = ranges[range] ?? 0;
+       return listAuditEvents(
+         {
+           limit,
+-          cursor: pageParam ?? undefined,
++          cursor: cursor ?? undefined,
+           category,
+           outcome: outcome as AuditOutcome | undefined,
+           actorUserId: actor,
+@@ -337,8 +337,6 @@ export function AuditPage() {
+         { signal },
+       );
+     },
+-    initialPageParam: null as string | null,
+-    getNextPageParam: (last) => last.next_cursor,
+     enabled: !badRequest && !badActor && badWindow === null,
+   });
+   const items = useMemo(
+@@ -369,14 +367,13 @@ export function AuditPage() {
+       </div>
+     );
+   } else if (events.error && items.length === 0) {
+-    body = isProblem(events.error) ? (
+-      <ProblemNotice
+-        problem={events.error}
+-        onRetry={() => {
+-          void events.refetch();
+-        }}
++    body = (
++      <AuditReadFailure
++        error={events.error}
++        busy={events.isFetching}
++        onRetry={events.readAgain}
+       />
+-    ) : null;
++    );
+   } else if (items.length === 0) {
+     body = (
+       <Card>
+@@ -394,13 +391,16 @@ export function AuditPage() {
+   } else {
+     body = (
+       <>
++        {events.error ? (
++          <AuditReadFailure error={events.error} partial busy={events.isFetching} onRetry={events.readAgain} />
++        ) : null}
+         <Rows items={items} list={list} />
+-        {events.hasNextPage ? (
++        {events.hasNextPage && !events.error ? (
+           <Button
+             className="mt-4"
+-            disabled={events.isFetchingNextPage}
++            disabled={events.isFetching}
+             onClick={() => {
+-              void events.fetchNextPage();
++              void events.fetchNextPage({ cancelRefetch: false });
+             }}
+           >
+             {t('audit.loadMore')}
+diff --git a/web/apps/console/src/resource-page.tsx b/web/apps/console/src/resource-page.tsx
+index a2ff256f..2f113109 100644
+--- a/web/apps/console/src/resource-page.tsx
++++ b/web/apps/console/src/resource-page.tsx
+@@ -17,12 +17,13 @@ import {
+   cn,
+   type StatusTone,
+ } from '@ownsolid/ui';
+-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
++import { useQuery } from '@tanstack/react-query';
+ import { Link, useRouter, useRouterState } from '@tanstack/react-router';
+ import { ArrowLeft, History, SearchX } from 'lucide-react';
+ import type { ReactNode } from 'react';
+ import { auditEventSearch } from './audit-link.ts';
+ import { ActionName } from './audit-names.tsx';
++import { AuditReadFailure, useAuditRead } from './audit-read.tsx';
+ 
+ const outcomeTones: Record<AuditOutcome, StatusTone> = {
+   success: 'good',
+@@ -173,31 +174,28 @@ export function ResourceActivity({
+ }) {
+   const { t, format } = useI18n();
+   const limit = useQuery(runtimeConfigQuery()).data?.ui.pageSize ?? 20;
+-  const events = useInfiniteQuery({
++  const events = useAuditRead({
+     queryKey: ['resource-activity', target, actor, since, limit],
+-    queryFn: ({ pageParam, signal }) =>
++    read: (cursor, signal) =>
+       listAuditEvents(
+         // The minute covers the moment it began, whose event may carry a slightly earlier time.
+         {
+           limit,
+-          cursor: pageParam ?? undefined,
++          cursor: cursor ?? undefined,
+           targetId: target,
+           actorUserId: actor,
+           from: new Date(Date.parse(since) - 60_000).toISOString(),
+         },
+         { signal },
+       ),
+-    initialPageParam: null as string | null,
+-    getNextPageParam: (last) => last.next_cursor,
+   });
+   if (events.isPending) return <Skeleton className="h-11 w-full" />;
+   if (events.isError && !events.data) {
+     return (
+-      <ResourceFailure
++      <AuditReadFailure
+         error={events.error}
+-        onRetry={() => {
+-          void events.refetch();
+-        }}
++        busy={events.isFetching}
++        onRetry={events.readAgain}
+       />
+     );
+   }
+@@ -213,6 +211,9 @@ export function ResourceActivity({
+   }
+   return (
+     <>
++      {events.error ? (
++        <AuditReadFailure error={events.error} partial busy={events.isFetching} onRetry={events.readAgain} />
++      ) : null}
+       <Card className="overflow-hidden">
+         <Table>
+           <thead>
+@@ -251,12 +252,12 @@ export function ResourceActivity({
+           </tbody>
+         </Table>
+       </Card>
+-      {events.hasNextPage ? (
++      {events.hasNextPage && !events.error ? (
+         <Button
+           className="mt-4"
+-          disabled={events.isFetchingNextPage}
++          disabled={events.isFetching}
+           onClick={() => {
+-            void events.fetchNextPage();
++            void events.fetchNextPage({ cancelRefetch: false });
+           }}
+         >
+           {t('audit.loadMore')}
+diff --git a/web/packages/i18n/locales/en.json b/web/packages/i18n/locales/en.json
+index e5aad760..89022fb1 100644
+--- a/web/packages/i18n/locales/en.json
++++ b/web/packages/i18n/locales/en.json
+@@ -193,6 +193,11 @@
+   "audit.range.31d": "Last 31 days",
+   "audit.range.7d": "Last 7 days",
+   "audit.range.custom": "Choose dates",
++  "audit.read.again": "Read again",
++  "audit.read.partial": "Showing only the pages already read. This is not a complete result.",
++  "audit.read.restart": "Read from the start",
++  "audit.read.unknown.detail": "We could not confirm this read. It may already be recorded in the audit trail. Read again starts a new request; nothing is retried automatically.",
++  "audit.read.unknown.title": "Audit read not confirmed",
+   "audit.request": "Find by request ID",
+   "audit.request.invalid": "That is not a request ID. Copy one from an error notice or an event.",
+   "audit.request.placeholder": "Paste a request ID",
+diff --git a/web/packages/i18n/locales/zh-cn.json b/web/packages/i18n/locales/zh-cn.json
+index 7d285685..6a1c27cc 100644
+--- a/web/packages/i18n/locales/zh-cn.json
++++ b/web/packages/i18n/locales/zh-cn.json
+@@ -193,6 +193,11 @@
+   "audit.range.31d": "过去 31 天",
+   "audit.range.7d": "过去 7 天",
+   "audit.range.custom": "选择日期",
++  "audit.read.again": "重新读取",
++  "audit.read.partial": "仅显示已经读取的页面，这不是完整结果。",
++  "audit.read.restart": "从头读取",
++  "audit.read.unknown.detail": "无法确认此次读取的结果，它可能已经记入审计记录。重新读取会发起一个新请求，系统不会自动重试。",
++  "audit.read.unknown.title": "无法确认此次审计读取",
+   "audit.request": "按请求 ID 查找",
+   "audit.request.invalid": "这不是请求 ID。请从错误提示或事件中复制。",
+   "audit.request.placeholder": "粘贴请求 ID",
+diff --git a/web/packages/shell/testing/audit.ts b/web/packages/shell/testing/audit.ts
+index 6db2241e..2f02c314 100644
+--- a/web/packages/shell/testing/audit.ts
++++ b/web/packages/shell/testing/audit.ts
+@@ -89,12 +89,12 @@ export async function routeAudit(
+   problem: Refuse,
+ ): Promise<void> {
+   await page.route('**/api/v1/admin/audit-events?*', (route) => {
++    const query = new URL(route.request().url()).searchParams;
++    state.auditQueries.push(query);
+     if (state.audience !== 'admin') {
+       return problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+     }
+     if (state.auditProblem) return problem(route, state.auditProblem);
+-    const query = new URL(route.request().url()).searchParams;
+-    state.auditQueries.push(query);
+     const category = query.get('category');
+     const outcome = query.get('outcome');
+     const actor = query.get('actor_user_id');
+diff --git a/web/packages/shell/testing/control-plane.ts b/web/packages/shell/testing/control-plane.ts
+index a57df34b..797c5edf 100644
+--- a/web/packages/shell/testing/control-plane.ts
++++ b/web/packages/shell/testing/control-plane.ts
+@@ -232,6 +232,8 @@ export interface ControlPlane
+   notificationPolls: boolean[];
+   /** Fails `/runtime-config.json` with a dropped connection while true. */
+   unreachable: boolean;
++  /** The validated runtime timeout used by transport-failure browser flows. */
++  requestTimeoutMilliseconds: number;
+   /** Answers the next sign-in with this failure instead of checking credentials. */
+   nextSignIn: ScriptedProblem | null;
+   /** Fails sign-out with this problem while set. */
+@@ -330,6 +332,7 @@ export async function mockControlPlane(
+     audience,
+     sessionWorkspace: workspace,
+     pollMilliseconds: runtimeConfig.ui.poll_milliseconds,
++    requestTimeoutMilliseconds: runtimeConfig.request_timeout_milliseconds,
+     signedIn: false,
+     user: { ...user },
+     password: account.password,
+@@ -392,6 +395,7 @@ export async function mockControlPlane(
+       ? route.abort('connectionrefused')
+       : data(route, {
+           ...runtimeConfig,
++          request_timeout_milliseconds: state.requestTimeoutMilliseconds,
+           default_locale: state.tenantSettings.default_locale,
+           ui: { ...runtimeConfig.ui, poll_milliseconds: state.pollMilliseconds },
+         }),
+diff --git a/web/packages/ui/src/components/components.test.tsx b/web/packages/ui/src/components/components.test.tsx
+index 5a0f92a0..7fbc1575 100644
+--- a/web/packages/ui/src/components/components.test.tsx
++++ b/web/packages/ui/src/components/components.test.tsx
+@@ -217,6 +217,41 @@ describe('ProblemNotice', () => {
+     expect(screen.getByRole('button', { name: 'Reload the page' })).toBeInTheDocument();
+     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+   });
++
++  it('uses explicit operation recovery for an uncertain outcome and preserves its request ID', async () => {
++    const onClick = vi.fn();
++    inEnglish(
++      <ProblemNotice
++        problem={{ ...base, code: 'STORAGE_COMMIT_OUTCOME_UNKNOWN', retryable: false }}
++        recovery={{ label: 'Read again', onClick }}
++      />,
++    );
++    expect(screen.queryByRole('button', { name: 'Reload the page' })).not.toBeInTheDocument();
++    expect(screen.getByRole('alert')).toHaveTextContent('req-1');
++    await userEvent.click(screen.getByRole('button', { name: 'Read again' }));
++    expect(onClick).toHaveBeenCalledOnce();
++  });
++
++  it('honors Retry-After and an in-flight operation for custom recovery', () => {
++    vi.useFakeTimers();
++    try {
++      const onClick = vi.fn();
++      const problem = { ...base, code: 'RATE_LIMITED', retryAfterSeconds: 2 };
++      const { rerender } = inEnglish(
++        <ProblemNotice problem={problem} recovery={{ label: 'Read again', onClick }} />,
++      );
++      expect(screen.getByRole('button', { name: 'Read again' })).toBeDisabled();
++      act(() => { vi.advanceTimersByTime(2_100); });
++      expect(screen.getByRole('button', { name: 'Read again' })).toBeEnabled();
++      rerender(
++        <I18nProvider locale="en">
++          <ProblemNotice problem={problem} recovery={{ label: 'Read again', onClick, disabled: true }} />
++        </I18nProvider>,
++      );
++      expect(screen.getByRole('button', { name: 'Read again' })).toBeDisabled();
++      expect(onClick).not.toHaveBeenCalled();
++    } finally { vi.useRealTimers(); }
++  });
+ });
+ 
+ describe('Dialog', () => {
+diff --git a/web/packages/ui/src/components/problem-notice.tsx b/web/packages/ui/src/components/problem-notice.tsx
+index f8711dd0..9010e95b 100644
+--- a/web/packages/ui/src/components/problem-notice.tsx
++++ b/web/packages/ui/src/components/problem-notice.tsx
+@@ -23,6 +23,12 @@ export interface ProblemNoticeProps {
+   title?: string | undefined;
+   /** A next step that depends on where the failure happened. */
+   detail?: string | undefined;
++  /** Operation-specific recovery, honoring Retry-After instead of the generic reload/retry. */
++  recovery?: {
++    label: string;
++    onClick: () => void;
++    disabled?: boolean;
++  } | undefined;
+   className?: string | undefined;
+ }
+ 
+@@ -71,7 +77,7 @@ export function ProblemNotice(props: ProblemNoticeProps) {
+   return <Explained key={`${code}:${requestId}:${String(retryAfterSeconds)}`} {...props} />;
+ }
+ 
+-function Explained({ problem, onRetry, titleAs, title, detail, className }: ProblemNoticeProps) {
++function Explained({ problem, onRetry, titleAs, title, detail, recovery, className }: ProblemNoticeProps) {
+   const { t, format, knows } = useI18n();
+   const wait = useWait(problem.retryAfterSeconds);
+   const base = `problem.${problem.code}`;
+@@ -80,7 +86,13 @@ function Explained({ problem, onRetry, titleAs, title, detail, className }: Prob
+   const known = knows(titleKey) && knows(detailKey);
+   const reload = fixedByReload.has(problem.code);
+   let action = null;
+-  if (reload) {
++  if (recovery) {
++    action = (
++      <Button size="sm" disabled={wait > 0 || recovery.disabled} onClick={recovery.onClick}>
++        {recovery.label}
++      </Button>
++    );
++  } else if (reload) {
+     action = (
+       <Button
+         size="sm"

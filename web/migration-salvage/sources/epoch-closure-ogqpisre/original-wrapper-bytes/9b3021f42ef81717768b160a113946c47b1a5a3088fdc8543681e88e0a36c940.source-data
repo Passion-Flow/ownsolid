@@ -1,0 +1,73 @@
+from pathlib import Path
+import hashlib,json,os,shutil,signal,subprocess,sys,time
+root=Path(sys.argv[1]);info=json.loads((root/'preparation.json').read_text());frozen=Path(info['frozenWorktree']);work=Path(info['worktree']);target=frozen/info['testPath']
+env={key:value for key,value in os.environ.items() if not key.startswith(('OWNSOLID_LIVE_','OWNSOLID_GW120_')) and key not in ['OWNSOLID_DEV_ORIGIN','TMOUT','PS1']}
+env.update({'npm_config_offline':'true','OWNSOLID_PLAYWRIGHT_PORT_OFFSET':'26066','VITEST_MAX_WORKERS':'2','GOPROXY':'off','GOSUMDB':'off','CARGO_NET_OFFLINE':'true'})
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+def git(cwd,*args):return subprocess.check_output(['git',*args],cwd=cwd,text=True).strip()
+def record(phase,**kw):
+ (root/'narrow-state.json').write_text(json.dumps({'phase':phase,**kw},indent=2)+'\n')
+def execute(args,cwd,log,timeout=60):
+ with log.open('w') as out:subprocess.run(args,cwd=cwd,env=env,stdout=out,stderr=subprocess.STDOUT,timeout=timeout,check=True)
+def tests(suites):
+ for suite in suites:
+  for spec in suite.get('specs',[]):
+   for test in spec.get('tests',[]):yield spec,test
+  yield from tests(suite.get('suites',[]))
+def browser(label,app,expected_failures=0):
+ report=root/(label+'.json');stderr=root/(label+'.stderr.log')
+ args=['pnpm','exec','playwright','test','e2e/help.spec.ts','--grep','keeps a contract discoverable offline and retries its download in','--workers=2','--reporter=json','--output='+str(root/(label+'-results'))]
+ record(label,source=info['focusedSource'],command=args)
+ with report.open('w') as out,stderr.open('w') as err:
+  result=subprocess.run(args,cwd=frozen/'web/apps'/app,env=env,stdout=out,stderr=err,timeout=70)
+ (root/(label+'.exit')).write_text(str(result.returncode)+'\n')
+ data=json.loads(report.read_text());stats=data['stats'];assert not data.get('errors'),data.get('errors')
+ assert stats['skipped']==0 and stats['flaky']==0 and stats['unexpected']==expected_failures,stats
+ assert stats['expected']==2-expected_failures,stats
+ cases=list(tests(data['suites']));assert len(cases)==2,len(cases)
+ assert all(len(test['results'])==1 and test['results'][0].get('retry',0)==0 for spec,test in cases)
+ if expected_failures:
+  assert result.returncode==1,result.returncode
+  for spec,test in cases:
+   errors=test['results'][0].get('errors',[])
+   message='\n'.join(error.get('message','') for error in errors)
+   assert 'toHaveURL' in message and '/help/api?q=changePassword' in message,message
+ else:assert result.returncode==0,result.returncode
+ return {'exit':result.returncode,'stats':stats,'report':str(report)}
+def terminate(signum,frame):raise SystemExit(124)
+signal.signal(signal.SIGTERM,terminate)
+assert git(frozen,'rev-parse','HEAD')==info['focusedSource'] and not git(frozen,'status','--porcelain')
+assert sha(target)==info['fixedTestSha256']
+results={}
+try:
+ target.write_bytes((root/'negative-help-flows.ts').read_bytes());assert sha(target)==info['negativeTestSha256']
+ results['negativePortal']=browser('negative-portal','portal',expected_failures=2)
+finally:target.write_bytes((root/'fixed-help-flows.ts').read_bytes())
+assert not git(frozen,'status','--porcelain')
+results['console']=browser('focused-console','console')
+results['portal']=browser('focused-portal','portal')
+(root/'focused-qualification.json').write_text(json.dumps({'source':info['focusedSource'],'testSha256':info['fixedTestSha256'],'runtimeAssetsUnchanged':True,'results':results,'knownModelFailuresPreserved':info['knownFailedModelRuns'],'newCompleteGateRun':False,'installedRun':False},indent=2)+'\n')
+# Publish only after the accurate-source focused cases pass; no code is authored while holding the window.
+record('publish-preflight')
+assert git(work,'rev-parse','HEAD')==info['focusedSource'] and not git(work,'status','--porcelain')
+execute(['git','fetch','origin'],work,root/'fetch.log',timeout=15)
+execute(['git','rebase','origin/main'],work,root/'rebase.log',timeout=15)
+source=git(work,'rev-parse','HEAD')
+paths=['web','api','pkg/capabilities/declaration.json','tests/fixtures','tools/codegen/web-api.mjs','tools/codegen/web-help.mjs','Makefile']
+assert not git(work,'diff','--name-only',info['focusedSource'],source,'--',*paths),'Focused/browser inputs changed; no push'
+assert not git(work,'status','--porcelain')
+(root/'published-source-candidate').write_text(source+'\n')
+(root/'original-author-series').write_text(git(work,'log','--reverse','--format=%H %an <%ae> %s','origin/main..HEAD')+'\n')
+(root/'original-author-series.patch').write_bytes(subprocess.check_output(['git','format-patch','--stdout','origin/main..HEAD'],cwd=work))
+execute(['git','push','origin','HEAD:main'],work,root/'push.log',timeout=15)
+(root/'published-source').write_text(source+'\n')
+record('client-preparation',source=source)
+execute([sys.executable,str(root/'prepare-client.py'),str(root),source],work,root/'client-preparation.log',timeout=40)
+client=root/'installed-help'
+execute(['bash',str(client/'checks.sh'),str(client)],client,root/'client-checks.log',timeout=40)
+execute([sys.executable,str(root/'materialize-client.py'),str(root)],work,root/'client-materialization.log',timeout=20)
+assert not git(frozen,'status','--porcelain') and not git(work,'status','--porcelain')
+ports=subprocess.run(['lsof','-nP','-iTCP:30376','-iTCP:30377','-sTCP:LISTEN'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+(root/'preview-cleanup.log').write_text(ports.stdout);assert ports.returncode==1,ports.stdout
+record('complete',source=source,focusedSource=info['focusedSource'],newClientSelftests=True,installedRun=False)
+print(json.dumps({'source':source,'focusedSource':info['focusedSource'],'focusedPositive':4,'negativeControls':2,'client':'new source-bound typecheck,18 input guards,4 preservation guards,3 discoveries; no real browser/session/runtime used','package':str(root/'input-manifest.json')}),flush=True)

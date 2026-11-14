@@ -1,0 +1,29 @@
+{
+  "status": "prepared-only; needs a new explicit resource opportunity, no queue or executable started",
+  "source": "6d3d6b8c6e2641dea8d2d750eda3121e4263b6ca",
+  "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282",
+  "ownChangedInputs": [
+    "web/packages/shell/src/account-page.tsx",
+    "web/packages/shell/testing/account-session-flows.ts"
+  ],
+  "checks": [
+    "format and affected Shell lint/types",
+    "33 session/Account tests",
+    "same-source Console and Portal builds",
+    "collect and run both complete 11-case account-sessions selections with one worker, zero retries/skips",
+    "confirm cleanup before opening raw target screenshots"
+  ],
+  "notIncluded": [
+    "full repository gates",
+    "native",
+    "installed"
+  ],
+  "requiredViews": [
+    "1280px settings context and session target",
+    "1440px session target",
+    "390px English/Chinese session and shortcut cards",
+    "360px dark session and shortcut cards",
+    "narrow dark confirmation with axe and Escape dismissal",
+    "actual loading/empty/partial/denied/not-ready/relogin/password targets"
+  ]
+}

@@ -1,0 +1,170 @@
+[
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-090db-ut-retained-session-actions-chromium/SERVICE_NOT_READY.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/01-SERVICE_NOT_READY.png",
+    "sha256": "058d5c9057bbba7c918961b469aa9ebaa1c3c3e0c447657da1cc437aae24c41d",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/account-1440.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/02-account-1440.png",
+    "sha256": "eebb7f2c5c5d2c9bcac5e157465743f05f56b40c26fea50b6e4726fac983aa6e",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/account-390.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/03-account-390.png",
+    "sha256": "74638c364cf8b19b3f33cd8cc768ad0e6045753ca002a6228fc703dd09166658",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/account-desktop.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/04-account-desktop.png",
+    "sha256": "9933914ff83680c9cf9f6046199695521f9881468c83516e71c95a8ec0df2d5d",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/account-narrow-dark.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/05-account-narrow-dark.png",
+    "sha256": "ea95751c7f3c18b4215452fc375932799de50dea6488ff0951dcad6bcd798b3f",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/account-settings.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/06-account-settings.png",
+    "sha256": "ddc908a3aae70c3b498737ddcdded38747e54b4197a740fc966ba23e0f439481",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/current-only.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/07-current-only.png",
+    "sha256": "38871ade9856139ae2236fef2f40bc9813749f81d940f7abbc3401dd7060bb68",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/empty-live-list.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/08-empty-live-list.png",
+    "sha256": "2a6a9949ca455c92c27368cf426252e718e8aafdedc8aed1a4e4156c73d552f4",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/end-confirmation-narrow-dark.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/09-end-confirmation-narrow-dark.png",
+    "sha256": "796fbb05981251cb822a79d419b3a2971ad8c4df7137233a372fcfd88725d358",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/end-confirmation.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/10-end-confirmation.png",
+    "sha256": "fe0be43f7a0a370653b5a953e3249b349e3204819a3003feb1717ab0aea9f761",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/keyboard-390.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/11-keyboard-390.png",
+    "sha256": "fcc5cc79594f225901fe7090efcd1746cc6ce5660bc97cbc25af7222b6448e6a",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/keyboard-narrow-dark.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/12-keyboard-narrow-dark.png",
+    "sha256": "8c0c3e2c445cde15be1a3c880711127650593f812a416c087d83bdc447266a26",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-6b452-ccount-sign-out-and-sign-in-chromium/same-account-relogin.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/13-same-account-relogin.png",
+    "sha256": "caad15b4481c06251a1e5a681924d39702acf3b4f2911fdbb854bd8d26a0b810",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-ad2ad-gh-the-actual-password-form-chromium/password-rotation.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/14-password-rotation.png",
+    "sha256": "66bdc206ee40470239fe38c496f573f642d799dd5f8e9521c2bf617dc2fb13c9",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/account-1440.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/15-account-1440.png",
+    "sha256": "66debe532d8cb548d59929ef2e18a7358d3fc1804990ba3df793a52f7b3f9326",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/account-390.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/16-account-390.png",
+    "sha256": "2ec840f8b4426d918a53786414119a7569cc73fd96d8be36186f1916b0e2214c",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/account-desktop.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/17-account-desktop.png",
+    "sha256": "6b917048e5a930e53ba3afb60b307a95bfdb34bc3ae7db84b47d517e34d326c3",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/account-narrow-dark.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/18-account-narrow-dark.png",
+    "sha256": "2fa4ec753941ba5801232bcb9c2c7ad248ab95eaad1009254182f9d57de46086",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/account-settings.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/19-account-settings.png",
+    "sha256": "641963e1e74e3be1d336702677e7e9608f9b20174cffc3c230d42c047c68fe89",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/current-only.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/20-current-only.png",
+    "sha256": "fabf7e7ed4fe25fb7e22912b2424a6c1d09ed0f8ddd7580e83e67ee869863dfb",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/empty-live-list.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/21-empty-live-list.png",
+    "sha256": "b7a2bc1c80865298ae3d6d1458c6e3fdcce480dad30fee8732f5a3d8bc8cda9b",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/end-confirmation-narrow-dark.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/22-end-confirmation-narrow-dark.png",
+    "sha256": "e5a5d59a478cfcd04897c0e82b3f44e9f1f0b8833c785777352cc3bfad5d91a8",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/end-confirmation.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/23-end-confirmation.png",
+    "sha256": "6e098bd14cba9d28f9f9513deeaf4f77f13b8c2df2671426b19aed98672fa3b7",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/keyboard-390.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/24-keyboard-390.png",
+    "sha256": "02aab708b50107c0cb68f1c999b67ff3bd84bffc6abc58a26fad8b3622d13ae8",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/keyboard-narrow-dark.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/25-keyboard-narrow-dark.png",
+    "sha256": "2ee9a778e6d4611bee70890039e107c6edb28164a16b464eb23a5d46191ba422",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-f366f-ut-retained-session-actions-chromium/ACCESS_DENIED.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/26-ACCESS_DENIED.png",
+    "sha256": "75c3fd403bfe27607c01f1cb7278e33ece6955eedb593202330b7d3784fd53d7",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-f5256-d-cursor-and-failed-restart-chromium/pagination-partial.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/27-pagination-partial.png",
+    "sha256": "c4703e1815f304d31ddf68be257feea9dbd840e12d1d2789055b61a2f7a0cb30",
+    "read": false
+  },
+  {
+    "original": "web/apps/console/test-results/account-sessions-account-s-fd013-during-a-delayed-first-read-chromium/loading-delayed.png",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/screenshots/28-loading-delayed.png",
+    "sha256": "1509144fab312241296a5822737047823270568624d31b2c9d596085ec39c4da",
+    "read": false
+  }
+]

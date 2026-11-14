@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "scope": "Isolated query-cache prototype only; no server/browser/SQL",
+  "package": "@tanstack/react-query",
+  "version": "5.105.3",
+  "checksPassed": 8,
+  "explicitRequests": 4,
+  "scriptSha256": "6dee7e597ac0c931c4c219375434ed9d6e87bbb44df6947ee67ea14a8e4e95d2"
+}

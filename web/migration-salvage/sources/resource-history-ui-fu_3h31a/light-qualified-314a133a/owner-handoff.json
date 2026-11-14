@@ -1,0 +1,147 @@
+{
+  "head": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+  "testedCode": "314a133a1d635d5403efff6974a296d11054bad4",
+  "webTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "testedWebTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "base": "6ed5c627a04a52b97d273f6782fdb0733d8703c4",
+  "commits": [
+    "dcd2cd32814530a1ebfc5d77fcf749f2da7c18a1",
+    "e96caf94fbfc024232a5effb6c4cf1ad8e6462e4",
+    "7f9eae17027977299d5d6f64cb3b70b87845f966",
+    "6b03b4e4432cb2cb4859eee6c560bfb19570ff58",
+    "314a133a1d635d5403efff6974a296d11054bad4",
+    "43eaa0cbf0574b620745a760d4a4928064e706ce"
+  ],
+  "branch": "codex/web-resource-history-ui",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-qualified-314a133a/web-resource-history.bundle",
+  "bundleSha256": "c197093f357a8e56c3ef2205f72239204929f2b0481a6ecd8d28efac82b7f328",
+  "files": {
+    "docs/development/design-system.md": "380d441a37c5d53d80c9cd21c62f5d45b214830ea880c1ee9e1d6da1d7fe331e",
+    "docs/research/resource-detail-pages.md": "ded2f73a3cf67b73d6503406aef5eac124e10624e960ff1fa99d9c520e0303c9",
+    "web/README.md": "0a5d87d8b729460fdace0d534a6280c4ded95bc8dbd6604bb7d2e31380000624",
+    "web/apps/console/e2e/node-page.spec.ts": "82d0d2e9b0cd1a423a439ea772366db5ef25620f9be013c22c04a4b11e5653cb",
+    "web/apps/console/e2e/pages.ts": "74da590d093174b248e007462b74d400448c3f6034545b0119c5bcff4dafbedf",
+    "web/apps/console/e2e/resource-activity-fixture.ts": "81e8b105204bcda34a631b3948e16559b4439a5d923838774f1c8e4b6ab96e0c",
+    "web/apps/console/e2e/resource-activity.spec.ts": "efbc00f4daf54efb3f21dba1858e577f34f3f19a1c42c12e5abac13cbf14a926",
+    "web/apps/console/e2e/resource-pages.spec.ts": "545ca0aa60c91bd2d5a7fff2fadaaa36f4400af9ce532b9bb333dee455b22b4a",
+    "web/apps/console/src/activity-window.test.ts": "4a337acf2f8cb7dafaee16967ed8243562e0fd0b7d9aa55fd14f12583de31360",
+    "web/apps/console/src/activity-window.ts": "c503a3f97b8ddadf0c73b74c0c26a86f33bc8d7ebb6ebc446bbe6462da82178d",
+    "web/apps/console/src/audit-read.test.tsx": "82eee873ea31ecd06d8ac4352d5a15a9242a5726dcdf07e856ef842c6f05a8a7",
+    "web/apps/console/src/audit-read.tsx": "062ca93291190048e19a2c1aa7a6603a709c718915e179c4a1cdfb69c3446a18",
+    "web/apps/console/src/connector-page.tsx": "a97d87af0ab4f7ebafd4105cc54c923cd51f6f6a993c1af6416dc1d20f8b028b",
+    "web/apps/console/src/deployment-page.tsx": "87f38030aa55bcc5477a2ab27d5a6285501e3964d176e7afde37129ef1ad419a",
+    "web/apps/console/src/model-page.tsx": "ad8595c5d78689f1fa3f341b5c1083f1c0920e30520c50a3cce1ad715ef3f935",
+    "web/apps/console/src/node-page.tsx": "08c72b4a424967dba49de3320f2aa09344e50bf0fcd156b587424ed17029d887",
+    "web/apps/console/src/resource-activity.tsx": "516e63f8f94dba31452f1ef473aced5719420f1099b7d9d65078cef77f2658ff",
+    "web/apps/console/src/resource-page.tsx": "4813e225a44f8b778f70bd0fd697ff0bc7ab0a8cefef2947cae22e3963a3ac00",
+    "web/apps/console/src/user-page.tsx": "77ab9909ceb2003d275d7aff0d22db53d21a188ec7ac44f20f4cabc7d3f07bda",
+    "web/packages/help/locales/en/console/audit-trail.md": "3e244bd97d2ec3290a4a35d5798b300dd9083da9eda073e3ba802e7294486375",
+    "web/packages/help/locales/zh-cn/console/audit-trail.md": "f848698f043cd631a9f95d14c414ff27e07844d482e24f72265e07b2bc1fca57",
+    "web/packages/help/src/gen/locales/en/console.json": "14cce9c93792ac78cde0a303ffad3025f0227bd03a122bd8e7f9c34c2e32ec90",
+    "web/packages/help/src/gen/locales/en/console/audit-trail.json": "7f533af071a248d9d56222b755ae1e53e97f47df34ee5aa0062bdc40335968bb",
+    "web/packages/help/src/gen/locales/zh-cn/console.json": "4dba453e00d3131f1d4ecb04c841b6591020f5dce4c1a7fbe0fa12755cec0bca",
+    "web/packages/help/src/gen/locales/zh-cn/console/audit-trail.json": "df930b8373dbc3e0c6ecfb68d8383702761548558099a2b7fc9cbe8e92e66c71",
+    "web/packages/i18n/locales/en.json": "802dd0619f4bb47191ec5fc7fd68a03f9cfba9a8d5ee44f1318bcf5bf3adfec4",
+    "web/packages/i18n/locales/zh-cn.json": "a71645158ad879c7468e46cf9a7119146e075cc5b16e57b6da6b0964919e3c4d",
+    "web/packages/i18n/src/format.test.ts": "c2e79487104191b3976189b74bcf79fc8e61a49549c43e3a941c2192a7d3ebd1",
+    "web/packages/i18n/src/format.ts": "f1785a1c2cffddfe092716d91d2ae34c9abd5e6315ca64740768ebadca63ecc8"
+  },
+  "preservedBytes": {
+    "web/apps/console/e2e/audit-read-recovery.spec.ts": true,
+    "web/packages/shell/testing/help-flows.ts": true,
+    "web/packages/api/src/gen/identity.ts": true,
+    "web/packages/help/src/gen/api/console/identity.json": true,
+    "web/packages/help/src/gen/contracts/console/identity.json": true,
+    "web/packages/help/src/gen/locales/zh-cn/api-descriptions.json": true,
+    "web/packages/help/locales/zh-cn/api-descriptions.json": true
+  },
+  "apiContractChanged": false,
+  "newDependencies": false,
+  "admissions": [
+    {
+      "started": "2026-11-13T01:46:33.695205+00:00",
+      "finished": "2026-11-13T01:46:33.722247+00:00",
+      "exitCode": 1,
+      "busy": true,
+      "childStarted": false,
+      "scope": "formatter, focused lint/types and unit tests only; no browser/build/full/native"
+    },
+    {
+      "source": "7f9eae17027977299d5d6f64cb3b70b87845f966",
+      "started": "2026-11-13T02:01:33.909558+00:00",
+      "finished": "2026-11-13T02:01:37.234634+00:00",
+      "exitCode": 1,
+      "busy": false,
+      "childStarted": true,
+      "trigger": "Published MODEL complete-gate evidence and completed source-only candidate; no Web changes in intervening origin/main commits",
+      "scope": "read-only focused lint/types/units; no browser, build, native or full gate"
+    },
+    {
+      "source": "6b03b4e4432cb2cb4859eee6c560bfb19570ff58",
+      "started": "2026-11-13T02:02:06.065848+00:00",
+      "finished": "2026-11-13T02:02:11.752629+00:00",
+      "exitCode": 1,
+      "busy": false,
+      "childStarted": true,
+      "trigger": "Fix the observed cursor-guard lint failure; previous failure retained",
+      "scope": "read-only focused lint/types/units; no browser, build, native or full gate"
+    },
+    {
+      "source": "314a133a1d635d5403efff6974a296d11054bad4",
+      "started": "2026-11-13T02:05:48.734990+00:00",
+      "finished": "2026-11-13T02:06:02.754561+00:00",
+      "exitCode": 0,
+      "busy": false,
+      "childStarted": true,
+      "trigger": "Fix both legacy resource consumers reported by typecheck, retaining the preceding failures",
+      "scope": "read-only focused lint/types/units; no browser, build, native or full gate"
+    }
+  ],
+  "qualification": {
+    "focusedLint": true,
+    "consoleTypecheck": true,
+    "i18nTypecheck": true,
+    "consoleUnitsPassed": 22,
+    "i18nUnitsPassed": 22,
+    "browser": false,
+    "fullNative": false,
+    "imagesRead": 0,
+    "installed": false,
+    "pushedToMain": false,
+    "roadmapTicked": false
+  },
+  "focusSelection": {
+    "consoleUnits": [
+      "src/activity-window.test.ts",
+      "src/audit-read.test.tsx"
+    ],
+    "i18nUnits": [
+      "src/format.test.ts",
+      "src/catalogs.test.ts"
+    ],
+    "consoleBrowser": [
+      "e2e/resource-activity.spec.ts",
+      "e2e/audit-read-recovery.spec.ts",
+      "e2e/resource-pages.spec.ts",
+      "e2e/node-page.spec.ts"
+    ],
+    "expectedNewBrowserCasesNotDiscovered": 21,
+    "plannedScreenshotsNotGenerated": 27,
+    "fullGate": [
+      "make check",
+      "make build",
+      "make test"
+    ]
+  },
+  "logs": [
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-check.log",
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-validation-after-model.log",
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-validation-cursor-guard.log",
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-validation-all-consumers.log"
+  ],
+  "supersedesCandidateHandoff": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/owner-handoff.json",
+  "publicationBoundary": "Do not merge until final combined-source browser tests, actual image review, complete gates and installed acceptance complete. DEV public metadata remains a separate atomic original-owner composition. Frozen 44ab/1230 assets remain unchanged.",
+  "macJobsLeftRunning": [],
+  "newWaiters": 0
+}

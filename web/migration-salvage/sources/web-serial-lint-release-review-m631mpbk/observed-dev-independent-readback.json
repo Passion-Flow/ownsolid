@@ -1,0 +1,19 @@
+{
+  "result_sha256": "d6615b3f73c3730cdd941712f0696df182dce7791120c65f9572915d1f92b023",
+  "attempt_sha256": "ee5ce09afa5ea76e7238a3d309728f51e7b205dd91c497247e1619f2d456c560",
+  "manifest_sha256": "c7905b073fd129451743e551941c16ef9ecd0e193c4516e53f3567bbc04c1d43",
+  "source_inputs_checked_after_refusal": 36,
+  "source_inputs_unchanged": true,
+  "carrier_inode_preserved": true,
+  "carrier_opened": false,
+  "worker_result_exists": false,
+  "private_tool_binary_exists": false,
+  "new_sdk_output_exists": false,
+  "command_logs": 0,
+  "free_mib": 160.21875,
+  "disk_gib": 152.95550155639648,
+  "attempt_consumed": true,
+  "retry_authorized": false,
+  "worker_peak_rss": "NOTRUN",
+  "new_sdk_comparisons": "NOTRUN"
+}

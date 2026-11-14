@@ -1,0 +1,15 @@
+--- original-attempt/bench-run.py
++++ future-authorized-input/bench-run.py
+@@ -61,8 +61,10 @@
+  if row['exit']!=code:raise RuntimeError(row['name']+' exited '+str(row['exit'])+'; expected '+str(code))
+ def read_json(row):return json.loads(Path(row['stdout']).read_text())
+ source_check();assert subprocess.check_output(['git','status','--porcelain'],cwd=work,timeout=budget(3))==b''
+-row=execute('01-seven-cli-regressions',['node','--test','--test-concurrency=1','lint.test.js'],web/'packages/config');require(row)
+-tap=Path(row['stdout']).read_text();assert re.search(r'# (?:tests|pass) 7\b',tap) and re.search(r'# fail 0\b',tap),tap[-3000:]
++row=execute('01-seven-cli-regressions',['node','--test','--test-concurrency=1','--test-reporter=tap','lint.test.js'],web/'packages/config');require(row)
++tap=Path(row['stdout']).read_text()
++for metric,expected in {'tests':7,'pass':7,'fail':0,'cancelled':0,'skipped':0,'todo':0}.items():
++ match=re.search(r'^# '+metric+r'\s+(\d+)\s*$',tap,re.MULTILINE);assert match and int(match.group(1))==expected,(metric,tap[-3000:])
+ row=execute('02-file-config-proof',['node',str(root/'coverage.mjs'),str(web)]);require(row);proof=read_json(row);assert proof['exactDisjointUnion'] and proof['allCalculatedConfigsEqual'] and proof['unionCount']==len(proof['originalFiles'])
+ old=execute('03-original-complete-lint',['node',cli,'--config','packages/config/eslint.config.js','--max-warnings','0','--format','json','.'])
+ new=execute('04-new-complete-lint',['pnpm','--silent','lint','--format','json']);require(new)

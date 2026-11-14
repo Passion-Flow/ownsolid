@@ -1,0 +1,65 @@
+{
+  "observedUTC": "2026-11-13T11:42:48.020404+00:00",
+  "scope": "This WEB owner only; no global absence asserted.",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "head": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+  "tree": "3738fd33098cc42f10425b89f5fda26a6cacd0aa",
+  "clean": true,
+  "productSourceChanged": false,
+  "newDocumentationCommit": false,
+  "ownedLiveCompileTestBrowserServiceJobs": 0,
+  "ownedLiveDetachedWaitRetryJobs": 0,
+  "ownedOldIdentityFds": 0,
+  "knownHistoricalPidsChecked": 10,
+  "knownHistoricalPidsPresentAtFirstSnapshot": 0,
+  "ownedQueues": 0,
+  "schedulerEvidence": {
+    "crontabOwnedMatches": 0,
+    "launchPlistsScanned": 14,
+    "launchPlistOwnedMatches": 0,
+    "loadedGui501OwnedPathHits": 0,
+    "codexAutomationsCreatedByThisSession": 0
+  },
+  "knownOwnedSameIdentityHardlinksCreated": 0,
+  "managedStateOldIdentityHardlinkMatches": 0,
+  "managedStateHardlinkEntriesChecked": 3444,
+  "closedPrivateScriptPaths": 89,
+  "oldEntrancesClosed": true,
+  "denialExit": 78,
+  "closureMethod": "Immediate exit before former admission/work body; no old carrier O_CREAT, recreation, fallback, alternative path, queue or automatic retry can be reached through these registered paths.",
+  "originalWrapperBytesPreserved": true,
+  "originalNonExecutableDataFiles": 81,
+  "priorLogsManifestsImagesArchivesUntouched": true,
+  "closureProbeCases": 4,
+  "closureProbeExits": [
+    78,
+    78,
+    78,
+    78
+  ],
+  "postClosureOwnedLiveJobs": [],
+  "postClosureSelfOldFds": [],
+  "previewPorts31036And31037Empty": true,
+  "carrierObserved": {
+    "exists": false,
+    "errno": 2
+  },
+  "carrierCreatedReplacedDeletedOrOpened": false,
+  "newEpochActivated": false,
+  "benchmarkFullBrowserNativeInstalledTests": "NOTRUN",
+  "ownerOldEpochQuiescent": true,
+  "cannotProve": [
+    "Other owners or users; no global FD sweep",
+    "Historical PID start times were not stored for every past invocation",
+    "Unenumerated paths, privileged/hidden schedulers and manual toolchain invocations outside the registered entry catalogue"
+  ],
+  "evidenceFiles": [
+    "initial-owner-state.json",
+    "wrapper-catalog.json",
+    "closed-wrappers.json",
+    "closed-entry-probes.json",
+    "owned-hardlink-check.json",
+    "loaded-scheduler-owner-check.json"
+  ],
+  "nextBoundary": "Await coordinator designation of the one persistent new epoch. Update this owner's entries explicitly only after activation; all test work remains NOTRUN."
+}

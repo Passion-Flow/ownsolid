@@ -1,0 +1,12 @@
+{
+  "grant": "One NB, directed exact full node-page file; if pass and immediate fresh original full preflight meets6GiB30GiB, continue original make test and necessary impacted checks on sameFD. No resource waiting, B peak, retry or queue.",
+  "targetedSeconds": 600,
+  "targetedCleanupReserve": 60,
+  "fullSeconds": 1800,
+  "fullCleanupReserve": 120,
+  "combinedSeconds": 2400,
+  "targetedRawFreeMinimum": 3221225472,
+  "targetedDiskMinimum": 16106127360,
+  "targetedHeapMiB": 512,
+  "fullHeapMaximumMiB": 4096
+}

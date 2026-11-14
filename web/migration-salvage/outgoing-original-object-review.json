@@ -1,0 +1,10 @@
+{
+  "scope": "Owned original outgoing DAG; reuse coordinator frozen original object-content scan",
+  "original_scan": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/original-local-source-scan.json",
+  "objects": 1379,
+  "findings": [],
+  "binary_candidates": [],
+  "triage": [],
+  "original_tips_scanned": 18,
+  "new_source_archive_requires_separate_scan": true
+}

@@ -1,0 +1,76 @@
+{
+  "parentPID": 25620,
+  "carrier": "/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock",
+  "expectedInode": 53377467,
+  "expectedDevice": 16777231,
+  "epoch": "ownsolid-2-20261113-e1",
+  "coreLimitBytes": 0,
+  "kernelWaitBudgetSeconds": 0,
+  "executionBudgetSeconds": 600,
+  "childStarted": true,
+  "entryMonotonic": 28460.327392,
+  "hardDeadlineMonotonic": 29060.327392,
+  "workCutoffMonotonic": 29000.327392,
+  "cleanupReserveSeconds": 60,
+  "cleanupConfirmed": true,
+  "cleanupEvidenceFailed": false,
+  "groupsConfirmed": true,
+  "awakeConfirmed": true,
+  "phaseHistory": [
+    {
+      "phase": "one-nonblocking-attempt",
+      "descriptor": 3,
+      "device": 16777231,
+      "inode": 53377467
+    },
+    {
+      "phase": "held",
+      "descriptor": 3
+    },
+    {
+      "phase": "scope-selected",
+      "chosenScope": "T",
+      "selectedSource": "30a6fd576102358581eabd1efe6f51098538f8c9",
+      "selectedTree": "723a7126525c28e478b727b123a703eb0152f6c4",
+      "rawFreeBytes": 5312806912,
+      "diskFreeBytes": 163199262720,
+      "unselectedScope": "NOTRUN"
+    },
+    {
+      "phase": "executing",
+      "childStarted": true,
+      "childPID": 25689,
+      "childGroup": 25689
+    },
+    {
+      "phase": "execution-timeout",
+      "childStarted": true
+    },
+    {
+      "phase": "wrapper-error",
+      "exit": 1,
+      "error": "PermissionError(1, 'Operation not permitted')",
+      "childStarted": true
+    },
+    {
+      "phase": "cleanup-evidence",
+      "exit": 1,
+      "cleanupConfirmed": true
+    }
+  ],
+  "descriptor": 3,
+  "device": 16777231,
+  "inode": 53377467,
+  "phase": "cleanup-evidence",
+  "updatedUTC": "2026-11-13T18:37:13.541366+00:00",
+  "chosenScope": "T",
+  "selectedSource": "30a6fd576102358581eabd1efe6f51098538f8c9",
+  "selectedTree": "723a7126525c28e478b727b123a703eb0152f6c4",
+  "rawFreeBytes": 5312806912,
+  "diskFreeBytes": 163199262720,
+  "unselectedScope": "NOTRUN",
+  "childPID": 25689,
+  "childGroup": 25689,
+  "exit": 1,
+  "error": "PermissionError(1, 'Operation not permitted')"
+}

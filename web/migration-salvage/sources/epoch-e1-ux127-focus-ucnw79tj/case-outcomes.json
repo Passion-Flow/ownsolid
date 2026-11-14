@@ -1,0 +1,778 @@
+[
+  {
+    "stage": "actions",
+    "title": "detail actions preserve commands and one activity primary in en at 1440px",
+    "file": "resource-actions.spec.ts",
+    "line": 11,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "actions",
+    "title": "detail actions preserve commands and one activity primary in en at 390px",
+    "file": "resource-actions.spec.ts",
+    "line": 11,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "actions",
+    "title": "detail actions preserve commands and one activity primary in zh-CN at 1440px",
+    "file": "resource-actions.spec.ts",
+    "line": 11,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "actions",
+    "title": "detail actions preserve commands and one activity primary in zh-CN at 390px",
+    "file": "resource-actions.spec.ts",
+    "line": 11,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads recent activity on an old node under a one-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 72,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads recent activity on an old model under a one-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 72,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads recent activity on an old deployment under a one-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 72,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads recent activity on an old connector under a one-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 72,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads current activity for a 400-day-old resource with a 1-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 107,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads current activity for a 400-day-old resource with a 31-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 107,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states",
+    "file": "resource-activity.spec.ts",
+    "line": 149,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "keeps exact cursor bounds and replaces a failed recent snapshot only after explicit recovery succeeds",
+    "file": "resource-activity.spec.ts",
+    "line": 218,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "cancels a pending page when leaving the tab and restores its earlier snapshot without replay",
+    "file": "resource-activity.spec.ts",
+    "line": 260,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "shows loading and a retained error, then hides all cached rows when access is refused",
+    "file": "resource-activity.spec.ts",
+    "line": 296,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads recent activity on an old node under a one-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 72,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads recent activity on an old model under a one-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 72,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads recent activity on an old deployment under a one-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 72,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads recent activity on an old connector under a one-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 72,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads current activity for a 400-day-old resource with a 1-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 107,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "reads current activity for a 400-day-old resource with a 31-day policy",
+    "file": "resource-activity.spec.ts",
+    "line": 107,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states",
+    "file": "resource-activity.spec.ts",
+    "line": 149,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "keeps exact cursor bounds and replaces a failed recent snapshot only after explicit recovery succeeds",
+    "file": "resource-activity.spec.ts",
+    "line": 218,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "cancels a pending page when leaving the tab and restores its earlier snapshot without replay",
+    "file": "resource-activity.spec.ts",
+    "line": 260,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "shows loading and a retained error, then hides all cached rows when access is refused",
+    "file": "resource-activity.spec.ts",
+    "line": 296,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "activity",
+    "title": "rejects reversed and nonexistent dates without an audit read",
+    "file": "resource-activity.spec.ts",
+    "line": 351,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "opens from the drawer, and the sidebar still marks Nodes",
+    "file": "node-page.spec.ts",
+    "line": 27,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "its tabs work from the keyboard and live in the address",
+    "file": "node-page.spec.ts",
+    "line": 39,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "Tasks lists this node and links each task",
+    "file": "node-page.spec.ts",
+    "line": 60,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "Tasks says when there are none, and a failure can be retried",
+    "file": "node-page.spec.ts",
+    "line": 67,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "Activity opens a historical period for this node and links its event",
+    "file": "node-page.spec.ts",
+    "line": 86,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "Activity says when there is none, and a failure can be retried",
+    "file": "node-page.spec.ts",
+    "line": 112,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "renaming stays on the page and can be undone",
+    "file": "node-page.spec.ts",
+    "line": 127,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "removing goes back to the list",
+    "file": "node-page.spec.ts",
+    "line": 139,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "a node that does not exist says so, and a failure can be retried",
+    "file": "node-page.spec.ts",
+    "line": 151,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "names its tabs",
+    "file": "node-page.spec.ts",
+    "line": 179,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "opens from the drawer and shows the details",
+    "file": "resource-pages.spec.ts",
+    "line": 28,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "tells what was done to them from what they did",
+    "file": "resource-pages.spec.ts",
+    "line": 40,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "can be disabled from the page, which stays and offers undo",
+    "file": "resource-pages.spec.ts",
+    "line": 58,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "your own account says so and cannot be disabled",
+    "file": "resource-pages.spec.ts",
+    "line": 70,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "one that does not exist says so, and a failure can be retried",
+    "file": "resource-pages.spec.ts",
+    "line": 78,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "opens from the drawer with its check and details",
+    "file": "resource-pages.spec.ts",
+    "line": 112,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "its activity lists who changed it",
+    "file": "resource-pages.spec.ts",
+    "line": 122,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "one that does not exist says so, and a failure can be retried",
+    "file": "resource-pages.spec.ts",
+    "line": 136,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "resource-pages",
+    "title": "names the tabs",
+    "file": "resource-pages.spec.ts",
+    "line": 154,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "is reached from the navigation, and says what it is for when empty",
+    "file": "services.spec.ts",
+    "line": 38,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "opens the flow from the d shortcut",
+    "file": "services.spec.ts",
+    "line": 48,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "tiles count and filter, from the address, and name what hid everything",
+    "file": "services.spec.ts",
+    "line": 55,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "says traffic is not collected rather than showing a number",
+    "file": "services.spec.ts",
+    "line": 71,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "a failed read says what happened and retries",
+    "file": "services.spec.ts",
+    "line": 78,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "previews a deployment in a drawer, and opens its own page",
+    "file": "services.spec.ts",
+    "line": 87,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "deploys from a model, stating the cost before the commit",
+    "file": "services.spec.ts",
+    "line": 97,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "lets a person choose another GPU, and keeps the choice in the address",
+    "file": "services.spec.ts",
+    "line": 111,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "shows what cannot be chosen yet, each with its reason",
+    "file": "services.spec.ts",
+    "line": 124,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "a lost answer retried with the same key makes one deployment",
+    "file": "services.spec.ts",
+    "line": 132,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "a retry on another GPU is a new request, not a conflict with the first",
+    "file": "services.spec.ts",
+    "line": 143,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "a refused deployment is explained and leaves the form",
+    "file": "services.spec.ts",
+    "line": 155,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "with nothing eligible, gives each reason and follows a fresh read",
+    "file": "services.spec.ts",
+    "line": 164,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "with no node having reported, asks one to read its GPUs",
+    "file": "services.spec.ts",
+    "line": 176,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "asks only a node of this workspace that can serve to read its GPUs",
+    "file": "services.spec.ts",
+    "line": 187,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "with no model, sends the person to the Model library",
+    "file": "services.spec.ts",
+    "line": 205,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "stopping names what breaks and confirms by typing",
+    "file": "services.spec.ts",
+    "line": 213,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "two people acting at once: the second is told and sees the new state",
+    "file": "services.spec.ts",
+    "line": 234,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "removing returns to the list",
+    "file": "services.spec.ts",
+    "line": 248,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "explains a failure the node reported, in words",
+    "file": "services.spec.ts",
+    "line": 261,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "shows traffic, logs, scaling and rollback as not ready, with reasons",
+    "file": "services.spec.ts",
+    "line": 269,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "a deployment that is gone says so",
+    "file": "services.spec.ts",
+    "line": 285,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "services",
+    "title": "a model lists its deployments, or offers the first",
+    "file": "services.spec.ts",
+    "line": 292,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "a node with its activity",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity with no recent events",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity with no events in a selected period",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity with invalid selected dates",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity with access refused",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity waiting for the initial read",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "audit trail with uncertain read recovery",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "audit trail with partial read recovery",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "audit activity with uncertain read recovery",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "audit activity with partial read recovery",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "a node with its activity",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity with no recent events",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity with no events in a selected period",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity with invalid selected dates",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity with access refused",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "resource activity waiting for the initial read",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "audit trail with uncertain read recovery",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "audit trail with partial read recovery",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "audit activity with uncertain read recovery",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "a11y",
+    "title": "audit activity with partial read recovery",
+    "file": "../../../packages/shell/testing/accessibility-flows.ts",
+    "line": 66,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "a node with its activity: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "resource activity with no recent events: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "resource activity with no events in a selected period: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "resource activity with invalid selected dates: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "resource activity with access refused: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "resource activity waiting for the initial read: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "audit trail with uncertain read recovery: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "audit trail with partial read recovery: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "audit activity with uncertain read recovery: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  },
+  {
+    "stage": "keyboard",
+    "title": "audit activity with partial read recovery: every control is reachable and shows focus",
+    "file": "../../../packages/shell/testing/keyboard-flows.ts",
+    "line": 189,
+    "status": "passed",
+    "retry": 0
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "epoch": "ownsolid-2-20261113-e1",
+  "grant": "One A-only original complete web-install/check/build/test job after fresh original6GiB/30GiB and original prechecks. No B, sampler prototype, waiting, retry or second NB.",
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "absoluteSeconds": 1800,
+  "finalCleanupSeconds": 120,
+  "nodeMaximumMiB": 4096,
+  "coordinatorResourceUTC": "2026-11-13T14:10:28.246310Z",
+  "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+}

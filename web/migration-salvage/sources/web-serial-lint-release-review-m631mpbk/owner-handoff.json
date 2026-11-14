@@ -1,0 +1,19 @@
+{
+  "branch": "codex/web-serial-lint",
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "tree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "webTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+  "originalPreparation": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-benchmark-roc27tnq",
+  "releaseReview": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-release-review-m631mpbk/release-prerequisite-review.json",
+  "result": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-release-review-m631mpbk/notrun-result.json",
+  "benchmarkPlan": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-release-review-m631mpbk/benchmark-plan.json",
+  "sourceClean": true,
+  "sourceChanged": false,
+  "entryInvoked": false,
+  "attemptConsumed": false,
+  "nextStage": "Verify the exact executed-instance DEV release receipt, then the authorized one-NB 600s lint-only entry with >=60s cleanup, Free>=3GiB, disk>=15GiB, Node<=2048MiB preserving stricter limits. No job/queue while that prerequisite is unproven.",
+  "fullProfileFloorGiB": 6,
+  "oldOomAndRefusalsPreserved": true,
+  "published": false,
+  "roadmapTicked": false
+}

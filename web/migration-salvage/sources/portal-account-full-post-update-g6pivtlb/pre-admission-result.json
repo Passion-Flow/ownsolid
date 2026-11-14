@@ -1,0 +1,82 @@
+{
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "sourceClean": true,
+  "sourceFilesHashed": 5099,
+  "reviewUTC": "2026-11-13T10:54:59.125836+00:00",
+  "phase": "carrier-prerequisite-missing",
+  "entryInvoked": false,
+  "workChildStarted": false,
+  "carrierOpened": false,
+  "nonblockingAttempts": 0,
+  "carrierPath": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "requiredCarrier": {
+    "inode": 50313339,
+    "uid": 501,
+    "regular": true
+  },
+  "observedCarrier": {
+    "exists": false,
+    "errno": 2,
+    "error": "ENOENT",
+    "lstatOnly": true
+  },
+  "carrierCreatedOrReplaced": false,
+  "alternativeLockUsed": false,
+  "oldAttempt": {
+    "source": "9e7404f63fe7587ace0decb34fd01b6214977181",
+    "phase": "cleanup-evidence",
+    "exit": 1,
+    "childStarted": false,
+    "cleanupConfirmed": true,
+    "parentPresent": false
+  },
+  "newOwnedRunOrResultFoundBeforePreparation": false,
+  "previewListeners": {
+    "exit": 1,
+    "empty": true
+  },
+  "freshReadOnlyResources": {
+    "freePages": 361013,
+    "pageBytes": 16384,
+    "freeMemoryBytes": 5914836992,
+    "freeMemoryGiB": 5.5086212158203125,
+    "diskFreeBytes": 167870816256,
+    "diskFreeGiB": 156.34188079833984,
+    "meets6GiBAnd30GiB": false,
+    "notAnAdmissionSample": true
+  },
+  "intendedProfile": {
+    "totalSeconds": 1800,
+    "cleanupReserveSeconds": 120,
+    "minimumFreeGiB": 6,
+    "minimumDiskGiB": 30,
+    "nodeOldSpaceMaximumMiB": 4096,
+    "preserveStricterLimits": true,
+    "goParallel": 1,
+    "gomaxprocsMaximum": 2,
+    "cargoJobs": 1,
+    "workerMaximum": 1,
+    "targets": [
+      "web-install",
+      "check",
+      "build",
+      "test"
+    ],
+    "makefileOverlay": false
+  },
+  "serialLint56CandidateIncluded": false,
+  "strictJson37Or719Included": false,
+  "compatibilityAudit430OriginalExit": 1,
+  "webInstall": "NOTRUN",
+  "check": "NOTRUN",
+  "build": "NOTRUN",
+  "test": "NOTRUN",
+  "casesSkipsRetriesAssets": "NOTRUN",
+  "coreOrNegativeFilesCreated": false,
+  "sourceRuntimeAssetsChanged": false,
+  "backgroundQueueOrRetry": false,
+  "elapsedMetadataSeconds": 0.5710260000000744,
+  "blocker": "The authorized permanent regular carrier is absent. The exact inode/UID identity cannot be verified. Do not create or replace a carrier, substitute another lock, or launch gate work under this instruction."
+}

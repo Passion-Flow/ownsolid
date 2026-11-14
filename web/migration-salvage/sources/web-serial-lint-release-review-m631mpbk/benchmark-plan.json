@@ -1,0 +1,103 @@
+{
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "tree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "webTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "preparedOnly": true,
+  "admissionAttempted": false,
+  "running": false,
+  "proposedTotalSeconds": 600,
+  "proposedCleanupReserveSeconds": 60,
+  "proposedFreeMemoryMinimumGiB": 3,
+  "proposedNodeOldSpaceMaximumMiB": 2048,
+  "preserveStricterInheritedLimits": true,
+  "fullProfileFreeMemoryMinimumGiB": 6,
+  "fullProfileChanged": false,
+  "sharedCarrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "carrierInode": 50313339,
+  "queueCreated": false,
+  "commands": [
+    {
+      "name": "fixture-regressions",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/config",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "lint.test.js"
+      ]
+    },
+    {
+      "name": "configuration-and-file-discovery",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "node",
+        "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-release-review-m631mpbk/coverage.mjs",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web"
+      ]
+    },
+    {
+      "name": "original-lint",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "node",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/eslint@10.14.0_jiti@2.7.0_supports-color@10.2.2/node_modules/eslint/bin/eslint.js",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "--format",
+        "json",
+        "."
+      ],
+      "retainFailure": true,
+      "retries": 0
+    },
+    {
+      "name": "complete-serial-lint",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "argv": [
+        "pnpm",
+        "--silent",
+        "lint",
+        "--format",
+        "json"
+      ],
+      "retries": 0
+    },
+    {
+      "name": "negative-controls",
+      "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web",
+      "plan": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-release-review-m631mpbk/negative-controls.json",
+      "retries": 0
+    }
+  ],
+  "measurement": {
+    "perCommand": [
+      "/usr/bin/time",
+      "-l"
+    ],
+    "sampleOwnedTreeRssOnly": true,
+    "sampleIntervalMilliseconds": 250,
+    "includeCoordinatorAndActiveChild": true,
+    "neverConcurrentOriginalAndNew": true
+  },
+  "stops": [
+    "No job or carrier acquisition until exact current DEV executed-instance completion and groups/FD cleanup evidence is verified; no inference from older refusal or unexecuted metadata.",
+    "Refuse busy/resource thresholds without a queue or automatic retry",
+    "Preserve partial baseline/OOM rather than claiming complete equality",
+    "Stop on source changes or unexpected process/coverage/config failures"
+  ],
+  "releasePrerequisiteProven": false,
+  "originalPreparation": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-benchmark-roc27tnq",
+  "requiredReleaseReview": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-release-review-m631mpbk/release-prerequisite-review.json",
+  "coreDumpLimitBytes": 0,
+  "monitorFields": [
+    "pid",
+    "ppid",
+    "pgid",
+    "rss"
+  ],
+  "monitorEnvironment": false,
+  "monitorArgv": false
+}

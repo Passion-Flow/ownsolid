@@ -1,0 +1,291 @@
+{
+  "reviewedUTC": "2026-11-13T17:51:50.976420+00:00",
+  "source": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+  "correctedSource": "3f614d691f166213935cdbb7fa563fd0482c6649",
+  "actualGenerated": 25,
+  "actuallyOpenedAndRead": 25,
+  "correctedSourceImages": 0,
+  "images": [
+    {
+      "name": "resource-history-node-recent-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/01-resource-history-node-recent-en.png",
+      "sha256": "74d170b17fda85fc9305593a8a0b8c0c51e4021aa97ae438cac702f81a3435f1",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-model-recent-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/02-resource-history-model-recent-en.png",
+      "sha256": "3d591b89f787e2c56bbd459cb38be6fd4b836846a019adfdf2235f72c3677226",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-deployment-recent-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/03-resource-history-deployment-recent-en.png",
+      "sha256": "3278caeb1388d73420315fb232c8cc1dfd1c580d88ca622dab8d71dd30b82201",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-connector-recent-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/04-resource-history-connector-recent-en.png",
+      "sha256": "82dc1063b4a5a9cd9393ad4f9a2fbecf0a4e2c63785981bff4a926eb129c3338",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-recent-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/05-resource-history-recent-en.png",
+      "sha256": "54bfdfe8eab1f1c8d37e3d9e44de2fd80c06e1aee44b930c5ad444932ea8718a",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-recent-empty-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/06-resource-history-recent-empty-en.png",
+      "sha256": "8f793b04304ef2fd5d6c64116b45e8656cdb962df35027f98e535122311d226b",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-range-refused-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/07-resource-history-range-refused-en.png",
+      "sha256": "9e763fb8917b7922518b275620f8c790b2d0bc52d6d00630043c93d891da534b",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-historical-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/08-resource-history-historical-en.png",
+      "sha256": "7ee165de32cb4c324058eb8032b667c5f45cdfd1a60c17c1845fc710f2f0ed03",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-filtered-empty-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/09-resource-history-filtered-empty-en.png",
+      "sha256": "8e75ef97387114e2bb4ebe098bb46d64f18d1708834ac717a701ab19b15a6eba",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-loading-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/10-resource-history-loading-en.png",
+      "sha256": "62df0142b3807d0d62a1488cabe42039d8274574e33b492b1d0acb638a7856e1",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-error-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/11-resource-history-error-en.png",
+      "sha256": "a3c2dbfb53c9a1d8871b2f1308035982219fd269c007cf290eb6aaeb5e59edb6",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-denied-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/12-resource-history-denied-en.png",
+      "sha256": "498bd16f8348f9f484439c51b05a36a0b6c533f9bf7b5254532547ad6c70a234",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-node-recent-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/13-resource-history-node-recent-zh-CN.png",
+      "sha256": "0bb268e11d3f85b6081dba938c0f3f3d24b9b82bd746ad16b9c2c236dc5131c4",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-model-recent-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/14-resource-history-model-recent-zh-CN.png",
+      "sha256": "0d85faa5439c9b1a0039751489acc41f7463f27509f2776b955fe9c601ba4ed8",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-deployment-recent-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/15-resource-history-deployment-recent-zh-CN.png",
+      "sha256": "2f1e6f1624e53ba93cd25ded95bf9b0da6e7b131b10c8d93c4855a7c9314f94f",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-connector-recent-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/16-resource-history-connector-recent-zh-CN.png",
+      "sha256": "f0365fbe5492ea9a52f20330b826a6ca9e3b0ac20f7d472d2fdbfd83c3b18bba",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-recent-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/17-resource-history-recent-zh-CN.png",
+      "sha256": "b9fc72b220221078400e1ba5d9f6dc4c2f84cccb408c7d476af097f1fe9eebfb",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-recent-empty-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/18-resource-history-recent-empty-zh-CN.png",
+      "sha256": "7847afaab6910e056aeb360d590a87f7eeb18e136fc4c88a43733332ed829ffb",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-range-refused-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/19-resource-history-range-refused-zh-CN.png",
+      "sha256": "04c49aad571846eab663ceff9fcd2560f9022b3d82f4e6bcb372676e8fa05654",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-historical-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/20-resource-history-historical-zh-CN.png",
+      "sha256": "e340da5fc6a747556272dd8af18279b361606ca00ac8a929183221438bbc04dc",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-filtered-empty-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/21-resource-history-filtered-empty-zh-CN.png",
+      "sha256": "13f10c4f60f13c88b04ec03871af4e712bb212a57292488c7a34a8e6cf7c747d",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-loading-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/22-resource-history-loading-zh-CN.png",
+      "sha256": "34e3d0521b49eb71f3a95f068d8916d02f3b4545789f903e8b97db4a23b51718",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-error-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/23-resource-history-error-zh-CN.png",
+      "sha256": "8580c532cc5c44fb22cd10f844709e9f0e75b10c819215c4c745315ce5c1c339",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-denied-zh-CN",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/24-resource-history-denied-zh-CN.png",
+      "sha256": "18193569a7f3198e98698b50cb59d3bc1b7d9d209e42f836c125e0f1b200f36e",
+      "dimensions": [
+        390,
+        844
+      ],
+      "read": true
+    },
+    {
+      "name": "resource-history-invalid-local-dates-en",
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/extracted-round1/25-resource-history-invalid-local-dates-en.png",
+      "sha256": "a12b912039382da72f9e21af4d1d35357de9222e73e420f2ba751400d09ceb46",
+      "dimensions": [
+        1440,
+        900
+      ],
+      "read": true
+    }
+  ],
+  "missingImages": [
+    "resource-history-partial-en",
+    "resource-history-partial-zh-CN"
+  ],
+  "missingReason": "Original pagination assertions failed before attachment. No rerun started.",
+  "collectorGap": "Original images-ready-round1 reports 0 external PNGs. JSON reporter contained 25 inline PNG bodies, extracted unchanged. Original record preserved.",
+  "archetype": {
+    "kind": "Detail",
+    "accepted": false,
+    "reason": "Breadcrumb/name/status/tabs present; node has four and deployment six header actions, exceeding two visible actions."
+  },
+  "states": {
+    "loading": "Seen EN/ZH with layout skeleton and Reading activity text.",
+    "emptyFirstTime": "Seen EN/ZH recent empty, explains this period and offers earlier dates.",
+    "emptyFiltered": "Seen EN/ZH distinct selected-period copy; EN clear-dates action visible. ZH remedy lies below viewport so screenshot alone does not qualify access.",
+    "partial": "Defined and prepared; actual paging failed and screenshots missing.",
+    "error": "Seen EN/ZH inline cause, request ID and Read again.",
+    "denied": "Seen EN/ZH disabled period/read controls, permission owner and remedy.",
+    "notReady": "Seen in deployment header: disabled options visible with reasons, but roadmap IDs are unsuitable product guidance."
+  },
+  "primary": {
+    "intended": "Read activity for the Activity tab.",
+    "accepted": false,
+    "reason": "Node Collect facts and model Deploy a model compete with the tab primary in desktop and narrow images."
+  },
+  "otherObservations": [
+    "Text accompanies status colours.",
+    "390px tables place later columns beyond the viewport; keyboard/scroll qualification was not reached.",
+    "Inline date-validation feedback retains the previous read."
+  ],
+  "overallVisualAcceptance": false
+}

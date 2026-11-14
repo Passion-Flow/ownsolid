@@ -1,0 +1,5 @@
+{
+  "path": "web/apps/console/e2e/node-page.spec.ts",
+  "sha256": "e3d075240e5f7c7a1b55a2244055c79bfc36156814505bc24579afe4e2e2a123",
+  "change": "Replace the stale shared-activity retry label and add exact failed/manual read counts; no product or screenshot actuator changed"
+}

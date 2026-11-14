@@ -1,0 +1,92 @@
+{
+  "kind": "Offline internal-consistency review of actual saved native snapshots, not a new live measurement",
+  "newCompleteTreeConclusionAccepted": false,
+  "historicalGapRetained": true,
+  "commands": {
+    "old": {
+      "rawSha256": "4f7b1fd72f422eb55337dc355dcbb2a704ca3198edbdb4e2cca1c6a2977b6ab9",
+      "savedFrames": 314,
+      "distinctLifetimes": 6,
+      "recordedRetiredLifetimes": 2,
+      "crossPgidEdges": [
+        [
+          64612,
+          64630,
+          64612,
+          64630
+        ]
+      ],
+      "maximumSavedGapSeconds": 0.05469699999957811,
+      "maximumSavedRssBytes": 2600534016,
+      "internalConsistencyErrors": [],
+      "allSavedFramesConsistent": true,
+      "fullCommandPeakAccepted": true
+    },
+    "new": {
+      "rawSha256": "84c7d3353f3fbeda36bf575d61f66bf6e1123d0fefc4abe0706bd1d3c819c560",
+      "savedFrames": 544,
+      "distinctLifetimes": 21,
+      "recordedRetiredLifetimes": 11,
+      "crossPgidEdges": [
+        [
+          64612,
+          64630,
+          64612,
+          64630
+        ],
+        [
+          68295,
+          68296,
+          64630,
+          68296
+        ],
+        [
+          68295,
+          68305,
+          64630,
+          68305
+        ]
+      ],
+      "maximumSavedGapSeconds": 0.05498000000079628,
+      "maximumSavedRssBytes": 2197012480,
+      "internalConsistencyErrors": [],
+      "allSavedFramesConsistent": true,
+      "fullCommandPeakAccepted": false,
+      "failedPidObservations": 52,
+      "failedPidFirst": {
+        "sample": 494,
+        "monotonic": 11503.084838,
+        "row": {
+          "pid": 74118,
+          "ppid": 68306,
+          "pgid": 68296,
+          "uid": 501,
+          "startTime": [
+            1794577535,
+            979192
+          ],
+          "rssBytes": 1343488,
+          "status": 2
+        }
+      },
+      "failedPidLast": {
+        "sample": 545,
+        "monotonic": 11505.792369,
+        "row": {
+          "pid": 74118,
+          "ppid": 68306,
+          "pgid": 68296,
+          "uid": 501,
+          "startTime": [
+            1794577535,
+            979192
+          ],
+          "rssBytes": 936837120,
+          "status": 2
+        }
+      },
+      "finalLifecycleProofMissing": true,
+      "maximumSavedRssUse": "Partial-run observation only; cannot compare full command peaks"
+    }
+  }
+}

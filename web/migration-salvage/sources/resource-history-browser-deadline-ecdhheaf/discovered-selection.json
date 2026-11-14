@@ -1,0 +1,14 @@
+{
+  "counts": {
+    "audit-read-recovery.spec.ts": 41,
+    "node-page.spec.ts": 10,
+    "resource-activity.spec.ts": 21,
+    "resource-pages.spec.ts": 9
+  },
+  "auditPartitions": [
+    19,
+    19,
+    3
+  ],
+  "inventory": 30
+}

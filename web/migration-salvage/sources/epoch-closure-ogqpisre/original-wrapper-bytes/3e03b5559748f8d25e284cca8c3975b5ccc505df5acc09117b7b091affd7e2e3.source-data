@@ -1,0 +1,36 @@
+from pathlib import Path
+import fcntl,json,os,select,stat,subprocess,sys,time
+root=Path(__file__).resolve().parent
+carrier='/private/tmp/ownsolid-workstation-full-gate.lock'
+command=['bash',str(root/'publish-consumers.sh'),str(root)]
+attempt=0
+while True:
+ attempt+=1
+ fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW)
+ info=os.fstat(fd)
+ if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid():os.close(fd);raise SystemExit('Unsafe shared lock carrier')
+ try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+ except BlockingIOError:os.close(fd)
+ else:
+  print('Owned Mac window acquired; starting the reviewed consumer publication',flush=True)
+  try:raise SystemExit(subprocess.run(command).returncode)
+  finally:os.close(fd)
+ result=subprocess.run(['lsof','-Fpc',carrier],capture_output=True,text=True)
+ pids=[];pid=None
+ for line in result.stdout.splitlines():
+  if line.startswith('p'):pid=int(line[1:])
+  elif line.startswith('c') and line[1:].lower().startswith('python') and pid and pid!=os.getpid():pids.append(pid)
+ with (root/'full-window-wait.jsonl').open('a') as log:log.write(json.dumps({'attempt':attempt,'observedOwners':pids,'commandStarted':False})+'\n')
+ if not pids:
+  if attempt>1:raise SystemExit('Busy lock owner was not observable; no command started')
+  continue
+ print('Waiting for observed owner exit events; no timer retry or server starts',flush=True)
+ queue=select.kqueue()
+ try:
+  pending=set()
+  for pid in pids:
+   try:queue.control([select.kevent(pid,filter=select.KQ_FILTER_PROC,flags=select.KQ_EV_ADD|select.KQ_EV_ONESHOT,fflags=select.KQ_NOTE_EXIT)],0,0);pending.add(pid)
+   except ProcessLookupError:pass
+  while pending:
+   for event in queue.control([],len(pending),None):pending.discard(event.ident)
+ finally:queue.close()

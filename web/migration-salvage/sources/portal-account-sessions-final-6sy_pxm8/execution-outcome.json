@@ -1,0 +1,14 @@
+{
+  "observedAt": "2026-11-13T05:10:27.412257+00:00",
+  "actualExitCode": 1,
+  "stage": "memory-preflight",
+  "freePages": 46555,
+  "pageBytes": 16384,
+  "requiredFreeBytes": 2147483648,
+  "workChildStarted": false,
+  "preflightProbe": "vm_stat did run; no formatter/lint/type/test/browser child started",
+  "browserCasesRun": 0,
+  "screenshotsGenerated": 0,
+  "screenshotsRead": 0,
+  "retryQueued": false
+}

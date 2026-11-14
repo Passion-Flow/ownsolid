@@ -1,0 +1,64 @@
+{
+  "recordedUTC": "2026-11-13T17:47:49.750152+00:00",
+  "source": "3f614d691f166213935cdbb7fa563fd0482c6649",
+  "tree": "6c486d8f57ac81bb35dc3a853593b3d18a53db0a",
+  "webTree": "da6882b8d6d0510323fd9ed50d080c8ca72876eb",
+  "gitStatus": "",
+  "preparedFileHashesMatch": {
+    "mac-epoch-once.py": true,
+    "ux-browser-run.py": true,
+    "cleanup-epoch-owned.py": true,
+    "stage-plan.json": true,
+    "source-file-sha256.json": true,
+    "old-console-assets.json": true,
+    "previous-new-console-assets.json": true,
+    "previous-build-and-discovery.json": true,
+    "prior-busy-outcome.json": true,
+    "corrected-probe-inputs.json": true,
+    "authorization.json": true,
+    "scope-inputs.json": true
+  },
+  "correctedProbeHashesMatch": {
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative.config.ts": true,
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe/package.json": true,
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe/resource-activity.spec.ts": true,
+    "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe/resource-activity-fixture.ts": true
+  },
+  "currentConsole": {
+    "files": 696,
+    "mismatches": []
+  },
+  "oldConsole": {
+    "files": 696,
+    "mismatches": []
+  },
+  "carrier": {
+    "device": 16777231,
+    "inode": 53377467,
+    "mode": "0o600",
+    "uid": 501,
+    "nlink": 1,
+    "size": 0,
+    "regular": true,
+    "openedReadOnlySameInode": true,
+    "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+  },
+  "knownParentAndWorkerPIDQuery": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "portsQuery": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "noLockAttempt": true,
+  "noNodeOrBrowserStarted": true,
+  "closedOldWrappers": {
+    "count": 89,
+    "stubsUnchanged": true,
+    "sourceDataUnchanged": true,
+    "noOldWrapperExecuted": true
+  }
+}

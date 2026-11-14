@@ -1,0 +1,49 @@
+{
+  "source": "2b983dbf75feaf36f6ac3423f4d1b0a1ecf0fc52",
+  "testSha256": "de309e95ea595eed027c8b4c9b67e69de97eab1e24dd6061cfe707aa9d4d3d18",
+  "runtimeAssetsUnchanged": true,
+  "results": {
+    "negativePortal": {
+      "exit": 1,
+      "stats": {
+        "startTime": "2026-11-13T00:24:31.264Z",
+        "duration": 10062.719000000001,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 2,
+        "flaky": 0
+      },
+      "report": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/negative-portal.json"
+    },
+    "console": {
+      "exit": 0,
+      "stats": {
+        "startTime": "2026-11-13T00:24:42.184Z",
+        "duration": 3972.5899999999997,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "report": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/focused-console.json"
+    },
+    "portal": {
+      "exit": 0,
+      "stats": {
+        "startTime": "2026-11-13T00:24:46.417Z",
+        "duration": 2943.215,
+        "expected": 2,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "report": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/focused-portal.json"
+    }
+  },
+  "knownModelFailuresPreserved": [
+    "684f07ef on db7ee24a",
+    "b4e222a7 on d0ab719a"
+  ],
+  "newCompleteGateRun": false,
+  "installedRun": false
+}

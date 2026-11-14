@@ -1,0 +1,190 @@
+{
+  "epoch": "ownsolid-2-20261113-e1",
+  "scope": "B remaining qualification only",
+  "handoffHead": "f556daff33bdc992ed40b77a6d05159eed5a1b2d",
+  "handoffTree": "493e784f7b65f64d3f8d7aaa9061793892a6050a",
+  "branch": "codex/web-serial-lint",
+  "sourceClean": true,
+  "testedSource": "56a19799bfec788170d71680b4f0663c23073107",
+  "testedTree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "testedWebTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+  "all5101SourceHashesVerified": true,
+  "originalFrozenABranch": "82c602d32b2d957459b3a742499de96867da27a9",
+  "runtimeWebBytesUnchangedSinceTest": true,
+  "freshAdmission": {
+    "rawFreeBytes": 5296308224,
+    "rawFreeGiB": 4.9325714111328125,
+    "diskFreeBytes": 166389809152,
+    "nodeOldSpaceMaximumMiB": 2048,
+    "absoluteSecondsLimit": 600,
+    "cleanupReserveSeconds": 60,
+    "coreDumpLimitBytes": 0,
+    "oneNB": true,
+    "sameFdThroughCleanup": true,
+    "descriptor": 3,
+    "carrierDevice": 16777231,
+    "carrierInode": 53377467,
+    "carrierUID": 501,
+    "carrierMode": "0600",
+    "carrierNlink": 1,
+    "carrierSize": 0,
+    "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+  },
+  "executionParentExit": 0,
+  "executionTotalSeconds": 82.48449400000027,
+  "functionalQualification": {
+    "originalEffectiveFiles": 372,
+    "newEffectiveFiles": 372,
+    "exactDisjointUnion": true,
+    "all372EffectiveConfigsEqual": true,
+    "originalIgnoresPreserved": 5,
+    "positiveNewLintErrors": 0,
+    "positiveNewLintWarnings": 0,
+    "newNegativeFiles": 379,
+    "originalPlusExactlySevenControls": true,
+    "allSevenOriginalVsNewControlDiagnosticsEqual": true,
+    "unchangedRealCliCasesRetainedFromPreviousAttempt": 7,
+    "realCliCasesRerunThisAttempt": 0
+  },
+  "crossAttemptCliEvidence": {
+    "priorAttempt": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-once-jt8bpohu",
+    "sourceAndInvocationBytesUnchanged": true,
+    "priorCommandExit": 0,
+    "priorActualTests": 7,
+    "priorActualPass": 7,
+    "priorActualSkip": 0,
+    "priorParentReporterFailureExitRetained": 1,
+    "originalStdoutSha256": "1373abb17009f27694c41ffd00c4e723d77db94d6f72369202e0059219d3b5e9",
+    "originalStderrSha256": "cf41c3245291761c35a0a772f53ef1277dcd24d623b5dbe17b0c5340a381010f",
+    "cliTestsRerunThisAttempt": false,
+    "offlineSummaryParserDerivedNegativeChecks": 9
+  },
+  "actualCommands": [
+    {
+      "name": "02-file-config-proof",
+      "exit": 0,
+      "seconds": 0.7979780000005121,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/02-file-config-proof.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/02-file-config-proof.stderr",
+      "timeMaximumRssBytes": 289701888
+    },
+    {
+      "name": "03-original-complete-lint",
+      "exit": -6,
+      "seconds": 15.766399000000092,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/03-original-complete-lint.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/03-original-complete-lint.stderr",
+      "timeMaximumRssBytes": 2566897664
+    },
+    {
+      "name": "04-new-complete-lint",
+      "exit": 0,
+      "seconds": 28.14731699999993,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/04-new-complete-lint.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/04-new-complete-lint.stderr",
+      "timeMaximumRssBytes": 2075901952
+    },
+    {
+      "name": "05-original-negative-00",
+      "exit": 1,
+      "seconds": 0.2838949999995748,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-00.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-00.stderr",
+      "timeMaximumRssBytes": 227901440
+    },
+    {
+      "name": "05-original-negative-01",
+      "exit": 1,
+      "seconds": 0.28977500000019063,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-01.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-01.stderr",
+      "timeMaximumRssBytes": 228573184
+    },
+    {
+      "name": "05-original-negative-02",
+      "exit": 1,
+      "seconds": 1.5110479999993913,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-02.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-02.stderr",
+      "timeMaximumRssBytes": 731332608
+    },
+    {
+      "name": "05-original-negative-03",
+      "exit": 1,
+      "seconds": 1.4099779999996827,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-03.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-03.stderr",
+      "timeMaximumRssBytes": 684261376
+    },
+    {
+      "name": "05-original-negative-04",
+      "exit": 1,
+      "seconds": 1.3868969999994079,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-04.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-04.stderr",
+      "timeMaximumRssBytes": 701661184
+    },
+    {
+      "name": "05-original-negative-05",
+      "exit": 1,
+      "seconds": 1.2990720000007059,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-05.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-05.stderr",
+      "timeMaximumRssBytes": 667467776
+    },
+    {
+      "name": "05-original-negative-06",
+      "exit": 1,
+      "seconds": 0.9088260000007722,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-06.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/05-original-negative-06.stderr",
+      "timeMaximumRssBytes": 495468544
+    },
+    {
+      "name": "06-new-whole-negative",
+      "exit": 1,
+      "seconds": 28.116946000000098,
+      "stdout": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/06-new-whole-negative.stdout",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/06-new-whole-negative.stderr",
+      "timeMaximumRssBytes": 2056159232
+    }
+  ],
+  "oldSameSourceCompleteCommandOomPreserved": true,
+  "completeOldPositiveDiagnosticEquality": false,
+  "timeCommandReportedMaxRssReductionPercent": 19.12798156646731,
+  "fullOwnerTreePeakQualified": false,
+  "samplingScopeDefect": {
+    "validForCompleteTree": false,
+    "reason": "The private sampler selected only the original runner process group and admission parent. It did not follow all descendant PPIDs across process groups; the new-command raw sampled value omits large descendants and cannot be interpreted as an owner-tree maximum.",
+    "rawValuesPreserved": true,
+    "rawBenchmarkPeakActuallyLowerFlagAcceptedAsTreeConclusion": false,
+    "originalSampledBytes": 2598076416,
+    "newSampledBytes": 73629696,
+    "newSampledPerPidMaxBytes": 28098560,
+    "timeCommandMaxIsSeparateEvidence": true,
+    "exactMissingDescendantTopology": "Not retained; no historical process tree is fabricated."
+  },
+  "samplerRepair": "Data-only PPID/start-time-aware selection; seven offline topology assertions passed, actual measurement NOTRUN",
+  "qualityVerdict": "Functional file/config coverage, complete new lint and real rejection controls passed; comparative complete owner-tree peak remains unqualified. Do not use the raw sampled-tree flag as proof.",
+  "nextFocusedScope": "Only actual original/new memory measurement using the corrected owner-tree sampler, under a separate job grant; unchanged functional coverage and controls need no repeat. No second NB was attempted.",
+  "cleanup": {
+    "confirmed": true,
+    "guardAndRunnerGone": true,
+    "ownedGroupsRemaining": 0,
+    "ownedNegativeFilesCreatedAndRemoved": 7,
+    "liveOwnerAttributedProcessesAtReadback": 0,
+    "carrierFdReadbackExit": 1,
+    "sourceClean": true,
+    "carrierAndManifestUnchanged": true,
+    "old89StubsUnchanged": true
+  },
+  "scopeAWebInstallCheckBuildTest": "NOTRUN",
+  "newAssetsBrowserNativeInstalledSqlSso": "NOTRUN",
+  "newStrictJson37Or719Included": false,
+  "full6GiBProfileUnchanged": true,
+  "published": false,
+  "roadmapTicked": false,
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/web-serial-lint-functional-qualification.bundle",
+  "bundleSha256": "8ac104e3aa813e2647042c9996a6603ff20bed6a3de76798f9522b31d85e9b8a",
+  "bundlePrerequisite": "82c602d32b2d957459b3a742499de96867da27a9"
+}

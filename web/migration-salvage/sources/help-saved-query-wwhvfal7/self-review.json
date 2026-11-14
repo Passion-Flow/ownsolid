@@ -1,0 +1,44 @@
+{
+  "source": "2b983dbf75feaf36f6ac3423f4d1b0a1ecf0fc52",
+  "changedSourcePaths": [
+    "docs/research/in-product-help.md",
+    "web/packages/shell/testing/help-flows.ts"
+  ],
+  "runtimeOrGeneratedChange": false,
+  "assetReuseProof": "Exactly one reviewed non-runtime file differs under all browser/build input roots; original 8dee production assets and hash inventory preserved",
+  "productIntent": "Bare list links restore memory; explicit queries win; deliberate clearing is persisted",
+  "assertionsPreserved": [
+    "offline unseen contract discovery",
+    "real preview503 and no-store",
+    "failed native download",
+    "recovered actual download and audience",
+    "keyboard focus",
+    "no off-origin request"
+  ],
+  "assertionsStrengthened": [
+    "specific user/list query persisted before leaving",
+    "restored input plus exact query plus included/excluded operations",
+    "real operation click and anchor",
+    "expanded details after reload",
+    "different explicit operation query overrides memory",
+    "clear makes query and input empty while retaining correct open operation",
+    "bare article link after a remembered clear stays empty"
+  ],
+  "testRetries": 0,
+  "fixedSleepsAdded": false,
+  "globalStorageResetAdded": false,
+  "concurrency": "Two locale contexts run together under workers2",
+  "staticChecks": [
+    "targeted Prettier",
+    "targeted ESLint",
+    "shell TypeScript no-emit"
+  ],
+  "browserStatus": "Not run until the one authorized kernel wait acquires the carrier",
+  "scopeBoundaries": [
+    "No API, services, deploy, tools or runtime edit",
+    "No real account, session, credential or runtime fixture consumed",
+    "No older be62/e5c source rebind",
+    "No complete-gate or installed-pass claim from focused results"
+  ],
+  "fixedFileSha256": "de309e95ea595eed027c8b4c9b67e69de97eab1e24dd6061cfe707aa9d4d3d18"
+}

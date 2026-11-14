@@ -1,0 +1,90 @@
+{
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "firstNavigation": {
+    "source": "web/apps/console/e2e/models.spec.ts:744",
+    "url": "http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075",
+    "method": "reload",
+    "class": "Page",
+    "params": {
+      "waitUntil": "load"
+    },
+    "startUtc": "2026-11-13T14:29:43.747849+00:00",
+    "endUtc": "2026-11-13T14:30:01.815951+00:00",
+    "milliseconds": 18068.10200000007,
+    "message": "net::ERR_TIMED_OUT",
+    "testTitle": "models.spec.ts:701 \u203a pending expiry is not resumable and a failed refresh recovers in en",
+    "origin": "http://localhost:31036"
+  },
+  "subsequentSameConfiguredOrigin": true,
+  "sameKernelListenerProven": false,
+  "lastFailure": {
+    "method": "goto",
+    "class": "Frame",
+    "params": {
+      "url": "/",
+      "waitUntil": "load"
+    },
+    "startUtc": "2026-11-13T14:31:01.386748+00:00",
+    "endUtc": "2026-11-13T14:31:01.650413+00:00",
+    "milliseconds": 263.66500000003725,
+    "message": "net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/",
+    "testTitle": "overview.spec.ts:47 \u203a names an offline node and opens its drawer",
+    "origin": "http://localhost:31036"
+  },
+  "failureBlock": "909..989 inclusive; 81 consecutive cases across models/navigation/nodes/overview; case990 passed",
+  "config": {
+    "appPort": 4310,
+    "offset": 26726,
+    "previewPort": 31036,
+    "baseURL": "http://localhost:31036",
+    "command": "pnpm exec vite preview --port 31036 --strictPort",
+    "reuseExistingServer": false,
+    "workers": 1,
+    "retries": 0
+  },
+  "lifecycleEvidence": {
+    "commandInvokedPid": 17612,
+    "commandReceiptHasStartOrExit": false,
+    "viteWarningPid": 17613,
+    "exactViteKernelBirthRecorded": false,
+    "pid17612To17613ParentEdgeRecorded": false,
+    "launcherStartLogUTC": "2026-11-13T14:16:30.605Z",
+    "readiness200UTC": "2026-11-13T14:16:30.967Z",
+    "terminationRequestedUTC": "2026-11-13T14:33:54.762Z",
+    "terminationLoggedUTC": "2026-11-13T14:33:54.765Z",
+    "previewActualExitCodeRecorded": false,
+    "noMidRunExitLogDoesNotProveLiveness": true,
+    "stdoutAndStderrMergedInOriginalLog": true
+  },
+  "sourceReview": {
+    "modelFailureFixtureOnlyMatches": "/api/v1/admin/model-imports/<uuid>",
+    "mainDocumentNavigationInterceptedByModelFixture": false,
+    "contextOfflineTrace": false,
+    "firstTestFailureBeforeTestTimeout": true,
+    "firstNavigationErrorWasBrowserNetworkErrorNotRunnerDeadline": true,
+    "parentExitedByFailureNotDeadline": true,
+    "newSourceDifferencesSinceTest": [
+      "docs/product/roadmap/portal.md",
+      "docs/research/portal-account-sessions.md"
+    ],
+    "9e7404To82WebOrMakefileDifference": false
+  },
+  "directCauseProven": "Chromium main-document navigation timed out, then other main-document navigations to the same origin failed at the socket layer. This is one contiguous incident; causality between individual tests is not established.",
+  "unknown": [
+    "Historical listening PID/start identity/socket family during failure",
+    "Preview or pnpm actual intermediate exit or restart",
+    "Socket/resource exhaustion or external network/proxy changes",
+    "Browser-internal versus server/OS failure",
+    "Why case990 recovered"
+  ],
+  "noBlindProductFix": true,
+  "diagnosticGapToCorrect": "Retain passive preview spawn-handle start/exit/signal, Vite bootstrap PID/PPID/lifetime nonce, actual listening address, socket errors and timestamped exact stderr; do not change original commands or assertions.",
+  "reviewedInputSha256": {
+    "web/packages/config/src/playwright.ts": "dd5e2e5b4f7f4c353261d83e0449879fcf4c84d88094ff0f3b1fa460fabc5bee",
+    "web/apps/console/e2e/models.spec.ts": "4bb9e00370f1e95f73c16a04258902ddea125e8404f6abd2e1fd086b51a8aa5c",
+    "web/packages/shell/testing/models.ts": "103a1255657fb440f183e15a3464a557bb445f11a79313e80c5306426b03e640",
+    "web/packages/shell/testing/control-plane.ts": "7e6348e87eceb88a2d07a067eb33cd318efb6e3bda1ce259a65bbe5aafc1670b",
+    "web/node_modules/.pnpm/playwright@1.64.1/node_modules/playwright/lib/runner/index.js": "2cb242134ba364714f289100dbfc02fc496d74bde24274490556395e57109fdb",
+    "web/node_modules/.pnpm/playwright-core@1.64.1/node_modules/playwright-core/lib/coreBundle.js": "829521b67ed7be90c7d6d6098ff39f2241562d47e4ad7ccab13710924a56001d"
+  }
+}

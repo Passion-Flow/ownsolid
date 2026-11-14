@@ -1,0 +1,127 @@
+{
+  "phase": "short-opportunity-consumed-collection-failure-cleanup-confirmed",
+  "guardActualExitCode": 1,
+  "guardElapsedSeconds": 15.755728000003728,
+  "cleanupConfirmed": true,
+  "busy": false,
+  "deadlineHit": false,
+  "retryAttempted": false,
+  "attemptMarkerRetained": true,
+  "consumedPacket": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf",
+  "approvedInputHashesUnchanged": {
+    "run-browser-once.sh": "fcaffb9fe3a4e3ff96701e02d0e48d6ff473a3f994a5534c3339359c75520670",
+    "mac-browser-once.py": "e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a",
+    "browser-run.py": "fc2492b985775e7c59b5ae420a514f0a3666faaf4bd3874bfcca0f338ff8905c",
+    "stage-plan.json": "96002e8d3914a2c130a64fabedfaa3b4e102c5de991eedb3886c332d02477d1e"
+  },
+  "executionOutcome": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/execution-outcome.json",
+  "evidenceSha256": {
+    "execution-outcome.json": "bbf8704c11eb18653a545589d2620b44ed906951c9e62dacf2178639e53f0e52",
+    "execution-evidence-digests.json": "9f7bc18e43b7853b9320abc9890573bc0dea778d5b23cfa1521da389c0b7207b",
+    "gate-state.json": "92df49c5f4dbf0e3683deb7faa41105d68e06eb692d96e2a49a239a0223697dc",
+    "gate-output.log": "e2fc9c420253870363ee6a9f0a77037fe94549acabf8be5a36ff22937add031b",
+    "gate-exit-status": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "browser-state.json": "df835ac03b4007cd6f740e2ea16c54bf720881d127cb19813ead72cd4b1d5485",
+    "discovered-selection.json": "c060f353b8931f96ed212f35bf9a111efb0fc4bc9721baa099ce6dd38f7faaf1",
+    "new-console-assets.json": "31ecbbae60314b2cc5a6ae229cc1efeafc802734df85ac1e29d9993842fee9e0",
+    "negative-old-runtime.json": "49fdf18aae44824862c49beec47f70ac943ee444ae08cfa375232bcfb5a94edb",
+    "negative-old-runtime.stderr.log": "0461ab56c2970afa12d4fffb8caef6f3ef3650067f1c97c986ce6d53f279304c",
+    "preview-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "owned-groups-cleanup.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "post-parent-child-processes.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "post-listeners.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "post-carrier-holders.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "post-owned-awake.log": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  "actualSource": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+  "actualWebTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "evidenceCommit": "d4bfec1cd66cd7b4160fd900eeeb2e165d47dd3b",
+  "currentWebTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "webTreesEqual": true,
+  "newConsoleBuild": {
+    "exit": 0,
+    "files": 696,
+    "manifest": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/new-console-assets.json",
+    "manifestSha256": "31ecbbae60314b2cc5a6ae229cc1efeafc802734df85ac1e29d9993842fee9e0",
+    "windowCodeChunks": [
+      {
+        "path": "web/apps/console/dist/assets/resource-page-DOXZES-j.js",
+        "sha256": "43609e330ea1f9756afb98b23a263af2e899a477ecfd20515f25d0976b137ed2"
+      }
+    ],
+    "releaseArchiveCreated": false
+  },
+  "actualDiscovery": {
+    "counts": {
+      "audit-read-recovery.spec.ts": 41,
+      "node-page.spec.ts": 10,
+      "resource-activity.spec.ts": 21,
+      "resource-pages.spec.ts": 9
+    },
+    "auditPartitions": [
+      19,
+      19,
+      3
+    ],
+    "inventory": 30
+  },
+  "negativeControl": {
+    "commandExit": 1,
+    "collectionErrors": [
+      "SyntaxError: Cannot use 'import.meta' outside a module",
+      "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
+    ],
+    "stats": {
+      "startTime": "2026-11-13T03:16:59.049Z",
+      "duration": 3014.2290000000003,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "actualCasesExecuted": 0,
+    "acceptedExpectedPolicyFailures": 0,
+    "plannedPolicyFailures": 4,
+    "retryCount": 0,
+    "notAnExpectedNegativeControlFailure": true
+  },
+  "positiveBrowserCasesExecuted": 0,
+  "unstartedStages": [
+    "resource-activity",
+    "audit-en",
+    "audit-zh",
+    "audit-boundaries",
+    "resource-pages",
+    "inventory-a11y",
+    "inventory-keyboard"
+  ],
+  "imagesGenerated": 0,
+  "imagesRead": 0,
+  "cleanupReadback": {
+    "parentAndRunnerPsExit": 1,
+    "parentAndRunnerOutput": "",
+    "listenerCheckExit": 1,
+    "listenerOutput": "",
+    "ownAwakeMatches": [],
+    "originalParentPresentInCarrierHolders": false,
+    "carrierHoldersReadbackExit": 1
+  },
+  "carrier": {
+    "inode": 50313339,
+    "uid": 501,
+    "regular": true
+  },
+  "correctionManifest": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/correction-manifest.json",
+  "correctionPureModuleClassifierPassed": true,
+  "correctedProbePlaywrightDiscovery": false,
+  "correctedProbeBrowserExecution": false,
+  "newGuardOrQueueCreated": false,
+  "docEvidenceBundle": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/doc-evidence.bundle",
+  "docEvidenceBundleSha256": "35d1e7c3899ea19e9638df87dc3525f7125a2577d32c46842598da2b51799811",
+  "fullGate": false,
+  "nativeGate": false,
+  "installed": false,
+  "publishedToMain": false,
+  "roadmapTicked": false,
+  "publicationBoundary": "The short operation failed before any case execution. Build/discovery are partial evidence only. Keep the consumed marker and raw errors. A future separately authorized bounded opportunity must collect the corrected four-case negative probe before proceeding; full/native and exact-source installed acceptance remain open."
+}

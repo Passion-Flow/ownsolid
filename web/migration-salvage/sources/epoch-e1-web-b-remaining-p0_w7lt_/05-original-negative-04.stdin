@@ -1,0 +1,1 @@
+export function lintControl() { Promise.resolve(1); }

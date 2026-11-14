@@ -1,0 +1,14 @@
+[
+  "*",
+  "apps/*",
+  "apps/console",
+  "apps/portal",
+  "node_modules",
+  "packages/*",
+  "packages/api",
+  "packages/config",
+  "packages/help",
+  "packages/i18n",
+  "packages/shell",
+  "packages/ui"
+]

@@ -1,0 +1,6 @@
+{
+  "source": "be62f58e846dcc654dafee65cba6cc7480890570",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web",
+  "dependencies": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/node_modules",
+  "state": "candidate binding; rebind to the new clean frozen checkout before an installed run"
+}

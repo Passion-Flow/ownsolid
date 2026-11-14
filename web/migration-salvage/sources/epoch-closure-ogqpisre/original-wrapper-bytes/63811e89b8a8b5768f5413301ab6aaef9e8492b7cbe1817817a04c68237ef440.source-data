@@ -1,0 +1,3 @@
+#!/bin/sh
+set -eu
+exec python3 -I /Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/mac-browser-once.py /Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3

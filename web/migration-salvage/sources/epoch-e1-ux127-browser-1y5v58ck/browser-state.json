@@ -1,0 +1,10 @@
+{
+  "phase": "active-image-review",
+  "round": 1,
+  "generatedImages": 0,
+  "failure": {
+    "errorClass": "RuntimeError",
+    "detail": "resource-activity actual case/status mismatch"
+  },
+  "workCutoffMonotonic": 25490.036508
+}

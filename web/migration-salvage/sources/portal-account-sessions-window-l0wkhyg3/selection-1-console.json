@@ -1,0 +1,46 @@
+[
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "reviews the settings section and confirmation in en"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "reviews the settings section and confirmation in zh-CN"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "replaces the current marker after a real same-account sign-out and sign-in"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "replaces the current marker through the actual password form"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "keeps earlier pages on an invalid cursor and failed restart"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "shows ACCESS_DENIED without retained session actions"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "shows SERVICE_NOT_READY without retained session actions"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "reads before another attempt after RESOURCE_NOT_FOUND"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "reads before another attempt after STORAGE_COMMIT_OUTCOME_UNKNOWN"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "keeps the settings page usable during a delayed first read"
+  },
+  {
+    "file": "../../../packages/shell/testing/account-session-flows.ts",
+    "title": "does not replay a lost end reply even when the server already ended the target"
+  }
+]

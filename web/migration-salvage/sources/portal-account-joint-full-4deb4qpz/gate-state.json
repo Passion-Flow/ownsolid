@@ -1,0 +1,46 @@
+{
+  "parentPID": 38870,
+  "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "expectedInode": 50313339,
+  "kernelWaitBudgetSeconds": 0,
+  "executionBudgetSeconds": 1800,
+  "childStarted": false,
+  "entryMonotonic": 71631.628716,
+  "hardDeadlineMonotonic": 73431.628716,
+  "workCutoffMonotonic": 73311.628716,
+  "cleanupReserveSeconds": 120,
+  "cleanupConfirmed": true,
+  "cleanupEvidenceFailed": false,
+  "groupsConfirmed": true,
+  "awakeConfirmed": true,
+  "phaseHistory": [
+    {
+      "phase": "one-nonblocking-attempt",
+      "descriptor": 3,
+      "device": 16777234,
+      "inode": 50313339
+    },
+    {
+      "phase": "held",
+      "descriptor": 3
+    },
+    {
+      "phase": "wrapper-error",
+      "exit": 1,
+      "error": "AssertionError('Under6GiB free memory; no child started')",
+      "childStarted": false
+    },
+    {
+      "phase": "cleanup-evidence",
+      "exit": 1,
+      "cleanupConfirmed": true
+    }
+  ],
+  "descriptor": 3,
+  "device": 16777234,
+  "inode": 50313339,
+  "phase": "cleanup-evidence",
+  "updatedUTC": "2026-11-13T07:44:57.529836+00:00",
+  "exit": 1,
+  "error": "AssertionError('Under6GiB free memory; no child started')"
+}

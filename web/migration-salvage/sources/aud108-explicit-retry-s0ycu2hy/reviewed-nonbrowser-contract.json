@@ -1,0 +1,22 @@
+{
+  "path": "api/configuration/v1/control-serving-expectation/schema.json",
+  "oldSource": "7aa8b068",
+  "fullSource": "c70e9f5950f421e7bef194ae5f5ced0efaf1ca7f",
+  "oldSha256": "af10f3b2f95a83833b5064fd833ab36153e486c0aeaf8b1a18c8d2d73dd76396",
+  "newSha256": "453cfa8217c21ceb87188c4a87f154b15ccb1e1b81b3562785039f7c3467b33a",
+  "exactChange": "Optional portal_listen_address string/minLength1 property only",
+  "consumerSearch": {
+    "arguments": [
+      "rg",
+      "-n",
+      "control-serving-expectation|api/configuration",
+      "web",
+      "tools/codegen/web-api.mjs",
+      "tools/codegen/web-help.mjs",
+      "Makefile"
+    ],
+    "exit": 1,
+    "output": ""
+  },
+  "scope": "An installation serving expectation JSON schema, with no Web/generator/Makefile reference. The complete full gate covers this exact newer source; the focused screenshots use unchanged Web/OpenAPI inputs."
+}

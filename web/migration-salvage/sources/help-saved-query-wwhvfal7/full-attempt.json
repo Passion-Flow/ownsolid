@@ -1,0 +1,12 @@
+{
+  "phase": "one nonblocking original-full-window attempt",
+  "command": [
+    "/Users/passion./.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12",
+    "/Users/passion./.local/state/ownsolid/web-scopes/mac-window.py",
+    "bash",
+    "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/run-full-once.sh",
+    "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7"
+  ],
+  "createsWaiter": false,
+  "source": "44ab52293e516128ba2efc0edc2cb2053acc3462"
+}

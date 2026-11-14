@@ -1,0 +1,268 @@
+{
+  "recordedUTC": "2026-11-13T17:53:45.380587+00:00",
+  "branch": "codex/web-resource-history-ui",
+  "candidate": {
+    "source": "31fe39e974400f80efb82ef68e5d33e80d5dd64b",
+    "tree": "220e9e881e350c659e3aef7476a07a10f1b52172",
+    "webTree": "da6882b8d6d0510323fd9ed50d080c8ca72876eb",
+    "status": ""
+  },
+  "bundle": {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/ux127-cursor-correction.bundle",
+    "sha256": "45c4a8028075671ae1d6fef2fb41c47de298e1c7d446bc4f17a695c79e37c245",
+    "prerequisite": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+    "verified": true
+  },
+  "commits": [
+    "31fe39e974400f80efb82ef68e5d33e80d5dd64b UX-127 Record failed cursor acceptance and reopen visual qualification",
+    "3f614d691f166213935cdbb7fa563fd0482c6649 UX-127 Cover cursor fingerprint preservation at the client boundary",
+    "f655af2b1eed5208219b05c8e8ea7993cf1ff1ff UX-127 Preserve explicit audit bounds on cursor requests"
+  ],
+  "changedPaths": [
+    "docs/product/roadmap/index.md",
+    "docs/product/roadmap/usability-and-localization.md",
+    "docs/product/status.md",
+    "docs/research/resource-detail-pages.md",
+    "web/packages/api/src/audit.test.ts",
+    "web/packages/api/src/audit.ts"
+  ],
+  "originalBrowserTestsAndFixturesUnchanged": true,
+  "executedCandidate": {
+    "source": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+    "webTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+    "assets": 696,
+    "assetFilesMatchOriginalMap": true,
+    "referenceManifestSha256": "31ecbbae60314b2cc5a6ae229cc1efeafc802734df85ac1e29d9993842fee9e0"
+  },
+  "currentBuiltAssetsAreStaleForCorrectedSource": true,
+  "stages": [
+    {
+      "name": "console-build",
+      "source": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+      "round": 1,
+      "argv": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exit": 0,
+      "seconds": 7.651726000000053,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/console-build.log"
+    },
+    {
+      "name": "negative-old-runtime",
+      "source": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+      "round": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "resource-activity.spec.ts",
+        "--config",
+        "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative.config.ts",
+        "--grep",
+        "reads current activity for a 400-day-old resource with a (?:1|31)-day policy",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--reporter=json",
+        "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/negative-old-runtime-results"
+      ],
+      "exit": 1,
+      "seconds": 22.747419999999693,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/negative-old-runtime.json",
+      "stats": {
+        "startTime": "2026-11-13T17:29:51.293Z",
+        "duration": 22477.356000000003,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 4,
+        "flaky": 0
+      },
+      "collectedCases": 4
+    },
+    {
+      "name": "resource-activity",
+      "source": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+      "round": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/resource-activity.spec.ts",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--reporter=json",
+        "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/resource-activity-results"
+      ],
+      "exit": 1,
+      "seconds": 33.89910999999847,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/resource-activity.json",
+      "stats": {
+        "startTime": "2026-11-13T17:30:14.008Z",
+        "duration": 33638.91,
+        "expected": 17,
+        "skipped": 0,
+        "unexpected": 4,
+        "flaky": 0
+      },
+      "collectedCases": 21
+    }
+  ],
+  "oldRuntimeNegative": {
+    "actualExit": 1,
+    "expectedAssertionFailures": 4,
+    "passedProductCases": 0,
+    "collectionErrors": 0,
+    "skip": 0,
+    "retry": 0
+  },
+  "positive": {
+    "planned": 111,
+    "ran": 21,
+    "pass": 17,
+    "fail": 4,
+    "notRun": 90,
+    "skip": 0,
+    "retry": 0
+  },
+  "images": {
+    "planned": 27,
+    "actual": 25,
+    "read": 25,
+    "missingPartial": 2,
+    "correctedSource": 0,
+    "manifest": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/visual-readback.json",
+    "visualAcceptance": false
+  },
+  "guard": {
+    "actualExit": 1,
+    "actualElapsedSeconds": 540.2780399999974,
+    "phaseHistory": [
+      {
+        "phase": "one-nonblocking-attempt",
+        "descriptor": 3,
+        "device": 16777231,
+        "inode": 53377467
+      },
+      {
+        "phase": "held",
+        "descriptor": 3
+      },
+      {
+        "phase": "scope-selected",
+        "chosenScope": "T",
+        "selectedSource": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+        "selectedTree": "22db2779f71a3606570effa5840f6c9b13aeefd4",
+        "rawFreeBytes": 5368053760,
+        "diskFreeBytes": 163447857152,
+        "unselectedScope": "NOTRUN"
+      },
+      {
+        "phase": "executing",
+        "childStarted": true,
+        "childPID": 41157,
+        "childGroup": 41157
+      },
+      {
+        "phase": "execution-timeout",
+        "childStarted": true
+      },
+      {
+        "phase": "wrapper-error",
+        "exit": 1,
+        "error": "PermissionError(1, 'Operation not permitted')",
+        "childStarted": true
+      },
+      {
+        "phase": "cleanup-evidence",
+        "exit": 1,
+        "cleanupConfirmed": true
+      }
+    ],
+    "cleanupConfirmed": true,
+    "abortDecisionProcessed": false,
+    "absoluteWorkCutoffExpired": true,
+    "cleanupDeadlineHandlingError": "PermissionError(1, 'Operation not permitted')"
+  },
+  "postExit": {
+    "recordedUTC": "2026-11-13T17:47:49.750152+00:00",
+    "source": "3f614d691f166213935cdbb7fa563fd0482c6649",
+    "tree": "6c486d8f57ac81bb35dc3a853593b3d18a53db0a",
+    "webTree": "da6882b8d6d0510323fd9ed50d080c8ca72876eb",
+    "gitStatus": "",
+    "preparedFileHashesMatch": {
+      "mac-epoch-once.py": true,
+      "ux-browser-run.py": true,
+      "cleanup-epoch-owned.py": true,
+      "stage-plan.json": true,
+      "source-file-sha256.json": true,
+      "old-console-assets.json": true,
+      "previous-new-console-assets.json": true,
+      "previous-build-and-discovery.json": true,
+      "prior-busy-outcome.json": true,
+      "corrected-probe-inputs.json": true,
+      "authorization.json": true,
+      "scope-inputs.json": true
+    },
+    "correctedProbeHashesMatch": {
+      "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative.config.ts": true,
+      "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe/package.json": true,
+      "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe/resource-activity.spec.ts": true,
+      "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative-probe/resource-activity-fixture.ts": true
+    },
+    "currentConsole": {
+      "files": 696,
+      "mismatches": []
+    },
+    "oldConsole": {
+      "files": 696,
+      "mismatches": []
+    },
+    "carrier": {
+      "device": 16777231,
+      "inode": 53377467,
+      "mode": "0o600",
+      "uid": 501,
+      "nlink": 1,
+      "size": 0,
+      "regular": true,
+      "openedReadOnlySameInode": true,
+      "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+    },
+    "knownParentAndWorkerPIDQuery": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "portsQuery": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "noLockAttempt": true,
+    "noNodeOrBrowserStarted": true,
+    "closedOldWrappers": {
+      "count": 89,
+      "stubsUnchanged": true,
+      "sourceDataUnchanged": true,
+      "noOldWrapperExecuted": true
+    }
+  },
+  "currentLightChecks": {
+    "layout": 0,
+    "roadmapConsistency": 0,
+    "gitDiffWhitespace": 0,
+    "bundleVerify": 0
+  },
+  "newSourceTestsTypesLintBuildBrowser": "NOTRUN",
+  "fullNativeInstalled": "NOTRUN",
+  "UX127": "OPEN",
+  "POR112": "OPEN_UNCHANGED",
+  "publication": "NOTRUN",
+  "noNewNodeBrowserLockAfterExit": true,
+  "followupDataOnly": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/followup-data-only.json"
+}

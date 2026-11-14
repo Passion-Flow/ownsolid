@@ -1,0 +1,24 @@
+{
+  "originalSampleFile": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/stage-results.json",
+  "sha256": "601f2f1ab317a3e2479c958742acef71592787f7b60b128f80d98bf66da00599",
+  "retainedActualSampleForm": "Per-PID maximum RSS map, filtered to prior PGID plus guard",
+  "hasRawParentChildSamples": false,
+  "hasStartIdentity": false,
+  "historicalCompleteOwnerTreePeakAccepted": false,
+  "reason": "The actual retained data lacks PPID/start-time rows and omitted some cross-PGID descendants. These omissions cannot be reconstructed from per-PID maxima or time -l.",
+  "oldAndNewNumericSamplesRetained": [
+    {
+      "name": "02-file-config-proof",
+      "observedPidCount": 7
+    },
+    {
+      "name": "03-original-complete-lint",
+      "observedPidCount": 63
+    },
+    {
+      "name": "04-new-complete-lint",
+      "observedPidCount": 109
+    }
+  ],
+  "offlineRepairMayCreateNoHistoricalPass": true
+}

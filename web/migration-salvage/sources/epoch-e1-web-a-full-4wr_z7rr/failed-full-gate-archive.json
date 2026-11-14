@@ -1,0 +1,10 @@
+{
+  "archive": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/failed-full-gate-assets-and-tests.tar.gz",
+  "sha256": "4ed1e4cda02cc2b771b0087024b3f9a000f5afffa22a2816e77d189952fac5f9",
+  "files": 1424,
+  "assetFiles": 1233,
+  "testResultFiles": 191,
+  "verifiedEveryArchivedByte": true,
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "completeGatePassed": false
+}

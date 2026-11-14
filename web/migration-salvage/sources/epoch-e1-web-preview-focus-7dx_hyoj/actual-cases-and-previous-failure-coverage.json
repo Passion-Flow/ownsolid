@@ -1,0 +1,713 @@
+{
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "selected": 137,
+  "targetFileCases": 129,
+  "targetPassed": 129,
+  "failed": 0,
+  "originalLiveConditionSkips": 8,
+  "retryAttempts": 0,
+  "previousFailureCasesCoveredAndPassed": 71,
+  "previousFailureCasesNotRun": 10,
+  "previousMissingFile": "e2e/node-page.spec.ts",
+  "correction": "The earlier four-file plan incorrectly claimed all81 failed cases; exact path/name comparison disproves that. No original source/result is edited.",
+  "missingCases": [
+    "e2e/node-page.spec.ts:27:1 \u203a opens from the drawer, and the sidebar still marks Nodes",
+    "e2e/node-page.spec.ts:39:1 \u203a its tabs work from the keyboard and live in the address",
+    "e2e/node-page.spec.ts:60:1 \u203a Tasks lists this node and links each task",
+    "e2e/node-page.spec.ts:67:1 \u203a Tasks says when there are none, and a failure can be retried",
+    "e2e/node-page.spec.ts:86:1 \u203a Activity shows what people did to this node over its whole life",
+    "e2e/node-page.spec.ts:106:1 \u203a Activity says when there is none, and a failure can be retried",
+    "e2e/node-page.spec.ts:121:1 \u203a renaming stays on the page and can be undone",
+    "e2e/node-page.spec.ts:132:1 \u203a removing goes back to the list",
+    "e2e/node-page.spec.ts:143:1 \u203a a node that does not exist says so, and a failure can be retried",
+    "e2e/node-page.spec.ts:171:3 \u203a in Chinese \u203a names its tabs"
+  ],
+  "fileArgumentRegexExtraMatchesAcknowledged": true,
+  "cases": [
+    {
+      "position": 1,
+      "status": "skipped",
+      "case": "e2e/live-models.spec.ts:51:1 \u203a resumes at the durable offset after a real chunk interruption"
+    },
+    {
+      "position": 2,
+      "status": "skipped",
+      "case": "e2e/live-models.spec.ts:207:1 \u203a retires the model"
+    },
+    {
+      "position": 3,
+      "status": "skipped",
+      "case": "e2e/live-models.spec.ts:220:1 \u203a discards a real import before accepting its first chunk"
+    },
+    {
+      "position": 4,
+      "status": "skipped",
+      "case": "e2e/live-navigation.spec.ts:23:1 \u203a groups, the filter and the rail work, and the rail follows the account"
+    },
+    {
+      "position": 5,
+      "status": "skipped",
+      "case": "e2e/live-nodes.spec.ts:27:1 \u203a adds a node with the commands on the page and works with it"
+    },
+    {
+      "position": 6,
+      "status": "skipped",
+      "case": "e2e/live-nodes.spec.ts:185:1 \u203a registers a Kubernetes Agent from a private unicast address"
+    },
+    {
+      "position": 7,
+      "status": "skipped",
+      "case": "e2e/live-nodes.spec.ts:242:1 \u203a issues a 48-node CSV and observes real Agent enrollment"
+    },
+    {
+      "position": 8,
+      "status": "skipped",
+      "case": "e2e/live-overview.spec.ts:17:1 \u203a shows real figures and leads to the fix"
+    },
+    {
+      "position": 9,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:44:1 \u203a is reached from the navigation, and says what it is for when empty"
+    },
+    {
+      "position": 10,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:55:3 \u203a copies the tool-specific bundle commands from offline help (en)"
+    },
+    {
+      "position": 11,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:55:3 \u203a copies the tool-specific bundle commands from offline help (zh-CN)"
+    },
+    {
+      "position": 12,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:101:1 \u203a keeps bundle commands selectable when the clipboard is unavailable"
+    },
+    {
+      "position": 13,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:114:1 \u203a filters from the address, and says which filter hid everything"
+    },
+    {
+      "position": 14,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:128:1 \u203a previews a model in a drawer, and opens its own page"
+    },
+    {
+      "position": 15,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:140:1 \u203a finds a model from the command menu and opens its drawer"
+    },
+    {
+      "position": 16,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:150:1 \u203a shows a failed read and retries it"
+    },
+    {
+      "position": 17,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:159:1 \u203a says what the catalogue can do in this release"
+    },
+    {
+      "position": 18,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:165:1 \u203a imports a bundle: sends every chunk, verifies, and opens the model"
+    },
+    {
+      "position": 19,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:203:1 \u203a shows publication without reading the import catalogue"
+    },
+    {
+      "position": 20,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:216:1 \u203a keeps a paused upload visible while its resume settings are unavailable"
+    },
+    {
+      "position": 21,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:233:1 \u203a rides out a lost answer and a dropped connection without help"
+    },
+    {
+      "position": 22,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:240:1 \u203a stops on a long outage, says so, and continues on request"
+    },
+    {
+      "position": 23,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:250:1 \u203a discards an import before its first chunk is accepted"
+    },
+    {
+      "position": 24,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:280:1 \u203a shows cancelled verification in Chinese on a narrow screen"
+    },
+    {
+      "position": 25,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:304:1 \u203a keeps uploading while the person moves around the console"
+    },
+    {
+      "position": 26,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:315:1 \u203a continues after the tab closed, from what the server holds"
+    },
+    {
+      "position": 27,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:334:1 \u203a continues with the same file"
+    },
+    {
+      "position": 28,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:342:1 \u203a explains a failed verification, verifies again, and can discard"
+    },
+    {
+      "position": 29,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:361:1 \u203a says when an import has used all its tries"
+    },
+    {
+      "position": 30,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:368:1 \u203a cannot start without a store, and says what to do"
+    },
+    {
+      "position": 31,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:375:1 \u203a points to the import in the way of a new one"
+    },
+    {
+      "position": 32,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:384:1 \u203a refuses a file that cannot be the bundle before anything is sent"
+    },
+    {
+      "position": 33,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:392:1 \u203a explains a refused start and keeps the form"
+    },
+    {
+      "position": 34,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:400:1 \u203a retires a model after its name is typed, and keeps one still in use"
+    },
+    {
+      "position": 35,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:416:1 \u203a leads from a fine-tuned model to the one it was made from"
+    },
+    {
+      "position": 36,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:474:3 \u203a shows both retained dataset versions in the model detail (en)"
+    },
+    {
+      "position": 37,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:531:3 \u203a keeps origin available when a model has no lineage field (en)"
+    },
+    {
+      "position": 38,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:474:3 \u203a shows both retained dataset versions in the model detail (zh-CN)"
+    },
+    {
+      "position": 39,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:531:3 \u203a keeps origin available when a model has no lineage field (zh-CN)"
+    },
+    {
+      "position": 40,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:566:3 \u203a preserves the Admin detail refusal for ACCESS_DENIED"
+    },
+    {
+      "position": 41,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:566:3 \u203a preserves the Admin detail refusal for MODEL_DERIVED_CATALOG_INVALID"
+    },
+    {
+      "position": 42,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:574:1 \u203a retries a failed model detail read and returns to its lineage tab"
+    },
+    {
+      "position": 43,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:591:1 \u203a says when a model or an import does not exist"
+    },
+    {
+      "position": 44,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:598:1 \u203a explains import storage and background cleanup in Simplified Chinese"
+    },
+    {
+      "position": 45,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:619:3 \u203a expired import replay opens its history and a new upload uses a fresh key in en"
+    },
+    {
+      "position": 46,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:701:3 \u203a pending expiry is not resumable and a failed refresh recovers in en"
+    },
+    {
+      "position": 47,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:750:3 \u203a a 409 resume refusal refreshes the expired history in en"
+    },
+    {
+      "position": 48,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:778:3 \u203a an import refresh refusal removes cached controls in en"
+    },
+    {
+      "position": 49,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:619:3 \u203a expired import replay opens its history and a new upload uses a fresh key in zh-CN"
+    },
+    {
+      "position": 50,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:701:3 \u203a pending expiry is not resumable and a failed refresh recovers in zh-CN"
+    },
+    {
+      "position": 51,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:750:3 \u203a a 409 resume refusal refreshes the expired history in zh-CN"
+    },
+    {
+      "position": 52,
+      "status": "passed",
+      "case": "e2e/models.spec.ts:778:3 \u203a an import refresh refusal removes cached controls in zh-CN"
+    },
+    {
+      "position": 53,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:26:1 \u203a only the group of the current page is open"
+    },
+    {
+      "position": 54,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:36:1 \u203a the current page is marked by a bar and weight, not colour alone"
+    },
+    {
+      "position": 55,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:44:1 \u203a a heading only opens and closes, and never navigates"
+    },
+    {
+      "position": 56,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:54:1 \u203a what a person opened goes when they move to another page"
+    },
+    {
+      "position": 57,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:66:1 \u203a a closed group still says it holds the current page"
+    },
+    {
+      "position": 58,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:77:1 \u203a works from the keyboard"
+    },
+    {
+      "position": 59,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:87:1 \u203a a page beneath a destination keeps its group open"
+    },
+    {
+      "position": 60,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:96:3 \u203a the filter \u203a finds pages in closed groups, and Enter opens the first"
+    },
+    {
+      "position": 61,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:110:3 \u203a the filter \u203a Enter passes over a page that has not shipped"
+    },
+    {
+      "position": 62,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:120:3 \u203a the filter \u203a says when nothing matches, and Escape clears it"
+    },
+    {
+      "position": 63,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:138:3 \u203a the icon-only rail \u203a keeps every name, marks the current page and shows the name on focus"
+    },
+    {
+      "position": 64,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:159:3 \u203a the icon-only rail \u203a shows the name on hover, and it stays while the pointer moves onto it"
+    },
+    {
+      "position": 65,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:173:3 \u203a the icon-only rail \u203a follows the account, and comes back after a reload"
+    },
+    {
+      "position": 66,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:186:3 \u203a the icon-only rail \u203a a choice made in another browser arrives with the account"
+    },
+    {
+      "position": 67,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:193:3 \u203a the icon-only rail \u203a can be chosen from the command menu"
+    },
+    {
+      "position": 68,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:201:3 \u203a the icon-only rail \u203a never applies to the drawer of a narrow screen"
+    },
+    {
+      "position": 69,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:220:3 \u203a pinned pages \u203a a pin sits at the top, stays in its group, and comes off"
+    },
+    {
+      "position": 70,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:254:3 \u203a pinned pages \u203a a page that has not shipped cannot be pinned"
+    },
+    {
+      "position": 71,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:259:3 \u203a pinned pages \u203a pins arrive with the account, and a pin whose page has gone is left out"
+    },
+    {
+      "position": 72,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:269:3 \u203a pinned pages \u203a the rail shows pins first, with their names"
+    },
+    {
+      "position": 73,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:277:3 \u203a pinned pages \u203a a filter looks through the groups, not the pins"
+    },
+    {
+      "position": 74,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:285:3 \u203a pinned pages \u203a the limit says what to do"
+    },
+    {
+      "position": 75,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:296:3 \u203a pinned pages \u203a the command menu pins the current page"
+    },
+    {
+      "position": 76,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:306:3 \u203a pinned pages \u203a the account page has no pin"
+    },
+    {
+      "position": 77,
+      "status": "passed",
+      "case": "e2e/navigation.spec.ts:317:3 \u203a in Chinese \u203a the filter reads the names on screen"
+    },
+    {
+      "position": 78,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:40:3 \u203a shows Kubernetes profiles on node and registration reads (en)"
+    },
+    {
+      "position": 79,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:40:3 \u203a shows Kubernetes profiles on node and registration reads (zh-CN)"
+    },
+    {
+      "position": 80,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:85:3 \u203a the list \u203a is reached from the navigation and shows each node as it stands"
+    },
+    {
+      "position": 81,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:97:3 \u203a the list \u203a says how to begin when there are no nodes"
+    },
+    {
+      "position": 82,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:105:3 \u203a the list \u203a filters on the server, shows the counts and keeps the filter in the link"
+    },
+    {
+      "position": 83,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:125:3 \u203a the list \u203a a tile is a figure and the filter that shows those rows"
+    },
+    {
+      "position": 84,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:152:3 \u203a the list \u203a tiles still filter when the figures cannot be read"
+    },
+    {
+      "position": 85,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:170:3 \u203a the list \u203a filters by name and by status"
+    },
+    {
+      "position": 86,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:182:3 \u203a the list \u203a the add dialog names the systems that can join, and works without them"
+    },
+    {
+      "position": 87,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:198:3 \u203a the list \u203a keeps removed nodes out unless asked for"
+    },
+    {
+      "position": 88,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:211:3 \u203a the list \u203a offers a retry when it cannot load, and keeps the rows when a poll fails"
+    },
+    {
+      "position": 89,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:229:3 \u203a the list \u203a reads the fleet in the background, so an open page does not hold the session"
+    },
+    {
+      "position": 90,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:238:3 \u203a the list \u203a is not part of the portal"
+    },
+    {
+      "position": 91,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:246:3 \u203a a node \u203a opens with its facts and tasks, from a link too"
+    },
+    {
+      "position": 92,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:261:3 \u203a a node \u203a from a link is found even when the list does not hold it"
+    },
+    {
+      "position": 93,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:266:3 \u203a a node \u203a that does not exist says so"
+    },
+    {
+      "position": 94,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:271:3 \u203a a node \u203a that went quiet says what to check"
+    },
+    {
+      "position": 95,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:279:3 \u203a a node \u203a collects its facts again and shows the task"
+    },
+    {
+      "position": 96,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:290:3 \u203a a node \u203a is disabled at once and can be put back"
+    },
+    {
+      "position": 97,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:303:3 \u203a a node \u203a that is disabled offers to enable it"
+    },
+    {
+      "position": 98,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:313:3 \u203a a node \u203a is renamed, and a taken name is explained"
+    },
+    {
+      "position": 99,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:328:3 \u203a a node \u203a changed by someone else is explained"
+    },
+    {
+      "position": 100,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:336:3 \u203a a node \u203a is removed only after its name is typed"
+    },
+    {
+      "position": 101,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:353:3 \u203a several nodes \u203a are disabled together, and undone together"
+    },
+    {
+      "position": 102,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:366:3 \u203a several nodes \u203a keep the ones that failed selected and can try again"
+    },
+    {
+      "position": 103,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:379:3 \u203a several nodes \u203a collect their facts together"
+    },
+    {
+      "position": 104,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:400:3 \u203a adding a node \u203a shows the token once, keeps it out of the commands and sees the node join"
+    },
+    {
+      "position": 105,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:428:3 \u203a adding a node \u203a explains a refusal and can try again"
+    },
+    {
+      "position": 106,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:437:5 \u203a adding a node \u203a registers a Kubernetes node with its own Agent address (en)"
+    },
+    {
+      "position": 107,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:437:5 \u203a adding a node \u203a registers a Kubernetes node with its own Agent address (zh-CN)"
+    },
+    {
+      "position": 108,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:552:5 \u203a adding a node \u203a keeps Kubernetes visible with its reason for RESOURCE_NOT_FOUND"
+    },
+    {
+      "position": 109,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:552:5 \u203a adding a node \u203a keeps Kubernetes visible with its reason for KUBERNETES_CELLS_UNCONFIGURED"
+    },
+    {
+      "position": 110,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:552:5 \u203a adding a node \u203a keeps Kubernetes visible with its reason for KUBERNETES_CLUSTER_STORAGE_UNSUPPORTED"
+    },
+    {
+      "position": 111,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:552:5 \u203a adding a node \u203a keeps Kubernetes visible with its reason for ACCESS_DENIED"
+    },
+    {
+      "position": 112,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:574:3 \u203a adding a node \u203a can retry a failed Kubernetes check and explains a later token refusal"
+    },
+    {
+      "position": 113,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:600:3 \u203a adding a node \u203a a token not used is listed and can be revoked"
+    },
+    {
+      "position": 114,
+      "status": "passed",
+      "case": "e2e/nodes.spec.ts:612:3 \u203a adding a node \u203a a token that cannot be revoked says why, and the list catches up"
+    },
+    {
+      "position": 115,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:36:1 \u203a is the first page and says when nothing needs you"
+    },
+    {
+      "position": 116,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:47:1 \u203a names an offline node and opens its drawer"
+    },
+    {
+      "position": 117,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:56:1 \u203a leaves a node disabled on purpose alone"
+    },
+    {
+      "position": 118,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:63:1 \u203a names a few offline nodes, and links to the rest"
+    },
+    {
+      "position": 119,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:77:1 \u203a links a recent failed task to the failed tasks"
+    },
+    {
+      "position": 120,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:86:1 \u203a links a recent failed email to the failed emails"
+    },
+    {
+      "position": 121,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:94:1 \u203a lets old failures go, so the list can clear"
+    },
+    {
+      "position": 122,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:102:1 \u203a puts what stops work first, and a coming renewal last"
+    },
+    {
+      "position": 123,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:119:1 \u203a leads with a license that refuses work"
+    },
+    {
+      "position": 124,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:133:1 \u203a shows the fleet by state, each a link to its list"
+    },
+    {
+      "position": 125,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:145:1 \u203a counts nodes, running tasks and the license on the tiles"
+    },
+    {
+      "position": 126,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:156:1 \u203a a new installation is walked through setup, from real state"
+    },
+    {
+      "position": 127,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:181:1 \u203a quick actions open the dialog they name, once"
+    },
+    {
+      "position": 128,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:215:1 \u203a one source failing leaves the others and offers a retry"
+    },
+    {
+      "position": 129,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:228:1 \u203a does not call a page that could not check clear"
+    },
+    {
+      "position": 130,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:240:1 \u203a shows the fleet failure where the fleet goes, with a retry"
+    },
+    {
+      "position": 131,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:259:1 \u203a reads in the background, so an open overview keeps no session alive"
+    },
+    {
+      "position": 132,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:277:1 \u203a keeps what it showed when a later read fails"
+    },
+    {
+      "position": 133,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:295:3 \u203a has no sideways scroll at 1440 pixels"
+    },
+    {
+      "position": 134,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:295:3 \u203a has no sideways scroll at 1024 pixels"
+    },
+    {
+      "position": 135,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:295:3 \u203a has no sideways scroll at 390 pixels"
+    },
+    {
+      "position": 136,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:309:1 \u203a the portal keeps its own start page"
+    },
+    {
+      "position": 137,
+      "status": "passed",
+      "case": "e2e/overview.spec.ts:318:3 \u203a in Chinese \u203a reads in the interface language"
+    }
+  ]
+}

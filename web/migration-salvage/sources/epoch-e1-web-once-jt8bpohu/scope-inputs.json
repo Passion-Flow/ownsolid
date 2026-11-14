@@ -1,0 +1,16 @@
+{
+  "A": {
+    "source": "82c602d32b2d957459b3a742499de96867da27a9",
+    "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+    "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+    "files": 5099,
+    "manifest": "source-A-sha256.json"
+  },
+  "B": {
+    "source": "56a19799bfec788170d71680b4f0663c23073107",
+    "tree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+    "webTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+    "files": 5101,
+    "manifest": "source-B-sha256.json"
+  }
+}

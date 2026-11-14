@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+run="$1"
+lane="$2"
+lock=/private/tmp/ownsolid-workstation-full-gate.lock
+mkdir "$lock"
+printf '%s\n' "$run/focus-probe" > "$lock/owner"
+caffeinate -i -w "$$" &
+awake=$!
+cleanup() {
+  status=$?
+  trap - EXIT
+  kill "$awake" 2>/dev/null || true
+  if test "$(cat "$lock/owner" 2>/dev/null)" = "$run/focus-probe"; then
+    rm "$lock/owner"
+    rmdir "$lock"
+  fi
+  printf '%s\n' "$status" > "$run/focus-exit-status"
+  exit "$status"
+}
+trap cleanup EXIT
+cd "$lane"
+df -h . > "$run/focus-preflight"
+git rev-parse HEAD > "$run/focus-revision"
+export npm_config_offline=true OWNSOLID_PLAYWRIGHT_PORT_OFFSET=12666
+if lsof -nP -iTCP:16977 -sTCP:LISTEN; then exit 1; fi
+(cd web && pnpm --filter @ownsolid/portal build > "$run/focus-build.log" 2>&1)
+cd web/apps/portal
+PLAYWRIGHT_JSON_OUTPUT_FILE="$run/focus-current-report.json" pnpm exec playwright test e2e/keyboard.spec.ts --grep "focused control|a key's drawer with its sample calls" --workers=1 --output "$run/focus-current-results" --reporter=line,json > "$run/focus-current.log" 2>&1
+pnpm exec playwright test --config "$run/focus-probe/playwright.config.ts" --grep "waits for the focused control" --workers=1 --reporter=line > "$run/focus-baseline.log" 2>&1
+tail -n 18 "$run/focus-current.log"
+tail -n 22 "$run/focus-baseline.log"

@@ -1,0 +1,19 @@
+{
+  "base": "b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32",
+  "contractSource": "2426699bfad4c1a4e4ee6999cfc14f264c4cda12",
+  "contractVerifiedThrough": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+  "requiredProducerComposition": "d16d7f11699ef00e1d26fa576be2db76a8d640af",
+  "producerCompositionAvailableLocally": false,
+  "contractSha256": "7fce16936a778912b2ea21d3f70e653aed1d6584d7210de8dccc72c0de4acb32",
+  "patchSha256": "a3def1685309d4a7609274852cbc17f0904f9477a8edcaa9d016b4ced085dea9",
+  "preservedConsumerFiles": {
+    "web/apps/console/src/audit-read.tsx": "18a7d5bb53a5e31485b7c9a648f43e8dcfe1f155057c0981847a9db9ab7929f4",
+    "web/apps/console/src/audit-page.tsx": "66e1ea6dcd4c2ffd7f20c574ba2f2f58d2eae987aa739717757b5ef705016b1d",
+    "web/apps/console/src/resource-page.tsx": "4bbaa84181c0879e15df113a193a4ee884f1795741c2d28b9080355d9ae5be6b",
+    "web/apps/console/e2e/audit-read-recovery.spec.ts": "6d37859ef3bb0688b2997b8721992555d425c8fa4fbdf32f5006dc936139d7c3",
+    "web/packages/shell/testing/help-flows.ts": "de309e95ea595eed027c8b4c9b67e69de97eab1e24dd6061cfe707aa9d4d3d18"
+  },
+  "oldConsumerPatchApplied": false,
+  "pushStandaloneProjectionToMain": false,
+  "missingInput": "Portable ref/bundle containing d16d7f or a DEV successor composed with current main; genuine API242 bytes are available, full producer composition is not."
+}

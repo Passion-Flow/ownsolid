@@ -1,0 +1,44 @@
+{
+  "parentPID": 93536,
+  "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+  "expectedInode": 50313339,
+  "kernelWaitBudgetSeconds": 0,
+  "executionBudgetSeconds": 600,
+  "childStarted": false,
+  "entryMonotonic": 57216.981832,
+  "hardDeadlineMonotonic": 57816.981832,
+  "workCutoffMonotonic": 57786.981832,
+  "cleanupReserveSeconds": 30,
+  "cleanupConfirmed": true,
+  "cleanupEvidenceFailed": false,
+  "groupsConfirmed": true,
+  "awakeConfirmed": true,
+  "phaseHistory": [
+    {
+      "phase": "one-nonblocking-attempt",
+      "descriptor": 3,
+      "device": 16777234,
+      "inode": 50313339
+    },
+    {
+      "phase": "lock-busy",
+      "exit": 75,
+      "error": "Shared Mac window occupied; no child started",
+      "childStarted": false,
+      "busy": true
+    },
+    {
+      "phase": "cleanup-evidence",
+      "exit": 75,
+      "cleanupConfirmed": true
+    }
+  ],
+  "descriptor": 3,
+  "device": 16777234,
+  "inode": 50313339,
+  "phase": "cleanup-evidence",
+  "updatedUTC": "2026-11-13T03:44:42.868487+00:00",
+  "exit": 75,
+  "error": "Shared Mac window occupied; no child started",
+  "busy": true
+}

@@ -1,0 +1,39 @@
+{
+  "observedUTC": "2026-11-13T11:37:33.742884+00:00",
+  "inspectorPID": 75117,
+  "managedWorktrees": [
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-44ab5229",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-2b983dbf"
+  ],
+  "knownPIDCount": 10,
+  "knownPresent": [],
+  "ownedLiveJobs": [],
+  "ownedLiveJobCount": 0,
+  "oldIdentityFdMatches": [],
+  "ownedOldFdCount": 0,
+  "cwdProbe": {
+    "exit": 0,
+    "stderrLineCount": 0,
+    "matchedOwnedProcesses": 0
+  },
+  "schedulerCheck": {
+    "crontabExit": 1,
+    "ownedMatchingLineHashes": [],
+    "launchPlistsScanned": 14,
+    "ownedMatchingPlists": [],
+    "unreadablePlists": []
+  },
+  "inspectorAncestorsExcluded": [
+    1,
+    12777,
+    12984,
+    75117
+  ],
+  "allOwnedExecCellsKnownTerminal": true,
+  "codexAutomationsCreatedByThisSession": 0,
+  "knownOwnedSameIdentityHardlinksCreated": 0,
+  "scopeLimit": "No global FD/ownership assertion. Original start times were not retained for every historical PID. Other users, arbitrary hidden schedulers and unenumerated paths remain outside this owner-scoped confirmation.",
+  "elapsedSeconds": 0.17914699999982986
+}

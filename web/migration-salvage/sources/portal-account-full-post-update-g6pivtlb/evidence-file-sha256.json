@@ -1,0 +1,16 @@
+{
+  "author-composition-proof.json": "68ff5087344668aeafde44f612eac3d5c4a91f2f88c686d16e59abfdc677c319",
+  "author-projection-inputs.json": "295993dda549af2a47ddf6db82ff2eb218557ce32f0c0be1896eac7ac79c2b83",
+  "frozen-source-sha256.json": "39a900adc8d43ce9a4f0304d3b395c776daab87f60fecb7ee153db2413995343",
+  "owner-handoff.json": "76d44dc1a7c6b816942a42e4b56265c7f21f11f5ef76541df9627cae5047e06e",
+  "portal-account-admission-record.bundle": "561382a820f55a77d79243b4d509f8a8e816698308252606cc64ab495c200da7",
+  "pre-admission-result.json": "9b4203a76dd10213f94f8960557fdecc1d8791e0a5d14a4adf86a41aa6a8096b",
+  "premerge-review.json": "09b2aeabacf89921cd20758b9cad995da630b9babc97a03b2fb0db57840832d0",
+  "read-only-live-memory.log": "c75af838e821310738328fe6ccb9e250df2efd295990de5c6c066f0078e1b3cd",
+  "read-only-live-space.log": "857361e6b53ce1a52944633d930f915bdd5ee566224ff3f70ab7b48dd71804cf",
+  "read-only-preview-listeners.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "reviewed-cleanup-owned.py": "fa5276a2fe6e7d0dd4cb5fd8443a4c37ab9cab421366e054c8df20492dc3d40e",
+  "reviewed-full-run.py": "adbc0542c179f52143353eed4d48e869ed89769b7398d6e156cc48ac8dd99e21",
+  "reviewed-mac-browser-once.py": "7b3a458a3c358049d869e3fa6ad9bc262ccd1aa39f1b7853973a7b17c55a3fed",
+  "stage-plan.json": "b468c440c7a4004c869108cc4cd22400c3366ed4f588925b67c6364380b7cd5e"
+}

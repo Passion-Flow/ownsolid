@@ -1,0 +1,8 @@
+{
+  "version": "8.3.5",
+  "sha256": "5d40302b2d86ff8f3501df6503a69908dce2c2eab4ce03c154cd8745c0bec5f2",
+  "resolveHostname": "Undefined/false host resolves configuration to localhost; no explicit --host in original command",
+  "previewListen": "resolveHostname(options.host), httpServerStart with configured port/strictPort and hostname.host",
+  "addressesDuringHistoricalFailureKnown": false,
+  "newAddressOrPortFixSelected": false
+}

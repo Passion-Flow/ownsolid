@@ -1,0 +1,11 @@
+{
+  "python": "3.9.6 (default, Oct 19 2026, 19:18:13) \n[Clang 21.0.0 (clang-2100.4.1.1)]",
+  "clock": "clock_gettime(CLOCK_MONOTONIC)",
+  "clockId": 6,
+  "before": 54873.25784,
+  "child": 54873.298837,
+  "after": 54873.300317,
+  "childProcessRelativeMonotonic": 0.033027458,
+  "lockAttempts": 0,
+  "workChildren": 0
+}

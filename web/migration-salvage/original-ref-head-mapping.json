@@ -1,0 +1,492 @@
+{
+  "main_sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "mapping": [
+    {
+      "ref": "refs/archive/web-aud108-before-main-refresh",
+      "sha": "8afef0a56a6503ffccd97d082dddb695aed19843",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8afef0a56a6503ffccd97d082dddb695aed19843",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-archive-web-aud108-before-main-refresh-8afef0a56a65"
+    },
+    {
+      "ref": "refs/archive/web-aud108-producer-783567ea",
+      "sha": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "783567ea4a2e19f3b2f7ca065d47dfe59886633e",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-archive-web-aud108-producer-783567ea-783567ea4a2e"
+    },
+    {
+      "ref": "refs/archive/web-aud108-recovery-before-rebase",
+      "sha": "7aa8b068a24bf18db3a6fe8fb57e8a0aecd22857",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "7aa8b068a24bf18db3a6fe8fb57e8a0aecd22857",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-archive-web-aud108-recovery-before-rebase-7aa8b068a24b"
+    },
+    {
+      "ref": "refs/archive/web-consumers-7401-qualified",
+      "sha": "7401ff675b3259e018e3ba148ed63ae2331b11bd",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "7401ff675b3259e018e3ba148ed63ae2331b11bd",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-archive-web-consumers-7401-qualified-7401ff675b32"
+    },
+    {
+      "ref": "refs/archive/web-consumers-final-qualified",
+      "sha": "6a77bcdbc372a0aa7fac24b3f21a83105c246c86",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "6a77bcdbc372a0aa7fac24b3f21a83105c246c86",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-archive-web-consumers-final-qualified-6a77bcdbc372"
+    },
+    {
+      "ref": "refs/archive/web-consumers-original",
+      "sha": "6a80e122daf69c6b5f058f7e94317ce8e6ba82cf",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "6a80e122daf69c6b5f058f7e94317ce8e6ba82cf",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-archive-web-consumers-original-6a80e122daf6"
+    },
+    {
+      "ref": "refs/codex/handoff/web-help-exact-5d595469",
+      "sha": "5d5954691dad2c5dce8d5545f62efada371243af",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfaaaec3b3cfdec0b20accc8c6ca30e7865fc485",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-description-pre-integration-bfaaaec3b3cf"
+    },
+    {
+      "ref": "refs/codex/handoff/web-help-review-7abdd0a3",
+      "sha": "7abdd0a3d8e7fbb8e75ebeb64efc6969a9d99ad1",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfaaaec3b3cfdec0b20accc8c6ca30e7865fc485",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-description-pre-integration-bfaaaec3b3cf"
+    },
+    {
+      "ref": "refs/heads/archive/web-description-20261113",
+      "sha": "96975ee50cbd1a0e97c60f2da61cf598f3c39f9e",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "96975ee50cbd1a0e97c60f2da61cf598f3c39f9e",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-description-20261113-96975ee50cbd"
+    },
+    {
+      "ref": "refs/heads/archive/web-description-pre-integration",
+      "sha": "bfaaaec3b3cfdec0b20accc8c6ca30e7865fc485",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfaaaec3b3cfdec0b20accc8c6ca30e7865fc485",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-description-pre-integration-bfaaaec3b3cf"
+    },
+    {
+      "ref": "refs/heads/archive/web-download-b495-qualified",
+      "sha": "c75beeffa66df4573d5797df6b62b271e6dab2d2",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfaaaec3b3cfdec0b20accc8c6ca30e7865fc485",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-description-pre-integration-bfaaaec3b3cf"
+    },
+    {
+      "ref": "refs/heads/archive/web-gate-60b85e03",
+      "sha": "60b85e037aa24fc0d30ae0195e6dffe8f59a6946",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "60b85e037aa24fc0d30ae0195e6dffe8f59a6946",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-gate-60b85e03-60b85e037aa2"
+    },
+    {
+      "ref": "refs/heads/codex/portal-account-admission-record",
+      "sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-admission-record-8acdf1bb1d3c"
+    },
+    {
+      "ref": "refs/heads/codex/portal-account-sessions",
+      "sha": "379aab980485df41b1a66c6fb5e6af65814f886f",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-admission-record-8acdf1bb1d3c"
+    },
+    {
+      "ref": "refs/heads/codex/portal-account-sessions-joint",
+      "sha": "bfeea90cd5adb082b77047b0c97fcea7c7654c51",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfeea90cd5adb082b77047b0c97fcea7c7654c51",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-sessions-joint-bfeea90cd5ad"
+    },
+    {
+      "ref": "refs/heads/codex/web-audit-metadata",
+      "sha": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-audit-metadata-c7ba62718fa4"
+    },
+    {
+      "ref": "refs/heads/codex/web-gw104-help",
+      "sha": "8b987d4a3738702c9ab357810116411a13b6ffdd",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8b987d4a3738702c9ab357810116411a13b6ffdd",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-gw104-help-8b987d4a3738"
+    },
+    {
+      "ref": "refs/heads/codex/web-resource-history",
+      "sha": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-audit-metadata-c7ba62718fa4"
+    },
+    {
+      "ref": "refs/heads/codex/web-resource-history-ui",
+      "sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "refs/heads/codex/web-serial-lint",
+      "sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "refs/heads/lane-web",
+      "sha": "124520b94be27f673bdb32a3c5d825d1d337f75d",
+      "state": "COVERED_BY_GITHUB_MAIN",
+      "covering_sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+      "covering_ref": "refs/heads/main"
+    },
+    {
+      "ref": "worktree/lane-web",
+      "sha": "124520b94be27f673bdb32a3c5d825d1d337f75d",
+      "state": "COVERED_BY_GITHUB_MAIN",
+      "covering_sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+      "covering_ref": "refs/heads/main"
+    },
+    {
+      "ref": "worktree/lane-web-acceptance-4463bbe6",
+      "sha": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+      "covering_ref": "refs/heads/salvage/mac/web/worktree-lane-web-acceptance-4463bbe6-4463bbe628f6"
+    },
+    {
+      "ref": "worktree/lane-web-acceptance-a4f1120d",
+      "sha": "a4f1120d5d90a892cca21c991f7d68f0b13c500b",
+      "state": "COVERED_BY_GITHUB_MAIN",
+      "covering_sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+      "covering_ref": "refs/heads/main"
+    },
+    {
+      "ref": "worktree/lane-web-acceptance-be62f58e",
+      "sha": "be62f58e846dcc654dafee65cba6cc7480890570",
+      "state": "COVERED_BY_GITHUB_MAIN",
+      "covering_sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+      "covering_ref": "refs/heads/main"
+    },
+    {
+      "ref": "worktree/lane-web-acceptance-help-2b983dbf",
+      "sha": "2b983dbf75feaf36f6ac3423f4d1b0a1ecf0fc52",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "2b983dbf75feaf36f6ac3423f4d1b0a1ecf0fc52",
+      "covering_ref": "refs/heads/salvage/mac/web/worktree-lane-web-acceptance-help-2b983dbf-2b983dbf75fe"
+    },
+    {
+      "ref": "worktree/lane-web-acceptance-help-44ab5229",
+      "sha": "44ab52293e516128ba2efc0edc2cb2053acc3462",
+      "state": "COVERED_BY_GITHUB_MAIN",
+      "covering_sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+      "covering_ref": "refs/heads/main"
+    },
+    {
+      "ref": "worktree/lane-web-history",
+      "sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "lint/56a19799",
+      "sha": "56a19799bfec788170d71680b4f0663c23073107",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "lint/4ca31d94",
+      "sha": "4ca31d944aa82b3e3c6db4f9b7e4be557b34e494",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "lint/f556daff",
+      "sha": "f556daff33bdc992ed40b77a6d05159eed5a1b2d",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "bundle/portal-account-sessions-after-review",
+      "sha": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/portal-account-sessions-after-review.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-admission-record-8acdf1bb1d3c"
+    },
+    {
+      "ref": "bundle/doc-evidence",
+      "sha": "d4bfec1cd66cd7b4160fd900eeeb2e165d47dd3b",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/doc-evidence.bundle",
+      "bundle_ref": "refs/heads/codex/web-resource-history-ui",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "bundle/next-account-research",
+      "sha": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/next-account-research.bundle",
+      "bundle_ref": "refs/heads/codex/web-resource-history-ui",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "bundle/ux127-actions-cursor",
+      "sha": "63e2baea823524d4b20e8e429d689644265736d7",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-fix-1obf55xi/ux127-actions-cursor.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "bundle/web-serial-lint-prepared",
+      "sha": "56a19799bfec788170d71680b4f0663c23073107",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-release-review-m631mpbk/web-serial-lint-prepared.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "bundle/web-serial-lint-fixture-result",
+      "sha": "4ca31d944aa82b3e3c6db4f9b7e4be557b34e494",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-once-jt8bpohu/web-serial-lint-fixture-result.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "bundle/portal-account-sessions",
+      "sha": "91d36706641515a7697937b11adf8b23dc7ada4c",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-handoff-mz3j52a8/portal-account-sessions.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-admission-record-8acdf1bb1d3c"
+    },
+    {
+      "ref": "bundle/por112-directed-preview-evidence",
+      "sha": "a0a29dae5b68dfa78c2951973ea198209e3e7833",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/por112-directed-preview-evidence.bundle",
+      "bundle_ref": "refs/heads/codex/portal-account-sessions-joint",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfeea90cd5adb082b77047b0c97fcea7c7654c51",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-sessions-joint-bfeea90cd5ad"
+    },
+    {
+      "ref": "bundle/web-owner",
+      "sha": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-web-projection-g39l3rkp/web-owner.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "c7ba62718fa4cded20914c179473cb2a02bf2ea9",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-audit-metadata-c7ba62718fa4"
+    },
+    {
+      "ref": "bundle/portal-account-sessions-qualified-frontend",
+      "sha": "379aab980485df41b1a66c6fb5e6af65814f886f",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/portal-account-sessions-qualified-frontend.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-admission-record-8acdf1bb1d3c"
+    },
+    {
+      "ref": "bundle/portal-account-admission-record",
+      "sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-full-post-update-g6pivtlb/portal-account-admission-record.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-admission-record-8acdf1bb1d3c"
+    },
+    {
+      "ref": "bundle/web-serial-lint-prepared",
+      "sha": "56a19799bfec788170d71680b4f0663c23073107",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-benchmark-roc27tnq/web-serial-lint-prepared.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "bundle/web-resource-history",
+      "sha": "7f9eae17027977299d5d6f64cb3b70b87845f966",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/web-resource-history.bundle",
+      "bundle_ref": "refs/heads/codex/web-resource-history-ui",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "bundle/web-resource-history",
+      "sha": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/light-qualified-314a133a/web-resource-history.bundle",
+      "bundle_ref": "refs/heads/codex/web-resource-history-ui",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "bundle/web-serial-lint-functional-qualification",
+      "sha": "f556daff33bdc992ed40b77a6d05159eed5a1b2d",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_/web-serial-lint-functional-qualification.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "bundle/ux127-cursor-correction",
+      "sha": "31fe39e974400f80efb82ef68e5d33e80d5dd64b",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/ux127-cursor-correction.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "bundle/por112-original-joint-full-gate-evidence",
+      "sha": "45344aab8048c5b36747fe43af0697371f72c857",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/por112-original-joint-full-gate-evidence.bundle",
+      "bundle_ref": "refs/heads/codex/portal-account-sessions-joint",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfeea90cd5adb082b77047b0c97fcea7c7654c51",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-sessions-joint-bfeea90cd5ad"
+    },
+    {
+      "ref": "bundle/por112-preview-diagnosis",
+      "sha": "78deaf5a86f5e05c3b591e422f76e74219d3ae11",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/por112-preview-diagnosis.bundle",
+      "bundle_ref": "refs/heads/codex/portal-account-sessions-joint",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfeea90cd5adb082b77047b0c97fcea7c7654c51",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-sessions-joint-bfeea90cd5ad"
+    },
+    {
+      "ref": "bundle/por112-node-page-coverage",
+      "sha": "bfeea90cd5adb082b77047b0c97fcea7c7654c51",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-node-page-_u9t_ix5/por112-node-page-coverage.bundle",
+      "bundle_ref": "refs/heads/codex/portal-account-sessions-joint",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfeea90cd5adb082b77047b0c97fcea7c7654c51",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-sessions-joint-bfeea90cd5ad"
+    },
+    {
+      "ref": "bundle/gw104-help-8b987d4a",
+      "sha": "8b987d4a3738702c9ab357810116411a13b6ffdd",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/gw104-help-8b987d4a.bundle",
+      "bundle_ref": "refs/codex/handoff/web-gw104-help-8b987d4a",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8b987d4a3738702c9ab357810116411a13b6ffdd",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-gw104-help-8b987d4a3738"
+    },
+    {
+      "ref": "bundle/monitoring-locales-4056925f",
+      "sha": "4056925fea033b1fb22f32b3597679fdf6d8ebb3",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/monitoring-locales-4056925f.bundle",
+      "bundle_ref": "refs/codex/handoff/web-monitoring-locales-4056925f",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "4056925fea033b1fb22f32b3597679fdf6d8ebb3",
+      "covering_ref": "refs/heads/salvage/mac/web/bundle-monitoring-locales-4056925f-4056925fea03"
+    },
+    {
+      "ref": "bundle/por114-s108-342c556a",
+      "sha": "342c556a6d5d2bd2c133205912e02ca928d60ed1",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/por114-s108-342c556a.bundle",
+      "bundle_ref": "refs/codex/handoff/web-por114-s108-342c556a",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8b987d4a3738702c9ab357810116411a13b6ffdd",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-gw104-help-8b987d4a3738"
+    },
+    {
+      "ref": "bundle/help-exact-5d595469",
+      "sha": "5d5954691dad2c5dce8d5545f62efada371243af",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/help-exact-5d595469.bundle",
+      "bundle_ref": "refs/codex/handoff/web-help-exact-5d595469",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfaaaec3b3cfdec0b20accc8c6ca30e7865fc485",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-description-pre-integration-bfaaaec3b3cf"
+    },
+    {
+      "ref": "bundle/help-review-7abdd0a3",
+      "sha": "7abdd0a3d8e7fbb8e75ebeb64efc6969a9d99ad1",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/help-review-7abdd0a3.bundle",
+      "bundle_ref": "refs/codex/handoff/web-help-review-7abdd0a3",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfaaaec3b3cfdec0b20accc8c6ca30e7865fc485",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-description-pre-integration-bfaaaec3b3cf"
+    },
+    {
+      "ref": "bundle/focus-ce92c4d2",
+      "sha": "ce92c4d264071c0444526fd02cb4aa30b8bfea3d",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/focus-ce92c4d2.bundle",
+      "bundle_ref": "refs/codex/handoff/web-focus-ce92c4d2",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "bfaaaec3b3cfdec0b20accc8c6ca30e7865fc485",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-archive-web-description-pre-integration-bfaaaec3b3cf"
+    },
+    {
+      "ref": "bundle/web-serial-lint-native-sampling-review",
+      "sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-finish-sc8f3xim/web-serial-lint-native-sampling-review.bundle",
+      "bundle_ref": "refs/heads/codex/web-serial-lint",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "bundle/ux127-focus-layout",
+      "sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/ux127-focus-layout.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "bundle/ux127-complete-candidate",
+      "sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/ux127-complete-candidate.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-resource-history-ui-fc8d26d3ec64"
+    },
+    {
+      "ref": "bundle/web-serial-lint-with-refusal",
+      "sha": "826e761a912dede6426415a04b1ae8eac1aada2b",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-benchmark-once-5vs6awio/web-serial-lint-with-refusal.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-web-serial-lint-98cf81c8f3c2"
+    },
+    {
+      "ref": "bundle/portal-account-original-author-joint",
+      "sha": "82c602d32b2d957459b3a742499de96867da27a9",
+      "bundle_path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-joint-full-4deb4qpz/portal-account-original-author-joint.bundle",
+      "bundle_ref": "HEAD",
+      "state": "SALVAGE_PLANNED",
+      "covering_sha": "8acdf1bb1d3c5aed944dcc0c67445067583fd490",
+      "covering_ref": "refs/heads/salvage/mac/web/refs-heads-codex-portal-account-admission-record-8acdf1bb1d3c"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "generatedPaths": [
+    "web/packages/api/src/gen/identity.ts",
+    "web/packages/help/locales/zh-cn/api-descriptions.json",
+    "web/packages/help/src/gen/api/console/identity.json",
+    "web/packages/help/src/gen/contracts/console/identity.json",
+    "web/packages/help/src/gen/locales/zh-cn/api-descriptions.json"
+  ],
+  "perPathSha256": {
+    "web/packages/api/src/gen/identity.ts": "3edf4de889080de15b229ceaf5b6da72a8dc34a90e43a1bce85be057c60bf73a",
+    "web/packages/help/locales/zh-cn/api-descriptions.json": "b6615f7c909fb18b6fbaa7087750e2278303e842e38881c448c8d7b17841a502",
+    "web/packages/help/src/gen/api/console/identity.json": "5ea47a03807a700c4b54ffc360085fcfb936702b66278dd73ae0ac3a124bc96c",
+    "web/packages/help/src/gen/contracts/console/identity.json": "15952e600e0250ce7d16ed9760adc45272607f1b6dfcffec62b19621d0541406",
+    "web/packages/help/src/gen/locales/zh-cn/api-descriptions.json": "ea7c71db4ae1da75fa653f2d851f52ee95bfc1d4fbe1b3ad38d7ae54b593abb3"
+  },
+  "helpProjectionDeltas": [
+    "/operations/18/errors/409",
+    "/operations/18/parameters/1/description"
+  ],
+  "downloadContractDeltas": [
+    "/paths//api/v1/admin/audit-events/get/description",
+    "/paths//api/v1/admin/audit-events/get/parameters/1/description",
+    "/paths//api/v1/admin/audit-events/get/responses/409",
+    "/paths//api/v1/admin/audit-events/get/x-error-codes/409"
+  ],
+  "ordinaryRequiredFields": 13,
+  "auditSchemaAndActionEnumUnchanged": true,
+  "consumerRecoverySharedHelpByteIdentical": true,
+  "oldConsumerPatchApplied": false,
+  "actualContractSourceVerified": true,
+  "producerD16CompositionAvailable": false,
+  "generatorCheck": "not run against mismatched main; awaits the real paired composition and admitted light check window",
+  "standaloneMainPush": false
+}

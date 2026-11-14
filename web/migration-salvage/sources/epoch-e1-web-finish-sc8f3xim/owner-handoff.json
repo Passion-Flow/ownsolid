@@ -1,0 +1,292 @@
+{
+  "epoch": "ownsolid-2-20261113-e1",
+  "scope": "Latest sole admitted B memory-only job; original A prerequisite was not met",
+  "handoffHead": "98cf81c8f3c2f82ec2967c017e266f9c345560c0",
+  "handoffTree": "6b3a6471ce8245d0265b30be62e75b9f6623eaf7",
+  "handoffWebTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+  "branch": "codex/web-serial-lint",
+  "sourceClean": true,
+  "testedSource": "56a19799bfec788170d71680b4f0663c23073107",
+  "testedTree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "testedWebTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+  "frozenA": "82c602d32b2d957459b3a742499de96867da27a9",
+  "latestChange": "Research note only; executed candidate runtime and prior fixture bytes unchanged",
+  "freshAdmission": {
+    "rawFreeBytes": 4864524288,
+    "diskFreeBytes": 165640785920,
+    "oneNbOnly": true,
+    "sameOpenDescriptionThroughCleanup": true,
+    "BTotalSeconds": 600,
+    "finalCleanupReserveSeconds": 120,
+    "nodeMaximumOldSpaceMiB": 2048,
+    "coreBytes": 0
+  },
+  "parentExit": 1,
+  "parentTotalSeconds": 46.7284950000012,
+  "oldCommand": {
+    "name": "B-old-complete-cli-memory",
+    "exit": -6,
+    "seconds": 16.673130999999557,
+    "validSnapshots": 313,
+    "samplerFailures": 0,
+    "sampledWholeOwnerTreePeakRssBytes": 2600534016,
+    "sampledSingleProcessPeakRssBytes": 2536177664,
+    "samplerPeakRssBytes": 20643840,
+    "samplerCpuSeconds": 0.06358499999999959,
+    "samplerWallSeconds": 0.0641167479999813,
+    "monitorTotalCpuSeconds": 0.192167,
+    "maximumObservedSampleGapSeconds": 0.05469699999957811,
+    "commandCrossPgidEdges": [],
+    "crossPgidEdgesObserved": 1,
+    "timeReportedMaximumRssBytes": 2560540672,
+    "source": "56a19799bfec788170d71680b4f0663c23073107"
+  },
+  "newCommand": {
+    "exit": "NOT_CAPTURED_BY_INTERRUPTED_WRAPPER",
+    "completeJsonFiles": 372,
+    "errors": 0,
+    "warnings": 0,
+    "timeLWallSeconds": 28.97,
+    "timeLMaximumRssBytes": 2038513664,
+    "savedNativeFrames": 544,
+    "distinctLifetimes": 21,
+    "crossPgidCommandEdges": [
+      [
+        68295,
+        68296,
+        64630,
+        68296
+      ],
+      [
+        68295,
+        68305,
+        64630,
+        68305
+      ]
+    ],
+    "partialMaximumSavedRssBytes": 2197012480,
+    "partialValueQualifiedAsCompletePeak": false,
+    "samplingFailure": {
+      "error": "SampleGap('Cannot read exact owned task sample: pid=74118 bytes=0 errno=3')",
+      "ownerTreeConclusionAccepted": false
+    }
+  },
+  "retainedFrameConsistencyReview": {
+    "kind": "Offline internal-consistency review of actual saved native snapshots, not a new live measurement",
+    "newCompleteTreeConclusionAccepted": false,
+    "historicalGapRetained": true,
+    "commands": {
+      "old": {
+        "rawSha256": "4f7b1fd72f422eb55337dc355dcbb2a704ca3198edbdb4e2cca1c6a2977b6ab9",
+        "savedFrames": 314,
+        "distinctLifetimes": 6,
+        "recordedRetiredLifetimes": 2,
+        "crossPgidEdges": [
+          [
+            64612,
+            64630,
+            64612,
+            64630
+          ]
+        ],
+        "maximumSavedGapSeconds": 0.05469699999957811,
+        "maximumSavedRssBytes": 2600534016,
+        "internalConsistencyErrors": [],
+        "allSavedFramesConsistent": true,
+        "fullCommandPeakAccepted": true
+      },
+      "new": {
+        "rawSha256": "84c7d3353f3fbeda36bf575d61f66bf6e1123d0fefc4abe0706bd1d3c819c560",
+        "savedFrames": 544,
+        "distinctLifetimes": 21,
+        "recordedRetiredLifetimes": 11,
+        "crossPgidEdges": [
+          [
+            64612,
+            64630,
+            64612,
+            64630
+          ],
+          [
+            68295,
+            68296,
+            64630,
+            68296
+          ],
+          [
+            68295,
+            68305,
+            64630,
+            68305
+          ]
+        ],
+        "maximumSavedGapSeconds": 0.05498000000079628,
+        "maximumSavedRssBytes": 2197012480,
+        "internalConsistencyErrors": [],
+        "allSavedFramesConsistent": true,
+        "fullCommandPeakAccepted": false,
+        "failedPidObservations": 52,
+        "failedPidFirst": {
+          "sample": 494,
+          "monotonic": 11503.084838,
+          "row": {
+            "pid": 74118,
+            "ppid": 68306,
+            "pgid": 68296,
+            "uid": 501,
+            "startTime": [
+              1794577535,
+              979192
+            ],
+            "rssBytes": 1343488,
+            "status": 2
+          }
+        },
+        "failedPidLast": {
+          "sample": 545,
+          "monotonic": 11505.792369,
+          "row": {
+            "pid": 74118,
+            "ppid": 68306,
+            "pgid": 68296,
+            "uid": 501,
+            "startTime": [
+              1794577535,
+              979192
+            ],
+            "rssBytes": 936837120,
+            "status": 2
+          }
+        },
+        "finalLifecycleProofMissing": true,
+        "maximumSavedRssUse": "Partial-run observation only; cannot compare full command peaks"
+      }
+    }
+  },
+  "fullOwnerTreeComparisonQualified": false,
+  "peakReductionClaimed": false,
+  "originalOomPreserved": true,
+  "originalCompletePositiveDiagnosticEquality": false,
+  "priorFunctionalQualification": {
+    "source": "56a19799bfec788170d71680b4f0663c23073107",
+    "realCliCasesPassed": 7,
+    "originalFilesAndMatchingConfigs": 372,
+    "originalNegativeControlsRejected": 7,
+    "newNegativeFileSet": 379,
+    "fullNewLintExit": 0,
+    "fullNewLintSeconds": 28.147317,
+    "packet": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-b-remaining-p0_w7lt_",
+    "recountedOrRerunInMemoryJob": false
+  },
+  "prototype": {
+    "prototypeOnly": true,
+    "actualSelfReadPassed": true,
+    "actualExitLifecycleObserved": false,
+    "syntheticControls": [
+      {
+        "name": "Historical gap lacks exit and kernel-start proof",
+        "passed": true
+      },
+      {
+        "name": "Task ESRCH alone is not process exit",
+        "passed": true
+      },
+      {
+        "name": "Usage permission error plus visible PID",
+        "passed": true
+      },
+      {
+        "name": "Usage failure plus visible PID",
+        "passed": true
+      },
+      {
+        "name": "Same live kernel lifetime without exit",
+        "passed": true
+      },
+      {
+        "name": "Reused PID with different kernel start",
+        "passed": true
+      },
+      {
+        "name": "Exit precedes start",
+        "passed": true
+      },
+      {
+        "name": "Same-lifetime kernel exit creates event only",
+        "passed": true
+      },
+      {
+        "name": "Kernel PID absence creates event only",
+        "passed": true
+      },
+      {
+        "name": "Same-lifetime zombie creates event only",
+        "passed": true
+      },
+      {
+        "name": "Reject changed BSD startTime",
+        "passed": true
+      },
+      {
+        "name": "Reject changed BSD uid",
+        "passed": true
+      },
+      {
+        "name": "Reject changed BSD ruid",
+        "passed": true
+      },
+      {
+        "name": "Reject changed BSD pid",
+        "passed": true
+      },
+      {
+        "name": "Unbound usage cannot repair historical frame",
+        "passed": true
+      }
+    ],
+    "count": 15,
+    "historicalMeasurementStillInvalid": true,
+    "installedInExecutedSampler": false,
+    "jobEntryPreparedOrExecuted": false,
+    "candidateSha256": "ff9dd073c8f99dc79856ab5fd8e583efb15c91706f3ac0a3e63d7f9ed95c6eda"
+  },
+  "prototypeReadyForActualMeasurement": false,
+  "prototypeRemaining": "Integrate bound lifetime reads and detailed fallback evidence; validate a real exit transition before accepting full metrics. Historical evidence remains invalid.",
+  "cleanup": {
+    "preparedInputsChanged": [],
+    "carrier": {
+      "device": 16777231,
+      "inode": 53377467,
+      "uid": 501,
+      "mode": "0o600",
+      "size": 0,
+      "nlink": 1,
+      "regular": true
+    },
+    "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+    "carrierFdReadback": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "parentControllerReadback": {
+      "exit": 1,
+      "stdout": ""
+    },
+    "newExit": "Not captured by interrupted measurement wrapper; stdout has complete372-file zero-error JSON and time-l output, neither is an exit record."
+  },
+  "oldClosedEntryReadback": {
+    "checked": 89,
+    "changed": []
+  },
+  "AOriginalWebInstallCheckBuildTest": "NOTRUN",
+  "newBrowserAssetsNativeInstalledSqlSso": "NOTRUN",
+  "newStrictJson37Or719Included": false,
+  "full6GiBProfileUnchanged": true,
+  "automaticRetryOrNewQueue": false,
+  "published": false,
+  "roadmapTicked": false,
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-finish-sc8f3xim/web-serial-lint-native-sampling-review.bundle",
+  "bundleSha256": "99eb44c9c14fd8b33b0c41519fd8841dcb080ec4af606f30a0b829ff19431cb8",
+  "bundlePrerequisite": "82c602d32b2d957459b3a742499de96867da27a9"
+}

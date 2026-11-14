@@ -1,0 +1,1 @@
+{"head": "763169e3f1600efed40071ee7f1812d2d6199e69", "run": ["lint-shell", "shell-types", "session-units", "format-check"], "repair": "Await the actual sign-in redirect instead of abandoning the asynchronous login before reading Account. Retain first-run raw failures and unchanged assertions."}

@@ -1,0 +1,932 @@
+{
+  "recordedUTC": "2026-11-13T21:18:59.019593+00:00",
+  "branch": "codex/web-resource-history-ui",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "candidate": {
+    "source": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+    "tree": "c9204e90adf296a68f80ba0877b4bf52baa473f7",
+    "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+    "clean": true
+  },
+  "verifiedRuntime": {
+    "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+    "tree": "69030b656ce87905d50cd912d9bb36cd740719ed",
+    "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+    "assetFiles": 697,
+    "assetManifestSha256": "f56c166fd1e50e18c700eace2ccca7d2cb368a618f542ba21f5f968e0ce5fdee",
+    "assetArchive": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/verified-697-assets.tar",
+    "assetArchiveSha256": "db7d60f4f7fdf09c4e085fc4d812adc32693d207214ab4afdd716ce4947a2005"
+  },
+  "documentationOnlyDelta": [
+    "docs/development/design-system.md",
+    "docs/product/roadmap/usability-and-localization.md",
+    "docs/product/status.md",
+    "docs/research/resource-detail-pages.md"
+  ],
+  "runtimeWebTreeUnchangedSinceQualification": true,
+  "bundles": [
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/ux127-focus-layout.bundle",
+      "sha256": "ea7f0c9411c82853a6c6f10460613ea4d1284d67dd79e01986b4b8eed29eb759",
+      "prerequisite": "63e2baea823524d4b20e8e429d689644265736d7",
+      "verifyExit": 0
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/ux127-complete-candidate.bundle",
+      "sha256": "217d20f002972a2784a34c0d7790f6c59c22c244e6f639ee54a20d2d1099a025",
+      "prerequisite": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+      "verifyExit": 0
+    }
+  ],
+  "newCommits": [
+    "fc8d26d3ec64793c29ed7121594400344613dbfa UX-127 Record verified focus and narrow-layout corrections",
+    "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33 UX-127 Format the frozen focus and layout candidate",
+    "8281d2d71487cf7e7312934ff64d171f1fc72c31 UX-127 Capture native command dialogs during focus acceptance",
+    "2eef4c2bbd60bf2a370c2feac1f22f413bb3134a UX-127 Keep command focus and selected tabs visible in detail views"
+  ],
+  "newUnitCases": {
+    "API": 2,
+    "UI": 54,
+    "total": 56,
+    "skip": 0,
+    "retry": 0
+  },
+  "newBrowserCases": {
+    "passed": 97,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "retry": 0,
+    "newOriginalFocusCasesPassed": 4
+  },
+  "stages": [
+    {
+      "name": "api-unit",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "src/audit.test.ts",
+        "--maxWorkers=1"
+      ],
+      "cwd": "web/packages/api",
+      "exit": 0,
+      "seconds": 0.9095180000003893,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/api-unit.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/api-unit.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "ui-unit",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "--maxWorkers=1"
+      ],
+      "cwd": "web/packages/ui",
+      "exit": 0,
+      "seconds": 1.9498230000026524,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/ui-unit.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/ui-unit.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "api-types",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "cwd": "web/packages/api",
+      "exit": 0,
+      "seconds": 0.7503639999995357,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/api-types.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/api-types.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "ui-types",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "cwd": "web/packages/ui",
+      "exit": 0,
+      "seconds": 0.9845179999974789,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/ui-types.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/ui-types.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "lint-api",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "packages/api/src/audit.ts",
+        "packages/api/src/audit.test.ts"
+      ],
+      "cwd": "web",
+      "exit": 0,
+      "seconds": 1.4257789999974193,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/lint-api.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/lint-api.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "lint-console-src",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "apps/console/src/node-actions.tsx",
+        "apps/console/src/deployment-actions.tsx",
+        "apps/console/src/resource-page.tsx",
+        "apps/console/src/use-command-dialog.ts"
+      ],
+      "cwd": "web",
+      "exit": 0,
+      "seconds": 2.6493090000003576,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/lint-console-src.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/lint-console-src.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "lint-console-e2e",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "apps/console/e2e/resource-actions.spec.ts"
+      ],
+      "cwd": "web",
+      "exit": 0,
+      "seconds": 1.560566000000108,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/lint-console-e2e.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/lint-console-e2e.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "lint-ui",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "--config",
+        "packages/config/eslint.config.js",
+        "--max-warnings",
+        "0",
+        "packages/ui/src/components/tabs.tsx"
+      ],
+      "cwd": "web",
+      "exit": 0,
+      "seconds": 1.2618169999987003,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/lint-ui.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/lint-ui.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "format-check",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "prettier",
+        "--check",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e/resource-actions.spec.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/src/deployment-actions.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/src/node-actions.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/src/resource-page.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/src/use-command-dialog.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/api/src/audit.test.ts",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/ui/src/components/tabs.tsx",
+        "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/docs/research/resource-detail-pages.md"
+      ],
+      "cwd": "web",
+      "exit": 0,
+      "seconds": 0.21477900000172667,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/format-check.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/format-check.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "build",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "cwd": "web/apps/console",
+      "exit": 0,
+      "seconds": 7.421585000003688,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/build.log",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/build.stderr.log",
+      "pass": true
+    },
+    {
+      "name": "actions",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/resource-actions.spec.ts",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--reporter=json",
+        "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/actions-results"
+      ],
+      "cwd": "web/apps/console",
+      "exit": 0,
+      "seconds": 4.735023000001092,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/actions.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/actions.stderr.log",
+      "pass": true,
+      "stats": {
+        "startTime": "2026-11-13T20:59:38.683Z",
+        "duration": 4486.651,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": 4,
+      "errors": [],
+      "images": [
+        {
+          "name": "detail-actions-node-en-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-01.png",
+          "sha256": "4491bd9ea569d00dbfab8fb49a90fb0426df0c4757c60ed7cd43309694ae7234",
+          "case": "detail actions preserve commands and one activity primary in en at 1440px"
+        },
+        {
+          "name": "detail-actions-model-en-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-02.png",
+          "sha256": "c78da6f492af6a4224272c32f8614c689ad34b58cbea7c5dc8c1dacbddd87e27",
+          "case": "detail actions preserve commands and one activity primary in en at 1440px"
+        },
+        {
+          "name": "detail-actions-deployment-en-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-03.png",
+          "sha256": "869b9c02885f7f16a08d911f461f1d6f2d07e940803cd6269b8153c793360ced",
+          "case": "detail actions preserve commands and one activity primary in en at 1440px"
+        },
+        {
+          "name": "detail-actions-deployment-menu-en-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-04.png",
+          "sha256": "14603406557c27417f958cc622069acb69afc703f370337d803213ad2e9e0db6",
+          "case": "detail actions preserve commands and one activity primary in en at 1440px"
+        },
+        {
+          "name": "detail-actions-deployment-confirmation-en-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-05.png",
+          "sha256": "849ba644a6759b71c31ebbb68e2a0633ce43e034eb934b2f4b6e5103889b1315",
+          "case": "detail actions preserve commands and one activity primary in en at 1440px"
+        },
+        {
+          "name": "detail-actions-node-menu-en-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-06.png",
+          "sha256": "48fc66ecd9f623848def7cc9482deaa72b0aa2ee6b539884e127f2e66189e625",
+          "case": "detail actions preserve commands and one activity primary in en at 1440px"
+        },
+        {
+          "name": "detail-actions-node-rename-en-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-07.png",
+          "sha256": "8720dbd692f03e9ebdaa2fa25193ff56d5c1cfa59429e9c0f2b91b280e49f72c",
+          "case": "detail actions preserve commands and one activity primary in en at 1440px"
+        },
+        {
+          "name": "detail-actions-node-en-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-08.png",
+          "sha256": "91c8c1dd43b45cf168d148baaee2e414487bd7a4c4de08e3251356cd5edf6b88",
+          "case": "detail actions preserve commands and one activity primary in en at 390px"
+        },
+        {
+          "name": "detail-actions-model-en-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-09.png",
+          "sha256": "ea2df2ebc227361211ccdf6ad23620970f193865be4d39c211efef495b71593e",
+          "case": "detail actions preserve commands and one activity primary in en at 390px"
+        },
+        {
+          "name": "detail-actions-deployment-en-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-10.png",
+          "sha256": "751c41b38b66fdf22b324198988ebc64349276ffd55e78c23ae8970217324c05",
+          "case": "detail actions preserve commands and one activity primary in en at 390px"
+        },
+        {
+          "name": "detail-actions-deployment-menu-en-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-11.png",
+          "sha256": "8b9d84f328fa26659cc306de0104dde6e672bea9f4080f56ba081282e78364a7",
+          "case": "detail actions preserve commands and one activity primary in en at 390px"
+        },
+        {
+          "name": "detail-actions-deployment-confirmation-en-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-12.png",
+          "sha256": "3215a93a6b85f504ac0bfe3ad83989c5bb3302ef6b8784425d52f178a6ca5e2d",
+          "case": "detail actions preserve commands and one activity primary in en at 390px"
+        },
+        {
+          "name": "detail-actions-node-menu-en-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-13.png",
+          "sha256": "346d8852eb1f76a75ab677b6df6b8f1104ed1992eca8068d4109f9d3a6dfefc1",
+          "case": "detail actions preserve commands and one activity primary in en at 390px"
+        },
+        {
+          "name": "detail-actions-node-rename-en-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-14.png",
+          "sha256": "1fe966ae54af18e862ae57d69dc0ac9dc76be9cc172d0c2f9d08041a6ce81108",
+          "case": "detail actions preserve commands and one activity primary in en at 390px"
+        },
+        {
+          "name": "detail-actions-node-zh-CN-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-15.png",
+          "sha256": "67a5c14462a0d9e5dd2740fb5375eb7b8d455b9ee5858ede701a4e47f54fc6df",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 1440px"
+        },
+        {
+          "name": "detail-actions-model-zh-CN-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-16.png",
+          "sha256": "9484ff47d9dc650d2961d8555f03ca4769c9640a365e8d0b80023834f075d09d",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 1440px"
+        },
+        {
+          "name": "detail-actions-deployment-zh-CN-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-17.png",
+          "sha256": "864afc85bedee13ed8a9db7d2b775b360116a81d10ec74d8bee71d234502de07",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 1440px"
+        },
+        {
+          "name": "detail-actions-deployment-menu-zh-CN-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-18.png",
+          "sha256": "656b6ab272a4df422e643ee87e4e700fa049cc53d4b737b971aa6663af904598",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 1440px"
+        },
+        {
+          "name": "detail-actions-deployment-confirmation-zh-CN-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-19.png",
+          "sha256": "3702ae51d5d500d5c577bdfd5e643df93ec37959b50ae641e51ee36c71d1a519",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 1440px"
+        },
+        {
+          "name": "detail-actions-node-menu-zh-CN-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-20.png",
+          "sha256": "52be694a55b80f9f14b3bd1cb15e8f7cfc761935f48e4cb878cba295cfd9c98d",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 1440px"
+        },
+        {
+          "name": "detail-actions-node-rename-zh-CN-1440",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-21.png",
+          "sha256": "7d5f792552b6c8887ca0f53a93a3d8bb4c931f2a7ef58e187181700db040135d",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 1440px"
+        },
+        {
+          "name": "detail-actions-node-zh-CN-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-22.png",
+          "sha256": "e605992410eab5046a9872486cd61527521a1cf599e3430996706c9cafde2cd7",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 390px"
+        },
+        {
+          "name": "detail-actions-model-zh-CN-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-23.png",
+          "sha256": "58b205e80b3e4d300d12db1e527c61f0a806ded02e02ef980258fc751f737bd7",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 390px"
+        },
+        {
+          "name": "detail-actions-deployment-zh-CN-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-24.png",
+          "sha256": "6b7d00ac81507bb3083517f8fd064eb0f4d48ac7863716c11dd2522e14b6d7db",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 390px"
+        },
+        {
+          "name": "detail-actions-deployment-menu-zh-CN-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-25.png",
+          "sha256": "124986ef5a5efc26db36d8f02fc83326a1e7ab404aab22681dc760a2af2fcb2b",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 390px"
+        },
+        {
+          "name": "detail-actions-deployment-confirmation-zh-CN-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-26.png",
+          "sha256": "db4c019d2d676c34b15562f38b7bb69cd9d2457e076c0b5dfa80298c21174579",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 390px"
+        },
+        {
+          "name": "detail-actions-node-menu-zh-CN-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-27.png",
+          "sha256": "d0f68ccd95cd74689cb5cee07c4482e198abce0ef66fa30417a16ae2eb94dd40",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 390px"
+        },
+        {
+          "name": "detail-actions-node-rename-zh-CN-390",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/actions-28.png",
+          "sha256": "18e2f6df317e684e9d5335240db3e37a83c2198bb87da45ba274aebc519958e5",
+          "case": "detail actions preserve commands and one activity primary in zh-CN at 390px"
+        }
+      ]
+    },
+    {
+      "name": "activity",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/resource-activity.spec.ts",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--reporter=json",
+        "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/activity-results"
+      ],
+      "cwd": "web/apps/console",
+      "exit": 0,
+      "seconds": 14.754861000001256,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/activity.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/activity.stderr.log",
+      "pass": true,
+      "stats": {
+        "startTime": "2026-11-13T20:59:43.462Z",
+        "duration": 14488.17,
+        "expected": 21,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": 21,
+      "errors": [],
+      "images": [
+        {
+          "name": "resource-history-node-recent-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-01.png",
+          "sha256": "85a6fd5e5ef34062408614073d66c315f2ae90ac9513bcbdd41a1adf0c26ca7d",
+          "case": "reads recent activity on an old node under a one-day policy"
+        },
+        {
+          "name": "resource-history-model-recent-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-02.png",
+          "sha256": "28963f99448ec9dc1aaad6c284d0b1446a4a44f3a10334f85cdd4fc8e5e3849f",
+          "case": "reads recent activity on an old model under a one-day policy"
+        },
+        {
+          "name": "resource-history-deployment-recent-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-03.png",
+          "sha256": "b9911381461e422600d097a5e2201b2271038f169a57b903246dacb361fa2115",
+          "case": "reads recent activity on an old deployment under a one-day policy"
+        },
+        {
+          "name": "resource-history-connector-recent-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-04.png",
+          "sha256": "7d54eae4a86337b7f90005431c9234568bdd3a792df7b0f996d9573cd131dca7",
+          "case": "reads recent activity on an old connector under a one-day policy"
+        },
+        {
+          "name": "resource-history-recent-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-05.png",
+          "sha256": "f8d089caa406fac6dd65d1c54cc7bc1617a9dd614a474bc51a837bf833f1078e",
+          "case": "reads current activity for a 400-day-old resource with a 1-day policy"
+        },
+        {
+          "name": "resource-history-recent-empty-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-06.png",
+          "sha256": "9375eecb8c86a6aca7668640e3be95e58c00cde85150f3bbc47ac1813fab4172",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-range-refused-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-07.png",
+          "sha256": "9e763fb8917b7922518b275620f8c790b2d0bc52d6d00630043c93d891da534b",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-historical-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-08.png",
+          "sha256": "7ee165de32cb4c324058eb8032b667c5f45cdfd1a60c17c1845fc710f2f0ed03",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-filtered-empty-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-09.png",
+          "sha256": "8e75ef97387114e2bb4ebe098bb46d64f18d1708834ac717a701ab19b15a6eba",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-filtered-empty-en-remedy",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-10.png",
+          "sha256": "8e75ef97387114e2bb4ebe098bb46d64f18d1708834ac717a701ab19b15a6eba",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-partial-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-11.png",
+          "sha256": "84a7cdc3a9df5c1eefc80d48a1b112a0e15324544c4d31f765d60729641f795c",
+          "case": "keeps exact cursor bounds and replaces a failed recent snapshot only after explicit recovery succeeds"
+        },
+        {
+          "name": "resource-history-loading-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-12.png",
+          "sha256": "62df0142b3807d0d62a1488cabe42039d8274574e33b492b1d0acb638a7856e1",
+          "case": "shows loading and a retained error, then hides all cached rows when access is refused"
+        },
+        {
+          "name": "resource-history-error-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-13.png",
+          "sha256": "9b5b532316a20194cccf8525ce47431e9ccd7d8ff31c012c128c38ce1f26f74c",
+          "case": "shows loading and a retained error, then hides all cached rows when access is refused"
+        },
+        {
+          "name": "resource-history-denied-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-14.png",
+          "sha256": "498bd16f8348f9f484439c51b05a36a0b6c533f9bf7b5254532547ad6c70a234",
+          "case": "shows loading and a retained error, then hides all cached rows when access is refused"
+        },
+        {
+          "name": "resource-history-node-recent-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-15.png",
+          "sha256": "4d68d2a934a04fe694d5aab74a3646195dd4bea9b8c4bd6c7ffb2bfc3dc36e34",
+          "case": "reads recent activity on an old node under a one-day policy"
+        },
+        {
+          "name": "resource-history-model-recent-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-16.png",
+          "sha256": "d8d0c7a01d8b9d9f34abd2426b0826b2199a4015606bd73df26e2b69c77cbc05",
+          "case": "reads recent activity on an old model under a one-day policy"
+        },
+        {
+          "name": "resource-history-deployment-recent-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-17.png",
+          "sha256": "8a6481f2d7fb817579762559f452d3b717391a98b929d896296207fa5792c88d",
+          "case": "reads recent activity on an old deployment under a one-day policy"
+        },
+        {
+          "name": "resource-history-connector-recent-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-18.png",
+          "sha256": "66448d7372fe212eb58207d0e0f501c8eb708f1873a564e2703c0bf045932a93",
+          "case": "reads recent activity on an old connector under a one-day policy"
+        },
+        {
+          "name": "resource-history-recent-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-19.png",
+          "sha256": "9303f44972730a77a1c2204d0ef0751b6a7ace9ae8c099265d696133393c71d7",
+          "case": "reads current activity for a 400-day-old resource with a 1-day policy"
+        },
+        {
+          "name": "resource-history-recent-empty-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-20.png",
+          "sha256": "c834bfb24b27f5a16e37e72dc95968a27608e988150fc9fb54d3db1e07c3666b",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-range-refused-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-21.png",
+          "sha256": "b65ff97eb8624b664947dc75175f42a82e8853cfc3b2ef94f70ff1782aceb563",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-historical-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-22.png",
+          "sha256": "5e4483c58f4f6b3b53aa7e99a433090d89ab56ab183650024bfa9fea10e5a8d7",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-filtered-empty-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-23.png",
+          "sha256": "a65e826d84eb6f5bd5be4da4a85a8338e0f5a28ec084d01a294bdef826f80d7f",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-filtered-empty-zh-CN-remedy",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-24.png",
+          "sha256": "2b574906db84ff131f3cf9bb6751179f073e33b487f4625a200628409ed7f2d8",
+          "case": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states"
+        },
+        {
+          "name": "resource-history-partial-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-25.png",
+          "sha256": "22b9023732cbcd5f93a281aa978704013f22596366e9c6eb51724943ad2d84c3",
+          "case": "keeps exact cursor bounds and replaces a failed recent snapshot only after explicit recovery succeeds"
+        },
+        {
+          "name": "resource-history-loading-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-26.png",
+          "sha256": "6521fc0944c10ed0f99625e3a492c8a0732211b45b060d9fac3c7d5024f7b0e4",
+          "case": "shows loading and a retained error, then hides all cached rows when access is refused"
+        },
+        {
+          "name": "resource-history-error-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-27.png",
+          "sha256": "cbdcaea2f8c6c7454bf66fab9d08bee20eff489021a62cffdbec9cb473e213ef",
+          "case": "shows loading and a retained error, then hides all cached rows when access is refused"
+        },
+        {
+          "name": "resource-history-denied-zh-CN",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-28.png",
+          "sha256": "db70fd5855cc929bb0bd06daa758e5d49c0c21ec9330b26ddcb7807488e19464",
+          "case": "shows loading and a retained error, then hides all cached rows when access is refused"
+        },
+        {
+          "name": "resource-history-invalid-local-dates-en",
+          "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/images/activity-29.png",
+          "sha256": "df50f0a8280ff8ed3dd868f688b8d7130fc2e63df84c11f31b388d38085dd249",
+          "case": "rejects reversed and nonexistent dates without an audit read"
+        }
+      ]
+    },
+    {
+      "name": "resource-pages",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/resource-pages.spec.ts",
+        "e2e/node-page.spec.ts",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--reporter=json",
+        "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/resource-pages-results"
+      ],
+      "cwd": "web/apps/console",
+      "exit": 0,
+      "seconds": 22.071019000002707,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/resource-pages.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/resource-pages.stderr.log",
+      "pass": true,
+      "stats": {
+        "startTime": "2026-11-13T20:59:58.271Z",
+        "duration": 21786.883,
+        "expected": 19,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": 19,
+      "errors": [],
+      "images": []
+    },
+    {
+      "name": "services",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/services.spec.ts",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--reporter=json",
+        "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/services-results"
+      ],
+      "cwd": "web/apps/console",
+      "exit": 0,
+      "seconds": 13.54707100000087,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/services.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/services.stderr.log",
+      "pass": true,
+      "stats": {
+        "startTime": "2026-11-13T21:00:20.379Z",
+        "duration": 13283.090999999999,
+        "expected": 23,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": 23,
+      "errors": [],
+      "images": []
+    },
+    {
+      "name": "a11y",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/accessibility.spec.ts",
+        "--grep",
+        "(?:a\\ node\\ with\\ its\\ activity|resource\\ activity\\ with\\ no\\ recent\\ events|resource\\ activity\\ with\\ no\\ events\\ in\\ a\\ selected\\ period|resource\\ activity\\ with\\ invalid\\ selected\\ dates|resource\\ activity\\ with\\ access\\ refused|resource\\ activity\\ waiting\\ for\\ the\\ initial\\ read|audit\\ trail\\ with\\ uncertain\\ read\\ recovery|audit\\ trail\\ with\\ partial\\ read\\ recovery|audit\\ activity\\ with\\ uncertain\\ read\\ recovery|audit\\ activity\\ with\\ partial\\ read\\ recovery)(?:: every control is reachable and shows focus)?$",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--reporter=json",
+        "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/a11y-results"
+      ],
+      "cwd": "web/apps/console",
+      "exit": 0,
+      "seconds": 12.899266000000353,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/a11y.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/a11y.stderr.log",
+      "pass": true,
+      "stats": {
+        "startTime": "2026-11-13T21:00:33.975Z",
+        "duration": 12630.77,
+        "expected": 20,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": 20,
+      "errors": [],
+      "images": []
+    },
+    {
+      "name": "keyboard",
+      "round": 1,
+      "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+      "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/keyboard.spec.ts",
+        "--grep",
+        "(?:a\\ node\\ with\\ its\\ activity|resource\\ activity\\ with\\ no\\ recent\\ events|resource\\ activity\\ with\\ no\\ events\\ in\\ a\\ selected\\ period|resource\\ activity\\ with\\ invalid\\ selected\\ dates|resource\\ activity\\ with\\ access\\ refused|resource\\ activity\\ waiting\\ for\\ the\\ initial\\ read|audit\\ trail\\ with\\ uncertain\\ read\\ recovery|audit\\ trail\\ with\\ partial\\ read\\ recovery|audit\\ activity\\ with\\ uncertain\\ read\\ recovery|audit\\ activity\\ with\\ partial\\ read\\ recovery)(?:: every control is reachable and shows focus)?$",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--reporter=json",
+        "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/keyboard-results"
+      ],
+      "cwd": "web/apps/console",
+      "exit": 0,
+      "seconds": 16.93912800000544,
+      "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/keyboard.json",
+      "stderr": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/round-1/keyboard.stderr.log",
+      "pass": true,
+      "stats": {
+        "startTime": "2026-11-13T21:00:46.914Z",
+        "duration": 16688.442,
+        "expected": 10,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": 10,
+      "errors": [],
+      "images": []
+    }
+  ],
+  "images": {
+    "generated": 57,
+    "read": 57,
+    "missing": 0,
+    "visualAcceptedWithinDirectedScope": true,
+    "manifest": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/visual-readback.json"
+  },
+  "guard": {
+    "overallExit": 0,
+    "wrapperOperationalExit": 0,
+    "childExit": 0,
+    "cleanupExit": 0,
+    "cleanupConfirmed": true,
+    "elapsedSeconds": 418.8157030000002,
+    "sameInheritedFD": 3,
+    "singleNonblockingAttempt": true,
+    "noFullBranch": true,
+    "rawFreeBytes": 4826398720,
+    "diskFreeBytes": 161266491392,
+    "NodeOldSpaceMiB": 512,
+    "workerMaximum": 1,
+    "totalDeadlineSeconds": 600,
+    "cleanupReserveSeconds": 60
+  },
+  "previousEvidence": {
+    "packet": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-fix-1obf55xi",
+    "unchangedCriticalFiles": {
+      "gate-state.json": true,
+      "owner-handoff.json": true,
+      "visual-readback.json": true,
+      "supplemental-stage-results.json": true,
+      "supplemental/resource-actions.json": true
+    },
+    "originalFailedFocusCases": 4,
+    "oldImagesRead": 61,
+    "old697ArchiveSha256": "b9fa0945fe6167af543a302cbab6911fa1ffdd10d7da4179d5a3fd40edf4960a",
+    "old697ManifestSha256": "6c2f186f379ceaed64ecfa118ec9232e8e5fcc0aa978721dfb9b58afcd90b569",
+    "notRelabelledAsCurrent": true
+  },
+  "unchangedPriorInputs": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-focus-ucnw79tj/unchanged-prior-inputs.json",
+  "postExit": {
+    "recordedUTC": "2026-11-13T21:07:46.987812+00:00",
+    "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+    "tree": "69030b656ce87905d50cd912d9bb36cd740719ed",
+    "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+    "assetFiles": 697,
+    "assetManifestSha256": "f56c166fd1e50e18c700eace2ccca7d2cb368a618f542ba21f5f968e0ce5fdee",
+    "assetMismatches": [],
+    "old697ArchiveSha256": "b9fa0945fe6167af543a302cbab6911fa1ffdd10d7da4179d5a3fd40edf4960a",
+    "old697ArchiveMatches": true,
+    "preparedFilesUnchanged": true,
+    "knownPIDs": {
+      "checked": 72,
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "previewPort": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "knownParentWorkerFDs": {
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "carrier": {
+      "device": 16777231,
+      "inode": 53377467,
+      "uid": 501,
+      "mode": "0o600",
+      "regular": true,
+      "nlink": 1,
+      "size": 0,
+      "readOnlySameIdentity": true,
+      "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+    },
+    "closedOldEntrances": {
+      "count": 89,
+      "stubsUnchanged": true,
+      "sourceDataUnchanged": true
+    },
+    "noNewLockAttempt": true,
+    "noNewNodeAfterExit": true
+  },
+  "finalLightChecks": {
+    "layout": 0,
+    "roadmap": 0,
+    "whitespace": 0,
+    "bundleVerify": 0
+  },
+  "fullPlatformNativeInstalled": "NOTRUN",
+  "PortalSharedTabsConsumer": "NOTRUN_CURRENT_SOURCE",
+  "UX127": "OPEN",
+  "POR112": "OPEN_UNCHANGED",
+  "publication": "NOTRUN",
+  "nextMacOwner": "DEV full SDK / joint gate",
+  "noAutomaticReacquisition": true
+}

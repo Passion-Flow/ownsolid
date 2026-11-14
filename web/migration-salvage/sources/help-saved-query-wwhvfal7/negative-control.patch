@@ -1,0 +1,11 @@
+--- a/web/packages/shell/testing/help-flows.ts
++++ b/web/packages/shell/testing/help-flows.ts
+@@ -177,7 +177,7 @@
+         const password = page.getByRole('button', { name: / changePassword$/ });
+         const workspace = page.getByRole('button', { name: new RegExp(` ${operation}$`) });
+         await expect(search).toHaveValue('changePassword');
+-        await expect(page).toHaveURL(/\/help\/api\?q=changePassword$/);
++        await expect(page).toHaveURL(/\/help\/api$/);
+         await expect(password).toBeVisible();
+         await expect(workspace).toHaveCount(0);
+         await info.attach(`contract-restored-search-${locale}`, {

@@ -1,0 +1,1 @@
+{"action": "abort", "reason": "Initial source has four real cursor-pagination failures. API adapter correction and regression tests are committed separately at3f614d69; no affected rerun fits the remaining admitted work cutoff. Keep all original failures; corrected source is unverified."}

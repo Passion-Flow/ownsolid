@@ -1,0 +1,15 @@
+{
+  "attempted": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "coverage.mjs": "27105713fc4f697fa31319e493afbef811806f8c365054b7aa04454466591ae4",
+  "negative-controls.json": "754c2363099d26ce5daffdc3b17fbf121e2fab87fb769a4d4241b2f947dc2833",
+  "original-prepared-file-sha256.json": "e232efd7160bad6b4e195e975394b3653d9823aabdca2740e22ddc3ce1943fe9",
+  "owner-handoff.json": "cf81880ef2f54155e494fa597c6edf0955829c3133db917656dcae508d46afc0",
+  "pinned-discovery-sha256.json": "144fa7e1e5de569431b3e2591ffcfd57808e2156e661c24967ab90e58bac3eff",
+  "preflight-memory.log": "4fa2616584679308ef878800fe29deb7346f418841b974f4506adb4b2bfe2217",
+  "preflight-result.json": "581a7a914b964ec93d272f7266278ac1cb39f256dfe6bf2bce20b3741775fbe2",
+  "preflight-space.log": "56bfdeefb242505ed82d5ee237bec4aa1f84c9e13627fc7195d805924f77205f",
+  "source-input-sha256.json": "f492695a1d6feba84e03763e81b454dc8fcef65e44423f29b9b429cb88d1b03e",
+  "static-partitions.json": "ef6ceb6b98a6873c228af48fdca95c72e169765533b0b281106e2ed827c4a770",
+  "tracked-source-sha256.json": "de114228f2470305de76378beb071fe3e27795d7d74261f2bfdb3361611de953",
+  "web-serial-lint-with-refusal.bundle": "6c41bedca191381841afe9b82d275cffc54e2fe2d4fc47a165ad364bbacb0722"
+}

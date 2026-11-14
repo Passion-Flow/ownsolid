@@ -1,0 +1,412 @@
+[
+  {
+    "path": "lint-negative-fixture.js",
+    "expectedRules": [
+      "no-undef"
+    ],
+    "originalExit": 1,
+    "actualOriginalRules": [
+      "no-undef"
+    ],
+    "originalDiagnostics": {
+      "filePath": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/lint-negative-fixture.js",
+      "messages": [
+        {
+          "ruleId": "no-undef",
+          "severity": 2,
+          "message": "'unresolvedRootLintControl' is not defined.",
+          "line": 1,
+          "column": 1,
+          "messageId": "undef",
+          "endLine": 1,
+          "endColumn": 26
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 1,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "unresolvedRootLintControl;\n",
+      "usedDeprecatedRules": []
+    },
+    "newExit": 1,
+    "actualNewRules": [
+      "no-undef"
+    ],
+    "exactControlDiagnosticsEqual": true
+  },
+  {
+    "path": ".lint-negative-fixture.js",
+    "expectedRules": [
+      "no-undef"
+    ],
+    "originalExit": 1,
+    "actualOriginalRules": [
+      "no-undef"
+    ],
+    "originalDiagnostics": {
+      "filePath": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/.lint-negative-fixture.js",
+      "messages": [
+        {
+          "ruleId": "no-undef",
+          "severity": 2,
+          "message": "'unresolvedDotLintControl' is not defined.",
+          "line": 1,
+          "column": 1,
+          "messageId": "undef",
+          "endLine": 1,
+          "endColumn": 25
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 1,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "unresolvedDotLintControl;\n",
+      "usedDeprecatedRules": []
+    },
+    "newExit": 1,
+    "actualNewRules": [
+      "no-undef"
+    ],
+    "exactControlDiagnosticsEqual": true
+  },
+  {
+    "path": "apps/console/src/lint-negative-fixture.tsx",
+    "expectedRules": [
+      "react-hooks/rules-of-hooks",
+      "no-restricted-syntax",
+      "@typescript-eslint/no-unsafe-member-access"
+    ],
+    "originalExit": 1,
+    "actualOriginalRules": [
+      "@typescript-eslint/no-explicit-any",
+      "@typescript-eslint/no-unsafe-member-access",
+      "@typescript-eslint/no-unsafe-return",
+      "no-restricted-syntax",
+      "react-hooks/rules-of-hooks"
+    ],
+    "originalDiagnostics": {
+      "filePath": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/src/lint-negative-fixture.tsx",
+      "messages": [
+        {
+          "ruleId": "react-hooks/rules-of-hooks",
+          "severity": 2,
+          "message": "React Hook \"useState\" is called conditionally. React Hooks must be called in the exact same order in every component render.",
+          "line": 3,
+          "column": 15,
+          "endLine": 3,
+          "endColumn": 23
+        },
+        {
+          "ruleId": "no-restricted-syntax",
+          "severity": 2,
+          "message": "Put user-visible text in the locale catalogs and render it with t().",
+          "line": 4,
+          "column": 18,
+          "messageId": "restrictedSyntax",
+          "endLine": 4,
+          "endColumn": 38
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 6,
+          "column": 38,
+          "messageId": "unexpectedAny",
+          "endLine": 6,
+          "endColumn": 41,
+          "suggestions": [
+            {
+              "messageId": "suggestUnknown",
+              "fix": {
+                "range": [
+                  215,
+                  218
+                ],
+                "text": "unknown"
+              },
+              "desc": "Use `unknown` instead, this will force you to explicitly, and safely assert the type is correct."
+            },
+            {
+              "messageId": "suggestNever",
+              "fix": {
+                "range": [
+                  215,
+                  218
+                ],
+                "text": "never"
+              },
+              "desc": "Use `never` instead, this is useful when instantiating generic type parameters that you don't need to know the type of."
+            }
+          ]
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-return",
+          "severity": 2,
+          "message": "Unsafe return of a value of type `any`.",
+          "line": 6,
+          "column": 45,
+          "messageId": "unsafeReturn",
+          "endLine": 6,
+          "endColumn": 65
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .member on an `any` value.",
+          "line": 6,
+          "column": 58,
+          "messageId": "unsafeMemberExpression",
+          "endLine": 6,
+          "endColumn": 64
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 5,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "import { useState } from 'react';\nexport function LintControl({ active }: { active: boolean }) {\n  if (active) useState(false);\n  return <button>Untranslated control</button>;\n}\nexport function unsafeControl(value: any) { return value.member; }\n",
+      "usedDeprecatedRules": []
+    },
+    "newExit": 1,
+    "actualNewRules": [
+      "@typescript-eslint/no-explicit-any",
+      "@typescript-eslint/no-unsafe-member-access",
+      "@typescript-eslint/no-unsafe-return",
+      "no-restricted-syntax",
+      "react-hooks/rules-of-hooks"
+    ],
+    "exactControlDiagnosticsEqual": true
+  },
+  {
+    "path": "apps/portal/src/lint-negative-fixture.tsx",
+    "expectedRules": [
+      "jsx-a11y-x/alt-text"
+    ],
+    "originalExit": 1,
+    "actualOriginalRules": [
+      "jsx-a11y-x/alt-text"
+    ],
+    "originalDiagnostics": {
+      "filePath": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/src/lint-negative-fixture.tsx",
+      "messages": [
+        {
+          "ruleId": "jsx-a11y-x/alt-text",
+          "severity": 2,
+          "message": "img elements must have an alt prop, either with meaningful text, or an empty string for decorative images.",
+          "line": 1,
+          "column": 40,
+          "endLine": 1,
+          "endColumn": 67
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 1,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "export function LintControl() { return <img src=\"/lint-control\" />; }\n",
+      "usedDeprecatedRules": []
+    },
+    "newExit": 1,
+    "actualNewRules": [
+      "jsx-a11y-x/alt-text"
+    ],
+    "exactControlDiagnosticsEqual": true
+  },
+  {
+    "path": "apps/console/e2e/lint-negative-fixture.ts",
+    "expectedRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "originalExit": 1,
+    "actualOriginalRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "originalDiagnostics": {
+      "filePath": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e/lint-negative-fixture.ts",
+      "messages": [
+        {
+          "ruleId": "@typescript-eslint/no-floating-promises",
+          "severity": 2,
+          "message": "Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.",
+          "line": 1,
+          "column": 33,
+          "messageId": "floatingVoid",
+          "endLine": 1,
+          "endColumn": 52,
+          "suggestions": [
+            {
+              "messageId": "floatingFixVoid",
+              "fix": {
+                "range": [
+                  32,
+                  32
+                ],
+                "text": "void "
+              },
+              "desc": "Add void operator to ignore."
+            },
+            {
+              "messageId": "floatingFixAwait",
+              "fix": {
+                "range": [
+                  32,
+                  32
+                ],
+                "text": "await "
+              },
+              "desc": "Add await operator."
+            }
+          ]
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 1,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "export function lintControl() { Promise.resolve(1); }\n",
+      "usedDeprecatedRules": []
+    },
+    "newExit": 1,
+    "actualNewRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "exactControlDiagnosticsEqual": true
+  },
+  {
+    "path": "packages/shell/testing/lint-negative-fixture.ts",
+    "expectedRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "originalExit": 1,
+    "actualOriginalRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "originalDiagnostics": {
+      "filePath": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/lint-negative-fixture.ts",
+      "messages": [
+        {
+          "ruleId": "@typescript-eslint/no-floating-promises",
+          "severity": 2,
+          "message": "Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.",
+          "line": 1,
+          "column": 33,
+          "messageId": "floatingVoid",
+          "endLine": 1,
+          "endColumn": 52,
+          "suggestions": [
+            {
+              "messageId": "floatingFixVoid",
+              "fix": {
+                "range": [
+                  32,
+                  32
+                ],
+                "text": "void "
+              },
+              "desc": "Add void operator to ignore."
+            },
+            {
+              "messageId": "floatingFixAwait",
+              "fix": {
+                "range": [
+                  32,
+                  32
+                ],
+                "text": "await "
+              },
+              "desc": "Add await operator."
+            }
+          ]
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 1,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "export function lintControl() { Promise.resolve(1); }\n",
+      "usedDeprecatedRules": []
+    },
+    "newExit": 1,
+    "actualNewRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "exactControlDiagnosticsEqual": true
+  },
+  {
+    "path": "packages/config/src/lint-negative-fixture.ts",
+    "expectedRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "originalExit": 1,
+    "actualOriginalRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "originalDiagnostics": {
+      "filePath": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/config/src/lint-negative-fixture.ts",
+      "messages": [
+        {
+          "ruleId": "@typescript-eslint/no-floating-promises",
+          "severity": 2,
+          "message": "Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.",
+          "line": 1,
+          "column": 33,
+          "messageId": "floatingVoid",
+          "endLine": 1,
+          "endColumn": 52,
+          "suggestions": [
+            {
+              "messageId": "floatingFixVoid",
+              "fix": {
+                "range": [
+                  32,
+                  32
+                ],
+                "text": "void "
+              },
+              "desc": "Add void operator to ignore."
+            },
+            {
+              "messageId": "floatingFixAwait",
+              "fix": {
+                "range": [
+                  32,
+                  32
+                ],
+                "text": "await "
+              },
+              "desc": "Add await operator."
+            }
+          ]
+        }
+      ],
+      "suppressedMessages": [],
+      "errorCount": 1,
+      "fatalErrorCount": 0,
+      "warningCount": 0,
+      "fixableErrorCount": 0,
+      "fixableWarningCount": 0,
+      "source": "export function lintControl() { Promise.resolve(1); }\n",
+      "usedDeprecatedRules": []
+    },
+    "newExit": 1,
+    "actualNewRules": [
+      "@typescript-eslint/no-floating-promises"
+    ],
+    "exactControlDiagnosticsEqual": true
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "publishedSource": "be62f58e846dcc654dafee65cba6cc7480890570",
+  "clean": true,
+  "fullGateSource": "60b85e037aa24fc0d30ae0195e6dffe8f59a6946",
+  "fullGateDirectory": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/full-final-NNbVbXbw",
+  "fullGateExit": 0,
+  "installedBrowserRun": false,
+  "newInstallationRequired": true,
+  "requiredSchema": "60/120",
+  "handoff": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/del-web-handoff-20261113.md",
+  "handoffSha256": "da7c46edb81b073de82814d98aa05223c60a9decca253b3da3ac063ca026684a",
+  "manifest": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/del-web-manifest-20261113.json",
+  "manifestSha256": "c4cd15d999b92eab52fb1e9b05ab51163db4667a0c8a26fe09453112cbec9336",
+  "next": "Bind final clients to DEL new frozen source; GW120 UI -> Help -> Scope -> independent SQL -> CLI -> original OBS7"
+}

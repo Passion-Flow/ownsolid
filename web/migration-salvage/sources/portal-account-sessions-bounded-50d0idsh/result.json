@@ -1,0 +1,57 @@
+{
+  "scope": "focused formatter, Help generation, lint, types and unit tests only; no browser/build/full/native/installed",
+  "steps": [
+    {
+      "name": "lint-api",
+      "exitCode": 0
+    },
+    {
+      "name": "lint-shell",
+      "exitCode": 0
+    },
+    {
+      "name": "lint-ui",
+      "exitCode": 0
+    },
+    {
+      "name": "lint-console",
+      "exitCode": 0
+    },
+    {
+      "name": "lint-portal",
+      "exitCode": 0
+    },
+    {
+      "name": "format",
+      "exitCode": 0
+    },
+    {
+      "name": "shell-types",
+      "exitCode": 0
+    },
+    {
+      "name": "session-units",
+      "exitCode": 0
+    },
+    {
+      "name": "confirmation-units",
+      "exitCode": 0
+    },
+    {
+      "name": "format-check",
+      "exitCode": 0
+    },
+    {
+      "name": "console-types",
+      "exitCode": 0
+    },
+    {
+      "name": "portal-types",
+      "exitCode": 0
+    }
+  ],
+  "busy": false,
+  "childStarted": true,
+  "carrierInode": 50313339,
+  "exitCode": 0
+}

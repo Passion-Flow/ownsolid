@@ -1,0 +1,10 @@
+{
+  "source": "7f9eae17027977299d5d6f64cb3b70b87845f966",
+  "started": "2026-11-13T02:01:33.909558+00:00",
+  "finished": "2026-11-13T02:01:37.234634+00:00",
+  "exitCode": 1,
+  "busy": false,
+  "childStarted": true,
+  "trigger": "Published MODEL complete-gate evidence and completed source-only candidate; no Web changes in intervening origin/main commits",
+  "scope": "read-only focused lint/types/units; no browser, build, native or full gate"
+}

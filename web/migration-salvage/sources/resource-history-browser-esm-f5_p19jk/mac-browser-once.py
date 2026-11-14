@@ -1,0 +1,204 @@
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+import sys as _ownsolid_closed_epoch_sys
+_ownsolid_closed_epoch_sys.stderr.write("Old Mac admission epoch is closed; await coordinated activation.\n")
+raise SystemExit(78)
+import time
+ENTRY_STARTED=time.clock_gettime(time.CLOCK_MONOTONIC)
+from pathlib import Path
+import datetime,fcntl,hashlib,json,os,re,shutil,signal,stat,subprocess,sys
+def require_runtime(flags):
+ if not flags.isolated or flags.optimize:
+  raise SystemExit('Run with python3 -I and without -O; no acquisition attempted')
+require_runtime(sys.flags)
+TOTAL_DEADLINE=ENTRY_STARTED+600
+WORK_DEADLINE=TOTAL_DEADLINE-30
+cleaning=False
+class DeadlineExpired(BaseException):pass
+def budget(cap,deadline=None,now=None):
+ target=(TOTAL_DEADLINE if cleaning else WORK_DEADLINE) if deadline is None else deadline
+ remaining=target-(time.clock_gettime(time.CLOCK_MONOTONIC) if now is None else now)
+ if remaining<=0:raise DeadlineExpired('The absolute operation budget expired')
+ return min(float(cap),remaining)
+def check_budget():budget(600)
+def bounded_write(path,value,deadline=None):
+ budget(600,deadline=deadline)
+ if isinstance(value,bytes):path.write_bytes(value)
+ else:path.write_text(value)
+ budget(600,deadline=deadline)
+def deadline_expired(signum,frame):raise DeadlineExpired('The entry absolute backstop fired')
+def arm_backstop(deadline):
+ signal.signal(signal.SIGALRM,deadline_expired)
+ signal.setitimer(signal.ITIMER_REAL,budget(600,deadline=deadline))
+arm_backstop(TOTAL_DEADLINE)
+os.umask(0o077)
+root=Path(sys.argv[1]);carrier=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+state={'parentPID':os.getpid(),'carrier':str(carrier),'expectedInode':50313339,'kernelWaitBudgetSeconds':0,'executionBudgetSeconds':600,'childStarted':False,'entryMonotonic':ENTRY_STARTED,'hardDeadlineMonotonic':TOTAL_DEADLINE,'workCutoffMonotonic':WORK_DEADLINE,'cleanupReserveSeconds':30,'cleanupConfirmed':False,'cleanupEvidenceFailed':False,'groupsConfirmed':True,'awakeConfirmed':True}
+def record(phase,**values):
+ state.setdefault('phaseHistory',[]).append({'phase':phase,**values});state.update(values);state['phase']=phase;state['updatedUTC']=datetime.datetime.now(datetime.timezone.utc).isoformat()
+ budget(600,deadline=TOTAL_DEADLINE);tmp=root/'gate-state.json.tmp';bounded_write(tmp,json.dumps(state,indent=2)+'\n',deadline=TOTAL_DEADLINE);budget(600,deadline=TOTAL_DEADLINE);tmp.replace(root/'gate-state.json');budget(600,deadline=TOTAL_DEADLINE)
+def inspect(fd):
+ check_budget()
+ opened=os.fstat(fd);current=os.stat(carrier,follow_symlinks=False)
+ assert stat.S_ISREG(opened.st_mode) and opened.st_uid==os.geteuid()
+ assert opened.st_ino==50313339 and (opened.st_dev,opened.st_ino)==(current.st_dev,current.st_ino)
+ check_budget();return opened
+class LockBusy(Exception):pass
+def cleanup_failure(phase,error):
+ state['cleanupEvidenceFailed']=True;state['cleanupConfirmed']=False
+ record(phase,exit=1,error=str(error),cleanupConfirmed=False)
+ return 1
+def preflight():
+ free=shutil.disk_usage(root).free
+ memory=subprocess.check_output(['vm_stat'],timeout=budget(2));bounded_write(root/'preflight-memory.log',memory)
+ pages=int(re.search(rb'Pages free:\s+(\d+)',memory).group(1));page_size=int(re.search(rb'page size of (\d+)',memory).group(1))
+ assert pages*page_size>=2*1024**3,'Under2GiB free memory; no child started'
+ bounded_write(root/'preflight-space.log',subprocess.check_output(['df','-h',str(root)],timeout=budget(2)))
+ assert free>=15*1024**3,'Under15GiB free; no child started'
+ for label,args in [('ports',['lsof','-nP','-iTCP:31036','-iTCP:31037','-sTCP:LISTEN']),('legacy',['lsof','-nP','/private/tmp/ownsolid-macos-full-gate.lock'])]:
+  result=subprocess.run(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=budget(2))
+  bounded_write(root/('preflight-'+label+'.log'),result.stdout)
+  if result.returncode==0 and result.stdout.strip():raise RuntimeError(label+' occupied; no child started')
+def capture_groups(pid):
+ raw=subprocess.check_output(['ps','-axo','pid=,ppid=,pgid='],text=True,timeout=budget(2))
+ rows=[tuple(map(int,line.split())) for line in raw.splitlines() if line.strip()]
+ descendants={pid}|{child for child,parent,group in rows if group==pid}
+ for _ in rows:
+  check_budget()
+  added={child for child,parent,group in rows if parent in descendants}-descendants
+  if not added:break
+  descendants.update(added)
+ return {group for child,parent,group in rows if child in descendants and group!=os.getpgrp()}
+def cancelled(signum,frame):raise KeyboardInterrupt("Narrow window interrupted")
+signal.signal(signal.SIGTERM,cancelled)
+code=1;fd=None;child=None;awake=None;start=None;owned_groups=set()
+# Verify the reviewed operational inputs before touching the lock carrier.
+check_budget();prepared=json.loads((root/'preparation.json').read_text())
+for name in ['mac-browser-once.py','browser-run.py','stage-plan.json']:
+ check_budget();assert hashlib.sha256((root/name).read_bytes()).hexdigest()==prepared['preparedFiles'][name],name
+# An accidental second invocation cannot create a second admission attempt.
+check_budget();marker=os.open(root/'attempted',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600);os.close(marker);check_budget()
+try:
+ try:
+  fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW);info=inspect(fd)
+  record('one-nonblocking-attempt',descriptor=fd,device=info.st_dev,inode=info.st_ino)
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:raise LockBusy('Shared Mac window occupied; no child started')
+  inspect(fd);record('held',descriptor=fd)
+  preflight()
+  check_budget();awake=subprocess.Popen(['caffeinate','-i','-w',str(os.getpid())]);state['awakeConfirmed']=False;check_budget()
+  with (root/'gate-output.log').open('w') as out:
+   check_budget()
+   try:child=subprocess.Popen([sys.executable,'-I',str(root/'browser-run.py'),str(root),str(WORK_DEADLINE),str(TOTAL_DEADLINE)],stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+   except OSError as error:
+    record('child-start-error',error=str(error),errno=error.errno);raise
+   state['groupsConfirmed']=False;check_budget();start=time.clock_gettime(time.CLOCK_MONOTONIC);record('executing',childStarted=True,childPID=child.pid,childGroup=child.pid)
+   try:code=child.wait(timeout=budget(565))
+   except subprocess.TimeoutExpired:
+    cleaning=True;code=124
+    record('execution-timeout',childStarted=True)
+    try:owned_groups.update(capture_groups(child.pid))
+    except (OSError,subprocess.SubprocessError):record('timeout-descendant-snapshot-failed')
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=budget(5))
+    except subprocess.TimeoutExpired:
+     os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=budget(3))
+    code=124
+  record('finished' if code==0 else 'child-failed',exit=code,executionSeconds=time.clock_gettime(time.CLOCK_MONOTONIC)-start)
+ except DeadlineExpired as error:
+  cleaning=True;code=124;record('absolute-deadline-expired',exit=code,error=str(error))
+ except LockBusy as error:
+  cleaning=True;code=75;record('lock-busy',exit=code,error=str(error),childStarted=False,busy=True)
+ except BaseException as error:
+  cleaning=True;code=1;record('wrapper-error',exit=code,error=repr(error),childStarted=child is not None)
+ finally:
+  cleaning=True
+  try:
+   if child is not None and child.poll() is None:
+    try:owned_groups.update(capture_groups(child.pid))
+    except (OSError,subprocess.SubprocessError) as error:code=cleanup_failure('cleanup-initial-descendant-snapshot-failed',error)
+    try:os.killpg(child.pid,signal.SIGTERM)
+    except ProcessLookupError:pass
+    try:child.wait(timeout=budget(5))
+    except subprocess.TimeoutExpired:
+     try:os.killpg(child.pid,signal.SIGKILL)
+     except ProcessLookupError:pass
+     child.wait(timeout=budget(3))
+   if child is not None:
+    groups={child.pid}|owned_groups
+    try:groups.update(capture_groups(child.pid))
+    except (OSError,subprocess.SubprocessError) as error:code=cleanup_failure('cleanup-descendant-snapshot-failed',error)
+    registry=root/'owned-stage-groups.json'
+    if registry.exists():
+     try:groups.update(json.loads(registry.read_text()))
+     except (ValueError,OSError) as error:code=cleanup_failure('cleanup-registry-unreadable',error)
+    info=json.loads((root/'preparation.json').read_text())
+    check_budget()
+    for port,cwd in [(31036,info['worktree']+'/web/apps/console'),(31037,info['oldWorktree']+'/web/apps/console')]:
+     listeners=subprocess.run(['lsof','-t','-nP','-iTCP:'+str(port),'-sTCP:LISTEN'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=budget(2))
+     for raw in listeners.stdout.splitlines():
+      check_budget()
+      if not raw.isdigit():continue
+      pid=int(raw)
+      current=subprocess.run(['lsof','-a','-p',str(pid),'-d','cwd','-Fn'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=budget(2))
+      if ('n'+cwd) in current.stdout.splitlines():
+       try:groups.add(os.getpgid(pid))
+       except ProcessLookupError:pass
+    for group in groups:
+     check_budget()
+     if group==os.getpgrp():continue
+     try:os.killpg(group,signal.SIGTERM)
+     except ProcessLookupError:pass
+    for group in groups:
+     check_budget()
+     if group==os.getpgrp():continue
+     try:os.killpg(group,signal.SIGKILL)
+     except ProcessLookupError:pass
+    ports=subprocess.run(['lsof','-nP','-iTCP:31036','-iTCP:31037','-sTCP:LISTEN'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=budget(2))
+    bounded_write(root/'preview-cleanup.log',ports.stdout)
+    if ports.returncode!=1:code=cleanup_failure('cleanup-listener-remains',ports.stdout)
+    snapshot=subprocess.check_output(['ps','-axo','pgid=,stat='],text=True,timeout=budget(2))
+    live=[]
+    for row in snapshot.splitlines():
+     check_budget();parts=row.split()
+     if parts and int(parts[0]) in groups and not parts[1].startswith('Z'):live.append(row)
+    bounded_write(root/'owned-groups-cleanup.json',json.dumps(live)+'\n')
+    state['groupsConfirmed']=not live
+    if live:code=cleanup_failure('cleanup-owned-group-remains',live)
+  except BaseException as error:
+   code=124 if isinstance(error,DeadlineExpired) else 1;state['cleanupEvidenceFailed']=True;state['cleanupConfirmed']=False;record('child-cleanup-error',error=repr(error),exit=code,cleanupConfirmed=False)
+  finally:
+   try:
+    if awake is not None:
+     awake.terminate()
+     try:awake.wait(timeout=budget(2))
+     except subprocess.TimeoutExpired:awake.kill();awake.wait(timeout=budget(2))
+     state['awakeConfirmed']=True
+   except BaseException as error:
+    code=124 if isinstance(error,DeadlineExpired) else 1;state['cleanupEvidenceFailed']=True;state['cleanupConfirmed']=False;record('awake-cleanup-error',error=repr(error),exit=code,cleanupConfirmed=False)
+   finally:
+    if fd is not None:
+     try:
+      inspect(fd)
+      state['cleanupConfirmed']=state['groupsConfirmed'] and state['awakeConfirmed'] and not state['cleanupEvidenceFailed']
+      if not state['cleanupConfirmed'] and code==0:code=1
+      record('cleanup-evidence',exit=code,cleanupConfirmed=state['cleanupConfirmed'])
+     except BaseException as error:
+      code=124 if isinstance(error,DeadlineExpired) else 1;state['cleanupEvidenceFailed']=True;state['cleanupConfirmed']=False;record('carrier-cleanup-error',error=repr(error),exit=code,cleanupConfirmed=False)
+     finally:
+      try:fcntl.flock(fd,fcntl.LOCK_UN)
+      finally:os.close(fd)
+    bounded_write(root/'gate-exit-status',str(code)+'\n')
+except BaseException as error:
+ code=124 if isinstance(error,DeadlineExpired) else 1
+ state['cleanupConfirmed']=False;state['cleanupEvidenceFailed']=True;state['terminalError']=repr(error)
+finally:
+ # Keep the absolute timer armed through evidence/output and exit. No unbounded
+ # post-deadline recording is attempted; missing terminal evidence cannot pass.
+ if time.clock_gettime(time.CLOCK_MONOTONIC)>=TOTAL_DEADLINE:os._exit(124)
+ try:
+  payload=json.dumps({'phase':state.get('phase'),'exit':code,'childStarted':state['childStarted'],'cleanupConfirmed':state['cleanupConfirmed'],'elapsedSeconds':time.clock_gettime(time.CLOCK_MONOTONIC)-ENTRY_STARTED,'state':str(root/'gate-state.json')})+'\n'
+  os.write(1,payload.encode())
+ except BaseException as error:
+  code=124 if isinstance(error,DeadlineExpired) else 1
+ os._exit(code)

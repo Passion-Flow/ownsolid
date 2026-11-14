@@ -1,0 +1,12 @@
+{
+  "preparation.json": "c2e86624fb32f397ec5f3257e15390051c52eaf01f8d439f12210286dcbbe9fb",
+  "negative.config.ts": "e9c9a2b2fbdf944bb41a369b144b859832392e1246af42f8212c78ef63ea1fe8",
+  "browser-run.py": "a81fb5dc07b42eaaf5d2d141ebb7764aa07394ffa294a225ad91e176bf00f35a",
+  "stage-plan.json": "96002e8d3914a2c130a64fabedfaa3b4e102c5de991eedb3886c332d02477d1e",
+  "mac-browser-once.py": "db17deecf99a5a3da381db0b8139c35c08e44da332cb50aa87925c6d0c43c2d4",
+  "guard-minimal-extension.patch": "b1c70ab962d41723ce0a159609a400bf5360cd82d5e97be498a295e90f81a30f",
+  "handoff.md": "8f649f72e43a033e0a74935ab722b8dc6f73d2d5bab9748e98cd6e9248363da6",
+  "old-console-assets.json": "ee688e7b66cf1ede87504878d99568df6a64af2c87d362cfa04e88a797076983",
+  "negative-probe/resource-activity-fixture.ts": "81e8b105204bcda34a631b3948e16559b4439a5d923838774f1c8e4b6ab96e0c",
+  "negative-probe/resource-activity.spec.ts": "efbc00f4daf54efb3f21dba1858e577f34f3f19a1c42c12e5abac13cbf14a926"
+}

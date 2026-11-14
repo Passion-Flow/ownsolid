@@ -1,0 +1,15 @@
+{
+  "scope": "B",
+  "nodeOldSpaceMaximumMiB": 2048,
+  "serialCommands": true,
+  "coreLimitBytes": 0,
+  "sampleIntervalSeconds": 0.25,
+  "monitoredFields": [
+    "pid",
+    "ppid",
+    "pgid",
+    "rss"
+  ],
+  "environmentOrArgvDumped": false,
+  "fullProfileUnchanged": true
+}

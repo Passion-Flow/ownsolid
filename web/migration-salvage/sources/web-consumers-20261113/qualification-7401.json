@@ -1,0 +1,24 @@
+{
+  "source": "7401ff675b3259e018e3ba148ed63ae2331b11bd",
+  "run": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/consumer-full-clean-l8v2melx",
+  "stage": "complete",
+  "exit": 0,
+  "console": {
+    "startTime": "2026-11-12T19:01:22.173Z",
+    "duration": 245720.08599999998,
+    "expected": 1134,
+    "skipped": 28,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "portal": {
+    "startTime": "2026-11-12T19:05:28.209Z",
+    "duration": 345103.87700000004,
+    "expected": 410,
+    "skipped": 10,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "installedRun": false,
+  "firstFailedRun": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/consumer-full-o21j686q"
+}

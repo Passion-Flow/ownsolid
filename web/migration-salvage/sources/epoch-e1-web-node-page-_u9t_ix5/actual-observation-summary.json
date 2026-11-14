@@ -1,0 +1,41 @@
+{
+  "identitySnapshots": 12,
+  "listenerObservations": 11,
+  "pid": 50418,
+  "kernelStart": [
+    1794588481,
+    222942
+  ],
+  "fd": "17",
+  "address": "[::1]:31036",
+  "healthSamples": 11,
+  "healthStatuses": {
+    "200": 11
+  },
+  "healthFirstUTC": "2026-11-13T16:48:02.157895+00:00",
+  "healthLastUTC": "2026-11-13T16:48:12.924096+00:00",
+  "bsdLookupErrors": 0,
+  "knownUnavailableMarked": 6,
+  "noProductFailureInferredFromObservation": true,
+  "launcherExit": [
+    {
+      "sequence": 5,
+      "utc": "2026-11-13T16:48:12.978Z",
+      "monotonicNs": "22466958736375",
+      "pid": 50399,
+      "ppid": 50397,
+      "nonce": "7aed7701-2935-4782-97cd-386b5a5dfa48",
+      "role": "playwright-runner",
+      "event": "preview-launcher-exit",
+      "execution": "e6f20aa2-3965-4107-a79e-edaf84df9dd9",
+      "childPid": 50417,
+      "code": null,
+      "signal": "SIGKILL"
+    }
+  ],
+  "viteOwnFinalExitStatus": "NOT_OBSERVED; not replaced with launcher SIGKILL",
+  "continuousLivenessClaimed": false,
+  "oldIncidentCauseKnown": false,
+  "networkTraceFiles": 0,
+  "originalPrivateControlsAndPrior129Rerun": false
+}

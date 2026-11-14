@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+run="$1"
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web"
+git rev-parse HEAD > "$run/browser-source"
+df -h . > "$run/browser-resources"
+export npm_config_offline=true OWNSOLID_PLAYWRIGHT_PORT_OFFSET=12666
+if lsof -nP -iTCP:16976 -iTCP:16977 -sTCP:LISTEN; then exit 1; fi
+cd web
+pnpm exec prettier --write apps/console/src/alias-description* apps/console/src/deployment-page.tsx apps/console/e2e/alias-description.spec.ts apps/portal/e2e/models.spec.ts apps/portal/src/models-page.tsx packages/i18n/locales/en.json packages/i18n/locales/zh-cn.json
+pnpm exec eslint --config packages/config/eslint.config.js --max-warnings 0 apps/console/src/alias-description* apps/console/src/deployment-page.tsx apps/console/e2e/alias-description.spec.ts apps/portal/e2e/models.spec.ts apps/portal/src/models-page.tsx
+pnpm build > "$run/build.log" 2>&1
+(cd apps/console && PLAYWRIGHT_JSON_OUTPUT_FILE="$run/console-report.json" pnpm exec playwright test e2e/alias-description.spec.ts e2e/gateway-publishing.spec.ts --workers=1 --output "$run/console-results" --reporter=line,json > "$run/console.log" 2>&1)
+(cd apps/portal && PLAYWRIGHT_JSON_OUTPUT_FILE="$run/portal-report.json" pnpm exec playwright test e2e/models.spec.ts --workers=1 --output "$run/portal-results" --reporter=line,json > "$run/portal.log" 2>&1)

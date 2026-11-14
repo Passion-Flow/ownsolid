@@ -1,0 +1,15 @@
+{
+  "phase": "make-test-running",
+  "pathDevice": 16777231,
+  "pathInode": 53377467,
+  "uid": 501,
+  "mode": "0o600",
+  "regular": true,
+  "nlink": 1,
+  "size": 0,
+  "parentPid": 92939,
+  "parentFd": 3,
+  "descriptorReadback": "p92939\nf3\nD0x100000f\ni53377467\nn/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock\n",
+  "descriptorReadbackExit": 0,
+  "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+}

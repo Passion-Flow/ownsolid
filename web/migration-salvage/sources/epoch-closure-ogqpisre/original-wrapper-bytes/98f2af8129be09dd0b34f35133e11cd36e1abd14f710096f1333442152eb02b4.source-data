@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+web_run="$1"
+web_worktree="$2"
+web_lock=/private/tmp/ownsolid-workstation-full-gate.lock
+web_mount=/private/tmp/ow-web-b8aqos
+test "$(cat "$web_lock/owner")" = "$web_run"
+test ! -e "$web_mount"
+cd "$web_worktree"
+test -z "$(git status --porcelain)"
+caffeinate -i -w "$$" &
+keep_awake=$!
+cleanup() {
+  web_status=$?
+  trap - EXIT
+  kill "$keep_awake" 2>/dev/null || true
+  if mount | grep -F " on $web_mount (" >/dev/null; then
+    hdiutil detach "$web_mount" >> "$web_run/cleanup.log" 2>&1 || web_status=1
+  fi
+  if test -d "$web_mount" && ! mount | grep -F " on $web_mount (" >/dev/null; then
+    rmdir "$web_mount" || web_status=1
+  fi
+  printf '%s\n' "$web_status" > "$web_run/exit-status"
+  date -u > "$web_run/finish"
+  exit "$web_status"
+}
+trap cleanup EXIT
+export PYTHON="$(uv python find 3.12)"
+export PYTHONDONTWRITEBYTECODE=1
+export GOPROXY=off GOSUMDB=off GOMAXPROCS=3 GOFLAGS=-p=1
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2
+export VITEST_MAX_WORKERS=2 npm_config_offline=true
+git rev-parse HEAD > "$web_run/window-revision"
+df -h . > "$web_run/preflight-space"
+hdiutil create -size 12g -type SPARSE -fs APFS -volname ownsolid-web-gate "$web_run/scratch" > "$web_run/volume-create.log"
+mkdir "$web_mount"
+hdiutil attach -nobrowse -mountpoint "$web_mount" "$web_run/scratch.sparseimage" > "$web_run/volume-attach.log"
+mkdir "$web_mount/tmp"
+export TMPDIR="$web_mount/tmp/"
+test "$(stat -f %u "$TMPDIR")" = "$(id -u)"
+test "$(stat -f %g "$TMPDIR")" = "$(id -g)"
+df -h "$TMPDIR" > "$web_run/scratch-space"
+printf 'live-scope\n' > "$web_run/stage"
+bash "$web_run/run.sh" "$web_worktree" "$web_run" > "$web_run/live-scope.log" 2>&1
+printf 'Portal live scope fixture passed\n'
+printf 'check\n' > "$web_run/stage"
+make check > "$web_run/check.log" 2>&1
+printf 'make check passed\n'
+printf 'build\n' > "$web_run/stage"
+make build > "$web_run/build-all.log" 2>&1
+printf 'make build passed\n'
+if test -f tools/audit-verify/audit-verify; then
+  test -z "$(git ls-files -- tools/audit-verify/audit-verify)"
+  "$PYTHON" - <<'PY'
+from pathlib import Path
+path=Path('tools/audit-verify/audit-verify')
+with path.open('rb') as stream:
+    assert stream.read(4)==bytes.fromhex('cffaedfe')
+path.unlink()
+PY
+fi
+export OWNSOLID_PLAYWRIGHT_PORT_OFFSET=12666
+cat > "$web_run/affected-browser.mk" <<'MAKE'
+test-web-browser: web-install
+	@cd web/apps/console && PLAYWRIGHT_JSON_OUTPUT_FILE="$(WEB_GATE_DIR)/console-help-report.json" pnpm exec playwright test e2e/help.spec.ts --workers=2 --output "$(WEB_GATE_DIR)/console-help-results" --reporter=line,json
+	@cd web/apps/portal && PLAYWRIGHT_JSON_OUTPUT_FILE="$(WEB_GATE_DIR)/portal-help-report.json" pnpm exec playwright test e2e/help.spec.ts e2e/home.spec.ts e2e/models.spec.ts --workers=2 --output "$(WEB_GATE_DIR)/portal-affected-results" --reporter=line,json
+MAKE
+printf 'test\n' > "$web_run/stage"
+make -f Makefile -f "$web_run/affected-browser.mk" test WEB_GATE_DIR="$web_run" > "$web_run/test.log" 2>&1
+printf 'make test with affected browser flows passed\n'
+git diff --check
+test -z "$(git status --porcelain)"
+git rev-parse HEAD > "$web_run/ok"
+printf 'complete\n' > "$web_run/stage"

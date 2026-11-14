@@ -1,0 +1,179 @@
+{
+  "branch": "codex/portal-account-sessions",
+  "head": "379aab980485df41b1a66c6fb5e6af65814f886f",
+  "base": "6f785818156ff5e827ccc86923b7cfa0b4c0185d",
+  "clean": true,
+  "testedSource": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+  "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282",
+  "runtimeChange": "6d3d6b8c6e2641dea8d2d750eda3121e4263b6ca",
+  "scopedFrontendQualified": true,
+  "fullReleaseQualified": false,
+  "focused": {
+    "changedInputs": [
+      "web/packages/shell/src/account-page.tsx",
+      "web/packages/shell/testing/account-session-flows.ts"
+    ],
+    "formatterChangedFiles": false,
+    "affectedLint": "passed",
+    "shellTypes": "passed",
+    "shellSessionAccountTests": 33,
+    "applicableUiTests": 34,
+    "apiI18nHelpRerun": false
+  },
+  "builds": {
+    "console": {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/assets-1-console.json",
+      "sha256": "15d9d02290e165a03511fe30bbf9c3e0be450f774cd19b273a4930dff85d734e",
+      "fileCount": 697,
+      "source": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+      "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282"
+    },
+    "portal": {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/assets-1-portal.json",
+      "sha256": "cd598140853e77b2792b0e4234b07983fddd859c33f6de6ec3523f9d0de5a7d8",
+      "fileCount": 536,
+      "source": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+      "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282"
+    }
+  },
+  "browser": {
+    "collectedPerEntrance": 11,
+    "passedConsole": 11,
+    "passedPortal": 11,
+    "skips": 0,
+    "retries": 0,
+    "flaky": 0,
+    "protocol": "scripted control plane, real Chromium and production frontend transport/CSP; no installed authority claim"
+  },
+  "screenshots": {
+    "generated": 56,
+    "rawIndividuallyOpened": 56,
+    "review": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/visual-review.json"
+  },
+  "gate": {
+    "parentPID": 69020,
+    "carrier": "/private/tmp/ownsolid-workstation-full-gate.lock",
+    "expectedInode": 50313339,
+    "kernelWaitBudgetSeconds": 0,
+    "executionBudgetSeconds": 600,
+    "childStarted": true,
+    "entryMonotonic": 65241.358794,
+    "hardDeadlineMonotonic": 65841.358794,
+    "workCutoffMonotonic": 65811.358794,
+    "cleanupReserveSeconds": 30,
+    "cleanupConfirmed": true,
+    "cleanupEvidenceFailed": false,
+    "groupsConfirmed": true,
+    "awakeConfirmed": true,
+    "phaseHistory": [
+      {
+        "phase": "one-nonblocking-attempt",
+        "descriptor": 3,
+        "device": 16777234,
+        "inode": 50313339
+      },
+      {
+        "phase": "held",
+        "descriptor": 3
+      },
+      {
+        "phase": "executing",
+        "childStarted": true,
+        "childPID": 69029,
+        "childGroup": 69029
+      },
+      {
+        "phase": "finished",
+        "exit": 0,
+        "executionSeconds": 74.51284899999882
+      },
+      {
+        "phase": "cleanup-evidence",
+        "exit": 0,
+        "cleanupConfirmed": true
+      }
+    ],
+    "descriptor": 3,
+    "device": 16777234,
+    "inode": 50313339,
+    "phase": "cleanup-evidence",
+    "updatedUTC": "2026-11-13T05:59:42.013589+00:00",
+    "childPID": 69029,
+    "childGroup": 69029,
+    "exit": 0,
+    "executionSeconds": 74.51284899999882
+  },
+  "actualExitCode": 0,
+  "elapsedSeconds": 74.82585700000345,
+  "carrier": {
+    "inode": 50313339,
+    "uid": 501,
+    "size": 0,
+    "regular": true,
+    "replacedOrTruncated": false
+  },
+  "postCleanup": {
+    "parentAndRunner": "gone",
+    "previewPorts": [
+      31036,
+      31037
+    ],
+    "listeners": "none",
+    "carrierHolders": "none at readback",
+    "leftRunning": []
+  },
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/portal-account-sessions-qualified-frontend.bundle",
+  "bundleSha256": "f01ad5448c61c894cc4581f1847399d440ed747f0db72abcf878fde4f9ffe86e",
+  "bundlePrerequisite": "6f785818156ff5e827ccc86923b7cfa0b4c0185d",
+  "commits": [
+    "b3c37bba304167b09c5763993da8c54fe24fcbda",
+    "6d0b7776fa3eb1ceb155bc62024a313b0b5a6543",
+    "ad84c61f6c677c9617b64079e9222bb506a08879",
+    "2efbdfaac288c16ab774271fed7ed58821a1797a",
+    "91d36706641515a7697937b11adf8b23dc7ada4c",
+    "5152f6f0119f1b900a82e212e516850d26912daf",
+    "763169e3f1600efed40071ee7f1812d2d6199e69",
+    "6d3d6b8c6e2641dea8d2d750eda3121e4263b6ca",
+    "84a39194c824e5ad0074dafa4a3f78401fe5b757",
+    "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+    "3236b326c0a191d71620bc938bc60a0ce2600b20",
+    "379aab980485df41b1a66c6fb5e6af65814f886f"
+  ],
+  "mainPush": false,
+  "roadmapTicked": false,
+  "resourceQueueCreated": false,
+  "notYetIncluded": [
+    "DEV joint API/generator source currently in Linux full gate; compose/rebase after its actual publication",
+    "same-final-composed-source affected checks and complete make check && make build && make test",
+    "network-disconnected installed flow",
+    "same-account real peer revocation persistence and independent durable PostgreSQL audit",
+    "cross-account/entrance/no-workspace/license-blocked acceptance",
+    "real SSO session source acceptance"
+  ],
+  "previousEvidence": {
+    "763169e3": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3",
+    "UX127": {
+      "branch": "codex/web-resource-history-ui",
+      "head": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+      "assetsAndQualificationTransferred": false
+    },
+    "44ab1230": "unchanged; not used as current runtime"
+  },
+  "nextOwnWork": {
+    "POR-114": "84a39194 documents personal account/entrance scope and exact installed request/database acceptance; fixture and installed opportunity still required",
+    "POR-102": "379aab98 updates the adoption draft with published q search, cursor/login binding and unsupported filter conjunction; formal S-302 entry and Workflow error metadata remain open",
+    "otherP1": "UX-106/122 depend on formal S-309 catalogue. UX-117 depends on missing screens. UX-131 contracts belong to their owners. No P2 skip."
+  },
+  "scopedAssetSnapshot": {
+    "archive": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-visual-6tebiwnq/scoped-frontend-assets-0a50a040.tar.gz",
+    "sha256": "0c337cf30eefd79576729b1fed0288b5b3e2deb872b74ec01ba8126c48c7f774",
+    "bytes": 5820080,
+    "regularFileCount": 1233,
+    "source": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+    "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282",
+    "scope": "immutable snapshot of the scoped frontend build only",
+    "fullReleaseQualified": false,
+    "installed": false,
+    "doNotRebindToLaterDevComposition": true
+  }
+}

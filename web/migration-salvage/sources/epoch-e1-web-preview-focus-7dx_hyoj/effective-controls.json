@@ -1,0 +1,11 @@
+{
+  "nodeMaximumOldSpaceMiB": 512,
+  "workers": 1,
+  "retries": 0,
+  "offlineDependencies": true,
+  "noInstallOrBuild": true,
+  "exactSourceAssetsVerified": 1233,
+  "privacy": "Network trace off; collector records no headers/body/query/fragment. Preview stderr content is hashed with allowlisted error codes only.",
+  "testAssertionsUnchanged": true,
+  "samplerMemoryFields": false
+}

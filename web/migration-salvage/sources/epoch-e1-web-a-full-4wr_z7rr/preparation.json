@@ -1,0 +1,24 @@
+{
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "files": 5099,
+  "manifest": "source-A-sha256.json",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "preparedFiles": {
+    "mac-epoch-once.py": "64b3027c3f82401ff4b8c6188f765c71ee735acfbbfe94f23e8e120229dd10f9",
+    "full-run.py": "c175c15fd785fd630240f2a414c35984b11d2a6dcbe15f59057b4fec6277d32c",
+    "cleanup-owned.py": "fa5276a2fe6e7d0dd4cb5fd8443a4c37ab9cab421366e054c8df20492dc3d40e",
+    "cleanup-epoch-owned.py": "1f3375ac785a16088fa595d7aba50bf33d97f808919a04c507709bc9f3a29050",
+    "bin/pnpm": "28ed6f5207d4547563005a2df49d7df011c491a23593fea02c746726184d8103",
+    "scope-inputs.json": "45afb4a842da6fd628fea0b70c965a5deb2e3b5785c693933b2b4f3c13cbf7ea",
+    "source-file-sha256.json": "39a900adc8d43ce9a4f0304d3b395c776daab87f60fecb7ee153db2413995343",
+    "authorization.json": "d215f75c0def42db99ebb4b679d2239037a27902435b5ffc83f8f5769a8c3d92"
+  },
+  "reviewedParent": "epoch-e1-web-once-jt8bpohu",
+  "guardChanges": [
+    "Remove B branch; resource refusal cannot fall back",
+    "Invoke unchanged reviewed full-run.py directly; no measurement assertions"
+  ],
+  "fullRunAndBothCleanupScriptsUnchanged": true
+}

@@ -1,0 +1,335 @@
+{
+  "scope": "One bounded directed observer and browser job; no complete gate or peak comparison",
+  "handoffHead": "a0a29dae5b68dfa78c2951973ea198209e3e7833",
+  "handoffTree": "d3a9dfa07dfb9096a1852a47bdb96094971dcc5b",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "branch": "codex/portal-account-sessions-joint",
+  "clean": true,
+  "testedProductSource": "82c602d32b2d957459b3a742499de96867da27a9",
+  "testedProductTree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+  "testedWebTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "productAndOriginalTestInputsChanged": false,
+  "originalObserverSourceSha256": "ca777d7173d0ce88efde51f93c77c1b64362041153a2903da91ae5f073311ad4",
+  "testedObserverSourceSha256": "620136aeaea77198a5ea7e62f3dedfe57c0cd13b0247d5818236a1e21b859d3d",
+  "admission": {
+    "rawFreeBytes": 4496769024,
+    "diskFreeBytes": 163521044480,
+    "nodeMaximumOldSpaceMiB": 512,
+    "priorAcceptedProfile": "Node512 and singleworker; prior2GiB floor raised to3GiB, disk15GiB, cleanup30 raised to60",
+    "absoluteSeconds": 600,
+    "cleanupReserveSeconds": 60,
+    "oneNb": true,
+    "sameFdThroughCleanup": true,
+    "coreBytes": 0
+  },
+  "parentActualExit": 0,
+  "parentActualTotalSeconds": 101.40523499999836,
+  "stages": [
+    {
+      "name": "01-original-six",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/preview-lifecycle-observer.test.cjs"
+      ],
+      "exit": 0,
+      "seconds": 0.06775199999901815,
+      "capturedBytes": 1277,
+      "rawStreamSha256": "0fbe9633d881488f98363586d91d2a5e8b16dd737a276828d88226de10f65037",
+      "outputRedactedBeforePersistence": true
+    },
+    {
+      "name": "02-current-observer-controls",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-concurrency=1",
+        "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/preview-lifecycle-observer.test.cjs",
+        "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/observer-metadata.test.cjs"
+      ],
+      "exit": 0,
+      "seconds": 0.09520999999949709,
+      "capturedBytes": 1705,
+      "rawStreamSha256": "ac174225ae0111e36d6bdabc9b7bcd78ed1e64301f50d0742a58c9e9bdd4c868",
+      "outputRedactedBeforePersistence": true
+    },
+    {
+      "name": "03-four-original-browser-files",
+      "argv": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "models.spec.ts",
+        "navigation.spec.ts",
+        "nodes.spec.ts",
+        "overview.spec.ts",
+        "--workers=1",
+        "--retries=0",
+        "--trace=off",
+        "--output",
+        "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/test-results"
+      ],
+      "exit": 0,
+      "seconds": 99.97744599999714,
+      "capturedBytes": 18878,
+      "rawStreamSha256": "78bd4d9c96c2c48ba799967ef712a8f33472303400634bfd9c8ccc2738f2b783",
+      "outputRedactedBeforePersistence": true
+    }
+  ],
+  "originalPreparedSixControls": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "assertionsUnchanged": true
+  },
+  "currentObserverControls": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Six original unchanged controls on changed observer plus two privacy controls, not14 distinct product tests"
+  },
+  "browser": {
+    "selected": 137,
+    "targetFourFileCases": 129,
+    "targetPassed": 129,
+    "failed": 0,
+    "originalLiveConditionSkips": 8,
+    "retries": 0,
+    "flakySuccesses": 0,
+    "actualSeconds": 99.97744599999714,
+    "regexExtraLiveMatches": "Acknowledged unanchored filenames matched8 existing live cases; no skip was added. Future exact-path selection is prepared, not executed.",
+    "caseRecord": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/actual-cases-and-previous-failure-coverage.json"
+  },
+  "coverageCorrection": {
+    "earlierAll81ClaimWasWrong": true,
+    "previousFailureCasesCoveredAndPassed": 71,
+    "previousFailureCasesNotRun": 10,
+    "omittedFile": "web/apps/console/e2e/node-page.spec.ts",
+    "missingCases": [
+      "e2e/node-page.spec.ts:27:1 \u203a opens from the drawer, and the sidebar still marks Nodes",
+      "e2e/node-page.spec.ts:39:1 \u203a its tabs work from the keyboard and live in the address",
+      "e2e/node-page.spec.ts:60:1 \u203a Tasks lists this node and links each task",
+      "e2e/node-page.spec.ts:67:1 \u203a Tasks says when there are none, and a failure can be retried",
+      "e2e/node-page.spec.ts:86:1 \u203a Activity shows what people did to this node over its whole life",
+      "e2e/node-page.spec.ts:106:1 \u203a Activity says when there is none, and a failure can be retried",
+      "e2e/node-page.spec.ts:121:1 \u203a renaming stays on the page and can be undone",
+      "e2e/node-page.spec.ts:132:1 \u203a removing goes back to the list",
+      "e2e/node-page.spec.ts:143:1 \u203a a node that does not exist says so, and a failure can be retried",
+      "e2e/node-page.spec.ts:171:3 \u203a in Chinese \u203a names its tabs"
+    ],
+    "futureSelection": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/future-exact-file-selection.json",
+    "futureFifthFileNeedsNewGrant": true,
+    "noSecondBrowserRun": true
+  },
+  "processAndHealth": {
+    "source": "82c602d32b2d957459b3a742499de96867da27a9",
+    "identitySnapshots": 95,
+    "listenerObservations": 92,
+    "listener": {
+      "pid": 64652,
+      "kernelStartSeconds": 1794585653,
+      "kernelStartMicroseconds": 871713,
+      "ppid": 64651,
+      "pgid": 64652,
+      "fd": "17",
+      "address": "[::1]:31036",
+      "nodeNonce": "173c9fc6-e398-4283-a2f8-744a40289890",
+      "serverInstance": "193df985-542b-43c0-b7d2-4edbc7a21c3b",
+      "nodeListeningUTC": "2026-11-13T16:00:54.067Z"
+    },
+    "launcher": {
+      "pid": 64651,
+      "runnerPid": 64630,
+      "execution": "73ace3e7-c44a-4332-b044-51e625de87c8",
+      "spawnUTC": "2026-11-13T16:00:53.861Z",
+      "exitUTC": "2026-11-13T16:02:33.573Z",
+      "exitCode": null,
+      "signal": "SIGKILL",
+      "afterRunnerTeardownRequest": true
+    },
+    "previewActualExitStatus": "NOT_OBSERVED; launcher exit is not silently relabeled as its separate-PGID Vite child exit",
+    "crossPgidOwnershipObserved": true,
+    "health": {
+      "samples": 92,
+      "statuses": {
+        "200": 92
+      },
+      "firstUTC": "2026-11-13T16:00:54.718033+00:00",
+      "lastUTC": "2026-11-13T16:02:33.389026+00:00",
+      "errors": 0,
+      "noContinuousLivenessClaim": true
+    },
+    "stderr": {
+      "chunks": 1,
+      "safeMetadataOnly": true,
+      "observedErrorCodes": [
+        []
+      ]
+    },
+    "diagnosticLimits": {
+      "lookupErrors": 11,
+      "affectedSnapshots": 10,
+      "distinctLookupPids": [
+        69117,
+        69199,
+        71180,
+        73542,
+        73760,
+        75614,
+        75768,
+        76824,
+        79491,
+        79735
+      ],
+      "lookupFailureKind": "BSD0bytes/ESRCH; no exit or product failure inferred",
+      "knownUnavailableEvents": 46,
+      "noPrimaryListenerIdentityFailure": true,
+      "nullAddressStartupServersNotCountedAsRestarts": 3
+    },
+    "oldFailureReproduced": false,
+    "oldFailureCauseEstablished": false
+  },
+  "causeVerdict": "Original reload/socket incident did not reproduce. Do not infer historical cause, environment/product fault, a repair, or complete-gate qualification from this100-second focused pass.",
+  "collectorLimits": "11 BSD/ESRCH lookup observations on10 non-listener PIDs over10 snapshots; no primary listener identity error. Own Vite final exit status not observed; launcher SIGKILL is separate. No private error was converted into product failure.",
+  "privacy": {
+    "observerRawOutputOrHeaderFields": [],
+    "networkTraceFiles": 0,
+    "healthResponseBodiesStored": false,
+    "outputLogsRedactedBeforePersistence": true,
+    "outputLogSha256EqualsRawDigest": {
+      "01-original-six": true,
+      "02-current-observer-controls": true,
+      "03-four-original-browser-files": true
+    }
+  },
+  "metadataOnlyArtifacts": "Network traces disabled and output redacted/digested before persistence; original test assertions, lifecycle defaults, timeouts, retries, host/port and protocol preserved.",
+  "cleanup": {
+    "parentConfirmed": true,
+    "epoch": {
+      "confirmed": true,
+      "negativeFilesRemoved": [],
+      "errors": []
+    },
+    "ownedGroupsRemaining": [],
+    "postExit": {
+      "carrier": {
+        "dev": 16777231,
+        "inode": 53377467,
+        "uid": 501,
+        "mode": "0o600",
+        "regular": true,
+        "nlink": 1,
+        "size": 0
+      },
+      "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+      "fdReadbackExit": 1,
+      "fdReadback": "",
+      "knownPidReadbackExit": 1,
+      "knownPidRows": "",
+      "knownPids": [
+        64523,
+        64533,
+        64532,
+        64630,
+        64651,
+        64652,
+        65059,
+        65060
+      ],
+      "sourceClean": true
+    },
+    "ownLifetimes": {
+      "observedOwnedPids": 59,
+      "sameLifetimeLive": [],
+      "differentLifetimeExcluded": [],
+      "bsdUnavailablePids": [
+        64523,
+        64533,
+        64532,
+        64609,
+        64618,
+        64628,
+        64630,
+        64639,
+        64913,
+        64651,
+        64652,
+        64663,
+        65059,
+        65060,
+        65099,
+        65097,
+        65095,
+        65384,
+        65471,
+        66193,
+        66704,
+        67189,
+        68610,
+        68858,
+        68894,
+        69297,
+        69499,
+        69492,
+        69582,
+        69610,
+        70247,
+        70463,
+        71180,
+        71399,
+        71574,
+        72354,
+        72711,
+        72925,
+        73010,
+        73091,
+        73179,
+        73264,
+        73842,
+        73964,
+        74176,
+        75313,
+        75688,
+        75919,
+        75932,
+        76385,
+        76412,
+        76656,
+        76907,
+        77035,
+        77120,
+        77433,
+        77661,
+        78349,
+        78831
+      ],
+      "scope": "Observed own lifetimes only; no global quiescence claim and no additional kill"
+    },
+    "integrity": {
+      "sourceHashesVerified": 5099,
+      "oldFailureEvidenceFilesUnchanged": 82,
+      "oldClosedStubsUnchanged": 89,
+      "operationalInputsUnchanged": 12,
+      "assetsUnchanged": true
+    }
+  },
+  "noInstallBuildNativeFullGateOrPeakWork": true,
+  "old45344aabFailurePreserved": true,
+  "oldDev430AuditAndInstalledSqlSsoOfflineGapsRetained": true,
+  "fullGateQualified": false,
+  "roadmapTicked": false,
+  "published": false,
+  "noRetryQueueOrBackgroundWork": true,
+  "documentationChecks": {
+    "layout": "PASS",
+    "roadmap": "PASS589",
+    "whitespace": "PASS"
+  },
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-preview-focus-7dx_hyoj/por112-directed-preview-evidence.bundle",
+  "bundleSha256": "2dbf95d9b255894b7936e4affcf690259ce731485d57cfaf9d0c73fee22cd0e1",
+  "bundlePrerequisite": "78deaf5a86f5e05c3b591e422f76e74219d3ae11"
+}

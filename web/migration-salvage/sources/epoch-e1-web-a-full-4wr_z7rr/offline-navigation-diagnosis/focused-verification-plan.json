@@ -1,0 +1,81 @@
+{
+  "status": "PREPARED_ONLY_NOT_ADMITTED_NOT_QUEUED",
+  "originalSource": "82c602d32b2d957459b3a742499de96867da27a9",
+  "productWebTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "observer": {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/preview-lifecycle-observer.cjs",
+    "sha256": "ca777d7173d0ce88efde51f93c77c1b64362041153a2903da91ae5f073311ad4",
+    "requiresSyntaxAndExecutionValidation": true,
+    "kernelBirthClaimed": false,
+    "lifetimeBinding": "Preview launcher ChildProcess handle pairs spawn/exit/signal; Node bootstrap nonce distinguishes the Vite lifetime and records its actual PID/PPID/timeOrigin and Server.address events. Node timeOrigin is not a kernel birth timestamp.",
+    "newExternalConnections": false,
+    "memorySampling": false,
+    "newSignalHandlers": false,
+    "stdioPreservation": "Original write arguments, callback, receiver and return forwarded; raw chunks separately base64-encoded, unchanged.",
+    "loggerFailureMarker": "[preview-observer-unavailable] invalidates diagnostic completeness; it cannot count as a passing observation."
+  },
+  "validation": {
+    "syntaxCommand": [
+      "node",
+      "--check",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/preview-lifecycle-observer.cjs"
+    ],
+    "privateUnitCommand": [
+      "node",
+      "--test",
+      "--test-concurrency=1",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/preview-lifecycle-observer.test.cjs"
+    ],
+    "privateUnitCases": 6,
+    "allCommandsThisGrant": "NOTRUN; no new Node/preview/Chromium/install/lock taken"
+  },
+  "minimumBrowserScope": {
+    "cwd": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console",
+    "argv": [
+      "pnpm",
+      "exec",
+      "playwright",
+      "test",
+      "models.spec.ts",
+      "navigation.spec.ts",
+      "nodes.spec.ts",
+      "overview.spec.ts",
+      "--workers=1",
+      "--retries=0"
+    ],
+    "rationale": "All four original files containing the81 consecutive failures, including preceding expiry success and both languages. This is focused diagnosis only, not a smaller substitute for the complete gate.",
+    "testAssertionsChanged": false,
+    "newSkipsOrRetries": false,
+    "baseUrlHostPortConfigurationChanged": false,
+    "original6GiB30GiBFloorsAndControlsRemain": true,
+    "budgetAndAdmission": "Only a future explicit grant may supply its new fresh resource check, single NB, absolute budget and cleanup. Current A grant is consumed."
+  },
+  "futureEnvironmentOnly": {
+    "NODE_OPTIONSAppend": [
+      "--require",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis/preview-lifecycle-observer.cjs"
+    ],
+    "OWNSOLID_PREVIEW_OBSERVER_DIRECTORY": "A new grant-owned0700 directory in its own evidence packet; never overwrite original outputs"
+  },
+  "requiredActualEvidence": [
+    "All6 private observer controls pass and original API/error/signal semantics retained",
+    "Real runner and Vite boot/listening/output/exit or explicit unobserved signal gaps",
+    "Original failure navigation trace and exact URL/timestamps plus actual launcher stderr sequence",
+    "Fresh source/input hashes, exact exits/case/skip/retry counts and owned cleanup"
+  ],
+  "acceptanceLimit": "Isolated passes cannot establish the cause of a late full-suite transient or clear the original failed complete gate. No root-cause repair or full qualification until new actual evidence supports it.",
+  "affectedInputSha256": {
+    "web/packages/config/src/playwright.ts": "dd5e2e5b4f7f4c353261d83e0449879fcf4c84d88094ff0f3b1fa460fabc5bee",
+    "web/apps/console/playwright.config.ts": "0bfaa1192e8776c293e67e3cb5f8e265ee2e33266e24c068293f527fe5f2f261",
+    "web/apps/console/e2e/models.spec.ts": "4bb9e00370f1e95f73c16a04258902ddea125e8404f6abd2e1fd086b51a8aa5c",
+    "web/apps/console/e2e/navigation.spec.ts": "96d66efa58e5ecbe3e3264d2aa57f15efcaa9ae1b69f07984ecd4f62c5a9692e",
+    "web/apps/console/e2e/nodes.spec.ts": "fba929149aa3a94c0d3251d19a3dc78bd4e28ae81e723cbb726e1556f847a522",
+    "web/apps/console/e2e/overview.spec.ts": "b56c2d832fe422add3b6b553bef42d1d91d221aa9d5fc60f05aea29245b7b967",
+    "web/packages/shell/testing/models.ts": "103a1255657fb440f183e15a3464a557bb445f11a79313e80c5306426b03e640",
+    "web/packages/shell/testing/control-plane.ts": "7e6348e87eceb88a2d07a067eb33cd318efb6e3bda1ce259a65bbe5aafc1670b",
+    "web/package.json": "a220f65bce6b074e88246327b2fb37b2e12f667c363ba9f27af2a17d83438179",
+    "web/pnpm-lock.yaml": "de9a5caf8f5dc63c0aa16e2789a8ef828a139e91bf4293b80f9d63ed263fcd08",
+    "Makefile": "f6078f4b28aca143f680055c106fa31abf252415d99519caffa012f24ed2fe89"
+  },
+  "originalFailureEvidenceImmutable": true
+}

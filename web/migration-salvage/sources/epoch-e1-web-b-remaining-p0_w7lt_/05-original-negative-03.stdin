@@ -1,0 +1,1 @@
+export function LintControl() { return <img src="/lint-control" />; }

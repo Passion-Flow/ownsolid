@@ -1,0 +1,132 @@
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+import sys as _ownsolid_closed_epoch_sys
+_ownsolid_closed_epoch_sys.stderr.write("Old Mac admission epoch is closed; await coordinated activation.\n")
+raise SystemExit(78)
+from pathlib import Path
+import datetime,fcntl,json,os,re,shutil,signal,stat,subprocess,sys,time
+os.umask(0o077)
+root=Path(sys.argv[1]);carrier=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+state={'parentPID':os.getpid(),'carrier':str(carrier),'expectedInode':50313339,'kernelWaitBudgetSeconds':0,'executionBudgetSeconds':600,'childStarted':False}
+def record(phase,**values):
+ state.setdefault('phaseHistory',[]).append({'phase':phase,**values});state.update(values);state['phase']=phase;state['updatedUTC']=datetime.datetime.now(datetime.timezone.utc).isoformat()
+ tmp=root/'gate-state.json.tmp';tmp.write_text(json.dumps(state,indent=2)+'\n');tmp.replace(root/'gate-state.json')
+def inspect(fd):
+ opened=os.fstat(fd);current=os.stat(carrier,follow_symlinks=False)
+ assert stat.S_ISREG(opened.st_mode) and opened.st_uid==os.geteuid()
+ assert opened.st_ino==50313339 and (opened.st_dev,opened.st_ino)==(current.st_dev,current.st_ino)
+ return opened
+class LockBusy(Exception):pass
+def preflight():
+ free=shutil.disk_usage(root).free
+ memory=subprocess.check_output(['vm_stat'],timeout=2);(root/'preflight-memory.log').write_bytes(memory)
+ pages=int(re.search(rb'Pages free:\s+(\d+)',memory).group(1));page_size=int(re.search(rb'page size of (\d+)',memory).group(1))
+ assert pages*page_size>=2*1024**3,'Under2GiB free memory; no child started'
+ (root/'preflight-space.log').write_bytes(subprocess.check_output(['df','-h',str(root)],timeout=2))
+ assert free>=15*1024**3,'Under15GiB free; no child started'
+ for label,args in [('ports',['lsof','-nP','-iTCP:31036','-iTCP:31037','-sTCP:LISTEN']),('legacy',['lsof','-nP','/private/tmp/ownsolid-macos-full-gate.lock'])]:
+  result=subprocess.run(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=2)
+  (root/('preflight-'+label+'.log')).write_text(result.stdout)
+  if result.returncode==0 and result.stdout.strip():raise RuntimeError(label+' occupied; no child started')
+def capture_groups(pid):
+ raw=subprocess.check_output(['ps','-axo','pid=,ppid=,pgid='],text=True,timeout=2)
+ rows=[tuple(map(int,line.split())) for line in raw.splitlines() if line.strip()]
+ descendants={pid}
+ for _ in rows:
+  added={child for child,parent,group in rows if parent in descendants}-descendants
+  if not added:break
+  descendants.update(added)
+ return {group for child,parent,group in rows if child in descendants and group!=os.getpgrp()}
+def cancelled(signum,frame):raise KeyboardInterrupt("Narrow window interrupted")
+signal.signal(signal.SIGTERM,cancelled)
+code=1;fd=None;child=None;awake=None;start=None;owned_groups=set()
+# An accidental second invocation cannot create a second admission attempt.
+marker=os.open(root/'attempted',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600);os.close(marker)
+try:
+ fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW);info=inspect(fd)
+ record('one-nonblocking-attempt',descriptor=fd,device=info.st_dev,inode=info.st_ino)
+ try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+ except BlockingIOError:raise LockBusy('Shared Mac window occupied; no child started')
+ inspect(fd);record('held',descriptor=fd)
+ preflight()
+ awake=subprocess.Popen(['caffeinate','-i','-w',str(os.getpid())])
+ with (root/'gate-output.log').open('w') as out:
+  try:child=subprocess.Popen([sys.executable,str(root/'browser-run.py'),str(root)],stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+  except OSError as error:
+   record('child-start-error',error=str(error),errno=error.errno);raise
+  start=time.monotonic();record('executing',childStarted=True,childPID=child.pid,childGroup=child.pid)
+  try:code=child.wait(timeout=565)
+  except subprocess.TimeoutExpired:
+   record('execution-timeout',childStarted=True)
+   try:owned_groups.update(capture_groups(child.pid))
+   except (OSError,subprocess.SubprocessError):record('timeout-descendant-snapshot-failed')
+   os.killpg(child.pid,signal.SIGTERM)
+   try:child.wait(timeout=5)
+   except subprocess.TimeoutExpired:
+    os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=3)
+   code=124
+ record('finished' if code==0 else 'child-failed',exit=code,executionSeconds=time.monotonic()-start)
+except LockBusy as error:
+ code=75;record('lock-busy',exit=code,error=str(error),childStarted=False,busy=True)
+except BaseException as error:
+ code=1;record('wrapper-error',exit=code,error=repr(error),childStarted=child is not None)
+finally:
+ try:
+  if child is not None and child.poll() is None:
+   try:os.killpg(child.pid,signal.SIGTERM)
+   except ProcessLookupError:pass
+   try:child.wait(timeout=5)
+   except subprocess.TimeoutExpired:
+    try:os.killpg(child.pid,signal.SIGKILL)
+    except ProcessLookupError:pass
+    child.wait(timeout=3)
+  if child is not None:
+   groups={child.pid}|owned_groups
+   try:groups.update(capture_groups(child.pid))
+   except (OSError,subprocess.SubprocessError):code=1;record('cleanup-descendant-snapshot-failed',exit=code)
+   registry=root/'owned-stage-groups.json'
+   if registry.exists():
+    try:groups.update(json.loads(registry.read_text()))
+    except (ValueError,OSError):record('cleanup-registry-unreadable',exit=1)
+   info=json.loads((root/'preparation.json').read_text())
+   for port,cwd in [(31036,info['worktree']+'/web/apps/console'),(31037,info['oldWorktree']+'/web/apps/console')]:
+    listeners=subprocess.run(['lsof','-t','-nP','-iTCP:'+str(port),'-sTCP:LISTEN'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=2)
+    for raw in listeners.stdout.splitlines():
+     if not raw.isdigit():continue
+     pid=int(raw)
+     current=subprocess.run(['lsof','-a','-p',str(pid),'-d','cwd','-Fn'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=2)
+     if ('n'+cwd) in current.stdout.splitlines():
+      try:groups.add(os.getpgid(pid))
+      except ProcessLookupError:pass
+   for group in groups:
+    if group==os.getpgrp():continue
+    try:os.killpg(group,signal.SIGTERM)
+    except ProcessLookupError:pass
+   for group in groups:
+    if group==os.getpgrp():continue
+    try:os.killpg(group,signal.SIGKILL)
+    except ProcessLookupError:pass
+   ports=subprocess.run(['lsof','-nP','-iTCP:31036','-iTCP:31037','-sTCP:LISTEN'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=2)
+   (root/'preview-cleanup.log').write_text(ports.stdout)
+   if ports.returncode!=1:code=1;record('cleanup-listener-remains',exit=code)
+ except BaseException as error:
+  code=1;record('child-cleanup-error',error=repr(error),exit=code)
+ finally:
+  try:
+   if awake is not None:
+    awake.terminate()
+    try:awake.wait(timeout=2)
+    except subprocess.TimeoutExpired:awake.kill();awake.wait(timeout=2)
+  except BaseException as error:
+   code=1;record('awake-cleanup-error',error=repr(error),exit=code)
+  finally:
+   if fd is not None:
+    try:inspect(fd)
+    except BaseException as error:
+     code=1;record('carrier-cleanup-error',error=repr(error),exit=code)
+    finally:
+     try:fcntl.flock(fd,fcntl.LOCK_UN)
+     finally:os.close(fd)
+   (root/'gate-exit-status').write_text(str(code)+'\n')
+print(json.dumps({'phase':state['phase'],'exit':code,'childStarted':state['childStarted'],'state':str(root/'gate-state.json')}))
+raise SystemExit(code)

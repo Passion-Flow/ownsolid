@@ -1,0 +1,13 @@
+{
+  "parentPID": 25620,
+  "sameOriginalDescriptor": 3,
+  "lsofFields": [
+    "p25620",
+    "f3",
+    "D0x100000f",
+    "i53377467",
+    "n/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock"
+  ],
+  "checkedMonotonic": 28928.957695,
+  "noLockAttempt": true
+}

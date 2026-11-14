@@ -1,0 +1,48 @@
+{
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "tree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "webTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+  "branch": "codex/web-serial-lint",
+  "base": "82c602d32b2d957459b3a742499de96867da27a9",
+  "researchCommit": "31a5b2d1fec20d1961551965020eb0cdeca9525e",
+  "implementationCommit": "56a19799bfec788170d71680b4f0663c23073107",
+  "frozenJointBranchUnchanged": true,
+  "preparedOnly": true,
+  "sourceClean": true,
+  "actualChecks": {
+    "nodeSyntaxFiles": 2,
+    "nodeSyntaxExit": 0,
+    "changedFilePrettierFiles": 5,
+    "changedFilePrettierExit": 0,
+    "formatterHeapMaximumMiB": 128,
+    "staticPlanPartitions": 12,
+    "staticPlanExit": 0,
+    "gitDiffCheckExit": 0
+  },
+  "notExecuted": [
+    "Seven real-CLI fixture regressions",
+    "Complete original lint",
+    "Complete serial lint",
+    "Actual file-union/config fingerprint proof",
+    "Representative typed/plugin negative controls",
+    "Original/new peak RSS benchmark",
+    "make check/build/test",
+    "Browser/native/installed acceptance"
+  ],
+  "resourceAcquisitionAttempted": false,
+  "backgroundQueue": false,
+  "wholeProfileFreeMemoryGiBUnchanged": 6,
+  "nextProposedBoundedOpportunity": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-benchmark-roc27tnq/benchmark-plan.json",
+  "reviewedGuardTemplateSha256": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+  "guardTemplateNotInvoked": true,
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/web-serial-lint-benchmark-roc27tnq/web-serial-lint-prepared.bundle",
+  "bundleSha256": "e548779bb5dd283f7bd85e4c99b5de990e8fb1fa7afc0673d38344038057b036",
+  "bundlePrerequisites": [
+    "82c602d32b2d957459b3a742499de96867da27a9"
+  ],
+  "published": false,
+  "roadmapTicked": false,
+  "oldOOMAndMemoryRefusalPreserved": true,
+  "newDependency": false,
+  "outsideOwnerPathsChanged": false
+}

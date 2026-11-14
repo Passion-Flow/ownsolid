@@ -1,0 +1,412 @@
+{
+  "kind": "Offline review of actual saved traces only; no rerun or asserted root cause",
+  "traceFiles": 81,
+  "networkFailureTexts": {},
+  "traces": [
+    {
+      "path": "web/apps/console/test-results/navigation-pinned-pages-the-limit-says-what-to-do-chromium/trace.zip",
+      "sha256": "bee3e34c4d365e727b2ab77f1965241c6d4ba96d72893b966354c32a7cac97d6",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-pinned-pages-a--75567-ot-shipped-cannot-be-pinned-chromium/trace.zip",
+      "sha256": "936eaf5fc1bbccdf067269161a5aee5a28b0f80c779432a17538bdffe62ff03f",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-removing-goes-back-to-the-list-chromium/trace.zip",
+      "sha256": "12c6dd2ecf54699613a63995b0c4233af611916e06e48501013919d22d74d745",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-reads-the-f-55b81-e-does-not-hold-the-session-chromium/trace.zip",
+      "sha256": "ced72cba3c75b4e880979f3758a6e79279ab798eacf3d4b095f2c3e0d0be30f7",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-in-Chinese-the-filter-reads-the-names-on-screen-chromium/trace.zip",
+      "sha256": "cbe8e747e7ef8144b27b0da1348032f9e39d92fd3835de8cefa9d5842da70a88",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-works-from-the-keyboard-chromium/trace.zip",
+      "sha256": "45f3e2ac4eb7db41fc2e4091aa57bcb2deda82fb6db96e0f7a26415fa928f237",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-icon-only-r-b75d2-e-the-pointer-moves-onto-it-chromium/trace.zip",
+      "sha256": "7df6dee96e3dc2b5213d28efc3ba3558513f7b6d0a00ca562b0b88927ebf072f",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-pinned-pages-th-77af7-pins-first-with-their-names-chromium/trace.zip",
+      "sha256": "c4b07663810855790e646ff83107d4f85342b9f9036c534b3f706e4990731ef6",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-several-nodes-keep-t-5a616--selected-and-can-try-again-chromium/trace.zip",
+      "sha256": "eee6d9ac7e57047fb91076eb56e34fd526c30102db16ad2f012bfd85abb850e0",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-several-nodes-are-di-9bc2e-ogether-and-undone-together-chromium/trace.zip",
+      "sha256": "956df767f9549e83684e332703572c7d28d865d8ae6b10257d67527e5b807bac",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-opens-with-its-facts-and-tasks-from-a-link-too-chromium/trace.zip",
+      "sha256": "1ec5a19daa4ffb2c1713d2e8c0e452b3bcabda19dd470c5f52c5be920ffa82d2",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-keeps--272ad-CLUSTER-STORAGE-UNSUPPORTED-chromium/trace.zip",
+      "sha256": "0f68478e97c65863449ae2331bb71fe0cdefda72bacdd59ca2d8795e7a2cfbb4",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-Activity-shows-w-5fe6e-is-node-over-its-whole-life-chromium/trace.zip",
+      "sha256": "d144b7c5db410fc686f41b4f5b81b6c15fd1255ee99ab9be58dbcb3619ba2a80",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-shows--21cdc-ands-and-sees-the-node-join-chromium/trace.zip",
+      "sha256": "65434ff147655e00475cb52dc0615bb883a4ddf7f55903c733a6a4722a483376",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-can-re-d8c0d-lains-a-later-token-refusal-chromium/trace.zip",
+      "sha256": "d01886f7e1d35412ec6b8a5565f09c14b0358497a86122f637afb4db47357f11",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-collects-its-facts-again-and-shows-the-task-chromium/trace.zip",
+      "sha256": "9fd9d2b57f5bb497a9a6d74a8b80a2e06511fbe6492cbda5bac4d7b4717b560f",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-offers-a-re-ecdb3--the-rows-when-a-poll-fails-chromium/trace.zip",
+      "sha256": "d81da09625258a43c0f78d2d1d239fa23f1825d4e0f6bf96c0c4151358c5bbf4",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-a-closed-group--b1b57-s-it-holds-the-current-page-chromium/trace.zip",
+      "sha256": "3d65fa693d5df0b705973174d40d645009de95b48611531aee57b709092ec901",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-Tasks-says-when--c7ba4-nd-a-failure-can-be-retried-chromium/trace.zip",
+      "sha256": "04d56bb35aebe148df23577e31a028404a29681c509d0fddc29a02b2cbd549cd",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-a-node-that-does-d5ecb-nd-a-failure-can-be-retried-chromium/trace.zip",
+      "sha256": "62551406e5b6fceeb8b29c1319b0b65e7e1e49e727bd18fc41f66277650d4479",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-is-disabled-at-once-and-can-be-put-back-chromium/trace.zip",
+      "sha256": "905e5740465802518d97f40756d5b47690ebc09c48f69863a16e0d6bb192539d",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-in-Chinese-names-its-tabs-chromium/trace.zip",
+      "sha256": "d6977f329cd154bd265c12c83b42b91756157f8c819f65164f2c674e1dd1cbe5",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/models-an-import-refresh-r-03b61-es-cached-controls-in-zh-CN-chromium/trace.zip",
+      "sha256": "391802577e5efb240604ca88ea96092584c876de390b72c5a6c77bf746170539",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-shows-Kubernetes-pro-b6d1d-d-registration-reads-zh-CN--chromium/trace.zip",
+      "sha256": "529bbb30efd0edcc557bbe7886557a014134083cadd4c94842ecdb3387614cae",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-is-not-part-of-the-portal-chromium/trace.zip",
+      "sha256": "f08df1ea3afd8b623f33b69cbdd18578e86a6f9857c4ff28bf8a4e4b6208e80a",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-Tasks-lists-this-node-and-links-each-task-chromium/trace.zip",
+      "sha256": "7783c58335a06c23975158ce10949bc1e40744eb736a5c64e2b2264447a43874",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-pinned-pages-pi-39376-e-page-has-gone-is-left-out-chromium/trace.zip",
+      "sha256": "056096766cd978809ecae2679ef025c46242c4bd5c4962635694ec426b4f741f",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-icon-only-r-a76f8-e-drawer-of-a-narrow-screen-chromium/trace.zip",
+      "sha256": "5090af3517e34bd5732462df4b1b8d853ed89de3e777f85e67d41a2dc48a02a6",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-its-tabs-work-fr-7232f-ard-and-live-in-the-address-chromium/trace.zip",
+      "sha256": "ffbe98838029f941a9aa115af9313ad6e3bfe2ac5da067d0f88081e42462ea7a",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-opens-from-the-d-6f45c-e-sidebar-still-marks-Nodes-chromium/trace.zip",
+      "sha256": "192dad2c529ee0fc30708cef0b7c2bc3d7014c128d2bc257c1079fc6df86fb81",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-keeps--b154e-BERNETES-CELLS-UNCONFIGURED-chromium/trace.zip",
+      "sha256": "ecdbf834a2d8f521f8d876d67b67da2f185e67f2d2b61aff8fbe476db8cc56bc",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-explains-a-refusal-and-can-try-again-chromium/trace.zip",
+      "sha256": "03bfe34246b4510e605bf8effd15182706fd7ad22c5b167430da174c4776ba46",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/overview-names-an-offline-node-and-opens-its-drawer-chromium/trace.zip",
+      "sha256": "9f63a790112e8053a9632f37d4735d101a572866b14ea341a0d77e68817657c3",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-a-page-beneath-a-destination-keeps-its-group-open-chromium/trace.zip",
+      "sha256": "dc020d255d1eab5e7c46af3065b27f2b95213d0ac992604b0bca5f4eceff93e5",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-a-heading-only--e890b--closes-and-never-navigates-chromium/trace.zip",
+      "sha256": "1179ae3a97f8f4827824a7a9b595bfe21567a6bc9d4e6885a862f588a34734fc",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-keeps-removed-nodes-out-unless-asked-for-chromium/trace.zip",
+      "sha256": "a5893d865cd470ea951a7817e257788e2dfe88f365247b04b0af7a082416c621",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-is-renamed-and-a-taken-name-is-explained-chromium/trace.zip",
+      "sha256": "7b82b374449621542527e1c4bd9ece7ba8cc21dfce81d5b055cf84b1f634bcd8",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-icon-only-r-d9a34-er-arrives-with-the-account-chromium/trace.zip",
+      "sha256": "80ed18a4f63f12636ece05fc217b33202ee8b7d988749d0ec300c1434aea4d46",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-only-the-group-of-the-current-page-is-open-chromium/trace.zip",
+      "sha256": "1165da758b8023e4a134dc2928168ff2d8faaed65bf65204f4f07a6607ed2117",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-from-a-link-i-94359-n-the-list-does-not-hold-it-chromium/trace.zip",
+      "sha256": "040067da58498bab0bf703fc116474fbb58df08edb3f39865ee8f841cb6982e2",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-is-reached--b249b-hows-each-node-as-it-stands-chromium/trace.zip",
+      "sha256": "d2a174a63244792dcf59a996a88b9ec70198ffcdf3004c1b5c67643a7ee87a44",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/models-pending-expiry-is-n-cc215-iled-refresh-recovers-in-en-chromium/trace.zip",
+      "sha256": "7efe1cc674d4150cdc8ce7a4397bdccc8bf2541aa7f3a5a57532dab8cff743bf",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-regist-c4462-ts-own-Agent-address-zh-CN--chromium/trace.zip",
+      "sha256": "5a9c52f598751c43c41b55ee541a538165226c4e756d7aadbf7d848412ac9e28",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/overview-is-the-first-page-and-says-when-nothing-needs-you-chromium/trace.zip",
+      "sha256": "3986bbfdd2a87b77d64e9cd9ed19a611b31b1a211875ad150b1ce41ceef62c9a",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-pinned-pages-th-7ba1e--menu-pins-the-current-page-chromium/trace.zip",
+      "sha256": "a6cd036d947688e1ea444a9c6cfab753d4adb9945c628f4c025465dd318d2f57",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-a-tile-is-a-89b61-ilter-that-shows-those-rows-chromium/trace.zip",
+      "sha256": "f71430c02d27162c4241503410ce95db3db08b509af5c0691a810eb999f78821",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-filter-says-c9f7d-atches-and-Escape-clears-it-chromium/trace.zip",
+      "sha256": "db6cce35475335b6c558c5a20791583666203e18fddf1623fee76eb9e303a353",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-Activity-says-wh-d8b0a-nd-a-failure-can-be-retried-chromium/trace.zip",
+      "sha256": "a2d34899cc73f74ffcaeb30263a0f48c1ff69f284e669a8eec56f466109b5114",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-tiles-still-9d4dd--the-figures-cannot-be-read-chromium/trace.zip",
+      "sha256": "c71afe24620c316553d6649b2a581141642ce92fbd597c33cd4ec5bacef7ff9c",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/node-page-renaming-stays-on-the-page-and-can-be-undone-chromium/trace.zip",
+      "sha256": "5eb89061cbae0d98a3024d03d39390e4ba25e3eda936cae7542428963228dacf",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-shows-Kubernetes-pro-fc420--and-registration-reads-en--chromium/trace.zip",
+      "sha256": "ecd73c4c49e07776b2b9630f74af2cfb7c68f3d82c6475b60ae60438371e9824",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-several-nodes-collect-their-facts-together-chromium/trace.zip",
+      "sha256": "b15cba679d201ba67040a179658dd61e7201b7d1ecf6a263841f5b92b6c6c7e8",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-keeps--0092a-ason-for-RESOURCE-NOT-FOUND-chromium/trace.zip",
+      "sha256": "aff10a52263127712f4e1cf3ca666557340b2283a45ee92832b4ba9f314b593f",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/models-expired-import-repl-57cd5-d-uses-a-fresh-key-in-zh-CN-chromium/trace.zip",
+      "sha256": "d5eb2dbb710fc7673d389e41ec6f1e02008810eb72f46b570e51a12701d06e68",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/models-a-409-resume-refusa-ded30-s-the-expired-history-in-en-chromium/trace.zip",
+      "sha256": "809f46bb947ced872b0db6e0fda65a05e5761cb62654765209f11171e11e8258",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-keeps--580e8-ts-reason-for-ACCESS-DENIED-chromium/trace.zip",
+      "sha256": "d37f1fc827c55eab5ac0e6c29fc3ed5f9ab978aa9d9a2c01db5cf1e2ef74a2e1",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-that-does-not-exist-says-so-chromium/trace.zip",
+      "sha256": "e33a4b730f75d0be7836ab03975892e23e5f1ffa978816da49c469c7c3989010",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-pinned-pages-a--9c86c-ugh-the-groups-not-the-pins-chromium/trace.zip",
+      "sha256": "bee935e58d00eaf3a78faa45336a19d88d2992b22634e5ddf1e72901ee1d2688",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-icon-only-r-a4365-hosen-from-the-command-menu-chromium/trace.zip",
+      "sha256": "890310d5000992b709d348d14b8068a9d1850823b915c6047138f91a4af045e5",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-filters-by-name-and-by-status-chromium/trace.zip",
+      "sha256": "97ea426c2d31b90094416405e2b42b70453ab4e6389e9fc9fbcf244b35e8cc8d",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-pinned-pages-a--57c1c--in-its-group-and-comes-off-chromium/trace.zip",
+      "sha256": "44c67c58719a23add17a0e29a96eb0e1f1efb3b2fd5477d09be64088ea10ed08",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-filter-Ente-1cc34-a-page-that-has-not-shipped-chromium/trace.zip",
+      "sha256": "384da350c005f5fd9a5b0839dfe2ab6145cbfebd551196a25bed7cc7b7ad981d",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/models-a-409-resume-refusa-beba1-he-expired-history-in-zh-CN-chromium/trace.zip",
+      "sha256": "a5fed6065de0632b903eb5884e292ccfcba135687432887ccb5257a75b0648f2",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-what-a-person-o-6fbba-n-they-move-to-another-page-chromium/trace.zip",
+      "sha256": "a5315770c402ee3357e8cd33b308a8564e18f89bce5044b05440ab373b7fa2f7",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-filter-find-232f2-s-and-Enter-opens-the-first-chromium/trace.zip",
+      "sha256": "79dfcc33f763bff3daecb24143a729d187634518dbfcebefc33b1d9f5b72dd66",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-that-went-quiet-says-what-to-check-chromium/trace.zip",
+      "sha256": "02d76a29d1d49c5f1d38cd36abee41f066bec22818bbdb41d9d07c094a1f6ae2",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-regist-c0149-h-its-own-Agent-address-en--chromium/trace.zip",
+      "sha256": "a83f9e56de5a943b29888faae4b5fd7f42863a7f79a2287d3ab3bb31c33edfa0",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-icon-only-r-b3483-d-comes-back-after-a-reload-chromium/trace.zip",
+      "sha256": "c02563a6fc7b1c7efc3105d1c8e22b21d469fe832be58674c06512933e5a1c19",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-is-removed-only-after-its-name-is-typed-chromium/trace.zip",
+      "sha256": "b903dbd19e27f574535baaa938f63d1da47a8804b9c888b05463ab4b6d274a84",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-changed-by-someone-else-is-explained-chromium/trace.zip",
+      "sha256": "b0698e8aa3cf80cb47113167748c3cf1e2fb7da69ee71a7cf564053de9302b94",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-a-toke-9c418-why-and-the-list-catches-up-chromium/trace.zip",
+      "sha256": "b012ff506b2e5b91828a0ca56c80cf692c655196669dfdbf977e620add9df4f2",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-adding-a-node-a-toke-cbeb9-s-listed-and-can-be-revoked-chromium/trace.zip",
+      "sha256": "282900a73641727d0b120026b9ae8238b011b3db2a27835cc1cd050b82f85e96",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-icon-only-r-89750-and-shows-the-name-on-focus-chromium/trace.zip",
+      "sha256": "a3d69b88bceaffff8c593927a6d3d4b4db2ca650c57a0d2c4676bf53c2916d66",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-the-current-pag-61675-and-weight-not-colour-alone-chromium/trace.zip",
+      "sha256": "973fb81ba9ac2c3f382a4dee20d183746653298fcd38db2f3d0fea2a5e97ae21",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-filters-on--01eb3-eeps-the-filter-in-the-link-chromium/trace.zip",
+      "sha256": "20fc133dd0a61dcc4b53acac4723411db229bae9b46f34442e06a195afb19a81",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/models-pending-expiry-is-n-3751d-d-refresh-recovers-in-zh-CN-chromium/trace.zip",
+      "sha256": "0a7d5a13f70fe61fb9837c06d9661a0750ef4dbb5b7baef40b9cd8600c0efa48",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-a-node-that-is-disabled-offers-to-enable-it-chromium/trace.zip",
+      "sha256": "b4082d45f312b4d06b06841cdc54ab44f4348e08a61bbf4859d64a1324cd26cc",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/models-an-import-refresh-r-73c84-moves-cached-controls-in-en-chromium/trace.zip",
+      "sha256": "824562d069678e80f69b6ebd08f08ad3e6c0ed4d321fee27a52ecd25ed7689f2",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/navigation-pinned-pages-the-account-page-has-no-pin-chromium/trace.zip",
+      "sha256": "bf8c7ada18450ce1f50c8978f76393aa55f8caed18e031f8204903a18ef2dc0f",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-says-how-to-begin-when-there-are-no-nodes-chromium/trace.zip",
+      "sha256": "4d427bd724bf7bce8844f96263d8431cf558f3d3fdfe12cabdb10cc95394e565",
+      "networkFailures": []
+    },
+    {
+      "path": "web/apps/console/test-results/nodes-the-list-the-add-dia-48ef7-join-and-works-without-them-chromium/trace.zip",
+      "sha256": "8f6396099595dbe4eb2c89725bdaef6b7b3e9f67a7011dfb1634152e8536cfd6",
+      "networkFailures": []
+    }
+  ]
+}

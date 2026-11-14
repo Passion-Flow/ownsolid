@@ -1,0 +1,1186 @@
+{
+  "5790b8961955400ffe25f10ced170bf4f669683c": {
+    "usability-and-localization.md": [
+      {
+        "id": "UX-001",
+        "checked": true,
+        "text": "Web workspace: `web/apps/console`, `web/apps/portal`, `web/packages/{ui,api,i18n,config}`, ESLint, Prettier, Vitest, Playwright (P0) - Evidence: ed470b5, 799ed29; zero-egress install and real-browser sign-in on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-002",
+        "checked": true,
+        "text": "Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0) - Evidence: d12d0ff; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-003",
+        "checked": true,
+        "text": "Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427 - Evidence: ff9561a; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-004",
+        "checked": true,
+        "text": "Typed API client generated from `api/openapi` (P0) - Catalog: F540 - Evidence: 2bfea74; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-005",
+        "checked": true,
+        "text": "Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0) - Evidence: 3eed593; real-browser run and zero-egress install on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-101",
+        "checked": true,
+        "text": "Console overview: quick actions, needs-attention list with next steps, setup checklist, fleet health (P1) - Catalog: F435 - Evidence: b8891d5; real Chromium on an offline install on `ownsolid-cpu` matched the tiles to the API, followed a real offline node to its drawer and opened the add-node and invite dialogs, three runs in a row, 2026-11-07"
+      },
+      {
+        "id": "UX-102",
+        "checked": true,
+        "text": "Portal home: apps and assistants, conversations, my resources and usage (P1) - Catalog: F425, F426, F429 - Evidence: aba0ad6, f1003af; real-browser run against lane B's install on `ownsolid-cpu`, 2026-11-07"
+      },
+      {
+        "id": "UX-103",
+        "checked": true,
+        "text": "Shared list pattern: filter bar, saved views, column chooser, bulk selection with action bar, detail drawer (P1) - Evidence: 5c630cf; real Chromium saved, opened and deleted a view and read an email's details on an offline install on `ownsolid-cpu` upgraded in place to schema 39, 2026-11-06"
+      },
+      {
+        "id": "UX-104",
+        "checked": true,
+        "text": "Long-task pattern: step timeline, live log, tasks continue when the page is left (P1) - Evidence: 6d314d8, 853daf0; a real agent on an offline install on `ownsolid-cpu` ran fact collection from the console in real Chromium while the page was left; the console told how it ended and showed its steps and log after a reload, six runs in a row"
+      },
+      {
+        "id": "UX-105",
+        "checked": true,
+        "text": "Undo for reversible actions; typed confirmation only for irreversible ones (P1) - Evidence: 62714e7, 68dcb6e; real Chromium on both entrances of an offline install on `ownsolid-cpu` saved and undid a view deletion and revoked an invitation by typing its address; admin passed five runs in a row, portal two"
+      },
+      {
+        "id": "UX-106",
+        "checked": false,
+        "text": "Global search across nodes, models, apps, users and tasks (P1). Open: nodes, people, tasks, workspaces and workspace models are found from the command menu; applications wait for the catalog (S-309)."
+      },
+      {
+        "id": "UX-107",
+        "checked": true,
+        "text": "Empty states and errors that state the cause and the next action (P1) - Catalog: F022 - Evidence: 6c1fa48; contract and catalog tests, and real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-108",
+        "checked": true,
+        "text": "English and Simplified Chinese complete for every page, email and error (P1) - Catalog: F537, F552 - Evidence: 22304f9, b2a1448; real Chromium read twelve console and three portal pages of an offline install on `ownsolid-cpu` in Chinese, three and two runs in a row, and an invitation arrived in Chinese through a real TLS mail server, 2026-11-07"
+      },
+      {
+        "id": "UX-109",
+        "checked": true,
+        "text": "Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553 - Evidence: dfc68b2; real Chromium on both entrances of an offline install on `ownsolid-cpu` upgraded in place to schema 37, 2026-11-06"
+      },
+      {
+        "id": "UX-110",
+        "checked": true,
+        "text": "Locale formatting for dates, numbers and units (P1) - Catalog: F555 - Evidence: bee9124; real Chromium switched languages on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-111",
+        "checked": true,
+        "text": "In-product help and API documentation available offline (P1) - Catalog: F431 - Evidence: c25cb2c, 779c155; real-browser run on both entrances of lane B's install on `ownsolid-cpu`, 2026-11-07"
+      },
+      {
+        "id": "UX-112",
+        "checked": true,
+        "text": "Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-113",
+        "checked": true,
+        "text": "Warn before a session ends from inactivity, with one action to stay signed in (P1) - Evidence: 62b3448; a real 60-second idle timeout with the page's poll running in Chromium on the admin entrance of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-114",
+        "checked": true,
+        "text": "Shareable links: filters, sort order and the open drawer live in the URL (P1) - Evidence: fb4eac6; real Chromium reloaded a filtered email list from its address on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-115",
+        "checked": true,
+        "text": "Route-level code splitting and a bundle size budget enforced in CI (P1) - Evidence: 13b789e, 13034a0; real-browser run on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-116",
+        "checked": true,
+        "text": "Automated accessibility checks in the browser tests of every page (P1) - Evidence: 31e5343; axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-117",
+        "checked": false,
+        "text": "Replace the inherited browser suite in `services/control/internal/testing/browser` with Playwright flows as pages land; its `tests/acceptance` scripts did not move here, so it cannot run (P1). Open: sign-in, single sign-on, workspaces, language and account flows are replaced; the tests of the portal's applications, plugins, datasets, training, evaluation and models wait for those pages ([research](../../research/browser-suite-replacement.md))"
+      },
+      {
+        "id": "UX-131",
+        "checked": false,
+        "text": "Declare the entrance (`x-audiences`) and the error codes (`x-error-codes`) of every API operation, so the API reference lists and explains all of them (P1). Open: every operation declares its entrance, and the generator enforces it; remaining operations still need error declarations verified against their handlers"
+      },
+      {
+        "id": "UX-118",
+        "checked": true,
+        "text": "Theme and density follow the user across browsers through `/api/v1/preferences` (P1) - Evidence: aa68ace; two browser contexts on both entrances of an offline install on `ownsolid-cpu`, and migration 000034 on an installed database, 2026-11-05"
+      },
+      {
+        "id": "UX-119",
+        "checked": true,
+        "text": "Account page: profile, password change and linked sign-in providers (P1) - Evidence: 46d2fbb, 9267698; real browser on both entrances of an offline install on `ownsolid-cpu`, and link and unlink against Gitea 28.1.0 on the admin entrance, 2026-11-05"
+      },
+      {
+        "id": "UX-120",
+        "checked": true,
+        "text": "Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1) - Evidence: ec65295; a real failed reset email resent from the console in Chromium on a licensed offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-121",
+        "checked": true,
+        "text": "Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1) - Evidence: 82b0830; real Chromium received Brotli copies on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-122",
+        "checked": false,
+        "text": "Single-key shortcuts for common actions (the prototype's D, I, N, K), with an account setting to turn them off as WCAG 2.2 criterion 2.1.4 requires (P1). Open: `N`, `D`, `K`, `/`, `?` and the switch work; `I` waits for the catalog"
+      },
+      {
+        "id": "UX-123",
+        "checked": true,
+        "text": "Navigation to [ADR 0037](../../decisions/0037-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1) - Evidence: d85452f; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 46, two runs"
+      },
+      {
+        "id": "UX-124",
+        "checked": true,
+        "text": "Pinned destinations, chosen by the person and kept per person (P1) - Evidence: 7a36453; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, with the pin reaching a second browser"
+      },
+      {
+        "id": "UX-125",
+        "checked": true,
+        "text": "One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1) - Evidence: 6210c2e; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+      },
+      {
+        "id": "UX-126",
+        "checked": true,
+        "text": "Summary tiles above a list filter the list instead of decorating it (P1) - Evidence: feff70a; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+      },
+      {
+        "id": "UX-127",
+        "checked": true,
+        "text": "Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1) - Evidence: 39cc736, cdf7ee9; real Chromium on an installation on `ownsolid-cpu` at schema 48, on a joined node, the administrator and a connector with a real Gitea"
+      },
+      {
+        "id": "UX-128",
+        "checked": true,
+        "text": "Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1) - Evidence: 5823524; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, two runs"
+      },
+      {
+        "id": "UX-129",
+        "checked": true,
+        "text": "English strings load as their own chunk like the other languages, so the first download stops growing with every page, and its limit comes back down (P1) - Evidence: 04e6554; real Chromium on an installation on `ownsolid-cpu` at schema 48, first download 141.8 kB"
+      },
+      {
+        "id": "UX-130",
+        "checked": false,
+        "text": "Message catalogs split by page, so a page downloads only its own strings, once a catalog is large enough to repay the key-to-page map ([research](../../research/message-catalogs.md)) (P2)"
+      },
+      {
+        "id": "UX-201",
+        "checked": false,
+        "text": "Wall display and NOC dashboards for operations centers (P2)"
+      },
+      {
+        "id": "UX-202",
+        "checked": false,
+        "text": "Branding: logo, product name and theme per installation (P2) - Catalog: F060, F061"
+      },
+      {
+        "id": "UX-203",
+        "checked": false,
+        "text": "Translation pipeline: string extraction, glossary, placeholder checks, reviewed language packs (P2) - Catalog: F546 to F551, F554, F556 to F564"
+      },
+      {
+        "id": "UX-401",
+        "checked": false,
+        "text": "Remaining languages from the 249-language target, with RTL and fonts (P4) - Catalog: F546"
+      },
+      {
+        "id": "UX-402",
+        "checked": false,
+        "text": "Mobile companion for alerts and approvals (P4)"
+      }
+    ],
+    "portal.md": [
+      {
+        "id": "POR-101",
+        "checked": false,
+        "text": "Portal shell: the person's workspace switcher, grouped navigation, command menu, and a home that answers what is running, what it cost and what needs them (P1)"
+      },
+      {
+        "id": "POR-102",
+        "checked": false,
+        "text": "Assistants and conversations: chat with what has been published to the workspace, with history that never leaves the installation (P1)"
+      },
+      {
+        "id": "POR-103",
+        "checked": false,
+        "text": "Applications: open and install the apps an administrator published to this workspace, and nothing else (P1)"
+      },
+      {
+        "id": "POR-104",
+        "checked": false,
+        "text": "Model catalogue for users: which models this workspace may call, what each one costs, and what it is good for (P1)"
+      },
+      {
+        "id": "POR-105",
+        "checked": false,
+        "text": "Playground: try a model against a prompt, compare two, and copy the call that produced the answer (P1)"
+      },
+      {
+        "id": "POR-106",
+        "checked": true,
+        "text": "API keys and endpoints: issue, name, rotate and revoke my own keys; the endpoint, a code sample per language, and my own call log (P1) - Evidence: c20a9df, 4b62fef; live run on an installation, 2026-11-08: a non-administrator invited through a real mail flow issued, rotated and revoked a key from the portal against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; an administrator's portal session got 404 for that key, and another workspace was refused. No model ran; the three samples were run against a local HTTPS stub with the real OpenAI SDKs and curl"
+      },
+      {
+        "id": "POR-107",
+        "checked": false,
+        "text": "Jobs: submit training, batch and scientific jobs, watch their steps and logs, open their results, and re-run one (P1)"
+      },
+      {
+        "id": "POR-108",
+        "checked": false,
+        "text": "Workspaces: notebooks and development environments I own, with the resource they hold shown against my quota (P1)"
+      },
+      {
+        "id": "POR-109",
+        "checked": false,
+        "text": "Data: my datasets and files, their size against my storage quota, and what a job did with them (P1)"
+      },
+      {
+        "id": "POR-110",
+        "checked": false,
+        "text": "Evaluation: start a run against a model I may call, and read the score beside the runs before it (P1)"
+      },
+      {
+        "id": "POR-111",
+        "checked": false,
+        "text": "Usage and quota: tokens, GPU hours and budget used against what I was given, with the day it will run out (P1)"
+      },
+      {
+        "id": "POR-112",
+        "checked": false,
+        "text": "Account: my profile, my password, my sessions, and the ones I want ended (P1)"
+      },
+      {
+        "id": "POR-113",
+        "checked": true,
+        "text": "In-product help that works offline, reachable from every page (P1) - Evidence: 779c1558 and the [portal Chromium help flows](../../../web/apps/portal/e2e/help.spec.ts); the existing offline installation run served the articles and portal-only API reference, and local Chromium on 2026-11-09 opened the contextual article on every signed-in portal screen with an article, checked the fallback and filtered empty states, and reached help without requests outside the installation origin"
+      },
+      {
+        "id": "POR-114",
+        "checked": false,
+        "text": "Every portal page reads its scope from the session, with a test that a parameter naming another workspace is refused rather than filtered (P1)"
+      },
+      {
+        "id": "POR-201",
+        "checked": false,
+        "text": "Ask for more: a quota request an administrator approves, with the reason and the decision recorded (P2)"
+      },
+      {
+        "id": "POR-202",
+        "checked": false,
+        "text": "Share within the workspace: hand an app, a key's scope or a dataset to a colleague, within what the workspace holds (P2)"
+      },
+      {
+        "id": "POR-203",
+        "checked": false,
+        "text": "Notifications: my job finished, my budget is nearly gone, my key is about to expire (P2)"
+      }
+    ]
+  },
+  "98cf81c8f3c2f82ec2967c017e266f9c345560c0": {
+    "usability-and-localization.md": [
+      {
+        "id": "UX-001",
+        "checked": true,
+        "text": "Web workspace: `web/apps/console`, `web/apps/portal`, `web/packages/{ui,api,i18n,config}`, ESLint, Prettier, Vitest, Playwright (P0) - Evidence: ed470b5, 799ed29; zero-egress install and real-browser sign-in on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-002",
+        "checked": true,
+        "text": "Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0) - Evidence: d12d0ff; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-003",
+        "checked": true,
+        "text": "Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427 - Evidence: ff9561a; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-004",
+        "checked": true,
+        "text": "Typed API client generated from `api/openapi` (P0) - Catalog: F540 - Evidence: 2bfea74; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-005",
+        "checked": true,
+        "text": "Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0) - Evidence: 3eed593; real-browser run and zero-egress install on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-101",
+        "checked": true,
+        "text": "Console overview: quick actions, needs-attention list with next steps, setup checklist, fleet health (P1) - Catalog: F435 - Evidence: b8891d5; real Chromium on an offline install on `ownsolid-cpu` matched the tiles to the API, followed a real offline node to its drawer and opened the add-node and invite dialogs, three runs in a row, 2026-11-07"
+      },
+      {
+        "id": "UX-102",
+        "checked": true,
+        "text": "Portal home: apps and assistants, conversations, my resources and usage (P1) - Catalog: F425, F426, F429 - Evidence: aba0ad6, f1003af; real-browser run against lane B's install on `ownsolid-cpu`, 2026-11-07"
+      },
+      {
+        "id": "UX-103",
+        "checked": true,
+        "text": "Shared list pattern: filter bar, saved views, column chooser, bulk selection with action bar, detail drawer (P1) - Evidence: 5c630cf; real Chromium saved, opened and deleted a view and read an email's details on an offline install on `ownsolid-cpu` upgraded in place to schema 39, 2026-11-06"
+      },
+      {
+        "id": "UX-104",
+        "checked": true,
+        "text": "Long-task pattern: step timeline, live log, tasks continue when the page is left (P1) - Evidence: 6d314d8, 853daf0; a real agent on an offline install on `ownsolid-cpu` ran fact collection from the console in real Chromium while the page was left; the console told how it ended and showed its steps and log after a reload, six runs in a row"
+      },
+      {
+        "id": "UX-105",
+        "checked": true,
+        "text": "Undo for reversible actions; typed confirmation only for irreversible ones (P1) - Evidence: 62714e7, 68dcb6e; real Chromium on both entrances of an offline install on `ownsolid-cpu` saved and undid a view deletion and revoked an invitation by typing its address; admin passed five runs in a row, portal two"
+      },
+      {
+        "id": "UX-106",
+        "checked": false,
+        "text": "Global search across nodes, models, apps, users and tasks (P1). Open: nodes, people, tasks, workspaces and workspace models are found from the command menu; applications wait for the catalog (S-309)."
+      },
+      {
+        "id": "UX-107",
+        "checked": true,
+        "text": "Empty states and errors that state the cause and the next action (P1) - Catalog: F022 - Evidence: 6c1fa48; contract and catalog tests, and real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-108",
+        "checked": true,
+        "text": "English and Simplified Chinese complete for every page, email and error (P1) - Catalog: F537, F552 - Evidence: 22304f9, b2a1448; real Chromium read twelve console and three portal pages of an offline install on `ownsolid-cpu` in Chinese, three and two runs in a row, and an invitation arrived in Chinese through a real TLS mail server, 2026-11-07"
+      },
+      {
+        "id": "UX-109",
+        "checked": true,
+        "text": "Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553 - Evidence: dfc68b2; real Chromium on both entrances of an offline install on `ownsolid-cpu` upgraded in place to schema 37, 2026-11-06"
+      },
+      {
+        "id": "UX-110",
+        "checked": true,
+        "text": "Locale formatting for dates, numbers and units (P1) - Catalog: F555 - Evidence: bee9124; real Chromium switched languages on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-111",
+        "checked": true,
+        "text": "In-product help and API documentation available offline (P1) - Catalog: F431 - Evidence: c25cb2c, 779c155; real-browser run on both entrances of lane B's install on `ownsolid-cpu`, 2026-11-07"
+      },
+      {
+        "id": "UX-112",
+        "checked": true,
+        "text": "Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-113",
+        "checked": true,
+        "text": "Warn before a session ends from inactivity, with one action to stay signed in (P1) - Evidence: 62b3448; a real 60-second idle timeout with the page's poll running in Chromium on the admin entrance of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-114",
+        "checked": true,
+        "text": "Shareable links: filters, sort order and the open drawer live in the URL (P1) - Evidence: fb4eac6; real Chromium reloaded a filtered email list from its address on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-115",
+        "checked": true,
+        "text": "Route-level code splitting and a bundle size budget enforced in CI (P1) - Evidence: 13b789e, 13034a0; real-browser run on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-116",
+        "checked": true,
+        "text": "Automated accessibility checks in the browser tests of every page (P1) - Evidence: 31e5343; axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-117",
+        "checked": false,
+        "text": "Replace the inherited browser suite in `services/control/internal/testing/browser` with Playwright flows as pages land; its `tests/acceptance` scripts did not move here, so it cannot run (P1). Open: sign-in, single sign-on, workspaces, language and account flows are replaced; the tests of the portal's applications, plugins, datasets, training, evaluation and models wait for those pages ([research](../../research/browser-suite-replacement.md))"
+      },
+      {
+        "id": "UX-131",
+        "checked": false,
+        "text": "Declare the entrance (`x-audiences`) and the error codes (`x-error-codes`) of every API operation, so the API reference lists and explains all of them (P1). Open: every operation declares its entrance, and the generator enforces it; remaining operations still need error declarations verified against their handlers"
+      },
+      {
+        "id": "UX-118",
+        "checked": true,
+        "text": "Theme and density follow the user across browsers through `/api/v1/preferences` (P1) - Evidence: aa68ace; two browser contexts on both entrances of an offline install on `ownsolid-cpu`, and migration 000034 on an installed database, 2026-11-05"
+      },
+      {
+        "id": "UX-119",
+        "checked": true,
+        "text": "Account page: profile, password change and linked sign-in providers (P1) - Evidence: 46d2fbb, 9267698; real browser on both entrances of an offline install on `ownsolid-cpu`, and link and unlink against Gitea 28.1.0 on the admin entrance, 2026-11-05"
+      },
+      {
+        "id": "UX-120",
+        "checked": true,
+        "text": "Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1) - Evidence: ec65295; a real failed reset email resent from the console in Chromium on a licensed offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-121",
+        "checked": true,
+        "text": "Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1) - Evidence: 82b0830; real Chromium received Brotli copies on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-122",
+        "checked": false,
+        "text": "Single-key shortcuts for common actions (the prototype's D, I, N, K), with an account setting to turn them off as WCAG 2.2 criterion 2.1.4 requires (P1). Open: `N`, `D`, `K`, `/`, `?` and the switch work; `I` waits for the catalog"
+      },
+      {
+        "id": "UX-123",
+        "checked": true,
+        "text": "Navigation to [ADR 0037](../../decisions/0037-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1) - Evidence: d85452f; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 46, two runs"
+      },
+      {
+        "id": "UX-124",
+        "checked": true,
+        "text": "Pinned destinations, chosen by the person and kept per person (P1) - Evidence: 7a36453; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, with the pin reaching a second browser"
+      },
+      {
+        "id": "UX-125",
+        "checked": true,
+        "text": "One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1) - Evidence: 6210c2e; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+      },
+      {
+        "id": "UX-126",
+        "checked": true,
+        "text": "Summary tiles above a list filter the list instead of decorating it (P1) - Evidence: feff70a; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+      },
+      {
+        "id": "UX-127",
+        "checked": true,
+        "text": "Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1) - Evidence: 39cc736, cdf7ee9; real Chromium on an installation on `ownsolid-cpu` at schema 48, on a joined node, the administrator and a connector with a real Gitea"
+      },
+      {
+        "id": "UX-128",
+        "checked": true,
+        "text": "Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1) - Evidence: 5823524; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, two runs"
+      },
+      {
+        "id": "UX-129",
+        "checked": true,
+        "text": "English strings load as their own chunk like the other languages, so the first download stops growing with every page, and its limit comes back down (P1) - Evidence: 04e6554; real Chromium on an installation on `ownsolid-cpu` at schema 48, first download 141.8 kB"
+      },
+      {
+        "id": "UX-130",
+        "checked": false,
+        "text": "Message catalogs split by page, so a page downloads only its own strings, once a catalog is large enough to repay the key-to-page map ([research](../../research/message-catalogs.md)) (P2)"
+      },
+      {
+        "id": "UX-201",
+        "checked": false,
+        "text": "Wall display and NOC dashboards for operations centers (P2)"
+      },
+      {
+        "id": "UX-202",
+        "checked": false,
+        "text": "Branding: logo, product name and theme per installation (P2) - Catalog: F060, F061"
+      },
+      {
+        "id": "UX-203",
+        "checked": false,
+        "text": "Translation pipeline: string extraction, glossary, placeholder checks, reviewed language packs (P2) - Catalog: F546 to F551, F554, F556 to F564"
+      },
+      {
+        "id": "UX-401",
+        "checked": false,
+        "text": "Remaining languages from the 249-language target, with RTL and fonts (P4) - Catalog: F546"
+      },
+      {
+        "id": "UX-402",
+        "checked": false,
+        "text": "Mobile companion for alerts and approvals (P4)"
+      }
+    ],
+    "portal.md": [
+      {
+        "id": "POR-101",
+        "checked": false,
+        "text": "Portal shell: the person's workspace switcher, grouped navigation, command menu, and a home that answers what is running, what it cost and what needs them (P1)"
+      },
+      {
+        "id": "POR-102",
+        "checked": false,
+        "text": "Assistants and conversations: chat with what has been published to the workspace, with history that never leaves the installation (P1)"
+      },
+      {
+        "id": "POR-103",
+        "checked": false,
+        "text": "Applications: open and install the apps an administrator published to this workspace, and nothing else (P1)"
+      },
+      {
+        "id": "POR-104",
+        "checked": false,
+        "text": "Model catalogue for users: which models this workspace may call, what each one costs, and what it is good for (P1)"
+      },
+      {
+        "id": "POR-105",
+        "checked": false,
+        "text": "Playground: try a model against a prompt, compare two, and copy the call that produced the answer (P1)"
+      },
+      {
+        "id": "POR-106",
+        "checked": true,
+        "text": "API keys and endpoints: issue, name, rotate and revoke my own keys; the endpoint, a code sample per language, and my own call log (P1) - Evidence: c20a9df, 4b62fef; live run on an installation, 2026-11-08: a non-administrator invited through a real mail flow issued, rotated and revoked a key from the portal against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; an administrator's portal session got 404 for that key, and another workspace was refused. No model ran; the three samples were run against a local HTTPS stub with the real OpenAI SDKs and curl"
+      },
+      {
+        "id": "POR-107",
+        "checked": false,
+        "text": "Jobs: submit training, batch and scientific jobs, watch their steps and logs, open their results, and re-run one (P1)"
+      },
+      {
+        "id": "POR-108",
+        "checked": false,
+        "text": "Workspaces: notebooks and development environments I own, with the resource they hold shown against my quota (P1)"
+      },
+      {
+        "id": "POR-109",
+        "checked": false,
+        "text": "Data: my datasets and files, their size against my storage quota, and what a job did with them (P1)"
+      },
+      {
+        "id": "POR-110",
+        "checked": false,
+        "text": "Evaluation: start a run against a model I may call, and read the score beside the runs before it (P1)"
+      },
+      {
+        "id": "POR-111",
+        "checked": false,
+        "text": "Usage and quota: tokens, GPU hours and budget used against what I was given, with the day it will run out (P1)"
+      },
+      {
+        "id": "POR-112",
+        "checked": false,
+        "text": "Account: my profile, my password, my sessions, and the ones I want ended (P1)"
+      },
+      {
+        "id": "POR-113",
+        "checked": true,
+        "text": "In-product help that works offline, reachable from every page (P1) - Evidence: 779c1558 and the [portal Chromium help flows](../../../web/apps/portal/e2e/help.spec.ts); the existing offline installation run served the articles and portal-only API reference, and local Chromium on 2026-11-09 opened the contextual article on every signed-in portal screen with an article, checked the fallback and filtered empty states, and reached help without requests outside the installation origin"
+      },
+      {
+        "id": "POR-114",
+        "checked": false,
+        "text": "Every portal page reads its scope from the session, with a test that a parameter naming another workspace is refused rather than filtered (P1)"
+      },
+      {
+        "id": "POR-201",
+        "checked": false,
+        "text": "Ask for more: a quota request an administrator approves, with the reason and the decision recorded (P2)"
+      },
+      {
+        "id": "POR-202",
+        "checked": false,
+        "text": "Share within the workspace: hand an app, a key's scope or a dataset to a colleague, within what the workspace holds (P2)"
+      },
+      {
+        "id": "POR-203",
+        "checked": false,
+        "text": "Notifications: my job finished, my budget is nearly gone, my key is about to expire (P2)"
+      }
+    ]
+  },
+  "bfeea90cd5adb082b77047b0c97fcea7c7654c51": {
+    "usability-and-localization.md": [
+      {
+        "id": "UX-001",
+        "checked": true,
+        "text": "Web workspace: `web/apps/console`, `web/apps/portal`, `web/packages/{ui,api,i18n,config}`, ESLint, Prettier, Vitest, Playwright (P0) - Evidence: ed470b5, 799ed29; zero-egress install and real-browser sign-in on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-002",
+        "checked": true,
+        "text": "Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0) - Evidence: d12d0ff; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-003",
+        "checked": true,
+        "text": "Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427 - Evidence: ff9561a; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-004",
+        "checked": true,
+        "text": "Typed API client generated from `api/openapi` (P0) - Catalog: F540 - Evidence: 2bfea74; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-005",
+        "checked": true,
+        "text": "Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0) - Evidence: 3eed593; real-browser run and zero-egress install on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-101",
+        "checked": true,
+        "text": "Console overview: quick actions, needs-attention list with next steps, setup checklist, fleet health (P1) - Catalog: F435 - Evidence: b8891d5; real Chromium on an offline install on `ownsolid-cpu` matched the tiles to the API, followed a real offline node to its drawer and opened the add-node and invite dialogs, three runs in a row, 2026-11-07"
+      },
+      {
+        "id": "UX-102",
+        "checked": true,
+        "text": "Portal home: apps and assistants, conversations, my resources and usage (P1) - Catalog: F425, F426, F429 - Evidence: aba0ad6, f1003af; real-browser run against lane B's install on `ownsolid-cpu`, 2026-11-07"
+      },
+      {
+        "id": "UX-103",
+        "checked": true,
+        "text": "Shared list pattern: filter bar, saved views, column chooser, bulk selection with action bar, detail drawer (P1) - Evidence: 5c630cf; real Chromium saved, opened and deleted a view and read an email's details on an offline install on `ownsolid-cpu` upgraded in place to schema 39, 2026-11-06"
+      },
+      {
+        "id": "UX-104",
+        "checked": true,
+        "text": "Long-task pattern: step timeline, live log, tasks continue when the page is left (P1) - Evidence: 6d314d8, 853daf0; a real agent on an offline install on `ownsolid-cpu` ran fact collection from the console in real Chromium while the page was left; the console told how it ended and showed its steps and log after a reload, six runs in a row"
+      },
+      {
+        "id": "UX-105",
+        "checked": true,
+        "text": "Undo for reversible actions; typed confirmation only for irreversible ones (P1) - Evidence: 62714e7, 68dcb6e; real Chromium on both entrances of an offline install on `ownsolid-cpu` saved and undid a view deletion and revoked an invitation by typing its address; admin passed five runs in a row, portal two"
+      },
+      {
+        "id": "UX-106",
+        "checked": false,
+        "text": "Global search across nodes, models, apps, users and tasks (P1). Open: nodes, people, tasks, workspaces and workspace models are found from the command menu; applications wait for the catalog (S-309)."
+      },
+      {
+        "id": "UX-107",
+        "checked": true,
+        "text": "Empty states and errors that state the cause and the next action (P1) - Catalog: F022 - Evidence: 6c1fa48; contract and catalog tests, and real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-108",
+        "checked": true,
+        "text": "English and Simplified Chinese complete for every page, email and error (P1) - Catalog: F537, F552 - Evidence: 22304f9, b2a1448; real Chromium read twelve console and three portal pages of an offline install on `ownsolid-cpu` in Chinese, three and two runs in a row, and an invitation arrived in Chinese through a real TLS mail server, 2026-11-07"
+      },
+      {
+        "id": "UX-109",
+        "checked": true,
+        "text": "Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553 - Evidence: dfc68b2; real Chromium on both entrances of an offline install on `ownsolid-cpu` upgraded in place to schema 37, 2026-11-06"
+      },
+      {
+        "id": "UX-110",
+        "checked": true,
+        "text": "Locale formatting for dates, numbers and units (P1) - Catalog: F555 - Evidence: bee9124; real Chromium switched languages on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-111",
+        "checked": true,
+        "text": "In-product help and API documentation available offline (P1) - Catalog: F431 - Evidence: c25cb2c, 779c155; real-browser run on both entrances of lane B's install on `ownsolid-cpu`, 2026-11-07"
+      },
+      {
+        "id": "UX-112",
+        "checked": true,
+        "text": "Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-113",
+        "checked": true,
+        "text": "Warn before a session ends from inactivity, with one action to stay signed in (P1) - Evidence: 62b3448; a real 60-second idle timeout with the page's poll running in Chromium on the admin entrance of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-114",
+        "checked": true,
+        "text": "Shareable links: filters, sort order and the open drawer live in the URL (P1) - Evidence: fb4eac6; real Chromium reloaded a filtered email list from its address on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-115",
+        "checked": true,
+        "text": "Route-level code splitting and a bundle size budget enforced in CI (P1) - Evidence: 13b789e, 13034a0; real-browser run on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-116",
+        "checked": true,
+        "text": "Automated accessibility checks in the browser tests of every page (P1) - Evidence: 31e5343; axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-117",
+        "checked": false,
+        "text": "Replace the inherited browser suite in `services/control/internal/testing/browser` with Playwright flows as pages land; its `tests/acceptance` scripts did not move here, so it cannot run (P1). Open: sign-in, single sign-on, workspaces, language and account flows are replaced; the tests of the portal's applications, plugins, datasets, training, evaluation and models wait for those pages ([research](../../research/browser-suite-replacement.md))"
+      },
+      {
+        "id": "UX-131",
+        "checked": false,
+        "text": "Declare the entrance (`x-audiences`) and the error codes (`x-error-codes`) of every API operation, so the API reference lists and explains all of them (P1). Open: every operation declares its entrance, and the generator enforces it; remaining operations still need error declarations verified against their handlers"
+      },
+      {
+        "id": "UX-118",
+        "checked": true,
+        "text": "Theme and density follow the user across browsers through `/api/v1/preferences` (P1) - Evidence: aa68ace; two browser contexts on both entrances of an offline install on `ownsolid-cpu`, and migration 000034 on an installed database, 2026-11-05"
+      },
+      {
+        "id": "UX-119",
+        "checked": true,
+        "text": "Account page: profile, password change and linked sign-in providers (P1) - Evidence: 46d2fbb, 9267698; real browser on both entrances of an offline install on `ownsolid-cpu`, and link and unlink against Gitea 28.1.0 on the admin entrance, 2026-11-05"
+      },
+      {
+        "id": "UX-120",
+        "checked": true,
+        "text": "Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1) - Evidence: ec65295; a real failed reset email resent from the console in Chromium on a licensed offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-121",
+        "checked": true,
+        "text": "Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1) - Evidence: 82b0830; real Chromium received Brotli copies on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-122",
+        "checked": false,
+        "text": "Single-key shortcuts for common actions (the prototype's D, I, N, K), with an account setting to turn them off as WCAG 2.2 criterion 2.1.4 requires (P1). Open: `N`, `D`, `K`, `/`, `?` and the switch work; `I` waits for the catalog"
+      },
+      {
+        "id": "UX-123",
+        "checked": true,
+        "text": "Navigation to [ADR 0037](../../decisions/0037-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1) - Evidence: d85452f; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 46, two runs"
+      },
+      {
+        "id": "UX-124",
+        "checked": true,
+        "text": "Pinned destinations, chosen by the person and kept per person (P1) - Evidence: 7a36453; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, with the pin reaching a second browser"
+      },
+      {
+        "id": "UX-125",
+        "checked": true,
+        "text": "One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1) - Evidence: 6210c2e; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+      },
+      {
+        "id": "UX-126",
+        "checked": true,
+        "text": "Summary tiles above a list filter the list instead of decorating it (P1) - Evidence: feff70a; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+      },
+      {
+        "id": "UX-127",
+        "checked": true,
+        "text": "Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1) - Evidence: 39cc736, cdf7ee9; real Chromium on an installation on `ownsolid-cpu` at schema 48, on a joined node, the administrator and a connector with a real Gitea"
+      },
+      {
+        "id": "UX-128",
+        "checked": true,
+        "text": "Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1) - Evidence: 5823524; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, two runs"
+      },
+      {
+        "id": "UX-129",
+        "checked": true,
+        "text": "English strings load as their own chunk like the other languages, so the first download stops growing with every page, and its limit comes back down (P1) - Evidence: 04e6554; real Chromium on an installation on `ownsolid-cpu` at schema 48, first download 141.8 kB"
+      },
+      {
+        "id": "UX-130",
+        "checked": false,
+        "text": "Message catalogs split by page, so a page downloads only its own strings, once a catalog is large enough to repay the key-to-page map ([research](../../research/message-catalogs.md)) (P2)"
+      },
+      {
+        "id": "UX-201",
+        "checked": false,
+        "text": "Wall display and NOC dashboards for operations centers (P2)"
+      },
+      {
+        "id": "UX-202",
+        "checked": false,
+        "text": "Branding: logo, product name and theme per installation (P2) - Catalog: F060, F061"
+      },
+      {
+        "id": "UX-203",
+        "checked": false,
+        "text": "Translation pipeline: string extraction, glossary, placeholder checks, reviewed language packs (P2) - Catalog: F546 to F551, F554, F556 to F564"
+      },
+      {
+        "id": "UX-401",
+        "checked": false,
+        "text": "Remaining languages from the 249-language target, with RTL and fonts (P4) - Catalog: F546"
+      },
+      {
+        "id": "UX-402",
+        "checked": false,
+        "text": "Mobile companion for alerts and approvals (P4)"
+      }
+    ],
+    "portal.md": [
+      {
+        "id": "POR-101",
+        "checked": false,
+        "text": "Portal shell: the person's workspace switcher, grouped navigation, command menu, and a home that answers what is running, what it cost and what needs them (P1)"
+      },
+      {
+        "id": "POR-102",
+        "checked": false,
+        "text": "Assistants and conversations: chat with what has been published to the workspace, with history that never leaves the installation (P1)"
+      },
+      {
+        "id": "POR-103",
+        "checked": false,
+        "text": "Applications: open and install the apps an administrator published to this workspace, and nothing else (P1)"
+      },
+      {
+        "id": "POR-104",
+        "checked": false,
+        "text": "Model catalogue for users: which models this workspace may call, what each one costs, and what it is good for (P1)"
+      },
+      {
+        "id": "POR-105",
+        "checked": false,
+        "text": "Playground: try a model against a prompt, compare two, and copy the call that produced the answer (P1)"
+      },
+      {
+        "id": "POR-106",
+        "checked": true,
+        "text": "API keys and endpoints: issue, name, rotate and revoke my own keys; the endpoint, a code sample per language, and my own call log (P1) - Evidence: c20a9df, 4b62fef; live run on an installation, 2026-11-08: a non-administrator invited through a real mail flow issued, rotated and revoked a key from the portal against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; an administrator's portal session got 404 for that key, and another workspace was refused. No model ran; the three samples were run against a local HTTPS stub with the real OpenAI SDKs and curl"
+      },
+      {
+        "id": "POR-107",
+        "checked": false,
+        "text": "Jobs: submit training, batch and scientific jobs, watch their steps and logs, open their results, and re-run one (P1)"
+      },
+      {
+        "id": "POR-108",
+        "checked": false,
+        "text": "Workspaces: notebooks and development environments I own, with the resource they hold shown against my quota (P1)"
+      },
+      {
+        "id": "POR-109",
+        "checked": false,
+        "text": "Data: my datasets and files, their size against my storage quota, and what a job did with them (P1)"
+      },
+      {
+        "id": "POR-110",
+        "checked": false,
+        "text": "Evaluation: start a run against a model I may call, and read the score beside the runs before it (P1)"
+      },
+      {
+        "id": "POR-111",
+        "checked": false,
+        "text": "Usage and quota: tokens, GPU hours and budget used against what I was given, with the day it will run out (P1)"
+      },
+      {
+        "id": "POR-112",
+        "checked": false,
+        "text": "Account: my profile, my password, my sessions, and the ones I want ended (P1)"
+      },
+      {
+        "id": "POR-113",
+        "checked": true,
+        "text": "In-product help that works offline, reachable from every page (P1) - Evidence: 779c1558 and the [portal Chromium help flows](../../../web/apps/portal/e2e/help.spec.ts); the existing offline installation run served the articles and portal-only API reference, and local Chromium on 2026-11-09 opened the contextual article on every signed-in portal screen with an article, checked the fallback and filtered empty states, and reached help without requests outside the installation origin"
+      },
+      {
+        "id": "POR-114",
+        "checked": false,
+        "text": "Every portal page reads its scope from the session, with a test that a parameter naming another workspace is refused rather than filtered (P1)"
+      },
+      {
+        "id": "POR-201",
+        "checked": false,
+        "text": "Ask for more: a quota request an administrator approves, with the reason and the decision recorded (P2)"
+      },
+      {
+        "id": "POR-202",
+        "checked": false,
+        "text": "Share within the workspace: hand an app, a key's scope or a dataset to a colleague, within what the workspace holds (P2)"
+      },
+      {
+        "id": "POR-203",
+        "checked": false,
+        "text": "Notifications: my job finished, my budget is nearly gone, my key is about to expire (P2)"
+      }
+    ]
+  },
+  "fc8d26d3ec64793c29ed7121594400344613dbfa": {
+    "usability-and-localization.md": [
+      {
+        "id": "UX-001",
+        "checked": true,
+        "text": "Web workspace: `web/apps/console`, `web/apps/portal`, `web/packages/{ui,api,i18n,config}`, ESLint, Prettier, Vitest, Playwright (P0) - Evidence: ed470b5, 799ed29; zero-egress install and real-browser sign-in on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-002",
+        "checked": true,
+        "text": "Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0) - Evidence: d12d0ff; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-003",
+        "checked": true,
+        "text": "Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427 - Evidence: ff9561a; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-004",
+        "checked": true,
+        "text": "Typed API client generated from `api/openapi` (P0) - Catalog: F540 - Evidence: 2bfea74; real-browser run on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-005",
+        "checked": true,
+        "text": "Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0) - Evidence: 3eed593; real-browser run and zero-egress install on `ownsolid-cpu`, 2026-11-04"
+      },
+      {
+        "id": "UX-101",
+        "checked": true,
+        "text": "Console overview: quick actions, needs-attention list with next steps, setup checklist, fleet health (P1) - Catalog: F435 - Evidence: b8891d5; real Chromium on an offline install on `ownsolid-cpu` matched the tiles to the API, followed a real offline node to its drawer and opened the add-node and invite dialogs, three runs in a row, 2026-11-07"
+      },
+      {
+        "id": "UX-102",
+        "checked": true,
+        "text": "Portal home: apps and assistants, conversations, my resources and usage (P1) - Catalog: F425, F426, F429 - Evidence: aba0ad6, f1003af; real-browser run against lane B's install on `ownsolid-cpu`, 2026-11-07"
+      },
+      {
+        "id": "UX-103",
+        "checked": true,
+        "text": "Shared list pattern: filter bar, saved views, column chooser, bulk selection with action bar, detail drawer (P1) - Evidence: 5c630cf; real Chromium saved, opened and deleted a view and read an email's details on an offline install on `ownsolid-cpu` upgraded in place to schema 39, 2026-11-06"
+      },
+      {
+        "id": "UX-104",
+        "checked": true,
+        "text": "Long-task pattern: step timeline, live log, tasks continue when the page is left (P1) - Evidence: 6d314d8, 853daf0; a real agent on an offline install on `ownsolid-cpu` ran fact collection from the console in real Chromium while the page was left; the console told how it ended and showed its steps and log after a reload, six runs in a row"
+      },
+      {
+        "id": "UX-105",
+        "checked": true,
+        "text": "Undo for reversible actions; typed confirmation only for irreversible ones (P1) - Evidence: 62714e7, 68dcb6e; real Chromium on both entrances of an offline install on `ownsolid-cpu` saved and undid a view deletion and revoked an invitation by typing its address; admin passed five runs in a row, portal two"
+      },
+      {
+        "id": "UX-106",
+        "checked": false,
+        "text": "Global search across nodes, models, apps, users and tasks (P1). Open: nodes, people, tasks, workspaces and workspace models are found from the command menu; applications wait for the catalog (S-309)."
+      },
+      {
+        "id": "UX-107",
+        "checked": true,
+        "text": "Empty states and errors that state the cause and the next action (P1) - Catalog: F022 - Evidence: 6c1fa48; contract and catalog tests, and real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-108",
+        "checked": true,
+        "text": "English and Simplified Chinese complete for every page, email and error (P1) - Catalog: F537, F552 - Evidence: 22304f9, b2a1448; real Chromium read twelve console and three portal pages of an offline install on `ownsolid-cpu` in Chinese, three and two runs in a row, and an invitation arrived in Chinese through a real TLS mail server, 2026-11-07"
+      },
+      {
+        "id": "UX-109",
+        "checked": true,
+        "text": "Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553 - Evidence: dfc68b2; real Chromium on both entrances of an offline install on `ownsolid-cpu` upgraded in place to schema 37, 2026-11-06"
+      },
+      {
+        "id": "UX-110",
+        "checked": true,
+        "text": "Locale formatting for dates, numbers and units (P1) - Catalog: F555 - Evidence: bee9124; real Chromium switched languages on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-111",
+        "checked": true,
+        "text": "In-product help and API documentation available offline (P1) - Catalog: F431 - Evidence: c25cb2c, 779c155; real-browser run on both entrances of lane B's install on `ownsolid-cpu`, 2026-11-07"
+      },
+      {
+        "id": "UX-112",
+        "checked": true,
+        "text": "Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-113",
+        "checked": true,
+        "text": "Warn before a session ends from inactivity, with one action to stay signed in (P1) - Evidence: 62b3448; a real 60-second idle timeout with the page's poll running in Chromium on the admin entrance of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-114",
+        "checked": true,
+        "text": "Shareable links: filters, sort order and the open drawer live in the URL (P1) - Evidence: fb4eac6; real Chromium reloaded a filtered email list from its address on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-115",
+        "checked": true,
+        "text": "Route-level code splitting and a bundle size budget enforced in CI (P1) - Evidence: 13b789e, 13034a0; real-browser run on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-116",
+        "checked": true,
+        "text": "Automated accessibility checks in the browser tests of every page (P1) - Evidence: 31e5343; axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-117",
+        "checked": false,
+        "text": "Replace the inherited browser suite in `services/control/internal/testing/browser` with Playwright flows as pages land; its `tests/acceptance` scripts did not move here, so it cannot run (P1). Open: sign-in, single sign-on, workspaces, language and account flows are replaced; the tests of the portal's applications, plugins, datasets, training, evaluation and models wait for those pages ([research](../../research/browser-suite-replacement.md))"
+      },
+      {
+        "id": "UX-131",
+        "checked": false,
+        "text": "Declare the entrance (`x-audiences`) and the error codes (`x-error-codes`) of every API operation, so the API reference lists and explains all of them (P1). Open: every operation declares its entrance, and the generator enforces it; remaining operations still need error declarations verified against their handlers"
+      },
+      {
+        "id": "UX-118",
+        "checked": true,
+        "text": "Theme and density follow the user across browsers through `/api/v1/preferences` (P1) - Evidence: aa68ace; two browser contexts on both entrances of an offline install on `ownsolid-cpu`, and migration 000034 on an installed database, 2026-11-05"
+      },
+      {
+        "id": "UX-119",
+        "checked": true,
+        "text": "Account page: profile, password change and linked sign-in providers (P1) - Evidence: 46d2fbb, 9267698; real browser on both entrances of an offline install on `ownsolid-cpu`, and link and unlink against Gitea 28.1.0 on the admin entrance, 2026-11-05"
+      },
+      {
+        "id": "UX-120",
+        "checked": true,
+        "text": "Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1) - Evidence: ec65295; a real failed reset email resent from the console in Chromium on a licensed offline install on `ownsolid-cpu`, 2026-11-05"
+      },
+      {
+        "id": "UX-121",
+        "checked": true,
+        "text": "Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1) - Evidence: 82b0830; real Chromium received Brotli copies on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+      },
+      {
+        "id": "UX-122",
+        "checked": false,
+        "text": "Single-key shortcuts for common actions (the prototype's D, I, N, K), with an account setting to turn them off as WCAG 2.2 criterion 2.1.4 requires (P1). Open: `N`, `D`, `K`, `/`, `?` and the switch work; `I` waits for the catalog"
+      },
+      {
+        "id": "UX-123",
+        "checked": true,
+        "text": "Navigation to [ADR 0037](../../decisions/0037-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1) - Evidence: d85452f; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 46, two runs"
+      },
+      {
+        "id": "UX-124",
+        "checked": true,
+        "text": "Pinned destinations, chosen by the person and kept per person (P1) - Evidence: 7a36453; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, with the pin reaching a second browser"
+      },
+      {
+        "id": "UX-125",
+        "checked": true,
+        "text": "One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1) - Evidence: 6210c2e; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+      },
+      {
+        "id": "UX-126",
+        "checked": true,
+        "text": "Summary tiles above a list filter the list instead of decorating it (P1) - Evidence: feff70a; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+      },
+      {
+        "id": "UX-127",
+        "checked": false,
+        "text": "Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1). Open: directed corrections passed on f430afe3: 56 unit cases, related types/lint/build, 97 affected browser cases with zero skipped/retried, and all 57 generated screenshots read. Original focus, narrow-heading, disabled-style and active-tab failures are resolved in that scope. Joint/full gates and installed authority/SQL/offline/SSO acceptance remain open; see the [verified corrections](../../research/resource-detail-pages.md#verified-focus-and-narrow-layout-corrections)."
+      },
+      {
+        "id": "UX-128",
+        "checked": true,
+        "text": "Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1) - Evidence: 5823524; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, two runs"
+      },
+      {
+        "id": "UX-129",
+        "checked": true,
+        "text": "English strings load as their own chunk like the other languages, so the first download stops growing with every page, and its limit comes back down (P1) - Evidence: 04e6554; real Chromium on an installation on `ownsolid-cpu` at schema 48, first download 141.8 kB"
+      },
+      {
+        "id": "UX-130",
+        "checked": false,
+        "text": "Message catalogs split by page, so a page downloads only its own strings, once a catalog is large enough to repay the key-to-page map ([research](../../research/message-catalogs.md)) (P2)"
+      },
+      {
+        "id": "UX-201",
+        "checked": false,
+        "text": "Wall display and NOC dashboards for operations centers (P2)"
+      },
+      {
+        "id": "UX-202",
+        "checked": false,
+        "text": "Branding: logo, product name and theme per installation (P2) - Catalog: F060, F061"
+      },
+      {
+        "id": "UX-203",
+        "checked": false,
+        "text": "Translation pipeline: string extraction, glossary, placeholder checks, reviewed language packs (P2) - Catalog: F546 to F551, F554, F556 to F564"
+      },
+      {
+        "id": "UX-401",
+        "checked": false,
+        "text": "Remaining languages from the 249-language target, with RTL and fonts (P4) - Catalog: F546"
+      },
+      {
+        "id": "UX-402",
+        "checked": false,
+        "text": "Mobile companion for alerts and approvals (P4)"
+      }
+    ],
+    "portal.md": [
+      {
+        "id": "POR-101",
+        "checked": false,
+        "text": "Portal shell: the person's workspace switcher, grouped navigation, command menu, and a home that answers what is running, what it cost and what needs them (P1)"
+      },
+      {
+        "id": "POR-102",
+        "checked": false,
+        "text": "Assistants and conversations: chat with what has been published to the workspace, with history that never leaves the installation (P1)"
+      },
+      {
+        "id": "POR-103",
+        "checked": false,
+        "text": "Applications: open and install the apps an administrator published to this workspace, and nothing else (P1)"
+      },
+      {
+        "id": "POR-104",
+        "checked": false,
+        "text": "Model catalogue for users: which models this workspace may call, what each one costs, and what it is good for (P1)"
+      },
+      {
+        "id": "POR-105",
+        "checked": false,
+        "text": "Playground: try a model against a prompt, compare two, and copy the call that produced the answer (P1)"
+      },
+      {
+        "id": "POR-106",
+        "checked": true,
+        "text": "API keys and endpoints: issue, name, rotate and revoke my own keys; the endpoint, a code sample per language, and my own call log (P1) - Evidence: c20a9df, 4b62fef; live run on an installation, 2026-11-08: a non-administrator invited through a real mail flow issued, rotated and revoked a key from the portal against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; an administrator's portal session got 404 for that key, and another workspace was refused. No model ran; the three samples were run against a local HTTPS stub with the real OpenAI SDKs and curl"
+      },
+      {
+        "id": "POR-107",
+        "checked": false,
+        "text": "Jobs: submit training, batch and scientific jobs, watch their steps and logs, open their results, and re-run one (P1)"
+      },
+      {
+        "id": "POR-108",
+        "checked": false,
+        "text": "Workspaces: notebooks and development environments I own, with the resource they hold shown against my quota (P1)"
+      },
+      {
+        "id": "POR-109",
+        "checked": false,
+        "text": "Data: my datasets and files, their size against my storage quota, and what a job did with them (P1)"
+      },
+      {
+        "id": "POR-110",
+        "checked": false,
+        "text": "Evaluation: start a run against a model I may call, and read the score beside the runs before it (P1)"
+      },
+      {
+        "id": "POR-111",
+        "checked": false,
+        "text": "Usage and quota: tokens, GPU hours and budget used against what I was given, with the day it will run out (P1)"
+      },
+      {
+        "id": "POR-112",
+        "checked": false,
+        "text": "Account: my profile, my password, my sessions, and the ones I want ended (P1)"
+      },
+      {
+        "id": "POR-113",
+        "checked": true,
+        "text": "In-product help that works offline, reachable from every page (P1) - Evidence: 779c1558 and the [portal Chromium help flows](../../../web/apps/portal/e2e/help.spec.ts); the existing offline installation run served the articles and portal-only API reference, and local Chromium on 2026-11-09 opened the contextual article on every signed-in portal screen with an article, checked the fallback and filtered empty states, and reached help without requests outside the installation origin"
+      },
+      {
+        "id": "POR-114",
+        "checked": false,
+        "text": "Every portal page reads its scope from the session, with a test that a parameter naming another workspace is refused rather than filtered (P1)"
+      },
+      {
+        "id": "POR-201",
+        "checked": false,
+        "text": "Ask for more: a quota request an administrator approves, with the reason and the decision recorded (P2)"
+      },
+      {
+        "id": "POR-202",
+        "checked": false,
+        "text": "Share within the workspace: hand an app, a key's scope or a dataset to a colleague, within what the workspace holds (P2)"
+      },
+      {
+        "id": "POR-203",
+        "checked": false,
+        "text": "Notifications: my job finished, my budget is nearly gone, my key is about to expire (P2)"
+      }
+    ]
+  }
+}

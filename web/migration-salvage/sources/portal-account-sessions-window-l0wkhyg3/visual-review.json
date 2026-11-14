@@ -1,0 +1,340 @@
+{
+  "source": "763169e3f1600efed40071ee7f1812d2d6199e69",
+  "webTree": "7bab205eb4942575843dfb628f13538ff5265178",
+  "reviewedAfterCleanup": true,
+  "allWindowGenerated": 70,
+  "finalRoundGenerated": 36,
+  "rawFinalImagesOpened": 36,
+  "firstRoundGenerated": 34,
+  "firstRoundOpened": 0,
+  "images": [
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-090db-ut-retained-session-actions-chromium/SERVICE_NOT_READY.png",
+      "sha256": "531f36448bec55d0fafcbdcac349db166553e24c22fd1f49d9573c00aed931a5",
+      "index": 0,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/account-390.png",
+      "sha256": "cd3a371c6f112f2ac3c7819a8a8c115f330282a8405047d935cae6e7693e1254",
+      "index": 1,
+      "openedRaw": true,
+      "width": 390,
+      "height": 844
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/account-desktop.png",
+      "sha256": "481e7124211194bef50ba5f299abe3ff3dee2a02aaa3d05ec715c0041dd816f9",
+      "index": 2,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/account-narrow-dark.png",
+      "sha256": "6b530f3c5f26cdf5398e443a118e2120a17f1ab1f5c5819eb94a15c2d87f0e4c",
+      "index": 3,
+      "openedRaw": true,
+      "width": 360,
+      "height": 780
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/current-only.png",
+      "sha256": "9c45a652bc79606235ae36b81f721b6d8a3dff8680f2c5b9bb92705a8a08b54b",
+      "index": 4,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/empty-live-list.png",
+      "sha256": "3e7097b6ff40503acf3dffc156a65454eff46235d674c0ddb7d24128c92d3699",
+      "index": 5,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-5dbaa-tion-and-confirmation-in-en-chromium/end-confirmation.png",
+      "sha256": "7be2b56df5d06c2b45fe863af105daa1d9e77e36d2b6bb48212c2ab13039d85d",
+      "index": 6,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-6b452-ccount-sign-out-and-sign-in-chromium/same-account-relogin.png",
+      "sha256": "0a785bef016b968a2f8029307400051fcdcdfd861f35d665ab93030fa04eaacb",
+      "index": 7,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-ad2ad-gh-the-actual-password-form-chromium/password-rotation.png",
+      "sha256": "85d35b5c9cbd712905b193f545eb1b7c0e911642c755f68f9c0c43ec85f2f7d0",
+      "index": 8,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/account-390.png",
+      "sha256": "34ce8233760be9ddf9803584d12fe4dcf9965b90336e5262ca40217726f1a9a3",
+      "index": 9,
+      "openedRaw": true,
+      "width": 390,
+      "height": 844
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/account-desktop.png",
+      "sha256": "8ea89142eb73c0bed1422d56b6228614a4e38fcf94e57bf72917d09d0d2701bb",
+      "index": 10,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/account-narrow-dark.png",
+      "sha256": "9ed1c7a9561ed02b1fdb5d67b177385f2c551093788c90d07562442169ba1590",
+      "index": 11,
+      "openedRaw": true,
+      "width": 360,
+      "height": 780
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/current-only.png",
+      "sha256": "9fab3f6be78ab55235adf5362448601ff22ba3db53222639ade35415040e967b",
+      "index": 12,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/empty-live-list.png",
+      "sha256": "157ba3477b229d2a04b402b4b856d79cb852feabef3ae950632dbb05469ccb97",
+      "index": 13,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-c7e15-n-and-confirmation-in-zh-CN-chromium/end-confirmation.png",
+      "sha256": "edfa415c374382c6f63ff8db144aece98f78ac0e8fedb317301cbbde42f97d64",
+      "index": 14,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-f366f-ut-retained-session-actions-chromium/ACCESS_DENIED.png",
+      "sha256": "554fddb14d7b51938c3fca0c13098d9ceaacfca051a0dc6f1251d3eb9c02f675",
+      "index": 15,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-f5256-d-cursor-and-failed-restart-chromium/pagination-partial.png",
+      "sha256": "14b50591f60fc4b87c06d5d5be8a3d88bef15699b916be42359caf3a5516fffc",
+      "index": 16,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-console-results/account-sessions-account-s-fd013-during-a-delayed-first-read-chromium/loading-delayed.png",
+      "sha256": "0a785bef016b968a2f8029307400051fcdcdfd861f35d665ab93030fa04eaacb",
+      "index": 17,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-28888-gh-the-actual-password-form-chromium/password-rotation.png",
+      "sha256": "abcfee4ec2f2d67f1b4600938ec878d0f20af905b72d0146d49dbaffeab6d7e1",
+      "index": 18,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-2b7a2-ccount-sign-out-and-sign-in-chromium/same-account-relogin.png",
+      "sha256": "1b2a4710a69bd8d6accccefc88a98ea437f355334fce670b7f1c8c3e8804a3b7",
+      "index": 19,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-30a81-during-a-delayed-first-read-chromium/loading-delayed.png",
+      "sha256": "1b2a4710a69bd8d6accccefc88a98ea437f355334fce670b7f1c8c3e8804a3b7",
+      "index": 20,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-47fb9-ut-retained-session-actions-chromium/ACCESS_DENIED.png",
+      "sha256": "830b0caaca7fd90114e62d91b59f77d1770a253093873ae668afa1de6d1e4bd3",
+      "index": 21,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-60d0b-n-and-confirmation-in-zh-CN-chromium/account-390.png",
+      "sha256": "34ce8233760be9ddf9803584d12fe4dcf9965b90336e5262ca40217726f1a9a3",
+      "index": 22,
+      "openedRaw": true,
+      "width": 390,
+      "height": 844
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-60d0b-n-and-confirmation-in-zh-CN-chromium/account-desktop.png",
+      "sha256": "4aed79e5ee9710f05c638b1d2cfb4960d5c6b4d77516f041c391117cff94e3cd",
+      "index": 23,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-60d0b-n-and-confirmation-in-zh-CN-chromium/account-narrow-dark.png",
+      "sha256": "9ed1c7a9561ed02b1fdb5d67b177385f2c551093788c90d07562442169ba1590",
+      "index": 24,
+      "openedRaw": true,
+      "width": 360,
+      "height": 780
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-60d0b-n-and-confirmation-in-zh-CN-chromium/current-only.png",
+      "sha256": "92f461d60e2bd01002c1f551f47ea14c2f095e1c2bef0fe5651cd13a2da997cd",
+      "index": 25,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-60d0b-n-and-confirmation-in-zh-CN-chromium/empty-live-list.png",
+      "sha256": "f028d27acab19e551a0fc65e38674998e2137fcab6cf579d04e480c591e419cd",
+      "index": 26,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-60d0b-n-and-confirmation-in-zh-CN-chromium/end-confirmation.png",
+      "sha256": "56cf4a81f4c247e6b6f90432618ad8a85c29194e636f1e72c66cc125c9c211b6",
+      "index": 27,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-8f2ad-d-cursor-and-failed-restart-chromium/pagination-partial.png",
+      "sha256": "a36c85b58e47941ba16b1a8424d6216f17e44230f9648b2bd330d8750882bdc5",
+      "index": 28,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-b9b1b-ut-retained-session-actions-chromium/SERVICE_NOT_READY.png",
+      "sha256": "1a3a3592e47aca4f9c58efc80906fd9f9a1cf6887e82ff80d51899b250be0c47",
+      "index": 29,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-b9c84-tion-and-confirmation-in-en-chromium/account-390.png",
+      "sha256": "cd3a371c6f112f2ac3c7819a8a8c115f330282a8405047d935cae6e7693e1254",
+      "index": 30,
+      "openedRaw": true,
+      "width": 390,
+      "height": 844
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-b9c84-tion-and-confirmation-in-en-chromium/account-desktop.png",
+      "sha256": "523002857de9b4f65dcc87e3ba83c4f55f74c915700a92073cc288a58ea5da83",
+      "index": 31,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-b9c84-tion-and-confirmation-in-en-chromium/account-narrow-dark.png",
+      "sha256": "6b530f3c5f26cdf5398e443a118e2120a17f1ab1f5c5819eb94a15c2d87f0e4c",
+      "index": 32,
+      "openedRaw": true,
+      "width": 360,
+      "height": 780
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-b9c84-tion-and-confirmation-in-en-chromium/current-only.png",
+      "sha256": "0d03694e578014a689beccc95c6cda3d3ea14ab06ae30cc9cb7f308151ae547b",
+      "index": 33,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-b9c84-tion-and-confirmation-in-en-chromium/empty-live-list.png",
+      "sha256": "877dafb06273e2e2411db2fe86701fc79077777ea6296e1eab9f80afda7cf3bd",
+      "index": 34,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-sessions-window-l0wkhyg3/browser-2-portal-results/account-sessions-account-s-b9c84-tion-and-confirmation-in-en-chromium/end-confirmation.png",
+      "sha256": "1cab0987431e50a98c0f986d61d8bf33e83f02c826c5907a6fba6e9ca7a28464",
+      "index": 35,
+      "openedRaw": true,
+      "width": 1280,
+      "height": 720
+    }
+  ],
+  "verdict": "Visual acceptance incomplete; preserve passing DOM tests but do not call missing targets visually qualified.",
+  "archetype": "Settings: independently saved Account sections, Sessions below them. Header/profile/password/language/providers visible in full-page context; loaded session facts and actions visible in desktop target captures.",
+  "states": "Different current-only and empty-live copy visibly confirmed. Denied hides rows, not-ready shows disabled End with reason, partial retains earlier history and recovery, single irreversible confirmation identifies the target. Filtered-empty is explicitly inapplicable. Loading and narrow targets were absent from the captures.",
+  "primary": "Change password on Account; ending a peer session is the section action with one submit in one dialog.",
+  "findings": [
+    {
+      "indices": [
+        1,
+        3,
+        9,
+        11,
+        22,
+        24,
+        30,
+        32
+      ],
+      "issue": "390px/360px snapshots show earlier settings rather than Sessions; shortcut title compressed to three English lines / vertical Chinese column."
+    },
+    {
+      "indices": [
+        7,
+        17,
+        19,
+        20
+      ],
+      "issue": "Re-login/loading full-page screenshots remain at page top, so cannot visually prove the session marker or skeleton."
+    },
+    {
+      "indices": [
+        5,
+        16,
+        28,
+        34
+      ],
+      "issue": "Full-page capture clips lower part of the empty/partial card due to independent main scrolling."
+    }
+  ],
+  "postReviewFix": "6d3d6b8c6e2641dea8d2d750eda3121e4263b6ca",
+  "postReviewFixQualified": false,
+  "followup": "Capture the actual session region, preserve separate page context, inspect 1440px and mobile dialog/shortcut views, and verify the heading layout change on the same rebuilt source."
+}

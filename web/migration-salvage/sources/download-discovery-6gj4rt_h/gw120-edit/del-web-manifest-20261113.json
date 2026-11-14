@@ -1,0 +1,172 @@
+{
+  "candidateSource": "be62f58e846dcc654dafee65cba6cc7480890570",
+  "fullGateSource": "60b85e037aa24fc0d30ae0195e6dffe8f59a6946",
+  "fullGateWebAndOpenapiByteIdentical": true,
+  "newInstallationRequired": true,
+  "installedRunPerformed": false,
+  "requiredSchemaVersion": 60,
+  "requiredStableTables": 120,
+  "originalAuthorCommits": [
+    {
+      "sha": "f3a487d93f5299806ac458313cc884a9590123d9",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "POR-114: Prepare live scope recovery across Portal navigation"
+    },
+    {
+      "sha": "3986ce38baa31123a010e3d17f070850786dcb1b",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "S-108: Check published parameters and apply-cutover recovery"
+    },
+    {
+      "sha": "cc30e928522f8b86e4ef3569b59d6bea27ae6bf0",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "POR-114: Capture selected scope and narrow recovery views"
+    },
+    {
+      "sha": "1d9fd9e17691d5d61731b8ef1bd609fb386e9501",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "POR-114: Observe refused scope responses before checking their status"
+    },
+    {
+      "sha": "c2a098402bdf81454f04eccfff00d3ccfc28b425",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "UX-112: Wait for focused control geometry before sampling"
+    },
+    {
+      "sha": "69a76e4d33de608fa39da1c452e5ba279de6a541",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "UX-112: Record controlled focus-sampling regression evidence"
+    },
+    {
+      "sha": "d448879ad235c725f60ba3843e10330f39006e58",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "S-108: Match the complete workspace operation in consumer checks"
+    },
+    {
+      "sha": "8cd632dee8d5a75a5c30b14f515ff73ae28ab30d",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "S-108: Record bilingual parameter and recovery screenshot review"
+    },
+    {
+      "sha": "5d6e69b6f960fa46c93bfc7aab3372ba46d1e649",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "UX-111: Research resilient discovery of contract downloads"
+    },
+    {
+      "sha": "1c025fb526e51552b898c112c5c3adf2d4c767a6",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "UX-111: Keep contract download addresses available without a lookup request"
+    },
+    {
+      "sha": "9f96ab7aa1e2487ec495895501271651f96c0c40",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "UX-111: Inject isolated preview download failures over HTTP"
+    },
+    {
+      "sha": "5fef33014f3a5afc286dc69bab9674aec533f0a0",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "S-108: Document installed entrance boundary acceptance"
+    },
+    {
+      "sha": "8664098abaf42ef58e4cba4dbd43b60b26fea1d9",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "UX-111: Record native download recovery and bilingual screen review"
+    },
+    {
+      "sha": "45aca40ce90cdcdc0c7c767295fe26d4996d465a",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "GW-120: Research revision-safe Console description editing"
+    },
+    {
+      "sha": "f2f6a8f37d9b10af52d4067ec79fa12f2f73b7cf",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "GW-120: Add revision-aware Console description editing"
+    },
+    {
+      "sha": "6f184564937f9df0983a76dcbdb9de08d71459f9",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "GW-120: Preserve UI scope across late saves and refused catalogue refreshes"
+    },
+    {
+      "sha": "557a866e6c29d068aeea52a3f701533eb81a20e5",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "GW-120: Record bilingual Web consumer evidence and installed boundary"
+    },
+    {
+      "sha": "459c07bf8ccd9c1abc91a53e866e0a5c49ebb36f",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "GW-120: Reconcile Undo outcomes and protect description drafts"
+    },
+    {
+      "sha": "be62f58e846dcc654dafee65cba6cc7480890570",
+      "author": "Passion.",
+      "email": "279058513+Passion-Flow@users.noreply.github.com",
+      "subject": "GW-120: Record the complete Web gate and final screen review"
+    }
+  ],
+  "clientFiles": {
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/README.md": "41fb53cc09cf0060854cdb6faf4e6d16f0c5588357bdf289314570300b67ad07",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/bind.py": "59aa2554a5a60d1fca222ab27badb0080c48a1534f7b7a1d1564a28023c292dc",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/binding.json": "97ca3828ef12639b5fe6b33bda2174d8d76565f574722d183d34c1232177c00c",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/bound-source.ts": "70ae778fd9724bb629ad38cb5e7e7c58894a661c9b30a2e89ac5bd8808782c43",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/checks.sh": "9226201be02b2e07d9492f225377574b3334b77b746faae8af9ecc9dea8e0da1",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/description.spec.ts": "1a72d9e8fa01c1db92fc10da278d4a2146f82f7eb203c61e0b32a6d2c4f180f5",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/discovery.log": "80ac1859713f1478fb47c15d0ab0522acd9db2150ca0479c682c606f4bacfa45",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.template.json": "08d4a7850f86fbf873fa01dd30c776bbb5be6f2ce8ac36f56b068e631e2978a6",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/fixture.ts": "12ac9f4ffb8394ae4a157974c64387a3fd28a5fef53a46e02f87a1e1647bb01f",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/help-discovery.log": "3f6d1379db4b4b78dad44efa89ac453b74afdc95adbbdb1079d85fee0b3fa5e1",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/help.config.ts": "256b75012fb025adb96a268bea3061fd72c35ca3c5e71975ff86fe3ec90a8012",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/input-selftest.log": "f08ccf8fb09367811add09561c4a34230ca0ec5be79b2a44999ed57771ea85b9",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/input-selftest.mjs": "40494234484bdc65936fcdcd7c3c7d7017504686e98d2f49fd8460d789cb5130",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/output-selftest.log": "ccac2b9135cc4a0f4d12000b011d9e2cfe6707013efc3476056ccff1ddca4290",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/package.json": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/parameters.spec.ts": "8951e024420f238b3a4edb834fec43d2b4f80e4b6655d8f9a7699941983555bf",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/playwright.config.ts": "e2662eb28ef398cba39112b033d2b843e50ca6090c1f5d72a364b82d2f2466c0",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/report.json": "dbcbaa124e013e2ae24b12b67ea2932c99421bda2df8ce0c360e459f9db4ffa5",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/run.py": "7263ad2ecd129e1e777aac8007e29af3eac68610c63d4a862f9488bb52b4ec29",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/runtime-source.ts": "0e25eb0951b738a668ab16b86bf43b0eef7c37aafceb2460d88eef596dcd0372",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/scope-discovery.log": "614b61b763dd78caf06ca8f647fd90b94d30f1c7b9e86d653e42cd3e02d9f1ca",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/scope.config.ts": "2dabb52c0d7ffd091c1994b6e7fbd17a4bd99897769a56756d22e72528f3d93d",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/tsconfig.json": "7ef29d1f9b7f1bd6cd7b1b956ff4f14ffa91f473c4f90192d193e151c3072fee",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/typecheck-before-attempt-guard.log": "1e076c390b5561d02dc049cf7c79804a15b9b15dd9b319c9e915626b45ab6ba4",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/typecheck-module-path.log": "0281d5487ff97141792c0e93fbe98cdafed0ca68e683ab987c94b7d2c981a043",
+    "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/installed-gw120/typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "historical4463Clients": {
+    "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/installed-help/parameters.spec.ts": "605e42c025ef3114ca4ffd9d7a83fd260cd2d6f455f1f7b4536b3590ac8f7276",
+    "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/installed-help/playwright.config.ts": "e0787bea09defd380565bed9836b29b271331b6d9b909354ee16d741ea7b01b7",
+    "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/installed-help/scope.config.ts": "1226123281ba250c37e7ffb67d1127d876e41fefcee58baea8904eae49325413",
+    "/Users/passion./.local/state/ownsolid/web-scopes/acceptance-b8aqosz5/installed-help/source.ts": "4eadc49f3ed736d2fb3911494012fa0aeeed3a58a45df8ad251c2fe4c91523c2"
+  },
+  "series": {
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/web-original-author-series-be62f58e.patch",
+    "sha256": "900dcb3874ad4af8dd55062994ae6ca8ed6c63c32945c58dc49e03cbce0199a9"
+  },
+  "selftest": {
+    "typecheck": "passed",
+    "inputGuards": 18,
+    "outputPreservation": 4,
+    "gw120Discovery": 1,
+    "helpDiscovery": 1,
+    "boundScopeDiscovery": 1,
+    "actualBrowserRuns": 0
+  }
+}

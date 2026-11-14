@@ -1,0 +1,61 @@
+{
+  "observedUTC": "2026-11-13T09:38:58.948254+00:00",
+  "observedJobSource": "d186e3045408e0d340e94b2a5ad3a5a63e90d057",
+  "observedJobTree": "494087509039d50276dd3872a0d113d27bf72350",
+  "observedActualAttemptUTC": "2026-11-13T09:32:23.644388+00:00",
+  "observedActualResultUTC": "2026-11-13T09:32:23.741900+00:00",
+  "actualTerminalResult": {
+    "source": "d186e3045408e0d340e94b2a5ad3a5a63e90d057",
+    "tree": "494087509039d50276dd3872a0d113d27bf72350",
+    "absolute_seconds_limit": 600,
+    "execution_seconds_limit": 540,
+    "cleanup_reserve_seconds": 60,
+    "nb_attempts_started": 0,
+    "worker_started": false,
+    "tool_build_or_generation_started": false,
+    "native_or_full_run": false,
+    "retry_or_queue": false,
+    "resource_snapshots": [
+      {
+        "phase": "before-carrier",
+        "free_bytes": 168001536,
+        "disk_free_bytes": 164234719232
+      }
+    ],
+    "resource_refusal": true,
+    "error": "RuntimeError: Light workload resource threshold refused",
+    "exit": 75,
+    "elapsed_seconds": 0.097
+  },
+  "independentReadbackHashesMatch": true,
+  "attemptParentPID": 36482,
+  "attemptParentPresent": false,
+  "metadataReceipts": {
+    "attempt.json": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-tool-and-sdk-d186e304/attempt.json",
+      "sha256": "ee5ce09afa5ea76e7238a3d309728f51e7b205dd91c497247e1619f2d456c560",
+      "modifiedUTC": "2026-11-13T09:32:23.644388+00:00"
+    },
+    "launch.json": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-tool-and-sdk-d186e304/launch.json",
+      "sha256": "8e32a106e183cedc2411bd9235c9a34f6269e84d5d24edd573342f1645e03182",
+      "modifiedUTC": "2026-11-13T09:32:23.644487+00:00"
+    },
+    "result.json": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-tool-and-sdk-d186e304/result.json",
+      "sha256": "d6615b3f73c3730cdd941712f0696df182dce7791120c65f9572915d1f92b023",
+      "modifiedUTC": "2026-11-13T09:32:23.741900+00:00"
+    },
+    "independent-readback.json": {
+      "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-tool-and-sdk-d186e304/independent-readback.json",
+      "sha256": "ad1769eead1ecb9edacb52bb328a67a9dcdae8973dcae5b732e6555934bc2cc2",
+      "modifiedUTC": "2026-11-13T09:33:44.073135+00:00"
+    }
+  },
+  "requiredExecutedRunGroupsAndFdCleanupReceiptPresent": false,
+  "matchingReleasePrerequisiteProven": false,
+  "reason": "Observed exact-source 600-second entry terminated before any carrier acquisition or worker. This is not an executed tool-build/SDK-worker completion and group/FD cleanup receipt; do not infer release of a different or current executed instance from its exit75, absent worker or absent parent. No other executed-instance terminal receipt was located in this bounded metadata review.",
+  "logsRead": false,
+  "devInterrupted": false,
+  "backgroundPolling": false
+}

@@ -1,0 +1,11 @@
+{
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "sourceHashes": 5099,
+  "exactAssetFiles": 1233,
+  "clean": true,
+  "observerOriginalSha256": "ca777d7173d0ce88efde51f93c77c1b64362041153a2903da91ae5f073311ad4",
+  "observerCurrentSha256": "620136aeaea77198a5ea7e62f3dedfe57c0cd13b0247d5818236a1e21b859d3d",
+  "noNodeStartedBeforeAdmission": true
+}

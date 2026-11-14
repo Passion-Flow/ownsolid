@@ -1,0 +1,7 @@
+{
+  "mount": "/private/tmp/ownsolid-por112-joint-92949",
+  "image": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/scratch.sparseimage",
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "auditBinaryCreatedOnlyAfterBuild": true,
+  "workspaceSumAbsentAtEntry": true
+}

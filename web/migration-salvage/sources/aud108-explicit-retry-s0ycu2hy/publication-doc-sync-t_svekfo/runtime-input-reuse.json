@@ -1,0 +1,18 @@
+{
+  "previousSource": "4b432dbf249e01ff9af447b3e5efc354a8682403",
+  "currentSource": "a67bcdf63974954c3a6a0078c86d1b47dd21018d",
+  "exactTreeDifference": [
+    "docs/research/directory-login.md"
+  ],
+  "qualifiedPreviousRun": "/Users/passion./.local/state/ownsolid/web-scopes/aud108-explicit-retry-s0ycu2hy/publication-i3bv8bf9",
+  "previousCheckBuildTestExit": 0,
+  "fullBrowserSource": "c70e9f5950f421e7bef194ae5f5ced0efaf1ca7f",
+  "disposition": "Only an independent research document changed. All runtime, configuration, dependency, build and test inputs are byte-identical. Reuse the already passed build/native/unit/browser results and run make check again for the new documentation.",
+  "freshDocumentationChecks": [
+    "check-layout",
+    "check-roadmap",
+    "test-tools"
+  ],
+  "freshDocumentationChecksExit": 0,
+  "freshFullCheck": false
+}

@@ -1,0 +1,19 @@
+[
+  "web/README.md",
+  "web/apps/console/e2e/audit.spec.ts",
+  "web/apps/console/e2e/pages.ts",
+  "web/apps/console/e2e/audit-read-recovery.spec.ts",
+  "web/apps/console/src/audit-page.tsx",
+  "web/apps/console/src/resource-page.tsx",
+  "web/apps/console/src/audit-read.tsx",
+  "web/apps/console/src/audit-read.test.tsx",
+  "web/packages/api/src/problem.ts",
+  "web/packages/i18n/locales/en.json",
+  "web/packages/i18n/locales/zh-cn.json",
+  "web/packages/shell/testing/audit.ts",
+  "web/packages/shell/testing/control-plane.ts",
+  "web/packages/ui/src/components/components.test.tsx",
+  "web/packages/ui/src/components/problem-notice.tsx",
+  "web/packages/help/locales/en/console/audit-trail.md",
+  "web/packages/help/locales/zh-cn/console/audit-trail.md"
+]

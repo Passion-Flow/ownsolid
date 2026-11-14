@@ -1,0 +1,81 @@
+{
+  "handoffHead": "82c602d32b2d957459b3a742499de96867da27a9",
+  "handoffTree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "attemptSource": "9e7404f63fe7587ace0decb34fd01b6214977181",
+  "attemptTree": "6c5938e198745062ba5a14e1f952cb4593797ccd",
+  "parents": [
+    "379aab980485df41b1a66c6fb5e6af65814f886f",
+    "2e64ab4c6c16bd84ae5c101b9de5444550760ff2"
+  ],
+  "sourceClean": true,
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/portal-account-joint-full-4deb4qpz/portal-account-original-author-joint.bundle",
+  "bundleSha256": "7b8ddb3df53cc819381d0c9b62dc8b3faa0d797de031b9678fb74324c0350ed0",
+  "result": "resource_refusal",
+  "entryExit": 1,
+  "entrySeconds": 0.07179099999484606,
+  "freePages": 22958,
+  "pageBytes": 16384,
+  "freeMemoryGiB": 0.350311279296875,
+  "requiredFreeMemoryGiB": 6,
+  "targetsStarted": [],
+  "workChildStarted": false,
+  "awakeStarted": false,
+  "scratchCreated": false,
+  "jointCases": null,
+  "jointSkips": null,
+  "jointRetries": null,
+  "jointAssets": null,
+  "cleanupConfirmed": true,
+  "parentPID": 38870,
+  "parentGone": true,
+  "carrierInode": 50313339,
+  "readback": {
+    "carrier": {
+      "exit": 1,
+      "output": ""
+    },
+    "ports": {
+      "exit": 1,
+      "output": ""
+    }
+  },
+  "newAttemptQueued": false,
+  "published": false,
+  "roadmapTicked": false,
+  "originalAuthorManifestPaths": 19,
+  "projectionInputsAtAuthor": 79,
+  "projectionInputsUnchangedInCombination": 77,
+  "ownedHelpInputDifferences": 2,
+  "sdkFiles": 122,
+  "protectedHelpers": 5,
+  "originalAudit": {
+    "operations": 430,
+    "actualExit": 1,
+    "explicit409Retained": true,
+    "reexecuted": false
+  },
+  "previousFrontendQualification": {
+    "source": "0a50a0405b4841e8117d40ce65b000a2344ceaea",
+    "webTree": "b656b51b998d4e2a23fa9b3b6f2062b60669f282",
+    "casePassesPerEntrance": 11,
+    "generatedImages": 56,
+    "readImages": 56,
+    "qualifiedForJoint": false
+  },
+  "remaining": [
+    "New authorized full-source resource opportunity with current Free>=6GiB and disk>=30GiB",
+    "Original-author DEV publication first, then compose actual published main and review affected paths",
+    "Same-source original four make targets",
+    "Installed peer revocation and independent durable SQL audit",
+    "Disconnected installation and real SSO UI"
+  ],
+  "devStrictJson37cbbIncluded": false,
+  "bundlePrerequisites": [
+    "6ed5c627a04a52b97d273f6782fdb0733d8703c4",
+    "b18d2b0ba1a55e3c9619079893ddc8c7d47d6f32",
+    "9e32b023a0a3deed6a8653a8878d52c2583fd6cf",
+    "6f785818156ff5e827ccc86923b7cfa0b4c0185d"
+  ],
+  "bundleVerified": true
+}

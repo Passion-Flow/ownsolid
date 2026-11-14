@@ -1,0 +1,96 @@
+{
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "priorAttempt": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-once-jt8bpohu",
+  "priorParentExitRetained": 1,
+  "priorRealCommandExit": 0,
+  "priorStdoutSha256": "1373abb17009f27694c41ffd00c4e723d77db94d6f72369202e0059219d3b5e9",
+  "priorStderrSha256": "cf41c3245291761c35a0a772f53ef1277dcd24d623b5dbe17b0c5340a381010f",
+  "actualParsedSummary": {
+    "reporter": "spec",
+    "metrics": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cases": [
+      "covers root, containers, every workspace and new hidden/non-workspace directories",
+      "matches original diagnostics and rejects errors in root, e2e, shared and config files",
+      "fails on a warning even when no partition has an error",
+      "retains fatal syntax diagnostics and a failing exit",
+      "does not replace an all-ignored original failure with a successful empty lint",
+      "refuses malformed configuration and a terminated lint process",
+      "does not follow directory symlinks when planning partitions"
+    ]
+  },
+  "actualCommandArgv": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "lint.test.js"
+  ],
+  "invocationArgumentsUnchanged": true,
+  "candidateRuntimeAndTestsByteUnchanged": {
+    "web/packages/config/lint.js": "147bd7329e8de3d71b8d10e25ffde4e49822d95afe859ac320c5eec3758ef694",
+    "web/packages/config/lint.test.js": "38e151fe602478f8512bae3312801cc73633b7ceab2e3c064bfa22e1e9545510",
+    "web/packages/config/eslint.config.js": "5cdc090ff19e48ce394fbc7b55379b89d5d2ed662510aa7e44cb5e58bb6f3b72",
+    "web/packages/config/package.json": "608314e610e4aa221cf6ba41dc6f96126cbd140a64e6abecd8bd7e425e97e6ca",
+    "web/package.json": "45b224442e750969397d48f3ff26b9db0e2a3c45cb88610c4d5a8c47abf5ac95",
+    "web/pnpm-lock.yaml": "de9a5caf8f5dc63c0aa16e2789a8ef828a139e91bf4293b80f9d63ed263fcd08",
+    "web/pnpm-workspace.yaml": "644a245ab5a3b750ae4f124bd621e595af7fd161528a5d592f0f12574febf4a4"
+  },
+  "all5101SourceManifestEntriesIdentical": true,
+  "pinnedToolInputsUnchanged": true,
+  "offlinePositiveRealOutputAccepted": true,
+  "offlineDerivedNegativeChecks": [
+    {
+      "name": "missing-counter",
+      "rejected": true,
+      "reason": "Missing, contradictory or failing summary counters"
+    },
+    {
+      "name": "failed-counter",
+      "rejected": true,
+      "reason": "Missing, contradictory or failing summary counters"
+    },
+    {
+      "name": "duplicate-counter",
+      "rejected": true,
+      "reason": "Duplicate summary counter: pass"
+    },
+    {
+      "name": "command-failed",
+      "rejected": true,
+      "reason": "The actual CLI command did not exit zero"
+    },
+    {
+      "name": "empty-output",
+      "rejected": true,
+      "reason": "Missing, contradictory or failing summary counters"
+    },
+    {
+      "name": "zero-tests",
+      "rejected": true,
+      "reason": "Missing, contradictory or failing summary counters"
+    },
+    {
+      "name": "skipped-case",
+      "rejected": true,
+      "reason": "Missing, contradictory or failing summary counters"
+    },
+    {
+      "name": "trailing-private-exception",
+      "rejected": true,
+      "reason": "Abnormal or failed test output"
+    },
+    {
+      "name": "actual-failed-wrapper-output",
+      "rejected": true,
+      "reason": "The actual CLI command did not exit zero"
+    }
+  ],
+  "testsExecutedAgain": false,
+  "crossAttemptBoundary": "Reuse only the unchanged original seven real CLI case results; this attempt executes remaining B checks separately. No original parent exit or incomplete benchmark result is overwritten."
+}

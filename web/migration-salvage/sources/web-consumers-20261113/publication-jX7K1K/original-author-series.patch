@@ -1,0 +1,1509 @@
+From c00f5710e367e656ef367c41c3b8fdd8c12e9e22 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 01:59:25 +0800
+Subject: [PATCH 1/5] AUD-108: Localize audit reads and verify category
+ recovery
+
+Name the audit access family and audit.events_read in both locales without changing the exact-action contract or thirteen-field projection. Verify check, 49 locale tests, 20 audit browser cases and four page-state checks; retain the existing conditional skip. Read desktop and narrow screenshots. Installed accounting and the module completion remain open.
+---
+ docs/research/identity-audit-read-access.md  | 43 +++++++++++++
+ web/apps/console/e2e/audit.spec.ts           | 65 ++++++++++++++++++++
+ web/apps/console/e2e/pages.ts                | 11 ++++
+ web/apps/console/src/audit-page.tsx          |  1 +
+ web/packages/i18n/locales/en.json            |  2 +
+ web/packages/i18n/locales/zh-cn.json         |  2 +
+ web/packages/i18n/src/audit-coverage.test.ts |  1 +
+ web/packages/shell/testing/audit.ts          | 11 ++++
+ web/packages/shell/testing/index.ts          |  8 ++-
+ 9 files changed, 143 insertions(+), 1 deletion(-)
+
+diff --git a/docs/research/identity-audit-read-access.md b/docs/research/identity-audit-read-access.md
+index cef9d9ed..66f98cb5 100644
+--- a/docs/research/identity-audit-read-access.md
++++ b/docs/research/identity-audit-read-access.md
+@@ -120,3 +120,46 @@ The existing workspace projection root also passed with a restricted principal t
+ Fixtures used PostgreSQL 18.6 and pgvector 0.8.7 in owned network-none Linux arm64 containers on the workstation. No native Linux amd64 installation or new rendered UI acceptance is claimed. The qualified runtime/test input is `fcbb839af30f6df6b7b6dd60bbf60c61442bf973`; the durable local evidence set is `aud108-identity-20261112.vi6mouqa`, including exact input, raw native logs, wire observations and full-gate exit codes. Fixtures and the owned scratch volume were cleaned up. Only this verification text changed after the gate.
+ 
+ AUD-108 remains open for SCI scoped-workspace accounting, Web action/family names, DEV public contract metadata and Delivery collector admission/reconciliation.
++
++## Web action and family display
++
++The existing S-407 audit list and preview drawer remain the consumer. Display
++`audit.events_read` as "Audit trail read" and add the audit family to the existing
++Kind of action selector. Keep the machine action in the drawer and keep using
++`category=audit`; do not invent an exact-action query value or change the thirteen
++public fields. The existing action-name fallback still handles future unnamed
++actions without treating a module identifier as prose.
++
++The [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
++keeps event identity and access control with the producing application. The
++[WCAG language guidance](https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html)
++allows technical identifiers while requiring readable interface language. Localized
++names plus an explicit raw identifier in details preserve both needs. This uses
++only the existing React (MIT), TanStack (MIT), Lucide (ISC) and ownsolid localization
++code. Commercial distribution and offline use remain allowed with their notices;
++no dependency, model, dataset, network resource or licence term is added.
++
++Consumer checks must cover English and Simplified Chinese action names, the audit
++family filter sent as `category` (without an `action` query), sharing/reloading that
++filter, the retained machine identifier in the drawer, a filtered empty and a
++failed read with explicit retry. Existing initial empty, partial pagination,
++permission and Portal-refusal behavior remains unchanged. Register a representative
++audit-read page state for the existing keyboard, accessibility and localization
++checks. Read desktop and narrow screenshots before recording the Web slice.
++This does not qualify the actual installed append, scoped workspace accounting,
++collector admission or DEV's exact-action enum. AUD-108 stays open.
++
++The focused Web consumer checks passed `make check`, both app type checks,
++49 locale tests, the Console production build, 20 audit Chromium cases
++with one unchanged conditional skip, and four new page-state checks.
++English desktop and 390-pixel Simplified Chinese screenshots were opened:
++the list keeps its title/filter/table structure and the preview drawer keeps
++the original event and request identifiers. The seven state boundaries stay
++in the existing audit page: layout-shaped loading, initial no-records,
++filtered no-match with Clear filters, retained partial pages, retryable
++read failure, denied read, and unavailable operations with reasons. Initial
++and filtered empty copy remains distinct. This slice adds no surface or
++primary action; reading an event remains the immediate task, with its
++request/person follow-up in the preview. Installed append/SQL acceptance
++is not claimed by the scripted browser checks. Full gate evidence follows
++only after the exact committed source has passed it.
+diff --git a/web/apps/console/e2e/audit.spec.ts b/web/apps/console/e2e/audit.spec.ts
+index a40a2cc7..a37ff68f 100644
+--- a/web/apps/console/e2e/audit.spec.ts
++++ b/web/apps/console/e2e/audit.spec.ts
+@@ -1,7 +1,9 @@
+ // The audit trail: an administrator reads who did what and how it ended, narrows it from a link, and
+ // follows an event to its person or its request.
++import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
+ import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
+ import {
++  auditReadEvent,
+   failedSignIn,
+   licenseEvent,
+   mockControlPlane,
+@@ -242,3 +244,66 @@ test("keeps an action's identifier in its details, and shows an unnamed action's
+     page.getByRole('dialog', { name: 'License imported' }).getByText('license.imported'),
+   ).toBeVisible();
+ });
++
++for (const [locale, messages] of [
++  ['en', english],
++  ['zh-CN', chinese],
++] as const) {
++  test(`names audit access and recovers the family filter in ${locale}`, async ({ page }, info) => {
++    control.preferences.locale = locale;
++    control.auditEvents = [auditReadEvent, licenseEvent];
++    await page.setViewportSize(
++      locale === 'en' ? { width: 1440, height: 900 } : { width: 390, height: 844 },
++    );
++    await page.goto('/audit');
++    const family = page.getByLabel(messages['audit.filter.category'], { exact: true });
++    await family.selectOption('audit');
++    await expect(page).toHaveURL(/category=audit/);
++    const row = rows(page).filter({ hasText: messages['audit.action.audit.events_read'] });
++    await expect(row).toBeVisible();
++    await expect(row).toContainText(messages['audit.target.installation']);
++    await expect(
++      rows(page).filter({ hasText: messages['audit.action.license.imported'] }),
++    ).toHaveCount(0);
++    await page.reload();
++    await expect(family).toHaveValue('audit');
++    await expect(row).toBeVisible();
++    expect(control.auditQueries.at(-1)?.get('category')).toBe('audit');
++    expect(control.auditQueries.every((query) => !query.has('action'))).toBe(true);
++    await row
++      .getByText(messages['audit.action.audit.events_read'], { exact: true })
++      .scrollIntoViewIfNeeded();
++    await info.attach(`audit-read-list-${locale}`, {
++      body: await page.screenshot({ animations: 'disabled' }),
++      contentType: 'image/png',
++    });
++    await row.getByRole('button').click();
++    const drawer = page.getByRole('dialog', {
++      name: messages['audit.action.audit.events_read'],
++      exact: true,
++    });
++    await expect(drawer.getByText('audit.events_read', { exact: true })).toBeVisible();
++    await expect(drawer.getByText(auditReadEvent.request_id, { exact: true })).toBeVisible();
++    await info.attach(`audit-read-details-${locale}`, {
++      body: await page.screenshot({ animations: 'disabled' }),
++      contentType: 'image/png',
++    });
++    await page.keyboard.press('Escape');
++    control.auditEvents = [licenseEvent];
++    await page.reload();
++    await expect(
++      page.getByRole('heading', { name: messages['audit.emptyFilter.title'], exact: true }),
++    ).toBeVisible();
++    control.auditProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
++    await page.reload();
++    await expect(
++      page.getByRole('button', { name: messages['action.retry'], exact: true }),
++    ).toBeVisible();
++    control.auditProblem = null;
++    control.auditEvents = [auditReadEvent];
++    await page.getByRole('button', { name: messages['action.retry'], exact: true }).click();
++    await expect(row).toBeVisible();
++    expect(control.auditQueries.at(-1)?.get('category')).toBe('audit');
++    expect(control.auditQueries.every((query) => !query.has('action'))).toBe(true);
++  });
++}
+diff --git a/web/apps/console/e2e/pages.ts b/web/apps/console/e2e/pages.ts
+index ceaeb773..b757794f 100644
+--- a/web/apps/console/e2e/pages.ts
++++ b/web/apps/console/e2e/pages.ts
+@@ -2,6 +2,7 @@ import {
+   activeConnector,
+   activeLicense,
+   activeSummary,
++  auditReadEvent,
+   adminUser,
+   checksStoppingAt,
+   deploymentAlias,
+@@ -1052,6 +1053,16 @@ export const consolePages: readonly PageState[] = [
+       await page.getByRole('dialog', { name: 'License imported' }).waitFor();
+     },
+   },
++  {
++    name: 'audit read event details',
++    path: '/audit',
++    open: async (page, control) => {
++      control.auditEvents = [auditReadEvent];
++      await openAudit(page, control);
++      await page.getByRole('button', { name: /^Show details of Audit trail read/ }).click();
++      await page.getByRole('dialog', { name: 'Audit trail read', exact: true }).waitFor();
++    },
++  },
+   {
+     name: 'audit trail with nothing recorded',
+     path: '/audit',
+diff --git a/web/apps/console/src/audit-page.tsx b/web/apps/console/src/audit-page.tsx
+index 1a0bbd55..79731aec 100644
+--- a/web/apps/console/src/audit-page.tsx
++++ b/web/apps/console/src/audit-page.tsx
+@@ -42,6 +42,7 @@ import { ActionName, TargetName, useAuditNames } from './audit-names.tsx';
+ 
+ const categories = [
+   'account',
++  'audit',
+   'auth',
+   'dataset',
+   'deployment',
+diff --git a/web/packages/i18n/locales/en.json b/web/packages/i18n/locales/en.json
+index 64d818c9..7383730e 100644
+--- a/web/packages/i18n/locales/en.json
++++ b/web/packages/i18n/locales/en.json
+@@ -57,6 +57,7 @@
+   "audit.action.account.enabled": "Account enabled",
+   "audit.action.account.updated": "Account updated",
+   "audit.action.auth.login_failed": "Sign-in failed",
++  "audit.action.audit.events_read": "Audit trail read",
+   "audit.action.auth.login_succeeded": "Signed in",
+   "audit.action.auth.logout": "Signed out",
+   "audit.action.auth.password_change_failed": "Password change failed",
+@@ -127,6 +128,7 @@
+   "audit.action.workspace.restored": "Workspace enabled",
+   "audit.action.workspace.updated": "Workspace changed",
+   "audit.category.account": "Accounts",
++  "audit.category.audit": "Audit access",
+   "audit.category.auth": "Sign-in",
+   "audit.category.dataset": "Datasets",
+   "audit.category.deployment": "Deployments",
+diff --git a/web/packages/i18n/locales/zh-cn.json b/web/packages/i18n/locales/zh-cn.json
+index 382fd248..d65d7dc1 100644
+--- a/web/packages/i18n/locales/zh-cn.json
++++ b/web/packages/i18n/locales/zh-cn.json
+@@ -57,6 +57,7 @@
+   "audit.action.account.enabled": "启用账号",
+   "audit.action.account.updated": "更新账号",
+   "audit.action.auth.login_failed": "登录失败",
++  "audit.action.audit.events_read": "已读取审计记录",
+   "audit.action.auth.login_succeeded": "登录",
+   "audit.action.auth.logout": "退出登录",
+   "audit.action.auth.password_change_failed": "修改密码失败",
+@@ -127,6 +128,7 @@
+   "audit.action.workspace.restored": "启用工作空间",
+   "audit.action.workspace.updated": "修改工作空间",
+   "audit.category.account": "账号",
++  "audit.category.audit": "审计访问",
+   "audit.category.auth": "登录",
+   "audit.category.dataset": "数据集",
+   "audit.category.deployment": "部署",
+diff --git a/web/packages/i18n/src/audit-coverage.test.ts b/web/packages/i18n/src/audit-coverage.test.ts
+index f4de8a55..d912f143 100644
+--- a/web/packages/i18n/src/audit-coverage.test.ts
++++ b/web/packages/i18n/src/audit-coverage.test.ts
+@@ -12,6 +12,7 @@ const server = join(root, 'services', 'control', 'internal');
+ 
+ const named = [
+   'account',
++  'audit',
+   'auth',
+   'gateway',
+   'installation',
+diff --git a/web/packages/shell/testing/audit.ts b/web/packages/shell/testing/audit.ts
+index 0ab7dd82..6db2241e 100644
+--- a/web/packages/shell/testing/audit.ts
++++ b/web/packages/shell/testing/audit.ts
+@@ -21,6 +21,17 @@ export const licenseEvent: AuditEvent = {
+   request_id: '6f1c7a1e-0000-4000-8000-0000000000f1',
+ };
+ 
++/** The real identity consumer records a bounded installation audit read. */
++export const auditReadEvent: AuditEvent = {
++  ...licenseEvent,
++  id: '6f1c7a1e-0000-4000-8000-0000000000e4',
++  action: 'audit.events_read',
++  target_type: 'installation',
++  target_id: null,
++  reason: 'installation_audit_read;limit=20;returned=3;assistant=false',
++  request_id: '6f1c7a1e-0000-4000-8000-0000000000f4',
++};
++
+ /** An action on someone's account, by another person, that failed. */
+ export const failedSignIn: AuditEvent = {
+   ...licenseEvent,
+diff --git a/web/packages/shell/testing/index.ts b/web/packages/shell/testing/index.ts
+index b2537766..b8a01ef9 100644
+--- a/web/packages/shell/testing/index.ts
++++ b/web/packages/shell/testing/index.ts
+@@ -90,7 +90,13 @@ export {
+   teamWorkspace,
+   type WorkspaceScript,
+ } from './workspaces.ts';
+-export { failedSignIn, licenseEvent, systemEvent, type AuditScript } from './audit.ts';
++export {
++  auditReadEvent,
++  failedSignIn,
++  licenseEvent,
++  systemEvent,
++  type AuditScript,
++} from './audit.ts';
+ export {
+   activeLicense,
+   activeSummary,
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 58c91a0cc26ee820c0d4a214ccafa0a96a738d74 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 02:30:19 +0800
+Subject: [PATCH 2/5] MOD-121: Explain expired uploads and verify fresh-import
+ recovery
+
+Project cancelled expiry and pending cleanup from successful DTOs without adding a Problem. Stop closed transfers and withdraw controls after refused refreshes; a terminal creation replay cannot upload and a new form uses a fresh key. Verify check, 44 Console units, 49 locale and 19 Help tests, 44 model browser cases and eight page-state checks. Preserve three conditional skips and read six desktop/narrow screenshots. Startup and installed expiry acceptance remain open.
+---
+ docs/research/model-import-cleanup.md         |  70 +++++++
+ web/README.md                                 |   6 +
+ web/apps/console/e2e/models.spec.ts           | 176 ++++++++++++++++++
+ web/apps/console/e2e/pages.ts                 |  22 +++
+ web/apps/console/src/model-import-page.tsx    |  91 +++++++--
+ web/apps/console/src/model-library-page.tsx   |   4 +-
+ web/apps/console/src/model-state.ts           |  23 ++-
+ web/apps/console/src/model-upload.test.ts     |  34 ++++
+ web/apps/console/src/model-upload.ts          |  15 +-
+ .../help/locales/en/console/model-library.md  |   6 +
+ .../locales/zh-cn/console/model-library.md    |   6 +
+ .../help/src/gen/locales/en/console.json      |   4 +
+ .../gen/locales/en/console/model-library.json |  65 +++++++
+ .../help/src/gen/locales/zh-cn/console.json   |   4 +
+ .../locales/zh-cn/console/model-library.json  |  39 ++++
+ web/packages/i18n/locales/en.json             |   8 +
+ web/packages/i18n/locales/zh-cn.json          |   8 +
+ web/packages/shell/testing/index.ts           |   2 +
+ web/packages/shell/testing/models.ts          |  25 +++
+ 19 files changed, 590 insertions(+), 18 deletions(-)
+
+diff --git a/docs/research/model-import-cleanup.md b/docs/research/model-import-cleanup.md
+index f6cc3a51..c52d5ff8 100644
+--- a/docs/research/model-import-cleanup.md
++++ b/docs/research/model-import-cleanup.md
+@@ -328,3 +328,73 @@ cases and the prior HTTPS import tests passed in the same fixture.
+ go -C services/control test ./internal/modules/models/http \
+   -run '^TestModelImportHTTPSExpiryIsScopedAndDistinctFromCancellation$' -count=1 -v
+ ```
++
++### Web expiry consumer
++
++The existing import flow and status page consume the successful DTO's lifecycle
++reason. The [tus expiration extension](https://tus.io/protocols/resumable-upload#expiration)
++requires clients to recognize an expired upload instead of attempting to continue
++its old resource. Keep ownsolid's current protocol: the read DTO distinguishes
++`cancelled` plus `MODEL_IMPORT_EXPIRED`; mutation refusal remains the existing
++409 `MODEL_IMPORT_STATE_CONFLICT`. Do not construct a new expiry Problem.
++
++Show Expired in import history and status, with the historic byte count and steps.
++Explain that it cannot resume and offer Upload a new bundle, leading through the
++existing import form. That form creates a new idempotency key per intent; retry
++within the same intent retains its key. A creation replay of a terminal or pending
++expiry must navigate to its status without starting a transfer. Keep ordinary
++cancellation separate. Pending expiry cleanup is not Upload incomplete: disable
++resume/cancel writes, keep polling its real status and explain that the new import
++must wait for cleanup. A stale transfer that observes a closed upload stops and
++refreshes; a transport retry must not reopen a terminal resource.
++
++Reuse the existing React and TanStack code (MIT), Lucide (ISC) and Playwright
++(Apache-2.0), with their existing commercial redistribution/offline notices.
++No dependency, model, dataset, API operation, Problem name or runtime request is
++added. Browser tests use synthetic bundle bytes; they do not qualify the expiry
++worker's installation/startup behavior or real-model expiration.
++
++Verify both languages, ordinary cancellation as a positive control, pending cleanup,
++refresh and failed-read retry, an upload whose reply becomes a real 409 state
++conflict followed by the expired DTO, and a fresh form that sends a distinct key.
++Verify permission denial never exposes cached import controls or allows writes.
++Unit transfer checks must stop on a terminal/pending DTO without uploading or
++requesting verification, including a read after a lost chunk response. Register
++the expired and pending states for keyboard/accessibility/catalog checks and read
++desktop/narrow screenshots. ARC startup binding and actual installed expiry E2E
++remain open; no roadmap completion follows from preview checks.
++
++The existing three-step import flow ends on its status detail; this change adds
++no dialog or drawer. For an expired record, the one primary action is Upload a
++new bundle. Cleanup in progress offers no write and explains why continuation
++is unavailable. The seven state decisions are explicit:
++
++| State | Consumer behavior |
++| --- | --- |
++| Loading | Keep the existing resource-shaped loading state until the first read. |
++| First-time empty | The Imports tab explains when import history appears. A status route requires a real import; a missing record uses the existing not-found recovery. |
++| Filtered empty | A single import has no collection filter. The library's filtered-empty message and Clear filters remain distinct from initial import history. |
++| Partial | A transient status refresh keeps the known lifecycle and bytes with a retryable Problem notice. |
++| Error | Existing Problems explain read/write failures; state-conflict recovery reads the current DTO rather than inventing an expiry Problem. |
++| Denied | A 403/404 refresh removes cached status controls, stops transfer and polling, and shows the existing server recovery message. |
++| Not ready | Resume remains visible and aria-disabled for pending/expired uploads, with its adjacent reason; pending cleanup also leaves Discard visibly unavailable. |
++
++The focused Web checks passed make check, the Console production build,
++44 Console unit tests, 49 locale tests and 19 Help tests. Chromium passed
++44 model cases with three unchanged installation-dependent skips and all
++eight new expiry page-state checks. There were no retries or flaky cases.
++The first run's four failures were fixture configuration rejection: 100 ms
++polling is outside the existing 1,000--60,000 ms runtime contract. The
++corrected tests use 1,000 ms; no product limit was weakened. Both raw runs
++are retained separately.
++
++Six screenshots were opened and read: expired status, pending cleanup and
++its Help section in English desktop and 390-pixel Simplified Chinese.
++The status header names the model and lifecycle, the same three-step
++history remains, and the pending upload step reads Cancelled instead of
++suggesting it can continue. Expired status has one primary action, Upload
++a new bundle. Resume and pending Discard are visibly unavailable with
++reasons. The Help remains a reference article with sections and no extra
++surface. Known bytes and state labels wrap inside the narrow layout.
++These are scripted browser results. ARC startup binding, real installed
++expiry and the complete MOD-121 item remain open.
+diff --git a/web/README.md b/web/README.md
+index d96754ef..c0e654f1 100644
+--- a/web/README.md
++++ b/web/README.md
+@@ -104,3 +104,9 @@ independent of serving revisions; an exact replay can return a newer current des
+ - **Errors:** show failures with `ProblemNotice`, which gives the cause, the next step and
+   the request ID. New server error codes get `problem.<CODE>.title` and `.detail` keys.
+ - **File names** are kebab-case, as for all TypeScript in this repository.
++
++An expired model upload remains in import history with its byte count. Its status
++explains that it cannot resume and opens a new bundle upload. Pending expiry
++cleanup blocks continuation until it finishes. A new import uses a new request
++key; replaying an old key only reads the original import. The UI does not enable
++the optional expiry worker, whose startup binding belongs to Control.
+diff --git a/web/apps/console/e2e/models.spec.ts b/web/apps/console/e2e/models.spec.ts
+index 85bc5e68..fde1ca7a 100644
+--- a/web/apps/console/e2e/models.spec.ts
++++ b/web/apps/console/e2e/models.spec.ts
+@@ -7,6 +7,8 @@ import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
+ import {
+   derivedModel,
+   expectAccessible,
++  expiredImport,
++  expiringImport,
+   failedImport,
+   mockControlPlane,
+   modelCatalog,
+@@ -609,3 +611,177 @@ test('explains import storage and background cleanup in Simplified Chinese', asy
+   ).toContainText(chinese['models.import.published.detail']);
+   await expect(page.getByRole('link', { name: chinese['models.import.openModel'] })).toBeVisible();
+ });
++
++for (const [locale, messages] of [
++  ['en', english],
++  ['zh-CN', chinese],
++] as const) {
++  test(`expired import replay opens its history and a new upload uses a fresh key in ${locale}`, async ({
++    page,
++  }, info) => {
++    control.preferences.locale = locale;
++    control.modelImports = [{ ...expiredImport }];
++    control.modelImportReplay = { ...expiredImport };
++    const keys: string[] = [];
++    const writes: string[] = [];
++    page.on('request', (request) => {
++      const path = new URL(request.url()).pathname;
++      if (request.method() === 'POST' && path.endsWith('/admin/model-imports'))
++        keys.push(request.headers()['idempotency-key'] ?? '');
++      if (/(?:chunks|complete|cancel)$/.test(path)) writes.push(path);
++    });
++    await page.setViewportSize(
++      locale === 'en' ? { width: 1440, height: 900 } : { width: 390, height: 844 },
++    );
++    async function chooseNewBundle() {
++      await page.getByTestId('model-bundle').setInputFiles(bundle());
++      await page
++        .getByLabel(messages['models.reason'], { exact: true })
++        .fill('Qualify a fresh import after expiry');
++      await page.getByRole('checkbox').check();
++      await page
++        .getByRole('button', { name: messages['models.import.submit'], exact: true })
++        .click();
++    }
++    await page.goto('/library/import');
++    await chooseNewBundle();
++    await expect(page).toHaveURL(new RegExp(`/library/imports/${expiredImport.id}$`));
++    await expect(
++      page.getByText(messages['models.import.expired.title'], { exact: true }),
++    ).toBeVisible();
++    await expect(
++      page.getByRole('button', { name: messages['models.import.resume.unavailable'], exact: true }),
++    ).toHaveAttribute('aria-disabled', 'true');
++    expect(writes).toEqual([]);
++    await page.reload();
++    await expect(
++      page.getByText(messages['models.import.state.expired'], { exact: true }),
++    ).toBeVisible();
++    await info.attach(`model-import-expired-${locale}`, {
++      body: await page.screenshot({ animations: 'disabled' }),
++      contentType: 'image/png',
++    });
++    await page
++      .getByRole('link', { name: messages['models.import.expired.restart'], exact: true })
++      .click();
++    await chooseNewBundle();
++    await expect(
++      page.getByRole('link', { name: messages['models.import.openModel'], exact: true }),
++    ).toBeVisible();
++    expect(keys).toHaveLength(2);
++    expect(keys[0]).toMatch(/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/);
++    expect(keys[1]).not.toBe(keys[0]);
++    await page.goto('/library?tab=imports');
++    const old = page
++      .getByRole('row')
++      .filter({ has: page.getByRole('link', { name: expiredImport.name, exact: true }) })
++      .filter({ hasText: messages['models.import.state.expired'] });
++    await expect(old).toBeVisible();
++    await page.goto('/help/model-library');
++    await page.getByText('Idempotency-Key', { exact: true }).scrollIntoViewIfNeeded();
++    await info.attach(`model-import-expiry-help-${locale}`, {
++      body: await page.screenshot({ animations: 'disabled' }),
++      contentType: 'image/png',
++    });
++  });
++
++  test(`pending expiry is not resumable and a failed refresh recovers in ${locale}`, async ({
++    page,
++  }, info) => {
++    control.preferences.locale = locale;
++    control.pollMilliseconds = 1_000;
++    control.modelImports = [{ ...expiringImport }];
++    await page.setViewportSize(
++      locale === 'en' ? { width: 1440, height: 900 } : { width: 390, height: 844 },
++    );
++    await page.goto(`/library/imports/${expiringImport.id}`);
++    await expect(
++      page.getByText(messages['models.import.expiring.title'], { exact: true }),
++    ).toBeVisible();
++    await expect(
++      page.getByRole('button', { name: messages['models.import.resume.unavailable'], exact: true }),
++    ).toHaveAttribute('aria-disabled', 'true');
++    await expect(page.getByTestId('model-bundle-resume')).toHaveCount(0);
++    await expect(
++      page.getByRole('link', { name: messages['models.import.expired.restart'], exact: true }),
++    ).toHaveCount(0);
++    await expect(
++      page
++        .getByRole('list', { name: messages['models.import.steps'] })
++        .getByRole('listitem')
++        .first(),
++    ).toContainText(messages['timeline.state.cancelled']);
++    await info.attach(`model-import-expiring-${locale}`, {
++      body: await page.screenshot({ animations: 'disabled' }),
++      contentType: 'image/png',
++    });
++    control.modelImportProblem = { status: 503, code: 'STORAGE_UNAVAILABLE' };
++    await expect(
++      page.getByRole('button', { name: messages['action.retry'], exact: true }),
++    ).toBeVisible({ timeout: 10_000 });
++    await expect(
++      page.getByText(messages['models.import.expiring.title'], { exact: true }),
++    ).toBeVisible();
++    control.modelImportProblem = null;
++    control.modelImports = [{ ...expiredImport }];
++    await page.getByRole('button', { name: messages['action.retry'], exact: true }).click();
++    await expect(
++      page.getByRole('link', { name: messages['models.import.expired.restart'], exact: true }),
++    ).toBeVisible();
++    await page.reload();
++    await expect(
++      page.getByText(messages['models.import.state.expired'], { exact: true }),
++    ).toBeVisible();
++  });
++
++  test(`a 409 resume refusal refreshes the expired history in ${locale}`, async ({ page }) => {
++    control.preferences.locale = locale;
++    control.modelImports = [{ ...stalledImport }];
++    control.chunkFailures = [{ status: 409, code: 'MODEL_IMPORT_STATE_CONFLICT' }];
++    const writes: string[] = [];
++    await page.route(/\/admin\/model-imports\/[0-9a-f-]{36}\/chunks$/, async (route) => {
++      writes.push(route.request().url());
++      control.modelImports = [{ ...expiredImport }];
++      await route.fallback();
++    });
++    await page.goto(`/library/imports/${stalledImport.id}`);
++    await expect(
++      page.getByRole('button', { name: messages['models.import.resume.choose'], exact: true }),
++    ).toBeEnabled();
++    const refused = page.waitForResponse(
++      (response) => response.url().endsWith('/chunks') && response.status() === 409,
++    );
++    await page.getByTestId('model-bundle-resume').setInputFiles(bundle());
++    expect(((await (await refused).json()) as { code: string }).code).toBe(
++      'MODEL_IMPORT_STATE_CONFLICT',
++    );
++    await expect(
++      page.getByText(messages['models.import.expired.title'], { exact: true }),
++    ).toBeVisible();
++    await expect(page.getByTestId('model-bundle-resume')).toHaveCount(0);
++    expect(writes).toHaveLength(1);
++  });
++
++  test(`an import refresh refusal removes cached controls in ${locale}`, async ({ page }) => {
++    control.preferences.locale = locale;
++    control.pollMilliseconds = 1_000;
++    control.modelImports = [{ ...expiringImport }];
++    await page.goto(`/library/imports/${expiringImport.id}`);
++    await expect(
++      page.getByText(messages['models.import.expiring.title'], { exact: true }),
++    ).toBeVisible();
++    control.modelImportProblem = { status: 403, code: 'ACCESS_DENIED' };
++    await expect(
++      page.getByText(messages['problem.ACCESS_DENIED.title'], { exact: true }),
++    ).toBeVisible();
++    await expect(
++      page.getByText(messages['models.import.expiring.title'], { exact: true }),
++    ).toHaveCount(0);
++    await expect(
++      page.getByRole('button', { name: messages['models.import.resume.unavailable'], exact: true }),
++    ).toHaveCount(0);
++    await expect(
++      page.getByRole('link', { name: messages['models.import.expired.restart'], exact: true }),
++    ).toHaveCount(0);
++  });
++}
+diff --git a/web/apps/console/e2e/pages.ts b/web/apps/console/e2e/pages.ts
+index b757794f..85bdfeb9 100644
+--- a/web/apps/console/e2e/pages.ts
++++ b/web/apps/console/e2e/pages.ts
+@@ -8,6 +8,8 @@ import {
+   deploymentAlias,
+   deploymentKey,
+   expiringKey,
++  expiredImport,
++  expiringImport,
+   failedDeployment,
+   failedImport,
+   failedMail,
+@@ -436,6 +438,26 @@ export const consolePages: readonly PageState[] = [
+       await page.getByText('This tab is not uploading').waitFor();
+     },
+   },
++  {
++    name: 'an expired import',
++    path: '/library/imports/$importId',
++    open: async (page, control) => {
++      control.signedIn = true;
++      control.modelImports = [expiredImport];
++      await page.goto(`/library/imports/${expiredImport.id}`);
++      await page.getByRole('link', { name: 'Upload a new bundle', exact: true }).waitFor();
++    },
++  },
++  {
++    name: 'an import awaiting expiry cleanup',
++    path: '/library/imports/$importId',
++    open: async (page, control) => {
++      control.signedIn = true;
++      control.modelImports = [expiringImport];
++      await page.goto(`/library/imports/${expiringImport.id}`);
++      await page.getByText('Removing an expired upload', { exact: true }).waitFor();
++    },
++  },
+   {
+     name: 'an import that published a model',
+     path: '/library/imports/$importId',
+diff --git a/web/apps/console/src/model-import-page.tsx b/web/apps/console/src/model-import-page.tsx
+index ce0ab7a0..8f387533 100644
+--- a/web/apps/console/src/model-import-page.tsx
++++ b/web/apps/console/src/model-import-page.tsx
+@@ -36,9 +36,9 @@ import {
+ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+ import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
+ import { ArrowRight, FileArchive, Upload } from 'lucide-react';
+-import { useRef, useState, type SubmitEvent } from 'react';
++import { useEffect, useRef, useState, type SubmitEvent } from 'react';
+ import { ModelFacts, totalBytes } from './model-details.tsx';
+-import { importStates, modelKeys, modelsKey } from './model-state.ts';
++import { canUploadImport, importState, modelKeys, modelsKey } from './model-state.ts';
+ import { startTransfer, stopTransfer, useTransfer, type Transfer } from './model-upload.ts';
+ import { ResourceHeader, ResourceUnavailable } from './resource-page.tsx';
+ 
+@@ -162,9 +162,11 @@ function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
+       ),
+     onSuccess: (created, bundle) => {
+       const refresh = () => queryClient.invalidateQueries({ queryKey: modelsKey });
+-      startTransfer(bundle, created, catalog.chunk_bytes, reason.trim(), () => {
+-        void refresh();
+-      });
++      if (canUploadImport(created)) {
++        startTransfer(bundle, created, catalog.chunk_bytes, reason.trim(), () => {
++          void refresh();
++        });
++      }
+       void refresh();
+       void navigate({ to: '/library/imports/$importId', params: { importId: created.id } });
+     },
+@@ -196,7 +198,11 @@ function ImportForm({ catalog }: { catalog: ModelCatalogAvailability }) {
+       )}
+       {blocking ? (
+         <Notice title={t('models.import.blocked.title', { name: blocking.name })}>
+-          {t('models.import.blocked.detail')}{' '}
++          {t(
++            blocking.error_code === 'MODEL_IMPORT_EXPIRY_PENDING'
++              ? 'models.import.expiring.detail'
++              : 'models.import.blocked.detail',
++          )}{' '}
+           <Link
+             to="/library/imports/$importId"
+             params={{ importId: blocking.id }}
+@@ -357,6 +363,7 @@ export function ModelImportPage() {
+ }
+ 
+ function stepStates(item: ModelImport, sending: boolean): [StepState, StepState, StepState] {
++  if (item.error_code === 'MODEL_IMPORT_EXPIRY_PENDING') return ['cancelled', 'pending', 'pending'];
+   switch (item.state) {
+     case 'uploading':
+       return [sending ? 'running' : 'pending', 'pending', 'pending'];
+@@ -467,7 +474,7 @@ function CancelDialog({ item, onClose }: { item: ModelImport; onClose: () => voi
+ }
+ 
+ function Loaded({ item }: { item: ModelImport }) {
+-  const { t } = useI18n();
++  const { t, format } = useI18n();
+   const queryClient = useQueryClient();
+   const transfer = useTransfer(item.id);
+   const [cancelling, setCancelling] = useState(false);
+@@ -478,11 +485,17 @@ function Loaded({ item }: { item: ModelImport }) {
+     onSettled: refresh,
+   });
+   const stopping = item.error_code === cancellationPending;
++  const expiring = item.error_code === 'MODEL_IMPORT_EXPIRY_PENDING';
++  const expired = item.state === 'cancelled' && item.error_code === 'MODEL_IMPORT_EXPIRED';
++  const uploadOpen = canUploadImport(item);
++  useEffect(() => {
++    if (!uploadOpen) stopTransfer(item.id);
++  }, [item.id, uploadOpen]);
+   const sending = transfer?.state === 'sending';
+   // A refusal that will not pass needs another file; one that may pass offers Try again instead.
+   const stuck =
+     transfer?.state === 'failed' && !(isProblem(transfer.problem) && transfer.problem.retryable);
+-  const canResume = item.state === 'uploading' && !stopping && (transfer === undefined || stuck);
++  const canResume = uploadOpen && (transfer === undefined || stuck);
+   const needsCatalog = canResume || item.state === 'failed';
+   const catalog = useQuery({
+     queryKey: modelKeys.catalog,
+@@ -490,9 +503,9 @@ function Loaded({ item }: { item: ModelImport }) {
+     enabled: needsCatalog,
+   });
+   const rules = catalog.data;
+-  const state = importStates[item.state];
++  const state = importState(item);
+   const [upload, verification, publication] = stepStates(item, sending);
+-  const uploadIncomplete = item.state === 'uploading' && !sending;
++  const uploadIncomplete = uploadOpen && !sending;
+   const publishedModelId = item.state === 'ready' ? item.model_id : null;
+   const failure = item.state === 'failed' && item.error_code ? item.error_code : null;
+   const resume = (file: File) => {
+@@ -525,6 +538,15 @@ function Loaded({ item }: { item: ModelImport }) {
+               {t('models.import.openModel')}
+               <ArrowRight aria-hidden />
+             </Link>
++          ) : expired ? (
++            <Link to="/library/import" className={buttonVariants({ variant: 'primary' })}>
++              {t('models.import.expired.restart')}
++              <Upload aria-hidden />
++            </Link>
++          ) : expiring ? (
++            <Button variant="danger" aria-disabled aria-describedby="import-upload-closed">
++              {t('models.import.cancel.open')}
++            </Button>
+           ) : finished.includes(item.state) ? null : (
+             <Button
+               variant="danger"
+@@ -539,6 +561,26 @@ function Loaded({ item }: { item: ModelImport }) {
+       />
+       <div className="flex max-w-[720px] flex-col gap-4">
+         {stopping ? <Notice title={t('models.import.stopping')} /> : null}
++        {expiring || expired ? (
++          <Notice
++            title={t(expired ? 'models.import.expired.title' : 'models.import.expiring.title')}
++            actions={
++              <Button aria-disabled aria-describedby="import-upload-closed">
++                {t('models.import.resume.unavailable')}
++              </Button>
++            }
++          >
++            <p id="import-upload-closed" className="m-0">
++              {t(expired ? 'models.import.expired.detail' : 'models.import.expiring.detail')}
++            </p>
++            <p className="m-0 mt-2 tabular-nums">
++              {t('models.import.progress', {
++                sent: format.bytes(item.uploaded_bytes),
++                total: format.bytes(item.expected_bytes),
++              })}
++            </p>
++          </Notice>
++        ) : null}
+         {needsCatalog && !rules ? (
+           catalog.isPending ? (
+             <p role="status" className="m-0 text-text-2">
+@@ -554,7 +596,7 @@ function Loaded({ item }: { item: ModelImport }) {
+             />
+           ) : null
+         ) : null}
+-        {item.state === 'uploading' && !stopping ? (
++        {uploadOpen ? (
+           <Card className="flex flex-col gap-3 p-[18px]">
+             <Sending item={item} transfer={transfer} />
+             {transfer?.state === 'failed' && isProblem(transfer.problem) ? (
+@@ -618,7 +660,7 @@ function Loaded({ item }: { item: ModelImport }) {
+           />
+         </Card>
+       </div>
+-      {cancelling ? (
++      {cancelling && !expiring && !finished.includes(item.state) ? (
+         <CancelDialog
+           item={item}
+           onClose={() => {
+@@ -639,10 +681,31 @@ export function ModelImportStatusPage() {
+     queryKey: modelKeys.import(importId),
+     queryFn: ({ signal }) => getModelImport(importId, { signal, background: true }),
+     refetchInterval: (query) =>
+-      query.state.data && finished.includes(query.state.data.state) ? false : poll,
++      (query.state.data && finished.includes(query.state.data.state)) ||
++      (isProblem(query.state.error) && [403, 404].includes(query.state.error.status))
++        ? false
++        : poll,
+     retry: (failures, error) => failures < 2 && isProblem(error) && error.retryable,
+   });
+-  if (item.data) return <Loaded item={item.data} />;
++  const denied = isProblem(item.error) && [403, 404].includes(item.error.status);
++  useEffect(() => {
++    if (denied) stopTransfer(importId);
++  }, [denied, importId]);
++  if (item.data && !denied) {
++    return (
++      <>
++        {isProblem(item.error) ? (
++          <ProblemNotice
++            problem={item.error}
++            onRetry={() => {
++              void item.refetch();
++            }}
++          />
++        ) : null}
++        <Loaded key={item.data.id} item={item.data} />
++      </>
++    );
++  }
+   return (
+     <ResourceUnavailable
+       pending={item.isPending}
+diff --git a/web/apps/console/src/model-library-page.tsx b/web/apps/console/src/model-library-page.tsx
+index 5cbb0522..cdebeeaa 100644
+--- a/web/apps/console/src/model-library-page.tsx
++++ b/web/apps/console/src/model-library-page.tsx
+@@ -44,7 +44,7 @@ import { Link } from '@tanstack/react-router';
+ import { ArrowRight, Boxes, PackageOpen, Upload } from 'lucide-react';
+ import { useMemo } from 'react';
+ import { ModelFacts, modelSummary, totalBytes } from './model-details.tsx';
+-import { importStates, modelKinds, modelKeys } from './model-state.ts';
++import { importState, modelKinds, modelKeys } from './model-state.ts';
+ import { useChosenTab } from './resource-page.tsx';
+ 
+ const tabs = ['models', 'imports', 'catalogue'] as const;
+@@ -277,7 +277,7 @@ function ImportRows({ items }: { items: readonly ModelImport[] }) {
+         </thead>
+         <tbody>
+           {items.map((item) => {
+-            const state = importStates[item.state];
++            const state = importState(item);
+             return (
+               <Tr key={item.id}>
+                 <Td className="font-semibold">
+diff --git a/web/apps/console/src/model-state.ts b/web/apps/console/src/model-state.ts
+index e6c5d666..9abb5bb2 100644
+--- a/web/apps/console/src/model-state.ts
++++ b/web/apps/console/src/model-state.ts
+@@ -1,5 +1,5 @@
+ // How models and imports are named, and the keys their reads share.
+-import type { ModelImportState, ModelVersion } from '@ownsolid/api';
++import type { ModelImport, ModelImportState, ModelVersion } from '@ownsolid/api';
+ import type { TranslationKey } from '@ownsolid/i18n';
+ import type { StatusTone } from '@ownsolid/ui';
+ 
+@@ -30,3 +30,24 @@ export const importStates: Record<ModelImportState, { label: TranslationKey; ton
+   failed: { label: 'models.import.state.failed', tone: 'critical' },
+   cancelled: { label: 'models.import.state.cancelled', tone: 'neutral' },
+ };
++
++/** The existing DTO carries retention reasons without adding a protocol state. */
++export function importState(item: ModelImport): { label: TranslationKey; tone: StatusTone } {
++  if (item.error_code === 'MODEL_IMPORT_EXPIRY_PENDING') {
++    return { label: 'models.import.state.expiring', tone: 'warning' };
++  }
++  if (item.state === 'cancelled' && item.error_code === 'MODEL_IMPORT_EXPIRED') {
++    return { label: 'models.import.state.expired', tone: 'warning' };
++  }
++  return importStates[item.state];
++}
++
++/** A retained byte count is history after cancellation or expiry, never a resumable offset. */
++export function canUploadImport(item: ModelImport): boolean {
++  return (
++    item.state === 'uploading' &&
++    !['MODEL_CANCELLATION_PENDING', 'MODEL_IMPORT_EXPIRY_PENDING', 'MODEL_IMPORT_EXPIRED'].includes(
++      item.error_code ?? '',
++    )
++  );
++}
+diff --git a/web/apps/console/src/model-upload.test.ts b/web/apps/console/src/model-upload.test.ts
+index 83740918..bec99c8a 100644
+--- a/web/apps/console/src/model-upload.test.ts
++++ b/web/apps/console/src/model-upload.test.ts
+@@ -138,4 +138,38 @@ describe('sendBundle', () => {
+     ).rejects.toBeInstanceOf(ApiProblem);
+     expect(calls.wait).not.toHaveBeenCalled();
+   });
++  it.each([
++    { state: 'cancelled' as const, error_code: 'MODEL_IMPORT_EXPIRED' },
++    { state: 'uploading' as const, error_code: 'MODEL_IMPORT_EXPIRY_PENDING' },
++    { state: 'uploading' as const, error_code: 'MODEL_CANCELLATION_PENDING' },
++  ])('does not send or verify a closed upload: $error_code', async (closed) => {
++    const { calls } = server(4, 8);
++    await expect(
++      sendBundle(
++        new Blob([new Uint8Array(8)]),
++        { ...target(4, 8), ...closed },
++        chunk,
++        'reason',
++        new AbortController().signal,
++        vi.fn(),
++        calls,
++      ),
++    ).rejects.toMatchObject({ code: 'MODEL_IMPORT_STATE_CONFLICT' });
++    expect(calls.upload).not.toHaveBeenCalled();
++    expect(calls.verify).not.toHaveBeenCalled();
++    expect(calls.wait).not.toHaveBeenCalled();
++  });
++
++  it('does not resume an expired offset after a lost chunk response', async () => {
++    const { calls, sent } = server(0, 12, ['lost']);
++    vi.mocked(calls.read).mockResolvedValue({
++      ...target(4, 12),
++      state: 'cancelled',
++      error_code: 'MODEL_IMPORT_EXPIRED',
++    });
++    await expect(send(12, 0, calls)).rejects.toMatchObject({ code: 'MODEL_IMPORT_STATE_CONFLICT' });
++    expect(sent).toEqual([0]);
++    expect(calls.read).toHaveBeenCalledOnce();
++    expect(calls.verify).not.toHaveBeenCalled();
++  });
+ });
+diff --git a/web/apps/console/src/model-upload.ts b/web/apps/console/src/model-upload.ts
+index 0380a177..ca2e2d0f 100644
+--- a/web/apps/console/src/model-upload.ts
++++ b/web/apps/console/src/model-upload.ts
+@@ -1,6 +1,7 @@
+ // Sending a bundle to the server, one chunk at a time. It lives outside any page, so moving around
+ // the console does not stop it (docs/research/model-library.md).
+ import {
++  ApiProblem,
+   getModelImport,
+   isProblem,
+   uploadModelChunk,
+@@ -8,6 +9,7 @@ import {
+   type ModelImport,
+ } from '@ownsolid/api';
+ import { useSyncExternalStore } from 'react';
++import { canUploadImport } from './model-state.ts';
+ 
+ // A short outage passes within these; a longer one is the person's to see and retry.
+ const attemptsPerStep = 4;
+@@ -69,6 +71,11 @@ export async function sendBundle(
+   onProgress: (sent: number) => void,
+   calls: TransferCalls = serverCalls,
+ ): Promise<void> {
++  const requireOpen = (item: ModelImport) => {
++    if (!canUploadImport(item))
++      throw new ApiProblem('MODEL_IMPORT_STATE_CONFLICT', { status: 409 });
++  };
++  requireOpen(target);
+   const retrying = async (step: () => Promise<void>) => {
+     for (let attempt = 1; ; attempt += 1) {
+       try {
+@@ -88,7 +95,9 @@ export async function sendBundle(
+     await retrying(async () => {
+       // A failure may have stored the chunk with its answer lost, so ask rather than assume.
+       if (!answered && proven) {
+-        cursor = (await calls.read(target.id, { signal })).uploaded_bytes;
++        const current = await calls.read(target.id, { signal });
++        requireOpen(current);
++        cursor = current.uploaded_bytes;
+         if (cursor >= total) return;
+       }
+       answered = false;
+@@ -148,6 +157,10 @@ export function startTransfer(
+   onSettled: () => void,
+ ): void {
+   stopTransfer(target.id);
++  if (!canUploadImport(target)) {
++    onSettled();
++    return;
++  }
+   const stop = new AbortController();
+   stops.set(target.id, stop);
+   window.addEventListener('beforeunload', warnBeforeLeaving);
+diff --git a/web/packages/help/locales/en/console/model-library.md b/web/packages/help/locales/en/console/model-library.md
+index 0b93d619..36572690 100644
+--- a/web/packages/help/locales/en/console/model-library.md
++++ b/web/packages/help/locales/en/console/model-library.md
+@@ -37,6 +37,12 @@ A failed import says why. **Verify again** retries it a limited number of times.
+ what was uploaded. A workspace takes one import at a time, so a failed import must be finished or
+ discarded before the next can start.
+ 
++## If an upload expires
++
++If an unfinished upload expires, its status explains what happened. **Expired** means its temporary files have been removed and it cannot resume. Choose **Upload a new bundle**, select the bundle again and start a new import. While cleanup is running, wait for it to finish. Import history keeps the original byte count.
++
++For scripts, use a new `Idempotency-Key` for the fresh import. Reusing the old key returns the original expired import; it does not create another upload.
++
+ ## Retiring a model
+ 
+ **Deploy a model** on a model's page opens [Model services](help:model-services) with the model chosen.
+diff --git a/web/packages/help/locales/zh-cn/console/model-library.md b/web/packages/help/locales/zh-cn/console/model-library.md
+index 0047ebd0..bdcce2aa 100644
+--- a/web/packages/help/locales/zh-cn/console/model-library.md
++++ b/web/packages/help/locales/zh-cn/console/model-library.md
+@@ -27,6 +27,12 @@ macOS 自带的 tar 即使指定 `--format=ustar`，生成的归档头也无法
+ 
+ 失败的导入会说明原因。“重新校验”可重试有限次数。“丢弃”会删除已上传的内容。一个工作空间一次只能进行一个导入，所以必须先完成或丢弃失败的导入，才能开始下一个。
+ 
++## 上传过期时
++
++未完成的上传过期时，状态页会说明原因。“已过期”表示临时文件已删除，无法继续上传。选择“重新上传模型包”，再次选择模型包，开始一次新导入。清理仍在进行时，请先等待完成。导入历史保留原有字节数。
++
++使用脚本时，新导入需使用新的 `Idempotency-Key`。重用旧键只会返回原来已过期的导入，不会创建新上传。
++
+ ## 退役模型
+ 
+ 模型页面上的“退役”会把它从列表中移除，并阻止新的部署。正在使用的模型不能退役：请先停止依赖它的内容。文件保留在存储中，历史保留在审计记录中。
+diff --git a/web/packages/help/src/gen/locales/en/console.json b/web/packages/help/src/gen/locales/en/console.json
+index 1c15e2d9..ee5686c2 100644
+--- a/web/packages/help/src/gen/locales/en/console.json
++++ b/web/packages/help/src/gen/locales/en/console.json
+@@ -77,6 +77,10 @@
+     "title": "If an import fails",
+     "anchor": "if-an-import-fails"
+    },
++   {
++    "title": "If an upload expires",
++    "anchor": "if-an-upload-expires"
++   },
+    {
+     "title": "Retiring a model",
+     "anchor": "retiring-a-model"
+diff --git a/web/packages/help/src/gen/locales/en/console/model-library.json b/web/packages/help/src/gen/locales/en/console/model-library.json
+index 3e713fc0..72f956c6 100644
+--- a/web/packages/help/src/gen/locales/en/console/model-library.json
++++ b/web/packages/help/src/gen/locales/en/console/model-library.json
+@@ -412,6 +412,71 @@
+     }
+    ]
+   },
++  {
++   "type": "heading",
++   "depth": 2,
++   "children": [
++    {
++     "type": "text",
++     "value": "If an upload expires"
++    }
++   ],
++   "data": {
++    "id": "if-an-upload-expires"
++   }
++  },
++  {
++   "type": "paragraph",
++   "children": [
++    {
++     "type": "text",
++     "value": "If an unfinished upload expires, its status explains what happened. "
++    },
++    {
++     "type": "strong",
++     "children": [
++      {
++       "type": "text",
++       "value": "Expired"
++      }
++     ]
++    },
++    {
++     "type": "text",
++     "value": " means its temporary files have been removed and it cannot resume. Choose "
++    },
++    {
++     "type": "strong",
++     "children": [
++      {
++       "type": "text",
++       "value": "Upload a new bundle"
++      }
++     ]
++    },
++    {
++     "type": "text",
++     "value": ", select the bundle again and start a new import. While cleanup is running, wait for it to finish. Import history keeps the original byte count."
++    }
++   ]
++  },
++  {
++   "type": "paragraph",
++   "children": [
++    {
++     "type": "text",
++     "value": "For scripts, use a new "
++    },
++    {
++     "type": "inlineCode",
++     "value": "Idempotency-Key"
++    },
++    {
++     "type": "text",
++     "value": " for the fresh import. Reusing the old key returns the original expired import; it does not create another upload."
++    }
++   ]
++  },
+   {
+    "type": "heading",
+    "depth": 2,
+diff --git a/web/packages/help/src/gen/locales/zh-cn/console.json b/web/packages/help/src/gen/locales/zh-cn/console.json
+index 14eeec74..599c3d44 100644
+--- a/web/packages/help/src/gen/locales/zh-cn/console.json
++++ b/web/packages/help/src/gen/locales/zh-cn/console.json
+@@ -77,6 +77,10 @@
+     "title": "导入失败时",
+     "anchor": "导入失败时"
+    },
++   {
++    "title": "上传过期时",
++    "anchor": "上传过期时"
++   },
+    {
+     "title": "退役模型",
+     "anchor": "退役模型"
+diff --git a/web/packages/help/src/gen/locales/zh-cn/console/model-library.json b/web/packages/help/src/gen/locales/zh-cn/console/model-library.json
+index 78344e17..13b4b3ce 100644
+--- a/web/packages/help/src/gen/locales/zh-cn/console/model-library.json
++++ b/web/packages/help/src/gen/locales/zh-cn/console/model-library.json
+@@ -321,6 +321,45 @@
+     }
+    ]
+   },
++  {
++   "type": "heading",
++   "depth": 2,
++   "children": [
++    {
++     "type": "text",
++     "value": "上传过期时"
++    }
++   ],
++   "data": {
++    "id": "上传过期时"
++   }
++  },
++  {
++   "type": "paragraph",
++   "children": [
++    {
++     "type": "text",
++     "value": "未完成的上传过期时，状态页会说明原因。“已过期”表示临时文件已删除，无法继续上传。选择“重新上传模型包”，再次选择模型包，开始一次新导入。清理仍在进行时，请先等待完成。导入历史保留原有字节数。"
++    }
++   ]
++  },
++  {
++   "type": "paragraph",
++   "children": [
++    {
++     "type": "text",
++     "value": "使用脚本时，新导入需使用新的 "
++    },
++    {
++     "type": "inlineCode",
++     "value": "Idempotency-Key"
++    },
++    {
++     "type": "text",
++     "value": "。重用旧键只会返回原来已过期的导入，不会创建新上传。"
++    }
++   ]
++  },
+   {
+    "type": "heading",
+    "depth": 2,
+diff --git a/web/packages/i18n/locales/en.json b/web/packages/i18n/locales/en.json
+index 7383730e..e5aad760 100644
+--- a/web/packages/i18n/locales/en.json
++++ b/web/packages/i18n/locales/en.json
+@@ -1874,6 +1874,14 @@
+   "models.import.state.verifying": "Verifying",
+   "models.import.state.ready": "Ready",
+   "models.import.state.failed": "Failed",
++  "models.import.state.expired": "Expired",
++  "models.import.state.expiring": "Expiring",
++  "models.import.resume.unavailable": "Resume upload",
++  "models.import.expired.title": "This upload expired",
++  "models.import.expired.detail": "Its temporary files have been removed. It cannot be resumed. Upload the bundle again to start a new import.",
++  "models.import.expired.restart": "Upload a new bundle",
++  "models.import.expiring.title": "Removing an expired upload",
++  "models.import.expiring.detail": "This upload can no longer be resumed. Wait for cleanup to finish, then upload the bundle as a new import.",
+   "models.import.state.cancelled": "Discarded",
+   "models.import.resume.incomplete": "Upload incomplete",
+   "models.import.resume.title": "This tab is not uploading",
+diff --git a/web/packages/i18n/locales/zh-cn.json b/web/packages/i18n/locales/zh-cn.json
+index d65d7dc1..7d285685 100644
+--- a/web/packages/i18n/locales/zh-cn.json
++++ b/web/packages/i18n/locales/zh-cn.json
+@@ -1874,6 +1874,14 @@
+   "models.import.state.verifying": "校验中",
+   "models.import.state.ready": "就绪",
+   "models.import.state.failed": "失败",
++  "models.import.state.expired": "已过期",
++  "models.import.state.expiring": "过期清理中",
++  "models.import.resume.unavailable": "继续上传",
++  "models.import.expired.title": "此上传已过期",
++  "models.import.expired.detail": "临时文件已删除，无法继续上传。请重新上传模型包，开始一次新导入。",
++  "models.import.expired.restart": "重新上传模型包",
++  "models.import.expiring.title": "正在清理过期上传",
++  "models.import.expiring.detail": "此上传无法继续。请等待清理完成，再重新上传模型包。",
+   "models.import.state.cancelled": "已丢弃",
+   "models.import.resume.incomplete": "上传未完成",
+   "models.import.resume.title": "此标签页未在上传",
+diff --git a/web/packages/shell/testing/index.ts b/web/packages/shell/testing/index.ts
+index b8a01ef9..d6337730 100644
+--- a/web/packages/shell/testing/index.ts
++++ b/web/packages/shell/testing/index.ts
+@@ -40,6 +40,8 @@ export {
+   modelCatalog,
+   publishedImport,
+   readyModel,
++  expiredImport,
++  expiringImport,
+   stalledImport,
+   type ModelScript,
+ } from './models.ts';
+diff --git a/web/packages/shell/testing/models.ts b/web/packages/shell/testing/models.ts
+index 0e1be74e..77984e83 100644
+--- a/web/packages/shell/testing/models.ts
++++ b/web/packages/shell/testing/models.ts
+@@ -95,6 +95,19 @@ export const stalledImport: ModelImport = {
+   updated_at: stamp,
+ };
+ 
++/** An expired partial upload whose original byte count remains in history. */
++export const expiredImport: ModelImport = {
++  ...stalledImport,
++  state: 'cancelled',
++  error_code: 'MODEL_IMPORT_EXPIRED',
++};
++
++/** Expiry has committed its intent but has not finished removing staging. */
++export const expiringImport: ModelImport = {
++  ...stalledImport,
++  error_code: 'MODEL_IMPORT_EXPIRY_PENDING',
++};
++
+ /** An import whose model has been published. The import response has no cleanup state. */
+ export const publishedImport: ModelImport = {
+   ...stalledImport,
+@@ -129,6 +142,10 @@ export interface ModelScript {
+   modelChunks: Record<string, Record<number, string>>;
+   modelsProblem: ScriptedFailure | null;
+   nextModelImport: ScriptedFailure | null;
++  /** A creation retry may return its now-terminal import. */
++  modelImportReplay: ModelImport | null;
++  /** Failure of import status reads, including a refresh after an earlier success. */
++  modelImportProblem: ScriptedFailure | null;
+   /** Failures of the next chunks, in order; `lost` stores the chunk and drops its answer. */
+   chunkFailures: (ScriptedFailure | 'lost' | 'dropped')[];
+   /** Holds every chunk this long, so a flow can act during an upload. */
+@@ -148,6 +165,8 @@ export function emptyModelScript(): ModelScript {
+     modelChunks: {},
+     modelsProblem: null,
+     nextModelImport: null,
++    modelImportReplay: null,
++    modelImportProblem: null,
+     chunkFailures: [],
+     chunkDelayMilliseconds: 0,
+     verificationOutcome: 'ready',
+@@ -230,6 +249,11 @@ export async function routeModels(
+       state.nextModelImport = null;
+       return problem(route, scripted);
+     }
++    if (state.modelImportReplay) {
++      const replay = state.modelImportReplay;
++      state.modelImportReplay = null;
++      return data(route, replay);
++    }
+     const body = route.request().postDataJSON() as {
+       workspace_id: string;
+       name: string;
+@@ -254,6 +278,7 @@ export async function routeModels(
+     return data(route, created, 201);
+   });
+   await page.route(/\/admin\/model-imports\/[0-9a-f-]{36}$/, (route) => {
++    if (state.modelImportProblem) return problem(route, state.modelImportProblem);
+     const found = state.modelImports.find((item) => item.id === idOf(route));
+     return found ? data(route, found) : problem(route, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+   });
+-- 
+2.54.0 (Apple Git-157)
+
+
+From 396a31dca033e2d4809a3e878d3b449261079819 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 02:41:03 +0800
+Subject: [PATCH 3/5] DEL-109: Correct the installer import-limit configuration
+ path
+
+Verify the existing renderer retains runtime settings and owns only top-level licensing trust. Document the installation input instead of hand edits to generated configuration. Keep installed quota and lifecycle acceptance open; no runtime code changes.
+---
+ docs/research/license-page.md | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/docs/research/license-page.md b/docs/research/license-page.md
+index b4de4cc0..3cde186f 100644
+--- a/docs/research/license-page.md
++++ b/docs/research/license-page.md
+@@ -52,8 +52,12 @@ only from a command line, which an offline site's administrator may not have to
+ - **Limits are honest.** A license carries no node, user or feature limit (the product decision: one
+   whole-platform license), so the page says so and shows what does limit it: whether new work is
+   allowed, and imports used of `runtime.licensing.maximum_imports`, which the API now reports. The
+-  installer has no setting for it yet, so raising it means editing `control.yaml`, and `apply` rewrites
+-  that file; the default of 64 is far from a yearly renewal's reach, and DEL-109 owns the gap.
++  installer already accepts `control_settings.runtime.licensing.maximum_imports`. Its
++  [renderer](../../deploy/offline/internal/install/materialize.go) retains the supplied runtime
++  settings for both Control profiles and owns the separate top-level `licensing.trust_file`.
++  Change the installation input and apply it; a hand edit to generated `control.yaml` is overwritten.
++  The default remains 64. Materializing and preserving an override does not establish installed
++  quota admission or renewal lifecycle acceptance, so those DEL-109 checks remain open.
+ - **The first failure stays recoverable.** Inspection joins import in the list of actions a missing or
+   expired license cannot block.
+ 
+-- 
+2.54.0 (Apple Git-157)
+
+
+From d2cd19b667281a05b6ff54cee90fe3564832e8c6 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 03:39:46 +0800
+Subject: [PATCH 4/5] MOD-121: Find expiry help by its visible lifecycle term
+
+Use the existing heading index without stemming or search-scope changes. The pinned old production heading fails the English expired query while Chinese remains a positive control. Verify check, units, 44 model browser cases with three unchanged skips and eight state checks. Installed expiry remains open.
+---
+ docs/research/model-import-cleanup.md             | 13 +++++++++++++
+ web/apps/console/e2e/models.spec.ts               | 15 ++++++++++++++-
+ .../help/locales/en/console/model-library.md      |  2 +-
+ web/packages/help/src/gen/locales/en/console.json |  4 ++--
+ .../src/gen/locales/en/console/model-library.json |  4 ++--
+ 5 files changed, 32 insertions(+), 6 deletions(-)
+
+diff --git a/docs/research/model-import-cleanup.md b/docs/research/model-import-cleanup.md
+index c52d5ff8..09c23483 100644
+--- a/docs/research/model-import-cleanup.md
++++ b/docs/research/model-import-cleanup.md
+@@ -398,3 +398,16 @@ reasons. The Help remains a reference article with sections and no extra
+ surface. Known bytes and state labels wrap inside the narrow layout.
+ These are scripted browser results. ARC startup binding, real installed
+ expiry and the complete MOD-121 item remain open.
++
++The Help index searches titles, summaries and section headings, without stemming.
++Use Expired uploads as the English heading so the visible Expired lifecycle term
++finds this answer. The bilingual consumer must find the article from Help search
++before reading its new-key guidance. Preserve a controlled old production build:
++the old expires heading does not match expired, while the Chinese heading already
++matches the equivalent query. This changes article wording only, not search scope.
++
++A discovery assertion must first establish the filtered-empty state, then enter
++the lifecycle term and await its query URL. Otherwise the unchanged article may
++still be visible before the debounced filter commits, producing a false positive.
++Keep that initial false-positive comparison separate from the corrected old-build
++regression. Neither comparison uses an installed server or real model bytes.
+diff --git a/web/apps/console/e2e/models.spec.ts b/web/apps/console/e2e/models.spec.ts
+index fde1ca7a..304f4ea7 100644
+--- a/web/apps/console/e2e/models.spec.ts
++++ b/web/apps/console/e2e/models.spec.ts
+@@ -677,7 +677,20 @@ for (const [locale, messages] of [
+       .filter({ has: page.getByRole('link', { name: expiredImport.name, exact: true }) })
+       .filter({ hasText: messages['models.import.state.expired'] });
+     await expect(old).toBeVisible();
+-    await page.goto('/help/model-library');
++    await page.goto('/help');
++    const search = page.getByLabel(messages['help.search'], { exact: true });
++    await search.fill('no-expiry-answer-matches-this');
++    await expect(
++      page.getByRole('heading', { name: messages['help.empty.title'], exact: true }),
++    ).toBeVisible();
++    const term = locale === 'en' ? 'expired' : '\u8fc7\u671f';
++    await search.fill(term);
++    await expect(page).toHaveURL(new RegExp(`[?&]q=${encodeURIComponent(term)}(?:&|$)`));
++    const answer = page
++      .getByRole('main')
++      .getByRole('link', { name: new RegExp(`^${messages['models.title']}`) });
++    await expect(answer).toBeVisible();
++    await answer.click();
+     await page.getByText('Idempotency-Key', { exact: true }).scrollIntoViewIfNeeded();
+     await info.attach(`model-import-expiry-help-${locale}`, {
+       body: await page.screenshot({ animations: 'disabled' }),
+diff --git a/web/packages/help/locales/en/console/model-library.md b/web/packages/help/locales/en/console/model-library.md
+index 36572690..2e5cd73c 100644
+--- a/web/packages/help/locales/en/console/model-library.md
++++ b/web/packages/help/locales/en/console/model-library.md
+@@ -37,7 +37,7 @@ A failed import says why. **Verify again** retries it a limited number of times.
+ what was uploaded. A workspace takes one import at a time, so a failed import must be finished or
+ discarded before the next can start.
+ 
+-## If an upload expires
++## Expired uploads
+ 
+ If an unfinished upload expires, its status explains what happened. **Expired** means its temporary files have been removed and it cannot resume. Choose **Upload a new bundle**, select the bundle again and start a new import. While cleanup is running, wait for it to finish. Import history keeps the original byte count.
+ 
+diff --git a/web/packages/help/src/gen/locales/en/console.json b/web/packages/help/src/gen/locales/en/console.json
+index ee5686c2..32735a64 100644
+--- a/web/packages/help/src/gen/locales/en/console.json
++++ b/web/packages/help/src/gen/locales/en/console.json
+@@ -78,8 +78,8 @@
+     "anchor": "if-an-import-fails"
+    },
+    {
+-    "title": "If an upload expires",
+-    "anchor": "if-an-upload-expires"
++    "title": "Expired uploads",
++    "anchor": "expired-uploads"
+    },
+    {
+     "title": "Retiring a model",
+diff --git a/web/packages/help/src/gen/locales/en/console/model-library.json b/web/packages/help/src/gen/locales/en/console/model-library.json
+index 72f956c6..36ea72c7 100644
+--- a/web/packages/help/src/gen/locales/en/console/model-library.json
++++ b/web/packages/help/src/gen/locales/en/console/model-library.json
+@@ -418,11 +418,11 @@
+    "children": [
+     {
+      "type": "text",
+-     "value": "If an upload expires"
++     "value": "Expired uploads"
+     }
+    ],
+    "data": {
+-    "id": "if-an-upload-expires"
++    "id": "expired-uploads"
+    }
+   },
+   {
+-- 
+2.54.0 (Apple Git-157)
+
+
+From c864fbb10294fa36bdbf4256fe1601f8358ad1f8 Mon Sep 17 00:00:00 2001
+From: "Passion." <279058513+Passion-Flow@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 03:59:35 +0800
+Subject: [PATCH 5/5] MOD-121: Record the complete consumer gate and regression
+ controls
+
+Verify the exact integrated source with all repository gates, 1,134 Console and 410 Portal cases, 38 unchanged environment skips and no retries/flakes. Retain the preview-listener failure, invalid polling fixture and early search false-positive separately. Read ten final consumer screenshots. Keep real installed and owner acceptance open.
+---
+ docs/research/identity-audit-read-access.md |  7 +++--
+ docs/research/model-import-cleanup.md       | 34 +++++++++++++++++++++
+ 2 files changed, 39 insertions(+), 2 deletions(-)
+
+diff --git a/docs/research/identity-audit-read-access.md b/docs/research/identity-audit-read-access.md
+index 66f98cb5..d420a8fc 100644
+--- a/docs/research/identity-audit-read-access.md
++++ b/docs/research/identity-audit-read-access.md
+@@ -161,5 +161,8 @@ read failure, denied read, and unavailable operations with reasons. Initial
+ and filtered empty copy remains distinct. This slice adds no surface or
+ primary action; reading an event remains the immediate task, with its
+ request/person follow-up in the preview. Installed append/SQL acceptance
+-is not claimed by the scripted browser checks. Full gate evidence follows
+-only after the exact committed source has passed it.
++is not claimed by the scripted browser checks. The complete integrated gate passed
++at 6a77bcdbc372a0aa7fac24b3f21a83105c246c86;
++see the [shared Web gate](model-import-cleanup.md#complete-web-consumer-gate).
++This retains the exact-action and thirteen-field boundaries; installed AUD-108
++acceptance is still separate.
+diff --git a/docs/research/model-import-cleanup.md b/docs/research/model-import-cleanup.md
+index 09c23483..adb72e9e 100644
+--- a/docs/research/model-import-cleanup.md
++++ b/docs/research/model-import-cleanup.md
+@@ -411,3 +411,37 @@ the lifecycle term and await its query URL. Otherwise the unchanged article may
+ still be visible before the debounced filter commits, producing a false positive.
+ Keep that initial false-positive comparison separate from the corrected old-build
+ regression. Neither comparison uses an installed server or real model bytes.
++
++### Complete Web consumer gate
++
++The exact integrated source 6a77bcdbc372a0aa7fac24b3f21a83105c246c86 passed make check,
++make build and make test, including all Go modules, Rust, Web unit targets
++and both full browser suites. Console passed 1,134 cases with 28 existing
++installation-dependent skips; Portal passed 410 with 10 existing skips.
++There were zero unexpected/flaky cases and no retries. The private Make
++overlay only capped workers at four for Console and one for Portal and
++reused the same production assets just built. It selected no subset and
++introduced no skip. No installed expiry worker or GPU run is claimed.
++
++The old 7401ff67 production asset manifest was kept unchanged during the
++controlled discovery check. English expired search failed with the old
++expires heading; Chinese remained a passing positive control. The new
++heading and consumer passed both languages, all 44 model cases with
++three existing skips, eight state checks, and the unit/catalog checks.
++Six final screenshots were read again, including the answer reached
++through the settled search. The first comparison that clicked an article
++before filtering settled is retained as a false-positive test, not as
++regression evidence.
++
++The earlier interactive-preview full run at be1e7339 lost its listener
++about 60 seconds after startup. It was interrupted and remains failed;
++its raw cleanup status alone is not a successful gate. A noninteractive
++rerun with clean shell environment and separate owned ports passed at
++7401ff67 and again at the exact source above. The final runner requires
++both complete stage and zero exit status. No product assertion or limit
++was weakened. Raw reports, asset/image hashes and failed controls remain
++outside Git in the source-qualified Web artifacts.
++
++AUD-108's action/family consumer is included in this same gate. Actual
++same-source installed audit reads, expiry, GW120/Help/Scope and independent
++SQL remain separate. MOD-121 and AUD-108 stay open with their owner work.
+-- 
+2.54.0 (Apple Git-157)
+

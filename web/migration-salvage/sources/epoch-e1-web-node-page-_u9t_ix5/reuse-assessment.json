@@ -1,0 +1,9 @@
+{
+  "oldSource": "82c602d32b2d957459b3a742499de96867da27a9",
+  "oldCommands": "web-install/check/build actual exits0 unchanged",
+  "allTrackedInputAndAssetHashesAvailable": true,
+  "historicalCompleteExecutableHashManifest": "NOT_RECORDED",
+  "unconditionalThreeTargetReuseQualified": false,
+  "fullIfAdmitted": "Requalify original install/check/build only for this missing toolchain-byte binding, then original make test within full1800/combined2400; do not borrow unproven whole results.",
+  "noNewFailureOrToolchainChangeInferred": true
+}

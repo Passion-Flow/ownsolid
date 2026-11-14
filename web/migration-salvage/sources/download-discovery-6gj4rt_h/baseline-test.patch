@@ -1,0 +1,99 @@
+diff --git a/docs/research/in-product-help.md b/docs/research/in-product-help.md
+index 808c0b0a..70ee86b3 100644
+--- a/docs/research/in-product-help.md
++++ b/docs/research/in-product-help.md
+@@ -385,8 +385,16 @@ has no address and disappears. The address itself is static build data.
+ [Vite glob imports](https://vite.dev/guide/features#glob-import) support
+ eager default imports with a `?url` query. Include those URL strings in
+ the reference module while keeping the JSON files as separate same-origin
+-assets. The existing zero-inline asset policy still applies. Preserve
+-the asynchronous contractUrl API used by current callers.
++assets. The existing zero-inline asset policy still applies. Read this
++constant address synchronously in the reference header. The private Web
++helper retains its name, entrance projection and null result for an
++unknown contract; its only runtime consumer no longer needs a query.
++
++[TanStack Query's network modes](https://tanstack.com/query/latest/docs/framework/react/guides/network-mode)
++explain a second failure: its default online query pauses while offline,
++even if its result needs no network. Changing only the import would leave
++the header paused. An always-running query could avoid that pause but
++still adds asynchronous state and a cache for a constant build value.
+ 
+ Reject fetching every full contract in advance: finding a download
+ address does not require reading its content. A second manually maintained
+diff --git a/web/packages/shell/testing/help-flows.ts b/web/packages/shell/testing/help-flows.ts
+index 2e057bc9..a3fb2f19 100644
+--- a/web/packages/shell/testing/help-flows.ts
++++ b/web/packages/shell/testing/help-flows.ts
+@@ -6,6 +6,7 @@ import { article } from '@ownsolid/help/catalog';
+ import english from '@ownsolid/i18n/locales/en.json' with { type: 'json' };
+ import chinese from '@ownsolid/i18n/locales/zh-cn.json' with { type: 'json' };
+ import { expect, test } from '@playwright/test';
++import { expectContractAudience } from './contract-download.ts';
+ import { mockControlPlane, type ControlPlane } from './control-plane.ts';
+ 
+ /** Registers the help flows for one entrance. */
+@@ -85,6 +86,63 @@ export function helpFlows(audience: ControlPlane['audience']): void {
+       ['en', english],
+       ['zh-CN', chinese],
+     ] as const) {
++      test(`keeps a contract discoverable offline and retries its download in ${locale}`, async ({
++        page,
++        context,
++      }, info) => {
++        control.preferences.locale = locale;
++        await page.setViewportSize(
++          locale === 'zh-CN' ? { width: 390, height: 844 } : { width: 1440, height: 900 },
++        );
++        const operation = audience === 'admin' ? 'getAdminWorkspace' : 'getPortalWorkspace';
++        await page.goto(`/help/api?q=${operation}`);
++        await expect(
++          page.getByRole('link', {
++            name: messages['help.api.save.label'].replace('{domain}', 'workspaces'),
++          }),
++        ).toBeVisible();
++        await context.setOffline(true);
++        try {
++          await page.getByLabel(messages['help.api.search']).fill('changePassword');
++          await expect(page.getByRole('button', { name: / changePassword$/ })).toBeVisible();
++          await info.attach(`contract-discovery-offline-${locale}`, {
++            body: await page.screenshot({ animations: 'disabled' }),
++            contentType: 'image/png',
++          });
++          await expect(
++            page.getByRole('link', {
++              name: messages['help.api.save.label'].replace('{domain}', 'identity'),
++            }),
++          ).toBeVisible();
++        } finally {
++          await context.setOffline(false);
++        }
++        const save = page.getByRole('link', {
++          name: messages['help.api.save.label'].replace('{domain}', 'identity'),
++        });
++        await expect(save).toHaveAttribute('download', 'identity.openapi.json');
++        const href = await save.getAttribute('href');
++        expect(href).toBeTruthy();
++        const address = new URL(href ?? '', page.url()).href;
++        let refused = 0;
++        await page.route(
++          (url) => url.href === address,
++          async (route) => {
++            refused += 1;
++            await route.abort('connectionreset');
++          },
++          { times: 1 },
++        );
++        const failure = page.waitForEvent('download');
++        await save.click();
++        expect(await (await failure).failure()).not.toBeNull();
++        expect(refused).toBe(1);
++        await expect(save).toBeVisible();
++        const retry = page.waitForEvent('download');
++        await save.click();
++        await expectContractAudience(await retry, audience);
++      });
++
+       test(`the published operation explains its error in ${locale}`, async ({ page }, info) => {
+         control.preferences.locale = locale;
+         await page.goto('/help/api');

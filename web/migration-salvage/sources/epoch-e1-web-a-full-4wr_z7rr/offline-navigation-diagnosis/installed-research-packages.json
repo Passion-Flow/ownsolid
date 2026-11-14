@@ -1,0 +1,16 @@
+[
+  {
+    "path": "web/node_modules/.pnpm/playwright@1.64.1/node_modules/playwright/package.json",
+    "name": "playwright",
+    "version": "1.64.1",
+    "license": "Apache-2.0",
+    "sha256": "313d23ce667d93962d3a1ab4be80908cefe840e4d9e48f1cd5863b91f65e8e39"
+  },
+  {
+    "path": "web/apps/console/node_modules/vite/package.json",
+    "name": "vite",
+    "version": "8.3.5",
+    "license": "MIT",
+    "sha256": "c9586ac07b42763a8a7f6aac6b4a805d70f057bd8c67c43da81c0cc4e5da8293"
+  }
+]

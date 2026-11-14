@@ -1,0 +1,348 @@
+{
+  "scope": "Actual saved failure contexts during the original complete make test; no rerun",
+  "count": 81,
+  "errors": {
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075": 5,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/library/import": 1,
+    "Error: page.reload: net::ERR_TIMED_OUT": 1,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks": 19,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/users/workspaces": 2,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/": 6,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/account": 1,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031?tab=activity": 2,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031?tab=tasks": 2,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-ffffffffffff": 1,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031": 4,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes?open=6f1c7a1e-0000-4000-8000-000000000031": 1,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes": 26,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes?connectivity=offline&open=6f1c7a1e-0000-4000-8000-000000000031": 1,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes?open=6f1c7a1e-0000-4000-8000-000000000099": 1,
+    "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add": 8
+  },
+  "contexts": [
+    {
+      "path": "models-a-409-resume-refusa-beba1-he-expired-history-in-zh-CN-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075"
+    },
+    {
+      "path": "models-a-409-resume-refusa-ded30-s-the-expired-history-in-en-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075"
+    },
+    {
+      "path": "models-an-import-refresh-r-03b61-es-cached-controls-in-zh-CN-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075"
+    },
+    {
+      "path": "models-an-import-refresh-r-73c84-moves-cached-controls-in-en-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075"
+    },
+    {
+      "path": "models-expired-import-repl-57cd5-d-uses-a-fresh-key-in-zh-CN-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/library/import"
+    },
+    {
+      "path": "models-pending-expiry-is-n-3751d-d-refresh-recovers-in-zh-CN-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/library/imports/6f1c7a1e-0000-4000-8000-000000000075"
+    },
+    {
+      "path": "models-pending-expiry-is-n-cc215-iled-refresh-recovers-in-en-chromium/error-context.md",
+      "error": "Error: page.reload: net::ERR_TIMED_OUT"
+    },
+    {
+      "path": "navigation-a-closed-group--b1b57-s-it-holds-the-current-page-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-a-heading-only--e890b--closes-and-never-navigates-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-a-page-beneath-a-destination-keeps-its-group-open-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/users/workspaces"
+    },
+    {
+      "path": "navigation-in-Chinese-the-filter-reads-the-names-on-screen-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/"
+    },
+    {
+      "path": "navigation-only-the-group-of-the-current-page-is-open-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-pinned-pages-a--57c1c--in-its-group-and-comes-off-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-pinned-pages-a--75567-ot-shipped-cannot-be-pinned-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-pinned-pages-a--9c86c-ugh-the-groups-not-the-pins-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-pinned-pages-pi-39376-e-page-has-gone-is-left-out-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-pinned-pages-th-77af7-pins-first-with-their-names-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-pinned-pages-th-7ba1e--menu-pins-the-current-page-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/users/workspaces"
+    },
+    {
+      "path": "navigation-pinned-pages-the-account-page-has-no-pin-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/account"
+    },
+    {
+      "path": "navigation-pinned-pages-the-limit-says-what-to-do-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-the-current-pag-61675-and-weight-not-colour-alone-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-the-filter-Ente-1cc34-a-page-that-has-not-shipped-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/"
+    },
+    {
+      "path": "navigation-the-filter-find-232f2-s-and-Enter-opens-the-first-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/"
+    },
+    {
+      "path": "navigation-the-filter-says-c9f7d-atches-and-Escape-clears-it-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-the-icon-only-r-89750-and-shows-the-name-on-focus-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-the-icon-only-r-a4365-hosen-from-the-command-menu-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-the-icon-only-r-a76f8-e-drawer-of-a-narrow-screen-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-the-icon-only-r-b3483-d-comes-back-after-a-reload-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-the-icon-only-r-b75d2-e-the-pointer-moves-onto-it-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-the-icon-only-r-d9a34-er-arrives-with-the-account-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-what-a-person-o-6fbba-n-they-move-to-another-page-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "navigation-works-from-the-keyboard-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/tasks"
+    },
+    {
+      "path": "node-page-Activity-says-wh-d8b0a-nd-a-failure-can-be-retried-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031?tab=activity"
+    },
+    {
+      "path": "node-page-Activity-shows-w-5fe6e-is-node-over-its-whole-life-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031?tab=activity"
+    },
+    {
+      "path": "node-page-Tasks-lists-this-node-and-links-each-task-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031?tab=tasks"
+    },
+    {
+      "path": "node-page-Tasks-says-when--c7ba4-nd-a-failure-can-be-retried-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031?tab=tasks"
+    },
+    {
+      "path": "node-page-a-node-that-does-d5ecb-nd-a-failure-can-be-retried-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-ffffffffffff"
+    },
+    {
+      "path": "node-page-in-Chinese-names-its-tabs-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031"
+    },
+    {
+      "path": "node-page-its-tabs-work-fr-7232f-ard-and-live-in-the-address-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031"
+    },
+    {
+      "path": "node-page-opens-from-the-d-6f45c-e-sidebar-still-marks-Nodes-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes?open=6f1c7a1e-0000-4000-8000-000000000031"
+    },
+    {
+      "path": "node-page-removing-goes-back-to-the-list-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031"
+    },
+    {
+      "path": "node-page-renaming-stays-on-the-page-and-can-be-undone-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes/6f1c7a1e-0000-4000-8000-000000000031"
+    },
+    {
+      "path": "nodes-a-node-changed-by-someone-else-is-explained-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-a-node-collects-its-facts-again-and-shows-the-task-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-a-node-from-a-link-i-94359-n-the-list-does-not-hold-it-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes?connectivity=offline&open=6f1c7a1e-0000-4000-8000-000000000031"
+    },
+    {
+      "path": "nodes-a-node-is-disabled-at-once-and-can-be-put-back-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-a-node-is-removed-only-after-its-name-is-typed-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-a-node-is-renamed-and-a-taken-name-is-explained-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-a-node-opens-with-its-facts-and-tasks-from-a-link-too-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-a-node-that-does-not-exist-says-so-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes?open=6f1c7a1e-0000-4000-8000-000000000099"
+    },
+    {
+      "path": "nodes-a-node-that-is-disabled-offers-to-enable-it-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-a-node-that-went-quiet-says-what-to-check-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-adding-a-node-a-toke-9c418-why-and-the-list-catches-up-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-adding-a-node-a-toke-cbeb9-s-listed-and-can-be-revoked-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-adding-a-node-can-re-d8c0d-lains-a-later-token-refusal-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add"
+    },
+    {
+      "path": "nodes-adding-a-node-explains-a-refusal-and-can-try-again-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-adding-a-node-keeps--0092a-ason-for-RESOURCE-NOT-FOUND-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add"
+    },
+    {
+      "path": "nodes-adding-a-node-keeps--272ad-CLUSTER-STORAGE-UNSUPPORTED-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add"
+    },
+    {
+      "path": "nodes-adding-a-node-keeps--580e8-ts-reason-for-ACCESS-DENIED-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add"
+    },
+    {
+      "path": "nodes-adding-a-node-keeps--b154e-BERNETES-CELLS-UNCONFIGURED-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add"
+    },
+    {
+      "path": "nodes-adding-a-node-regist-c0149-h-its-own-Agent-address-en--chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add"
+    },
+    {
+      "path": "nodes-adding-a-node-regist-c4462-ts-own-Agent-address-zh-CN--chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add"
+    },
+    {
+      "path": "nodes-adding-a-node-shows--21cdc-ands-and-sees-the-node-join-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-several-nodes-are-di-9bc2e-ogether-and-undone-together-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-several-nodes-collect-their-facts-together-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-several-nodes-keep-t-5a616--selected-and-can-try-again-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-shows-Kubernetes-pro-b6d1d-d-registration-reads-zh-CN--chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-shows-Kubernetes-pro-fc420--and-registration-reads-en--chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-a-tile-is-a-89b61-ilter-that-shows-those-rows-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-filters-by-name-and-by-status-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-filters-on--01eb3-eeps-the-filter-in-the-link-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-is-not-part-of-the-portal-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-is-reached--b249b-hows-each-node-as-it-stands-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/"
+    },
+    {
+      "path": "nodes-the-list-keeps-removed-nodes-out-unless-asked-for-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-offers-a-re-ecdb3--the-rows-when-a-poll-fails-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-reads-the-f-55b81-e-does-not-hold-the-session-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-says-how-to-begin-when-there-are-no-nodes-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "nodes-the-list-the-add-dia-48ef7-join-and-works-without-them-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes#add"
+    },
+    {
+      "path": "nodes-the-list-tiles-still-9d4dd--the-figures-cannot-be-read-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/nodes"
+    },
+    {
+      "path": "overview-is-the-first-page-and-says-when-nothing-needs-you-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/"
+    },
+    {
+      "path": "overview-names-an-offline-node-and-opens-its-drawer-chromium/error-context.md",
+      "error": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:31036/"
+    }
+  ]
+}

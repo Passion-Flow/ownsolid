@@ -1,0 +1,73 @@
+{
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "tree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "webTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+  "startedUTC": "2026-11-13T09:44:13.714687+00:00",
+  "entryMonotonic": 78787.861842,
+  "hardDeadlineMonotonic": 79387.861842,
+  "workCutoffMonotonic": 79327.861842,
+  "totalSeconds": 600,
+  "cleanupReserveSeconds": 60,
+  "freeMemoryMinimumGiB": 3,
+  "diskMinimumGiB": 15,
+  "nodeOldSpaceMaximumMiB": 2048,
+  "wholeProfileFreeMemoryMinimumGiB": 6,
+  "wholeProfileChanged": false,
+  "oneEntryConsumed": true,
+  "carrierOpened": false,
+  "nonblockingAttempts": 0,
+  "workChildStarted": false,
+  "probeCommands": [
+    "vm_stat",
+    "df -h worktree"
+  ],
+  "fixturesCreated": false,
+  "queued": false,
+  "retried": false,
+  "phase": "before-carrier-resource-refusal",
+  "sourceFilesVerified": 5101,
+  "sourceClean": true,
+  "currentDevZeroResourceRefusalAccepted": {
+    "source": "d186e3045408e0d340e94b2a5ad3a5a63e90d057",
+    "tree": "494087509039d50276dd3872a0d113d27bf72350",
+    "receipt": {
+      "attempt.json": {
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-tool-and-sdk-d186e304/attempt.json",
+        "sha256": "ee5ce09afa5ea76e7238a3d309728f51e7b205dd91c497247e1619f2d456c560",
+        "modifiedUTC": "2026-11-13T09:32:23.644388+00:00"
+      },
+      "result.json": {
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-tool-and-sdk-d186e304/result.json",
+        "sha256": "d6615b3f73c3730cdd941712f0696df182dce7791120c65f9572915d1f92b023",
+        "modifiedUTC": "2026-11-13T09:32:23.741900+00:00"
+      },
+      "manifest.json": {
+        "path": "/Users/passion./.local/state/ownsolid/lane-rel/strict-contract-json/mac-tool-and-sdk-d186e304/manifest.json",
+        "sha256": "c7905b073fd129451743e551941c16ef9ecd0e193c4516e53f3567bbc04c1d43",
+        "modifiedUTC": "2026-11-13T09:31:51.105432+00:00"
+      }
+    },
+    "exactAttemptUTC": "2026-11-13T09:32:23.644388+00:00",
+    "carrierOpened": false,
+    "buildOrGenerationStarted": false,
+    "newPrivateToolOrSdkOutput": false,
+    "notInferredFromOldRefusalOrEmptyLsof": true
+  },
+  "freePages": 17673,
+  "pageBytes": 16384,
+  "freeMemoryBytes": 289554432,
+  "freeMemoryGiB": 0.2696685791015625,
+  "diskFreeBytes": 164085407744,
+  "diskFreeGiB": 152.81644439697266,
+  "exit": 75,
+  "resourceRefused": true,
+  "reason": "Fresh live Free memory or disk is below the lint-only profile; no carrier or work child started.",
+  "elapsedSeconds": 0.5973420000082115,
+  "sevenCliRegressions": "NOTRUN",
+  "originalFileAndConfigProof": "NOTRUN",
+  "oldWholeLint": "NOTRUN",
+  "newWholeLint": "NOTRUN",
+  "negativeControls": "NOTRUN",
+  "oldAndNewPeakRss": "NOTRUN",
+  "cleanupConfirmed": true
+}

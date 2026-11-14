@@ -1,0 +1,13 @@
+{
+  "nodeMaximumOldSpaceMiB": 512,
+  "workers": 1,
+  "retries": 0,
+  "perCommandCapsUnchanged": true,
+  "wholeSeconds": 600,
+  "cleanupReserve": 60,
+  "priorDiscoveryAnd44UnitsNotRepeated": true,
+  "buildReason": "300 current asset mismatches; rebuild affected Console only",
+  "externalProbeMinimalESM": "Existing package type:module, unchanged test/fixture/config hashes",
+  "networkTrace": "off; no request header/body archive",
+  "offlineDependencies": true
+}

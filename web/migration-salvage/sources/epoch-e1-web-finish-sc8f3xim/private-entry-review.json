@@ -1,0 +1,28 @@
+{
+  "baseActualGuard": "epoch-e1-web-once-jt8bpohu",
+  "newChanges": [
+    "Initial fresh A/B choice retains original floors",
+    "B is memory-only on56, no functional case count rerun",
+    "Native guard-root descendant snapshots include precise lifetime and cross-PGID ownership; sample failures and >250ms gaps reject metric",
+    "Per-phase B<=600/A<=1800 and combined<=2400 with final120 cleanup",
+    "Only valid finished B with no live stage groups may take one fresh A check on sameFD; no wait or retry",
+    "All old stubs remain closed and original results immutable"
+  ],
+  "preparedFiles": {
+    "mac-epoch-once.py": "3cb6e55e717b25e7dff127b7062e21a37323cab54a812d710508eda540ee887f",
+    "controller-run.py": "b4ac8e2e6e2aa58c3adcde49a14ddd1e7f07274229dbe1e0d7bf9de020b90b15",
+    "measure-b.py": "3514243ca87c0c8998c1eeaec8bd42db487fdd410362dbfb80beb05c8220fc70",
+    "native-sampler.py": "f5fe5207fa651fea89694bfe8d807be0ea1d335dddc67e7ad36c8f5a48d186c3",
+    "full-run.py": "c175c15fd785fd630240f2a414c35984b11d2a6dcbe15f59057b4fec6277d32c",
+    "cleanup-owned.py": "fa5276a2fe6e7d0dd4cb5fd8443a4c37ab9cab421366e054c8df20492dc3d40e",
+    "cleanup-epoch-owned.py": "1f3375ac785a16088fa595d7aba50bf33d97f808919a04c507709bc9f3a29050",
+    "scope-inputs.json": "449231e57e8a77758df6c972abe793a48b6af2943d58fc7319f254d524290fc0",
+    "source-A-sha256.json": "39a900adc8d43ce9a4f0304d3b395c776daab87f60fecb7ee153db2413995343",
+    "source-B-sha256.json": "de114228f2470305de76378beb071fe3e27795d7d74261f2bfdb3361611de953",
+    "source-file-sha256.json": "39a900adc8d43ce9a4f0304d3b395c776daab87f60fecb7ee153db2413995343",
+    "pinned-discovery-sha256.json": "144fa7e1e5de569431b3e2591ffcfd57808e2156e661c24967ab90e58bac3eff",
+    "authorization.json": "1cfeda6eab86353ae1b21765b7d7bc7c94427a54aaa0bbc609a7836d24bc2a85",
+    "bin/pnpm": "28ed6f5207d4547563005a2df49d7df011c491a23593fea02c746726184d8103"
+  },
+  "entryExecuted": false
+}

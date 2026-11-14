@@ -1,0 +1,17 @@
+{
+  "phase": "runner-ended",
+  "previousPhase": "negative-old-runtime",
+  "results": {
+    "negative-old-runtime": {
+      "exit": 1,
+      "stats": {
+        "startTime": "2026-11-13T03:16:59.049Z",
+        "duration": 3014.2290000000003,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    }
+  }
+}

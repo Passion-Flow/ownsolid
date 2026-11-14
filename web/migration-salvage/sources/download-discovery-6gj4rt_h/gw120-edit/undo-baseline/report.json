@@ -1,0 +1,199 @@
+{
+  "config": {
+    "argv": [
+      "/Users/passion./.local/opt/node/bin/node",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "e2e/alias-description.spec.ts",
+      "--grep",
+      "a lost Undo answer",
+      "--workers=1",
+      "--output",
+      "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/undo-baseline/results",
+      "--reporter=line,json"
+    ],
+    "configFile": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/playwright.config.ts",
+    "rootDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/undo-baseline/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/undo-baseline/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e",
+        "snapshotDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://localhost:16976",
+          "trace": "retain-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": {
+      "command": "pnpm exec vite preview --port 16976 --strictPort",
+      "url": "http://localhost:16976",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "alias-description.spec.ts",
+      "file": "alias-description.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "a lost Undo answer followed by a newer edit reports the current description",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 5633,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('Your edit was applied. A newer description is now shown.', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('Your edit was applied. A newer description is now shown.', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Your edit was applied. A newer description is now shown.', { exact: true })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('Your edit was applied. A newer description is now shown.', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('Your edit was applied. A newer description is now shown.', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Your edit was applied. A newer description is now shown.', { exact: true })\u001b[22m\n\n    at /Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e/alias-description.spec.ts:341:96",
+                    "location": {
+                      "file": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e/alias-description.spec.ts",
+                      "column": 96,
+                      "line": 341
+                    },
+                    "snippet": "  339 |   control.aliases = [{ ...currentAlias(), description: 'A later administrator edit', description_revision: 4 }];\n  340 |   await page.getByRole('button', { name: 'Try again', exact: true }).click();\n> 341 |   await expect(page.getByText(english['services.gateway.description.newer'], { exact: true })).toBeVisible();\n      |                                                                                                ^\n  342 |   await expect(page.getByRole('region', { name: 'On the gateway', exact: true })).toContainText('A later administrator edit');\n  343 |   expect(control.publishWrites[1]?.key).toBe(control.publishWrites[2]?.key);\n  344 |   expect(control.aliases[0]?.description_revision).toBe(4);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e/alias-description.spec.ts",
+                        "column": 96,
+                        "line": 341
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('Your edit was applied. A newer description is now shown.', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('Your edit was applied. A newer description is now shown.', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Your edit was applied. A newer description is now shown.', { exact: true })\u001b[22m\n\n\n  339 |   control.aliases = [{ ...currentAlias(), description: 'A later administrator edit', description_revision: 4 }];\n  340 |   await page.getByRole('button', { name: 'Try again', exact: true }).click();\n> 341 |   await expect(page.getByText(english['services.gateway.description.newer'], { exact: true })).toBeVisible();\n      |                                                                                                ^\n  342 |   await expect(page.getByRole('region', { name: 'On the gateway', exact: true })).toContainText('A later administrator edit');\n  343 |   expect(control.publishWrites[1]?.key).toBe(control.publishWrites[2]?.key);\n  344 |   expect(control.aliases[0]?.description_revision).toBe(4);\n    at /Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e/alias-description.spec.ts:341:96"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-12T15:03:14.670Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/undo-baseline/results/alias-description-a-lost-U-cd818-rts-the-current-description-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/passion./.local/state/ownsolid/web-scopes/download-discovery-6gj4rt_h/gw120-edit/undo-baseline/results/alias-description-a-lost-U-cd818-rts-the-current-description-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web/apps/console/e2e/alias-description.spec.ts",
+                    "column": 96,
+                    "line": 341
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d30541335c56fc6c6224-b60b4e605d15bef05613",
+          "file": "alias-description.spec.ts",
+          "line": 328,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-12T15:03:13.968Z",
+    "duration": 6498.661,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

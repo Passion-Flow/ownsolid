@@ -1,0 +1,6 @@
+{
+  "state": "NOTRUN",
+  "reason": "Full check/build admission failed on fresh raw Free; preserve original DAG and use salvage immediately",
+  "main_sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "original_tips_preserved": true
+}

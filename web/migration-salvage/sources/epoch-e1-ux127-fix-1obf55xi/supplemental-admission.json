@@ -1,0 +1,16 @@
+{
+  "source": "1a2344cad8a48eb3397fdc3692b142a1c82f09f0",
+  "tree": "66bf75784491910c54403fd277aec5639e0f5b7f",
+  "webTree": "30836729a0cd62148925bda04d8b24dfa3617c8b",
+  "parentOriginalFD": 3,
+  "guardParentPID": 25620,
+  "supervisedPGID": 66776,
+  "sameGuardSameCarrierNoNewNB": true,
+  "executorFDInherited": false,
+  "binding": "Original guard continuously holds FD; kernel lsof verifies that exact parent descriptor before and after each command. Registered group belongs to original deadline cleanup.",
+  "nodeMiB": 512,
+  "workers": 1,
+  "retries": 0,
+  "originalWorkDeadline": 29000.327392,
+  "scriptSha256": "bbd5f7f453ec07d8c698e2d174c55d6bdc2f0b5c05eb2df52ae83e541910dc62"
+}

@@ -1,0 +1,19 @@
+{
+  "web/packages/api/src/client.ts": "530520daab38dde16d382b06afa88bf1618cc2d4663b711297e87d324228be86",
+  "web/packages/api/src/identity.ts": "d95e8fb2f869393110575506184de65871b276fe66afacde831318483a12a753",
+  "web/packages/api/src/index.ts": "a1eb0f2942238edec5ab66c2853aea1b3dbc0a77aa704db19d41277c27510272",
+  "web/packages/api/src/transport.ts": "2acf4cc4e46936aa9027fe2c8edfcce548aaf93e7d51fea5a54edcfb49f54a74",
+  "web/packages/help/locales/en/shared/account.md": "6c98dbf8a820c86100039d4389da18a6635f222a84f60a8ae3b28c2390430adb",
+  "web/packages/help/locales/zh-cn/shared/account.md": "5cf2a9be80c456eacf392cc5a9873ba7a826324c958f5282e75d377cbb6376d3",
+  "web/packages/i18n/locales/en.json": "54ed41bd53439040e38f4bd7aca9189706ecd651229c5b3e9bd7827c2821e2ea",
+  "web/packages/i18n/locales/zh-cn.json": "40e1a78c4f46163f405d998c629acfe413afcbfd87821e3262a0c86f9d82bc58",
+  "web/packages/shell/src/account-page.tsx": "50e138723440636d47e8f47c2f926d1c511dfbd26aabb9f48eb45de857c23bd3",
+  "web/packages/shell/src/session.ts": "1c706afd060b0af9863b69262289c2e66739e87bba818d3e41853a00959111e4",
+  "web/packages/shell/src/sign-in-page.tsx": "74fb4eac76b599c8aa1ac5f25d05b602a5dfc0546a6b8cb30f536cadc51410f7",
+  "web/packages/ui/src/components/typed-confirmation.tsx": "f8d8717f7a3684dc1975682420bdaadbe998a8d04e88e499b406cc8f5da08b84",
+  "web/packages/api/src/browser-sessions.test.ts": "96cbb0241cfaa565d8729fe72b7e1b4416b2edf0249ba62cfa613d87200ba952",
+  "web/packages/shell/src/account-sessions.test.tsx": "64146811c5a79348185dc729a4bb35ad970c6b5385a0376805b6e8738163245a",
+  "web/packages/shell/src/account-sessions.tsx": "548c10e8504e9c3ee9fc5291ce4bc130c0df25b7193bf905b79e0fc68c8c4642",
+  "web/packages/shell/src/use-account-sessions.test.tsx": "d1586f06d71419f5ee74566d43a461618832104579806f1598d92266f8e93106",
+  "web/packages/shell/src/use-account-sessions.ts": "2b8b118df2b44568265d169bf720fd1a89b709dbcafbf3bc95f75e937f3b8b3e"
+}

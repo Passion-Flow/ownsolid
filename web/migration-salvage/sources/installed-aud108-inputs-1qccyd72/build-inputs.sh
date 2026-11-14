@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+printf '%s\n' 'Old Mac admission epoch is closed; await coordinated activation.' >&2
+exit 78
+set -euo pipefail
+umask 077
+root="$1"
+test ! -e "$root/input-manifest.json"
+checkout="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["worktree"])' "$root/preparation.json")"
+test -z "$(git -C "$checkout" status --porcelain)"
+export npm_config_offline=true
+unset TMOUT PS1
+df -h "$checkout" > "$root/preflight-space"
+vm_stat > "$root/preflight-memory"
+python3 - "$checkout" <<'SPACE'
+import shutil,sys
+if shutil.disk_usage(sys.argv[1]).free < 15*1024**3:raise SystemExit('Under 15 GiB free; no build started')
+SPACE
+(cd "$checkout/web"; pnpm install --offline --frozen-lockfile --ignore-scripts) > "$root/install.log" 2>&1
+(cd "$checkout/web"; pnpm generate:check; pnpm build) > "$root/build.log" 2>&1
+source="$(git -C "$checkout" rev-parse HEAD)"
+python3 "$root/installed-aud108/bind.py" "$checkout" "$source" > "$root/bind.log" 2>&1
+bash "$root/installed-aud108/checks.sh" "$root/installed-aud108" > "$root/checks.log" 2>&1
+test -z "$(git -C "$checkout" status --porcelain)"
+python3 "$root/materialize.py" "$root" "$checkout"
+printf 'Fresh explicit-audit-recovery asset and client inputs prepared; no installed run.\n'

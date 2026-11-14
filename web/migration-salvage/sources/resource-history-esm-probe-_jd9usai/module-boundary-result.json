@@ -1,0 +1,15 @@
+{
+  "scope": "Pinned upstream module-classification helper only; no tests loaded, no Playwright collection, browser or preview",
+  "version": "1.64.1",
+  "selectorSource": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/playwright@1.64.1/node_modules/playwright/lib/util.js",
+  "selectorSha256": "874c55495773da8c5a2ec46551c2265937bf08446231c09a8b5966e8bea2b1f7",
+  "actual": {
+    "oldExternalEntry": false,
+    "correctedExternalEntry": true,
+    "mainConsoleEntry": true
+  },
+  "passed": true,
+  "browserExecuted": false,
+  "discoveryExecuted": false,
+  "buildExecuted": false
+}

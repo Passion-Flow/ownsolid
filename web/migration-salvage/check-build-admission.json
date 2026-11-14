@@ -1,0 +1,46 @@
+{
+  "timestamp_utc": "2026-11-14T00:19:41.589549+00:00",
+  "raw_free_bytes": 1062944768,
+  "required_free_bytes": 6442450944,
+  "disk_free_bytes": 160333553664,
+  "required_disk_bytes": 32212254720,
+  "carrier": "/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock",
+  "expected": {
+    "dev": 16777231,
+    "ino": 53377467,
+    "uid": 501,
+    "mode": 384,
+    "nlink": 1,
+    "size": 0,
+    "regular": true
+  },
+  "observed": {
+    "dev": 16777231,
+    "ino": 53377467,
+    "uid": 501,
+    "mode": 384,
+    "nlink": 1,
+    "size": 0,
+    "regular": true
+  },
+  "open_flags": [
+    "O_RDONLY",
+    "O_NOFOLLOW"
+  ],
+  "identity_fd_closed": true,
+  "nb_attempts": 0,
+  "children_started": 0,
+  "state": "NOTRUN",
+  "reasons": [
+    "Fresh raw Free is below the required 6 GiB"
+  ],
+  "make_check": {
+    "state": "NOTRUN",
+    "exit_code": null
+  },
+  "make_build": {
+    "state": "NOTRUN",
+    "exit_code": null
+  },
+  "main_push": false
+}

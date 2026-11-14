@@ -1,0 +1,7 @@
+{
+  "status": "NOTRUN",
+  "reason": "Fresh original full resource floor not met; no wait or full child",
+  "rawFreeBytes": 5059379200,
+  "diskFreeBytes": 163487219712,
+  "directedExit": 0
+}

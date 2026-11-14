@@ -1,0 +1,29 @@
+{
+  "pythonAST": true,
+  "carrierOpenNoCreateTruncateNoFollow": true,
+  "singleNBCall": true,
+  "fixed600Reserve60": true,
+  "noFullExecutionBranch": true,
+  "planHasNoMake": true,
+  "allOriginalNewFocusCasesRetained": true,
+  "browserCases": 97,
+  "controlCases": [
+    {
+      "workAt": 539,
+      "remaining": 1
+    },
+    {
+      "workAt": 540,
+      "expired": true
+    },
+    {
+      "cleanupAt": 599,
+      "remaining": 1
+    },
+    {
+      "cleanupAt": 600,
+      "expired": true
+    }
+  ],
+  "syntheticOnlyNotProductTests": true
+}

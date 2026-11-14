@@ -1,0 +1,10 @@
+{
+  "source": "6b03b4e4432cb2cb4859eee6c560bfb19570ff58",
+  "started": "2026-11-13T02:02:06.065848+00:00",
+  "finished": "2026-11-13T02:02:11.752629+00:00",
+  "exitCode": 1,
+  "busy": false,
+  "childStarted": true,
+  "trigger": "Fix the observed cursor-guard lint failure; previous failure retained",
+  "scope": "read-only focused lint/types/units; no browser, build, native or full gate"
+}

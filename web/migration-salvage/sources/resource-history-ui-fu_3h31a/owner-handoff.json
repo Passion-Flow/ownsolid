@@ -1,0 +1,101 @@
+{
+  "head": "7f9eae17027977299d5d6f64cb3b70b87845f966",
+  "base": "6ed5c627a04a52b97d273f6782fdb0733d8703c4",
+  "commits": [
+    "dcd2cd32814530a1ebfc5d77fcf749f2da7c18a1",
+    "e96caf94fbfc024232a5effb6c4cf1ad8e6462e4",
+    "7f9eae17027977299d5d6f64cb3b70b87845f966"
+  ],
+  "branch": "codex/web-resource-history-ui",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "bundle": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-ui-fu_3h31a/web-resource-history.bundle",
+  "bundleSha256": "49a14eaa11e593f9a77d2799fa0c389cd24a53667ba85864a21cad8183c7fe9f",
+  "files": {
+    "docs/development/design-system.md": "380d441a37c5d53d80c9cd21c62f5d45b214830ea880c1ee9e1d6da1d7fe331e",
+    "docs/research/resource-detail-pages.md": "f67792b445b4c250127644483b453b18786b98bcf63467ef1a438ffe91c3fa21",
+    "web/README.md": "0a5d87d8b729460fdace0d534a6280c4ded95bc8dbd6604bb7d2e31380000624",
+    "web/apps/console/e2e/pages.ts": "74da590d093174b248e007462b74d400448c3f6034545b0119c5bcff4dafbedf",
+    "web/apps/console/e2e/resource-activity-fixture.ts": "a5c58fc2b24ca857698f765cbe3d4a47767e0293bbf2249775818cb2361d63fd",
+    "web/apps/console/e2e/resource-activity.spec.ts": "c6f04533d2b4654a2f27a9caf3c014ab9e23a20d7d394cbdd60946708e9a875c",
+    "web/apps/console/e2e/resource-pages.spec.ts": "545ca0aa60c91bd2d5a7fff2fadaaa36f4400af9ce532b9bb333dee455b22b4a",
+    "web/apps/console/src/activity-window.test.ts": "4a337acf2f8cb7dafaee16967ed8243562e0fd0b7d9aa55fd14f12583de31360",
+    "web/apps/console/src/activity-window.ts": "c503a3f97b8ddadf0c73b74c0c26a86f33bc8d7ebb6ebc446bbe6462da82178d",
+    "web/apps/console/src/audit-read.test.tsx": "82eee873ea31ecd06d8ac4352d5a15a9242a5726dcdf07e856ef842c6f05a8a7",
+    "web/apps/console/src/audit-read.tsx": "062ca93291190048e19a2c1aa7a6603a709c718915e179c4a1cdfb69c3446a18",
+    "web/apps/console/src/connector-page.tsx": "a97d87af0ab4f7ebafd4105cc54c923cd51f6f6a993c1af6416dc1d20f8b028b",
+    "web/apps/console/src/node-page.tsx": "08c72b4a424967dba49de3320f2aa09344e50bf0fcd156b587424ed17029d887",
+    "web/apps/console/src/resource-activity.tsx": "516e63f8f94dba31452f1ef473aced5719420f1099b7d9d65078cef77f2658ff",
+    "web/apps/console/src/resource-page.tsx": "4813e225a44f8b778f70bd0fd697ff0bc7ab0a8cefef2947cae22e3963a3ac00",
+    "web/apps/console/src/user-page.tsx": "77ab9909ceb2003d275d7aff0d22db53d21a188ec7ac44f20f4cabc7d3f07bda",
+    "web/packages/help/locales/en/console/audit-trail.md": "07ba447fe660150e71726ac756d237cc3be2deb39197dbe908ca9a27eb0e076e",
+    "web/packages/help/locales/zh-cn/console/audit-trail.md": "ae14f6201733fb34089edd25b25b831ce4af5058678f23ed1d60fab1873d907d",
+    "web/packages/help/src/gen/locales/en/console.json": "14cce9c93792ac78cde0a303ffad3025f0227bd03a122bd8e7f9c34c2e32ec90",
+    "web/packages/help/src/gen/locales/en/console/audit-trail.json": "06ef785f30751f459d85b9330ce18e480548cade79090ff8aef3e21668fbd70e",
+    "web/packages/help/src/gen/locales/zh-cn/console.json": "4dba453e00d3131f1d4ecb04c841b6591020f5dce4c1a7fbe0fa12755cec0bca",
+    "web/packages/help/src/gen/locales/zh-cn/console/audit-trail.json": "6e004f4edf4ed3185a1f4ae4bb05fa0b9706d90b7234411925fb10ca3293dfd3",
+    "web/packages/i18n/locales/en.json": "802dd0619f4bb47191ec5fc7fd68a03f9cfba9a8d5ee44f1318bcf5bf3adfec4",
+    "web/packages/i18n/locales/zh-cn.json": "a71645158ad879c7468e46cf9a7119146e075cc5b16e57b6da6b0964919e3c4d",
+    "web/packages/i18n/src/format.test.ts": "c2e79487104191b3976189b74bcf79fc8e61a49549c43e3a941c2192a7d3ebd1",
+    "web/packages/i18n/src/format.ts": "f1785a1c2cffddfe092716d91d2ae34c9abd5e6315ca64740768ebadca63ecc8"
+  },
+  "preservedBytes": {
+    "web/apps/console/e2e/audit-read-recovery.spec.ts": true,
+    "web/packages/shell/testing/help-flows.ts": true,
+    "web/packages/api/src/gen/identity.ts": true,
+    "web/packages/help/src/gen/api/console/identity.json": true,
+    "web/packages/help/src/gen/contracts/console/identity.json": true,
+    "web/packages/help/src/gen/locales/zh-cn/api-descriptions.json": true,
+    "web/packages/help/locales/zh-cn/api-descriptions.json": true
+  },
+  "apiContractChanged": false,
+  "newDependencies": false,
+  "checkAdmission": {
+    "started": "2026-11-13T01:46:33.695205+00:00",
+    "finished": "2026-11-13T01:46:33.722247+00:00",
+    "exitCode": 1,
+    "busy": true,
+    "childStarted": false,
+    "scope": "formatter, focused lint/types and unit tests only; no browser/build/full/native"
+  },
+  "sourceAuthoring": {
+    "prettierWriteCompleted": true,
+    "helpGenerationCompleted": true,
+    "generationChangedOnlyFourArticleProjectionFiles": true
+  },
+  "qualification": {
+    "unit": false,
+    "lint": false,
+    "types": false,
+    "browser": false,
+    "fullNative": false,
+    "imagesRead": 0,
+    "installed": false,
+    "pushedToMain": false,
+    "roadmapTicked": false
+  },
+  "focusSelection": {
+    "consoleUnits": [
+      "src/activity-window.test.ts",
+      "src/audit-read.test.tsx"
+    ],
+    "i18nUnits": [
+      "src/format.test.ts",
+      "src/catalogs.test.ts"
+    ],
+    "consoleBrowser": [
+      "e2e/resource-activity.spec.ts",
+      "e2e/audit-read-recovery.spec.ts",
+      "e2e/resource-pages.spec.ts"
+    ],
+    "expectedNewBrowserCasesNotDiscovered": 13,
+    "plannedScreenshotsNotGenerated": 19,
+    "fullGate": [
+      "make check",
+      "make build",
+      "make test"
+    ]
+  },
+  "publicationBoundary": "Source-only candidate. Do not merge until combined-source tests, actual image review and installed acceptance complete. DEV public metadata projection remains a separate atomic owner composition; preserve the frozen 44ab package and 1230-asset archive.",
+  "macJobsLeftRunning": [],
+  "newWaiters": 0
+}

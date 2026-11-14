@@ -1,0 +1,71 @@
+[
+  {
+    "name": "scratch-create",
+    "argv": [
+      "hdiutil",
+      "create",
+      "-size",
+      "12g",
+      "-type",
+      "SPARSE",
+      "-fs",
+      "APFS",
+      "-volname",
+      "ownsolid-por112-joint",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/scratch"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 1.048715999999331
+  },
+  {
+    "name": "scratch-attach",
+    "argv": [
+      "hdiutil",
+      "attach",
+      "-nobrowse",
+      "-owners",
+      "on",
+      "-mountpoint",
+      "/private/tmp/ownsolid-por112-joint-92949",
+      "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/scratch.sparseimage"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 0.3493479999997362
+  },
+  {
+    "name": "web-install",
+    "argv": [
+      "make",
+      "web-install"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 2.6614300000001094
+  },
+  {
+    "name": "check",
+    "argv": [
+      "make",
+      "check"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 35.73019800000111
+  },
+  {
+    "name": "build",
+    "argv": [
+      "make",
+      "build"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 101.0466860000015
+  },
+  {
+    "name": "test",
+    "argv": [
+      "make",
+      "test"
+    ],
+    "exit": 2,
+    "elapsedSeconds": 1048.4680819999994
+  }
+]

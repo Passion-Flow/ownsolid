@@ -1,0 +1,12 @@
+"""Private proposed sampler ownership selection; no process is started here."""
+def select_owned_rows(rows, root_pid, guard_pid, known_starts):
+ by_pid={row['pid']:row for row in rows}
+ descendants={root_pid} if root_pid in by_pid else set()
+ while True:
+  added={row['pid'] for row in rows if row['ppid'] in descendants}-descendants
+  if not added:break
+  descendants.update(added)
+ for pid in descendants:known_starts[pid]=by_pid[pid]['startTime']
+ owned={pid for pid,start in known_starts.items() if pid in by_pid and by_pid[pid]['startTime']==start}
+ if guard_pid in by_pid:owned.add(guard_pid)
+ return [by_pid[pid] for pid in sorted(owned)]

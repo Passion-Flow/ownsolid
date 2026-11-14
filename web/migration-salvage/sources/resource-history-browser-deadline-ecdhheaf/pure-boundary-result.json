@@ -1,0 +1,58 @@
+{
+  "parentSha256": "e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a",
+  "runnerSha256": "fc2492b985775e7c59b5ae420a514f0a3666faaf4bd3874bfcca0f338ff8905c",
+  "planSha256": "96002e8d3914a2c130a64fabedfaa3b4e102c5de991eedb3886c332d02477d1e",
+  "scope": "syntax, fake-clock/fake-signal arithmetic, actual invalid-runtime refusals against nonexistent packet paths, isolated registry fixtures and byte preservation only",
+  "checks": [
+    {
+      "name": "both proposed sources compile without execution",
+      "passed": true
+    },
+    {
+      "name": "preflight, work wait and cleanup deduct one clock without reset",
+      "passed": true
+    },
+    {
+      "name": "backstop uses the original remaining deadline with a fake signal interface",
+      "passed": true
+    },
+    {
+      "name": "actual isolated processes share the selected CLOCK_MONOTONIC reference",
+      "passed": true
+    },
+    {
+      "name": "all timed subprocess waits use remaining budget and no timer is disabled",
+      "passed": true
+    },
+    {
+      "name": "parent and child runtime refusal remains explicit before assertion contracts",
+      "passed": true
+    },
+    {
+      "name": "optimized isolated parent refuses before a lock-capable path",
+      "passed": true
+    },
+    {
+      "name": "nonisolated parent refuses before a lock-capable path",
+      "passed": true
+    },
+    {
+      "name": "optimized isolated runner refuses before source or browser reads",
+      "passed": true
+    },
+    {
+      "name": "actual malformed/missing registry branches return nonzero and deny cleanup confirmation",
+      "passed": true
+    },
+    {
+      "name": "all predecessor files and unchanged stage/negative inputs retain their bytes",
+      "passed": true
+    }
+  ],
+  "passed": 11,
+  "failed": 0,
+  "lockAcquisitionAttempts": 0,
+  "workRunnerStarted": false,
+  "buildStarted": false,
+  "browserStarted": false
+}

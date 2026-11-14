@@ -1,0 +1,12 @@
+{
+  "affected-input-sha256.json": "d9a2bc8c8b1e917e76fcc72d186905db3afe4e73622d14627bb8164668138b61",
+  "diagnosis.json": "7d7260de9dd37dbd9474a69bea4e950ef650e00cd27d20e2822a40879abd03eb",
+  "failure-timeline.json": "531b6c63c8951984415a164aee60ba25964b68d9a0eec771a0176f0e502cba22",
+  "focused-verification-plan.json": "4419809a84e0bd759513018bd74e8cd5be82977ded0d34b09174e3465c73414f",
+  "installed-research-packages.json": "b199075baec3118432146624a3f8973568ea679e80857a1cab9ff05426533889",
+  "owner-handoff.json": "bec0f2dc1ffe04bcee8e85d895097395e9a28cec7e412c733586e3420b1858d2",
+  "por112-preview-diagnosis.bundle": "d46de179553ec16e2528a97b077d18f0385368391a1f2221442bd0fefb7f525a",
+  "preview-lifecycle-observer.cjs": "ca777d7173d0ce88efde51f93c77c1b64362041153a2903da91ae5f073311ad4",
+  "preview-lifecycle-observer.test.cjs": "1fbac1bcc315b56ffc04d0168225e4ec6b873f647d0046e1068149d0d95de296",
+  "vite-source-review.json": "32a526923fd8b202044d036f13a5c16c281ea0966a95bb88a5e32e53d83bc68c"
+}

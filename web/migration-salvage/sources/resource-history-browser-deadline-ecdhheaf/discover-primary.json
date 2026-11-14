@@ -1,0 +1,1824 @@
+{
+  "config": {
+    "argv": [
+      "/Users/passion./.local/opt/node/bin/node",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "e2e/resource-activity.spec.ts",
+      "e2e/audit-read-recovery.spec.ts",
+      "e2e/resource-pages.spec.ts",
+      "e2e/node-page.spec.ts",
+      "--list",
+      "--reporter=json"
+    ],
+    "configFile": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/playwright.config.ts",
+    "rootDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e",
+        "snapshotDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://localhost:31036",
+          "trace": "retain-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 7,
+    "webServer": {
+      "command": "pnpm exec vite preview --port 31036 --strictPort",
+      "url": "http://localhost:31036",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "audit-read-recovery.spec.ts",
+      "file": "audit-read-recovery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "finds explicit audit recovery in Help in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-9673172505f8ed296c87",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 75,
+          "column": 3
+        },
+        {
+          "title": "trail waits for deliberate recovery after lost-response in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-1857c8f23c9ec01f5302",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after network in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-075d39f98ab526f0ae6c",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after timeout in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-0753b3b3613e7e768c6a",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after unknown in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-5072ef5c8a2c81761709",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after unavailable in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-c159ef1a6b840189c08b",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after invalid-response in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-88d2d65605400bb2ef0c",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail preserves two pages and retries only the failed cursor in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-366a95d3f07e6a55c280",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 210,
+          "column": 5
+        },
+        {
+          "title": "trail restarts an invalid cursor once and retains history until success in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-fdbf56eaa24810fd9d42",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 256,
+          "column": 5
+        },
+        {
+          "title": "trail removes cached events after a current permission refusal in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-9853e053d9b28c220bd6",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 288,
+          "column": 5
+        },
+        {
+          "title": "activity waits for deliberate recovery after lost-response in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-c6518145cb276baab0d4",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after network in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-51ba022321b14aa5b071",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after timeout in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-ca723d3be145d5aaa698",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after unknown in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-dde1a2384c3058948c29",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after unavailable in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-83bf4989f8879f55cc36",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after invalid-response in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-d2ba718cb030a6753204",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity preserves two pages and retries only the failed cursor in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-5b0591228176977cf21d",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 210,
+          "column": 5
+        },
+        {
+          "title": "activity restarts an invalid cursor once and retains history until success in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-486fc5234c8d7e676604",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 256,
+          "column": 5
+        },
+        {
+          "title": "activity removes cached events after a current permission refusal in en",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-8d10c59428bf61f904a9",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 288,
+          "column": 5
+        },
+        {
+          "title": "finds explicit audit recovery in Help in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-0a3f33e593e16d721302",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 75,
+          "column": 3
+        },
+        {
+          "title": "trail waits for deliberate recovery after lost-response in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-c34c4b9544348a2aeb0c",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after network in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-7a1dab3680409d6b66d4",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after timeout in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-c9828152d2dd75432363",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after unknown in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-ffd06cf6c66a3def871b",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after unavailable in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-c23068c846be14192b88",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail waits for deliberate recovery after invalid-response in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-0ff4589a6f75b1450903",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "trail preserves two pages and retries only the failed cursor in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-72eec1e26a55f3960477",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 210,
+          "column": 5
+        },
+        {
+          "title": "trail restarts an invalid cursor once and retains history until success in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-1d562bd8e00a1bce2d80",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 256,
+          "column": 5
+        },
+        {
+          "title": "trail removes cached events after a current permission refusal in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-0355300c31b51a2850f1",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 288,
+          "column": 5
+        },
+        {
+          "title": "activity waits for deliberate recovery after lost-response in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-5574e369210755c8eb3e",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after network in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-83a1bf08a58f1709c052",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after timeout in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-800a68aec2910154260a",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after unknown in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-8adc827d57f82d8041e5",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after unavailable in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-021893f307ed92515353",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity waits for deliberate recovery after invalid-response in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-2723d902022466832e9a",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 119,
+          "column": 7
+        },
+        {
+          "title": "activity preserves two pages and retries only the failed cursor in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-ed21d238fc476053ad43",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 210,
+          "column": 5
+        },
+        {
+          "title": "activity restarts an invalid cursor once and retains history until success in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-5f42138e5a498819fce8",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 256,
+          "column": 5
+        },
+        {
+          "title": "activity removes cached events after a current permission refusal in zh-CN",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-d197018c2a929a85448d",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 288,
+          "column": 5
+        },
+        {
+          "title": "does not expose an audit consumer to a Portal session at /audit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-436f5ae4170f5364d6d7",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 360,
+          "column": 3
+        },
+        {
+          "title": "does not expose an audit consumer to a Portal session at /users/6f1c7a1e-0000-4000-8000-000000000070?tab=activity",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-e215a977a4e3058475f5",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 360,
+          "column": 3
+        },
+        {
+          "title": "does not queue an offline audit retry for the next reconnect",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e4fd371bb386077377ad-8976adf2f52e3aa7478a",
+          "file": "audit-read-recovery.spec.ts",
+          "line": 380,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "node-page.spec.ts",
+      "file": "node-page.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "opens from the drawer, and the sidebar still marks Nodes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-666fe2adf3c3b0a07afe",
+          "file": "node-page.spec.ts",
+          "line": 27,
+          "column": 1
+        },
+        {
+          "title": "its tabs work from the keyboard and live in the address",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-7e48b8ec68f583a60350",
+          "file": "node-page.spec.ts",
+          "line": 39,
+          "column": 1
+        },
+        {
+          "title": "Tasks lists this node and links each task",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-c29371f7975e1e4a3cb7",
+          "file": "node-page.spec.ts",
+          "line": 60,
+          "column": 1
+        },
+        {
+          "title": "Tasks says when there are none, and a failure can be retried",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-60c493493a82fcaf6d3a",
+          "file": "node-page.spec.ts",
+          "line": 67,
+          "column": 1
+        },
+        {
+          "title": "Activity opens a historical period for this node and links its event",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-a7563055f5c7751c3768",
+          "file": "node-page.spec.ts",
+          "line": 86,
+          "column": 1
+        },
+        {
+          "title": "Activity says when there is none, and a failure can be retried",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-ed5739bd7afcb96921ea",
+          "file": "node-page.spec.ts",
+          "line": 112,
+          "column": 1
+        },
+        {
+          "title": "renaming stays on the page and can be undone",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-d170c9f9cfdde876aecf",
+          "file": "node-page.spec.ts",
+          "line": 127,
+          "column": 1
+        },
+        {
+          "title": "removing goes back to the list",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-26b7c6ff40c216f81f91",
+          "file": "node-page.spec.ts",
+          "line": 138,
+          "column": 1
+        },
+        {
+          "title": "a node that does not exist says so, and a failure can be retried",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cd26e5ea6abc0e8c4fb1-d8d93129a26995461f77",
+          "file": "node-page.spec.ts",
+          "line": 149,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "in Chinese",
+          "file": "node-page.spec.ts",
+          "line": 174,
+          "column": 6,
+          "specs": [
+            {
+              "title": "names its tabs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cd26e5ea6abc0e8c4fb1-704e28fc381fafe9540d",
+              "file": "node-page.spec.ts",
+              "line": 177,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "resource-activity.spec.ts",
+      "file": "resource-activity.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "bounded resource history in en",
+          "file": "resource-activity.spec.ts",
+          "line": 52,
+          "column": 8,
+          "specs": [
+            {
+              "title": "reads recent activity on an old node under a one-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-fe801b1748fedc23a547",
+              "file": "resource-activity.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "reads recent activity on an old model under a one-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-507136f5e95997a5f2cd",
+              "file": "resource-activity.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "reads recent activity on an old deployment under a one-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-1b59688571c971e08b19",
+              "file": "resource-activity.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "reads recent activity on an old connector under a one-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-5da1f9b5f749040fa6df",
+              "file": "resource-activity.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "reads current activity for a 400-day-old resource with a 1-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-960302a701563c5309f9",
+              "file": "resource-activity.spec.ts",
+              "line": 96,
+              "column": 7
+            },
+            {
+              "title": "reads current activity for a 400-day-old resource with a 31-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-83723c81cad324b3f14f",
+              "file": "resource-activity.spec.ts",
+              "line": 96,
+              "column": 7
+            },
+            {
+              "title": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-aeeb01ef4dc6aac43851",
+              "file": "resource-activity.spec.ts",
+              "line": 138,
+              "column": 5
+            },
+            {
+              "title": "keeps exact cursor bounds and replaces a failed recent snapshot only after explicit recovery succeeds",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-55be38c2afce99824553",
+              "file": "resource-activity.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "cancels a pending page when leaving the tab and restores its earlier snapshot without replay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-de45cbcf3df10ee26743",
+              "file": "resource-activity.spec.ts",
+              "line": 249,
+              "column": 5
+            },
+            {
+              "title": "shows loading and a retained error, then hides all cached rows when access is refused",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-8d036584ee70f8eb4713",
+              "file": "resource-activity.spec.ts",
+              "line": 285,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "bounded resource history in zh-CN",
+          "file": "resource-activity.spec.ts",
+          "line": 52,
+          "column": 8,
+          "specs": [
+            {
+              "title": "reads recent activity on an old node under a one-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-13c6f307ffc028362975",
+              "file": "resource-activity.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "reads recent activity on an old model under a one-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-31d6dba87cdbb1382ccb",
+              "file": "resource-activity.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "reads recent activity on an old deployment under a one-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-de6e71e0ca908b70c75b",
+              "file": "resource-activity.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "reads recent activity on an old connector under a one-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-dfea0998fd706fccb6cd",
+              "file": "resource-activity.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "reads current activity for a 400-day-old resource with a 1-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-732c85f0fbc802aa609c",
+              "file": "resource-activity.spec.ts",
+              "line": 96,
+              "column": 7
+            },
+            {
+              "title": "reads current activity for a 400-day-old resource with a 31-day policy",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-1c58871fe192137c8c2d",
+              "file": "resource-activity.spec.ts",
+              "line": 96,
+              "column": 7
+            },
+            {
+              "title": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-13170ef15fd16dce03c0",
+              "file": "resource-activity.spec.ts",
+              "line": 138,
+              "column": 5
+            },
+            {
+              "title": "keeps exact cursor bounds and replaces a failed recent snapshot only after explicit recovery succeeds",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-23900a60be3ae1b9a2b0",
+              "file": "resource-activity.spec.ts",
+              "line": 207,
+              "column": 5
+            },
+            {
+              "title": "cancels a pending page when leaving the tab and restores its earlier snapshot without replay",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-464a2e823729806d845f",
+              "file": "resource-activity.spec.ts",
+              "line": 249,
+              "column": 5
+            },
+            {
+              "title": "shows loading and a retained error, then hides all cached rows when access is refused",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-3675433b0d0d39b055b9",
+              "file": "resource-activity.spec.ts",
+              "line": 285,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "native activity dates in a daylight-saving zone",
+          "file": "resource-activity.spec.ts",
+          "line": 338,
+          "column": 6,
+          "specs": [
+            {
+              "title": "rejects reversed and nonexistent dates without an audit read",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "784ef84d04fb08846350-8e8b85c3fe7b34f9d22f",
+              "file": "resource-activity.spec.ts",
+              "line": 340,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "resource-pages.spec.ts",
+      "file": "resource-pages.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "a person",
+          "file": "resource-pages.spec.ts",
+          "line": 24,
+          "column": 6,
+          "specs": [
+            {
+              "title": "opens from the drawer and shows the details",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-094b47fbb4cbe8b8a10c",
+              "file": "resource-pages.spec.ts",
+              "line": 28,
+              "column": 3
+            },
+            {
+              "title": "tells what was done to them from what they did",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-f3147b902526d2329a57",
+              "file": "resource-pages.spec.ts",
+              "line": 40,
+              "column": 3
+            },
+            {
+              "title": "can be disabled from the page, which stays and offers undo",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-bb53ba20cd876c214829",
+              "file": "resource-pages.spec.ts",
+              "line": 58,
+              "column": 3
+            },
+            {
+              "title": "your own account says so and cannot be disabled",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-a37a854455df885fa913",
+              "file": "resource-pages.spec.ts",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "one that does not exist says so, and a failure can be retried",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-4a5d4e47b5dfa4e630bb",
+              "file": "resource-pages.spec.ts",
+              "line": 78,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "a connector",
+          "file": "resource-pages.spec.ts",
+          "line": 104,
+          "column": 6,
+          "specs": [
+            {
+              "title": "opens from the drawer with its check and details",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-be3011996697bc6d99a2",
+              "file": "resource-pages.spec.ts",
+              "line": 112,
+              "column": 3
+            },
+            {
+              "title": "its activity lists who changed it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-5dbbbe03f3d48e9a1cdd",
+              "file": "resource-pages.spec.ts",
+              "line": 122,
+              "column": 3
+            },
+            {
+              "title": "one that does not exist says so, and a failure can be retried",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-9f06e140956652d939f6",
+              "file": "resource-pages.spec.ts",
+              "line": 136,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "in Chinese",
+          "file": "resource-pages.spec.ts",
+          "line": 151,
+          "column": 6,
+          "specs": [
+            {
+              "title": "names the tabs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1a493c9918a61d490f8b-73d3c5f57a8539503ea1",
+              "file": "resource-pages.spec.ts",
+              "line": 154,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-13T03:16:50.007Z",
+    "duration": 268.573,
+    "expected": 0,
+    "skipped": 81,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

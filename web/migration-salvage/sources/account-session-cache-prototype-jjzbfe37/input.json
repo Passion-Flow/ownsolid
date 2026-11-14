@@ -1,0 +1,10 @@
+{
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "queryVersion": "5.105.3",
+  "data": "synthetic in-memory rows only",
+  "network": false,
+  "browser": false,
+  "productSourceChanged": false,
+  "heapMiB": 256,
+  "commandBudgetSeconds": 5
+}

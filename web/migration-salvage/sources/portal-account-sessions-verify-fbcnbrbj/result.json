@@ -1,0 +1,25 @@
+{
+  "scope": "focused formatter, Help generation, lint, types and unit tests only; no browser/build/full/native/installed",
+  "steps": [
+    {
+      "name": "format",
+      "exitCode": 0
+    },
+    {
+      "name": "help-generation",
+      "exitCode": 0
+    },
+    {
+      "name": "lint",
+      "exitCode": 0
+    },
+    {
+      "name": "api-types",
+      "exitCode": 2
+    }
+  ],
+  "busy": false,
+  "childStarted": true,
+  "carrierInode": 50313339,
+  "exitCode": 2
+}

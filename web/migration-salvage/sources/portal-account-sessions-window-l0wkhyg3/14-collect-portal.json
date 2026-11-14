@@ -1,0 +1,346 @@
+{
+  "config": {
+    "argv": [
+      "/Users/passion./.local/opt/node/bin/node",
+      "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "account-sessions.spec.ts",
+      "--list",
+      "--reporter=json"
+    ],
+    "configFile": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/playwright.config.ts",
+    "rootDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "name": "chromium",
+        "testDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/e2e",
+        "snapshotDir": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/e2e",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://localhost:31037",
+          "trace": "retain-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 7,
+    "webServer": {
+      "command": "pnpm exec vite preview --port 31037 --strictPort",
+      "url": "http://localhost:31037",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "account-sessions.spec.ts",
+      "file": "account-sessions.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "account sessions, portal",
+          "file": "../../../packages/shell/testing/account-session-flows.ts",
+          "line": 17,
+          "column": 8,
+          "specs": [
+            {
+              "title": "reviews the settings section and confirmation in en",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-720c88fded997fcdc3f1",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "reviews the settings section and confirmation in zh-CN",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-4f1a5b686dac217d87aa",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "replaces the current marker after a real same-account sign-out and sign-in",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-76dd1c3837a16aad45b2",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 98,
+              "column": 5
+            },
+            {
+              "title": "replaces the current marker through the actual password form",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-7c23dafada49cdaec4a9",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 124,
+              "column": 5
+            },
+            {
+              "title": "keeps earlier pages on an invalid cursor and failed restart",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-370c9d98e54c2ec42aa3",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 145,
+              "column": 5
+            },
+            {
+              "title": "shows ACCESS_DENIED without retained session actions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-c7f71c3c611c80a8041b",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 168,
+              "column": 7
+            },
+            {
+              "title": "shows SERVICE_NOT_READY without retained session actions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-953b9b84630a9522fe36",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 168,
+              "column": 7
+            },
+            {
+              "title": "reads before another attempt after RESOURCE_NOT_FOUND",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-1e0935be025587d629c1",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 190,
+              "column": 7
+            },
+            {
+              "title": "reads before another attempt after STORAGE_COMMIT_OUTCOME_UNKNOWN",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-f751adee34f8a86da269",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 190,
+              "column": 7
+            },
+            {
+              "title": "keeps the settings page usable during a delayed first read",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-29682779ec4c4ff59658",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 208,
+              "column": 5
+            },
+            {
+              "title": "does not replay a lost end reply even when the server already ended the target",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "05f57e96b9f90d7471d9-68f0f121bc95bcaca7b2",
+              "file": "../../../packages/shell/testing/account-session-flows.ts",
+              "line": 230,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-13T05:36:40.136Z",
+    "duration": 64.80000000000004,
+    "expected": 0,
+    "skipped": 11,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "sourceHashesVerified": 5099,
+  "assetHashesVerified": 1233,
+  "originalFullEvidenceUnchanged": 82,
+  "priorDirectedEvidenceUnchanged": 50,
+  "closedStubsUnchanged": 89,
+  "executedPreparedInputsUnchanged": 16,
+  "retainedOriginalCommands": [
+    {
+      "name": "web-install",
+      "exit": 0,
+      "seconds": 2.6614300000001094,
+      "source": "82c602d32b2d957459b3a742499de96867da27a9",
+      "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+      "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+      "logSha256": "2b57e582126265c61c3f6c20c3b0e0326090c05fb9292f94b340b5d23f181e10",
+      "currentTransferredWholeQualification": false,
+      "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+    },
+    {
+      "name": "check",
+      "exit": 0,
+      "seconds": 35.73019800000111,
+      "source": "82c602d32b2d957459b3a742499de96867da27a9",
+      "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+      "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+      "logSha256": "5cc599ebfc664dc86550f45716d404523c303004fc9e6d9e08a702275717635f",
+      "currentTransferredWholeQualification": false,
+      "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+    },
+    {
+      "name": "build",
+      "exit": 0,
+      "seconds": 101.0466860000015,
+      "source": "82c602d32b2d957459b3a742499de96867da27a9",
+      "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+      "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+      "logSha256": "f6eb663b253e021f8d004324b98b4e72ab9e327f597e1f4b8f2bd5190e10a1a1",
+      "currentTransferredWholeQualification": false,
+      "reason": "Original actual exit retained; full continuation not admitted, historical complete external executable hash manifest unavailable"
+    }
+  ]
+}

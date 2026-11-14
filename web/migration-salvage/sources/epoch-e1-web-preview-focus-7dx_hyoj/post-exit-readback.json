@@ -1,0 +1,27 @@
+{
+  "carrier": {
+    "dev": 16777231,
+    "inode": 53377467,
+    "uid": 501,
+    "mode": "0o600",
+    "regular": true,
+    "nlink": 1,
+    "size": 0
+  },
+  "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+  "fdReadbackExit": 1,
+  "fdReadback": "",
+  "knownPidReadbackExit": 1,
+  "knownPidRows": "",
+  "knownPids": [
+    64523,
+    64533,
+    64532,
+    64630,
+    64651,
+    64652,
+    65059,
+    65060
+  ],
+  "sourceClean": true
+}

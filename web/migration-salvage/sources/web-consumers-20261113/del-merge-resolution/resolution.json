@@ -1,0 +1,18 @@
+{
+  "head": "a957bce46163d83b5de2bb92f89d72bbc38f6a78",
+  "mergeHead": "gitdir: /Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git/worktrees/lane-del-main60-preparation\n",
+  "paths": {
+    "web/packages/shell/testing/help-flows.ts": {
+      "chosen": "stage2, exactly the qualified be62f58e main file",
+      "resolvedSha256": "a61ca1dea98a8127388364904ca46bc7ae958d0e61c1096a12696ba37da254ef",
+      "stage3Sha256": "09071bd5e73ee8d9f816b9e9d1f3ceb2b709a7a04c19db1fcd940842629ca184"
+    },
+    "docs/research/in-product-help.md": {
+      "chosen": "stage2, exactly the qualified be62f58e main file",
+      "resolvedSha256": "205b52d97e73135142a696905b44772e39dd70707d2564e72804302743fde75d",
+      "stage3Sha256": "439d35c6ece791b459ada66648573a4b0e81f94744ef1d0c4c1730bb6dc4d4fc"
+    }
+  },
+  "focusHelperSha256": "646622151f78ad7aca8adf872abd58965940946a68d1c033df19eb13d8808e3e",
+  "scope": "Only the two Web-owned conflicts resolved; shared status remains for DEL. No build or service launched."
+}

@@ -1,0 +1,27 @@
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+import sys as _ownsolid_closed_epoch_sys
+_ownsolid_closed_epoch_sys.stderr.write("Old Mac admission epoch is closed; await coordinated activation.\n")
+raise SystemExit(78)
+from pathlib import Path
+import select,subprocess,sys
+root=Path(__file__).resolve().parent
+carrier='/private/tmp/ownsolid-workstation-full-gate.lock'
+result=subprocess.run(['lsof','-Fpc',carrier],capture_output=True,text=True)
+owners=[];pid=None
+for line in result.stdout.splitlines():
+ if line.startswith('p'):pid=int(line[1:])
+ elif line.startswith('c') and line[1:].lower().startswith('python') and pid:owners.append(pid)
+if owners:
+ queue=select.kqueue()
+ try:
+  watched=0
+  for pid in owners:
+   try:queue.control([select.kevent(pid,filter=select.KQ_FILTER_PROC,flags=select.KQ_EV_ADD|select.KQ_EV_ONESHOT,fflags=select.KQ_NOTE_EXIT)],0,0);watched+=1
+   except ProcessLookupError:pass
+  if watched:
+   print('Waiting only for the current Mac owner exit; no lock retry or service starts',flush=True)
+   queue.control([],len(owners),None)
+ finally:queue.close()
+print('Opening the owned Web validation window; interactive idle timeout is 60 seconds',flush=True)
+raise SystemExit(subprocess.run([sys.executable,str(root.parent/'mac-window.py'),'env','TMOUT=60','PS1=web-window$ ','bash','--noprofile','--norc','-i']).returncode)

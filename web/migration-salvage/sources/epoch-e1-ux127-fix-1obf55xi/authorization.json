@@ -1,0 +1,13 @@
+{
+  "scope": "One directed UX127 UI/API correction qualification. No full/native/installed/POR112 or lint peak work.",
+  "totalSeconds": 600,
+  "cleanupReserveSeconds": 60,
+  "rawFreeMinimumBytes": 3221225472,
+  "diskFreeMinimumBytes": 16106127360,
+  "NodeOldSpaceMiB": 512,
+  "workers": 1,
+  "retries": 0,
+  "negativeControlAlreadyRunNoUnchangedRepetition": true,
+  "carrier": "ownsolid-2-20261113-e1",
+  "noPublication": true
+}

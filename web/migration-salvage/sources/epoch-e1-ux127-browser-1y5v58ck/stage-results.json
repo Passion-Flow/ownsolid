@@ -1,0 +1,77 @@
+[
+  {
+    "name": "console-build",
+    "source": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+    "round": 1,
+    "argv": [
+      "pnpm",
+      "run",
+      "build"
+    ],
+    "exit": 0,
+    "seconds": 7.651726000000053,
+    "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/console-build.log"
+  },
+  {
+    "name": "negative-old-runtime",
+    "source": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+    "round": 1,
+    "argv": [
+      "pnpm",
+      "exec",
+      "playwright",
+      "test",
+      "resource-activity.spec.ts",
+      "--config",
+      "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative.config.ts",
+      "--grep",
+      "reads current activity for a 400-day-old resource with a (?:1|31)-day policy",
+      "--workers=1",
+      "--retries=0",
+      "--trace=off",
+      "--reporter=json",
+      "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/negative-old-runtime-results"
+    ],
+    "exit": 1,
+    "seconds": 22.747419999999693,
+    "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/negative-old-runtime.json",
+    "stats": {
+      "startTime": "2026-11-13T17:29:51.293Z",
+      "duration": 22477.356000000003,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 4,
+      "flaky": 0
+    },
+    "collectedCases": 4
+  },
+  {
+    "name": "resource-activity",
+    "source": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+    "round": 1,
+    "argv": [
+      "pnpm",
+      "exec",
+      "playwright",
+      "test",
+      "e2e/resource-activity.spec.ts",
+      "--workers=1",
+      "--retries=0",
+      "--trace=off",
+      "--reporter=json",
+      "--output=/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/resource-activity-results"
+    ],
+    "exit": 1,
+    "seconds": 33.89910999999847,
+    "output": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck/round-1/resource-activity.json",
+    "stats": {
+      "startTime": "2026-11-13T17:30:14.008Z",
+      "duration": 33638.91,
+      "expected": 17,
+      "skipped": 0,
+      "unexpected": 4,
+      "flaky": 0
+    },
+    "collectedCases": 21
+  }
+]

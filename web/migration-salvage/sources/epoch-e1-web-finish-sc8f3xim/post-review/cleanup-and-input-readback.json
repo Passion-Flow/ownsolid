@@ -1,0 +1,23 @@
+{
+  "preparedInputsChanged": [],
+  "carrier": {
+    "device": 16777231,
+    "inode": 53377467,
+    "uid": 501,
+    "mode": "0o600",
+    "size": 0,
+    "nlink": 1,
+    "regular": true
+  },
+  "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+  "carrierFdReadback": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "parentControllerReadback": {
+    "exit": 1,
+    "stdout": ""
+  },
+  "newExit": "Not captured by interrupted measurement wrapper; stdout has complete372-file zero-error JSON and time-l output, neither is an exit record."
+}

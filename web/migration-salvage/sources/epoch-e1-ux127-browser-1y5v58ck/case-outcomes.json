@@ -1,0 +1,284 @@
+{
+  "negative-old-runtime": {
+    "stats": {
+      "startTime": "2026-11-13T17:29:51.293Z",
+      "duration": 22477.356000000003,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 4,
+      "flaky": 0
+    },
+    "globalErrors": [],
+    "cases": [
+      {
+        "title": "reads current activity for a 400-day-old resource with a 1-day policy",
+        "line": 96,
+        "status": "failed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "error-context"
+        ]
+      },
+      {
+        "title": "reads current activity for a 400-day-old resource with a 31-day policy",
+        "line": 96,
+        "status": "failed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "error-context"
+        ]
+      },
+      {
+        "title": "reads current activity for a 400-day-old resource with a 1-day policy",
+        "line": 96,
+        "status": "failed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "error-context"
+        ]
+      },
+      {
+        "title": "reads current activity for a 400-day-old resource with a 31-day policy",
+        "line": 96,
+        "status": "failed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "error-context"
+        ]
+      }
+    ]
+  },
+  "resource-activity": {
+    "stats": {
+      "startTime": "2026-11-13T17:30:14.008Z",
+      "duration": 33638.91,
+      "expected": 17,
+      "skipped": 0,
+      "unexpected": 4,
+      "flaky": 0
+    },
+    "globalErrors": [],
+    "cases": [
+      {
+        "title": "reads recent activity on an old node under a one-day policy",
+        "line": 61,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-node-recent-en"
+        ]
+      },
+      {
+        "title": "reads recent activity on an old model under a one-day policy",
+        "line": 61,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-model-recent-en"
+        ]
+      },
+      {
+        "title": "reads recent activity on an old deployment under a one-day policy",
+        "line": 61,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-deployment-recent-en"
+        ]
+      },
+      {
+        "title": "reads recent activity on an old connector under a one-day policy",
+        "line": 61,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-connector-recent-en"
+        ]
+      },
+      {
+        "title": "reads current activity for a 400-day-old resource with a 1-day policy",
+        "line": 96,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-recent-en"
+        ]
+      },
+      {
+        "title": "reads current activity for a 400-day-old resource with a 31-day policy",
+        "line": 96,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": []
+      },
+      {
+        "title": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states",
+        "line": 138,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-recent-empty-en",
+          "resource-history-range-refused-en",
+          "resource-history-historical-en",
+          "resource-history-filtered-empty-en"
+        ]
+      },
+      {
+        "title": "keeps exact cursor bounds and replaces a failed recent snapshot only after explicit recovery succeeds",
+        "line": 207,
+        "status": "failed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "error-context"
+        ]
+      },
+      {
+        "title": "cancels a pending page when leaving the tab and restores its earlier snapshot without replay",
+        "line": 249,
+        "status": "failed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "error-context"
+        ]
+      },
+      {
+        "title": "shows loading and a retained error, then hides all cached rows when access is refused",
+        "line": 285,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-loading-en",
+          "resource-history-error-en",
+          "resource-history-denied-en"
+        ]
+      },
+      {
+        "title": "reads recent activity on an old node under a one-day policy",
+        "line": 61,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-node-recent-zh-CN"
+        ]
+      },
+      {
+        "title": "reads recent activity on an old model under a one-day policy",
+        "line": 61,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-model-recent-zh-CN"
+        ]
+      },
+      {
+        "title": "reads recent activity on an old deployment under a one-day policy",
+        "line": 61,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-deployment-recent-zh-CN"
+        ]
+      },
+      {
+        "title": "reads recent activity on an old connector under a one-day policy",
+        "line": 61,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-connector-recent-zh-CN"
+        ]
+      },
+      {
+        "title": "reads current activity for a 400-day-old resource with a 1-day policy",
+        "line": 96,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-recent-zh-CN"
+        ]
+      },
+      {
+        "title": "reads current activity for a 400-day-old resource with a 31-day policy",
+        "line": 96,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": []
+      },
+      {
+        "title": "corrects a refused period, preserves its URL across tabs and reload, and distinguishes empty states",
+        "line": 138,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-recent-empty-zh-CN",
+          "resource-history-range-refused-zh-CN",
+          "resource-history-historical-zh-CN",
+          "resource-history-filtered-empty-zh-CN"
+        ]
+      },
+      {
+        "title": "keeps exact cursor bounds and replaces a failed recent snapshot only after explicit recovery succeeds",
+        "line": 207,
+        "status": "failed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "error-context"
+        ]
+      },
+      {
+        "title": "cancels a pending page when leaving the tab and restores its earlier snapshot without replay",
+        "line": 249,
+        "status": "failed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "error-context"
+        ]
+      },
+      {
+        "title": "shows loading and a retained error, then hides all cached rows when access is refused",
+        "line": 285,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-loading-zh-CN",
+          "resource-history-error-zh-CN",
+          "resource-history-denied-zh-CN"
+        ]
+      },
+      {
+        "title": "rejects reversed and nonexistent dates without an audit read",
+        "line": 340,
+        "status": "passed",
+        "retry": 0,
+        "resultCount": 1,
+        "attachmentNames": [
+          "resource-history-invalid-local-dates-en"
+        ]
+      }
+    ]
+  }
+}

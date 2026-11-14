@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+printf '%s\n' 'Old Mac admission epoch is closed; await coordinated activation.' >&2
+exit 78
+set -euo pipefail
+export npm_config_offline=true
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web/web"
+pnpm exec prettier --write apps/console/src/alias-description* apps/console/src/deployment-gateway.tsx apps/console/e2e/alias-description.spec.ts apps/portal/e2e/models.spec.ts packages/api/src/distribution.ts packages/api/src/index.ts packages/i18n/locales/en.json packages/i18n/locales/zh-cn.json packages/shell/testing/gateway.ts
+pnpm exec eslint --config packages/config/eslint.config.js --max-warnings 0 apps/console/src/alias-description* apps/console/src/deployment-gateway.tsx apps/console/e2e/alias-description.spec.ts apps/portal/e2e/models.spec.ts packages/api/src/distribution.ts packages/api/src/index.ts packages/shell/testing/gateway.ts
+pnpm --filter @ownsolid/console typecheck
+pnpm --filter @ownsolid/portal typecheck
+pnpm --filter @ownsolid/console exec vitest run src/alias-description.test.ts
+pnpm --filter @ownsolid/i18n test

@@ -1,0 +1,10 @@
+{
+  "source": "124520b94be27f673bdb32a3c5d825d1d337f75d",
+  "fullWebGateSource": "c70e9f5950f421e7bef194ae5f5ced0efaf1ca7f",
+  "nativeCheckBuildTestSource": "4b432dbf249e01ff9af447b3e5efc354a8682403",
+  "browserInputsUnchanged": true,
+  "upstreamSchedulingIntegration": "1b594f2e",
+  "freshNativeIntegrationState": "pending; no latest-source pass claimed",
+  "roadmapTicksChanged": false,
+  "strategy": "Publish the original-author Web commits with their already passed source-qualified gate; qualify the immutable integrated source before delivering new installation inputs. Later main movement will not retag the frozen source."
+}

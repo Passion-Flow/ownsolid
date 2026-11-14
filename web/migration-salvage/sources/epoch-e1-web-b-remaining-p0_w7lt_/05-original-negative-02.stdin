@@ -1,0 +1,6 @@
+import { useState } from 'react';
+export function LintControl({ active }: { active: boolean }) {
+  if (active) useState(false);
+  return <button>Untranslated control</button>;
+}
+export function unsafeControl(value: any) { return value.member; }

@@ -1,0 +1,25 @@
+{
+  "epoch": "ownsolid-2-20261113-e1",
+  "grant": "Separate coordinator B remaining-qualification job; no other owner has parallel Mac authorization. Exactly one NB, no retry/queue. Reuse unchanged seven actual CLI results from prior source-bound attempt; do not rerun them.",
+  "onlyScope": "B",
+  "fullOriginalFourTargets": "NOTRUN",
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "tree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "rawFreeMinimumGiB": 3,
+  "diskMinimumGiB": 15,
+  "absoluteSeconds": 600,
+  "cleanupReserveSeconds": 60,
+  "nodeOldSpaceMaximumMiB": 2048,
+  "preserveStricterLimits": true,
+  "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+  "identity": {
+    "device": 16777231,
+    "inode": 53377467,
+    "uid": 501,
+    "mode": "0600",
+    "regular": true,
+    "nlink": 1,
+    "size": 0
+  },
+  "notInstalledAcceptance": true
+}

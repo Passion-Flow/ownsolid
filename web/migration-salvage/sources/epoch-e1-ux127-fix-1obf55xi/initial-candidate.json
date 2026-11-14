@@ -1,0 +1,37 @@
+{
+  "source": "30a6fd576102358581eabd1efe6f51098538f8c9",
+  "tree": "723a7126525c28e478b727b123a703eb0152f6c4",
+  "webTree": "106e168248871fbd3f6cbd280c3dd949aa3517b1",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "oldWorktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-acceptance-help-44ab5229",
+  "referencePacket": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-ux127-browser-1y5v58ck",
+  "formatPaths": [
+    "web/apps/console/e2e/node-page.spec.ts",
+    "web/apps/console/e2e/resource-actions.spec.ts",
+    "web/apps/console/e2e/resource-activity.spec.ts",
+    "web/apps/console/e2e/services.spec.ts",
+    "web/apps/console/src/deployment-actions.tsx",
+    "web/apps/console/src/deployment-page.tsx",
+    "web/apps/console/src/model-page.tsx",
+    "web/apps/console/src/node-actions.tsx",
+    "web/apps/console/src/node-page.tsx",
+    "web/packages/api/src/audit.test.ts",
+    "web/packages/api/src/audit.ts",
+    "web/packages/i18n/locales/en.json",
+    "web/packages/i18n/locales/zh-cn.json",
+    "docs/research/resource-detail-pages.md"
+  ],
+  "lintPaths": [
+    "apps/console/e2e/node-page.spec.ts",
+    "apps/console/e2e/resource-actions.spec.ts",
+    "apps/console/e2e/resource-activity.spec.ts",
+    "apps/console/e2e/services.spec.ts",
+    "apps/console/src/deployment-actions.tsx",
+    "apps/console/src/deployment-page.tsx",
+    "apps/console/src/model-page.tsx",
+    "apps/console/src/node-actions.tsx",
+    "apps/console/src/node-page.tsx",
+    "packages/api/src/audit.test.ts",
+    "packages/api/src/audit.ts"
+  ]
+}

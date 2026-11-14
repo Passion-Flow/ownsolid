@@ -1,0 +1,22 @@
+{
+  "version": "5.105.3",
+  "assertionsPassed": 8,
+  "checks": [
+    "Negative control: a naive reused key exposes the retained old Current marker without a read",
+    "Fresh per-view cache identity withholds old data even when old snapshots remain cached",
+    "A refused first read never reveals the retained earlier session snapshot",
+    "One explicit recovery reads a current marker from the current view",
+    "Leaving cancels the pending page; its late answer cannot enter a new view",
+    "Explicit view reset after credential rotation does not reuse a previous Current marker",
+    "The real handler-style null-session transition hides data even with cached pages retained",
+    "Expiry is not replayed by focus, reconnect or invalidation"
+  ],
+  "fixtureReadCalls": 7,
+  "deniedReads": 2,
+  "cancelledPages": 1,
+  "scope": "TanStack observer/cache prototype only; synthetic rows, no React mount/StrictMode, HTTP, browser, SQL or durable revocation",
+  "network": false,
+  "browser": false,
+  "productSourceChanged": false,
+  "strategy": "ephemeral view key plus explicit reset on auth/credential transition; server authority remains unchanged"
+}

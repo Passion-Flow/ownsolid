@@ -1,0 +1,37 @@
+{
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web",
+  "source": "6a77bcdbc372a0aa7fac24b3f21a83105c246c86",
+  "commits": {
+    "AUD108": "7b53bc6e",
+    "MOD121": "d342d1cf",
+    "DEL109Documentation": "36d32588",
+    "MOD121HelpDiscovery": "6a77bcdb"
+  },
+  "allCommitted": true,
+  "published": true,
+  "fullRun": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/expiry-help-discovery-tzmrh6j8/full",
+  "activeExecSession": null,
+  "macLock": "Released after successful publication; no own publication processes, listeners or mounts remain",
+  "priorSuccessfulFullSource": "7401ff675b3259e018e3ba148ed63ae2331b11bd",
+  "priorSuccessfulFullRun": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/consumer-full-clean-l8v2melx",
+  "baseline": {
+    "source": "7401ff67 pinned old dist",
+    "path": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/expiry-help-discovery-tzmrh6j8/old-build.json",
+    "english": "expected failure for expired search",
+    "chinese": "positive control passed",
+    "firstFalsePositive": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/expiry-help-discovery-tzmrh6j8/old-build.json.before-filter-settled"
+  },
+  "imagesRead": "/Users/passion./.codex/visualizations/2026/11/08/01a1bc5a-6881-7790-88c0-62ef0b189235/mod121-import-expiry/qualified-discovery",
+  "remaining": "Actual new-instance GW120, Help, Scope, independent SQL, CLI and original OBS7 acceptance; no roadmap ticks added",
+  "entry": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry.md",
+  "manifest": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/installed-entry-manifest.json",
+  "be62FrozenUntouched": true,
+  "qualifiedSource": "6a77bcdbc372a0aa7fac24b3f21a83105c246c86",
+  "fullGatePassed": true,
+  "evidenceCommit": "cac8615e",
+  "next": "Use Delivery formal frozen source/runtime/object/credential inputs, rebind a copy of the frozen be62 kit and rerun its input checks before installed acceptance",
+  "publishedSource": "c864fbb10294fa36bdbf4256fe1601f8358ad1f8",
+  "handoff": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/consumer-handoff.md",
+  "handoffManifest": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/consumer-handoff-manifest.json",
+  "cleanupVerification": "/Users/passion./.local/state/ownsolid/web-scopes/web-consumers-20261113/publication-cleanup-verification.json"
+}

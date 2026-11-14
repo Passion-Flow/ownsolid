@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+printf '%s\n' 'Old Mac admission epoch is closed; await coordinated activation.' >&2
+exit 78
+set -eu
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web"
+pnpm exec prettier --write apps/console/src/activity-window.ts apps/console/src/activity-window.test.ts apps/console/src/resource-activity.tsx apps/console/src/resource-page.tsx apps/console/src/audit-read.tsx apps/console/src/audit-read.test.tsx apps/console/src/user-page.tsx apps/console/src/node-page.tsx apps/console/src/connector-page.tsx apps/console/e2e/resource-activity-fixture.ts apps/console/e2e/resource-activity.spec.ts apps/console/e2e/resource-pages.spec.ts apps/console/e2e/pages.ts packages/i18n/src/format.ts packages/i18n/src/format.test.ts packages/i18n/locales/en.json packages/i18n/locales/zh-cn.json
+pnpm exec eslint --config packages/config/eslint.config.js --max-warnings 0 apps/console/src/activity-window.ts apps/console/src/activity-window.test.ts apps/console/src/resource-activity.tsx apps/console/src/resource-page.tsx apps/console/src/audit-read.tsx apps/console/src/audit-read.test.tsx apps/console/src/user-page.tsx apps/console/src/node-page.tsx apps/console/src/connector-page.tsx apps/console/e2e/resource-activity-fixture.ts apps/console/e2e/resource-activity.spec.ts apps/console/e2e/resource-pages.spec.ts apps/console/e2e/pages.ts packages/i18n/src/format.ts packages/i18n/src/format.test.ts
+pnpm --filter @ownsolid/console typecheck
+pnpm --filter @ownsolid/i18n typecheck
+pnpm --dir apps/console exec vitest run src/activity-window.test.ts src/audit-read.test.tsx
+pnpm --dir packages/i18n exec vitest run src/format.test.ts src/catalogs.test.ts

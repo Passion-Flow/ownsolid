@@ -1,0 +1,51 @@
+[
+  {
+    "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/lint-negative-fixture.js",
+    "device": 16777231,
+    "inode": 53424117,
+    "uid": 501,
+    "expectedSha256": "530054c166602a82535a14d8fb04dda4428820cf527f33c9e31869f48e940180"
+  },
+  {
+    "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/.lint-negative-fixture.js",
+    "device": 16777231,
+    "inode": 53424119,
+    "uid": 501,
+    "expectedSha256": "de34fdad20e04145423ca8d3bdf4a848a07c7b5f4640ea8b2b4f5405ead70f63"
+  },
+  {
+    "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/src/lint-negative-fixture.tsx",
+    "device": 16777231,
+    "inode": 53424120,
+    "uid": 501,
+    "expectedSha256": "9a8abb813953eff282d07ae767b8e6425d0c971641d29fbc48ffc2cbcc3b8a51"
+  },
+  {
+    "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/portal/src/lint-negative-fixture.tsx",
+    "device": 16777231,
+    "inode": 53424121,
+    "uid": 501,
+    "expectedSha256": "37d14859a3389c64dbda9c82c9da9b0f22d168d082d7cb604e7e9b64636208a9"
+  },
+  {
+    "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/apps/console/e2e/lint-negative-fixture.ts",
+    "device": 16777231,
+    "inode": 53424122,
+    "uid": 501,
+    "expectedSha256": "248301610e0bf324d46d77f888b0c8615f18dccb7d2c8ed0676af1d6666d3c62"
+  },
+  {
+    "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/shell/testing/lint-negative-fixture.ts",
+    "device": 16777231,
+    "inode": 53424123,
+    "uid": 501,
+    "expectedSha256": "248301610e0bf324d46d77f888b0c8615f18dccb7d2c8ed0676af1d6666d3c62"
+  },
+  {
+    "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history/web/packages/config/src/lint-negative-fixture.ts",
+    "device": 16777231,
+    "inode": 53424124,
+    "uid": 501,
+    "expectedSha256": "248301610e0bf324d46d77f888b0c8615f18dccb7d2c8ed0676af1d6666d3c62"
+  }
+]

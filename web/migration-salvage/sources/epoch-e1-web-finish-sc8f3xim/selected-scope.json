@@ -1,0 +1,19 @@
+{
+  "scope": "B",
+  "source": "56a19799bfec788170d71680b4f0663c23073107",
+  "tree": "b2a8e44948370907c50b66702e3800f3a3fc4b6c",
+  "webTree": "c6f7153f37ff0625017823ce4a3415d641e24a21",
+  "files": 5101,
+  "manifest": "source-B-sha256.json",
+  "rawFreeBytes": 4864524288,
+  "freePages": 296907,
+  "pageBytes": 16384,
+  "diskFreeBytes": 165640785920,
+  "totalSeconds": 600,
+  "cleanupReserveSeconds": 120,
+  "nodeOldSpaceMaximumMiB": 2048,
+  "unselectedScope": "NOTRUN",
+  "entryMonotonic": 11459.446875,
+  "hardDeadlineMonotonic": 12059.446875,
+  "workCutoffMonotonic": 11939.446875
+}

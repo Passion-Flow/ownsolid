@@ -1,0 +1,6 @@
+{
+  "exit": 0,
+  "heapMiB": 256,
+  "commandLimitSeconds": 5,
+  "scope": "in-memory standalone prototype; not a shared browser/full/native job"
+}

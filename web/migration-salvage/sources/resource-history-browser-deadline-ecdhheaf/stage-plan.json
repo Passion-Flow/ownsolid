@@ -1,0 +1,147 @@
+{
+  "source": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+  "webTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "originalHelpers": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/narrow-run.py",
+  "inputFiles": {
+    "e2e/resource-activity.spec.ts": "efbc00f4daf54efb3f21dba1858e577f34f3f19a1c42c12e5abac13cbf14a926",
+    "e2e/audit-read-recovery.spec.ts": "6d37859ef3bb0688b2997b8721992555d425c8fa4fbdf32f5006dc936139d7c3",
+    "e2e/resource-pages.spec.ts": "545ca0aa60c91bd2d5a7fff2fadaaa36f4400af9ce532b9bb333dee455b22b4a",
+    "e2e/node-page.spec.ts": "82d0d2e9b0cd1a423a439ea772366db5ef25620f9be013c22c04a4b11e5653cb",
+    "e2e/resource-activity-fixture.ts": "81e8b105204bcda34a631b3948e16559b4439a5d923838774f1c8e4b6ab96e0c",
+    "e2e/accessibility.spec.ts": "bc2b08ac8f483ae25d4509c7e7a46f4365fecd12d7835cbf22760668aaac939e",
+    "e2e/keyboard.spec.ts": "287bf77c0400f369ff9c4c1d71c073668481af784540402e650bc385d41b2909",
+    "e2e/pages.ts": "74da590d093174b248e007462b74d400448c3f6034545b0119c5bcff4dafbedf"
+  },
+  "inventoryNames": [
+    "a node with its activity",
+    "resource activity with no recent events",
+    "resource activity with no events in a selected period",
+    "resource activity with invalid selected dates",
+    "resource activity with access refused",
+    "resource activity waiting for the initial read",
+    "audit trail with uncertain read recovery",
+    "audit trail with partial read recovery",
+    "audit activity with uncertain read recovery",
+    "audit activity with partial read recovery"
+  ],
+  "inventoryGrep": "(?:a\\ node\\ with\\ its\\ activity|resource\\ activity\\ with\\ no\\ recent\\ events|resource\\ activity\\ with\\ no\\ events\\ in\\ a\\ selected\\ period|resource\\ activity\\ with\\ invalid\\ selected\\ dates|resource\\ activity\\ with\\ access\\ refused|resource\\ activity\\ waiting\\ for\\ the\\ initial\\ read|audit\\ trail\\ with\\ uncertain\\ read\\ recovery|audit\\ trail\\ with\\ partial\\ read\\ recovery|audit\\ activity\\ with\\ uncertain\\ read\\ recovery|audit\\ activity\\ with\\ partial\\ read\\ recovery)(?:: every control is reachable and shows focus)?$",
+  "expectedInventoryCasesOnly": 30,
+  "stages": [
+    {
+      "name": "discover-primary",
+      "args": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/resource-activity.spec.ts",
+        "e2e/audit-read-recovery.spec.ts",
+        "e2e/resource-pages.spec.ts",
+        "e2e/node-page.spec.ts",
+        "--list",
+        "--reporter=json"
+      ],
+      "timeout": 30
+    },
+    {
+      "name": "discover-inventory",
+      "args": [
+        "pnpm",
+        "exec",
+        "playwright",
+        "test",
+        "e2e/accessibility.spec.ts",
+        "e2e/keyboard.spec.ts",
+        "--grep",
+        "(?:a\\ node\\ with\\ its\\ activity|resource\\ activity\\ with\\ no\\ recent\\ events|resource\\ activity\\ with\\ no\\ events\\ in\\ a\\ selected\\ period|resource\\ activity\\ with\\ invalid\\ selected\\ dates|resource\\ activity\\ with\\ access\\ refused|resource\\ activity\\ waiting\\ for\\ the\\ initial\\ read|audit\\ trail\\ with\\ uncertain\\ read\\ recovery|audit\\ trail\\ with\\ partial\\ read\\ recovery|audit\\ activity\\ with\\ uncertain\\ read\\ recovery|audit\\ activity\\ with\\ partial\\ read\\ recovery)(?:: every control is reachable and shows focus)?$",
+        "--list",
+        "--reporter=json"
+      ],
+      "timeout": 30
+    },
+    {
+      "name": "console-build",
+      "args": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "timeout": 60
+    },
+    {
+      "name": "negative-old-runtime",
+      "config": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative.config.ts",
+      "spec": [
+        "resource-activity.spec.ts"
+      ],
+      "grep": "reads current activity for a 400-day-old resource with a (?:1|31)-day policy",
+      "expectedFailures": 4,
+      "timeout": 70
+    },
+    {
+      "name": "resource-activity",
+      "spec": [
+        "e2e/resource-activity.spec.ts"
+      ],
+      "timeout": 70
+    },
+    {
+      "name": "audit-en",
+      "spec": [
+        "e2e/audit-read-recovery.spec.ts"
+      ],
+      "grep": " in en$",
+      "timeout": 70
+    },
+    {
+      "name": "audit-zh",
+      "spec": [
+        "e2e/audit-read-recovery.spec.ts"
+      ],
+      "grep": " in zh-CN$",
+      "timeout": 70
+    },
+    {
+      "name": "audit-boundaries",
+      "spec": [
+        "e2e/audit-read-recovery.spec.ts"
+      ],
+      "grep": "does not expose an audit consumer|does not queue an offline audit retry",
+      "timeout": 70
+    },
+    {
+      "name": "resource-pages",
+      "spec": [
+        "e2e/resource-pages.spec.ts",
+        "e2e/node-page.spec.ts"
+      ],
+      "timeout": 70
+    },
+    {
+      "name": "inventory-a11y",
+      "spec": [
+        "e2e/accessibility.spec.ts"
+      ],
+      "grep": "(?:a\\ node\\ with\\ its\\ activity|resource\\ activity\\ with\\ no\\ recent\\ events|resource\\ activity\\ with\\ no\\ events\\ in\\ a\\ selected\\ period|resource\\ activity\\ with\\ invalid\\ selected\\ dates|resource\\ activity\\ with\\ access\\ refused|resource\\ activity\\ waiting\\ for\\ the\\ initial\\ read|audit\\ trail\\ with\\ uncertain\\ read\\ recovery|audit\\ trail\\ with\\ partial\\ read\\ recovery|audit\\ activity\\ with\\ uncertain\\ read\\ recovery|audit\\ activity\\ with\\ partial\\ read\\ recovery)(?:: every control is reachable and shows focus)?$",
+      "timeout": 70
+    },
+    {
+      "name": "inventory-keyboard",
+      "spec": [
+        "e2e/keyboard.spec.ts"
+      ],
+      "grep": "(?:a\\ node\\ with\\ its\\ activity|resource\\ activity\\ with\\ no\\ recent\\ events|resource\\ activity\\ with\\ no\\ events\\ in\\ a\\ selected\\ period|resource\\ activity\\ with\\ invalid\\ selected\\ dates|resource\\ activity\\ with\\ access\\ refused|resource\\ activity\\ waiting\\ for\\ the\\ initial\\ read|audit\\ trail\\ with\\ uncertain\\ read\\ recovery|audit\\ trail\\ with\\ partial\\ read\\ recovery|audit\\ activity\\ with\\ uncertain\\ read\\ recovery|audit\\ activity\\ with\\ partial\\ read\\ recovery)(?:: every control is reachable and shows focus)?$",
+      "timeout": 70
+    }
+  ],
+  "noRetry": true,
+  "workersMaximum": 2,
+  "noPublication": true,
+  "noFullGate": true,
+  "noNative": true,
+  "noInstalled": true,
+  "actualDiscovery": null,
+  "actualBrowserResults": null,
+  "plannedScreenshotCountOnly": 27
+}

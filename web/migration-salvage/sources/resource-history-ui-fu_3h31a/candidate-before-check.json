@@ -1,0 +1,23 @@
+{
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "head": "dcd2cd32814530a1ebfc5d77fcf749f2da7c18a1",
+  "files": {
+    "web/apps/console/e2e/resource-activity-fixture.ts": "e2eac8e1964b344c2d33933f0882a3931a79713500d452159da9860679323378",
+    "web/apps/console/e2e/resource-activity.spec.ts": "dbaefa8dd12f3b24647b4276a0c8518b060262badb6d30cca0b700a17b1916e8",
+    "web/apps/console/src/activity-window.test.ts": "043f27f78e96e2e399b2aeaec017e8b7e492073cdb635cf6f239d3d2aefbee15",
+    "web/apps/console/src/activity-window.ts": "3afb04299217a2947bb06f8ef33a00bf7367166a1cb500c4e10122177598de1e",
+    "web/apps/console/src/resource-activity.tsx": "12492bd180b71e4f4829d4f4cef565bf89b7f88b9d3371cde5920a1983793770",
+    "web/apps/console/e2e/pages.ts": "d002a8ee6f555ac8b3dd4de6daf98cc1936353b20990bb658b5e4def4226e114",
+    "web/apps/console/e2e/resource-pages.spec.ts": "8d6b3c810005b8994e853e336cd8ea11ce5b1569f3dd63166e33082460e0cc3a",
+    "web/apps/console/src/audit-read.test.tsx": "2285b70804b43aeb5cc2887c7f6b8ecdc1093cc68ea8c287709b59f9b04e08af",
+    "web/apps/console/src/audit-read.tsx": "7812b3596b22ca252cce3e4ad7305e26523fa9a0ed0d3cee1f4a101b1fc69503",
+    "web/apps/console/src/connector-page.tsx": "0b20c51ff0c6d1137d9f3631e1697ab99d8ff4cc2f6f1479511e6f3855954f5a",
+    "web/apps/console/src/node-page.tsx": "08c72b4a424967dba49de3320f2aa09344e50bf0fcd156b587424ed17029d887",
+    "web/apps/console/src/resource-page.tsx": "4813e225a44f8b778f70bd0fd697ff0bc7ab0a8cefef2947cae22e3963a3ac00",
+    "web/apps/console/src/user-page.tsx": "77ab9909ceb2003d275d7aff0d22db53d21a188ec7ac44f20f4cabc7d3f07bda",
+    "web/packages/i18n/locales/en.json": "cfd5bff4f73e6c8f50fb4fab579a88bdde661bcef46169c8dcb3a56308990ebb",
+    "web/packages/i18n/locales/zh-cn.json": "f26eb1736a2100bba99b9fbb3556c182c301c9c7c20ad2986b9930d0bee27d8a",
+    "web/packages/i18n/src/format.test.ts": "c2e79487104191b3976189b74bcf79fc8e61a49549c43e3a941c2192a7d3ebd1",
+    "web/packages/i18n/src/format.ts": "f1785a1c2cffddfe092716d91d2ae34c9abd5e6315ca64740768ebadca63ecc8"
+  }
+}

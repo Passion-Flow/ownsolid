@@ -1,0 +1,45 @@
+{
+  "scope": "focused formatter, Help generation, lint, types and unit tests only; no browser/build/full/native/installed",
+  "steps": [
+    {
+      "name": "lint-fix",
+      "exitCode": -6
+    },
+    {
+      "name": "format",
+      "exitCode": 0
+    },
+    {
+      "name": "help-generation",
+      "exitCode": 0
+    },
+    {
+      "name": "lint",
+      "exitCode": -6
+    },
+    {
+      "name": "api-types",
+      "exitCode": 0
+    },
+    {
+      "name": "shell-types",
+      "exitCode": 2
+    },
+    {
+      "name": "session-units",
+      "exitCode": 0
+    },
+    {
+      "name": "confirmation-units",
+      "exitCode": 0
+    },
+    {
+      "name": "locale-units",
+      "exitCode": 0
+    }
+  ],
+  "busy": false,
+  "childStarted": true,
+  "carrierInode": 50313339,
+  "exitCode": 1
+}

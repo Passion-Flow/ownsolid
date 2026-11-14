@@ -1,0 +1,12 @@
+{
+  "scope": "UX127 frozen source only; corrected external package ESM; full original four primary flow files plus unchanged affected accessibility/keyboard inventory and old-runtime negative control",
+  "totalSeconds": 600,
+  "cleanupReserveSeconds": 60,
+  "minimumFreeMemoryBytes": 3221225472,
+  "minimumFreeDiskBytes": 16106127360,
+  "nodeHeapMiB": 512,
+  "workers": 1,
+  "noDiscoveryOrUnitRepeat": true,
+  "buildReason": "300 current candidate asset mismatches against prior696 map; source/dependencies remain frozen",
+  "noAFullGateOrPeakOrPublish": true
+}

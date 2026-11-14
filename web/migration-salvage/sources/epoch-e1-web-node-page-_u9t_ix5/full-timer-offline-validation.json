@@ -1,0 +1,8 @@
+{
+  "isolatedBudgetChecks": 5,
+  "passed": 5,
+  "fullRearmAstUsesBudget1800": true,
+  "runtimeSignalOrTimerStarted": false,
+  "actualFullRun": "NOTRUN",
+  "originalTargetedResultChanged": false
+}

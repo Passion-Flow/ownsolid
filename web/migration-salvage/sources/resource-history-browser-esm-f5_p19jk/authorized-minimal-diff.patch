@@ -1,0 +1,33 @@
+--- /Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/browser-run.py
++++ /Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/browser-run.py
+@@ -68,6 +68,12 @@
+  assert sum(map(len,partitions))==41 and len(set(sum(partitions,[])))==41,partitions
+  assert len(list(cases(inventory['suites'])))==30
+  (root/'discovered-selection.json').write_text(json.dumps({'counts':counts,'auditPartitions':[len(p) for p in partitions],'inventory':30},indent=2)+'\n')
++ # The corrected external probe must collect before spending the build stage.
++ for path,digest in info['correctedProbeInputs'].items():assert sha(Path(path))==digest,path
++ assert execute('discover-negative',info['correctedNegativeDiscoveryArgs'],30,True)==0
++ negative_discovery=json.loads((root/'discover-negative.json').read_text())
++ assert not negative_discovery.get('errors'),negative_discovery.get('errors')
++ assert len(list(cases(negative_discovery['suites'])))==4
+  build=plan['stages'][2];assert execute(build['name'],build['args'],build['timeout'])==0
+  assets={str(p.relative_to(work)):sha(p) for p in (app/'dist').rglob('*') if p.is_file()}
+  chunks=[p.read_text() for p in (app/'dist/assets').glob('*.js')]
+--- /Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf/stage-plan.json
++++ /Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/stage-plan.json
+@@ -1,5 +1,5 @@
+ {
+-  "source": "43eaa0cbf0574b620745a760d4a4928064e706ce",
++  "source": "d4bfec1cd66cd7b4160fd900eeeb2e165d47dd3b",
+   "webTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+   "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+   "originalHelpers": "/Users/passion./.local/state/ownsolid/web-scopes/help-saved-query-wwhvfal7/narrow-run.py",
+@@ -71,7 +71,7 @@
+     },
+     {
+       "name": "negative-old-runtime",
+-      "config": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-preparation-w5jpf3m7/negative.config.ts",
++      "config": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-esm-probe-_jd9usai/negative.config.ts",
+       "spec": [
+         "resource-activity.spec.ts"
+       ],

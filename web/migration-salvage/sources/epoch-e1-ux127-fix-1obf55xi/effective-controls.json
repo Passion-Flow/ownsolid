@@ -1,0 +1,12 @@
+{
+  "NodeOldSpaceMiB": 512,
+  "workers": 1,
+  "retries": 0,
+  "offlineDependencies": true,
+  "wholeSeconds": 600,
+  "cleanupReserve": 60,
+  "negativeControlNotRepeated": true,
+  "noFullNativeInstalled": true,
+  "trace": "off",
+  "inlinePngExtraction": true
+}

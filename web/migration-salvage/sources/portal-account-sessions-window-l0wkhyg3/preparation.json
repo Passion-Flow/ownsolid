@@ -1,0 +1,12 @@
+{
+  "source": "91d36706641515a7697937b11adf8b23dc7ada4c",
+  "webTree": "c86857e40124d0dd28658abc83a4787b0620130b",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "reviewedParentTemplate": "e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a",
+  "parentChange": "Only own Portal cwd binding for port 31037; absolute deadlines, NB carrier and cleanup unchanged.",
+  "preparedFiles": {
+    "mac-browser-once.py": "4dc28786980826d8de5f088e77c5107807a80553de5c5f9a48ccfefe93308d1e",
+    "browser-run.py": "21a5ab30139ceb109d0995492eed7b020e0963b29524b8fe63e799cb863ab847",
+    "stage-plan.json": "aaa610b95a80f7bef1b102cb28230108825235991abb6e9348d8e42c0c591aa2"
+  }
+}

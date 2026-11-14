@@ -1,0 +1,30 @@
+{
+  "node": {
+    "path": "/Users/passion./.local/opt/node/bin/node",
+    "sha256": "533bd644c5ae0e0ea3a80e433aad16b817447ccba1e1eea701875eac80cb75d4"
+  },
+  "pnpm": {
+    "path": "/Users/passion./.local/opt/node/lib/node_modules/pnpm/pnpm",
+    "sha256": "dbeac289e38258dbbe9c2aa3e51e33be2c5118682b05dd20d7f2e0fd11f38b95"
+  },
+  "go": {
+    "path": "/Users/passion./.local/opt/go/bin/go",
+    "sha256": "aa355b078a81158d418079a3f8c776719eb99cc6f527e39ffa3250c66566aafb"
+  },
+  "cargo": {
+    "path": "/Users/passion./.cargo/bin/rustup",
+    "sha256": "63752a1919a3a4793173ec70f8f212621a7ce38ba6a246095984482f4de20f9f"
+  },
+  "rustc": {
+    "path": "/Users/passion./.cargo/bin/rustup",
+    "sha256": "63752a1919a3a4793173ec70f8f212621a7ce38ba6a246095984482f4de20f9f"
+  },
+  "uv": {
+    "path": "/Users/passion./.local/bin/uv",
+    "sha256": "0f333833a6d011710d3edc0e45b55d3d934aef15bb83a25b29848c241ac513b4"
+  },
+  "python3": {
+    "path": "/usr/bin/python3",
+    "sha256": "34129c71a01a74f7f3b2443521519b2e5447553fa187f5fcafaaf8c42cc192e2"
+  }
+}

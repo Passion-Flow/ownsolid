@@ -1,0 +1,27 @@
+{
+  "realCurrentOwnedSelf": {
+    "pid": 52817,
+    "ppid": 12984,
+    "pgid": 52817,
+    "uid": 501,
+    "startTime": [
+      1794577019,
+      255780
+    ],
+    "rssBytes": 18169856,
+    "status": 2
+  },
+  "actualHistoricalDataReview": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-finish-sc8f3xim/actual-retained-sample-review.json",
+  "historicalMissingPpidAndStartSamplesRejected": true,
+  "offlineTopologyAssertions": [
+    "Cross-PGID child included",
+    "Cross-PGID grandchild included",
+    "Known same-lifetime reparented child retained",
+    "Reused unrelated PID excluded",
+    "Unreadable/missing child sample refuses metric"
+  ],
+  "injectedSampleErrorRejected": true,
+  "nativeSourceSha256": "f5fe5207fa651fea89694bfe8d807be0ea1d335dddc67e7ad36c8f5a48d186c3",
+  "realMeasurementYetRun": false,
+  "offlineParentBoundaryCorrection": "Synthetic PID1 guard case now accepts the exact declared parent instead of assuming every admitted guard PID exceeds1; no process was spawned."
+}

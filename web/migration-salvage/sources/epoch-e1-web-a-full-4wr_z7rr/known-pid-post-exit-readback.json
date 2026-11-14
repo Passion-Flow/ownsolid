@@ -1,0 +1,6 @@
+{
+  "knownInvocationAndWorkerPidsChecked": 100,
+  "psExit": 1,
+  "currentRows": "",
+  "identityLimit": "PID-only readback is not a global quiescence statement; no unrelated process was killed."
+}

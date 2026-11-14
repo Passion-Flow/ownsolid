@@ -1,0 +1,22 @@
+{
+  "attempted": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "author-composition-proof.json": "68ff5087344668aeafde44f612eac3d5c4a91f2f88c686d16e59abfdc677c319",
+  "author-projection-inputs.json": "295993dda549af2a47ddf6db82ff2eb218557ce32f0c0be1896eac7ac79c2b83",
+  "bin/pnpm": "28ed6f5207d4547563005a2df49d7df011c491a23593fea02c746726184d8103",
+  "bundle-verification.log": "399c9f1a2bea95b61e9ae1b352f2dc998d41af7e781ca4066ae69dfaa08eb34b",
+  "cleanup-owned.py": "fa5276a2fe6e7d0dd4cb5fd8443a4c37ab9cab421366e054c8df20492dc3d40e",
+  "full-run.py": "adbc0542c179f52143353eed4d48e869ed89769b7398d6e156cc48ac8dd99e21",
+  "gate-exit-status": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "gate-state.json": "e72a960803ab3854ec74e13d689a4d37a36587f58993a8d34b08fe134eb2356d",
+  "import-receipt.json": "5c9ff57b137b80f7f219d60dc3816bead6f959056fb550ceebf2bec497d1da90",
+  "mac-browser-once.py": "7b3a458a3c358049d869e3fa6ad9bc262ccd1aa39f1b7853973a7b17c55a3fed",
+  "owner-handoff.json": "a80017dfbc2cdd00d96dd815785e2c5870dd2956584ee285eb1a83bf8f4281fb",
+  "portal-account-original-author-joint.bundle": "7b8ddb3df53cc819381d0c9b62dc8b3faa0d797de031b9678fb74324c0350ed0",
+  "preflight-memory.log": "29d4af888011aefa21ae50656735e303bd240b989e6f6c5404222c3e27b3404a",
+  "premerge-review.json": "09b2aeabacf89921cd20758b9cad995da630b9babc97a03b2fb0db57840832d0",
+  "preparation.json": "b2a8544da006241ac1400c9700fa6bbf2d8550be62f0f4c8c3a536f4c28ba25c",
+  "readback-carrier.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "readback-ports.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "source-file-sha256.json": "ef5bf610d817809f2f524146688639f0556dc77393ee67187bc88af78f4de05e",
+  "stage-plan.json": "b468c440c7a4004c869108cc4cd22400c3366ed4f588925b67c6364380b7cd5e"
+}

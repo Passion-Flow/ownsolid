@@ -1,0 +1,145 @@
+{
+  "scope": "All owned readable source files, including retired source-data copies; static parse only",
+  "embedded_binary_literals": [],
+  "other_encoding_candidates": [
+    {
+      "path": "web-consumers-20261113/consumer-full-clean.sh",
+      "line": 39,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "web-consumers-20261113/consumer-full-clean.sh",
+      "line": 67,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 77
+    },
+    {
+      "path": "web-consumers-20261113/consumer-full.sh",
+      "line": 36,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "web-consumers-20261113/consumer-full.sh",
+      "line": 64,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 77
+    },
+    {
+      "path": "web-consumers-20261113/publication-check.sh",
+      "line": 39,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "web-consumers-20261113/publication-check.sh",
+      "line": 67,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 77
+    },
+    {
+      "path": "help-saved-query-wwhvfal7/full-gate.sh",
+      "line": 42,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "help-saved-query-wwhvfal7/full-gate.sh",
+      "line": 75,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 77
+    },
+    {
+      "path": "epoch-e1-web-once-jt8bpohu/cleanup-owned.py",
+      "line": 25,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 82
+    },
+    {
+      "path": "epoch-e1-web-once-jt8bpohu/reviewed-cleanup-owned.py",
+      "line": 25,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 82
+    },
+    {
+      "path": "aud108-explicit-retry-s0ycu2hy/publication-check.sh",
+      "line": 39,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "aud108-explicit-retry-s0ycu2hy/publication-check.sh",
+      "line": 72,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 77
+    },
+    {
+      "path": "aud108-explicit-retry-s0ycu2hy/full-gate.sh",
+      "line": 39,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "aud108-explicit-retry-s0ycu2hy/full-gate.sh",
+      "line": 72,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 77
+    },
+    {
+      "path": "portal-account-full-post-update-g6pivtlb/reviewed-cleanup-owned.py",
+      "line": 25,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 82
+    },
+    {
+      "path": "epoch-e1-web-a-full-4wr_z7rr/cleanup-owned.py",
+      "line": 25,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 82
+    },
+    {
+      "path": "download-discovery-6gj4rt_h/gw120-edit/full-window-v2.sh",
+      "line": 36,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "download-discovery-6gj4rt_h/gw120-edit/full-window-v2.sh",
+      "line": 64,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 77
+    },
+    {
+      "path": "download-discovery-6gj4rt_h/gw120-edit/full-window.sh",
+      "line": 35,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "epoch-e1-web-node-page-_u9t_ix5/cleanup-owned.py",
+      "line": 25,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 82
+    },
+    {
+      "path": "acceptance-b8aqosz5/window.sh",
+      "line": 63,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 52
+    },
+    {
+      "path": "epoch-e1-web-finish-sc8f3xim/cleanup-owned.py",
+      "line": 25,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 82
+    },
+    {
+      "path": "portal-account-joint-full-4deb4qpz/cleanup-owned.py",
+      "line": 25,
+      "rule": "encoded-payload-or-binary-patch",
+      "length": 82
+    }
+  ],
+  "retired_scripts_executed": false
+}

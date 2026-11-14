@@ -1,0 +1,56 @@
+{
+  "target": "4463bbe628f60486bbdb92c15f72311fb53d076a",
+  "original_candidates_preserved_in_order": [
+    {
+      "original": "db8fe58c38ce02503f22e2a254dfab01eb9bf7ab",
+      "applied": "2a3b7d04d69314a2fae63987f8e0a587e0494213",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "patch_id_preserved": true,
+      "order": 20
+    },
+    {
+      "original": "40fa3f5b49371d2b7d2dad1aec469ed99b659189",
+      "applied": "967da9f0dbd9db5b97598f864e1de9566211ce57",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "patch_id_preserved": true,
+      "order": 21
+    },
+    {
+      "original": "54614882d91f56d3c1bb02cbd8857b459f2818f1",
+      "applied": "8385b5f1d4d8f02686ec4db120b5e0a1a68011c7",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "patch_id_preserved": true,
+      "order": 22
+    },
+    {
+      "original": "342c556a6d5d2bd2c133205912e02ca928d60ed1",
+      "applied": "673fe10b7574c44519c55790420d2585ff3d149b",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "patch_id_preserved": true,
+      "order": 23
+    },
+    {
+      "original": "fa63032637239ba0ce2b11075eadd1a182ae44c5",
+      "applied": "c670ab346cd0842d85474efae02a48a7182797c3",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "patch_id_preserved": true,
+      "order": 24
+    },
+    {
+      "original": "ce92c4d264071c0444526fd02cb4aa30b8bfea3d",
+      "applied": "2d958cb5185b4e4a41dcc8ec56410468a99f11c6",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "patch_id_preserved": true,
+      "order": 25
+    },
+    {
+      "original": "5d5954691dad2c5dce8d5545f62efada371243af",
+      "applied": "85c2abdd4b3deacc6c12a5929f77f5a5c579cbfc",
+      "author": "Passion. <279058513+Passion-Flow@users.noreply.github.com>",
+      "patch_id_preserved": true,
+      "order": 26
+    }
+  ],
+  "web_tree_identical_to": "5d5954691dad2c5dce8d5545f62efada371243af",
+  "status": "Source comparison only; final-SHA full gates and installed acceptance are not inferred from earlier results."
+}

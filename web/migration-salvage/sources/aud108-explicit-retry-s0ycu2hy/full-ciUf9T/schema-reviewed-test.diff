@@ -1,0 +1,12 @@
+diff --git a/api/configuration/v1/control-serving-expectation/schema.json b/api/configuration/v1/control-serving-expectation/schema.json
+index 28cceff7..47f10b83 100644
+--- a/api/configuration/v1/control-serving-expectation/schema.json
++++ b/api/configuration/v1/control-serving-expectation/schema.json
+@@ -10,6 +10,7 @@
+     "format_version": {"type": "integer", "const": 1},
+     "transport_mode": {"type": "string", "enum": ["http", "direct_https", "trusted_proxy_https"]},
+     "listen_address": {"type": "string", "minLength": 1},
++    "portal_listen_address": {"type": "string", "minLength": 1},
+     "portal_origin": {"type": "string", "minLength": 1},
+     "admin_origin": {"type": "string", "minLength": 1},
+     "tls_certificate_file": {"type": "string"},

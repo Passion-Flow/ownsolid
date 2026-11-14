@@ -1,0 +1,68 @@
+{
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "identitySnapshots": 95,
+  "listenerObservations": 92,
+  "listener": {
+    "pid": 64652,
+    "kernelStartSeconds": 1794585653,
+    "kernelStartMicroseconds": 871713,
+    "ppid": 64651,
+    "pgid": 64652,
+    "fd": "17",
+    "address": "[::1]:31036",
+    "nodeNonce": "173c9fc6-e398-4283-a2f8-744a40289890",
+    "serverInstance": "193df985-542b-43c0-b7d2-4edbc7a21c3b",
+    "nodeListeningUTC": "2026-11-13T16:00:54.067Z"
+  },
+  "launcher": {
+    "pid": 64651,
+    "runnerPid": 64630,
+    "execution": "73ace3e7-c44a-4332-b044-51e625de87c8",
+    "spawnUTC": "2026-11-13T16:00:53.861Z",
+    "exitUTC": "2026-11-13T16:02:33.573Z",
+    "exitCode": null,
+    "signal": "SIGKILL",
+    "afterRunnerTeardownRequest": true
+  },
+  "previewActualExitStatus": "NOT_OBSERVED; launcher exit is not silently relabeled as its separate-PGID Vite child exit",
+  "crossPgidOwnershipObserved": true,
+  "health": {
+    "samples": 92,
+    "statuses": {
+      "200": 92
+    },
+    "firstUTC": "2026-11-13T16:00:54.718033+00:00",
+    "lastUTC": "2026-11-13T16:02:33.389026+00:00",
+    "errors": 0,
+    "noContinuousLivenessClaim": true
+  },
+  "stderr": {
+    "chunks": 1,
+    "safeMetadataOnly": true,
+    "observedErrorCodes": [
+      []
+    ]
+  },
+  "diagnosticLimits": {
+    "lookupErrors": 11,
+    "affectedSnapshots": 10,
+    "distinctLookupPids": [
+      69117,
+      69199,
+      71180,
+      73542,
+      73760,
+      75614,
+      75768,
+      76824,
+      79491,
+      79735
+    ],
+    "lookupFailureKind": "BSD0bytes/ESRCH; no exit or product failure inferred",
+    "knownUnavailableEvents": 46,
+    "noPrimaryListenerIdentityFailure": true,
+    "nullAddressStartupServersNotCountedAsRestarts": 3
+  },
+  "oldFailureReproduced": false,
+  "oldFailureCauseEstablished": false
+}

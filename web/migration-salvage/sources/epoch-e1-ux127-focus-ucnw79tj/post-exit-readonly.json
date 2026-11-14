@@ -1,0 +1,46 @@
+{
+  "recordedUTC": "2026-11-13T21:07:46.987812+00:00",
+  "source": "f430afe3a31631d9e9a0f65e79f6bbaae6d91b33",
+  "tree": "69030b656ce87905d50cd912d9bb36cd740719ed",
+  "webTree": "33dbeaf1db84c4a2ddc73feea6b79a6eea68311c",
+  "assetFiles": 697,
+  "assetManifestSha256": "f56c166fd1e50e18c700eace2ccca7d2cb368a618f542ba21f5f968e0ce5fdee",
+  "assetMismatches": [],
+  "old697ArchiveSha256": "b9fa0945fe6167af543a302cbab6911fa1ffdd10d7da4179d5a3fd40edf4960a",
+  "old697ArchiveMatches": true,
+  "preparedFilesUnchanged": true,
+  "knownPIDs": {
+    "checked": 72,
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "previewPort": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "knownParentWorkerFDs": {
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "carrier": {
+    "device": 16777231,
+    "inode": 53377467,
+    "uid": 501,
+    "mode": "0o600",
+    "regular": true,
+    "nlink": 1,
+    "size": 0,
+    "readOnlySameIdentity": true,
+    "manifestSha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983"
+  },
+  "closedOldEntrances": {
+    "count": 89,
+    "stubsUnchanged": true,
+    "sourceDataUnchanged": true
+  },
+  "noNewLockAttempt": true,
+  "noNewNodeAfterExit": true
+}

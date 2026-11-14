@@ -1,0 +1,25 @@
+{
+  "targets": [
+    "web-install",
+    "check",
+    "build",
+    "test"
+  ],
+  "makefileOverlay": false,
+  "selectionChanges": false,
+  "retries": 0,
+  "playwrightWorkers": 1,
+  "workspaceConcurrency": 1,
+  "nodeOldSpaceMaximumMiB": 4096,
+  "goParallel": 1,
+  "gomaxprocsMaximum": 2,
+  "cargoJobs": 1,
+  "rustTestThreads": 1,
+  "vitestWorkers": 1,
+  "totalSeconds": 1800,
+  "cleanupReserveSeconds": 120,
+  "freeMemoryMinimumGiB": 6,
+  "freeDiskMinimumGiB": 30,
+  "scratchGiB": 12,
+  "offlineBoundary": "Existing Mac cache-only tooling; no Linux network namespace or installed disconnected acceptance is claimed."
+}

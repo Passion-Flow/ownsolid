@@ -1,0 +1,25 @@
+{
+  "source": "82c602d32b2d957459b3a742499de96867da27a9",
+  "tree": "fbbf65a10a349d43726a355e60fdb171837c97d5",
+  "webTree": "8ce0c9946a8403a5d4502b54e4337a754de38bfc",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web-history",
+  "originalObserverDirectory": "/Users/passion./.local/state/ownsolid/web-scopes/epoch-e1-web-a-full-4wr_z7rr/offline-navigation-diagnosis",
+  "preparedFiles": {
+    "mac-epoch-once.py": "eb64885ed53f073aa5e302b3f6e4370cf2db290eaf1fa807f98ec6199bf83890",
+    "target-run.py": "672e8d7b23e35485508c390c2915e8f70c0592e11f41cf8ccebcc78f143a97ee",
+    "owned-preview-observer.py": "19269f113784cc01a97eb9616bc5d22575c47677550d0a5338d6fc7c86d89a4f",
+    "cleanup-epoch-owned.py": "1f3375ac785a16088fa595d7aba50bf33d97f808919a04c507709bc9f3a29050",
+    "preview-lifecycle-observer.cjs": "620136aeaea77198a5ea7e62f3dedfe57c0cd13b0247d5818236a1e21b859d3d",
+    "preview-lifecycle-observer.test.cjs": "1fbac1bcc315b56ffc04d0168225e4ec6b873f647d0046e1068149d0d95de296",
+    "observer-metadata.test.cjs": "ddd7976774580203dadfa87196b429f7cb337728f9c065a3e8f40e0f79aa8fe7",
+    "observer-original.cjs": "ca777d7173d0ce88efde51f93c77c1b64362041153a2903da91ae5f073311ad4",
+    "scope-inputs.json": "3a8510c96c85b139bedb874468889b475c9bc7eb52c3abc12ca29a7ecad2078c",
+    "source-file-sha256.json": "39a900adc8d43ce9a4f0304d3b395c776daab87f60fecb7ee153db2413995343",
+    "asset-inputs.json": "109cf095be0ce44bdce0f2a0bb2fad37e4502fb2a33aa56f4aca24954c3c06a9",
+    "authorization.json": "b6ba0ecc0a23e282ffd5ddc90b31a7713fb03921b0af82ae8a9fbf639d85a491"
+  },
+  "oldParentTemplate": "epoch-e1-web-once-jt8bpohu",
+  "changes": "Directed T only3GiB/15GiB, Node512,600total/60cleanup; unchanged epoch identity and sameFD cleanup; no A/B. First original6 controls, then current6+2 privacy controls, then all4 original browser files.",
+  "observerOriginalSha256": "ca777d7173d0ce88efde51f93c77c1b64362041153a2903da91ae5f073311ad4",
+  "observerCurrentSha256": "620136aeaea77198a5ea7e62f3dedfe57c0cd13b0247d5818236a1e21b859d3d"
+}

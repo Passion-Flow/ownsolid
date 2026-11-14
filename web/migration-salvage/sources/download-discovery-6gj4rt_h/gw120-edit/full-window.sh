@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# OWNSOLID_OLD_MAC_EPOCH_CLOSED
+printf '%s\n' 'Old Mac admission epoch is closed; await coordinated activation.' >&2
+exit 78
+set -euo pipefail
+umask 077
+run="$1"
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-web"
+test -z "$(git status --porcelain)"
+test ! -e tools/audit-verify/audit-verify
+export PYTHON="$(uv python find 3.12)" PYTHONDONTWRITEBYTECODE=1
+export GOPROXY=off GOSUMDB=off GOMAXPROCS=3 GOFLAGS=-p=1
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2
+export VITEST_MAX_WORKERS=2 npm_config_offline=true OWNSOLID_PLAYWRIGHT_PORT_OFFSET=12666
+if lsof -nP -iTCP:16976 -iTCP:16977 -sTCP:LISTEN; then exit 1; fi
+caffeinate -i -w "$$" &
+awake=$!
+cleanup() {
+  status=$?
+  trap - EXIT
+  kill "$awake" 2>/dev/null || true
+  if mount | rg -F " on $run/mount (" >/dev/null; then
+    hdiutil detach "$run/mount" >> "$run/cleanup.log" 2>&1 || status=1
+  fi
+  if test -d "$run/mount" && ! mount | rg -F " on $run/mount (" >/dev/null; then
+    rmdir "$run/mount" || status=1
+    if test -f "$run/scratch.sparseimage"; then rm "$run/scratch.sparseimage"; fi
+  fi
+  if test -f tools/audit-verify/audit-verify; then
+    "$PYTHON" - <<'CLEAN'
+from pathlib import Path
+p=Path('tools/audit-verify/audit-verify')
+with p.open('rb') as stream:
+    assert stream.read(4)==bytes.fromhex('cffaedfe')
+p.unlink()
+CLEAN
+  fi
+  printf '%s\n' "$status" > "$run/exit-status"
+  date -u > "$run/finish"
+  exit "$status"
+}
+trap cleanup EXIT
+git rev-parse HEAD > "$run/source"
+git rev-parse HEAD^{tree} > "$run/source-tree"
+df -h . > "$run/preflight-space"
+vm_stat > "$run/preflight-memory"
+hdiutil create -size 12g -type SPARSE -fs APFS -volname ownsolid-web-gw120 "$run/scratch" > "$run/volume-create.log"
+mkdir "$run/mount"
+hdiutil attach -nobrowse -owners on -mountpoint "$run/mount" "$run/scratch.sparseimage" > "$run/volume-attach.log"
+mkdir -m 700 "$run/mount/tmp"
+export TMPDIR="$run/mount/tmp/"
+df -h "$TMPDIR" > "$run/scratch-space"
+printf 'check\n' > "$run/stage"
+make check > "$run/check.log" 2>&1
+printf 'make check passed\n'
+printf 'build\n' > "$run/stage"
+make build > "$run/build.log" 2>&1
+printf 'make build passed\n'
+printf 'test\n' > "$run/stage"
+make -f Makefile -f "$run/workers.mk" test WEB_GATE_DIR="$run" > "$run/test.log" 2>&1
+printf 'make test with full browser suites and worker caps passed\n'
+git diff --check
+test -z "$(git status --porcelain)"
+printf 'complete\n' > "$run/stage"

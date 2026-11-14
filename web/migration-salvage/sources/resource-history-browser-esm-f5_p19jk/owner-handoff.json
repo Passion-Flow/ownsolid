@@ -1,0 +1,73 @@
+{
+  "phase": "one-NB-refusal-no-work-child",
+  "packet": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk",
+  "actualGuardExitCode": 75,
+  "guardElapsedSeconds": 0.05731500000547385,
+  "busy": true,
+  "cleanupConfirmed": true,
+  "workChildrenStarted": 0,
+  "newLockAttemptAfterRefusal": false,
+  "waiterCreated": false,
+  "retryAttempted": false,
+  "attemptMarkerRetained": true,
+  "frozenAttemptSource": "d4bfec1cd66cd7b4160fd900eeeb2e165d47dd3b",
+  "frozenAttemptWebTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "currentHead": "ce17733688a5f8e074b5052d79f4d80cef0f0353",
+  "currentWebTree": "0c70c6e25706594d17de574e1bae2f5989855a10",
+  "webTreeUnchanged": true,
+  "guardInputSha256": {
+    "mac-browser-once.py": "e6bab498143b0daa94fad1893a089465778b8a2a9633d4e39254e15786ef387a",
+    "browser-run.py": "36b6b3b32d0c882e5c1666a9adf0d6e9c36bb6962a3df87082c541367c63e5ba",
+    "stage-plan.json": "97e6555b82cfdbeeec31157436eeea9c77152ee2943c3ba71f660806984f9201",
+    "run-browser-once.sh": "f4222d1479b6e68a39a8c1217ec571959a5816c37d95a172e62b39eca6081ceb",
+    "old-console-assets.json": "ee688e7b66cf1ede87504878d99568df6a64af2c87d362cfa04e88a797076983"
+  },
+  "rawOutcome": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/execution-outcome.json",
+  "evidenceSha256": {
+    "gate-state.json": "13c763fa1f26e1a5e0443be1f71e856f5c0bf8d792dce4b8e3497c4176a684f8",
+    "gate-exit-status": "84b9bb077be0d8a29d0d01ef350d718b77c2ec5f40c3ab90502b1b4b5016c550",
+    "post-parent-process.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "post-carrier-holders.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "execution-outcome.json": "d6e86c22cb48428055b058f5d961ce18270b5f2e93e83e8b2661a92f90fc80da"
+  },
+  "newActualDiscovery": null,
+  "newBuild": null,
+  "newBrowserCasesExecuted": 0,
+  "newImagesGenerated": 0,
+  "newImagesRead": 0,
+  "previousBuildReference": {
+    "packet": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-deadline-ecdhheaf",
+    "actualSource": "43eaa0cbf0574b620745a760d4a4928064e706ce",
+    "manifestSha256": "31ecbbae60314b2cc5a6ae229cc1efeafc802734df85ac1e29d9993842fee9e0",
+    "notANewBuild": true
+  },
+  "independentWork": {
+    "item": "POR-112",
+    "research": "docs/research/portal-account-sessions.md",
+    "commits": [
+      "8d9128cf",
+      "ce17733688a5f8e074b5052d79f4d80cef0f0353"
+    ],
+    "prototype": "/Users/passion./.local/state/ownsolid/web-scopes/account-session-cache-prototype-jjzbfe37/prototype.mjs",
+    "prototypeSha256": "980c93362ec6d86ac292d0a79b7770a2002848725389b18fef78a27c60864826",
+    "result": "/Users/passion./.local/state/ownsolid/web-scopes/account-session-cache-prototype-jjzbfe37/result.json",
+    "resultSha256": "cd42c792542389ee323051b25e385d2a7d236bd0661cf704b6408392f135e685",
+    "assertionsPassed": 8,
+    "syntheticReadCalls": 7,
+    "heapMiB": 256,
+    "commandLimitSeconds": 5,
+    "noHTTP": true,
+    "noBrowser": true,
+    "noProductCodeChanged": true,
+    "ReactStrictModeNotVerified": true
+  },
+  "researchBundle": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/next-account-research.bundle",
+  "researchBundleSha256": "a25890d6ae5066f749bf1eee2fae2cdad04341a047f0cececd6273e061f1e6a3",
+  "nextReadyReview": "/Users/passion./.local/state/ownsolid/web-scopes/resource-history-browser-esm-f5_p19jk/next-ready-review.json",
+  "fullGate": false,
+  "native": false,
+  "installed": false,
+  "published": false,
+  "roadmapTicked": false,
+  "boundary": "The authorized attempt ended on NB busy before resource preflight or any work child. Do not report earlier discovery/build as this attempt. Account research/prototype are independent non-browser work and do not establish a user flow. All UI, complete-gate and installed conditions remain open."
+}
