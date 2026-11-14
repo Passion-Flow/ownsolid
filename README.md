@@ -82,11 +82,25 @@ Add `--destination ../recovered-source` to restore into a new directory. The hel
 
 ```json
 {
-  "status": "pending after preservation verification",
-  "ids": [
-    "ownsolid",
-    "ownsolid-2"
-  ]
+  "status": "verified PAUSED",
+  "time": "2026-11-14T09:12:43.085477+00:00",
+  "automations": [
+    {
+      "id": "ownsolid",
+      "name": "ownsolid 双机资源巡检",
+      "status": "PAUSED",
+      "target_thread_id": "01a1bc59-c46b-7723-b081-2f1bb324ce59",
+      "updated_at": 1794647563000
+    },
+    {
+      "id": "ownsolid-2",
+      "name": "ownsolid 开发巡检",
+      "status": "PAUSED",
+      "target_thread_id": "01a1bc5d-f337-7073-93cd-58c7f96bf328",
+      "updated_at": 1794647563035
+    }
+  ],
+  "scope": "Only these two ownsolid app automations. No Claude Guard or other project automation was operated on."
 }
 ```
 

@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-14T09:10:09.891476+00:00",
+  "date": "2026-11-14T09:12:43.154114+00:00",
   "summary": "本机与 ownsolid-cpu 的现存原始 Git 工作已保全到 GitHub。独立 GitHub 克隆核验 5,008 个原始提交无遗漏，git fsck --full --strict 通过。未删除原有分支、工作树或原始文件，未强推。代码保全与合入、端到端验收、路线图勾选分别记录。",
   "integration": "本轮 main 推进 0 个提交。13 条车道的未合入成果均保存于 salvage；原始提交和中间历史都保留。各车道候选没有获得当前 main 上的完整验收，后续按依赖继续整合。",
   "main": "5790b8961955400ffe25f10ced170bf4f669683c",
@@ -198,11 +198,25 @@
     "本次没有新增路线图勾选，也没有补做硬件、客户环境或完整安装的独立验收。"
   ],
   "automations": {
-    "status": "pending after preservation verification",
-    "ids": [
-      "ownsolid",
-      "ownsolid-2"
-    ]
+    "status": "verified PAUSED",
+    "time": "2026-11-14T09:12:43.085477+00:00",
+    "automations": [
+      {
+        "id": "ownsolid",
+        "name": "ownsolid 双机资源巡检",
+        "status": "PAUSED",
+        "target_thread_id": "01a1bc59-c46b-7723-b081-2f1bb324ce59",
+        "updated_at": 1794647563000
+      },
+      {
+        "id": "ownsolid-2",
+        "name": "ownsolid 开发巡检",
+        "status": "PAUSED",
+        "target_thread_id": "01a1bc5d-f337-7073-93cd-58c7f96bf328",
+        "updated_at": 1794647563035
+      }
+    ],
+    "scope": "Only these two ownsolid app automations. No Claude Guard or other project automation was operated on."
   },
   "test_limit": "Browser phase failed; the subsequent Go, Cargo and web-unit stages were not reached by make test. No PASS was inferred for them."
 }
