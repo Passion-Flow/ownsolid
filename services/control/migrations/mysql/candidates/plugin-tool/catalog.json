@@ -1,0 +1,110 @@
+{
+  "format": "projectone.mysql.plugin-tool-schema-source-candidate.v1",
+  "status": "candidate_source_only_not_measured_not_activated",
+  "base_step_count": 183,
+  "start_step": 184,
+  "end_step": 194,
+  "base_candidate_catalog_sha256": "17c870972d5282c4c91052ab5d7aa555d4871541aa5d87751d330d5ce74a2858",
+  "postgresql_source_sha256": "32243f3461a1d37422f1b9f1552fc132bdadaf7841c784f7d3302b1372f4be11",
+  "steps": [
+    {
+      "step": 184,
+      "file": "000184_plugin_versions.sql",
+      "object": "plugin_versions",
+      "kind": "create_table",
+      "source_sha256": "b5824aacf2c62ecf126097960ee385654f8923e6450a256d35a12aeaf4ea2d13",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 185,
+      "file": "000185_plugin_provenance_immutable_update.sql",
+      "object": "plugin_provenance_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "d8b39903df46583348fc682e39ed339b3e15567399578f0e9671e3a54296241e",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 186,
+      "file": "000186_plugin_provenance_immutable_delete.sql",
+      "object": "plugin_provenance_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "f42140ccbd2eb400370a971e892a26e5981de45a4bf80182114f4a0587bb48fb",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 187,
+      "file": "000187_plugin_grants.sql",
+      "object": "plugin_grants",
+      "kind": "create_table",
+      "source_sha256": "c82d95ea15ea6628cc87945dd4ce8ef2844b94c59b6d95bd301a5f91ed4b4a0d",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 188,
+      "file": "000188_plugin_mutation_intents.sql",
+      "object": "plugin_mutation_intents",
+      "kind": "create_table",
+      "source_sha256": "a19e1554192b565a9a66312f2de0c7b76ded14c128a022122d72cd5cbcfb2982",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 189,
+      "file": "000189_workflow_plugin_references.sql",
+      "object": "workflow_plugin_references",
+      "kind": "create_table",
+      "source_sha256": "e18315a38042f635cef427006fffcb56ab7da01d6e3819088b9d92025ae76abe",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 190,
+      "file": "000190_workflow_plugin_reference_immutable_update.sql",
+      "object": "workflow_plugin_reference_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "c57317a2d89d1dd35b99b6b6f816adf4e6e79e447fa60a303420498eaa265940",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 191,
+      "file": "000191_workflow_plugin_reference_immutable_delete.sql",
+      "object": "workflow_plugin_reference_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "7672850666b2f7a93f1fdd12835c2d048b22b26d21e544bb3537968c2fdc7430",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 1
+    },
+    {
+      "step": 192,
+      "file": "000192_workflow_run_tool_result.sql",
+      "object": "workflow_runs",
+      "kind": "alter_table",
+      "source_sha256": "892b0e8951cd9cb162dd242084784b011d939e2e947716fff69c367a33848f79",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 193,
+      "file": "000193_workflow_trace_tool_kind.sql",
+      "object": "workflow_node_traces",
+      "kind": "alter_table",
+      "source_sha256": "51c0fe620ef2e5f146beb1ee027e037a56e6574589b6c501959dc9fa2eaafe73",
+      "metadata_status": "not_measured"
+    },
+    {
+      "step": 194,
+      "file": "000194_workflow_run_result_identity.sql",
+      "object": "workflow_run_result_identity",
+      "kind": "create_trigger",
+      "source_sha256": "b3eeaef3a12b4c6c4a2e4715fe92ad2c6ea0280d0d9124ac2239d0bfbe77a3d8",
+      "metadata_status": "not_measured",
+      "expected_trigger_order": 2
+    }
+  ],
+  "activation_blockers": [
+    "actual table/trigger metadata not measured",
+    "exact input named checks/source and previous-definition bindings require actual probe",
+    "shared compiler requires reviewed CHECK replacement and exact workflow_run_result_identity BEFORE UPDATE order2 support after actual metadata",
+    "final numbering/canonical journal/reconcile/export/fresh restore gates remain pending"
+  ]
+}

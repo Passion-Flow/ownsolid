@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/configuration/gateway-systemd/v1",
+  "title": "Gateway systemd rendering profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "binary_file",
+    "configuration_file",
+    "gateway_id",
+    "service_gid",
+    "service_uid",
+    "state_directory"
+  ],
+  "properties": {
+    "restart_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 5
+    },
+    "stop_seconds": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 120,
+      "default": 15
+    },
+    "start_limit_seconds": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 3600,
+      "default": 60
+    },
+    "start_limit_burst": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "default": 3
+    },
+    "memory_high_mb": {
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 3072,
+      "default": 384
+    },
+    "memory_max_mb": {
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 4096,
+      "default": 512
+    },
+    "cpu_quota_percent": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 400,
+      "default": 100
+    },
+    "max_tasks": {
+      "type": "integer",
+      "minimum": 32,
+      "maximum": 1024,
+      "default": 128
+    },
+    "environment_file": {
+      "type": "string",
+      "default": "",
+      "pattern": "^$|^/[A-Za-z0-9_./-]+$",
+      "maxLength": 4096,
+      "description": "Optional explicit protected gateway --env-file; empty omits it. Same UID/private-file rules; restart required."
+    },
+    "gateway_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "service_uid": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647
+    },
+    "service_gid": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647
+    },
+    "binary_file": {
+      "type": "string",
+      "pattern": "^/[A-Za-z0-9_./-]+$",
+      "maxLength": 4096
+    },
+    "configuration_file": {
+      "type": "string",
+      "pattern": "^/[A-Za-z0-9_./-]+$",
+      "maxLength": 4096
+    },
+    "state_directory": {
+      "type": "string",
+      "pattern": "^/[A-Za-z0-9_./-]+$",
+      "maxLength": 4096
+    }
+  },
+  "description": "Boundary additionally validates canonical paths, inaccessible namespaces and memory_high<=memory_max. Rendering never installs units or creates accounts."
+}

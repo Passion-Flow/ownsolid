@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "kind": "projectone-localization-runtime-policy-v1",
+  "fields": {
+    "package_bytes": {"default": 1048576, "minimum": 65536, "maximum": 4194304},
+    "font_bytes": {"default": 33554432, "minimum": 1048576, "maximum": 134217728},
+    "aggregate_bytes": {"default": 67108864, "minimum": 4194304, "maximum": 268435456},
+    "maximum_locales": {"default": 32, "minimum": 2, "maximum": 256},
+    "maximum_messages": {"default": 10000, "minimum": 2000, "maximum": 20000},
+    "maximum_fonts": {"default": 16, "minimum": 1, "maximum": 256},
+    "cache_seconds": {"default": 3600, "minimum": 0, "maximum": 86400}
+  }
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=ownsolid scheduled backup
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=ownsolid-install scheduled-backup --config ${OWNSOLID_INSTALL_CONFIG}
+NoNewPrivileges=yes
+# The install configuration bounds backup and database cleanup.
+TimeoutStartSec=infinity

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "projectone-plugin-component-assets-v1",
+  "capsule_file": "/mnt/projectone-manufacturing/public/model-directory-1.0.0.json",
+  "capsule_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "publisher_file": "/mnt/projectone-manufacturing/public/publisher.json",
+  "platform_license_file": "/mnt/projectone-manufacturing/public/platform-license.txt",
+  "platform_license_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "release_version": "1.0.0",
+  "provenance_label": "manufacturer-supplied"
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/verification/node-join-target-marker/v1",
+  "title": "Node join isolated target marker",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "engine",
+    "database",
+    "username",
+    "connection_sha256",
+    "disposable"
+  ],
+  "properties": {
+    "kind": {
+      "const": "projectone-node-join-target-isolated-v1",
+      "description": "Fixed protocol identifier for one operator-owned disposable qualification scope."
+    },
+    "engine": {
+      "enum": [
+        "mysql",
+        "postgresql"
+      ],
+      "description": "Exact initial loopback SQL profile; never inferred from the host."
+    },
+    "database": {
+      "type": "string",
+      "pattern": "^m20_repository_[a-f0-9]{20}_test$",
+      "description": "Fresh operator-created empty disposable database, one per selected case. Never a production database."
+    },
+    "username": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_]{1,64}$",
+      "description": "Exact isolated connection principal, checked against actual server identity. No password belongs here."
+    },
+    "connection_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA256 of the exact protected MySQL configuration JSON or PostgreSQL DSN file; bind before execution and do not modify during a case."
+    },
+    "disposable": {
+      "const": true,
+      "description": "Required explicit operator acknowledgement of a disposable synthetic test scope. False never authorizes execution."
+    }
+  }
+}

@@ -1,0 +1,37 @@
+# Supply the Registry address, image and release identity with helm-images.
+registry:
+  address: ""
+  pullSecret: ""
+images:
+  control: ""
+release:
+  manifestSHA256: ""
+
+# Use an existing PVC and namespace-local Secret references.
+control:
+  runtimeSecret: ""
+  modelClaim: ""
+  uid: 10001
+  gid: 10001
+  terminationGracePeriodSeconds: 45
+  resources:
+    requests: {}
+    limits: {}
+
+# Select a private Traefik TCP entry point on port 443 and a TLS Secret
+# whose certificate covers both distinct names.
+ingress:
+  className: ""
+  entryPoint: ""
+  adminHost: ""
+  portalHost: ""
+  tlsSecret: ""
+
+# The site relay and optional credentials use the same file-only contract as
+# the Control service. smtp-ca.pem is required in the runtime Secret.
+smtp:
+  host: ""
+  port: 587
+  fromAddress: ""
+  tlsMode: starttls_required
+  username: ""

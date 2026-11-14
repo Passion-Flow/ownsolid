@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Isolated ODBC manager versions 2 and 3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "connection_file",
+    "login_seconds",
+    "connection_seconds",
+    "query_seconds",
+    "maximum_parameter_bytes",
+    "maximum_cell_bytes",
+    "maximum_rows",
+    "maximum_columns",
+    "maximum_result_bytes",
+    "maximum_sql_bytes",
+    "maximum_open_connections",
+    "maximum_physical_connections"
+  ],
+  "properties": {
+    "format_version": {
+      "type": "integer",
+      "enum": [
+        2,
+        3
+      ]
+    },
+    "connection_file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Canonical absolute protected file reference; no credentials here."
+    },
+    "login_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30
+    },
+    "connection_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120
+    },
+    "query_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120
+    },
+    "maximum_parameter_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1048576
+    },
+    "maximum_cell_bytes": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 1048576
+    },
+    "maximum_rows": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10001
+    },
+    "maximum_columns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 128
+    },
+    "maximum_result_bytes": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 16777216
+    },
+    "maximum_sql_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+    "maximum_open_connections": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4
+    },
+    "maximum_physical_connections": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "Maximum manager physical reservations including failed/retained/in-flight; at least maximum_open_connections."
+    },
+    "maximum_long_value_bytes": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 67108864,
+      "description": "Per LONG text UTF-8 or binary byte bound. Required in long-value format; runtime also requires >= maximum_cell_bytes."
+    },
+    "transfer_chunk_bytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 262144,
+      "multipleOf": 4,
+      "description": "Native transfer scratch in bytes. Runtime also requires <= maximum_parameter_bytes; descriptors plus inline bindings plus the active DAE scratch must fit that parameter bound."
+    },
+    "maximum_retained_bytes": {
+      "type": "integer",
+      "minimum": 8256,
+      "maximum": 536870912,
+      "description": "Manager-wide admission budget for binding/scratch/materialized-result ownership. Runtime additionally requires >= 4*maximum_long_value_bytes + 2*transfer_chunk_bytes. Not a process RSS limit."
+    }
+  },
+  "description": "Versioned closed input. Runtime checks canonical protected references and all cross-field bounds. Legacy format forbids all long-value fields; new format requires all three. No target qualification or serving selector is implied.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "format_version": {
+            "const": 2
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "maximum_long_value_bytes"
+              ]
+            },
+            {
+              "required": [
+                "transfer_chunk_bytes"
+              ]
+            },
+            {
+              "required": [
+                "maximum_retained_bytes"
+              ]
+            }
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "maximum_long_value_bytes",
+          "transfer_chunk_bytes",
+          "maximum_retained_bytes"
+        ]
+      }
+    }
+  ]
+}

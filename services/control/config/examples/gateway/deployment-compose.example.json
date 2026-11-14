@@ -1,0 +1,15 @@
+{
+  "configuration_file": "gateway.json",
+  "environment_file": "gateway.env",
+  "memory_mib": 512,
+  "cpu_millicores": 1000,
+  "pids": 128,
+  "stop_seconds": 15,
+  "deployment_name": "projectone-gateway-example",
+  "image": "projectone/gateway:m07-example-arm64",
+  "architecture": "arm64",
+  "uid": 10001,
+  "gid": 10001,
+  "configuration_directory": "/etc/projectone/gateway",
+  "state_directory": "/var/lib/projectone/gateway"
+}

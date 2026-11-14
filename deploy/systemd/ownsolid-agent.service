@@ -1,0 +1,21 @@
+[Unit]
+Description=Ownsolid Agent
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+User=ownsolid-agent
+Group=ownsolid-agent
+ExecStart=/opt/ownsolid-agent/agent run --config /etc/ownsolid-agent/agent.json
+Restart=on-failure
+RestartPreventExitStatus=77
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/ownsolid-agent
+
+[Install]
+WantedBy=multi-user.target

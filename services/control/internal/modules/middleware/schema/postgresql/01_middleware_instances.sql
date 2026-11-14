@@ -1,0 +1,20 @@
+CREATE TABLE middleware_instances (
+ id uuid PRIMARY KEY,
+ tenant_id uuid NOT NULL,
+ workspace_id uuid NOT NULL,
+ profile_key varchar(63) NOT NULL CHECK(profile_key ~ '^[a-z][a-z0-9_]{0,62}$'),
+ kind varchar(24) NOT NULL CHECK(kind IN('platform_owned','customer_external')),
+ name varchar(100) NOT NULL CHECK(length(name)>0),
+ version bigint NOT NULL DEFAULT 1 CHECK(version BETWEEN 1 AND 9007199254740991),
+ state varchar(16) NOT NULL DEFAULT 'active' CHECK(state IN('active','archived')),
+ profile_fingerprint char(64) NOT NULL CHECK(profile_fingerprint ~ '^[a-f0-9]{64}$'),
+ created_by uuid NOT NULL REFERENCES users(id),
+ creation_key uuid NOT NULL,
+ creation_fingerprint char(64) NOT NULL CHECK(creation_fingerprint ~ '^[a-f0-9]{64}$'),
+ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ UNIQUE(tenant_id,workspace_id,id),
+ UNIQUE(tenant_id,workspace_id,profile_key),
+ UNIQUE(tenant_id,workspace_id,created_by,creation_key),
+ FOREIGN KEY(tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id)
+);

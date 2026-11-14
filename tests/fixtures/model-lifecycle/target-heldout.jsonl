@@ -1,0 +1,3 @@
+{"source_id":"synthetic-heldout-account","prompt":"I cannot access my profile after losing my sign-in password.","completion":"account"}
+{"source_id":"synthetic-heldout-billing","prompt":"My monthly statement contains two identical payments. Please investigate the invoice.","completion":"billing"}
+{"source_id":"synthetic-heldout-technical","prompt":"The desktop application exits with a stack trace whenever I open a project.","completion":"technical"}

@@ -1,0 +1,20 @@
+CREATE TABLE training_artifacts (
+    id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+    tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    workspace_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    job_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    attempt_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    manifest_sha256 VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(manifest_sha256,'^[a-f0-9]{64}$','c')),
+    manifest JSON NOT NULL CHECK(JSON_TYPE(manifest)='OBJECT' AND OCTET_LENGTH(CAST(manifest AS CHAR CHARACTER SET utf8mb4))<=1048576),
+    file_inventory JSON NOT NULL CHECK(JSON_TYPE(file_inventory)='OBJECT' AND OCTET_LENGTH(CAST(file_inventory AS CHAR CHARACTER SET utf8mb4))<=1048576),
+    storage_key VARCHAR(160) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(storage_key,'^artifacts/[a-f0-9-]{36}/[a-f0-9-]{36}/[a-f0-9-]{36}$','c')),
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    UNIQUE(tenant_id,workspace_id,job_id,id),
+    UNIQUE(attempt_id),
+    FOREIGN KEY(tenant_id,workspace_id,job_id,attempt_id) REFERENCES training_attempts(tenant_id,workspace_id,job_id,id),
+    CONSTRAINT training_artifacts_id_canonical CHECK(REGEXP_LIKE(id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_artifacts_tenant_id_canonical CHECK(REGEXP_LIKE(tenant_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_artifacts_workspace_id_canonical CHECK(REGEXP_LIKE(workspace_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_artifacts_job_id_canonical CHECK(REGEXP_LIKE(job_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_artifacts_attempt_id_canonical CHECK(REGEXP_LIKE(attempt_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

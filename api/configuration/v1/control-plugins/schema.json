@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Control plugin policy environment mapping",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "maximum_references": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 1000,
+      "x-environment": "PROJECT_ONE_PLUGINS_MAXIMUM_REFERENCES",
+      "x-runtime-path": "runtime.plugins.maximum_references"
+    },
+    "commit_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "default": 10,
+      "x-environment": "PROJECT_ONE_PLUGINS_COMMIT_SECONDS",
+      "x-runtime-path": "runtime.plugins.commit_seconds"
+    },
+    "maintenance_batch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_PLUGINS_MAINTENANCE_BATCH",
+      "x-runtime-path": "runtime.plugins.maintenance_batch"
+    },
+    "maintenance_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 60,
+      "x-environment": "PROJECT_ONE_PLUGINS_MAINTENANCE_SECONDS",
+      "x-runtime-path": "runtime.plugins.maintenance_seconds"
+    },
+    "capsule_bytes": {
+      "type": "integer",
+      "minimum": 2048,
+      "maximum": 1048576,
+      "default": 262144,
+      "x-environment": "PROJECT_ONE_PLUGINS_CAPSULE_BYTES",
+      "x-runtime-path": "runtime.plugins.capsule_bytes"
+    },
+    "manifest_bytes": {
+      "type": "integer",
+      "minimum": 512,
+      "maximum": 16384,
+      "default": 8192,
+      "x-environment": "PROJECT_ONE_PLUGINS_MANIFEST_BYTES",
+      "x-runtime-path": "runtime.plugins.manifest_bytes"
+    },
+    "result_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 1048576,
+      "default": 65536,
+      "x-environment": "PROJECT_ONE_PLUGINS_RESULT_BYTES",
+      "x-runtime-path": "runtime.plugins.result_bytes"
+    },
+    "maximum_models": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_PLUGINS_MAXIMUM_MODELS",
+      "x-runtime-path": "runtime.plugins.maximum_models"
+    },
+    "maximum_versions": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-environment": "PROJECT_ONE_PLUGINS_MAXIMUM_VERSIONS",
+      "x-runtime-path": "runtime.plugins.maximum_versions"
+    },
+    "maximum_grants": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 1000,
+      "x-environment": "PROJECT_ONE_PLUGINS_MAXIMUM_GRANTS",
+      "x-runtime-path": "runtime.plugins.maximum_grants"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "x-environment": "PROJECT_ONE_PLUGINS_ENABLED",
+      "x-runtime-path": "plugins.enabled"
+    },
+    "trusted_keys_file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute protected0600 JSON array of reviewed public key_id/public_key entries only; no default publisher or private key.",
+      "x-environment": "PROJECT_ONE_PLUGINS_TRUSTED_KEYS_FILE",
+      "x-runtime-path": "plugins.trusted_keys"
+    }
+  }
+}

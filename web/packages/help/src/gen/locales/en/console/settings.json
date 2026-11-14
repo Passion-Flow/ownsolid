@@ -1,0 +1,60 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/settings",
+     "children": [
+      {
+       "type": "text",
+       "value": "Settings"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " holds choices an administrator makes for everyone in the tenant. Your own\nchoices are on "
+    },
+    {
+     "type": "link",
+     "url": "help:account",
+     "children": [
+      {
+       "type": "text",
+       "value": "your account"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Default language"
+    }
+   ],
+   "data": {
+    "id": "default-language"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The tenant's default language applies to everyone who has not chosen a language of their own, and\nto the pages people see before they sign in."
+    }
+   ]
+  }
+ ]
+}

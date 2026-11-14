@@ -1,0 +1,6 @@
+{
+  "listen_address": "127.0.0.1:9443",
+  "origin": "https://machine.example.invalid:9443",
+  "tls_certificate_file": "/run/projectone/private/machine-certificate.pem",
+  "tls_private_key_file": "/run/projectone/private/machine-key.pem"
+}

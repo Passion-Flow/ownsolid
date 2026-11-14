@@ -1,0 +1,307 @@
+{
+  "format": "projectone.mysql.holdout-schema-acceptance.v1",
+  "specification": "docs/milestones/m20-mysql/holdout-schema.md",
+  "prefix_steps": 85,
+  "complete_steps": 94,
+  "packet_profile_bytes": 33554432,
+  "cases": {
+    "Fresh": {
+      "selector": "^TestActualMySQLHoldoutSchemaFresh$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Upgrade": {
+      "selector": "^TestActualMySQLHoldoutSchemaUpgrade$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Constraints": {
+      "selector": "^TestActualMySQLHoldoutSchemaConstraints$",
+      "complete_entries": 61,
+      "leaves": [
+        "canonical_id",
+        "canonical_tenant_id",
+        "canonical_workspace_id",
+        "canonical_dataset_id",
+        "canonical_dataset_version_id",
+        "canonical_created_by",
+        "canonical_creation_key",
+        "invalid_manifest_sha256",
+        "invalid_effective_source_sha256",
+        "invalid_row_mapping_sha256",
+        "invalid_recipe_sha256",
+        "invalid_instruction_sha256",
+        "empty_name",
+        "empty_reason",
+        "empty_recipe_id",
+        "empty_fingerprint_algorithm",
+        "invalid_audience",
+        "creation_fingerprint_short",
+        "source_digest_short",
+        "prompt_digest_short",
+        "source_bytes_underflow",
+        "source_bytes_overflow",
+        "row_count_underflow",
+        "row_count_overflow",
+        "label_SQL_NULL",
+        "label_JSON_null",
+        "label_array",
+        "label_scalar",
+        "label_malformed_JSON",
+        "label_missing_account",
+        "label_missing_billing",
+        "label_missing_technical",
+        "label_extra_key",
+        "label_wrong_case",
+        "label_wrong_sum",
+        "label_large_integer",
+        "label_account_null",
+        "label_account_string",
+        "label_account_float",
+        "label_account_boolean",
+        "label_account_negative",
+        "label_account_zero",
+        "label_account_overflow",
+        "label_account_object",
+        "label_billing_null",
+        "label_billing_string",
+        "label_billing_float",
+        "label_billing_boolean",
+        "label_billing_negative",
+        "label_billing_zero",
+        "label_billing_overflow",
+        "label_billing_object",
+        "label_technical_null",
+        "label_technical_string",
+        "label_technical_float",
+        "label_technical_boolean",
+        "label_technical_negative",
+        "label_technical_zero",
+        "label_technical_overflow",
+        "label_technical_object"
+      ],
+      "layer": 88
+    },
+    "Bounds": {
+      "selector": "^TestActualMySQLHoldoutSchemaBounds$",
+      "complete_entries": 15,
+      "leaves": [
+        "name_reason_exact_unicode_lengths",
+        "recipe_algorithm_exact_lengths",
+        "source_bytes_minimum",
+        "source_bytes_maximum",
+        "row_count_minimum",
+        "row_count_maximum",
+        "binary32_and_UTC_microseconds_roundtrip",
+        "name_overflow",
+        "reason_overflow",
+        "recipe_overflow",
+        "algorithm_overflow",
+        "fingerprint_overflow",
+        "source_digest_overflow",
+        "prompt_digest_overflow"
+      ],
+      "layer": 88
+    },
+    "ForeignScopes": {
+      "selector": "^TestActualMySQLHoldoutSchemaForeignScopes$",
+      "complete_entries": 12,
+      "leaves": [
+        "dataset_version_pair",
+        "workspace_version",
+        "tenant_version",
+        "missing_creator",
+        "source_foreign_workspace",
+        "source_foreign_tenant",
+        "prompt_foreign_workspace",
+        "prompt_foreign_tenant",
+        "source_missing_holdout",
+        "prompt_missing_holdout",
+        "referenced_holdout_delete"
+      ],
+      "layer": 88
+    },
+    "Uniqueness": {
+      "selector": "^TestActualMySQLHoldoutSchemaUniqueness$",
+      "complete_entries": 6,
+      "leaves": [
+        "version_recipe",
+        "actor_audience_creation_key",
+        "source_primary_key",
+        "prompt_primary_key",
+        "distinct_Workspace_creation_key_allowed"
+      ],
+      "layer": 88
+    },
+    "ConcurrentRegistration": {
+      "selector": "^TestActualMySQLHoldoutSchemaConcurrentRegistration$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Immutability": {
+      "selector": "^TestActualMySQLHoldoutSchemaImmutability$",
+      "complete_entries": 7,
+      "leaves": [
+        "model_holdouts_update",
+        "model_holdouts_delete",
+        "model_holdout_sources_update",
+        "model_holdout_sources_delete",
+        "model_holdout_prompts_update",
+        "model_holdout_prompts_delete"
+      ],
+      "layer": 94
+    },
+    "PrepareRecovery": {
+      "selector": "^TestActualMySQLHoldoutSchemaPrepareRecovery$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "UnjournaledHoldout": {
+      "selector": "^TestActualMySQLHoldoutSchemaUnjournaledHoldout$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "MissingAppliedPrompts": {
+      "selector": "^TestActualMySQLHoldoutSchemaMissingAppliedPrompts$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "WrongDefinition": {
+      "selector": "^TestActualMySQLHoldoutSchemaWrongDefinition$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "WrongSourceChecksum": {
+      "selector": "^TestActualMySQLHoldoutSchemaWrongSourceChecksum$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "WrongTrigger": {
+      "selector": "^TestActualMySQLHoldoutSchemaWrongTrigger$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before86": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore86$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After86": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter86$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before87": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore87$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After87": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter87$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before88": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore88$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After88": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter88$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before89": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore89$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After89": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter89$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before90": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore90$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After90": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter90$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before91": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore91$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After91": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter91$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before92": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore92$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After92": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter92$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before93": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore93$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After93": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter93$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "Before94": {
+      "selector": "^TestActualMySQLHoldoutSchemaBefore94$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    },
+    "After94": {
+      "selector": "^TestActualMySQLHoldoutSchemaAfter94$",
+      "complete_entries": 1,
+      "leaves": [],
+      "layer": 94
+    }
+  },
+  "separate_readback": {
+    "selector": "^TestActualMySQLHoldoutSchemaReadback$",
+    "complete_entries": 1
+  },
+  "qualification": "Declared before Go acceptance implementation. Actual isolated metadata/security/recovery only; standard SQL is not Go race or native/GPU/full MySQL qualification."
+}

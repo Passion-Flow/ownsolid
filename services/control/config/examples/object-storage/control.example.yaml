@@ -1,0 +1,57 @@
+# Merge into the complete protected control configuration. This does not create a service or grant backend qualification.
+object_storage:
+  # Optional ingress enablement; false requires every other setting omitted. Owner: object storage configuration; type: boolean. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.enabled; explicit env-file takes precedence; restart required.
+  enabled: true
+  # Only this initial self-hosted S3 implementation is accepted. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.backend; explicit env-file takes precedence; restart required.
+  backend: "seaweedfs_s3"
+  # Exact endpoint origin; no userinfo, query, fragment or alternate URL. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.endpoint; explicit env-file takes precedence; restart required.
+  endpoint: "https://store.example.invalid"
+  # Explicit SigV4 region, matching the private server. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.region; explicit env-file takes precedence; restart required.
+  region: "private"
+  # Existing private unversioned bucket; never created by the runtime. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.bucket; explicit env-file takes precedence; restart required.
+  bucket: "projectone-artifacts"
+  # https or explicitly selected http_private with only private/loopback dial IPs. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.transport; explicit env-file takes precedence; restart required.
+  transport: "https"
+  # Protected 0600 access identifier reference; value is never an access identifier. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.access_key_file; explicit env-file takes precedence; restart required.
+  access_key_file: "/run/projectone/s3-access-key"
+  # Protected 0600 secret reference; no inline credential. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.secret_key_file; explicit env-file takes precedence; restart required.
+  secret_key_file: "/run/projectone/s3-secret-key"
+  # Optional protected private-CA PEM reference; empty uses system trust under HTTPS. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.ca_file; explicit env-file takes precedence; restart required.
+  ca_file: "/run/projectone/s3-ca.pem"
+  # JSON array of explicit canonical dial IPs; hostname remains TLS/SigV4 authority. Owner: object storage configuration; type: array of IP strings. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.dial_addresses; explicit env-file takes precedence; restart required.
+  dial_addresses: ["127.0.0.1"]
+  # Exclusive preinitialized private owned staging directory, disjoint from existing artifact roots and secrets. Owner: object storage configuration; type: string. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.staging_root; explicit env-file takes precedence; restart required.
+  staging_root: "/var/lib/projectone/object-staging"
+  # Contiguous multipart bytes, 5242880..5368709120. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.part_bytes; explicit env-file takes precedence; restart required.
+  part_bytes: 8388608
+  # Object admission bytes, 1..5497558138880; ceil(size/part_bytes)<=10000. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.maximum_object_bytes; explicit env-file takes precedence; restart required.
+  maximum_object_bytes: 2147483648
+  # Additional retained disk reserve bytes >=4096; user 30% floor also applies. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.minimum_free_bytes; explicit env-file takes precedence; restart required.
+  minimum_free_bytes: 1073741824
+  # One S3 metadata/part call deadline seconds, 1..300. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.operation_seconds; explicit env-file takes precedence; restart required.
+  operation_seconds: 10
+  # Whole GET deadline seconds, operation_seconds..86400. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.transfer_seconds; explicit env-file takes precedence; restart required.
+  transfer_seconds: 300
+  # Multipart intent lifetime seconds, transfer_seconds..604800. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.upload_seconds; explicit env-file takes precedence; restart required.
+  upload_seconds: 3600
+  # Object retention lifetime seconds, upload_seconds..31536000. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.object_lifetime_seconds; explicit env-file takes precedence; restart required.
+  object_lifetime_seconds: 86400
+  # Exact access grant maximum seconds, 1..object_lifetime_seconds. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.maximum_grant_seconds; explicit env-file takes precedence; restart required.
+  maximum_grant_seconds: 300
+  # Per-process bounded transport concurrency, 1..8. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.maximum_concurrent_transfers; explicit env-file takes precedence; restart required.
+  maximum_concurrent_transfers: 1
+  # Bounded exact ownership listing pages, 1..100. Owner: object storage configuration; type: integer. Required when enabled except optional CA; no implicit deployment default. YAML object_storage.maximum_list_pages; explicit env-file takes precedence; restart required.
+  maximum_list_pages: 4
+  # Worker queue poll seconds, 1..60. Owner: object storage; integer, required while enabled, no implicit default; env-file takes precedence; restart required.
+  worker_poll_seconds: 1
+  # Four private gRPC listener identities: s3/master/filer/volume. Array required while enabled; each canonical private dial IP is positively and negatively tested with protected CA/client certificate references. Never publish these ports. YAML object_storage.management or JSON PROJECT_ONE_OBJECT_STORAGE_MANAGEMENT; env-file takes precedence; restart required. This is a configuration example, not a qualification receipt.
+  management: [{"kind":"s3_grpc","authority":"s3-grpc.example.invalid:10443","dial_addresses":["127.0.0.1"],"ca_file":"/run/projectone/management-ca.pem","client_certificate_file":"/run/projectone/management-client.pem","client_key_file":"/run/projectone/management-client-key.pem"},{"kind":"master_grpc","authority":"master-grpc.example.invalid:10444","dial_addresses":["127.0.0.1"],"ca_file":"/run/projectone/management-ca.pem","client_certificate_file":"/run/projectone/management-client.pem","client_key_file":"/run/projectone/management-client-key.pem"},{"kind":"filer_grpc","authority":"filer-grpc.example.invalid:10445","dial_addresses":["127.0.0.1"],"ca_file":"/run/projectone/management-ca.pem","client_certificate_file":"/run/projectone/management-client.pem","client_key_file":"/run/projectone/management-client-key.pem"},{"kind":"volume_grpc","authority":"volume-grpc.example.invalid:10446","dial_addresses":["127.0.0.1"],"ca_file":"/run/projectone/management-ca.pem","client_certificate_file":"/run/projectone/management-client.pem","client_key_file":"/run/projectone/management-client-key.pem"}]
+
+  # Existing separate empty private canary bucket on the same endpoint; differs from bucket. Admission preserves and rejects unexpected data; List-only observer proves existence by bounded listing. Owner: object storage admission; string, required while enabled, no default; exact lowercase bucket syntax; not a secret. YAML object_storage.refusal_bucket; explicit protected env-file overrides YAML; restart required.
+  refusal_bucket: "projectone-refusal"
+
+  # Observer access identifier protected0600 file reference; distinct identity restricted to the refusal bucket. Owner: object storage admission; absolute path string, required while enabled, no default; never inline credentials. YAML object_storage.refusal_access_key_file; explicit protected env-file overrides YAML; restart required.
+  refusal_access_key_file: "/run/projectone/s3-refusal-access-key"
+
+  # Observer secret protected0600 file reference; all four credential references must differ. Owner: object storage admission; absolute path string, required while enabled, no default; never inline credentials. YAML object_storage.refusal_secret_key_file; explicit protected env-file overrides YAML; restart required.
+  refusal_secret_key_file: "/run/projectone/s3-refusal-secret-key"

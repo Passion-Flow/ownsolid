@@ -1,0 +1,16 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "1d54b8e34d7609ff7524a69033a5909904ac038f06504665533e000301a063b5",
+  "after_step": 37,
+  "steps": [
+    {
+      "step": 38,
+      "file": "000038_sessions_user_live_index.sql",
+      "source_sha256": "61c65473085e2d6b540e45d3a1878951a7ef0d9fe7465c71fdecc71afb19c61a",
+      "object": "sessions",
+      "kind": "alter_table",
+      "previous_definition_sha256": "1d522f80b0a50a55943cbd3f492849d7e4cf709a573f190be6263cc3f6f2cac7"
+    }
+  ]
+}

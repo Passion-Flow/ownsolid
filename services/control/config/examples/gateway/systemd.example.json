@@ -1,0 +1,8 @@
+{
+  "gateway_id": "00000000-0000-0000-0000-000000000001",
+  "service_uid": 2000,
+  "service_gid": 2000,
+  "binary_file": "/opt/projectone/gateway/projectone-gateway",
+  "configuration_file": "/etc/projectone/gateway/gateway.json",
+  "state_directory": "/var/lib/projectone/gateway"
+}

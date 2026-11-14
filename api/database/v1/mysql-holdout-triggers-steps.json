@@ -1,0 +1,62 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "2961a85e9d17cffc27603340dd324de62fa4d17962524f9afe135670bf90cac9",
+  "after_step": 88,
+  "steps": [
+    {
+      "step": 89,
+      "file": "000089_holdout_immutable_update.sql",
+      "object": "model_holdout_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "33ab77a990d6b7ed23e2da4301018eef1c8b5391fe91604c7f830a5d8c7e01b6",
+      "table": "model_holdouts",
+      "event": "UPDATE"
+    },
+    {
+      "step": 90,
+      "file": "000090_holdout_immutable_delete.sql",
+      "object": "model_holdout_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "319e02ae9e65163107734d4fae7f88f342471d1ff79dec010b48aeafb39d6c1b",
+      "table": "model_holdouts",
+      "event": "DELETE"
+    },
+    {
+      "step": 91,
+      "file": "000091_holdout_source_immutable_update.sql",
+      "object": "model_holdout_source_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "5627d93457c9a41edf47112f1cee4ee4424c2e7b768c3e17e5b876070772c631",
+      "table": "model_holdout_sources",
+      "event": "UPDATE"
+    },
+    {
+      "step": 92,
+      "file": "000092_holdout_source_immutable_delete.sql",
+      "object": "model_holdout_source_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "0f1f2db802e33df2508a54a98037421ec8c95f0a54e8aab28178931cad670ce6",
+      "table": "model_holdout_sources",
+      "event": "DELETE"
+    },
+    {
+      "step": 93,
+      "file": "000093_holdout_prompt_immutable_update.sql",
+      "object": "model_holdout_prompt_immutable_update",
+      "kind": "create_trigger",
+      "source_sha256": "8015ceecc0f2214386cb59df3529e671677cf326bb30cd9b666c544b6bbaf646",
+      "table": "model_holdout_prompts",
+      "event": "UPDATE"
+    },
+    {
+      "step": 94,
+      "file": "000094_holdout_prompt_immutable_delete.sql",
+      "object": "model_holdout_prompt_immutable_delete",
+      "kind": "create_trigger",
+      "source_sha256": "6eda14df0a985b9a457cb651851eaabcaa9d34eb56968d6068a63347cdb6a933",
+      "table": "model_holdout_prompts",
+      "event": "DELETE"
+    }
+  ]
+}

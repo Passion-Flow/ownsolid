@@ -1,0 +1,27 @@
+{
+  "format_version": 1,
+  "policy": {
+    "request_seconds": 30,
+    "probe_seconds": 10,
+    "operation_seconds": 7200,
+    "lease_seconds": 120,
+    "renew_seconds": 30,
+    "poll_milliseconds": 1000,
+    "maximum_instances": 100,
+    "page_size": 50,
+    "maximum_evidence_bytes": 1048576
+  },
+  "profiles": [
+    {
+      "key": "customer_readonly",
+      "kind": "customer_external",
+      "host": "postgres.example.invalid",
+      "port": 5432,
+      "database": "customer_database",
+      "user": "customer_readonly",
+      "password_file": "/replace/private/middleware/password",
+      "ca_file": "/replace/private/middleware/ca.pem",
+      "expected_major": 18
+    }
+  ]
+}

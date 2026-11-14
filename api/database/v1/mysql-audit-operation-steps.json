@@ -1,0 +1,16 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "d4be641c33ccd10879ef960cd3204b9ebc1f77856b7fefbe0099b36cd786e33e",
+  "after_step": 35,
+  "steps": [
+    {
+      "step": 36,
+      "file": "000036_audit_operation_lookup.sql",
+      "source_sha256": "82974f6eb8f779fbda26c9f093eb2ad2e69a4b18c48e1a3df14791516b9a7345",
+      "object": "audit_events",
+      "kind": "alter_table",
+      "previous_definition_sha256": "d2b73efb5ccc915a7a373b0e05790415d2a9bc6cf5ffe3ba57da07f21565f8b7"
+    }
+  ]
+}

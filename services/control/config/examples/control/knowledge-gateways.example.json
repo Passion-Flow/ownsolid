@@ -1,0 +1,3 @@
+[
+  {"origin":"https://gateway.example.invalid:9443","dial_addresses":["192.0.2.10"],"ca_file":"/run/projectone/private/gateway-ca.pem"}
+]

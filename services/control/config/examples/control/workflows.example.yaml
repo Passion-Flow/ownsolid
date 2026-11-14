@@ -1,0 +1,31 @@
+# Merge explicitly into the complete protected control configuration.
+# Requires the actual packaged knowledge encoder/pgvector and a trusted current
+# same-Workspace Rust gateway configured through knowledge.gateways.
+workflows:
+  enabled: true
+runtime:
+  http:
+    request_seconds: 90
+    startup_seconds: 60
+    shutdown_seconds: 30
+  workflows:
+    graph_bytes: 32768
+    instructions_bytes: 2048
+    question_bytes: 2048
+    answer_bytes: 32768
+    run_seconds: 150
+    retrieval_seconds: 50
+    answer_seconds: 50
+    concurrency: 1
+    workspace_concurrency: 1
+    lease_seconds: 200
+    heartbeat_seconds: 4
+    commit_seconds: 10
+    maximum_workflows: 50
+    maximum_versions: 50
+    maximum_conversations: 50
+    maximum_runs: 500
+    maximum_turns: 500
+    retention_days: 14
+    maintenance_batch: 50
+    maintenance_seconds: 45

@@ -1,0 +1,21 @@
+CREATE TABLE middleware_instances (
+ id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+ tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ workspace_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ profile_key VARCHAR(63) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(profile_key,'^[a-z][a-z0-9_]{0,62}$','c')),
+ kind VARCHAR(24) NOT NULL CHECK(kind IN('platform_owned','customer_external')),
+ name VARCHAR(100) NOT NULL CHECK(CHAR_LENGTH(name)>0),
+ version BIGINT NOT NULL DEFAULT 1 CHECK(version BETWEEN 1 AND 9007199254740991),
+ state VARCHAR(16) NOT NULL DEFAULT 'active' CHECK(state IN('active','archived')),
+ profile_fingerprint CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(profile_fingerprint,'^[a-f0-9]{64}$','c')),
+ created_by CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ creation_key CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ creation_fingerprint CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(creation_fingerprint,'^[a-f0-9]{64}$','c')),
+ created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ UNIQUE(tenant_id,workspace_id,id),
+ UNIQUE(tenant_id,workspace_id,profile_key),
+ UNIQUE(tenant_id,workspace_id,created_by,creation_key),
+ FOREIGN KEY(created_by) REFERENCES users(id),
+ FOREIGN KEY(tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;
