@@ -1,0 +1,175 @@
+{
+  "scope": "Mac SCH/MET only",
+  "timestamp_utc": "20261114t073243z",
+  "github_url": "https://github.com/Passion-Flow/ownsolid.git",
+  "original_repo": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid",
+  "original_shared_branch": "main",
+  "original_shared_head": "f98a160dcdfb39ec5f841e4a854753d8c20a25be",
+  "archive_worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-sch-migration-20261114t073243z",
+  "archive_branch": "salvage/mac/sch/source-archive-20261114t073243z",
+  "archive_base": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "source_ref_mapping": {
+    "refs/codex/sch-queue-b8d3efa0": {
+      "original_sha": "b8d3efa0df33312e3e1ef1c1c4f5bd876c6666d9",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-queue-b8d3efa0-b8d3efa0df33",
+      "preserved_sha": "b8d3efa0df33312e3e1ef1c1c4f5bd876c6666d9",
+      "mode": "original-dag-no-rewrite"
+    },
+    "refs/codex/sch-queue-current-1b594f2e": {
+      "original_sha": "1b594f2e83ba753bb9f4e5dc995bfc34c415a252",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-queue-current-1b594f2e-1b594f2e83ba",
+      "preserved_sha": "1b594f2e83ba753bb9f4e5dc995bfc34c415a252",
+      "mode": "original-dag-no-rewrite"
+    },
+    "refs/codex/sch-queue-current-47aac2d6": {
+      "original_sha": "47aac2d6869beaef50736fedb9439a7694c2fcc6",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-queue-current-47aac2d6-47aac2d6869b",
+      "preserved_sha": "47aac2d6869beaef50736fedb9439a7694c2fcc6",
+      "mode": "original-dag-no-rewrite"
+    },
+    "refs/codex/sch-queue-final-8b17a295": {
+      "original_sha": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-queue-final-8b17a295-8b17a2954260",
+      "preserved_sha": "8b17a2954260e517b434906e95740a39ecdd4a9a",
+      "mode": "original-dag-no-rewrite"
+    },
+    "refs/codex/sch-queued-candidate-5ee946b6": {
+      "original_sha": "5ee946b6abd7d9add9396bbf61c39d14acc64abd",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-queued-candidate-5ee946b6-5ee946b6abd7",
+      "preserved_sha": "5ee946b6abd7d9add9396bbf61c39d14acc64abd",
+      "mode": "original-dag-no-rewrite"
+    },
+    "refs/codex/sch-queued-candidate-d61d6879": {
+      "original_sha": "d61d68799f49ccbd6921f983fb71ad945cffb13c",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-queued-candidate-d61d6879-d61d68799f49",
+      "preserved_sha": "d61d68799f49ccbd6921f983fb71ad945cffb13c",
+      "mode": "original-dag-no-rewrite"
+    },
+    "refs/codex/sch-queued-candidate-fd64e112": {
+      "original_sha": "fd64e1120320320305fef077014e19dfd081bbba",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-queued-candidate-fd64e112-fd64e1120320",
+      "preserved_sha": "fd64e1120320320305fef077014e19dfd081bbba",
+      "mode": "original-dag-no-rewrite"
+    },
+    "refs/codex/sch-quota-publish": {
+      "original_sha": "b87f338892f5dff2f7fa33232be5b51a742292e8",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-quota-publish-b87f338892f5",
+      "preserved_sha": "b87f338892f5dff2f7fa33232be5b51a742292e8",
+      "mode": "original-dag-no-rewrite"
+    },
+    "refs/codex/sch-quota-release-test": {
+      "original_sha": "5271790d0e1ec2717f69e8462c1845e01744387c",
+      "remote_ref": "refs/heads/salvage/mac/sch/sch-quota-release-test-5271790d0e1e",
+      "preserved_sha": "5271790d0e1ec2717f69e8462c1845e01744387c",
+      "mode": "original-dag-no-rewrite"
+    }
+  },
+  "detached_mapping": {
+    "original_worktree": "/private/tmp/ownsolid-sch-quota-modules.SBNyMX1R/src",
+    "directory_present": false,
+    "registered_head": "d61d68799f49ccbd6921f983fb71ad945cffb13c",
+    "remote_ref": "refs/heads/salvage/mac/sch/sch-queued-candidate-d61d6879-d61d68799f49",
+    "original_registration_retained": true
+  },
+  "private_source_file_count": 0,
+  "necessary_config_file_count": 0,
+  "metadata_files_committed": 1,
+  "source_roots": {
+    "/private/tmp/ownsolid-sch-lock-1fxoq5r0": false,
+    "/private/tmp/ownsolid-sch-quota-modules.SBNyMX1R": false,
+    "/Users/passion./.local/state/ownsolid/lane-sch": false
+  },
+  "bundles": [],
+  "embedded_bundle_payloads": [],
+  "rebase": "NOTRUN: preserve raw tips; archive starts at freshly fetched GitHub main",
+  "roadmap_checked": 0,
+  "roadmap_total": 20,
+  "roadmap_unchanged": true,
+  "existing_main_admission": "1b594f2e83ba753bb9f4e5dc995bfc34c415a252",
+  "full_validation": {
+    "status": "NOTRUN",
+    "reason": "fresh raw Free below 6 GiB; immediate salvage",
+    "raw_free_pages": 279480,
+    "page_size_bytes": 16384,
+    "raw_free_bytes": 4579000320,
+    "required_raw_free_bytes": 6442450944,
+    "disk_available_kib": 154490744,
+    "required_disk_bytes": 32212254720,
+    "carrier": "/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock",
+    "expected_observed_identity": {
+      "dev": 16777231,
+      "ino": 53377467,
+      "uid": 501,
+      "mode": "0600",
+      "regular": true,
+      "nlink": 1,
+      "size": 0
+    },
+    "carrier_acquired": false,
+    "make_check_exit": null,
+    "make_build_exit": null,
+    "retired_gate_runs": 0
+  },
+  "exclusions": [
+    {
+      "category": "absent-owner-private-source-roots",
+      "count": 3,
+      "paths": [
+        "/private/tmp/ownsolid-sch-lock-1fxoq5r0",
+        "/private/tmp/ownsolid-sch-quota-modules.SBNyMX1R",
+        "/Users/passion./.local/state/ownsolid/lane-sch"
+      ],
+      "action": "not reconstructed; originals not deleted"
+    },
+    {
+      "category": "unowned-MachO-build-artifact",
+      "count": 1,
+      "paths": [
+        "tools/audit-verify/audit-verify"
+      ],
+      "action": "not selected; original untouched"
+    },
+    {
+      "category": "third-party-dependencies-node_modules",
+      "count": 0,
+      "count_basis": "no owner source roots present; caches not traversed"
+    },
+    {
+      "category": "models-and-databases",
+      "count": 0,
+      "count_basis": "none selected in owner Mac scope"
+    },
+    {
+      "category": "temporary-output-and-binary-payloads",
+      "count": 0,
+      "count_basis": "known private roots absent; no payload selected"
+    },
+    {
+      "category": "credentials",
+      "count": 0,
+      "count_basis": "not read/copied; existing gh helper used"
+    },
+    {
+      "category": "Mac-owner-bundles-and-embedded-bundles",
+      "count": 0,
+      "count_basis": "all known owner script roots absent"
+    },
+    {
+      "category": "server-deferred",
+      "count": 26,
+      "count_basis": "5 branches + 16 custom refs + 5 bundles; no server access"
+    },
+    {
+      "category": "shared-reflog-only-history",
+      "count": null,
+      "count_basis": "coordinator preserves all 4171 original commits; not duplicated"
+    },
+    {
+      "category": "other-owner-stashes",
+      "count": null,
+      "count_basis": "not applied or dropped; original owner/coordinator scope"
+    }
+  ],
+  "no_other_owned_independent_repo": true,
+  "coordinator_original_object_safety_report": "original-mac-object-safety.json"
+}
