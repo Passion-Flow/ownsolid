@@ -1,0 +1,6 @@
+[
+  "services/control/internal/modules/identity/http/agent_path.go",
+  "services/control/internal/modules/identity/http/agent_published_readers.go",
+  "services/control/internal/modules/identity/http/agent_published_readers_test.go",
+  "services/control/internal/modules/identity/README.md"
+]

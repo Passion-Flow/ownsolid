@@ -1,0 +1,147 @@
+diff --git a/services/control/internal/modules/identity/http/sso_live_recovery_integration_test.go b/services/control/internal/modules/identity/http/sso_live_recovery_integration_test.go
+index 032ce366..3989a908 100644
+--- a/services/control/internal/modules/identity/http/sso_live_recovery_integration_test.go
++++ b/services/control/internal/modules/identity/http/sso_live_recovery_integration_test.go
+@@ -181,45 +181,6 @@ func (p *recoveryGitea) authorize(t *testing.T, authorization string) string {
+ 	return callback.RequestURI()
+ }
+ 
+-func recoveryCallback(t *testing.T, c *client, path, want string, issued bool) {
+-	t.Helper()
+-	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, c.s.URL+path, nil)
+-	if err != nil {
+-		t.Fatal("actual callback request invalid")
+-	}
+-	req.Host = c.audience + ".example.invalid"
+-	for _, cookie := range c.cookies {
+-		req.AddCookie(cookie)
+-	}
+-	httpClient := *c.http
+-	httpClient.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+-	response, err := httpClient.Do(req)
+-	if err != nil {
+-		t.Fatal("actual verified callback failed")
+-	}
+-	defer response.Body.Close()
+-	if response.StatusCode != 303 || response.Header.Get("Location") != want || response.Header.Get("Cache-Control") != "no-store" || response.Header.Get("Referrer-Policy") != "no-referrer" || response.Header.Get("X-Request-ID") == "" || response.TLS == nil || len(response.TLS.VerifiedChains) == 0 {
+-		t.Fatal("actual callback outcome or security headers invalid")
+-	}
+-	session := false
+-	for _, cookie := range response.Cookies() {
+-		if !cookie.Secure || !cookie.HttpOnly || cookie.Domain != "" || cookie.Path != "/" {
+-			t.Fatal("actual callback cookie boundary invalid")
+-		}
+-		if cookie.Name == "__Host-"+c.audience+"_session" && cookie.Value != "" && cookie.MaxAge > 0 {
+-			session = true
+-		}
+-		if cookie.MaxAge < 0 {
+-			delete(c.cookies, cookie.Name)
+-		} else {
+-			c.cookies[cookie.Name] = cookie
+-		}
+-	}
+-	if session != issued {
+-		t.Fatal("actual callback session issuance changed")
+-	}
+-}
+-
+ func TestSSOActualGiteaRecoveryAndDeviceRevocationHTTPS(t *testing.T) {
+ 	p := actualRecoveryGitea(t)
+ 	s, _, _, template, password := setup(t)
+diff --git a/services/control/internal/modules/sso/connector_check.go b/services/control/internal/modules/sso/connector_check.go
+index 0342279b..016cb393 100644
+--- a/services/control/internal/modules/sso/connector_check.go
++++ b/services/control/internal/modules/sso/connector_check.go
+@@ -90,6 +90,7 @@ func (s *Service) readStoredConnector(ctx context.Context, q transaction.Executo
+ 	if e != nil {
+ 		return storedConnector{}, e
+ 	}
++	defer clear(secret)
+ 	if !safeOpaque(string(secret), maximumSecretBytes) {
+ 		return storedConnector{}, fail("SSO_ENCRYPTED_STATE_INVALID")
+ 	}
+diff --git a/services/control/internal/modules/sso/crypto.go b/services/control/internal/modules/sso/crypto.go
+index 5e0c80e9..8e861fbf 100644
+--- a/services/control/internal/modules/sso/crypto.go
++++ b/services/control/internal/modules/sso/crypto.go
+@@ -22,6 +22,7 @@ const (
+ 	maximumSecretBytes   = 4096
+ 	clientSecretPurpose  = "connector_client_secret"
+ 	flowVerifierPurpose  = "flow_pkce_verifier"
++	connectorTestPurpose = "connector_test_secrets"
+ )
+ 
+ var keyIDPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`)
+@@ -45,7 +46,7 @@ func canonicalID(value string) bool {
+ }
+ 
+ func (s secretScope) associatedData() ([]byte, error) {
+-	if !canonicalID(s.tenant) || !canonicalID(s.connector) || !canonicalID(s.record) || s.purpose != clientSecretPurpose && s.purpose != flowVerifierPurpose || s.purpose == clientSecretPurpose && s.record != s.connector {
++	if !canonicalID(s.tenant) || !canonicalID(s.connector) || !canonicalID(s.record) || s.purpose != clientSecretPurpose && s.purpose != flowVerifierPurpose && s.purpose != connectorTestPurpose || s.purpose == clientSecretPurpose && s.record != s.connector {
+ 		return nil, errors.New("SSO_SECRET_SCOPE_INVALID")
+ 	}
+ 	// A JSON array gives unambiguous field boundaries and an explicit schema/domain discriminator.
+diff --git a/services/control/internal/modules/sso/http/handler.go b/services/control/internal/modules/sso/http/handler.go
+index e31e92ea..642448fe 100644
+--- a/services/control/internal/modules/sso/http/handler.go
++++ b/services/control/internal/modules/sso/http/handler.go
+@@ -14,16 +14,20 @@ import (
+ 	"time"
+ 	"unicode/utf8"
+ 
+-	"github.com/google/uuid"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity/security"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/sso"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/httpserver"
++	"github.com/google/uuid"
+ )
+ 
+-type Handler struct{ Service *sso.Service }
++type Handler struct {
++	Service *sso.Service
++	// ConnectorTests selects the unpublished diagnostic adapter after explicit storage admission.
++	ConnectorTests *sso.ConnectorSignInTests
++}
+ 
+ const (
+ 	maximumCallbackCodeBytes        = 4096
+@@ -147,6 +151,9 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request, audience, sessi
+ 	if e != nil {
+ 		return nil, 0, bad
+ 	}
++	if h.ConnectorTests != nil && len(parts) >= 7 && len(parts) <= 8 && parts[2] == "admin" && parts[3] == "sso" && parts[4] == "connectors" && parts[6] == "sign-in-tests" {
++		return h.connectorSignInTest(w, r, parts, query, audience, session, requestID)
++	}
+ 	ctx := r.Context()
+ 	accounts := h.Service.Identity
+ 	cookies, e := httpserver.NewCookiePolicy(accounts.Config.Server.EffectiveTransportMode())
+diff --git a/services/control/internal/modules/sso/provider.go b/services/control/internal/modules/sso/provider.go
+index 854d85b3..5318ee21 100644
+--- a/services/control/internal/modules/sso/provider.go
++++ b/services/control/internal/modules/sso/provider.go
+@@ -26,7 +26,7 @@ const maximumProviderFields = 128
+ const maximumAuthorizationCodeBytes = 4096
+ const maximumProviderCertificateBytes = 1048576
+ 
+-type providerIdentity struct{ subject string }
++type providerIdentity struct{ subject, login, name string }
+ 
+ // The provider receives only operator-approved network policy and exact server-generated callback URIs.
+ type giteaProvider struct {
+@@ -276,5 +276,13 @@ func (p *giteaProvider) exchange(ctx context.Context, clientID, secret, callback
+ 	}
+ 	// Email, name, avatar, groups and provider administrator status confer no local identity/authority.
+ 	out.subject = subject
++	// Display fields never confer identity or authority. A malformed optional
++	// profile cannot change ordinary sign-in admission.
++	for key, target := range map[string]*string{"login": &out.login, "full_name": &out.name} {
++		var value string
++		if json.Unmarshal(user[key], &value) == nil && len(value) <= 256 && utf8.ValidString(value) && !strings.ContainsFunc(value, unicode.IsControl) {
++			*target = value
++		}
++	}
+ 	return out, nil
+ }

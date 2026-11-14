@@ -1,0 +1,95 @@
+[
+  {
+    "path": "/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/qualified-graph-source-v1.bundle",
+    "sha256": "7016466592a837b546850baaa5fda481e2f3e9746549337a3ea1ec92a84cf1d4",
+    "size": 5757,
+    "list_heads_exit_code": 0,
+    "list_heads": "b3c2a700fe55e50be61c35155f9d43de665ff5ae refs/heads/codex/iam-agent-readers-20261113\n",
+    "stderr": "",
+    "verify_exit_code": 0,
+    "heads": [
+      {
+        "sha": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+        "original_ref": "refs/heads/codex/iam-agent-readers-20261113",
+        "already_in_local_original_refs": true,
+        "bundle_only_import_required": false,
+        "preserved_by_remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-agent-readers-20261113-b3c2a700fe55"
+      }
+    ]
+  },
+  {
+    "path": "/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-source-v5.bundle",
+    "sha256": "bed3c3e2b37c799ef33c6ae3e0869dac0f8f379049131d6c569eebf536dc9769",
+    "size": 24442,
+    "list_heads_exit_code": 0,
+    "list_heads": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba refs/heads/codex/iam-saml-completion-http-20261113\n",
+    "stderr": "",
+    "verify_exit_code": 0,
+    "heads": [
+      {
+        "sha": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba",
+        "original_ref": "refs/heads/codex/iam-saml-completion-http-20261113",
+        "already_in_local_original_refs": true,
+        "bundle_only_import_required": false,
+        "preserved_by_remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-saml-completion-http-20261113-c2b955ed7aca"
+      }
+    ]
+  },
+  {
+    "path": "/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/qualified-graph-evidence.tar",
+    "member": "qualified-graph/qualified-graph-source-v1.bundle",
+    "local_audit_copy": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-iam/local-bundle-audit/archive-member-0.bundle",
+    "sha256": "7016466592a837b546850baaa5fda481e2f3e9746549337a3ea1ec92a84cf1d4",
+    "size": 5757,
+    "list_heads_exit_code": 0,
+    "list_heads": "b3c2a700fe55e50be61c35155f9d43de665ff5ae refs/heads/codex/iam-agent-readers-20261113\n",
+    "verify_exit_code": 0,
+    "heads": [
+      {
+        "sha": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+        "original_ref": "refs/heads/codex/iam-agent-readers-20261113",
+        "already_in_local_original_refs": true,
+        "bundle_only_import_required": false,
+        "preserved_by_remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-agent-readers-20261113-b3c2a700fe55"
+      }
+    ]
+  },
+  {
+    "path": "/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-v5-evidence.tar",
+    "member": "http-completion-v5/http-completion-source-v5.bundle",
+    "local_audit_copy": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-iam/local-bundle-audit/archive-member-1.bundle",
+    "sha256": "bed3c3e2b37c799ef33c6ae3e0869dac0f8f379049131d6c569eebf536dc9769",
+    "size": 24442,
+    "list_heads_exit_code": 0,
+    "list_heads": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba refs/heads/codex/iam-saml-completion-http-20261113\n",
+    "verify_exit_code": 0,
+    "heads": [
+      {
+        "sha": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba",
+        "original_ref": "refs/heads/codex/iam-saml-completion-http-20261113",
+        "already_in_local_original_refs": true,
+        "bundle_only_import_required": false,
+        "preserved_by_remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-saml-completion-http-20261113-c2b955ed7aca"
+      }
+    ]
+  },
+  {
+    "path": "/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-v5-review-v2.tar",
+    "member": "http-completion-v5/http-completion-source-v5.bundle",
+    "local_audit_copy": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-iam/local-bundle-audit/archive-member-2.bundle",
+    "sha256": "bed3c3e2b37c799ef33c6ae3e0869dac0f8f379049131d6c569eebf536dc9769",
+    "size": 24442,
+    "list_heads_exit_code": 0,
+    "list_heads": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba refs/heads/codex/iam-saml-completion-http-20261113\n",
+    "verify_exit_code": 0,
+    "heads": [
+      {
+        "sha": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba",
+        "original_ref": "refs/heads/codex/iam-saml-completion-http-20261113",
+        "already_in_local_original_refs": true,
+        "bundle_only_import_required": false,
+        "preserved_by_remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-saml-completion-http-20261113-c2b955ed7aca"
+      }
+    ]
+  }
+]

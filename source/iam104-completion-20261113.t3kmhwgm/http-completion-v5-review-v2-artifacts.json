@@ -1,0 +1,12 @@
+{
+  "source_commit": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba",
+  "source_tree": "ec378e511d51cdd4cbd7a2ed103115e6a2c05a28",
+  "source_bundle_sha256": "bed3c3e2b37c799ef33c6ae3e0869dac0f8f379049131d6c569eebf536dc9769",
+  "evidence_bundle": "/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-v5-review-v2.tar",
+  "evidence_bundle_sha256": "122a7e599b919d7cee294a7733fd2ce54d31553f8ce183706e30bbec4e3f6308",
+  "evidence_manifest_sha256": "395383d5ff5fc5c525e0a81d9ee48a57551b3f59df83aeca386ccde2d52eea4f",
+  "file_count": 56,
+  "bytes": 583680,
+  "new_compile_or_test_pass": false,
+  "database_cases_executed": 0
+}

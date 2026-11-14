@@ -1,0 +1,19 @@
+{
+  "source_commit": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+  "source_tree": "d5e83cf914f3866a8d9e219dff63470886ee134f",
+  "source_bundle_sha256": "7016466592a837b546850baaa5fda481e2f3e9746549337a3ea1ec92a84cf1d4",
+  "evidence_bundle": "/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/qualified-graph-evidence.tar",
+  "evidence_bundle_sha256": "d13300c4246b6a91983678b9f9f10f9b29c163d3bbb2a8b3f2824eb2c717bc90",
+  "evidence_manifest_sha256": "971defa22bb9b2ff1dbf706beb842cc01d64aab250a7f5862cf66804ace3a85a",
+  "resource_preflight": {
+    "free_bytes": 4894343168,
+    "minimum_free_bytes": 2147483648,
+    "disk_free_bytes": 164990779392,
+    "minimum_disk_free_bytes": 16106127360,
+    "observed_at": 1794557453.330007
+  },
+  "unit_log_sha256": "26bdb9ee3769e19ac0527520023b83fafaa76ba5a8198b908df1f98084d0bebe",
+  "result_sha256": "19556c297c46005cc0c2639d39ee9945f5aa137d87c6c56106aa2e34b4621b17",
+  "file_count": 42,
+  "bytes": 327680
+}

@@ -1,0 +1,136 @@
+{
+  "refs": [
+    {
+      "ref": "refs/heads/codex/iam-agent-readers-20261113",
+      "sha": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/codex/iam-audit-http",
+      "sha": "9a6d1b6cd3b713e71eb25fdcd5618159f42eb088",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/codex/iam-audit58-input-0f02cf93",
+      "sha": "0f02cf937479aeae9dcbdea8da4ee8ef27f551a5",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/codex/iam-saml-completion-http-20261113",
+      "sha": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/codex/iam-service-principals",
+      "sha": "0fd74f924d8079ed16987e8556b47acac2522237",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/codex/iam-session-devices",
+      "sha": "4e8a99ea80aa1c0806bdd1a76d07566db77b1764",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/codex/iam-verified-36313f07",
+      "sha": "36313f07a309b413ec7a09574439c4cae57ae19f",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/codex/iam-verified-544c77a9",
+      "sha": "544c77a92c0495be55c47bbb6015a176005277fa",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/codex/iam119-recoverable-sso",
+      "sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/heads/lane-iam",
+      "sha": "bad52f760e1f772e160608a52eb9f88a0156035b",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/20261112-6100a2fe",
+      "sha": "6100a2fe78f81db3b289cc335b5a3ce2efd57023",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/joint-handoff-d575e86e",
+      "sha": "d575e86ed93d649a2018af909ebc75b6e45dabe1",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/migration-88404b04",
+      "sha": "88404b0410787a9af14354f3ed5bdcfdb10ca27a",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/offline-ab02c3b1",
+      "sha": "ab02c3b15f249028373df2c5f1f925d17a97ee55",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/original-candidates",
+      "sha": "e1e6363e1e67e82bf70e9a26630a118f8934fcf8",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/pre-merge-126523d8",
+      "sha": "126523d883efd153c1afbfd3cc98bb35a01401e2",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/resumed-0abd4f3b",
+      "sha": "0abd4f3b5dbe6e3a8aa342b8da9fdd0dddf068f2",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/shared-device-91d77b14",
+      "sha": "91d77b143d17044c7dbad82ee9f71f466a5c5bd2",
+      "type": "commit"
+    },
+    {
+      "ref": "refs/tags/iam-evidence/sso-keyring-7e77b814",
+      "sha": "7e77b814cb0ff61aa1b1d25b00d22a4ac5ba64c2",
+      "type": "commit"
+    }
+  ],
+  "HEAD": {
+    "command": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit_code": 0,
+    "stdout": "5790b8961955400ffe25f10ced170bf4f669683c\n",
+    "stderr": ""
+  },
+  "status": {
+    "command": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "stash": {
+    "command": [
+      "git",
+      "stash",
+      "list",
+      "--format=%gd %H %s"
+    ],
+    "exit_code": 0,
+    "stdout": "stash@{0} c1b11aab517905bcd793989822b28a6d71fa9f18 On codex/iam119-recoverable-sso: IAM gateway published-reader candidate pending corrected graph and native qualification\nstash@{1} a35691d4c7b321666691f71adc1fb215cc732b06 On codex/iam119-recoverable-sso: IAM-104 v4 owned source pending actual SQL qualification\nstash@{2} 7a396121171df1b553ba2f51aef7183b4cf5c4d4 On codex/iam119-recoverable-sso: IAM-104 owned review source before documentation rebase\n",
+    "stderr": ""
+  },
+  "origin_url": "https://github.com/Passion-Flow/ownsolid.git",
+  "untouched_other_lane_refs": [
+    "refs/codex/handoff/lane-rel-iam111",
+    "refs/codex/handoff/lane-rel-training-cursor-iam-publish",
+    "refs/codex/handoff/lane-rel-trn-cursor-base-iam"
+  ]
+}

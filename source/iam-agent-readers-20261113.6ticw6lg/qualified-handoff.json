@@ -1,0 +1,39 @@
+{
+  "candidate_commit": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+  "candidate_tree": "d5e83cf914f3866a8d9e219dff63470886ee134f",
+  "candidate_branch": "codex/iam-agent-readers-20261113",
+  "candidate_parent": "9a0543b9a84fbe82f45e3e67da24cca67748aaf2",
+  "producer_required_commit": "e639db9035b0b2c0229c90175493c605f328e295",
+  "producer_runtime_commit": "5b73fa05305c2c5d8178a256683ede8b4e9ef99f",
+  "original_producer_author_preserved": true,
+  "own_paths": [
+    "services/control/internal/modules/identity/http/agent_path.go",
+    "services/control/internal/modules/identity/http/agent_published_readers.go",
+    "services/control/internal/modules/identity/http/agent_published_readers_test.go",
+    "services/control/internal/modules/identity/README.md"
+  ],
+  "source_hashes": {
+    "services/control/internal/modules/identity/http/agent_path.go": "47d7b1c6d9aadec7bac48ee594cf6498f004ecc187a008bdc8048582036a5d24",
+    "services/control/internal/modules/identity/http/agent_published_readers.go": "f291d2cd67c1e001e86c069f4b91c2b954b7eaaaf9bf197b56180e2bf8abefc8",
+    "services/control/internal/modules/identity/http/agent_published_readers_test.go": "f47de4fb01737cab6f3a5141546a300fcb5eeb240afad5d0de64f45deddf138f",
+    "services/control/internal/modules/identity/README.md": "6c0cfe42feb9ee21d29b4e01fb8a67b4ea1cbe681955832ca11a2848ad39108e"
+  },
+  "source_bundle": "/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/qualified-graph-source-v1.bundle",
+  "source_bundle_sha256": "7016466592a837b546850baaa5fda481e2f3e9746549337a3ea1ec92a84cf1d4",
+  "patch_sha256": "8907bbf2f38ce3aec7effb424d33aa4f40bff795ac72fd638d14d1208e0fb53d",
+  "opportunity": "/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/corrected-opportunity-ooyhog7q",
+  "unit_check": "/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/unit-1794557453330389000",
+  "roots_passed": 3,
+  "subtests_passed": 3,
+  "skip_count": 0,
+  "failure_count": 0,
+  "database_cases_executed": 0,
+  "runtime_registered": false,
+  "pushed_to_main": false,
+  "elapsed_seconds": 9.018893875,
+  "functions": [
+    "func NewAgentGatewayWithPublishedReaders(s *identity.Service, ready func() error, tenant string) (*AgentGateway, error)",
+    "func (g *AgentGateway) ClosePublishedReaders() error"
+  ],
+  "packaging_note": "A SHA-only revision range was refused as an empty bundle (exit 128); the named candidate ref with an explicit prerequisite created and verified this source bundle. No test was rerun."
+}

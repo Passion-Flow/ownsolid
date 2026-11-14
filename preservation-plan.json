@@ -1,0 +1,227 @@
+[
+  {
+    "source_ref": "refs/heads/codex/iam-agent-readers-20261113",
+    "source_sha": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-agent-readers-20261113-b3c2a700fe55",
+    "sha": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/heads/codex/iam-audit-http",
+    "source_sha": "9a6d1b6cd3b713e71eb25fdcd5618159f42eb088",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-audit-http-9a6d1b6cd3b7",
+    "sha": "9a6d1b6cd3b713e71eb25fdcd5618159f42eb088",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/heads/codex/iam-audit58-input-0f02cf93",
+    "source_sha": "0f02cf937479aeae9dcbdea8da4ee8ef27f551a5",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-audit58-input-0f02cf93-0f02cf937479",
+    "sha": "0f02cf937479aeae9dcbdea8da4ee8ef27f551a5",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/heads/codex/iam-saml-completion-http-20261113",
+    "source_sha": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-saml-completion-http-20261113-c2b955ed7aca",
+    "sha": "c2b955ed7aca6cdaae98ef22d2a0759d92bac5ba",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/heads/codex/iam-service-principals",
+    "source_sha": "0fd74f924d8079ed16987e8556b47acac2522237",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-service-principals-0fd74f924d80",
+    "sha": "0fd74f924d8079ed16987e8556b47acac2522237",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/heads/codex/iam-session-devices",
+    "source_sha": "4e8a99ea80aa1c0806bdd1a76d07566db77b1764",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-session-devices-4e8a99ea80aa",
+    "sha": "4e8a99ea80aa1c0806bdd1a76d07566db77b1764",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/heads/codex/iam-verified-36313f07",
+    "source_sha": "36313f07a309b413ec7a09574439c4cae57ae19f",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-verified-36313f07-36313f07a309",
+    "sha": "36313f07a309b413ec7a09574439c4cae57ae19f",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/heads/codex/iam-verified-544c77a9",
+    "source_sha": "544c77a92c0495be55c47bbb6015a176005277fa",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam-verified-544c77a9-544c77a92c04",
+    "sha": "544c77a92c0495be55c47bbb6015a176005277fa",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/heads/codex/iam119-recoverable-sso",
+    "source_sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-codex-iam119-recoverable-sso-5790b8961955",
+    "sha": "5790b8961955400ffe25f10ced170bf4f669683c",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": true
+  },
+  {
+    "source_ref": "refs/heads/lane-iam",
+    "source_sha": "bad52f760e1f772e160608a52eb9f88a0156035b",
+    "remote_ref": "refs/heads/salvage/mac/iam/head-lane-iam-bad52f760e1f",
+    "sha": "bad52f760e1f772e160608a52eb9f88a0156035b",
+    "kind": "original-branch",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/20261112-6100a2fe",
+    "source_sha": "6100a2fe78f81db3b289cc335b5a3ce2efd57023",
+    "remote_ref": "refs/tags/iam-evidence/20261112-6100a2fe",
+    "sha": "6100a2fe78f81db3b289cc335b5a3ce2efd57023",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/joint-handoff-d575e86e",
+    "source_sha": "d575e86ed93d649a2018af909ebc75b6e45dabe1",
+    "remote_ref": "refs/tags/iam-evidence/joint-handoff-d575e86e",
+    "sha": "d575e86ed93d649a2018af909ebc75b6e45dabe1",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/migration-88404b04",
+    "source_sha": "88404b0410787a9af14354f3ed5bdcfdb10ca27a",
+    "remote_ref": "refs/tags/iam-evidence/migration-88404b04",
+    "sha": "88404b0410787a9af14354f3ed5bdcfdb10ca27a",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/offline-ab02c3b1",
+    "source_sha": "ab02c3b15f249028373df2c5f1f925d17a97ee55",
+    "remote_ref": "refs/tags/iam-evidence/offline-ab02c3b1",
+    "sha": "ab02c3b15f249028373df2c5f1f925d17a97ee55",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/original-candidates",
+    "source_sha": "e1e6363e1e67e82bf70e9a26630a118f8934fcf8",
+    "remote_ref": "refs/tags/iam-evidence/original-candidates",
+    "sha": "e1e6363e1e67e82bf70e9a26630a118f8934fcf8",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/pre-merge-126523d8",
+    "source_sha": "126523d883efd153c1afbfd3cc98bb35a01401e2",
+    "remote_ref": "refs/tags/iam-evidence/pre-merge-126523d8",
+    "sha": "126523d883efd153c1afbfd3cc98bb35a01401e2",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/resumed-0abd4f3b",
+    "source_sha": "0abd4f3b5dbe6e3a8aa342b8da9fdd0dddf068f2",
+    "remote_ref": "refs/tags/iam-evidence/resumed-0abd4f3b",
+    "sha": "0abd4f3b5dbe6e3a8aa342b8da9fdd0dddf068f2",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/shared-device-91d77b14",
+    "source_sha": "91d77b143d17044c7dbad82ee9f71f466a5c5bd2",
+    "remote_ref": "refs/tags/iam-evidence/shared-device-91d77b14",
+    "sha": "91d77b143d17044c7dbad82ee9f71f466a5c5bd2",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "refs/tags/iam-evidence/sso-keyring-7e77b814",
+    "source_sha": "7e77b814cb0ff61aa1b1d25b00d22a4ac5ba64c2",
+    "remote_ref": "refs/tags/iam-evidence/sso-keyring-7e77b814",
+    "sha": "7e77b814cb0ff61aa1b1d25b00d22a4ac5ba64c2",
+    "kind": "original-lightweight-evidence-tag",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "stash@{0}",
+    "source_sha": "c1b11aab517905bcd793989822b28a6d71fa9f18",
+    "remote_ref": "refs/heads/salvage/mac/iam/stash-0-c1b11aab5179",
+    "sha": "c1b11aab517905bcd793989822b28a6d71fa9f18",
+    "kind": "original-stash-commit",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "stash@{1}",
+    "source_sha": "a35691d4c7b321666691f71adc1fb215cc732b06",
+    "remote_ref": "refs/heads/salvage/mac/iam/stash-1-a35691d4c7b3",
+    "sha": "a35691d4c7b321666691f71adc1fb215cc732b06",
+    "kind": "original-stash-commit",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_ref": "stash@{2}",
+    "source_sha": "7a396121171df1b553ba2f51aef7183b4cf5c4d4",
+    "remote_ref": "refs/heads/salvage/mac/iam/stash-2-7a396121171d",
+    "sha": "7a396121171df1b553ba2f51aef7183b4cf5c4d4",
+    "kind": "original-stash-commit",
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_tree": "88af72c92b00c7c77206f9bee8b705b559861ef4",
+    "remote_ref": "refs/heads/salvage/mac/iam/review-tree-88af72c92b00-96c0f074ed56",
+    "sha": "96c0f074ed56a52ef96ae58ff267503cf1805fee",
+    "kind": "unaccepted-exact-tree-snapshot",
+    "parents": [],
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_tree": "0abbf5f0db217512c136f0406145b1fe719882f4",
+    "remote_ref": "refs/heads/salvage/mac/iam/review-tree-0abbf5f0db21-4227bca732b7",
+    "sha": "4227bca732b7bf7afabd8d2b0609c131e0e9dc3d",
+    "kind": "unaccepted-exact-tree-snapshot",
+    "parents": [],
+    "remote_before": "absent",
+    "main_ancestor": false
+  },
+  {
+    "source_tree": "1af0ca5497fbbe83875eb6af4769fad4198135ac",
+    "remote_ref": "refs/heads/salvage/mac/iam/review-tree-1af0ca5497fb-a8bea3d0e32a",
+    "sha": "a8bea3d0e32a8ca325a756eaa0014155b1addc2a",
+    "kind": "unaccepted-exact-tree-snapshot",
+    "parents": [],
+    "remote_before": "absent",
+    "main_ancestor": false
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-14T06:36:23.905104+00:00",
+  "vm_stat": {
+    "command": [
+      "vm_stat"
+    ],
+    "exit_code": 0,
+    "stdout": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                   341626.\nPages active:                                 796675.\nPages inactive:                               814096.\nPages speculative:                             13294.\nPages throttled:                                   0.\nPages wired down:                             247762.\nPages purgeable:                               36842.\n\"Translation faults\":                     4064516412.\nPages copy-on-write:                      1230428233.\nPages zero filled:                         757448751.\nPages reactivated:                            673454.\nPages purged:                                 582787.\nFile-backed pages:                            649056.\nAnonymous pages:                              975009.\nPages stored in compressor:                   166082.\nPages occupied by compressor:                  89281.\nDecompressions:                               201110.\nCompressions:                                 415634.\nPageins:                                    15125713.\nPageouts:                                        128.\nSwapins:                                           0.\nSwapouts:                                          0.\n",
+    "stderr": ""
+  },
+  "raw_free_bytes": 5597200384,
+  "disk_available_bytes": 158506151936,
+  "lock_lstat": {
+    "dev": 16777231,
+    "ino": 53377467,
+    "uid": 501,
+    "mode": "0o600",
+    "regular": true,
+    "nlink": 1,
+    "size": 0
+  },
+  "lock_opened": false,
+  "make_check": "NOTRUN",
+  "make_build": "NOTRUN",
+  "make_test": "NOTRUN",
+  "reason": "raw free below full profile 6 GiB; preservation only, no product acceptance or main advancement"
+}

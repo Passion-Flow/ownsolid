@@ -1,0 +1,68 @@
+import hashlib,io,json,os,pathlib,secrets,shutil,signal,subprocess,tarfile,tempfile,time,uuid
+os.umask(0o077)
+def stop(signum,frame):raise KeyboardInterrupt
+signal.signal(signal.SIGTERM,stop)
+p=pathlib.Path(__file__).parent;repo=pathlib.Path("/Users/passion./Documents/Passion's WorkSpace/Development/lane-iam")
+if shutil.disk_usage(p).free<15*1024**3:raise RuntimeError('disk resource refusal')
+proto=p/'prototype'
+stage=pathlib.Path(tempfile.mkdtemp(prefix='qualification-',dir=p));(p/'active-qualification').write_text(str(stage)+'\n');shutil.copy2(__file__,stage/'driver.py')
+env=os.environ|{'GOWORK':'off','TMPDIR':str(pathlib.Path(tempfile.gettempdir()).resolve()),'GOFLAGS':'-p=2 -mod=readonly','GOTOOLCHAIN':'local','GOMAXPROCS':'2','GOPROXY':'off','GOSUMDB':'off','IAM104_FIXTURE_CONFIG':''}
+def run(args,name,environment=env,stdin=None,timeout=240):
+ with (stage/(name+'.log')).open('wb') as out:r=subprocess.run(args,cwd=repo,env=environment,stdin=stdin,stdout=out,stderr=subprocess.STDOUT,timeout=timeout)
+ print(name,r.returncode,flush=True)
+ if r.returncode:raise RuntimeError(name+' failed: '+str(stage/(name+'.log')))
+ return (stage/(name+'.log')).read_text()
+run(['gofmt','-w',*map(str,proto.rglob('*.go'))],'format')
+source=stage/'source';shutil.copytree(proto,source)
+hashes={str(f.relative_to(source)):hashlib.sha256(f.read_bytes()).hexdigest() for f in source.rglob('*') if f.is_file()};(stage/'source-hashes.json').write_text(json.dumps(hashes,indent=2)+'\n');(stage/'input-sha').write_bytes(subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo));run(['go','version'],'go-version')
+common=['go','-C',str(proto),'test']
+run(common+['-c','-o',str(stage/'saml-storage.test'),'.'],'crosscompile',environment=env|{'GOWORK':'off','GOOS':'linux','GOARCH':'arm64','CGO_ENABLED':'0'})
+image='pgvector/pgvector@sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47';image_info=subprocess.check_output(['docker','image','inspect',image]);(stage/'image-inspect.json').write_bytes(image_info);assert json.loads(image_info)[0]['Architecture']=='arm64' and json.loads(image_info)[0]['Os']=='linux';results=[]
+for topology in ['native-race-loopback','disconnected-linux-arm64']:
+ folder=stage/topology;folder.mkdir();cid=None;network=None
+ try:
+  flags=['--network','none']
+  if topology=='native-race-loopback':
+   network=run(['docker','network','create','--label','ownsolid.lane=iam','iam104-storage-'+uuid.uuid4().hex[:10]],topology+'-network').strip();flags=['--network',network,'-p','127.0.0.1::5432']
+  entry='set -eu; chown -R postgres:postgres /tmp/fixture; chmod 700 /tmp/fixture; exec /usr/local/bin/docker-entrypoint.sh postgres -c log_error_verbosity=terse -c log_parameter_max_length_on_error=0'
+  cid=run(['docker','create','--label','ownsolid.lane=iam','--label','ownsolid.item=IAM-104',*flags,'--memory','768m','--cpus','1','--pids-limit','192','--tmpfs','/var/lib/postgresql:rw,size=512m','-e','POSTGRES_DB=iam_saml_storage_test','-e','POSTGRES_PASSWORD_FILE=/tmp/fixture/password','-e','POSTGRES_INITDB_ARGS=--auth-local=peer --auth-host=scram-sha-256','--entrypoint','/bin/sh',image,'-c',entry],topology+'-create').strip()
+  assert len(cid)==64;(folder/'container-id').write_text(cid+'\n');password=secrets.token_urlsafe(40)
+  (folder/'database-sensitive-inputs.json').write_text(json.dumps([password])+'\n')
+  payload={'tmp/fixture/password':password+'\n','tmp/fixture/database.dsn':'postgresql://postgres:'+password+'@127.0.0.1:5432/iam_saml_storage_test?sslmode=disable\n'}
+  archive=folder/'inputs.tar'
+  with tarfile.open(archive,'w') as tar:
+   for directory in ['tmp/fixture']:
+    d=tarfile.TarInfo(directory);d.type=tarfile.DIRTYPE;d.mode=0o700;tar.addfile(d)
+   for target,value in payload.items():
+    b=value.encode();item=tarfile.TarInfo(target);item.mode=0o600;item.size=len(b);tar.addfile(item,io.BytesIO(b))
+   for file,target,mode in [(stage/'saml-storage.test','tmp/fixture/saml-storage.test',0o500)]:
+    item=tarfile.TarInfo(target);item.mode=mode;item.size=file.stat().st_size
+    with file.open('rb') as f:tar.addfile(item,f)
+  with archive.open('rb') as f:run(['docker','cp','-',cid+':/'],topology+'-copy',stdin=f)
+  run(['docker','start',cid],topology+'-start')
+  for attempt in range(40):
+   ready=subprocess.run(['docker','exec','--user','postgres',cid,'pg_isready','-h','127.0.0.1','-d','iam_saml_storage_test'],capture_output=True)
+   if ready.returncode==0:break
+   time.sleep(.1)
+  else:raise RuntimeError('owned PostgreSQL not ready')
+  run(['docker','exec','--user','postgres',cid,'psql','-X','-v','ON_ERROR_STOP=1','-d','iam_saml_storage_test','-c','CREATE EXTENSION vector VERSION "0.8.7"','-c','SHOW server_version'],topology+'-database-version')
+  if topology=='native-race-loopback':
+   info=json.loads(subprocess.check_output(['docker','inspect',cid],text=True))[0];(folder/'native-port-inspect.json').write_text(json.dumps(info,indent=2)+'\n');ports=info['NetworkSettings']['Ports']['5432/tcp'];assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1';port=int(ports[0]['HostPort']);assert port>1024
+   dsn=folder/'database.dsn';dsn.write_text('postgresql://postgres:'+password+'@127.0.0.1:'+str(port)+'/iam_saml_storage_test?sslmode=disable\n');dsn.chmod(0o600)
+   native=env|{'IAM_SAML_STORAGE_DSN_FILE':str(dsn),'GOWORK':'off'}
+   raw=run(common+['-race','-count=1','-json','-timeout=180s','./...'],topology+'-tests',environment=native,timeout=300)
+   rows=[json.loads(x) for x in raw.splitlines()];roots=[x['Test'] for x in rows if x.get('Action')=='pass' and x.get('Test') and '/' not in x['Test']];assert len(roots)==15 and not any(x.get('Action')=='fail' for x in rows) and [x['Test'] for x in rows if x.get('Action')=='skip' and x.get('Test')]==['TestLiveKeycloakReady','TestLiveKeycloakSignedSAML']
+  else:
+   raw=run(['docker','exec','--user','postgres','-e','IAM_SAML_STORAGE_DSN_FILE=/tmp/fixture/database.dsn','-e','IAM104_FIXTURE_CONFIG=',cid,'/tmp/fixture/saml-storage.test','-test.v','-test.run','^Test','-test.count=1','-test.timeout=240s'],topology+'-tests',timeout=250)
+   roots=[line for line in raw.splitlines() if line.startswith('--- PASS: Test')];assert len(roots)==15 and '--- FAIL:' not in raw and [line.split(' (')[0] for line in raw.splitlines() if line.startswith('--- SKIP:')]==['--- SKIP: TestLiveKeycloakReady','--- SKIP: TestLiveKeycloakSignedSAML']
+  inspection=subprocess.check_output(['docker','inspect',cid]);(folder/'container-inspect.json').write_bytes(inspection)
+  if topology=='disconnected-linux-arm64':assert json.loads(inspection)[0]['HostConfig']['NetworkMode']=='none'
+  results.append({'topology':topology,'roots':len(roots),'race':topology=='native-race-loopback','client_egress_isolated':topology=='disconnected-linux-arm64'})
+ finally:
+  if cid:
+   with (folder/'postgres.log').open('wb') as out:subprocess.run(['docker','logs',cid],stdout=out,stderr=subprocess.STDOUT,timeout=20)
+   subprocess.run(['docker','stop','--time','15',cid],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=25)
+   r=subprocess.run(['docker','rm','--force','--volumes',cid],capture_output=True,timeout=30);(folder/'cleanup.log').write_bytes(r.stdout+r.stderr)
+   if r.returncode:raise RuntimeError('owned database cleanup failed')
+  if network:subprocess.run(['docker','network','rm',network],check=True,capture_output=True,timeout=20)
+(stage/'success.json').write_text(json.dumps({'results':results,'source_hashes':'source-hashes.json','product_source_changed':False,'formal_schema_changed':False,'saml_routes_installed':False},indent=2)+'\n');print('SAML_STORAGE_CANDIDATE_PASSED',stage,flush=True)

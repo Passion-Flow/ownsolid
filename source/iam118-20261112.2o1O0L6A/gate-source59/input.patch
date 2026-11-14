@@ -1,0 +1,151 @@
+diff --git a/docs/research/sso-interactive-connector-tests.md b/docs/research/sso-interactive-connector-tests.md
+index dd8e7f98..e599c033 100644
+--- a/docs/research/sso-interactive-connector-tests.md
++++ b/docs/research/sso-interactive-connector-tests.md
+@@ -29,8 +29,8 @@ in this path. The new record is bound to the installation tenant resolved by
+ the server, the connector's revision/auth version, and the initiating Admin
+ user, session and authentication epoch. A disabled connector can be tested.
+ 
+-An explicitly composed `ConnectorSignInTests` owner validates its PostgreSQL
+-storage before use. Its candidate DDL remains beside its tests until the
++An explicitly composed `ConnectorSignInTests` owner checks its required PostgreSQL
++projection before use. This is not catalog or grant admission. Its candidate DDL remains beside its tests until the
+ shared migration/catalog owner admits it with the HTTP contract and UI.
+ The existing default handler keeps the unpublished routes closed. An opt-in
+ handler permits real HTTPS qualification and supplies a concrete integration
+@@ -97,3 +97,58 @@ Research describes the upstream behavior; no vendor implementation is copied.
+ - The complete item also needs the API owner's published contract, the Web
+   owner's bilingual screen, admitted migration/restore/grants and an installed
+   disconnected browser run. No candidate-only roadmap tick is allowed.
++
++## Integration handoff
++
++The exact candidate schema is
++[`connector_sign_in_tests.up.sql`](../../services/control/internal/modules/sso/testdata/connector_sign_in_tests.up.sql),
++with its matching down file beside it. It adds one global identity table,
++`sso_connector_sign_in_tests`, and a transition function/trigger. The records
++belong to the server-selected installation tenant; they have no site or cell
++columns. Partial tenant/expiry and tenant/finished-time indexes bound capacity
++and retention scans. The runtime needs SELECT, INSERT, UPDATE and DELETE on
++this table; the migration owner retains DDL authority. It must admit the
++global table inventory, catalog fingerprints, runtime grants, fresh/upgrade
++histories and backup/restore together. No numbered migration is supplied here.
++
++Pending state, browser proof and verifier share one protected keyring bundle;
++the associated data includes tenant, connector, test ID and the new
++`connector_test_secrets` purpose. Formal startup/key inventory and restore
++selection must include this state family. Restoring must invalidate pending
++and claimed tests and erase their bundle without reviving any session. Retain
++the configured authentication HMAC and protected SSO keyring with the existing
++backup rules. Those production integrations are pending; the projection check
++does not establish them.
++
++After constructing the selected SSO owner and its identity SourceGuard,
++construct `NewConnectorSignInTests` and pass the result to
++`identityHandler.SSO.ConnectorTests`. Join its `Run` method to the existing
++maintenance context and wait for it on shutdown. A default identity handler
++does not mount the new routes. Keep ordinary login/link callbacks registered
++and add this exact connector-specific diagnostic callback at the provider:
++
++```text
++<AdminOrigin>/api/v1/admin/sso/connectors/<connector_id>/sign-in-tests/callback
++```
++
++The proposed start body is `{"revision": <observed revision>, "reason": "..."}`
++with the existing `Idempotency-Key`, Origin/CSRF and Admin cookie requirements.
++The successful data envelope contains `id`, `authorization_url` and
++`expires_at`. The browser proof is only a secure, HttpOnly Admin SSO-flow
++cookie. It is not a JSON field. Navigate to the returned URL in the initiating
++browser; the fixed first-party result is `/sso?test_id=<id>`. The result GET
++under that same connector namespace returns `id`, `connector_id`, `state`,
++nullable `subject`, `login`, `display_name`, `error_code`, `finished_at`, and
++`expires_at`. Only `succeeded` contains identity fields. A result is tied to
++the initiating live Admin session and the inspected connector revision, even
++when another session belongs to the same user.
++
++The screen must state that the identity is diagnostic and grants no ownsolid
++access. Render provider display values as text. Do not offer account linking
++or reuse an email claim as local identity. Fixed error redirects carry an
++existing public code; claimed, expired, denied or otherwise terminal attempts
++need a fresh start with a new idempotency key. Pending exact-key retries retain
++the original URL and proof. One browser has one active SSO-flow cookie, shared
++with the existing login/link path. Display actionable retry, session-expired
++and connector-changed states in both product languages. A rendered offline
++installation must verify these interactions before IAM-118 is ticked.
+diff --git a/services/control/internal/modules/identity/http/sso_connector_sign_in_test_integration_test.go b/services/control/internal/modules/identity/http/sso_connector_sign_in_test_integration_test.go
+index 36feeb10..576030c8 100644
+--- a/services/control/internal/modules/identity/http/sso_connector_sign_in_test_integration_test.go
++++ b/services/control/internal/modules/identity/http/sso_connector_sign_in_test_integration_test.go
+@@ -167,6 +167,26 @@ func (f *connectorSignInFixture) authority(t *testing.T) string {
+ 	return snapshot
+ }
+ 
++// A known foreign row makes the isolation check independent of an unknown-ID
++// refusal. Its copied ciphertext is never opened by a correctly scoped request.
++func (f *connectorSignInFixture) foreignTest(t *testing.T, source string) (connector, test, state string) {
++	t.Helper()
++	tenant := uuid.NewString()
++	connector, test, state = uuid.NewString(), uuid.NewString(), security.Token()
++	if _, err := f.accounts.DB.Exec(t.Context(), "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign diagnostic tenant','active')", tenant); err != nil {
++		t.Fatal(err)
++	}
++	if _, err := f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connectors(id,tenant_id,name,provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by)
++ SELECT $1,$2,'Foreign diagnostic connector',provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by FROM sso_connectors WHERE id=$3`, connector, tenant, f.connector); err != nil {
++		t.Fatal(err)
++	}
++	if _, err := f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connector_sign_in_tests(id,tenant_id,connector_id,connector_revision,auth_version,actor_user_id,actor_session_id,actor_epoch,idempotency_key,fingerprint,reason,state_hash,browser_hash,secret_key_id,secret_nonce,secret_ciphertext,created_at,expires_at)
++ SELECT $1,$2,$3,connector_revision,auth_version,actor_user_id,actor_session_id,actor_epoch,$4,fingerprint,reason,$5,browser_hash,secret_key_id,secret_nonce,secret_ciphertext,created_at,expires_at FROM sso_connector_sign_in_tests WHERE id=$6`, test, tenant, connector, uuid.NewString(), security.Digest(state), source); err != nil {
++		t.Fatal(err)
++	}
++	return connector, test, state
++}
++
+ func TestConnectorSignInTestHTTPS(t *testing.T) {
+ 	f := connectorSignInFixtureNew(t)
+ 	key := uuid.NewString()
+@@ -244,18 +264,15 @@ func TestConnectorSignInTestBoundaryHTTPS(t *testing.T) {
+ 	f.admin.refresh()
+ 	problemCode(t, f.admin.request(http.MethodPost, f.base, sso.ConnectorSignInTestInput{Revision: 1, Reason: "CSRF boundary"}, 403, "", map[string]string{"X-CSRF-Token": "", "Idempotency-Key": uuid.NewString()}), "CSRF_INVALID")
+ 	problemCode(t, f.admin.request(http.MethodPost, f.base, map[string]any{"revision": 1, "reason": "Scope injection", "tenant_id": uuid.NewString()}, 400, "", map[string]string{"Idempotency-Key": uuid.NewString()}), "VALIDATION_FAILED")
+-	foreignTenant, foreignConnector := uuid.NewString(), uuid.NewString()
+-	if _, err = f.accounts.DB.Exec(t.Context(), "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign diagnostic tenant','active')", foreignTenant); err != nil {
+-		t.Fatal(err)
+-	}
+-	if _, err = f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connectors(id,tenant_id,name,provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by)
+- SELECT $1,$2,'Foreign diagnostic connector',provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by FROM sso_connectors WHERE id=$3`, foreignConnector, foreignTenant, f.connector); err != nil {
+-		t.Fatal(err)
+-	}
++	foreignConnector, foreignTest, foreignState := f.foreignTest(t, id)
+ 	foreignBase := "/api/v1/admin/sso/connectors/" + foreignConnector + "/sign-in-tests"
+ 	problemCode(t, f.admin.mutate(http.MethodPost, foreignBase, sso.ConnectorSignInTestInput{Revision: 1, Reason: "Cross-tenant refusal"}, 404, ""), "SSO_CONNECTOR_NOT_FOUND")
+-	problemCode(t, f.admin.request(http.MethodGet, foreignBase+"/"+id, nil, 400, "", nil), "SSO_FLOW_INVALID")
+-	recoveryCallback(t, f.admin, strings.Replace(f.callbackPath(out), f.base, foreignBase, 1), "/sso?test_error=SSO_FLOW_UNUSABLE", false)
++	problemCode(t, f.admin.request(http.MethodGet, foreignBase+"/"+foreignTest, nil, 400, "", nil), "SSO_FLOW_INVALID")
++	recoveryCallback(t, f.admin, foreignBase+"/callback?"+url.Values{"state": {foreignState}, "code": {f.code}}.Encode(), "/sso?test_error=SSO_FLOW_UNUSABLE", false)
++	var intact int
++	if err = f.accounts.DB.QueryRow(t.Context(), "SELECT count(*) FROM sso_connector_sign_in_tests WHERE id IN ($1,$2) AND state='pending' AND claim_id IS NULL AND secret_ciphertext IS NOT NULL AND subject IS NULL", id, foreignTest).Scan(&intact); err != nil || intact != 2 {
++		t.Fatal("scope refusal changed an owned or foreign intent", err)
++	}
+ 	if f.exchanges.Load() != 0 {
+ 		t.Fatal("scope refusals contacted provider")
+ 	}
+@@ -423,18 +440,7 @@ func TestConnectorSignInTestExpiryAndCleanupHTTPS(t *testing.T) {
+ 		t.Fatal("expired callback did not terminate")
+ 	}
+ 	next := f.start(t, uuid.NewString())
+-	foreignTenant, foreignConnector, foreignTest := uuid.NewString(), uuid.NewString(), uuid.NewString()
+-	if _, err := f.accounts.DB.Exec(t.Context(), "INSERT INTO tenants(id,name,status) VALUES($1,'Foreign cleanup tenant','active')", foreignTenant); err != nil {
+-		t.Fatal(err)
+-	}
+-	if _, err := f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connectors(id,tenant_id,name,provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by)
+- SELECT $1,$2,'Foreign cleanup connector',provider,origin,client_id,secret_key_id,secret_nonce,secret_ciphertext,enabled,created_by FROM sso_connectors WHERE id=$3`, foreignConnector, foreignTenant, f.connector); err != nil {
+-		t.Fatal(err)
+-	}
+-	if _, err := f.accounts.DB.Exec(t.Context(), `INSERT INTO sso_connector_sign_in_tests(id,tenant_id,connector_id,connector_revision,auth_version,actor_user_id,actor_session_id,actor_epoch,idempotency_key,fingerprint,reason,state_hash,browser_hash,secret_key_id,secret_nonce,secret_ciphertext,created_at,expires_at)
+- SELECT $1,$2,$3,connector_revision,auth_version,actor_user_id,actor_session_id,actor_epoch,$4,fingerprint,reason,$5,browser_hash,secret_key_id,secret_nonce,secret_ciphertext,created_at,expires_at FROM sso_connector_sign_in_tests WHERE id=$6`, foreignTest, foreignTenant, foreignConnector, uuid.NewString(), security.Digest(security.Token()), next["id"]); err != nil {
+-		t.Fatal(err)
+-	}
++	_, foreignTest, _ := f.foreignTest(t, next["id"].(string))
+ 	expireConnectorTestFixture(t, f, next["id"].(string))
+ 	expireConnectorTestFixture(t, f, foreignTest)
+ 	if err := f.owner.Cleanup(t.Context()); err != nil {

@@ -1,0 +1,48 @@
+{
+  "source_scripts_checked": 131,
+  "tar_members_also_checked": true,
+  "tar_bundle_members": [
+    {
+      "path": "/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/qualified-graph-evidence.tar",
+      "member": "qualified-graph/qualified-graph-source-v1.bundle",
+      "size": 5757,
+      "git_bundle": true
+    },
+    {
+      "path": "/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-v5-evidence.tar",
+      "member": "http-completion-v5/http-completion-source-v5.bundle",
+      "size": 24442,
+      "git_bundle": true
+    },
+    {
+      "path": "/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-v5-review-v2.tar",
+      "member": "http-completion-v5/http-completion-source-v5.bundle",
+      "size": 24442,
+      "git_bundle": true
+    }
+  ],
+  "projection_required": false,
+  "scope": "UTF-8 source and source-like script members: literal raw bundle magic and base64 Python literal binary signatures; no scripts executed",
+  "initial_audit_attempt_exit_code": 1,
+  "initial_audit_issue": "AST Unicode surrogate test literal; corrected scanner to consider ASCII encoding candidates only",
+  "corrected_audit_exit_code": 0,
+  "archive_bundle_payloads": [
+    {
+      "location": "/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/qualified-graph-evidence.tar!qualified-graph/qualified-graph-source-v1.bundle",
+      "offset": 0,
+      "kind": "raw-bundle-magic"
+    },
+    {
+      "location": "/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-v5-evidence.tar!http-completion-v5/http-completion-source-v5.bundle",
+      "offset": 0,
+      "kind": "raw-bundle-magic"
+    },
+    {
+      "location": "/Users/passion./.codex/ownsolid-evidence/iam104-completion-20261113.t3kmhwgm/http-completion-v5-review-v2.tar!http-completion-v5/http-completion-source-v5.bundle",
+      "offset": 0,
+      "kind": "raw-bundle-magic"
+    }
+  ],
+  "embedded_script_binary_payloads": [],
+  "note": "The only raw magic occurrences were standalone Git bundle members of tar archives; all have identical original heads. No source script binary payload was found."
+}
