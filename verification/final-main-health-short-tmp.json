@@ -1,0 +1,138 @@
+{
+  "host": "ownsolid-cpu",
+  "commit": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "commands": {
+    "build": {
+      "exit": 0,
+      "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-build.log",
+      "started": "2026-11-14T07:06:46.797704+00:00",
+      "finished": "2026-11-14T07:13:20.954105+00:00"
+    },
+    "check": {
+      "exit": 0,
+      "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-check-after-setup.log",
+      "started": "2026-11-14T07:28:27.568503+00:00",
+      "finished": "2026-11-14T07:31:10.410465+00:00"
+    },
+    "test": {
+      "exit": 2,
+      "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-test-short-tmp.log",
+      "started": "2026-11-14T08:34:32.318649+00:00",
+      "finished": "2026-11-14T08:45:23.152595+00:00"
+    }
+  },
+  "started": "2026-11-14T07:06:40.645165+00:00",
+  "resources": {
+    "mem_available": 20762468352,
+    "disk_free_bytes": 784723271680
+  },
+  "worktree": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/verify-main-5790b896",
+  "versions": {
+    "go": {
+      "exit": 0,
+      "stdout": "go version go1.27.3 linux/amd64",
+      "stderr": ""
+    },
+    "node": {
+      "exit": 0,
+      "stdout": "v26.13.0",
+      "stderr": ""
+    },
+    "pnpm": {
+      "exit": 0,
+      "stdout": "12.16.1",
+      "stderr": ""
+    },
+    "rustc": {
+      "exit": 0,
+      "stdout": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "stderr": ""
+    },
+    "cargo": {
+      "exit": 0,
+      "stdout": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "stderr": ""
+    }
+  },
+  "tracked_diff_exit": 0,
+  "head_after": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "finished": "2026-11-14T08:45:23.165586+00:00",
+  "previous_attempts": {
+    "build": {
+      "exit": 0,
+      "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-build.log",
+      "started": "2026-11-14T07:06:46.797704+00:00",
+      "finished": "2026-11-14T07:13:20.954105+00:00"
+    },
+    "check": {
+      "exit": 0,
+      "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-check-after-setup.log",
+      "started": "2026-11-14T07:28:27.568503+00:00",
+      "finished": "2026-11-14T07:31:10.410465+00:00"
+    },
+    "test": {
+      "exit": 2,
+      "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-test-complete-environment.log",
+      "started": "2026-11-14T08:20:11.746312+00:00",
+      "finished": "2026-11-14T08:23:26.975981+00:00"
+    }
+  },
+  "rerun_started": "2026-11-14T08:34:32.163294+00:00",
+  "browser_dependency_archives": [
+    {
+      "name": "libasound2t64_1.2.11-1ubuntu0.3_amd64.deb",
+      "sha256": "5d17bfb5683eb99f1be951fe48e1be5bf3c52391913b6b74a8aecf9b4f5e779f"
+    },
+    {
+      "name": "libatk-bridge2.0-0t64_2.52.0-1build1_amd64.deb",
+      "sha256": "22b7d47e3c0f7953a78d3cfd309d1b20771085de9220fbe610c0989b9e808c9b"
+    },
+    {
+      "name": "libatk1.0-0t64_2.52.0-1build1_amd64.deb",
+      "sha256": "42c5d4b00954f17c2c3c4b866844f691eb8b6d57bf08b59203e65f12dc84a4f9"
+    },
+    {
+      "name": "libatspi2.0-0t64_2.52.0-1build1_amd64.deb",
+      "sha256": "d686ace4080eca9c2d6ce8de69392a5ac56c846701894c0858922d4ce341a1d7"
+    },
+    {
+      "name": "libgbm1_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+      "sha256": "4bfe348b456db5b445a80e0a3ffb9e9a01b91499bb86e0e568ca3634b134da7e"
+    },
+    {
+      "name": "libwayland-server0_1.22.0-2.1build1_amd64.deb",
+      "sha256": "edbfa4b6857691ae922cc768a753fab230eee9e956aa2ce4f2eaa8d9ad777dca"
+    },
+    {
+      "name": "libxcomposite1_1%3a0.4.5-1build3_amd64.deb",
+      "sha256": "a12d5d9ae70b798cbbf284080eae32b87367561fc9c24492f641b8860ac0f308"
+    },
+    {
+      "name": "libxdamage1_1%3a1.1.6-1build1_amd64.deb",
+      "sha256": "6891faf325e996ebd28ef53ebb9c043dc96f67327500490affc3e89d366d35ed"
+    },
+    {
+      "name": "libxfixes3_1%3a6.0.0-2build1_amd64.deb",
+      "sha256": "0ee1015cccd063249e01c0cd0bf45f513c8ac9a1e5e485070c12e69192455e4a"
+    },
+    {
+      "name": "libxi6_2%3a1.8.1-1build1_amd64.deb",
+      "sha256": "0ea7acb5e8a8ce4d6653b30e03a319bfe136db7bfb5ee7cad34c2aa1272ea8d9"
+    },
+    {
+      "name": "libxrandr2_2%3a1.5.2-2build1_amd64.deb",
+      "sha256": "f2955a5e594f5724b58ad241d9231ea191cb36574a0d5e5ca6b661cd41d6256d"
+    },
+    {
+      "name": "libxrender1_1%3a0.9.10-1.1build1_amd64.deb",
+      "sha256": "d70bd831aebe8d4834b5dd2ed98df26dd6bd27f1042c47543bd7f66df1ae22ea"
+    }
+  ],
+  "short_tmpdir": "/tmp/os-mg-uofif_4c/",
+  "test_cpu_affinity": [
+    0,
+    1,
+    2,
+    3
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "date": "2026-11-14T09:10:09.891476+00:00",
+  "summary": "本机与 ownsolid-cpu 的现存原始 Git 工作已保全到 GitHub。独立 GitHub 克隆核验 5,008 个原始提交无遗漏，git fsck --full --strict 通过。未删除原有分支、工作树或原始文件，未强推。代码保全与合入、端到端验收、路线图勾选分别记录。",
+  "integration": "本轮 main 推进 0 个提交。13 条车道的未合入成果均保存于 salvage；原始提交和中间历史都保留。各车道候选没有获得当前 main 上的完整验收，后续按依赖继续整合。",
+  "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "main_advanced": 0,
+  "main_health": {
+    "host": "ownsolid-cpu",
+    "commit": "5790b8961955400ffe25f10ced170bf4f669683c",
+    "commands": {
+      "build": {
+        "exit": 0,
+        "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-build.log",
+        "started": "2026-11-14T07:06:46.797704+00:00",
+        "finished": "2026-11-14T07:13:20.954105+00:00"
+      },
+      "check": {
+        "exit": 0,
+        "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-check-after-setup.log",
+        "started": "2026-11-14T07:28:27.568503+00:00",
+        "finished": "2026-11-14T07:31:10.410465+00:00"
+      },
+      "test": {
+        "exit": 2,
+        "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-test-short-tmp.log",
+        "started": "2026-11-14T08:34:32.318649+00:00",
+        "finished": "2026-11-14T08:45:23.152595+00:00"
+      }
+    },
+    "started": "2026-11-14T07:06:40.645165+00:00",
+    "resources": {
+      "mem_available": 20762468352,
+      "disk_free_bytes": 784723271680
+    },
+    "worktree": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/verify-main-5790b896",
+    "versions": {
+      "go": {
+        "exit": 0,
+        "stdout": "go version go1.27.3 linux/amd64",
+        "stderr": ""
+      },
+      "node": {
+        "exit": 0,
+        "stdout": "v26.13.0",
+        "stderr": ""
+      },
+      "pnpm": {
+        "exit": 0,
+        "stdout": "12.16.1",
+        "stderr": ""
+      },
+      "rustc": {
+        "exit": 0,
+        "stdout": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+        "stderr": ""
+      },
+      "cargo": {
+        "exit": 0,
+        "stdout": "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "stderr": ""
+      }
+    },
+    "tracked_diff_exit": 0,
+    "head_after": "5790b8961955400ffe25f10ced170bf4f669683c",
+    "finished": "2026-11-14T08:45:23.165586+00:00",
+    "previous_attempts": {
+      "build": {
+        "exit": 0,
+        "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-build.log",
+        "started": "2026-11-14T07:06:46.797704+00:00",
+        "finished": "2026-11-14T07:13:20.954105+00:00"
+      },
+      "check": {
+        "exit": 0,
+        "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-check-after-setup.log",
+        "started": "2026-11-14T07:28:27.568503+00:00",
+        "finished": "2026-11-14T07:31:10.410465+00:00"
+      },
+      "test": {
+        "exit": 2,
+        "log": "/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/final-make-test-complete-environment.log",
+        "started": "2026-11-14T08:20:11.746312+00:00",
+        "finished": "2026-11-14T08:23:26.975981+00:00"
+      }
+    },
+    "rerun_started": "2026-11-14T08:34:32.163294+00:00",
+    "browser_dependency_archives": [
+      {
+        "name": "libasound2t64_1.2.11-1ubuntu0.3_amd64.deb",
+        "sha256": "5d17bfb5683eb99f1be951fe48e1be5bf3c52391913b6b74a8aecf9b4f5e779f"
+      },
+      {
+        "name": "libatk-bridge2.0-0t64_2.52.0-1build1_amd64.deb",
+        "sha256": "22b7d47e3c0f7953a78d3cfd309d1b20771085de9220fbe610c0989b9e808c9b"
+      },
+      {
+        "name": "libatk1.0-0t64_2.52.0-1build1_amd64.deb",
+        "sha256": "42c5d4b00954f17c2c3c4b866844f691eb8b6d57bf08b59203e65f12dc84a4f9"
+      },
+      {
+        "name": "libatspi2.0-0t64_2.52.0-1build1_amd64.deb",
+        "sha256": "d686ace4080eca9c2d6ce8de69392a5ac56c846701894c0858922d4ce341a1d7"
+      },
+      {
+        "name": "libgbm1_25.2.8-0ubuntu0.24.04.4_amd64.deb",
+        "sha256": "4bfe348b456db5b445a80e0a3ffb9e9a01b91499bb86e0e568ca3634b134da7e"
+      },
+      {
+        "name": "libwayland-server0_1.22.0-2.1build1_amd64.deb",
+        "sha256": "edbfa4b6857691ae922cc768a753fab230eee9e956aa2ce4f2eaa8d9ad777dca"
+      },
+      {
+        "name": "libxcomposite1_1%3a0.4.5-1build3_amd64.deb",
+        "sha256": "a12d5d9ae70b798cbbf284080eae32b87367561fc9c24492f641b8860ac0f308"
+      },
+      {
+        "name": "libxdamage1_1%3a1.1.6-1build1_amd64.deb",
+        "sha256": "6891faf325e996ebd28ef53ebb9c043dc96f67327500490affc3e89d366d35ed"
+      },
+      {
+        "name": "libxfixes3_1%3a6.0.0-2build1_amd64.deb",
+        "sha256": "0ee1015cccd063249e01c0cd0bf45f513c8ac9a1e5e485070c12e69192455e4a"
+      },
+      {
+        "name": "libxi6_2%3a1.8.1-1build1_amd64.deb",
+        "sha256": "0ea7acb5e8a8ce4d6653b30e03a319bfe136db7bfb5ee7cad34c2aa1272ea8d9"
+      },
+      {
+        "name": "libxrandr2_2%3a1.5.2-2build1_amd64.deb",
+        "sha256": "f2955a5e594f5724b58ad241d9231ea191cb36574a0d5e5ca6b661cd41d6256d"
+      },
+      {
+        "name": "libxrender1_1%3a0.9.10-1.1build1_amd64.deb",
+        "sha256": "d70bd831aebe8d4834b5dd2ed98df26dd6bd27f1042c47543bd7f66df1ae22ea"
+      }
+    ],
+    "short_tmpdir": "/tmp/os-mg-uofif_4c/",
+    "test_cpu_affinity": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "progress": {
+    "P0": {
+      "checked": 28,
+      "total": 28
+    },
+    "P1": {
+      "checked": 61,
+      "total": 326
+    },
+    "P2": {
+      "checked": 0,
+      "total": 171
+    },
+    "P3": {
+      "checked": 0,
+      "total": 18
+    },
+    "P4": {
+      "checked": 0,
+      "total": 46
+    }
+  },
+  "checked": 89,
+  "total": 589,
+  "new_ticks": 0,
+  "original_git_commits": 5008,
+  "missing_original_commits": 0,
+  "source_heads_before_delivery": 1213,
+  "heads_including_delivery": 1214,
+  "tags": 9,
+  "lanes": {
+    "ARC": "先核对真实 control startup/config、数据库角色与 actual migrate；旧 PG 历史资格不能代替当前启动验收。",
+    "DEL": "在最新 main 完成安装、CLI、TLS、离线出口及取消流程的整体复验；原始 e3aff53e 与未验收重放 305cc970 均保留。",
+    "DEV": "从 b57e975b 恢复严格 JSON/API 兼容工作；旧独立仓库 origin 曾指向本机路径，新机须使用 GitHub origin；GPU 环境另行准备。",
+    "WEB": "继续 UX-127 / POR-112，补齐 installed authority、SQL、离线及 SSO 联验；旧短路径和退役门禁不能直接复用。",
+    "OPS": "OPS-104 尚缺持久游标和实时流；CAT 尚缺持久安装状态、授权 UI 与应用自身的离线 Helm 验收。",
+    "IAM": "恢复各候选分支与 3 个 stash；SAML、CSRF、SSO、启动角色与资格需按最新依赖复验；3 个审查树已单独保全。",
+    "APP": "AGT-101 的正式入口、角色、生产迁移接入与离线 UI 验收仍开放；AGT-111 仅组件资格；模型安全案例未定级。",
+    "SCI": "EVL 的持久化、正式路由及科研计算/审计的当前受权链仍需接入；服务器配对源码与 GPU 项保持各自证据范围。",
+    "MODEL": "formal61 的 7 个 SQL 根、11 维 cursor、startup 配置尚待验证；MOD-113 停在签名索引研究。服务器 7 份非 Git 快照已收录。",
+    "OBS": "继续 26 个 Go 根与当前 startup / installed 链、API / Console 及摄入限额验收；旧 schema59 证据不能迁移为新资格。",
+    "GW": "复验当前 whole / clippy / main replay 与 installed 路径；旧 219af27e 等结果只适用于原源码范围。",
+    "TRN": "startup-role、只读挂载与 drain 仍需验证；旧 e639db90 native 结果不覆盖这些项目。独立 source-only tree 已保全。",
+    "SCH": "dispatcher、role、UI/config 与调度/计量闭环仍开放；Mac 缺失旧工作树登记保留，按存续 HEAD 与服务器来源重建。"
+  },
+  "source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+  "mac_orphan_drafts": "c0aeea6401cd72bd1bc742a3b79a33364562d65e",
+  "limits": [
+    "部分旧工作树目录在本次盘点前已经缺失。它们存续的 HEAD/index 状态已保留，无法证明已不存在目录里是否曾有未暂存文件。",
+    "编译产物、第三方依赖缓存、模型、数据集、数据库与凭据不作为源码归档；新机需重新配置 GitHub、SSH/Tailscale 与私密环境文件。",
+    "CPU 归档扫描中的两个解析异常已核实为零字节旧归档和 163 字节 AppleDouble 旁注，不含源码载荷。",
+    "旧门禁绑定旧路径、inode、端口及源码版本，应视为归档，禁止照搬执行。",
+    "相对 origin/main 仍领先代表尚未合入；独立克隆的可达性核验确认其已在 GitHub 保全。",
+    "本次没有新增路线图勾选，也没有补做硬件、客户环境或完整安装的独立验收。"
+  ],
+  "automations": {
+    "status": "pending after preservation verification",
+    "ids": [
+      "ownsolid",
+      "ownsolid-2"
+    ]
+  },
+  "test_limit": "Browser phase failed; the subsequent Go, Cargo and web-unit stages were not reached by make test. No PASS was inferred for them."
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "path": "/root/lane-arc107-payload-c2ae96876797/source.tar.gz",
+    "bytes": 0,
+    "regular": true,
+    "first16_hex": "",
+    "classification": "empty archive, no source bytes"
+  },
+  {
+    "path": "/root/ownsolid-lane-m-proof.ztWSYxrx/._source.tar.gz",
+    "bytes": 163,
+    "regular": true,
+    "first16_hex": "00051607000200004d6163204f532058",
+    "classification": "AppleDouble sidecar"
+  }
+]

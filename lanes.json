@@ -1,0 +1,381 @@
+[
+  {
+    "lane": "DEL",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/DEL.md",
+    "mac_receipt": {
+      "lane": "DEL",
+      "host": "Mac",
+      "mainAdvanced": 0,
+      "status": "salvage",
+      "remoteBranches": 57,
+      "checks": {
+        "check": "NOTRUN rawFree 1247395840 < 6GiB",
+        "build": "NOTRUN"
+      },
+      "originalTip": "e3aff53eaeae247011215cdaa37e4940fa20a02a",
+      "rebasedTip": "305cc970aa61e9f367d64e8046b60333cedea126",
+      "privateSourceTip": "160837b357bac7bdd9ec2aa0cf72eef9b5f01231",
+      "privateSourceFiles": 168,
+      "remoteHeadsSnapshot": "github-after-del.tsv",
+      "writerTokenRevoked": true,
+      "fullReportPending": false,
+      "fullReport": "DEL 本轮迁移已结束，写入／推送令牌已释放。主线新增提交 0；57 个 salvage 分支已推送并核对 SHA，共保全相对主线的 241 个原始提交，以及 4 个变基提交和 1 个源码归档提交。 内容 远端分支（ salvage/mac/del/ 下） 完整 SHA 原始候选 del-tls-qualification-notes-e3aff53eaeae e3aff53eaeae247011215cdaa37e4940fa20a02a 独立旧历史 del-recovered-acceptance-9372c0dcf93a 9372c0dcf93a9198c048d160ffeeb4c02e915d16 变基待验候选 rebased-unverified-305cc970aa61 305cc970aa61e9f367d64e8046b60333cedea126 私人源码归档 private-source-archive-160837b357ba 160837b357bac7bdd9ec2aa0cf72eef9b5f01231 验证结果： 变基、差异空白检查均通过；候选文件树与原始候选合并当前主线的结果一致。 make check、make build 未运行：锁身份正确，但 raw Free 为 1,247,395,840 字节，低于 6 GiB 门槛。未尝试推进 main。 原有 22 个 DEL 引用、14 个现存工作树保持不变；缺失工作树的注册保留。 归档包含 168 份源码副本，其中 166 份逐字节一致。两份脚本内嵌 Git bundle，仅上传明确标注的源码投影；原件、哈希和省略说明均保留。 本轮新增勾选 0。现有 P1 勾选仍为 DEL-102/104/105/106/111/112/116/117、REL-110。21 条 P1 尚未全部完成：DEL-114 停在 TLS 实现及局部验证，仍缺最新候选的真实 Linux、实际镜像 CLI、安装和断网外连捕获验收；REL-106 的取消原型尚未运行，REL-102 仍是测量边界研究。 完整远端 SHA、历史覆盖和执行结果见 final-receipt.json。源码原件与投影映射见 source-manifest.json。 后续可从保留的 迁移工作树 继续验证；源码归档工作树 仅供查阅，旧门禁脚本不可执行。本轮未启动服务、未占用端口、未操作服务器或 lane-b-* 容器。",
+      "originalUniqueCommitsBeyondMain": 241,
+      "addedArchiveCommits": 1,
+      "rebaseNewCommitObjects": 4,
+      "tickedP1": [
+        "DEL-102",
+        "DEL-104",
+        "DEL-105",
+        "DEL-106",
+        "DEL-111",
+        "DEL-112",
+        "DEL-116",
+        "DEL-117",
+        "REL-110"
+      ],
+      "remaining": "DEL-114 latest Linux/image CLI/install/offline egress acceptance; REL-106 cancellation prototype unrun; REL-102 measurement-boundary research",
+      "finalReceipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/del/final-receipt.json"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "DEV",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/DEV.md",
+    "mac_receipt": {
+      "lane": "DEV",
+      "host": "Mac",
+      "status": "salvage",
+      "remoteBranches": 24,
+      "mainAdvanced": 0,
+      "originalTip": "b57e975bbd3f87a972a044587cfe2f249d2fd200",
+      "sourceArchiveTip": "44971f2d4b32085f78ede8368905aa16c325bf47",
+      "refsCovered": 42,
+      "worktreeHeadsCovered": 9,
+      "sourceFiles": 120,
+      "handoffFiles": 5,
+      "check": "NOTRUN rawFree ~1.50GiB < 6GiB",
+      "build": "NOTRUN",
+      "rebase": "NOTRUN",
+      "tickedExisting": [
+        "DEV-103"
+      ],
+      "newTicks": 0,
+      "next": "Candidate ahead43/behind8; replay and full validation on new machine; API/compatibility/GPU incomplete; server phase not done",
+      "report": "本轮 Mac 范围已保全到 GitHub：24 个 salvage 分支均已核对完整远端 SHA，main 新增 0 个提交。 推送结果 主候选 salvage/mac/dev/independent-head-strict-contract-json-b57e975bbd3f：b57e975bbd3f87a972a044587cfe2f249d2fd200 源码归档 salvage/mac/dev/private-source-44971f2d4b32：44971f2d4b32085f78ede8368905aa16c325bf47 main 保持 5790b8961955400ffe25f10ced170bf4f669683c。 42 个原始引用、9 个工作树 HEAD 的完整覆盖关系见 GitHub 映射。 Roadmap 本次未新增勾选；保留前任完成的 DEV-103。未完成的 API、版本兼容及 GPU 条目保持未勾选。 停点与下一步 raw Free 约 1.50 GiB，低于 6 GiB，因此变基、make check、make build 均为 NOTRUN。候选相对 main 领先 43、落后 8 个提交；换机后需重放并完成完整验收，才能推进 main。服务器迁移阶段未执行。 归档与已知坑 归档含 120 个源码/配置文件及 5 个交接文件，凭据扫描未命中。依赖、编译件、缓存和临时输出未上传，原物未删除。独立仓库 origin 指向本机目录；实际传输显式使用 GitHub HTTPS 和已验证代理。旧核验脚本包含已退役门禁，不能直接执行。 换机重建路径 当前工作树 独立 Git 主目录 源码归档工作树 验证与回执 原子推送、最终远端回读、归档提交和 fsck 均退出 0。早期直连发生重置、超时，以及一次退出 1 的创建响应；对应引用均已随后核对到准确远端 SHA。完整命令结果和全部分支 SHA 见 最终报告，文件哈希见 源码 manifest。 原始引用、源码、工作树和 origin 配置均保持不变。自有作业已结束，迁移令牌已释放，现已停止。",
+      "tokenReleased": true
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "ARC",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/ARC.md",
+    "mac_receipt": {
+      "lane": "ARC",
+      "host": "Mac",
+      "status": "salvage",
+      "remoteBranches": 30,
+      "mainAdvanced": 0,
+      "newTicks": 0,
+      "rawFree": 1651965952,
+      "fullGate": "NOTRUN below6GiB",
+      "docsCommitShort": "0cc4a6cf",
+      "archiveCommitShort": "38e9ffdb",
+      "sourceFiles": 474,
+      "sourceInstances": 862,
+      "handoffFiles": 3,
+      "bundleOnlyTips": 4,
+      "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-arc/final-receipt.json",
+      "tokenReleased": true,
+      "report": "已采用该 ASCII／Unicode 转义修法完成迁移。30 个 refs 原子推送退出 0，回读退出 0，全部 SHA 一致。 最终回执已保存；令牌已释放，已停止。"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "WEB",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/WEB.md",
+    "mac_receipt": {
+      "lane": "WEB",
+      "host": "Mac",
+      "status": "salvage",
+      "remoteBranches": 19,
+      "mainAdvanced": 0,
+      "newTicks": 0,
+      "sourceCurrentTip": "fc8d26d3ec64793c29ed7121594400344613dbfa",
+      "sourceArchiveTip": "e143f2cd172005254c8db4525d81b98f1e0e0ad9",
+      "refsCovered": 61,
+      "originalRefsUnchanged": 21,
+      "originalWorktrees": 7,
+      "bundlesCovered": 30,
+      "sourceFiles": 1008,
+      "excludedFiles": 3210,
+      "excludedDirectories": 13,
+      "rawFree": "~0.99GiB",
+      "rebase": "NOTRUN",
+      "check": "NOTRUN",
+      "build": "NOTRUN",
+      "historicalWhitespaceExit": 2,
+      "existingTicks": "UX-001..005,101..105,107..116,118..121,123..126,128..129; POR-106,113",
+      "remaining": "UX-127/POR-112: rebase and full build, joint/full, installed authority, SQL, offline, SSO acceptance",
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-web",
+      "tokenReleased": true,
+      "report": "已完成 GitHub 保全，迁移写入令牌已释放，现已停止。 main 推进 0 个提交，走 salvage。 19 个分支一次原子推送成功，逐一回读 SHA 全部匹配。远端 main 保持 5790b8961955400ffe25f10ced170bf4f669683c。 既有已勾选条目： UX-001–005、101–105、107–116、118–121、123–126、128–129；POR-106、113。本轮没有新增勾选。 未完成： UX-127、POR-112。当前源码为 codex/web-resource-history-ui@fc8d26d3ec64793c29ed7121594400344613dbfa。新机器需恢复这些分支、整合最新 main，完成完整构建及 joint/full、installed authority、SQL、offline、SSO 验收。 注意事项： 较新 lint 提交、孤立 2b983dbf、六个 archive refs、两个 handoff refs、30 个 bundle heads 均有覆盖映射。退休门禁未运行；定向测试通过不代表完整验收。服务器未操作，原件未删除。 工作树： 当前源码仍在 lane-web-history；七个旧工作树保持原样。新增独立归档工作树保存于 lane-web-source-archive-20261114，提交为 e143f2cd172005254c8db4525d81b98f1e0e0ad9。 验证与归档： 保全 1,008 份源码、配置及验收记录；排除 3,210 个文件和 13 个依赖/缓存目录。raw Free 仅约 0.99 GiB，因此 rebase、make check/build 为 NOTRUN。历史空白格式问题记录为退出码 2，未改写原始副本。 完整中文报告 · 准确远端 SHA、覆盖映射及排除清单 · 迁移 manifest"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "OPS",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/OPS.md",
+    "mac_receipt": {
+      "lane": "OPS",
+      "host": "Mac",
+      "status": "salvage",
+      "remoteBranches": 8,
+      "mainAdvanced": 0,
+      "newTicks": 0,
+      "sourceFiles": 31,
+      "handoffFiles": 3,
+      "rawFree": "~1.39GiB",
+      "rebase": "NOTRUN",
+      "check": "NOTRUN",
+      "build": "NOTRUN",
+      "test": "NOTRUN",
+      "existingTicks": [],
+      "ownedP1": "OPS0/14 CAT0/8",
+      "remaining": "OPS104 durable cursor/live stream; catalog persistent install state, authorized UI routes, per-app offline Helm acceptance",
+      "report": "已完成 GitHub 保全，迁移令牌已释放，现已停止。 main 推进 0 个提交。8 个 salvage refs 原子推送成功，回读 SHA 全部一致；main 保持 5790b8961955400ffe25f10ced170bf4f669683c。 roadmap 已勾选条目：无。OPS P1 为 0/14，CAT P1 为 0/8。现有快照、签名校验、依赖绑定等组成部分尚不构成完整用户路径。 未完成处：OPS-104 缺持久游标和实时流；应用目录缺持久安装状态、授权 UI 路由及应用自身的离线 Helm 验收。新机器按精确映射恢复分支、比较当前 main，再完成构建和这些集成。 验证与坑点：raw Free 约 1.39 GiB，未达到 6 GiB，rebase、check/build/test 均为 NOTRUN。源码哈希、暂存检查、提交、推送和回读均退出 0。旧门禁不可执行；历史验证还需补跑 catalog，APFS 挂载路径必须足够短。 归档：31 份原始源码及配置，加 3 份交接文件；106 份临时记录和依赖缓存均保留原地。原始分支、工作树及文件未删除。 换机器需重建的工作树： lane-ops lane-ops-cat105 lane-ops-source-archive-20261114 完整中文报告 · 准确远端 SHA、原始引用映射及排除清单 · 迁移 manifest",
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-ops",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "OPS",
+        "timestamp_utc": "20261114T050745842827Z",
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "expected_refs": 8,
+        "owned_remote_refs": 8,
+        "mismatches": [],
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-ops/final-receipt.json",
+        "receipt_exists": true,
+        "transport_errors_before_success": []
+      }
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "APP",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/APP.md",
+    "mac_receipt": {
+      "lane": "APP",
+      "host": "Mac",
+      "status": "reported_complete",
+      "report": "本轮 Mac APP 保全完成，令牌已释放，已停止。 main 新增 0 个提交。raw Free 为 1.52 GiB，低于 6 GiB 门槛，make check/build 均为 NOTRUN，因此仅走 salvage。 原始 3 个 DAG 共 12 个未入 main 的提交已保全；另归档 93 份源码/必要配置＋2 份元文件，排除 413 项输出及非源码材料。原物全部保留。 已打勾 roadmap 条目：0。AGT-111 组件资格保留；AGT-101 UI、正式路由、受限角色与配置仍待原所有者接入。 后续需完成入口、权限及生产迁移接入，再做离线 UI 验收；本轮不继续开发。 特别注意：预算/执行五表仍是候选 DDL；三条模型安全案例仍未定级。160 个 ref 外历史提交及 ORIG_HEAD 由协调器统一保全。 以下远端分支均位于 refs/heads/salvage/mac/app/，已逐项回读核对： 分支后缀 完整 SHA agt-107-identity-admission-e19ff8898e96 e19ff8898e96273d7d52900bf7af9f5c19703e4f agt110-native-evidence-254570fb8137 254570fb81374910bbb5bc7d18cf1ec268922ccb agt-112-c2b1bb5ab949 c2b1bb5ab94938633a63f2d3d9eb9dc5f39c1d24 private-source-archive-20261114t050918z-5790b8961955 bc5857f9d53d0f9716bc2a86f49c9d56516931b1 原工作树保持干净、不变： /Users/passion./Documents/Passion's WorkSpace/Development/lane-app 保留的归档工作树： /Users/passion./Documents/Passion's WorkSpace/Development/lane-app-migration-20261114t050918z 最终 receipt · 完整报告 · 源码及排除清单",
+      "turnId": "01a1d874-5905-74c1-bde4-a959781c07a6",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "APP",
+        "timestamp_utc": "20261114T053237279010Z",
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "expected_refs": 4,
+        "owned_remote_refs": 4,
+        "mismatches": [],
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-app/final-receipt.json",
+        "receipt_exists": true,
+        "transport_errors_before_success": []
+      },
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-app"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "SCI",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/SCI.md",
+    "mac_receipt": {
+      "lane": "SCI",
+      "host": "Mac",
+      "status": "reported_complete",
+      "report": "Mac SCI 工作已推送保全：main 推进 0 个提交，使用 4 个 salvage 分支，均已回读核对完整 SHA。 GitHub 分支（ salvage/mac/sci/ 下） SHA audit58-integration-d7dfcfa3a158 d7dfcfa3a158003959b58ef72b73a2556b9298ce audit58-catalog-2043f9e02410 2043f9e02410a1a208268b7cf188344511797738 audit58-preserved-213b6432-213b64327ea3 213b64327ea35cf57e4cdc201119a9a69058c9cc audit58-admission-151df7a5e05f 151df7a5e05f82da01aeb0c3a2221154cccd6062 Fetch、原子推送、远端回读均退出 0。raw Free 为 1.21 GiB＜6 GiB，rebase、make check、make build 均 NOTRUN，未推进 main。 保全 12 个源码路径的 48 个原始版本；新增非 Git 源码归档 0。编译件、依赖、模型、DB、凭据及临时输出未提交，原物均保留。 本轮新增 roadmap 勾选 0。既有 AUD-102、105、110 保持原记录，包含前任及 Web 成果，不冒领。 未完成：AUD-108 入口验收、EVL 持久化／报告／路由、SCI 作业及许可准入等。服务器工作与 4aa7bfbe… 留待 CPU 阶段，本轮未访问服务器。 注意：历史 audit58 原型不可直接重放到当前 schema；旧记录覆盖缺口、独立检查点、CPU 复现范围和客户模型许可边界均保留披露。 完整报告及工作树重建路径 · 源码清单 · 准确 receipt 令牌已释放，已停止。",
+      "turnId": "01a1d88b-1b1a-7f70-9587-1d4a45edc0eb",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "SCI",
+        "expected_refs": 5,
+        "mismatches": [],
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-sci/final-receipt.json",
+        "time_utc": "20261114T055201Z"
+      },
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-sci"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "MODEL",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/MODEL.md",
+    "mac_receipt": {
+      "lane": "MODEL",
+      "host": "Mac",
+      "status": "reported_complete",
+      "report": "本机 MODEL 已推送到 GitHub，main 新增 0 个提交，采用 4 个 salvage 分支。远端 SHA 已逐一核对： 分支（均在 salvage/mac/model/ 下） 准确 SHA lane-m-family61-db8435034a2a db8435034a2a94a3285a059f6bd40237322ae1c2 lane-m-mod113-d839b4cc1d6a d839b4cc1d6a2e5e3945eda3c9ca52ca45e52ca5 model-import-expiry-config-e2f424bdc7c5 e2f424bdc7c5cfc8ddcaea36cf3f51fc027fd676 private-source-db8435034a2a 93364a548ee9b7228b9bc7de34537be6d935d90a 关联路线图已勾选 MOD-119、MOD-120、SRV-111；本轮新增勾选 0。 formal61 的七个 SQL 根、十一维 cursor 和 startup 配置仍待验证；MOD-113 停在签名索引交接研究。 raw Free 仅约 168 MiB，未达到 6 GiB 门槛；变基及完整检查、构建、测试均 NOTRUN，未推进 main。 归档 83 份源码及映射输入，共 85 个文件；逐项排除 272 项，原物全部保留。bundle HEAD 已映射到远端原始提交。 旧门禁证据不能用于新候选；历史无 ref 提交由协调器统一保全。服务器七份快照留 CPU 阶段，本轮未触碰。 原工作树 lane-m 和独立归档工作树 均干净并保留。 完整报告 · 机器回执 · 源码 manifest 令牌已释放，已停止。",
+      "turnId": "01a1d89c-e007-79c0-b7b9-4e23e854627d",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "MODEL",
+        "expected_refs": 4,
+        "mismatches": [],
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-model/final-receipt.json",
+        "time_utc": "20261114T060545Z"
+      },
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-model"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "OBS",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/OBS.md",
+    "mac_receipt": {
+      "lane": "OBS",
+      "host": "Mac",
+      "status": "reported_complete",
+      "report": "本轮 Mac OBS/NET 已保全并核对远端 SHA。main 推进 0 个提交，走 salvage；令牌已释放，已停止。 远端前缀：refs/heads/salvage/mac/obs/ 分支后缀 已核对 SHA net102-before-schema59-aa4ba5534e08 aa4ba5534e08736e5055d21a4b343a4b532279af obs-876f9c5b-876f9c5b2692 876f9c5b26926d29c47e0bbf3ad572c137073816 recovery-delivery-dda4e8c317bd dda4e8c317bdab827d9a42bdc5d89de0c72bc2a3 private-source-archive-dda4e8c317bd 38a8e19341dae7a86ebd77bc48d54d4fafbaac01 Roadmap：既有勾选 OBS-001、OBS-002、OBS-108；本轮未新增勾选。 未完成：26 个 Go 根、Linux 标签编译及可信安装源接线仍未验证；后续需先取得合格资源，再验证准确源码。 验证：raw Free 约 0.79 GiB，低于 6 GiB 门槛，准入退出码 78；rebase、make check/build 均 NOTRUN。归档提交、原子推送、远端核对均退出 0。 归档：10 个文件，包含完整源码、必要配置及映射；bundle、运行输出、依赖、模型、DB、编译件未纳入，原物保留。 注意：schema59 资格不能迁移为 schema60/安装资格；四个缺失登记和旧 index 保留，24 条暂存路径已映射到 5ef9c4e8。服务器阶段未动。 重建位置：迁移工作树、原恢复树。 完整报告 · 源码清单 · 最终回执",
+      "turnId": "01a1d8a9-7302-73a3-9479-6e4a14d0f70a",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "OBS",
+        "expected_refs": 4,
+        "mismatches": [],
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-obs/final-receipt.json",
+        "time_utc": "20261114T062935Z"
+      },
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-obs"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "IAM",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/IAM.md",
+    "mac_receipt": {
+      "lane": "IAM",
+      "host": "Mac",
+      "status": "reported_complete",
+      "report": "IAM Mac 保全完成，令牌已释放，本线已停止。 17 个 salvage 分支、9 个证据标签已 atomic push，26 个远端 SHA 全部回读一致。 保存全部自有分支、3 份原 SHA stash、3 份原 tree 快照及 993 个源码/配置文件。 源码归档：1813fdb2481676a74aabc2965a4428ecefb19beb。 main 新增 0 提交；原物全部保留。完整检查/构建/测试因内存准入不足为 NOTRUN，未新增功能验收。 完整中文报告与重建步骤 · 最终 receipt（完整 SHA 映射及排除清单） · 归档 manifest",
+      "turnId": "01a1d8bf-42c6-7523-8b8d-62dbfe7d15cf",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "IAM",
+        "expected_refs": 26,
+        "mismatches": [],
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-iam/final-receipt.json",
+        "time_utc": "20261114T071012Z"
+      },
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-iam"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "GW",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/GW.md",
+    "mac_receipt": {
+      "lane": "GW",
+      "host": "Mac",
+      "status": "reported_complete",
+      "report": "Mac GW 已保全，令牌已释放，工作停止。 main 推进 0 个提交，走 salvage。 2 个指定分支及 19 个 custom refs 共 21 个原始 tip 已原子推送。push、远端回读均退出 0，21 个 SHA 全部一致。 已勾选条目： GW-113、GW-114、GW-117，均为既有记录；本轮新增完成 0 条。 未完成： GW-104 的完整候选、clippy、当前主线及安装链；GW-120 安装态验收；GW-123 非 inference 自动交付。raw Free 为 4,764,811,264 字节，低于 6 GiB，因此 rebase、check/build、clippy 均为 NOTRUN。 关键范围： 219af27e 四项 PG 结果仅保留原始范围。Mac 临时目录已缺失，但 1e4035b1fe60de6a377d5cba8251349a5c16c504 已按原 SHA 远端保存。服务器仓库未操作。 Git 外源码/配置归档 0 文件。 已提交源码未重复拷贝；编译产物、依赖缓存、模型、DB、临时输出及凭据未提交，原物未删除。 保留工作树： lane-gw-migration-20261114t071350z。 最终 receipt 包含全部原始 ref/HEAD 覆盖及准确的 remote_ref_to_sha 映射、排除项和退出码。中文报告 · 哈希清单",
+      "turnId": "01a1d8e4-71f8-7163-be1b-b47537b1f13c",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "GW",
+        "expected_refs": 21,
+        "mismatches": [],
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-gw/final-receipt.json",
+        "time_utc": "20261114T071718Z"
+      },
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-gw"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "TRN",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/TRN.md",
+    "mac_receipt": {
+      "lane": "TRN",
+      "host": "Mac",
+      "status": "reported_complete",
+      "report": "Mac TRN/DAT 源码保全已完成，令牌已释放并停止。 原始 7 个分支、92 个自定义引用，以及含 5,088 个文件的未验收快照均已推到 salvage；100 个远端引用的 SHA 已逐一回读核对。 快照提交：9ce875aed719110710470a4f51a62a7a82b290aa。 已 fetch main；raw Free 为 3.92 GiB，低于 6 GiB 门槛，变基、make check、make build 均为 NOTRUN。 main 新增提交 0，roadmap 新增勾选 0。原物未删除，两处缺失工作树的注册仍保留。 换机后的重建命令、未完成边界及下一步完整验收，见迁移报告；全部远端 SHA 映射见机器回执。",
+      "turnId": "01a1d8ea-f1b1-7c11-96e8-0c48a37fd994",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "TRN",
+        "expected_refs": 100,
+        "mismatches": [],
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-trn/final-receipt.json",
+        "time_utc": "20261114T072617Z"
+      },
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-trn"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  },
+  {
+    "lane": "SCH",
+    "route": "salvage",
+    "main_commits_advanced": 0,
+    "report": "reports/SCH.md",
+    "mac_receipt": {
+      "lane": "SCH",
+      "host": "Mac",
+      "status": "reported_complete",
+      "report": "main 推进 0 个提交；已走 salvage。 9 个原始 custom refs 及缺失工作树 HEAD 均按原 SHA 保全，另提交 1 个迁移 manifest。10 个远端 ref 已逐一回读一致。归档分支 salvage/mac/sch/source-archive-20261114t073243z → 9c90613a87e53d600fae88affa11f8936d37f733。 Roadmap：0/20 条已勾选，未改变真实状态。 原 admission 实现 1b594f2e 已有 main 覆盖。 实际停点： dispatcher、受限角色、DDL/catalog、公共契约、配置/UI、离线 cell 和计费生产者接入仍开放；恢复开发后由原 owner 按现有 handoff 接续。 验证与归档： raw Free 4.2645 GiB＜6 GiB，make check/build 为 NOTRUN，未运行旧门禁。Git 外源码/必要配置归档 0 文件：原私有目录已不存在，未重建。编译件、依赖、模型、DB、凭据均未提交；服务器内容未动。迁移脚本最终退出码 0。 注意事项： 普通 branch 列表会漏掉原 custom refs 和 detached 登记；精确原始名称、远端 SHA 映射、排除项及命令退出码均在 receipt。 保留工作树： /Users/passion./Documents/Passion's WorkSpace/Development/lane-sch-migration-20261114t073243z。 文件：final-receipt.json · manifest.json · 中文报告 令牌已释放，已停止。",
+      "turnId": "01a1d8f3-2dd3-71d0-9e63-04b49383d982",
+      "tokenReleased": true,
+      "remoteVerification": {
+        "lane": "SCH",
+        "expected_refs": 10,
+        "mismatches": [],
+        "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+        "receipt": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-sch/final-receipt.json",
+        "time_utc": "20261114T073820Z"
+      },
+      "receiptDirectory": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/mac-sch"
+    },
+    "server_source_archive": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "status": "stopped"
+  }
+]

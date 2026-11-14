@@ -1,0 +1,649 @@
+Scope: all 9 workspace projects
+✓ Lockfile passes supply-chain policies (verified 5d ago)
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /root/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Packages: +413
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 413, reused 413, downloaded 0, added 413, done
+Agent skills awaiting approval: @tanstack/react-router.
+Run "pnpm approve" to review them.
+
+devDependencies:
++ @eslint/js 10.0.1
++ @ownsolid/config <- packages/config
++ eslint 10.14.0
++ eslint-plugin-jsx-a11y-x 0.2.0
++ eslint-plugin-react-hooks 7.1.1
++ globals 17.14.0
++ prettier 3.9.10
++ typescript 6.0.3
++ typescript-eslint 8.72.1
+
+Done in 6.8s using pnpm v12.16.1
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling syn v3.0.9
+   Compiling libc v0.2.190
+   Compiling synstructure v0.14.0
+   Compiling pin-project-lite v0.2.17
+   Compiling bytes v1.12.1
+   Compiling zerofrom-derive v0.1.8
+   Compiling futures-core v0.3.34
+   Compiling zerofrom v0.1.8
+   Compiling yoke-derive v0.8.4
+   Compiling once_cell v1.21.4
+   Compiling itoa v1.0.18
+   Compiling stable_deref_trait v1.2.1
+   Compiling yoke v0.8.3
+   Compiling errno v0.3.14
+   Compiling signal-hook-registry v1.4.8
+   Compiling socket2 v0.6.5
+   Compiling mio v1.2.4
+   Compiling tokio-macros v2.7.2
+   Compiling zerovec-derive v0.11.6
+   Compiling cfg-if v1.0.5
+   Compiling zerovec v0.11.8
+   Compiling tokio v1.53.3
+   Compiling displaydoc v0.2.7
+   Compiling find-msvc-tools v0.1.14
+   Compiling shlex v2.0.1
+   Compiling log v0.4.34
+   Compiling cc v1.8.0
+   Compiling http v1.5.0
+   Compiling tracing-core v0.1.36
+   Compiling smallvec v1.16.3
+   Compiling tracing v0.1.44
+   Compiling ring v0.17.14
+   Compiling slab v0.4.12
+   Compiling http-body v1.1.0
+   Compiling tinystr v0.8.4
+   Compiling writeable v0.6.4
+   Compiling percent-encoding v2.3.2
+   Compiling litemap v0.8.3
+   Compiling serde_core v1.0.229
+   Compiling zeroize v1.9.1
+   Compiling rustls-pki-types v1.15.1
+   Compiling icu_locale_core v2.3.0
+   Compiling zerotrie v0.2.5
+   Compiling potential_utf v0.1.6
+   Compiling getrandom v0.2.17
+   Compiling futures-macro v0.3.34
+   Compiling futures-task v0.3.34
+   Compiling icu_normalizer_data v2.3.0
+   Compiling httparse v1.10.1
+   Compiling utf8_iter v1.0.4
+   Compiling untrusted v0.9.0
+   Compiling tower-service v0.3.3
+   Compiling icu_properties_data v2.3.0
+   Compiling hashbrown v0.17.1
+   Compiling equivalent v1.0.3
+   Compiling futures-sink v0.3.34
+   Compiling tokio-util v0.7.20
+   Compiling indexmap v2.14.2
+   Compiling icu_collections v2.3.0
+   Compiling futures-util v0.3.34
+   Compiling icu_provider v2.3.1
+   Compiling try-lock v0.2.5
+   Compiling atomic-waker v1.1.2
+   Compiling fnv v1.0.7
+   Compiling rustls v0.23.46
+   Compiling h2 v0.4.20
+   Compiling want v0.3.2
+   Compiling rustls-webpki v0.103.15
+   Compiling futures-channel v0.3.34
+   Compiling subtle v2.6.1
+   Compiling httpdate v1.0.3
+   Compiling hyper v1.12.0
+   Compiling icu_properties v2.3.0
+   Compiling icu_normalizer v2.3.0
+   Compiling form_urlencoded v1.2.2
+   Compiling sync_wrapper v1.0.2
+   Compiling zmij v1.0.23
+   Compiling base64 v0.23.1
+   Compiling tower-layer v0.3.3
+   Compiling serde v1.0.229
+   Compiling typenum v1.20.1
+   Compiling ipnet v2.12.2
+   Compiling hyper-util v0.1.21
+   Compiling hybrid-array v0.4.15
+   Compiling idna_adapter v1.2.2
+   Compiling serde_derive v1.0.229
+   Compiling serde_json v1.0.154
+   Compiling rustversion v1.0.23
+   Compiling autocfg v1.5.1
+   Compiling fs-err v3.3.2
+   Compiling idna v1.1.0
+   Compiling tower v0.5.3
+   Compiling tokio-rustls v0.26.6
+   Compiling http-body-util v0.1.5
+   Compiling openssl-probe v0.2.1
+   Compiling getrandom v0.4.3
+   Compiling bitflags v2.13.2
+   Compiling memchr v2.8.3
+   Compiling cfg_aliases v0.2.2
+   Compiling nix v0.31.3
+   Compiling rustls-native-certs v0.8.5
+   Compiling url v2.5.8
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling syn v2.0.119
+   Compiling ryu v1.0.23
+   Compiling mime v0.3.17
+   Compiling const-oid v0.10.2
+   Compiling digest v0.11.3
+   Compiling axum-core v0.5.6
+   Compiling serde_urlencoded v0.7.1
+   Compiling async-stream-impl v0.3.6
+   Compiling arc-swap v1.9.2
+   Compiling tower-http v0.6.11
+   Compiling rustls-platform-verifier v0.7.1
+   Compiling hyper-rustls v0.27.10
+   Compiling serde_path_to_error v0.1.20
+   Compiling deranged v0.5.9
+   Compiling cpufeatures v0.3.1
+   Compiling either v1.19.0
+   Compiling matchit v0.8.4
+   Compiling time-core v0.1.9
+   Compiling num-conv v0.2.2
+   Compiling powerfmt v0.2.1
+   Compiling time v0.3.55
+   Compiling axum v0.8.9
+   Compiling axum-server v0.8.0
+   Compiling sha2 v0.11.1
+   Compiling reqwest v0.13.5
+   Compiling uuid v1.28.0
+   Compiling async-stream v0.3.6
+   Compiling projectone-gateway v0.7.0 (/root/.local/state/ownsolid/migration/20261113T223425Z-8f047db7/verify-main-5790b896/services/gateway)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 44s
+$ pnpm --filter ./apps/console --filter ./apps/portal run build
+Scope: 2 of 9 workspace projects
+apps/console build$ tsc --noEmit && vite build
+apps/portal build$ tsc --noEmit && vite build
+apps/portal build: vite v8.3.5 building client environment for production...
+apps/portal build: transforming...
+apps/portal build: ✓ 2569 modules transformed.
+apps/portal build: rendering chunks...
+apps/portal build: [plugin ownsolid-bundle-budget] bundle budget: first download 138.7 kB of 150.0 kB gzip; largest later chunk assets/zh-cn-CGrToIM2.js 47.3 kB of 60.0 kB
+apps/portal build: computing gzip size...
+apps/portal build: dist/assets/favicon-Ct1tNDdh.svg                                      0.21 kB │ gzip:  0.17 kB
+apps/portal build: dist/index.html                                                       0.68 kB │ gzip:  0.36 kB
+apps/portal build: dist/assets/jetbrains-mono-cyrillic-ext-wght-normal-EocZY2iu.woff2    2.02 kB
+apps/portal build: dist/assets/capabilities-sEWI-QPu.json                                3.74 kB │ gzip:  1.39 kB
+apps/portal build: dist/assets/jetbrains-mono-vietnamese-wght-normal-Bt-aOZkq.woff2      7.50 kB
+apps/portal build: dist/assets/jetbrains-mono-greek-wght-normal-Bw9x6K1M.woff2           9.00 kB
+apps/portal build: dist/assets/licensing-BYrryJfi.json                                   9.07 kB │ gzip:  2.24 kB
+apps/portal build: dist/assets/releases-i3wixqUW.json                                    9.53 kB │ gzip:  2.07 kB
+apps/portal build: dist/assets/cloud-inventory--oo_p3wX.json                             9.56 kB │ gzip:  2.08 kB
+apps/portal build: dist/assets/cloud-inventory-Bk6wc394.json                             9.59 kB │ gzip:  2.09 kB
+apps/portal build: dist/assets/figtree-latin-ext-wght-normal-DCwSJGxG.woff2             10.28 kB
+apps/portal build: dist/assets/localization-B-e7JJJK.json                               10.89 kB │ gzip:  2.04 kB
+apps/portal build: dist/assets/jetbrains-mono-cyrillic-wght-normal-D73BlboJ.woff2       12.10 kB
+apps/portal build: dist/assets/third-party-notices.txt                                  12.32 kB │ gzip:  3.23 kB
+apps/portal build: dist/assets/taskdeliveries-BAKvBlP7.json                             12.75 kB │ gzip:  2.11 kB
+apps/portal build: dist/assets/licensing-CtnlcRPV.json                                  13.72 kB │ gzip:  2.66 kB
+apps/portal build: dist/assets/jetbrains-mono-latin-ext-wght-normal-DBQx-q_a.woff2      15.19 kB
+apps/portal build: dist/assets/monitoring-Utav3yQ9.json                                 16.06 kB │ gzip:  3.52 kB
+apps/portal build: dist/assets/cell-clusters-Djmuve4d.json                              16.44 kB │ gzip:  2.77 kB
+apps/portal build: dist/assets/taskdeliveries-C1Lsix7O.json                             17.71 kB │ gzip:  2.35 kB
+apps/portal build: dist/assets/models-DT0DNxfO.json                                     19.88 kB │ gzip:  3.75 kB
+apps/portal build: dist/assets/figtree-latin-wght-normal-D_ZTVpCC.woff2                 20.15 kB
+apps/portal build: dist/assets/privateclusters-Dm7eCYCj.json                            25.42 kB │ gzip:  3.44 kB
+apps/portal build: dist/assets/notifications-DLa98Uek.json                              25.92 kB │ gzip:  5.66 kB
+apps/portal build: dist/assets/applications-wy2U1vwB.json                               26.97 kB │ gzip:  5.89 kB
+apps/portal build: dist/assets/middleware-DfE2XG4S.json                                 28.92 kB │ gzip:  3.99 kB
+apps/portal build: dist/assets/middleware-BkWojSs3.json                                 28.93 kB │ gzip:  3.99 kB
+apps/portal build: dist/assets/plugins-BuYs-bnY.json                                    29.43 kB │ gzip:  6.24 kB
+apps/portal build: dist/assets/workspaces-B8cHbfl4.json                                 29.72 kB │ gzip:  3.19 kB
+apps/portal build: dist/assets/privateclusters-DIxUgpOj.json                            31.50 kB │ gzip:  3.57 kB
+apps/portal build: dist/assets/artifactstores-BtFfGmXv.json                             32.00 kB │ gzip:  2.87 kB
+apps/portal build: dist/assets/preferences-5GB9mFn-.json                                32.23 kB │ gzip:  6.75 kB
+apps/portal build: dist/assets/models-C0E_tOR9.json                                     33.54 kB │ gzip:  4.50 kB
+apps/portal build: dist/assets/artifactstores-CuR_TcuN.json                             34.14 kB │ gzip:  2.93 kB
+apps/portal build: dist/assets/preferences-kEoHY5hj.json                                34.22 kB │ gzip:  6.85 kB
+apps/portal build: dist/assets/workspaces-DEygVoKq.json                                 34.54 kB │ gzip:  3.23 kB
+apps/portal build: dist/assets/sso-Cs-2atcH.json                                        35.11 kB │ gzip:  7.12 kB
+apps/portal build: dist/assets/identity-TKkfGz5s.json                                   40.10 kB │ gzip:  5.99 kB
+apps/portal build: dist/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2          40.40 kB
+apps/portal build: dist/assets/sso-lHmBpfEZ.json                                        41.66 kB │ gzip:  7.82 kB
+apps/portal build: dist/assets/plugins-ByN4lk_u.json                                    41.67 kB │ gzip:  6.64 kB
+apps/portal build: dist/assets/identity-Tz1MTfvn.json                                   54.16 kB │ gzip:  7.67 kB
+apps/portal build: dist/assets/training-CfBm2_zm.json                                   54.43 kB │ gzip:  8.28 kB
+apps/portal build: dist/assets/training-B8EpXz27.json                                   54.82 kB │ gzip:  8.27 kB
+apps/portal build: dist/assets/datasets-Bqx_JLNe.json                                   64.68 kB │ gzip:  7.44 kB
+apps/portal build: dist/assets/workflows-DD-dhT2U.json                                  66.08 kB │ gzip:  8.06 kB
+apps/portal build: dist/assets/datasets-hepdwsLU.json                                   68.95 kB │ gzip:  7.50 kB
+apps/portal build: dist/assets/workflows-CbvQl8P1.json                                  69.11 kB │ gzip:  8.09 kB
+apps/portal build: dist/assets/distribution-n6x5CDGH.json                               71.39 kB │ gzip: 10.00 kB
+apps/portal build: dist/assets/model-lifecycle-BE2UwIPU.json                            74.55 kB │ gzip: 10.35 kB
+apps/portal build: dist/assets/model-lifecycle-DVH8edny.json                            75.67 kB │ gzip: 10.38 kB
+apps/portal build: dist/assets/distribution-4EMjcUSG.json                              102.51 kB │ gzip: 12.08 kB
+apps/portal build: dist/assets/components-CHnz9PHH.json                                141.92 kB │ gzip: 18.68 kB
+apps/portal build: dist/assets/components-CaSC7FpS.json                                143.99 kB │ gzip: 18.81 kB
+apps/portal build: dist/assets/deployments-CeaCm-OU.json                               152.07 kB │ gzip: 19.34 kB
+apps/portal build: dist/assets/nodes-HDQu6oF5.json                                     161.49 kB │ gzip: 21.06 kB
+apps/portal build: dist/assets/deployments-B8FQ0nB-.json                               162.44 kB │ gzip: 19.93 kB
+apps/portal build: dist/assets/nodes-BZy5kofW.json                                     178.83 kB │ gzip: 22.03 kB
+apps/portal build: dist/assets/index-DTog1NZJ.css                                       44.77 kB │ gzip:  9.69 kB
+apps/portal build: dist/assets/chevron-down-oZFRcb1G.js                                  0.15 kB │ gzip:  0.15 kB
+apps/portal build: dist/assets/chevron-right-DJLvMLqd.js                                 0.16 kB │ gzip:  0.15 kB
+apps/portal build: dist/assets/download-C9DxPcId.js                                      0.26 kB │ gzip:  0.21 kB
+apps/portal build: dist/assets/link-2-D7_JtXdh.js                                        0.27 kB │ gzip:  0.22 kB
+apps/portal build: dist/assets/search-x-Djl2QYFe.js                                      0.28 kB │ gzip:  0.21 kB
+apps/portal build: dist/assets/languages-oF8gqDt-.js                                     0.34 kB │ gzip:  0.23 kB
+apps/portal build: dist/assets/refresh-cw-DRaybyx-.js                                    0.35 kB │ gzip:  0.24 kB
+apps/portal build: dist/assets/controls-cnPPQBQF.js                                      0.59 kB │ gzip:  0.40 kB
+apps/portal build: dist/assets/link-token-CHMEZRCa.js                                    0.60 kB │ gzip:  0.35 kB
+apps/portal build: dist/assets/settings-BBdHGBCb.js                                      0.60 kB │ gzip:  0.35 kB
+apps/portal build: dist/assets/status-pill-ga-lbC7K.js                                   0.64 kB │ gzip:  0.40 kB
+apps/portal build: dist/assets/settings-C_cUVx1G.js                                      0.66 kB │ gzip:  0.31 kB
+apps/portal build: dist/assets/empty-state-CskZiOcL.js                                   0.68 kB │ gzip:  0.39 kB
+apps/portal build: dist/assets/card-CpaFJMvU.js                                          0.68 kB │ gzip:  0.36 kB
+apps/portal build: dist/assets/search-field-D85dNBP6.js                                  0.71 kB │ gzip:  0.46 kB
+apps/portal build: dist/assets/table-BKU9KO_6.js                                         0.80 kB │ gzip:  0.38 kB
+apps/portal build: dist/assets/select-field-D-x4syM7.js                                  0.82 kB │ gzip:  0.49 kB
+apps/portal build: dist/assets/licensing-v1MfD18o.js                                     0.84 kB │ gzip:  0.50 kB
+apps/portal build: dist/assets/text-field-WOjnhWag.js                                    0.90 kB │ gzip:  0.52 kB
+apps/portal build: dist/assets/password-fields-D4bBh3E_.js                               0.99 kB │ gzip:  0.48 kB
+apps/portal build: dist/assets/useInfiniteQuery-BANnySOk.js                              1.11 kB │ gzip:  0.47 kB
+apps/portal build: dist/assets/workspace-body-C_SPcBZX.js                                1.11 kB │ gzip:  0.66 kB
+apps/portal build: dist/assets/filter-tiles-161l0H4a.js                                  1.15 kB │ gzip:  0.60 kB
+apps/portal build: dist/assets/workspace-B9e3VIa2.js                                     1.17 kB │ gzip:  0.71 kB
+apps/portal build: dist/assets/code-block-REXbMD8p.js                                    1.24 kB │ gzip:  0.69 kB
+apps/portal build: dist/assets/tasks-BTTk5i32.js                                         1.28 kB │ gzip:  0.51 kB
+apps/portal build: dist/assets/platform-CwfGm9ul.js                                      1.29 kB │ gzip:  0.52 kB
+apps/portal build: dist/assets/tasks-TP8h1pYJ.js                                         1.29 kB │ gzip:  0.61 kB
+apps/portal build: dist/assets/sso-CZrT6P0h.js                                           1.53 kB │ gzip:  0.87 kB
+apps/portal build: dist/assets/what-is-supported-BbjYF1OL.js                             1.53 kB │ gzip:  0.60 kB
+apps/portal build: dist/assets/what-is-supported-DJt46hBO.js                             1.53 kB │ gzip:  0.60 kB
+apps/portal build: dist/assets/what-is-supported-B3H_fC9A.js                             1.54 kB │ gzip:  0.50 kB
+apps/portal build: dist/assets/what-is-supported-DS3y0aPB.js                             1.54 kB │ gzip:  0.50 kB
+apps/portal build: dist/assets/account-Cv1o8Lg_.js                                       1.61 kB │ gzip:  0.55 kB
+apps/portal build: dist/assets/account-DGjNRWKu.js                                       1.61 kB │ gzip:  0.55 kB
+apps/portal build: dist/assets/account-8L55WCjd.js                                       1.63 kB │ gzip:  0.69 kB
+apps/portal build: dist/assets/account-Bw0fjUxC.js                                       1.63 kB │ gzip:  0.69 kB
+apps/portal build: dist/assets/auth-layout-De8oSlbw.js                                   1.64 kB │ gzip:  0.79 kB
+apps/portal build: dist/assets/capabilities-CgNqDp1-.js                                  1.73 kB │ gzip:  0.80 kB
+apps/portal build: dist/assets/capabilities-yLPkcEM1.js                                  1.73 kB │ gzip:  0.80 kB
+apps/portal build: dist/assets/single-sign-on-D_cc10nn.js                                1.88 kB │ gzip:  0.80 kB
+apps/portal build: dist/assets/email-BhSHbzQn.js                                         1.89 kB │ gzip:  0.63 kB
+apps/portal build: dist/assets/license-BBNbfaBS.js                                       1.90 kB │ gzip:  0.80 kB
+apps/portal build: dist/assets/email-CNHElvrv.js                                         1.92 kB │ gzip:  0.55 kB
+apps/portal build: dist/assets/license-DdhhyYVJ.js                                       1.92 kB │ gzip:  0.68 kB
+apps/portal build: dist/assets/single-sign-on-DoJDyKcF.js                                1.94 kB │ gzip:  0.67 kB
+apps/portal build: dist/assets/people-and-workspaces-D3wauK99.js                         2.10 kB │ gzip:  0.71 kB
+apps/portal build: dist/assets/people-and-workspaces-DX5z9d6j.js                         2.13 kB │ gzip:  0.86 kB
+apps/portal build: dist/assets/audit-trail-Fou1zpEx.js                                   2.16 kB │ gzip:  1.03 kB
+apps/portal build: dist/assets/audit-trail-rntQ8H7E.js                                   2.17 kB │ gzip:  0.87 kB
+apps/portal build: dist/assets/register-page-C_cl1olW.js                                 2.27 kB │ gzip:  1.07 kB
+apps/portal build: dist/assets/useMutation-CBfQlsbN.js                                   2.29 kB │ gzip:  0.94 kB
+apps/portal build: dist/assets/sign-in-page-BE77F13a.js                                  2.30 kB │ gzip:  1.11 kB
+apps/portal build: dist/assets/models-CfRQBTtr.js                                        2.49 kB │ gzip:  0.87 kB
+apps/portal build: dist/assets/models-oXDuA3g3.js                                        2.49 kB │ gzip:  1.06 kB
+apps/portal build: dist/assets/getting-started-C_z59Gw0.js                               2.72 kB │ gzip:  1.02 kB
+apps/portal build: dist/assets/plugins-CDWOQp_h.js                                       2.76 kB │ gzip:  0.83 kB
+apps/portal build: dist/assets/getting-started-DiEbCnK2.js                               2.79 kB │ gzip:  0.85 kB
+apps/portal build: dist/assets/password-pages-BZV5diPj.js                                2.87 kB │ gzip:  1.04 kB
+apps/portal build: dist/assets/dialog-B5KbSIvx.js                                        2.89 kB │ gzip:  1.06 kB
+apps/portal build: dist/assets/notifications-DcIYnMyU.js                                 3.11 kB │ gzip:  0.97 kB
+apps/portal build: dist/assets/notifications-Jbf_NyKa.js                                 3.11 kB │ gzip:  0.97 kB
+apps/portal build: dist/assets/localization-CAbRjw9D.js                                  3.35 kB │ gzip:  0.98 kB
+apps/portal build: dist/assets/localization-CT5mG-Jd.js                                  3.35 kB │ gzip:  0.98 kB
+apps/portal build: dist/assets/help-page-7FECrjL4.js                                     3.40 kB │ gzip:  1.44 kB
+apps/portal build: dist/assets/cloud-inventory-CMghF3jo.js                               3.90 kB │ gzip:  0.86 kB
+apps/portal build: dist/assets/applications-9QX2J0Fz.js                                  3.91 kB │ gzip:  0.91 kB
+apps/portal build: dist/assets/api-keys-DFR11bPN.js                                      3.91 kB │ gzip:  1.40 kB
+apps/portal build: dist/assets/cloud-inventory-DcKQ5R5m.js                               3.94 kB │ gzip:  0.86 kB
+apps/portal build: dist/assets/api-keys-DWv6tCnL.js                                      3.97 kB │ gzip:  1.24 kB
+apps/portal build: dist/assets/notifications-CGycFSEd.js                                 4.11 kB │ gzip:  1.82 kB
+apps/portal build: dist/assets/taskdeliveries-Ctty_TO7.js                                4.13 kB │ gzip:  0.84 kB
+apps/portal build: dist/assets/getting-started-CU1rdXWK.js                               4.20 kB │ gzip:  1.36 kB
+apps/portal build: dist/assets/getting-started-CaSvb-X8.js                               4.28 kB │ gzip:  1.19 kB
+apps/portal build: dist/assets/use-typed-filter-DXL5OrbA.js                              4.57 kB │ gzip:  2.03 kB
+apps/portal build: dist/assets/support-page-D3BWBXEc.js                                  4.66 kB │ gzip:  1.91 kB
+apps/portal build: dist/assets/models-C0dES8j6.js                                        4.73 kB │ gzip:  1.37 kB
+apps/portal build: dist/assets/model-services-CmVRKejA.js                                4.74 kB │ gzip:  1.56 kB
+apps/portal build: dist/assets/sso-D4J2PNIc.js                                           4.84 kB │ gzip:  1.34 kB
+apps/portal build: dist/assets/model-services-BU6MKzkf.js                                4.84 kB │ gzip:  1.35 kB
+apps/portal build: dist/assets/article-page-C2Krqwq2.js                                  5.33 kB │ gzip:  2.01 kB
+apps/portal build: dist/assets/nodes-C03k41Lg.js                                         5.44 kB │ gzip:  1.47 kB
+apps/portal build: dist/assets/nodes-U2Qw3Ie0.js                                         5.57 kB │ gzip:  1.77 kB
+apps/portal build: dist/assets/model-library-DRZPk7pp.js                                 5.84 kB │ gzip:  2.08 kB
+apps/portal build: dist/assets/releases-DGClPTjc.js                                      5.85 kB │ gzip:  1.44 kB
+apps/portal build: dist/assets/components-8HLNU_Zq.js                                    6.08 kB │ gzip:  1.34 kB
+apps/portal build: dist/assets/taskdeliveries-BUDOwanr.js                                6.10 kB │ gzip:  1.01 kB
+apps/portal build: dist/assets/gateway-keys-cGqQ6QKp.js                                  6.42 kB │ gzip:  2.06 kB
+apps/portal build: dist/assets/gateway-keys-DE1N0ZUO.js                                  6.54 kB │ gzip:  1.77 kB
+apps/portal build: dist/assets/key-usage-Dv1xfsxI.js                                     6.68 kB │ gzip:  2.34 kB
+apps/portal build: dist/assets/preferences-BQjHRkHX.js                                   6.84 kB │ gzip:  1.68 kB
+apps/portal build: dist/assets/model-library-CGGBpEkF.js                                 6.93 kB │ gzip:  1.94 kB
+apps/portal build: dist/assets/licensing-CtKQgxYB.js                                     7.21 kB │ gzip:  1.73 kB
+apps/portal build: dist/assets/deployments-DRvK_E8h.js                                   7.90 kB │ gzip:  1.86 kB
+apps/portal build: dist/assets/preferences-BrSAS-5w.js                                   8.50 kB │ gzip:  1.82 kB
+apps/portal build: dist/assets/home-page-Sh1Um5RN.js                                     9.02 kB │ gzip:  2.87 kB
+apps/portal build: dist/assets/cell-clusters-CyNzA5vM.js                                 9.73 kB │ gzip:  1.75 kB
+apps/portal build: dist/assets/api-page-Cl_8mWVH.js                                      9.87 kB │ gzip:  3.32 kB
+apps/portal build: dist/assets/components-DnNhajHf.js                                    9.92 kB │ gzip:  1.98 kB
+apps/portal build: dist/assets/plugins-Bc7y_-Hv.js                                      10.15 kB │ gzip:  1.54 kB
+apps/portal build: dist/assets/account-page-BC9Jq85G.js                                 10.29 kB │ gzip:  3.40 kB
+apps/portal build: dist/assets/monitoring-BXN7NuBu.js                                   10.39 kB │ gzip:  2.67 kB
+apps/portal build: dist/assets/workspaces-Dlj36LmU.js                                   10.90 kB │ gzip:  1.84 kB
+apps/portal build: dist/assets/models-page-CGZTMHXY.js                                  10.90 kB │ gzip:  3.50 kB
+apps/portal build: dist/assets/privateclusters-DYt27xnh.js                              11.34 kB │ gzip:  1.50 kB
+apps/portal build: dist/assets/sso-BjZ49wu9.js                                          11.46 kB │ gzip:  2.31 kB
+apps/portal build: dist/assets/identity-C9lroCZ3.js                                     12.03 kB │ gzip:  2.36 kB
+apps/portal build: dist/assets/workspaces-BxcqT9yk.js                                   12.41 kB │ gzip:  1.71 kB
+apps/portal build: dist/assets/src-BNx9nxOS.js                                          14.39 kB │ gzip:  2.74 kB
+apps/portal build: dist/assets/privateclusters-rUtimCTP.js                              14.49 kB │ gzip:  1.66 kB
+apps/portal build: dist/assets/nodes-BK4iecE7.js                                        14.70 kB │ gzip:  2.81 kB
+apps/portal build: dist/assets/models-2jrYzs2p.js                                       15.58 kB │ gzip:  2.57 kB
+apps/portal build: dist/assets/useQuery-B6YLljQH.js                                     15.81 kB │ gzip:  5.31 kB
+apps/portal build: dist/assets/distribution--0v111JG.js                                 15.81 kB │ gzip:  2.44 kB
+apps/portal build: dist/assets/middleware-D9t9XJ11.js                                   15.89 kB │ gzip:  2.42 kB
+apps/portal build: dist/assets/middleware-B6-lOdJt.js                                   15.94 kB │ gzip:  2.42 kB
+apps/portal build: dist/assets/artifactstores-DDIvQA0-.js                               17.18 kB │ gzip:  1.61 kB
+apps/portal build: dist/assets/artifactstores-BKQ9DV4i.js                               18.98 kB │ gzip:  1.81 kB
+apps/portal build: dist/assets/api-descriptions-Cv0WPhfu.js                             19.59 kB │ gzip:  9.29 kB
+apps/portal build: dist/assets/training-CCaoAZDt.js                                     20.15 kB │ gzip:  2.84 kB
+apps/portal build: dist/assets/training-1k9I_5N_.js                                     20.47 kB │ gzip:  2.85 kB
+apps/portal build: dist/assets/deployments-CeRd444w.js                                  25.01 kB │ gzip:  3.66 kB
+apps/portal build: dist/assets/workflows-Bv0Od24m.js                                    25.30 kB │ gzip:  2.86 kB
+apps/portal build: dist/assets/identity-CvoJeTGF.js                                     25.41 kB │ gzip:  4.39 kB
+apps/portal build: dist/assets/workflows-BHUhZjbF.js                                    26.91 kB │ gzip:  2.87 kB
+apps/portal build: dist/assets/keys-page-yCtDLwXK.js                                    28.08 kB │ gzip:  8.44 kB
+apps/portal build: dist/assets/datasets-Cvq3tVvF.js                                     29.16 kB │ gzip:  3.40 kB
+apps/portal build: dist/assets/datasets-_pBosYof.js                                     31.38 kB │ gzip:  3.41 kB
+apps/portal build: dist/assets/model-lifecycle-Bb2hPqj8.js                              34.67 kB │ gzip:  5.39 kB
+apps/portal build: dist/assets/model-lifecycle-CMtXs0W_.js                              35.39 kB │ gzip:  5.46 kB
+apps/portal build: dist/assets/nodes-Fu3NPXjn.js                                        36.14 kB │ gzip:  5.11 kB
+apps/portal build: dist/assets/distribution-DIoVA-GU.js                                 38.31 kB │ gzip:  4.49 kB
+apps/portal build: dist/assets/app-frame-CfGI1pXH.js                                    56.10 kB │ gzip: 18.92 kB
+apps/portal build: dist/assets/entrance-DeGKbaon.js                                     75.90 kB │ gzip: 11.36 kB
+apps/portal build: dist/assets/menu-828yBY_9.js                                         83.77 kB │ gzip: 28.38 kB
+apps/portal build: dist/assets/client-DfqsoImc.js                                      128.23 kB │ gzip: 44.89 kB
+apps/portal build: dist/assets/zh-cn-CGrToIM2.js                                       171.96 kB │ gzip: 47.36 kB
+apps/portal build: dist/assets/en-CxsoRYco.js                                          175.92 kB │ gzip: 44.13 kB
+apps/portal build: dist/assets/index-CAHidHdh.js                                       253.94 kB │ gzip: 81.20 kB
+apps/portal build: 
+apps/portal build: ✓ built in 2.52s
+apps/console build: vite v8.3.5 building client environment for production...
+apps/console build: transforming...
+apps/console build: ✓ 2621 modules transformed.
+apps/console build: rendering chunks...
+apps/console build: [plugin ownsolid-bundle-budget] bundle budget: first download 144.2 kB of 150.0 kB gzip; largest later chunk assets/zh-cn-CGrToIM2.js 47.3 kB of 60.0 kB
+apps/console build: computing gzip size...
+apps/console build: dist/assets/favicon-Ct1tNDdh.svg                                      0.21 kB │ gzip:  0.17 kB
+apps/console build: dist/index.html                                                       0.83 kB │ gzip:  0.39 kB
+apps/console build: dist/assets/jetbrains-mono-cyrillic-ext-wght-normal-EocZY2iu.woff2    2.02 kB
+apps/console build: dist/assets/capabilities-sEWI-QPu.json                                3.74 kB │ gzip:  1.39 kB
+apps/console build: dist/assets/jetbrains-mono-vietnamese-wght-normal-Bt-aOZkq.woff2      7.50 kB
+apps/console build: dist/assets/jetbrains-mono-greek-wght-normal-Bw9x6K1M.woff2           9.00 kB
+apps/console build: dist/assets/licensing-BYrryJfi.json                                   9.07 kB │ gzip:  2.24 kB
+apps/console build: dist/assets/releases-i3wixqUW.json                                    9.53 kB │ gzip:  2.07 kB
+apps/console build: dist/assets/cloud-inventory--oo_p3wX.json                             9.56 kB │ gzip:  2.08 kB
+apps/console build: dist/assets/cloud-inventory-Bk6wc394.json                             9.59 kB │ gzip:  2.09 kB
+apps/console build: dist/assets/figtree-latin-ext-wght-normal-DCwSJGxG.woff2             10.28 kB
+apps/console build: dist/assets/localization-B-e7JJJK.json                               10.89 kB │ gzip:  2.04 kB
+apps/console build: dist/assets/jetbrains-mono-cyrillic-wght-normal-D73BlboJ.woff2       12.10 kB
+apps/console build: dist/assets/third-party-notices.txt                                  12.32 kB │ gzip:  3.23 kB
+apps/console build: dist/assets/taskdeliveries-BAKvBlP7.json                             12.75 kB │ gzip:  2.11 kB
+apps/console build: dist/assets/licensing-CtnlcRPV.json                                  13.72 kB │ gzip:  2.66 kB
+apps/console build: dist/assets/jetbrains-mono-latin-ext-wght-normal-DBQx-q_a.woff2      15.19 kB
+apps/console build: dist/assets/monitoring-Utav3yQ9.json                                 16.06 kB │ gzip:  3.52 kB
+apps/console build: dist/assets/cell-clusters-Djmuve4d.json                              16.44 kB │ gzip:  2.77 kB
+apps/console build: dist/assets/taskdeliveries-C1Lsix7O.json                             17.71 kB │ gzip:  2.35 kB
+apps/console build: dist/assets/models-DT0DNxfO.json                                     19.88 kB │ gzip:  3.75 kB
+apps/console build: dist/assets/figtree-latin-wght-normal-D_ZTVpCC.woff2                 20.15 kB
+apps/console build: dist/assets/privateclusters-Dm7eCYCj.json                            25.42 kB │ gzip:  3.44 kB
+apps/console build: dist/assets/notifications-DLa98Uek.json                              25.92 kB │ gzip:  5.66 kB
+apps/console build: dist/assets/applications-wy2U1vwB.json                               26.97 kB │ gzip:  5.89 kB
+apps/console build: dist/assets/middleware-DfE2XG4S.json                                 28.92 kB │ gzip:  3.99 kB
+apps/console build: dist/assets/middleware-BkWojSs3.json                                 28.93 kB │ gzip:  3.99 kB
+apps/console build: dist/assets/plugins-BuYs-bnY.json                                    29.43 kB │ gzip:  6.24 kB
+apps/console build: dist/assets/workspaces-B8cHbfl4.json                                 29.72 kB │ gzip:  3.19 kB
+apps/console build: dist/assets/privateclusters-DIxUgpOj.json                            31.50 kB │ gzip:  3.57 kB
+apps/console build: dist/assets/artifactstores-BtFfGmXv.json                             32.00 kB │ gzip:  2.87 kB
+apps/console build: dist/assets/preferences-5GB9mFn-.json                                32.23 kB │ gzip:  6.75 kB
+apps/console build: dist/assets/models-C0E_tOR9.json                                     33.54 kB │ gzip:  4.50 kB
+apps/console build: dist/assets/artifactstores-CuR_TcuN.json                             34.14 kB │ gzip:  2.93 kB
+apps/console build: dist/assets/preferences-kEoHY5hj.json                                34.22 kB │ gzip:  6.85 kB
+apps/console build: dist/assets/workspaces-DEygVoKq.json                                 34.54 kB │ gzip:  3.23 kB
+apps/console build: dist/assets/sso-Cs-2atcH.json                                        35.11 kB │ gzip:  7.12 kB
+apps/console build: dist/assets/identity-TKkfGz5s.json                                   40.10 kB │ gzip:  5.99 kB
+apps/console build: dist/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2          40.40 kB
+apps/console build: dist/assets/sso-lHmBpfEZ.json                                        41.66 kB │ gzip:  7.82 kB
+apps/console build: dist/assets/plugins-ByN4lk_u.json                                    41.67 kB │ gzip:  6.64 kB
+apps/console build: dist/assets/identity-Tz1MTfvn.json                                   54.16 kB │ gzip:  7.67 kB
+apps/console build: dist/assets/training-CfBm2_zm.json                                   54.43 kB │ gzip:  8.28 kB
+apps/console build: dist/assets/training-B8EpXz27.json                                   54.82 kB │ gzip:  8.27 kB
+apps/console build: dist/assets/datasets-Bqx_JLNe.json                                   64.68 kB │ gzip:  7.44 kB
+apps/console build: dist/assets/workflows-DD-dhT2U.json                                  66.08 kB │ gzip:  8.06 kB
+apps/console build: dist/assets/datasets-hepdwsLU.json                                   68.95 kB │ gzip:  7.50 kB
+apps/console build: dist/assets/workflows-CbvQl8P1.json                                  69.11 kB │ gzip:  8.09 kB
+apps/console build: dist/assets/distribution-n6x5CDGH.json                               71.39 kB │ gzip: 10.00 kB
+apps/console build: dist/assets/model-lifecycle-BE2UwIPU.json                            74.55 kB │ gzip: 10.35 kB
+apps/console build: dist/assets/model-lifecycle-DVH8edny.json                            75.67 kB │ gzip: 10.38 kB
+apps/console build: dist/assets/distribution-4EMjcUSG.json                              102.51 kB │ gzip: 12.08 kB
+apps/console build: dist/assets/components-CHnz9PHH.json                                141.92 kB │ gzip: 18.68 kB
+apps/console build: dist/assets/components-CaSC7FpS.json                                143.99 kB │ gzip: 18.81 kB
+apps/console build: dist/assets/deployments-CeaCm-OU.json                               152.07 kB │ gzip: 19.34 kB
+apps/console build: dist/assets/nodes-HDQu6oF5.json                                     161.49 kB │ gzip: 21.06 kB
+apps/console build: dist/assets/deployments-B8FQ0nB-.json                               162.44 kB │ gzip: 19.93 kB
+apps/console build: dist/assets/nodes-BZy5kofW.json                                     178.83 kB │ gzip: 22.03 kB
+apps/console build: dist/assets/index-CkQZDjOg.css                                       49.43 kB │ gzip: 10.45 kB
+apps/console build: dist/assets/cell-BOxUcdtA.js                                          0.05 kB │ gzip:  0.06 kB
+apps/console build: dist/assets/save-file-t3CWLtKv.js                                     0.14 kB │ gzip:  0.13 kB
+apps/console build: dist/assets/chevron-down-sOAcP9MF.js                                  0.16 kB │ gzip:  0.15 kB
+apps/console build: dist/assets/chevron-right-BqVZnxC2.js                                 0.16 kB │ gzip:  0.16 kB
+apps/console build: dist/assets/plus-gjApnJoi.js                                          0.18 kB │ gzip:  0.17 kB
+apps/console build: dist/assets/x-D1RwLvMu.js                                             0.18 kB │ gzip:  0.17 kB
+apps/console build: dist/assets/arrow-left-3RKFMhrX.js                                    0.19 kB │ gzip:  0.18 kB
+apps/console build: dist/assets/arrow-right-GrkU1DGf.js                                   0.19 kB │ gzip:  0.18 kB
+apps/console build: dist/assets/ban-DBnLCIW8.js                                           0.21 kB │ gzip:  0.19 kB
+apps/console build: dist/assets/play-CR1h0-Hi.js                                          0.22 kB │ gzip:  0.19 kB
+apps/console build: dist/assets/rotate-cw-BzLDnjcz.js                                     0.23 kB │ gzip:  0.20 kB
+apps/console build: dist/assets/upload-CYFRCp4t.js                                        0.26 kB │ gzip:  0.21 kB
+apps/console build: dist/assets/download-w7Y1g-3Y.js                                      0.26 kB │ gzip:  0.21 kB
+apps/console build: dist/assets/link-2-CAlDYn_v.js                                        0.27 kB │ gzip:  0.23 kB
+apps/console build: dist/assets/search-x-COqGe038.js                                      0.28 kB │ gzip:  0.22 kB
+apps/console build: dist/assets/pencil-CiLSSdkp.js                                        0.30 kB │ gzip:  0.24 kB
+apps/console build: dist/assets/user-plus-cX0IQ_Cy.js                                     0.34 kB │ gzip:  0.25 kB
+apps/console build: dist/assets/languages-BWfeD5cA.js                                     0.34 kB │ gzip:  0.23 kB
+apps/console build: dist/assets/refresh-cw-DVS4K8_o.js                                    0.35 kB │ gzip:  0.24 kB
+apps/console build: dist/assets/use-typed-filter-BqjePmxU.js                              0.36 kB │ gzip:  0.25 kB
+apps/console build: dist/assets/trash-bjCGlvRJ.js                                         0.37 kB │ gzip:  0.24 kB
+apps/console build: dist/assets/detail-list-DgGV8bVO.js                                   0.41 kB │ gzip:  0.27 kB
+apps/console build: dist/assets/filter-select-W8xp-ABE.js                                 0.43 kB │ gzip:  0.30 kB
+apps/console build: dist/assets/meter-BlAZc80v.js                                         0.45 kB │ gzip:  0.31 kB
+apps/console build: dist/assets/server-off-C8igqV8D.js                                    0.47 kB │ gzip:  0.29 kB
+apps/console build: dist/assets/link-token-D87gjrDV.js                                    0.60 kB │ gzip:  0.35 kB
+apps/console build: dist/assets/settings-BBdHGBCb.js                                      0.60 kB │ gzip:  0.35 kB
+apps/console build: dist/assets/use-hash-action-C9ImpiBs.js                               0.61 kB │ gzip:  0.34 kB
+apps/console build: dist/assets/mail-8GDMDFXV.js                                          0.62 kB │ gzip:  0.35 kB
+apps/console build: dist/assets/settings-C_cUVx1G.js                                      0.66 kB │ gzip:  0.31 kB
+apps/console build: dist/assets/empty-state-XkwV6npn.js                                   0.68 kB │ gzip:  0.39 kB
+apps/console build: dist/assets/card-C3uckhCF.js                                          0.68 kB │ gzip:  0.37 kB
+apps/console build: dist/assets/search-field-Mln8R8Ss.js                                  0.71 kB │ gzip:  0.47 kB
+apps/console build: dist/assets/capabilities-Bu5hmsyc.js                                  0.72 kB │ gzip:  0.41 kB
+apps/console build: dist/assets/node-state-CZNHePtE.js                                    0.75 kB │ gzip:  0.29 kB
+apps/console build: dist/assets/advanced-fold-Cem2vjKD.js                                 0.75 kB │ gzip:  0.48 kB
+apps/console build: dist/assets/table-Bpjqje2D.js                                         0.80 kB │ gzip:  0.38 kB
+apps/console build: dist/assets/users-BV9hsAZ0.js                                         0.81 kB │ gzip:  0.35 kB
+apps/console build: dist/assets/select-field-bkQM-5km.js                                  0.82 kB │ gzip:  0.49 kB
+apps/console build: dist/assets/licensing-v1MfD18o.js                                     0.84 kB │ gzip:  0.50 kB
+apps/console build: dist/assets/status-pill-B1YZUS7W.js                                   0.89 kB │ gzip:  0.48 kB
+apps/console build: dist/assets/text-field-CAPoXH-y.js                                    0.90 kB │ gzip:  0.53 kB
+apps/console build: dist/assets/tasks-DCy9jpgQ.js                                         0.92 kB │ gzip:  0.41 kB
+apps/console build: dist/assets/password-fields-Cpnks_zL.js                               0.99 kB │ gzip:  0.49 kB
+apps/console build: dist/assets/model-state-DcHxgx3b.js                                   1.08 kB │ gzip:  0.42 kB
+apps/console build: dist/assets/useInfiniteQuery-KPCCX0sw.js                              1.11 kB │ gzip:  0.47 kB
+apps/console build: dist/assets/workspaces-B3xmvv7c.js                                    1.12 kB │ gzip:  0.38 kB
+apps/console build: dist/assets/workspace-BK1vCyrK.js                                     1.13 kB │ gzip:  0.70 kB
+apps/console build: dist/assets/tabs-Ds7zz13l.js                                          1.14 kB │ gzip:  0.67 kB
+apps/console build: dist/assets/filter-tiles-BPH_Z4sO.js                                  1.15 kB │ gzip:  0.61 kB
+apps/console build: dist/assets/typed-confirmation-D5M6Ir39.js                            1.17 kB │ gzip:  0.70 kB
+apps/console build: dist/assets/code-block-D3RJjblh.js                                    1.23 kB │ gzip:  0.70 kB
+apps/console build: dist/assets/revoke-invitation-Def48iFB.js                             1.25 kB │ gzip:  0.71 kB
+apps/console build: dist/assets/tasks-BTTk5i32.js                                         1.28 kB │ gzip:  0.51 kB
+apps/console build: dist/assets/tasks-TP8h1pYJ.js                                         1.29 kB │ gzip:  0.61 kB
+apps/console build: dist/assets/controls-DvUGdDbC.js                                      1.38 kB │ gzip:  0.72 kB
+apps/console build: dist/assets/platform-Ck0AVYLy.js                                      1.48 kB │ gzip:  0.57 kB
+apps/console build: dist/assets/what-is-supported-BbjYF1OL.js                             1.53 kB │ gzip:  0.60 kB
+apps/console build: dist/assets/what-is-supported-DJt46hBO.js                             1.53 kB │ gzip:  0.60 kB
+apps/console build: dist/assets/what-is-supported-B3H_fC9A.js                             1.54 kB │ gzip:  0.50 kB
+apps/console build: dist/assets/what-is-supported-DS3y0aPB.js                             1.54 kB │ gzip:  0.50 kB
+apps/console build: dist/assets/sso-BJYOv_5f.js                                           1.59 kB │ gzip:  0.90 kB
+apps/console build: dist/assets/account-Cv1o8Lg_.js                                       1.61 kB │ gzip:  0.55 kB
+apps/console build: dist/assets/account-DGjNRWKu.js                                       1.61 kB │ gzip:  0.55 kB
+apps/console build: dist/assets/account-8L55WCjd.js                                       1.63 kB │ gzip:  0.69 kB
+apps/console build: dist/assets/account-Bw0fjUxC.js                                       1.63 kB │ gzip:  0.69 kB
+apps/console build: dist/assets/license-standing-KJIaADBB.js                              1.63 kB │ gzip:  0.61 kB
+apps/console build: dist/assets/use-row-selection-C93W0wHt.js                             1.66 kB │ gzip:  0.87 kB
+apps/console build: dist/assets/auth-layout-CE81E84_.js                                   1.67 kB │ gzip:  0.81 kB
+apps/console build: dist/assets/capabilities-CgNqDp1-.js                                  1.73 kB │ gzip:  0.80 kB
+apps/console build: dist/assets/capabilities-yLPkcEM1.js                                  1.73 kB │ gzip:  0.80 kB
+apps/console build: dist/assets/connector-page-Bg_cIV0q.js                                1.73 kB │ gzip:  0.92 kB
+apps/console build: dist/assets/user-page-vHSIzGCz.js                                     1.80 kB │ gzip:  0.91 kB
+apps/console build: dist/assets/single-sign-on-D_cc10nn.js                                1.88 kB │ gzip:  0.80 kB
+apps/console build: dist/assets/email-BhSHbzQn.js                                         1.89 kB │ gzip:  0.63 kB
+apps/console build: dist/assets/license-BBNbfaBS.js                                       1.90 kB │ gzip:  0.80 kB
+apps/console build: dist/assets/email-CNHElvrv.js                                         1.92 kB │ gzip:  0.55 kB
+apps/console build: dist/assets/license-DdhhyYVJ.js                                       1.92 kB │ gzip:  0.68 kB
+apps/console build: dist/assets/single-sign-on-DoJDyKcF.js                                1.94 kB │ gzip:  0.67 kB
+apps/console build: dist/assets/search-finders-C9Mn1JUg.js                                2.06 kB │ gzip:  0.85 kB
+apps/console build: dist/assets/models-CR7DZGme.js                                        2.10 kB │ gzip:  0.72 kB
+apps/console build: dist/assets/people-and-workspaces-D3wauK99.js                         2.10 kB │ gzip:  0.71 kB
+apps/console build: dist/assets/model-details-vK4IfWuy.js                                 2.12 kB │ gzip:  0.75 kB
+apps/console build: dist/assets/people-and-workspaces-DX5z9d6j.js                         2.13 kB │ gzip:  0.86 kB
+apps/console build: dist/assets/step-timeline-CcmBphzq.js                                 2.14 kB │ gzip:  0.89 kB
+apps/console build: dist/assets/audit-trail-Fou1zpEx.js                                   2.16 kB │ gzip:  1.03 kB
+apps/console build: dist/assets/audit-trail-rntQ8H7E.js                                   2.17 kB │ gzip:  0.87 kB
+apps/console build: dist/assets/useMutation-C4gp9u1z.js                                   2.29 kB │ gzip:  0.94 kB
+apps/console build: dist/assets/register-page-C5MYpCIv.js                                 2.34 kB │ gzip:  1.10 kB
+apps/console build: dist/assets/sign-in-page-Dj6RGJWH.js                                  2.36 kB │ gzip:  1.14 kB
+apps/console build: dist/assets/nodes-DJv33Me2.js                                         2.37 kB │ gzip:  0.73 kB
+apps/console build: dist/assets/settings-page-DtNsXHPI.js                                 2.45 kB │ gzip:  1.17 kB
+apps/console build: dist/assets/models-CfRQBTtr.js                                        2.49 kB │ gzip:  0.87 kB
+apps/console build: dist/assets/models-oXDuA3g3.js                                        2.49 kB │ gzip:  1.06 kB
+apps/console build: dist/assets/license-status-yJG10yGk.js                                2.68 kB │ gzip:  1.31 kB
+apps/console build: dist/assets/getting-started-C_z59Gw0.js                               2.72 kB │ gzip:  1.02 kB
+apps/console build: dist/assets/plugins-CDWOQp_h.js                                       2.76 kB │ gzip:  0.83 kB
+apps/console build: dist/assets/dialog-BmGs5AVO.js                                        2.79 kB │ gzip:  1.00 kB
+apps/console build: dist/assets/getting-started-DiEbCnK2.js                               2.79 kB │ gzip:  0.85 kB
+apps/console build: dist/assets/password-pages-Dt1wWkQ1.js                                2.94 kB │ gzip:  1.08 kB
+apps/console build: dist/assets/node-page-C-1pOgSi.js                                     2.97 kB │ gzip:  1.35 kB
+apps/console build: dist/assets/notifications-DcIYnMyU.js                                 3.11 kB │ gzip:  0.97 kB
+apps/console build: dist/assets/notifications-Jbf_NyKa.js                                 3.11 kB │ gzip:  0.97 kB
+apps/console build: dist/assets/localization-CAbRjw9D.js                                  3.35 kB │ gzip:  0.98 kB
+apps/console build: dist/assets/localization-CT5mG-Jd.js                                  3.35 kB │ gzip:  0.98 kB
+apps/console build: dist/assets/audit-read-BUBSBwH_.js                                    3.44 kB │ gzip:  1.69 kB
+apps/console build: dist/assets/useQueries-xlT4JshF.js                                    3.46 kB │ gzip:  1.48 kB
+apps/console build: dist/assets/help-page-EQeB-8Fx.js                                     3.47 kB │ gzip:  1.47 kB
+apps/console build: dist/assets/user-surface-BiQ2eZqY.js                                  3.49 kB │ gzip:  1.47 kB
+apps/console build: dist/assets/agent-shed-CK7X6w3p.js                                    3.70 kB │ gzip:  1.63 kB
+apps/console build: dist/assets/cloud-inventory-CMghF3jo.js                               3.90 kB │ gzip:  0.86 kB
+apps/console build: dist/assets/applications-9QX2J0Fz.js                                  3.91 kB │ gzip:  0.91 kB
+apps/console build: dist/assets/api-keys-DFR11bPN.js                                      3.91 kB │ gzip:  1.40 kB
+apps/console build: dist/assets/cloud-inventory-DcKQ5R5m.js                               3.94 kB │ gzip:  0.86 kB
+apps/console build: dist/assets/api-keys-DWv6tCnL.js                                      3.97 kB │ gzip:  1.24 kB
+apps/console build: dist/assets/taskdeliveries-Ctty_TO7.js                                4.13 kB │ gzip:  0.84 kB
+apps/console build: dist/assets/getting-started-CU1rdXWK.js                               4.20 kB │ gzip:  1.36 kB
+apps/console build: dist/assets/getting-started-CaSvb-X8.js                               4.28 kB │ gzip:  1.19 kB
+apps/console build: dist/assets/support-page-W7q6qPTs.js                                  4.31 kB │ gzip:  1.74 kB
+apps/console build: dist/assets/use-list-view-vRUXukJ7.js                                 4.43 kB │ gzip:  1.99 kB
+apps/console build: dist/assets/resource-page-Cw2OTpvE.js                                 4.45 kB │ gzip:  1.94 kB
+apps/console build: dist/assets/sha2-C77sL9Ok.js                                          4.51 kB │ gzip:  2.22 kB
+apps/console build: dist/assets/models-C0dES8j6.js                                        4.73 kB │ gzip:  1.37 kB
+apps/console build: dist/assets/model-services-CmVRKejA.js                                4.74 kB │ gzip:  1.56 kB
+apps/console build: dist/assets/sso-D4J2PNIc.js                                           4.84 kB │ gzip:  1.34 kB
+apps/console build: dist/assets/model-services-BU6MKzkf.js                                4.84 kB │ gzip:  1.35 kB
+apps/console build: dist/assets/client-C4xQP2EQ.js                                        5.17 kB │ gzip:  2.34 kB
+apps/console build: dist/assets/saved-views-menu-CfFD4T-0.js                              5.28 kB │ gzip:  2.05 kB
+apps/console build: dist/assets/article-page-BsFHNM_K.js                                  5.43 kB │ gzip:  2.06 kB
+apps/console build: dist/assets/nodes-C03k41Lg.js                                         5.44 kB │ gzip:  1.47 kB
+apps/console build: dist/assets/nodes-U2Qw3Ie0.js                                         5.57 kB │ gzip:  1.77 kB
+apps/console build: dist/assets/agent-pacing-page-B38i7vtd.js                             5.61 kB │ gzip:  2.17 kB
+apps/console build: dist/assets/sso-page-DksMM3ja.js                                      5.64 kB │ gzip:  2.24 kB
+apps/console build: dist/assets/model-library-DRZPk7pp.js                                 5.84 kB │ gzip:  2.08 kB
+apps/console build: dist/assets/releases-DGClPTjc.js                                      5.85 kB │ gzip:  1.44 kB
+apps/console build: dist/assets/components-8HLNU_Zq.js                                    6.08 kB │ gzip:  1.34 kB
+apps/console build: dist/assets/taskdeliveries-BUDOwanr.js                                6.10 kB │ gzip:  1.01 kB
+apps/console build: dist/assets/tasks-page-DYllt9q5.js                                    6.26 kB │ gzip:  2.41 kB
+apps/console build: dist/assets/deployment-details-Bap3hZQD.js                            6.33 kB │ gzip:  2.44 kB
+apps/console build: dist/assets/services-page-C1rTzKjh.js                                 6.35 kB │ gzip:  2.40 kB
+apps/console build: dist/assets/gateway-keys-cGqQ6QKp.js                                  6.42 kB │ gzip:  2.06 kB
+apps/console build: dist/assets/gateway-keys-DE1N0ZUO.js                                  6.54 kB │ gzip:  1.77 kB
+apps/console build: dist/assets/workspaces-page-D8CdcbtP.js                               6.67 kB │ gzip:  2.54 kB
+apps/console build: dist/assets/preferences-BQjHRkHX.js                                   6.84 kB │ gzip:  1.68 kB
+apps/console build: dist/assets/model-library-CGGBpEkF.js                                 6.93 kB │ gzip:  1.94 kB
+apps/console build: dist/assets/model-page-omImrc81.js                                    7.13 kB │ gzip:  2.67 kB
+apps/console build: dist/assets/licensing-CtKQgxYB.js                                     7.21 kB │ gzip:  1.73 kB
+apps/console build: dist/assets/node-details-Dr4v4d5C.js                                  7.66 kB │ gzip:  2.73 kB
+apps/console build: dist/assets/deployments-DRvK_E8h.js                                   7.90 kB │ gzip:  1.86 kB
+apps/console build: dist/assets/add-node-dialog-mg0mzZsQ.js                               8.14 kB │ gzip:  3.21 kB
+apps/console build: dist/assets/task-page-BKseggDL.js                                     8.38 kB │ gzip:  3.45 kB
+apps/console build: dist/assets/preferences-BrSAS-5w.js                                   8.50 kB │ gzip:  1.82 kB
+apps/console build: dist/assets/model-library-page-DzWSK7qB.js                            9.30 kB │ gzip:  3.26 kB
+apps/console build: dist/assets/cell-clusters-CyNzA5vM.js                                 9.73 kB │ gzip:  1.75 kB
+apps/console build: dist/assets/audit-page-DQ_9XWhQ.js                                    9.82 kB │ gzip:  3.50 kB
+apps/console build: dist/assets/components-DnNhajHf.js                                    9.92 kB │ gzip:  1.98 kB
+apps/console build: dist/assets/api-page-DE3nEXeP.js                                      9.98 kB │ gzip:  3.39 kB
+apps/console build: dist/assets/deploy-page-BEBMukXR.js                                  10.12 kB │ gzip:  3.59 kB
+apps/console build: dist/assets/plugins-Bc7y_-Hv.js                                      10.15 kB │ gzip:  1.54 kB
+apps/console build: dist/assets/account-page-u0krk-TU.js                                 10.35 kB │ gzip:  3.41 kB
+apps/console build: dist/assets/monitoring-BXN7NuBu.js                                   10.39 kB │ gzip:  2.67 kB
+apps/console build: dist/assets/users-page-TWL7Vv4J.js                                   10.61 kB │ gzip:  3.81 kB
+apps/console build: dist/assets/workspace-page-Da4ibM3v.js                               10.81 kB │ gzip:  3.33 kB
+apps/console build: dist/assets/workspaces-Dlj36LmU.js                                   10.90 kB │ gzip:  1.84 kB
+apps/console build: dist/assets/privateclusters-DYt27xnh.js                              11.34 kB │ gzip:  1.50 kB
+apps/console build: dist/assets/sso-BjZ49wu9.js                                          11.46 kB │ gzip:  2.31 kB
+apps/console build: dist/assets/license-page-DzBi1f9k.js                                 11.80 kB │ gzip:  3.78 kB
+apps/console build: dist/assets/mail-deliveries-page-CFin-fd5.js                         11.82 kB │ gzip:  4.03 kB
+apps/console build: dist/assets/identity-C9lroCZ3.js                                     12.03 kB │ gzip:  2.36 kB
+apps/console build: dist/assets/sso-surface-CV6HN_GH.js                                  12.09 kB │ gzip:  3.81 kB
+apps/console build: dist/assets/workspaces-BxcqT9yk.js                                   12.41 kB │ gzip:  1.71 kB
+apps/console build: dist/assets/nodes-page-BpyWHLfb.js                                   12.68 kB │ gzip:  4.33 kB
+apps/console build: dist/assets/overview-page-CyA7ewTq.js                                13.84 kB │ gzip:  4.18 kB
+apps/console build: dist/assets/src-uB5I_6yx.js                                          14.24 kB │ gzip:  2.64 kB
+apps/console build: dist/assets/gateway-page-t3vzCTKG.js                                 14.37 kB │ gzip:  4.60 kB
+apps/console build: dist/assets/privateclusters-rUtimCTP.js                              14.49 kB │ gzip:  1.66 kB
+apps/console build: dist/assets/nodes-BK4iecE7.js                                        14.70 kB │ gzip:  2.81 kB
+apps/console build: dist/assets/publish-model-hint-CfLAbQ5h.js                           14.78 kB │ gzip:  4.54 kB
+apps/console build: dist/assets/models-2jrYzs2p.js                                       15.58 kB │ gzip:  2.57 kB
+apps/console build: dist/assets/useQuery-CWzLx7GU.js                                     15.80 kB │ gzip:  5.31 kB
+apps/console build: dist/assets/distribution--0v111JG.js                                 15.81 kB │ gzip:  2.44 kB
+apps/console build: dist/assets/middleware-D9t9XJ11.js                                   15.89 kB │ gzip:  2.42 kB
+apps/console build: dist/assets/middleware-B6-lOdJt.js                                   15.94 kB │ gzip:  2.42 kB
+apps/console build: dist/assets/model-import-page-DxmO8mxL.js                            16.55 kB │ gzip:  5.71 kB
+apps/console build: dist/assets/artifactstores-DDIvQA0-.js                               17.18 kB │ gzip:  1.61 kB
+apps/console build: dist/assets/artifactstores-BKQ9DV4i.js                               18.98 kB │ gzip:  1.81 kB
+apps/console build: dist/assets/api-descriptions-Cv0WPhfu.js                             19.59 kB │ gzip:  9.29 kB
+apps/console build: dist/assets/training-CCaoAZDt.js                                     20.15 kB │ gzip:  2.84 kB
+apps/console build: dist/assets/training-1k9I_5N_.js                                     20.47 kB │ gzip:  2.85 kB
+apps/console build: dist/assets/bulk-node-enrollment-page-Dd6PegH1.js                    20.56 kB │ gzip:  7.27 kB
+apps/console build: dist/assets/deployments-CeRd444w.js                                  25.01 kB │ gzip:  3.66 kB
+apps/console build: dist/assets/workflows-Bv0Od24m.js                                    25.30 kB │ gzip:  2.86 kB
+apps/console build: dist/assets/identity-CvoJeTGF.js                                     25.41 kB │ gzip:  4.39 kB
+apps/console build: dist/assets/workflows-BHUhZjbF.js                                    26.91 kB │ gzip:  2.87 kB
+apps/console build: dist/assets/datasets-Cvq3tVvF.js                                     29.16 kB │ gzip:  3.40 kB
+apps/console build: dist/assets/deployment-page-Id0vupsj.js                              31.10 kB │ gzip:  8.83 kB
+apps/console build: dist/assets/datasets-_pBosYof.js                                     31.38 kB │ gzip:  3.41 kB
+apps/console build: dist/assets/model-lifecycle-Bb2hPqj8.js                              34.67 kB │ gzip:  5.39 kB
+apps/console build: dist/assets/model-lifecycle-CMtXs0W_.js                              35.39 kB │ gzip:  5.46 kB
+apps/console build: dist/assets/nodes-Fu3NPXjn.js                                        36.14 kB │ gzip:  5.11 kB
+apps/console build: dist/assets/distribution-DIoVA-GU.js                                 38.31 kB │ gzip:  4.49 kB
+apps/console build: dist/assets/app-frame-BlEIXILX.js                                    52.73 kB │ gzip: 17.63 kB
+apps/console build: dist/assets/link-CQ1BoHyt.js                                         59.47 kB │ gzip: 21.41 kB
+apps/console build: dist/assets/mutation-DXYr5oWR.js                                     61.28 kB │ gzip: 21.20 kB
+apps/console build: dist/assets/entrance-C0YuGHW5.js                                     75.90 kB │ gzip: 11.36 kB
+apps/console build: dist/assets/menu-Bza4c41e.js                                         83.77 kB │ gzip: 28.44 kB
+apps/console build: dist/assets/zh-cn-CGrToIM2.js                                       171.96 kB │ gzip: 47.36 kB
+apps/console build: dist/assets/en-CxsoRYco.js                                          175.92 kB │ gzip: 44.13 kB
+apps/console build: dist/assets/index-B8KtFO8S.js                                       273.83 kB │ gzip: 87.52 kB
+apps/console build: 
+apps/console build: ✓ built in 2.82s
+apps/portal build: Done
+apps/console build: Done

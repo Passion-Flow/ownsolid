@@ -1,0 +1,490 @@
+{
+  "time": "2026-11-14T08:09:53.736849+00:00",
+  "main": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "original_commits": 5008,
+  "original_missing": [],
+  "server_with_bundle_commits": 2717,
+  "bundle_records": 203,
+  "unique_bundle_heads": 174,
+  "all_bundle_heads_reachable": true,
+  "source_instances": 208885,
+  "source_unique_blobs": 23987,
+  "source_blob_manifest_tree_equal": true,
+  "fsck_exit": 0,
+  "remote_heads": 1213,
+  "remote_tags": 9,
+  "github_reachable_commits": 5029,
+  "progress": {
+    "P0": {
+      "checked": 28,
+      "total": 28
+    },
+    "P1": {
+      "checked": 61,
+      "total": 326
+    },
+    "P2": {
+      "checked": 0,
+      "total": 171
+    },
+    "P3": {
+      "checked": 0,
+      "total": 18
+    },
+    "P4": {
+      "checked": 0,
+      "total": 46
+    }
+  },
+  "checked": 89,
+  "total": 589,
+  "checked_items": [
+    {
+      "id": "ARC-001",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-001 Repository layout, language and tooling checks enforced in CI (P0) - Evidence: commit 96f3e9f"
+    },
+    {
+      "id": "ARC-002",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-002 Backend moved into the ownsolid layout with behavior unchanged (P0) - Evidence: commit df6fbd5"
+    },
+    {
+      "id": "ARC-003",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-003 Merge the dozen deployment profiles into one topology model with sizes: single node, HA, cell, multi-cell, multi-site; remove profile branches from code, configuration and UI (P0) - Evidence: commits 17e8506, e38f5cf (ADR 0003, 0005)"
+    },
+    {
+      "id": "ARC-004",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-004 Cell ID and site ID in every resource key, table and API path, even with one cell (P0) - Evidence: commit 4d36bfa (ADR 0006)"
+    },
+    {
+      "id": "ARC-005",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-005 Agent protocol v1: agent-initiated long-lived gRPC stream over HTTP/2 through a stateless gateway tier, with long-poll fallback (P0) - Evidence: commit 0a8e805 (ADR 0007)"
+    },
+    {
+      "id": "ARC-006",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-006 Task semantics: per-node sequence numbers, idempotent tasks, acknowledgements, resume from last ack, rate-limited full resync (P0) - Evidence: commit 9eaa366 (ADR 0011)"
+    },
+    {
+      "id": "ARC-007",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-007 Server-paced heartbeat interval, jitter and reconnect delay, changeable at runtime; full-jitter backoff; retry at one layer only (P0) - Evidence: commit eaa67f6 (ADR 0013)"
+    },
+    {
+      "id": "ARC-008",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-008 Per-operation limits and priority classes (quarantine above heartbeat above telemetry above bulk) with retry hints (P0) - Evidence: commit 6c04ac4 (ADR 0018)"
+    },
+    {
+      "id": "ARC-009",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-009 Cost rule: every agent call declares its server cost; calls whose cost grows with fleet size fail review (P0) - Evidence: commit 9d25841 (ADR 0020)"
+    },
+    {
+      "id": "ARC-010",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-010 Liveness kept in gateway memory plus a small replicated store; PostgreSQL stores only state transitions and batched last-seen (P0) - Evidence: commit 2ee0fe1 (ADR 0022)"
+    },
+    {
+      "id": "ARC-011",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-011 Transactional outbox with batched delivery replaces LISTEN/NOTIFY; low-frequency reconciliation (P0) - Evidence: commit 1f9fb41 (ADR 0028)"
+    },
+    {
+      "id": "ARC-012",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-012 Time-partitioned append tables for events, task history and audit, with partition drop; pooled connections; agents never hold database connections (P0) - Evidence: commit d216352 (ADR 0029)"
+    },
+    {
+      "id": "ARC-013",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-013 Static stability: agents keep running work when disconnected and never kill on disconnect (P0) - Evidence: commit e22d96f (ADR 0032)"
+    },
+    {
+      "id": "ARC-014",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-014 Fake-agent simulator speaking the real protocol, thousands of agents per process, scripted heartbeats, task acks, reconnect and fault storms (P0) - Evidence: commit 48db9d9 (ADR 0033)"
+    },
+    {
+      "id": "ARC-015",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-015 Load tested with 2,000 simulated nodes at twice the planned load; full reconnect within 5 minutes; control-plane restart leaves work running (P0) - Evidence: commits 3a15704, 5b8ddca, 2f7613b (ADR 0038, ADR 0040); `TestFleetLoad`, three runs in a row on `ownsolid-cpu`, 2026-11-07"
+    },
+    {
+      "id": "ARC-016",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-016 Break-glass admin path independent of agent traffic, plus an admission switch that sheds agent load (P0) - Evidence: commits bd27727, 2294c33 (ADR 0043, 0045); `TestBreakGlass` passed twice in a row with 2,000 simulated agents on `ownsolid-cpu`"
+    },
+    {
+      "id": "ARC-101",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-101 Versioned in-memory snapshot cache with watches for per-node reads (P1) - Evidence: commit 21460f6 (ADR 0047); `TestSingleNodeInstall` and `TestFleetLoad` on `ownsolid-cpu`, 2026-11-08"
+    },
+    {
+      "id": "ARC-102",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-102 Gateway tier scales horizontally; agents connect to one or two gateways (P1) - Evidence: commit 8c832c1 (ADR 0048); `TestAgentGateways` passed twice in a row on `ownsolid-cpu`, 2026-11-08"
+    },
+    {
+      "id": "ARC-103",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-103 mTLS agent identity, certificate rotation, enrollment throttled per rack (P1) - Catalog: F575 - Evidence: commit 1c8f02a (ADR 0050)"
+    },
+    {
+      "id": "ARC-106",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-106 Published fleet KPIs: dispatch p99, reconnect time, database writes per second at measured scale (P1) - Evidence: [Published 2,000-agent measurements](../../operations/fleet-capacity.md); unchanged native TestFleetLoad passed at 3ae6bfeb in 1,558.49 s, all required stream windows and terminal 2,000/2,000, zero product egress. Complete check/build/test also passed the published runtime integration 20069022. [Exact scope and retained failed candidate](../../research/fleet-load-test.md#accepted-native-kpi-baseline)."
+    },
+    {
+      "id": "ARC-107",
+      "file": "docs/product/roadmap/architecture-and-scale.md",
+      "evidence": "- [x] ARC-107 Gateway connection lifecycle: maximum connection age with jitter, GOAWAY drain, and rebalancing after a gateway roll so long-lived streams do not pile onto old gateways (P1)"
+    },
+    {
+      "id": "AUD-102",
+      "file": "docs/product/roadmap/audit-and-compliance.md",
+      "evidence": "- [x] AUD-102 Hash-chained audit records with an offline verifier (P1) - Evidence: [verification record](../../research/lane-e-decisions.md#repository-verification-on-a-shared-workstation) at c4f3a69. PostgreSQL 18.6 wrote 1,000 concurrent events and the disconnected verifier checked 1,003 exported events across two months."
+    },
+    {
+      "id": "AUD-105",
+      "file": "docs/product/roadmap/audit-and-compliance.md",
+      "evidence": "- [x] AUD-105 Admins cannot delete or alter operation logs (P1) - Evidence: [PostgreSQL authority and acceptance](../../research/audit-immutability.md) at 2410daa. The serving role could append but was refused updates, deletes and truncation."
+    },
+    {
+      "id": "AUD-110",
+      "file": "docs/product/roadmap/audit-and-compliance.md",
+      "evidence": "- [x] AUD-110 Audit trail page: events with filters by action, outcome, time and request, event details, shareable links (P1) - Evidence: 2c51002; real Chromium on an offline install on `ownsolid-cpu` read a real sign-in event with the person's address, filtered by family, followed it to its request and opened it from its own link, three runs in a row, 2026-11-07"
+    },
+    {
+      "id": "CMP-215",
+      "file": "docs/product/roadmap/compatibility-matrix.md",
+      "evidence": "- [x] CMP-215 Capability registry: every option the product offers, each declared ready, planned, licensed or unsupported, with a reason and the roadmap item behind it; the installer, the API and both entrances read the same declaration ([ADR 0036](../../decisions/0036-show-every-option-and-fetch-models-offline.md)) (P1) - Evidence: 97daf16; real Chromium against lane B's offline install on `ownsolid-cpu` (live-support.spec.ts: the page matches the shipped declaration, a request without a session is refused, axe clean), `ownsolid-install validate` refused `ha` there with the declared reason, make check, build and test passed"
+    },
+    {
+      "id": "DEL-001",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-001 One typed configuration and one install path produce every topology size; delete per-profile Compose files and Dockerfiles (P0) - Catalog: F217 - Evidence: 3eed593; zero-egress install on the image with the console and portal, `ownsolid-cpu`, 2026-11-04"
+    },
+    {
+      "id": "DEL-002",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-002 Zero-egress test harness: install and run with no network route, recording any outbound attempt (P0) - Catalog: F502, F510 - Evidence: commit 1d8fcdd (ADR 0008)"
+    },
+    {
+      "id": "DEL-003",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-003 Real egress denial for workload containers on nodes, not only offline flags (found on real GPU, 2026-11-04) (P0) - Catalog: F234 - Evidence: be0f52c (ADR 0017); real-kernel guard tests and the zero-egress harness on `ownsolid-cpu`, 2026-11-05"
+    },
+    {
+      "id": "DEL-102",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-102 Installer with preflight (OS, kernel, ports, disk, memory, time, DNS, drivers), idempotent and resumable (P1) - Catalog: F220, F498 - Evidence: b8535ef. The Linux amd64 isolated installation resumed after SIGKILL with both entrances ready and the same administrator, tenant, workspace and credential."
+    },
+    {
+      "id": "DEL-104",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-104 Offline upgrade with required stops, pre-upgrade backup and database migration plan (P1) - Catalog: F222, F503 - Evidence: c54fed2. A disconnected Compose installation verified its recovery backup before migrating PostgreSQL from schema 52 to 54."
+    },
+    {
+      "id": "DEL-105",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-105 Rollback of application versions, separated from database restore (P1) - Catalog: F533 - Evidence: 2bd0729. An injected candidate startup failure was followed by a rollback to the previous signed image with the same PostgreSQL container and schema."
+    },
+    {
+      "id": "DEL-106",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-106 Incremental patch bundles verified against the installed baseline (P1) - Catalog: F504 - Evidence: 4e22094 and c54fed2. The isolated installer refused the wrong baseline and verified and applied the patch against the exact installed signed release."
+    },
+    {
+      "id": "DEL-111",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-111 Diagnostic support bundle command that collects host, cluster and application state with secrets redacted and works while the console is down (P1) - Evidence: 35bda91 and b8535ef. The disconnected installer produced a private support archive with host, service and PostgreSQL status while control was stopped."
+    },
+    {
+      "id": "DEL-112",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-112 Bundle signature verification against a pinned offline trust root, with signed root rotation and a clear refusal for expired or unknown roots (P1) - Evidence: 38efd30 and b23f6bc. The disconnected factory verified the signature threshold, rejected replay and verified a release under the rotated trust root."
+    },
+    {
+      "id": "DEL-116",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-116 License page: status, limits and expiry, import of a license file, diagnostics that say why a file was refused (P1) - Evidence: 5f0110a; real Chromium on an offline install on `ownsolid-cpu` refused real signed files for the real reason, imported a real renewal that survived a reload and downloaded diagnostics, three runs in a row, 2026-11-07"
+    },
+    {
+      "id": "DEL-117",
+      "file": "docs/product/roadmap/delivery-and-upgrades.md",
+      "evidence": "- [x] DEL-117 The installer sets up the model store: `data/models` mounted into the control plane and configured, carried by `backup` and put back by `restore` ([ADR 0044](../../decisions/0044-web-lane-follows-the-build-plan.md)) (P1) - Evidence: f424d36; a fresh install and an upgrade in place on `ownsolid-cpu` gave serving the store, and a backup and a restore over the running installation brought back the real model's lost weights, 2026-11-07"
+    },
+    {
+      "id": "DEV-103",
+      "file": "docs/product/roadmap/developer-experience.md",
+      "evidence": "- [x] DEV-103 Python and Go SDKs generated from the API (P1) - Evidence: [offline SDK verification](../../research/sdk.md#integration-evidence) at 5876679. Reproduced Go and Python clients for 412 operations across 27 domains and exercised both clients against offline Admin TLS and PostgreSQL."
+    },
+    {
+      "id": "FLT-113",
+      "file": "docs/product/roadmap/fleet-and-infrastructure.md",
+      "evidence": "- [x] FLT-113 Console page for agent pacing: current values, change with a reason, the online-window refusal explained (P1) - Evidence: 5dd2247; real Chromium on an offline install on `ownsolid-cpu` changed the pacing and a real agent adopted it and the earlier value, three runs in a row, 2026-11-06"
+    },
+    {
+      "id": "FLT-114",
+      "file": "docs/product/roadmap/fleet-and-infrastructure.md",
+      "evidence": "- [x] FLT-114 Nodes page: list with server-side filters and counts, details drawer, rename, disable and remove, add a node with a one-time join token and see it join (P1) - Evidence: 602acdf, b66dfce; real Chromium on an offline install on `ownsolid-cpu` added a node by running the page's commands on a disposable host, saw the real agent join and ran a task on it, four runs in a row, 2026-11-06"
+    },
+    {
+      "id": "GW-113",
+      "file": "docs/product/roadmap/gateway.md",
+      "evidence": "- [x] GW-113 Gateway and keys page: issue, rotate and revoke keys, with each key's call log (S-206) (P1) - Evidence: 4c1eb36, b9e6728; live run on an installation, 2026-11-08, twice: keys issued, rotated with an overlap and revoked from the browser against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; no model ran, and aliases are published through the API until GW-117"
+    },
+    {
+      "id": "GW-114",
+      "file": "docs/product/roadmap/gateway.md",
+      "evidence": "- [x] GW-114 The model gateway runs on each serving node, started by its agent when a deployment is published, with its identity provisioned on the node and no network needed ([ADR 0052](../../decisions/0052-the-model-gateway-runs-beside-the-model.md)) (P1) - Evidence: 90ebbad; live on an installation, 2026-11-09: a real agent (protocol 1.6) started the real gateway image when its gateway was registered, served TLS with the certificate control issued for its declared origin, and stopped it with its secrets removed when revoked; from the browser a deployment was published through its node's own gateway with no address typed and no credential shown, a key issued from the card, and calls with it reached vLLM's CPU build serving Qwen3-0.6B (plain and streamed, wrong key refused, each call in the key's log with the engine's token counts). The deployment's node was scripted, with its gateway tasks run by the agent's own gateway code; no GPU"
+    },
+    {
+      "id": "GW-117",
+      "file": "docs/product/roadmap/gateway.md",
+      "evidence": "- [x] GW-117 Publish a deployment to the gateway from the console: provision a gateway instance and name the alias a key calls (P1) - Evidence: c6936b9, b45b879; live run on an installation, 2026-11-08: a verified deployment on a scripted node was published from its page, which registered the node's gateway and showed its credential once; a key issued from the same card made two calls admitted over the real gateway protocol with that credential by a stand-in for the gateway process (GW-114), and after Stop publishing the name was refused; no model ran"
+    },
+    {
+      "id": "IAM-101",
+      "file": "docs/product/roadmap/identity-and-access.md",
+      "evidence": "- [x] IAM-101 Local accounts: invitation, login, logout, password reset, lockout (P1) - Catalog: F001 - Evidence: dcac35a5 and [disconnected account acceptance](../../research/local-accounts.md#verification)"
+    },
+    {
+      "id": "IAM-112",
+      "file": "docs/product/roadmap/identity-and-access.md",
+      "evidence": "- [x] IAM-112 Separate Admin and Portal entrances with audience-bound sessions (P1) - Catalog: F424, F432, F545 - Evidence: a2531e60 and [disconnected browser entrance acceptance](../../research/browser-entrance-sessions.md#verification)"
+    },
+    {
+      "id": "IAM-115",
+      "file": "docs/product/roadmap/identity-and-access.md",
+      "evidence": "- [x] IAM-115 Users page: accounts with status and filters, invite and resend, disable and enable an account with a reason (P1) - Evidence: 24d6b00; real Chromium on an offline install on `ownsolid-cpu` with a TLS mail server accepted a real invitation, disabled the new account, which ended its session, and enabled it, three runs in a row, 2026-11-07"
+    },
+    {
+      "id": "IAM-116",
+      "file": "docs/product/roadmap/identity-and-access.md",
+      "evidence": "- [x] IAM-116 Workspaces page: list, create and rename workspaces and manage who belongs to each (P1) - Evidence: 3a406f9; real Chromium on an offline install on `ownsolid-cpu` created a workspace, added a real account, changed its role, removed it, was refused for the last owner and disabled the workspace with its reason in the audit trail, three runs in a row, 2026-11-07"
+    },
+    {
+      "id": "IAM-117",
+      "file": "docs/product/roadmap/identity-and-access.md",
+      "evidence": "- [x] IAM-117 Single sign-on page: list, add, test and disable connectors, on the existing connector API (P1) - Evidence: c23e230; real Chromium on an offline install on `ownsolid-cpu` with a real Gitea 28.1.0 over TLS added a connector, was told of a wrong secret and an unregistered callback, passed the check, turned it on, linked an account, signed in through Gitea, and turning it off from another browser ended that session, three runs in a row, 2026-11-07. Single sign-on was turned on by hand under `control_settings` (IAM-113)"
+    },
+    {
+      "id": "MOD-119",
+      "file": "docs/product/roadmap/models-and-registry.md",
+      "evidence": "- [x] MOD-119 Model library page: your models, importing a bundle with resumable upload and verification shown, each model's own page and retiring it (S-201, S-202) (P1) - Evidence: a2cb8f4, 9bc583a, d296b9f; real Chromium imported, interrupted, resumed and retired the real Qwen3-0.6B on lane B's installation on `ownsolid-cpu`, 2026-11-07"
+    },
+    {
+      "id": "MOD-120",
+      "file": "docs/product/roadmap/models-and-registry.md",
+      "evidence": "- [x] MOD-120 Remove a finished import's upload and failed stages from the model store once its model is published, crash-safe, so a model takes its own size (P1) - Evidence: e81959df, bbf09930, [disconnected Linux amd64 acceptance](../../research/model-import-cleanup.md#linux-amd64-acceptance)"
+    },
+    {
+      "id": "OBS-001",
+      "file": "docs/product/roadmap/observability-and-alerting.md",
+      "evidence": "- [x] OBS-001 Select the time-series and log stores by license, offline packaging and single-binary operation (P0) - Evidence: commit e11ba81 (ADR 0009)"
+    },
+    {
+      "id": "OBS-002",
+      "file": "docs/product/roadmap/observability-and-alerting.md",
+      "evidence": "- [x] OBS-002 Telemetry and logs separated from the control-plane database (P0) - Evidence: commits f329a1a, 32df90d, 33061e5 (ADR 0012)"
+    },
+    {
+      "id": "OBS-108",
+      "file": "docs/product/roadmap/observability-and-alerting.md",
+      "evidence": "- [x] OBS-108 Load tested at about 17 million active series (P1) - Evidence: [Linux amd64 scale qualification](../../research/telemetry-scale.md#linux-amd64-qualification)"
+    },
+    {
+      "id": "REL-001",
+      "file": "docs/product/roadmap/platform-reliability.md",
+      "evidence": "- [x] REL-001 Control-plane restart and crash recovery without losing tasks (P0) - Evidence: commit f966d43 (ADR 0046); `TestControlCrash` passed twice in a row with 2,000 simulated agents on `ownsolid-cpu`"
+    },
+    {
+      "id": "REL-002",
+      "file": "docs/product/roadmap/platform-reliability.md",
+      "evidence": "- [x] REL-002 Database-aware backup and restore of the control plane (P0) - Catalog: F204 - Evidence: commit 5a62c37 (ADR 0014)"
+    },
+    {
+      "id": "REL-110",
+      "file": "docs/product/roadmap/platform-reliability.md",
+      "evidence": "- [x] REL-110 Encrypted backups with the key held outside the archive (P1) - Evidence: fe49ce45 and 3b47c1de. Disconnected Linux amd64 verified explicit single-node encrypted backup, direct restore and restore into a clean site, with the age identity held separately."
+    },
+    {
+      "id": "POR-106",
+      "file": "docs/product/roadmap/portal.md",
+      "evidence": "- [x] POR-106 API keys and endpoints: issue, name, rotate and revoke my own keys; the endpoint, a code sample per language, and my own call log (P1) - Evidence: c20a9df, 4b62fef; live run on an installation, 2026-11-08: a non-administrator invited through a real mail flow issued, rotated and revoked a key from the portal against a real control plane and database, calls admitted over the real gateway protocol by a stand-in for the gateway process (GW-114) and read per key; an administrator's portal session got 404 for that key, and another workspace was refused. No model ran; the three samples were run against a local HTTPS stub with the real OpenAI SDKs and curl"
+    },
+    {
+      "id": "POR-113",
+      "file": "docs/product/roadmap/portal.md",
+      "evidence": "- [x] POR-113 In-product help that works offline, reachable from every page (P1) - Evidence: 779c1558 and the [portal Chromium help flows](../../../web/apps/portal/e2e/help.spec.ts); the existing offline installation run served the articles and portal-only API reference, and local Chromium on 2026-11-09 opened the contextual article on every signed-in portal screen with an article, checked the fallback and filtered empty states, and reached help without requests outside the installation origin"
+    },
+    {
+      "id": "SRV-111",
+      "file": "docs/product/roadmap/serving.md",
+      "evidence": "- [x] SRV-111 Model services pages: the list, a deployment's own page and the deploy flow (S-203, S-204, S-205) (P1) - Evidence: 0a1a46a; live run on an installation, 2026-11-08: real agent to the no-GPU refusal, scripted node with a synthetic GPU through deploy, check, stop, start and remove; no model ran (SRV-110), and SRV-114 holds what the server cannot give yet"
+    },
+    {
+      "id": "UX-001",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-001 Web workspace: `web/apps/console`, `web/apps/portal`, `web/packages/{ui,api,i18n,config}`, ESLint, Prettier, Vitest, Playwright (P0) - Evidence: ed470b5, 799ed29; zero-egress install and real-browser sign-in on `ownsolid-cpu`, 2026-11-04"
+    },
+    {
+      "id": "UX-002",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-002 Design system package: tokens (warm neutrals, teal accent), Figtree and JetBrains Mono bundled, Lucide icons, light and dark, density (P0) - Evidence: d12d0ff; real-browser run on `ownsolid-cpu`, 2026-11-04"
+    },
+    {
+      "id": "UX-003",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-003 Shell: grouped navigation, workspace switcher, command menu (Cmd+K), notifications, user menu (P0) - Catalog: F427 - Evidence: ff9561a; real-browser run on `ownsolid-cpu`, 2026-11-04"
+    },
+    {
+      "id": "UX-004",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-004 Typed API client generated from `api/openapi` (P0) - Catalog: F540 - Evidence: 2bfea74; real-browser run on `ownsolid-cpu`, 2026-11-04"
+    },
+    {
+      "id": "UX-005",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-005 Remove the old `apps/web` code after the new console reaches parity for migrated pages (P0) - Evidence: 3eed593; real-browser run and zero-egress install on `ownsolid-cpu`, 2026-11-04"
+    },
+    {
+      "id": "UX-101",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-101 Console overview: quick actions, needs-attention list with next steps, setup checklist, fleet health (P1) - Catalog: F435 - Evidence: b8891d5; real Chromium on an offline install on `ownsolid-cpu` matched the tiles to the API, followed a real offline node to its drawer and opened the add-node and invite dialogs, three runs in a row, 2026-11-07"
+    },
+    {
+      "id": "UX-102",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-102 Portal home: apps and assistants, conversations, my resources and usage (P1) - Catalog: F425, F426, F429 - Evidence: aba0ad6, f1003af; real-browser run against lane B's install on `ownsolid-cpu`, 2026-11-07"
+    },
+    {
+      "id": "UX-103",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-103 Shared list pattern: filter bar, saved views, column chooser, bulk selection with action bar, detail drawer (P1) - Evidence: 5c630cf; real Chromium saved, opened and deleted a view and read an email's details on an offline install on `ownsolid-cpu` upgraded in place to schema 39, 2026-11-06"
+    },
+    {
+      "id": "UX-104",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-104 Long-task pattern: step timeline, live log, tasks continue when the page is left (P1) - Evidence: 6d314d8, 853daf0; a real agent on an offline install on `ownsolid-cpu` ran fact collection from the console in real Chromium while the page was left; the console told how it ended and showed its steps and log after a reload, six runs in a row"
+    },
+    {
+      "id": "UX-105",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-105 Undo for reversible actions; typed confirmation only for irreversible ones (P1) - Evidence: 62714e7, 68dcb6e; real Chromium on both entrances of an offline install on `ownsolid-cpu` saved and undid a view deletion and revoked an invitation by typing its address; admin passed five runs in a row, portal two"
+    },
+    {
+      "id": "UX-107",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-107 Empty states and errors that state the cause and the next action (P1) - Catalog: F022 - Evidence: 6c1fa48; contract and catalog tests, and real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+    },
+    {
+      "id": "UX-108",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-108 English and Simplified Chinese complete for every page, email and error (P1) - Catalog: F537, F552 - Evidence: 22304f9, b2a1448; real Chromium read twelve console and three portal pages of an offline install on `ownsolid-cpu` in Chinese, three and two runs in a row, and an invitation arrived in Chinese through a real TLS mail server, 2026-11-07"
+    },
+    {
+      "id": "UX-109",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-109 Language preference per user, tenant default and browser negotiation (P1) - Catalog: F553 - Evidence: dfc68b2; real Chromium on both entrances of an offline install on `ownsolid-cpu` upgraded in place to schema 37, 2026-11-06"
+    },
+    {
+      "id": "UX-110",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-110 Locale formatting for dates, numbers and units (P1) - Catalog: F555 - Evidence: bee9124; real Chromium switched languages on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+    },
+    {
+      "id": "UX-111",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-111 In-product help and API documentation available offline (P1) - Catalog: F431 - Evidence: c25cb2c, 779c155; real-browser run on both entrances of lane B's install on `ownsolid-cpu`, 2026-11-07"
+    },
+    {
+      "id": "UX-112",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-112 Keyboard navigation, focus order and screen-reader labels on all pages (P1) - Catalog: F569 - Evidence: 27d03fc; keyboard walk and axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+    },
+    {
+      "id": "UX-113",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-113 Warn before a session ends from inactivity, with one action to stay signed in (P1) - Evidence: 62b3448; a real 60-second idle timeout with the page's poll running in Chromium on the admin entrance of an offline install on `ownsolid-cpu`, 2026-11-06"
+    },
+    {
+      "id": "UX-114",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-114 Shareable links: filters, sort order and the open drawer live in the URL (P1) - Evidence: fb4eac6; real Chromium reloaded a filtered email list from its address on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+    },
+    {
+      "id": "UX-115",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-115 Route-level code splitting and a bundle size budget enforced in CI (P1) - Evidence: 13b789e, 13034a0; real-browser run on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+    },
+    {
+      "id": "UX-116",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-116 Automated accessibility checks in the browser tests of every page (P1) - Evidence: 31e5343; axe-core in real Chromium on both entrances of an offline install on `ownsolid-cpu`, 2026-11-05"
+    },
+    {
+      "id": "UX-118",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-118 Theme and density follow the user across browsers through `/api/v1/preferences` (P1) - Evidence: aa68ace; two browser contexts on both entrances of an offline install on `ownsolid-cpu`, and migration 000034 on an installed database, 2026-11-05"
+    },
+    {
+      "id": "UX-119",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-119 Account page: profile, password change and linked sign-in providers (P1) - Evidence: 46d2fbb, 9267698; real browser on both entrances of an offline install on `ownsolid-cpu`, and link and unlink against Gitea 28.1.0 on the admin entrance, 2026-11-05"
+    },
+    {
+      "id": "UX-120",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-120 Mail delivery status for administrators, so a failed invitation or reset email can be seen and resent (P1) - Evidence: ec65295; a real failed reset email resent from the console in Chromium on a licensed offline install on `ownsolid-cpu`, 2026-11-05"
+    },
+    {
+      "id": "UX-121",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-121 Precompressed web assets: the build writes gzip and Brotli copies and the control plane serves them by `Accept-Encoding` (P1) - Evidence: 82b0830; real Chromium received Brotli copies on both entrances of an offline install on `ownsolid-cpu`, 2026-11-06"
+    },
+    {
+      "id": "UX-123",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-123 Navigation to [ADR 0037](../../decisions/0037-simple-on-the-surface-deep-underneath.md): collapsing groups with only the current one open, self-cleaning open state, a heading that only opens and closes, a filter box, and a collapsed icon-only mode that keeps every accessible name (P1) - Evidence: d85452f; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 46, two runs"
+    },
+    {
+      "id": "UX-124",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-124 Pinned destinations, chosen by the person and kept per person (P1) - Evidence: 7a36453; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, with the pin reaching a second browser"
+    },
+    {
+      "id": "UX-125",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-125 One advanced fold per form: the common path first, everything with a working default behind it, the count shown on the fold, and nothing without a safe default hidden (P1) - Evidence: 6210c2e; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+    },
+    {
+      "id": "UX-126",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-126 Summary tiles above a list filter the list instead of decorating it (P1) - Evidence: feff70a; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48"
+    },
+    {
+      "id": "UX-127",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-127 Resource detail pages with their own tabs, related resources and activity, rather than only a drawer over the list (P1) - Evidence: 39cc736, cdf7ee9; real Chromium on an installation on `ownsolid-cpu` at schema 48, on a joined node, the administrator and a connector with a real Gitea"
+    },
+    {
+      "id": "UX-128",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-128 Moving through a list from the keyboard: `j` and `k` move the row selection and Enter opens it, under the switch UX-122 adds (P1) - Evidence: 5823524; real Chromium on an installation on `ownsolid-cpu` upgraded in place to schema 48, two runs"
+    },
+    {
+      "id": "UX-129",
+      "file": "docs/product/roadmap/usability-and-localization.md",
+      "evidence": "- [x] UX-129 English strings load as their own chunk like the other languages, so the first download stops growing with every page, and its limit comes back down (P1) - Evidence: 04e6554; real Chromium on an installation on `ownsolid-cpu` at schema 48, first download 141.8 kB"
+    }
+  ],
+  "independent_clone": "/Users/passion./.local/state/ownsolid/coordinator/migration/20261113T223425Z-8f047db7/github-before-root-6l_oq3jl/repository.git",
+  "checkbox_count_method": "All 589 checkbox lines on GitHub main; includes OPS-402 (P4, may be dropped)"
+}

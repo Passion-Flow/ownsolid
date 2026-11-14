@@ -1,0 +1,32 @@
+{
+  "started": "2026-11-14T07:58:01.829586+00:00",
+  "main_before": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "main_advanced": 0,
+  "server_commits": 2717,
+  "pending_tips": 0,
+  "pushes": [
+    {
+      "refs/heads/salvage/cpu/private-sources-63a32096f9e7": "63a32096f9e714e72354504aef2f31fee9dbef6d"
+    }
+  ],
+  "source_archive": {
+    "commit": "63a32096f9e714e72354504aef2f31fee9dbef6d",
+    "ref": "refs/heads/salvage/cpu/private-sources-63a32096f9e7",
+    "tree": "1816afe7e7e4d5b4170270b1bf46bc4c3c4a9497",
+    "files": 208885,
+    "unique_blobs": 23987,
+    "parts": 209,
+    "exclusions": 5364,
+    "errors": [
+      {
+        "path": "/root/lane-arc107-payload-c2ae96876797/source.tar.gz",
+        "error": "file could not be opened successfully:\n- method gz: ReadError('empty file')\n- method bz2: ReadError('not a bzip2 file')\n- method xz: ReadError('not an lzma file')\n- method tar: ReadError('empty file')"
+      },
+      {
+        "path": "/root/ownsolid-lane-m-proof.ztWSYxrx/._source.tar.gz",
+        "error": "file could not be opened successfully:\n- method gz: ReadError('not a gzip file')\n- method bz2: ReadError('not a bzip2 file')\n- method xz: ReadError('not an lzma file')\n- method tar: ReadError('truncated header')"
+      }
+    ]
+  },
+  "finished": "2026-11-14T07:59:12.927680+00:00"
+}

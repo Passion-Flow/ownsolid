@@ -1,0 +1,42 @@
+layout check passed
+roadmap ok: 589 items
+.............
+----------------------------------------------------------------------
+Ran 13 tests in 0.001s
+
+OK
+................................................
+----------------------------------------------------------------------
+Ran 48 tests in 3.520s
+
+OK
+Scope: all 9 workspace projects
+Agent skills awaiting approval: @tanstack/react-router.
+Run "pnpm approve" to review them.
+✓ Lockfile passes supply-chain policies (verified 5d ago)
+Lockfile is up to date, resolution step is skipped
+Done in 79ms using pnpm v12.16.1
+$ node ../tools/codegen/web-api.mjs --check && node ../tools/codegen/web-help.mjs --check
+generated API types match 29 contracts
+$ eslint --config packages/config/eslint.config.js --max-warnings 0 .
+$ prettier --ignore-path ../.gitignore --check . '!pnpm-lock.yaml' '!**/gen/**'
+Checking formatting...
+All matched files use Prettier code style!
+$ pnpm --recursive run typecheck
+Scope: 8 of 9 workspace projects
+packages/config typecheck$ tsc --noEmit
+packages/config typecheck: Done
+packages/api typecheck$ tsc --noEmit
+packages/i18n typecheck$ tsc --noEmit
+packages/help typecheck$ tsc --noEmit
+packages/help typecheck: Done
+packages/i18n typecheck: Done
+packages/ui typecheck$ tsc --noEmit
+packages/api typecheck: Done
+packages/ui typecheck: Done
+packages/shell typecheck$ tsc --noEmit
+packages/shell typecheck: Done
+apps/console typecheck$ tsc --noEmit
+apps/portal typecheck$ tsc --noEmit
+apps/portal typecheck: Done
+apps/console typecheck: Done
