@@ -1,0 +1,44 @@
+-- Unnumbered PostgreSQL ledger migration. The formal catalog and grants are assigned by the database owner.
+CREATE TABLE usage_ledger (
+  producer varchar(128) NOT NULL,
+  event_id varchar(128) NOT NULL,
+  tenant_id uuid NOT NULL,
+  workspace_id uuid NOT NULL,
+  site_id varchar(32) NOT NULL DEFAULT local_site_id(),
+  cell_id varchar(32) NOT NULL DEFAULT local_cell_id(),
+  occurred_at timestamptz NOT NULL CHECK (isfinite(occurred_at)),
+  gpu_microseconds bigint NOT NULL CHECK (gpu_microseconds >= 0),
+  tokens bigint NOT NULL CHECK (tokens >= 0),
+  storage_byte_seconds bigint NOT NULL CHECK (storage_byte_seconds >= 0),
+  requests bigint NOT NULL CHECK (requests >= 0),
+  unmeasured_token_requests bigint NOT NULL DEFAULT 0 CHECK (unmeasured_token_requests BETWEEN 0 AND requests),
+  PRIMARY KEY (producer, event_id),
+  FOREIGN KEY (tenant_id, workspace_id) REFERENCES workspaces (tenant_id, id),
+  CHECK (gpu_microseconds > 0 OR tokens > 0 OR storage_byte_seconds > 0 OR requests > 0)
+);
+CREATE INDEX usage_ledger_scope_time ON usage_ledger (site_id, cell_id, tenant_id, workspace_id, occurred_at);
+
+CREATE FUNCTION guard_usage_ledger_write() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  local_site varchar(32);
+  local_cell varchar(32);
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    -- Resolve the registry in the ledger's owning schema, even if the
+    -- session has a temporary table with the same name.
+    EXECUTE pg_catalog.format('SELECT site_id,id FROM %I.cells WHERE is_local', TG_TABLE_SCHEMA)
+      INTO local_site,local_cell;
+    IF NEW.site_id IS DISTINCT FROM local_site OR NEW.cell_id IS DISTINCT FROM local_cell THEN
+      RAISE EXCEPTION 'METERING_FOREIGN_CELL' USING ERRCODE = '23514';
+    END IF;
+    RETURN NEW;
+  END IF;
+  RAISE EXCEPTION 'METERING_APPEND_ONLY' USING ERRCODE = '55000';
+END;
+$$;
+
+CREATE TRIGGER usage_ledger_local_scope BEFORE INSERT ON usage_ledger
+  FOR EACH ROW EXECUTE FUNCTION guard_usage_ledger_write();
+
+CREATE TRIGGER usage_ledger_append_only BEFORE UPDATE OR DELETE OR TRUNCATE ON usage_ledger
+  FOR EACH STATEMENT EXECUTE FUNCTION guard_usage_ledger_write();

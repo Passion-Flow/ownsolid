@@ -1,0 +1,78 @@
+{
+ "title": "ownsolid whole-platform License",
+ "operations": [
+  {
+   "id": "GetPortalLicenseStatus",
+   "method": "get",
+   "path": "/api/v1/license/status",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "PortalLicenseStateResponse"
+     }
+    }
+   ],
+   "errors": {
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "LICENSE_CONFIGURATION_REQUIRED",
+     "LICENSE_STORED_STATE_INVALID"
+    ]
+   }
+  }
+ ],
+ "schemas": {
+  "PortalLicenseState": {
+   "type": "object",
+   "required": [
+    "state",
+    "new_business_allowed",
+    "warning"
+   ],
+   "properties": {
+    "state": {
+     "type": "string",
+     "enum": [
+      "missing",
+      "not_yet_valid",
+      "active",
+      "grace",
+      "expired",
+      "clock_suspect"
+     ]
+    },
+    "new_business_allowed": {
+     "type": "boolean"
+    },
+    "warning": {
+     "type": "boolean"
+    }
+   }
+  },
+  "PortalLicenseStateResponse": {
+   "type": "object",
+   "required": [
+    "data"
+   ],
+   "properties": {
+    "data": {
+     "$ref": "PortalLicenseState"
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,13 @@
+{
+  "knowledge": {
+    "enabled": true,
+    "scratchMountPath": "/var/lib/projectone/knowledge-work",
+    "scratchMiB": 128
+  },
+  "resources": {
+    "requestCPU": 500,
+    "limitCPU": 2000,
+    "requestMemoryMiB": 1024,
+    "limitMemoryMiB": 3072
+  }
+}

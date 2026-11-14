@@ -1,0 +1,22 @@
+{
+  "recipe_version": 1,
+  "engine": "vllm",
+  "version": "0.31.0",
+  "image_repository": "vllm/vllm-openai",
+  "image_manifest_digest": "sha256:a4a4c0437bf7240089da5f08aa370c4aee17ae5290f7a3b468825ee26c4c3a6b",
+  "image_config_digest": "sha256:c76d0e2225a4b1cb1e2109ace39639f55e714abd1a7a427acc8b0bbd7f6a83b3",
+  "architecture": "amd64",
+  "os": "linux",
+  "cuda_version": "13.0.2",
+  "minimum_driver_major": 580,
+  "minimum_compute_capability": 7.5,
+  "minimum_gpu_memory_mib": 8192,
+  "minimum_host_memory_bytes": 12884901888,
+  "host_port": 18000,
+  "container_port": 8000,
+  "container_user": "2000:0",
+  "maximum_context": 2048,
+  "maximum_sequences": 4,
+  "gpu_memory_utilization": 0.75,
+  "model_key": "qwen3-0.6b"
+}

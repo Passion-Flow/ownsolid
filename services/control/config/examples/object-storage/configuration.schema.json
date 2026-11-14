@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Optional private S3 ingress configuration",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "const": false
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "const": true
+        },
+        "backend": {
+          "type": "string",
+          "description": "Only this initial self-hosted S3 implementation is accepted",
+          "const": "seaweedfs_s3"
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "Exact endpoint origin; no userinfo, query, fragment or alternate URL"
+        },
+        "region": {
+          "type": "string",
+          "description": "Explicit SigV4 region, matching the private server"
+        },
+        "bucket": {
+          "type": "string",
+          "description": "Existing private unversioned bucket; never created by the runtime"
+        },
+        "transport": {
+          "type": "string",
+          "description": "https or explicitly selected http_private with only private/loopback dial IPs",
+          "enum": [
+            "https",
+            "http_private"
+          ]
+        },
+        "access_key_file": {
+          "type": "string",
+          "description": "Protected 0600 access identifier reference; value is never an access identifier",
+          "pattern": "^/[^\\u0000-\\u001f]*$"
+        },
+        "secret_key_file": {
+          "type": "string",
+          "description": "Protected 0600 secret reference; no inline credential",
+          "pattern": "^/[^\\u0000-\\u001f]*$"
+        },
+        "ca_file": {
+          "type": "string",
+          "description": "Optional protected private-CA PEM reference; empty uses system trust under HTTPS",
+          "pattern": "^$|^/[^\\u0000-\\u001f]*$"
+        },
+        "dial_addresses": {
+          "type": "array",
+          "description": "JSON array of explicit canonical dial IPs; hostname remains TLS/SigV4 authority",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "staging_root": {
+          "type": "string",
+          "description": "Exclusive preinitialized private owned staging directory, disjoint from existing artifact roots and secrets",
+          "pattern": "^/[^\\u0000-\\u001f]*$"
+        },
+        "part_bytes": {
+          "type": "integer",
+          "description": "Contiguous multipart bytes, 5242880..5368709120",
+          "minimum": 5242880,
+          "maximum": 5368709120
+        },
+        "maximum_object_bytes": {
+          "type": "integer",
+          "description": "Object admission bytes, 1..5497558138880; ceil(size/part_bytes)<=10000",
+          "minimum": 1,
+          "maximum": 5497558138880
+        },
+        "minimum_free_bytes": {
+          "type": "integer",
+          "description": "Additional retained disk reserve bytes >=4096; user 30% floor also applies",
+          "minimum": 4096
+        },
+        "operation_seconds": {
+          "type": "integer",
+          "description": "One S3 metadata/part call deadline seconds, 1..300",
+          "minimum": 1,
+          "maximum": 300
+        },
+        "transfer_seconds": {
+          "type": "integer",
+          "description": "Whole GET deadline seconds, operation_seconds..86400",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "upload_seconds": {
+          "type": "integer",
+          "description": "Multipart intent lifetime seconds, transfer_seconds..604800",
+          "minimum": 1,
+          "maximum": 604800
+        },
+        "object_lifetime_seconds": {
+          "type": "integer",
+          "description": "Object retention lifetime seconds, upload_seconds..31536000",
+          "minimum": 1,
+          "maximum": 31536000
+        },
+        "maximum_grant_seconds": {
+          "type": "integer",
+          "description": "Exact access grant maximum seconds, 1..object_lifetime_seconds",
+          "minimum": 1,
+          "maximum": 31536000
+        },
+        "maximum_concurrent_transfers": {
+          "type": "integer",
+          "description": "Per-process bounded transport concurrency, 1..8",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "maximum_list_pages": {
+          "type": "integer",
+          "description": "Bounded exact ownership listing pages, 1..100",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "worker_poll_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "description": "Queue poll seconds, explicit while enabled."
+        },
+        "management": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "s3_grpc",
+                  "master_grpc",
+                  "filer_grpc",
+                  "volume_grpc"
+                ]
+              },
+              "authority": {
+                "type": "string"
+              },
+              "dial_addresses": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ca_file": {
+                "type": "string"
+              },
+              "client_certificate_file": {
+                "type": "string"
+              },
+              "client_key_file": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "authority",
+              "dial_addresses",
+              "ca_file",
+              "client_certificate_file",
+              "client_key_file"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "refusal_bucket": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Existing distinct empty private canary bucket on the exact configured endpoint; required while enabled, no default. A bounded List-only proof and own HEAD denial are required; unexpected data is preserved and rejected.",
+          "maxLength": 63,
+          "pattern": "^[a-z0-9][a-z0-9.-]*[a-z0-9]$"
+        },
+        "refusal_access_key_file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Protected0600 access identifier file for the distinct canary observer; required while enabled, no inline credentials."
+        },
+        "refusal_secret_key_file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Protected0600 secret file for the canary observer; distinct references, required while enabled, no inline secrets."
+        }
+      },
+      "required": [
+        "enabled",
+        "backend",
+        "endpoint",
+        "region",
+        "bucket",
+        "transport",
+        "access_key_file",
+        "secret_key_file",
+        "dial_addresses",
+        "staging_root",
+        "part_bytes",
+        "maximum_object_bytes",
+        "minimum_free_bytes",
+        "operation_seconds",
+        "transfer_seconds",
+        "upload_seconds",
+        "object_lifetime_seconds",
+        "maximum_grant_seconds",
+        "maximum_concurrent_transfers",
+        "maximum_list_pages",
+        "worker_poll_seconds",
+        "management",
+        "refusal_bucket",
+        "refusal_access_key_file",
+        "refusal_secret_key_file"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Owning Go validation additionally enforces exact URL/dial/path/byte/deadline relationships. Default omitted/disabled retains existing local stores."
+}

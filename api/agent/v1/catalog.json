@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "default_version": "1.12.1",
+  "recipes": [
+    {
+      "schema_version": 1,
+      "component": "node_exporter",
+      "version": "1.12.0",
+      "os": "linux",
+      "architecture": "amd64",
+      "archive_name": "node_exporter-1.12.0.linux-amd64.tar.gz",
+      "archive_size_bytes": 12166227,
+      "archive_sha256": "b206d98e98a431f2687d4c217abb4b15c46a6b272896113ce9a1585cf1a75d1f",
+      "archive_url": "https://github.com/prometheus/node_exporter/releases/download/v1.12.0/node_exporter-1.12.0.linux-amd64.tar.gz",
+      "checksum_url": "https://github.com/prometheus/node_exporter/releases/download/v1.12.0/sha256sums.txt",
+      "checksum_sha256": "55173e6de1564861e4189f8934b50a50a66e43f2fe0da803c4ddb0a878527b27",
+      "license": "Apache-2.0",
+      "required_files": [
+        "node_exporter",
+        "LICENSE",
+        "NOTICE"
+      ],
+      "listen_address": "127.0.0.1:9100",
+      "collectors": [
+        "cpu",
+        "meminfo",
+        "filesystem",
+        "uname"
+      ],
+      "unit_name": "projectone-node-exporter.service",
+      "target_qualification": "pending",
+      "upgrade_order": 0
+    },
+    {
+      "schema_version": 1,
+      "component": "node_exporter",
+      "version": "1.12.1",
+      "os": "linux",
+      "architecture": "amd64",
+      "archive_name": "node_exporter-1.12.1.linux-amd64.tar.gz",
+      "archive_size_bytes": 12168577,
+      "archive_sha256": "b51d8a76aa2a9156a55d501aca6276fae09e262259a5e4e831d2c2222f084e63",
+      "archive_url": "https://github.com/prometheus/node_exporter/releases/download/v1.12.1/node_exporter-1.12.1.linux-amd64.tar.gz",
+      "checksum_url": "https://github.com/prometheus/node_exporter/releases/download/v1.12.1/sha256sums.txt",
+      "checksum_sha256": "589109afe06b57058f20c865aafe9f56ff4e812026b7394f161289a6668d1f50",
+      "license": "Apache-2.0",
+      "required_files": [
+        "node_exporter",
+        "LICENSE",
+        "NOTICE"
+      ],
+      "listen_address": "127.0.0.1:9100",
+      "collectors": [
+        "cpu",
+        "meminfo",
+        "filesystem",
+        "uname"
+      ],
+      "unit_name": "projectone-node-exporter.service",
+      "target_qualification": "pending",
+      "upgrade_order": 1
+    }
+  ]
+}

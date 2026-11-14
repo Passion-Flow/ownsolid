@@ -1,0 +1,21 @@
+CREATE TABLE training_events (
+    tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    workspace_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    job_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    attempt_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    sequence bigint NOT NULL CHECK(sequence BETWEEN 1 AND 1000000),
+    kind VARCHAR(16) NOT NULL CHECK(kind IN ('phase','metric','checkpoint')),
+    global_step integer NOT NULL CHECK(global_step BETWEEN 0 AND 1000),
+    payload JSON NOT NULL CHECK(JSON_TYPE(payload)='OBJECT' AND OCTET_LENGTH(CAST(payload AS CHAR CHARACTER SET utf8mb4))<=16384),
+    canonical_sha256 VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(canonical_sha256,'^[a-f0-9]{64}$','c')),
+    recorded_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY(attempt_id,sequence),
+    FOREIGN KEY(tenant_id,workspace_id,job_id,attempt_id) REFERENCES training_attempts(tenant_id,workspace_id,job_id,id),
+    checkpoint_step INT GENERATED ALWAYS AS(CASE WHEN kind='checkpoint' THEN global_step ELSE NULL END) STORED,
+    UNIQUE KEY training_checkpoint_event_step_idx(attempt_id,checkpoint_step),
+    KEY training_event_job_page_idx(tenant_id,workspace_id,job_id,attempt_id,sequence),
+    CONSTRAINT training_events_tenant_id_canonical CHECK(REGEXP_LIKE(tenant_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_events_workspace_id_canonical CHECK(REGEXP_LIKE(workspace_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_events_job_id_canonical CHECK(REGEXP_LIKE(job_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+    CONSTRAINT training_events_attempt_id_canonical CHECK(REGEXP_LIKE(attempt_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

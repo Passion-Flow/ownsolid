@@ -1,0 +1,64 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "72271b287573ac91e0326cb352608a626e2fc116ef7e61389af7d55cffc8cabe",
+  "after_step": 59,
+  "steps": [
+    {
+      "step": 60,
+      "file": "000060_training_jobs.sql",
+      "object": "training_jobs",
+      "kind": "create_table",
+      "source_sha256": "b26c1b90a853ca000d71cc454334aaf2a1576fc05f8354857b92b64a01a93602"
+    },
+    {
+      "step": 61,
+      "file": "000061_training_attempts.sql",
+      "object": "training_attempts",
+      "kind": "create_table",
+      "source_sha256": "a43696576070bee0167394975e29224579aece773e081d96cbc2790e2ec59c89"
+    },
+    {
+      "step": 62,
+      "file": "000062_training_events.sql",
+      "object": "training_events",
+      "kind": "create_table",
+      "source_sha256": "0dea85aa92b532d885c4d9c1823c3918750f03c648096a3e8d621bacba7d09ef"
+    },
+    {
+      "step": 63,
+      "file": "000063_training_checkpoints.sql",
+      "object": "training_checkpoints",
+      "kind": "create_table",
+      "source_sha256": "e8ee5ae840a3eb5546711da8ddbf6b26bc3ab359176c793e3777be9ce4955cd2"
+    },
+    {
+      "step": 64,
+      "file": "000064_training_artifacts.sql",
+      "object": "training_artifacts",
+      "kind": "create_table",
+      "source_sha256": "a23067899863908675fc741ca0435893c6db57547fb78ad6d4ad0330b6ac0590"
+    },
+    {
+      "step": 65,
+      "file": "000065_training_recoveries.sql",
+      "object": "training_recoveries",
+      "kind": "create_table",
+      "source_sha256": "d36c69d6e2b993ef753ff754e7442bb0a5000e7336f406e029874019486aa0d6"
+    },
+    {
+      "step": 66,
+      "file": "000066_training_uploads.sql",
+      "object": "training_uploads",
+      "kind": "create_table",
+      "source_sha256": "47ee7522590f1213670dddd8ce1a30a799b30a8ac56523c034246f46f28f9070"
+    },
+    {
+      "step": 67,
+      "file": "000067_training_upload_chunks.sql",
+      "object": "training_upload_chunks",
+      "kind": "create_table",
+      "source_sha256": "750d185c88d19b69a8782f08074ed7f34762dccfc1bb9bdbc62ef2997b5329ad"
+    }
+  ]
+}

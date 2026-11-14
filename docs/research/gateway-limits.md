@@ -1,0 +1,284 @@
+# GW-106 gateway rate limits and token budgets
+
+A request count bounds submission pressure but does not bound GPU occupancy or
+token consumption. Enforce independent request-rate, active-request and
+hourly, daily and monthly token limits across the tenant, application and key
+of an authorized call.
+
+## Sources and algorithm
+
+- [LiteLLM virtual keys](https://docs.litellm.ai/docs/proxy/virtual_keys) enforce
+  parent-team and per-key rate and budget policies. [Portkey budgets](https://portkey.ai/docs/product/ai-gateway/virtual-keys/budget-limits)
+  document per-key token limits with recurring resets. Apply every configured
+  ancestor cap to the same call, and reject an explicit child ceiling above any
+  corresponding ancestor ceiling at startup.
+- [Envoy local rate limiting](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/local_rate_limit_filter)
+  uses token buckets and computes a delay until a request can be retried.
+  The [Redis algorithm comparison](https://redis.io/tutorials/howtos/ratelimiting/)
+  describes fixed windows, token buckets and exact sliding logs. A fixed
+  one-second window can admit twice the allowance across its boundary. A
+  continuously refilled bucket has constant space but permits an initial burst
+  plus refills within a trailing second. Use an exact one-second sliding log
+  with monotonic timestamps and bounded configured capacity per scope. It
+  permits a burst up to the configured allowance and enforces the ceiling in
+  every trailing second. The cost of expiring timestamps is amortized across
+  admitted requests.
+- [OpenAI's streaming contract](https://developers.openai.com/api/reference/resources/chat/subresources/completions/streaming-events)
+  places aggregate usage in the final usage chunk and warns that interrupted
+  streams may never provide it. The gateway already requests this chunk from
+  the backend regardless of client display preferences, and validates usage
+  against the tokenizer and output ceiling.
+- [RFC 6585 section 4](https://www.rfc-editor.org/rfc/rfc6585.html#section-4)
+  defines 429 and calls for details about the condition.
+  [RFC 9110 section 10.2.3](https://www.rfc-editor.org/rfc/rfc9110.html#section-10.2.3)
+  defines the integer-seconds form of Retry-After. Round rate and reset waits up,
+  and use a one-second retry hint for concurrency, whose release time is
+  unknown. Preserve the control plane's integer delay when it rejects a call.
+
+## Identity and execution
+
+The existing [gateway wire](../../api/gateway/v1/protocol.go) authenticates a
+gateway, workspace and model binding but does not return a tenant, application
+or API key ID. Use an explicit mapping in the gateway's private operator JSON.
+The [control credential format](../../services/control/internal/modules/distribution/keys.go)
+carries the key UUID, and [control authorization](../../services/control/internal/modules/distribution/authorization.go)
+authenticates that UUID and its secret in the returned workspace. Resolve
+the mapping after successful control authorization and require the configured
+workspace to match. An unmapped key is denied when scoped quotas are configured.
+A fresh control admission remains mandatory before any inference. Caller
+headers, request bodies and aliases cannot select a quota scope. The JSON is
+optional so existing deployments retain their existing control limits.
+
+Check rate and concurrency together before queueing and backend work, with a
+single in-memory lock per tenant. Hold the concurrency permit through request
+preparation and generation, including streaming and cancellation. Count
+requests that pass this check even if they later fail validation or the token
+budget check. Each scope can omit dimensions and remains subject to its
+ancestors' settings.
+
+After fresh admission, tokenize the prompt through the selected backend.
+Before sending the generation request, debit the validated prompt token count
+plus the requested maximum output at all three scopes and configured periods.
+This upper bound protects against concurrent overspend; a character heuristic
+or a debit only after generation does not. At successful unary completion or
+validated SSE completion, refund the difference between the debit and actual
+prompt-plus-output usage. For SSE, successful completion requires the valid
+usage chunk, exact DONE and clean upstream EOF. Keep the original debit on
+missing usage, malformed output, timeouts, cancellation or uncertain execution.
+Debit belongs to the UTC hour, day and calendar month in which generation was
+reserved. A later settlement never credits a newer period.
+
+## Durability and scope
+
+Check limits in memory, with no quota RPC or database read. Persist accepted
+token debits and successful refunds in a bounded private per-tenant snapshot
+under the existing gateway state-directory lock. Publish through a synced
+temporary file, [atomic rename](https://pubs.opengroup.org/onlinepubs/9799919799/functions/rename.html)
+and [directory sync](https://doc.rust-lang.org/std/fs/struct.File.html#method.sync_all).
+Wait for the debit to be durable before dispatch; treat storage uncertainty as
+unavailable for new token reservations in that tenant. Run file operations on
+the blocking pool. A crash can retain an unrefunded debit, preserving the ceiling.
+Requests limited only by rate or concurrency do not write quota state. Reject a
+wall clock regression into an earlier persisted budget period to avoid resetting
+spend on a backward clock adjustment.
+
+This is the standalone quota path. The shared mode below also uses the
+same policy and durable ledger. Authoritative application metadata, automatic
+key registration and Console policy management need control-plane and
+deployment work.
+
+## Dependencies and acceptance
+
+No new service, model, dataset or external runtime call. Promote the existing
+locked [time](https://github.com/time-rs/time) crate to a direct dependency for
+UTC calendar arithmetic. It is MIT OR Apache-2.0 and permits commercial use,
+redistribution with applicable notices and offline use. The quota path reuses
+Rust std, Serde, serde_json and UUID (MIT OR Apache-2.0), Tokio and Axum (MIT)
+and the existing nix filesystem wrapper (MIT). These permit commercial use,
+redistribution with the applicable notices and offline use.
+
+Verify each limit independently, aggregate sibling keys against their application,
+tenant isolation, config validation, rolling-second boundaries, retry delay,
+atomic concurrent debits, stream refunds and unknown usage, UTC rollover,
+and token persistence after reopening state. Exercise 429 and final usage
+through the TLS listener with loopback control and backend fixtures. Report
+an optimized contention benchmark of the in-memory check separately from
+the durable budget path.
+
+## Local release benchmark
+
+Apple M4 Max, 8 worker threads and 128 tenants, all three request and
+concurrency scopes enabled, 800,000 admitted checks. The quiet rerun
+measured 5.58 million checks/s and p50/p95/p99 of 0.125/0.583/9.125 microseconds
+for key lookup, validation and acquisition. The durable path, measured
+separately against the local filesystem with 1,000 sequential reserve/refund
+pairs, took 9.904/14.671/21.820 ms for reservation and
+9.848/15.245/22.648 ms for refund. A run concurrent with build and test work
+reached a 76.959 ms reservation p99. Durable I/O remains sensitive to the
+state volume and serializes within one tenant. These numbers exclude TLS,
+control RPCs, and upstream inference.
+
+## Coalesce durable updates under contention
+
+The single-update snapshot path serializes full filesystem publication for
+every debit and every nonzero refund. This is measurable even with a small
+ledger on a fast volume. [PostgreSQL group commit](https://www.postgresql.org/docs/current/runtime-config-wal.html#GUC-COMMIT-DELAY)
+amortizes a durable flush across ready transactions. Adopt the same
+publication rule while retaining the existing atomic snapshot format.
+Snapshot writers can apply independent budget operations in FIFO order,
+publish one snapshot for the ready batch, and acknowledge only after the
+file and directory are synced. Start a batch as soon as work is available
+with no intentional batching delay. A bounded Tokio channel per tenant
+uses the configured gateway active-request limit as its capacity.
+
+The queue and the blocking writer serve one tenant. Request-rate and
+concurrency checks continue to use their separate in-memory lock. Each
+request within a batch sees the cumulative debits and refunds ahead of it.
+A failed publication returns unavailable to the batch and closes the
+ledger to further mutations. A canceled request that is still queued can
+be discarded before debit. Once the writer has started a reservation, its
+debit may remain even if the response is lost. A queued refund is already
+based on validated usage and can commit after the waiting client is gone.
+Every admitted debit is durable before upstream generation, including
+debits that used capacity released by a refund in the same snapshot.
+
+A deferred checkpoint would lower latency by exposing uncommitted
+balances and would need new restart semantics. A custom append-only log
+would need record validation, replay and compaction, and an embedded
+database would add a storage dependency. Retain the existing compatible
+snapshot and existing Tokio (MIT) dependency. Verify mixed batches,
+cancellation, flush failure and reopening with the existing format. Compare
+single-tenant concurrent throughput and latency with the one-update
+baseline. Batching helps overlapping operations and does not eliminate the
+cost of a lone durable write.
+
+In the single-tenant contention benchmark on Apple M4 Max, eight workers
+each completed 25 reserve/refund pairs. The per-operation writer completed
+20.1 pairs/s with pair p50/p95/p99 of 33.537/711.518/7916.743 ms. The batched
+writer completed 100.0 pairs/s with pair p50/p95/p99 of
+50.541/97.947/164.564 ms. The baseline used eight threads contending for
+the snapshot lock. The batched run used eight Tokio workers submitting to
+the FIFO writer. These are single runs on the local filesystem, excluding
+transport, control and model work. Reproduce the current path with
+`cargo test --release --locked --offline contended_budget_benchmark -- --ignored --nocapture --test-threads=1`.
+
+## Go, PostgreSQL and offline engine in one request path
+
+The native Rust gateway passed a local quota smoke against the real Go
+distribution handler and a disposable PostgreSQL database. A scratch Go
+test overlay reused the existing TLS and authorized-key fixture without
+changing the Go source. It supplied the protected quota JSON and routed
+inference over loopback to the pinned vLLM CPU engine running with
+`--network none` on `ownsolid-cpu`. The node and deployment observation
+came from the existing synthetic machine fixture.
+
+With a daily application budget of 71 tokens, the fixture paused the first
+generation after its 39-token reservation. An overlapping request was
+refused with HTTP 429 and Retry-After, before reaching model generation.
+The first stream returned 23 prompt and 9 completion tokens, freeing seven
+tokens. A second stream then fit exactly at reservation time and returned
+the same usage. A final request was refused. PostgreSQL acknowledged all
+four outcomes, released all admission holds and retained 64 used tokens
+across the two successful streams. The deterministic Rust suite exercises
+exact reset delays, interrupted streams and each configured scope.
+
+## Shared enforcement between gateway instances
+
+[Envoy global rate limiting](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/other_features/global_rate_limiting.html)
+shows the central decision-point pattern for limits spanning proxies.
+[Kubernetes leases](https://kubernetes.io/docs/concepts/architecture/leases/)
+show bounded ownership in a cluster. Use one gateway as the authority for
+a configured group of serving peers. Add a versioned machine-only route
+to its existing TLS listener. Peers keep the Go authority checks and
+then identify the already authenticated workspace and key by UUID. The
+peer credential is separate from the user's API key and from the Go
+machine credential. Each peer is scoped to one workspace. Authenticate
+with an [RFC 6750-style bearer header](https://www.rfc-editor.org/rfc/rfc6750.html#section-2.1)
+over verified TLS and pin the authority's CA. Promote the already locked
+[subtle](https://github.com/dalek-cryptography/subtle/blob/main/LICENSE)
+2.6.1 (BSD-3-Clause) crate to compare peer digests in constant time. The
+existing reqwest (MIT OR Apache-2.0), sha2 (MIT OR Apache-2.0) and Rustls
+(Apache-2.0 OR ISC OR MIT) dependencies handle transport and hashing.
+Their licenses allow commercial distribution with applicable notices
+and offline use. The design adds no runtime database, model or dataset.
+
+Acquire a lease before tokenization. Apply RPS and concurrency at the
+authority and then reserve the estimated tokens using the existing
+durable writer. Finish with verified actual usage or retain the debit
+when usage is unknown. The peer stops backend work by its local monotonic
+deadline, calculated from before its acquire request with a guard margin.
+The authority measures the lease from its own admission. A lost peer
+holds capacity until the lease expires. A restarted authority fences new
+admission for the maximum previous lease horizon. The state directory
+lock and deployment must ensure one authority per group. Serving nodes
+must keep bounded clock drift and stay awake while running inference.
+The ordinary no-policy and standalone-policy paths keep their behavior.
+
+A per-instance quota split can protect the aggregate ceiling only with
+static allocations and leaves idle capacity stranded. A new Redis-style
+datastore would add deployment and clock/transaction dependencies, and
+moving this into the Go service requires a cross-lane change. The
+centralized Rust path reuses the same policy and snapshots, requires
+explicit private configuration, and trades an internal round trip for
+exact shared admission. A lost authority stops new work. Automatic
+authority failover and installation-managed peer credentials are outside
+this standalone path.
+
+Exercise two TLS peers sharing an application budget and verify refusal
+before inference, final refunds, expiry and rejection of another peer's
+lease. Test that stale authority state fences restart and unavailable
+authority never falls back to local counters. Report admitted request
+latency through a real loopback TLS peer against local acquisition.
+
+The optimized loopback test measured 250 acquire RPCs with established
+HTTP/TLS clients. The observed p50/p95/p99 were 3.372/16.848/29.861 ms.
+This is the round trip, including validation and the in-memory rate and
+concurrency check. Chat makes a separate durable reserve call and a
+terminal finish call. The test excludes the Go authorization and model
+latency. The two-peer integration uses independent gateway applications
+and connections, with synthetic control and backend fixtures.
+
+A native-process smoke also passed with two serving gateway processes and
+one independent quota authority, all on verified TLS. The scratch overlay
+reused the actual Go distribution handler, PostgreSQL 18.6 with pgvector
+0.8.7, and the CPU vLLM container with its network disabled. The two peers
+used separate state directories and the same real Go gateway identity in
+this fixture. The Rust TLS suite separately checks peers with distinct
+credentials and workspace scopes.
+
+With the application cap set to 71 tokens, the first peer reserved 39.
+The second peer got HTTP 429 before reaching the model. The first stream
+used 32 tokens, which made enough capacity for the second peer's
+39-token reservation. That stream used 32 tokens as well, and the first
+peer was refused on its next attempt. PostgreSQL acknowledged four
+outcomes, recorded 64 actual tokens and released every admission hold.
+The product installer and control policy manager were outside this
+standalone run.
+
+## Native application budget acceptance
+
+[LiteLLM's budgets and rate limits](https://docs.litellm.ai/docs/proxy/users)
+attach ceilings to authority shared by several keys. Verify the ownsolid
+equivalent with real keys issued and checked by Go/PostgreSQL. The test
+uses the existing private quota policy keyed by server-issued key IDs
+and a single native Rust gateway. Keep the tenant ceiling higher than
+each application ceiling so an application refusal can be distinguished
+from a tenant refusal.
+
+Use three keys in the same workspace. Two keys belong to an application
+with a 31-token monthly ceiling. A synthetic 7-token prompt with 16
+allowed output tokens reserves 23, and the valid receipt settles 9.
+The sibling key now has 22 tokens left in its shared application
+budget and must be refused before generation. A key in a different
+application still completes. Verify the refused admission receives a
+terminal no-usage receipt and releases deployment capacity. Existing
+deterministic Rust tests cover rollover and the shared quota authority.
+No dependency, model, dataset or provider credential is added.
+
+The disconnected Linux run passed with three real workspace keys.
+The first call settled 9 tokens. Its sibling returned HTTP 429
+with a positive Retry-After and the application monthly budget code.
+The other application generated normally. PostgreSQL retained two
+successful receipts and one terminal receipt with unknown usage and
+no output. Each released its deployment hold. The two successful
+calls were the only generation dispatches.

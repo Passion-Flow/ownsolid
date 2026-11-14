@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "version": "0.9.0",
+  "python": "3.12.15",
+  "uv": "0.12.23",
+  "packages": {
+    "torch": "2.14.1",
+    "transformers": "5.19.0",
+    "peft": "0.21.2",
+    "accelerate": "1.15.0"
+  },
+  "locks": {
+    "native-macos-arm64.lock": "03d3fab0f311aa4837190ab2e90e30a9c16c51c098fc6e6c41626630c6aa0175",
+    "linux-amd64-cuda.lock": "250fee15d9e7eb9ec71793c743b02f62870094bb494a57a0c463c5ce29399946"
+  },
+  "native_verification": {
+    "os": "darwin",
+    "architecture": "arm64",
+    "minimum_macos_major": 14,
+    "device": "cpu",
+    "qualification": "Native CPU verification only; never NVIDIA/Ascend qualification."
+  },
+  "linux_target": {
+    "os": "linux",
+    "architecture": "amd64",
+    "minimum_glibc": "2.28",
+    "qualification": "Dependency lock only; actual image build/runtime and physical NVIDIA tests remain pending. CUDA13 libraries retain their exact individually locked versions."
+  },
+  "manufacturing": {
+    "venv_seconds": 30,
+    "dependency_seconds": 240,
+    "import_seconds": 60,
+    "download_concurrency": 2,
+    "install_concurrency": 1,
+    "threads": 2
+  },
+  "provenance": "docs/execution/mvp/research-m09.json",
+  "native_core_verification": {
+    "wall_seconds": 300,
+    "maximum_rss_bytes": 6442450944,
+    "maximum_log_bytes": 1048576,
+    "poll_milliseconds": 100,
+    "stop_seconds": 5
+  },
+  "linux_manufacturing": {
+    "pip": "26.2.1",
+    "download_seconds": 1200,
+    "build_seconds": 1800,
+    "import_seconds": 180,
+    "stop_seconds": 10,
+    "maximum_log_bytes": 16777216,
+    "minimum_free_bytes": 42949672960,
+    "memory_bytes": 4294967296,
+    "cpu_threads": 2,
+    "pids_limit": 128,
+    "request_seconds": 30,
+    "retries": 2,
+    "platforms": [
+      "manylinux_2_28_x86_64",
+      "manylinux_2_27_x86_64",
+      "manylinux_2_26_x86_64",
+      "manylinux_2_25_x86_64",
+      "manylinux_2_24_x86_64",
+      "manylinux_2_23_x86_64",
+      "manylinux_2_22_x86_64",
+      "manylinux_2_21_x86_64",
+      "manylinux_2_20_x86_64",
+      "manylinux_2_19_x86_64",
+      "manylinux_2_18_x86_64",
+      "manylinux_2_17_x86_64",
+      "manylinux2014_x86_64",
+      "manylinux2010_x86_64",
+      "manylinux1_x86_64",
+      "linux_x86_64"
+    ],
+    "implementation": "cp",
+    "abis": [
+      "cp312",
+      "abi3",
+      "none"
+    ],
+    "image_installer": {
+      "version": "26.2.1",
+      "filename": "pip-26.2.1-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/f3/6e/1736e5b4ae2b778ef2f81c47d797de9f891d4d8acb047a24ca37a60294dd/pip-26.2.1-py3-none-any.whl",
+      "sha256": "71138adf1f4ca900cdb7d289c21b7494329f2332b6d85f0e1c42108c0384ed3e",
+      "size_bytes": 1816632
+    }
+  }
+}

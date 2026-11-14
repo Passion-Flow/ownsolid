@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "projectone.agent.explicit-environment.v1",
+  "title": "Agent explicitly selected protected environment file key/value contract",
+  "type": "object",
+  "minProperties": 1,
+  "additionalProperties": false,
+  "properties": {
+    "PROJECT_ONE_AGENT_CONTROL_ORIGIN": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for control_origin; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_CA_FILE": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for ca_file; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_STATE_DIRECTORY": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for state_directory; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_DISK_PATH": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for disk_path; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_JOIN_TOKEN_FILE": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for join_token_file; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_EXECUTION_PROFILE": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for execution_profile; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_COMPONENTS_ROOT_DIRECTORY": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for components.root_directory; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_COMPONENTS_SERVICE_USER": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for components.service_user; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_INFERENCE_ROOT_DIRECTORY": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for inference.root_directory; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_INFERENCE_DOCKER_SOCKET": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for inference.docker_socket; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_TRAINING_ROOT_DIRECTORY": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.root_directory; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_TRAINING_DOCKER_SOCKET": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.docker_socket; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_TRAINING_IMAGE_REFERENCE": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.image_reference; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_TRAINING_IMAGE_ID": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.image_id; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_TRAINING_WORKER_SOURCE_SHA256": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.worker_source_sha256; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_ROOT_DIRECTORY": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.root_directory; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_DOCKER_SOCKET": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.docker_socket; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_IMAGE_REFERENCE": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.image_reference; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_IMAGE_ID": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.image_id; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_WORKER_SOURCE_SHA256": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.worker_source_sha256; omitted retains valid JSON; required fields must already be configured; nonempty string satisfying the owning profile/path/image contract; restart required."
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_OUTPUT_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.output_seconds; omitted retains JSON or typed default 300; 1..3600, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_ENROLL_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.enroll_seconds; omitted retains JSON or typed default 20; 1..120, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_REMOVE_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.remove_seconds; omitted retains JSON or typed default 120; 30..300, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_CONTROL_REQUEST_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.control_request_seconds; omitted retains JSON or typed default 15; 1..25, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_CONTROL_HEADER_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.control_header_seconds; omitted retains JSON or typed default 10; 1..20, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_TLS_HANDSHAKE_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.tls_handshake_seconds; omitted retains JSON or typed default 5; 1..15, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_IDLE_CONNECTION_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.idle_connection_seconds; omitted retains JSON or typed default 30; 1..300, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_CONTROL_CONNECTIONS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.control_connections; omitted retains JSON or typed default 2; 1..16, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_BACKOFF_INITIAL_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.backoff_initial_seconds; omitted retains JSON or typed default 1; 1..10, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_BACKOFF_MAX_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.backoff_max_seconds; omitted retains JSON or typed default 30; 1..300, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_COMPONENT_TASK_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.component_task_seconds; omitted retains JSON or typed default 120; 30..240, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_INFERENCE_TASK_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.inference_task_seconds; omitted retains JSON or typed default 1740; 300..1740, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_SYSTEMD_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.systemd_seconds; omitted retains JSON or typed default 25; 1..60, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_MAINTENANCE_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.maintenance_seconds; omitted retains JSON or typed default 10; 1..30, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_METRICS_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.metrics_seconds; omitted retains JSON or typed default 3; 1..15, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_METRICS_HEADER_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.metrics_header_seconds; omitted retains JSON or typed default 2; 1..10, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_DOCKER_STOP_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.docker_stop_seconds; omitted retains JSON or typed default 15; 1..60, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_DOCKER_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.docker_seconds; omitted retains JSON or typed default 30; 1..120, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_DOCKER_HEADER_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.docker_header_seconds; omitted retains JSON or typed default 25; 1..90, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_DOCKER_DIAL_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.docker_dial_seconds; omitted retains JSON or typed default 5; 1..30, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_DOCKER_CONNECTIONS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.docker_connections; omitted retains JSON or typed default 2; 1..16, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_PROBE_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.probe_seconds; omitted retains JSON or typed default 30; 1..120, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_PROBE_HEADER_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.probe_header_seconds; omitted retains JSON or typed default 5; 1..30, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_PROBE_DIAL_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.probe_dial_seconds; omitted retains JSON or typed default 2; 1..10, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_GPU_PROBE_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.gpu_probe_seconds; omitted retains JSON or typed default 10; 1..30, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_MODEL_LOAD_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.model_load_seconds; omitted retains JSON or typed default 600; 30..1200, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_RUNTIME_MODEL_POLL_MILLISECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for runtime.model_poll_milliseconds; omitted retains JSON or typed default 1000; 100..10000, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_USER_ID": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.user_id; omitted retains JSON or typed default 10001; 1..2147483647, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_GROUP_ID": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.group_id; omitted retains JSON or typed default 10001; 1..2147483647, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_PIDS_LIMIT": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.pids_limit; omitted retains JSON or typed default 128; 32..1024, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_TEMPORARY_MEMORY_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.temporary_memory_bytes; omitted retains JSON or typed default 268435456; 16777216..1073741824, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_SHARED_MEMORY_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.shared_memory_bytes; omitted retains JSON or typed default 67108864; 16777216..1073741824, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_LOG_MAXIMUM_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.log_maximum_bytes; omitted retains JSON or typed default 1048576; 65536..16777216, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_LOG_MAXIMUM_FILES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.log_maximum_files; omitted retains JSON or typed default 2; 1..5, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_POLL_MILLISECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.poll_milliseconds; omitted retains JSON or typed default 500; 100..5000, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_STOP_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.stop_seconds; omitted retains JSON or typed default 15; 1..60, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_MAXIMUM_MEMORY_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.maximum_memory_bytes; omitted retains JSON or typed default 8589934592; 134217728..17179869184, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_MAXIMUM_CPU_THREADS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.maximum_cpu_threads; omitted retains JSON or typed default 8; 1..8, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_MINIMUM_FREE_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.minimum_free_bytes; omitted retains JSON or typed default 2147483648; 1048576..1099511627776, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_TRAINING_RUNTIME_HOST_MEMORY_RESERVE_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for training.runtime.host_memory_reserve_bytes; omitted retains JSON or typed default 1073741824; 134217728..4294967296, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_USER_ID": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.user_id; omitted retains JSON or typed default 10001; 1..2147483647, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_GROUP_ID": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.group_id; omitted retains JSON or typed default 10001; 1..2147483647, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_PIDS_LIMIT": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.pids_limit; omitted retains JSON or typed default 128; 32..1024, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_TEMPORARY_MEMORY_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.temporary_memory_bytes; omitted retains JSON or typed default 268435456; 16777216..1073741824, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_SHARED_MEMORY_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.shared_memory_bytes; omitted retains JSON or typed default 67108864; 16777216..1073741824, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_LOG_MAXIMUM_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.log_maximum_bytes; omitted retains JSON or typed default 1048576; 65536..16777216, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_LOG_MAXIMUM_FILES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.log_maximum_files; omitted retains JSON or typed default 2; 1..5, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_POLL_MILLISECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.poll_milliseconds; omitted retains JSON or typed default 500; 100..5000, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_STOP_SECONDS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.stop_seconds; omitted retains JSON or typed default 15; 1..60, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_MAXIMUM_MEMORY_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.maximum_memory_bytes; omitted retains JSON or typed default 8589934592; 134217728..17179869184, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_MAXIMUM_CPU_THREADS": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.maximum_cpu_threads; omitted retains JSON or typed default 8; 1..8, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_MINIMUM_FREE_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.minimum_free_bytes; omitted retains JSON or typed default 2147483648; 1048576..1099511627776, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_MODEL_PREPARATION_RUNTIME_HOST_MEMORY_RESERVE_BYTES": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit override for model_preparation.runtime.host_memory_reserve_bytes; omitted retains JSON or typed default 1073741824; 134217728..4294967296, with owning cross-field/resource constraints; restart required.",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "PROJECT_ONE_AGENT_REGISTRY_CONFIG_FILE": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Protected registry component JSON reference; omitted keeps registry disabled; restart required."
+    }
+  }
+}

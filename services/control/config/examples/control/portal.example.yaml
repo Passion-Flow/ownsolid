@@ -1,0 +1,9 @@
+# Merge into the complete protected control configuration. Restart required.
+# This nondefault bounded policy adds no external notification channel.
+# Application execution retains workflows/knowledge/plugins prerequisites.
+runtime:
+  portal:
+    commit_seconds: 7
+    notification_retention_days: 14
+    notification_maintenance_batch: 25
+    notification_maintenance_seconds: 45

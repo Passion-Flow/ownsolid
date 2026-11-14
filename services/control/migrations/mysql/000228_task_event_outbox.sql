@@ -1,0 +1,1 @@
+ALTER TABLE task_event_outbox ADD INDEX task_event_outbox_due(state,not_before,created_at,id);

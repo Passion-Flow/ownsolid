@@ -1,0 +1,353 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/keys",
+     "children": [
+      {
+       "type": "text",
+       "value": "我的 API 密钥"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "列出你在切换器所选工作空间中签发的密钥。密钥让应用或脚本调用一个模型。密钥在到期、被你撤销或你离开工作空间后停用。这里不会出现别人的密钥，你的密钥也不会出现在别人的门户中。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "签发密钥"
+    }
+   ],
+   "data": {
+    "id": "签发密钥"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": true,
+   "start": 1,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "选择"
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "签发密钥"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "，或按 "
+        },
+        {
+         "type": "inlineCode",
+         "value": "k"
+        },
+        {
+         "type": "text",
+         "value": "。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "按使用它的程序命名，选择模型，并选择有效期。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "填写原因（会保存在审计日志中），然后选择"
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "签发"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "复制密钥。它只显示这一次，之后无法再次读取。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "选择"
+        },
+        {
+         "type": "strong",
+         "children": [
+          {
+           "type": "text",
+           "value": "完成"
+          }
+         ]
+        },
+        {
+         "type": "text",
+         "value": "。密钥详情会打开，其中有调用所需的信息。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "如果没有可选的模型，说明此工作空间尚未发布模型，请联系管理员发布。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "如果响应在途中丢失，"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "重试"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "会找到同一个密钥，但其密文无法再次显示。请撤销该密钥并重新签发。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "调用模型"
+    }
+   ],
+   "data": {
+    "id": "调用模型"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "打开密钥可看到"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "使用此密钥"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "：Base URL、模型名称，以及 cURL、Python 和 Node.js 的示例调用。每个示例都从 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "OWNSOLID_KEY"
+    },
+    {
+     "type": "text",
+     "value": " 环境变量读取密钥，请先设置该变量，不要把密钥写进代码。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Python 和 Node.js 示例需要 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "openai"
+    },
+    {
+     "type": "text",
+     "value": " 软件包。如果你的组织使用私有证书颁发机构，cURL 需要 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "--cacert"
+    },
+    {
+     "type": "text",
+     "value": " 和其证书路径，Python 需要把 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "SSL_CERT_FILE"
+    },
+    {
+     "type": "text",
+     "value": " 设为该路径，Node.js 需要把 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "NODE_EXTRA_CA_CERTS"
+    },
+    {
+     "type": "text",
+     "value": " 设为该路径。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "轮换和撤销"
+    }
+   ],
+   "data": {
+    "id": "轮换和撤销"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "轮换"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "为密钥生成新密文，只显示一次。可以选择旧密文继续有效多久（最长七天），以便不中断地迁移正在使用它的程序。如果密文已泄露，请选择立即停用。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "撤销"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "会立即停用密钥。需要输入密钥名称确认。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "查看调用记录"
+    }
+   ],
+   "data": {
+    "id": "查看调用记录"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "打开密钥可查看用它发起的每次调用，最新的在前：运行时间、结果、使用的令牌数和耗时。"
+    }
+   ]
+  }
+ ]
+}

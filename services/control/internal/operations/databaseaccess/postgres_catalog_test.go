@@ -1,0 +1,51 @@
+package databaseaccess
+
+import (
+	"reflect"
+	"regexp"
+	"sort"
+	"testing"
+
+	"github.com/Passion-Flow/ownsolid/services/control/migrations"
+)
+
+func TestPostgreSQLVariantRuntimeGrantsMatchActualMigrations(t *testing.T) {
+	var actual []string
+	for _, path := range []string{"postgresql/000024_external_imports.up.sql", "postgresql/000025_artifact_objects.up.sql", "postgresql/000026_image_registry.up.sql", "postgresql/000027_task_events.up.sql", "postgresql/000028_middleware.up.sql", "postgresql/000029_private_cluster.up.sql", "postgresql/000060_dataset_draft_import_receipts.up.sql"} {
+		raw, err := migrations.Files.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, match := range regexp.MustCompile(`(?m)^CREATE TABLE ([a-z_]+) \(`).FindAllSubmatch(raw, -1) {
+			actual = append(actual, string(match[1]))
+		}
+	}
+	sort.Strings(actual)
+	wanted := append([]string(nil), postgreSQLVariantTables[:]...)
+	sort.Strings(wanted)
+	if len(actual) != 23 || !reflect.DeepEqual(actual, wanted) {
+		t.Fatalf("runtime grants differ from implemented variant tables: %v / %v", actual, wanted)
+	}
+}
+
+func TestPostgreSQLVariantCatalogRemainsIndependentOfSharedTables(t *testing.T) {
+	if len(applicationTables) != 84 {
+		t.Fatal("vendor variants expanded the shared initial catalog")
+	}
+	for _, required := range postgreSQLVariantTables {
+		found := false
+		for _, name := range postgreSQLTables() {
+			if name == required {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatal("implemented PostgreSQL variant table has no runtime grant", required)
+		}
+		for _, name := range applicationTables {
+			if name == required {
+				t.Fatal("PostgreSQL variant entered the shared initial catalog", required)
+			}
+		}
+	}
+}

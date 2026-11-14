@@ -1,0 +1,11 @@
+--- a/services/control/cmd/server/artifactstores.go
++++ b/services/control/cmd/server/artifactstores.go
+@@ -16,7 +16,7 @@
+ 	if c.ObjectStorage == nil || !c.ObjectStorage.Enabled {
+ 		return nil
+ 	}
+-	if store == nil || store.Dialect() != transaction.PostgreSQL {
++	if store == nil || store.Dialect() != transaction.PostgreSQL && store.Dialect() != transaction.Dameng {
+ 		return errors.New("OBJECT_SCHEMA_NOT_ACTIVE")
+ 	}
+ 	return nil

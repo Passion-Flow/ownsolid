@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit protected datasets environment mapping",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "PROJECT_ONE_DATASETS_SNAPSHOT_MAXIMUM_FILES": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000,
+      "default": 10000,
+      "x-runtime-path": "runtime.datasets.snapshot_maximum_files",
+      "description": "Protected explicit env-file integer count; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_SNAPSHOT_MAXIMUM_BYTES": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 1099511627776,
+      "default": 1073741824,
+      "x-runtime-path": "runtime.datasets.snapshot_maximum_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_SNAPSHOT_MANIFEST_BYTES": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 67108864,
+      "default": 8388608,
+      "x-runtime-path": "runtime.datasets.snapshot_manifest_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_SNAPSHOT_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 120,
+      "x-runtime-path": "runtime.datasets.snapshot_seconds",
+      "description": "Protected explicit env-file integer seconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_UPLOAD_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 30,
+      "x-runtime-path": "runtime.datasets.upload_seconds",
+      "description": "Protected explicit env-file integer seconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_COMMIT_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 10,
+      "x-runtime-path": "runtime.datasets.commit_seconds",
+      "description": "Protected explicit env-file integer seconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_RETRY_DELAY_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 2,
+      "x-runtime-path": "runtime.datasets.retry_delay_seconds",
+      "description": "Protected explicit env-file integer seconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_POLL_MILLISECONDS": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 5000,
+      "default": 500,
+      "x-runtime-path": "runtime.datasets.poll_milliseconds",
+      "description": "Protected explicit env-file integer milliseconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_LEASE_SECONDS": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 600,
+      "default": 60,
+      "x-runtime-path": "runtime.datasets.lease_seconds",
+      "description": "Protected explicit env-file integer seconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_MAX_ATTEMPTS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "default": 3,
+      "x-runtime-path": "runtime.datasets.max_attempts",
+      "description": "Protected explicit env-file integer count; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_CONCURRENCY": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2,
+      "default": 1,
+      "x-runtime-path": "runtime.datasets.concurrency",
+      "description": "Protected explicit env-file integer count; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_CHILD_STOP_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 2,
+      "x-runtime-path": "runtime.datasets.child_stop_seconds",
+      "description": "Protected explicit env-file integer seconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_MEMORY_POLL_MILLISECONDS": {
+      "type": "integer",
+      "minimum": 50,
+      "maximum": 1000,
+      "default": 100,
+      "x-runtime-path": "runtime.datasets.memory_poll_milliseconds",
+      "description": "Protected explicit env-file integer milliseconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_MINIMUM_FREE_BYTES": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 9007199254740991,
+      "default": 67108864,
+      "x-runtime-path": "runtime.datasets.minimum_free_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_MAX_DATASETS_PER_WORKSPACE": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-runtime-path": "runtime.datasets.max_datasets_per_workspace",
+      "description": "Protected explicit env-file integer count; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_MAX_ACTIVE_DRAFTS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-runtime-path": "runtime.datasets.max_active_drafts",
+      "description": "Protected explicit env-file integer count; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_MAX_VERSIONS_PER_DATASET": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "default": 100,
+      "x-runtime-path": "runtime.datasets.max_versions_per_dataset",
+      "description": "Protected explicit env-file integer count; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_VALIDATION_BASIS_POINTS": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 5000,
+      "default": 2000,
+      "x-runtime-path": "runtime.datasets.validation_basis_points",
+      "description": "Protected explicit env-file integer basis points of connected source groups; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_LIMITS_MAXIMUM_BYTES": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 67108864,
+      "default": 16777216,
+      "x-runtime-path": "runtime.datasets.limits.maximum_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_LIMITS_MAXIMUM_ROWS": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 10000,
+      "default": 2000,
+      "x-runtime-path": "runtime.datasets.limits.maximum_rows",
+      "description": "Protected explicit env-file integer count; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_LIMITS_MAXIMUM_LINE_BYTES": {
+      "type": "integer",
+      "minimum": 256,
+      "maximum": 131072,
+      "default": 65536,
+      "x-runtime-path": "runtime.datasets.limits.maximum_line_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_LIMITS_MAXIMUM_TEXT_BYTES": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 32768,
+      "default": 16384,
+      "x-runtime-path": "runtime.datasets.limits.maximum_text_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_LIMITS_MAXIMUM_SOURCE_BYTES": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 512,
+      "default": 512,
+      "x-runtime-path": "runtime.datasets.limits.maximum_source_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_LIMITS_MAXIMUM_ERRORS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000,
+      "default": 200,
+      "x-runtime-path": "runtime.datasets.limits.maximum_errors",
+      "description": "Protected explicit env-file integer count; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_RESOURCES_WALL_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 90,
+      "default": 15,
+      "x-runtime-path": "runtime.datasets.resources.wall_seconds",
+      "description": "Protected explicit env-file integer seconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_RESOURCES_CPU_SECONDS": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "default": 10,
+      "x-runtime-path": "runtime.datasets.resources.cpu_seconds",
+      "description": "Protected explicit env-file integer seconds; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_RESOURCES_MEMORY_BYTES": {
+      "type": "integer",
+      "minimum": 67108864,
+      "maximum": 1073741824,
+      "default": 536870912,
+      "x-runtime-path": "runtime.datasets.resources.memory_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_RESOURCES_MAXIMUM_RESULT_BYTES": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 83886080,
+      "default": 33554432,
+      "x-runtime-path": "runtime.datasets.resources.maximum_result_bytes",
+      "description": "Protected explicit env-file integer bytes; restart required; nonsecret."
+    },
+    "PROJECT_ONE_DATASETS_ARTIFACT_ROOT": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "x-runtime-path": "datasets.artifact_root"
+    },
+    "PROJECT_ONE_DATASETS_PYTHON_EXECUTABLE": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "x-runtime-path": "datasets.python_executable"
+    },
+    "PROJECT_ONE_DATASETS_PROCESSOR_FILE": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^/",
+      "x-runtime-path": "datasets.processor_file"
+    }
+  }
+}

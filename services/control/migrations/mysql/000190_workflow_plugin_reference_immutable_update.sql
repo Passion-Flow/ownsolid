@@ -1,0 +1,4 @@
+CREATE TRIGGER workflow_plugin_reference_immutable_update BEFORE UPDATE ON workflow_plugin_references FOR EACH ROW
+BEGIN
+ SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='WORKFLOW_VERSION_IMMUTABLE';
+END;

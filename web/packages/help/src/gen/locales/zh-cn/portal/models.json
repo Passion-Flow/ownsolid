@@ -1,0 +1,200 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "link",
+     "url": "/models",
+     "children": [
+      {
+       "type": "text",
+       "value": "模型"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "列出你可以在切换器所选工作空间中调用的内容。每一行都是管理员发布到该工作空间的一个名称，也就是调用时填写在 "
+    },
+    {
+     "type": "inlineCode",
+     "value": "model"
+    },
+    {
+     "type": "text",
+     "value": " 字段中的名称。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "查看列表"
+    }
+   ],
+   "data": {
+    "id": "查看列表"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "可调用"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "表示现在发起调用会被受理。"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "不可用"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "表示模型已发布，但目前没有实例在提供服务，在管理员重新启动之前调用都会失败。点击统计卡片可只看对应的模型，也可以按调用名称或其背后的模型搜索。地址会保留筛选条件，因此你可以把当前看到的列表分享给别人。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "模型提供的信息"
+    }
+   ],
+   "data": {
+    "id": "模型提供的信息"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "打开一个模型，可以看到调用名称、Base URL、背后的模型、它的来源、适用场景、可使用的上下文长度和许可协议。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "本地微调"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "表示模型是在此安装环境中基于"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "基于"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "一栏所列的模型继续训练得到的。"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "已发布模型"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "表示它与作者发布时的版本一致。"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "此版本尚未提供价格，也还不能在页面上试用模型。如需立即调用，请选择"
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "签发密钥"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "，并按"
+    },
+    {
+     "type": "link",
+     "url": "/keys",
+     "children": [
+      {
+       "type": "text",
+       "value": "我的 API 密钥"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "操作。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "如果看不到模型"
+    }
+   ],
+   "data": {
+    "id": "如果看不到模型"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "说明此工作空间尚未发布模型，请联系管理员。如果你认为应该有模型，请确认切换器中选择的工作空间是否正确。已撤下的模型不会再出现在这里。"
+    }
+   ]
+  }
+ ]
+}

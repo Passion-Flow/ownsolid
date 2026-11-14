@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit actual parent-owned M28 local gate inputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "configuration",
+    "kubectl",
+    "kubectl_sha256",
+    "kubeconfig",
+    "context",
+    "docker_vm_memory_mib",
+    "peak_additional_memory_mib",
+    "peak_additional_bytes",
+    "minimum_headroom_percent"
+  ],
+  "properties": {
+    "configuration": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Exact existing canonical protected file path. Configuration uses CA/token/manufacturer proof references; kubeconfig is private local-kind embedded mTLS only. No secret literal or download."
+    },
+    "kubectl": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Exact existing canonical protected file path. Configuration uses CA/token/manufacturer proof references; kubeconfig is private local-kind embedded mTLS only. No secret literal or download."
+    },
+    "kubeconfig": {
+      "type": "string",
+      "pattern": "^/",
+      "description": "Exact existing canonical protected file path. Configuration uses CA/token/manufacturer proof references; kubeconfig is private local-kind embedded mTLS only. No secret literal or download."
+    },
+    "kubectl_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Actual measured pinned official existing kubectl bytes; no invented checksum."
+    },
+    "context": {
+      "type": "string",
+      "pattern": "^kind-projectone-m28-[a-f0-9]{12}$",
+      "description": "Explicit parent-owned pre-existing disposable local cluster context; no creation, adoption or production selection."
+    },
+    "docker_vm_memory_mib": {
+      "type": "integer",
+      "const": 6144,
+      "description": "Complete existing Docker VM memory budget in MiB, measured actual daemon capacity; not merely container limits."
+    },
+    "peak_additional_memory_mib": {
+      "type": "integer",
+      "minimum": 6656,
+      "description": "MiB for complete 6144MiB VM plus at least 512MiB control/test allowance, added to unchanged shared DB/Go policies."
+    },
+    "peak_additional_bytes": {
+      "type": "integer",
+      "minimum": 1073741824,
+      "description": "Additional host and VM filesystem peak bytes plus shared DB/recovery peak; required storage mapping is observed."
+    },
+    "minimum_headroom_percent": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 90,
+      "description": "Minimum available filesystem and host memory headroom after additive budget, percent."
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "A task is work the control plane sends to one node's agent, such as collecting its facts. The\n"
+    },
+    {
+     "type": "link",
+     "url": "/tasks",
+     "children": [
+      {
+       "type": "text",
+       "value": "Tasks"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " page lists them, newest first."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Following a task"
+    }
+   ],
+   "data": {
+    "id": "following-a-task"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Filter by state to find what is running or what failed."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "Open a task to see its steps, its log and how it ended."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "A task that is waiting for its node says so. It starts when the node's agent reports again."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "When a task fails"
+    }
+   ],
+   "data": {
+    "id": "when-a-task-fails"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The task's page shows the error and the log lines that led to it. Fix the cause on the node, then\nrun the action again. Failed tasks from the last day also appear on the overview."
+    }
+   ]
+  }
+ ]
+}

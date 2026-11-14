@@ -1,0 +1,5 @@
+[project]
+name = "projectone-training"
+version = "0.9.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["torch==2.14.1", "transformers==5.19.0", "peft==0.21.2", "accelerate==1.15.0"]

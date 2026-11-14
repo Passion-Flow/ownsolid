@@ -1,0 +1,10 @@
+[
+  {
+    "origin": "https://identity.example.invalid",
+    "issuer": "https://identity.example.invalid",
+    "dial_addresses": [
+      "127.0.0.1"
+    ],
+    "ca_file": "/run/projectone/private/provider-ca.pem"
+  }
+]

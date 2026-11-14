@@ -1,0 +1,115 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "任务是控制平面发送给某个节点代理程序的工作，例如采集节点信息。"
+    },
+    {
+     "type": "link",
+     "url": "/tasks",
+     "children": [
+      {
+       "type": "text",
+       "value": "任务"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "页面按时间倒序列出任务。"
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "跟踪任务"
+    }
+   ],
+   "data": {
+    "id": "跟踪任务"
+   }
+  },
+  {
+   "type": "list",
+   "ordered": false,
+   "spread": false,
+   "children": [
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "按状态筛选，找到正在运行或已失败的任务。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "打开任务可以查看它的步骤、日志以及结束方式。"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "listItem",
+     "spread": false,
+     "children": [
+      {
+       "type": "paragraph",
+       "children": [
+        {
+         "type": "text",
+         "value": "正在等待节点的任务会注明这一点；节点的代理程序再次上报后，任务就会开始。"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "任务失败时"
+    }
+   ],
+   "data": {
+    "id": "任务失败时"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "任务页面会显示错误以及导致错误的日志行。在节点上修复原因后，再次执行该操作。最近一天失败的任务也会显示在概览中。"
+    }
+   ]
+  }
+ ]
+}

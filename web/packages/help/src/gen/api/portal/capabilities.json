@@ -1,0 +1,127 @@
+{
+ "title": "ownsolid capabilities",
+ "operations": [
+  {
+   "id": "listCapabilities",
+   "method": "get",
+   "path": "/api/v1/capabilities",
+   "parameters": [],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "$ref": "CapabilityDeclaration"
+     }
+    }
+   ],
+   "errors": {
+    "400": [
+     "VALIDATION_FAILED"
+    ],
+    "401": [
+     "AUTH_REQUIRED",
+     "AUTH_SESSION_EXPIRED"
+    ],
+    "403": [
+     "ACCESS_DENIED"
+    ],
+    "404": [
+     "RESOURCE_NOT_FOUND"
+    ],
+    "421": [
+     "MISDIRECTED_REQUEST"
+    ],
+    "503": [
+     "STORAGE_UNAVAILABLE",
+     "SERVICE_NOT_READY",
+     "STORAGE_TIMEOUT"
+    ]
+   }
+  }
+ ],
+ "schemas": {
+  "CapabilityDeclaration": {
+   "type": "object",
+   "required": [
+    "registries"
+   ],
+   "properties": {
+    "registries": {
+     "type": "array",
+     "items": {
+      "$ref": "CapabilityRegistry"
+     }
+    }
+   }
+  },
+  "CapabilityOption": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "state"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "description": "Stable within its registry; it also names the option's translated text."
+    },
+    "name": {
+     "type": "string",
+     "description": "English name."
+    },
+    "state": {
+     "type": "string",
+     "description": "ready can be chosen now; planned has an open roadmap item; licensed works under a licence or account the customer holds; unsupported is a decision not to support it.",
+     "enum": [
+      "ready",
+      "planned",
+      "licensed",
+      "unsupported"
+     ]
+    },
+    "roadmap_item": {
+     "type": "string",
+     "description": "The roadmap item that makes the option ready or, once ready, made it so. Absent when unsupported."
+    },
+    "reason": {
+     "type": "string",
+     "description": "English: why the option cannot simply be chosen. Present in every state but ready."
+    },
+    "note": {
+     "type": "string",
+     "description": "English: a fact about what is ready, such as what it was run on."
+    }
+   }
+  },
+  "CapabilityRegistry": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "description",
+    "options"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string",
+     "description": "English name."
+    },
+    "description": {
+     "type": "string",
+     "description": "English: what the options are for."
+    },
+    "options": {
+     "type": "array",
+     "items": {
+      "$ref": "CapabilityOption"
+     }
+    }
+   }
+  }
+ }
+}

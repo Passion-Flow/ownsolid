@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "target_profile": "ubuntu24.04-amd64",
+  "go_version": "go1.27.2",
+  "node_version": "v24.21.0",
+  "pnpm_version": "12.11.2",
+  "minimum_free_bytes": 10737418240,
+  "minimum_available_memory_bytes": 4294967296,
+  "maximum_source_files": 20000,
+  "maximum_source_bytes": 268435456,
+  "maximum_dependency_files": 200000,
+  "maximum_dependency_bytes": 4294967296,
+  "command_seconds": 120,
+  "build_seconds": 300,
+  "tests_seconds": 540,
+  "startup_seconds": 90,
+  "cleanup_seconds": 45,
+  "postgres_memory_bytes": 536870912,
+  "postgres_image": "pgvector/pgvector@sha256:ad249f9fb9572979643a47694e59b9a8cdcdf6abc6accebf49bb80ad5f20ff9b",
+  "postgres_extension_version": "0.8.7"
+}

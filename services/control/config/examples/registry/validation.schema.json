@@ -1,0 +1,12 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"Actual Registry large-file acceptance deadlines",
+ "type":"object","additionalProperties":false,
+ "required":["build_seconds","test_seconds","stability_seconds","cleanup_seconds"],
+ "properties":{
+  "build_seconds":{"type":"integer","minimum":30,"maximum":600,"default":180,"description":"Registry owner compile deadline in seconds; no shared memory/CPU/profile relaxation."},
+  "test_seconds":{"type":"integer","minimum":5,"maximum":7200,"default":1800,"description":"Real complete release/OCI/model/backup test deadline in seconds. Capture samples <=60seconds and real timeout is failure."},
+  "stability_seconds":{"type":"integer","minimum":5,"maximum":60,"default":10,"description":"Seconds between host admission observations before actual work."},
+  "cleanup_seconds":{"type":"integer","minimum":1,"maximum":30,"default":5,"description":"Seconds after TERM before only the exact owned process group is killed; retain failed evidence."}
+ }
+}

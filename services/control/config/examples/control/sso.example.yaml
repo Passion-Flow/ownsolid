@@ -1,0 +1,31 @@
+# Overlay for the control configuration, not a standalone configuration.
+# The initial path is implemented; this safe example requires explicit operator opt-in and real provider assets.
+# Paths and destinations are synthetic markers. Never place OAuth client credentials in this file.
+sso:
+  enabled: false
+  keyring_file: /run/projectone/sso-keyring.json
+  providers:
+    - origin: https://gitea.example.invalid:9443
+      issuer: https://gitea.example.invalid:9443
+      dial_addresses: [10.66.0.10]
+      ca_file: /run/projectone/gitea-ca.pem
+runtime:
+  sso:
+    flow_seconds: 180
+    operation_seconds: 15
+    connect_seconds: 2
+    response_bytes: 32768
+    max_concurrent_exchanges: 2
+    maximum_connectors: 8
+    maximum_bindings_per_user: 32
+    maximum_pending_flows: 100
+    start_ip_count: 12
+    start_window_seconds: 60
+    callback_ip_count: 60
+    callback_window_seconds: 60
+    password_ip_count: 6
+    password_window_seconds: 60
+    cleanup_seconds: 30
+    cleanup_timeout_seconds: 5
+    cleanup_batch_size: 50
+    flow_retention_days: 3

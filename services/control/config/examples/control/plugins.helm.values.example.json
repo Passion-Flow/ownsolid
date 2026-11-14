@@ -1,0 +1,29 @@
+{
+  "architecture": "amd64",
+  "image": {
+    "reference": "projectone/control:replace-with-loaded-current-signed-tool-amd64-image"
+  },
+  "knowledge": {
+    "enabled": true,
+    "scratchMountPath": "/var/lib/projectone/knowledge-work",
+    "scratchMiB": 128
+  },
+  "workflows": {
+    "enabled": true
+  },
+  "lifecycle": {
+    "terminationGraceSeconds": 45
+  },
+  "resources": {
+    "requestMemoryMiB": 1536,
+    "limitMemoryMiB": 3072,
+    "requestCPU": 500,
+    "limitCPU": 2000
+  },
+  "runtime": {
+    "goMemoryMiB": 768
+  },
+  "plugins": {
+    "enabled": true
+  }
+}

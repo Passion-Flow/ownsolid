@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 30s
+  scrape_timeout: 5s
+
+scrape_configs:
+  - job_name: ownsolid-platform-readiness
+    metrics_path: /probe
+    params:
+      module: [private_https_ready]
+    static_configs:
+      - targets: ["https://admin.site.invalid/health/ready"]
+        labels:
+          site_id: site-a
+          endpoint: admin-readiness
+      - targets: ["https://portal.site.invalid/health/ready"]
+        labels:
+          site_id: site-a
+          endpoint: portal-readiness
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [endpoint]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: probe_success|probe_duration_seconds|probe_http_status_code
+        action: keep

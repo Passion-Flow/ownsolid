@@ -1,0 +1,26 @@
+{
+  "mode": "serve",
+  "architecture": "amd64",
+  "image": {"reference": "REPLACE_WITH_IMPORTED_AMD64_CONTROL_IMAGE_AT_SHA256", "pullPolicy": "Never"},
+  "configuration": {"existingConfigMap": "replace-runtime-config", "privateMountPath": "/run/projectone"},
+  "secrets": {"existingSecret": "replace-runtime-secret", "files": ["database-dsn", "auth-hmac", "mail-keyring.json", "certificate.pem", "private-key.pem", "license-trust.json"]},
+  "runtime": {"uid": 10001, "gid": 10001, "goMemoryMiB": 768},
+  "probes": {"host": "admin.example.invalid"},
+  "storage": {
+    "models": {"existingClaim": "replace-models", "mountPath": "/var/lib/projectone/models"},
+    "datasets": {"existingClaim": "replace-datasets", "mountPath": "/var/lib/projectone/datasets"},
+    "training": {"existingClaim": "replace-training", "mountPath": "/var/lib/projectone/training"},
+    "preparations": {"existingClaim": "replace-preparations", "mountPath": "/var/lib/projectone/preparations"}
+  },
+  "operator": {
+    "acknowledgeNamespace": "",
+    "jobID": "",
+    "existingConfigMap": "",
+    "existingSecret": "",
+    "command": "verify-preparation-files",
+    "arguments": [],
+    "interactive": false,
+    "activeDeadlineSeconds": 600,
+    "snapshot": {"existingClaim": "", "mountPath": "/var/lib/projectone/snapshots"}
+  }
+}
