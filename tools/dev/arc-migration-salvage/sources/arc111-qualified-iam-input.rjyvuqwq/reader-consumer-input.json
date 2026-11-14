@@ -1,0 +1,70 @@
+{
+  "actual_arc_reader_consumption_executed": false,
+  "close": "(*identityhttp.AgentGateway).ClosePublishedReaders() error",
+  "combined_compiler_started": false,
+  "combined_unit_or_native_tests_executed": false,
+  "construction_owner": "Original IAM constructor opens TRN concrete readers, binds the one existing service graph, leaves Store fields nil, and unwinds partial open or graph errors. ARC does not open unused readers.",
+  "constructor": "identityhttp.NewAgentGatewayWithPublishedReaders(s *identity.Service, ready func() error, tenant string) (*identityhttp.AgentGateway, error)",
+  "iam_corrected_unit_result_received": true,
+  "iam_owner_qualification": {
+    "actual_arc_caller_executed": false,
+    "database_cases_executed": 0,
+    "elapsed_seconds": 9.018893875,
+    "failure_count": 0,
+    "original_commit": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+    "passed_cleanup_subcases": 3,
+    "passed_roots": 3,
+    "result_sha256": "19556c297c46005cc0c2639d39ee9945f5aa137d87c6c56106aa2e34b4621b17",
+    "scope": "Exact IAM4 plus TRN21 overlay, file-only constructor and failure cleanup; not ARC combined process",
+    "skip_count": 0
+  },
+  "namespace_inputs": [
+    "existing Config.Datasets.ArtifactRoot",
+    "existing Config.Training.ArtifactRoot"
+  ],
+  "owner_source_verification": {
+    "formal_sql_catalog_checks_and_v1_unchanged_from_0f47a66b": true,
+    "iam_original_paths_byte_identical": 4,
+    "iam_research_byte_identical": true,
+    "model_original_paths_byte_identical": 13,
+    "trn_original_paths_byte_identical": 21
+  },
+  "process_lifetime": [
+    "Register ClosePublishedReaders immediately after successful construction.",
+    "Retain its actual error in the process failure; close the pool last.",
+    "Refuse exhausted startup context before serving.",
+    "Seal new HTTP admission and drain sessions.",
+    "Join admitted HTTP handlers and real RPC callbacks plus their receive loops.",
+    "Join original background workers.",
+    "Only confirmed joins permit reader close, then pool close.",
+    "A caller timeout retains still-used owners and does not claim a completed join."
+  ],
+  "qualification_boundaries": [
+    "The prior e321fdc opportunity remains NOTRUN on SSH banner timeout255 before carrier acquisition; it is not an attempt or result for this source.",
+    "No SQL catalog fingerprints have been derived or changed.",
+    "No source B, positive formal61 admission or MODEL qualification exists.",
+    "No main publication, roadmap tick or supported claim.",
+    "Original IAM corrected file-only opportunity passed and its exact DAG and bytes are preserved. No concurrent Mac compiler, queue, Linux retry or new resource opportunity is authorized by this preparation."
+  ],
+  "selection": "Either configured namespace selects the required concrete pair; both absent preserves NewAgentGateway. A partial or invalid configured pair fails, without legacy fallback.",
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "source_inputs": {
+    "arc_actual_caller": "8e9a6c4ab6fa144edfd935f2b796e232ef7bc8e7",
+    "arc_dag_merge": "6999a6e5b8b16a9eb741e87487eba368a3a1621c",
+    "arc_formal_sql": "0f47a66bcb84c585b00bb1a92bf30f455017c1c9",
+    "arc_qualification_boundary": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+    "arc_request_rpc_join": "1eba3cc36beead54356c07b33f75b180b8054ca0",
+    "iam_original_bundle_sha256": "7016466592a837b546850baaa5fda481e2f3e9746549337a3ea1ec92a84cf1d4",
+    "iam_original_commit": "b3c2a700fe55e50be61c35155f9d43de665ff5ae",
+    "iam_original_parent": "9a0543b9a84fbe82f45e3e67da24cca67748aaf2",
+    "iam_original_research": "9a0543b9",
+    "iam_original_review_tree": "1af0ca5497fbbe83875eb6af4769fad4198135ac",
+    "iam_original_tree": "d5e83cf914f3866a8d9e219dff63470886ee134f",
+    "iam_patch_sha256": "8907bbf2f38ce3aec7effb424d33aa4f40bff795ac72fd638d14d1208e0fb53d",
+    "model": "db8435034a2a94a3285a059f6bd40237322ae1c2",
+    "trn": "e639db9035b0b2c0229c90175493c605f328e295"
+  },
+  "state": "Actual caller source wired and exact original qualified IAM DAG retained. Combined process and native qualification pending.",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "trusted_tenant_input": "installedTenant(startup, original selected transaction.Store)"
+}

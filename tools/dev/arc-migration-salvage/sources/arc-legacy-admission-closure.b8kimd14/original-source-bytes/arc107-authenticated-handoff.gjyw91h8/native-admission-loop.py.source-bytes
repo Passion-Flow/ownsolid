@@ -1,0 +1,11 @@
+from pathlib import Path
+import random,subprocess,time
+root=Path(__file__).resolve().parent
+for attempt in range(90):
+ with(root/'prepare-driver.log').open('ab') as log:
+  code=subprocess.run(['python3','-I',str(root/'native-prepare.py'),str(root)],stdout=log,stderr=subprocess.STDOUT).returncode
+ if code!=75:break
+ with(root/'prepare-lease.log').open('a') as log:log.write(str(time.time())+' resource lease busy\n')
+ time.sleep(random.uniform(7,13))
+(root/'prepare-driver-exit').write_text(str(code)+'\n')
+raise SystemExit(code)

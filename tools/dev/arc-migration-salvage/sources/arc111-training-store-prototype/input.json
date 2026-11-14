@@ -1,0 +1,7 @@
+{
+  "bytes": 1791,
+  "sha256": "07e0a60271977cc2412025d3a557f22b671ea076a226b44cd0ba4bb2275d0b0c",
+  "test_sha256": "9e391dfe97fe928560b0ba2489479f3bbc4de344591cf096d568402acb87b566",
+  "runner_sha256": "d65d0904c582e9459564713c22cecdb6f177c09668dfee020e291362567c12df",
+  "scope": "Observed current gateway dataset-store composition boundary; actual control retry, no restricted-role acceptance"
+}

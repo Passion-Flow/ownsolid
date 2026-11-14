@@ -1,0 +1,11 @@
+{
+  "source_tree": "4631e3091ee1870657d76d91d68a2b4677b85785",
+  "equivalent_current_arc_source": "1e687ed99bc0727016c15c616d95124e9e4a212c",
+  "scope": "native HTTP transport and gateway race suites; platform/api-agent/pkg/workspace/control module inputs unchanged",
+  "cached_payload_hashes": {
+    "manifest.json": "3a1cdfedeaa36963c8526f37b2c5ef74a66088dcc5d9efd8631ebf78b81ca392",
+    "update.patch": "539982e132e89db1ab947dda8dd031637678b2da9d3c68eabedecc43390b2e45",
+    "verify-source.py": "1f771ec6daf731585bab6878ceb6fec5613e6a64d086b41c8f24caf0a7935368"
+  },
+  "base_source": "/root/lane-arc-audit58.QQe1KRCn/repo"
+}

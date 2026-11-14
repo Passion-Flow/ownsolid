@@ -1,0 +1,11 @@
+from pathlib import Path
+import random,subprocess,time
+b=Path(__file__).resolve().parent
+for i in range(181):
+ with(b/'compact-build-queue.log').open('ab') as log:code=subprocess.run(['python3','-I',str(b/'compact-cross-build.py')],stdout=log,stderr=subprocess.STDOUT).returncode
+ if code!=75:break
+ time.sleep(random.uniform(7,13))
+(b/'compact-build-queue.exit').write_text(str(code)+'\n')
+if code==0:
+ with(b/'native-compact-launch.log').open('ab') as log:code=subprocess.run(['python3','-I',str(b/'upload-native-compact.py')],stdout=log,stderr=subprocess.STDOUT).returncode
+(b/'compact-queue.exit').write_text(str(code)+'\n')

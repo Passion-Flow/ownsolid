@@ -1,0 +1,26 @@
+{
+  "ownsolid-age-gateway-a": {
+    "rows": 61,
+    "stopped_rows": 23,
+    "sockets": {
+      "listen": 1,
+      "established": 477,
+      "time_wait": 24
+    },
+    "memory_mib_max": 106.2,
+    "cpu_percent_max": 21.86,
+    "pids_max": 21
+  },
+  "ownsolid-age-gateway-b": {
+    "rows": 61,
+    "stopped_rows": 0,
+    "sockets": {
+      "listen": 1,
+      "established": 932,
+      "time_wait": 51
+    },
+    "memory_mib_max": 198.5,
+    "cpu_percent_max": 41.53,
+    "pids_max": 21
+  }
+}

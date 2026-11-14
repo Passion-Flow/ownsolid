@@ -1,0 +1,215 @@
+from pathlib import Path
+import os,sys,json,time,stat,hashlib,fcntl,subprocess,signal,shutil,re,tempfile,tarfile,io,socket,secrets,uuid,base64
+cfg=json.loads(sys.argv[1]); start=time.monotonic(); end=start+1100; work_end=end-120; phase_end=start+45
+os.umask(0o077)
+record={'source':cfg['source'],'tree':cfg['tree'],'state':'NOTRUN','runner_pid':os.getpid(),'remote_budget_seconds':1100,'cleanup_reserve_seconds':120,'stages':[],'metadata':[],'lock_nb_attempts':[],'runtime_profiles_executed':[],'go_compilers_started':0}
+root=None;locks=[];children=[];container=None;volume=None;network=None;secrets_owned=[];input_data=None
+expected_locks=[('/run/lock/ownsolid-heavy.lock',29,82),('/root/lane-sci-tools/heavy-test.lock',64512,7508772)]
+def emit(name,value):
+ try: print('ARC_NATIVE_'+name+' '+json.dumps(value,sort_keys=True),flush=True)
+ except BrokenPipeError: pass
+def save():
+ if root is not None:(root/'result.json').write_text(json.dumps(record,sort_keys=True,indent=2)+'\n')
+def lock_identity(s):return {'dev':s.st_dev,'ino':s.st_ino,'uid':s.st_uid,'mode':stat.S_IMODE(s.st_mode),'nlink':s.st_nlink,'size':s.st_size,'regular':stat.S_ISREG(s.st_mode)}
+def check_locks():
+ for fd,path,dev,ino in locks:
+  a=os.fstat(fd);b=os.lstat(path)
+  assert a.st_dev==b.st_dev==dev and a.st_ino==b.st_ino==ino and a.st_uid==b.st_uid==0 and stat.S_ISREG(a.st_mode) and stat.S_ISREG(b.st_mode) and a.st_nlink==b.st_nlink==1 and a.st_size==b.st_size==0,'LOCK_IDENTITY_CHANGED'
+def group_members(pgid):
+ found=[]
+ for line in subprocess.check_output(['ps','-e','-o','pid=,ppid=,pgid=,lstart=,stat=,comm='],text=True).splitlines():
+  p=line.split(None,3)
+  if len(p)==4 and int(p[2])==pgid:found.append(line.strip())
+ return found
+def stop_child(p):
+ if p.poll() is None:
+  os.killpg(p.pid,signal.SIGTERM)
+  try:p.wait(timeout=max(.01,min(5,end-time.monotonic())))
+  except subprocess.TimeoutExpired:
+   os.killpg(p.pid,signal.SIGKILL);p.wait(timeout=max(.01,min(5,end-time.monotonic())))
+ left=group_members(p.pid)
+ if left:
+  os.killpg(p.pid,signal.SIGKILL);until=min(end,time.monotonic()+3)
+  while time.monotonic()<until and group_members(p.pid):time.sleep(.05)
+ return group_members(p.pid)
+def command(name,argv,data=None,timeout=20,allow=False,cleanup=False):
+ limit=end if cleanup else min(work_end,phase_end)
+ remaining=limit-time.monotonic()
+ if remaining<=.5:raise TimeoutError('ABSOLUTE_PHASE_CUTOFF_'+name)
+ check_locks();began=time.monotonic()
+ p=subprocess.Popen(argv,stdin=subprocess.PIPE if data is not None else subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True,close_fds=True);children.append(p)
+ try:stdout,stderr=p.communicate(data,timeout=min(timeout,remaining))
+ except subprocess.TimeoutExpired:
+  stop_child(p);stdout,stderr=p.communicate();raise TimeoutError('CHILD_TIMEOUT_'+name)
+ info={'name':name,'pid':p.pid,'exit':p.returncode,'elapsed_seconds':time.monotonic()-began,'stdout_sha256':hashlib.sha256(stdout).hexdigest(),'stderr_sha256':hashlib.sha256(stderr).hexdigest()}
+ if root is not None:
+  (root/(name+'.stdout')).write_bytes(stdout);(root/(name+'.stderr')).write_bytes(stderr)
+ record['stages'].append(info);save();check_locks()
+ if p.returncode and not allow:raise RuntimeError('CHILD_FAILED_'+name+'_exit_'+str(p.returncode))
+ return stdout,p.returncode
+def psql(name,db,sql,timeout=30):
+ return command(name,['docker','exec','-i',container,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','postgres','-d',db],sql.encode() if isinstance(sql,str) else sql,timeout)[0]
+def catalog(name,db,schema,version):
+ raw=psql(name+'-catalog-query',db,'SET search_path="'+schema+'";\n'+(root/'metadata-inputs/catalog.sql').read_text())
+ assert raw.endswith(b'\n') and len(raw)>1000
+ raw=raw[:-1];parsed=json.loads(raw);assert parsed['table_count']==(122 if version==61 else 120),(name,parsed['table_count'])
+ (root/(name+'.catalog.json')).write_bytes(raw)
+ ledger=psql(name+'-ledger-query',db,'SET search_path="'+schema+'";\n'+(root/'metadata-inputs/ledger.sql').read_text()).rstrip(b'\n')
+ expected=[[m['version'],m['sha256']] for m in input_data['migrations'] if m['version']<=version]
+ assert json.loads(ledger)==expected,(name,'LEDGER_MISMATCH');(root/(name+'.ledger.json')).write_bytes(ledger)
+ value={'name':name,'database':db,'schema':schema,'version':version,'table_count':parsed['table_count'],'catalog_bytes':len(raw),'catalog_sha256':hashlib.sha256(raw).hexdigest(),'ledger_sha256':hashlib.sha256(ledger).hexdigest(),'ledger_entries':len(expected)}
+ record['metadata'].append(value);save();emit('HISTORY',value);return value
+def terminate(signum,frame):raise SystemExit(128+signum)
+for sig in [signal.SIGTERM,signal.SIGINT,signal.SIGHUP]:signal.signal(sig,terminate)
+try:
+ memory={x.split(':')[0]:int(x.split(':')[1].split()[0])*1024 for x in Path('/proc/meminfo').read_text().splitlines() if x.split(':')[0] in ['MemFree','MemAvailable']}
+ psi=float(re.search(r'^full avg10=([0-9.]+)',Path('/proc/pressure/io').read_text(),re.M)[1]);disk=shutil.disk_usage('/root').free
+ heavy=[x.strip() for x in subprocess.check_output(['ps','-e','-o','pid=,comm='],text=True).splitlines() if x.split() and x.split()[-1] in {'go','compile','link','rustc','cargo','make','gcc','cc1'}]
+ record['preflight']={'memory_bytes':memory,'full_io_psi_avg10':psi,'disk_free_bytes':disk,'foreign_heavy':heavy};emit('PREFLIGHT',record['preflight'])
+ assert memory['MemFree']>=2*1024**3 and memory['MemAvailable']>=8*1024**3 and disk>=30*1024**3 and psi<=5 and not heavy,'RESOURCE_REFUSAL'
+ for path,dev,ino in expected_locks:
+  s=os.lstat(path);assert (s.st_dev,s.st_ino,s.st_uid)==(dev,ino,0) and stat.S_ISREG(s.st_mode) and s.st_nlink==1 and s.st_size==0,'LOCK_PATH_REFUSAL'
+  fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC);s=os.fstat(fd)
+  assert (s.st_dev,s.st_ino,s.st_uid)==(dev,ino,0) and stat.S_ISREG(s.st_mode),'LOCK_FD_REFUSAL'
+  record['lock_nb_attempts'].append({'path':path,'identity':lock_identity(s)})
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:os.close(fd);raise RuntimeError('LOCK_BUSY_NOTRUN')
+  locks.append((fd,path,dev,ino));check_locks()
+ record['admitted']=True
+ root=Path(tempfile.mkdtemp(prefix='lane-arc111-formal61-e1.',dir='/root'));record['remote_root']=str(root);save();emit('ROOT',str(root))
+ image_raw,_=command('image-inspect',['docker','image','inspect',cfg['image']],timeout=10);image=json.loads(image_raw)[0]
+ assert image['Id']==cfg['image'] and image['Architecture']=='amd64' and image['Os']=='linux','IMAGE_REFUSAL'
+ volumes=list(image['Config']['Volumes']);assert len(volumes)==1 and volumes[0].startswith('/var/lib/postgresql'),'VOLUME_TARGET_REFUSAL'
+ record['image']={'id':image['Id'],'os':image['Os'],'architecture':image['Architecture'],'volume_target':volumes[0]};save()
+ raw=sys.stdin.buffer.read(cfg['payload_bytes']+1)
+ assert len(raw)==cfg['payload_bytes'] and hashlib.sha256(raw).hexdigest()==cfg['payload_sha256'],'PAYLOAD_REFUSAL'
+ with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
+  actual=set()
+  for member in archive:
+   assert member.isfile() and member.name in cfg['payload_members'] and member.name not in actual and '..' not in Path(member.name).parts and not Path(member.name).is_absolute()
+   data=archive.extractfile(member).read();expected=cfg['payload_members'][member.name]
+   assert len(data)==expected['bytes'] and hashlib.sha256(data).hexdigest()==expected['sha256'],member.name
+   dest=root/member.name;dest.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+   with dest.open('xb') as f:f.write(data)
+   actual.add(member.name)
+  assert actual==set(cfg['payload_members'])
+ manifest=json.loads((root/'source-manifest.json').read_text());assert manifest['source']==cfg['source'] and manifest['tree']==cfg['tree'] and len(manifest['files'])==5102
+ expected={m['path']:m for m in manifest['files']};seen=set();up={}
+ with tarfile.open(root/'frozen-source.tar.gz','r:gz') as archive:
+  for member in archive:
+   if member.isdir():continue
+   ref=expected[member.name];assert member.name not in seen
+   data=member.linkname.encode() if member.issym() else archive.extractfile(member).read()
+   assert len(data)==ref['bytes'] and hashlib.sha256(data).hexdigest()==ref['sha256'],member.name
+   if member.name.startswith('services/control/migrations/postgresql/') and member.name.endswith('.up.sql'):up[member.name]=hashlib.sha256(data).hexdigest()
+   if member.name=='services/control/internal/platform/database/catalog.go':catalog_go=data
+   seen.add(member.name)
+ assert seen==set(expected)
+ input_data=json.loads((root/'migration-inputs.json').read_text())
+ for m in input_data['migrations']:assert up[m['path']]==m['sha256']
+ assert re.search(rb'const CatalogSQL = `([\s\S]*?)`',catalog_go)[1]+b';\n'==(root/'metadata-inputs/catalog.sql').read_bytes()
+ record['all_source_paths_and_migration_inputs_verified']=True;record['native_binaries_locally_verified_not_executed']=json.loads((root/'binding.json').read_text())['native_binaries_locally_verified'];save()
+ assert time.monotonic()<phase_end,'ADMISSION_PHASE_EXCEEDED'
+ phase_end=min(work_end,time.monotonic()+60)
+ fixture=str(uuid.uuid4());suffix=fixture.replace('-','');record['fixture_uuid']=fixture
+ network='arc111-formal61-'+suffix;volume='arc111-formal61-'+suffix;container='arc111-formal61-'+suffix
+ labels=['--label','projectone.owner=mvp-development','--label','projectone.milestone=M12','--label','projectone.fixture_id='+fixture]
+ _,absent=command('volume-precreate-inspect',['docker','volume','inspect',volume],allow=True);assert absent!=0
+ command('network-create',['docker','network','create','--internal','--driver','bridge',*labels,network]);record['network_created']=network;save()
+ command('volume-create',['docker','volume','create',*labels,volume]);record['volume_created']=volume;save()
+ sock=socket.socket();sock.bind(('127.0.0.1',0));port=sock.getsockname()[1];sock.close();record['loopback_port']=port
+ password=secrets.token_urlsafe(32);password_file=root/'postgres-password';password_file.write_text(password+'\n');secrets_owned.append(password_file)
+ dsn=root/'database-input';dsn.write_text('postgres://postgres:'+password+'@127.0.0.1:'+str(port)+'/arc111_catalog_test?sslmode=disable\n');secrets_owned.append(dsn)
+ created,_=command('container-create',['docker','create','--name',container,*labels,'--network',network,'--publish','127.0.0.1:'+str(port)+':5432','--cpus','2','--memory','4g','--memory-swap','4g','--pids-limit','256','--env','POSTGRES_DB=arc111_catalog_test','--env','POSTGRES_USER=postgres','--env','POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password','--env','POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=trust','--mount','type=bind,src='+str(password_file)+',dst=/run/secrets/postgres-password,readonly','--mount','type=volume,src='+volume+',dst='+volumes[0],cfg['image'],'postgres','-c','cluster_name=knowledge-fixture-'+fixture,'-c','log_statement=none','-c','log_parameter_max_length=0','-c','log_min_error_statement=panic'])
+ record['container_id']=created.decode().strip();save()
+ passwd,_=command('container-postgres-identity',['docker','cp',container+':/etc/passwd','-'])
+ with tarfile.open(fileobj=io.BytesIO(passwd)) as archive:
+  entry=next(x for x in archive if x.name=='passwd' or x.name.endswith('/passwd'));line=next(x for x in archive.extractfile(entry).read().decode().splitlines() if x.startswith('postgres:'));parts=line.split(':');pg_uid,pg_gid=int(parts[2]),int(parts[3])
+ assert pg_uid>0;os.chown(password_file,pg_uid,pg_gid);os.chmod(password_file,0o600)
+ command('container-start',['docker','start',container])
+ ready_limit=min(phase_end,time.monotonic()+35)
+ while True:
+  _,code=command('readiness-'+str(len(record['stages'])),['docker','exec',container,'pg_isready','-U','postgres','-d','arc111_catalog_test'],timeout=3,allow=True)
+  if code==0:break
+  assert time.monotonic()<ready_limit,'POSTGRES_READY_TIMEOUT';time.sleep(.3)
+ info_raw,_=command('container-scope-inspect',['docker','inspect',container]);ci=json.loads(info_raw)[0]
+ assert ci['Image']==cfg['image'] and ci['Config']['Labels']['projectone.fixture_id']==fixture and ci['HostConfig']['Memory']==4*1024**3 and ci['HostConfig']['NanoCpus']==2000000000
+ assert ci['HostConfig']['PortBindings']['5432/tcp']==[{'HostIp':'127.0.0.1','HostPort':str(port)}]
+ net_raw,_=command('network-scope-inspect',['docker','network','inspect',network]);ni=json.loads(net_raw)[0];assert ni['Internal'] and len(ni['Containers'])==1
+ routes,_=command('container-routes',['docker','exec',container,'cat','/proc/net/route']);assert not any(x.split()[1]=='00000000' for x in routes.decode().splitlines()[1:] if x.split()),'EXTERNAL_DEFAULT_ROUTE'
+ with socket.create_connection(('127.0.0.1',port),timeout=3):pass
+ record['fixture_scope']={'cluster':'knowledge-fixture-'+fixture,'loopback_port':port,'internal_network':True,'no_external_default_route':True,'host_loopback_tcp_reached':True,'cpus':2,'memory_bytes':4*1024**3,'volume':volume};save()
+ actual=psql('postgres-vector-version','arc111_catalog_test',"CREATE EXTENSION vector;\nSELECT current_setting('server_version_num'),current_setting('cluster_name'),extversion FROM pg_extension WHERE extname='vector' AND extnamespace='public'::regnamespace;\n")
+ assert actual.decode().strip()=='180006|knowledge-fixture-'+fixture+'|0.8.7',actual.decode();record['postgres_vector_verified']=True;save()
+ phase_end=min(work_end,time.monotonic()+180)
+ def new_schema():
+  s='m01_'+uuid.uuid4().hex;psql('schema-create-'+s,'arc111_catalog_test','CREATE SCHEMA "'+s+'";');return s
+ def apply(name,db,schema,file):return psql(name,db,'\\set schema '+schema+'\n'+(root/'metadata-inputs'/file).read_text(),40)
+ baseline=new_schema();apply('baseline60-prefix','arc111_catalog_test',baseline,'prefix-60.sql');b=catalog('baseline-fresh60','arc111_catalog_test',baseline,60)
+ assert b['catalog_sha256']=='4999ec1b3e7ccad081e2290270860c362d23d56ba088441dee7869f734f608d7','FRESH60_BASELINE_DIFFERS'
+ fresh=new_schema();apply('fresh61-prefix','arc111_catalog_test',fresh,'prefix-61.sql');catalog('fresh61','arc111_catalog_test',fresh,61)
+ for version in range(55,62):
+  schema=new_schema();apply('prefix-'+str(version),'arc111_catalog_test',schema,'prefix-'+str(version)+'.sql')
+  dump,_=command('dump-at-'+str(version),['docker','exec',container,'pg_dump','-U','postgres','-d','arc111_catalog_test','-Fc','--no-owner','--no-privileges','--lock-wait-timeout=5s','--schema',schema],timeout=20);assert 100<len(dump)<=64*1024**2
+  (root/('restore-at-'+str(version)+'.dump')).write_bytes(dump)
+  target='m12_restore_'+uuid.uuid4().hex+'_test';psql('restore-db-create-'+str(version),'arc111_catalog_test','CREATE DATABASE "'+target+'";');psql('restore-vector-'+str(version),target,'CREATE EXTENSION vector;')
+  command('restore-at-'+str(version),['docker','exec','-i',container,'pg_restore','-U','postgres','-d',target,'--no-owner','--no-privileges','--exit-on-error'],dump,20)
+  if version==60:
+   before=catalog('baseline-restored60',target,schema,60);assert before['catalog_sha256']=='93b8967dbcc4b90c1692dcf67076192a8b97ead256335cf2a4fbccb6dcdf87b4','RESTORED60_BASELINE_DIFFERS'
+  apply('upgrade-from-'+str(version),target,schema,'upgrade-from-'+str(version)+'.sql');catalog('restored-at-'+str(version),target,schema,61)
+ expected_histories={'fresh61'}|{'restored-at-'+str(n) for n in range(55,62)}
+ histories={x['name']:x for x in record['metadata'] if x['version']==61};assert set(histories)==expected_histories
+ record['state']='METADATA_COMPLETE_REBUILD_REQUIRED';record['actual_catalog_pin_change_required']=True;record['original_schema60_pins_unchanged']=True;record['source_b_qualified']=False;record['reason']='Observed schema61 catalogs require a new frozen pin source and matching native binaries; current schema60 pins remain fail-closed. No rebuild is authorized in this allocation.'
+ save()
+except BaseException as error:
+ record['error_type']=type(error).__name__;record['error']=str(error)[:2000]
+ if record.get('admitted'):record['state']='FAILED_OR_INCOMPLETE'
+finally:
+ for sig in [signal.SIGTERM,signal.SIGINT,signal.SIGHUP]:signal.signal(sig,signal.SIG_IGN)
+ cleanup_begin=time.monotonic();remaining=[]
+ for p in children:
+  try:
+   left=stop_child(p)
+   if left:remaining.append({'group':p.pid,'members':left})
+  except BaseException as error:remaining.append({'group':p.pid,'error':str(error)})
+ record['remaining_owned_groups']=remaining
+ phase_end=end
+ if container and record.get('container_id'):
+  try:
+   command('cleanup-postgres-logs',['docker','logs',record['container_id']],timeout=10,allow=True,cleanup=True)
+   command('cleanup-container-remove',['docker','rm','--force','--volumes',record['container_id']],timeout=25,cleanup=True)
+   _,code=command('cleanup-container-absence',['docker','inspect',record['container_id']],timeout=10,allow=True,cleanup=True);record['container_absent']=code!=0
+  except BaseException as error:record['container_cleanup_error']=str(error)
+ if volume and record.get('volume_created'):
+  try:
+   command('cleanup-volume-remove',['docker','volume','rm',volume],timeout=15,cleanup=True)
+   _,code=command('cleanup-volume-absence',['docker','volume','inspect',volume],timeout=10,allow=True,cleanup=True);record['volume_absent']=code!=0
+  except BaseException as error:record['volume_cleanup_error']=str(error)
+ if network and record.get('network_created'):
+  try:
+   command('cleanup-network-remove',['docker','network','rm',network],timeout=15,cleanup=True)
+   _,code=command('cleanup-network-absence',['docker','network','inspect',network],timeout=10,allow=True,cleanup=True);record['network_absent']=code!=0
+  except BaseException as error:record['network_cleanup_error']=str(error)
+ for secret in secrets_owned:
+  try:secret.unlink();assert not secret.exists()
+  except BaseException as error:record.setdefault('secret_cleanup_errors',[]).append(type(error).__name__)
+ record['credential_paths_absent']=all(not x.exists() for x in secrets_owned)
+ record['cleanup_seconds']=time.monotonic()-cleanup_begin
+ try:check_locks();record['lock_identities_retained']=True
+ except BaseException as error:record['lock_identity_error']=str(error)
+ record['lock_fd_closure']=[]
+ for fd,path,dev,ino in reversed(locks):
+  try:
+   fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)
+   try:os.fstat(fd);closed=False
+   except OSError:closed=True
+   record['lock_fd_closure'].append({'path':path,'closed':closed})
+  except BaseException as error:record['lock_fd_closure'].append({'path':path,'error':str(error)})
+ record['elapsed_seconds']=time.monotonic()-start;record['within_remote_budget']=record['elapsed_seconds']<=1100;save();emit('RESULT',record)
+ if root is not None:
+  evidence=io.BytesIO()
+  with tarfile.open(fileobj=evidence,mode='w:gz',compresslevel=1) as archive:
+   for p in sorted(root.iterdir()):
+    if p.is_file() and (p.name=='result.json' or p.name.endswith(('.stdout','.stderr','.catalog.json','.ledger.json','.dump'))):archive.add(p,arcname=p.name,recursive=False)
+  emit('EVIDENCE',{'sha256':hashlib.sha256(evidence.getvalue()).hexdigest(),'bytes':len(evidence.getvalue()),'base64':base64.b64encode(evidence.getvalue()).decode()})
+sys.exit(0 if record['state']=='METADATA_COMPLETE_REBUILD_REQUIRED' and not record.get('remaining_owned_groups') and all(record.get(k,True) for k in ['container_absent','volume_absent','network_absent','credential_paths_absent','within_remote_budget']) else 75 if record['state']=='NOTRUN' else 1)

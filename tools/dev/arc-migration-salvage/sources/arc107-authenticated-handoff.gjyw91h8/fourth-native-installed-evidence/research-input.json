@@ -1,0 +1,53 @@
+{
+  "source": "3ae6bfebb67b47d684de4651cc597c26f104d725",
+  "tree": "afc11c111952100cd34b22b76b80db47d0e4709f",
+  "profiles": {
+    "client": {
+      "sha256": "1648598a7de917344f10ccbcb32be8cc9e0adc4771d17da0be5f11a22715d92a",
+      "skip": 0,
+      "fail": 0
+    },
+    "sessiontransport": {
+      "sha256": "37822782412dd4a8362928f5f4afc961e0ae7c0b6dc8e14afddcdf678465bdeb",
+      "skip": 0,
+      "fail": 0
+    },
+    "agentgateway": {
+      "sha256": "e8cd3fe0dd292f51a588a873707cc02c323d88deea53a93debbb5625c5351df7",
+      "skip": 0,
+      "fail": 0
+    },
+    "httpserver": {
+      "sha256": "ed9c76f890601f2f8328fecd71b2aa6590fa782d9f60da02fd54b8634ccc128a",
+      "skip": 0,
+      "fail": 0
+    },
+    "agent-contract": {
+      "sha256": "3cff9b37a34e3c15f82d9b946142de2b0595ea24d6b6dfaee49a116c9a853128",
+      "skip": 0,
+      "fail": 0
+    },
+    "simulator-fleet": {
+      "sha256": "14d982e79dd5487fcc84d8f0646fc4d41b39615f596aece3455ca88c6f452b11",
+      "skip": 0,
+      "fail": 0
+    }
+  },
+  "scripts": {
+    "installed-handoff-runner.py": "59ceb5da8dac44ba1b29283acb11aa9d92f95eba7e7c0739a8115d97a3065810",
+    "capture-installed-handoff.py": "67d35f257869751f80ed757d45b78853c686cd7637509de0d348d9db6d5b33fe",
+    "installed-admission-loop.py": "5e59592cb728c2d22c1fe48f6f04c41ab515db67da26c0488aef4c928921a2dd",
+    "fleet-kpi-runner.py": "05f70322c375bc66f1660aa781a93352a5c58fee9e5fd16aa176ca93bfc3ca92",
+    "capture-fleet-kpis.py": "8c476b7828348e4b6279403397acace42929a2061590a70cdf6ffab0173c411f",
+    "fleet-kpi-admission.py": "cf2907d4a26e9a989f95e5747f181eda58a4684b46c4489c19217f90ce49fc48"
+  },
+  "research": {
+    "docs/research/fleet-load-test.md": "dd9fc8e252e6ddd5237b7e71573ccd9f2a782ac946e92cc942b4cf29ae4ed473",
+    "docs/research/agent-gateway-rebalance.md": "1fe5f6a11b729e2520a8eb69dfe3730c9b69d4646dddad0bd8d8e011dc5e761e",
+    "docs/decisions/0083-bound-fallback-after-a-usable-agent-stream.md": "262947b1c2ebe0fac4d0a5f83f59d5d9d84d1418538cb065912ee5d237886091"
+  },
+  "selected_test_source": "tests/e2e/agent_gateway_lifecycle_test.go",
+  "selected_test_sha256": "6617b61dd77db9fefd7b29f30ee982a9fd693505795a1521dba2e21ba6e86175",
+  "assertion_changes": false,
+  "run_once": true
+}

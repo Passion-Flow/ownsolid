@@ -1,0 +1,781 @@
+{
+  "original_payloads": [
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/audit58.dP8vTQ69/latest-source.kXgQRQKi.tar.gz",
+      "bytes": 8876286,
+      "sha256": "3435ecf88c05c4338c525bae23742e22db4cfa436e98e220bedd2905500c0cef"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/audit58.dP8vTQ69/remote-payload.tar.gz",
+      "bytes": 23501652,
+      "sha256": "a4e4b30b1726e30464cd79b23a3c6f44701306f92397f33842d84baea3e7378d"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/audit58.dP8vTQ69/clean-archive-proof.gaPWv6Z0/candidate.tar.gz",
+      "bytes": 8211530,
+      "sha256": "400305ad8c014ad6652301af098f2b3bc09276caf6d8aa8a0aaa4c39cad0993e"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/audit58.dP8vTQ69/admit-refreshed.8s7FaayQ/candidate.tar.gz",
+      "bytes": 8952726,
+      "sha256": "674a0fe5eb870df8ba0ca1ea9e99bddafb83d76bdcfb570240a0f9aa5ede6c47"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/second-native-handoff-source.tar.gz",
+      "bytes": 520443,
+      "sha256": "daf68633960948e1cb399c094e40b08525e675be692450ff5e6c28b7e572ba8d"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/first-native-handoff-web.tar.gz",
+      "bytes": 5315598,
+      "sha256": "0f65ac3d54cb1aa8a7237a277d5bfd959d7e7d5988a0984c1754171f17bdce52"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/second-native-handoff-web.tar.gz",
+      "bytes": 5315598,
+      "sha256": "694c997f731e09309caf5393a2ac1e0b2895d7e60821834dd61dcfe9c53c2d54"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/native-handoff-first-source.tar.gz",
+      "bytes": 587365,
+      "sha256": "fbe4a3df03e968f1a85f561757a89ef108bd872fcbf17c7fcb41a968eeea4dfc"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/native-idle-overlay.tar.gz",
+      "bytes": 9394,
+      "sha256": "095997d301860ea4afa816e00826f355ebd475ec1596730b4a5d222ee05d704a"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/third-native-handoff-source.tar.gz",
+      "bytes": 483543,
+      "sha256": "617e204d7c0d998d01c0a7a5799f3a453fed69fddc0d451c299513a57f1b50e4"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/native-handoff-source.tar.gz",
+      "bytes": 545461,
+      "sha256": "c9bd5ffbbbbae19f08afd6c466762b5f7358616a78d6155a541e6c880a510e8a"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/third-native-handoff-web.tar.gz",
+      "bytes": 5359807,
+      "sha256": "a35e896fa5ae9b92e22a98760ba3545802c33ec0318853f647888359fb8532c9"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-authenticated-handoff.gjyw91h8/native-handoff-web.tar.gz",
+      "bytes": 5359686,
+      "sha256": "579b198f55a1169ca7ec8d89414dff579178feca7270e6f7963d2337a6f006da"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/net102-startup/net102-625dbdd8.bundle",
+      "bytes": 13754,
+      "sha256": "136a8254c2b691a8bf588284ef8b9b880809b4c832f61e7f66cb563de2ef9a21",
+      "list_heads_exit": 0,
+      "bundle_heads": [
+        "625dbdd87d536f8519f23b00d647c5438bc6837a HEAD"
+      ],
+      "locally_present_heads": [
+        {
+          "head": "625dbdd87d536f8519f23b00d647c5438bc6837a",
+          "present": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-cache-admission.as02x_ht/payload.wire.xz",
+      "bytes": 720340,
+      "sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-qualified-iam-input.rjyvuqwq/source.tar.gz",
+      "bytes": 9002365,
+      "sha256": "15027f9f5b3145eba29d7850f4ba5aa5eb1a7da0babaee9e875ab0600ee73848"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-ssh-offline.9vgaoj6h/replay/corrected-diagnostic-success-only/payload.tar",
+      "bytes": 12840960,
+      "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-ssh-offline.9vgaoj6h/replay/corrected-renewed-failure/payload.tar",
+      "bytes": 12840960,
+      "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-ssh-offline.9vgaoj6h/replay/original-first-failure/payload.tar",
+      "bytes": 12840960,
+      "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-ssh-offline.9vgaoj6h/replay/original-renewed-failure/payload.tar",
+      "bytes": 12840960,
+      "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-ssh-offline.9vgaoj6h/replay/corrected-first-failure/payload.tar",
+      "bytes": 12840960,
+      "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-ssh-offline.9vgaoj6h/replay/original-diagnostic-success-only/payload.tar",
+      "bytes": 12840960,
+      "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-fa82645c.bundle",
+      "bytes": 43542,
+      "sha256": "910536a870d8c385f956be074fe26c009490df2a5ce5c7a803c941ab49cf001c",
+      "list_heads_exit": 0,
+      "bundle_heads": [
+        "fa82645ca49811521872df90450dad858816b71f HEAD"
+      ],
+      "locally_present_heads": [
+        {
+          "head": "fa82645ca49811521872df90450dad858816b71f",
+          "present": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-schema60-f1107579-minimal.bundle",
+      "bytes": 108333,
+      "sha256": "b3aa444d51f8fb8d030ea9b5abc8685414cdb945e627bb60ceb9aeabea15290d",
+      "list_heads_exit": 0,
+      "bundle_heads": [
+        "f110757995e081544b836ec240474a700176571e HEAD"
+      ],
+      "locally_present_heads": [
+        {
+          "head": "f110757995e081544b836ec240474a700176571e",
+          "present": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-schema60-8123466c.bundle",
+      "bytes": 122547,
+      "sha256": "a96d4ef1fa9d9763de3fac0b2c08e04a6de2f47d38e38ca6c4a3f17d683c2b50",
+      "list_heads_exit": 0,
+      "bundle_heads": [
+        "8123466c5a64b6424047f126815ae63100383bc6 HEAD"
+      ],
+      "locally_present_heads": [
+        {
+          "head": "8123466c5a64b6424047f126815ae63100383bc6",
+          "present": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-schema60-f1107579.bundle",
+      "bytes": 893015,
+      "sha256": "5f6158245a28c1ecb9157ff08a9f6318a30bd55bf4aa19786125f0887bebf701",
+      "list_heads_exit": 0,
+      "bundle_heads": [
+        "f110757995e081544b836ec240474a700176571e HEAD"
+      ],
+      "locally_present_heads": [
+        {
+          "head": "f110757995e081544b836ec240474a700176571e",
+          "present": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-composed-role-prototype/prototype-input.tar.gz",
+      "bytes": 7805,
+      "sha256": "eac225cd29a957cf8afcb525b3255476ead4316d16b190575568a8781f8b2d87"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-formal-inputs.ihsf8qrs/source-0f47a66b.tar.gz",
+      "bytes": 8964003,
+      "sha256": "3397ea71ef5458307eceeab12ccc53f12a6547ca6c07c23afb2ef8195cf7c579"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-local-qualified.oigb4sew/source.tar.gz",
+      "bytes": 9004769,
+      "sha256": "18294297c0f6a5734eb6c3f68d2c8d56337c8c1a1e5c6b63d1392fe8907db0a8"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc110-entrance-listeners/native-cross-input.tar.gz",
+      "bytes": 32528951,
+      "sha256": "4fb83d3258d319f5a5dfb33344a39ffce5a673e5a1985467ec88f53c5f783591"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc110-entrance-listeners/native-input.tar.gz",
+      "bytes": 340497,
+      "sha256": "ce1956836aad9c41928fb84a3495083b388173b699b5067ef2f38d3ab8594af9"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc110-entrance-listeners/native-compact-input.tar.gz",
+      "bytes": 17372840,
+      "sha256": "c38dce66ec4d82f5806b905ea76b5dc61b50eb14f4ade9fa9a9abb5d5dc5d7f5"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc110-entrance-listeners/native-certificate-input.tar.gz",
+      "bytes": 341271,
+      "sha256": "9fa5e6d52338b066b7a0e0fb94c8458ee445b5f7755ad16faec04ca4fa4f7bca"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc110-entrance-listeners/native-scoped-input.tar.gz",
+      "bytes": 392282,
+      "sha256": "9e9c633f32d08a0013ca802e7865294dc9322e17bebe73dd91d5cbcc7a0fd1c0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/audit58-resume.UeFZoBlF/current-main.S4V3Bh3U/joint-candidate.tar.gz",
+      "bytes": 8623548,
+      "sha256": "88b4a8b698e50bb95c9c56cc3e42f208baa2183fde693342eb7bd024f8cf3780"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-actual-consumer.2owcamuh/source.tar.gz",
+      "bytes": 9001378,
+      "sha256": "e28e60a3e33cfc6a069006b37bce6283373450411d7c3a1aacf9aef40072148d"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-tls-ecdsa-ready-prototype/prototype-input.tar.gz",
+      "bytes": 9328,
+      "sha256": "156bb548141e631558f4ab6bb7342c87c1a9c31f3fa241aaadd448c7a39b7fa5"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/payload.wire.xz",
+      "bytes": 720340,
+      "sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/native-evidence.tar.gz",
+      "bytes": 573628,
+      "sha256": "b974e765a4432b972678da87a27063a3517e4ed84eeae6dcbcfb1764ddffa313"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/full-source-transport/payload.wire.xz",
+      "bytes": 5952828,
+      "sha256": "2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-full-source.rz7njuic/payload.wire.xz",
+      "bytes": 5952828,
+      "sha256": "2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-full-source.rz7njuic/native-evidence.tar.gz",
+      "bytes": 455604,
+      "sha256": "4661674fa899c6f72978940b4fbf367fcd6e5af0740d39adecb2b00f1627e3f5"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-cache-corrected.lq63tx0i/payload.wire.xz",
+      "bytes": 720340,
+      "sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-cache-corrected.lq63tx0i/native-evidence.tar.gz",
+      "bytes": 3022,
+      "sha256": "e3aefbca005e638f333691b2e11bc19030170d3a33ae6a4306e88cf462844ef5"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-tls-role-prototype/prototype-input.tar.gz",
+      "bytes": 9307,
+      "sha256": "d59611dca09c6240092bcbcb43aa01ce40e7b7edc5471c9beb89c332de43f95f"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/published-handoff.tar.gz",
+      "bytes": 96021,
+      "sha256": "a30cc17a8c527947d1962d404ecab27d8fb1b2ead029d86b1aa2aeb6269ea443"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/native-payload.tar.gz",
+      "bytes": 81466,
+      "sha256": "993bc28014fd3e915852856e9192b2facee1bcef56c2ab6289d20292807cf87b"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/gw120-12520508.bundle",
+      "bytes": 69324,
+      "sha256": "eabcdb39ce960c8eab6903cf53830506fbb76c01c02237ffea98e570d54ea653",
+      "list_heads_exit": 0,
+      "bundle_heads": [
+        "12520508998c0cf8d1e7eb3e606d642bdbb37794 refs/heads/codex/gw120-schema59-integration"
+      ],
+      "locally_present_heads": [
+        {
+          "head": "12520508998c0cf8d1e7eb3e606d642bdbb37794",
+          "present": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/handoff.tar.gz",
+      "bytes": 9488,
+      "sha256": "7420109a78389b316efabe270cac533313f4318ea754e41728b6274bbe4bd580"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/gw120-4f76102c.bundle",
+      "bytes": 80209,
+      "sha256": "fa701318291056b32a010de53a4e0a9da159d2540ea1eb1c3af3dd706371ddaf",
+      "list_heads_exit": 0,
+      "bundle_heads": [
+        "4f76102ca99328e0b9063eb05b0352e62501e154 HEAD"
+      ],
+      "locally_present_heads": [
+        {
+          "head": "4f76102ca99328e0b9063eb05b0352e62501e154",
+          "present": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/handoff.base64",
+      "bytes": 12652,
+      "sha256": "ee32d1426864043c7cf950cafb858e4fca920ae3947294d574a676cb3f781374",
+      "members": [
+        {
+          "name": "handoff.json",
+          "bytes": 1745,
+          "regular": true
+        },
+        {
+          "name": "source-manifest.sha256",
+          "bytes": 1554,
+          "regular": true
+        },
+        {
+          "name": "candidate.up.sql",
+          "bytes": 1267,
+          "regular": true
+        },
+        {
+          "name": "candidate.down.sql",
+          "bytes": 605,
+          "regular": true
+        },
+        {
+          "name": "production-source.patch",
+          "bytes": 0,
+          "regular": true
+        },
+        {
+          "name": "verification-and-safe-down.patch",
+          "bytes": 23787,
+          "regular": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/qualified-handoff.tar.gz",
+      "bytes": 86039,
+      "sha256": "006f1cd183014cd1940ab038fd122e4b93ed1b5b908914d298582f9a9fc4e289"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/qualified-a446ec58.tar.gz",
+      "bytes": 8495675,
+      "sha256": "985cca36772dd614fcc021ae3a88f66352b99ffb048c3ad5c0f33285b843e949"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/predecessor-fixtures.tar.gz",
+      "bytes": 377399,
+      "sha256": "5a9c311e5c00e62a1a49edf2077a78170d5a0d8ecd88551a4978593cd5d1d928"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/predecessor-fixtures.base64",
+      "bytes": 503200,
+      "sha256": "4023c821b29d0b0129e3be044932b34cffe9842735eba76be8b69d9821edae33",
+      "members": [
+        {
+          "name": "schema55.dump",
+          "bytes": 798120,
+          "regular": true
+        },
+        {
+          "name": "schema56.dump",
+          "bytes": 809477,
+          "regular": true
+        },
+        {
+          "name": "schema57.dump",
+          "bytes": 811001,
+          "regular": true
+        },
+        {
+          "name": "schema58.dump",
+          "bytes": 811646,
+          "regular": true
+        },
+        {
+          "name": "prefix.jsonl",
+          "bytes": 1436,
+          "regular": true
+        },
+        {
+          "name": "fixture-checksums.json",
+          "bytes": 436,
+          "regular": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-observed.eldemtbg/payload.tar",
+      "bytes": 12840960,
+      "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-observed.eldemtbg/cleanup-native-evidence.tar.gz",
+      "bytes": 2979,
+      "sha256": "9ee8d80712bf582e69c2411c0e5b4cc48a8078f72a278aa70c15b609398bc8fd"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-delta-observed.yvsxr0l4/payload.wire.xz",
+      "bytes": 720340,
+      "sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-delta-observed.yvsxr0l4/native-evidence.tar.gz",
+      "bytes": 2888,
+      "sha256": "3741bec4db353e325416786d733cde1c575f5f1e43d51e76e4cf0ec4f8e903b7"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-formal61.qtc543lk/payload.tar",
+      "bytes": 12840960,
+      "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-training-store-protected-prototype/prototype-input.tar.gz",
+      "bytes": 1791,
+      "sha256": "07e0a60271977cc2412025d3a557f22b671ea076a226b44cd0ba4bb2275d0b0c"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-delta-preflight/payload.wire.xz",
+      "bytes": 720340,
+      "sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-delta-preflight/payload.decoded.tar",
+      "bytes": 5304320,
+      "sha256": "f55b36054aef4e6277c5b1164b07877a9e8ce7fced00dc23c8b8f4f4a451c910"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-delta-preflight/payload.wire.gz",
+      "bytes": 2045584,
+      "sha256": "7cc82d1b4afeea0fea2ce4663cc40dd68b9566f7c73851f3b2ce0f29a74fd702"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-delta-preflight/source-delta.tar",
+      "bytes": 3266560,
+      "sha256": "30edc29a3b99a3770a6c4a75571420f9d1ee7c8a4a6116782a19fa7d3f1a2051"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-tls-ecdsa-prototype/prototype-input.tar.gz",
+      "bytes": 9328,
+      "sha256": "156bb548141e631558f4ab6bb7342c87c1a9c31f3fa241aaadd448c7a39b7fa5"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-joint-catalog._69mha_3/source.tar.gz",
+      "bytes": 8987025,
+      "sha256": "bb96b822445bc540e8b0853b051104b2d64f05e1cae8f2dee7fe82c698fdeee1"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-node-authority-prototype/prototype-input.tar.gz",
+      "bytes": 5271,
+      "sha256": "1201d518a9cecc3ff40fa5acd2bb506a6c9248f9a25a856a540099a7af0318dd"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/native-current-update.patch.gz",
+      "bytes": 192932,
+      "sha256": "5e63aee489ff47ea3462dd29d027dca3dae66377ea69774b3709d061c9293f9f"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/native-input.tar.gz",
+      "bytes": 8510077,
+      "sha256": "c77a9ac5a4695dd903c1f0c7cf962b8ef730e9f300b4fa385a74511e8d791726"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/native-current-update.json.gz",
+      "bytes": 39660,
+      "sha256": "5823519672ac89e7bdda1be5685e9fb5f1098731f5acdf8681e89c70d5984498"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/installed-source-149a9501.tar.gz",
+      "bytes": 35577,
+      "sha256": "941bbd8186f65428578665580d1463789feee6bc979a803b72c587b9306d3a34"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/native-current-eea738bf.tar.gz",
+      "bytes": 233217,
+      "sha256": "fd4450c3f0ef774fec9f5196ec65e3283e6011ac72ab4ba6ccd5ce48fb962787"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/installed-web-assets-129573ae.tar.gz",
+      "bytes": 5352317,
+      "sha256": "c58bc98d1d2ed8bf7e735cd0384df1bcde5a49d6a5d1e16df5e985d95e8340c1"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/installed-source-59c9c86a.tar.gz",
+      "bytes": 47684,
+      "sha256": "3582f505f2ec293043a5aefdffb37978459aaf24e12d783dafec76879aa1050f"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/installed-source-129573ae.tar.gz",
+      "bytes": 128810,
+      "sha256": "defc778cc7bfb59a6389fa544129a2f2dcc10bbb1633c45da6724ea53819ba13"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/linux-incremental.bkjl0j0a/payload.tar.gz",
+      "bytes": 258959,
+      "sha256": "3ce970746066736582a7729e8b925aeb064d9e670301170e5e0d7eb38b36d52d"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/native-current.q_7wo85z/payload.tar.gz",
+      "bytes": 263695,
+      "sha256": "2f7f230fcb246598e9f9086bd01206c934cfa953cbcb5df6f233d58611e7b67e"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/native-commands.7e454ycf/payload.tar.gz",
+      "bytes": 263695,
+      "sha256": "3782e3406aa239f82e44da556f03e2a498d0e6c26cc52f87f38b8c47a42787aa"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/linux-amd64.NrSh9GrY/source.tar.gz",
+      "bytes": 8481629,
+      "sha256": "e585cb9c6ee80aace26b744a13ec123883d9482ee224071a99eef72b251272e5"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/native-current.pqybha52/payload.tar.gz",
+      "bytes": 263695,
+      "sha256": "0a9f2a2b0c8c2b0ef4063be2a19f0371e992bd4a7d068bd246f3c5778fb7a1fd"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k/native-current.f_475h_r/payload.tar.gz",
+      "bytes": 263697,
+      "sha256": "0fb95a800f21aea1372866dde24865e0795e9f2d22d5dabd0b23b81c54d1e478"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-metadata-none.rrp7nmdh/payload.wire.xz",
+      "bytes": 5952828,
+      "sha256": "2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-metadata-none.rrp7nmdh/native-evidence.tar.gz",
+      "bytes": 4421583,
+      "sha256": "bff3df1e873415e37cabf5b2f7c4ef691b4f4f5e5ad5531e3ba7cf9e47e6cc97"
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-metadata-none.rrp7nmdh/schema61-pin-candidate/measured61-pin-source.bundle",
+      "bytes": 1343,
+      "sha256": "14336b33c91f034b0e71b3c545e6b7cc6938f25b5984142e5f7150bfb6cc5363",
+      "list_heads_exit": 0,
+      "bundle_heads": [
+        "549c3ad699debc2acd0c7b9754fd59d97788d74c refs/heads/codex/arc111-measured61-pins-1a7ad692"
+      ],
+      "locally_present_heads": [
+        {
+          "head": "549c3ad699debc2acd0c7b9754fd59d97788d74c",
+          "present": true
+        }
+      ]
+    },
+    {
+      "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-training-store-prototype/prototype-input.tar.gz",
+      "bytes": 1791,
+      "sha256": "07e0a60271977cc2412025d3a557f22b671ea076a226b44cd0ba4bb2275d0b0c"
+    }
+  ],
+  "bundle_head_coverage": [
+    {
+      "original_bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/net102-startup/net102-625dbdd8.bundle",
+      "sha": "625dbdd87d536f8519f23b00d647c5438bc6837a",
+      "reachable_from_owned_salvage_tip_union": false,
+      "locally_present": true,
+      "direct_preservation_ref": "refs/heads/salvage/mac/arc/bundle-net102-625dbdd8-625dbdd87d53"
+    },
+    {
+      "original_bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-fa82645c.bundle",
+      "sha": "fa82645ca49811521872df90450dad858816b71f",
+      "reachable_from_owned_salvage_tip_union": false,
+      "locally_present": true,
+      "direct_preservation_ref": "refs/heads/salvage/mac/arc/bundle-dat101-fa82645c-fa82645ca498"
+    },
+    {
+      "original_bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-schema60-f1107579-minimal.bundle",
+      "sha": "f110757995e081544b836ec240474a700176571e",
+      "reachable_from_owned_salvage_tip_union": false,
+      "locally_present": true,
+      "direct_preservation_ref": "refs/heads/salvage/mac/arc/bundle-dat101-schema60-f1107579-minimal-f110757995e0"
+    },
+    {
+      "original_bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-schema60-8123466c.bundle",
+      "sha": "8123466c5a64b6424047f126815ae63100383bc6",
+      "reachable_from_owned_salvage_tip_union": true,
+      "locally_present": true
+    },
+    {
+      "original_bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-schema60-f1107579.bundle",
+      "sha": "f110757995e081544b836ec240474a700176571e",
+      "reachable_from_owned_salvage_tip_union": false,
+      "locally_present": true,
+      "direct_preservation_ref": "refs/heads/salvage/mac/arc/bundle-dat101-schema60-f1107579-minimal-f110757995e0"
+    },
+    {
+      "original_bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/gw120-12520508.bundle",
+      "sha": "12520508998c0cf8d1e7eb3e606d642bdbb37794",
+      "reachable_from_owned_salvage_tip_union": false,
+      "locally_present": true,
+      "direct_preservation_ref": "refs/heads/salvage/mac/arc/bundle-gw120-12520508-12520508998c"
+    },
+    {
+      "original_bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/gw120-4f76102c.bundle",
+      "sha": "4f76102ca99328e0b9063eb05b0352e62501e154",
+      "reachable_from_owned_salvage_tip_union": true,
+      "locally_present": true
+    },
+    {
+      "original_bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-metadata-none.rrp7nmdh/schema61-pin-candidate/measured61-pin-source.bundle",
+      "sha": "549c3ad699debc2acd0c7b9754fd59d97788d74c",
+      "reachable_from_owned_salvage_tip_union": true,
+      "locally_present": true
+    }
+  ],
+  "preserved_refs": [
+    {
+      "original_ref": "refs/codex/arc107-before-schema60-rebase",
+      "sha": "1e687ed99bc0727016c15c616d95124e9e4a212c",
+      "remote_ref": "refs/heads/salvage/mac/arc/codex-arc107-before-schema60-rebase-1e687ed99bc0"
+    },
+    {
+      "original_ref": "refs/codex/arc107-full-qualified-129573ae",
+      "sha": "129573ae8977cce83c1e81d9d386e45c1a176c3b",
+      "remote_ref": "refs/heads/salvage/mac/arc/codex-arc107-full-qualified-129573ae-129573ae8977"
+    },
+    {
+      "original_ref": "refs/codex/arc107-full-qualified-59c9c86a",
+      "sha": "59c9c86a432c8623ec6b68595bf575920ff89056",
+      "remote_ref": "refs/heads/salvage/mac/arc/codex-arc107-full-qualified-59c9c86a-59c9c86a432c"
+    },
+    {
+      "original_ref": "refs/codex/arc107-installed-busy-149a9501",
+      "sha": "149a95013db6c6d1ca9dbadd09b05fff9b4c98de",
+      "remote_ref": "refs/heads/salvage/mac/arc/codex-arc107-installed-busy-149a9501-149a95013db6"
+    },
+    {
+      "original_ref": "refs/codex/arc107-qualified-eea738bf",
+      "sha": "eea738bfc11d74f8505eee41c3a3ce0d9fa5cf7b",
+      "remote_ref": "refs/heads/salvage/mac/arc/codex-arc107-qualified-eea738bf-eea738bfc11d"
+    },
+    {
+      "original_ref": "refs/codex/arc108-observation-qualified-30cc67d6",
+      "sha": "30cc67d6e6c546e05cf268de1aba7d96d8c3823b",
+      "remote_ref": "refs/heads/salvage/mac/arc/codex-arc108-observation-qualified-30cc67d6-30cc67d6e6c5"
+    },
+    {
+      "original_ref": "refs/codex/arc108-qualified-a91a817b",
+      "sha": "a91a817b23157fd610f714533b04cf6e7d8ec012",
+      "remote_ref": "refs/heads/salvage/mac/arc/codex-arc108-qualified-a91a817b-a91a817b2315"
+    },
+    {
+      "original_ref": "refs/codex/gw-published-f7842492",
+      "sha": "f78424921d99c284daa42da5f461ecffc9fb8ead",
+      "remote_ref": "refs/heads/salvage/mac/arc/codex-gw-published-f7842492-f78424921d99"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc104-signed-registry-consumer",
+      "sha": "81701dba16e2e61e4c032fec3b47d11161ecdfe7",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc104-signed-registry-consumer-81701dba16e2"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc107-handoff",
+      "sha": "6f785818156ff5e827ccc86923b7cfa0b4c0185d",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc107-handoff-6f785818156f"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc107-production-lifecycle",
+      "sha": "e2fde0f5fc8faa04f63f37ba18441b163ad58f53",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc107-production-lifecycle-e2fde0f5fc8f"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc107-resume-22a39595",
+      "sha": "22a3959522913bdc7c189fb78f8d88910b0b4236",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc107-resume-22a39595-22a395952291"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc108-inference-heartbeat-cost",
+      "sha": "d3528d5f6b660eb1ddd23324a96cdbb164e09a17",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc108-inference-heartbeat-cost-d3528d5f6b66"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc108-operation-cost",
+      "sha": "1d3ac8384fcbe6d87974b983d601818cce8f205f",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc108-operation-cost-1d3ac8384fcb"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc110-entrance-listeners",
+      "sha": "bc2d12cf95726982f2feb872581be34236da37ee",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc110-entrance-listeners-bc2d12cf9572"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc111-database-role",
+      "sha": "baa584c39ff0d3039f0b463e4415bb71bef63eaa",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc111-database-role-baa584c39ff0"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc111-joint-catalog",
+      "sha": "9c8fa041f74c3030540f3f7a97f1958f04c879af",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc111-joint-catalog-9c8fa041f74c"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc111-measured61-pins-1a7ad692",
+      "sha": "549c3ad699debc2acd0c7b9754fd59d97788d74c",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc111-measured61-pins-1a7ad692-549c3ad699de"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc111-qualified-readers",
+      "sha": "aaf1f65a94736b441323c3e18819e5cbc69d34ac",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc111-qualified-readers-aaf1f65a9473"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc111-reader-lifecycle",
+      "sha": "8e9a6c4ab6fa144edfd935f2b796e232ef7bc8e7",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-arc111-reader-lifecycle-8e9a6c4ab6fa"
+    },
+    {
+      "original_ref": "refs/heads/codex/dat101-schema60-integration",
+      "sha": "f78424921d99c284daa42da5f461ecffc9fb8ead",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-dat101-schema60-integration-f78424921d99"
+    },
+    {
+      "original_ref": "refs/heads/codex/gw120-schema59-integration",
+      "sha": "4f76102ca99328e0b9063eb05b0352e62501e154",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-gw120-schema59-integration-4f76102ca993"
+    },
+    {
+      "original_ref": "refs/heads/codex/net102-startup-qualification",
+      "sha": "2025a1c877b9d1165739c25da84ff534a9b83c41",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-codex-net102-startup-qualification-2025a1c877b9"
+    },
+    {
+      "original_ref": "refs/heads/lane-arc",
+      "sha": "0f55a770aa242a36d53fafde15f2cc8172380b3c",
+      "remote_ref": "refs/heads/salvage/mac/arc/heads-lane-arc-0f55a770aa24"
+    },
+    {
+      "original_ref": "refs/heads/codex/arc111-qualified-readers (after the three-document commit)",
+      "sha": "0cc4a6cfc0d175f9f515a09a0184221bd72e00c7",
+      "remote_ref": "refs/heads/salvage/mac/arc/qualified-readers-docs-0cc4a6cfc0d1"
+    },
+    {
+      "original_ref": "local ARC bundle HEAD: /Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/net102-startup/net102-625dbdd8.bundle",
+      "sha": "625dbdd87d536f8519f23b00d647c5438bc6837a",
+      "remote_ref": "refs/heads/salvage/mac/arc/bundle-net102-625dbdd8-625dbdd87d53"
+    },
+    {
+      "original_ref": "local ARC bundle HEAD: /Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-fa82645c.bundle",
+      "sha": "fa82645ca49811521872df90450dad858816b71f",
+      "remote_ref": "refs/heads/salvage/mac/arc/bundle-dat101-fa82645c-fa82645ca498"
+    },
+    {
+      "original_ref": "local ARC bundle HEAD: /Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/dat101-integration/dat101-schema60-f1107579-minimal.bundle",
+      "sha": "f110757995e081544b836ec240474a700176571e",
+      "remote_ref": "refs/heads/salvage/mac/arc/bundle-dat101-schema60-f1107579-minimal-f110757995e0"
+    },
+    {
+      "original_ref": "local ARC bundle HEAD: /Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/gw120-12520508.bundle",
+      "sha": "12520508998c0cf8d1e7eb3e606d642bdbb37794",
+      "remote_ref": "refs/heads/salvage/mac/arc/bundle-gw120-12520508-12520508998c"
+    }
+  ],
+  "policy": "Binary archives and Git bundle files remain local. Reconstruct Git source from the preserved DAG and readable source mapping. Retired wrappers must not be executed."
+}

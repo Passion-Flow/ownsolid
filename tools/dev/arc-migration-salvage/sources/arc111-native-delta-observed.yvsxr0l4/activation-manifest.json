@@ -1,0 +1,34 @@
+{
+  "binding.json": {
+    "bytes": 2626,
+    "sha256": "3b637e4df2bf4d99f83f62d956f66366ec1a023951104f204d92f422eb2f9b99"
+  },
+  "driver.py": {
+    "bytes": 13256,
+    "sha256": "80a24f9d6d843b1d384e63bef858bd8ca688dfa3a6e2670fcac0f452470185a8"
+  },
+  "full-frame-negative-result.json": {
+    "bytes": 2330,
+    "sha256": "88012a4dfe6f1ffff7cf966867492c208a53f2921db88d4c6a38b58889dc3134"
+  },
+  "full-frame-offline-result.json": {
+    "bytes": 2627,
+    "sha256": "7ed36989292e04daa3a70eba9acc1350bc2d9cb21be2c11b8758e8876b4812ab"
+  },
+  "invariant-review.json": {
+    "bytes": 342,
+    "sha256": "43cdba2f61e037236cabc352a232906b0ed1d52b7ec2bc8f9f924e8701a96a63"
+  },
+  "payload-manifest.json": {
+    "bytes": 66217,
+    "sha256": "94f51de273b1168b58567afd433bf5363878b17622010f3be82d0891a4943380"
+  },
+  "payload.wire.xz": {
+    "bytes": 720340,
+    "sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb"
+  },
+  "remote-guard.py": {
+    "bytes": 29887,
+    "sha256": "4a4ff99360223541e51167baddf102fe752127c3b33a0e9b9e4f5a84f514e854"
+  }
+}

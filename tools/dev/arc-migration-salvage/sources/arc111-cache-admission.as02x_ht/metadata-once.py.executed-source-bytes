@@ -1,0 +1,29 @@
+from pathlib import Path
+import os,json,time,subprocess,base64,shlex,hashlib,signal
+os.umask(0o077);out=Path(__file__).resolve().parent
+allocation=json.loads((out/'allocation.json').read_text())
+end_unix=allocation['start_unix']+1200;work_end_unix=end_unix-120
+assert work_end_unix-time.time()>60
+fd=os.open(out/'metadata-entry-consumed',os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600);os.close(fd)
+source=(out/'metadata-remote.py').read_bytes();encoded=base64.b64encode(source).decode()
+remote='python3 -I -c '+shlex.quote('import base64;exec(compile(base64.b64decode('+repr(encoded)+'),"arc111-readonly-cache-metadata","exec"))')
+argv=['/usr/bin/ssh','-vv','-o','ConnectTimeout=10','-o','ConnectionAttempts=1','-o','ServerAliveInterval=5','-o','ServerAliveCountMax=2','ownsolid-cpu',remote]
+began=time.monotonic();record={'metadata_connections':1,'native_execution_connections':0,'remote_source_sha256':hashlib.sha256(source).hexdigest(),'outer_pid':os.getpid(),'allocation_elapsed_before_seconds':time.time()-allocation['start_unix']}
+with (out/'metadata.stdout').open('wb') as stdout,(out/'metadata.stderr').open('wb') as stderr:
+ child=subprocess.Popen(argv,stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,start_new_session=True)
+ record['ssh_pid']=child.pid
+ try:child.wait(timeout=min(45,work_end_unix-time.time()))
+ except subprocess.TimeoutExpired:
+  record['outer_timeout']=True;os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=min(5,end_unix-time.time()))
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=min(3,end_unix-time.time()))
+ record['exit']=child.returncode
+record['elapsed_seconds']=time.monotonic()-began
+record['allocation_elapsed_seconds']=time.time()-allocation['start_unix']
+record['stdout_sha256']=hashlib.sha256((out/'metadata.stdout').read_bytes()).hexdigest()
+record['stderr_sha256']=hashlib.sha256((out/'metadata.stderr').read_bytes()).hexdigest()
+if child.returncode==0:
+ record['remote']=json.loads((out/'metadata.stdout').read_text())
+(out/'metadata-result.json').write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+print(json.dumps(record,indent=2))
+raise SystemExit(child.returncode if child.returncode>=0 else 128-child.returncode)

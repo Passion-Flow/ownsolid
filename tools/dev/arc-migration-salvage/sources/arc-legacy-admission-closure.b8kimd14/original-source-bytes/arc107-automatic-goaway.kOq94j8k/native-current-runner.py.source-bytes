@@ -1,0 +1,84 @@
+from pathlib import Path
+import fcntl,gzip,hashlib,json,os,shutil,signal,stat,subprocess,sys,tarfile,time
+root=Path(sys.argv[1]);os.umask(0o077)
+archive=root/'native-current-eea738bf.tar.gz'
+assert archive.stat().st_size==233217 and hashlib.sha256(archive.read_bytes()).hexdigest()=='fd4450c3f0ef774fec9f5196ec65e3283e6011ac72ab4ba6ccd5ce48fb962787'
+with tarfile.open(archive) as bundle:
+ assert set(bundle.getnames())=={'update.patch.gz','update.json.gz'}
+ manifest=json.loads(gzip.decompress(bundle.extractfile('update.json.gz').read()))
+ patch=gzip.decompress(bundle.extractfile('update.patch.gz').read())
+assert manifest['source']=='eea738bfc11d74f8505eee41c3a3ce0d9fa5cf7b' and manifest['base_tree']=='4631e3091ee1870657d76d91d68a2b4677b85785'
+assert hashlib.sha256(patch).hexdigest()==manifest['patch_sha256']
+assert not (root/'exit').exists(),'Read retained result instead of blindly repeating a job'
+locks=[];child=None
+try:
+ for name in ['/run/lock/ownsolid-heavy.lock','/root/lane-sci-tools/heavy-test.lock']:
+  p=Path(name);fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW);i=os.fstat(fd);assert stat.S_ISREG(i.st_mode) and i.st_uid==os.getuid()
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:os.close(fd);raise SystemExit(75)
+  assert (i.st_dev,i.st_ino)==(p.lstat().st_dev,p.lstat().st_ino);locks.append(fd)
+ memory={}
+ for line in Path('/proc/meminfo').read_text().splitlines():
+  key,_,value=line.partition(':')
+  if key in ['MemFree','MemAvailable']:memory[key]=int(value.split()[0])
+ psi=float(Path('/proc/pressure/io').read_text().split('full avg10=')[1].split()[0]);disk=shutil.disk_usage(root)
+ preflight={'memory_kib':memory,'full_io_psi_avg10':psi,'disk_free_bytes':disk.free,'source':manifest['source'],'compile_wall_budget_seconds':240,'test_timeout_seconds':90,'scope':'two native race binaries in loopback-only network namespace; no database/container'}
+ (root/'preflight.json').write_text(json.dumps(preflight,indent=2)+'\n');print(json.dumps(preflight),flush=True)
+ if memory['MemFree']<2097152 or memory['MemAvailable']<8388608 or psi>5 or disk.free<30*1024**3:raise SystemExit(75)
+ commands=subprocess.check_output(['ps','-e','-o','comm='],text=True).splitlines();assert not any(Path(x.strip()).name in {'go','compile','link','gcc','cc1','rustc','cargo','make'} for x in commands),'Another compiler is active'
+ go='/root/lane-sci-tools/go/bin/go';assert subprocess.check_output([go,'version'],text=True).strip()=='go version go1.27.3 linux/amd64';assert shutil.which('gcc')
+ cache=Path('/root/lane-arc107-commands-760b80950612');verify=cache/'verify-source.py';old=cache/'native-qualified-414f48f6/source'
+ assert hashlib.sha256(verify.read_bytes()).hexdigest()=='1f771ec6daf731585bab6878ceb6fec5613e6a64d086b41c8f24caf0a7935368'
+ assert hashlib.sha256((cache/'manifest.json').read_bytes()).hexdigest()=='3a1cdfedeaa36963c8526f37b2c5ef74a66088dcc5d9efd8631ebf78b81ca392'
+ with (root/'baseline-source-verification.log').open('wb') as out:subprocess.run(['python3',str(verify),str(old),str(cache/'manifest.json')],stdout=out,stderr=subprocess.STDOUT,check=True)
+ source=root/'source';assert not source.exists();subprocess.run(['cp','-a','--reflink=auto',str(old),str(source)],check=True)
+ (root/'update.patch').write_bytes(patch)
+ subprocess.run(['git','-C',str(source),'apply','--check',str(root/'update.patch')],check=True)
+ subprocess.run(['git','-C',str(source),'apply',str(root/'update.patch')],check=True)
+ for entry in manifest['changes']:
+  p=source/entry['path'];assert p.is_relative_to(source)
+  if entry['status']=='D':assert not p.exists() and not p.is_symlink();continue
+  if entry['mode']=='120000':assert p.is_symlink();raw=os.readlink(p).encode()
+  else:
+   assert p.is_file() and not p.is_symlink();raw=p.read_bytes();assert bool(p.stat().st_mode&0o111)==(entry['mode']=='100755')
+  assert len(raw)==entry['bytes'] and hashlib.sha256(raw).hexdigest()==entry['sha256'],entry['path']
+ actual={str(p.relative_to(source)) for p in source.rglob('*') if p.is_file() or p.is_symlink()}
+ assert actual==set(manifest['tracked_paths']),'Snapshot paths differ'
+ (root/'source-verified.json').write_text(json.dumps({'source':manifest['source'],'tree':manifest['tree'],'base_tree':manifest['base_tree'],'paths':len(actual),'changed_paths':len(manifest['changes']),'all_changed_bytes_and_modes_matched':True,'all_unchanged_base_paths_verified':True},indent=2)+'\n')
+ env=os.environ.copy();env.update({'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1','GOMEMLIMIT':'512MiB','CGO_ENABLED':'1','GOENV':'off','GOCACHE':'/root/lane-sci-tools/go-cache','GOMODCACHE':'/root/lane-sci-tools/go-mod'})
+ temporary=root/'tmp';temporary.mkdir(mode=0o700);env['TMPDIR']=str(temporary)
+ for key in list(env):
+  if key.startswith(('PROJECT_ONE_TEST_','PROJECT_ONE_REPOSITORY_')):env.pop(key)
+ cpus=','.join(str(n) for n in sorted(os.sched_getaffinity(0))[:2]);assert len(cpus.split(','))==2
+ def stop(sig,frame):raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop);signal.signal(signal.SIGHUP,stop)
+ def execute(command,name,budget):
+  global child
+  with (root/name).open('wb') as out:
+   child=subprocess.Popen(command,env=env,stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+   try:code=child.wait(timeout=budget)
+   except subprocess.TimeoutExpired:
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=15)
+    except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+    code=124
+   assert code==0,(name,code)
+ (root/'runner-pid').write_text(str(os.getpid())+'\n');(root/'start').write_text(str(time.time())+'\n')
+ for package in ['httpserver','agentgateway']:
+  (root/'stage').write_text('compile-'+package+'\n');started=time.time()
+  execute(['taskset','-c',cpus,go,'-C',str(source/'services/control'),'test','-c','-race','-o',str(root/(package+'.test')),'./internal/platform/'+package],'compile-'+package+'.log',240)
+  (root/('compile-'+package+'-seconds')).write_text(str(time.time()-started)+'\n')
+  (root/'stage').write_text('test-'+package+'\n')
+  script='set -euo pipefail; ip link set lo up; printf "network_namespace=%s\n" "$(readlink /proc/self/ns/net)"; ip route; cd "$3"; exec taskset -c "$1" "$2" -test.v -test.timeout=90s'
+  execute(['unshare','--net','bash','-c',script,'arc107-native',cpus,str(root/(package+'.test')),str(source/'services/control/internal/platform'/package)],package+'.log',105)
+  text=(root/(package+'.log')).read_text();assert '--- FAIL:' not in text and '--- SKIP:' not in text and '\nPASS\n' in text
+  print(package+' native race passed',flush=True)
+ (root/'exit').write_text('0\n');(root/'finish').write_text(str(time.time())+'\n');print('Both current-source native race suites passed',flush=True)
+except BaseException:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ raise
+finally:
+ for fd in reversed(locks):fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

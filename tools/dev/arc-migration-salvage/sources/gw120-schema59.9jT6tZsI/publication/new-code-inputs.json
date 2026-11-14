@@ -1,0 +1,4 @@
+[
+  "services/control/internal/modules/productagent/http/dispatch_repository_integration_test.go",
+  "services/control/internal/modules/productagent/http/guarded_dispatch_repository_integration_test.go"
+]

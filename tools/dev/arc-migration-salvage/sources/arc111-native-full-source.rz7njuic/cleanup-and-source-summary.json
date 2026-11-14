@@ -1,0 +1,58 @@
+{
+  "PG_container_created_and_started": true,
+  "PG_readiness_child_ran": true,
+  "PG_version_vector_SQL_not_executed": true,
+  "SQL_qualification_roots": 0,
+  "actual_EOF": true,
+  "actual_full_wire_bytes": 5952828,
+  "actual_full_wire_sha256": "2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773",
+  "actual_receive_seconds": 5.825986198033206,
+  "actual_source_canonical_mode_counts": {
+    "0o644": 5090,
+    "0o755": 12
+  },
+  "actual_source_paths_verified": 5102,
+  "additional_native_retries": 0,
+  "before_reserve": true,
+  "carrier_identities_retained": true,
+  "catalog_records": 0,
+  "cleanup_confirmed_allocation_seconds": 101.24193215370178,
+  "cleanup_seconds": 1.7047866620123386,
+  "container_absent": true,
+  "credential_paths_absent": true,
+  "dual_fd_closure": [
+    {
+      "closed": true,
+      "path": "/root/lane-sci-tools/heavy-test.lock"
+    },
+    {
+      "closed": true,
+      "path": "/run/lock/ownsolid-heavy.lock"
+    }
+  ],
+  "error": "[Errno 111] Connection refused",
+  "first_failure_stage": "fixture",
+  "local_owned_pids_absent": [
+    98660,
+    98736
+  ],
+  "native_test_binary_executions": 0,
+  "network_absent": true,
+  "observer_joined": true,
+  "old_cache_reads": 0,
+  "one_actual_attempt": true,
+  "outer_elapsed_seconds": 25.001918542,
+  "outer_exit_observed": 1,
+  "owned_remote_groups": [],
+  "remote_completion_scope": "Authoritative receipt and natural SSH1, no extra cleanup or PID readback connection.",
+  "remote_elapsed_seconds": 14.698804819956422,
+  "remote_runner_pid": 558642,
+  "role_cases": 0,
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "source_B_new_pins": false,
+  "source_and61_migration16_SQL_inputs_verified": true,
+  "ssh_exit": 1,
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "volume_absent": true,
+  "within1200": true
+}

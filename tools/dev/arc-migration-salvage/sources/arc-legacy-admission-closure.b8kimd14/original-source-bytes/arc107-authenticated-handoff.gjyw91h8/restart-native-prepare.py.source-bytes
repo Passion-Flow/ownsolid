@@ -1,0 +1,35 @@
+from pathlib import Path
+import hashlib,json,shlex,subprocess
+b=Path(__file__).resolve().parent
+r=json.loads((b/'native-handoff-receiver.json').read_text())['root']
+expected={n:hashlib.sha256((b/n).read_bytes()).hexdigest() for n in ('native-prepare.py','native-admission-loop.py')}
+script=r'''
+from pathlib import Path
+import hashlib,json,os,stat,subprocess,sys,time
+r=Path(sys.argv[1]);expected=json.loads(sys.argv[2]);os.umask(0o077)
+assert r.name=='lane-arc107-handoff.3ae6bfeb.ae445841'
+s=r.lstat();assert stat.S_ISDIR(s.st_mode) and s.st_uid==os.getuid() and stat.S_IMODE(s.st_mode)==0o700
+assert (r/'prepare-driver-exit').read_text().strip()=='75'
+assert not (r/'source').exists() and not (r/'build-start').exists() and not (r/'build-exit').exists()
+old=Path('/proc/3455734')
+if old.exists():
+ cmd=(old/'cmdline').read_bytes();state=(old/'stat').read_text().rsplit(')',1)[1].split()[0]
+ assert hashlib.sha256(cmd).hexdigest()!='759f6decdfdc1fad637d69bb8b67a3e64a6960cbce30085ddeffd6012e7094ba' or state=='Z'
+for n,h in expected.items():
+ p=r/n;s=p.lstat();assert stat.S_ISREG(s.st_mode) and s.st_uid==os.getuid() and hashlib.sha256(p.read_bytes()).hexdigest()==h
+for n in ('prepare-driver-exit','prepare-driver.pid'):
+ p=r/n;destination=r/(n+'.resource-admission-first')
+ if p.exists():
+  assert not destination.exists();p.rename(destination)
+assert not (r/'prepare-restart-identity.json').exists()
+with (r/'prepare-launch-second.log').open('xb') as log:
+ p=subprocess.Popen(['python3','-I',str(r/'native-admission-loop.py')],stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,close_fds=True)
+ identity={'pid':p.pid,'start_ticks':Path('/proc',str(p.pid),'stat').read_text().rsplit(')',1)[1].split()[19],'cmdline_sha256':hashlib.sha256(Path('/proc',str(p.pid),'cmdline').read_bytes()).hexdigest(),'time':time.time(),'reason':'Only the first admission loop exited 75; no source copy or selected test began','scripts':expected}
+ (r/'prepare-driver.pid').write_text(str(p.pid)+'\n');(r/'prepare-restart-identity.json').write_text(json.dumps(identity,indent=2)+'\n')
+ print(json.dumps(identity),flush=True)
+'''
+p=subprocess.run(['ssh','-o','ConnectTimeout=20','ownsolid-cpu','python3 -I -c '+shlex.quote(script)+' '+shlex.quote(r)+' '+shlex.quote(json.dumps(expected))],capture_output=True,text=True,timeout=40)
+(b/'fourth-native-restart-launch.log').write_text(p.stdout+p.stderr)
+print(p.stdout);print(p.stderr)
+if p.returncode==0:(b/'fourth-native-restart-identity.json').write_text(p.stdout)
+raise SystemExit(p.returncode)

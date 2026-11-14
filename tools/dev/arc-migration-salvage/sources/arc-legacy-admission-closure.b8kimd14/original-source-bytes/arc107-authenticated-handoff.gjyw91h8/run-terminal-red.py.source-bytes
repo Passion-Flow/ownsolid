@@ -1,0 +1,31 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,shutil,stat,subprocess,tempfile,time
+b=Path(__file__).resolve().parent;r=b.parent.parent/'lane-arc107-handoff'
+p=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW);s=os.fstat(fd)
+assert stat.S_ISREG(s.st_mode) and s.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+try:
+ assert(s.st_dev,s.st_ino)==(p.lstat().st_dev,p.lstat().st_ino);assert shutil.disk_usage(r).free>=30*1024**3
+ trial=Path(tempfile.mkdtemp(prefix='product-terminal-red.',dir=b));tmp=Path(tempfile.mkdtemp(prefix='arc107-product.',dir='/private/tmp'));os.chown(tmp,-1,os.getgid());os.chmod(tmp,0o700)
+ (trial/'owned-tmp').write_text(str(tmp)+'\n')
+ with(trial/'resources.log').open('wb')as log:subprocess.run(['df','-h',str(r)],stdout=log,check=True);subprocess.run(['vm_stat'],stdout=log,check=True)
+ env=os.environ.copy();env.update(TMPDIR=str(tmp)+'/',GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=1')
+ changed=subprocess.check_output(['git','diff','--name-only','-z'],cwd=r).decode().rstrip('\0').split('\0')
+ untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard','-z'],cwd=r).decode().rstrip('\0').split('\0')
+ files=[p for p in changed+untracked if p.endswith('.go')]
+ subprocess.run(['gofmt','-w',*[str(r/p)for p in files]],env=env,check=True)
+ subprocess.run(['go','-C','tools/dev/simulator','mod','edit','-fmt'],cwd=r,env=env,check=True)
+ inputs={p:hashlib.sha256((r/p).read_bytes()).hexdigest() for p in sorted(set(changed+untracked)) if p}
+ commands=[('terminal-red',['go','-C','services/agent','test','-race','-count=1','-timeout=45s','-run','^TestEarlyTerminalRefusalRetainsAuthenticationStatus$','-v','./internal/client'])]
+ results={}
+ for name,command in commands:
+  start=time.time()
+  with(trial/(name+'.log')).open('wb')as log:code=subprocess.run(command,cwd=r,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=180).returncode
+  results[name]={'exit':code,'elapsed_seconds':time.time()-start,'log_sha256':hashlib.sha256((trial/(name+'.log')).read_bytes()).hexdigest()};print(name,code,flush=True)
+  if code:break
+ assert all(hashlib.sha256((r/p).read_bytes()).hexdigest()==digest for p,digest in inputs.items())
+ record={'base':subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip(),'inputs':inputs,'results':results}
+ (trial/'qualification.json').write_text(json.dumps(record,indent=2)+'\n');(b/'latest-product-terminal-red').write_text(str(trial)+'\n');shutil.rmtree(tmp)
+ raise SystemExit(max(result['exit']for result in results.values()))
+finally:fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

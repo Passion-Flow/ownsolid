@@ -1,0 +1,45 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,signal,stat,subprocess,tempfile,time
+base=Path(__file__).resolve().parent;repo=base.parent.parent/'lane-arc110'
+if (base/'editing').exists():raise SystemExit(75)
+gate=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(gate,os.O_RDWR|os.O_NOFOLLOW);info=os.fstat(fd)
+assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+child=None
+try:
+ assert (info.st_dev,info.st_ino)==(gate.lstat().st_dev,gate.lstat().st_ino)
+ if subprocess.run(['pgrep','-x','make|cargo|rustc|compile|link'],capture_output=True).returncode==0:raise SystemExit(75)
+ space=os.statvfs(repo);assert space.f_bavail*space.f_frsize>=15*1024**3
+ def inputs():
+  names=subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard','-z'],cwd=repo).split(b'\0');digest=hashlib.sha256()
+  for name in sorted(n for n in names if n):
+   path=repo/os.fsdecode(name);digest.update(name+b'\0'+hashlib.sha256(path.read_bytes()).digest())
+  return digest.hexdigest()
+ source=inputs();run=Path(tempfile.mkdtemp(prefix='focused.',dir=base));(base/'latest-focused').write_text(str(run)+'\n')
+ tmp=Path(tempfile.mkdtemp(prefix='ownsolid-arc110-focus.',dir='/private/tmp'));os.chown(tmp,-1,os.getgid());os.chmod(tmp,0o700)
+ env=os.environ.copy();env.update({'TMPDIR':str(tmp)+'/', 'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1'})
+ packages=['./internal/platform/config','./internal/platform/httpserver','./internal/operations/servingcheck']
+ print('ARC110 focused input '+source+' logs '+str(run),flush=True)
+ def stop(signum,frame):
+  if child is not None and child.poll() is None:os.killpg(child.pid,signal.SIGTERM)
+  raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+ for name,command in [('race',['go','-C','services/control','test','-race','-count=1','-v']+packages),('vet',['go','-C','services/control','vet']+packages),('server-linux-compile',['env','GOOS=linux','GOARCH=amd64','CGO_ENABLED=0','go','-C','services/control','test','-c','-tags=repository_integration,machine_ingress_integration','-o',str(run/'server.test'),'./cmd/server'])]:
+  (run/'stage').write_text(name+'\n')
+  with (run/(name+'.log')).open('wb') as log:
+   child=subprocess.Popen(command,cwd=repo,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True);code=child.wait(timeout=600)
+  (run/(name+'.exit')).write_text(str(code)+'\n')
+  print(name+' exit '+str(code),flush=True)
+  if code:print((run/(name+'.log')).read_text()[-12000:]);break
+ assert inputs()==source,'Source changed during qualification'
+ (run/'qualification.json').write_text(json.dumps({'input_sha256':source,'exit':code,'logs':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in run.glob('*.log')}},indent=2)+'\n')
+ import shutil
+ shutil.rmtree(tmp)
+ raise SystemExit(code)
+finally:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

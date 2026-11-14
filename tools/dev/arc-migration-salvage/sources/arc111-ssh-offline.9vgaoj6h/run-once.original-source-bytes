@@ -1,0 +1,39 @@
+from pathlib import Path
+import subprocess,json,time,hashlib,shlex,base64,os,signal,tarfile,io
+out=Path(__file__).resolve().parent;start=time.monotonic();end=start+1200
+payload=json.loads((out/'payload-manifest.json').read_text());binding=json.loads((out/'binding.json').read_text())
+cfg={**binding,'payload_bytes':payload['bytes'],'payload_sha256':payload['sha256'],'payload_members':payload['members'],'image':'sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47'}
+guard=(out/'remote-guard.py').read_bytes();encoded=base64.b64encode(guard).decode()
+remote='python3 -I -c '+shlex.quote('import base64;exec(compile(base64.b64decode('+repr(encoded)+'),"arc111-frozen-remote-guard","exec"))')+' '+shlex.quote(json.dumps(cfg))
+command=['ssh','-o','ConnectTimeout=10','-o','ConnectionAttempts=1','-o','ServerAliveInterval=5','-o','ServerAliveCountMax=2','ownsolid-cpu',remote]
+record={'source':binding['source'],'tree':binding['tree'],'ssh_attempts':1,'retry_count':0,'absolute_budget_seconds':1200,'cleanup_reserve_seconds':120,'remote_guard_sha256':hashlib.sha256(guard).hexdigest(),'state':'PREENTRY'}
+with (out/'transport.stdout').open('wb') as stdout,(out/'transport.stderr').open('wb') as stderr:
+ child=subprocess.Popen(command,stdin=subprocess.PIPE,stdout=stdout,stderr=stderr,start_new_session=True,close_fds=True);record['ssh_pid']=child.pid
+ record['ssh_initial_identity']=subprocess.run(['ps','-p',str(child.pid),'-o','pid=,ppid=,pgid=,lstart=,comm='],capture_output=True,text=True).stdout.strip()
+ (out/'outer-result.json').write_text(json.dumps(record,indent=2)+'\n')
+ try:
+  child.communicate((out/'payload.tar').read_bytes(),timeout=1100);record['ssh_exit']=child.returncode
+ except subprocess.TimeoutExpired:
+  record['outer_timeout']=True;os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=20)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=10)
+  record['ssh_exit']=child.returncode
+raw=(out/'transport.stdout').read_text(errors='replace')
+for line in raw.splitlines():
+ if line.startswith('ARC_NATIVE_RESULT '):record['remote']=json.loads(line[len('ARC_NATIVE_RESULT '):])
+ if line.startswith('ARC_NATIVE_EVIDENCE '):
+  info=json.loads(line[len('ARC_NATIVE_EVIDENCE '):]);data=base64.b64decode(info.pop('base64'));assert hashlib.sha256(data).hexdigest()==info['sha256'] and len(data)==info['bytes'];(out/'native-evidence.tar.gz').write_bytes(data)
+  evidence=out/'native-evidence';evidence.mkdir(mode=0o700)
+  with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+   for item in archive:
+    assert item.isfile() and Path(item.name).name==item.name
+    (evidence/item.name).write_bytes(archive.extractfile(item).read())
+  record['evidence']=info
+record['elapsed_seconds']=time.monotonic()-start;record['within_budget']=time.monotonic()<=end
+record['state']=record.get('remote',{}).get('state','NOTRUN' if child.returncode else 'INCOMPLETE_NO_REMOTE_RESULT')
+record['ssh_stderr']=(out/'transport.stderr').read_text(errors='replace')[-2000:]
+record['current_ssh_pid_absent']=not subprocess.run(['ps','-p',str(child.pid),'-o','pid='],capture_output=True,text=True).stdout.strip()
+(out/'outer-result.json').write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+print(json.dumps({k:v for k,v in record.items() if k!='remote'},indent=2))
+if 'remote' in record:
+ r=record['remote'];print(json.dumps({k:r.get(k) for k in ['state','error','preflight','metadata','cleanup_seconds','container_absent','volume_absent','network_absent','credential_paths_absent','lock_fd_closure','elapsed_seconds','remaining_owned_groups']},indent=2))

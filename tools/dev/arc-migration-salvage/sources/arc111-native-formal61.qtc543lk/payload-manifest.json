@@ -1,0 +1,86 @@
+{
+  "bytes": 12840960,
+  "members": {
+    "binding.json": {
+      "bytes": 2626,
+      "sha256": "3b637e4df2bf4d99f83f62d956f66366ec1a023951104f204d92f422eb2f9b99"
+    },
+    "frozen-source.tar.gz": {
+      "bytes": 9002365,
+      "sha256": "15027f9f5b3145eba29d7850f4ba5aa5eb1a7da0babaee9e875ab0600ee73848"
+    },
+    "metadata-inputs/catalog.sql": {
+      "bytes": 3059,
+      "sha256": "33407087a5476eeb465b08f1674743a97f203f0a1608f64e4e024696a848ade2"
+    },
+    "metadata-inputs/ledger.sql": {
+      "bytes": 101,
+      "sha256": "6c83b9af397227fe818002fb17fd1579cf328666d8abbb1f7336d0b8d951648c"
+    },
+    "metadata-inputs/prefix-55.sql": {
+      "bytes": 308769,
+      "sha256": "9f47eb0d2f62e830a61d3624ae764042bbc25543de7bfd96fba6b69f028eb642"
+    },
+    "metadata-inputs/prefix-56.sql": {
+      "bytes": 315943,
+      "sha256": "104593a39ec51a36d18acbdc9e82bfcf5845fee7b4445a4299601bf10331dfe5"
+    },
+    "metadata-inputs/prefix-57.sql": {
+      "bytes": 321013,
+      "sha256": "d07d6910f4425ddb8871765137da5d9f1c16612d436d718ab656041ab502cfa5"
+    },
+    "metadata-inputs/prefix-58.sql": {
+      "bytes": 324221,
+      "sha256": "ecc3b6f33d5cad79a751dd834b0bc2fa8ab7da67a081c9ef23bc0469c09c801c"
+    },
+    "metadata-inputs/prefix-59.sql": {
+      "bytes": 325710,
+      "sha256": "8b0c99744a7b1208c0018b2fc5b860cb2c7fd134144a599f30dcfb651c43d786"
+    },
+    "metadata-inputs/prefix-60.sql": {
+      "bytes": 326817,
+      "sha256": "bf36c863d9237af1e0e5fa045dbff7fa03540f1bd835207c73549a3872e224de"
+    },
+    "metadata-inputs/prefix-61.sql": {
+      "bytes": 333920,
+      "sha256": "7345a437a8d15c7eeec1e3d89631bb206e89592225062b69c538521dab5850bb"
+    },
+    "metadata-inputs/upgrade-from-55.sql": {
+      "bytes": 25299,
+      "sha256": "0c208f50006bb1e5227980bb43a1ffa6625842c4b7d6f415a307b273f991cb50"
+    },
+    "metadata-inputs/upgrade-from-56.sql": {
+      "bytes": 18125,
+      "sha256": "969ae2907a1384c36e28dbb51ac385a75247f282fb9d136ac37625391950cbd6"
+    },
+    "metadata-inputs/upgrade-from-57.sql": {
+      "bytes": 13055,
+      "sha256": "e15aacabeccc080ca2ab4e587a694472945fb9458815a6695c4db2eee1868879"
+    },
+    "metadata-inputs/upgrade-from-58.sql": {
+      "bytes": 9847,
+      "sha256": "827ef6dffe814f42bfbf4b5b7b441627296d9d6d7cfaa5fccc6c18d3e7ec876e"
+    },
+    "metadata-inputs/upgrade-from-59.sql": {
+      "bytes": 8358,
+      "sha256": "032d5d0477336538b9a3c75a677f622a717a7f236ef1e1228099815488500c77"
+    },
+    "metadata-inputs/upgrade-from-60.sql": {
+      "bytes": 7251,
+      "sha256": "1d1e3b1be172d1c9e58bfbd04f53ca08ab97729e330e6b7e0cbede6c08b423b4"
+    },
+    "metadata-inputs/upgrade-from-61.sql": {
+      "bytes": 148,
+      "sha256": "6bc83ef76fb47cbf7decc29ed54d85e3e79c86f581752432089117133bfd7002"
+    },
+    "migration-inputs.json": {
+      "bytes": 16440,
+      "sha256": "205e92cde7440c37a8a77129b704849736edadc14b169bc6f41af8414347bb74"
+    },
+    "source-manifest.json": {
+      "bytes": 1429564,
+      "sha256": "9de6cb0f1e829a6fa92a2b41b2cb9d84fbc41669805680cd7b7f0e8960ba59c9"
+    }
+  },
+  "sha256": "843c3e272625d75133db64129ffbe1934acc465475a2af2a97dd8f8e4c50a5b0"
+}

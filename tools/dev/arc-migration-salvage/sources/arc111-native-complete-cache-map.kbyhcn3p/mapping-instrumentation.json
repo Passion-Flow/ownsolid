@@ -1,0 +1,15 @@
+{
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "previous_guard_sha256": "0e2d1d69e7c7890f91cd76bce60b178fbdf50c7ab0ad30a7763635b5027ebf45",
+  "actual_guard_sha256": "8742e9a5d5876895b57beffb3de8c0c2c534dab09d05c4471e5a33b2b3e18212",
+  "changed": "Record every actual basis and target mode/type/uid/nlink/length/SHA/blob binding; aggregate rejected inputs before refusing SQL. No predicate or target mode relaxation.",
+  "strict_original_functions_ast_unchanged": [
+    "verify_file",
+    "read_cached_file",
+    "cache_transport_reference",
+    "receive_payload"
+  ],
+  "local_full_rebuilds": 0,
+  "existing_affected_cases_retained": 24
+}

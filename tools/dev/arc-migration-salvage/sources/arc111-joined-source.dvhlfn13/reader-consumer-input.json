@@ -1,0 +1,38 @@
+{
+  "actual_reader_consumption_executed": false,
+  "construction": [
+    "Original IAM graph must borrow concrete pointers, preserve shared service graph and leave gateway Store fields nil.",
+    "ARC opens only configured existing namespaces; no writer, initializer, processor or client-selected path/tenant.",
+    "A second-open or constructor failure closes successfully opened readers in reverse order, retaining original and close errors.",
+    "Only actual bound graph can serve; opening unused readers does not establish readiness or a successful claim."
+  ],
+  "dataset_namespace_input": "existing Config.Datasets.ArtifactRoot; same-host retained namespace, readonly access",
+  "iam_additive_hook": null,
+  "owner_apis": [
+    "datasets.OpenPublishedReader(path, tenant) (*datasets.PublishedReader, error)",
+    "training.OpenPublishedReader(path, tenant) (*training.PublishedReader, error)",
+    "both Close() error"
+  ],
+  "shutdown": [
+    "seal HTTP admission",
+    "drain sessions",
+    "join HTTP requests",
+    "join actual RPC callbacks and receive loops",
+    "join existing process workers",
+    "close borrowed concrete readers in reverse ownership order",
+    "close the original selected database pool last"
+  ],
+  "source": "87c27032f705143d6ffaf3dfb754962476085ebd",
+  "state": "Blocked on original IAM graph input; no unused reader is opened in product code.",
+  "training_namespace_input": "existing Config.Training.ArtifactRoot; same-host retained namespace, readonly access",
+  "trn_source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "trusted_tenant_input": "installedTenant(startup, original selected transaction.Store)",
+  "unchanged": [
+    "current SQL authority and post-I/O recheck",
+    "Identity/http constructor source",
+    "all21 original TRN module paths",
+    "all13 original MODEL module paths",
+    "agent v1 wire/version and cost assertions"
+  ],
+  "unit_or_native_tests_executed": false
+}

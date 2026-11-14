@@ -1,0 +1,68 @@
+from pathlib import Path
+import fcntl,hashlib,io,json,os,shutil,signal,stat,subprocess,tarfile,tempfile,time
+b=Path(__file__).resolve().parent;repo=b.parent.parent/'lane-arc107-handoff'
+lock=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(lock,os.O_RDWR|os.O_NOFOLLOW);i=os.fstat(fd);assert stat.S_ISREG(i.st_mode)and i.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+child=None;tmp=None
+try:
+ assert(i.st_dev,i.st_ino)==(lock.lstat().st_dev,lock.lstat().st_ino)
+ if subprocess.run(['pgrep','-x','go|make|cargo|rustc|compile|link'],capture_output=True).returncode==0:raise SystemExit(75)
+ assert shutil.disk_usage(repo).free>=15*1024**3
+ assert subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True)==''
+ revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip();assert revision.startswith('77b9b37b')
+ run=Path(tempfile.mkdtemp(prefix='fallback-prototype.',dir=b));os.chmod(run,0o700);(b/'latest-fallback-prototype').write_text(str(run)+'\n')
+ source=run/'source';source.mkdir(mode=0o755);archive=subprocess.check_output(['git','archive','HEAD'],cwd=repo)
+ with tarfile.open(fileobj=io.BytesIO(archive))as t:
+  for m in t:
+   assert not Path(m.name).is_absolute()and '..'not in Path(m.name).parts and(m.isfile()or m.isdir())
+  t.extractall(source)
+ tmp=Path(tempfile.mkdtemp(prefix='osa-fallback.',dir='/private/tmp'));os.chown(tmp,-1,os.getgid());os.chmod(tmp,0o700)
+ env=os.environ.copy();env.update(TMPDIR=str(tmp)+'/',GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=1 -mod=readonly',CGO_ENABLED='1')
+ (run/'input.json').write_text(json.dumps({'source':revision,'archive_sha256':hashlib.sha256(archive).hexdigest(),'scope':'external real verified TLS/gRPC policy prototype; no product source changes','started':time.time()},indent=2)+'\n')
+ for local,target in [('fallback-client-prototype.go','services/agent/internal/client/fallback_prototype_test.go'),('fallback-fleet-prototype.go','tools/dev/simulator/internal/fleet/fallback_prototype_test.go')]:shutil.copyfile(b/local,source/target)
+ def stop(sig,frame):raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+ def execute(name,command,budget=180):
+  global child
+  with(run/(name+'.log')).open('wb')as log:
+   child=subprocess.Popen(command,cwd=source,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+   try:code=child.wait(timeout=budget)
+   except subprocess.TimeoutExpired:
+    os.killpg(child.pid,signal.SIGTERM)
+    try:child.wait(timeout=15)
+    except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+    code=124
+  print(name,code,flush=True);return code
+ paths=['services/agent/internal/client/fallback_prototype_test.go','tools/dev/simulator/internal/fleet/fallback_prototype_test.go']
+ assert execute('format-tests',['gofmt','-w',*paths])==0
+ for module,name in [('services/agent','client'),('tools/dev/simulator','fleet')]:
+  command=['go','-C',module,'test','-race','./internal/'+name,'-count=1','-run','^TestPrototypePreviouslyUsableStreamRetriesWithinReconnectBound$','-v','-timeout=60s']
+  assert execute('red-'+name,command)==1
+  text=(run/('red-'+name+'.log')).read_text();assert 'previously usable stream retained fallback' in text and '[build failed]'not in text and 'WARNING: DATA RACE'not in text
+ p=source/'services/agent/internal/client/session.go';s=p.read_text();assert 'previouslyUsable'not in s
+ s=s.replace('\tprobes       int','\tpreviouslyUsable bool\n\tprobes       int',1)
+ marker='\ts.adopt(out.Pacing)';assert marker in s;s=s.replace(marker,'\tif s.transport == TransportStream {\n\t\ts.previouslyUsable = true\n\t}\n'+marker,1)
+ s=s.replace('slog.Warn("agent_session_fallback", "retry_seconds", wire.SessionFallbackRetrySeconds)\n\ts.fallbackUntil = s.now().Add(time.Duration(wire.SessionFallbackRetrySeconds) * time.Second)','delay := wire.SessionFallbackDelay(s.pacing, s.previouslyUsable)\n\tslog.Warn("agent_session_fallback", "retry_seconds", int(delay/time.Second))\n\ts.fallbackUntil = s.now().Add(delay)');assert 'wire.SessionFallbackDelay' in s;p.write_text(s)
+ p=source/'tools/dev/simulator/internal/fleet/agent.go';s=p.read_text();assert 'previouslyUsable'not in s
+ s=s.replace('\tprobes            int','\tprobes            int\n\tpreviouslyUsable bool',1)
+ s=s.replace('\t\ta.fallbackUntil, a.probeHTTPS, a.probes, a.failures, a.pacing =','\t\ta.previouslyUsable = false\n\t\ta.fallbackUntil, a.probeHTTPS, a.probes, a.failures, a.pacing =',1)
+ s=s.replace('a.fallbackUntil = time.Now().Add(time.Duration(wire.SessionFallbackRetrySeconds) * time.Second)','a.fallbackUntil = time.Now().Add(wire.SessionFallbackDelay(a.pacing, a.previouslyUsable))',1)
+ old='\treturn *reply.Disposition, nil';assert s.count(old)==2;s=s.replace(old,'\ta.previouslyUsable = true\n'+old);p.write_text(s)
+ shutil.copyfile(b/'fallback-policy-prototype.go',source/'api/agent/v1/session_fallback.go');shutil.copyfile(b/'fallback-policy-tests.go',source/'api/agent/v1/session_fallback_test.go')
+ changed=['api/agent/v1/session_fallback.go','api/agent/v1/session_fallback_test.go','services/agent/internal/client/session.go','tools/dev/simulator/internal/fleet/agent.go',*paths]
+ assert execute('format-candidate',['gofmt','-w',*changed])==0
+ checks=[('api-green',['go','-C','api/agent','test','-race','./v1','-run','^TestSessionFallbackDelay$','-count=1','-v']),('client-green',['go','-C','services/agent','test','-race','./internal/client','-run','Test(Session.*(Fallback|FallsBack|ControlRestart|HTTPS)|PrototypePreviously)','-count=1','-v','-timeout=90s']),('fleet-green',['go','-C','tools/dev/simulator','test','-race','./internal/fleet','-run','^Test(AgentFallsBackToHTTPSWhenTheStreamCannotOpen|PrototypePreviouslyUsableStreamRetriesWithinReconnectBound)$','-count=1','-v','-timeout=90s'])]
+ for name,command in checks:
+  assert execute(name,command)==0
+  text=(run/(name+'.log')).read_text();assert '--- SKIP:'not in text and '--- FAIL:'not in text and 'PASS'in text
+ for module,package,name in [('api/agent','./v1','api'),('services/agent','./internal/client','client'),('tools/dev/simulator','./internal/fleet','fleet')]:assert execute('vet-'+name,['go','-C',module,'vet',package])==0
+ proof={'source':revision,'scope':'external selected verified TLS prototypes and original unsupported-path regressions; no native installed or load acceptance','candidate':{name:hashlib.sha256((source/name).read_bytes()).hexdigest()for name in changed},'logs':{p.name:hashlib.sha256(p.read_bytes()).hexdigest()for p in run.glob('*.log')},'finished':time.time()}
+ (run/'qualification.json').write_text(json.dumps(proof,indent=2)+'\n');print('External bounded fallback prototype passed '+str(run),flush=True)
+finally:
+ if child is not None and child.poll()is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ if tmp is not None and tmp.is_dir()and not tmp.is_symlink()and tmp.stat().st_uid==os.getuid():shutil.rmtree(tmp)
+ fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

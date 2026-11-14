@@ -1,0 +1,29 @@
+{
+  "active_strict60_source_unchanged": true,
+  "active_worktree_strict60_unchanged": true,
+  "actual_metadata_sha256": "6be01a0347889e70c47e3b3ae78aaa686a090d717501988cf5a387c5a798bccf",
+  "base_source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "base_tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "bundle_sha256": "14336b33c91f034b0e71b3c545e6b7cc6938f25b5984142e5f7150bfb6cc5363",
+  "candidate_branch": "codex/arc111-measured61-pins-1a7ad692",
+  "candidate_compiled": false,
+  "candidate_not_merged_not_pushed_not_qualified": true,
+  "candidate_qualified": false,
+  "candidate_source": "549c3ad699debc2acd0c7b9754fd59d97788d74c",
+  "candidate_tree": "1a7ad692d315e18f5658918a6bc2d1f01749afa3",
+  "changed_paths": [
+    "services/control/internal/platform/database/catalog.go"
+  ],
+  "native_rebuild_packages": [
+    "internal/platform/database",
+    "internal/operations/databaseaccess",
+    "internal/modules/models with repository_integration"
+  ],
+  "new_catalog_git_blob": "80f9ebc4a35291a89a64c88399c50c1435583874",
+  "new_catalog_sha256": "fe1acee8e87d40721f337372116fe3d7b2376e4df585d141d3431461738a5084",
+  "no_migrations_grants_predicates_tests_or_owner_paths_changed": true,
+  "only_one_catalog_file_changed": true,
+  "original_runtime_fixture_required": true,
+  "patch_sha256": "e9581694bf56bcd5ecbe2fc8fb7218bfcbcf5a7d1d23f6dfd2d8bb18ec0c8e87",
+  "source_bundle_prerequisite": "3513ab2ba5885bb5d782919f7611d96e35d28fc6"
+}

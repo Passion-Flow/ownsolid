@@ -1,0 +1,38 @@
+from pathlib import Path
+import fcntl,os,signal,stat,subprocess,tempfile,time,json
+base=Path(__file__).resolve().parent;repo=base.parent.parent/'lane-arc';os.chdir(repo)
+gate=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(gate,os.O_RDWR|os.O_NOFOLLOW)
+info=os.fstat(fd);assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+child=None
+try:
+ assert (info.st_dev,info.st_ino)==(gate.lstat().st_dev,gate.lstat().st_ino)
+ assert subprocess.run(['pgrep','-x','make|cargo|rustc|compile|link'],capture_output=True).returncode!=0
+ assert subprocess.check_output(['git','status','--porcelain'],text=True)==''
+ assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()=='149a95013db6c6d1ca9dbadd09b05fff9b4c98de'
+ free=os.statvfs(repo);assert free.f_bavail*free.f_frsize>=15*1024**3
+ run=Path(tempfile.mkdtemp(prefix='full-repository.',dir=str(base)))
+ (base/'latest-full-repository').write_text(str(run)+'\n')
+ (run/'runner-pid').write_text(str(os.getpid())+'\n')
+ (run/'resource-preflight').write_bytes(subprocess.check_output(['df','-h','/'])+subprocess.check_output(['memory_pressure','-Q']))
+ (run/'full-gate.zsh').write_bytes((base/'full-gate-busy.zsh').read_bytes())
+ def stop(signum,frame):
+  if child is not None and child.poll() is None:
+   os.killpg(child.pid,signal.SIGTERM)
+   try:child.wait(timeout=15)
+   except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+  raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+ print('ARC107 full repository gate input149a9501; logs '+str(run),flush=True)
+ with (run/'runner.log').open('wb') as out:
+  child=subprocess.Popen(['caffeinate','-i','zsh',str(run/'full-gate.zsh'),str(run),str(repo)],stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+  code=child.wait(timeout=2100)
+ (run/'exit').write_text(str(code)+'\n');print((run/'runner.log').read_text()[-2500:],flush=True);print('Full repository exit '+str(code),flush=True)
+ raise SystemExit(code)
+finally:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

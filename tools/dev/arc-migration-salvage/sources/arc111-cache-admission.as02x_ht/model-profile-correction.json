@@ -1,0 +1,103 @@
+{
+  "activation": false,
+  "actual_go_tests_run": 0,
+  "binary_recompiled": false,
+  "corrected_selector": "^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$",
+  "cursor_dimensions": [
+    "account",
+    "session",
+    "epoch",
+    "audience",
+    "tenant",
+    "workspace",
+    "site",
+    "cell",
+    "family",
+    "anchor",
+    "filter"
+  ],
+  "definitions": [
+    {
+      "build_tag": "repository_integration",
+      "path": "services/control/internal/modules/models/family_repository_integration_test.go",
+      "root": "TestActualModelFamilyFormalBackfillAndLifecycle",
+      "sha256": "5fa4fe19b677e3b8e557110f85bad3bda4a7a251840e398c5c5a97b5553ac0d3"
+    },
+    {
+      "build_tag": "repository_integration",
+      "path": "services/control/internal/modules/models/family_repository_integration_test.go",
+      "root": "TestActualModelFamilyHistoryPagesAndAuthority",
+      "sha256": "5fa4fe19b677e3b8e557110f85bad3bda4a7a251840e398c5c5a97b5553ac0d3"
+    },
+    {
+      "build_tag": "repository_integration",
+      "path": "services/control/internal/modules/models/family_repository_integration_test.go",
+      "root": "TestActualModelFamilySelectionTransactions",
+      "sha256": "5fa4fe19b677e3b8e557110f85bad3bda4a7a251840e398c5c5a97b5553ac0d3"
+    },
+    {
+      "build_tag": "repository_integration",
+      "path": "services/control/internal/modules/models/family_repository_integration_test.go",
+      "root": "TestActualModelFamilyRetainedDerivedGraph",
+      "sha256": "5fa4fe19b677e3b8e557110f85bad3bda4a7a251840e398c5c5a97b5553ac0d3"
+    },
+    {
+      "build_tag": "repository_integration",
+      "path": "services/control/internal/modules/models/family_repository_integration_test.go",
+      "root": "TestActualModelFamilyDerivedRegistration",
+      "sha256": "5fa4fe19b677e3b8e557110f85bad3bda4a7a251840e398c5c5a97b5553ac0d3"
+    },
+    {
+      "build_tag": "repository_integration",
+      "path": "services/control/internal/modules/models/family_scope_integration_test.go",
+      "root": "TestActualModelFamilyRestrictedPrincipal",
+      "sha256": "33ccc4343575c4a90ddb7a2180675da0ccc73ed6228ff535e201d0a40907c43a"
+    },
+    {
+      "build_tag": "repository_integration",
+      "path": "services/control/internal/modules/models/family_scope_integration_test.go",
+      "root": "TestActualModelFamilyFormalCellScope",
+      "sha256": "33ccc4343575c4a90ddb7a2180675da0ccc73ed6228ff535e201d0a40907c43a"
+    },
+    {
+      "build_tag": null,
+      "path": "services/control/internal/modules/models/history_cursor_test.go",
+      "root": "TestModelHistoryCursorIntegrityAndScope",
+      "sha256": "8d30bd86cc948068e2b963c198da5805ad537c06bd9ac9faf4a0c97096cb367d"
+    }
+  ],
+  "original_model_author": "db8435034a2a94a3285a059f6bd40237322ae1c2",
+  "original_plan_sha256": "79ccc8259461ffdc2123e9a99851140a72c13013cdf1d38b438c4e69f7c40cc8",
+  "original_selected_roots": [
+    "TestActualModelFamilyFormalBackfillAndLifecycle",
+    "TestActualModelFamilyHistoryPagesAndAuthority",
+    "TestActualModelFamilySelectionTransactions",
+    "TestActualModelFamilyRetainedDerivedGraph",
+    "TestActualModelFamilyDerivedRegistration",
+    "TestActualModelFamilyRestrictedPrincipal",
+    "TestActualModelFamilyFormalCellScope"
+  ],
+  "original_selector": "^TestActualModelFamily",
+  "owner_source_modified": false,
+  "required_roots": [
+    "TestActualModelFamilyFormalBackfillAndLifecycle",
+    "TestActualModelFamilyHistoryPagesAndAuthority",
+    "TestActualModelFamilySelectionTransactions",
+    "TestActualModelFamilyRetainedDerivedGraph",
+    "TestActualModelFamilyDerivedRegistration",
+    "TestActualModelFamilyRestrictedPrincipal",
+    "TestActualModelFamilyFormalCellScope",
+    "TestModelHistoryCursorIntegrityAndScope"
+  ],
+  "required_run_profile": "repository_integration compiled package; all seven original SQL roots plus the untagged original cursor root and its eleven dimensions",
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "sql_run": 0,
+  "state": "FROZEN_CORRECTION_UNEXECUTED",
+  "static_checks": {
+    "all_original_files_byte_identical": true,
+    "new_selector_covers_every_required_root": true,
+    "original_selector_omission_reproduced": true,
+    "root_count": 8,
+    "unique_definitions": true
+  }
+}

@@ -1,0 +1,82 @@
+from pathlib import Path, PurePosixPath
+import ast,base64,hashlib,io,json,os,shutil,stat,subprocess,tarfile,tempfile,time
+os.umask(0o077);out=Path(__file__).resolve().parent
+allocation=json.loads((out/'allocation.json').read_text());remaining=allocation['start_unix']+1200-time.time();assert remaining>600
+diagnostic=json.loads((out/'metadata-result.json').read_text());assert diagnostic['exit']==0
+actual=diagnostic['remote'];assert actual['failed_relative_path']=='.editorconfig'
+assert actual['actual_lstat']['permission_bits']==0o664 and actual['actual_fstat']['permission_bits']==0o664
+assert actual['hash_match'] and actual['git_blob_match'] and actual['actual_fstat']['uid']==0 and actual['actual_fstat']['nlink']==1
+old=out.parent/'arc111-native-delta-observed.yvsxr0l4'
+guard=(old/'post-cache-mode-fix/remote-guard.corrected-source-bytes').read_text()
+assert hashlib.sha256(guard.encode()).hexdigest()=='faf141220ffc0d2668ad6de3d64e463874fa31bae151d4922a7eee013a7e409e'
+normalization=(out/'cache-normalization.py').read_text()
+guard=guard.replace('def terminate(signum,frame):',normalization+'\n\ndef terminate(signum,frame):')
+old_call=" record['source_reconstruction']=reconstruct_source(root,manifest,transport_binding,Path(transport_binding['basis_path']),0,min(phase_end,work_end),apply_source_delta)"
+new_call=""" normalized_basis,normalization_result=materialize_git_archive_basis(root,manifest,transport_binding,0,min(phase_end,work_end))
+ record['basis_cache_materialization']=normalization_result;save()
+ record['source_reconstruction']=reconstruct_source(root,manifest,transport_binding,normalized_basis,0,min(phase_end,work_end),apply_source_delta)"""
+assert guard.count(old_call)==1;guard=guard.replace(old_call,new_call);ast.parse(guard)
+(out/'remote-guard.frozen-source-bytes').write_text(guard)
+namespace={'Path':Path,'PurePosixPath':PurePosixPath,'hashlib':hashlib,'io':io,'json':json,'os':os,'stat':stat,'tarfile':tarfile,'time':time}
+names={'checked_relative','verify_file','read_cached_file','reconstruct_source','materialize_git_archive_basis'}
+definitions=[n for n in ast.parse(guard).body if isinstance(n,ast.FunctionDef) and n.name in names]
+exec(compile(ast.Module(body=definitions,type_ignores=[]),'frozen-source-policy','exec'),namespace)
+manifest=json.loads((out.parent/'arc111-native-delta-preflight/source-manifest.json').read_text())
+transport=json.loads((out.parent/'arc111-native-delta-preflight/transport-binding.json').read_text())
+# Model the exact archive state, including raw 0664/0775, rather than normalizing
+# the input before the prototype has inspected it.
+raw_parent=Path(tempfile.mkdtemp(prefix='local-raw-basis.',dir=out));raw_basis=raw_parent/'source';raw_basis.mkdir(mode=0o700)
+repo=out.parent.parent/'lane-arc111-qualified-readers'
+archive_bytes=subprocess.check_output(['git','archive','--format=tar',transport['basis_source']],cwd=repo)
+raw_counts={}
+with tarfile.open(fileobj=io.BytesIO(archive_bytes),mode='r:') as archive:
+ for member in archive:
+  if member.isdir():continue
+  assert member.isfile() and member.mode in {0o664,0o775};namespace['checked_relative'](member.name)
+  p=raw_basis/member.name;p.parent.mkdir(mode=0o700,parents=True,exist_ok=True);p.write_bytes(archive.extractfile(member).read());p.chmod(member.mode)
+  raw_counts[oct(member.mode)]=raw_counts.get(oct(member.mode),0)+1
+# The same function verifies the real local fixture binding hash. Native caller
+# keeps the frozen default hash of the actual read-only remote diagnostic.
+test_binding={'source':transport['basis_source'],'tree':transport['basis_tree'],'paths':5015,'every_source_byte_and_mode_verified':True}
+(raw_parent/'installed-source-verified.json').write_text(json.dumps(test_binding))
+test_sha=hashlib.sha256((raw_parent/'installed-source-verified.json').read_bytes()).hexdigest()
+local_root=Path(tempfile.mkdtemp(prefix='local-normalized-proof.',dir=out));local_transport=dict(transport,basis_path=str(raw_basis))
+began=time.monotonic();normalized,materialized=namespace['materialize_git_archive_basis'](local_root,manifest,local_transport,os.getuid(),began+45,basis_binding_sha256=test_sha)
+shutil.copyfile(out.parent/'arc111-native-delta-preflight/source-delta.patch',local_root/'source-delta.patch')
+def apply_delta(destination,patch):
+ result=subprocess.run(['git','--no-optional-locks','-c','core.hooksPath=/dev/null','apply','--binary','--whitespace=nowarn','--',str(patch)],cwd=destination,capture_output=True,timeout=10,umask=0o022)
+ assert result.returncode==0
+proof=namespace['reconstruct_source'](local_root,manifest,transport,normalized,os.getuid(),began+45,apply_delta)
+elapsed=time.monotonic()-began
+negative=[];sample=next(ref for ref in manifest['files'] if ref['path']=='.editorconfig')
+for mode in [0o600,0o644,0o777]:
+ (raw_basis/'.editorconfig').chmod(mode)
+ ref=dict(sample,mode=oct(stat.S_IFREG|0o664))
+ try:namespace['read_cached_file'](raw_basis,'.editorconfig',ref,os.getuid())
+ except AssertionError as error:
+  assert json.loads(str(error))['code']=='SOURCE_MODE_MISMATCH';negative.append({'raw_mode':oct(mode),'exact_0664_policy_refused':True})
+ else:raise AssertionError('RAW_MODE_POLICY_WAS_RELAXED')
+(raw_basis/'.editorconfig').chmod(0o664)
+original_ast=ast.parse((old/'remote-guard.py.executed-source-bytes').read_text())
+original_verifier=next(n for n in original_ast.body if isinstance(n,ast.FunctionDef) and n.name=='verify_file')
+new_verifier=next(n for n in ast.parse(guard).body if isinstance(n,ast.FunctionDef) and n.name=='verify_file');assert ast.dump(original_verifier)==ast.dump(new_verifier)
+driver=(old/'driver.py.executed-source-bytes').read_text()
+old_deadline="start=time.monotonic();end=start+1200;work_end=end-120"
+new_deadline="""allocation=json.loads((out/'allocation.json').read_text())
+allocation_end_unix=allocation['start_unix']+1200
+remaining_allocation=allocation_end_unix-time.time()
+assert remaining_allocation>300,'ALLOCATION_TOO_SHORT_FOR_WORK_AND_CLEANUP'
+start=time.monotonic();end=start+remaining_allocation;work_end=end-120"""
+assert driver.count(old_deadline)==1;driver=driver.replace(old_deadline,new_deadline)
+driver=driver.replace("cfg['remote_budget_seconds']=min(cfg['remote_budget_seconds'],1000)","cfg['remote_budget_seconds']=min(cfg['remote_budget_seconds'],1000,remaining_allocation-60)")
+driver=driver.replace("record['payload_requested_bytes']=len(payload_bytes)","record['payload_requested_bytes']=len(payload_bytes)\nrecord['allocation_elapsed_before_native_seconds']=time.time()-allocation['start_unix']\nrecord['outer_pid']=os.getpid()")
+ast.parse(driver);(out/'driver.frozen-source-bytes').write_text(driver)
+result={'source':manifest['source'],'tree':manifest['tree'],'actual_diagnostic_sha256':hashlib.sha256((out/'metadata-result.json').read_bytes()).hexdigest(),
+ 'actual_relative_path':actual['failed_relative_path'],'actual_raw_mode':actual['actual_lstat']['permission_octal'],'expected_git_mode':actual['expected']['git_mode_raw'],
+ 'raw_archive_mode_counts':raw_counts,'materialization':materialized,'target_source_proof':proof,'elapsed_seconds':elapsed,'negative_raw_modes':negative,
+ 'strict_source_verifier_unchanged':True,'owner_binding_local_test':'Same frozen verifier checks the real local fixture binding hash; native caller retains exact remote diagnosed default binding hash and source/tree/5015 predicate.',
+ 'native_guard_sha256':hashlib.sha256(guard.encode()).hexdigest(),'native_driver_sha256':hashlib.sha256(driver.encode()).hexdigest(),'no_extra_connection_or_compile':True}
+(out/'normalization-offline-result.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+for name in ['payload.wire.xz','payload-manifest.json','binding.json','model-profile-correction.json']:
+ shutil.copyfile(old/name,out/name)
+print(json.dumps(result,indent=2))

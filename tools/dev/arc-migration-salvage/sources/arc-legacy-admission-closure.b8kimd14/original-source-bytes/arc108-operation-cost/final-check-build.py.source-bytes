@@ -1,0 +1,56 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,signal,stat,subprocess,tempfile
+base=Path(__file__).resolve().parent;repo=base.parent.parent/'lane-arc108';os.chdir(repo)
+expected='0df420bf0a654a9cb92d9439097319970da98dda';qualified='a91a817b23157fd610f714533b04cf6e7d8ec012';web='60b85e037aa24fc0d30ae0195e6dffe8f59a6946'
+def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+assert git('rev-parse','HEAD')==expected and git('status','--porcelain')==''
+changed=git('diff','--name-only',qualified,'HEAD').splitlines();assert all(p.startswith('web/') or p.endswith('.md') for p in changed)
+assert git('diff','--name-only',web,'HEAD','--','web')==''
+carrier=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW);i=os.fstat(fd);assert stat.S_ISREG(i.st_mode) and i.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+child=None;mountpoint=None;run=None
+try:
+ assert (i.st_dev,i.st_ino)==(carrier.lstat().st_dev,carrier.lstat().st_ino)
+ assert subprocess.run(['pgrep','-x','make|cargo|rustc|compile|link'],capture_output=True).returncode!=0
+ disk=os.statvfs(repo);assert disk.f_bavail*disk.f_frsize>=15*1024**3
+ run=Path(tempfile.mkdtemp(prefix='final-integration.',dir=str(base)));(base/'latest-final-integration').write_text(str(run)+'\n');(run/'input').write_bytes(subprocess.check_output(['git','rev-parse','HEAD','HEAD^{tree}','origin/main']));(run/'runner-pid').write_text(str(os.getpid())+'\n')
+ mountpoint=Path(tempfile.mkdtemp(prefix='osa8f.',dir='/private/tmp'))
+ def stop(sig,frame):raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+ def execute(command,name,budget,env=None,cwd=None):
+  global child
+  with (run/name).open('wb') as out:
+   child=subprocess.Popen(command,stdout=out,stderr=subprocess.STDOUT,env=env,cwd=cwd,start_new_session=True)
+   try:code=child.wait(timeout=budget)
+   except BaseException:
+    if child.poll() is None:
+     os.killpg(child.pid,signal.SIGTERM)
+     try:child.wait(timeout=15)
+     except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+    raise
+   assert code==0,(name,code)
+ execute(['hdiutil','create','-size','8g','-fs','APFS','-type','SPARSE','-volname','ownsolid-arc108-final','-o',str(run/'scratch')],'create.log',45)
+ execute(['hdiutil','attach','-nobrowse','-mountpoint',str(mountpoint),str(run/'scratch.sparseimage')],'attach.log',45)
+ temporary=mountpoint/'t';temporary.mkdir(mode=0o700);os.chown(temporary,-1,os.getgid())
+ env=os.environ.copy();env.update({'TMPDIR':str(temporary)+'/','GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1','CARGO_NET_OFFLINE':'true','CARGO_BUILD_JOBS':'2'})
+ env['PYTHON']=subprocess.check_output(['uv','python','find','3.12'],text=True).strip();env['PATH']=str(base.parent/'gw120-schema59.9jT6tZsI/offline-tools')+os.pathsep+env['PATH']
+ print('ARC108 final integrated check/build '+expected+'; '+str(run),flush=True)
+ execute(['pnpm','install','--offline','--frozen-lockfile','--ignore-scripts'],'dependency-bootstrap.log',180,env,repo/'web')
+ execute(['make','check'],'check.log',420,env)
+ execute(['make','build'],'build.log',420,env)
+ artifact=repo/'tools/audit-verify/audit-verify'
+ if artifact.exists():assert git('ls-files','--','tools/audit-verify/audit-verify')=='';artifact.unlink()
+ assert git('status','--porcelain')==''
+ (run/'admission.json').write_text(json.dumps({'source':expected,'go_and_non_web_complete_gate':qualified,'web_complete_gate':web,'non_web_executable_test_inputs_unchanged':True,'web_inputs_identical':True,'post_gate_changes':changed,'final_check_and_build':'passed','final_hashes':{n:hashlib.sha256((run/n).read_bytes()).hexdigest() for n in ['check.log','build.log']},'arc_gate':str(base/'combined.sq0fqi38/full'),'web_gate_report':'docs/research/gateway-model-description.md#complete-web-gate-and-final-screen-review','no_new_make_test_run_claimed':True},indent=2)+'\n')
+ (run/'exit').write_text('0\n');print('Final integrated check/build passed; qualified component test inputs matched',flush=True)
+finally:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ if mountpoint is not None:
+  if os.path.ismount(mountpoint):
+   with (run/'cleanup.log').open('ab') as out:subprocess.run(['hdiutil','detach',str(mountpoint)],stdout=out,stderr=subprocess.STDOUT,check=True,timeout=45)
+  mountpoint.rmdir()
+ fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

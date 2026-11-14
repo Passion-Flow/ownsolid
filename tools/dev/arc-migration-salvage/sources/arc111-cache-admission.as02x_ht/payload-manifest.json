@@ -1,0 +1,1433 @@
+{
+  "bytes": 720340,
+  "members": {
+    "binding.json": {
+      "bytes": 2626,
+      "sha256": "3b637e4df2bf4d99f83f62d956f66366ec1a023951104f204d92f422eb2f9b99"
+    },
+    "metadata-inputs/catalog.sql": {
+      "bytes": 3059,
+      "sha256": "33407087a5476eeb465b08f1674743a97f203f0a1608f64e4e024696a848ade2"
+    },
+    "metadata-inputs/ledger.sql": {
+      "bytes": 101,
+      "sha256": "6c83b9af397227fe818002fb17fd1579cf328666d8abbb1f7336d0b8d951648c"
+    },
+    "metadata-inputs/prefix-55.sql": {
+      "bytes": 308769,
+      "sha256": "9f47eb0d2f62e830a61d3624ae764042bbc25543de7bfd96fba6b69f028eb642"
+    },
+    "metadata-inputs/prefix-56.sql": {
+      "bytes": 315943,
+      "sha256": "104593a39ec51a36d18acbdc9e82bfcf5845fee7b4445a4299601bf10331dfe5"
+    },
+    "metadata-inputs/prefix-57.sql": {
+      "bytes": 321013,
+      "sha256": "d07d6910f4425ddb8871765137da5d9f1c16612d436d718ab656041ab502cfa5"
+    },
+    "metadata-inputs/prefix-58.sql": {
+      "bytes": 324221,
+      "sha256": "ecc3b6f33d5cad79a751dd834b0bc2fa8ab7da67a081c9ef23bc0469c09c801c"
+    },
+    "metadata-inputs/prefix-59.sql": {
+      "bytes": 325710,
+      "sha256": "8b0c99744a7b1208c0018b2fc5b860cb2c7fd134144a599f30dcfb651c43d786"
+    },
+    "metadata-inputs/prefix-60.sql": {
+      "bytes": 326817,
+      "sha256": "bf36c863d9237af1e0e5fa045dbff7fa03540f1bd835207c73549a3872e224de"
+    },
+    "metadata-inputs/prefix-61.sql": {
+      "bytes": 333920,
+      "sha256": "7345a437a8d15c7eeec1e3d89631bb206e89592225062b69c538521dab5850bb"
+    },
+    "metadata-inputs/upgrade-from-55.sql": {
+      "bytes": 25299,
+      "sha256": "0c208f50006bb1e5227980bb43a1ffa6625842c4b7d6f415a307b273f991cb50"
+    },
+    "metadata-inputs/upgrade-from-56.sql": {
+      "bytes": 18125,
+      "sha256": "969ae2907a1384c36e28dbb51ac385a75247f282fb9d136ac37625391950cbd6"
+    },
+    "metadata-inputs/upgrade-from-57.sql": {
+      "bytes": 13055,
+      "sha256": "e15aacabeccc080ca2ab4e587a694472945fb9458815a6695c4db2eee1868879"
+    },
+    "metadata-inputs/upgrade-from-58.sql": {
+      "bytes": 9847,
+      "sha256": "827ef6dffe814f42bfbf4b5b7b441627296d9d6d7cfaa5fccc6c18d3e7ec876e"
+    },
+    "metadata-inputs/upgrade-from-59.sql": {
+      "bytes": 8358,
+      "sha256": "032d5d0477336538b9a3c75a677f622a717a7f236ef1e1228099815488500c77"
+    },
+    "metadata-inputs/upgrade-from-60.sql": {
+      "bytes": 7251,
+      "sha256": "1d1e3b1be172d1c9e58bfbd04f53ca08ab97729e330e6b7e0cbede6c08b423b4"
+    },
+    "metadata-inputs/upgrade-from-61.sql": {
+      "bytes": 148,
+      "sha256": "6bc83ef76fb47cbf7decc29ed54d85e3e79c86f581752432089117133bfd7002"
+    },
+    "migration-inputs.json": {
+      "bytes": 16440,
+      "sha256": "205e92cde7440c37a8a77129b704849736edadc14b169bc6f41af8414347bb74"
+    },
+    "source-delta.patch": {
+      "bytes": 1429140,
+      "sha256": "0a6719cfa9f0b83f62209e0f6799ad91452ec0aa60746200a7cf1d3149a181aa"
+    },
+    "source-manifest.json": {
+      "bytes": 1429564,
+      "sha256": "9de6cb0f1e829a6fa92a2b41b2cb9d84fbc41669805680cd7b7f0e8960ba59c9"
+    },
+    "transport-binding.json": {
+      "bytes": 57243,
+      "sha256": "5f2eb7651403e565b82fdf7b6f7ceef7537edeb8a2e69b5f123042e8ceb1abb5"
+    }
+  },
+  "sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb",
+  "transport": {
+    "check": "SHA256",
+    "compression_preset": 6,
+    "decoded_bytes": 5304320,
+    "decoded_sha256": "f55b36054aef4e6277c5b1164b07877a9e8ce7fced00dc23c8b8f4f4a451c910",
+    "encoding": "xz-of-tar-v1",
+    "source_transport": {
+      "basis_access": "read-only; no fallback and no mutation",
+      "basis_changed_or_removed_inputs": [
+        {
+          "bytes": 6475,
+          "git_blob": "9586a5dfa002ad3aeed5cc405e982524ca1f5969",
+          "mode": "100644",
+          "path": "api/agent/v1/session.go",
+          "sha256": "90ef1df1367eea3c614415b6961089223bfbc883eb1c48758069859e1c1dac06"
+        },
+        {
+          "bytes": 1840,
+          "git_blob": "28cceff7691ed7097aea87f5013757dd39f7f65e",
+          "mode": "100644",
+          "path": "api/configuration/v1/control-serving-expectation/schema.json",
+          "sha256": "af10f3b2f95a83833b5064fd833ab36153e486c0aeaf8b1a18c8d2d73dd76396"
+        },
+        {
+          "bytes": 2190,
+          "git_blob": "406ff94f2176e89e1ec30243ce28cf1dfaecc687",
+          "mode": "100644",
+          "path": "docs/decisions/0070-scope-gateway-http-shutdown-to-one-connection.md",
+          "sha256": "dda632eb3a0954dc4c625e8aa97e47f36b2ebcedd86f77629cdd8705f3017dc5"
+        },
+        {
+          "bytes": 27151,
+          "git_blob": "b6f286995b7e78eadf2b0cb5f0a4d3554d1721a6",
+          "mode": "100644",
+          "path": "docs/operations/install.md",
+          "sha256": "286a092df5d854d61fa0392537589b0e6cc1e3721677642a2c1c383a6c44108f"
+        },
+        {
+          "bytes": 14196,
+          "git_blob": "25e1b55737571285283cbc01ff93116f83562aaa",
+          "mode": "100644",
+          "path": "docs/product/roadmap/architecture-and-scale.md",
+          "sha256": "63c70eed9ac4bdf128b6b38ae0ecb7323fe8e1bd2e182eda00823dfa10ece1ec"
+        },
+        {
+          "bytes": 4747,
+          "git_blob": "6958ffae028b72b93d3473058e9edc3cf362df40",
+          "mode": "100644",
+          "path": "docs/product/roadmap/audit-and-compliance.md",
+          "sha256": "674076cb93f9b543f66a63704ef148cbfeb520139c0425de3b02f11b95a4430f"
+        },
+        {
+          "bytes": 12818,
+          "git_blob": "babf04a7c7444b129bdff53e7b1a459af71b5c1c",
+          "mode": "100644",
+          "path": "docs/product/roadmap/index.md",
+          "sha256": "bb70b42c7b262929d7857e41c02574088758350e4450606b58eea92e0de963ea"
+        },
+        {
+          "bytes": 5119,
+          "git_blob": "e6ee4687d73721e076f4bc26f16aa33b3093e01c",
+          "mode": "100644",
+          "path": "docs/product/roadmap/models-and-registry.md",
+          "sha256": "fa7cf40337330cd5353f41eb1d7e922b608d67d08cbcc8ed7be45981a7fdd5c4"
+        },
+        {
+          "bytes": 103258,
+          "git_blob": "229bb8ea8b912da1b7195ab8723965f798a535a3",
+          "mode": "100644",
+          "path": "docs/product/status.md",
+          "sha256": "bf375b31bf031b3f46a86359d4173834b0804617a3e822a4f12b1eab0eacce8e"
+        },
+        {
+          "bytes": 30519,
+          "git_blob": "599b66610799d920a73f345692914f44c51e77a8",
+          "mode": "100644",
+          "path": "docs/research/agent-gateway-rebalance.md",
+          "sha256": "e344123ba26764d7258c096e1e40c6bd05d91dd6e7565a66c94538a354dc0b5d"
+        },
+        {
+          "bytes": 24469,
+          "git_blob": "76e2d1f7ed2a0793b2837726daecca3846a006ad",
+          "mode": "100644",
+          "path": "docs/research/cell-scale-validation.md",
+          "sha256": "5f835274644b322dbb367e6a191bc59d0444912c86c21db8e4efd4cb75159bb1"
+        },
+        {
+          "bytes": 42862,
+          "git_blob": "af1f822ca5ba8f0551aafa6b5df8e0ac80759e16",
+          "mode": "100644",
+          "path": "docs/research/dataset-import.md",
+          "sha256": "8ce18f80a3446d162bd078618f627cbaa13a3e15631bae2959d9f7fda00fe1e9"
+        },
+        {
+          "bytes": 12112,
+          "git_blob": "50a29de565a1a98be7860601f0d4163032824982",
+          "mode": "100644",
+          "path": "docs/research/directory-login.md",
+          "sha256": "37e546c8d87605aecfd75c88048ff0a0f0fb4da1116d4d8d7baf5d35c974f58b"
+        },
+        {
+          "bytes": 15651,
+          "git_blob": "cb03e5dd086639bad82f14c93438c3602cebf342",
+          "mode": "100644",
+          "path": "docs/research/fleet-load-test.md",
+          "sha256": "0f872aaf6f4540e4159bebc9e43985c59fac8f542fc0462c0ce764ebe607b08b"
+        },
+        {
+          "bytes": 8397,
+          "git_blob": "8c5c1ff9882307ee43eabea10690b83843e8c68c",
+          "mode": "100644",
+          "path": "docs/research/group-role-mapping.md",
+          "sha256": "72f5480058b67278210aa67b2c366f6b32fde86b2b9b619269b7105b13373f02"
+        },
+        {
+          "bytes": 11252,
+          "git_blob": "9715b1bbf6c4a83405a87fe0732e34e420b0b3fe",
+          "mode": "100644",
+          "path": "docs/research/iam-questions.md",
+          "sha256": "118b29a460df737877cfece43e4e2a35516bd17f3cca51998d6bc62983673f82"
+        },
+        {
+          "bytes": 8571,
+          "git_blob": "cef9d9ed738ce0c2a0ac7f7a948c9a25677b94e2",
+          "mode": "100644",
+          "path": "docs/research/identity-audit-read-access.md",
+          "sha256": "931ae1fb3a8d0f7a6f4290db37d1da0852588e028e69c2212ce2c67c29629dc0"
+        },
+        {
+          "bytes": 29477,
+          "git_blob": "811beb3d216c1709cc341879419e6ff0bee0334f",
+          "mode": "100644",
+          "path": "docs/research/in-product-help.md",
+          "sha256": "205b52d97e73135142a696905b44772e39dd70707d2564e72804302743fde75d"
+        },
+        {
+          "bytes": 2035,
+          "git_blob": "694107504adf45ccdd0060164a489b74e9df4c7f",
+          "mode": "100644",
+          "path": "docs/research/lane-arc-decisions.md",
+          "sha256": "34ea786001e163231ceb8ca7ae30dcae37610f017061af45ef3d09eb3581e905"
+        },
+        {
+          "bytes": 7707,
+          "git_blob": "e9bbb5adda4f5b32d5d65fc9f4d454f0af06f7a1",
+          "mode": "100644",
+          "path": "docs/research/lane-f-decisions.md",
+          "sha256": "e7765f3401ca770e37ea963502aabd0a9b46aab6b0def5c9185a8b946e9c0462"
+        },
+        {
+          "bytes": 12138,
+          "git_blob": "c5a505d9234d1340fa573911e0c5f3034669abaa",
+          "mode": "100644",
+          "path": "docs/research/lane-m-questions.md",
+          "sha256": "c66110c954511fa8ad52b50d8bbf1f7a1e235b136085ff814334da53885c1e07"
+        },
+        {
+          "bytes": 8931,
+          "git_blob": "235c1bc7785fae3a07772bd807a34b2010ddf491",
+          "mode": "100644",
+          "path": "docs/research/lane-sch-questions.md",
+          "sha256": "ca9f4790c08e4330eff62ba3f224383b86c43a7fa94b1fda93da1506e3f855cc"
+        },
+        {
+          "bytes": 4941,
+          "git_blob": "99692ed4e969afd69a8dba70c6bf8c38c3811a63",
+          "mode": "100644",
+          "path": "docs/research/lane-sci-decisions.md",
+          "sha256": "ce4f9d0af0cc33cc1010e7e92b0e96de702a0cbcea2a5fa2eca5e2f857f35ce3"
+        },
+        {
+          "bytes": 3205,
+          "git_blob": "66cf1ce7369e44d2f243be799922e0b0c6f6387b",
+          "mode": "100644",
+          "path": "docs/research/lane-trn-questions.md",
+          "sha256": "c570b30460abe0050a72362aaee65c1eba3d6c4c69f6e0fb10602df0ad7cd391"
+        },
+        {
+          "bytes": 3800,
+          "git_blob": "4e0a1d00b01618c5082fefeb21e2c38158e7069e",
+          "mode": "100644",
+          "path": "docs/research/lane-web-decisions.md",
+          "sha256": "42b7581c5e8223918a524200f6019b2c20e24b282b006dfa927a96d3aea26007"
+        },
+        {
+          "bytes": 6094,
+          "git_blob": "b4de4cc0b9ff8d77558f4573062148eb2e065b42",
+          "mode": "100644",
+          "path": "docs/research/license-page.md",
+          "sha256": "9d4a3c76e4edd9a2e00b0d8d238cd6fba6aeef7e081e19e61f427368cf406f1f"
+        },
+        {
+          "bytes": 19488,
+          "git_blob": "f6cc3a51dec150c726c0c5d7cbc7dec470391f62",
+          "mode": "100644",
+          "path": "docs/research/model-import-cleanup.md",
+          "sha256": "e2a89dcdf0c4f4182ba79df644b5d8a7c4e195d698a4a36e1fafa5095f9c2cdb"
+        },
+        {
+          "bytes": 19080,
+          "git_blob": "3d5fcb78eea00dcaa3e3a214e4cf0287290bcbd5",
+          "mode": "100644",
+          "path": "docs/research/oidc-sign-in.md",
+          "sha256": "0301fad7f5bf2d27cddb415659dfda440ab85ab140bfc620c01c82e4f63e480a"
+        },
+        {
+          "bytes": 4196,
+          "git_blob": "8d66e154d5a4bacba7b7a00bf9977cf63af5b68f",
+          "mode": "100644",
+          "path": "docs/research/resource-detail-pages.md",
+          "sha256": "78d5d207910fa391f2a65d83cbca28ef9222a291ec1abf5a3ce618b05a4cd9d7"
+        },
+        {
+          "bytes": 10672,
+          "git_blob": "18ed9b48297d1c42d3ea3b615decc24faac0e09d",
+          "mode": "100644",
+          "path": "docs/research/saml-sign-in.md",
+          "sha256": "d2aa614e81b5dedd66177c6f541a82854e17e5d05cad29ce9e668dfb27b2ef5f"
+        },
+        {
+          "bytes": 4729,
+          "git_blob": "6940752c4ffc833e1c6ac844f2435626821f0e17",
+          "mode": "100644",
+          "path": "docs/research/scheduling-cell-adapters.md",
+          "sha256": "096368a068b418efa1cacef17fdbb826263a3dac6048ea95d66c4958b3074443"
+        },
+        {
+          "bytes": 11479,
+          "git_blob": "563a18a00e8479dbc5948e8dbdce8dbf6b5c7d39",
+          "mode": "100644",
+          "path": "docs/research/scheduling-queue-policy.md",
+          "sha256": "9b6f2dffb43540f7f917d15580e66605e62b304092b139475fe9a5dd9a18fa21"
+        },
+        {
+          "bytes": 7941,
+          "git_blob": "4ea22430e44116857d913ece0c13cba254da3af2",
+          "mode": "100644",
+          "path": "docs/research/scheduling-quota-borrowing.md",
+          "sha256": "32b0979eaa9c62ed4b562a6d3e3687e344024d128e30b6869168b3e89c7de5a4"
+        },
+        {
+          "bytes": 7830,
+          "git_blob": "78afd497829e8ec65d0e0b712136982b31214639",
+          "mode": "100644",
+          "path": "docs/research/training-agent-cost.md",
+          "sha256": "22f3cb01d647fc090c19ea0b4b8db226a1df5b686c320fef1faf76a022bc92a9"
+        },
+        {
+          "bytes": 20396,
+          "git_blob": "4e6bc3c0eebf50fcad8bfc5b9e10a6e283b83ba5",
+          "mode": "100644",
+          "path": "docs/research/training-checkpoint-recovery.md",
+          "sha256": "f00ffa8a90de2097f5ccd8846c06485574c3fb1ef5688cfcbc55c24829988b66"
+        },
+        {
+          "bytes": 13030,
+          "git_blob": "9b476b087c05294e7bb880e7866490e9db11713f",
+          "mode": "100644",
+          "path": "docs/research/training-compute-record.md",
+          "sha256": "728720e56be83e7ea3592fa4f459e2d0894849d3ea5c633d15b02fc2b2b88683"
+        },
+        {
+          "bytes": 31894,
+          "git_blob": "c933e0db3b997763c95f89818a6ab2d72ae542ea",
+          "mode": "100644",
+          "path": "docs/research/training-dataset-lineage.md",
+          "sha256": "8e44d571aa2090cbb6a3ac0dd43dcc609da42a95a40853592987d3c1ae5dcabe"
+        },
+        {
+          "bytes": 11817,
+          "git_blob": "3602e9b8667e3a6c2564bbbdc0c7bf15887b13da",
+          "mode": "100644",
+          "path": "docs/research/training-experiment-records.md",
+          "sha256": "4210d7009a5d92c2a73a29c720d431ba3c204c3088dd09aacbc0f5bc2644a8c6"
+        },
+        {
+          "bytes": 7155,
+          "git_blob": "deede7330f2ec59ef9929feffe34d0b814348b40",
+          "mode": "100644",
+          "path": "docs/research/training-interactive-environments.md",
+          "sha256": "79ed95c7ea54205406baecc7fa93d3a68687d2df4973f82d367d90e9904f6d8b"
+        },
+        {
+          "bytes": 4735,
+          "git_blob": "1f8211f138b999da52c03f71e447ac63d7051c24",
+          "mode": "100644",
+          "path": "docs/research/training-job-lifecycle.md",
+          "sha256": "7be177319569a0e7d08dc69073fa0cdcbf318ddf4fa413688a270ed79ec919ad"
+        },
+        {
+          "bytes": 36335,
+          "git_blob": "4d0904c9292946800957f8ec701f9b129c3b91d2",
+          "mode": "100644",
+          "path": "docs/research/training-runtime-delivery.md",
+          "sha256": "37a86d8c511c7ddb8fcf9993e12da88c276af12df08726c53bb2f9a9187d4db1"
+        },
+        {
+          "bytes": 5174,
+          "git_blob": "2f7eeb458c900ab59c3fac30e8ceddefe1306a7a",
+          "mode": "100644",
+          "path": "services/agent/README.md",
+          "sha256": "cd42eec42f7e7931671c7b7e42fd8cb00289e7dd8c20b8e0bc7a15d9bf58cf6f"
+        },
+        {
+          "bytes": 3435,
+          "git_blob": "c883ab800945be52e69c95cf30bb7ba2cfad09f8",
+          "mode": "100644",
+          "path": "services/agent/internal/client/README.md",
+          "sha256": "caf0248403e4f03fce559e6bef255247a9cd98e0c8db7352671f1b5fae9afbcf"
+        },
+        {
+          "bytes": 18517,
+          "git_blob": "dac1bef248b1f04aa977b21e0dcffdc60083523b",
+          "mode": "100644",
+          "path": "services/agent/internal/client/session.go",
+          "sha256": "d1fcb0234056b17a4a6796288b41416215e7851ca6e67ef0684c54fbcb41181c"
+        },
+        {
+          "bytes": 19088,
+          "git_blob": "da1277988130f762060705d3c6a700d90b6739c8",
+          "mode": "100644",
+          "path": "services/agent/internal/client/session_test.go",
+          "sha256": "f3d89ce07d810092de8d51a899411c59fd93ea2ee4801f9a2bd96312890216a9"
+        },
+        {
+          "bytes": 18964,
+          "git_blob": "7b4931c32b88afa6ee462d47b3dac1ebf05c14d1",
+          "mode": "100644",
+          "path": "services/control/cmd/server/README.md",
+          "sha256": "c88ec1f638b9b0ee129abc4e4d917a242b26f4d9bc276cba2acd37f118436012"
+        },
+        {
+          "bytes": 9831,
+          "git_blob": "cb88af2894b2520811934e49594d593da4eac322",
+          "mode": "100644",
+          "path": "services/control/cmd/server/agent_gateway.go",
+          "sha256": "5645529a622de8551aa24dc2a7b42ace1b02716f3c7fab635447a002586ed151"
+        },
+        {
+          "bytes": 14008,
+          "git_blob": "23145df847370d2f06f50bd66dee207a6788a674",
+          "mode": "100644",
+          "path": "services/control/cmd/server/runtime_lifecycle.go",
+          "sha256": "5c06ccf093cb5653ed0c516f8cd78ac882f48c4cc2de0b53f2bdb0a3d81ca52e"
+        },
+        {
+          "bytes": 4621,
+          "git_blob": "b29f218eb0bf54e7ddaff0ba73d4f9e4be8cd5d6",
+          "mode": "100644",
+          "path": "services/control/config/examples/control/transport.env.example",
+          "sha256": "1ac058692e2477cb8bb98d91c480130184bfd5bdd6be52567480018eae7e7bcb"
+        },
+        {
+          "bytes": 3880,
+          "git_blob": "a09d06d7b2176ea05686676e309780970f32547c",
+          "mode": "100644",
+          "path": "services/control/internal/modules/audit/README.md",
+          "sha256": "c7c3fe7aac5afdf969542108cbcc3019891cea538d6da8d63167ee0fb6f4678b"
+        },
+        {
+          "bytes": 17069,
+          "git_blob": "890a0b15b3c3ca9d7ec7326fbd51b042a93cf9a3",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/README.md",
+          "sha256": "02b5f65b1706d042739aa82bd65f3ce84d407e84e8ce11a51d8b6ced40a01795"
+        },
+        {
+          "bytes": 17180,
+          "git_blob": "13dcf329b5e1c8c20c73f733eb0ea79c2d379b74",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/draft_source_candidate.go",
+          "sha256": "37467e541d60aa21849d824cac9b85d6b5f48257eb6b80bba125ac2a1219a247"
+        },
+        {
+          "bytes": 19688,
+          "git_blob": "9d7b187d6da6155ed58f11f1da26191cda7f3bd4",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/draft_source_restore_integration_test.go",
+          "sha256": "be7eef39c34fb353e755d29cfc00b07eea00bb2c601f7503b44cf3db8633ffdd"
+        },
+        {
+          "bytes": 5631,
+          "git_blob": "f513fbcae7fb26225eb23df8595de079758eb58d",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/integrity.go",
+          "sha256": "750f6fe12ee83198a76a7d2caa185c07f7e778c69a35cdf22e8a33004ce5892b"
+        },
+        {
+          "bytes": 10278,
+          "git_blob": "db5c4286fa07b866b835ce32196a6bb4d813de72",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/publication_storage.go",
+          "sha256": "3ddf609feac666844500067e164545b0e321ff5879b63ded38a122db822c8fc9"
+        },
+        {
+          "bytes": 3934,
+          "git_blob": "adac2d21fd3a024491ae5bf5c9412aec34c9fd4e",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/published_source_repository.go",
+          "sha256": "665b15ad3db255e381f182d4187934bb7cbdaa918b6cba09a0051c113fe0d212"
+        },
+        {
+          "bytes": 9816,
+          "git_blob": "6c2cff29a54753f8c1ffd7a4565c577328fa0447",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/service.go",
+          "sha256": "b26fb47f8c9a568672d452d6f1d4086b4f22dfebd6c9cf5ac8063f0644617798"
+        },
+        {
+          "bytes": 6490,
+          "git_blob": "a3e6ea668dd5099f7eb53c37a419bb187280fc39",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/snapshot.go",
+          "sha256": "4ec4f45d013832af28bbadd97b3a89afc2af6f21dc69dc34969795c1a653eafc"
+        },
+        {
+          "bytes": 8262,
+          "git_blob": "1e9b8a0cc5828c6aa6c43066c2255be0a1789f30",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/snapshot_import.go",
+          "sha256": "1ebb441b21de8b50585539e0d0b382a250cce887be35b9f915e8be45a0274475"
+        },
+        {
+          "bytes": 6207,
+          "git_blob": "362617a72ab8d26e038d17f6554cbe6cf31c6992",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/snapshot_inventory.go",
+          "sha256": "d24ca775b556ca2dcc1c2621221f94f9f1f2a29233007f6857bee2e2517e0c98"
+        },
+        {
+          "bytes": 11282,
+          "git_blob": "be48b55257b96a52eb5d59c91958e541a9f83fd6",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/storage.go",
+          "sha256": "3b4b687ac7164c6e3115b8d9e03f41689d9804451cdc047cda96a186df26db53"
+        },
+        {
+          "bytes": 2790,
+          "git_blob": "d8ba638651e7c2d8ed3430f3a24072b12d02e5c8",
+          "mode": "100755",
+          "path": "services/control/internal/modules/datasets/testdata/replay_draft_import.sh",
+          "sha256": "a5d2ab2d0f275a1bdcf22af2e8808d0148beb4c6396abf736a32e4d3747400d4"
+        },
+        {
+          "bytes": 2865,
+          "git_blob": "7e15dcaa63e3f273e0fb0c86f59497d4564e6cc5",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/training_input_repository.go",
+          "sha256": "639a1c3693eb1d5168d323fdd9e6ba4fd8386f566902677f1fe355f8b9a658d0"
+        },
+        {
+          "bytes": 2426,
+          "git_blob": "6754247a4dcc97b24fc44d7c0654db5fd1ac0d61",
+          "mode": "100644",
+          "path": "services/control/internal/modules/datasets/training_inputs.go",
+          "sha256": "7db8ad95ca300cb59ef0589a99eb1731e773ee74ffa8a169315d2a14ca728b9d"
+        },
+        {
+          "bytes": 18589,
+          "git_blob": "a7a07b460588c29305bc4651348194cc40d42739",
+          "mode": "100644",
+          "path": "services/control/internal/modules/identity/README.md",
+          "sha256": "9d36ef49d00d080470e5f0aca2a21adc2530376cae1e34756f2617620999d09a"
+        },
+        {
+          "bytes": 16467,
+          "git_blob": "5f128828d9af63f208679e1fa73525a5ef40f223",
+          "mode": "100644",
+          "path": "services/control/internal/modules/identity/audit_list_integration_test.go",
+          "sha256": "3705997b829fdce8be2ace8adfb144fb9075ad4baf9ce25a3a50abdb6074cdb8"
+        },
+        {
+          "bytes": 1623,
+          "git_blob": "f3a69e41e30eba58e1486700f3666ee03f9f61fb",
+          "mode": "100644",
+          "path": "services/control/internal/modules/identity/audit_read.go",
+          "sha256": "d6058e7c0cd6ef8a650e3855064dfc38df8c59e8c6fe8119b4d91315c2d1b357"
+        },
+        {
+          "bytes": 10367,
+          "git_blob": "d4778ca8a806d06e16d03baae303bef409ac1102",
+          "mode": "100644",
+          "path": "services/control/internal/modules/identity/http/agent_path.go",
+          "sha256": "251c908f0863f0ccc78318c6baf93250faf1d5c1ce945d8d6aab143c6fdd93b9"
+        },
+        {
+          "bytes": 23638,
+          "git_blob": "9b2cf48347ef83732c8d4afb8b19cc8afef8cdc7",
+          "mode": "100644",
+          "path": "services/control/internal/modules/identity/lists.go",
+          "sha256": "277fafd2f433a3e4b95809f4deb2f96a75e6b46d7b02f91b2683e4911097f331"
+        },
+        {
+          "bytes": 7461,
+          "git_blob": "0a310881932f93800309a757535633e91e07de11",
+          "mode": "100644",
+          "path": "services/control/internal/modules/models/README.md",
+          "sha256": "64764b180090354f457d7a77c283f70ce2515963b9ddf073e34e93b72b5d6b49"
+        },
+        {
+          "bytes": 5120,
+          "git_blob": "9c3778fc842767c4b64f7ff66ed959303f676d3d",
+          "mode": "100644",
+          "path": "services/control/internal/modules/models/access_repository.go",
+          "sha256": "141a7a69b1c785eef458f11d537a669da42149be4f2a15490d4cf0633221b1a9"
+        },
+        {
+          "bytes": 4495,
+          "git_blob": "cbe554247ff595f2876c3091d60e2688a9e5bda8",
+          "mode": "100644",
+          "path": "services/control/internal/modules/models/derived_lineage.go",
+          "sha256": "592a881e009ed17903eaa1d0688e47bd48df365e1c1cd550bdca893627ba609f"
+        },
+        {
+          "bytes": 15290,
+          "git_blob": "1e19ec44a4ca36e7e97b5d61acfa3a90be3d3a16",
+          "mode": "100644",
+          "path": "services/control/internal/modules/models/reads_repository_integration_test.go",
+          "sha256": "2fd0efcea1a4b493104bc3bde09d27afc9432b9af2c4135ace3700d324a265ac"
+        },
+        {
+          "bytes": 25418,
+          "git_blob": "db2c1b37e804103c66a8e27d4613a76cf826ebf9",
+          "mode": "100644",
+          "path": "services/control/internal/modules/models/registration_repository_integration_test.go",
+          "sha256": "986203ef0394460fbfd607e835c65f18f830ebeeee16774bd885c79657b14a7e"
+        },
+        {
+          "bytes": 2449,
+          "git_blob": "0a63d28d0f4063557946b5db03877b4494c435f7",
+          "mode": "100644",
+          "path": "services/control/internal/modules/models/repository.go",
+          "sha256": "7fe9e6823cd48041c547cb67582858329eaa468835f4abd2e5e55b3212aafefc"
+        },
+        {
+          "bytes": 3523,
+          "git_blob": "e02eb8af27b169ac7dfc9252a2d30ae865c482a1",
+          "mode": "100644",
+          "path": "services/control/internal/modules/models/retire.go",
+          "sha256": "d7ab6dee43c4a22c5ecc09e9e99f77747d90b89c2e7f2a9e743d823681541b30"
+        },
+        {
+          "bytes": 8367,
+          "git_blob": "8403b8a91d857ad53152ba27e9f5203d4af1abad",
+          "mode": "100644",
+          "path": "services/control/internal/modules/scheduling/README.md",
+          "sha256": "24455ff339f38710d0d48020a2c2f36d097e5d8da01173e84391d3ed7fc4c439"
+        },
+        {
+          "bytes": 11248,
+          "git_blob": "2f6dbb003a6f91e236093dba0ad67311b500933a",
+          "mode": "100644",
+          "path": "services/control/internal/modules/scheduling/reservation.go",
+          "sha256": "2f3f069940a02b679cda6152da48750cd329e941feb971926f1c6f788d0b2048"
+        },
+        {
+          "bytes": 4901,
+          "git_blob": "cfa4fe4c10cd382f1aeb7fa2689739d268ce6092",
+          "mode": "100644",
+          "path": "services/control/internal/modules/scheduling/reservation_commit_ack_test.go",
+          "sha256": "0b954967663f3b325adeceb34a71d2d3b640ae4df0355bf0bc496d521bb621de"
+        },
+        {
+          "bytes": 6101,
+          "git_blob": "416ba651032eefb74d2ea110adfe2f7629ab87f8",
+          "mode": "100644",
+          "path": "services/control/internal/modules/scheduling/wait_reasons.go",
+          "sha256": "46e63cdb31163bca377a836a687d01407468d50d94cc26d0f88e53fd8de635fd"
+        },
+        {
+          "bytes": 2470,
+          "git_blob": "871ef60d57609a3157567c3fbf904c5dc3a9ea93",
+          "mode": "100644",
+          "path": "services/control/internal/modules/scheduling/workspace_queue.go",
+          "sha256": "c9a6726ab005e9834b89d15c6ac68f2e26924ab3eb64cc830e817803738f3a8a"
+        },
+        {
+          "bytes": 7289,
+          "git_blob": "3d3de21c512ab354e6e7e6e717c650d88eebbc92",
+          "mode": "100644",
+          "path": "services/control/internal/modules/scheduling/workspace_queue_executor_test.go",
+          "sha256": "03a8864940317ff49aac7eacbc7244a282f5a825b38ec42607627888cccd98fa"
+        },
+        {
+          "bytes": 11095,
+          "git_blob": "709eea3809e927920b959dd4e0b4049e68619893",
+          "mode": "100644",
+          "path": "services/control/internal/modules/sso/README.md",
+          "sha256": "e5cc309d77867a17b8c46db382684284d0fc36275396210fed1f30c83d8e2898"
+        },
+        {
+          "bytes": 7298,
+          "git_blob": "88ee81875e54568b3be38d030c2a8876729fe29d",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/README.md",
+          "sha256": "aafe5eeae6df7b2e07c72e3bc6d5d95e21790d829b10fed96913618f37933f69"
+        },
+        {
+          "bytes": 3029,
+          "git_blob": "8b029f6ebaa6695966a5899ad71f8ae282bdc006",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/accepted_adapter.go",
+          "sha256": "89e860ae9e56246f44bb9769e3ac77bdb0b13b2b14675b4ba7686bb40b7eed43"
+        },
+        {
+          "bytes": 9257,
+          "git_blob": "3a6b06ffcbb63280792aeeb0f41173676a0b3807",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/accepted_adapter_repository.go",
+          "sha256": "a9c283b30a451be5e1b9a59e9e9994ff398db07a1b18c648519ad92c92f4411b"
+        },
+        {
+          "bytes": 30281,
+          "git_blob": "cc51204be3300d966df4d57505be9fb6784dbbea",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/accepted_adapter_repository_integration_test.go",
+          "sha256": "d33d165d4957c25c4a42011081b3d45a9838d690ccd21eba9249f053106cbf4e"
+        },
+        {
+          "bytes": 2836,
+          "git_blob": "3d5fe159866022360446b6f63d3660eb26958b36",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/authority.go",
+          "sha256": "0b2ff34f2599dbcd45b47e7966ee6f2e4f26716455378aa1064bca190e1edce8"
+        },
+        {
+          "bytes": 5565,
+          "git_blob": "4aea90efb680b876cfdd6bc6a9091e79be82b942",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/checkpoints.go",
+          "sha256": "970578342695b8156bc0c3f95e4adbc1fae3d920800e6ee7472bf6683d3095cc"
+        },
+        {
+          "bytes": 14531,
+          "git_blob": "8aa5a4808d4aa422b911db6640f274b8c9b4d1fe",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/creator_repository.go",
+          "sha256": "5dad1bca0ae2d9bc1045cc6f769cb40bdb2dcd681586f589d3e083c989a53042"
+        },
+        {
+          "bytes": 13579,
+          "git_blob": "8559b0a935158f8071ceda9334f99f00cc298f83",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/execution_evidence_repository_integration_test.go",
+          "sha256": "ffbb90e2b52543302b60e475a3c6944a5b50bee2beecc570dff9773944ee5ab2"
+        },
+        {
+          "bytes": 6293,
+          "git_blob": "52b8712f7f56bb6e81509756e98ebac90ab99fbb",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/export.go",
+          "sha256": "1cc42a45f4f005a588f88a658e76f87ad4231bdf7a8ceba195e1561a625a0c1b"
+        },
+        {
+          "bytes": 7903,
+          "git_blob": "de334645264abf696e8843cd8bd252376179e712",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/publication_storage.go",
+          "sha256": "ddc67c0c81fc6daebbb8e8440e458d3e4158814f642a2e8985d5a9ccf43ff5c3"
+        },
+        {
+          "bytes": 11293,
+          "git_blob": "849d9f919d3b19266fad855e1ab1fd2513776951",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/reconcile.go",
+          "sha256": "14ce64e61beeb4623dd3680dd175c71e600cd1693d7f1fee0e40bfc246c14668"
+        },
+        {
+          "bytes": 4131,
+          "git_blob": "f204623ad770b42a3b5bdba06e90ca3c8eaf037e",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/service.go",
+          "sha256": "58cd7d457eca69cbf531c371ac072c2d6bdb88902d4966fe68fa2540896b3ecf"
+        },
+        {
+          "bytes": 12615,
+          "git_blob": "3725035165e1a4a0d4705d795bbc87bebc1cf4d5",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/storage.go",
+          "sha256": "36a7b5043b64fa98d10f422b5c5080d4b11290bdf88f051d525bdd13de243384"
+        },
+        {
+          "bytes": 2786,
+          "git_blob": "205ffa390c0d97d17cc5d1ec3a3b5a988693096a",
+          "mode": "100644",
+          "path": "services/control/internal/modules/training/testdata/replay_accepted_experiment.sh",
+          "sha256": "c0841ee6a0118f1f5206d0094366dc1f5fe9899d81adea95abac183441849e2f"
+        },
+        {
+          "bytes": 13088,
+          "git_blob": "3f59bed41fbc9f6b922d6a97c761b29ca4d06763",
+          "mode": "100644",
+          "path": "services/control/internal/operations/databaseaccess/README.md",
+          "sha256": "35ad03ad22e9e126386fba71e912ba6b655814a08ca8716adf8841c517581bc3"
+        },
+        {
+          "bytes": 1269,
+          "git_blob": "57884623724f36297e13ac4c1771fcc52cb5ad70",
+          "mode": "100644",
+          "path": "services/control/internal/operations/databaseaccess/postgres_catalog.go",
+          "sha256": "f79eaf06afc0219e3029d0e62a6aa2c7cb7cfab097c6de49810a3242d4a571c5"
+        },
+        {
+          "bytes": 4334,
+          "git_blob": "ee8d3d40e45ca8d54db55ebdd47d35321cf2259c",
+          "mode": "100644",
+          "path": "services/control/internal/operations/servingcheck/README.md",
+          "sha256": "51ca3eb5ab685d21ae2e4f5fd24d2b47df4b3f6446ca55c3998050e956f57684"
+        },
+        {
+          "bytes": 6601,
+          "git_blob": "4afafb09191d5a64ae25a23c52ef5dd87be5bc11",
+          "mode": "100644",
+          "path": "services/control/internal/operations/servingcheck/check.go",
+          "sha256": "35ec15e3b50331a54d1b1da670f70c8cdc244f99ed8d66dbaae99f9edd236b21"
+        },
+        {
+          "bytes": 7814,
+          "git_blob": "13d82450065233e6a6de71c72341728c4ad3a89f",
+          "mode": "100644",
+          "path": "services/control/internal/platform/README.md",
+          "sha256": "69f7874da34a5f45fe5a970fd2608215ff123f69493b22e545603fa0886620a4"
+        },
+        {
+          "bytes": 13516,
+          "git_blob": "ed237184c02e5a5beeb67a2a206ebca6177efd9c",
+          "mode": "100644",
+          "path": "services/control/internal/platform/agentgateway/gateway.go",
+          "sha256": "e2373f7b5eb8fcb8ecc89e8289712db725663129ba3bae9c160f2cd3a282f0fe"
+        },
+        {
+          "bytes": 19386,
+          "git_blob": "520c627dc856a62dc45ff6b07f79d7450f4fd289",
+          "mode": "100644",
+          "path": "services/control/internal/platform/agentgateway/gateway_test.go",
+          "sha256": "8b9093f1ff5385139ea32c9b087a80c54cfb5016b6d281bb0eeaab3e61175e0b"
+        },
+        {
+          "bytes": 16099,
+          "git_blob": "89217212f860d359cd126cddd2dffc92bb048eaf",
+          "mode": "100644",
+          "path": "services/control/internal/platform/config/README.md",
+          "sha256": "c16b188085e87b7635d7b375fad17788cad39b8e8b7b0db32a941f46d8f93474"
+        },
+        {
+          "bytes": 3261,
+          "git_blob": "45b10442cbe50c07ed63599fb0aedeb2f3f2c0a0",
+          "mode": "100644",
+          "path": "services/control/internal/platform/config/agent_gateway.go",
+          "sha256": "2428dcbdac191b5e74e3e956d268dc371ea4731398c7ea49537f972021cee8d0"
+        },
+        {
+          "bytes": 4499,
+          "git_blob": "0044e770310c2f6947a71edd9fccc07423497095",
+          "mode": "100644",
+          "path": "services/control/internal/platform/config/machine_server.go",
+          "sha256": "c586c1d9003170f08b262fc44e5426089027baafcc309d720637df9e3f96d6c5"
+        },
+        {
+          "bytes": 11114,
+          "git_blob": "a237ffb85bc2865806cc969b96a52226daec4813",
+          "mode": "100644",
+          "path": "services/control/internal/platform/config/server_transport.go",
+          "sha256": "67edf839bac8dac292d928f86c56518ac0ab2883171daecd73cc50b658fe5a81"
+        },
+        {
+          "bytes": 14826,
+          "git_blob": "f0c32997980c747b5d64c3b16b4b4f08192433ff",
+          "mode": "100644",
+          "path": "services/control/internal/platform/database/README.md",
+          "sha256": "66778f7ac7cabaf4fdac1c36bd3d4792f39c8ddaae95edd507204fbcfdb97e33"
+        },
+        {
+          "bytes": 3200,
+          "git_blob": "3410b3cc2de17e4bea6b6875b8b99cffeaa3c8c5",
+          "mode": "100644",
+          "path": "services/control/internal/platform/database/catalog_upgrade_test.go",
+          "sha256": "01a08aa2cd3299ad596878186a587838df115fc21799b2d2f508440cc250950c"
+        },
+        {
+          "bytes": 8874,
+          "git_blob": "2c06169a56913bd24403e751015a1b0a67aefdcf",
+          "mode": "100644",
+          "path": "services/control/internal/platform/database/database.go",
+          "sha256": "489fd87ca0edf6c187c4264b9c345333bfba9c6b617147ec1c15de4d73ad4a46"
+        },
+        {
+          "bytes": 8509,
+          "git_blob": "d4a8e8aae717390259d9f7209e3031c41e160adb",
+          "mode": "100644",
+          "path": "services/control/internal/platform/httpserver/README.md",
+          "sha256": "bf8263cd4571b8d026283a6885209d2eee0f1a48249f9f70597460b55545de51"
+        },
+        {
+          "bytes": 2257,
+          "git_blob": "51159fe7b7d5965bd74bcca976df2cd6d1d543a5",
+          "mode": "100644",
+          "path": "services/control/internal/platform/httpserver/connection_age.go",
+          "sha256": "15d83e23e7112441a50cde3cf078baf95c97e01187de8f4d13479080a81e6040"
+        },
+        {
+          "bytes": 10586,
+          "git_blob": "ea678d6d2200b3f2074beebd7c3433fe3d9b32b9",
+          "mode": "100644",
+          "path": "services/control/internal/platform/httpserver/server.go",
+          "sha256": "2579d4e02c1cd3c5d5b86948b8e077b813b1d8699f4e3dd5f23583b4f615fe64"
+        },
+        {
+          "bytes": 7876,
+          "git_blob": "4d0fdf1dca91aa71a75a397f78951b463aa9f564",
+          "mode": "100644",
+          "path": "tools/dev/simulator/README.md",
+          "sha256": "1012212c518ade08368fb32ec624a4db990a648ecf4ae9d35a680e604fe5effe"
+        },
+        {
+          "bytes": 490,
+          "git_blob": "bfff048e1b042209fafa0add1c2c47c00483fd29",
+          "mode": "100644",
+          "path": "tools/dev/simulator/go.mod",
+          "sha256": "4ca19f4a6dffa6f1ef0e38e3c764185a8b85629061c9c5a159579f70bcab0a10"
+        },
+        {
+          "bytes": 15134,
+          "git_blob": "751aee806802fe3746389a25f737f7da6796d62b",
+          "mode": "100644",
+          "path": "tools/dev/simulator/internal/fleet/agent.go",
+          "sha256": "89a883ad6d6f5f3134b43ad0d7e71496df93ea5accddd0e9278a67b9e070f2ae"
+        },
+        {
+          "bytes": 15582,
+          "git_blob": "2d2a85ce7e7a43b5f486e4ddb5d99e82c3025856",
+          "mode": "100644",
+          "path": "tools/dev/simulator/internal/fleet/fleet_test.go",
+          "sha256": "0af23b8d240edb1fe9a09a0773a065d25ad5fd7469ff7b76495c383044f9f717"
+        },
+        {
+          "bytes": 8069,
+          "git_blob": "6b8d70581f0d95ea6841b54501656ee520854753",
+          "mode": "100644",
+          "path": "tools/dev/simulator/internal/link/session.go",
+          "sha256": "65a125723c3c3d8d7364cf67b20bc21ce649980165a13110aefbe96b803e577d"
+        },
+        {
+          "bytes": 9816,
+          "git_blob": "8c3f840db765706b0c3e918de31028bc8b5d2b75",
+          "mode": "100644",
+          "path": "tools/dev/simulator/internal/report/report.go",
+          "sha256": "81570b2d7ba81b6bd2d0b1dfe5da6e1609974e52ebded26e3504e9e8d182c0f1"
+        },
+        {
+          "bytes": 6320,
+          "git_blob": "d96754efd847a837dfd3e7b002d14d67c77b5ae4",
+          "mode": "100644",
+          "path": "web/README.md",
+          "sha256": "c03fe2c5ee166d783e11650ca637e5f632e70f9ab2418a1a680eab19c9792624"
+        },
+        {
+          "bytes": 11459,
+          "git_blob": "a40a2cc7969dd89717e72d3f2050218f50f15dc6",
+          "mode": "100644",
+          "path": "web/apps/console/e2e/audit.spec.ts",
+          "sha256": "744e83d6b0106bc89f7abfd4ad3e862e2776885acb48fb23ca57747f618a1b16"
+        },
+        {
+          "bytes": 28698,
+          "git_blob": "85bc5e68812f53578f1b360dd3f406a3446ec980",
+          "mode": "100644",
+          "path": "web/apps/console/e2e/models.spec.ts",
+          "sha256": "d46fc5e8a80ef0604db6d950758fb5ac9768a544ad070ee4109367b4aceb93c8"
+        },
+        {
+          "bytes": 7210,
+          "git_blob": "c922036ccb1b7a501149a1fb4f475aac3797d60f",
+          "mode": "100644",
+          "path": "web/apps/console/e2e/node-page.spec.ts",
+          "sha256": "3d240ef18a7918df30cdef3c26c16f4b2b3892a825de4bbadce6032406d27598"
+        },
+        {
+          "bytes": 38866,
+          "git_blob": "ceaeb77301ee84256e59d388bea9455b1878995e",
+          "mode": "100644",
+          "path": "web/apps/console/e2e/pages.ts",
+          "sha256": "44f9d7f338b62b3eed70bba40bca4ba79bda1b79584ceb8751eb15e1bba19f22"
+        },
+        {
+          "bytes": 17001,
+          "git_blob": "1a0bbd55b0a562c1efd1369c0f01f33eb8519227",
+          "mode": "100644",
+          "path": "web/apps/console/src/audit-page.tsx",
+          "sha256": "9f49274fb47a013bf9c4d574b7a2ef841a2de1e8b196958090f6e48ab9774b15"
+        },
+        {
+          "bytes": 22371,
+          "git_blob": "ce0ab7a0f50768c70345bf231e56a3ac5bbe219d",
+          "mode": "100644",
+          "path": "web/apps/console/src/model-import-page.tsx",
+          "sha256": "4f870fd8534f311d0ed30959bf5873bddc2618d9e0b57993b7d8e9dacb9f9ed5"
+        },
+        {
+          "bytes": 13370,
+          "git_blob": "5cbb052233504d80dde0bc3d2ffbb3bd42efe965",
+          "mode": "100644",
+          "path": "web/apps/console/src/model-library-page.tsx",
+          "sha256": "ef4d88dfaff2381b3106a1002d923cd3c56d6540f5d30961e76e15d9a75f3591"
+        },
+        {
+          "bytes": 1581,
+          "git_blob": "e6c5d666f34671fc3fb201010fd08b2d8eba3dff",
+          "mode": "100644",
+          "path": "web/apps/console/src/model-state.ts",
+          "sha256": "81bb17b0ed1999d84c28afbf8f95143b64bc2586590d89acfecff71b7b403847"
+        },
+        {
+          "bytes": 5012,
+          "git_blob": "83740918ece31cc02c4000596a01d1f3cd7f28c6",
+          "mode": "100644",
+          "path": "web/apps/console/src/model-upload.test.ts",
+          "sha256": "b4b203264edb08fda6cf543e4d99527cb0c0cd3ce424db592e050801cf1be251"
+        },
+        {
+          "bytes": 6451,
+          "git_blob": "0380a177ca56f8a6e6bc00160804cb023855db54",
+          "mode": "100644",
+          "path": "web/apps/console/src/model-upload.ts",
+          "sha256": "7e6b330883e751abb6694b2c628b8a199946a5bd69d9913d7e33f2415b5d71c1"
+        },
+        {
+          "bytes": 7821,
+          "git_blob": "a2ff256ff43ded46cd1f1354b2faadd3c58f6f4a",
+          "mode": "100644",
+          "path": "web/apps/console/src/resource-page.tsx",
+          "sha256": "729bbe3e2c8d9c5632481340d7619294250d39fa41d874e78fdbddf38b41e94e"
+        },
+        {
+          "bytes": 2550,
+          "git_blob": "ae465a18e6257888b17a253a47b681d270f4edd3",
+          "mode": "100644",
+          "path": "web/packages/api/src/problem.ts",
+          "sha256": "97c8d0788accd603b7e05538840c34317e3897511fba8a48d0a2909de4d2b012"
+        },
+        {
+          "bytes": 622,
+          "git_blob": "ac6f84c8beb161a6a548948676c894b8e97c6860",
+          "mode": "100644",
+          "path": "web/packages/help/locales/en/console/audit-trail.md",
+          "sha256": "8a765129f27b62368ea6c5a71997625f9ab1de741c5683b12f8d5a08c12d2e91"
+        },
+        {
+          "bytes": 2957,
+          "git_blob": "0b93d61937bbecb39512949cb6aeb599fd1efec2",
+          "mode": "100644",
+          "path": "web/packages/help/locales/en/console/model-library.md",
+          "sha256": "b75ff89cf04fc4c772e1b108126c12f73f3d98502a067353ee8140191b71617c"
+        },
+        {
+          "bytes": 639,
+          "git_blob": "eaa5f496a8e6e6e323bf7562f3789bb4234c98e9",
+          "mode": "100644",
+          "path": "web/packages/help/locales/zh-cn/console/audit-trail.md",
+          "sha256": "ffcb83fe8d9b71fd1b99b692c3c5a0102aaf244391fa0b7be0182c5f3c87013e"
+        },
+        {
+          "bytes": 2753,
+          "git_blob": "0047ebd067156f0061f179ba830e867c1ad02a30",
+          "mode": "100644",
+          "path": "web/packages/help/locales/zh-cn/console/model-library.md",
+          "sha256": "9c337e68d3fc531548241c8d117fec758f905be87625a26b43fe2c342a67853b"
+        },
+        {
+          "bytes": 6476,
+          "git_blob": "1c15e2d947455915dea187230f7a69b22019d054",
+          "mode": "100644",
+          "path": "web/packages/help/src/gen/locales/en/console.json",
+          "sha256": "1e91b66f88a35c61bb148b35866ef8ee81f96e3850a82e73095b58f1dd6afddc"
+        },
+        {
+          "bytes": 2070,
+          "git_blob": "fe9f92ca387e3f0e36500666db2134958b8ee57b",
+          "mode": "100644",
+          "path": "web/packages/help/src/gen/locales/en/console/audit-trail.json",
+          "sha256": "922b9df70974dc84fad4a44ee54d9d55ae04a6c69dfa8b10985c1f2faf04b028"
+        },
+        {
+          "bytes": 10427,
+          "git_blob": "3e713fc0c9550b2298d3197923b71554bf483a88",
+          "mode": "100644",
+          "path": "web/packages/help/src/gen/locales/en/console/model-library.json",
+          "sha256": "1f3cf39d61914b8c3ed269eae2ec4076c416fbf14866a8254d988409fdbc1fce"
+        },
+        {
+          "bytes": 6166,
+          "git_blob": "14eeec74b5c6e018d57c4acc588c6842e0b4a86f",
+          "mode": "100644",
+          "path": "web/packages/help/src/gen/locales/zh-cn/console.json",
+          "sha256": "199dd746ac53cb31df84b7299ae6440f3cba03400a9101fbefb16e0f0f730ba8"
+        },
+        {
+          "bytes": 2084,
+          "git_blob": "b44f01327513cbce4d53e307b8985057d7560656",
+          "mode": "100644",
+          "path": "web/packages/help/src/gen/locales/zh-cn/console/audit-trail.json",
+          "sha256": "7c6074a689edbddfcca29e9399156c2056ae6edb63480519799d88b68a40342a"
+        },
+        {
+          "bytes": 8380,
+          "git_blob": "78344e173ac0c96bbcfb15bae01a0739eebddd1f",
+          "mode": "100644",
+          "path": "web/packages/help/src/gen/locales/zh-cn/console/model-library.json",
+          "sha256": "d80a7c80f1b3b9ecffba5aede2f7530bca09025e2aae4a767494276631ccf720"
+        },
+        {
+          "bytes": 185351,
+          "git_blob": "64d818c96010173422af7cb5b496f3de54f7486f",
+          "mode": "100644",
+          "path": "web/packages/i18n/locales/en.json",
+          "sha256": "917ce71db34e42b567cd25301e6fb79cc0183619f3c0ed7280bec5400710bffd"
+        },
+        {
+          "bytes": 181449,
+          "git_blob": "382fd2486b4236493b733d1858e592d1e57ef036",
+          "mode": "100644",
+          "path": "web/packages/i18n/locales/zh-cn.json",
+          "sha256": "c0d347148bc0e727c370f8e68d5048e21c1dab632e45c19b5bacfd4efb02a926"
+        },
+        {
+          "bytes": 2273,
+          "git_blob": "f4de8a55c8e2c558bd919b6da4de8e9d3e81d727",
+          "mode": "100644",
+          "path": "web/packages/i18n/src/audit-coverage.test.ts",
+          "sha256": "7d52c394761dccb2741367c617ccc486c1f4b11f6b85ec8872dfd4ddaad5ce93"
+        },
+        {
+          "bytes": 3997,
+          "git_blob": "0ab7dd821b6fafa56dc94ca21fd9e7fcf708c257",
+          "mode": "100644",
+          "path": "web/packages/shell/testing/audit.ts",
+          "sha256": "9fc794239ce4e62266e107fdea7acc33cf37283e615d7ba8c2f02ad22dc4ab69"
+        },
+        {
+          "bytes": 30710,
+          "git_blob": "a57df34b5749e213b1a22a4a3800c9debf43a689",
+          "mode": "100644",
+          "path": "web/packages/shell/testing/control-plane.ts",
+          "sha256": "b80741d43085b6abaa1f05c813dba0e42b05029254e8e0ddd0571d20656a5eea"
+        },
+        {
+          "bytes": 13729,
+          "git_blob": "230b9be0be5087b96eeb7c697fcf24b43ac38e90",
+          "mode": "100644",
+          "path": "web/packages/shell/testing/help-flows.ts",
+          "sha256": "a61ca1dea98a8127388364904ca46bc7ae958d0e61c1096a12696ba37da254ef"
+        },
+        {
+          "bytes": 2570,
+          "git_blob": "b2537766446296f4ec6fc844108c3cf0c1a7427e",
+          "mode": "100644",
+          "path": "web/packages/shell/testing/index.ts",
+          "sha256": "d2ec82afd6174acf67e4205ea88a96fac8de9b984a95fb85f19618fca7d2cd22"
+        },
+        {
+          "bytes": 11222,
+          "git_blob": "0e1be74e623f68774e49538647f2fe2f8626c389",
+          "mode": "100644",
+          "path": "web/packages/shell/testing/models.ts",
+          "sha256": "67f783e3a4ebae97f15284401ad35eea53c6b8a72f8699d89f3809b8a079932d"
+        },
+        {
+          "bytes": 14436,
+          "git_blob": "5a0f92a00ee0833f0c300c010c3215870f0d7f41",
+          "mode": "100644",
+          "path": "web/packages/ui/src/components/components.test.tsx",
+          "sha256": "f2adef3d8aad6038b2227b7f5b58aec64366a6389ab110833bd90ba0786d6d09"
+        },
+        {
+          "bytes": 4151,
+          "git_blob": "f8711dd01e2392133908c574b2f6a64eac3f2ae4",
+          "mode": "100644",
+          "path": "web/packages/ui/src/components/problem-notice.tsx",
+          "sha256": "8ecd195a21e6d620c3a5e7c2ab8f05155097b44c8969f2c92bcf18dcdb81ae85"
+        }
+      ],
+      "basis_path": "/root/lane-arc107-installed.149a9501.c92cc7f9/source",
+      "basis_source": "149a95013db6c6d1ca9dbadd09b05fff9b4c98de",
+      "basis_tree": "aa85534e6fff3d7b605f50b78ddcec97cab1e6ed",
+      "cached_path_count": 4862,
+      "delta_patch_bytes": 1429140,
+      "delta_patch_sha256": "0a6719cfa9f0b83f62209e0f6799ad91452ec0aa60746200a7cf1d3149a181aa",
+      "delta_path_count": 240,
+      "delta_paths": [
+        "api/agent/v1/session.go",
+        "api/agent/v1/session_age.go",
+        "api/agent/v1/session_age_test.go",
+        "api/agent/v1/session_fallback.go",
+        "api/agent/v1/session_fallback_test.go",
+        "api/configuration/v1/control-serving-expectation/schema.json",
+        "docs/decisions/0071-scope-gateway-http-shutdown-to-one-connection.md",
+        "docs/decisions/0072-preserve-gateway-authority-locks-without-direct-update-grants.md",
+        "docs/decisions/0073-version-dataset-snapshots-with-original-sources.md",
+        "docs/decisions/0074-bind-split-browser-listeners-to-their-audiences.md",
+        "docs/decisions/0075-bind-scoped-role-grants-to-membership-lifetimes.md",
+        "docs/decisions/0076-bound-tenant-admission-locking.md",
+        "docs/decisions/0077-read-published-training-files-without-writer-ownership.md",
+        "docs/decisions/0081-retain-explicit-model-family-membership.md",
+        "docs/decisions/0082-authenticate-a-replacement-before-agent-connection-age.md",
+        "docs/decisions/0083-bound-fallback-after-a-usable-agent-stream.md",
+        "docs/decisions/0084-bind-saml-results-to-request-and-browser-authority.md",
+        "docs/operations/entrance-listeners.md",
+        "docs/operations/fleet-capacity.md",
+        "docs/operations/install.md",
+        "docs/product/roadmap/architecture-and-scale.md",
+        "docs/product/roadmap/audit-and-compliance.md",
+        "docs/product/roadmap/index.md",
+        "docs/product/roadmap/models-and-registry.md",
+        "docs/product/status.md",
+        "docs/research/agent-gateway-database-role.md",
+        "docs/research/agent-gateway-rebalance.md",
+        "docs/research/audit-diagnostic-access.md",
+        "docs/research/catalog-oidc-provider.md",
+        "docs/research/cell-scale-validation.md",
+        "docs/research/dataset-import.md",
+        "docs/research/directory-login.md",
+        "docs/research/entrance-listeners.md",
+        "docs/research/fleet-load-test.md",
+        "docs/research/group-role-mapping.md",
+        "docs/research/iam-questions.md",
+        "docs/research/identity-agent-published-readers.md",
+        "docs/research/identity-audit-read-access.md",
+        "docs/research/in-product-help.md",
+        "docs/research/lane-arc-decisions.md",
+        "docs/research/lane-f-decisions.md",
+        "docs/research/lane-m-questions.md",
+        "docs/research/lane-sch-questions.md",
+        "docs/research/lane-sci-decisions.md",
+        "docs/research/lane-trn-questions.md",
+        "docs/research/lane-web-decisions.md",
+        "docs/research/license-page.md",
+        "docs/research/model-family-schema-admission.md",
+        "docs/research/model-import-cleanup.md",
+        "docs/research/oidc-sign-in.md",
+        "docs/research/resource-detail-pages.md",
+        "docs/research/saml-sign-in.md",
+        "docs/research/scheduling-cell-adapters.md",
+        "docs/research/scheduling-preemption.md",
+        "docs/research/scheduling-queue-policy.md",
+        "docs/research/scheduling-quota-borrowing.md",
+        "docs/research/scheduling-topology.md",
+        "docs/research/scoped-role-authorization.md",
+        "docs/research/training-agent-cost.md",
+        "docs/research/training-checkpoint-recovery.md",
+        "docs/research/training-compute-record.md",
+        "docs/research/training-dataset-lineage.md",
+        "docs/research/training-experiment-records.md",
+        "docs/research/training-interactive-environments.md",
+        "docs/research/training-job-lifecycle.md",
+        "docs/research/training-published-file-readers.md",
+        "docs/research/training-runtime-delivery.md",
+        "services/agent/README.md",
+        "services/agent/internal/client/README.md",
+        "services/agent/internal/client/session.go",
+        "services/agent/internal/client/session_age.go",
+        "services/agent/internal/client/session_age_test.go",
+        "services/agent/internal/client/session_fallback_test.go",
+        "services/agent/internal/client/session_terminal_test.go",
+        "services/agent/internal/client/session_test.go",
+        "services/agent/sessiontransport/README.md",
+        "services/agent/sessiontransport/connection.go",
+        "services/agent/sessiontransport/connection_test.go",
+        "services/agent/sessiontransport/exchange.go",
+        "services/agent/sessiontransport/exchange_test.go",
+        "services/control/cmd/server/README.md",
+        "services/control/cmd/server/agent_gateway.go",
+        "services/control/cmd/server/agent_gateway_requests.go",
+        "services/control/cmd/server/agent_gateway_requests_test.go",
+        "services/control/cmd/server/entrance_listener_repository_integration_test.go",
+        "services/control/cmd/server/runtime_lifecycle.go",
+        "services/control/config/examples/control/transport.env.example",
+        "services/control/internal/modules/audit/README.md",
+        "services/control/internal/modules/audit/scoped.go",
+        "services/control/internal/modules/audit/scoped_integration_test.go",
+        "services/control/internal/modules/audit/scoped_test.go",
+        "services/control/internal/modules/datasets/README.md",
+        "services/control/internal/modules/datasets/draft_source_candidate.go",
+        "services/control/internal/modules/datasets/draft_source_inventory.go",
+        "services/control/internal/modules/datasets/draft_source_inventory_integration_test.go",
+        "services/control/internal/modules/datasets/draft_source_inventory_test.go",
+        "services/control/internal/modules/datasets/draft_source_restore_integration_test.go",
+        "services/control/internal/modules/datasets/integrity.go",
+        "services/control/internal/modules/datasets/publication_storage.go",
+        "services/control/internal/modules/datasets/published_reader.go",
+        "services/control/internal/modules/datasets/published_reader_repository_integration_test.go",
+        "services/control/internal/modules/datasets/published_reader_test.go",
+        "services/control/internal/modules/datasets/published_source_repository.go",
+        "services/control/internal/modules/datasets/service.go",
+        "services/control/internal/modules/datasets/snapshot.go",
+        "services/control/internal/modules/datasets/snapshot_import.go",
+        "services/control/internal/modules/datasets/snapshot_inventory.go",
+        "services/control/internal/modules/datasets/storage.go",
+        "services/control/internal/modules/datasets/testdata/replay_draft_import.sh",
+        "services/control/internal/modules/datasets/training_input_repository.go",
+        "services/control/internal/modules/datasets/training_inputs.go",
+        "services/control/internal/modules/identity/README.md",
+        "services/control/internal/modules/identity/audit_list_integration_test.go",
+        "services/control/internal/modules/identity/audit_read.go",
+        "services/control/internal/modules/identity/audit_workspace_read_integration_test.go",
+        "services/control/internal/modules/identity/audit_workspace_read_repository_integration_test.go",
+        "services/control/internal/modules/identity/http/agent_path.go",
+        "services/control/internal/modules/identity/http/agent_published_readers.go",
+        "services/control/internal/modules/identity/http/agent_published_readers_test.go",
+        "services/control/internal/modules/identity/lists.go",
+        "services/control/internal/modules/models/README.md",
+        "services/control/internal/modules/models/access_repository.go",
+        "services/control/internal/modules/models/derived_lineage.go",
+        "services/control/internal/modules/models/family.go",
+        "services/control/internal/modules/models/family_fixture_integration_test.go",
+        "services/control/internal/modules/models/family_repository_integration_test.go",
+        "services/control/internal/modules/models/family_scope_integration_test.go",
+        "services/control/internal/modules/models/history.go",
+        "services/control/internal/modules/models/history_cursor.go",
+        "services/control/internal/modules/models/history_cursor_test.go",
+        "services/control/internal/modules/models/reads_repository_integration_test.go",
+        "services/control/internal/modules/models/registration_repository_integration_test.go",
+        "services/control/internal/modules/models/repository.go",
+        "services/control/internal/modules/models/retire.go",
+        "services/control/internal/modules/models/testdata/model_family_candidate.down.sql",
+        "services/control/internal/modules/models/testdata/model_family_candidate.up.sql",
+        "services/control/internal/modules/scheduling/README.md",
+        "services/control/internal/modules/scheduling/owner_queue_fixture_test.go",
+        "services/control/internal/modules/scheduling/queued_reservation.go",
+        "services/control/internal/modules/scheduling/queued_reservation_fence_test.go",
+        "services/control/internal/modules/scheduling/queued_reservation_test.go",
+        "services/control/internal/modules/scheduling/reservation.go",
+        "services/control/internal/modules/scheduling/reservation_commit_ack_test.go",
+        "services/control/internal/modules/scheduling/wait_reasons.go",
+        "services/control/internal/modules/scheduling/workspace_queue.go",
+        "services/control/internal/modules/scheduling/workspace_queue_executor_test.go",
+        "services/control/internal/modules/sso/README.md",
+        "services/control/internal/modules/sso/oidc_profile_schema_repository_integration_test.go",
+        "services/control/internal/modules/sso/testdata/oidc_profile.down.sql",
+        "services/control/internal/modules/sso/testdata/oidc_profile.up.sql",
+        "services/control/internal/modules/training/README.md",
+        "services/control/internal/modules/training/accepted_adapter.go",
+        "services/control/internal/modules/training/accepted_adapter_repository.go",
+        "services/control/internal/modules/training/accepted_adapter_repository_integration_test.go",
+        "services/control/internal/modules/training/authority.go",
+        "services/control/internal/modules/training/cell_scope_repository_integration_test.go",
+        "services/control/internal/modules/training/checkpoints.go",
+        "services/control/internal/modules/training/creator_repository.go",
+        "services/control/internal/modules/training/execution_evidence_repository_integration_test.go",
+        "services/control/internal/modules/training/export.go",
+        "services/control/internal/modules/training/publication_storage.go",
+        "services/control/internal/modules/training/published_reader.go",
+        "services/control/internal/modules/training/published_reader_test.go",
+        "services/control/internal/modules/training/reconcile.go",
+        "services/control/internal/modules/training/service.go",
+        "services/control/internal/modules/training/storage.go",
+        "services/control/internal/modules/training/testdata/replay_accepted_experiment.sh",
+        "services/control/internal/operations/databaseaccess/README.md",
+        "services/control/internal/operations/databaseaccess/model_family_upgrade_test.go",
+        "services/control/internal/operations/databaseaccess/postgres_catalog.go",
+        "services/control/internal/operations/servingcheck/README.md",
+        "services/control/internal/operations/servingcheck/check.go",
+        "services/control/internal/operations/servingcheck/entrance_listener_test.go",
+        "services/control/internal/platform/README.md",
+        "services/control/internal/platform/agentgateway/drain_join_test.go",
+        "services/control/internal/platform/agentgateway/gateway.go",
+        "services/control/internal/platform/agentgateway/gateway_test.go",
+        "services/control/internal/platform/agentgateway/session_age_test.go",
+        "services/control/internal/platform/config/README.md",
+        "services/control/internal/platform/config/agent_gateway.go",
+        "services/control/internal/platform/config/entrance_listener_test.go",
+        "services/control/internal/platform/config/machine_server.go",
+        "services/control/internal/platform/config/server_transport.go",
+        "services/control/internal/platform/database/README.md",
+        "services/control/internal/platform/database/catalog_upgrade_test.go",
+        "services/control/internal/platform/database/database.go",
+        "services/control/internal/platform/database/model_family_assets_test.go",
+        "services/control/internal/platform/database/model_family_migration_test.go",
+        "services/control/internal/platform/httpserver/README.md",
+        "services/control/internal/platform/httpserver/connection_age.go",
+        "services/control/internal/platform/httpserver/entrance_listener_test.go",
+        "services/control/internal/platform/httpserver/server.go",
+        "services/control/migrations/postgresql/000061_model_families.down.sql",
+        "services/control/migrations/postgresql/000061_model_families.up.sql",
+        "tools/dev/simulator/README.md",
+        "tools/dev/simulator/go.mod",
+        "tools/dev/simulator/internal/fleet/agent.go",
+        "tools/dev/simulator/internal/fleet/fleet_test.go",
+        "tools/dev/simulator/internal/fleet/session_fallback_test.go",
+        "tools/dev/simulator/internal/link/session.go",
+        "tools/dev/simulator/internal/link/session_age.go",
+        "tools/dev/simulator/internal/link/session_age_test.go",
+        "tools/dev/simulator/internal/link/session_terminal_test.go",
+        "tools/dev/simulator/internal/report/report.go",
+        "web/README.md",
+        "web/apps/console/e2e/audit-read-recovery.spec.ts",
+        "web/apps/console/e2e/audit.spec.ts",
+        "web/apps/console/e2e/models.spec.ts",
+        "web/apps/console/e2e/node-page.spec.ts",
+        "web/apps/console/e2e/pages.ts",
+        "web/apps/console/src/audit-page.tsx",
+        "web/apps/console/src/audit-read.test.tsx",
+        "web/apps/console/src/audit-read.tsx",
+        "web/apps/console/src/model-import-page.tsx",
+        "web/apps/console/src/model-library-page.tsx",
+        "web/apps/console/src/model-state.ts",
+        "web/apps/console/src/model-upload.test.ts",
+        "web/apps/console/src/model-upload.ts",
+        "web/apps/console/src/resource-page.tsx",
+        "web/packages/api/src/problem.ts",
+        "web/packages/help/locales/en/console/audit-trail.md",
+        "web/packages/help/locales/en/console/model-library.md",
+        "web/packages/help/locales/zh-cn/console/audit-trail.md",
+        "web/packages/help/locales/zh-cn/console/model-library.md",
+        "web/packages/help/src/gen/locales/en/console.json",
+        "web/packages/help/src/gen/locales/en/console/audit-trail.json",
+        "web/packages/help/src/gen/locales/en/console/model-library.json",
+        "web/packages/help/src/gen/locales/zh-cn/console.json",
+        "web/packages/help/src/gen/locales/zh-cn/console/audit-trail.json",
+        "web/packages/help/src/gen/locales/zh-cn/console/model-library.json",
+        "web/packages/i18n/locales/en.json",
+        "web/packages/i18n/locales/zh-cn.json",
+        "web/packages/i18n/src/audit-coverage.test.ts",
+        "web/packages/shell/testing/audit.ts",
+        "web/packages/shell/testing/control-plane.ts",
+        "web/packages/shell/testing/help-flows.ts",
+        "web/packages/shell/testing/index.ts",
+        "web/packages/shell/testing/models.ts",
+        "web/packages/ui/src/components/components.test.tsx",
+        "web/packages/ui/src/components/problem-notice.tsx"
+      ],
+      "format": "verified-read-only-source-cache-git-delta-v1",
+      "native_binary_transfer": false,
+      "original_full_source_archive_sha256": "15027f9f5b3145eba29d7850f4ba5aa5eb1a7da0babaee9e875ab0600ee73848",
+      "original_full_source_archive_transferred": false,
+      "target_manifest_sha256": "9de6cb0f1e829a6fa92a2b41b2cb9d84fbc41669805680cd7b7f0e8960ba59c9",
+      "target_path_count": 5102,
+      "target_proof": "All 5102 byte lengths, SHA-256, Git blob IDs and regular file modes must verify after reconstruction.",
+      "target_source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+      "target_tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8"
+    },
+    "wire_bytes": 720340,
+    "wire_sha256": "7bf611452afb455b2535b6b928257da726cb250b2ec942adf1d23063df4234cb"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "archive_bytes": 9307,
+  "archive_sha256": "d59611dca09c6240092bcbcb43aa01ce40e7b7edc5471c9beb89c332de43f95f",
+  "files": {
+    "gateway-authority-proto_test.go": "11fdf6745c4b498312f2f0b8150a54892a8c28d37c5b8942bfc1dfab0711c0bd",
+    "preparation_source_repository.go": "664c44239ffebe394c9f941558d0603485229c36ba7b398447f9a2bf9759459f"
+  },
+  "runner_sha256": "6faae027ed0d540b79777af2297f4c68d81fb58f5d143dc109fa46104d26cca8"
+}

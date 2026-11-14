@@ -1,0 +1,8 @@
+{
+  "head": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "main": "1280ea79c94f54b37f63ec33541fabfa6325901c",
+  "final_check": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/final-admission.ikeb619a",
+  "final_check_sha256": "15127c50ce4967f4f9f32d6dbf4d9e9a1913a8ce1ec4062eecabe31b76155451",
+  "retained_qualification": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/publication/admission.json",
+  "DEL_priority_window": "original runner exited at its deadline; containers and forwarding stopped, no newer live window observed"
+}

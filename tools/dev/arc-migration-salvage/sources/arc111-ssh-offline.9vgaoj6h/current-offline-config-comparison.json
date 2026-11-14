@@ -1,0 +1,145 @@
+{
+  "config_sha256": "0cd8f0cc7b9770fd8d0a5102776c981b7b9108138a26b9a7a962e62b4f7caa7d",
+  "current_login_shell": "/bin/zsh",
+  "current_resolved_ssh": "/usr/bin/ssh",
+  "current_uid": 501,
+  "network_connections_started": 0,
+  "past_resolved_exec_and_environment": "not captured; current values do not prove historical values",
+  "profiles": {
+    "corrected_candidate_args": {
+      "argv": [
+        "/usr/bin/ssh",
+        "-G",
+        "-vv",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
+        "-o",
+        "ConnectionAttempts=1",
+        "-o",
+        "ServerAliveInterval=5",
+        "-o",
+        "ServerAliveCountMax=2",
+        "ownsolid-cpu"
+      ],
+      "exit": 0,
+      "scope": "Current offline config parse; not a retroactive historical config snapshot or connection",
+      "selected_effective_config": {
+        "batchmode": "yes",
+        "connectionattempts": "1",
+        "connecttimeout": "10",
+        "controlmaster": "false",
+        "controlpersist": "no",
+        "hostname": "100.100.110.24",
+        "port": "22",
+        "proxycommand": "/Users/passion./.local/bin/tailscale --socket=/Users/passion./.local/state/tailscale-userspace/tailscaled.sock nc %h %p",
+        "requesttty": "auto",
+        "serveralivecountmax": "2",
+        "serveraliveinterval": "5",
+        "stdinnull": "no",
+        "stricthostkeychecking": "ask",
+        "user": "root"
+      }
+    },
+    "failure_e1_args": {
+      "argv": [
+        "/usr/bin/ssh",
+        "-G",
+        "-o",
+        "ConnectTimeout=10",
+        "-o",
+        "ConnectionAttempts=1",
+        "-o",
+        "ServerAliveInterval=5",
+        "-o",
+        "ServerAliveCountMax=1",
+        "ownsolid-cpu"
+      ],
+      "exit": 0,
+      "scope": "Current offline config parse; not a retroactive historical config snapshot or connection",
+      "selected_effective_config": {
+        "batchmode": "no",
+        "connectionattempts": "1",
+        "connecttimeout": "10",
+        "controlmaster": "false",
+        "controlpersist": "no",
+        "hostname": "100.100.110.24",
+        "port": "22",
+        "proxycommand": "/Users/passion./.local/bin/tailscale --socket=/Users/passion./.local/state/tailscale-userspace/tailscaled.sock nc %h %p",
+        "requesttty": "auto",
+        "serveralivecountmax": "1",
+        "serveraliveinterval": "5",
+        "stdinnull": "no",
+        "stricthostkeychecking": "ask",
+        "user": "root"
+      }
+    },
+    "failure_formal61_args": {
+      "argv": [
+        "/usr/bin/ssh",
+        "-G",
+        "-o",
+        "ConnectTimeout=10",
+        "-o",
+        "ConnectionAttempts=1",
+        "-o",
+        "ServerAliveInterval=5",
+        "-o",
+        "ServerAliveCountMax=2",
+        "ownsolid-cpu"
+      ],
+      "exit": 0,
+      "scope": "Current offline config parse; not a retroactive historical config snapshot or connection",
+      "selected_effective_config": {
+        "batchmode": "no",
+        "connectionattempts": "1",
+        "connecttimeout": "10",
+        "controlmaster": "false",
+        "controlpersist": "no",
+        "hostname": "100.100.110.24",
+        "port": "22",
+        "proxycommand": "/Users/passion./.local/bin/tailscale --socket=/Users/passion./.local/state/tailscale-userspace/tailscaled.sock nc %h %p",
+        "requesttty": "auto",
+        "serveralivecountmax": "2",
+        "serveraliveinterval": "5",
+        "stdinnull": "no",
+        "stricthostkeychecking": "ask",
+        "user": "root"
+      }
+    },
+    "success_observed_args": {
+      "argv": [
+        "/usr/bin/ssh",
+        "-G",
+        "-vv",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=8",
+        "-o",
+        "ConnectionAttempts=1",
+        "ownsolid-cpu"
+      ],
+      "exit": 0,
+      "scope": "Current offline config parse; not a retroactive historical config snapshot or connection",
+      "selected_effective_config": {
+        "batchmode": "yes",
+        "connectionattempts": "1",
+        "connecttimeout": "8",
+        "controlmaster": "false",
+        "controlpersist": "no",
+        "hostname": "100.100.110.24",
+        "port": "22",
+        "proxycommand": "/Users/passion./.local/bin/tailscale --socket=/Users/passion./.local/state/tailscale-userspace/tailscaled.sock nc %h %p",
+        "requesttty": "auto",
+        "serveralivecountmax": "3",
+        "serveraliveinterval": "0",
+        "stdinnull": "no",
+        "stricthostkeychecking": "ask",
+        "user": "root"
+      }
+    }
+  },
+  "ssh_version": "OpenSSH_10.3p1, LibreSSL 3.3.6"
+}

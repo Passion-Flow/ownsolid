@@ -1,0 +1,150 @@
+{
+  "arc_source": "0f47a66bcb84c585b00bb1a92bf30f455017c1c9",
+  "catalog_pin_patch_sha256": null,
+  "cleanup_steps": [
+    {
+      "cap_seconds": 15,
+      "step": "exact child groups TERM/KILL/join"
+    },
+    {
+      "cap_seconds": 20,
+      "step": "bounded logs/metadata retention"
+    },
+    {
+      "cap_seconds": 25,
+      "step": "exact owned container stop/remove"
+    },
+    {
+      "cap_seconds": 20,
+      "step": "exact owned volume/network remove"
+    },
+    {
+      "cap_seconds": 20,
+      "step": "absence readback"
+    },
+    {
+      "cap_seconds": 20,
+      "step": "private credentials, final record and carrier release"
+    }
+  ],
+  "constraints": [
+    "No compiler, SQL, Docker create/start, carrier acquisition or queue has run.",
+    "No acceptance on the derivation source; final positive tests must share one exact source with measured catalog pins.",
+    "Preserve all original selected test roots and strict Migrate/catalog/ledger/drift assertions.",
+    "Use the existing owned PostgreSQL restore fixture and Go test entries; no overlay or replacement test variant.",
+    "All phase termination and cleanup are inside the same absolute1200-second deadline.",
+    "Unfinished stages or unconfirmed cleanup fail; no retry, cleanup extension, guessed fingerprint or publication."
+  ],
+  "entrypoints": {
+    "body_timeouts_seconds": {
+      "database": 225,
+      "databaseaccess": 135,
+      "models": 90
+    },
+    "compile": "Existing go test -c per package, serial -mod=readonly -p1, MODEL repository_integration tag; no overlay",
+    "database": "^(TestModelFamily.*|TestEveryCellOwnedTableCarriesScope|TestCatalogAdmissionAfterLogicalRestore|TestLineageUpgradeFromEveryPrefixMatchesFreshCatalog|TestM02ActualUpgradeFailureRecoveryAndChecksums)$",
+    "databaseaccess": "^(TestCatalogMatchesImmutableMigrations|TestModelFamilyRuntimeGrantUpgradeRetainsPublicationAndDenial|TestUpgrade.*|TestFreshRuntimeGrants)$",
+    "model_entry_confirmation": "Required from original owner together with adapted source and protected shared PostgreSQL fixture bindings",
+    "models": "^TestActualModelFamily",
+    "runtime": "Existing measured binaries from original package directories, -test.v -test.count=1 and unchanged frozen selectors"
+  },
+  "fixture": {
+    "binding_required": "127.0.0.1 HostConfig port must equal protected DSN input",
+    "cluster_name": "knowledge-fixture-<same-generated-uuid>",
+    "container_id": null,
+    "docker_context": null,
+    "explicit_loopback_port": null,
+    "fixture_uuid": null,
+    "milestone_label": "M12",
+    "native_postgres_receipt": "Not used; do not fabricate Darwin native-toolchain naming on Linux",
+    "network_id": null,
+    "network_mode": "one owned internal bridge; actual isolation and host loopback reachability must pass before SQL",
+    "owner_contract": "Existing identityfixture.OwnedPostgres M12, unchanged",
+    "owner_label": "mvp-development",
+    "pool_bindings": "Operator and restricted-principal secret-file references only; same physical postmaster, original owner/tenant/schema fences"
+  },
+  "image": {
+    "current_readback": "SSH exit255 banner timeout; no image inspection result, no resource locks, no workload",
+    "expected_config_id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "expected_platform": "linux/amd64",
+    "expected_postgresql_version_num": 180006,
+    "expected_vector_version": "0.8.7",
+    "launch_reference": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+    "repo_digest": "unobserved; never substitute configuration ID as a registry manifest digest",
+    "repository": "pgvector/pgvector"
+  },
+  "model_adaptation_source": null,
+  "no_new_workload_after_seconds": 1080,
+  "one_absolute_deadline_seconds": 1200,
+  "phases": [
+    {
+      "ends_by_seconds": 45,
+      "maximum_seconds_including_child_termination": 45,
+      "name": "admission",
+      "starts_by_seconds": 0
+    },
+    {
+      "ends_by_seconds": 105,
+      "maximum_seconds_including_child_termination": 60,
+      "name": "fixture",
+      "starts_by_seconds": 45
+    },
+    {
+      "ends_by_seconds": 285,
+      "maximum_seconds_including_child_termination": 180,
+      "name": "metadata",
+      "starts_by_seconds": 105
+    },
+    {
+      "ends_by_seconds": 345,
+      "maximum_seconds_including_child_termination": 60,
+      "name": "pin_source",
+      "starts_by_seconds": 285
+    },
+    {
+      "ends_by_seconds": 585,
+      "maximum_seconds_including_child_termination": 240,
+      "name": "compile_serial",
+      "starts_by_seconds": 345
+    },
+    {
+      "ends_by_seconds": 825,
+      "maximum_seconds_including_child_termination": 240,
+      "name": "database_original",
+      "starts_by_seconds": 585
+    },
+    {
+      "ends_by_seconds": 975,
+      "maximum_seconds_including_child_termination": 150,
+      "name": "control_role_original",
+      "starts_by_seconds": 825
+    },
+    {
+      "ends_by_seconds": 1080,
+      "maximum_seconds_including_child_termination": 105,
+      "name": "model_owner_original",
+      "starts_by_seconds": 975
+    },
+    {
+      "ends_by_seconds": 1200,
+      "maximum_seconds_including_child_termination": 120,
+      "name": "cleanup",
+      "starts_by_seconds": 1080
+    }
+  ],
+  "qualification_source": null,
+  "resources": {
+    "cpus": 2,
+    "fixture_count": 1,
+    "go_memory_limit": "512MiB",
+    "parallel_packages": 1,
+    "postgres_memory_bytes": 4294967296
+  },
+  "source_sequence": {
+    "input_A": "ARC 0f47a66b plus the original MODEL adaptation, committed and manifested before admission",
+    "positive_acceptance": "All database, role and MODEL profiles from the same frozen B and same owned postmaster",
+    "source_B": "A plus measured catalog constants/comment only; actual commit/tree/manifest/binaries required after observation",
+    "source_B_equivalence_readback_phase": "pin_source"
+  },
+  "state": "prepared_not_authorized_to_execute"
+}

@@ -1,0 +1,58 @@
+from pathlib import Path
+import hashlib,json,os,secrets,select,shlex,subprocess,time
+base=Path(__file__).resolve().parent;metadata=json.loads((base/'native-input.json').read_text());raw=(base/'native-input.tar.gz').read_bytes();assert len(raw)==metadata['bytes'] and hashlib.sha256(raw).hexdigest()==metadata['sha256']
+receiver=base/'native-receiver.json'
+if receiver.exists():
+ saved=json.loads(receiver.read_text());assert saved['sha256']==metadata['sha256'];root=saved['root']
+else:
+ root='/root/lane-arc110-native.'+metadata['source'][:8]+'.'+secrets.token_hex(4);metadata['root']=root;receiver.write_text(json.dumps(metadata,indent=2)+'\n')
+ssh=['ssh','-o','ConnectTimeout=30','-o','ServerAliveInterval=10','-o','ServerAliveCountMax=2','ownsolid-cpu']
+remote='''from pathlib import Path
+import hashlib,os,sys
+os.umask(0o077);p=Path(ROOT);p.mkdir(mode=0o700,exist_ok=True);f=p/'input.tar.gz';offset=f.stat().st_size if f.exists() else 0
+assert offset<=SIZE
+print('READY',offset,hashlib.sha256(f.read_bytes() if f.exists() else b'').hexdigest(),flush=True)
+with f.open('r+b' if f.exists() else 'w+b') as out:
+ out.seek(offset)
+ while offset<SIZE:
+  chunk=sys.stdin.buffer.read(min(8192,SIZE-offset))
+  assert chunk
+  out.write(chunk);out.flush();offset+=len(chunk);print('ACK',offset,flush=True)
+assert hashlib.sha256(f.read_bytes()).hexdigest()==SHA
+print('VERIFIED',offset,flush=True)
+'''.replace('ROOT',repr(root)).replace('SIZE',str(len(raw))).replace('SHA',repr(metadata['sha256']))
+def command(code):return ssh+['python3 -c '+shlex.quote(code)]
+for attempt in range(1,4):
+ process=subprocess.Popen(command(remote),stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=(base/'native-upload-error.log').open('ab'))
+ def line(timeout=45):
+  if not select.select([process.stdout],[],[],timeout)[0]:raise TimeoutError('bounded source acknowledgement')
+  value=process.stdout.readline().decode().strip();assert value,value
+  return value.split()
+ try:
+  ready=line();assert ready[0]=='READY';position=int(ready[1]);assert ready[2]==hashlib.sha256(raw[:position]).hexdigest()
+  while position<len(raw):
+   end=min(position+8192,len(raw));process.stdin.write(raw[position:end]);process.stdin.flush();ack=line();assert ack==['ACK',str(end)];position=end
+  # Buffered stdout can retain the final VERIFIED line after the final ACK.
+  verified=process.stdout.readline().decode().strip();assert verified=='VERIFIED '+str(len(raw)),verified
+  process.stdin.close();assert process.wait(timeout=20)==0
+  print('Native source input verified '+str(len(raw))+' bytes',flush=True);break
+ except BaseException:
+  process.terminate()
+  try:process.wait(timeout=5)
+  except subprocess.TimeoutExpired:process.kill();process.wait()
+  if attempt==3:raise
+  time.sleep(2)
+queue="from pathlib import Path\nimport json,random,subprocess,sys,time\np=Path(sys.argv[1])\nfor attempt in range(1,121):\n with (p/'queue.log').open('ab') as log:\n  code=subprocess.run(['python3',str(p/'native-runner.py'),str(p)],stdout=log,stderr=subprocess.STDOUT).returncode\n  log.write((json.dumps({'attempt':attempt,'exit':code,'at':time.time()})+'\\n').encode())\n if code!=75:break\n time.sleep(random.uniform(7,13))\n(p/'queue-exit').write_text(str(code)+'\\n')\n"
+launch='''from pathlib import Path
+import hashlib,json,subprocess,tarfile
+p=Path(ROOT);a=p/'input.tar.gz';assert hashlib.sha256(a.read_bytes()).hexdigest()==SHA
+with tarfile.open(a) as tar:
+ assert set(tar.getnames())=={'manifest.json','delta.patch','native-runner.py'}
+ for m in tar:
+  assert m.isfile();(p/m.name).write_bytes(tar.extractfile(m).read())
+(p/'queue.py').write_text(QUEUE)
+with(p/'launch.log').open('ab') as log:
+ child=subprocess.Popen(['python3',str(p/'queue.py'),str(p)],stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True)
+print(child.pid)
+'''.replace('ROOT',repr(root)).replace('SHA',repr(metadata['sha256'])).replace('QUEUE',repr(queue))
+pid=int(subprocess.check_output(command(launch),text=True,timeout=55).strip());metadata.update({'root':root,'queue_pid':pid});receiver.write_text(json.dumps(metadata,indent=2)+'\n');print(json.dumps(metadata),flush=True)

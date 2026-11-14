@@ -1,0 +1,38 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,signal,stat,subprocess,tempfile
+base=Path(__file__).resolve().parent;repo=base.parent.parent/'lane-arc108';os.chdir(repo)
+carrier=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW);info=os.fstat(fd)
+assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);print('Workstation gate busy; no child started',flush=True);raise SystemExit(75)
+child=None
+try:
+ assert (info.st_dev,info.st_ino)==(carrier.lstat().st_dev,carrier.lstat().st_ino)
+ assert subprocess.run(['pgrep','-x','make|cargo|rustc|compile|link'],capture_output=True).returncode!=0
+ assert subprocess.check_output(['git','status','--porcelain'],text=True)==''
+ assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()=='a91a817b23157fd610f714533b04cf6e7d8ec012'
+ disk=os.statvfs(repo);assert disk.f_bavail*disk.f_frsize>=15*1024**3
+ run=Path(tempfile.mkdtemp(prefix='focused.',dir=str(base)))
+ (base/'latest-focused').write_text(str(run)+'\n');(run/'runner-pid').write_text(str(os.getpid())+'\n')
+ (run/'resource-preflight').write_bytes(subprocess.check_output(['df','-h','/'])+subprocess.check_output(['memory_pressure','-Q']))
+ (run/'input').write_bytes(subprocess.check_output(['git','rev-parse','HEAD','HEAD^{tree}','origin/main']))
+ (run/'focused.sh').write_bytes((base/'focused.sh').read_bytes())
+ def stop(signum,frame):raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+ print('ARC108 focused inputa91a817b '+str(run),flush=True)
+ with (run/'run.log').open('wb') as out:
+  child=subprocess.Popen(['caffeinate','-i','bash',str(run/'focused.sh'),str(run),str(repo)],stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+  code=child.wait(timeout=900)
+ (run/'exit').write_text(str(code)+'\n')
+ for name in ['run.log','race.log','vet.log','compile.log','cost.log']:
+  p=run/name
+  if p.exists():print(name+':\n'+p.read_text()[-5000:],flush=True)
+ (run/'hashes.json').write_text(json.dumps({p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in run.iterdir() if p.is_file() and p.suffix in ['.log','.test']},indent=2)+'\n')
+ print('Focused exit '+str(code),flush=True)
+ raise SystemExit(code)
+finally:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

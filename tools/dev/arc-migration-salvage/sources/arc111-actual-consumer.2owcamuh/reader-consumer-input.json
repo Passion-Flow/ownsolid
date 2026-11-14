@@ -1,0 +1,52 @@
+{
+  "actual_reader_consumption_executed": false,
+  "close": "(*identityhttp.AgentGateway).ClosePublishedReaders() error",
+  "compiler_started": false,
+  "construction_owner": "Original IAM constructor opens TRN concrete readers, binds the one existing service graph, leaves Store fields nil, and unwinds partial open or graph errors. ARC does not open unused readers.",
+  "constructor": "identityhttp.NewAgentGatewayWithPublishedReaders(s *identity.Service, ready func() error, tenant string) (*identityhttp.AgentGateway, error)",
+  "iam_corrected_unit_result_received": false,
+  "namespace_inputs": [
+    "existing Config.Datasets.ArtifactRoot",
+    "existing Config.Training.ArtifactRoot"
+  ],
+  "owner_source_verification": {
+    "formal_sql_catalog_checks_and_v1_unchanged_from_0f47a66b": true,
+    "iam_original_paths_byte_identical": 4,
+    "iam_research_byte_identical": true,
+    "model_original_paths_byte_identical": 13,
+    "trn_original_paths_byte_identical": 21
+  },
+  "process_lifetime": [
+    "Register ClosePublishedReaders immediately after successful construction.",
+    "Retain its actual error in the process failure; close the pool last.",
+    "Refuse exhausted startup context before serving.",
+    "Seal new HTTP admission and drain sessions.",
+    "Join admitted HTTP handlers and real RPC callbacks plus their receive loops.",
+    "Join original background workers.",
+    "Only confirmed joins permit reader close, then pool close.",
+    "A caller timeout retains still-used owners and does not claim a completed join."
+  ],
+  "qualification_boundaries": [
+    "The prior e321fdc opportunity remains NOTRUN on SSH banner timeout255 before carrier acquisition; it is not an attempt or result for this source.",
+    "No SQL catalog fingerprints have been derived or changed.",
+    "No source B, positive formal61 admission or MODEL qualification exists.",
+    "IAM separately owns its corrected no-database retest; this preparation starts no competing compiler or queue.",
+    "No main publication, roadmap tick or supported claim."
+  ],
+  "selection": "Either configured namespace selects the required concrete pair; both absent preserves NewAgentGateway. A partial or invalid configured pair fails, without legacy fallback.",
+  "source": "8e9a6c4ab6fa144edfd935f2b796e232ef7bc8e7",
+  "source_inputs": {
+    "arc_actual_caller": "8e9a6c4ab6fa144edfd935f2b796e232ef7bc8e7",
+    "arc_formal_sql": "0f47a66bcb84c585b00bb1a92bf30f455017c1c9",
+    "arc_request_rpc_join": "1eba3cc36beead54356c07b33f75b180b8054ca0",
+    "iam_original_research": "9a0543b9",
+    "iam_original_review_tree": "1af0ca5497fbbe83875eb6af4769fad4198135ac",
+    "iam_patch_sha256": "8907bbf2f38ce3aec7effb424d33aa4f40bff795ac72fd638d14d1208e0fb53d",
+    "model": "db8435034a2a94a3285a059f6bd40237322ae1c2",
+    "trn": "e639db9035b0b2c0229c90175493c605f328e295"
+  },
+  "state": "Source wired to the original IAM constructor; qualification pending.",
+  "tree": "02cddd612683f79110113251808149db25621229",
+  "trusted_tenant_input": "installedTenant(startup, original selected transaction.Store)",
+  "unit_or_native_tests_executed": false
+}

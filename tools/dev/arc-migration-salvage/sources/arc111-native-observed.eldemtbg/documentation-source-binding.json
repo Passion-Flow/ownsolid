@@ -1,0 +1,30 @@
+{
+  "actual_entries_closed": true,
+  "actual_qualification_sha256": "0e72235329676a07adbb8c52cc783db83d2ed061c37adbc0e674d2fb3746739d",
+  "actual_remote_cleanup_readback_sha256": "79e64db0ba30612a7e8950db0e24eac1408fa621c060eae5f28edd275b5cacad",
+  "actual_remote_result_sha256": "c6280bcc225fcb89efbab8ec316311e4ee87551e9044a9cf3521a7fa74e2371b",
+  "actual_trace_sha256": "7fd7627c01cb736c9591891a0134e45ea0fcf617313629480b1e0ca54aec47b0",
+  "binary_hashes_preserved": {
+    "database-linux-amd64.test": "2bc2623083210a5265dd215647f4762a9959ada8a3d1be13f102820e05da0124",
+    "databaseaccess-linux-amd64.test": "293ab7afe7db552a9c450634394a013fc5bbc856ff19915c199a12707b3a7be5",
+    "models-linux-amd64.test": "6ff49492f7a535dd1a1d67880aa3d6b330ac9538eb6a2376456ba4d90dc80947"
+  },
+  "catalog_result": null,
+  "frozen_correction_binding_sha256": "2f2241a4e2fb508f995d8074be19da345fa7ca9d2690dd83275c4ca380f5c97b",
+  "full_gate_run": false,
+  "go_catalog_pin_patch": null,
+  "native_sql_or_role_cases": 0,
+  "new_private_candidates_activated": false,
+  "original_owner_ancestors_preserved": true,
+  "original_product_source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "original_product_tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "private_os_pipe_test_receipt_sha256": "fec29c52e37f95332cd99a96a6c2049af780427a6c58045b48ac7b0c333f26b0",
+  "private_policy_test_receipt_sha256": "3409890f552d03b1927c12a837343c73b3d720ce3c5a4ba0878d8f6ba267c47f",
+  "production_protocol_migration_and_original_test_bytes_unchanged": true,
+  "pushed": false,
+  "roadmap_ticked": false,
+  "source": "734cdf91696db599b82a9281f872cf61d9710d1b",
+  "source_b": null,
+  "tree": "b9dde8f453c0d67329c91134d9c7c62cfdb6ca02",
+  "worktree_clean": true
+}

@@ -1,0 +1,66 @@
+{
+  "files_to_copy_into_new_owned_entry": {
+    "binding.json": "binding.json",
+    "driver.py": "driver.frozen-source-bytes",
+    "model-profile-correction.json": "model-profile-correction.json",
+    "payload-manifest.json": "payload-manifest.json",
+    "payload.wire.xz": "payload.wire.xz",
+    "remote-guard.py": "remote-guard.frozen-source-bytes"
+  },
+  "first_actual_work": "Fresh strict source admission, baseline60 pin checks, exact fresh61 plus restores at55..61 CatalogSQL raw JSON/SHA and ledgers.",
+  "fresh_allocation_json_required": true,
+  "fresh_resource_minima": {
+    "available_bytes": 8589934592,
+    "disk_bytes": 32212254720,
+    "free_bytes": 2147483648,
+    "full_io_psi_avg10_max": 5,
+    "no_competing_heavy": true
+  },
+  "image_id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+  "later_fixture_inputs": "Protected real shared DSN plus original approved non-weight MODEL files must be supplied through owning fixture/file configuration; absent inputs are not a skipped success.",
+  "max_fixture": {
+    "cpus": 2,
+    "memory_bytes": 4294967296,
+    "own_single_fixture": true,
+    "postgres": "18.6",
+    "vector": "0.8.7"
+  },
+  "minimal_native_argv_in_new_owned_entry": [
+    "python3",
+    "-I",
+    "${NEW_OWNED_ENTRY_DIR}/driver.py"
+  ],
+  "model_selector": "^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$",
+  "new_opportunity_required": true,
+  "next_original_profiles": [
+    "original database Migrate/admission/restore/drift/ledger/failure-resume roots",
+    "original databaseaccess runtime grants/Control-role denial roots",
+    "MODEL original seven SQL roots and original cursor root with eleven dimensions"
+  ],
+  "old_deadline_must_not_be_changed": true,
+  "one_nb_each_no_wait_or_third_carrier": true,
+  "original_carriers": [
+    {
+      "dev": 29,
+      "ino": 82,
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "uid": 0
+    },
+    {
+      "dev": 64512,
+      "ino": 7508772,
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "uid": 0
+    }
+  ],
+  "qualification_claims": {
+    "ARC111_complete": false,
+    "E2E": false,
+    "SQL": false,
+    "push_or_tick": false
+  },
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "state": "FROZEN_INPUTS_ONLY_ALL_ENTRIES_CLOSED",
+  "stop_boundary": "Actual61 pins require a new frozen source and matching rebuilt native packages; retained old binaries do not qualify changed pins. No Mac compilation in this allocation.",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8"
+}

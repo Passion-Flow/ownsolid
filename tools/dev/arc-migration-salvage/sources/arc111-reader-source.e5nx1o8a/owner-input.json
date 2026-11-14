@@ -1,0 +1,115 @@
+{
+  "source": "e639db9035b0b2c0229c90175493c605f328e295",
+  "prerequisite": "97a563ba047869fc95acf50c0017ef3cdea13139",
+  "arc_parent": "baa584c39ff0d3039f0b463e4415bb71bef63eaa",
+  "paths": [
+    {
+      "path": "services/control/internal/modules/datasets/README.md",
+      "git_mode": "100644",
+      "sha256": "e35e965c97e14659dfc39cb8736f837510c1d2fac3795060153981bccf569ef4"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/publication_storage.go",
+      "git_mode": "100644",
+      "sha256": "87cc8dcbefceae46b61285db248c41d1fe334882f9caa6805a4c06645f2a70f8"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/published_reader.go",
+      "git_mode": "100644",
+      "sha256": "bef9075ec4ef536d58d4c1ffad7ce4a05971df7fb99433ca7ca5155b84a232f5"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/published_reader_repository_integration_test.go",
+      "git_mode": "100644",
+      "sha256": "28872e65701f152917e3ddb205af78399285d8c41d7d4751796bc817ee6bdf5d"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/published_reader_test.go",
+      "git_mode": "100644",
+      "sha256": "8697a4576f8030682a485d3725b7fc6a900c96f775b6ad14b505cc5bd3c6e0b8"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/published_source_repository.go",
+      "git_mode": "100644",
+      "sha256": "2c6a33711cdcf8fa3ed188a1fcb2b64671bf47abfae1e698cc76dcfcb51b70a4"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/service.go",
+      "git_mode": "100644",
+      "sha256": "ffe8ab21a2ce332a4bb145228455b2c0ee8e3a92072042f1c70922860b6262bd"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/storage.go",
+      "git_mode": "100644",
+      "sha256": "24700701e24142767a0163f5ed8ecfce3e6711f94eab240f7b92820854614b43"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/training_input_repository.go",
+      "git_mode": "100644",
+      "sha256": "7276be648d3b9190421ca3f3a5ebccfb1f6077ae84838059b027e6a03e122e49"
+    },
+    {
+      "path": "services/control/internal/modules/datasets/training_inputs.go",
+      "git_mode": "100644",
+      "sha256": "eeb79ae0ec24a45b16e2e1b9ccec1947a5edaac2220fb052b25974cf79018ba9"
+    },
+    {
+      "path": "services/control/internal/modules/training/README.md",
+      "git_mode": "100644",
+      "sha256": "3bc17139e2a395565c8d6e34702f79f4799031cb5bd1906750220e20bcf52c20"
+    },
+    {
+      "path": "services/control/internal/modules/training/accepted_adapter.go",
+      "git_mode": "100644",
+      "sha256": "0c9e78e8910ed31556672585806ce3f3663d3041502d4cfa661b078586bf3e5a"
+    },
+    {
+      "path": "services/control/internal/modules/training/accepted_adapter_repository.go",
+      "git_mode": "100644",
+      "sha256": "4a223409975e5ac2079bae6e6fa3494be375152647781d8d8743aa09ca124775"
+    },
+    {
+      "path": "services/control/internal/modules/training/accepted_adapter_repository_integration_test.go",
+      "git_mode": "100644",
+      "sha256": "e835a9565c6ee8f0851fc4457a4f2cf5f2e9d57aec9dc875dd71f8c1c20404ce"
+    },
+    {
+      "path": "services/control/internal/modules/training/checkpoints.go",
+      "git_mode": "100644",
+      "sha256": "4ed820402b9f765b167e851850b251f08eff61ab4360244d17a65ad074bcf10c"
+    },
+    {
+      "path": "services/control/internal/modules/training/export.go",
+      "git_mode": "100644",
+      "sha256": "3c304f374d1256557129c3bb673b68633585c62e574533592d34789f985fa5f9"
+    },
+    {
+      "path": "services/control/internal/modules/training/publication_storage.go",
+      "git_mode": "100644",
+      "sha256": "8eab7f961e6c03dc87cddcb8f17a8add06b565fea7b26f11334ebc3c6024d34f"
+    },
+    {
+      "path": "services/control/internal/modules/training/published_reader.go",
+      "git_mode": "100644",
+      "sha256": "34c6a9569532413bf7bc9d9bce62041bdbd81ddbd5fc06734deb099e66587f87"
+    },
+    {
+      "path": "services/control/internal/modules/training/published_reader_test.go",
+      "git_mode": "100644",
+      "sha256": "097a21067a94b247507722a0a945c8069d89afef5346c9f88382826c81bbe5e6"
+    },
+    {
+      "path": "services/control/internal/modules/training/service.go",
+      "git_mode": "100644",
+      "sha256": "1425bc8290ece8e353b90a2205e73a34c2cd5e36695075f4b8306b014de6ee70"
+    },
+    {
+      "path": "services/control/internal/modules/training/storage.go",
+      "git_mode": "100644",
+      "sha256": "29c3e63172d75a70c5e89af9de7bc61c5ad6d251f68c91f0259566dc7435af5f"
+    }
+  ],
+  "all21_owner_paths_byte_identical": true,
+  "research_conflict": "Retain the entire newer main research and the original author native-plan block without replacing either.",
+  "native_or_compiler_started": false
+}

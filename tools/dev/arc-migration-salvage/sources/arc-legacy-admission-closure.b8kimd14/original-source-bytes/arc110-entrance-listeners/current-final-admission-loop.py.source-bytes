@@ -1,0 +1,8 @@
+from pathlib import Path
+import random,subprocess,time
+b=Path(__file__).resolve().parent
+for i in range(60):
+ with(b/'current-final-check-queue.log').open('ab') as log:c=subprocess.run(['python3','-I',str(b/'current-final-check.py')],stdout=log,stderr=subprocess.STDOUT).returncode
+ if c!=75:break
+ time.sleep(random.uniform(7,13))
+(b/'current-final-check-exit').write_text(str(c)+'\n')

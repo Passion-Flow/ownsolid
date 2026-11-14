@@ -1,0 +1,32 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,stat,subprocess,tempfile,time
+b=Path(__file__).resolve().parent;repo=b.parent.parent/'lane-arc107-handoff';os.chdir(repo)
+lock=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(lock,os.O_RDWR|os.O_NOFOLLOW);info=os.fstat(fd)
+assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+try:
+ assert(info.st_dev,info.st_ino)==(lock.lstat().st_dev,lock.lstat().st_ino)
+ assert not subprocess.check_output(['git','status','--porcelain'])
+ revision=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+ def inventory(ref):
+  raw=subprocess.check_output(['git','ls-tree','-rz','--full-tree',ref]);out={}
+  for item in raw.split(b'\0'):
+   if not item:continue
+   metadata,name=item.split(b'\t',1)
+   if not name.startswith(b'docs/'):out[name.decode()]=metadata.decode()
+  return out
+ assert inventory('3ae6bfebb67b47d684de4651cc597c26f104d725')==inventory(revision),'Material source changed; rerun the complete gate'
+ run=Path(tempfile.mkdtemp(prefix='integration-check.',dir=b));(b/'latest-integration-check').write_text(str(run)+'\n')
+ env=os.environ.copy();env.update(GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=1',CARGO_NET_OFFLINE='true',CARGO_BUILD_JOBS='2',PYTHON=subprocess.check_output(['uv','python','find','3.12'],text=True).strip());env['PATH']=str(b.parent/'gw120-schema59.9jT6tZsI/offline-tools')+os.pathsep+env['PATH']
+ started=time.time()
+ with(run/'check.log').open('wb')as log:p=subprocess.run(['make','check'],env=env,stdout=log,stderr=subprocess.STDOUT,timeout=600)
+ with(run/'capabilities-test.log').open('wb')as log:caps=subprocess.run(['go','-C','pkg/capabilities','test','-count=1','./...'],env=env,stdout=log,stderr=subprocess.STDOUT,timeout=120)
+ assert not subprocess.check_output(['git','status','--porcelain']) and subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==revision
+ result={'source':revision,'runtime_equivalent_to':'3ae6bfebb67b47d684de4651cc597c26f104d725','non_docs_paths':len(inventory(revision)),'non_docs_bytes_and_modes_identical':True,'check_exit':p.returncode,'seconds':round(time.time()-started,3),'check_sha256':hashlib.sha256((run/'check.log').read_bytes()).hexdigest()}
+ result['capabilities_test_exit']=caps.returncode;result['capabilities_test_sha256']=hashlib.sha256((run/'capabilities-test.log').read_bytes()).hexdigest()
+ (run/'qualification.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result),flush=True)
+ if p.returncode:print((run/'check.log').read_text()[-3000:])
+ if caps.returncode:print((run/'capabilities-test.log').read_text()[-3000:])
+ raise SystemExit(p.returncode or caps.returncode)
+finally:fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

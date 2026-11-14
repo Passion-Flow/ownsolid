@@ -1,0 +1,76 @@
+{
+  "Go_version_required": "1.27.3 as original qualification",
+  "MODEL_SQL_roots": 7,
+  "MODEL_cursor_dimensions": 11,
+  "MODEL_cursor_roots": 1,
+  "MODEL_selector": "^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$",
+  "branch": "codex/arc111-measured61-pins-1a7ad692",
+  "builds": [
+    {
+      "argv": [
+        "go",
+        "test",
+        "-mod=readonly",
+        "-p=1",
+        "-c",
+        "-o",
+        "${NEW_EVIDENCE_DIR}/database-linux-amd64.test",
+        "./internal/platform/database"
+      ],
+      "output": "database-linux-amd64.test"
+    },
+    {
+      "argv": [
+        "go",
+        "test",
+        "-mod=readonly",
+        "-p=1",
+        "-c",
+        "-o",
+        "${NEW_EVIDENCE_DIR}/databaseaccess-linux-amd64.test",
+        "./internal/operations/databaseaccess"
+      ],
+      "output": "databaseaccess-linux-amd64.test"
+    },
+    {
+      "argv": [
+        "go",
+        "test",
+        "-mod=readonly",
+        "-p=1",
+        "-tags",
+        "repository_integration",
+        "-c",
+        "-o",
+        "${NEW_EVIDENCE_DIR}/models-linux-amd64.test",
+        "./internal/modules/models"
+      ],
+      "output": "models-linux-amd64.test"
+    }
+  ],
+  "candidate_bundle_sha256": "14336b33c91f034b0e71b3c545e6b7cc6938f25b5984142e5f7150bfb6cc5363",
+  "candidate_patch_sha256": "e9581694bf56bcd5ecbe2fc8fb7218bfcbcf5a7d1d23f6dfd2d8bb18ec0c8e87",
+  "metadata_only_qualification_basis": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-metadata-none.rrp7nmdh/actual-metadata.json",
+  "native_list_then_original_execution_required": true,
+  "new_binaries_SHA_and_size_required": true,
+  "no_Mac_compile_in_current_window": true,
+  "no_native_cases_run_for_B": true,
+  "offline_env": {
+    "CGO_ENABLED": "0",
+    "GOARCH": "amd64",
+    "GOMAXPROCS": "2",
+    "GOMEMLIMIT": "512MiB",
+    "GOOS": "linux",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOTOOLCHAIN": "local"
+  },
+  "original_host_TCP_runtime_fixture_still_required": true,
+  "original_qualified_source_A_binaries_not_source_B_proof": true,
+  "serialization": "One fresh assigned Mac lease; serial -p1/GOMAX2/GOMEM512; no original closed entry or carrier is reused. Do not execute now.",
+  "source": "549c3ad699debc2acd0c7b9754fd59d97788d74c",
+  "source_parent": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "state": "REBUILD_PENDING_NEW_MAC_ALLOCATION",
+  "tree": "1a7ad692d315e18f5658918a6bc2d1f01749afa3",
+  "working_directory": "${NEW_ISOLATED_CANDIDATE_WORKTREE}/services/control"
+}

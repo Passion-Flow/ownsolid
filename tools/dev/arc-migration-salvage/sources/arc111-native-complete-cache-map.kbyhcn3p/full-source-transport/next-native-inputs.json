@@ -1,0 +1,85 @@
+{
+  "changed_source_scope": "Full original frozen source envelope only; source3513/treec65 and original binaries/SQL/targetGitmodes unchanged. No legacy cache or Git delta input.",
+  "copy_hashes": {
+    "binding.json": "3b637e4df2bf4d99f83f62d956f66366ec1a023951104f204d92f422eb2f9b99",
+    "driver.py": "7da60acd7be7ef748a4176fc12ef3965fee0eaf6b8512ee00d769b0c1557f246",
+    "model-profile-correction.json": "c8e5f88a425546a7eb37c7906744c234f4fba39fc00cfac8b428b57a677c532d",
+    "payload-manifest.json": "ed5b733744a977f33bba5431ef1fdd6ca7cecab64881995aa2aed5d25bad305c",
+    "payload.wire.xz": "2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773",
+    "remote-guard.py": "6b070e08d806f9b9ef3da8a38a418fcd6344409a8f68a63c5a8d47c1518289b3"
+  },
+  "copy_sources": {
+    "binding.json": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/full-source-transport/binding.json",
+    "driver.py": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/driver.py.executed-source-bytes",
+    "model-profile-correction.json": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/model-profile-correction.json",
+    "payload-manifest.json": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/full-source-transport/payload-manifest.json",
+    "payload.wire.xz": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/full-source-transport/payload.wire.xz",
+    "remote-guard.py": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-native-complete-cache-map.kbyhcn3p/full-source-transport/remote-guard.frozen-source-bytes"
+  },
+  "first_actual_work": "Receive complete5952828-byte frame+EOF inside original45s, verify every full-source path/content/blob/tar metadata and exact new target0644/0755/type/UID/nlink, then original baseline60/fresh61/restore55..61 CatalogSQL raw JSON/SHA.",
+  "fresh_allocation_json_required": true,
+  "fresh_resource_minima": {
+    "available_bytes": 8589934592,
+    "disk_bytes": 32212254720,
+    "free_bytes": 2147483648,
+    "full_io_psi_avg10_max": 5,
+    "no_competing_heavy": true
+  },
+  "image_id": "sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47",
+  "later_fixture_inputs": "Protected real shared DSN plus original approved non-weight MODEL files must be supplied through owning fixture/file configuration; absent inputs are not a skipped success.",
+  "legacy_cache_status": "Rejected complete metadata5015;4879 byte/hash/blob verified;136 rejected modes135x0600+1x0700 were not content-read. Never reuse as fully qualified.",
+  "max_fixture": {
+    "cpus": 2,
+    "memory_bytes": 4294967296,
+    "own_single_fixture": true,
+    "postgres": "18.6",
+    "vector": "0.8.7"
+  },
+  "minimal_native_argv_in_new_owned_entry": [
+    "python3",
+    "-I",
+    "${NEW_OWNED_ENTRY_DIR}/driver.py"
+  ],
+  "model_selector": "^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$",
+  "native_attempts_in_ended_window": 1,
+  "native_qualification_of_new_candidate": false,
+  "new_opportunity_required": true,
+  "next_original_profiles": [
+    "original database Migrate/admission/restore/drift/ledger/failure-resume roots",
+    "original databaseaccess runtime grants/Control-role denial roots",
+    "MODEL original seven SQL roots and original cursor root with eleven dimensions"
+  ],
+  "old_cache_dependency": false,
+  "old_deadline_must_not_be_changed": true,
+  "one_nb_each_no_wait_or_third_carrier": true,
+  "original_carriers": [
+    {
+      "dev": 29,
+      "ino": 82,
+      "path": "/run/lock/ownsolid-heavy.lock",
+      "uid": 0
+    },
+    {
+      "dev": 64512,
+      "ino": 7508772,
+      "path": "/root/lane-sci-tools/heavy-test.lock",
+      "uid": 0
+    }
+  ],
+  "qualification_claims": {
+    "ARC111_complete": false,
+    "E2E": false,
+    "SQL": false,
+    "push_or_tick": false
+  },
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "state": "FROZEN_FULL_SOURCE_INPUT_UNACTIVATED",
+  "stop_boundary": "Actual61 pins require a new frozen source and matching rebuilt native packages; retained old binaries do not qualify changed pins. No Mac compilation in this allocation.",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "wire_admission": {
+    "bytes": 5952828,
+    "deadline_seconds": 45,
+    "sha256": "2cb6b1bb8d23cb6367950779eff9e73ee2c3aa582e748e6a3aaf59d5f7bb3773",
+    "small_frame_trace_is_not_bandwidth_guarantee": true
+  }
+}

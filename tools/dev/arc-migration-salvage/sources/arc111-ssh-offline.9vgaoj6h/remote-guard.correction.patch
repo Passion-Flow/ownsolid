@@ -1,0 +1,31 @@
+--- remote-guard.original-source-bytes
++++ remote-guard.corrected-source-bytes
+@@ -1,8 +1,8 @@
+ from pathlib import Path
+ import os,sys,json,time,stat,hashlib,fcntl,subprocess,signal,shutil,re,tempfile,tarfile,io,socket,secrets,uuid,base64
+-cfg=json.loads(sys.argv[1]); start=time.monotonic(); end=start+1100; work_end=end-120; phase_end=start+45
++cfg=json.loads(sys.argv[1]); start=time.monotonic(); assert 120<cfg['remote_budget_seconds']<=1000; end=start+cfg['remote_budget_seconds']; work_end=end-120; phase_end=start+45
+ os.umask(0o077)
+-record={'source':cfg['source'],'tree':cfg['tree'],'state':'NOTRUN','runner_pid':os.getpid(),'remote_budget_seconds':1100,'cleanup_reserve_seconds':120,'stages':[],'metadata':[],'lock_nb_attempts':[],'runtime_profiles_executed':[],'go_compilers_started':0}
++record={'source':cfg['source'],'tree':cfg['tree'],'state':'NOTRUN','runner_pid':os.getpid(),'remote_budget_seconds':cfg['remote_budget_seconds'],'cleanup_reserve_seconds':120,'stages':[],'metadata':[],'lock_nb_attempts':[],'runtime_profiles_executed':[],'go_compilers_started':0}
+ root=None;locks=[];children=[];container=None;volume=None;network=None;secrets_owned=[];input_data=None
+ expected_locks=[('/run/lock/ownsolid-heavy.lock',29,82),('/root/lane-sci-tools/heavy-test.lock',64512,7508772)]
+ def emit(name,value):
+@@ -166,7 +166,7 @@
+  if record.get('admitted'):record['state']='FAILED_OR_INCOMPLETE'
+ finally:
+  for sig in [signal.SIGTERM,signal.SIGINT,signal.SIGHUP]:signal.signal(sig,signal.SIG_IGN)
+- cleanup_begin=time.monotonic();remaining=[]
++ cleanup_begin=time.monotonic();end=min(end,cleanup_begin+120);remaining=[]
+  for p in children:
+   try:
+    left=stop_child(p)
+@@ -205,7 +205,7 @@
+    except OSError:closed=True
+    record['lock_fd_closure'].append({'path':path,'closed':closed})
+   except BaseException as error:record['lock_fd_closure'].append({'path':path,'error':str(error)})
+- record['elapsed_seconds']=time.monotonic()-start;record['within_remote_budget']=record['elapsed_seconds']<=1100;save();emit('RESULT',record)
++ record['elapsed_seconds']=time.monotonic()-start;record['within_remote_budget']=record['elapsed_seconds']<=cfg['remote_budget_seconds'];save();emit('RESULT',record)
+  if root is not None:
+   evidence=io.BytesIO()
+   with tarfile.open(fileobj=evidence,mode='w:gz',compresslevel=1) as archive:

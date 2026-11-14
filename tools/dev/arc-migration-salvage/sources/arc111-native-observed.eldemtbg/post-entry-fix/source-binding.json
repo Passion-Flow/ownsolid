@@ -1,0 +1,13 @@
+{
+  "admission_deadline_extended": false,
+  "candidate_activated": false,
+  "connection_retry_added": false,
+  "corrected_parent_sha256": "4a94e6edda5fc4297ee5b79accc4b5eae36f3bbcb466559f37ceb11a7ad48a30",
+  "corrected_remote_sha256": "6d54f58cbf83b61dc189b279742f37a29e821eebdbd6b7101549e6b9d7df2838",
+  "executed_parent_sha256": "2eb60cd28c2ba5b8bf0da92ead0189cd21919fdc78cf5730e0cc65478998c340",
+  "executed_remote_sha256": "4fe8acf210f41a7554b46e01a79b1ed235c212096fcf80f47ab6e6534aec8b51",
+  "original_raw_and_results_unchanged": true,
+  "policy_sha256": "acc77792d6a11e1187927d1381e660194e0e3b4cb0cd2e111ee6857d7f4bbb53",
+  "preserved_integrity_assertion": true,
+  "received_length_or_digest_reconstructed": false
+}

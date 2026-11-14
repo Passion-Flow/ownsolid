@@ -1,0 +1,16 @@
+{
+  "original": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/gw120-schema59.9jT6tZsI/mac-catalog-matrix.zem9ye4q",
+  "hashes": {
+    "database.test": "24ee8be83223a556a11758e80f9e74450b5adf76939f6da9349eb4189487848d",
+    "audit-verify": "b2e245f7a6842daf33f611e5a1c473e6dfa19f3482c96182c88d690237c77201",
+    "catalog.sql": "ca359cfa5edc41f22c54a365998c1211f2810eee0b8f82a5492c827983e4d2d0",
+    "prefix.jsonl": "efd0df11e3dcf11d876df5949d8b673cbab5fb5cabc88826eda0eb38672d60f5",
+    "schema55.dump": "ef0c39fae4db0be63d3a856f460e2256956c832d520b48b56d699ade1a05daab",
+    "schema56.dump": "cb2cd0e846f5cdfa674b52e45c0a00849b8b63743ca9a4daa14be81177c592b7",
+    "schema57.dump": "103ada6a4d88a504568a0d59889c3c47e7bcc9dd3043e17904de137f75ba2d5d",
+    "schema58.dump": "712dd89c41f8eec07ea0449ad599851a044d23375c84f4c89da817d6dd2f879f",
+    "schema59.dump": "10d8f85cd8a5378bc50f7ee0e40756db4c42c539a24caa7f6b901b0f0e7d446c"
+  },
+  "accepted59_migrator_source": "a446ec580cf6dffc63df5d8269518f1ef8175d40",
+  "scope": "immutable predecessor dumps and accepted59 binary reused to construct native59; all current migrations and runtime tests use the pinned current candidate"
+}

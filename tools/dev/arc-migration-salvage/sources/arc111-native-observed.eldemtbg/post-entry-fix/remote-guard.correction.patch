@@ -1,0 +1,78 @@
+--- executed-remote-source
++++ bounded-admission-candidate
+@@ -1,5 +1,5 @@
+ from pathlib import Path
+-import os,sys,json,time,stat,hashlib,fcntl,subprocess,signal,shutil,re,tempfile,tarfile,io,socket,secrets,uuid,base64
++import os,sys,json,time,stat,hashlib,fcntl,subprocess,signal,shutil,re,tempfile,tarfile,io,socket,secrets,uuid,base64,select
+ cfg=json.loads(sys.argv[1]); start=time.monotonic(); assert 120<cfg['remote_budget_seconds']<=1000; end=start+cfg['remote_budget_seconds']; work_end=end-120; phase_end=start+45
+ os.umask(0o077)
+ record={'source':cfg['source'],'tree':cfg['tree'],'state':'NOTRUN','runner_pid':os.getpid(),'remote_budget_seconds':cfg['remote_budget_seconds'],'cleanup_reserve_seconds':120,'stages':[],'metadata':[],'lock_nb_attempts':[],'runtime_profiles_executed':[],'go_compilers_started':0}
+@@ -59,6 +59,59 @@
+  assert json.loads(ledger)==expected,(name,'LEDGER_MISMATCH');(root/(name+'.ledger.json')).write_bytes(ledger)
+  value={'name':name,'database':db,'schema':schema,'version':version,'table_count':parsed['table_count'],'catalog_bytes':len(raw),'catalog_sha256':hashlib.sha256(raw).hexdigest(),'ledger_sha256':hashlib.sha256(ledger).hexdigest(),'ledger_entries':len(expected)}
+  record['metadata'].append(value);save();emit('HISTORY',value);return value
++def receive_payload(read_piece, wait_readable, now, deadline, expected_size, expected_sha256, receipt):
++    """Read the exact frozen input and EOF within the existing admission deadline."""
++    started = now()
++    received = bytearray()
++    digest = hashlib.sha256()
++    eof = False
++    try:
++        while True:
++            remaining = deadline - now()
++            if remaining <= 0 or not wait_readable(remaining):
++                raise TimeoutError("PAYLOAD_ADMISSION_DEADLINE_EXCEEDED")
++            try:
++                data = read_piece(min(65536, expected_size + 1 - len(received)))
++            except BlockingIOError:
++                continue
++            if not data:
++                eof = True
++                break
++            received.extend(data)
++            digest.update(data)
++            if len(received) > expected_size:
++                raise ValueError("PAYLOAD_BYTE_COUNT_MISMATCH")
++        if len(received) != expected_size:
++            raise ValueError("PAYLOAD_BYTE_COUNT_MISMATCH")
++        if digest.hexdigest() != expected_sha256:
++            raise ValueError("PAYLOAD_DIGEST_MISMATCH")
++        return bytes(received)
++    finally:
++        receipt.update(
++            expected_bytes=expected_size,
++            expected_sha256=expected_sha256,
++            received_bytes=len(received),
++            received_sha256=digest.hexdigest(),
++            eof_observed=eof,
++            elapsed_seconds=now() - started,
++        )
++
++
++def read_admission_payload(expected_size, expected_sha256):
++    fd = sys.stdin.buffer.fileno()
++    blocking = os.get_blocking(fd)
++    receipt = record.setdefault("payload_receive", {})
++    os.set_blocking(fd, False)
++    try:
++        return receive_payload(
++            lambda size: os.read(fd, size),
++            lambda remaining: bool(select.select([fd], [], [], remaining)[0]),
++            time.monotonic, min(phase_end, work_end), expected_size, expected_sha256, receipt,
++        )
++    finally:
++        os.set_blocking(fd, blocking)
++        save()
++
+ def terminate(signum,frame):raise SystemExit(128+signum)
+ for sig in [signal.SIGTERM,signal.SIGINT,signal.SIGHUP]:signal.signal(sig,terminate)
+ try:
+@@ -81,7 +134,7 @@
+  assert image['Id']==cfg['image'] and image['Architecture']=='amd64' and image['Os']=='linux','IMAGE_REFUSAL'
+  volumes=list(image['Config']['Volumes']);assert len(volumes)==1 and volumes[0].startswith('/var/lib/postgresql'),'VOLUME_TARGET_REFUSAL'
+  record['image']={'id':image['Id'],'os':image['Os'],'architecture':image['Architecture'],'volume_target':volumes[0]};save()
+- raw=sys.stdin.buffer.read(cfg['payload_bytes']+1)
++ raw=read_admission_payload(cfg['payload_bytes'],cfg['payload_sha256'])
+  assert len(raw)==cfg['payload_bytes'] and hashlib.sha256(raw).hexdigest()==cfg['payload_sha256'],'PAYLOAD_REFUSAL'
+  with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
+   actual=set()

@@ -1,0 +1,12 @@
+{
+  "candidate": "625dbdd87d536f8519f23b00d647c5438bc6837a",
+  "base": "1280ea79c94f54b37f63ec33541fabfa6325901c",
+  "bundle": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/net102-startup/net102-625dbdd8.bundle",
+  "bundle_sha256": "136a8254c2b691a8bf588284ef8b9b880809b4c832f61e7f66cb563de2ef9a21",
+  "qualified_input": "2d1513b0d549110f20b18579bdbc3c2ef982405c",
+  "configuration_race_input": "8025163372b36b18e2e9352a3c241e0e917a0622",
+  "postgres_scope": "Linux arm64 network-none PostgreSQL 18.6/pgvector 0.8.7 on Darwin arm64",
+  "full_repository_gate": "pending",
+  "installed_source_to_pin": "pending",
+  "roadmap_tick": false
+}

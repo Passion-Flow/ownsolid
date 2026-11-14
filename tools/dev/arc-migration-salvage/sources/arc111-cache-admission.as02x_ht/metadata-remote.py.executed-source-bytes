@@ -1,0 +1,60 @@
+from pathlib import Path
+import hashlib,json,os,stat,time
+start=time.monotonic();deadline=start+25
+root=Path('/root/lane-arc111-formal61-e1.q0ros2oq')
+result_bytes=(root/'result.json').read_bytes()
+result=json.loads(result_bytes)
+assert result['source']=='3513ab2ba5885bb5d782919f7611d96e35d28fc6'
+assert result['error']=='SOURCE_MODE_MISMATCH' and result['first_failure_stage']=='source_reconstruction'
+assert result['metadata']==[] and result['remaining_owned_groups']==[]
+manifest_bytes=(root/'source-manifest.json').read_bytes()
+assert hashlib.sha256(manifest_bytes).hexdigest()=='9de6cb0f1e829a6fa92a2b41b2cb9d84fbc41669805680cd7b7f0e8960ba59c9'
+manifest=json.loads(manifest_bytes)
+transport=json.loads((root/'transport-binding.json').read_text())
+assert transport['target_source']==result['source'] and transport['target_tree']==result['tree']
+basis_path=Path(transport['basis_path'])
+assert str(basis_path)=='/root/lane-arc107-installed.149a9501.c92cc7f9/source'
+expected={ref['path']:ref for ref in manifest['files'] if ref['path'] not in transport['delta_paths']}
+for ref in transport['basis_changed_or_removed_inputs']:
+ assert ref['path'] not in expected;expected[ref['path']]=ref
+assert len(expected)==5015
+source=root/'source'
+copied={str(p.relative_to(source)) for p in source.rglob('*') if p.is_file()}
+ordered=sorted(expected)
+first=next((i for i,name in enumerate(ordered) if name not in copied),len(ordered))
+assert first<len(ordered) and copied==set(ordered[:first]),'PARTIAL_COPY_IS_NOT_EXACT_ORDERED_PREFIX'
+relative=ordered[first];ref=expected[relative];path=basis_path/relative
+
+def identity(p):
+ s=p.lstat()
+ return {'path':str(p),'mode_full':s.st_mode,'permission_bits':stat.S_IMODE(s.st_mode),'permission_octal':oct(stat.S_IMODE(s.st_mode)),
+         'type_bits':stat.S_IFMT(s.st_mode),'regular':stat.S_ISREG(s.st_mode),'directory':stat.S_ISDIR(s.st_mode),
+         'symlink':stat.S_ISLNK(s.st_mode),'uid':s.st_uid,'gid':s.st_gid,'nlink':s.st_nlink,'bytes':s.st_size,'dev':s.st_dev,'ino':s.st_ino}
+parents=[identity(p) for p in [Path('/root'),basis_path.parent,basis_path,source,root]]
+actual_lstat=identity(path)
+fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+try:
+ s=os.fstat(fd);assert stat.S_ISREG(s.st_mode) and s.st_size==ref['bytes'] and s.st_uid==0 and s.st_nlink==1
+ data=b''
+ while len(data)<=ref['bytes']:
+  assert time.monotonic()<deadline
+  piece=os.read(fd,min(65536,ref['bytes']+1-len(data)))
+  if not piece:break
+  data+=piece
+ actual_fstat={'mode_full':s.st_mode,'permission_bits':stat.S_IMODE(s.st_mode),'permission_octal':oct(stat.S_IMODE(s.st_mode)),
+               'type_bits':stat.S_IFMT(s.st_mode),'regular':stat.S_ISREG(s.st_mode),'uid':s.st_uid,'gid':s.st_gid,'nlink':s.st_nlink,'bytes':s.st_size,'dev':s.st_dev,'ino':s.st_ino}
+ actual_hash=hashlib.sha256(data).hexdigest()
+ actual_blob=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+finally:os.close(fd)
+binding=[]
+for name in ['installed-source-verified.json','receiver.json']:
+ p=basis_path.parent/name
+ if p.is_file() and not p.is_symlink() and p.stat().st_size<=100000:
+  value=json.loads(p.read_text())
+  binding.append({'path':str(p),'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'fields':{k:value[k] for k in ['source','tree','base_source','paths','every_source_byte_and_mode_verified','owned_regular_modes','root','baseline_root','baseline_source'] if k in value}})
+print(json.dumps({'source':result['source'],'tree':result['tree'],'basis_source':transport['basis_source'],'basis_tree':transport['basis_tree'],
+                  'basis_path':str(basis_path),'failed_relative_path':relative,'localization':'First absent destination in exact ordered copied prefix; failure was before any Git apply.',
+                  'already_copied_count':first,'expected':{'git_mode_raw':ref['mode'],'raw_type':type(ref['mode']).__name__,'parsed_octal_full':int(ref['mode'],8),'permission_bits':int(ref['mode'],8)&0o777,'permission_octal':oct(int(ref['mode'],8)&0o777),'bytes':ref['bytes'],'sha256':ref['sha256'],'git_blob':ref['git_blob']},
+                  'actual_lstat':actual_lstat,'actual_fstat':actual_fstat,'parents':parents,'observed_sha256':actual_hash,'observed_git_blob':actual_blob,'hash_match':actual_hash==ref['sha256'],'git_blob_match':actual_blob==ref['git_blob'],'path_owner_binding':binding,
+                  'original_result_sha256':hashlib.sha256(result_bytes).hexdigest(),'source_manifest_sha256':hashlib.sha256(manifest_bytes).hexdigest(),'transport_binding_sha256':hashlib.sha256((root/'transport-binding.json').read_bytes()).hexdigest(),
+                  'scope':'Read-only existing metadata and one exact source input hash; no locks, compiler, PG, service or write.', 'elapsed_seconds':time.monotonic()-start},sort_keys=True))

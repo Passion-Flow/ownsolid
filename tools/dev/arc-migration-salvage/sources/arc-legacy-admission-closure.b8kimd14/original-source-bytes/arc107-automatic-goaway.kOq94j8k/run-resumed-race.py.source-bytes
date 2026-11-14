@@ -1,0 +1,36 @@
+from pathlib import Path
+import ast,fcntl,os,signal,subprocess,tempfile
+base=Path(__file__).resolve().parent;repo=base.parent.parent/'lane-arc';os.chdir(repo)
+run=Path(tempfile.mkdtemp(prefix='resume-race.',dir=str(base)));gate=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+fd=os.open(gate,os.O_RDWR)
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit('Mac gate held by another lane; no tests started')
+child=None
+try:
+ assert os.fstat(fd).st_ino==gate.stat().st_ino
+ if subprocess.run(['pgrep','-x','make|cargo|rustc|compile|link'],capture_output=True).returncode==0:raise RuntimeError('Another compiler active; no tests started')
+ source=ast.parse((base/'race-after-schema59.py').read_text());script=None
+ for node in ast.walk(source):
+  if isinstance(node,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='script' for t in node.targets):script=ast.literal_eval(node.value)
+ assert script
+ script=script.replace('if [[ -f "$lock/owner" && $(cat "$lock/owner") == "$run" ]];then rm "$lock/owner";rmdir "$lock";fi','true # The parent owns the existing file lock; never unlink the shared inode.')
+ script=script.replace('trap cleanup EXIT','trap cleanup EXIT\ntrap \'exit 143\' TERM INT')
+ (run/'focused.sh').write_text(script);(run/'input').write_bytes(subprocess.check_output(['git','rev-parse','HEAD','HEAD^{tree}','origin/main']))
+ (run/'lock-protocol').write_text('Exclusive flock on existing regular file; shared inode retained.\n')
+ (run/'runner-pid').write_text(str(os.getpid())+'\n');(base/'latest-resumed-race').write_text(str(run)+'\n')
+ def stop(signum,frame):
+  if child is not None and child.poll() is None:
+   os.killpg(child.pid,signal.SIGTERM)
+   try:child.wait(timeout=15)
+   except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+  raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+ print('Testing ARC-107 '+(run/'input').read_text().splitlines()[0]+'; logs '+str(run),flush=True)
+ with (run/'run.log').open('wb') as out:
+  child=subprocess.Popen(['caffeinate','-i','bash',str(run/'focused.sh'),str(run),str(repo)],stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+  code=child.wait()
+ (run/'exit').write_text(str(code)+'\n');print((run/'run.log').read_text()[-1800:],flush=True)
+ if (run/'race.log').exists():print((run/'race.log').read_text()[-2400:],flush=True)
+ raise SystemExit(code)
+finally:
+ fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

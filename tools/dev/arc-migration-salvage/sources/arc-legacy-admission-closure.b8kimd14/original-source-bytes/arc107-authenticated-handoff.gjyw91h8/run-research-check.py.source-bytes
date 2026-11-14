@@ -1,0 +1,16 @@
+from pathlib import Path
+import fcntl,json,os,stat,subprocess,tempfile,shutil
+b=Path(__file__).resolve().parent;r=b.parent.parent/'lane-arc107-handoff';p=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW);s=os.fstat(fd);assert stat.S_ISREG(s.st_mode) and s.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+try:
+ assert(s.st_dev,s.st_ino)==(p.lstat().st_dev,p.lstat().st_ino);assert subprocess.check_output(['git','status','--porcelain'],cwd=r,text=True)==''
+ rev=subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip();assert rev=='56a75ee89422a4f0e3e42a7dc5e66c73fa3f79f8'
+ tmp=Path(tempfile.mkdtemp(prefix='ownsolid-arc107-check.',dir='/private/tmp'));os.chown(tmp,-1,os.getgid());os.chmod(tmp,0o700)
+ env=os.environ.copy();env.update({'TMPDIR':str(tmp)+'/', 'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1','PYTHON':subprocess.check_output(['uv','python','find','3.12'],text=True).strip()});env['PATH']=str(b.parent/'gw120-schema59.9jT6tZsI/offline-tools')+':'+env['PATH']
+ codes={}
+ for name,command in [('install',['make','web-install']),('check',['make','check'])]:
+  with(b/('research-'+name+'.log')).open('wb') as log:codes[name]=subprocess.run(command,cwd=r,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=300).returncode
+  if codes[name]:break
+ (b/'research-qualification.json').write_text(json.dumps({'source':rev,'results':codes},indent=2)+'\n');shutil.rmtree(tmp);print(codes,flush=True);raise SystemExit(max(codes.values()))
+finally:fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

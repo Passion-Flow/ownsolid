@@ -1,0 +1,18 @@
+{
+  "all_original_SQL_members_unchanged": true,
+  "canonical_output_permissions": "Exact original Git0644/0755; new ownUID/type/nlink verified.",
+  "format": "full-frozen-git-source-v1",
+  "input_tar_permissions": {
+    "0o664": 5090,
+    "0o775": 12
+  },
+  "manifest_sha256": "9de6cb0f1e829a6fa92a2b41b2cb9d84fbc41669805680cd7b7f0e8960ba59c9",
+  "old_cache_dependency": false,
+  "original_gzip_reference_only": true,
+  "original_gzip_sha256": "15027f9f5b3145eba29d7850f4ba5aa5eb1a7da0babaee9e875ab0600ee73848",
+  "source_paths": 5102,
+  "source_tar_bytes": 46325760,
+  "source_tar_sha256": "ac3c3fefbee06749bf75ba00187dfd49e631b6bf73cd5f3d8cab5794b56c9e44",
+  "target_source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "target_tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8"
+}

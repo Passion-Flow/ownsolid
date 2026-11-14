@@ -1,0 +1,40 @@
+--- executed-observed-parent
++++ entry-aware-classification-candidate
+@@ -26,9 +26,18 @@
+     stages["host_key_matched"] = True if re.search(r"is known and matches the .* host key", text) else None
+     errors = []
+     for line in text.splitlines():
+-        if any(needle in line for needle in ["timed out", "Connection refused", "Permission denied", "Host key verification failed", "Could not resolve hostname", "failed to connect to local tailscaled"]):
++        if any(needle in line for needle in ["timed out", "Timeout, server", "Broken pipe", "Connection reset", "Connection refused", "Permission denied", "Host key verification failed", "Could not resolve hostname", "failed to connect to local tailscaled"]):
+             errors.append(re.sub(r"[^\x20-\x7e]", "?", line)[:240])
+     return {"stages": stages, "necessary_errors": errors[:6], "missing_marker_means": "unknown, not proof that a stage was not entered"}
++
++def classify_opportunity(ssh_exit, stage_events, remote_receipt=None):
++    """Keep confirmed remote entry separate from missing SQL/cleanup evidence."""
++    if isinstance(remote_receipt, dict):
++        return remote_receipt.get("state", "INCOMPLETE_REMOTE_RECEIPT")
++    entered = any(item.get("stage") == "remote_entry_confirmed" for item in stage_events)
++    if entered:
++        return "FAILED_AFTER_REMOTE_ENTRY" if ssh_exit else "INCOMPLETE_AFTER_REMOTE_ENTRY"
++    return "ENTRY_UNCONFIRMED_CONNECTION_FAILED" if ssh_exit else "INCOMPLETE_ENTRY_UNCONFIRMED"
+ 
+ def forwarded_outer_exit(record):
+     if record.get("outer_timeout"):
+@@ -93,7 +102,7 @@
+ payload_bytes=(out/'payload.tar').read_bytes()
+ record={'source':binding['source'],'tree':binding['tree'],'ssh_attempts':1,'retry_count':0,'absolute_budget_seconds':1200,'cleanup_reserve_seconds':120,'remote_guard_sha256':hashlib.sha256(guard).hexdigest(),'state':'PREENTRY'}
+ record['launcher_context']={'cwd':str(Path.cwd()),'uid':os.getuid(),'ssh_exec':str(Path(command[0]).resolve()),'ssh_exec_sha256':hashlib.sha256(Path(command[0]).read_bytes()).hexdigest(),'ssh_config_sha256':hashlib.sha256((Path.home()/'.ssh/config').read_bytes()).hexdigest(),'stdin_mode':'PIPE; payload preserved; EOF delivered by communicate','ssh_auth_sock_present':bool(os.environ.get('SSH_AUTH_SOCK')),'ssh_askpass_present':bool(os.environ.get('SSH_ASKPASS'))}
+-invocation=out/'ssh-invocation.json';invocation.write_text(json.dumps(command)+'\n');record['ssh_invocation_sha256']=hashlib.sha256(invocation.read_bytes()).hexdigest()
++invocation=out/'ssh-invocation.json';invocation.write_text(json.dumps(command)+'\n');record['ssh_invocation_sha256']=hashlib.sha256(invocation.read_bytes()).hexdigest();record['payload_requested_bytes']=len(payload_bytes)
+ remaining_work_timeout(time.monotonic(),work_end,1100)
+ with (out/'transport.stdout').open('wb') as stdout,(out/'transport.stderr').open('wb') as stderr:
+  child=subprocess.Popen(command,stdin=subprocess.PIPE,stdout=stdout,stderr=stderr,start_new_session=True,close_fds=True);record['ssh_pid']=child.pid
+@@ -125,7 +134,7 @@
+     (evidence/item.name).write_bytes(archive.extractfile(item).read())
+   record['evidence']=info
+ record['elapsed_seconds']=time.monotonic()-start;record['within_budget']=time.monotonic()<=end
+-record['state']=record.get('remote',{}).get('state','NOTRUN' if child.returncode else 'INCOMPLETE_NO_REMOTE_RESULT')
++record['state']=classify_opportunity(record['ssh_exit'],record.get('observed_stage_events',[]),record.get('remote'))
+ record['ssh_observation']=observed_ssh_stages((out/'transport.stderr').read_bytes())
+ record['ssh_stderr_sha256']=hashlib.sha256((out/'transport.stderr').read_bytes()).hexdigest()
+ record['current_ssh_pid_absent']=not subprocess.run(['ps','-p',str(child.pid),'-o','pid='],capture_output=True,text=True).stdout.strip()

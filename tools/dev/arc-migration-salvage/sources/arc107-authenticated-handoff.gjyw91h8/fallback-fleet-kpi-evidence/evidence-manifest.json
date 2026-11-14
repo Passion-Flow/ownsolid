@@ -1,0 +1,186 @@
+{
+  "exits": {
+    "installed-exit": "0",
+    "installed-driver-exit": "0"
+  },
+  "files": {
+    "installed.log": {
+      "bytes": 141630,
+      "sha256": "ae87580c015f461c882a557379c115b478770c94b3f7ce24d6591469293f4bce"
+    },
+    "installed-start": {
+      "bytes": 18,
+      "sha256": "58dbe8493dd5b955d4a269e7cb33c8ec409a53a0e05a7982d7ab1f84f1411f45"
+    },
+    "installed-finish": {
+      "bytes": 18,
+      "sha256": "b1f5af2587cb7c643b01bc71b3ed81ecdf4e928c4901e17d033eb1e868456531"
+    },
+    "installed-preflight.json": {
+      "bytes": 479,
+      "sha256": "2ab3c91b350a756de13cf555442d13ab8aeb5445b5e0a0a9004fd21307cb98b7"
+    },
+    "fixture-image.json": {
+      "bytes": 843,
+      "sha256": "85c9a95d783d6586755ddc50df49b9dd63d1f52bc69c604e126cfdbcae35a407"
+    },
+    "runner-input.json": {
+      "bytes": 427,
+      "sha256": "6c495187e95f2911c4ea138d4eb279b0b89bd80bd3695cb5f7dd482eaf456106"
+    },
+    "research-input.json": {
+      "bytes": 2216,
+      "sha256": "68f9a26475161cca97db46ad2141d1213a40be72b4f8075cbc15073cb7f971cf"
+    },
+    "raw/egress.log": {
+      "bytes": 115,
+      "sha256": "bbb83db1cfccfbd5d3cab8f4c03b3fabe1775eba969c1a80201cabb64bb545ac"
+    },
+    "raw/routes-v4.log": {
+      "bytes": 215,
+      "sha256": "1215510dad48090a8ab0eab1f99d22acbca2a7844be6da17acbed533b03538e4"
+    },
+    "raw/routes-v6.log": {
+      "bytes": 392,
+      "sha256": "41929406718ae8a1ac8c6f4222a0117fe674cab0b8d5baf59d33939f87de89f7"
+    },
+    "raw/interfaces.log": {
+      "bytes": 3007,
+      "sha256": "1502dd6e7afee48f2a41bef71def52d6a6f6ce76ce02d8316e50738eb7f5a733"
+    },
+    "raw/routes-v4-last-read.json": {
+      "bytes": 105,
+      "sha256": "359834a54387d96ea6943de3cb0f6d68e641397cf0f2ed0d6ff16052e49f0f77"
+    },
+    "raw/routes-v6-last-read.json": {
+      "bytes": 105,
+      "sha256": "aba4c60c45e6ac3f5fec8811a1868de251f23cf76ec91bf680ff74ad265b3123"
+    },
+    "raw/outer-state.log": {
+      "bytes": 220,
+      "sha256": "03eccea8268cb5e2803a57a7be71890e304812bf3c75945852d5ccc9c3d2465c"
+    },
+    "raw/database-observations.jsonl": {
+      "bytes": 26045,
+      "sha256": "70bd2a4213fed52966218ccf7bd35e1ad970214dcdd3ef1cfe69c82d64781601"
+    },
+    "raw/database-container-state.log": {
+      "bytes": 810,
+      "sha256": "3534d2d8d5febec1113d623b696d2e355bc5ec52530492544e81797ce9d682eb"
+    }
+  },
+  "raw_retained_remotely": {
+    "ownsolid-age-gateway-b-last-read.json": {
+      "bytes": 173,
+      "sha256": "42cabf66d67af7368810435de528189b5b772f6bde90a3b1b12e90def249410b"
+    },
+    "ownsolid-postgres-1-last-read.json": {
+      "bytes": 2129,
+      "sha256": "adb3f0a9738d5ab572c38d696deef9712d8ace6b42b52c2e0deb1df79658226f"
+    },
+    "database-statistics-state.log": {
+      "bytes": 124,
+      "sha256": "0deee79a64746dd29717813acd9b47a096818379c3b69aafb547bcda48c65947"
+    },
+    "database-observations.jsonl": {
+      "bytes": 26045,
+      "sha256": "70bd2a4213fed52966218ccf7bd35e1ad970214dcdd3ef1cfe69c82d64781601"
+    },
+    "database-container-state.log": {
+      "bytes": 810,
+      "sha256": "3534d2d8d5febec1113d623b696d2e355bc5ec52530492544e81797ce9d682eb"
+    },
+    "routes-v4.log": {
+      "bytes": 215,
+      "sha256": "1215510dad48090a8ab0eab1f99d22acbca2a7844be6da17acbed533b03538e4"
+    },
+    "outer-daemon.log": {
+      "bytes": 38089,
+      "sha256": "985b461ba670ac8438e0e1d24f732968cf0c18b44a541b89154d473b100c4add"
+    },
+    "outer-state.log": {
+      "bytes": 220,
+      "sha256": "03eccea8268cb5e2803a57a7be71890e304812bf3c75945852d5ccc9c3d2465c"
+    },
+    "ownsolid-control-1-last-read.json": {
+      "bytes": 2156,
+      "sha256": "f6ad33e809806674b29c2aee6aca543e1ad95e04bf31740580ca5e582bbc9c73"
+    },
+    "ownsolid-postgres-1.log": {
+      "bytes": 894132,
+      "sha256": "fd34f76f88f3d6e6cf8da5b1e3c306d2765ae74b8810f4a93846003c2c61abb0"
+    },
+    "egress-last-read.json": {
+      "bytes": 105,
+      "sha256": "86ac7d0017f4d70b07f0b41f5924ba029c2af2597170790269eac99bcb5cb2a4"
+    },
+    "database-container-state-last-read.json": {
+      "bytes": 104,
+      "sha256": "6413309fe8e5c9f6d59cf99f492949fecf5fc5b21267bdf0c860378d2659dbb2"
+    },
+    "interfaces.log": {
+      "bytes": 3007,
+      "sha256": "1502dd6e7afee48f2a41bef71def52d6a6f6ce76ce02d8316e50738eb7f5a733"
+    },
+    "database-statistics-state-last-read.json": {
+      "bytes": 105,
+      "sha256": "d487803d956ad010c6220775f0ffdefffa28c0f844ed2aedcbc272c5389be012"
+    },
+    "ownsolid-control-1.log": {
+      "bytes": 6573836,
+      "sha256": "c7870a20619fa82a2ad4cf42f6f188e13f8b6ea964a58126b5e46fe7847ee946"
+    },
+    "ownsolid-age-gateway-a-last-read.json": {
+      "bytes": 174,
+      "sha256": "b69ad7b74585e05a3b240938a99264c4d1d832720c15515127dee538945b6053"
+    },
+    "interfaces-last-read.json": {
+      "bytes": 105,
+      "sha256": "7f28bc294c04db938597eb552e00fdfbb0a7fa2f5ec9265e005d0fb41e89d85c"
+    },
+    "outer-daemon-last-read.json": {
+      "bytes": 2224,
+      "sha256": "0604c7394144bf04cbb1bc797443dc47d2d880c6210b513c1a84902208bb1b76"
+    },
+    "inner-containers.log": {
+      "bytes": 5093,
+      "sha256": "df64d9ce55fa6851ee0895ab2ef5e6c4565332adba81027e2b03f978342cd95d"
+    },
+    "routes-v6.log": {
+      "bytes": 392,
+      "sha256": "41929406718ae8a1ac8c6f4222a0117fe674cab0b8d5baf59d33939f87de89f7"
+    },
+    "inner-containers-last-read.json": {
+      "bytes": 106,
+      "sha256": "28f8f4eadfe59e8ad97a54190757b0a0fe6f0516a300f86412f1598e0e68ca9a"
+    },
+    "routes-v6-last-read.json": {
+      "bytes": 105,
+      "sha256": "aba4c60c45e6ac3f5fec8811a1868de251f23cf76ec91bf680ff74ad265b3123"
+    },
+    "egress.log": {
+      "bytes": 115,
+      "sha256": "bbb83db1cfccfbd5d3cab8f4c03b3fabe1775eba969c1a80201cabb64bb545ac"
+    },
+    "routes-v4-last-read.json": {
+      "bytes": 105,
+      "sha256": "359834a54387d96ea6943de3cb0f6d68e641397cf0f2ed0d6ff16052e49f0f77"
+    },
+    "outer-state-last-read.json": {
+      "bytes": 105,
+      "sha256": "29c6d70b842400ede77944572d9d5d84a3648239193777ebdb754eef303d4901"
+    }
+  },
+  "source_after_run": {
+    "source": "3ae6bfebb67b47d684de4651cc597c26f104d725",
+    "tree": "afc11c111952100cd34b22b76b80db47d0e4709f",
+    "paths": 5081,
+    "all_source_bytes_and_modes_unchanged": true
+  },
+  "cleanup": {
+    "outer_container": "ownsolid-e2e-3et3ao",
+    "outer_absent": true,
+    "installation_scratch_empty": true,
+    "fixture_image_retained_until_evidence_collected": true
+  }
+}

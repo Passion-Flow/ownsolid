@@ -1,0 +1,19 @@
+{
+  "source_directory": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc111-qualified-readers",
+  "source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "entrypoints": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-qualified-iam-input.rjyvuqwq/focused-entrypoints.json",
+  "source_manifest": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-arc-diagnostics/arc111-qualified-iam-input.rjyvuqwq/source-manifest.json",
+  "carrier": "/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock",
+  "carrier_identity": {
+    "dev": 16777231,
+    "ino": 53377467,
+    "uid": 501,
+    "mode": 384,
+    "nlink": 1,
+    "size": 0
+  },
+  "manifest_sha256": "7fa013a32f542f8ff6467863425e952da5e436b0ad470da25d766613c94eb983",
+  "budget_seconds": 300,
+  "cleanup_reserve_seconds": 60
+}

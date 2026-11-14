@@ -1,0 +1,21 @@
+{
+  "candidate_installed_or_activated": false,
+  "full_gate_run": false,
+  "go_node_rust_compilers_started": 0,
+  "heavy_locks_opened": 0,
+  "model_profile_correction_sha256": "c8e5f88a425546a7eb37c7906744c234f4fba39fc00cfac8b428b57a677c532d",
+  "native_sql_state": "NOTRUN",
+  "network_connections_started": 0,
+  "next_external_release_condition": "One separately authorized diagnostic under the frozen actual launcher profile with observed proxy/banner/KEX/auth stages and confirmed access. No waiting or retry is active.",
+  "offline_replay_result_sha256": "73209413ae4f15b5113284423d681da71c8e8e7a0a2071a9b054c75bb49c93c8",
+  "original_owner_ancestors_preserved": true,
+  "original_tested_source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "original_tested_tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "production_protocol_migration_and_original_test_bytes_unchanged": true,
+  "pushed": false,
+  "roadmap_ticked": false,
+  "services_or_databases_started": 0,
+  "source": "4dc6db9f6048db7b0d6cb627eaf646861be368fb",
+  "tree": "918507549d31e130896748b21486f786e113623d",
+  "worktree_clean": true
+}

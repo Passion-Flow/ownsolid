@@ -1,0 +1,17 @@
+{
+  "tests/e2e/fleet_load_test.go": {
+    "sha256": "471b66c32dce31e9cdb7aa0108b11e9ffe05fe19267120b62126029a19690e71",
+    "bytes": 17059,
+    "821227ea_3ae6bfeb_and_current_identical": true
+  },
+  "tests/e2e/agent_gateway_lifecycle_test.go": {
+    "sha256": "6617b61dd77db9fefd7b29f30ee982a9fd693505795a1521dba2e21ba6e86175",
+    "bytes": 21948,
+    "821227ea_3ae6bfeb_and_current_identical": true
+  },
+  "tests/e2e/run-single-node.sh": {
+    "sha256": "328e41784236e6fd1faf352b32456fda9549a15cb01fc57d97496d43d7e9b49c",
+    "bytes": 5136,
+    "821227ea_3ae6bfeb_and_current_identical": true
+  }
+}

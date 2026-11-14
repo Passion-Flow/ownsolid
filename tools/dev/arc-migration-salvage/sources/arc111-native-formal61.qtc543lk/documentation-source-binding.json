@@ -1,0 +1,15 @@
+{
+  "attempted_source": "3513ab2ba5885bb5d782919f7611d96e35d28fc6",
+  "attempted_tree": "c65b8e3fde9833369c253c8303b70c3f13cae5d8",
+  "catalog_result": null,
+  "documentation_source": "79795a6ab77b748bc26c8c4bc440eccb1ec8416a",
+  "documentation_tree": "f0bc962476c36dcc0f4f125bdf2b68cb94180195",
+  "full_gate_run": false,
+  "native_state": "NOTRUN",
+  "original_owner_ancestors_retained": true,
+  "pin_patch": null,
+  "production_test_protocol_migration_bytes_unchanged": true,
+  "pushed": false,
+  "roadmap_ticked": false,
+  "worktree_clean": true
+}

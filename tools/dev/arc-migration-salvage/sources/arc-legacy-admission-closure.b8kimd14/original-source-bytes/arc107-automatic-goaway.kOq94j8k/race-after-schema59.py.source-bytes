@@ -1,0 +1,57 @@
+from pathlib import Path
+import json,os,subprocess,tempfile,time
+repo=Path.cwd().resolve();base=Path('../lane-arc-diagnostics/arc107-automatic-goaway.kOq94j8k').resolve();publication=Path('../lane-arc-diagnostics/gw120-schema59.9jT6tZsI/publication').resolve()
+run=Path(tempfile.mkdtemp(prefix='schema59-race.',dir=str(base)));(base/'latest-after-schema59').write_text(str(run)+'\n');(run/'runner-pid').write_text(str(os.getpid())+'\n')
+deadline=time.monotonic()+1800
+print('ARC-107 waits for the accepted schema-59 publication before rebasing',flush=True)
+while not (publication/'published').exists():
+ if time.monotonic()>deadline: raise SystemExit('No schema-59 publication yet; old candidate was left untouched')
+ time.sleep(10)
+assert subprocess.check_output(['git','status','--porcelain'],text=True)==''
+assert subprocess.check_output(['git','branch','--show-current'],text=True).strip()=='codex/arc107-production-lifecycle'
+old=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+backup='codex/arc107-before-schema59-'+old[:8]
+if subprocess.run(['git','rev-parse','--verify','--quiet',backup],stdout=subprocess.DEVNULL).returncode:
+ subprocess.run(['git','branch',backup,old],check=True)
+with (run/'rebase.log').open('wb') as out: subprocess.run(['git','rebase','origin/main'],stdout=out,stderr=subprocess.STDOUT,check=True)
+identity=subprocess.check_output(['git','rev-parse','HEAD','HEAD^{tree}','origin/main'],text=True);(run/'input').write_text(identity)
+lock=Path('/private/tmp/ownsolid-workstation-full-gate.lock');last=None
+while True:
+ try:lock.mkdir()
+ except FileExistsError:
+  try:owner=(lock/'owner').read_text().strip()
+  except FileNotFoundError:owner='initializing'
+  if owner!=last:print('ARC-107 focused gate queued behind '+owner,flush=True);last=owner
+ else:
+  (lock/'owner').write_text(str(run)+'\n');break
+ if time.monotonic()>deadline:raise SystemExit('Bounded gate queue expired before any test')
+ time.sleep(10)
+script='''set -euo pipefail
+run=$1
+repo=$2
+lock=/private/tmp/ownsolid-workstation-full-gate.lock
+mountpoint=$(mktemp -d /private/tmp/osarc.XXXXXXXX)
+cleanup() {
+ if mount | grep -F "on $mountpoint (" >/dev/null; then hdiutil detach "$mountpoint" >> "$run/cleanup.log" 2>&1;fi
+ rmdir "$mountpoint"
+ if [[ -f "$lock/owner" && $(cat "$lock/owner") == "$run" ]];then rm "$lock/owner";rmdir "$lock";fi
+}
+trap cleanup EXIT
+hdiutil create -size 8g -fs APFS -type SPARSE -volname ownsolid-arc107-race -o "$run/scratch" > "$run/create.log" 2>&1
+hdiutil attach -nobrowse -mountpoint "$mountpoint" "$run/scratch.sparseimage" > "$run/attach.log" 2>&1
+mkdir "$mountpoint/t";chgrp "$(id -g)" "$mountpoint/t";chmod 700 "$mountpoint/t"
+export TMPDIR="$mountpoint/t/" GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOFLAGS=-p=1
+cd "$repo"
+test -z "$(git status --porcelain)"
+go -C services/control test -race -count=1 ./internal/platform/httpserver ./internal/platform/agentgateway ./internal/platform/config ./cmd/server > "$run/race.log" 2>&1
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C tests/e2e test -c -o "$run/e2e.test" > "$run/e2e-compile.log" 2>&1
+test -z "$(git status --porcelain)"
+printf 'ARC-107 complete affected-package race suites and Linux amd64 e2e compile passed\\n'
+'''
+(run/'focused.sh').write_text(script)
+print('Testing rebased ARC-107 '+identity.splitlines()[0],flush=True)
+with (run/'run.log').open('wb') as out:
+ r=subprocess.run(['caffeinate','-i','bash',str(run/'focused.sh'),str(run),str(repo)],stdout=out,stderr=subprocess.STDOUT)
+(run/'exit').write_text(str(r.returncode)+'\n');print((run/'run.log').read_text()[-2200:],flush=True)
+if (run/'race.log').exists():print((run/'race.log').read_text()[-2500:],flush=True)
+raise SystemExit(r.returncode)

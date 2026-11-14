@@ -1,0 +1,10 @@
+{
+  "source": "fe11bdf09c36129ad85c7eac3d075e3d53fe2655",
+  "tree": "dfe449059fb4cc0c64a74b15d3d41856713d1782",
+  "source_paths": 5040,
+  "bytes": 17372840,
+  "sha256": "c38dce66ec4d82f5806b905ea76b5dc61b50eb14f4ade9fa9a9abb5d5dc5d7f5",
+  "binary_sha256": "fbfbf7843c76ca1ab7cdce707efda37dd8f75b2cc7e12bc4b4a1dc2bbc13ca20",
+  "binary_bytes": 52379808,
+  "linker_flags": "-s -w"
+}

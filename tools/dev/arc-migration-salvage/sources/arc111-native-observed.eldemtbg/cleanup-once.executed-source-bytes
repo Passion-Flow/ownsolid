@@ -1,0 +1,97 @@
+from pathlib import Path
+import subprocess,json,shlex,time,os,signal,hashlib,base64,io,tarfile
+out=Path(__file__).resolve().parent
+original=json.loads((out/'outer-result.json').read_text());approx_start=(out/'outer-result.json').stat().st_mtime-original['elapsed_seconds'];remaining=max(0,1180-(time.time()-approx_start));budget=min(150,remaining)
+record={'purpose':'cleanup-only after entered transport loss; never a native retry','source':original['source'],'tree':original['tree'],'cleanup_connection_attempts':1,'native_retries':0,'budget_seconds':budget,'remote_root':'/root/lane-arc111-formal61-e1.bx9t4g36'}
+assert budget>=15,'NO_REMAINING_CLEANUP_BUDGET'
+remote=r'''from pathlib import Path
+import os,sys,stat,json,time,subprocess,signal,hashlib,io,tarfile,base64
+root=Path('/root/lane-arc111-formal61-e1.bx9t4g36');start=time.monotonic();end=start+110
+s=root.lstat();assert stat.S_ISDIR(s.st_mode) and s.st_uid==0 and stat.S_IMODE(s.st_mode)==0o700
+path=root/'result.json';s=path.lstat();assert stat.S_ISREG(s.st_mode) and s.st_uid==0 and s.st_size<5*1024**2
+r=json.loads(path.read_text());assert r['source']=='3513ab2ba5885bb5d782919f7611d96e35d28fc6' and r['tree']=='c65b8e3fde9833369c253c8303b70c3f13cae5d8' and r['remote_root']==str(root)
+a={'purpose':'cleanup only','original_runner_pid':r['runner_pid'],'source':r['source'],'remote_root':str(root),'actions':[]}
+def run(args,cap=10,allow=False):
+ p=subprocess.run(args,capture_output=True,timeout=max(.1,min(cap,end-time.monotonic())))
+ if not allow:assert p.returncode==0,(args[0:3],p.returncode)
+ return p
+pid=r['runner_pid'];proc=Path('/proc')/str(pid)
+if proc.exists():
+ cmd=(proc/'cmdline').read_bytes();assert b'arc111-frozen-remote-guard' in cmd and b'3513ab2ba5885bb5d782919f7611d96e35d28fc6' in cmd and proc.stat().st_uid==0
+ birth=(proc/'stat').read_text().rsplit(')',1)[1].split()[19];a['runner_initial_start_ticks']=birth
+ os.kill(pid,signal.SIGTERM);a['actions'].append('TERM exact original runner with matching source/cmdline/start identity')
+ until=min(end,time.monotonic()+50)
+ while time.monotonic()<until:
+  try:
+   current=(proc/'stat').read_text().rsplit(')',1)[1].split()
+   if current[19]!=birth or current[0]=='Z':break
+  except FileNotFoundError:break
+  time.sleep(.2)
+ if proc.exists():
+  fields=(proc/'stat').read_text().rsplit(')',1)[1].split()
+  if fields[19]==birth and fields[0]!='Z':
+   os.kill(pid,signal.SIGKILL);a['actions'].append('KILL exact original runner after bounded TERM cleanup');time.sleep(.2)
+# Read the original guard's last actual receipt before removing only its verified objects.
+r=json.loads(path.read_text());fixture=r.get('fixture_uuid');name='arc111-formal61-'+fixture.replace('-','') if fixture else None
+if name:
+ result=run(['docker','inspect',name],allow=True)
+ if result.returncode==0:
+  x=json.loads(result.stdout)[0];assert x['Config']['Labels']['projectone.fixture_id']==fixture and x['Config']['Labels']['projectone.owner']=='mvp-development' and x['Image']=='sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47'
+  run(['docker','rm','--force','--volumes',x['Id']],25);a['actions'].append('Removed exact label/image-bound own container')
+ a['container_absent']=run(['docker','inspect',name],allow=True).returncode!=0
+ for kind in ['volume','network']:
+  result=run(['docker',kind,'inspect',name],allow=True)
+  if result.returncode==0:
+   x=json.loads(result.stdout)[0];labels=x.get('Labels',{});assert labels['projectone.fixture_id']==fixture and labels['projectone.owner']=='mvp-development'
+   run(['docker',kind,'rm',name],15);a['actions'].append('Removed exact label-bound own '+kind)
+  a[kind+'_absent']=run(['docker',kind,'inspect',name],allow=True).returncode!=0
+else:a['no_fixture_uuid_or_creation_record']=True
+for name in ['postgres-password','database-input']:
+ p=root/name
+ if p.exists():
+  s=p.lstat();assert stat.S_ISREG(s.st_mode) and s.st_uid in [0,999];p.unlink()
+a['credential_paths_absent']=all(not(root/x).exists() for x in ['postgres-password','database-input'])
+if proc.exists():
+ fields=(proc/'stat').read_text().rsplit(')',1)[1].split();a['original_runner_absent_or_reaped']=fields[0]=='Z' or a.get('runner_initial_start_ticks')!=fields[19]
+else:a['original_runner_absent_or_reaped']=True
+# Only the known runner FD scope is inspected; never a global foreign-FD claim.
+a['original_runner_lock_fds']=[]
+if proc.exists() and not a['original_runner_absent_or_reaped']:
+ for fd in (proc/'fd').iterdir():
+  try:
+   s=fd.stat()
+   if (s.st_dev,s.st_ino) in [(29,82),(64512,7508772)]:a['original_runner_lock_fds'].append(int(fd.name))
+  except OSError:pass
+a['carrier_path_identities']={}
+for p,dev,ino in [('/run/lock/ownsolid-heavy.lock',29,82),('/root/lane-sci-tools/heavy-test.lock',64512,7508772)]:
+ s=os.lstat(p);a['carrier_path_identities'][p]={'dev':s.st_dev,'inode':s.st_ino,'uid':s.st_uid,'regular':stat.S_ISREG(s.st_mode),'same':(s.st_dev,s.st_ino,s.st_uid)==(dev,ino,0)}
+a['elapsed_seconds']=time.monotonic()-start;a['original_last_state']=r.get('state');a['actual_metadata_records']=len(r.get('metadata',[]));a['original_last_error']=r.get('error');a['original_last_stages']=[{'name':x['name'],'exit':x['exit']} for x in r.get('stages',[])]
+(root/'cleanup-external-readback.json').write_text(json.dumps(a,indent=2,sort_keys=True)+'\n');print('ARC_CLEANUP '+json.dumps(a,sort_keys=True),flush=True)
+blob=io.BytesIO()
+with tarfile.open(fileobj=blob,mode='w:gz',compresslevel=1) as t:
+ for p in sorted(root.iterdir()):
+  if p.is_file() and (p.name in ['result.json','cleanup-external-readback.json'] or p.name.endswith(('.stdout','.stderr','.catalog.json','.ledger.json','.dump'))):t.add(p,arcname=p.name,recursive=False)
+print('ARC_CLEANUP_EVIDENCE '+json.dumps({'sha256':hashlib.sha256(blob.getvalue()).hexdigest(),'base64':base64.b64encode(blob.getvalue()).decode()}),flush=True)
+'''
+command=['/usr/bin/ssh','-o','ConnectTimeout=10','-o','ConnectionAttempts=1','-o','ServerAliveInterval=5','-o','ServerAliveCountMax=2','ownsolid-cpu','python3 -I -c '+shlex.quote(remote)]
+os.umask(0o077)
+with (out/'cleanup-transport.stdout').open('wb') as stdout,(out/'cleanup-transport.stderr').open('wb') as stderr:
+ p=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,start_new_session=True,close_fds=True);record['ssh_pid']=p.pid;record['initial_identity']=subprocess.run(['ps','-p',str(p.pid),'-o','pid=,ppid=,pgid=,lstart=,comm='],capture_output=True,text=True).stdout.strip()
+ try:record['ssh_exit']=p.wait(timeout=budget)
+ except subprocess.TimeoutExpired:
+  record['outer_timeout']=True;os.killpg(p.pid,signal.SIGTERM)
+  try:p.wait(timeout=min(5,max(0,remaining-(time.time()-approx_start))))
+  except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait(timeout=5)
+  record['ssh_exit']=p.returncode
+for line in (out/'cleanup-transport.stdout').read_text(errors='replace').splitlines():
+ if line.startswith('ARC_CLEANUP '):record['remote_cleanup']=json.loads(line[len('ARC_CLEANUP '):])
+ if line.startswith('ARC_CLEANUP_EVIDENCE '):
+  e=json.loads(line[len('ARC_CLEANUP_EVIDENCE '):]);data=base64.b64decode(e.pop('base64'));assert hashlib.sha256(data).hexdigest()==e['sha256'];(out/'cleanup-native-evidence.tar.gz').write_bytes(data)
+  target=out/'cleanup-native-evidence';target.mkdir(mode=0o700)
+  with tarfile.open(fileobj=io.BytesIO(data)) as t:
+   for m in t:
+    assert m.isfile() and Path(m.name).name==m.name;(target/m.name).write_bytes(t.extractfile(m).read())
+record['ssh_stderr']=(out/'cleanup-transport.stderr').read_text(errors='replace')[-1000:];record['whole_window_elapsed_approx_seconds']=time.time()-approx_start
+(out/'cleanup-result.json').write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+print(json.dumps(record,indent=2))
+raise SystemExit(record['ssh_exit'] or (0 if 'remote_cleanup' in record else 1))

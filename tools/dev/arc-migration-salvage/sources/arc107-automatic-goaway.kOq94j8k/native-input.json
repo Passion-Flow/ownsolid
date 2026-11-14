@@ -1,0 +1,8 @@
+{
+  "source": "1e687ed99bc0727016c15c616d95124e9e4a212c",
+  "tree": "b60654bcbf10e58b859d7703d16d10527d67303c",
+  "archive_sha256": "c77a9ac5a4695dd903c1f0c7cf962b8ef730e9f300b4fa385a74511e8d791726",
+  "bytes": 8510077,
+  "scope": "native Linux amd64 HTTP transport and gateway package race suites, no database or installed fleet",
+  "control_source_equal_to_mac_qualified_10fc": true
+}

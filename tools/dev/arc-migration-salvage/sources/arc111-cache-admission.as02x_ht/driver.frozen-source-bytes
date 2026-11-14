@@ -1,0 +1,202 @@
+from pathlib import Path
+import subprocess,json,time,hashlib,shlex,base64,os,signal,tarfile,io,sys,threading,select
+os.umask(0o077)
+
+def send_payload(write_piece, wait_writable, now, deadline, data, receipt):
+    """Count only bytes accepted by the local OS pipe, not remote receipt."""
+    started = now()
+    written = 0
+    digest = hashlib.sha256()
+    try:
+        while written < len(data):
+            remaining = deadline - now()
+            if remaining <= 0:
+                raise TimeoutError("LOCAL_PAYLOAD_WRITE_DEADLINE_EXCEEDED")
+            if not wait_writable(min(remaining, 0.25)):
+                continue
+            try:
+                amount = write_piece(memoryview(data)[written:written + 16384])
+            except BlockingIOError:
+                continue
+            if not 0 < amount <= min(16384, len(data) - written):
+                raise ValueError("LOCAL_PAYLOAD_WRITE_COUNT_INVALID")
+            digest.update(data[written:written + amount])
+            written += amount
+            receipt.setdefault("first_write_after_seconds", now() - started)
+            receipt["last_write_after_seconds"] = now() - started
+        return written
+    except BaseException as error:
+        receipt["error_type"] = type(error).__name__
+        receipt["error"] = str(error)[:240]
+        raise
+    finally:
+        receipt.update(expected_bytes=len(data), written_bytes=written,
+                       written_sha256=digest.hexdigest(),
+                       elapsed_seconds=now() - started,
+                       proof_scope="local OS-pipe acceptance; not remote delivery")
+
+def remaining_work_timeout(now, work_end, maximum):
+    remaining = work_end - now
+    if remaining <= 0:
+        raise TimeoutError("ARC_WORK_DEADLINE_EXHAUSTED")
+    return min(maximum, remaining)
+
+def remaining_cleanup_timeout(now, end, maximum):
+    return max(0, min(maximum, max(0, end - now)))
+
+def observed_ssh_stages(stderr):
+    import re
+    text = stderr.decode("utf-8", errors="replace")
+    markers = {
+        "proxy_command_started": "Executing proxy command:",
+        "local_version_emitted": "Local version string SSH-",
+        "remote_banner_received": "Remote protocol version",
+        "kexinit_received": "SSH2_MSG_KEXINIT received",
+        "authenticated": "Authenticated to ",
+        "remote_command_sent": "Sending command:",
+    }
+    stages = {key: True if marker in text else None for key, marker in markers.items()}
+    stages["host_key_matched"] = True if re.search(r"is known and matches the .* host key", text) else None
+    errors = []
+    for line in text.splitlines():
+        if any(needle in line for needle in ["timed out", "Timeout, server", "Broken pipe", "Connection reset", "Connection refused", "Permission denied", "Host key verification failed", "Could not resolve hostname", "failed to connect to local tailscaled"]):
+            errors.append(re.sub(r"[^\x20-\x7e]", "?", line)[:240])
+    return {"stages": stages, "necessary_errors": errors[:6], "missing_marker_means": "unknown, not proof that a stage was not entered"}
+
+def classify_opportunity(ssh_exit, stage_events, remote_receipt=None):
+    """Keep confirmed remote entry separate from missing SQL/cleanup evidence."""
+    if isinstance(remote_receipt, dict):
+        return remote_receipt.get("state", "INCOMPLETE_REMOTE_RECEIPT")
+    entered = any(item.get("stage") == "remote_entry_confirmed" for item in stage_events)
+    if entered:
+        return "FAILED_AFTER_REMOTE_ENTRY" if ssh_exit else "INCOMPLETE_AFTER_REMOTE_ENTRY"
+    return "ENTRY_UNCONFIRMED_CONNECTION_FAILED" if ssh_exit else "INCOMPLETE_ENTRY_UNCONFIRMED"
+
+def forwarded_outer_exit(record):
+    if record.get("outer_timeout"):
+        return 124
+    status = record.get("ssh_exit")
+    if type(status) is not int:
+        return 1
+    if status != 0:
+        return min(255, 128 - status) if status < 0 else min(255, status)
+    sent = record.get("payload_send", {})
+    if sent.get("written_bytes") != record.get("payload_requested_bytes") or not sent.get("pipe_closed") or sent.get("error"):
+        return 1
+    remote = record.get("remote")
+    if not isinstance(remote, dict) or remote.get("state") != "METADATA_COMPLETE_REBUILD_REQUIRED":
+        return 1
+    if remote.get("source") != record.get("source") or remote.get("tree") != record.get("tree"):
+        return 1
+    if not all(remote.get(key) is True for key in ["all_source_paths_and_migration_inputs_verified", "container_absent", "volume_absent", "network_absent", "credential_paths_absent", "lock_identities_retained", "within_remote_budget"]):
+        return 1
+    if remote.get("remaining_owned_groups") != [] or not record.get("within_budget"):
+        return 1
+    closed = remote.get("lock_fd_closure")
+    if not isinstance(closed, list) or len(closed) != 2 or any(item.get("closed") is not True for item in closed):
+        return 1
+    return 0
+
+
+def observe_files(stop, events):
+    markers = {
+        "stderr": [("proxy_command_started", b"Executing proxy command:"), ("local_version_emitted", b"Local version string SSH-"), ("remote_banner_received", b"Remote protocol version"), ("kexinit_received", b"SSH2_MSG_KEXINIT received"), ("host_key_matched", b"is known and matches the "), ("authenticated", b"Authenticated to "), ("remote_command_sent", b"Sending command:")],
+        "stdout": [("remote_entry_confirmed", b"ARC_NATIVE_PREFLIGHT "), ("remote_carrier_admitted", b"ARC_NATIVE_ROOT "), ("payload_received", b"ARC_NATIVE_INPUT "), ("source_verified", b"ARC_NATIVE_SOURCE "), ("remote_result_received", b"ARC_NATIVE_RESULT ")],
+    }
+    positions = {"stdout": 0, "stderr": 0}
+    tails = {"stdout": b"", "stderr": b""}
+    observed = set()
+    while True:
+        for stream in ("stderr", "stdout"):
+            path = out / ("transport." + stream)
+            if not path.exists():
+                continue
+            with path.open("rb") as f:
+                f.seek(positions[stream])
+                data = f.read()
+            prior_position = positions[stream]
+            positions[stream] += len(data)
+            combined = tails[stream] + data
+            for stage, marker in markers[stream]:
+                index = combined.find(marker)
+                if index >= 0 and stage not in observed:
+                    observed.add(stage)
+                    events.append({"stage": stage, "observed_after_seconds": time.monotonic() - start, "stream": stream, "byte_offset": max(0, prior_position - len(tails[stream]) + index)})
+            tails[stream] = combined[-4096:]
+        if stop.is_set():
+            return
+        stop.wait(0.02)
+
+out=Path(__file__).resolve().parent
+entry_fd=os.open(out/'entry-consumed',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+os.write(entry_fd,b'One authorized opportunity; no retries.\n');os.close(entry_fd)
+allocation=json.loads((out/'allocation.json').read_text())
+allocation_end_unix=allocation['start_unix']+1200
+remaining_allocation=allocation_end_unix-time.time()
+assert remaining_allocation>300,'ALLOCATION_TOO_SHORT_FOR_WORK_AND_CLEANUP'
+start=time.monotonic();end=start+remaining_allocation;work_end=end-120
+observation_events=[];observation_stop=threading.Event();observer=None
+payload=json.loads((out/'payload-manifest.json').read_text());binding=json.loads((out/'binding.json').read_text())
+cfg={**binding,'payload_bytes':payload['bytes'],'payload_sha256':payload['sha256'],'payload_members':payload['members'],'image':'sha256:c29f30688a9ad961691bdf0ec1650717cc132a5814619d80f80463d6e4c42e47'}
+cfg['remote_budget_seconds']=min(cfg['remote_budget_seconds'],1000,remaining_allocation-60)
+cfg['transport']={k:v for k,v in payload['transport'].items() if k!='source_transport'}
+guard=(out/'remote-guard.py').read_bytes();encoded=base64.b64encode(guard).decode()
+remote='python3 -I -c '+shlex.quote('import base64;exec(compile(base64.b64decode('+repr(encoded)+'),"arc111-frozen-remote-guard","exec"))')+' '+shlex.quote(json.dumps(cfg))
+command=['/usr/bin/ssh','-vv','-o','ConnectTimeout=10','-o','ConnectionAttempts=1','-o','ServerAliveInterval=5','-o','ServerAliveCountMax=2','ownsolid-cpu',remote]
+payload_bytes=(out/'payload.wire.xz').read_bytes()
+record={'source':binding['source'],'tree':binding['tree'],'ssh_attempts':1,'retry_count':0,'absolute_budget_seconds':1200,'cleanup_reserve_seconds':120,'remote_guard_sha256':hashlib.sha256(guard).hexdigest(),'state':'PREENTRY'}
+record['launcher_context']={'cwd':str(Path.cwd()),'uid':os.getuid(),'ssh_exec':str(Path(command[0]).resolve()),'ssh_exec_sha256':hashlib.sha256(Path(command[0]).read_bytes()).hexdigest(),'ssh_config_sha256':hashlib.sha256((Path.home()/'.ssh/config').read_bytes()).hexdigest(),'stdin_mode':'PIPE; payload preserved; local OS-write counts; explicit pipe close; remote EOF separately verified','ssh_auth_sock_present':bool(os.environ.get('SSH_AUTH_SOCK')),'ssh_askpass_present':bool(os.environ.get('SSH_ASKPASS'))}
+invocation=out/'ssh-invocation.json';invocation.write_text(json.dumps(command)+'\n');record['ssh_invocation_sha256']=hashlib.sha256(invocation.read_bytes()).hexdigest();record['payload_requested_bytes']=len(payload_bytes)
+record['allocation_elapsed_before_native_seconds']=time.time()-allocation['start_unix']
+record['outer_pid']=os.getpid()
+assert len(payload_bytes)==payload['bytes'] and hashlib.sha256(payload_bytes).hexdigest()==payload['sha256']
+remaining_work_timeout(time.monotonic(),work_end,1100)
+with (out/'transport.stdout').open('wb') as stdout,(out/'transport.stderr').open('wb') as stderr:
+ child=subprocess.Popen(command,stdin=subprocess.PIPE,stdout=stdout,stderr=stderr,start_new_session=True,close_fds=True);record['ssh_pid']=child.pid
+ observer=threading.Thread(target=observe_files,args=(observation_stop,observation_events),name='ARC_SSH_LOG_OBSERVER',daemon=True);observer.start()
+ record['ssh_initial_identity']=subprocess.run(['ps','-p',str(child.pid),'-o','pid=,ppid=,pgid=,lstart=,comm='],capture_output=True,text=True).stdout.strip()
+ (out/'outer-result.json').write_text(json.dumps(record,indent=2)+'\n')
+ try:
+  send_receipt=record.setdefault('payload_send',{})
+  os.set_blocking(child.stdin.fileno(),False)
+  try:
+   send_payload(lambda data:os.write(child.stdin.fileno(),data),lambda remaining:bool(select.select([],[child.stdin.fileno()],[],remaining)[1]),time.monotonic,work_end,payload_bytes,send_receipt)
+  except (OSError,ValueError,TimeoutError) as error:
+   record['payload_send_error_type']=type(error).__name__;record['payload_send_error']=str(error)[:240]
+  finally:
+   child.stdin.close();send_receipt['pipe_closed']=True
+   (out/'outer-result.json').write_text(json.dumps(record,indent=2)+'\n')
+  child.wait(timeout=remaining_work_timeout(time.monotonic(),work_end,1100));record['ssh_exit']=child.returncode
+ except (subprocess.TimeoutExpired,TimeoutError):
+  record['outer_timeout']=True;os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=remaining_cleanup_timeout(time.monotonic(),end,20))
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=remaining_cleanup_timeout(time.monotonic(),end,10))
+  record['ssh_exit']=child.returncode
+observation_stop.set()
+if observer is not None:observer.join(timeout=remaining_cleanup_timeout(time.monotonic(),end,2))
+record['observer_joined']=observer is None or not observer.is_alive()
+record['observed_stage_events']=observation_events
+record['observation_timing_scope']='Parent observed existing regular-file bytes with 20ms polling; ordering offsets are exact within a stream, times are observation times, not packet timestamps.'
+(out/'stage-events.json').write_text(json.dumps(observation_events,indent=2)+'\n')
+raw=(out/'transport.stdout').read_text(errors='replace')
+for line in raw.splitlines():
+ if line.startswith('ARC_NATIVE_RESULT '):record['remote']=json.loads(line[len('ARC_NATIVE_RESULT '):])
+ if line.startswith('ARC_NATIVE_EVIDENCE '):
+  info=json.loads(line[len('ARC_NATIVE_EVIDENCE '):]);data=base64.b64decode(info.pop('base64'));assert hashlib.sha256(data).hexdigest()==info['sha256'] and len(data)==info['bytes'];(out/'native-evidence.tar.gz').write_bytes(data)
+  evidence=out/'native-evidence';evidence.mkdir(mode=0o700)
+  with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+   for item in archive:
+    assert item.isfile() and Path(item.name).name==item.name
+    (evidence/item.name).write_bytes(archive.extractfile(item).read())
+  record['evidence']=info
+record['elapsed_seconds']=time.monotonic()-start;record['within_budget']=time.monotonic()<=end
+record['state']=classify_opportunity(record['ssh_exit'],record.get('observed_stage_events',[]),record.get('remote'))
+record['ssh_observation']=observed_ssh_stages((out/'transport.stderr').read_bytes())
+record['ssh_stderr_sha256']=hashlib.sha256((out/'transport.stderr').read_bytes()).hexdigest()
+record['current_ssh_pid_absent']=not subprocess.run(['ps','-p',str(child.pid),'-o','pid='],capture_output=True,text=True).stdout.strip()
+(out/'outer-result.json').write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+print(json.dumps({k:record.get(k) for k in ['source','tree','state','ssh_attempts','ssh_exit','elapsed_seconds','within_budget','observer_joined','observed_stage_events','payload_send']},indent=2))
+if 'remote' in record:
+ r=record['remote'];print(json.dumps({k:r.get(k) for k in ['state','error','preflight','metadata','cleanup_seconds','container_absent','volume_absent','network_absent','credential_paths_absent','lock_fd_closure','elapsed_seconds','remaining_owned_groups']},indent=2))
+
+raise SystemExit(forwarded_outer_exit(record) if record.get('observer_joined') else (record.get('ssh_exit') or 1))

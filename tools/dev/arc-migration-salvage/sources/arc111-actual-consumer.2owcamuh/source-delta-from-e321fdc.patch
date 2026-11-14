@@ -1,0 +1,1352 @@
+diff --git a/docs/product/status.md b/docs/product/status.md
+index 9f61474f..c847f267 100644
+--- a/docs/product/status.md
++++ b/docs/product/status.md
+@@ -133,7 +133,7 @@ today and what is known to fail.
+ | Agent gateways (ARC-102): `serve-agent-gateway` serves agent session streams beside control from its own pool, without the installation lock, fenced on control holding the installation and drained on stop; agents order the gateways by rendezvous hash and move to the next one when theirs fails; the serving role's connection limit is configurable for control plus gateways (ADR 0048) | Yes, PostgreSQL only | `TestAgentGateways` on `ownsolid-cpu`, offline: control and two gateway containers, 500 simulated agents. The fleet split 237/263, tasks succeeded in under 2 s through two and through one gateway, every agent was back 7.5 s after a gateway was killed and at once after a drain, and both gateways fenced while control was stopped and served again when it returned | n/a | Training claims through a separate gateway are not supported: current construction has no dataset Store and returns DATASET_STORAGE_UNAVAILABLE; the same retained attempt claims and acknowledges through the control-side file owner. [Native reproduction and scope](../research/agent-gateway-database-role.md#reproduced-gateway-training-claim-failure). The installer does not place gateways on hosts yet (REL-101); gateways share the serving role (ARC-111); dedicated connection lifecycle and return-to-preferred passed ARC-107; load across gateways is ARC-105 ([research](../research/agent-gateway-tier.md)) |
+ | Dedicated Agent gateway connection age (ARC-107) | Supported on dedicated gateway listeners: jittered automatic GOAWAY, authenticated warm replacement and natural retirement with bounded ownership; optional v1 metadata preserves old/new coexistence | Full check/build/test passed at 821227ea and 3ae6bfeb, with 1,191/410 Console/Portal browser cases. Native affected race/vet profiles passed without skips. The unchanged offline installed 500-agent drill passed in 323.13 s and again in 312.93 s after the bounded fallback change: every original transport retired naturally, both 25-task batches retained attempt one, 600 renewals succeeded, all 500 reached the survivor, original 244/256 assignments returned in 38.9 s, strict terminal 500/500 streams and final persisted cursors passed. [Exact current input and retained fault errors](../research/agent-gateway-rebalance.md#bounded-fallback-integration-qualification) | No | None known in this dedicated path. The shared control listener retains legacy behavior; gateways still share the database role until ARC-111. Sampled overlap reached 932 serving-port sockets in the earlier run and 924 in the current run; warm handoff needs headroom inside existing limits. This is a 500-agent functional result, not a 10,000-node capacity claim |
+ | Separate browser listeners (ARC-110, open) | Opt-in Portal bind with Admin-only/Portal-only socket enforcement, shared connection budget, prebinding and joined shutdown; omission preserves the shared browser socket | Complete check/build/test at fe11bdf0: 1,134 Console and 410 Portal browser cases; original 38 environment-dependent browser skips retained. Three packages passed 200 race roots without skips. Native PostgreSQL production composition at 274d771c passed both HTTPS and explicit browser-HTTP profiles in 8.61 s, no skips: real dual login, certificate enrollment, scoped machine heartbeat, restart persistence and three-socket/worker cleanup. [Exact inputs and limits](../research/entrance-listeners.md#qualified-production-server-composition) | No | Complete four-entrance installed/operator projection and actual React-browser qualification remain open. Synthetic HTML/facts/License fixture; no hardware or capacity claim |
+-| Agent gateway database role (ARC-111, open) | Research and external prototypes; no runtime role activated | Native network-none PostgreSQL 18.6 passed the 14-check authority-lock prototype and independent SCRAM Node path. The actual gateway composition then passed first/update component and inference hardware reports, two liveness batches, read-only outbox wake, eleven 42501 refusals and a real two-connection role limit with 53300 overflow while the control-side fixture stayed usable; 1.95 s, no skips. The same composed path then passed ECDSA verified TLS 1.3 with required SCRAM binding, four independent TLS/authentication refusals and all eleven permission refusals in 2.11 s, no skips. [Inputs, grants and limits](../research/agent-gateway-database-role.md#qualified-verified-tls-composition) | No | Known gateway training claim failure: dataset Store is absent; control-side claim succeeds, and no lease or physical owner changes on refusal. Restricted delegated-profile permissions, deployment-bearing observations, replicated liveness, Ed25519 database-certificate compatibility, shed refresh, operator preparation, startup/restart admission and installed delivery remain open. No published migration or grant change. The local [formal family-schema candidate](../research/model-family-schema-admission.md#prepared-integration-and-qualification-boundary) preserves the owner SQL and adds cell scope and the closed Control grant entries; compilation, catalog fingerprints and actual SQL qualification remain unrun, and gateway reader binding is still absent |
++| Agent gateway database role (ARC-111, open) | Research and external prototypes; no runtime role activated | Native network-none PostgreSQL 18.6 passed the 14-check authority-lock prototype and independent SCRAM Node path. The actual gateway composition then passed first/update component and inference hardware reports, two liveness batches, read-only outbox wake, eleven 42501 refusals and a real two-connection role limit with 53300 overflow while the control-side fixture stayed usable; 1.95 s, no skips. The same composed path then passed ECDSA verified TLS 1.3 with required SCRAM binding, four independent TLS/authentication refusals and all eleven permission refusals in 2.11 s, no skips. [Inputs, grants and limits](../research/agent-gateway-database-role.md#qualified-verified-tls-composition) | No | Known gateway training claim failure: dataset Store is absent; control-side claim succeeds, and no lease or physical owner changes on refusal. Restricted delegated-profile permissions, deployment-bearing observations, replicated liveness, Ed25519 database-certificate compatibility, shed refresh, operator preparation, startup/restart admission and installed delivery remain open. No published migration or grant change. The local [formal family-schema candidate](../research/model-family-schema-admission.md#prepared-integration-and-qualification-boundary) preserves the owner SQL and adds cell scope and the closed Control grant entries; compilation, catalog fingerprints and actual SQL qualification remain unrun, and the private process candidate now calls the original IAM reader constructor with the trusted installation tenant, exact startup cleanup and joined shutdown; actual CLI/claim/read-only-mount and restricted-role qualification remain unrun. Exact original-owner joint input e321fdc is prepared; its one native opportunity was NOTRUN on SSH banner timeout255 before carrier acquisition, upload, compilation or SQL |
+ | Agent certificates (ARC-103): a node makes its own key and gets a client certificate naming it at enrollment; every call needs that certificate and the bound credential; the key is pinned, so a rotation is a revocation point; agents rotate by themselves 70% to 90% through the lifetime and confirm from the new key; a node that outlived its certificate recovers with the credential and a request signed by a pinned key; enrollment is limited per source network (ADR 0050) | Yes, PostgreSQL only; MySQL and Dameng keep the credential until CMP-201 and CMP-202 | `TestSingleNodeInstall` on `ownsolid-cpu`, offline, all 32 subtests: the real agent enrolled with a certificate, was refused without it (`AGENT_CERTIFICATE_REQUIRED`), rotated it without restarting, the old certificate was then refused (`AGENT_CERTIFICATE_SUPERSEDED`) and the new one ran tasks; the simulated fleet of the same run held a certificate per agent. `TestAgentGateways` passed with gateways verifying certificates from the CA alone. In one of three install runs, `apply` after a stopped database failed once at the administrator step with `BOOTSTRAP_RESULT_CONFLICT` and passed on the rerun | n/a | None known. Racks are source networks until FLT-101 names them (ARC-112); replacing the agent CA is a manual procedure (ARC-113); the console does not show certificate expiry (ARC-114). Certificate expiry on a clock more than 5 minutes behind control needs NTP ([research](../research/agent-mtls-identity.md)) |
+ | Control crash recovery (REL-001): control needs no shutdown to be safe. After a SIGKILL the restart policy brings it back, running tasks finish on their first attempt, an upload resumes from what the server kept, and an import killed while unpacking starts again by itself, spending one attempt (ADR 0046) | Yes; import recovery shares its code on all three databases, tested on PostgreSQL | `TestControlCrash` with 2,000 simulated agents in the offline single-node install on `ownsolid-cpu`, two passing runs in a row: control ready 1.7 to 3.4 s after each kill, 101 of 101 tasks on their first attempt, the real model bundle `ready` on attempt 2, a repeated write found the same task, every agent heard again, zero egress | n/a | None known. Mail and workflow recovery tests passed; dataset, knowledge and task-delivery recovery tests exist but did not run for this item ([research](../research/control-crash-recovery.md)). One control process on one host; simulated nodes; model store in memory |
+ 
+diff --git a/docs/research/agent-gateway-database-role.md b/docs/research/agent-gateway-database-role.md
+index f9dcd423..feb58662 100644
+--- a/docs/research/agent-gateway-database-role.md
++++ b/docs/research/agent-gateway-database-role.md
+@@ -754,3 +754,134 @@ go -C services/control test -mod=readonly -p 1 -count=1 ./internal/platform/agen
+ These primitive checks cannot replace real composed shutdown and file ownership
+ acceptance. The database-focused 1,200-second allocation does not also authorize
+ these extra profiles, the installed500-agent drill or a whole-repository gate.
++
++## Original TRN input and complete request ownership
++
++The integration tree merges original e639db9035b0b2c0229c90175493c605f328e295
++with baa584c3. All 21 owning dataset/training module paths, including README/test
++inputs, compare byte-for-byte to the original author; both research records are
++preserved. The owner's reported native v3 qualification is two packages/two roots
++and required independent-reader cases, zero skips/failures in 138.486532 s. That
++is author evidence for e639db90, not a run of this combined schema/process tree.
++No reader graph binding is inferred from importing its source.
++
++The pinned gRPC-Go v1.85.0 source shows why HTTP-handler counting alone is
++insufficient. Server.ServeHTTP starts RPC work through serveStreams; its handler
++transport can return after request cancellation while the application RPC callback
++is still unwinding. See [Server](https://github.com/grpc/grpc-go/blob/v1.85.0/server.go)
++and [handler transport](https://github.com/grpc/grpc-go/blob/v1.85.0/internal/transport/handler_server.go).
++Track the entire original Gateway.connect callback, from before peer/backend
++admission until all its scoped defers finish. Drain seals registration under the
++same mutex, and the last callback signals completion. Keep Drain nonblocking for
++existing callers; add a context-bounded DrainAndWait for process ownership. No
++wire/version change or old-agent upgrade is needed.
++
++The actual dedicated HTTP handler additionally needs a zero-value usable request
++owner. Admission and shutdown sealing use one mutex, so no request can register
++after a successful join. A sealed handler returns the existing SERVICE_NOT_READY
++without consulting a file or SQL owner. Register this join and the real RPC join
++with the existing runtime lifecycle before serving, and seal/drain on its tracked
++cancellation loop. Move the already opened database pool into that lifecycle as
++its first closer, so it closes last and is retained on an unconfirmed request
++join. Startup failures still close it through the same lifecycle. Reader closers
++can later share this ordering when IAM supplies its real graph binding.
++
++Use channels rather than a goroutine per waiting caller. A canceled join reports
++its original context error and does not declare completion; a later explicit
++join can observe actual completion. Cover active HTTP work, an RPC callback still
++running after its HTTP transport ends, refusal after seal, concurrent drain/join,
++panic/deferred release and startup/timeout owner retention. Keep real protocol
++and file/SQL composition acceptance separate from isolated lifetime tests.
++The source may implement these existing boundaries without constructing a second
++reader graph, opening an unbound reader and returning success, or calling an IAM
++interface that does not yet exist. Same-host reader paths remain the existing
++Dataset/Training artifact_root values and the tenant from installedTenant on the
++original selected store; initialization/Close must remain owner APIs.
++
++No dependency is added. gRPC-Go remains Apache-2.0 and Go remains BSD-3-Clause;
++commercial/offline redistribution retains their original notices. Runtime
++filesystem and network scope do not grow. This preparation is not a native,
++compiler or product qualification; all original checks and resource allocation
++requirements remain in force.
++
++The concrete source increment now registers HTTP and RPC joins in runAgentGateway,
++retains the real pool as the last lifecycle closer and exposes DrainAndWait from
++the existing Gateway. Prepared isolated tests use real HTTPS/file descriptors
++for request-owner retention and the existing unit backend fixture for a callback
++that remains active after cancellation/transport close. They exercise refusal,
++concurrent joins and delayed actual file close; they establish no SQL or training
++authorization evidence. Formatting/layout/roadmap/diff checks ran, but no compiler,
++unit/race execution, native process or full gate ran for this increment.
++
++The earlier handoff proposal above is superseded by the actual IAM API recorded
++below. The private process source now calls that constructor with the tenant
++from installedTenant(original selected store) and only the existing configured
++artifact roots. It registers the real ClosePublishedReaders operation before
++later startup work, retains its exact error and refuses startup-context expiry.
++IAM owns partial-open/graph-failure cleanup; ARC owns all later startup and
++request/RPC/worker joins. No unused reader helper or alternate unbound graph is
++introduced. This is source wiring, not executed CLI/claim/mount qualification.
++
++The same completion counter also owns each session receive loop. It is registered
++while its admitted RPC callback is still counted; therefore a racing drain cannot
++miss that descendant. It is released only when RecvMsg/channel handling exits,
++after stream cancellation/RPC return, without waiting inside the callback and
++deadlocking transport teardown. HTTP join and RPC/receive-loop join are both
++required before a process closer. The unit source covers real retained file
++descriptors, but its execution and the full composed reader contract remain
++unverified. No original IAM constructor, TRN owner path or agent v1 field changed.
++
++## Actual IAM constructor consumption
++
++The original IAM input is review tree1af0ca5497fbbe83875eb6af4769fad4198135ac
++on5bbc324d, archive e475f54c97137d11b7a9f40b687d809f69e4c65d0068822cd1d707858fd8feaf
++and hash manifest346e20c56a8032fba2815d4b06522c98ed9d96d7c814d9711f7161061757f6f5.
++All archive members, the four IAM owner paths and all21 original TRN paths were
++verified locally before import. The actual API differs from the earlier proposal:
++NewAgentGatewayWithPublishedReaders(s, ready, tenant) opens/binds the concrete
++readers itself; ClosePublishedReaders closes only those owners. ARC must consume
++this actual API, not retain its proposed option struct or duplicate reader opens.
++The original default constructor and all four imported owner paths remain intact.
++IAM's corrected Fstat observer and this combined graph are still unqualified.
++
++At process startup, no configured dataset/training namespace keeps the original
++constructor. If either artifact_root is configured, select the actual reader
++constructor; its required pair makes a partial/missing namespace fail visibly
++instead of returning an unbound graph. There is no fallback after a reader or
++graph error. Resolve tenant through installedTenant(startup, original store)
++only, after the existing bootstrap/schema admission, and pass only the original
++Config to the constructor. No deployment knob or client value selects a tenant,
++file path, writer or authorization mode. This is one complete reader-enabled
++path plus compatibility for the original namespace-free path.
++
++Register ClosePublishedReaders with the process lifecycle immediately after
++successful construction, before installation-fence admission, workers or listen.
++That gives every later startup error the same reverse close path. Retain the
++owner's exact close error in lifecycle failure before the generic store-close
++classification is added; its concrete errors are fixed storage codes, never
++private paths or credential values. A successful construction that has exhausted
++its startup context must also unwind and return that original context error.
++During serving, both real HTTP and RPC/receive-loop joins and all worker joins
++precede reader close, with the pool registered first and closed last. An
++unconfirmed join must never invoke reader or pool closers. Returned files remain
++owned and closed by their actual admitted handler, not by a replacement writer.
++
++Validation must combine IAM's original no-database graph/partial-open/failure
++tests, ARC's real HTTP/RPC/file lifetime tests, and the original real PostgreSQL
++retained-training-claim profile through this constructor. Actual CLI later-start
++failure, missing/foreign same-host namespace, shutdown/restart and read-only
++mount/role/offline runs remain required. Source imports and wiring prove none
++of those executions. No new dependency, model or dataset is introduced; the
++existing Go BSD-3-Clause, pgx MIT and gRPC-Go Apache-2.0 notices/offline rights
++remain unchanged.
++
++The actual caller is now wired directly in runAgentGateway. Its imported IAM
++README's research link is retained by importing the exact original9a0543b9 note,
++without changing that owner's four review paths. No typed option wrapper or
++alternate reader constructor was added. All four candidate paths remain the
++exact reviewed tree bytes; the original corrected observer/graph test roots and
++ARC's prepared lifetime tests remain required. Real process startup with the
++selected runtime principal, post-construction listen/fence failure cleanup,
++active training claim and installed read-only namespace behavior still need
++actual allocated execution. The old native opportunity remains NOTRUN and has
++not been reused for this source.
+diff --git a/docs/research/identity-agent-published-readers.md b/docs/research/identity-agent-published-readers.md
+new file mode 100644
+index 00000000..66db193d
+--- /dev/null
++++ b/docs/research/identity-agent-published-readers.md
+@@ -0,0 +1,146 @@
++# Identity construction of Agent gateway published readers
++
++Research for the IAM-owned `newAgentPath`/`NewAgentGateway` integration seam in
++ARC-111, TRN-101 and DAT-101. Reviewed 2026-11-13 before implementation. The
++[original owner handoff](training-published-file-readers.md#original-author-bundle-and-arc-lifecycle-handoff)
++qualifies exact `e639db9035b0b2c0229c90175493c605f328e295` reader tests and
++`5b73fa05305c2c5d8178a256683ede8b4e9ef99f` production bytes. Current main has
++neither concrete reader. Integration source must retain those original bytes;
++no equivalent writer, arbitrary callback or type assertion may replace them.
++
++## Primary sources and current graph
++
++The owner source is available as that exact shared Git object. Its twenty-one
++runtime/readme/test paths are exported outside the product for a private Go
++compile overlay. A separate SSH bundle-read attempt timed out after thirty
++seconds; no successful bundle transfer or bundle hash verification is inferred.
++The [reader research](training-published-file-readers.md) links the primary
++[Go Root contract](https://pkg.go.dev/os#Root),
++[Linux flock contract](https://man7.org/linux/man-pages/man2/flock.2.html),
++[Docker read-only bind contract](https://docs.docker.com/engine/storage/bind-mounts/)
++and [MLflow artifact architecture](https://mlflow.org/docs/latest/self-hosting/architecture/artifact-store/).
++The mechanism and actual owner SQL/file flows already passed their separate
++qualifications. No MLflow service or dependency is introduced.
++
++`identity/http/agent_path.go` builds one concrete dataset and training service,
++then shares them with preparation, Node and their machine callbacks. Control
++later opens its writer stores. The separate gateway currently opens neither;
++its real training-claim failure is recorded in
++[the role research](agent-gateway-database-role.md#reproduced-gateway-training-claim-failure).
++Preserve [ADR 0048](../decisions/0048-agent-gateways-beside-control.md): no
++processor, trainer, GPU worker, transfer endpoint or second writable Store is
++started by the gateway constructor.
++
++## Chosen additive constructor
++
++Keep `NewAgentGateway` unchanged for the current composition. Add
++`NewAgentGatewayWithPublishedReaders` with the same Identity/readiness owners
++and a tenant resolved by ARC's trusted installation startup, never HTTP input.
++It opens the existing configured dataset and training namespaces through the
++two exact `OpenPublishedReader` constructors. It creates no namespace and
++never acquires or weakens writer ownership. Both readers are required; partial
++failure closes only the readers this call opened and returns no gateway.
++
++Bind the concrete readers to the already shared dataset/training instances in
++`agentPath`, leaving both Store fields nil. Preparation continues to see those
++same instances. Do not recover them through Node interfaces, expose an internal
++writer, open a replacement Store or confuse preparation output ownership with
++published training input. No per-exchange SQL or authority order changes.
++
++Return one explicit reader-close lifecycle operation on the gateway. Its owner
++calls it after stopping admission and draining/joining active handlers and
++claims. It closes only the two independent readers, is idempotent under
++concurrent calls and retains the first close result. Caller-owned returned
++file descriptors keep their upstream contract. ARC retains startup rollback,
++request drain/join, namespace mounts, trusted tenant resolution, process
++registration and all other graph resources.
++
++Reject changing the existing constructor signature, implicit file access from a
++configured pathname, a second writer, filesystem initialization, guessed remote
++mounts, fake verification, new SQL privileges or a gateway processing worker.
++The additive constructor remains an unmerged candidate until the original
++producer and actual integrated graph can be admitted together.
++
++## Licences and failure acceptance
++
++There is no new dependency, model or dataset. Go/os/sync and x/sys retain their
++BSD-3-Clause notices; pgx retains MIT, and PostgreSQL retains its PostgreSQL
++License. Commercial use, redistribution and offline use follow those existing
++terms. Runtime construction performs only local namespace reads; file and
++current SQL authorization remain with their actual owners.
++
++Focused no-database composition tests must use real initialized namespaces and
++still-held exclusive writers, an actual lazy pool whose dial hook refuses any
++network, and the original concrete readers. Verify exact shared service pointers,
++no writer/processor, reader shutdown with retained writer exclusion, wrong
++tenant/missing namespace refusal, first-reader cleanup on second-open failure,
++and both-reader cleanup on graph-construction failure. Count only descriptors
++for those owned namespace inodes, not a process-wide unstable total.
++
++These tests cannot qualify a training lease or restricted database role. Actual
++acceptance must repeat the earlier real training claim through the new public
++constructor, with original accepted bytes/current actor/attempt/retirement
++checks, trusted startup rollback, active request drain/join, installed read-only
++mounts, Model/Node/protected-lock grants, complete repository gates and unchanged
++fleet budgets. No IAM/TRN/DAT/ARC checkbox is earned by a source or compile check.
++
++## Exact source and execution boundary
++
++The uncommitted four-path IAM review is Git tree
++`1af0ca5497fbbe83875eb6af4769fad4198135ac` on
++`5bbc324d0bb9edb6f127dff469edadc5b2fee20c`. Its explicit patch SHA-256 is
++`8907bbf2f38ce3aec7effb424d33aa4f40bff795ac72fd638d14d1208e0fb53d`.
++The source bundle is
++`/Users/passion./.codex/ownsolid-evidence/iam-agent-readers-20261113.6ticw6lg/review-source-v1.tar`,
++SHA-256 `e475f54c97137d11b7a9f40b687d809f69e4c65d0068822cd1d707858fd8feaf`.
++Its adjacent `review-source-v1-hashes.json` has SHA-256
++`346e20c56a8032fba2815d4b06522c98ed9d96d7c814d9711f7161061757f6f5`.
++All twenty-one original producer paths are included without changing the product
++worktree. The bundle also contains the private Go overlay, exact old failed-check
++source reconstructed against its recorded hashes, raw command/output and the
++current unqualified correction. No producer file was applied to main.
++
++The exact additive public API, in `identity/http/agent_published_readers.go`, is:
++
++```go
++func NewAgentGatewayWithPublishedReaders(
++    s *identity.Service, ready func() error, tenant string,
++) (*AgentGateway, error)
++func (g *AgentGateway) ClosePublishedReaders() error
++```
++
++`tenant` is ARC's already resolved installation tenant. Roots come only from
++`s.Config.Datasets.ArtifactRoot` and `s.Config.Training.ArtifactRoot`.
++Missing/foreign namespaces fail before readiness. Both readers open before the
++ordinary shared graph is returned; graph-construction failure closes both.
++Binding uses the private `agentPath.datasets` and `agentPath.training` pointers,
++not a production interface assertion or replacement service. The default
++constructor's signature and behavior remain unchanged. ARC can select the new
++constructor after admitting the exact producer and close it on later startup
++failure, or after stopping admission and joining active calls during shutdown.
++The close method does not drain sessions or close the SQL pool on ARC's behalf.
++
++The first no-database candidate compiled and executed three roots: two passed,
++one failed, with three passing failure-cleanup subtests and no skips. Its graph
++root reached the actual concrete service bindings, then failed an observer
++assertion reporting zero namespace descriptors before and after construction.
++On macOS, `stat(/dev/fd/N)` describes that path instead of the target inode.
++A separate Python descriptor prototype confirmed that direct `fstat(N)` sees
++the owned root and that the descriptor appears in the inventory. The corrected
++Go observer uses `syscall.Fstat` without opening or closing borrowed descriptors.
++It has not run. This failed check is not product/SQL/gateway qualification.
++
++The initial resource sample had only 454,164,480 free bytes (below 2 GiB), but
++was mistakenly combined with test launch instead of evaluated first. The
++short-lived test had already exited when the error was identified; no background
++work was retained. The corrected entry now evaluates admission before Go.
++A separate guarded opportunity returned raw 78 with 709,476,352 free bytes,
++against 2,147,483,648 required; disk free was 165,373,104,128 bytes against
++16,106,127,360 required. It started no compiler/test/database and queued no
++retry. Both raw attempts remain preserved. The permanent workstation carrier
++was released and not recreated, truncated or removed.
++
++No corrected unit pass, race run, real SQL claim, provider, processor, GPU,
++installed gateway or full repository gate is claimed. The actual no-database
++fix needs a fresh admitted opportunity; the actual integrated gateway still
++needs ARC's original native construction/startup/drain/role and fleet acceptance.
+diff --git a/docs/research/model-family-schema-admission.md b/docs/research/model-family-schema-admission.md
+index f22c9b6a..e510cbcc 100644
+--- a/docs/research/model-family-schema-admission.md
++++ b/docs/research/model-family-schema-admission.md
+@@ -307,3 +307,33 @@ a second writer, reflect into fields or add a constructor that returns success
+ without binding the real readers. Missing candidate objects or an unavailable
+ joint source is not permission to guess that interface. The reproduced dataset
+ storage refusal remains unresolved until the actual composed claim passes.
++
++## Exact original-owner joint input and transport refusal
++
++The clean assembled input is e321fdcb84fd20586c503cbdf3ae179eea1c6c10,
++tree efa43828c7febdadd72d03b70c30a28aefd800ef. It merges original MODEL
++db8435034a2a94a3285a059f6bd40237322ae1c2 and original TRN
++e639db9035b0b2c0229c90175493c605f328e295 onto the ARC input through baa584c3.
++All13 MODEL module paths match its original author, and all21 TRN module paths
++match its original author. The original formal61 SQL and schema60 catalog pins
++remain byte-identical to0f47a66b. The later dirty request/RPC join increment is
++not included in this input. MODEL's seven original TestActualModelFamily roots
++and TestModelHistoryCursorIntegrityAndScope remain required, with its exact
++protected PostgreSQL/schema and pinned approved non-weight file inputs.
++
++The regenerated full-source manifest covers5,096 paths. Its archive is8,987,025
++bytes, SHA-256 bb96b822445bc540e8b0853b051104b2d64f05e1cae8f2dee7fe82c698fdeee1;
++manifest SHA-256 ca272a2f9f5902aee32b8b4ce0e6900ad18f9253007f42e9995a4137f912752d.
++This replaces no earlier source or evidence; it is the actual new unqualified
++input A. There is no observed schema61 fingerprint or admitted input B.
++
++The one granted Linux opportunity stopped before entry. The required read-only
++image/resource SSH inspection returned255 with banner-exchange timeout. An earlier
++read-only command connected, but its clipped process-list output cannot establish
++usable final resource/image admission. No retry followed the transport refusal.
++No permanent carrier was opened, no source was uploaded, no compiler/test group
++or SQL statement ran, and no container, volume, namespace or credential was
++created. The result is NOTRUN, not a failed SQL assertion or a passed preflight.
++The local native-notrun.json retains the exact source and refusal classification;
++cleanup is not applicable rather than an invented successful cleanup result.
++The original1,200-second ceiling and every assertion remain unchanged.
+diff --git a/services/control/cmd/server/README.md b/services/control/cmd/server/README.md
+index 9e46a5a3..af540987 100644
+--- a/services/control/cmd/server/README.md
++++ b/services/control/cmd/server/README.md
+@@ -32,11 +32,21 @@ for partial/unknown outcomes, role/serving writes and Kubernetes qualification.
+ 
+ [agent_gateway.go](agent_gateway.go) serves `serve-agent-gateway`: the agent session stream from a process beside control, with its own pool and no installation lock, fenced on the lock's holder and drained on stop ([ADR 0048](../../../../docs/decisions/0048-agent-gateways-beside-control.md)). It builds the agent path with `identityhttp.NewAgentGateway`, the constructor control's own handler uses.
+ 
+-Its session drain is a lifecycle-owned cancellation loop, so confirmed worker
+-shutdown includes the drain operation before process-owned stores close. This
+-does not itself join arbitrary request handlers or bind dataset/training readers;
+-the original constructor owner and actual request/file-owner shutdown remain
+-required for ARC-111. See the [reader ownership boundary](../../../../docs/research/agent-gateway-database-role.md#concrete-reader-constructor-dependency-and-process-ownership).
++Its lifecycle seals HTTP admission, drains sessions and waits for both the HTTP
++handlers and actual RPC callbacks before closing process-owned stores. The pool
++is the first registered closer and closes last, including after partial startup;
++an unconfirmed join retains it. RPC callbacks may outlive a canceled HTTP
++transport, so transport closure alone never permits a file-owner close.
++Configured dataset/training namespaces select IAM's concrete published-reader
++constructor using the tenant read from the original installed store. Both existing
++namespaces are required; a partial/missing/foreign pair refuses startup without a
++writer or legacy fallback. A namespace-free configuration keeps the original
++constructor. Register reader close immediately after construction, so later
++startup failure or an exhausted startup context also unwinds those readers.
++Their original close codes are retained, and the same request/RPC/worker joins
++precede reader close during serving, with pool close last.
++This combined source increment has not been compiled or run end to end; see the
++[reader ownership boundary](../../../../docs/research/agent-gateway-database-role.md#actual-iam-constructor-consumption).
+ 
+ [runtime_lifecycle.go](runtime_lifecycle.go) owns dependency construction, cancellation, worker readiness, stop/join order and closers. Component helpers such as artifactstores.go, imageregistry.go, task_events.go, middleware.go and monitoring.go connect their existing owners. The identity HTTP package still composes/routes domains; extracting that historical hub is a separate verified change, not an invitation to create duplicate owners here.
+ 
+diff --git a/services/control/cmd/server/agent_gateway.go b/services/control/cmd/server/agent_gateway.go
+index 92bb6e8b..336432b3 100644
+--- a/services/control/cmd/server/agent_gateway.go
++++ b/services/control/cmd/server/agent_gateway.go
+@@ -132,13 +132,19 @@ type agentGatewayHandler struct {
+ 	machine  config.MachineServerConfiguration
+ 	sessions *agentgateway.Gateway
+ 	ready    func() error
++	requests agentGatewayRequests
+ }
+ 
+-func (h agentGatewayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
++func (h *agentGatewayHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+ 	requestID := uuid.NewString()
+ 	w.Header().Set("X-Request-ID", requestID)
+ 	w.Header().Set("Cache-Control", "no-store")
+ 	w.Header().Set("X-Content-Type-Options", "nosniff")
++	if !h.requests.begin() {
++		httpserver.Problem(w, requestID, errInstallationNotServing)
++		return
++	}
++	defer h.requests.end()
+ 	connection, e := httpserver.ResolveMachineRequest(r, h.machine)
+ 	if e != nil {
+ 		httpserver.Problem(w, requestID, e)
+@@ -195,7 +201,13 @@ func runAgentGateway(args []string) (result error) {
+ 	if e != nil {
+ 		return e
+ 	}
+-	defer pool.Close()
++	g := newRuntimeLifecycle(ctx)
++	g.closers = append(g.closers, func() error { pool.Close(); return nil })
++	defer func() {
++		cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), config.Seconds(policy.HTTP.ShutdownSeconds))
++		defer cancel()
++		result = errors.Join(result, g.Close(cleanup))
++	}()
+ 	store, e := transaction.FromPostgreSQL(pool)
+ 	if e != nil {
+ 		return e
+@@ -211,22 +223,37 @@ func runAgentGateway(args []string) (result error) {
+ 		return errors.New("BOOTSTRAP_REQUIRED")
+ 	}
+ 	fence := &installationFence{pool: pool, store: store, ready: errInstallationNotServing}
+-	g := newRuntimeLifecycle(ctx)
+-	defer func() {
+-		cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), config.Seconds(policy.HTTP.ShutdownSeconds))
+-		defer cancel()
+-		result = errors.Join(result, g.Close(cleanup))
+-	}()
+ 	ready := func() error {
+ 		if e := g.Err(); e != nil {
+ 			return errors.New("SERVICE_NOT_READY")
+ 		}
+ 		return fence.Ready()
+ 	}
+-	gateway, e := identityhttp.NewAgentGateway(&identity.Service{DB: pool, Config: c}, ready)
++	service := &identity.Service{DB: pool, Config: c}
++	var gateway *identityhttp.AgentGateway
++	if c.Datasets.ArtifactRoot != "" || c.Training.ArtifactRoot != "" {
++		tenant, tenantError := installedTenant(startup, store)
++		if tenantError != nil {
++			return tenantError
++		}
++		gateway, e = identityhttp.NewAgentGatewayWithPublishedReaders(service, ready, tenant)
++	} else {
++		gateway, e = identityhttp.NewAgentGateway(service, ready)
++	}
+ 	if e != nil {
+ 		return e
+ 	}
++	g.closers = append(g.closers, func() error {
++		err := gateway.ClosePublishedReaders()
++		if err != nil {
++			// Keep the concrete owner's fixed close code alongside lifecycle context.
++			g.Fail(err)
++		}
++		return err
++	})
++	if e = startup.Err(); e != nil {
++		return e
++	}
+ 	if e = fence.check(startup); e != nil {
+ 		return e
+ 	}
+@@ -260,7 +287,16 @@ func runAgentGateway(args []string) (result error) {
+ 	nodes.RestoreShed(startup)
+ 	g.Loop("NODE_AGENT_SHED", nodes.RunAgentShed)
+ 	g.Loop("NODE_TASK_WAKES", nodes.RunWakes)
++	if e = startup.Err(); e != nil {
++		return e
++	}
+ 	machine := config.MachineServerConfiguration{ListenAddress: c.AgentGateway.ListenAddress, Origin: origin, TLSCertificateFile: c.AgentGateway.TLSCertificateFile, TLSPrivateKeyFile: c.AgentGateway.TLSPrivateKeyFile}
++	handler := &agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}
++	g.stops = append(g.stops, func(ctx context.Context) error {
++		handler.requests.stop()
++		gateway.Sessions.Drain()
++		return errors.Join(handler.requests.wait(ctx), gateway.Sessions.DrainAndWait(ctx))
++	})
+ 	listener, e := net.Listen("tcp", c.AgentGateway.ListenAddress)
+ 	if e != nil {
+ 		return errors.New("SERVER_LISTEN_FAILED")
+@@ -269,6 +305,7 @@ func runAgentGateway(args []string) (result error) {
+ 	// for the shutdown to cut their streams. Join the drain before store closers.
+ 	g.Loop("AGENT_GATEWAY_DRAIN", func(ctx context.Context) {
+ 		<-ctx.Done()
++		handler.requests.stop()
+ 		gateway.Sessions.Drain()
+ 	})
+ 	fmt.Println("AGENT_GATEWAY_STARTED")
+@@ -278,7 +315,7 @@ func runAgentGateway(args []string) (result error) {
+ 		// Allow a peer check, one admitted exchange and a bounded reply.
+ 		Grace: config.Seconds(3*policy.HTTP.RequestSeconds + wire.MaxClaimWaitSeconds),
+ 	}
+-	e = httpserver.ServeListener(g.ctx, listener, tlsConfig, agentGatewayHandler{machine: machine, sessions: gateway.Sessions, ready: ready}, policy.HTTP, age)
++	e = httpserver.ServeListener(g.ctx, listener, tlsConfig, handler, policy.HTTP, age)
+ 	if e != nil {
+ 		result = errors.New("SERVER_FAILED")
+ 	}
+diff --git a/services/control/cmd/server/agent_gateway_requests.go b/services/control/cmd/server/agent_gateway_requests.go
+new file mode 100644
+index 00000000..88977308
+--- /dev/null
++++ b/services/control/cmd/server/agent_gateway_requests.go
+@@ -0,0 +1,66 @@
++package main
++
++import (
++	"context"
++	"errors"
++	"sync"
++)
++
++// The zero value owns admission without allocating a waiter per request/join.
++// Sealing and registration share the mutex; a completed join cannot miss an Add.
++type agentGatewayRequests struct {
++	mu       sync.Mutex
++	active   int
++	stopping bool
++	joined   chan struct{}
++}
++
++func (o *agentGatewayRequests) begin() bool {
++	o.mu.Lock()
++	defer o.mu.Unlock()
++	if o.stopping {
++		return false
++	}
++	o.active++
++	return true
++}
++
++func (o *agentGatewayRequests) end() {
++	o.mu.Lock()
++	defer o.mu.Unlock()
++	o.active--
++	if o.stopping && o.active == 0 {
++		close(o.joined)
++	}
++}
++
++func (o *agentGatewayRequests) stop() <-chan struct{} {
++	o.mu.Lock()
++	defer o.mu.Unlock()
++	if !o.stopping {
++		o.joined = make(chan struct{})
++		o.stopping = true
++		if o.active == 0 {
++			close(o.joined)
++		}
++	}
++	return o.joined
++}
++
++func (o *agentGatewayRequests) wait(ctx context.Context) error {
++	if ctx == nil {
++		return errors.New("AGENT_GATEWAY_CONTEXT_REQUIRED")
++	}
++	joined := o.stop()
++	select {
++	case <-joined:
++		return nil
++	default:
++	}
++	select {
++	case <-joined:
++		return nil
++	case <-ctx.Done():
++		return ctx.Err()
++	}
++}
+diff --git a/services/control/cmd/server/agent_gateway_requests_test.go b/services/control/cmd/server/agent_gateway_requests_test.go
+new file mode 100644
+index 00000000..b8e4f7b7
+--- /dev/null
++++ b/services/control/cmd/server/agent_gateway_requests_test.go
+@@ -0,0 +1,148 @@
++package main
++
++import (
++	"context"
++	"errors"
++	"io"
++	"net/http"
++	"net/http/httptest"
++	"os"
++	"path/filepath"
++	"strings"
++	"sync"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++)
++
++func TestAgentGatewayRequestOwnerSealAndRejoin(t *testing.T) {
++	var owner agentGatewayRequests
++	for range 32 {
++		if !owner.begin() {
++			t.Fatal("open owner refused registration")
++		}
++	}
++	joined := owner.stop()
++	short, cancel := context.WithCancel(t.Context())
++	cancel()
++	if err := owner.wait(short); !errors.Is(err, context.Canceled) {
++		t.Fatal("active requests reported joined", err)
++	}
++	var workers sync.WaitGroup
++	for range 32 {
++		workers.Go(func() {
++			if owner.begin() {
++				t.Error("request registered after sealing")
++			}
++			owner.end()
++		})
++	}
++	workers.Wait()
++	select {
++	case <-joined:
++	default:
++		t.Fatal("last admitted request did not complete the join")
++	}
++	if err := owner.wait(short); err != nil {
++		t.Fatal("actual completion was hidden by an already canceled caller", err)
++	}
++}
++
++func TestAgentGatewayHandlerJoinRetainsRealFileOwner(t *testing.T) {
++	directory := t.TempDir()
++	if err := os.WriteFile(filepath.Join(directory, "published"), []byte("synthetic"), 0600); err != nil {
++		t.Fatal(err)
++	}
++	root, err := os.OpenRoot(directory)
++	if err != nil {
++		t.Fatal(err)
++	}
++	t.Cleanup(func() { _ = root.Close() })
++	started, release := make(chan struct{}), make(chan struct{})
++	var released sync.Once
++	finish := func() { released.Do(func() { close(release) }) }
++	h := &agentGatewayHandler{ready: func() error {
++		file, err := root.Open("published")
++		if err != nil {
++			return err
++		}
++		defer file.Close()
++		close(started)
++		<-release
++		_, err = io.ReadAll(file)
++		return err
++	}}
++	server := httptest.NewUnstartedServer(h)
++	server.EnableHTTP2 = true
++	server.StartTLS()
++	t.Cleanup(server.Close)
++	t.Cleanup(finish)
++	h.machine = config.MachineServerConfiguration{ListenAddress: strings.TrimPrefix(server.URL, "https://"), Origin: server.URL, TLSCertificateFile: "/synthetic/certificate.pem", TLSPrivateKeyFile: "/synthetic/key.pem"}
++	g := newRuntimeLifecycle(t.Context())
++	g.stops = append(g.stops, h.requests.wait)
++	g.closers = append(g.closers, root.Close)
++	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
++	defer cancel()
++	response := make(chan error, 1)
++	go func() {
++		request, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/health/ready", nil)
++		if err != nil {
++			response <- err
++			return
++		}
++		r, err := server.Client().Do(request)
++		if err == nil {
++			_, err = io.Copy(io.Discard, r.Body)
++			r.Body.Close()
++			if r.StatusCode != http.StatusOK {
++				err = errors.New("ADMITTED_REQUEST_FAILED")
++			}
++		}
++		response <- err
++	}()
++	select {
++	case <-started:
++	case <-ctx.Done():
++		t.Fatal("real HTTPS request did not open its file")
++	}
++	h.requests.stop()
++	lateRequest, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/health/ready", nil)
++	if err != nil {
++		t.Fatal(err)
++	}
++	late, err := server.Client().Do(lateRequest)
++	if err != nil {
++		t.Fatal(err)
++	}
++	late.Body.Close()
++	if late.StatusCode != http.StatusServiceUnavailable {
++		t.Fatal("sealed handler dispatched another file owner", late.StatusCode)
++	}
++	short, stop := context.WithCancel(t.Context())
++	stop()
++	if err := g.Close(short); err == nil || err.Error() != "CONTROL_SHUTDOWN_TIMEOUT" {
++		t.Fatal("unreturned HTTP request reported a process join", err)
++	}
++	file, err := root.Open("published")
++	if err != nil {
++		t.Fatal("timed-out join closed a still-used file owner", err)
++	}
++	file.Close()
++	finish()
++	select {
++	case err := <-response:
++		if err != nil {
++			t.Fatal(err)
++		}
++	case <-ctx.Done():
++		t.Fatal("admitted request did not finish")
++	}
++	if err := g.Close(ctx); err != nil {
++		t.Fatal("confirmed HTTP owner join failed", err)
++	}
++	if file, err := root.Open("published"); err == nil {
++		file.Close()
++		t.Fatal("confirmed process join retained the file owner")
++	}
++}
+diff --git a/services/control/internal/modules/identity/README.md b/services/control/internal/modules/identity/README.md
+index 50428727..b632c2a1 100644
+--- a/services/control/internal/modules/identity/README.md
++++ b/services/control/internal/modules/identity/README.md
+@@ -270,3 +270,19 @@ retains its existing policy. This adds no workspace HTTP route. Action
+ localization, contract metadata and installer collection remain with their
+ owners. See [the identity consumer research](../../../../../docs/research/identity-audit-read-access.md)
+ for the separately recorded actual qualification and remaining AUD-108 boundaries.
++
++## Agent gateway published-reader composition candidate
++
++The unmerged IAM construction candidate adds
++`NewAgentGatewayWithPublishedReaders` alongside the unchanged gateway constructor.
++It opens the configured dataset/training namespaces with the original owners'
++concrete read-only readers, binds the shared graph instances and opens no writer
++or worker. Its tenant comes from trusted installation startup. Constructor failure
++closes its own readers; the caller invokes `ClosePublishedReaders` only after
++stopping admission and draining/joining active requests and claims.
++
++This candidate requires the exact unmerged TRN/DAT producer. Its source and
++actual failed/deferred checks are recorded in the
++[construction research](../../../../../docs/research/identity-agent-published-readers.md).
++No current runtime registration, SQL claim, installed gateway, read-only mount,
++restricted-role, full-gate or fleet qualification follows from this source.
+diff --git a/services/control/internal/modules/identity/http/agent_path.go b/services/control/internal/modules/identity/http/agent_path.go
+index d4778ca8..a70d3e17 100644
+--- a/services/control/internal/modules/identity/http/agent_path.go
++++ b/services/control/internal/modules/identity/http/agent_path.go
+@@ -193,6 +193,8 @@ type AgentGateway struct {
+ 	// Logs and Metrics are nil when no telemetry stores are configured.
+ 	Logs    *telemetrystore.Logs
+ 	Metrics *telemetrystore.MetricsPusher
++
++	publishedReaders *agentGatewayPublishedReaders
+ }
+ 
+ // NewAgentGateway builds the agent path for a gateway process. ready fences every session
+@@ -205,5 +207,9 @@ func NewAgentGateway(s *identity.Service, ready func() error) (*AgentGateway, er
+ 	if p.err != nil {
+ 		return nil, p.err
+ 	}
+-	return &AgentGateway{Nodes: p.nodes, Sessions: p.sessions, Logs: p.logs, Metrics: p.metrics}, nil
++	return agentGatewayFromPath(p), nil
++}
++
++func agentGatewayFromPath(p agentPath) *AgentGateway {
++	return &AgentGateway{Nodes: p.nodes, Sessions: p.sessions, Logs: p.logs, Metrics: p.metrics}
+ }
+diff --git a/services/control/internal/modules/identity/http/agent_published_readers.go b/services/control/internal/modules/identity/http/agent_published_readers.go
+new file mode 100644
+index 00000000..f4a214ad
+--- /dev/null
++++ b/services/control/internal/modules/identity/http/agent_published_readers.go
+@@ -0,0 +1,67 @@
++package http
++
++import (
++	"errors"
++	"sync"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/telemetrystore"
++	"github.com/google/uuid"
++)
++
++type agentGatewayPublishedReaders struct {
++	datasets   *datasets.PublishedReader
++	training   *training.PublishedReader
++	closeOnce  sync.Once
++	closeError error
++}
++
++func (r *agentGatewayPublishedReaders) close() error {
++	r.closeOnce.Do(func() { r.closeError = errors.Join(r.training.Close(), r.datasets.Close()) })
++	return r.closeError
++}
++
++// NewAgentGatewayWithPublishedReaders builds the ordinary gateway graph with
++// independent readers of both configured, existing artifact namespaces. tenant
++// must come from the trusted installed-tenant startup owner, never client input.
++// It creates no namespace, writable store or processing worker. On failure it
++// closes every reader it opened and returns no gateway. The successful caller
++// owns ClosePublishedReaders after stopping and joining its active requests.
++func NewAgentGatewayWithPublishedReaders(s *identity.Service, ready func() error, tenant string) (*AgentGateway, error) {
++	id, e := uuid.Parse(tenant)
++	if s == nil || s.DB == nil || ready == nil || e != nil || id == uuid.Nil || id.String() != tenant || s.Config.DatabaseEngine() != config.PostgreSQLDatabaseEngine {
++		return nil, errors.New("AGENT_GATEWAY_CONFIGURATION_INVALID")
++	}
++	datasetReader, e := datasets.OpenPublishedReader(s.Config.Datasets.ArtifactRoot, tenant)
++	if e != nil {
++		return nil, e
++	}
++	trainingReader, e := training.OpenPublishedReader(s.Config.Training.ArtifactRoot, tenant)
++	if e != nil {
++		return nil, errors.Join(e, datasetReader.Close())
++	}
++	readers := &agentGatewayPublishedReaders{datasets: datasetReader, training: trainingReader}
++	p := newAgentPath(s, telemetrystore.ServiceAgentGateway, ready)
++	if p.err != nil {
++		return nil, errors.Join(p.err, readers.close())
++	}
++	p.datasets.PublishedReader = datasetReader
++	p.training.PublishedReader = trainingReader
++	gateway := agentGatewayFromPath(p)
++	gateway.publishedReaders = readers
++	return gateway, nil
++}
++
++// ClosePublishedReaders releases only the independently opened input readers.
++// Stop admission and drain/join active handlers and claims before calling it.
++// It is safe to call concurrently and repeatedly. Returned file descriptors
++// remain owned by their callers; this never closes a writer or the SQL pool.
++func (g *AgentGateway) ClosePublishedReaders() error {
++	if g == nil || g.publishedReaders == nil {
++		return nil
++	}
++	return g.publishedReaders.close()
++}
+diff --git a/services/control/internal/modules/identity/http/agent_published_readers_test.go b/services/control/internal/modules/identity/http/agent_published_readers_test.go
+new file mode 100644
+index 00000000..fe2679a4
+--- /dev/null
++++ b/services/control/internal/modules/identity/http/agent_published_readers_test.go
+@@ -0,0 +1,265 @@
++package http
++
++import (
++	"context"
++	"errors"
++	"os"
++	"path/filepath"
++	"runtime"
++	"strconv"
++	"sync"
++	"sync/atomic"
++	"syscall"
++	"testing"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/datasets"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/modelpreparations"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/training"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5"
++	"github.com/jackc/pgx/v5/pgxpool"
++)
++
++type agentReaderFixture struct {
++	owner       *identity.Service
++	tenant      string
++	connections *atomic.Int32
++}
++
++func newAgentReaderFixture(t *testing.T) agentReaderFixture {
++	t.Helper()
++	root, e := filepath.EvalSymlinks(t.TempDir())
++	if e != nil {
++		t.Fatal(e)
++	}
++	datasetPath, trainingPath := filepath.Join(root, "datasets"), filepath.Join(root, "training")
++	for _, path := range []string{datasetPath, trainingPath} {
++		if e = os.Mkdir(path, 0700); e != nil {
++			t.Fatal(e)
++		}
++	}
++	tenant := uuid.NewString()
++	if e = datasets.InitializeStore(datasetPath, tenant, os.Geteuid(), os.Getegid()); e != nil {
++		t.Fatal(e)
++	}
++	if e = training.InitializeStore(trainingPath, tenant, os.Geteuid(), os.Getegid()); e != nil {
++		t.Fatal(e)
++	}
++	datasetWriter, e := datasets.OpenStore(datasetPath, tenant, 4096)
++	if e != nil {
++		t.Fatal(e)
++	}
++	t.Cleanup(func() {
++		if e := datasetWriter.Close(); e != nil {
++			t.Error(e)
++		}
++	})
++	trainingWriter, e := training.OpenStore(trainingPath, tenant, 4096, 1<<20, 16)
++	if e != nil {
++		t.Fatal(e)
++	}
++	t.Cleanup(func() {
++		if e := trainingWriter.Close(); e != nil {
++			t.Error(e)
++		}
++	})
++	poolConfig, e := pgxpool.ParseConfig("postgresql://127.0.0.1/ownsolid_test?sslmode=disable")
++	if e != nil {
++		t.Fatal(e)
++	}
++	connections := new(atomic.Int32)
++	poolConfig.MinConns = 0
++	poolConfig.BeforeConnect = func(context.Context, *pgx.ConnConfig) error {
++		connections.Add(1)
++		return errors.New("EXPLICIT_NO_DATABASE_FIXTURE")
++	}
++	pool, e := pgxpool.NewWithConfig(context.Background(), poolConfig)
++	if e != nil {
++		t.Fatal(e)
++	}
++	t.Cleanup(pool.Close)
++	policy := config.DefaultRuntimePolicy()
++	owner := &identity.Service{DB: pool, Config: config.Config{Runtime: &policy}}
++	owner.Config.Database.MaxOpenConnections = 10
++	owner.Config.Database.OperatorReservedConnections = 3
++	owner.Config.Datasets.ArtifactRoot = datasetPath
++	owner.Config.Training.ArtifactRoot = trainingPath
++	t.Cleanup(func() {
++		if connections.Load() != 0 {
++			t.Error("file-only graph construction attempted a database connection")
++		}
++	})
++	return agentReaderFixture{owner: owner, tenant: tenant, connections: connections}
++}
++
++func (f agentReaderFixture) writerExclusion(t *testing.T) {
++	t.Helper()
++	if writer, e := datasets.OpenStore(f.owner.Config.Datasets.ArtifactRoot, f.tenant, 4096); e == nil {
++		writer.Close()
++		t.Fatal("gateway reader released the dataset writer's exclusion")
++	}
++	if writer, e := training.OpenStore(f.owner.Config.Training.ArtifactRoot, f.tenant, 4096, 1<<20, 16); e == nil {
++		writer.Close()
++		t.Fatal("gateway reader released the training writer's exclusion")
++	}
++}
++
++// Count only descriptors for the generated namespace inodes. Unrelated pool or
++// runtime descriptors cannot change this assertion while another goroutine runs.
++func agentReaderOwnedDescriptors(t *testing.T, paths ...string) int {
++	t.Helper()
++	var owned []os.FileInfo
++	for _, path := range paths {
++		root, e := os.Stat(path)
++		if e != nil {
++			t.Fatal(e)
++		}
++		owned = append(owned, root)
++		entries, e := os.ReadDir(path)
++		if e != nil {
++			t.Fatal(e)
++		}
++		for _, entry := range entries {
++			info, e := entry.Info()
++			if e != nil {
++				t.Fatal(e)
++			}
++			if info.Mode().IsRegular() {
++				owned = append(owned, info)
++			}
++		}
++	}
++	directory := "/proc/self/fd"
++	if runtime.GOOS == "darwin" {
++		directory = "/dev/fd"
++	}
++	entries, e := os.ReadDir(directory)
++	if e != nil {
++		t.Fatal("owned descriptor observation unavailable", e)
++	}
++	count := 0
++	for _, entry := range entries {
++		fd, e := strconv.Atoi(entry.Name())
++		if e != nil {
++			continue
++		}
++		var held syscall.Stat_t
++		if syscall.Fstat(fd, &held) != nil {
++			continue
++		}
++		for _, target := range owned {
++			original, ok := target.Sys().(*syscall.Stat_t)
++			if ok && held.Dev == original.Dev && held.Ino == original.Ino {
++				count++
++				break
++			}
++		}
++	}
++	return count
++}
++
++func TestAgentGatewayPublishedReaderGraph(t *testing.T) {
++	f := newAgentReaderFixture(t)
++	paths := []string{f.owner.Config.Datasets.ArtifactRoot, f.owner.Config.Training.ArtifactRoot}
++	before := agentReaderOwnedDescriptors(t, paths...)
++	ready := func() error { return errors.New("EXPLICIT_TEST_NOT_READY") }
++	gateway, e := NewAgentGatewayWithPublishedReaders(f.owner, ready, f.tenant)
++	if e != nil || gateway == nil {
++		t.Fatal("actual reader graph construction", e)
++	}
++	t.Cleanup(func() {
++		gateway.Sessions.Drain()
++		if e := gateway.ClosePublishedReaders(); e != nil {
++			t.Error(e)
++		}
++	})
++	trainingOwner, ok := gateway.Nodes.Training.(*training.Service)
++	if !ok {
++		t.Fatal("Node graph lost its concrete training owner")
++	}
++	preparationOwner, ok := gateway.Nodes.Preparations.(*modelpreparations.Service)
++	if !ok {
++		t.Fatal("Node graph lost its concrete preparation owner")
++	}
++	datasetOwner := trainingOwner.Datasets
++	if datasetOwner == nil || datasetOwner.Identity != f.owner || trainingOwner.Identity != f.owner || preparationOwner.Identity != f.owner || trainingOwner.Nodes != gateway.Nodes || preparationOwner.Nodes != gateway.Nodes || preparationOwner.Training != trainingOwner || preparationOwner.Datasets != datasetOwner || trainingOwner.Holdouts != preparationOwner || trainingOwner.Workspaces != datasetOwner.Workspaces || preparationOwner.Workspaces != datasetOwner.Workspaces {
++		t.Fatal("published readers were attached to a different authority graph")
++	}
++	if datasetOwner.PublishedReader != gateway.publishedReaders.datasets || trainingOwner.PublishedReader != gateway.publishedReaders.training || datasetOwner.Store != nil || trainingOwner.Store != nil || preparationOwner.Store != nil || datasetOwner.Processor != nil {
++		t.Fatal("gateway opened a writer/processor or did not bind its real readers")
++	}
++	if after := agentReaderOwnedDescriptors(t, paths...); after != before+4 {
++		t.Fatal("two independent root/carrier pairs were not retained", before, after)
++	}
++	f.writerExclusion(t)
++	gateway.Sessions.Drain()
++	var wg sync.WaitGroup
++	for i := 0; i < 8; i++ {
++		wg.Go(func() {
++			if e := gateway.ClosePublishedReaders(); e != nil {
++				t.Error(e)
++			}
++		})
++	}
++	wg.Wait()
++	if after := agentReaderOwnedDescriptors(t, paths...); after != before {
++		t.Fatal("reader close leaked namespace descriptors", before, after)
++	}
++	f.writerExclusion(t)
++	if _, e = datasetOwner.PublishedReader.OpenVersionAssetContext(context.Background(), uuid.NewString(), uuid.NewString(), "train.jsonl", 1, "invalid"); e == nil {
++		t.Fatal("closed dataset reader remained usable")
++	}
++	if e = trainingOwner.PublishedReader.VerifyPublished(context.Background(), training.UploadDescriptor{}); e == nil {
++		t.Fatal("closed training reader remained usable")
++	}
++	legacy, e := NewAgentGateway(f.owner, ready)
++	if e != nil || legacy == nil || legacy.publishedReaders != nil {
++		t.Fatal("existing constructor acquired reader ownership", e)
++	}
++	legacy.Sessions.Drain()
++	if e = legacy.ClosePublishedReaders(); e != nil {
++		t.Fatal(e)
++	}
++}
++
++func TestAgentGatewayPublishedReaderFailureCleanup(t *testing.T) {
++	for _, kind := range []string{"foreign_tenant", "missing_second_namespace", "invalid_graph"} {
++		t.Run(kind, func(t *testing.T) {
++			f := newAgentReaderFixture(t)
++			paths := []string{f.owner.Config.Datasets.ArtifactRoot, f.owner.Config.Training.ArtifactRoot}
++			before := agentReaderOwnedDescriptors(t, paths...)
++			tenant := f.tenant
++			switch kind {
++			case "foreign_tenant":
++				tenant = uuid.NewString()
++			case "missing_second_namespace":
++				f.owner.Config.Training.ArtifactRoot = filepath.Join(paths[1], "missing")
++			case "invalid_graph":
++				f.owner.Config.Database.MaxOpenConnections = 0
++			}
++			gateway, e := NewAgentGatewayWithPublishedReaders(f.owner, func() error { return errors.New("EXPLICIT_TEST_NOT_READY") }, tenant)
++			if e == nil || gateway != nil {
++				t.Fatal("invalid reader graph returned a gateway", e)
++			}
++			if after := agentReaderOwnedDescriptors(t, paths...); after != before {
++				t.Fatal("constructor failure leaked an owned reader", before, after)
++			}
++			f.owner.Config.Datasets.ArtifactRoot, f.owner.Config.Training.ArtifactRoot = paths[0], paths[1]
++			f.writerExclusion(t)
++		})
++	}
++}
++
++func TestAgentGatewayPublishedReaderRequiresTrustedOwner(t *testing.T) {
++	for _, tenant := range []string{"", uuid.Nil.String(), "invalid"} {
++		if gateway, e := NewAgentGatewayWithPublishedReaders(nil, nil, tenant); e == nil || gateway != nil {
++			t.Fatal("missing owner released a gateway")
++		}
++	}
++	var gateway *AgentGateway
++	if e := gateway.ClosePublishedReaders(); e != nil {
++		t.Fatal(e)
++	}
++}
+diff --git a/services/control/internal/platform/README.md b/services/control/internal/platform/README.md
+index 13d82450..bf996cdc 100644
+--- a/services/control/internal/platform/README.md
++++ b/services/control/internal/platform/README.md
+@@ -28,6 +28,13 @@ Platform packages provide bounded shared mechanisms. Domain owners still decide
+ 
+ ## Invariants
+ 
++Gateway Drain remains nonblocking. A process that owns file/database dependencies
++uses DrainAndWait to join admitted RPC callbacks and their receive loops, together
++with its HTTP request join; an HTTP transport can end before its backend callback.
++A canceled wait reports no completion and never reopens admission. The dedicated
++gateway retains process owners until both joins finish. This source addition
++still requires its affected runtime, race and native composition acceptance.
++
+ [database/transaction](database/transaction/README.md) borrows an already configured pool. Repository-owned SQL names its dialect explicitly; the platform does not rewrite SQL, commit inside borrowed callbacks, or log statements and arguments. Preserve uncertain commit classification. [mysqlstore](database/mysqlstore/README.md) owns its protected connection/session invariants; [mysqlmigrate](database/mysqlmigrate/README.md) owns the separate DDL journal and reconciliation.
+ 
+ Transports do not grant business authority. Object keys use server-resolved UUID scope. Task bus publication/consumption transports existing task intent; it does not authorize task execution. Localization is installed offline data, never a customer-runtime translation API.
+diff --git a/services/control/internal/platform/agentgateway/drain_join_test.go b/services/control/internal/platform/agentgateway/drain_join_test.go
+new file mode 100644
+index 00000000..9eb1618c
+--- /dev/null
++++ b/services/control/internal/platform/agentgateway/drain_join_test.go
+@@ -0,0 +1,117 @@
++package agentgateway
++
++import (
++	"context"
++	"errors"
++	"os"
++	"path/filepath"
++	"sync"
++	"testing"
++	"time"
++
++	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++)
++
++// This isolates RPC ownership, not database authorization or reader qualification.
++type retainedFileBackend struct {
++	fakeBackend
++	path      string
++	file      *os.File
++	started   chan struct{}
++	cancelled chan struct{}
++	release   chan struct{}
++}
++
++func (b *retainedFileBackend) Heartbeat(ctx context.Context, _, _ string, _ wire.Handshake) (wire.Disposition, error) {
++	f, err := os.Open(b.path)
++	if err != nil {
++		return wire.Disposition{}, err
++	}
++	defer f.Close()
++	b.file = f
++	close(b.started)
++	<-ctx.Done()
++	close(b.cancelled)
++	<-b.release
++	var data [1]byte
++	if _, err := f.Read(data[:]); err != nil {
++		return wire.Disposition{}, err
++	}
++	return wire.Disposition{}, ctx.Err()
++}
++
++func TestDrainAndWaitRetainsBackendUntilActualCallbackExit(t *testing.T) {
++	file := filepath.Join(t.TempDir(), "published-asset")
++	if err := os.WriteFile(file, []byte("synthetic"), 0600); err != nil {
++		t.Fatal(err)
++	}
++	b := &retainedFileBackend{path: file, started: make(chan struct{}), cancelled: make(chan struct{}), release: make(chan struct{})}
++	g, conn := start(t, b, 4)
++	var release sync.Once
++	finish := func() { release.Do(func() { close(b.release) }) }
++	t.Cleanup(finish)
++	stream := open(t, conn)
++	if err := stream.SendMsg(heartbeat(1)); err != nil {
++		t.Fatal(err)
++	}
++	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
++	defer cancel()
++	select {
++	case <-b.started:
++	case <-ctx.Done():
++		t.Fatal("RPC did not reach retained file owner")
++	}
++	g.Drain()
++	select {
++	case <-b.cancelled:
++	case <-ctx.Done():
++		t.Fatal("drain did not cancel the real RPC callback")
++	}
++	if _, err := exchange(t, open(t, conn), heartbeat(2)); status.Code(err) != codes.Unavailable {
++		t.Fatal("drained gateway admitted another callback", err)
++	}
++	if err := conn.Close(); err != nil {
++		t.Fatal(err)
++	}
++	short, stop := context.WithCancel(t.Context())
++	stop()
++	if err := g.DrainAndWait(short); !errors.Is(err, context.Canceled) {
++		t.Fatal("unreturned backend reported a join", err)
++	}
++	if _, err := b.file.Stat(); err != nil {
++		t.Fatal("transport close invalidated the callback's retained file", err)
++	}
++	select {
++	case <-g.joined:
++		t.Fatal("closed transport was mistaken for callback completion")
++	default:
++	}
++	finish()
++	var workers sync.WaitGroup
++	for range 16 {
++		workers.Go(func() {
++			if err := g.DrainAndWait(ctx); err != nil {
++				t.Error("concurrent real callback join", err)
++			}
++		})
++	}
++	workers.Wait()
++	if _, err := b.file.Stat(); !errors.Is(err, os.ErrClosed) {
++		t.Fatal("confirmed callback join preceded its file close", err)
++	}
++}
++
++func TestDrainAndWaitEmptyGatewayAndInvalidContext(t *testing.T) {
++	g, _ := start(t, &fakeBackend{}, 1)
++	if err := g.DrainAndWait(nil); err == nil || g.draining.Err() != nil {
++		t.Fatal("invalid context changed admission", err)
++	}
++	if err := g.DrainAndWait(t.Context()); err != nil {
++		t.Fatal("empty gateway did not join", err)
++	}
++	if err := g.DrainAndWait(t.Context()); err != nil {
++		t.Fatal("repeated drain did not join", err)
++	}
++}
+diff --git a/services/control/internal/platform/agentgateway/gateway.go b/services/control/internal/platform/agentgateway/gateway.go
+index a23b0afa..37ad5672 100644
+--- a/services/control/internal/platform/agentgateway/gateway.go
++++ b/services/control/internal/platform/agentgateway/gateway.go
+@@ -72,6 +72,9 @@ type Gateway struct {
+ 	// draining ends when Drain is called, and every session with it.
+ 	draining context.Context
+ 	drain    context.CancelFunc
++	// work includes RPC callbacks and their independently running receive loops.
++	work   int
++	joined chan struct{}
+ }
+ 
+ type session struct{ cancel context.CancelCauseFunc }
+@@ -102,7 +105,7 @@ func newGateway(backend Backend, policy Policy, problem Problem, idle time.Durat
+ 	if backend == nil || problem == nil || policy.MaxSessions < 1 || policy.ExchangeSeconds < 1 || idle <= 0 {
+ 		return nil, errors.New("AGENT_GATEWAY_CONFIGURATION_INVALID")
+ 	}
+-	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}, idleTimeout: idle}
++	g := &Gateway{backend: backend, policy: policy, problem: problem, slots: make(chan struct{}, policy.MaxSessions), sessions: map[string]*session{}, idleTimeout: idle, joined: make(chan struct{})}
+ 	g.draining, g.drain = context.WithCancel(context.Background())
+ 	g.server = grpc.NewServer(
+ 		grpc.MaxRecvMsgSize(wire.MaxSessionMessageBytes),
+@@ -146,7 +149,47 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request, address stri
+ 
+ // Drain ends every session and refuses new ones, so that agents move to another gateway
+ // before this one stops. It does not wait; the sessions end as their streams return.
+-func (g *Gateway) Drain() { g.drain() }
++func (g *Gateway) Drain() {
++	g.mu.Lock()
++	defer g.mu.Unlock()
++	if g.draining.Err() != nil {
++		return
++	}
++	g.drain()
++	if g.work == 0 {
++		close(g.joined)
++	}
++}
++
++// DrainAndWait refuses new RPC callbacks and waits for admitted callbacks and
++// their receive loops, including backend work that may outlive its HTTP transport. Cancellation
++// returns the context error without reopening admission or claiming a join.
++func (g *Gateway) DrainAndWait(ctx context.Context) error {
++	if ctx == nil {
++		return errors.New("AGENT_GATEWAY_CONTEXT_REQUIRED")
++	}
++	g.Drain()
++	select {
++	case <-g.joined:
++		return nil
++	default:
++	}
++	select {
++	case <-g.joined:
++		return nil
++	case <-ctx.Done():
++		return ctx.Err()
++	}
++}
++
++func (g *Gateway) completeWork() {
++	g.mu.Lock()
++	defer g.mu.Unlock()
++	g.work--
++	if g.work == 0 && g.draining.Err() != nil {
++		close(g.joined)
++	}
++}
+ 
+ // Sessions reports the number of open streams and held long-poll claims.
+ func (g *Gateway) Sessions() int { return len(g.slots) }
+@@ -171,6 +214,14 @@ func header(md metadata.MD, name string) (string, bool) {
+ }
+ 
+ func (g *Gateway) connect(stream grpc.ServerStream) error {
++	g.mu.Lock()
++	if g.draining.Err() != nil {
++		g.mu.Unlock()
++		return status.Error(codes.Unavailable, errDraining.Error())
++	}
++	g.work++
++	g.mu.Unlock()
++	defer g.completeWork()
+ 	age := httpserver.ConnectionDrainAt(stream.Context())
+ 	if !age.IsZero() && !time.Now().Before(age) {
+ 		return status.Error(codes.Unavailable, errDraining.Error())
+@@ -223,7 +274,13 @@ func (g *Gateway) connect(stream grpc.ServerStream) error {
+ 
+ 	messages := make(chan wire.AgentMessage)
+ 	received := make(chan error, 1)
++	// This descendant is registered while its admitted callback is still owned,
++	// even when drain raced with peer checks. Its stream is canceled on RPC exit.
++	g.mu.Lock()
++	g.work++
++	g.mu.Unlock()
+ 	go func() {
++		defer g.completeWork()
+ 		for {
+ 			var m wire.AgentMessage
+ 			if e := stream.RecvMsg(&m); e != nil {

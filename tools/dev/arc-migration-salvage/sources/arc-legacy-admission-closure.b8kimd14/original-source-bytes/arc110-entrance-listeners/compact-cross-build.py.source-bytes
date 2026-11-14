@@ -1,0 +1,26 @@
+from pathlib import Path
+import fcntl,hashlib,io,json,os,stat,subprocess,tarfile,tempfile,shutil
+base=Path(__file__).resolve().parent;repo=base.parent.parent/'lane-arc110'
+gate=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(gate,os.O_RDWR|os.O_NOFOLLOW);info=os.fstat(fd);assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+try:
+ assert(info.st_dev,info.st_ino)==(gate.lstat().st_dev,gate.lstat().st_ino)
+ assert subprocess.check_output(['git','status','--porcelain'],cwd=repo,text=True)==''
+ manifest=json.loads((base/'native-cross-manifest.json').read_text());assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()==manifest['source']
+ tmp=Path(tempfile.mkdtemp(prefix='ownsolid-arc110-link.',dir='/private/tmp'));os.chown(tmp,-1,os.getgid());os.chmod(tmp,0o700)
+ env=os.environ.copy();env.update({'TMPDIR':str(tmp)+'/', 'GOTOOLCHAIN':'local','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1','GOOS':'linux','GOARCH':'amd64','CGO_ENABLED':'0'})
+ binary=base/'compact-composition.test'
+ with(base/'compact-link.log').open('wb') as log:
+  code=subprocess.run(['go','-C','services/control','test','-c','-ldflags=-s -w','-tags=repository_integration,machine_ingress_integration','-o',str(binary),'./cmd/server'],cwd=repo,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=300).returncode
+ (base/'compact-link.exit').write_text(str(code)+'\n');assert code==0
+ shutil.rmtree(tmp)
+ manifest['binary_sha256']=hashlib.sha256(binary.read_bytes()).hexdigest();manifest['binary_bytes']=binary.stat().st_size;manifest['linker_flags']='-s -w';manifest['all_tagged_tests_retained']=True
+ delta=subprocess.check_output(['git','diff','--binary','149a95013db6c6d1ca9dbadd09b05fff9b4c98de',manifest['source']],cwd=repo)
+ with tarfile.open(base/'native-compact-input.tar.gz','w:gz',compresslevel=9) as ar:
+  for name,raw,mode in [('manifest.json',json.dumps(manifest).encode(),0o644),('delta.patch',delta,0o644),('native-runner.py',(base/'native-cross-runner.py').read_bytes(),0o644)]:
+   m=tarfile.TarInfo(name);m.size=len(raw);m.mode=mode;ar.addfile(m,io.BytesIO(raw))
+  ar.add(binary,arcname='composition.test',recursive=False)
+ raw=(base/'native-compact-input.tar.gz').read_bytes();meta={'source':manifest['source'],'tree':manifest['tree'],'source_paths':len(manifest['files']),'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest(),'binary_sha256':manifest['binary_sha256'],'binary_bytes':manifest['binary_bytes'],'linker_flags':'-s -w'}
+ (base/'native-compact-input.json').write_text(json.dumps(meta,indent=2)+'\n');print(json.dumps(meta),flush=True)
+finally:fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

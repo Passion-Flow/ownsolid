@@ -1,0 +1,72 @@
+from pathlib import Path
+import hashlib,io,json,os,select,shlex,signal,subprocess,sys,tarfile,tempfile,time,uuid
+base=Path(sys.argv[1]);target=sys.argv[2]
+run=Path(tempfile.mkdtemp(prefix='native-current.',dir=str(base)))
+remote='/root/lane-arc107-current-'+uuid.uuid4().hex[:12]
+archive=subprocess.check_output(['git','archive','--format=tar',target])
+entries=[]
+with tarfile.open(fileobj=io.BytesIO(archive),mode='r:') as source:
+ for member in source:
+  if member.isfile():data=source.extractfile(member).read();kind='file'
+  elif member.issym():data=member.linkname.encode();kind='symlink'
+  else:continue
+  entries.append({'path':member.name,'kind':kind,'executable':bool(member.mode&0o111),'sha256':hashlib.sha256(data).hexdigest()})
+previous=next(base.glob('linux-incremental.*/payload.tar.gz'))
+with tarfile.open(previous,'r:gz') as source:
+ verify=source.extractfile('verify-source.py').read().decode().replace('37ab360b',target)
+ guard=source.extractfile('guard.sh').read().decode()
+ old_remote=Path(previous.parent/'remote').read_text().strip()
+ guard=guard.replace(old_remote,remote)
+ guard=guard.replace('2>&1 | tee "$work/test.log"','> "$work/test.log" 2>&1')
+ guard=guard.replace('cleanup() { rm -rf -- "$scratch"; }','cleanup() { result=$?; printf "Native test/build exit: %s\\n" "$result"; if [ -f "$work/test.log" ]; then grep -E "^ok[[:space:]]|^FAIL|^--- FAIL:|Error|error:" "$work/test.log" | tail -8 || true; fi; rm -rf -- "$scratch"; return "$result"; }')
+ guard=guard.replace('export ARC107_SOURCE="$work/repo"','export ARC107_WORK="$work" ARC107_SOURCE="$work/repo"')
+ needle="-count=1 -timeout=4m\n'"
+ assert needle in guard
+ guard=guard.replace(needle,'-count=1 -timeout=4m\n  CGO_ENABLED=0 make -C "$ARC107_SOURCE" e2e-binaries\n  CGO_ENABLED=0 go -C "$ARC107_SOURCE/services/control" build -trimpath -o "$ARC107_WORK/control" ./cmd/server\n\'')
+files={'update.patch':subprocess.check_output(['git','diff','--binary','0f02cf93',target]),'manifest.json':json.dumps(entries,separators=(',',':')).encode(),'verify-source.py':verify.encode(),'guard.sh':guard.encode()}
+payload=io.BytesIO()
+with tarfile.open(fileobj=payload,mode='w:gz') as archive:
+ for name,data in files.items():
+  member=tarfile.TarInfo(name);member.size=len(data);member.mode=0o600;archive.addfile(member,io.BytesIO(data))
+data=payload.getvalue();(run/'payload.tar.gz').write_bytes(data);(run/'guard.sh').write_text(guard)
+(run/'remote').write_text(remote+'\n');(run/'tree').write_text(target+'\n')
+subprocess.run(['bash','-n',str(run/'guard.sh')],check=True)
+options=['-S',str((base/'ssh-control-path').read_text().strip()),'-o','ControlMaster=auto','-o','BatchMode=yes','-o','ConnectTimeout=10','-o','ServerAliveInterval=10','-o','ServerAliveCountMax=2']
+command='umask 077; mkdir '+shlex.quote(remote)+'; cat > '+shlex.quote(remote+'/payload.tar.gz')
+with (run/'upload.log').open('wb') as log:
+ p=subprocess.Popen(['ssh',*options,'ownsolid-cpu',command],stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ os.set_blocking(p.stdin.fileno(),False);position=0;deadline=time.monotonic()+90
+ try:
+  while position<len(data):
+   if p.poll() is not None:raise RuntimeError('upload exited '+str(p.returncode))
+   if time.monotonic()>deadline:raise TimeoutError('bounded upload')
+   if select.select([], [p.stdin.fileno()], [],.25)[1]:
+    try:position+=os.write(p.stdin.fileno(),data[position:position+512])
+    except BlockingIOError:continue
+    time.sleep(.01)
+  p.stdin.close();assert p.wait(timeout=40)==0
+ except BaseException:
+  if p.poll() is None:
+   os.killpg(p.pid,signal.SIGTERM)
+   try:p.wait(timeout=5)
+   except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait()
+  raise
+value=subprocess.check_output(['ssh',*options,'ownsolid-cpu','sha256sum '+shlex.quote(remote+'/payload.tar.gz')],stdin=subprocess.DEVNULL,text=True,timeout=45)
+assert value.split()[0]==hashlib.sha256(data).hexdigest()
+(run/'verified-upload').write_text(value)
+subprocess.run(['ssh',*options,'ownsolid-cpu','tar -xzf '+shlex.quote(remote+'/payload.tar.gz')+' -C '+shlex.quote(remote)],stdin=subprocess.DEVNULL,check=True,timeout=45)
+(base/'latest-native-current').write_text(str(run)+'\n')
+print('Uploaded and verified',len(data),'bytes for',len(entries),'exact files:',target,flush=True)
+with (run/'run.log').open('wb') as log:
+ p=subprocess.Popen(['ssh',*options,'ownsolid-cpu','bash '+shlex.quote(remote+'/guard.sh')],stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ (run/'ssh-pid').write_text(str(p.pid)+'\n')
+ try:result=p.wait(timeout=1000)
+ except subprocess.TimeoutExpired:
+  os.killpg(p.pid,signal.SIGTERM)
+  try:p.wait(timeout=5)
+  except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait()
+  result=124
+(run/'exit').write_text(str(result)+'\n')
+print('Native current-tree exit:',result,flush=True)
+print((run/'run.log').read_text()[-3000:])
+raise SystemExit(result)

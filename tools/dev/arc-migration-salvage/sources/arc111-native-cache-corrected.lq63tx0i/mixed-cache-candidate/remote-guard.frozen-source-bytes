@@ -1,0 +1,510 @@
+from pathlib import Path, PurePosixPath
+import os,sys,json,time,stat,hashlib,fcntl,subprocess,signal,shutil,re,tempfile,tarfile,io,socket,secrets,uuid,base64,select,lzma
+cfg=json.loads(sys.argv[1]); start=time.monotonic(); assert 120<cfg['remote_budget_seconds']<=1000; end=start+cfg['remote_budget_seconds']; work_end=end-120; phase_end=start+45
+os.umask(0o077)
+record={'source':cfg['source'],'tree':cfg['tree'],'state':'NOTRUN','runner_pid':os.getpid(),'remote_budget_seconds':cfg['remote_budget_seconds'],'cleanup_reserve_seconds':120,'stages':[],'metadata':[],'lock_nb_attempts':[],'runtime_profiles_executed':[],'go_compilers_started':0}
+root=None;locks=[];children=[];container=None;volume=None;network=None;secrets_owned=[];input_data=None
+expected_locks=[('/run/lock/ownsolid-heavy.lock',29,82),('/root/lane-sci-tools/heavy-test.lock',64512,7508772)]
+def emit(name,value):
+ try: print('ARC_NATIVE_'+name+' '+json.dumps(value,sort_keys=True),flush=True)
+ except BrokenPipeError: pass
+def save():
+ if root is not None:(root/'result.json').write_text(json.dumps(record,sort_keys=True,indent=2)+'\n')
+def lock_identity(s):return {'dev':s.st_dev,'ino':s.st_ino,'uid':s.st_uid,'mode':stat.S_IMODE(s.st_mode),'nlink':s.st_nlink,'size':s.st_size,'regular':stat.S_ISREG(s.st_mode)}
+def check_locks():
+ for fd,path,dev,ino in locks:
+  a=os.fstat(fd);b=os.lstat(path)
+  assert a.st_dev==b.st_dev==dev and a.st_ino==b.st_ino==ino and a.st_uid==b.st_uid==0 and stat.S_ISREG(a.st_mode) and stat.S_ISREG(b.st_mode) and a.st_nlink==b.st_nlink==1 and a.st_size==b.st_size==0,'LOCK_IDENTITY_CHANGED'
+def group_members(pgid):
+ found=[]
+ for line in subprocess.check_output(['ps','-e','-o','pid=,ppid=,pgid=,lstart=,stat=,comm='],text=True).splitlines():
+  p=line.split(None,3)
+  if len(p)==4 and int(p[2])==pgid:found.append(line.strip())
+ return found
+def stop_child(p):
+ if p.poll() is None:
+  os.killpg(p.pid,signal.SIGTERM)
+  try:p.wait(timeout=max(.01,min(5,end-time.monotonic())))
+  except subprocess.TimeoutExpired:
+   os.killpg(p.pid,signal.SIGKILL);p.wait(timeout=max(.01,min(5,end-time.monotonic())))
+ left=group_members(p.pid)
+ if left:
+  os.killpg(p.pid,signal.SIGKILL);until=min(end,time.monotonic()+3)
+  while time.monotonic()<until and group_members(p.pid):time.sleep(.05)
+ return group_members(p.pid)
+def command(name,argv,data=None,timeout=20,allow=False,cleanup=False,cwd=None):
+ limit=end if cleanup else min(work_end,phase_end)
+ remaining=limit-time.monotonic()
+ if remaining<=.5:raise TimeoutError('ABSOLUTE_PHASE_CUTOFF_'+name)
+ check_locks();began=time.monotonic()
+ p=subprocess.Popen(argv,stdin=subprocess.PIPE if data is not None else subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True,close_fds=True,cwd=cwd,umask=0o022 if name=='source-git-apply' else -1);children.append(p)
+ try:stdout,stderr=p.communicate(data,timeout=min(timeout,remaining))
+ except subprocess.TimeoutExpired:
+  stop_child(p);stdout,stderr=p.communicate();raise TimeoutError('CHILD_TIMEOUT_'+name)
+ info={'name':name,'pid':p.pid,'exit':p.returncode,'elapsed_seconds':time.monotonic()-began,'stdout_sha256':hashlib.sha256(stdout).hexdigest(),'stderr_sha256':hashlib.sha256(stderr).hexdigest()}
+ if root is not None:
+  (root/(name+'.stdout')).write_bytes(stdout);(root/(name+'.stderr')).write_bytes(stderr)
+ record['stages'].append(info);save();check_locks()
+ if p.returncode and not allow:raise RuntimeError('CHILD_FAILED_'+name+'_exit_'+str(p.returncode))
+ return stdout,p.returncode
+def psql(name,db,sql,timeout=30):
+ return command(name,['docker','exec','-i',container,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','postgres','-d',db],sql.encode() if isinstance(sql,str) else sql,timeout)[0]
+def catalog(name,db,schema,version):
+ raw=psql(name+'-catalog-query',db,'SET search_path="'+schema+'";\n'+(root/'metadata-inputs/catalog.sql').read_text())
+ assert raw.endswith(b'\n') and len(raw)>1000
+ raw=raw[:-1];parsed=json.loads(raw);assert parsed['table_count']==(122 if version==61 else 120),(name,parsed['table_count'])
+ (root/(name+'.catalog.json')).write_bytes(raw)
+ ledger=psql(name+'-ledger-query',db,'SET search_path="'+schema+'";\n'+(root/'metadata-inputs/ledger.sql').read_text()).rstrip(b'\n')
+ expected=[[m['version'],m['sha256']] for m in input_data['migrations'] if m['version']<=version]
+ assert json.loads(ledger)==expected,(name,'LEDGER_MISMATCH');(root/(name+'.ledger.json')).write_bytes(ledger)
+ value={'name':name,'database':db,'schema':schema,'version':version,'table_count':parsed['table_count'],'catalog_bytes':len(raw),'catalog_sha256':hashlib.sha256(raw).hexdigest(),'ledger_sha256':hashlib.sha256(ledger).hexdigest(),'ledger_entries':len(expected)}
+ record['metadata'].append(value);save();emit('HISTORY',value);return value
+def receive_payload(read_piece, wait_readable, now, deadline, expected_size, expected_sha256, receipt):
+    """Read the exact frozen input and EOF within the existing admission deadline."""
+    started = now()
+    received = bytearray()
+    digest = hashlib.sha256()
+    eof = False
+    try:
+        while True:
+            remaining = deadline - now()
+            if remaining <= 0 or not wait_readable(remaining):
+                raise TimeoutError("PAYLOAD_ADMISSION_DEADLINE_EXCEEDED")
+            try:
+                data = read_piece(min(65536, expected_size + 1 - len(received)))
+            except BlockingIOError:
+                continue
+            if not data:
+                eof = True
+                break
+            received.extend(data)
+            digest.update(data)
+            if len(received) > expected_size:
+                raise ValueError("PAYLOAD_BYTE_COUNT_MISMATCH")
+        if len(received) != expected_size:
+            raise ValueError("PAYLOAD_BYTE_COUNT_MISMATCH")
+        if digest.hexdigest() != expected_sha256:
+            raise ValueError("PAYLOAD_DIGEST_MISMATCH")
+        return bytes(received)
+    finally:
+        receipt.update(
+            expected_bytes=expected_size,
+            expected_sha256=expected_sha256,
+            received_bytes=len(received),
+            received_sha256=digest.hexdigest(),
+            eof_observed=eof,
+            elapsed_seconds=now() - started,
+        )
+
+
+def read_admission_payload(expected_size, expected_sha256):
+    fd = sys.stdin.buffer.fileno()
+    blocking = os.get_blocking(fd)
+    receipt = record.setdefault("payload_receive", {})
+    os.set_blocking(fd, False)
+    try:
+        return receive_payload(
+            lambda size: os.read(fd, size),
+            lambda remaining: bool(select.select([fd], [], [], remaining)[0]),
+            time.monotonic, min(phase_end, work_end), expected_size, expected_sha256, receipt,
+        )
+    finally:
+        os.set_blocking(fd, blocking)
+        save()
+
+def send_payload(write_piece, wait_writable, now, deadline, data, receipt):
+    """Count only bytes accepted by the local OS pipe, not remote receipt."""
+    started = now()
+    written = 0
+    digest = hashlib.sha256()
+    try:
+        while written < len(data):
+            remaining = deadline - now()
+            if remaining <= 0:
+                raise TimeoutError("LOCAL_PAYLOAD_WRITE_DEADLINE_EXCEEDED")
+            if not wait_writable(min(remaining, 0.25)):
+                continue
+            try:
+                amount = write_piece(memoryview(data)[written:written + 16384])
+            except BlockingIOError:
+                continue
+            if not 0 < amount <= min(16384, len(data) - written):
+                raise ValueError("LOCAL_PAYLOAD_WRITE_COUNT_INVALID")
+            digest.update(data[written:written + amount])
+            written += amount
+            receipt.setdefault("first_write_after_seconds", now() - started)
+            receipt["last_write_after_seconds"] = now() - started
+        return written
+    except BaseException as error:
+        receipt["error_type"] = type(error).__name__
+        receipt["error"] = str(error)[:240]
+        raise
+    finally:
+        receipt.update(expected_bytes=len(data), written_bytes=written,
+                       written_sha256=digest.hexdigest(),
+                       elapsed_seconds=now() - started,
+                       proof_scope="local OS-pipe acceptance; not remote delivery")
+
+def decode_envelope(wire, transport):
+    assert transport["encoding"] == "xz-of-tar-v1"
+    decoder = lzma.LZMADecompressor(format=lzma.FORMAT_XZ, memlimit=64 * 1024**2)
+    raw = decoder.decompress(wire, max_length=transport["decoded_bytes"] + 1)
+    assert decoder.eof and not decoder.unused_data, "COMPRESSED_FRAME_BOUNDARY_MISMATCH"
+    assert len(raw) == transport["decoded_bytes"], "DECODED_BYTE_COUNT_MISMATCH"
+    assert hashlib.sha256(raw).hexdigest() == transport["decoded_sha256"], "DECODED_DIGEST_MISMATCH"
+    return raw
+
+def checked_relative(name):
+    relative = PurePosixPath(name)
+    assert name and str(relative) == name and not relative.is_absolute()
+    assert all(part not in {"", ".", ".."} for part in relative.parts)
+    return relative
+
+def unpack_members(raw, destination, members):
+    actual = set()
+    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:") as archive:
+        for member in archive:
+            checked_relative(member.name)
+            assert member.isfile() and member.name in members and member.name not in actual
+            expected = members[member.name]
+            assert member.size == expected["bytes"]
+            data = archive.extractfile(member).read(expected["bytes"] + 1)
+            assert len(data) == expected["bytes"] and hashlib.sha256(data).hexdigest() == expected["sha256"]
+            target = destination / member.name
+            target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            with target.open("xb") as stream:
+                stream.write(data)
+            actual.add(member.name)
+    assert actual == set(members)
+
+def verify_file(data, reference, mode):
+    assert mode == int(reference["mode"], 8) & 0o777, "SOURCE_MODE_MISMATCH"
+    assert len(data) == reference["bytes"], "SOURCE_LENGTH_MISMATCH"
+    assert hashlib.sha256(data).hexdigest() == reference["sha256"], "SOURCE_DIGEST_MISMATCH"
+    blob = b"blob " + str(len(data)).encode() + b"\0" + data
+    assert hashlib.sha1(blob).hexdigest() == reference["git_blob"], "SOURCE_GIT_BLOB_MISMATCH"
+
+def read_cached_file(base, name, reference, owner_uid):
+    """No symlink traversal or mutable/shared inode is accepted as a source input."""
+    relative = checked_relative(name)
+    flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC
+    descriptors = []
+    try:
+        parent = os.open(base, flags | os.O_DIRECTORY)
+        descriptors.append(parent)
+        assert os.fstat(parent).st_uid == owner_uid, "CACHE_DIRECTORY_OWNER_MISMATCH"
+        for part in relative.parts[:-1]:
+            parent = os.open(part, flags | os.O_DIRECTORY, dir_fd=parent)
+            descriptors.append(parent)
+            assert os.fstat(parent).st_uid == owner_uid, "CACHE_DIRECTORY_OWNER_MISMATCH"
+        fd = os.open(relative.name, flags, dir_fd=parent)
+        descriptors.append(fd)
+        before = os.fstat(fd)
+        assert stat.S_ISREG(before.st_mode) and before.st_uid == owner_uid and before.st_nlink == 1, "CACHE_FILE_IDENTITY_MISMATCH"
+        assert before.st_size == reference["bytes"], "CACHE_FILE_LENGTH_MISMATCH"
+        chunks = []
+        remaining = reference["bytes"] + 1
+        while remaining:
+            chunk = os.read(fd, min(remaining, 65536))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        after = os.fstat(fd)
+        fields = lambda s: (s.st_dev, s.st_ino, s.st_uid, s.st_nlink, s.st_size, s.st_mode, s.st_mtime_ns, s.st_ctime_ns)
+        assert fields(before) == fields(after), "CACHE_FILE_CHANGED_DURING_READ"
+        data = b"".join(chunks)
+        try:
+            verify_file(data, reference, stat.S_IMODE(before.st_mode))
+        except AssertionError as error:
+            context = {"code": str(error), "relative_path": name,
+                       "expected_mode": oct(int(reference["mode"], 8) & 0o777),
+                       "observed_mode": oct(stat.S_IMODE(before.st_mode)),
+                       "expected_bytes": reference["bytes"], "observed_bytes": len(data),
+                       "expected_sha256": reference["sha256"],
+                       "observed_sha256": hashlib.sha256(data).hexdigest(),
+                       "uid": before.st_uid, "nlink": before.st_nlink}
+            raise AssertionError(json.dumps(context, sort_keys=True)) from error
+        return data
+    finally:
+        for fd in reversed(descriptors):
+            os.close(fd)
+
+def reconstruct_source(root, manifest, transport_binding, base, owner_uid, deadline, apply_patch, now=time.monotonic):
+    expected = {item["path"]: item for item in manifest["files"]}
+    assert len(expected) == len(manifest["files"]) == 5102
+    changed = set(transport_binding["delta_paths"])
+    assert len(changed) == transport_binding["delta_path_count"] == 240
+    assert changed <= expected.keys()
+    patch = root / "source-delta.patch"
+    assert patch.stat().st_size == transport_binding["delta_patch_bytes"]
+    assert hashlib.sha256(patch.read_bytes()).hexdigest() == transport_binding["delta_patch_sha256"]
+    basis = {name: ref for name, ref in expected.items() if name not in changed}
+    for ref in transport_binding["basis_changed_or_removed_inputs"]:
+        assert ref["path"] not in basis
+        basis[ref["path"]] = ref
+    assert len(basis) == 5015
+    destination = root / "source"
+    destination.mkdir(mode=0o700)
+    for name, reference in sorted(basis.items()):
+        assert now() < deadline, "SOURCE_RECONSTRUCTION_ADMISSION_DEADLINE_EXCEEDED"
+        checked_relative(name)
+        assert reference["mode"] in {"100644", "100755"}
+        data = read_cached_file(base, name, reference, owner_uid)
+        target = destination / name
+        target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        with target.open("xb") as stream:
+            stream.write(data)
+        os.chmod(target, int(reference["mode"], 8) & 0o777)
+    assert now() < deadline, "SOURCE_RECONSTRUCTION_ADMISSION_DEADLINE_EXCEEDED"
+    apply_patch(destination, patch)
+    total = 0
+    for name, reference in sorted(expected.items()):
+        assert now() < deadline, "SOURCE_RECONSTRUCTION_ADMISSION_DEADLINE_EXCEEDED"
+        checked_relative(name)
+        target = destination / name
+        identity = target.lstat()
+        assert stat.S_ISREG(identity.st_mode) and identity.st_uid == owner_uid and identity.st_nlink == 1
+        verify_file(target.read_bytes(), reference, stat.S_IMODE(target.lstat().st_mode))
+        total += reference["bytes"]
+    assert {p.relative_to(destination).as_posix() for p in destination.rglob("*") if p.is_file()} == expected.keys()
+    assert not any(p.is_symlink() for p in destination.rglob("*"))
+    return {"target_paths": len(expected), "delta_paths": len(changed), "cached_paths": len(expected) - len(changed),
+            "basis_file_inputs_verified": len(basis),
+            "target_bytes": total, "every_byte_mode_and_git_blob_verified": True,
+            "cache_read_only": True, "original_source_archive_transferred": False}
+
+def cache_transport_reference(base, name, reference):
+    """Bind a read-only cache input to its exact canonical or Git tar mode."""
+    checked_relative(name)
+    assert reference['mode'] in {'100644', '100755'}
+    source_mode = int(reference['mode'], 8) & 0o777
+    observed = (base / name).lstat()
+    assert stat.S_ISREG(observed.st_mode), 'CACHE_INPUT_NOT_REGULAR'
+    actual_mode = stat.S_IMODE(observed.st_mode)
+    if actual_mode == source_mode:
+        return reference, actual_mode
+    if actual_mode == source_mode | 0o020:
+        return dict(reference, mode=oct(stat.S_IFREG | actual_mode)), actual_mode
+    raise AssertionError(json.dumps({'code':'CACHE_TRANSPORT_MODE_MISMATCH',
+                                    'relative_path':name,
+                                    'git_mode':reference['mode'],
+                                    'canonical_mode':oct(source_mode),
+                                    'git_tar_mode':oct(source_mode | 0o020),
+                                    'observed_mode':oct(actual_mode)}, sort_keys=True))
+
+def materialize_git_archive_basis(root, manifest, transport_binding, owner_uid, deadline, now=time.monotonic, basis_binding_sha256='0c6cc92715ef72a1d433250c8dbd2c4e8c7890f7314cdbfc636fa286c00dfe96'):
+    """Convert exact per-file canonical/Git tar input modes into a private cache."""
+    old = Path(transport_binding['basis_path'])
+    binding_path = old.parent / 'installed-source-verified.json'
+    binding_fd = os.open(binding_path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        identity = os.fstat(binding_fd)
+        assert stat.S_ISREG(identity.st_mode) and identity.st_uid == owner_uid and identity.st_nlink == 1 and identity.st_size <= 100000
+        binding_bytes = os.read(binding_fd, 100001)
+    finally:
+        os.close(binding_fd)
+    assert hashlib.sha256(binding_bytes).hexdigest() == basis_binding_sha256, 'BASIS_OWNER_BINDING_CHANGED'
+    binding = json.loads(binding_bytes)
+    assert binding['source'] == transport_binding['basis_source'] and binding['tree'] == transport_binding['basis_tree']
+    assert binding['paths'] == 5015 and binding['every_source_byte_and_mode_verified'] is True
+    changed = set(transport_binding['delta_paths'])
+    basis = {ref['path']:ref for ref in manifest['files'] if ref['path'] not in changed}
+    for ref in transport_binding['basis_changed_or_removed_inputs']:
+        assert ref['path'] not in basis
+        basis[ref['path']] = ref
+    assert len(basis) == 5015
+    destination = root / 'basis-cache'
+    destination.mkdir(mode=0o700)
+    counts = {}
+    total = 0
+    for name, reference in sorted(basis.items()):
+        assert now() < deadline, 'BASIS_MATERIALIZATION_ADMISSION_DEADLINE_EXCEEDED'
+        checked_relative(name)
+        assert reference['mode'] in {'100644', '100755'}
+        source_mode = int(reference['mode'], 8) & 0o777
+        # Mixed cache entries retain either the exact Git mode or the exact
+        # tar.umask=0002 representation. The target Git mode never changes.
+        archive_reference, actual_cache_mode = cache_transport_reference(old, name, reference)
+        data = read_cached_file(old, name, archive_reference, owner_uid)
+        target = destination / name
+        target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+        try:
+            offset = 0
+            while offset < len(data):
+                amount = os.write(fd, data[offset:])
+                assert amount > 0
+                offset += amount
+            os.fchmod(fd, source_mode)
+        finally:
+            os.close(fd)
+        # Check actual newly created file metadata; expected bits are never
+        # substituted for observed mode in the source verifier.
+        assert read_cached_file(destination, name, reference, owner_uid) == data
+        counts[oct(actual_cache_mode) + '->' + oct(source_mode)] = counts.get(oct(actual_cache_mode) + '->' + oct(source_mode), 0) + 1
+        total += len(data)
+    assert {p.relative_to(destination).as_posix() for p in destination.rglob('*') if p.is_file()} == basis.keys()
+    return destination, {'paths':len(basis), 'bytes':total, 'exact_permission_mapping_counts':counts,
+                         'old_cache_read_only':True, 'new_cache_owned':True,
+                         'strict_source_verifier_unchanged':True,
+                         'owner_binding_sha256':hashlib.sha256(binding_bytes).hexdigest()}
+
+
+def terminate(signum,frame):raise SystemExit(128+signum)
+for sig in [signal.SIGTERM,signal.SIGINT,signal.SIGHUP]:signal.signal(sig,terminate)
+try:
+ memory={x.split(':')[0]:int(x.split(':')[1].split()[0])*1024 for x in Path('/proc/meminfo').read_text().splitlines() if x.split(':')[0] in ['MemFree','MemAvailable']}
+ psi=float(re.search(r'^full avg10=([0-9.]+)',Path('/proc/pressure/io').read_text(),re.M)[1]);disk=shutil.disk_usage('/root').free
+ heavy=[x.strip() for x in subprocess.check_output(['ps','-e','-o','pid=,comm='],text=True).splitlines() if x.split() and x.split()[-1] in {'go','compile','link','rustc','cargo','make','gcc','cc1'}]
+ record['preflight']={'memory_bytes':memory,'full_io_psi_avg10':psi,'disk_free_bytes':disk,'foreign_heavy':heavy};emit('PREFLIGHT',record['preflight'])
+ assert memory['MemFree']>=2*1024**3 and memory['MemAvailable']>=8*1024**3 and disk>=30*1024**3 and psi<=5 and not heavy,'RESOURCE_REFUSAL'
+ for path,dev,ino in expected_locks:
+  s=os.lstat(path);assert (s.st_dev,s.st_ino,s.st_uid)==(dev,ino,0) and stat.S_ISREG(s.st_mode) and s.st_nlink==1 and s.st_size==0,'LOCK_PATH_REFUSAL'
+  fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC);s=os.fstat(fd)
+  assert (s.st_dev,s.st_ino,s.st_uid)==(dev,ino,0) and stat.S_ISREG(s.st_mode),'LOCK_FD_REFUSAL'
+  record['lock_nb_attempts'].append({'path':path,'identity':lock_identity(s)})
+  try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError:os.close(fd);raise RuntimeError('LOCK_BUSY_NOTRUN')
+  locks.append((fd,path,dev,ino));check_locks()
+ record['admitted']=True
+ root=Path(tempfile.mkdtemp(prefix='lane-arc111-formal61-e1.',dir='/root'));record['remote_root']=str(root);save();emit('ROOT',str(root))
+ image_raw,_=command('image-inspect',['docker','image','inspect',cfg['image']],timeout=10);image=json.loads(image_raw)[0]
+ assert image['Id']==cfg['image'] and image['Architecture']=='amd64' and image['Os']=='linux','IMAGE_REFUSAL'
+ volumes=list(image['Config']['Volumes']);assert len(volumes)==1 and volumes[0].startswith('/var/lib/postgresql'),'VOLUME_TARGET_REFUSAL'
+ record['image']={'id':image['Id'],'os':image['Os'],'architecture':image['Architecture'],'volume_target':volumes[0]};save()
+ record['active_stage']='wire_receive';save()
+ raw=read_admission_payload(cfg['payload_bytes'],cfg['payload_sha256'])
+ assert len(raw)==cfg['payload_bytes'] and hashlib.sha256(raw).hexdigest()==cfg['payload_sha256'],'PAYLOAD_REFUSAL'
+ emit('INPUT',record['payload_receive'])
+ record['active_stage']='decode_frame';save()
+ decoded=decode_envelope(raw,cfg['transport'])
+ record['decoded_frame']={'bytes':len(decoded),'sha256':hashlib.sha256(decoded).hexdigest()};save()
+ record['active_stage']='parse_members';save()
+ unpack_members(decoded,root,cfg['payload_members'])
+ manifest=json.loads((root/'source-manifest.json').read_text());assert manifest['source']==cfg['source'] and manifest['tree']==cfg['tree'] and len(manifest['files'])==5102
+ assert hashlib.sha256((root/'source-manifest.json').read_bytes()).hexdigest()==cfg['source_manifest_sha256']
+ transport_binding=json.loads((root/'transport-binding.json').read_text())
+ assert transport_binding['target_source']==cfg['source'] and transport_binding['target_tree']==cfg['tree']
+ record['active_stage']='source_reconstruction';save()
+ source_started=time.monotonic()
+ def apply_source_delta(destination,patch):
+  command('source-git-apply',['git','--no-optional-locks','-c','core.hooksPath=/dev/null','apply','--binary','--whitespace=nowarn','--',str(patch)],timeout=10,cwd=str(destination))
+ normalized_basis,normalization_result=materialize_git_archive_basis(root,manifest,transport_binding,0,min(phase_end,work_end))
+ record['basis_cache_materialization']=normalization_result;save()
+ record['source_reconstruction']=reconstruct_source(root,manifest,transport_binding,normalized_basis,0,min(phase_end,work_end),apply_source_delta)
+ record['source_reconstruction']['elapsed_seconds']=time.monotonic()-source_started
+ input_data=json.loads((root/'migration-inputs.json').read_text())
+ for m in input_data['migrations']:assert hashlib.sha256((root/'source'/m['path']).read_bytes()).hexdigest()==m['sha256']
+ for m in input_data['inputs']:
+  data=(root/m['path']).read_bytes();assert len(data)==m['bytes'] and hashlib.sha256(data).hexdigest()==m['sha256']
+ catalog_go=(root/'source/services/control/internal/platform/database/catalog.go').read_bytes()
+ assert re.search(rb'const CatalogSQL = `([\s\S]*?)`',catalog_go)[1]+b';\n'==(root/'metadata-inputs/catalog.sql').read_bytes()
+ record['all_source_paths_and_migration_inputs_verified']=True;record['native_binaries_locally_verified_not_executed']=json.loads((root/'binding.json').read_text())['native_binaries_locally_verified'];save()
+ emit('SOURCE',record['source_reconstruction'])
+ assert time.monotonic()<phase_end,'ADMISSION_PHASE_EXCEEDED'
+ record['active_stage']='fixture';save()
+ phase_end=min(work_end,time.monotonic()+60)
+ fixture=str(uuid.uuid4());suffix=fixture.replace('-','');record['fixture_uuid']=fixture
+ network='arc111-formal61-'+suffix;volume='arc111-formal61-'+suffix;container='arc111-formal61-'+suffix
+ labels=['--label','projectone.owner=mvp-development','--label','projectone.milestone=M12','--label','projectone.fixture_id='+fixture]
+ _,absent=command('volume-precreate-inspect',['docker','volume','inspect',volume],allow=True);assert absent!=0
+ command('network-create',['docker','network','create','--internal','--driver','bridge',*labels,network]);record['network_created']=network;save()
+ command('volume-create',['docker','volume','create',*labels,volume]);record['volume_created']=volume;save()
+ sock=socket.socket();sock.bind(('127.0.0.1',0));port=sock.getsockname()[1];sock.close();record['loopback_port']=port
+ password=secrets.token_urlsafe(32);password_file=root/'postgres-password';password_file.write_text(password+'\n');secrets_owned.append(password_file)
+ dsn=root/'database-input';dsn.write_text('postgres://postgres:'+password+'@127.0.0.1:'+str(port)+'/arc111_catalog_test?sslmode=disable\n');secrets_owned.append(dsn)
+ created,_=command('container-create',['docker','create','--name',container,*labels,'--network',network,'--publish','127.0.0.1:'+str(port)+':5432','--cpus','2','--memory','4g','--memory-swap','4g','--pids-limit','256','--env','POSTGRES_DB=arc111_catalog_test','--env','POSTGRES_USER=postgres','--env','POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password','--env','POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=trust','--mount','type=bind,src='+str(password_file)+',dst=/run/secrets/postgres-password,readonly','--mount','type=volume,src='+volume+',dst='+volumes[0],cfg['image'],'postgres','-c','cluster_name=knowledge-fixture-'+fixture,'-c','log_statement=none','-c','log_parameter_max_length=0','-c','log_min_error_statement=panic'])
+ record['container_id']=created.decode().strip();save()
+ passwd,_=command('container-postgres-identity',['docker','cp',container+':/etc/passwd','-'])
+ with tarfile.open(fileobj=io.BytesIO(passwd)) as archive:
+  entry=next(x for x in archive if x.name=='passwd' or x.name.endswith('/passwd'));line=next(x for x in archive.extractfile(entry).read().decode().splitlines() if x.startswith('postgres:'));parts=line.split(':');pg_uid,pg_gid=int(parts[2]),int(parts[3])
+ assert pg_uid>0;os.chown(password_file,pg_uid,pg_gid);os.chmod(password_file,0o600)
+ command('container-start',['docker','start',container])
+ ready_limit=min(phase_end,time.monotonic()+35)
+ while True:
+  _,code=command('readiness-'+str(len(record['stages'])),['docker','exec',container,'pg_isready','-U','postgres','-d','arc111_catalog_test'],timeout=3,allow=True)
+  if code==0:break
+  assert time.monotonic()<ready_limit,'POSTGRES_READY_TIMEOUT';time.sleep(.3)
+ info_raw,_=command('container-scope-inspect',['docker','inspect',container]);ci=json.loads(info_raw)[0]
+ assert ci['Image']==cfg['image'] and ci['Config']['Labels']['projectone.fixture_id']==fixture and ci['HostConfig']['Memory']==4*1024**3 and ci['HostConfig']['NanoCpus']==2000000000
+ assert ci['HostConfig']['PortBindings']['5432/tcp']==[{'HostIp':'127.0.0.1','HostPort':str(port)}]
+ net_raw,_=command('network-scope-inspect',['docker','network','inspect',network]);ni=json.loads(net_raw)[0];assert ni['Internal'] and len(ni['Containers'])==1
+ routes,_=command('container-routes',['docker','exec',container,'cat','/proc/net/route']);assert not any(x.split()[1]=='00000000' for x in routes.decode().splitlines()[1:] if x.split()),'EXTERNAL_DEFAULT_ROUTE'
+ with socket.create_connection(('127.0.0.1',port),timeout=3):pass
+ record['fixture_scope']={'cluster':'knowledge-fixture-'+fixture,'loopback_port':port,'internal_network':True,'no_external_default_route':True,'host_loopback_tcp_reached':True,'cpus':2,'memory_bytes':4*1024**3,'volume':volume};save()
+ actual=psql('postgres-vector-version','arc111_catalog_test',"CREATE EXTENSION vector;\nSELECT current_setting('server_version_num'),current_setting('cluster_name'),extversion FROM pg_extension WHERE extname='vector' AND extnamespace='public'::regnamespace;\n")
+ assert actual.decode().strip()=='180006|knowledge-fixture-'+fixture+'|0.8.7',actual.decode();record['postgres_vector_verified']=True;save()
+ record['active_stage']='catalog_metadata';save()
+ phase_end=min(work_end,time.monotonic()+180)
+ def new_schema():
+  s='m01_'+uuid.uuid4().hex;psql('schema-create-'+s,'arc111_catalog_test','CREATE SCHEMA "'+s+'";');return s
+ def apply(name,db,schema,file):return psql(name,db,'\\set schema '+schema+'\n'+(root/'metadata-inputs'/file).read_text(),40)
+ baseline=new_schema();apply('baseline60-prefix','arc111_catalog_test',baseline,'prefix-60.sql');b=catalog('baseline-fresh60','arc111_catalog_test',baseline,60)
+ assert b['catalog_sha256']=='4999ec1b3e7ccad081e2290270860c362d23d56ba088441dee7869f734f608d7','FRESH60_BASELINE_DIFFERS'
+ fresh=new_schema();apply('fresh61-prefix','arc111_catalog_test',fresh,'prefix-61.sql');catalog('fresh61','arc111_catalog_test',fresh,61)
+ for version in range(55,62):
+  schema=new_schema();apply('prefix-'+str(version),'arc111_catalog_test',schema,'prefix-'+str(version)+'.sql')
+  dump,_=command('dump-at-'+str(version),['docker','exec',container,'pg_dump','-U','postgres','-d','arc111_catalog_test','-Fc','--no-owner','--no-privileges','--lock-wait-timeout=5s','--schema',schema],timeout=20);assert 100<len(dump)<=64*1024**2
+  (root/('restore-at-'+str(version)+'.dump')).write_bytes(dump)
+  target='m12_restore_'+uuid.uuid4().hex+'_test';psql('restore-db-create-'+str(version),'arc111_catalog_test','CREATE DATABASE "'+target+'";');psql('restore-vector-'+str(version),target,'CREATE EXTENSION vector;')
+  command('restore-at-'+str(version),['docker','exec','-i',container,'pg_restore','-U','postgres','-d',target,'--no-owner','--no-privileges','--exit-on-error'],dump,20)
+  if version==60:
+   before=catalog('baseline-restored60',target,schema,60);assert before['catalog_sha256']=='93b8967dbcc4b90c1692dcf67076192a8b97ead256335cf2a4fbccb6dcdf87b4','RESTORED60_BASELINE_DIFFERS'
+  apply('upgrade-from-'+str(version),target,schema,'upgrade-from-'+str(version)+'.sql');catalog('restored-at-'+str(version),target,schema,61)
+ expected_histories={'fresh61'}|{'restored-at-'+str(n) for n in range(55,62)}
+ histories={x['name']:x for x in record['metadata'] if x['version']==61};assert set(histories)==expected_histories
+ record['state']='METADATA_COMPLETE_REBUILD_REQUIRED';record['actual_catalog_pin_change_required']=True;record['original_schema60_pins_unchanged']=True;record['source_b_qualified']=False;record['reason']='Observed schema61 catalogs require a new frozen pin source and matching native binaries; current schema60 pins remain fail-closed. No rebuild is authorized in this allocation.'
+ save()
+except BaseException as error:
+ record['error_type']=type(error).__name__;record['error']=str(error)[:2000];record['first_failure_stage']=record.get('active_stage','preflight_or_carrier')
+ if record.get('admitted'):record['state']='FAILED_OR_INCOMPLETE'
+finally:
+ for sig in [signal.SIGTERM,signal.SIGINT,signal.SIGHUP]:signal.signal(sig,signal.SIG_IGN)
+ cleanup_begin=time.monotonic();end=min(end,cleanup_begin+120);remaining=[]
+ for p in children:
+  try:
+   left=stop_child(p)
+   if left:remaining.append({'group':p.pid,'members':left})
+  except BaseException as error:remaining.append({'group':p.pid,'error':str(error)})
+ record['remaining_owned_groups']=remaining
+ phase_end=end
+ if container and record.get('container_id'):
+  try:
+   command('cleanup-postgres-logs',['docker','logs',record['container_id']],timeout=10,allow=True,cleanup=True)
+   command('cleanup-container-remove',['docker','rm','--force','--volumes',record['container_id']],timeout=25,cleanup=True)
+   _,code=command('cleanup-container-absence',['docker','inspect',record['container_id']],timeout=10,allow=True,cleanup=True);record['container_absent']=code!=0
+  except BaseException as error:record['container_cleanup_error']=str(error)
+ if volume and record.get('volume_created'):
+  try:
+   command('cleanup-volume-remove',['docker','volume','rm',volume],timeout=15,cleanup=True)
+   _,code=command('cleanup-volume-absence',['docker','volume','inspect',volume],timeout=10,allow=True,cleanup=True);record['volume_absent']=code!=0
+  except BaseException as error:record['volume_cleanup_error']=str(error)
+ if network and record.get('network_created'):
+  try:
+   command('cleanup-network-remove',['docker','network','rm',network],timeout=15,cleanup=True)
+   _,code=command('cleanup-network-absence',['docker','network','inspect',network],timeout=10,allow=True,cleanup=True);record['network_absent']=code!=0
+  except BaseException as error:record['network_cleanup_error']=str(error)
+ for secret in secrets_owned:
+  try:secret.unlink();assert not secret.exists()
+  except BaseException as error:record.setdefault('secret_cleanup_errors',[]).append(type(error).__name__)
+ record['credential_paths_absent']=all(not x.exists() for x in secrets_owned)
+ record['cleanup_seconds']=time.monotonic()-cleanup_begin
+ try:check_locks();record['lock_identities_retained']=True
+ except BaseException as error:record['lock_identity_error']=str(error)
+ record['lock_fd_closure']=[]
+ for fd,path,dev,ino in reversed(locks):
+  try:
+   fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)
+   try:os.fstat(fd);closed=False
+   except OSError:closed=True
+   record['lock_fd_closure'].append({'path':path,'closed':closed})
+  except BaseException as error:record['lock_fd_closure'].append({'path':path,'error':str(error)})
+ record['elapsed_seconds']=time.monotonic()-start;record['within_remote_budget']=record['elapsed_seconds']<=cfg['remote_budget_seconds'];save();emit('RESULT',record)
+ if root is not None:
+  evidence=io.BytesIO()
+  with tarfile.open(fileobj=evidence,mode='w:gz',compresslevel=1) as archive:
+   for p in sorted(root.iterdir()):
+    if p.is_file() and (p.name=='result.json' or p.name.endswith(('.stdout','.stderr','.catalog.json','.ledger.json','.dump'))):archive.add(p,arcname=p.name,recursive=False)
+  emit('EVIDENCE',{'sha256':hashlib.sha256(evidence.getvalue()).hexdigest(),'bytes':len(evidence.getvalue()),'base64':base64.b64encode(evidence.getvalue()).decode()})
+sys.exit(0 if record['state']=='METADATA_COMPLETE_REBUILD_REQUIRED' and not record.get('remaining_owned_groups') and all(record.get(k,True) for k in ['container_absent','volume_absent','network_absent','credential_paths_absent','within_remote_budget']) else 75 if record['state']=='NOTRUN' else 1)

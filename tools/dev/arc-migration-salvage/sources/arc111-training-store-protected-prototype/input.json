@@ -1,0 +1,8 @@
+{
+  "bytes": 1791,
+  "sha256": "07e0a60271977cc2412025d3a557f22b671ea076a226b44cd0ba4bb2275d0b0c",
+  "test_sha256": "9e391dfe97fe928560b0ba2489479f3bbc4de344591cf096d568402acb87b566",
+  "runner_sha256": "554b2a5d7a07f5126464088b9e9d2195ff19e284381945c93c63fe0f1fb5f9c7",
+  "scope": "Observed current gateway dataset-store composition boundary; actual control retry, no restricted-role acceptance",
+  "source_mode": "verified disposable checkout modes 0644/0755"
+}

@@ -1,0 +1,29 @@
+from pathlib import Path
+import datetime,os,subprocess,time
+base=Path(__file__).resolve().parent
+stages=[
+ ('gw120-final-check',base/'gw120-schema59.9jT6tZsI/finalize-regular-file-gate.py'),
+ ('arc107-observer',base/'arc107-automatic-goaway.kOq94j8k/qualify-observer.py'),
+ ('net102-startup',base/'net102-startup/qualify.py'),
+]
+run=base/('admission-queue-'+datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ'))
+run.mkdir();(run/'pid').write_text(str(os.getpid())+'\n')
+(base/'latest-admission-queue').write_text(str(run)+'\n')
+print('Bounded ARC queue '+str(run)+'; no file lock held while waiting; no publication enabled',flush=True)
+deadline=time.monotonic()+1200
+for name,script in stages:
+ print('Stage '+name,flush=True)
+ (run/'stage').write_text(name+'\n')
+ while True:
+  r=subprocess.run(['python3',str(script)],capture_output=True,text=True)
+  if r.returncode!=75:
+   (run/(name+'.log')).write_text(r.stdout+r.stderr)
+   (run/(name+'.exit')).write_text(str(r.returncode)+'\n')
+   print(name+' exited '+str(r.returncode)+' '+(r.stdout+r.stderr)[-2400:],flush=True)
+   break
+  if time.monotonic()>=deadline:
+   (run/'exit').write_text('75\n')
+   raise SystemExit('Bounded queue expired without starting the remaining checks')
+  time.sleep(10)
+(run/'exit').write_text('0\n')
+print('All admitted stages attempted once; inspect each stage result',flush=True)

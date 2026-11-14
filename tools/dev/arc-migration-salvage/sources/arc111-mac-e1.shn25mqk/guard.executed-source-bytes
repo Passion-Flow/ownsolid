@@ -1,0 +1,147 @@
+from pathlib import Path
+import os,sys,json,time,stat,hashlib,fcntl,subprocess,signal,shutil,re,datetime
+out=Path(__file__).resolve().parent
+cfg=json.loads((out/'job-input.json').read_text()); source=Path(cfg['source_directory'])
+start=time.monotonic(); work_end=start+240; end=start+300
+result={'source':cfg['source'],'tree':cfg['tree'],'started_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'budget_seconds':300,'cleanup_reserve_seconds':60,'stages':[],'nb_attempts':0,'state':'NOTRUN','database_started':False,'owned_groups':[]}
+fd=None; children=[]
+def save(): (out/'result.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+def identity(s): return {'dev':s.st_dev,'ino':s.st_ino,'uid':s.st_uid,'mode':stat.S_IMODE(s.st_mode),'nlink':s.st_nlink,'size':s.st_size}
+def verify():
+ path=Path(cfg['carrier']); expected=cfg['carrier_identity']
+ assert identity(path.lstat())==expected and stat.S_ISREG(path.lstat().st_mode),'CARRIER_PATH_IDENTITY'
+ if fd is not None: assert identity(os.fstat(fd))==expected,'CARRIER_FD_IDENTITY'
+ manifest=path.parent/'manifest.json'; mfd=os.open(manifest,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+ try:
+  ms=os.fstat(mfd); assert stat.S_ISREG(ms.st_mode) and ms.st_uid==501
+  data=b''
+  while True:
+   piece=os.read(mfd,65536)
+   if not piece: break
+   data+=piece
+  assert hashlib.sha256(data).hexdigest()==cfg['manifest_sha256'],'MANIFEST_SHA'
+  assert (manifest.lstat().st_dev,manifest.lstat().st_ino)==(ms.st_dev,ms.st_ino),'MANIFEST_PATH_CHANGED'
+ finally: os.close(mfd)
+ for parent in json.loads(data)['parent_paths']:
+  p=Path(parent['path']); info=p.lstat()
+  assert stat.S_ISDIR(info.st_mode) and not stat.S_ISLNK(info.st_mode)
+  assert (info.st_dev,info.st_ino,info.st_uid,stat.S_IMODE(info.st_mode))==(parent['dev'],parent['inode'],parent['uid'],int(parent['mode'],8)),str(p)
+def preflight():
+ raw=subprocess.check_output(['vm_stat'],text=True); pages=int(re.search(r'page size of (\d+) bytes',raw)[1]); free=int(re.search(r'^Pages free:\s+(\d+)',raw,re.M)[1])*pages
+ pressure=int(subprocess.check_output(['sysctl','-n','kern.memorystatus_vm_pressure_level'],text=True))
+ disk=shutil.disk_usage(out).free
+ process=subprocess.check_output(['ps','-axo','pid=,comm='],text=True); heavy=[]
+ for line in process.splitlines():
+  parts=line.split(None,1)
+  if len(parts)==2 and Path(parts[1]).name in {'go','compile','link','cargo','rustc','make','gcc','cc1','clang'}: heavy.append({'pid':int(parts[0]),'executable':Path(parts[1]).name})
+ value={'raw_free_bytes':free,'disk_free_bytes':disk,'pressure':pressure,'foreign_heavy':heavy}
+ assert free>=2*1024**3 and disk>=15*1024**3 and pressure==1 and not heavy,value
+ return value
+def members(group):
+ rows=[]
+ for line in subprocess.check_output(['ps','-axo','pid=,ppid=,pgid=,lstart=,stat=,comm='],text=True).splitlines():
+  p=line.split(None,3)
+  if len(p)==4 and int(p[2])==group: rows.append(line.strip())
+ return rows
+def stop(child):
+ if child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try: child.wait(timeout=max(.01,min(5,end-time.monotonic())))
+  except subprocess.TimeoutExpired:
+   os.killpg(child.pid,signal.SIGKILL); child.wait(timeout=max(.01,min(5,end-time.monotonic())))
+ remain=members(child.pid)
+ if remain:
+  os.killpg(child.pid,signal.SIGKILL)
+  limit=min(end,time.monotonic()+5)
+  while time.monotonic()<limit and members(child.pid): time.sleep(.05)
+ return members(child.pid)
+def stage(name,argv,env,timeout=100):
+ verify(); available=work_end-time.monotonic()
+ if available<3: raise TimeoutError('WORK_CUTOFF')
+ log=out/(name+'.log'); info={'name':name,'argv':argv,'log':str(log),'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()}
+ began=time.monotonic(); print('START '+name,flush=True)
+ with log.open('wb') as stream:
+  child=subprocess.Popen(argv,cwd=source,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True,close_fds=True)
+  children.append(child); info['pid']=child.pid; info['initial_identity']=subprocess.run(['ps','-p',str(child.pid),'-o','pid=,ppid=,pgid=,lstart=,comm='],capture_output=True,text=True).stdout.strip()
+  try: info['exit_code']=child.wait(timeout=min(timeout,available))
+  except subprocess.TimeoutExpired:
+   info['timed_out']=True; info['remaining_groups']=stop(child); info['exit_code']=child.returncode
+ info['elapsed_seconds']=time.monotonic()-began; info['log_sha256']=hashlib.sha256(log.read_bytes()).hexdigest(); info['remaining_group']=members(child.pid)
+ assert not info['remaining_group'],info
+ result['stages'].append(info); save(); verify(); print('END '+name+' exit='+str(info['exit_code'])+' elapsed='+str(round(info['elapsed_seconds'],3)),flush=True)
+ return info
+try:
+ assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()==cfg['source']
+ assert subprocess.check_output(['git','rev-parse','HEAD^{tree}'],cwd=source,text=True).strip()==cfg['tree']
+ assert not subprocess.check_output(['git','status','--porcelain'],cwd=source)
+ ep=json.loads(Path(cfg['entrypoints']).read_text()); manifest=json.loads(Path(cfg['source_manifest']).read_text())
+ assert ep['source']==manifest['source']==cfg['source']
+ for item in manifest['files']:
+  path=source/item['path']; data=os.readlink(path).encode() if path.is_symlink() else path.read_bytes()
+  assert len(data)==item['bytes'] and hashlib.sha256(data).hexdigest()==item['sha256'],item['path']
+ for entry in ep['entries']:
+  for definition in entry['definitions']:
+   data=(source/definition['path']).read_bytes(); assert hashlib.sha256(data).hexdigest()==definition['source_sha256']
+   assert len(re.findall(r'^func '+re.escape(definition['root'])+r'\(t \*testing\.T\)',data.decode(),re.M))==1
+ verify(); result['preflight']=preflight(); fd=os.open(cfg['carrier'],os.O_RDWR|os.O_NOFOLLOW|os.O_CLOEXEC); verify()
+ result['nb_attempts']=1
+ try: fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+ except BlockingIOError: raise RuntimeError('CARRIER_BUSY_NOTRUN')
+ result['carrier_acquired']=True; result['preflight_after_nb']=preflight(); verify(); save()
+ env=os.environ.copy(); env.update({k:v.replace('{source_directory}',str(source)) for k,v in ep['environment'].items()}); env['TMPDIR']=str((out/'tmp').resolve()); env['GOTRACEBACK']='all'
+ version=stage('go-version',['go','version'],env,5); assert version['exit_code']==0
+ assert (out/'go-version.log').read_text().strip()=='go version go1.27.3 darwin/arm64'
+ passed=[]; failed=[]
+ for i,entry in enumerate(ep['entries']):
+  prefix='package-'+str(i+1); replace=lambda a:a.replace('{source_directory}',str(source)).replace('{owned_output_directory}',str(out))
+  compile_info=stage(prefix+'-compile',[replace(a) for a in entry['compile_only_argv']],env,110)
+  if compile_info['exit_code']!=0: failed.append(prefix+'-compile'); continue
+  binary=Path(replace(entry['compile_only_argv'][entry['compile_only_argv'].index('-o')+1])); compile_info['binary_sha256']=hashlib.sha256(binary.read_bytes()).hexdigest(); save()
+  listed=stage(prefix+'-list',[replace(a) for a in entry['list_only_argv']],env,10)
+  listed_names={x.strip() for x in Path(listed['log']).read_text().splitlines() if x.startswith('Test')}
+  assert listed['exit_code']==0 and listed_names==set(entry['expected_roots']),(prefix,listed_names)
+  execution=stage(prefix+'-execute',[replace(a) for a in entry['execute_argv']],env,70)
+  events=[json.loads(line) for line in Path(execution['log']).read_text().splitlines() if line.startswith('{')]
+  runs=[e['Test'] for e in events if e.get('Action')=='run' and e.get('Test') and '/' not in e['Test']]
+  passes=[e['Test'] for e in events if e.get('Action')=='pass' and e.get('Test') and '/' not in e['Test']]
+  subs=[e['Test'] for e in events if e.get('Action')=='pass' and '/' in e.get('Test','')]
+  bad=[e for e in events if e.get('Action') in ('fail','skip')]
+  ok=execution['exit_code']==0 and sorted(runs)==sorted(entry['expected_roots']) and sorted(passes)==sorted(entry['expected_roots']) and not bad and any(e.get('Action')=='pass' and not e.get('Test') for e in events)
+  if i==2: ok=ok and set(subs)=={'TestAgentGatewayPublishedReaderFailureCleanup/'+s for s in ['foreign_tenant','missing_second_namespace','invalid_graph']}
+  execution.update({'required_roots':entry['expected_roots'],'actual_run_roots':runs,'passed_roots':passes,'passed_subcases':subs,'skip_or_fail_count':len(bad),'qualified':ok}); save()
+  if ok: passed.extend(passes)
+  else: failed.append(prefix+'-execute')
+ result.update({'state':'PASS' if len(passed)==11 and not failed else 'FAILED_OR_INCOMPLETE','passed_roots':passed,'failure_stages':failed}); save()
+ # Cross compilation is optional within this same fixed work cutoff; never take cleanup time.
+ if result['state']=='PASS' and work_end-time.monotonic()>=100:
+  cross=env.copy();cross.update(GOOS='linux',GOARCH='amd64',CGO_ENABLED='0')
+  for package,tags,name in [('internal/platform/database',None,'database'),('internal/operations/databaseaccess',None,'databaseaccess'),('internal/modules/models','repository_integration','models')]:
+   if work_end-time.monotonic()<45: break
+   argv=['go','-C',str(source/'services/control'),'test','-mod=readonly','-p','1','-c','-o',str(out/(name+'-linux-amd64.test'))]
+   if tags: argv+=['-tags',tags]
+   argv+=['./'+package]
+   info=stage('linux-'+name+'-compile',argv,cross,min(60,work_end-time.monotonic()-2))
+   if info['exit_code']!=0: break
+   info['binary_sha256']=hashlib.sha256((out/(name+'-linux-amd64.test')).read_bytes()).hexdigest();save()
+except BaseException as error:
+ result['error_type']=type(error).__name__;result['error']=str(error)[:3000]
+ if result.get('carrier_acquired'): result['state']='FAILED_OR_INCOMPLETE'
+finally:
+ cleanup_start=time.monotonic(); remaining=[]
+ for child in children:
+  try:
+   left=stop(child)
+   if left: remaining.append({'group':child.pid,'members':left})
+  except BaseException as error: remaining.append({'group':child.pid,'cleanup_error':str(error)})
+ result['remaining_owned_groups']=remaining;result['cleanup_seconds']=time.monotonic()-cleanup_start
+ try: verify();result['final_carrier_identity_verified']=True
+ except BaseException as error:result['final_carrier_verification_error']=str(error)
+ if fd is not None:
+  try:
+   if result.get('carrier_acquired'):fcntl.flock(fd,fcntl.LOCK_UN)
+   os.close(fd);result['carrier_fd_closed']=True
+  except BaseException as error:result['carrier_close_error']=str(error)
+ result['elapsed_seconds']=time.monotonic()-start;result['within_budget']=result['elapsed_seconds']<=300
+ result['source_still_clean']=not bool(subprocess.check_output(['git','status','--porcelain'],cwd=source));save()
+ print(json.dumps({k:result.get(k) for k in ['state','error','passed_roots','failure_stages','elapsed_seconds','remaining_owned_groups','carrier_fd_closed','within_budget']},indent=2),flush=True)
+sys.exit(0 if result['state']=='PASS' and not result.get('remaining_owned_groups') and result.get('within_budget') else 1)

@@ -1,0 +1,39 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,shutil,stat,subprocess,tempfile,time
+b=Path(__file__).resolve().parent;r=b.parent.parent/'lane-arc107-handoff'
+p=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW);s=os.fstat(fd)
+assert stat.S_ISREG(s.st_mode) and s.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+try:
+ assert(s.st_dev,s.st_ino)==(p.lstat().st_dev,p.lstat().st_ino);assert shutil.disk_usage(r).free>=30*1024**3
+ tmp=Path(tempfile.mkdtemp(prefix='arc107-client.',dir='/private/tmp'));os.chown(tmp,-1,os.getgid());os.chmod(tmp,0o700)
+ env=os.environ.copy();env.update(TMPDIR=str(tmp)+'/',GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=1')
+ trial=Path(tempfile.mkdtemp(prefix='client-trial.',dir=b));staged=trial/'source';staged.mkdir(mode=0o700)
+ assert subprocess.check_output(['git','status','--porcelain'],cwd=r,text=True)==''
+ revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip()
+ tracked=subprocess.check_output(['git','ls-files','-z'],cwd=r).decode().rstrip('\0').split('\0')
+ manifest={}
+ for relative in tracked:
+  source=r/relative;target=staged/relative
+  assert source.is_file() and not source.is_symlink(),relative
+  target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target);os.chmod(target,0o755 if source.stat().st_mode&0o111 else 0o644)
+  manifest[relative]=hashlib.sha256(target.read_bytes()).hexdigest()
+ (trial/'source-manifest.json').write_text(json.dumps(manifest,sort_keys=True)+'\n')
+ env['PROTOTYPE_SOURCE']=str(staged)
+ subprocess.run(['python3','-I',str(b/'prepare-client-overlay.py')],env=env,check=True)
+ inputs=json.loads((b/'client-overlay.json').read_text())['Replace'];subprocess.run(['gofmt','-w',*[path for path in inputs.values() if path.endswith('.go')]],env=env,check=True)
+ for target,source in inputs.items():
+  p=Path(target);p.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,p)
+ # All prototypes and public import bridges are materialized only in this owned snapshot.
+ (trial/'client-overlay.json').write_text((b/'client-overlay.json').read_text())
+ results={}
+ for name,command in [('wire-age',['go','-C','api','test','-race','-count=1','./agent/v1']),('actual-client',['go','-C','services/control','test','-race','-count=1','-timeout=60s','-run',os.environ.get('PROTOTYPE_RUN','^TestPrototype'),'-v','./internal/platform/agentgateway']),('legacy-client-suite',['go','-C','services/agent','test','-race','-count=1','-timeout=90s','./internal/client','./sessiontransport']),('simulator-offline',['go','-C','tools/dev/simulator','test','-race','-count=1','-timeout=120s','./...'])]:
+  start=time.time()
+  with (trial/(name+'.log')).open('wb') as log:code=subprocess.run(command,cwd=staged,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=240).returncode
+  results[name]={'command':command,'exit':code,'elapsed_seconds':time.time()-start,'log_sha256':hashlib.sha256((trial/(name+'.log')).read_bytes()).hexdigest()}
+  if code:break
+ record={'source':revision,'snapshot':str(staged),'tracked_paths':len(tracked),'results':results,'inputs':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p,v in inputs.items()}}
+ (trial/'client-probe-result.json').write_text(json.dumps(record,indent=2)+'\n');(b/'latest-client-trial').write_text(str(trial)+'\n');print(json.dumps(results),flush=True)
+ shutil.rmtree(tmp);raise SystemExit(max(result['exit'] for result in results.values()))
+finally:fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

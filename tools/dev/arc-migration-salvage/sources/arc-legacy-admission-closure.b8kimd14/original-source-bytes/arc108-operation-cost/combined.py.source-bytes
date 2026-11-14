@@ -1,0 +1,64 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,signal,stat,subprocess,tempfile,time,shutil
+base=Path(__file__).resolve().parent;repo=base.parent.parent/'lane-arc108';os.chdir(repo);os.umask(0o077)
+expected='a91a817b23157fd610f714533b04cf6e7d8ec012'
+carrier=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW);info=os.fstat(fd)
+assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);print('Workstation gate busy; no child started',flush=True);raise SystemExit(75)
+child=None
+try:
+ assert (info.st_dev,info.st_ino)==(carrier.lstat().st_dev,carrier.lstat().st_ino)
+ assert subprocess.run(['pgrep','-x','make|cargo|rustc|compile|link'],capture_output=True).returncode!=0
+ assert subprocess.check_output(['git','status','--porcelain'],text=True)==''
+ assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==expected
+ free=os.statvfs(repo);assert free.f_bavail*free.f_frsize>=15*1024**3
+ run=Path(tempfile.mkdtemp(prefix='combined.',dir=str(base)));focused=run/'focused';focused.mkdir(mode=0o700);full=run/'full';full.mkdir(mode=0o700)
+ (base/'latest-combined').write_text(str(run)+'\n');(run/'runner-pid').write_text(str(os.getpid())+'\n')
+ (run/'input').write_bytes(subprocess.check_output(['git','rev-parse','HEAD','HEAD^{tree}','origin/main']))
+ (run/'resource-preflight').write_bytes(subprocess.check_output(['df','-h','/'])+subprocess.check_output(['memory_pressure','-Q']))
+ reuse=base/'combined.lt33c7gz/focused'
+ assert (reuse/'input').read_text().splitlines()[0]==expected
+ digests=json.loads((reuse/'hashes.json').read_text())
+ reused={}
+ for name in ['race.log','vet.log','compile.log','nodes.test']:
+  assert hashlib.sha256((reuse/name).read_bytes()).hexdigest()==digests[name]
+  shutil.copy2(reuse/name,focused/name);reused[name]=digests[name]
+ (focused/'reused-unit-checks.json').write_text(json.dumps({'source':expected,'original_run':str(reuse),'hashes':reused,'reason':'Only the new wrapper directory mode caused private-input refusal; source, race, vet and compiled binary unchanged'},indent=2)+'\n')
+ (focused/'focused.sh').write_bytes((base/'focused-replay.sh').read_bytes());(full/'full-gate.zsh').write_bytes((base/'full-gate.zsh').read_bytes())
+ (focused/'input').write_bytes((run/'input').read_bytes());(full/'runner-pid').write_text(str(os.getpid())+'\n')
+ def stop(sig,frame):raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+ def execute(command,log,budget):
+  global child
+  with log.open('wb') as out:
+   child=subprocess.Popen(command,stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+   try:code=child.wait(timeout=budget)
+   except BaseException:
+    if child.poll() is None:
+     os.killpg(child.pid,signal.SIGTERM)
+     try:child.wait(timeout=15)
+     except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+    raise
+  return code
+ def hashes(directory):return {p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in directory.iterdir() if p.is_file() and p.suffix in ['.log','.test']}
+ print('ARC108 combined qualification '+expected+'; '+str(run),flush=True)
+ (run/'stage').write_text('focused\n')
+ code=execute(['caffeinate','-i','bash',str(focused/'focused.sh'),str(focused),str(repo)],focused/'run.log',900)
+ (focused/'exit').write_text(str(code)+'\n');(focused/'hashes.json').write_text(json.dumps(hashes(focused),indent=2)+'\n')
+ if code:print((focused/'run.log').read_text()[-2000:]);print((focused/'cost.log').read_text()[-4500:] if (focused/'cost.log').exists() else '');raise SystemExit(code)
+ proof={'source':expected,'tree':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),'run':str(focused),'scope':'Affected Darwin arm64 race/vet and real Linux arm64 network-none PostgreSQL18.6/pgvector0.8.7; both scoped HTTPS/mTLS observation roots; exact 50/3000 peer histories plus one enrolled node; no database skips; no simulator or native amd64 capacity claim','hashes':hashes(focused),'unit_reuse':json.loads((focused/'reused-unit-checks.json').read_text())}
+ for target in [run/'accepted-observation-cost.json',base/'accepted-observation-cost.json']:target.write_text(json.dumps(proof,indent=2)+'\n')
+ (base/'latest-focused').write_text(str(focused)+'\n');(base/'latest-full-repository').write_text(str(full)+'\n')
+ (run/'stage').write_text('full-repository\n')
+ print('Focused qualification passed; starting unchanged-input root gate',flush=True)
+ code=execute(['caffeinate','-i','zsh',str(full/'full-gate.zsh'),str(full),str(repo)],full/'runner.log',2100)
+ (full/'exit').write_text(str(code)+'\n');(full/'hashes.json').write_text(json.dumps(hashes(full),indent=2)+'\n');(run/'exit').write_text(str(code)+'\n')
+ print((full/'runner.log').read_text()[-2000:],flush=True);print('Combined qualification exit '+str(code),flush=True)
+ raise SystemExit(code)
+finally:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

@@ -1,0 +1,54 @@
+from pathlib import Path
+import hashlib,json,shlex,subprocess,sys
+b=Path(__file__).resolve().parent
+root=json.loads((b/'native-handoff-receiver.json').read_text())['root'];mode=sys.argv[1];assert mode in ('installed','fleet')
+names=('installed-handoff-runner.py','capture-installed-handoff.py','installed-admission-loop.py','fleet-kpi-runner.py','capture-fleet-kpis.py','fleet-kpi-admission.py')
+expected={n:hashlib.sha256((b/n).read_bytes()).hexdigest() for n in names}
+s=r'''
+from pathlib import Path
+import hashlib,json,os,shutil,stat,subprocess,sys,time
+inputs=Path(sys.argv[1]);mode=sys.argv[2];expected=json.loads(sys.argv[3]);os.umask(0o077)
+assert inputs.name=='lane-arc107-handoff.3ae6bfeb.ae445841'
+if not(inputs/'prepare-driver-exit').exists():print('Native qualification is still running');raise SystemExit(75)
+assert (inputs/'prepare-driver-exit').read_text().strip()=='0'
+assert (inputs/'build-exit').read_text().strip()=='0'
+proof=json.loads((inputs/'installed-source-verified.json').read_text());assert proof['source']=='3ae6bfebb67b47d684de4651cc597c26f104d725'
+profiles={}
+for n in ('client','sessiontransport','agentgateway','httpserver','agent-contract','simulator-fleet'):
+ data=(inputs/(n+'-race.log')).read_bytes();assert b'\nPASS\n' in data and b'--- SKIP:' not in data and b'--- FAIL:' not in data
+ assert not (inputs/(n+'-vet.log')).read_bytes()
+ profiles[n]={'sha256':hashlib.sha256(data).hexdigest(),'skip':0,'fail':0}
+for n,h in expected.items():
+ p=inputs/n;i=p.lstat();assert stat.S_ISREG(i.st_mode) and i.st_uid==os.getuid() and hashlib.sha256(p.read_bytes()).hexdigest()==h
+if mode=='fleet':
+ assert (inputs/'installed-driver-exit').read_text().strip()=='0' and (inputs/'installed-exit').read_text().strip()=='0'
+ output=(inputs/'installed.log').read_text();assert '--- PASS: TestAgentGatewayConnectionLifecycle' in output and '--- SKIP:' not in output
+ root=inputs/'fleet-kpis';assert not root.exists();root.mkdir(mode=0o700)
+ shutil.copyfile(inputs/'capture-fleet-kpis.py',root/'capture-fleet-kpis.py');os.chmod(root/'capture-fleet-kpis.py',0o600)
+ admission=inputs/'fleet-kpi-admission.py';test='tests/e2e/fleet_load_test.go'
+else:
+ root=inputs;admission=inputs/'installed-admission-loop.py';test='tests/e2e/agent_gateway_connection_age_test.go'
+ assert not(root/'installed-start').exists() and not(root/'installed-driver-exit').exists()
+assert not(root/'installed-launch-identity.json').exists()
+source=inputs/'source'
+research={str(p.relative_to(source)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (source/'docs/research/fleet-load-test.md',source/'docs/research/agent-gateway-rebalance.md',source/'docs/decisions/0083-bound-fallback-after-a-usable-agent-stream.md')}
+testpath=source/test
+if not testpath.exists():
+ candidates=[p for p in (source/'tests/e2e').glob('*test.go') if 'func TestAgentGatewayConnectionLifecycle(' in p.read_text()]
+ assert mode=='installed' and len(candidates)==1;testpath=candidates[0]
+record={'source':proof['source'],'tree':proof['tree'],'profiles':profiles,'scripts':expected,'research':research,'selected_test_source':str(testpath.relative_to(source)),'selected_test_sha256':hashlib.sha256(testpath.read_bytes()).hexdigest(),'assertion_changes':False,'run_once':True}
+(root/'research-input.json').write_text(json.dumps(record,indent=2)+'\n')
+with (root/'installed-launch.log').open('xb') as log:
+ p=subprocess.Popen(['python3','-I',str(admission)],stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,close_fds=True)
+ for attempt in range(20):
+  cmd=Path('/proc',str(p.pid),'cmdline').read_bytes()
+  if str(admission).encode() in cmd:break
+  time.sleep(0.05)
+ assert str(admission).encode() in cmd
+ identity={'pid':p.pid,'start_ticks':Path('/proc',str(p.pid),'stat').read_text().rsplit(')',1)[1].split()[19],'cmdline_sha256':hashlib.sha256(cmd).hexdigest(),'at':time.time(),'mode':mode,'source':proof['source']}
+ (root/'installed-driver.pid').write_text(str(p.pid)+'\n');(root/'installed-launch-identity.json').write_text(json.dumps(identity,indent=2)+'\n');print(json.dumps(identity),flush=True)
+'''
+p=subprocess.run(['ssh','-o','ConnectTimeout=25','-o','ServerAliveInterval=10','-o','ServerAliveCountMax=2','ownsolid-cpu','python3 -I -c '+shlex.quote(s)+' '+shlex.quote(root)+' '+shlex.quote(mode)+' '+shlex.quote(json.dumps(expected))],capture_output=True,text=True,timeout=45)
+print(p.stdout);print(p.stderr)
+if p.returncode==0:(b/('fourth-'+mode+'-launch.json')).write_text(p.stdout)
+raise SystemExit(p.returncode)

@@ -1,0 +1,70 @@
+from pathlib import Path
+import fcntl, os, signal, stat, subprocess, tempfile
+base=Path(__file__).resolve().parent
+repo=base.parent.parent/'lane-arc'
+os.chdir(repo)
+gate=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+fd=os.open(gate,os.O_RDWR|os.O_NOFOLLOW)
+info=os.fstat(fd)
+assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+try: fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:
+ os.close(fd)
+ raise SystemExit(75)
+child=None
+try:
+ assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()=='eea738bfc11d74f8505eee41c3a3ce0d9fa5cf7b'
+ assert subprocess.check_output(['git','status','--porcelain'],text=True)==''
+ free=os.statvfs(repo);assert free.f_bavail*free.f_frsize>=15*1024**3
+ run=Path(tempfile.mkdtemp(prefix='retirement-check.',dir=str(base)))
+ assert (info.st_dev,info.st_ino)==(gate.lstat().st_dev,gate.lstat().st_ino)
+ assert subprocess.run(['pgrep','-x','make|cargo|rustc|compile|link'],capture_output=True).returncode!=0
+ (base/'latest-retirement-check').write_text(str(run)+'\n')
+ (run/'input').write_bytes(subprocess.check_output(['git','rev-parse','HEAD','HEAD^{tree}','origin/main']))
+ (run/'runner-pid').write_text(str(os.getpid())+'\n')
+ script=r"""set -euo pipefail
+run=$1
+repo=$2
+mountpoint=$(mktemp -d /private/tmp/osobs.XXXXXXXX)
+cleanup() {
+ if mount | grep -F "on $mountpoint (" >/dev/null;then hdiutil detach "$mountpoint" >> "$run/cleanup.log" 2>&1;fi
+ rmdir "$mountpoint"
+}
+trap cleanup EXIT
+trap 'exit 143' TERM INT
+hdiutil create -size 8g -fs APFS -type SPARSE -volname ownsolid-arc107-observer -o "$run/scratch" > "$run/create.log" 2>&1
+hdiutil attach -nobrowse -mountpoint "$mountpoint" "$run/scratch.sparseimage" > "$run/attach.log" 2>&1
+mkdir "$mountpoint/t";chgrp "$(id -g)" "$mountpoint/t";chmod 700 "$mountpoint/t"
+export TMPDIR="$mountpoint/t/" GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local GOMAXPROCS=2 GOFLAGS=-p=1
+cd "$repo"
+test -z "$(git status --porcelain)"
+go -C services/control test -race -count=1 -v ./internal/platform/httpserver ./internal/platform/agentgateway > "$run/transport-race.log" 2>&1
+go -C services/control vet ./internal/platform/httpserver ./internal/platform/agentgateway > "$run/transport-vet.log" 2>&1
+go -C tests/e2e test -race -count=1 -v -run '^TestGateway(ObservationAdmission|ConnectionLogOrdering|ObservedRetirementTiming)$' . > "$run/race.log" 2>&1
+go -C tests/e2e vet . > "$run/vet.log" 2>&1
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C tests/e2e test -c -o "$run/e2e.test" . > "$run/compile.log" 2>&1
+test -z "$(git status --porcelain)"
+"""
+ (run/'qualify.sh').write_text(script)
+ def stop(signum,frame):
+  if child is not None and child.poll() is None:
+   os.killpg(child.pid,signal.SIGTERM)
+   try: child.wait(timeout=15)
+   except subprocess.TimeoutExpired: os.killpg(child.pid,signal.SIGKILL);child.wait()
+  raise SystemExit(143)
+ signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
+ print('ARC retirement timing input '+(run/'input').read_text().splitlines()[0]+'; logs '+str(run),flush=True)
+ with (run/'run.log').open('wb') as out:
+  child=subprocess.Popen(['caffeinate','-i','bash',str(run/'qualify.sh'),str(run),str(repo)],stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+  code=child.wait(timeout=600)
+ (run/'exit').write_text(str(code)+'\n')
+ print((run/'run.log').read_text()[-1500:])
+ if (run/'race.log').exists():print((run/'race.log').read_text()[-5000:])
+ raise SystemExit(code)
+finally:
+ if child is not None and child.poll() is None:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=15)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
+ fcntl.flock(fd,fcntl.LOCK_UN)
+ os.close(fd)

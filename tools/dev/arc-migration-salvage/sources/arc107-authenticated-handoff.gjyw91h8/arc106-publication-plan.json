@@ -1,0 +1,20 @@
+{
+  "runtime_source": "821227ea5b94a8357f695c290e78af3b81c54f22",
+  "pending_test": "TestFleetLoad",
+  "planned_owned_paths": [
+    "docs/research/fleet-load-test.md",
+    "docs/product/roadmap/architecture-and-scale.md",
+    "docs/product/roadmap/index.md",
+    "docs/product/status.md"
+  ],
+  "publication_scope": "single-host simulated 2000-node control-plane load; no extrapolation",
+  "database_precision": "approximately per-second rates as rounded in unchanged raw test output; total is the sum of individually rounded row rates",
+  "required_remaining": [
+    "full steady-window/fault/terminal verdict",
+    "PostgreSQL reset/start invariance across measured window",
+    "raw logs and simulator JSON extraction",
+    "zero product egress with observed probe",
+    "owned fixture cleanup",
+    "post-rebase complete repository gate"
+  ]
+}

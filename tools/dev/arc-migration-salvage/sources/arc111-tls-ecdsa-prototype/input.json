@@ -1,0 +1,7 @@
+{
+  "bytes": 9328,
+  "sha256": "156bb548141e631558f4ab6bb7342c87c1a9c31f3fa241aaadd448c7a39b7fa5",
+  "test_sha256": "d59722f9cfa0f5526ac806b5c6e4549ea8117d29fb13d2fc085bd2c0699f8d45",
+  "runner_sha256": "ac720f90a1d4dcf7839b0861c12525ebaa5281a8f94b99470699082362238d4c",
+  "scope": "ECDSA P256 SHA256, verify-full, required SCRAM binding, unchanged composed role assertions"
+}

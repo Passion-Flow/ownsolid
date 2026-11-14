@@ -1,0 +1,13 @@
+
+server:
+  listen_address: 127.0.0.1:8443
+  portal_origin: https://portal.example.invalid:8443
+  admin_origin: https://admin.example.invalid:8443
+  tls_certificate_file: /fixture/certificate.pem
+  tls_private_key_file: /fixture/private-key.pem
+database:
+  dsn_file: /fixture/restored_current.dsn
+smtp:
+  host: 127.0.0.1
+  port: 587
+  from_address: restore@example.invalid

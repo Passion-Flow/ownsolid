@@ -1,0 +1,30 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,shutil,stat,subprocess,tempfile,time
+b=Path(__file__).resolve().parent
+r=b.parent.parent/'lane-arc107-handoff'
+p=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW)
+s=os.fstat(fd)
+assert stat.S_ISREG(s.st_mode) and s.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+try:
+ assert (s.st_dev,s.st_ino)==(p.lstat().st_dev,p.lstat().st_ino)
+ assert shutil.disk_usage(r).free>=30*1024**3
+ with (b/'resources.log').open('wb') as log:
+  subprocess.run(['df','-h',str(r)],stdout=log,check=True)
+  subprocess.run(['vm_stat'],stdout=log,check=True)
+ tmp=Path(tempfile.mkdtemp(prefix='arc107-probe.',dir='/private/tmp'));os.chown(tmp,-1,os.getgid());os.chmod(tmp,0o700)
+ overlay={'Replace':{str(r/'services/control/internal/platform/agentgateway/transport_binding_prototype_test.go'):str(b/'transport_binding_test.go')}}
+ (b/'overlay.json').write_text(json.dumps(overlay,indent=2)+'\n')
+ env=os.environ.copy();env.update(TMPDIR=str(tmp)+'/',GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=1')
+ subprocess.run(['gofmt','-w',str(b/'transport_binding_test.go')],env=env,check=True)
+ command=['go','-C','services/control','test','-overlay',str(b/'overlay.json'),'-race','-count=1','-timeout=45s','-run','^TestPrototypeAuthenticatedStreamBindsNaturalTransportEnd$','-v','./internal/platform/agentgateway']
+ start=time.time()
+ with (b/'transport-binding.log').open('wb') as log:code=subprocess.run(command,cwd=r,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=180).returncode
+ record={'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip(),'command':command,'exit':code,'elapsed_seconds':time.time()-start,'test_sha256':hashlib.sha256((b/'transport_binding_test.go').read_bytes()).hexdigest(),'log_sha256':hashlib.sha256((b/'transport-binding.log').read_bytes()).hexdigest()}
+ (b/'transport-binding-result.json').write_text(json.dumps(record,indent=2)+'\n')
+ print(json.dumps(record),flush=True)
+ shutil.rmtree(tmp)
+ raise SystemExit(code)
+finally:fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

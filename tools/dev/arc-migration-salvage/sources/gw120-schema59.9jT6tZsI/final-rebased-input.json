@@ -1,0 +1,11 @@
+{
+  "candidate": "4f76102ca99328e0b9063eb05b0352e62501e154",
+  "tree": "7c2b4161c4240b319db82a82d0892a2c05133422",
+  "base": "1280ea79c94f54b37f63ec33541fabfa6325901c",
+  "qualified_source": "a446ec580cf6dffc63df5d8269518f1ef8175d40",
+  "previous_handoff": "12520508998c0cf8d1e7eb3e606d642bdbb37794",
+  "up_sha256": "399432d5de8be8daad68db91d74706e52456ff3d0560048e33d5a10088ab72ab",
+  "down_sha256": "61a6eb6f8dabc011610c5b307ab904c5c038ec7119a967d48512adbd5dd52c86",
+  "qualification_scope": "Reuse unchanged default source inputs from full root and focused PostgreSQL runs; only two explicitly tagged APP tests differ, both ignored under default Darwin and Linux builds",
+  "publication": "pending DEL priority window and final main/gate check"
+}

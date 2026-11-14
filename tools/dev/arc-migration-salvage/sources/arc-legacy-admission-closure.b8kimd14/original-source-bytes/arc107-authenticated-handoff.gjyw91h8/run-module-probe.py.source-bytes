@@ -1,0 +1,18 @@
+from pathlib import Path
+import fcntl,hashlib,json,os,shutil,stat,subprocess,tempfile
+b=Path(__file__).resolve().parent
+p=Path('/private/tmp/ownsolid-workstation-full-gate.lock');fd=os.open(p,os.O_RDWR|os.O_NOFOLLOW);s=os.fstat(fd)
+assert stat.S_ISREG(s.st_mode) and s.st_uid==os.getuid()
+try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+except BlockingIOError:os.close(fd);raise SystemExit(75)
+try:
+ assert(s.st_dev,s.st_ino)==(p.lstat().st_dev,p.lstat().st_ino)
+ assert shutil.disk_usage(b).free>=30*1024**3
+ trial=Path(tempfile.mkdtemp(prefix='module-trial.',dir=b));source=trial/'source'
+ shutil.copytree(b/'client-trial.bknwst32/source',source)
+ env=os.environ.copy();env.update(GOTOOLCHAIN='local',GOPROXY='off',GOSUMDB='off',GOMAXPROCS='2',GOFLAGS='-p=1 -mod=readonly',GOWORK='off')
+ command=['go','-C',str(source/'tools/dev/simulator'),'list','-m','all']
+ with(trial/'module-list.log').open('wb') as log:code=subprocess.run(command,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=30).returncode
+ record={'source':'56a75ee89422a4f0e3e42a7dc5e66c73fa3f79f8','command':command,'GOWORK':'off','GOPROXY':'off','GOSUMDB':'off','mod':'readonly','exit':code,'log_sha256':hashlib.sha256((trial/'module-list.log').read_bytes()).hexdigest()}
+ (trial/'qualification.json').write_text(json.dumps(record,indent=2)+'\n');(b/'latest-module-trial').write_text(str(trial)+'\n');print(record,flush=True);raise SystemExit(code)
+finally:fcntl.flock(fd,fcntl.LOCK_UN);os.close(fd)

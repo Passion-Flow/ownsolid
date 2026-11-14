@@ -1,0 +1,12 @@
+from pathlib import Path
+import random,subprocess,time
+base=Path(__file__).resolve().parent
+for script in ['focused-current.py','full-current.py']:
+ for attempt in range(1,181):
+  with (base/'current-queue.log').open('ab') as log:
+   code=subprocess.run(['python3',str(base/script)],stdout=log,stderr=subprocess.STDOUT).returncode
+   log.write((script+' attempt '+str(attempt)+' exit '+str(code)+'\n').encode())
+  if code!=75:break
+  time.sleep(random.uniform(7,13))
+ if code:break
+(base/'current-queue-exit').write_text(str(code)+'\n')

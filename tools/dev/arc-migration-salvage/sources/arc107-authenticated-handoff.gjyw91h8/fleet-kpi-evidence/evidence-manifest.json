@@ -1,0 +1,157 @@
+{
+  "exits": {
+    "installed-exit": "1",
+    "installed-driver-exit": "1"
+  },
+  "files": {
+    "installed.log": {
+      "bytes": 144171,
+      "sha256": "0dbefb72cce7ced365b6c1400f10c6f7d3cf01b5a47a9ea24002b354931c10da"
+    },
+    "installed-start": {
+      "bytes": 19,
+      "sha256": "7f7cd5b58feb5d6d90e1e60640f2d43e41ca14c1538a75a90b69126264bbd2b5"
+    },
+    "installed-finish": {
+      "bytes": 19,
+      "sha256": "9ef86da62a38a8c12e6c84daeaf1bdcc3543b39e10fd4f21fe6fdc27c5427fe4"
+    },
+    "installed-preflight.json": {
+      "bytes": 479,
+      "sha256": "6574018afb6d849885aa687780586cb862f33b7a98fca6c0630633a2981af432"
+    },
+    "fixture-image.json": {
+      "bytes": 843,
+      "sha256": "8484384d5fecd94ec6af9a4a1ae5cf199a1fe880177b091a98e073c2dc936c30"
+    },
+    "runner-input.json": {
+      "bytes": 427,
+      "sha256": "6c495187e95f2911c4ea138d4eb279b0b89bd80bd3695cb5f7dd482eaf456106"
+    },
+    "research-input.json": {
+      "bytes": 608,
+      "sha256": "7781473eef9921682f10b84c34f8ec0c24ce500bec297a3551eeee4fae467177"
+    },
+    "raw/database-observations.jsonl": {
+      "bytes": 25533,
+      "sha256": "d2e9b0816d9efac668843db1cfe0ac5bbed5f1131794e115bddb2ff9f9248295"
+    },
+    "raw/database-container-state.log": {
+      "bytes": 807,
+      "sha256": "9ec02b9cefced36c964299bfeb92df010c8a3d60677dae91a3fc3dfb7f04ec0a"
+    },
+    "raw/egress.log": {
+      "bytes": 115,
+      "sha256": "a68d8bf1092f3bcc4141e49981cb0e3f45c194052c94d20fb55da0b24a5d362b"
+    },
+    "raw/routes-v4-last-read.json": {
+      "bytes": 784,
+      "sha256": "46cdc740deb7551eb9231cbb2db5fedd2a74ef2f77a61b60dc1a9377e82f725d"
+    },
+    "raw/routes-v6-last-read.json": {
+      "bytes": 784,
+      "sha256": "ecab0dfe835b6170dd45fbe64f68d8454439327884b70c92c4b023acca15414d"
+    }
+  },
+  "raw_retained_remotely": {
+    "ownsolid-age-gateway-b-last-read.json": {
+      "bytes": 174,
+      "sha256": "60a21f71a4b639f1634cc202c3dc9e25920ff9885542c6a6467a549745382d4d"
+    },
+    "ownsolid-postgres-1-last-read.json": {
+      "bytes": 2128,
+      "sha256": "eb999d2cbc77845469d4043e5d42f7920f5c64d09d5cdf5366526266fde1d497"
+    },
+    "database-statistics-state.log": {
+      "bytes": 123,
+      "sha256": "ce1c0115bb47171329635e7537ba0506b94d99b1b22070fb1db652d985bdf860"
+    },
+    "database-observations.jsonl": {
+      "bytes": 25533,
+      "sha256": "d2e9b0816d9efac668843db1cfe0ac5bbed5f1131794e115bddb2ff9f9248295"
+    },
+    "database-container-state.log": {
+      "bytes": 807,
+      "sha256": "9ec02b9cefced36c964299bfeb92df010c8a3d60677dae91a3fc3dfb7f04ec0a"
+    },
+    "outer-daemon.log": {
+      "bytes": 38089,
+      "sha256": "bd430ccfeccef3922c301c79c5543385e22e55a836524955e3484b8fae68e328"
+    },
+    "outer-state.log": {
+      "bytes": 218,
+      "sha256": "754fc9911b1ad59c6375058c364fdad774245ab3d47fe944701a50efb160db7b"
+    },
+    "ownsolid-control-1-last-read.json": {
+      "bytes": 2161,
+      "sha256": "29c30a5883c69976b12dd6e2745d94e7feb6e5f276d12d20a74a253e44686d1f"
+    },
+    "ownsolid-postgres-1.log": {
+      "bytes": 898654,
+      "sha256": "06e574878bf690cd490bc62c20a82555bf380cedd8673feb474647115df94929"
+    },
+    "egress-last-read.json": {
+      "bytes": 105,
+      "sha256": "38c8195ccaed78e6d4d52bb44d2cadd7e0b190ede3b479b751d1075285ba4457"
+    },
+    "database-container-state-last-read.json": {
+      "bytes": 105,
+      "sha256": "d640deec485fa796c1155877a7dc9f53a41b7e1121d42a007be314a0bc2e3656"
+    },
+    "database-statistics-state-last-read.json": {
+      "bytes": 105,
+      "sha256": "ba4b03d6eb572ab64f152f48ea3969200afab15745f3abd465c5b76ce7b8e009"
+    },
+    "ownsolid-control-1.log": {
+      "bytes": 8399861,
+      "sha256": "8017ae840d27618b5d57d705b927c460756c4023ee0a57c24c2be6b9da8cc2ac"
+    },
+    "ownsolid-age-gateway-a-last-read.json": {
+      "bytes": 173,
+      "sha256": "d83961a836a62ea98d2618f686b409dcab489eb53123d40104fb9e03903fe6f2"
+    },
+    "interfaces-last-read.json": {
+      "bytes": 784,
+      "sha256": "d3aa5084ea2716e6647a10a5c312e55b62aeb00c7cfa0c1355286ce09de91017"
+    },
+    "outer-daemon-last-read.json": {
+      "bytes": 2223,
+      "sha256": "c4564b6a4c905c406c8d0e68f5a00f98a20c7848bfbe312fd143841ac47ebb9f"
+    },
+    "inner-containers.log": {
+      "bytes": 5093,
+      "sha256": "479ee1c56b060d89eb74e67bded92ef91d1cb40db8babe5d6c3740cbd06a7b6f"
+    },
+    "inner-containers-last-read.json": {
+      "bytes": 106,
+      "sha256": "cb6f57f8c76fcba69eaa0b6db2198323052f83c7ed5e08cfb1637d5b9c44dac4"
+    },
+    "routes-v6-last-read.json": {
+      "bytes": 784,
+      "sha256": "ecab0dfe835b6170dd45fbe64f68d8454439327884b70c92c4b023acca15414d"
+    },
+    "egress.log": {
+      "bytes": 115,
+      "sha256": "a68d8bf1092f3bcc4141e49981cb0e3f45c194052c94d20fb55da0b24a5d362b"
+    },
+    "routes-v4-last-read.json": {
+      "bytes": 784,
+      "sha256": "46cdc740deb7551eb9231cbb2db5fedd2a74ef2f77a61b60dc1a9377e82f725d"
+    },
+    "outer-state-last-read.json": {
+      "bytes": 104,
+      "sha256": "e8e8468309168004186773181ae7d37bce1d05e9907ec85a3c858f76eb731182"
+    }
+  },
+  "source_after_run": {
+    "source": "821227ea5b94a8357f695c290e78af3b81c54f22",
+    "paths": 5068,
+    "all_source_bytes_and_modes_unchanged": true
+  },
+  "cleanup": {
+    "outer_container": "ownsolid-e2e-jeazcu",
+    "outer_absent": true,
+    "installation_scratch_empty": true,
+    "fixture_image_retained_until_evidence_collected": true
+  }
+}
