@@ -1,0 +1,67 @@
+{
+  "candidate": "992e979f1a0a510d8f617c90d990fb9757969b1b",
+  "base": "8ee92f8c98af2502e72ba144534e58c1d375e79f",
+  "main_at_inventory": "203109c75cb2479419924c50b13c0046adfc5021",
+  "preserved_commits": [
+    "df29eff8d278e9e4cfc66e3e5818e088d4fcb35c",
+    "9eb51bd6497a4347a63923922481a031430a3c67",
+    "c4377e71d32bbeaa41cf00728c1ea6ad13cd2869",
+    "0cb4e60d0d99d2b61a3a6f648eb42c33a7a6c625",
+    "50f4847c71588984dcf9bfe9dee811e50f8456cf",
+    "494a9199e1b6059283f7cc57c9eaac9598f1390b",
+    "0cd30e89501a49d535a4d5e14f0f226ac8fdb475",
+    "992e979f1a0a510d8f617c90d990fb9757969b1b"
+  ],
+  "independent_mod113": "d839b4cc1d6a2e5e3945eda3c9ca52ca45e52ca5",
+  "original_to_current": {
+    "023c742e": "9eb51bd6",
+    "a2849edb": "c4377e71",
+    "992e979f": "992e979f",
+    "0cd30e89": "0cd30e89"
+  },
+  "historical_receipts": "Recorded in repository research only. Previous temporary logs and assets are absent.",
+  "recheck_inputs": [
+    "models and deployments source patches must remain byte-identical after rebase",
+    "full repository make check, make build, make test on the selected baseline",
+    "model archive read-only rejection unit roots",
+    "actual PostgreSQL import expiry worker races, audit rollback/recovery and HTTPS operator projection",
+    "actual TLS leased transfer with full digest refusal, approved tokenizer two-range replay and descriptor controls",
+    "actual PostgreSQL borrowed base and derived transfer controls",
+    "actual approved archive safety and publication rollback/recovery on Linux amd64 if the shared CPU lock is available"
+  ],
+  "boundaries": [
+    "MOD108 generic multi-entry catalogue and operator review remain open",
+    "MOD109 site Registry and Agent pre-warming remain open",
+    "MOD121 startup wiring is the ARC candidate e2f424bd",
+    "MOD121 released mutation conflict remains MODEL_IMPORT_STATE_CONFLICT under main 203109c7",
+    "MOD121 Console expiry rendering and localization remain open",
+    "MOD113 signed model catalogue production assets remain unavailable"
+  ],
+  "rebased_commits": {
+    "df29eff8d278e9e4cfc66e3e5818e088d4fcb35c": "05f3a7049ed01b54221757deb70c752b7fae6219",
+    "9eb51bd6497a4347a63923922481a031430a3c67": "c58b598d287ff738820f3a81f1f366fe310c9864",
+    "c4377e71d32bbeaa41cf00728c1ea6ad13cd2869": "4ea5d0422303e1d601083cb39a02b068f7141d66",
+    "0cb4e60d0d99d2b61a3a6f648eb42c33a7a6c625": "fa2f295e9ed27121191294b044af899831e918fd",
+    "50f4847c71588984dcf9bfe9dee811e50f8456cf": "17855c69c501a78cfdb0f4e372bc83bd025125e4",
+    "494a9199e1b6059283f7cc57c9eaac9598f1390b": "9ade9c1aed4ef1ce485b9ec1c42f22c23d9ad1e9",
+    "0cd30e89501a49d535a4d5e14f0f226ac8fdb475": "e69374f60af47c57fac7b62b08f1739f035a11ac",
+    "992e979f1a0a510d8f617c90d990fb9757969b1b": "a3b3747ddb31577529a0bd0907adfc70f49e72ee"
+  },
+  "gate_revision": [
+    "a3b3747ddb31577529a0bd0907adfc70f49e72ee",
+    "67293e12e3fd47cbb5b07c32fcc4ce3a596b02aa",
+    "d047e61c422a65b20766ab67a66b6e873b6dfae5"
+  ],
+  "published_head": "e17921ff7acb8b8de55ba6f28f27081c38a5d53c",
+  "native_gate": "Passed on a3b3747d with Python 3.12 and a short APFS temporary path",
+  "linux_actual_commands": "All six selected Go commands passed on disconnected Linux amd64 PostgreSQL 18.6, validated from retained raw results",
+  "original_harness_exit": "Preserved as exit 1 because the explicitly excluded publication subtest emitted a warning, with corrected predicate and independent validation retained",
+  "resource_cleanup": {
+    "mac_window": "released",
+    "temporary_images_removed": [
+      "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/test-volume.sparseimage",
+      "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/test-volume.sparseimage"
+    ],
+    "linux_fixture": "container, generated archive, model store and private credentials removed"
+  }
+}

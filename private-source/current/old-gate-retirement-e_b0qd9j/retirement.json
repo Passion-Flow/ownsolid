@@ -1,0 +1,205 @@
+{
+  "scope": "lane-m private wrappers only; no product source or lock mutation",
+  "checked_utc": "2026-11-13T11:35:41.425349+00:00",
+  "old_identity": {
+    "device": 16777234,
+    "inode": 50313339
+  },
+  "retired_wrappers": [
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/lock-native.py",
+      "before_sha256": "54ffff8ce479d787fce87a8153e95d5480a986b404b0c491a820b5e87d32b599",
+      "before_mode": "0o644",
+      "after_sha256": "ba404714bcba22af45b2dfc0a759e443e0ca317b0c4bbcf4fbba2842b758bc52",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publication-preflight.py",
+      "before_sha256": "79dd8876d9cde40e019e8e50cd859275d63e4100d61e95779336817ac814fab6",
+      "before_mode": "0o644",
+      "after_sha256": "3c765d28907d98c61e90459210a23b693787faea7ab2cdbba06aa053f58d7e89",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publish.py",
+      "before_sha256": "f4f3613f8ae723a8376dfe39af328c2c2a2a051b0c927155c83f55daf1c31287",
+      "before_mode": "0o644",
+      "after_sha256": "f724acb4ea4334c6a84f0ae624c9d3aea88a130e57ff2874d6b343662522cd41",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publish.sh",
+      "before_sha256": "c31f0feab848ea9c63dd2a1c483827e04582be389ebee6a3371695d5197d4546",
+      "before_mode": "0o644",
+      "after_sha256": "c83742f504d193a64a0fc71111e99a09bdd88876125141ccec005ccf75498218",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/qualify-publish.sh",
+      "before_sha256": "60c44bfc6f321fe56803e1a0ad787e9520ef18be081a03668fdd4afa29564dc2",
+      "before_mode": "0o644",
+      "after_sha256": "92c84a41abb8b7d5dfa67e7cfb3e167a0d58ac00f131990e79c4ef4e0ea3e817",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/run-native.sh",
+      "before_sha256": "4d6df717671822224923cac120de081376d4257576380da371e8b7813b20d537",
+      "before_mode": "0o700",
+      "after_sha256": "085c961ecfa098a6d245cee9cc046917599c08211fc11b22a32e54592069111f",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/lock-native-wait45.py",
+      "before_sha256": "6d29c9c3e822311fe1ecf452509ee0eb5b4f551e7089f0a0ba20cad3bb374d3d",
+      "before_mode": "0o644",
+      "after_sha256": "b0780ce3d9f9e3ef874cc4f97ffd95e69189448486ca4c96d867c6a3126f912b",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/lock-native.py",
+      "before_sha256": "54ffff8ce479d787fce87a8153e95d5480a986b404b0c491a820b5e87d32b599",
+      "before_mode": "0o644",
+      "after_sha256": "ba404714bcba22af45b2dfc0a759e443e0ca317b0c4bbcf4fbba2842b758bc52",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/run-native.sh",
+      "before_sha256": "343c725a81c4fbeef58b12f766f908b73583f1ac81c003190a8bee3caa82fb19",
+      "before_mode": "0o700",
+      "after_sha256": "2bdaf3616e167278516db20c1fb647e2ba48170bc67a4fa24a312cb2209571c7",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/run-one-bounded-window.py",
+      "before_sha256": "095f66388a9b9b5bedbfbbd3fe3d75458d0d8c5edcbc28e07ee513dcab5323e9",
+      "before_mode": "0o700",
+      "after_sha256": "ba405d4abe5533ce78f542b7a269235cc62a7dad9acbc24e79263c6b98390a49",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-backend-tail.sh",
+      "before_sha256": "813b4173d5ad9e76622ad615ab9e2215f8e459f21d3a1b86c7f4a19571faa7ca",
+      "before_mode": "0o644",
+      "after_sha256": "5c49881f836dffe515aab6f7d97725625c88290de20bf3f6d63ac0ceddfbf9b9",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-control-refresh.sh",
+      "before_sha256": "4cf5a9ae2413bd7a96fce7890a4287f465bea4069a6ae323fd0ff5e4af25a688",
+      "before_mode": "0o700",
+      "after_sha256": "8a475c989552d24bc9d13db8ecf8adf1e21f3dce3892b32b7a2fbf10f2ffb6ae",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-native.sh",
+      "before_sha256": "0d45dd88a158b18cdac2406bcdbd8e0be7971fc8a0b2804fd57f4174f4fb59e4",
+      "before_mode": "0o644",
+      "after_sha256": "5561ea2f2bcd54e56a038da47abdcd3015e809b45a01c797cd8035d9b34c5f43",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-portal-focus.sh",
+      "before_sha256": "c798033d35966180933c623888578a71fa94a2dce3466a4da9e6df7be1592881",
+      "before_mode": "0o644",
+      "after_sha256": "6291584f4994871418fbad8dd8da8871e9cf8a0b91dd0dda95e17e11329a0e65",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/preflight.py",
+      "before_sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "before_mode": "0o644",
+      "after_sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "closed_before_any_old_code": true
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/run-gate.sh",
+      "before_sha256": "8133c34bdbc61aaecefa0b3d4c0525c2306bc49fa7325cdfefbc9213b599079b",
+      "before_mode": "0o700",
+      "after_sha256": "1880a61ec07ee5fbff52394456754d3b1fe7a5cb5f439997acb92cb6121eb115",
+      "closed_before_any_old_code": true
+    }
+  ],
+  "original_archive_sha256": "fc140266b009601e06b35f8f17a2c61147acff3d166f95568f2d9557f3b1dfad",
+  "own_path_inventory_count": 43119,
+  "own_same_identity_links_preserved": [],
+  "inventory_errors": [],
+  "runtime_job_execution": false,
+  "lock_open_create_replace_delete": false
+}

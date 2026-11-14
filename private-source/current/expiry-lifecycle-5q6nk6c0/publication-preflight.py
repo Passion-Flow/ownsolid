@@ -1,0 +1,29 @@
+raise SystemExit("LANE_M_OLD_GATE_EPOCH_CLOSED")
+import os
+import pathlib
+import re
+import subprocess
+import sys
+
+worktree = pathlib.Path(sys.argv[1])
+proof = pathlib.Path(__file__).resolve().parent
+if os.path.lexists('/private/tmp/ownsolid-macos-full-gate.lock'):
+    raise SystemExit('Legacy workstation gate is occupied')
+root = os.statvfs('/')
+if root.f_bavail * root.f_frsize < 15 * 1024**3:
+    raise SystemExit('Host disk is below 15 GiB')
+patterns = {'make': r' (check|build|test)( |$)', 'gmake': r' (check|build|test)( |$)', 'node': r'playwright.*\btest\b|\bvitest\b|\bvite\b.*\bbuild\b|pnpm.*\b(test|build|check)\b', 'go': r'\bgo (test|build)\b', 'cargo': r'\bcargo (test|build|clippy)\b', 'docker': r'\bdocker (build|compose|run|buildx)\b'}
+for line in subprocess.check_output(['ps', '-Ao', 'pid=,comm=,args='], text=True).splitlines():
+    fields = line.strip().split(None, 2)
+    if len(fields) != 3:
+        continue
+    pid, comm, args = fields
+    name = os.path.basename(comm)
+    if name in patterns and re.search(patterns[name], args):
+        print('BUSY_PROCESS', pid, name)
+        raise SystemExit(75)
+for port in (4310, 4311):
+    if subprocess.run(['lsof', '-t', '-iTCP:' + str(port), '-sTCP:LISTEN'], stdout=subprocess.DEVNULL).returncode == 0:
+        raise SystemExit('Browser preview port is occupied')
+
+print('PUBLICATION_PREFLIGHT_ADMITTED')

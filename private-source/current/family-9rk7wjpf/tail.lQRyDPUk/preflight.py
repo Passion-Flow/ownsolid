@@ -1,0 +1,32 @@
+raise SystemExit("LANE_M_OLD_GATE_EPOCH_CLOSED")
+import os,pathlib,re,shutil,subprocess,sys
+for path in ['/private/tmp/ownsolid-macos-full-gate.lock']:
+ if pathlib.Path(path).exists():
+  sys.exit('Legacy gate lock is occupied')
+stats=os.statvfs(os.environ['TMPDIR'])
+free=stats.f_bavail*stats.f_frsize/1024**3
+ratio=stats.f_bavail/stats.f_blocks
+print(f'Test volume available {free:.1f} GiB ({100*ratio:.1f}%)')
+if ratio<0.30: sys.exit('Test volume is below the objectstore threshold')
+root=os.statvfs('/')
+if root.f_bavail*root.f_frsize<15*1024**3: sys.exit('Host disk is below 15 GiB')
+patterns={'make':r' (check|build|test)( |$)','gmake':r' (check|build|test)( |$)','node':r'playwright.*\btest\b|\bvitest\b|\bvite\b.*\bbuild\b|pnpm.*\b(test|build|check)\b','go':r'\bgo (test|build)\b','cargo':r'\bcargo (test|build|clippy)\b','docker':r'\bdocker (build|compose|run|buildx)\b'}
+busy=False
+for line in subprocess.check_output(['ps','-Ao','pid=,etime=,comm=,args='],text=True).splitlines():
+ fields=line.strip().split(None,3)
+ if len(fields)<4: continue
+ pid,elapsed,comm,args=fields
+ name=os.path.basename(comm)
+ if name in patterns and re.search(patterns[name],args):
+  out=subprocess.run(['lsof','-a','-p',pid,'-d','cwd','-Fn'],capture_output=True,text=True).stdout.splitlines()
+  cwd=next((s[1:] for s in out if s.startswith('n')),'')
+  print('Busy',pid,elapsed,name,os.path.basename(cwd))
+  busy=True
+for port in (4310,4311):
+ result=subprocess.run(['lsof','-t','-iTCP:'+str(port),'-sTCP:LISTEN'],capture_output=True,text=True)
+ if result.returncode==0:
+  print('Browser preview port is occupied',port)
+  busy=True
+if busy: sys.exit(75)
+for executable in ('go','make','cargo','node','pnpm'):
+ if not shutil.which(executable): sys.exit('Missing '+executable)

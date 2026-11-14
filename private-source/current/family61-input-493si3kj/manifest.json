@@ -1,0 +1,220 @@
+{
+  "format": 1,
+  "created_utc": "2026-11-13T07:16:14.617539+00:00",
+  "state": "prepared_uncompiled_unrun_unpublished",
+  "source": "db8435034a2a94a3285a059f6bd40237322ae1c2",
+  "tree": "25e5262c4eddd521d7c075862cf8293e5faf61c4",
+  "arc_base": "0f47a66bcb84c585b00bb1a92bf30f455017c1c9",
+  "arc_base_tree": "d45ba1d14f18f0e0298c8a6d4c5106447d0a351b",
+  "own_commits_in_order": [
+    "c0467dbad4832b237e212ae4f82934926c0c1fb9",
+    "80f9ee0893e19acf1e7b67b669be4f00064a0b55",
+    "fde4237a774e9ecda0c0bfc6d96eb3e20ad72498",
+    "db8435034a2a94a3285a059f6bd40237322ae1c2"
+  ],
+  "source_paths": [
+    {
+      "path": "docs/research/lane-m-questions.md",
+      "bytes": 15165,
+      "sha256": "a719118021fd59cff9f9092e233aa71b60d7a607e07d11711f62be63b54b5105"
+    },
+    {
+      "path": "docs/research/training-dataset-lineage.md",
+      "bytes": 59297,
+      "sha256": "caf16d976d06757267b68de5f91f0e21dadcbf8d8a2104febd74bbf73b9d0ae8"
+    },
+    {
+      "path": "services/control/internal/modules/models/README.md",
+      "bytes": 9770,
+      "sha256": "6f9274715a27653d658edd344a0137526f3dd0f7a464973d5700c5ff46b4dbde"
+    },
+    {
+      "path": "services/control/internal/modules/models/access_repository.go",
+      "bytes": 5296,
+      "sha256": "2863cfc684f3a4b0f1cd307e20cbf6719ed5864340e181f3ddfa79ccbb02eaa2"
+    },
+    {
+      "path": "services/control/internal/modules/models/derived_lineage.go",
+      "bytes": 5105,
+      "sha256": "147d44ae9d8ad492a19b5f58df7829b09da267b933adf05565f4cb0dc93168cd"
+    },
+    {
+      "path": "services/control/internal/modules/models/family.go",
+      "bytes": 6075,
+      "sha256": "3e64ce153cd63b3ee65088c72df37bc62a6fa35c6fd0c2f17634dc91579f4645"
+    },
+    {
+      "path": "services/control/internal/modules/models/family_fixture_integration_test.go",
+      "bytes": 9550,
+      "sha256": "b1586a8342a949435d0a1865765a2605cfd0e249ef83a1749a647779712769c6"
+    },
+    {
+      "path": "services/control/internal/modules/models/family_repository_integration_test.go",
+      "bytes": 26634,
+      "sha256": "5fa4fe19b677e3b8e557110f85bad3bda4a7a251840e398c5c5a97b5553ac0d3"
+    },
+    {
+      "path": "services/control/internal/modules/models/family_scope_integration_test.go",
+      "bytes": 6936,
+      "sha256": "33ccc4343575c4a90ddb7a2180675da0ccc73ed6228ff535e201d0a40907c43a"
+    },
+    {
+      "path": "services/control/internal/modules/models/history.go",
+      "bytes": 11245,
+      "sha256": "48f64d51a04d9c583ae762b4f7d8c8b6efee3cffb40491bea2ec6ad082c89557"
+    },
+    {
+      "path": "services/control/internal/modules/models/history_cursor.go",
+      "bytes": 3246,
+      "sha256": "2260619ad40d3bf3ec09d9d0900d4c52e974a67a92ed853384262282960d3d31"
+    },
+    {
+      "path": "services/control/internal/modules/models/history_cursor_test.go",
+      "bytes": 3500,
+      "sha256": "8d30bd86cc948068e2b963c198da5805ad537c06bd9ac9faf4a0c97096cb367d"
+    },
+    {
+      "path": "services/control/internal/modules/models/reads_repository_integration_test.go",
+      "bytes": 15543,
+      "sha256": "32cdbaf28aedd8b7d49d45642e642abe93fde39334489eb2b75db39a2d79e355"
+    },
+    {
+      "path": "services/control/internal/modules/models/registration_repository_integration_test.go",
+      "bytes": 25546,
+      "sha256": "76d57372cc656292d95b8ef10f91965188f91bf6c45fc4bc01571f9cd7a2e555"
+    },
+    {
+      "path": "services/control/internal/modules/models/retire.go",
+      "bytes": 3695,
+      "sha256": "728127b61ff79d6827a7f00e33a8b18f7c337cfd7464c33c7f415886363c5a6f"
+    }
+  ],
+  "unchanged_inputs": [
+    {
+      "path": "services/control/internal/platform/database/database.go",
+      "bytes": 8874,
+      "sha256": "4aa8224a27c9c7179b54256a453956597d2e66db28a57443a2107a52799af608",
+      "equal_to_arc_base": true
+    },
+    {
+      "path": "services/control/internal/platform/database/catalog.go",
+      "bytes": 5228,
+      "sha256": "ac6f60ad507cf33dce6d9b2225825416e00d920d8513b7c5af51f64335f15399",
+      "equal_to_arc_base": true
+    },
+    {
+      "path": "services/control/internal/operations/databaseaccess/postgres_catalog.go",
+      "bytes": 1334,
+      "sha256": "7dfada55ee1c548672e25b5aa6807ad7befb2e62b7bc95acd5776c72b7853faf",
+      "equal_to_arc_base": true
+    },
+    {
+      "path": "services/control/migrations/postgresql/000061_model_families.up.sql",
+      "bytes": 6890,
+      "sha256": "6d5d106d6a9349eadf032c279e1895b64395660d269f030930bebee7ad2be531",
+      "equal_to_arc_base": true
+    },
+    {
+      "path": "services/control/migrations/postgresql/000061_model_families.down.sql",
+      "bytes": 864,
+      "sha256": "f177fadd734a05c52af55ceea7b1f3a97ead8e21c1b43bed22ca02aff97d0644",
+      "equal_to_arc_base": true
+    },
+    {
+      "path": "services/control/internal/modules/models/testdata/model_family_candidate.up.sql",
+      "bytes": 5711,
+      "sha256": "03f8c26e190bc16e01a9905c45cb13be1eef8835056d29e86e761ff70ae2c49c",
+      "equal_to_arc_base": true
+    },
+    {
+      "path": "services/control/internal/modules/models/testdata/model_family_candidate.down.sql",
+      "bytes": 684,
+      "sha256": "0dc0c6c0c2821a0eead8399db277ab5de2538bf4b2b6ff6b3b8b73dcd8159cb6",
+      "equal_to_arc_base": true
+    }
+  ],
+  "owner_sql_roots": [
+    "TestActualModelFamilyFormalBackfillAndLifecycle",
+    "TestActualModelFamilyHistoryPagesAndAuthority",
+    "TestActualModelFamilySelectionTransactions",
+    "TestActualModelFamilyRetainedDerivedGraph",
+    "TestActualModelFamilyDerivedRegistration",
+    "TestActualModelFamilyRestrictedPrincipal",
+    "TestActualModelFamilyFormalCellScope"
+  ],
+  "owner_unit_root": "TestModelHistoryCursorIntegrityAndScope",
+  "cursor_scope_dimensions": [
+    "account",
+    "session",
+    "epoch",
+    "audience",
+    "tenant",
+    "workspace",
+    "site",
+    "cell",
+    "family",
+    "anchor",
+    "filter"
+  ],
+  "arc_family_roots": [
+    "TestModelFamilyMigrationPreservesReviewedOwnerSQL",
+    "TestModelFamilyFormalMigrationRetainsLegacyIdentities",
+    "TestModelFamilyCellScopeRejectsMismatchedReferences",
+    "TestModelFamilyNonlocalPredecessorRefusesWithoutRelabeling",
+    "TestModelFamilyEmptyRollbackRestoresPredecessorCatalog",
+    "TestModelFamilyRuntimeGrantUpgradeRetainsPublicationAndDenial"
+  ],
+  "arc_original_mandatory_roots": [
+    "TestCatalogAdmissionAfterLogicalRestore",
+    "TestLineageUpgradeFromEveryPrefixMatchesFreshCatalog",
+    "TestLineageRejectsForeignLedger",
+    "TestM02ActualUpgradeFailureRecoveryAndChecksums",
+    "TestUpgradeFromDeliveredPrefixPreservesRoleAndData",
+    "TestUpgradeResumesAfterSchemaCommittedAndUnknownGrantCommit",
+    "TestUpgradeResumesGrantsAfterSchemaCommitted",
+    "TestUpgradeRejectsForeignLedgerAndMissingRole",
+    "TestUpgradeRejectsMissingRole",
+    "TestUpgradeRejectsElevatedRoleBeforeDDL",
+    "TestActualRestoredRuntimeRolePreservesFreshGuardAndRefusesWrongContext"
+  ],
+  "planned_owner_command_not_run": "go -C services/control test -mod=readonly -p=1 -tags repository_integration -run '^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$' -count=1 -timeout=15m -v ./internal/modules/models",
+  "old_qualification": {
+    "native_source": "2783a46fa8990daa0792f11ee764c46a7795ef36",
+    "native_tree": "fd479f8e54563061274ec898923d9b16dcdccc0a",
+    "published": "dba2eaf6c2a8e90aa2a73634dfc576ddc91c6521",
+    "publication_equivalence_sha256": "b877dd4e4a7973427ecc6b07e9da1cd0dec834b64a8b008db9c3df9935e996f1",
+    "not_applicable_to_this_formal61_source": true
+  },
+  "artifacts": [
+    {
+      "name": "HANDOFF.md",
+      "bytes": 4615,
+      "sha256": "6a49adedf94493e18764e1957519376d365b8a23b41e35cb8c74adf307f6e92f"
+    },
+    {
+      "name": "bundle-verification.txt",
+      "bytes": 283,
+      "sha256": "d96d06ed9c610e4066f64606258a658b7f337e5b2017f0ffadad350944988bbe"
+    },
+    {
+      "name": "model-family61-source.tar.gz",
+      "bytes": 8903423,
+      "sha256": "0f4de019c4f957542461086dd8615c6fcbf923c51a9a8073e2c660f6723b0ec2"
+    },
+    {
+      "name": "model-family61.bundle",
+      "bytes": 31248,
+      "sha256": "c4fc38441b3fa870b9273cc592d316a29b6e4000e260b256611756ca3408cf3f"
+    },
+    {
+      "name": "model-family61.patch",
+      "bytes": 70200,
+      "sha256": "a4fdbcb834d31a24d36f0b75d1678d723bb4b90d3ab06a705e3d2bcd8a855f71"
+    },
+    {
+      "name": "static-checks.json",
+      "bytes": 1074,
+      "sha256": "f9bb033ba695f1f9afc8ca8d1d169a5138259eeb1b8c6c041f5a060a7a60e0a6"
+    }
+  ]
+}

@@ -1,0 +1,1210 @@
+diff --git a/docs/research/lane-m-questions.md b/docs/research/lane-m-questions.md
+index 3e0471d5..40f00d2b 100644
+--- a/docs/research/lane-m-questions.md
++++ b/docs/research/lane-m-questions.md
+@@ -8,7 +8,7 @@ responsible owners can extend their respective boundaries.
+ | --- | --- |
+ | MOD-101 | The models module resolves the legacy digest for upload, archive verification, publication and recovery. The two real archives exercised fail-closed admission and Qwen replay. The next slice needs the shared multi-entry API, immutable catalogue persistence and digest-bound Agent transfer in the [contract handoff](model-registry.md#contract-handoff). |
+ | MOD-102 | The Admin catalogue endpoint returns a single approved descriptor, and the existing UI facets cover that descriptor or already imported rows. Type and capability coverage for the catalogue needs a multi-entry read contract and its UI consumer. |
+-| MOD-103 | Retained training and holdout references use the existing publication graph. The [staged family/history domain](training-dataset-lineage.md#durable-family-domain-contract) now supplies unnumbered atomic membership DDL, signed bounded keysets and current-authority ready/retired reads with [PostgreSQL evidence](training-dataset-lineage.md#postgresql-family-domain-acceptance). ARC must admit migration/roles/catalog and retained-identity rollback; DEV and the route owner must admit public schemas and dispatcher, and Web owns S-202. Evaluation remains with SCI. |
++| MOD-103 | Retained training and holdout references use the existing publication graph. The [family/history domain](training-dataset-lineage.md#durable-family-domain-contract) is published at dba2eaf6 with original-source PostgreSQL and native evidence. The [formal-lineage owner adaptation](training-dataset-lineage.md#formal-lineage-and-restricted-control-adaptation) now targets ARC's unpublished 0f47a66b migration-61 candidate and actual restricted Control login; it is not compiled or run. ARC must register native fingerprints and admit migration/roles/catalog and retained-identity rollback; DEV and the route owner must admit public schemas and dispatcher, and Web owns S-202. Evaluation remains with SCI. |
+ | MOD-104 | Chat-template defaults need to reach the serving engine with an explicit command or request policy. The Agent inference adapter and its wire command are shared boundaries. |
+ | MOD-105 | The preparation worker accepts the existing pinned recipe. LoRA merge and format conversion need an admitted recipe and an Agent runner that can dispatch and verify the new output; the current runtime alone cannot make the job usable. |
+ | MOD-106 | Serving variants require recipe admission and a serving manifest accepted by the Agent, including matching quantization arguments and validation. |
+diff --git a/docs/research/training-dataset-lineage.md b/docs/research/training-dataset-lineage.md
+index fd7f5bb2..81d688f0 100644
+--- a/docs/research/training-dataset-lineage.md
++++ b/docs/research/training-dataset-lineage.md
+@@ -498,7 +498,7 @@ The v1 cursor is at most 512 ASCII bytes: canonical unpadded base64url JSON plus
+ an HMAC-SHA-256 signature with a model-history-specific domain separator. Reuse the
+ installed Identity HMAC key and [constant-time comparison](https://pkg.go.dev/crypto/hmac).
+ Bind its scope digest to account, session, auth epoch, audience, tenant, workspace,
+-family, exact anchor and state filter. Persist no cursor secrets or page results.
++local site/cell, family, exact anchor and state filter. Persist no cursor secrets or page results.
+ Key rotation invalidates old cursors and requires restarting navigation. Cursor
+ positions retain UTC microseconds and canonical nonzero UUIDs.
+ 
+@@ -706,13 +706,122 @@ an unnumbered candidate and the history reads remain unregistered. MOD-103 stays
+ open until ARC schema/role/catalog, IAM dispatch, DEV public contracts and Web
+ integration are actually admitted and verified.
+ 
++### Formal lineage and restricted Control adaptation
++
++Review input is ARC's unpublished `0f47a66bcb84c585b00bb1a92bf30f455017c1c9`,
++not a released schema. It appends platform site/cell defaults and composite keys
++to the reviewed domain SQL in migration 61; the original candidate inputs remain
++unchanged. The domain's initial-version/member cycle stays deferred, membership
++stays immutable, and populated downgrade still refuses before any object drops.
++The added foreign keys ensure related rows agree; they do not restrict a read to
++the server's local cell. New historical reads, explicit selection and retirement
++must also enforce that local scope, including the existing retained derivation
++and input rows. A matching snapshot must not authenticate a foreign-cell artifact.
++Bind navigation to the resolved local site
++and cell as well as the existing actor/anchor/filter dimensions. Neither identity
++comes from request input. No public DTO changes are required.
++
++Follow PostgreSQL's [composite and deferred constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)
++and [named constraint timing](https://www.postgresql.org/docs/18/sql-set-constraints.html).
++Run normal family tests on the actual `Migrate` lineage, never apply testdata over
++an already-migrated schema. Use the existing explicit predecessor-60 fixture for
++backfill and migration rollback, retaining its exact prefix/version fence. A
++pgx [nested transaction](https://pkg.go.dev/github.com/jackc/pgx/v5@v5.11.0#Tx)
++provides a real savepoint inside an owned rollback test; normal upgrade calls
++still use the real pool and exact catalog admission. Read the numbered downward
++asset only for explicit downgrade refusal, not as a replacement migration path.
++
++For service acceptance, create a fresh runtime through ARC's existing
++`LoadRuntime`/`Prepare`/`Check` operations, then connect separately as that actual
++Control login. Do not duplicate GRANT catalogs, use `SET ROLE` as a substitute
++login, or expose credentials in diagnostics. Privileged fixture corruption uses
++the retained operator pool explicitly; all business calls use the restricted
++pool. ARC remains responsible for predecessor-principal grant resume and its OID,
++authenticator, exact-catalog, DDL and journal fences. Consistently foreign
++family/member/version records must not produce history or permit retirement;
++mismatched scope must fail the real composite keys without partial state.
++
++Prepare coverage for nonempty 60-to-61 backfill with unchanged exact IDs and
++deployment references, local scope on all three rows, explicit/default publication
++rollback, orphan/audit/concurrent outcomes, current-authority keysets, retired
++read versus execution refusal, derived retained graphs and populated downgrade.
++The untouched platform catalog pins currently describe 60: ARC must collect and
++register actual 61 fingerprints before these positive tests can pass. Never relax
++that check or manufacture a digest. No compile, SQL, native or full-gate result
++is claimed by this source adaptation; the earlier 2783/dba acceptance stays exact.
++
++No dependency, model or dataset is added. This uses the existing Go/UUID BSD-3-Clause,
++pgx MIT and PostgreSQL licenses above. The pinned go-yaml 3.0.5 fixture serializer
++retains its upstream [MIT and Apache notices](https://github.com/yaml/go-yaml/blob/v3.0.5/LICENSE).
++All permit commercial/offline use and redistribution with their notices. Records
++and credentials are synthetic and disposable; original migration/role ownership,
++formal HTTP/API and S-202 qualification remain separate.
++
++The owner adaptation retains seven selected SQL roots:
++
++- `TestActualModelFamilyFormalBackfillAndLifecycle`: actual predecessor-60
++  version/ledger fence, nested real-Migrate rollback, normal migration/replay,
++  unchanged version rows and deployment references, scope consistency, retained
++  retirement and exact populated-down refusal.
++- `TestActualModelFamilyHistoryPagesAndAuthority`: existing bounded pages,
++  filter/cursor, current-authority, cross-workspace, damaged metadata and
++  unknown-outcome controls, now through the real restricted Control login.
++- `TestActualModelFamilySelectionTransactions`: existing explicit/default
++  rollback, orphan/audit failure, immutable triggers and real concurrent choices.
++- `TestActualModelFamilyRetainedDerivedGraph` and
++  `TestActualModelFamilyDerivedRegistration`: existing retained graph and verified
++  file publication, with explicit operator-only corruption, foreign-cell artifact
++  refusal/recovery and restricted DML.
++- `TestActualModelFamilyRestrictedPrincipal`: journal SELECT, actual DDL,
++  TRUNCATE, trigger and protected-head refusals, followed by retained retirement.
++- `TestActualModelFamilyFormalCellScope`: both mismatched composite references
++  and fully consistent foreign-site/foreign-cell graphs, no partial SQL state,
++  refused history/selection/execution/retirement and subsequent local recovery.
++
++The cursor unit root now prepares eleven binding dimensions, adding site/cell;
++its earlier nine-dimension result remains evidence of the original source only.
++This changes no wire fields or public DTO. The new fixture invokes ARC's public
++role operations; it implements no grant table list or role-creation SQL. It owns
++its random Control principal, private generated credential/configuration and
++disposable schema. Login identity, strict runtime admission and all three local
++scope projections are asserted before normal family cases. Both outer actor
++construction and synthetic metadata remain test fixtures, not installed UI use.
++
++For the joint native allocation, provide the existing private
++`PROJECT_ONE_TEST_DSN_FILE` and `PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE`
++references for the same disposable loopback `_test` PostgreSQL instance, plus
++`PROJECT_ONE_REPOSITORY_ENGINE=postgresql` and the existing exact owned
++`PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA`. The repository reference must be the
++explicit URI accepted by the original RuntimeInput parser, including its actual
++transport policy. Preserve the original setup limits or supply the original
++protected setup-policy file; do not extend a process budget implicitly.
++Derived registration also needs the existing
++`PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` of approved pinned non-weight files.
++No credential value belongs in a command or output. The owner root selection is
++`^TestActualModelFamily`; compilation, these SQL cases and the eleven-dimension
++cursor unit root remain unrun for this adaptation.
++
++ARC must register actually observed 61 catalog fingerprints before these
++positive migration/Control cases can run. Its formal empty-down, nonlocal
++predecessor rollback and original-principal grant-resume tests remain mandatory
++joint entries; MODEL does not replace them with a broader allowlist or new role
++orchestrator. Retain the existing strict predecessor-60 inventory and every
++original migration asset. Broader legacy inventory/import/cache/transfer cell
++coverage remains with the corresponding open MOD-101/MOD-102/MOD-109 paths;
++this slice changes only history, explicit family selection, retained-graph
++validation, retirement and exact-version execution guards. Actual public routes and offline user
++flows still require IAM/DEV/Web and their original qualification.
++
+ To replay, configure the private PostgreSQL DSN and fresh owned schema as described
+ by the [repository fixture](../../services/control/internal/testing/repositoryfixture/README.md).
+ Set `PROJECT_ONE_REPOSITORY_MODEL_FILES_DIRECTORY` to the pinned approved base's
+-non-weight files for the derived-registration fixture. The tests embed and apply
+-the unnumbered DDL only inside their disposable schemas.
++non-weight files for the derived-registration fixture. The tests use the formal
++migration in their disposable schemas. They require ARC's actual 61 catalog
++registration; the retained unnumbered SQL is a review input, not fixture setup.
++After joint native allocation, the intended owner selection is:
+ 
+ ```sh
+-go -C services/control test -p=1 -tags repository_integration ./internal/modules/models \
+-  -run '^TestActualModelFamily' -count=1 -v
++go -C services/control test -mod=readonly -p=1 -tags repository_integration \
++  -run '^(TestActualModelFamily.*|TestModelHistoryCursorIntegrityAndScope)$' \
++  -count=1 -timeout=15m -v ./internal/modules/models
+ ```
+diff --git a/services/control/internal/modules/models/README.md b/services/control/internal/modules/models/README.md
+index 5e706c81..bb6a82e8 100644
+--- a/services/control/internal/modules/models/README.md
++++ b/services/control/internal/modules/models/README.md
+@@ -45,9 +45,11 @@ The published manifest and the HTTP response retain their existing shapes.
+ The native approved-base detail path retains its existing behavior.
+ See the [lineage contract handoff](../../../../../docs/research/training-dataset-lineage.md#dev-contract-handoff).
+ 
+-The staged PostgreSQL family domain uses unnumbered
+-`testdata/model_family_candidate.up.sql`; it is not part of installed migrations.
+-It backfills one independent family per legacy version and atomically assigns
++The reviewed PostgreSQL family SQL remains unchanged in
++`testdata/model_family_candidate.up.sql`. ARC's unpublished formal-lineage
++candidate carries it in migration 61 with additional platform site/cell keys.
++Its actual catalog fingerprints, runtime-role admission and native qualification
++are still pending. It backfills one independent family per legacy version and atomically assigns
+ default membership when an import or derived version is inserted. Publishers
+ can call `StageVersionFamilyWithin` with a current Admin and an exact anchor
+ before their version insert in that same transaction. Empty anchor creates a
+@@ -59,12 +61,20 @@ metadata, including retired versions. They resolve family from an exact anchor
+ and validate the existing retained graph. They perform no physical file IO and
+ grant no execution permission. `VersionHistoryPolicy` reports the configured
+ UI page default and fixed wire bounds. Continuation is signed with the installed
+-Identity HMAC key and bound to actor, session, audience, scope, family, anchor
++Identity HMAC key and bound to actor, session, audience, tenant/workspace, local site/cell, family, anchor
+ and filter. Pagination requires that installed key; both reads fail closed if the
+ candidate schema is absent. Public contracts,
+ routes, formal migration/role/catalog admission and S-202 remain with their
+ owners. See the [family domain contract](../../../../../docs/research/training-dataset-lineage.md#durable-family-domain-contract).
+ 
++Prepared repository tests now use the real full migration path, a separate
++Control login provisioned by the original `databaseaccess.Prepare` operation,
++and an explicit predecessor-60 fixture for backfill/rollback. They never apply
++testdata over the current schema, use `SET ROLE` instead of login, or replace
++catalog checks. Business service calls use that restricted pool; only deliberate
++fixture corruption uses its named operator. The source adaptation is not yet
++compiled or run. See the [formal owner handoff](../../../../../docs/research/training-dataset-lineage.md#formal-lineage-and-restricted-control-adaptation).
++
+ After the import's version and audit event commit, the worker reclaims the
+ upload chunks and failed stages. During import the store still needs space
+ for the bundle and extracted model. The worker retains staging and logs
+diff --git a/services/control/internal/modules/models/access_repository.go b/services/control/internal/modules/models/access_repository.go
+index 9c3778fc..b947abd8 100644
+--- a/services/control/internal/modules/models/access_repository.go
++++ b/services/control/internal/modules/models/access_repository.go
+@@ -44,7 +44,7 @@ func (s *Service) ReadyWithin(ctx context.Context, q transaction.Executor, tenan
+ 	var digest string
+ 	var manifest []byte
+ 	e := q.QueryRow(ctx, modelNativeSQL(q, `SELECT CATALOG_DIGEST,MANIFEST FROM MODEL_VERSIONS WHERE TENANT_ID=? AND WORKSPACE_ID=? AND ID=? AND KIND='approved_base' AND STATE='ready' FOR UPDATE`,
+-		"SELECT catalog_digest,manifest FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND kind='approved_base' AND state='ready' FOR SHARE",
++		"SELECT catalog_digest,manifest FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND kind='approved_base' AND state='ready' AND (site_id,cell_id)=(local_site_id(),local_cell_id()) FOR SHARE",
+ 		"SELECT catalog_digest,manifest FROM model_versions WHERE tenant_id=? AND workspace_id=? AND id=? AND kind='approved_base' AND state='ready' FOR SHARE", tenant, workspace, id)).Scan(&digest, &manifest)
+ 	if errors.Is(e, sql.ErrNoRows) {
+ 		return fail("RESOURCE_NOT_FOUND")
+@@ -74,7 +74,7 @@ func (s *Service) derivedVersionWithin(ctx context.Context, q transaction.Execut
+ 	var digest, kind string
+ 	var preparation, attempt, artifact, base, report string
+ 	e := q.QueryRow(ctx, modelSQL(q,
+-		`SELECT v.manifest,v.catalog_digest,v.kind,d.catalog,d.preparation_id::text,d.attempt_id::text,d.artifact_id::text,d.base_model_id::text,d.report_sha256 FROM model_versions v JOIN model_derivations d ON d.tenant_id=v.tenant_id AND d.workspace_id=v.workspace_id AND d.model_id=v.id AND d.catalog_digest=v.catalog_digest WHERE v.tenant_id=$1 AND v.workspace_id=$2 AND v.id=$3 AND (NOT $4::boolean OR v.state='ready') FOR SHARE OF v,d`,
++		`SELECT v.manifest,v.catalog_digest,v.kind,d.catalog,d.preparation_id::text,d.attempt_id::text,d.artifact_id::text,d.base_model_id::text,d.report_sha256 FROM model_versions v JOIN model_derivations d ON d.tenant_id=v.tenant_id AND d.workspace_id=v.workspace_id AND d.model_id=v.id AND d.catalog_digest=v.catalog_digest WHERE v.tenant_id=$1 AND v.workspace_id=$2 AND v.id=$3 AND (NOT $4::boolean OR v.state='ready') AND (v.site_id,v.cell_id)=(local_site_id(),local_cell_id()) AND (d.site_id,d.cell_id)=(local_site_id(),local_cell_id()) FOR SHARE OF v,d`,
+ 		`SELECT v.manifest,v.catalog_digest,v.kind,d.catalog,d.preparation_id,d.attempt_id,d.artifact_id,d.base_model_id,d.report_sha256 FROM model_versions v JOIN model_derivations d ON d.tenant_id=v.tenant_id AND d.workspace_id=v.workspace_id AND d.model_id=v.id AND d.catalog_digest=v.catalog_digest WHERE v.tenant_id=? AND v.workspace_id=? AND v.id=? AND v.state IN ('ready','deleted') AND (NOT ? OR v.state='ready') FOR SHARE`, tenant, workspace, model, ready)).Scan(&raw, &digest, &kind, &record, &preparation, &attempt, &artifact, &base, &report)
+ 	if errors.Is(e, sql.ErrNoRows) {
+ 		return zero, fail("RESOURCE_NOT_FOUND")
+diff --git a/services/control/internal/modules/models/derived_lineage.go b/services/control/internal/modules/models/derived_lineage.go
+index cbe55424..50b35ee2 100644
+--- a/services/control/internal/modules/models/derived_lineage.go
++++ b/services/control/internal/modules/models/derived_lineage.go
+@@ -43,7 +43,17 @@ func derivedLineageWithin(ctx context.Context, q transaction.Executor, catalog l
+ 	err := q.QueryRow(ctx, modelSQL(q,
+ 		`SELECT p.input_snapshot,p.input_sha256,p.training_job_id::text,p.training_attempt_id::text,p.training_artifact_id::text,p.heldout_id::text,
+  j.dataset_id::text,j.dataset_version_id::text,j.dataset_manifest_sha256,h.dataset_id::text,h.dataset_version_id::text,h.manifest_sha256,t.manifest_sha256,v.attempt_id::text`+
+-			derivedLineageGraph+`WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.model_id=$3 AND b.catalog_digest=$4`,
++			derivedLineageGraph+`WHERE d.tenant_id=$1 AND d.workspace_id=$2 AND d.model_id=$3 AND b.catalog_digest=$4
++ AND (d.site_id,d.cell_id)=(local_site_id(),local_cell_id())
++ AND (p.site_id,p.cell_id)=(local_site_id(),local_cell_id())
++ AND (a.site_id,a.cell_id)=(local_site_id(),local_cell_id())
++ AND (f.site_id,f.cell_id)=(local_site_id(),local_cell_id())
++ AND (r.site_id,r.cell_id)=(local_site_id(),local_cell_id())
++ AND (b.site_id,b.cell_id)=(local_site_id(),local_cell_id())
++ AND (j.site_id,j.cell_id)=(local_site_id(),local_cell_id())
++ AND (t.site_id,t.cell_id)=(local_site_id(),local_cell_id())
++ AND (h.site_id,h.cell_id)=(local_site_id(),local_cell_id())
++ AND (v.site_id,v.cell_id)=(local_site_id(),local_cell_id())`,
+ 		`SELECT p.input_snapshot,p.input_sha256,p.training_job_id,p.training_attempt_id,p.training_artifact_id,p.heldout_id,
+  j.dataset_id,j.dataset_version_id,j.dataset_manifest_sha256,h.dataset_id,h.dataset_version_id,h.manifest_sha256,t.manifest_sha256,v.attempt_id`+
+ 			derivedLineageGraph+`WHERE d.tenant_id=? AND d.workspace_id=? AND d.model_id=? AND b.catalog_digest=?`,
+diff --git a/services/control/internal/modules/models/family.go b/services/control/internal/modules/models/family.go
+index facfc621..1ff7b863 100644
+--- a/services/control/internal/modules/models/family.go
++++ b/services/control/internal/modules/models/family.go
+@@ -17,7 +17,11 @@ func historyAvailable(ctx context.Context, q transaction.Executor) error {
+ 	var present bool
+ 	err := q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT
+  to_regclass(format('%I.model_families',current_schema())) IS NOT NULL AND
+- to_regclass(format('%I.model_family_members',current_schema())) IS NOT NULL`)).Scan(&present)
++ to_regclass(format('%I.model_family_members',current_schema())) IS NOT NULL AND
++ (SELECT count(*) FROM pg_attribute WHERE attrelid IN (
++  to_regclass(format('%I.model_families',current_schema())),
++  to_regclass(format('%I.model_family_members',current_schema())))
++  AND attname IN ('site_id','cell_id') AND attnotnull AND NOT attisdropped)=4`)).Scan(&present)
+ 	if err != nil {
+ 		return modelReadError(err)
+ 	}
+@@ -33,7 +37,10 @@ func versionFamilyWithin(ctx context.Context, q transaction.Executor, tenant, wo
+ SELECT m.family_id::text FROM model_family_members m
+ JOIN model_families f ON (f.tenant_id,f.workspace_id,f.id)=(m.tenant_id,m.workspace_id,m.family_id)
+ JOIN model_family_members r ON (r.tenant_id,r.workspace_id,r.family_id,r.version_id)=(f.tenant_id,f.workspace_id,f.id,f.initial_version_id)
+-WHERE m.tenant_id=$1 AND m.workspace_id=$2 AND m.version_id=$3`, tenant, workspace, version)).Scan(&family)
++WHERE m.tenant_id=$1 AND m.workspace_id=$2 AND m.version_id=$3
++ AND (m.site_id,m.cell_id)=(local_site_id(),local_cell_id())
++ AND (f.site_id,f.cell_id)=(local_site_id(),local_cell_id())
++ AND (r.site_id,r.cell_id)=(local_site_id(),local_cell_id())`, tenant, workspace, version)).Scan(&family)
+ 	if errors.Is(err, sql.ErrNoRows) || err == nil && !nonzeroModelID(family) {
+ 		return "", fail("MODEL_FAMILY_INVALID")
+ 	}
+@@ -90,7 +97,7 @@ func (s *Service) StageVersionFamilyWithin(ctx context.Context, q transaction.Ex
+ 	var previous string
+ 	var previousAnchor *string
+ 	err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+-		`SELECT family_id::text,anchor_version_id::text FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND version_id=$3`, w.TenantID, w.ID, version)).Scan(&previous, &previousAnchor)
++		`SELECT family_id::text,anchor_version_id::text FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND version_id=$3 AND (site_id,cell_id)=(local_site_id(),local_cell_id())`, w.TenantID, w.ID, version)).Scan(&previous, &previousAnchor)
+ 	if err == nil {
+ 		established, checkError := versionFamilyWithin(ctx, q, w.TenantID, w.ID, version)
+ 		if checkError != nil {
+diff --git a/services/control/internal/modules/models/family_fixture_integration_test.go b/services/control/internal/modules/models/family_fixture_integration_test.go
+new file mode 100644
+index 00000000..d4d45497
+--- /dev/null
++++ b/services/control/internal/modules/models/family_fixture_integration_test.go
+@@ -0,0 +1,235 @@
++//go:build repository_integration
++
++package models_test
++
++import (
++	"context"
++	"crypto/rand"
++	"net/url"
++	"os"
++	"path/filepath"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/operations/databaseaccess"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/identityfixture"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5"
++	"github.com/jackc/pgx/v5/pgxpool"
++	"go.yaml.in/yaml/v3"
++)
++
++// Only fixture setup and explicit corruption keep the operator. Every service
++// call in familySetup uses a separate real Control login, never SET ROLE.
++func familySetup(t *testing.T) modelReadFixture {
++	t.Helper()
++	f := repositoryfixture.NewUnbootstrapped(t)
++	if f.Store.Dialect() != transaction.PostgreSQL {
++		t.Fatal("MODEL_FAMILY_EXPLICIT_POSTGRESQL_REQUIRED")
++	}
++	operator := f.PostgreSQL
++	runtime := familyControlPool(t, operator)
++	store, err := transaction.FromPostgreSQL(runtime)
++	if err != nil {
++		t.Fatal(err)
++	}
++	f.Store, f.PostgreSQL = store, runtime
++	familySeedIdentity(t, f)
++	x := modelReadSetupOn(t, f)
++	x.operator = operator
++	familySigningKey(t, x)
++	familyAdmitted(t, x)
++	return x
++}
++
++func familySigningKey(t *testing.T, x modelReadFixture) {
++	t.Helper()
++	x.owner.HMACKey = make([]byte, 32)
++	if _, err := rand.Read(x.owner.HMACKey); err != nil {
++		t.Fatal(err)
++	}
++}
++
++func familySeedIdentity(t *testing.T, f repositoryfixture.Fixture) {
++	t.Helper()
++	ctx := t.Context()
++	if err := f.Store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
++		for _, statement := range []transaction.Statement{
++			transaction.SQL(transaction.PostgreSQL, `INSERT INTO tenants(id,name,status) VALUES($1,'Synthetic model family tenant','active')`, f.Tenant),
++			transaction.SQL(transaction.PostgreSQL, `INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Synthetic model family workspace','active')`, f.Workspace, f.Tenant),
++			transaction.SQL(transaction.PostgreSQL, `INSERT INTO users(id,email_canonical,email_display,display_name,locale,status,is_platform_admin) VALUES($1,'family@example.invalid','family@example.invalid','Synthetic family actor','en','active',true)`, f.User),
++			transaction.SQL(transaction.PostgreSQL, `UPDATE installation_state SET bootstrap_complete=true,tenant_id=$1,default_workspace_id=$2,primary_admin_user_id=$3,bootstrapped_at=clock_timestamp() WHERE id=1`, f.Tenant, f.Workspace, f.User),
++		} {
++			if _, err := q.Exec(ctx, statement); err != nil {
++				return err
++			}
++		}
++		return nil
++	}); err != nil {
++		t.Fatal("synthetic family identity seed", err)
++	}
++}
++
++func familyPredecessor(t *testing.T) modelReadFixture {
++	t.Helper()
++	if os.Getenv("PROJECT_ONE_TEST_DSN_FILE") == "" && os.Getenv("PROJECT_ONE_TEST_DSN") == "" {
++		t.Fatal("explicit predecessor PostgreSQL fixture required")
++	}
++	owner := identityfixture.NewAtVersion(t, 60)
++	store, err := transaction.FromPostgreSQL(owner.DB)
++	if err != nil {
++		t.Fatal(err)
++	}
++	f := repositoryfixture.Fixture{Store: store, PostgreSQL: owner.DB, Tenant: uuid.NewString(), Workspace: uuid.NewString(), User: uuid.NewString()}
++	familySeedIdentity(t, f)
++	x := modelReadSetupOn(t, f)
++	x.operator = owner.DB
++	familySigningKey(t, x)
++	return x
++}
++
++func familyAdmitted(t *testing.T, x modelReadFixture) {
++	t.Helper()
++	version, err := database.CheckPrefixWithin(x.ctx, x.f.Store)
++	if err != nil || version != database.SchemaVersion || version < 61 {
++		t.Fatal("formal family lineage is not admitted", version, err)
++	}
++	familyScopedVersion(t, x, x.model)
++}
++
++func familyScopedVersion(t *testing.T, x modelReadFixture, version string) {
++	t.Helper()
++	var local bool
++	if err := x.f.Store.QueryRow(x.ctx, transaction.SQL(transaction.PostgreSQL, `SELECT
++ (f.site_id,f.cell_id,m.site_id,m.cell_id,v.site_id,v.cell_id)=
++ (local_site_id(),local_cell_id(),local_site_id(),local_cell_id(),local_site_id(),local_cell_id())
++ FROM model_versions v JOIN model_family_members m ON m.version_id=v.id
++ JOIN model_families f ON f.id=m.family_id WHERE v.id=$1`, version)).Scan(&local); err != nil || !local {
++		t.Fatal("formal family/member/version scope", err)
++	}
++}
++
++func familyOperatorExec(t *testing.T, x modelReadFixture, sql string, args ...any) {
++	t.Helper()
++	if x.operator == nil {
++		t.Fatal("explicit fixture operator required")
++	}
++	if _, err := x.operator.Exec(x.ctx, sql, args...); err != nil {
++		t.Fatal("explicit synthetic corruption", err)
++	}
++}
++
++func familyControlPool(t *testing.T, operator *pgxpool.Pool) *pgxpool.Pool {
++	t.Helper()
++	ctx, cancel := context.WithTimeout(t.Context(), modelReadFixtureTimeout)
++	defer cancel()
++	role := "m103_control_" + strings.ReplaceAll(uuid.NewString(), "-", "")
++	password, err := databaseaccess.NewCredential()
++	if err != nil {
++		t.Fatal("synthetic runtime credential", err)
++	}
++	raw, err := config.Secret(os.Getenv("PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE"))
++	if err != nil {
++		t.Fatal("private fixture DSN required")
++	}
++	uri, err := url.Parse(strings.TrimSpace(string(raw)))
++	if err != nil || uri.Scheme != "postgres" && uri.Scheme != "postgresql" || uri.Hostname() != "127.0.0.1" || !strings.HasSuffix(uri.Path, "_test") {
++		t.Fatal("explicit loopback PostgreSQL test URI required")
++	}
++	uri.User = url.UserPassword(role, password)
++	query := uri.Query()
++	query.Set("search_path", operator.Config().ConnConfig.RuntimeParams["search_path"])
++	uri.RawQuery = query.Encode()
++	root, err := filepath.EvalSymlinks(t.TempDir())
++	if err != nil || os.Chmod(root, 0700) != nil {
++		t.Fatal("private fixture parent required")
++	}
++	var c config.Config
++	c.Server.ListenAddress, c.Server.AdminOrigin, c.Server.PortalOrigin = "127.0.0.1:18443", "https://admin.example.invalid", "https://portal.example.invalid"
++	c.Database.DSNFile = filepath.Join(root, "runtime-dsn")
++	c.Database.MaxOpenConnections, c.Database.MaxIdleConnections, c.Database.StatementTimeoutSeconds = 2, 0, 5
++	c.SMTP.Host, c.SMTP.Port, c.SMTP.FromAddress, c.SMTP.TLSMode = "smtp.example.invalid", 587, "platform@example.invalid", "starttls_required"
++	c.SMTP.ConnectTimeoutSeconds, c.SMTP.OperationTimeoutSeconds = 5, 20
++	if err := os.WriteFile(c.Database.DSNFile, []byte(uri.String()), 0600); err != nil {
++		t.Fatal("private runtime DSN write failed")
++	}
++	configuration := filepath.Join(root, "runtime.yaml")
++	encoded, err := yaml.Marshal(c)
++	if err != nil || os.WriteFile(configuration, encoded, 0600) != nil {
++		t.Fatal("private runtime configuration write failed")
++	}
++	input, err := databaseaccess.LoadRuntime(configuration)
++	if err != nil {
++		t.Fatal("runtime input validation", err)
++	}
++	lease, err := operator.Acquire(ctx)
++	if err != nil {
++		t.Fatal("fixture operator lease", err)
++	}
++	defer lease.Release()
++	var locked bool
++	if err := lease.QueryRow(ctx, `SELECT pg_try_advisory_lock($1)`, database.InstallationLockID).Scan(&locked); err != nil || !locked {
++		t.Fatal("fixture installation lease unavailable", err)
++	}
++	defer lease.Exec(context.WithoutCancel(ctx), `SELECT pg_advisory_unlock($1)`, database.InstallationLockID)
++	var existing bool
++	if err := lease.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=$1)`, role).Scan(&existing); err != nil || existing {
++		t.Fatal("fresh owned Control principal required", err)
++	}
++	// Preserve the disposable principal identity for original-owner cleanup;
++	// its credential and URI must never enter test output.
++	t.Log("MODEL_FAMILY_OWNED_CONTROL_ROLE", role)
++	t.Cleanup(func() {
++		cleanup, cancel := context.WithTimeout(context.Background(), 25*time.Second)
++		defer cancel()
++		var exists bool
++		if err := operator.QueryRow(cleanup, `SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=$1)`, role).Scan(&exists); err != nil {
++			t.Error("owned runtime principal inventory failed")
++			return
++		}
++		if !exists {
++			return
++		}
++		if _, err := operator.Exec(cleanup, "DROP OWNED BY "+pgx.Identifier{role}.Sanitize()); err != nil {
++			t.Error("owned runtime grants cleanup failed")
++			return
++		}
++		if _, err := operator.Exec(cleanup, "DROP ROLE "+pgx.Identifier{role}.Sanitize()); err != nil {
++			t.Error("owned runtime principal cleanup failed")
++		}
++	})
++	if state, err := databaseaccess.Prepare(ctx, operator, lease, input); err != nil || state != databaseaccess.Verified {
++		t.Fatal("original Control role preparation", state, err)
++	}
++	if state, err := databaseaccess.Check(ctx, operator, lease, input); err != nil || state != databaseaccess.Verified {
++		t.Fatal("original Control role verification", state, err)
++	}
++	parsed, err := config.LoadProtected(configuration)
++	if err != nil {
++		t.Fatal(err)
++	}
++	runtime, err := database.Open(ctx, parsed)
++	if err != nil {
++		t.Fatal("actual Control login", err)
++	}
++	t.Cleanup(runtime.Close)
++	var restricted bool
++	if err := runtime.QueryRow(ctx, `SELECT session_user=current_user AND current_user=$1
++ AND NOT rolsuper AND NOT rolcreaterole AND NOT rolcreatedb AND NOT rolinherit AND NOT rolreplication AND NOT rolbypassrls
++ FROM pg_roles WHERE rolname=current_user`, role).Scan(&restricted); err != nil || !restricted {
++		t.Fatal("actual restricted Control login required", err)
++	}
++	store, err := transaction.FromPostgreSQL(runtime)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := database.CheckRuntimeWithin(ctx, store); err != nil {
++		t.Fatal("strict runtime admission", err)
++	}
++	return runtime
++}
+diff --git a/services/control/internal/modules/models/family_repository_integration_test.go b/services/control/internal/modules/models/family_repository_integration_test.go
+index 9461b344..5948715e 100644
+--- a/services/control/internal/modules/models/family_repository_integration_test.go
++++ b/services/control/internal/modules/models/family_repository_integration_test.go
+@@ -4,8 +4,6 @@ package models_test
+ 
+ import (
+ 	"context"
+-	"crypto/rand"
+-	_ "embed"
+ 	"encoding/json"
+ 	"errors"
+ 	"reflect"
+@@ -20,42 +18,14 @@ import (
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+-	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
++	"github.com/Passion-Flow/ownsolid/services/control/migrations"
+ 	"github.com/google/uuid"
+ 	"github.com/jackc/pgx/v5"
++	"github.com/jackc/pgx/v5/pgconn"
+ )
+ 
+-//go:embed testdata/model_family_candidate.up.sql
+-var familyCandidateUp string
+-
+-//go:embed testdata/model_family_candidate.down.sql
+-var familyCandidateDown string
+-
+-func familyInstall(t *testing.T, x modelReadFixture) {
+-	t.Helper()
+-	if x.f.Store.Dialect() != transaction.PostgreSQL {
+-		t.Fatal("Explicit PostgreSQL candidate required")
+-	}
+-	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+-		_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateUp))
+-		return err
+-	}); err != nil {
+-		t.Fatal("candidate DDL", err)
+-	}
+-}
+-
+-func familySetup(t *testing.T) modelReadFixture {
+-	t.Helper()
+-	x := modelReadSetup(t)
+-	x.owner.HMACKey = make([]byte, 32)
+-	if _, err := rand.Read(x.owner.HMACKey); err != nil {
+-		t.Fatal(err)
+-	}
+-	familyInstall(t, x)
+-	return x
+-}
+-
+ func familyInsert(ctx context.Context, q transaction.Executor, x modelReadFixture, id, state string, stamp time.Time) error {
+ 	raw, _ := json.Marshal(wire.ApprovedModel())
+ 	_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, `INSERT INTO model_versions
+@@ -114,67 +84,109 @@ func familyDenied(t *testing.T, x modelReadFixture, a identity.Auth, workspace,
+ 	}
+ }
+ 
+-func TestActualModelFamilyCandidateBackfillAndLifecycle(t *testing.T) {
+-	t.Run("empty_candidate_rollback", func(t *testing.T) {
+-		ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
+-		defer cancel()
+-		x := modelReadFixture{f: repositoryfixture.New(t), ctx: ctx}
+-		familyInstall(t, x)
+-		if err := x.f.Store.Within(ctx, false, func(ctx context.Context, q transaction.Executor) error {
+-			_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateDown))
+-			return err
+-		}); err != nil {
+-			t.Fatal("empty candidate downgrade", err)
+-		}
+-	})
+-	x := modelReadSetup(t)
++func TestActualModelFamilyFormalBackfillAndLifecycle(t *testing.T) {
++	x := familyPredecessor(t)
+ 	old := uuid.NewString()
+ 	if err := familyInsert(x.ctx, x.f.Store, x, old, "deleted", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	// The retained deployment keeps its exact version reference across both DDL directions.
+ 	dep := retirementDeployment(t, x, x.f.Store, retirementNode(t, x), x.model, true)
+-	fault := errors.New("explicit candidate rollback")
+-	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+-		if _, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateUp)); err != nil {
+-			return err
+-		}
+-		return fault
+-	}); !errors.Is(err, fault) {
+-		t.Fatal("DDL rollback", err)
++	var before string
++	if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT jsonb_agg(to_jsonb(v) ORDER BY id)::text FROM model_versions v`).Scan(&before); err != nil {
++		t.Fatal(err)
++	}
++	if version, err := database.CheckPrefixWithin(x.ctx, x.f.Store); err != nil || version != 60 {
++		t.Fatal("exact predecessor prefix", version, err)
++	}
++	if err := database.Check(x.ctx, x.f.PostgreSQL); err == nil || err.Error() != "SCHEMA_INCOMPATIBLE" {
++		t.Fatal("predecessor serving fence", err)
+ 	}
+ 	familyDenied(t, x, x.admin, x.f.Workspace, x.model, models.HistoryQuery{}, "MODEL_HISTORY_UNAVAILABLE")
+-	familyInstall(t, x)
++	// Migrate uses a real savepoint; the outer transaction deliberately rolls back
++	// both the numbered DDL and its ledger, without substituting a catalog digest.
++	outer, err := x.f.PostgreSQL.Begin(x.ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer outer.Rollback(context.Background())
++	if err := database.Migrate(x.ctx, outer); err != nil {
++		t.Fatal("formal migration inside rollback", err)
++	}
++	if err := outer.Rollback(x.ctx); err != nil {
++		t.Fatal(err)
++	}
++	if version, err := database.CheckPrefixWithin(x.ctx, x.f.Store); err != nil || version != 60 {
++		t.Fatal("rollback changed predecessor ledger", version, err)
++	}
++	familyDenied(t, x, x.admin, x.f.Workspace, x.model, models.HistoryQuery{}, "MODEL_HISTORY_UNAVAILABLE")
++	if err := database.Migrate(x.ctx, x.f.PostgreSQL); err != nil {
++		t.Fatal("actual formal migration", err)
++	}
++	familyAdmitted(t, x)
++	var after string
++	if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT jsonb_agg(to_jsonb(v) ORDER BY id)::text FROM model_versions v`).Scan(&after); err != nil || after != before {
++		t.Fatal("formal backfill rewrote exact version metadata", err)
++	}
+ 	first, second := familyID(t, x, x.model), familyID(t, x, old)
+ 	if first == second || first == x.model || second == old || familyCount(t, x, "model_families") != 2 {
+-		t.Fatal("legacy IDs inferred a group")
++		t.Fatal("legacy IDs inferred a family")
++	}
++	for range 2 {
++		if err := database.Migrate(x.ctx, x.f.PostgreSQL); err != nil {
++			t.Fatal("formal migration replay", err)
++		}
++		if familyID(t, x, x.model) != first || familyID(t, x, old) != second {
++			t.Fatal("migration replay changed a family")
++		}
++	}
++	var invalid int
++	if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT count(*) FROM model_family_members m JOIN model_families f ON f.id=m.family_id JOIN model_versions v ON v.id=m.version_id WHERE
++ (f.site_id,f.cell_id,m.site_id,m.cell_id,v.site_id,v.cell_id) IS DISTINCT FROM
++ (local_site_id(),local_cell_id(),local_site_id(),local_cell_id(),local_site_id(),local_cell_id())`).Scan(&invalid); err != nil || invalid != 0 {
++		t.Fatal("backfill scope mismatch", invalid, err)
+ 	}
+ 	x.s.Referenced = func(context.Context, transaction.Executor, string, string, string) (bool, error) { return false, nil }
+ 	retirementRetire(t, x, x.model)
++	detail, err := x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, x.model, x.model)
++	if err != nil || detail.State != "retired" || detail.FamilyID != first {
++		t.Fatal("retained upgraded exact version", err)
++	}
+ 	newID := uuid.NewString()
+ 	if err := familyInsert(x.ctx, x.f.Store, x, newID, "ready", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if familyID(t, x, newID) == first {
+-		t.Fatal("same-digest reimport inferred family")
++		t.Fatal("reimport inferred a family")
+ 	}
+-	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+-		return x.s.ReadyWithin(ctx, q, x.f.Tenant, x.f.Workspace, x.model)
+-	}); err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
+-		t.Fatal("retired exact execution reference admitted", err)
++	if err := x.s.ReadyWithin(x.ctx, x.f.Store, x.f.Tenant, x.f.Workspace, x.model); err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++		t.Fatal("retired exact execution admitted", err)
+ 	}
+-	if err := x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
+-		_, err := q.Exec(ctx, transaction.SQL(transaction.PostgreSQL, familyCandidateDown))
+-		return err
+-	}); err == nil {
+-		t.Fatal("adopted family identities were removable")
++	down, err := migrations.Files.ReadFile("postgresql/000061_model_families.down.sql")
++	if err != nil {
++		t.Fatal(err)
++	}
++	downgrade, err := x.f.PostgreSQL.Begin(x.ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer downgrade.Rollback(context.Background())
++	_, err = downgrade.Exec(x.ctx, string(down))
++	var denied *pgconn.PgError
++	if !errors.As(err, &denied) || denied.Code != "0A000" || denied.Message != "MODEL_FAMILY_DOWNGRADE_REQUIRES_RETENTION" {
++		t.Fatal("populated formal downgrade", err)
++	}
++	if err := downgrade.Rollback(x.ctx); err != nil {
++		t.Fatal(err)
++	}
++	if familyID(t, x, x.model) != first || familyID(t, x, old) != second {
++		t.Fatal("refused downgrade changed a family")
+ 	}
+ 	var retained string
+ 	if err := x.f.Store.QueryRow(x.ctx, transaction.SQL(transaction.PostgreSQL, `SELECT model_id::text FROM deployments WHERE id=$1`, dep)).Scan(&retained); err != nil || retained != x.model {
+-		t.Fatal("deployment reference changed", err)
++		t.Fatal("deployment exact reference changed", err)
+ 	}
+ 	if value, err := x.s.Get(x.ctx, x.admin, x.f.Workspace, newID); err != nil || value.ID != newID {
+-		t.Fatal("legacy read alongside retained family identities", err)
++		t.Fatal("legacy local read after upgrade", err)
+ 	}
+ }
+ 
+@@ -354,15 +366,17 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
+ 					t.Fatal("orphan membership committed", err)
+ 				}
+ 			case "audit_rollback":
+-				x.exec(t, `CREATE FUNCTION reject_family_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='model.version_family_selected' THEN RAISE EXCEPTION 'SYNTHETIC_AUDIT_FAILURE'; END IF; RETURN NEW; END $$; CREATE TRIGGER reject_family_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_family_audit()`, "")
++				familyOperatorExec(t, x, `CREATE FUNCTION reject_family_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='model.version_family_selected' THEN RAISE EXCEPTION 'SYNTHETIC_AUDIT_FAILURE'; END IF; RETURN NEW; END $$; CREATE TRIGGER reject_family_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_family_audit()`)
+ 				family, err := familyPublish(x, id, "", nil)
+ 				if err == nil || family != "" || familyCount(t, x, "model_families") != 1 || familyCount(t, x, "model_family_members") != 1 {
+ 					t.Fatal("audit failure left membership", err)
+ 				}
+ 			case "immutable":
+-				for _, sql := range []string{`UPDATE model_family_members SET family_id=gen_random_uuid()`, `DELETE FROM model_family_members`, `UPDATE model_families SET initial_version_id=gen_random_uuid()`, `DELETE FROM model_families`, `TRUNCATE model_families CASCADE`} {
+-					if _, err := x.f.Store.Exec(x.ctx, transaction.SQL(transaction.PostgreSQL, sql)); err == nil {
+-						t.Fatal("mutable family identity", sql)
++				for _, sql := range []string{`UPDATE model_family_members SET family_id=gen_random_uuid()`, `DELETE FROM model_family_members`, `UPDATE model_families SET initial_version_id=gen_random_uuid()`, `DELETE FROM model_families`} {
++					_, err := x.f.PostgreSQL.Exec(x.ctx, sql)
++					var denied *pgconn.PgError
++					if !errors.As(err, &denied) || denied.Code != "23514" || denied.Message != "MODEL_FAMILY_IMMUTABLE" {
++						t.Fatal("immutable domain trigger", sql, err)
+ 					}
+ 				}
+ 			case "matching_concurrency", "conflicting_concurrency":
+@@ -380,7 +394,7 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
+ 				secondActor := second.issue(t, "admin")
+ 				// Actor construction has its own real login audit, outside publication.
+ 				before = x.audits(t)
+-				observer, err := pgx.ConnectConfig(x.ctx, x.f.PostgreSQL.Config().ConnConfig.Copy())
++				observer, err := pgx.ConnectConfig(x.ctx, x.operator.Config().ConnConfig.Copy())
+ 				if err != nil {
+ 					t.Fatal(err)
+ 				}
+@@ -481,6 +495,7 @@ func TestActualModelFamilySelectionTransactions(t *testing.T) {
+ func TestActualModelFamilyRetainedDerivedGraph(t *testing.T) {
+ 	x := familySetup(t)
+ 	c, want := seedModelHTTPLineage(t, x, nil)
++	familyScopedVersion(t, x, c.ModelID)
+ 	if familyID(t, x, c.ModelID) == familyID(t, x, x.model) {
+ 		t.Fatal("derivation parent inferred family")
+ 	}
+@@ -497,9 +512,30 @@ func TestActualModelFamilyRetainedDerivedGraph(t *testing.T) {
+ 	if _, err = x.s.DecodeDerivedVersionWithin(x.ctx, x.f.Store, x.f.Tenant, x.f.Workspace, c.ModelID); err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
+ 		t.Fatal("retired derivation executable", err)
+ 	}
+-	x.exec(t, `ALTER TABLE model_preparation_artifacts DISABLE TRIGGER model_preparation_artifact_immutable`, "")
++	var originalCell string
++	if err := x.operator.QueryRow(x.ctx, `SELECT cell_id FROM model_preparation_artifacts WHERE id=$1`, c.ArtifactID).Scan(&originalCell); err != nil {
++		t.Fatal(err)
++	}
++	foreignCell := "model-graph-foreign-cell"
++	if foreignCell == originalCell {
++		foreignCell = "model-graph-other-cell"
++	}
++	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts DISABLE TRIGGER model_preparation_artifact_immutable`)
++	familyOperatorExec(t, x, `UPDATE model_preparation_artifacts SET cell_id=$1 WHERE id=$2`, foreignCell, c.ArtifactID)
++	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts ENABLE TRIGGER model_preparation_artifact_immutable`)
++	familyDenied(t, x, x.admin, x.f.Workspace, c.ModelID, models.HistoryQuery{}, "MODEL_DERIVED_CATALOG_INVALID")
++	if detail, err = x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, c.ModelID, c.ModelID); err == nil || detail.ID != "" || detail.DatasetLineage != nil {
++		t.Fatal("foreign retained artifact released lineage", err)
++	}
++	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts DISABLE TRIGGER model_preparation_artifact_immutable`)
++	familyOperatorExec(t, x, `UPDATE model_preparation_artifacts SET cell_id=$1 WHERE id=$2`, originalCell, c.ArtifactID)
++	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts ENABLE TRIGGER model_preparation_artifact_immutable`)
++	if detail, err = x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, c.ModelID, c.ModelID); err != nil || detail.DatasetLineage == nil || *detail.DatasetLineage != want {
++		t.Fatal("local retained artifact recovery", err)
++	}
++	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts DISABLE TRIGGER model_preparation_artifact_immutable`)
+ 	x.exec(t, `UPDATE model_preparation_artifacts SET manifest_sha256=$1 WHERE id=$2`, "", strings.Repeat("f", 64), c.ArtifactID)
+-	x.exec(t, `ALTER TABLE model_preparation_artifacts ENABLE TRIGGER model_preparation_artifact_immutable`, "")
++	familyOperatorExec(t, x, `ALTER TABLE model_preparation_artifacts ENABLE TRIGGER model_preparation_artifact_immutable`)
+ 	familyDenied(t, x, x.admin, x.f.Workspace, c.ModelID, models.HistoryQuery{}, "MODEL_DERIVED_CATALOG_INVALID")
+ 	if detail, err = x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, c.ModelID, c.ModelID); err == nil || detail.ID != "" || detail.DatasetLineage != nil {
+ 		t.Fatal("damaged graph leaked detail", err)
+@@ -507,8 +543,7 @@ func TestActualModelFamilyRetainedDerivedGraph(t *testing.T) {
+ }
+ 
+ func TestActualModelFamilyDerivedRegistration(t *testing.T) {
+-	g := registrationSetup(t)
+-	familyInstall(t, g.x)
++	g := registrationSetupOn(t, familySetup(t))
+ 	fault := errors.New("synthetic reviewed publication rollback")
+ 	if _, err := registrationOwner(t, g, g.x.f.Store, fault); !errors.Is(err, fault) {
+ 		t.Fatal(err)
+@@ -522,4 +557,5 @@ func TestActualModelFamilyDerivedRegistration(t *testing.T) {
+ 	if familyCount(t, g.x, "model_families") != 2 || familyID(t, g.x, g.c.ModelID) == familyID(t, g.x, g.x.model) {
+ 		t.Fatal("derived registration inherited base family")
+ 	}
++	familyScopedVersion(t, g.x, g.c.ModelID)
+ }
+diff --git a/services/control/internal/modules/models/family_scope_integration_test.go b/services/control/internal/modules/models/family_scope_integration_test.go
+new file mode 100644
+index 00000000..74ac8aaa
+--- /dev/null
++++ b/services/control/internal/modules/models/family_scope_integration_test.go
+@@ -0,0 +1,149 @@
++//go:build repository_integration
++
++package models_test
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"testing"
++	"time"
++
++	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5/pgconn"
++)
++
++func TestActualModelFamilyRestrictedPrincipal(t *testing.T) {
++	x := familySetup(t)
++	for _, statement := range []string{
++		`CREATE TABLE forbidden_family_ddl(id integer)`,
++		`ALTER TABLE model_family_members DISABLE TRIGGER ALL`,
++		`TRUNCATE model_families CASCADE`,
++		`UPDATE schema_migrations SET checksum=checksum WHERE version=60`,
++		`SELECT * FROM audit_chain_head`,
++	} {
++		_, err := x.f.PostgreSQL.Exec(x.ctx, statement)
++		var denied *pgconn.PgError
++		if !errors.As(err, &denied) || denied.Code != "42501" {
++			t.Fatal("Control principal exceeded its original grants", statement, err)
++		}
++	}
++	var version int
++	if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT max(version) FROM schema_migrations`).Scan(&version); err != nil || version < 61 {
++		t.Fatal("Control journal SELECT refused", version, err)
++	}
++	before := familyID(t, x, x.model)
++	x.s.Referenced = func(context.Context, transaction.Executor, string, string, string) (bool, error) { return false, nil }
++	retirementRetire(t, x, x.model)
++	detail, err := x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, x.model, x.model)
++	if err != nil || detail.State != "retired" || detail.FamilyID != before {
++		t.Fatal("restricted principal lost retained exact history", err)
++	}
++	if err := x.s.ReadyWithin(x.ctx, x.f.Store, x.f.Tenant, x.f.Workspace, x.model); err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++		t.Fatal("restricted retirement granted execution", err)
++	}
++}
++
++func TestActualModelFamilyFormalCellScope(t *testing.T) {
++	x := familySetup(t)
++	var site, cell string
++	if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT local_site_id(),local_cell_id()`).Scan(&site, &cell); err != nil {
++		t.Fatal(err)
++	}
++	foreignSite, foreignCell := "model-foreign-site", "model-foreign-cell"
++	if site == foreignSite {
++		foreignSite = "model-other-site"
++	}
++	if cell == foreignCell {
++		foreignCell = "model-other-cell"
++	}
++	for _, item := range []struct{ name, site, cell string }{
++		{"site", foreignSite, cell}, {"cell", site, foreignCell},
++	} {
++		t.Run(item.name, func(t *testing.T) {
++			id, family := uuid.NewString(), uuid.NewString()
++			raw, err := json.Marshal(wire.ApprovedModel())
++			if err != nil {
++				t.Fatal(err)
++			}
++			insert := func(mismatched bool) error {
++				tx, err := x.f.PostgreSQL.Begin(x.ctx)
++				if err != nil {
++					return err
++				}
++				defer tx.Rollback(context.Background())
++				if _, err = tx.Exec(x.ctx, `INSERT INTO model_families(id,tenant_id,workspace_id,initial_version_id,site_id,cell_id) VALUES($1,$2,$3,$4,$5,$6)`, family, x.f.Tenant, x.f.Workspace, id, item.site, item.cell); err != nil {
++					return err
++				}
++				if _, err = tx.Exec(x.ctx, `INSERT INTO model_family_members(version_id,tenant_id,workspace_id,family_id,site_id,cell_id) VALUES($1,$2,$3,$4,$5,$6)`, id, x.f.Tenant, x.f.Workspace, family, item.site, item.cell); err != nil {
++					return err
++				}
++				versionSite, versionCell := item.site, item.cell
++				if mismatched {
++					versionSite, versionCell = site, cell
++				}
++				if _, err = tx.Exec(x.ctx, `INSERT INTO model_versions(id,tenant_id,workspace_id,name,model_key,catalog_digest,manifest,state,created_by,site_id,cell_id)
++ VALUES($1,$2,$3,'Synthetic foreign family','qwen3-0.6b',$4,$5::jsonb,'ready',$6,$7,$8)`, id, x.f.Tenant, x.f.Workspace, wire.ModelCatalogDigest(), raw, x.f.User, versionSite, versionCell); err != nil {
++					return err
++				}
++				if _, err = tx.Exec(x.ctx, `SET CONSTRAINTS model_family_initial_version_cell_fk,model_family_member_version_cell_fk IMMEDIATE`); err != nil {
++					return err
++				}
++				return tx.Commit(x.ctx)
++			}
++			err = insert(true)
++			var denied *pgconn.PgError
++			if !errors.As(err, &denied) || denied.Code != "23503" ||
++				denied.ConstraintName != "model_family_initial_version_cell_fk" && denied.ConstraintName != "model_family_member_version_cell_fk" {
++				t.Fatal("mismatched scope did not fail composite FK", err)
++			}
++			var count int
++			if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT (SELECT count(*) FROM model_versions WHERE id=$1)+(SELECT count(*) FROM model_family_members WHERE version_id=$1)+(SELECT count(*) FROM model_families WHERE id=$2)`, id, family).Scan(&count); err != nil || count != 0 {
++				t.Fatal("failed scope retained partial state", count, err)
++			}
++			// Consistent foreign records are deliberate synthetic operator inputs.
++			// They satisfy referential integrity but must not pass local service scope.
++			if err := insert(false); err != nil {
++				t.Fatal("consistent foreign fixture", err)
++			}
++			before := x.audits(t)
++			familyDenied(t, x, x.admin, x.f.Workspace, id, models.HistoryQuery{}, "RESOURCE_NOT_FOUND")
++			for _, anchor := range []string{id, x.model} {
++				detail, err := x.s.HistoricalVersion(x.ctx, x.admin, x.f.Workspace, anchor, id)
++				if err == nil || err.Error() != "RESOURCE_NOT_FOUND" || detail.ID != "" {
++					t.Fatal("foreign retained detail escaped local scope", err)
++				}
++			}
++			err = x.f.Store.Within(x.ctx, false, func(ctx context.Context, q transaction.Executor) error {
++				selected, err := x.s.StageVersionFamilyWithin(ctx, q, x.admin, x.f.Workspace, uuid.NewString(), id, "Synthetic foreign anchor refusal", uuid.NewString())
++				if selected != "" {
++					t.Error("foreign selection released a family ID")
++				}
++				return err
++			})
++			modelReadError(t, err, "RESOURCE_NOT_FOUND")
++			if err := x.s.ReadyWithin(x.ctx, x.f.Store, x.f.Tenant, x.f.Workspace, id); err == nil || err.Error() != "RESOURCE_NOT_FOUND" {
++				t.Fatal("foreign execution reference admitted", err)
++			}
++			x.s.Referenced = func(context.Context, transaction.Executor, string, string, string) (bool, error) { return false, nil }
++			retired, err := x.s.Retire(x.ctx, x.admin, id, "Synthetic foreign retirement refusal", uuid.NewString())
++			if err == nil || err.Error() != "RESOURCE_NOT_FOUND" || retired.ID != "" {
++				t.Fatal("foreign retirement escaped scope", err)
++			}
++			var state string
++			if err := x.f.PostgreSQL.QueryRow(x.ctx, `SELECT state FROM model_versions WHERE id=$1`, id).Scan(&state); err != nil || state != "ready" || x.audits(t) != before {
++				t.Fatal("foreign refusal changed model or audit", err)
++			}
++			if err := familyInsert(x.ctx, x.f.Store, x, uuid.NewString(), "deleted", time.Now().UTC().Truncate(time.Microsecond)); err != nil {
++				t.Fatal("local publication after refusal", err)
++			}
++			page, err := x.s.History(x.ctx, x.admin, x.f.Workspace, x.model, models.HistoryQuery{})
++			if err != nil || len(page.Items) != 1 || page.Items[0].ID != x.model {
++				t.Fatal("local history after foreign refusal", err)
++			}
++		})
++	}
++}
+diff --git a/services/control/internal/modules/models/history.go b/services/control/internal/modules/models/history.go
+index 241fba2a..65ba7dff 100644
+--- a/services/control/internal/modules/models/history.go
++++ b/services/control/internal/modules/models/history.go
+@@ -122,7 +122,7 @@ func (s *Service) retainedGraphWithin(ctx context.Context, q transaction.Executo
+ 
+ func (s *Service) retainedVersionWithin(ctx context.Context, q transaction.Executor, tenant, workspace, version string) (Version, error) {
+ 	out, err := scanVersion(q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL,
+-		`SELECT `+versionFields+` FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state IN ('ready','deleted') FOR SHARE`, tenant, workspace, version)), tenant)
++		`SELECT `+versionFields+` FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state IN ('ready','deleted') AND (site_id,cell_id)=(local_site_id(),local_cell_id()) FOR SHARE`, tenant, workspace, version)), tenant)
+ 	if err == nil {
+ 		err = s.retainedGraphWithin(ctx, q, tenant, workspace, &out)
+ 	}
+@@ -133,9 +133,10 @@ func (s *Service) retainedVersionWithin(ctx context.Context, q transaction.Execu
+ }
+ 
+ type historyAnchor struct {
+-	workspace workspaces.Workspace
+-	version   Version
+-	family    string
++	workspace  workspaces.Workspace
++	version    Version
++	family     string
++	site, cell string
+ }
+ 
+ func (s *Service) historyAnchorWithin(ctx context.Context, q transaction.Executor, a identity.Auth, workspace, anchor string) (historyAnchor, error) {
+@@ -157,7 +158,11 @@ func (s *Service) historyAnchorWithin(ctx context.Context, q transaction.Executo
+ 	if err != nil {
+ 		return historyAnchor{}, err
+ 	}
+-	return historyAnchor{workspace: w, version: selected, family: family}, nil
++	var site, cell string
++	if err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT local_site_id(),local_cell_id()`)).Scan(&site, &cell); err != nil {
++		return historyAnchor{}, err
++	}
++	return historyAnchor{workspace: w, version: selected, family: family, site: site, cell: cell}, nil
+ }
+ 
+ // History resolves the family from an exact anchor under current Admin authority.
+@@ -193,7 +198,7 @@ func (s *Service) History(ctx context.Context, a identity.Auth, workspace, ancho
+ 				return fail("VALIDATION_FAILED")
+ 			}
+ 		}
+-		scope := historyScope(a, w.TenantID, w.ID, family, anchor, state)
++		scope := historyScope(a, w.TenantID, w.ID, frame.site, frame.cell, family, anchor, state)
+ 		var stamp, after any
+ 		if input.Cursor != nil {
+ 			cursor, err := decodeHistoryCursor(*input.Cursor, scope, s.Identity.HMACKey)
+@@ -206,6 +211,8 @@ func (s *Service) History(ctx context.Context, a identity.Auth, workspace, ancho
+ SELECT v.id::text,v.workspace_id::text,v.name,v.model_key,v.catalog_digest,v.manifest,v.state,v.created_at,v.kind
+ FROM model_family_members m JOIN model_versions v ON (v.tenant_id,v.workspace_id,v.id)=(m.tenant_id,m.workspace_id,m.version_id)
+ WHERE m.tenant_id=$1 AND m.workspace_id=$2 AND m.family_id=$3 AND v.state IN ('ready','deleted')
++ AND (m.site_id,m.cell_id)=(local_site_id(),local_cell_id())
++ AND (v.site_id,v.cell_id)=(local_site_id(),local_cell_id())
+  AND ($4='' OR v.state=CASE WHEN $4='retired' THEN 'deleted' ELSE $4 END)
+  AND ($5::timestamptz IS NULL OR (v.created_at,v.id)<($5,$6::uuid))
+ ORDER BY v.created_at DESC,v.id DESC LIMIT $7 FOR SHARE OF v`, w.TenantID, w.ID, family, state, stamp, after, limit+1))
+@@ -273,7 +280,7 @@ func (s *Service) HistoricalVersion(ctx context.Context, a identity.Auth, worksp
+ 		if version != anchor {
+ 			var member bool
+ 			err = q.QueryRow(ctx, transaction.SQL(transaction.PostgreSQL, `SELECT EXISTS(
+- SELECT 1 FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND family_id=$3 AND version_id=$4)`,
++ SELECT 1 FROM model_family_members WHERE tenant_id=$1 AND workspace_id=$2 AND family_id=$3 AND version_id=$4 AND (site_id,cell_id)=(local_site_id(),local_cell_id()))`,
+ 				w.TenantID, w.ID, family, version)).Scan(&member)
+ 			if err != nil {
+ 				return err
+diff --git a/services/control/internal/modules/models/history_cursor.go b/services/control/internal/modules/models/history_cursor.go
+index a36b031a..1c9d8204 100644
+--- a/services/control/internal/modules/models/history_cursor.go
++++ b/services/control/internal/modules/models/history_cursor.go
+@@ -27,8 +27,8 @@ type historyCursor struct {
+ 	Scope   string    `json:"scope"`
+ }
+ 
+-func historyScope(a identity.Auth, tenant, workspace, family, anchor, state string) string {
+-	raw, _ := json.Marshal([]any{a.Me.User.ID, a.SessionID, a.Epoch, a.Me.Audience, tenant, workspace, family, anchor, state})
++func historyScope(a identity.Auth, tenant, workspace, site, cell, family, anchor, state string) string {
++	raw, _ := json.Marshal([]any{a.Me.User.ID, a.SessionID, a.Epoch, a.Me.Audience, tenant, workspace, site, cell, family, anchor, state})
+ 	sum := sha256.Sum256(raw)
+ 	return hex.EncodeToString(sum[:])
+ }
+diff --git a/services/control/internal/modules/models/history_cursor_test.go b/services/control/internal/modules/models/history_cursor_test.go
+index 12e72518..35526cd4 100644
+--- a/services/control/internal/modules/models/history_cursor_test.go
++++ b/services/control/internal/modules/models/history_cursor_test.go
+@@ -19,7 +19,7 @@ func TestModelHistoryCursorIntegrityAndScope(t *testing.T) {
+ 	}
+ 	a := identity.Auth{Me: identity.Me{User: identity.User{ID: uuid.NewString()}, Audience: "admin"}, SessionID: uuid.NewString(), Epoch: 1}
+ 	tenant, workspace, family, anchor := uuid.NewString(), uuid.NewString(), uuid.NewString(), uuid.NewString()
+-	scope := historyScope(a, tenant, workspace, family, anchor, "")
++	scope := historyScope(a, tenant, workspace, "site-a", "cell-a", family, anchor, "")
+ 	stamp, id := time.Date(2026, 11, 13, 1, 2, 3, 123456000, time.UTC), uuid.NewString()
+ 	token, err := encodeHistoryCursor(stamp, id, scope, key)
+ 	if err != nil || len(token) > HistoryMaximumCursorBytes {
+@@ -29,9 +29,9 @@ func TestModelHistoryCursorIntegrityAndScope(t *testing.T) {
+ 	if err != nil || value.ID != id || !value.Time.Equal(stamp) {
+ 		t.Fatal("exact tuple", err)
+ 	}
+-	for _, change := range []string{"account", "session", "epoch", "audience", "tenant", "workspace", "family", "anchor", "filter"} {
++	for _, change := range []string{"account", "session", "epoch", "audience", "tenant", "workspace", "site", "cell", "family", "anchor", "filter"} {
+ 		t.Run(change, func(t *testing.T) {
+-			actor, te, ws, fa, an, filter := a, tenant, workspace, family, anchor, ""
++			actor, te, ws, site, cell, fa, an, filter := a, tenant, workspace, "site-a", "cell-a", family, anchor, ""
+ 			switch change {
+ 			case "account":
+ 				actor.Me.User.ID = uuid.NewString()
+@@ -45,6 +45,10 @@ func TestModelHistoryCursorIntegrityAndScope(t *testing.T) {
+ 				te = uuid.NewString()
+ 			case "workspace":
+ 				ws = uuid.NewString()
++			case "site":
++				site = "site-b"
++			case "cell":
++				cell = "cell-b"
+ 			case "family":
+ 				fa = uuid.NewString()
+ 			case "anchor":
+@@ -52,7 +56,7 @@ func TestModelHistoryCursorIntegrityAndScope(t *testing.T) {
+ 			case "filter":
+ 				filter = "retired"
+ 			}
+-			got, err := decodeHistoryCursor(token, historyScope(actor, te, ws, fa, an, filter), key)
++			got, err := decodeHistoryCursor(token, historyScope(actor, te, ws, site, cell, fa, an, filter), key)
+ 			if err == nil || err.Error() != "INVALID_CURSOR" || got != (historyCursor{}) {
+ 				t.Fatal("scope rebound", got, err)
+ 			}
+diff --git a/services/control/internal/modules/models/reads_repository_integration_test.go b/services/control/internal/modules/models/reads_repository_integration_test.go
+index 1e19ec44..2d91dcd4 100644
+--- a/services/control/internal/modules/models/reads_repository_integration_test.go
++++ b/services/control/internal/modules/models/reads_repository_integration_test.go
+@@ -11,7 +11,6 @@ import (
+ 	"testing"
+ 	"time"
+ 
+-	"github.com/google/uuid"
+ 	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
+@@ -19,6 +18,8 @@ import (
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/config"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5/pgxpool"
+ )
+ 
+ type modelReadFixture struct {
+@@ -29,12 +30,20 @@ type modelReadFixture struct {
+ 	admin, portal identity.Auth
+ 	model         string
+ 	imports       []string
++	operator      *pgxpool.Pool
+ }
+ 
++const modelReadFixtureTimeout = 60 * time.Second
++
+ func modelReadSetup(t *testing.T) modelReadFixture {
+ 	t.Helper()
+ 	f := repositoryfixture.New(t)
+-	ctx, cancel := context.WithTimeout(t.Context(), 60*time.Second)
++	return modelReadSetupOn(t, f)
++}
++
++func modelReadSetupOn(t *testing.T, f repositoryfixture.Fixture) modelReadFixture {
++	t.Helper()
++	ctx, cancel := context.WithTimeout(t.Context(), modelReadFixtureTimeout)
+ 	t.Cleanup(cancel)
+ 	x := modelReadFixture{f: f, ctx: ctx, owner: &identity.Service{Storage: f.Store}, model: uuid.NewString()}
+ 	x.s = &models.Service{Identity: x.owner, Workspaces: &workspaces.Service{Identity: x.owner}}
+diff --git a/services/control/internal/modules/models/registration_repository_integration_test.go b/services/control/internal/modules/models/registration_repository_integration_test.go
+index db2c1b37..0104cb9f 100644
+--- a/services/control/internal/modules/models/registration_repository_integration_test.go
++++ b/services/control/internal/modules/models/registration_repository_integration_test.go
+@@ -14,12 +14,12 @@ import (
+ 	"testing"
+ 	"time"
+ 
+-	"github.com/google/uuid"
++	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/models"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
+-	lifecycle "github.com/Passion-Flow/ownsolid/api/model-lifecycle/v1"
++	"github.com/google/uuid"
+ )
+ 
+ type registrationStory struct {
+@@ -35,6 +35,11 @@ type registrationStory struct {
+ func registrationSetup(t *testing.T) registrationStory {
+ 	t.Helper()
+ 	x := modelReadSetup(t)
++	return registrationSetupOn(t, x)
++}
++
++func registrationSetupOn(t *testing.T, x modelReadFixture) registrationStory {
++	t.Helper()
+ 	accessRoot(t, x)
+ 	p := retirementTraining(t, x, x.model)
+ 	retirementPreparation(t, x, p, x.model)
+diff --git a/services/control/internal/modules/models/retire.go b/services/control/internal/modules/models/retire.go
+index e02eb8af..e9f59c03 100644
+--- a/services/control/internal/modules/models/retire.go
++++ b/services/control/internal/modules/models/retire.go
+@@ -5,9 +5,9 @@ import (
+ 	"database/sql"
+ 	"errors"
+ 
+-	"github.com/google/uuid"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
+ 	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/google/uuid"
+ )
+ 
+ type Retirement struct {
+@@ -29,7 +29,7 @@ func (s *Service) Retire(ctx context.Context, a identity.Auth, id, reason, reque
+ 	e := s.readActor(ctx, a, func(ctx context.Context, q transaction.Executor) error {
+ 		var workspace string
+ 		e := q.QueryRow(ctx, modelSQL(q,
+-			`SELECT m.workspace_id::text FROM model_versions m JOIN installation_state i ON i.tenant_id=m.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND m.id=$1`,
++			`SELECT m.workspace_id::text FROM model_versions m JOIN installation_state i ON i.tenant_id=m.tenant_id WHERE i.id=1 AND i.bootstrap_complete AND m.id=$1 AND (m.site_id,m.cell_id)=(local_site_id(),local_cell_id())`,
+ 			`SELECT m.workspace_id FROM model_versions m JOIN installation_state i ON i.tenant_id=m.tenant_id WHERE i.id=1 AND i.bootstrap_complete=1 AND m.id=?`, id)).Scan(&workspace)
+ 		if errors.Is(e, sql.ErrNoRows) {
+ 			return fail("RESOURCE_NOT_FOUND")
+@@ -46,7 +46,7 @@ func (s *Service) Retire(ctx context.Context, a identity.Auth, id, reason, reque
+ 		}
+ 		var state string
+ 		if e := q.QueryRow(ctx, modelSQL(q,
+-			"SELECT state FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 FOR UPDATE",
++			"SELECT state FROM model_versions WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND (site_id,cell_id)=(local_site_id(),local_cell_id()) FOR UPDATE",
+ 			"SELECT state FROM model_versions WHERE tenant_id=? AND workspace_id=? AND id=? FOR UPDATE", w.TenantID, w.ID, id)).Scan(&state); e != nil {
+ 			if errors.Is(e, sql.ErrNoRows) {
+ 				return fail("RESOURCE_NOT_FOUND")
+@@ -68,7 +68,7 @@ func (s *Service) Retire(ctx context.Context, a identity.Auth, id, reason, reque
+ 			return fail("MODEL_VERSION_REFERENCED")
+ 		}
+ 		n, e := q.Exec(ctx, modelSQL(q,
+-			"UPDATE model_versions SET state='deleted',deleted_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state='ready'",
++			"UPDATE model_versions SET state='deleted',deleted_at=clock_timestamp() WHERE tenant_id=$1 AND workspace_id=$2 AND id=$3 AND state='ready' AND (site_id,cell_id)=(local_site_id(),local_cell_id())",
+ 			"UPDATE model_versions SET state='deleted',deleted_at=UTC_TIMESTAMP(6) WHERE tenant_id=? AND workspace_id=? AND id=? AND state='ready'", w.TenantID, w.ID, id))
+ 		if e != nil {
+ 			return e

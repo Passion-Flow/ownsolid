@@ -1,0 +1,1739 @@
+{
+  "purpose": "Private Mac MODEL source preservation only; no product qualification",
+  "original_refs": {
+    "codex/lane-m-family61": "db8435034a2a94a3285a059f6bd40237322ae1c2",
+    "codex/lane-m-mod113": "d839b4cc1d6a2e5e3945eda3c9ca52ca45e52ca5",
+    "codex/model-import-expiry-config": "e2f424bdc7c5cfc8ddcaea36cf3f51fc027fd676"
+  },
+  "pending_github_preservation_refs": {
+    "refs/heads/salvage/mac/model/lane-m-family61-db8435034a2a": "db8435034a2a94a3285a059f6bd40237322ae1c2",
+    "refs/heads/salvage/mac/model/lane-m-mod113-d839b4cc1d6a": "d839b4cc1d6a2e5e3945eda3c9ca52ca45e52ca5",
+    "refs/heads/salvage/mac/model/model-import-expiry-config-e2f424bdc7c5": "e2f424bdc7c5cfc8ddcaea36cf3f51fc027fd676"
+  },
+  "already_main": {
+    "lane-m": {
+      "sha": "dba2eaf6c2a8e90aa2a73634dfc576ddc91c6521",
+      "contained_by": "5790b8961955400ffe25f10ced170bf4f669683c",
+      "ancestor_exit_code": 0
+    }
+  },
+  "bundle_receipts": [
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/model-family61.bundle",
+      "sha256": "c4fc38441b3fa870b9273cc592d316a29b6e4000e260b256611756ca3408cf3f",
+      "list_heads_exit_code": 0,
+      "heads": [
+        {
+          "head": "db8435034a2a94a3285a059f6bd40237322ae1c2",
+          "name": "HEAD",
+          "covered_by_pending_remote_refs": [
+            "refs/heads/salvage/mac/model/lane-m-family61-db8435034a2a"
+          ]
+        }
+      ],
+      "import_required": false,
+      "original_retained": true
+    }
+  ],
+  "archive_files": [
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/preflight.py",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/inventory.json",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/inventory.json",
+      "bytes": 2745,
+      "sha256": "c898d0d8ea3975e47b848f4330f9148113291d7266301dd30456d4b64fb26d37",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/lock-native.py",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/lock-native.py",
+      "bytes": 816,
+      "sha256": "ba404714bcba22af45b2dfc0a759e443e0ca317b0c4bbcf4fbba2842b758bc52",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/preflight.py",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/prepare-final-source.py",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/prepare-final-source.py",
+      "bytes": 2480,
+      "sha256": "87132fb475e9c86c60997ba2dd3f2d20af34b2b00a21c5332bb4609a1efa220f",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/prepare-final-source.sh",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/prepare-final-source.sh",
+      "bytes": 197,
+      "sha256": "de86c79e52ab72c52a9d4124f4ed6d7e5a18f73b4bbb3344e2f8f1fc1e56c7ad",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publication-preflight.py",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/publication-preflight.py",
+      "bytes": 1373,
+      "sha256": "3c765d28907d98c61e90459210a23b693787faea7ab2cdbba06aa053f58d7e89",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publish.py",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/publish.py",
+      "bytes": 2879,
+      "sha256": "f724acb4ea4334c6a84f0ae624c9d3aea88a130e57ff2874d6b343662522cd41",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publish.sh",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/publish.sh",
+      "bytes": 197,
+      "sha256": "c83742f504d193a64a0fc71111e99a09bdd88876125141ccec005ccf75498218",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/qualify-publish.sh",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/qualify-publish.sh",
+      "bytes": 972,
+      "sha256": "92c84a41abb8b7d5dfa67e7cfb3e167a0d58ac00f131990e79c4ef4e0ea3e817",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/reconstruct-source.py",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/reconstruct-source.py",
+      "bytes": 1110,
+      "sha256": "d83b39a762c092aaad74cddec8eca0455401c7d740d6bfdd292043679fbdcc91",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/run-linux-expiry.sh",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/run-linux-expiry.sh",
+      "bytes": 3488,
+      "sha256": "6ecef44f7fea2d0480e56696da35395b4b5a3b22063fd3ac78dd95a2e987a001",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/run-linux-source-expiry.sh",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/run-linux-source-expiry.sh",
+      "bytes": 4192,
+      "sha256": "c6312342aab5bb16dc235c39d304d0cc509181842af7bd69bcd2a692ee582657",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/run-native.sh",
+      "archive_path": "private-source/current/expiry-lifecycle-5q6nk6c0/run-native.sh",
+      "bytes": 3381,
+      "sha256": "085c961ecfa098a6d245cee9cc046917599c08211fc11b22a32e54592069111f",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/preflight.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/control-refresh.TFSVC3WM/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/preflight.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/gate.6fnjt9p4/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/preflight.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/gate.Dzgv2Z8c/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/inventory.json",
+      "archive_path": "private-source/current/family-9rk7wjpf/inventory.json",
+      "bytes": 8481,
+      "sha256": "7dd3e14be6b7bd75fe8db2ce5058f5868c2227ff31f5d045f535631643251760",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/reconstruct-source.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/iteration2/reconstruct-source.py",
+      "bytes": 1137,
+      "sha256": "9ce13c43708022879d2bbe5d2912dda88dc4c8e3bd2dfa77cb9b9d45cf536808",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/run-linux-family-wait.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/iteration2/run-linux-family-wait.sh",
+      "bytes": 4653,
+      "sha256": "e0019680b1ab794081dbc16fbf4f90991cc73082a7d150b032f3be9fc65a37b5",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/run-linux-family.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/iteration2/run-linux-family.sh",
+      "bytes": 4650,
+      "sha256": "f448c3afa6dae3bbbac168ae2b2fce07f9d9a90d63380b09d7c381940acac0f0",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/reconstruct-source.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/iteration3/reconstruct-source.py",
+      "bytes": 1155,
+      "sha256": "9408b0e399b647640e363de0ac61fad153d6ec10e9f2ca21203f6ca68982ebeb",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/run-linux-family.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/iteration3/run-linux-family.sh",
+      "bytes": 4817,
+      "sha256": "f568110acb5605968a36612b05e5fc57e8c33d11c7cfa8eacc920d1f86a674eb",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/reconstruct-source.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/iteration4/reconstruct-source.py",
+      "bytes": 1155,
+      "sha256": "9408b0e399b647640e363de0ac61fad153d6ec10e9f2ca21203f6ca68982ebeb",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/run-linux-family.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/iteration4/run-linux-family.sh",
+      "bytes": 4804,
+      "sha256": "f254a66dbcb8374434ce169e9759274c5aefa4a13509f5cc91bd2fe9deaa3069",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/lock-native-wait45.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/lock-native-wait45.py",
+      "bytes": 978,
+      "sha256": "b0780ce3d9f9e3ef874cc4f97ffd95e69189448486ca4c96d867c6a3126f912b",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/lock-native.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/lock-native.py",
+      "bytes": 816,
+      "sha256": "ba404714bcba22af45b2dfc0a759e443e0ca317b0c4bbcf4fbba2842b758bc52",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/preflight.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/prepared.json",
+      "archive_path": "private-source/current/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/prepared.json",
+      "bytes": 5310,
+      "sha256": "24dad3ce4280fa9d5cb883c50f920138e9f24102a314a32af16bdfe1fee141a6",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/preflight.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/native-ready.imq76o9f/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/prepared.json",
+      "archive_path": "private-source/current/family-9rk7wjpf/native-ready.imq76o9f/prepared.json",
+      "bytes": 5310,
+      "sha256": "24dad3ce4280fa9d5cb883c50f920138e9f24102a314a32af16bdfe1fee141a6",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/run-native.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/native-ready.imq76o9f/run-native.sh",
+      "bytes": 4565,
+      "sha256": "2bdaf3616e167278516db20c1fb647e2ba48170bc67a4fa24a312cb2209571c7",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/run-one-bounded-window.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/native-ready.imq76o9f/run-one-bounded-window.py",
+      "bytes": 5310,
+      "sha256": "ba405d4abe5533ce78f542b7a269235cc62a7dad9acbc24e79263c6b98390a49",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/preflight.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/reconstruct-source.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/reconstruct-source.py",
+      "bytes": 1137,
+      "sha256": "9ce13c43708022879d2bbe5d2912dda88dc4c8e3bd2dfa77cb9b9d45cf536808",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-backend-tail.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/run-backend-tail.sh",
+      "bytes": 2683,
+      "sha256": "5c49881f836dffe515aab6f7d97725625c88290de20bf3f6d63ac0ceddfbf9b9",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-control-refresh.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/run-control-refresh.sh",
+      "bytes": 1935,
+      "sha256": "8a475c989552d24bc9d13db8ecf8adf1e21f3dce3892b32b7a2fbf10f2ffb6ae",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-linux-family.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/run-linux-family.sh",
+      "bytes": 4843,
+      "sha256": "2d8991f14dbddde8c72a0c1a30f34629db79d79ed0400ff211ed7a1ab9001364",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-native.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/run-native.sh",
+      "bytes": 3381,
+      "sha256": "5561ea2f2bcd54e56a038da47abdcd3015e809b45a01c797cd8035d9b34c5f43",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/run-portal-focus.sh",
+      "archive_path": "private-source/current/family-9rk7wjpf/run-portal-focus.sh",
+      "bytes": 559,
+      "sha256": "6291584f4994871418fbad8dd8da8871e9cf8a0b91dd0dda95e17e11329a0e65",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/preflight.py",
+      "archive_path": "private-source/current/family-9rk7wjpf/tail.lQRyDPUk/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/HANDOFF.md",
+      "archive_path": "private-source/current/family61-input-493si3kj/HANDOFF.md",
+      "bytes": 4615,
+      "sha256": "6a49adedf94493e18764e1957519376d365b8a23b41e35cb8c74adf307f6e92f",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/manifest.json",
+      "archive_path": "private-source/current/family61-input-493si3kj/manifest.json",
+      "bytes": 8449,
+      "sha256": "273edc211238f5cdc58d11bf394ddfdbef6ea58ab646492b89d8aadee27eb194",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/model-family61.patch",
+      "archive_path": "private-source/current/family61-input-493si3kj/model-family61.patch",
+      "bytes": 70200,
+      "sha256": "a4fdbcb834d31a24d36f0b75d1678d723bb4b90d3ab06a705e3d2bcd8a855f71",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/retirement.json",
+      "archive_path": "private-source/current/old-gate-retirement-e_b0qd9j/retirement.json",
+      "bytes": 10322,
+      "sha256": "ae49bfc5b6f6dc39d3abb4668546ef69a2edeaa48471e6a4960f2d5c66d69199",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/reconcile-results.py",
+      "archive_path": "private-source/current/resume-j73g7nqp/gate.NCgIoTa2/linux-results/reconcile-results.py",
+      "bytes": 3236,
+      "sha256": "3fc474f4160a1c4542da69c315b04895a5e58de3a5f0b1fa729b800968bc49e3",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/run-linux-acceptance-corrected.sh",
+      "archive_path": "private-source/current/resume-j73g7nqp/gate.NCgIoTa2/linux-results/run-linux-acceptance-corrected.sh",
+      "bytes": 7881,
+      "sha256": "a513e6764bfd38bf7b044b5f587481f98342c7ddaee81bbd7171b21f5995f6d8",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/run-linux-acceptance.sh",
+      "archive_path": "private-source/current/resume-j73g7nqp/gate.NCgIoTa2/linux-results/run-linux-acceptance.sh",
+      "bytes": 7849,
+      "sha256": "19cc661ffa5bab264bf1b48f611fb7600de5ccc50d0ae1d1cc6b593ec56fb911",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/preflight.py",
+      "archive_path": "private-source/current/resume-j73g7nqp/gate.NCgIoTa2/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/run-linux-acceptance.sh",
+      "archive_path": "private-source/current/resume-j73g7nqp/gate.NCgIoTa2/run-linux-acceptance.sh",
+      "bytes": 7849,
+      "sha256": "19cc661ffa5bab264bf1b48f611fb7600de5ccc50d0ae1d1cc6b593ec56fb911",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/preflight.py",
+      "archive_path": "private-source/current/resume-j73g7nqp/gate.f8nijtrt/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/inventory.json",
+      "archive_path": "private-source/current/resume-j73g7nqp/inventory.json",
+      "bytes": 3855,
+      "sha256": "852c2b0ba13c38e42633e0ad17996b514d68b141f41d9e7ac643b4c153bf7df4",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/preflight.py",
+      "archive_path": "private-source/current/resume-j73g7nqp/preflight.py",
+      "bytes": 1763,
+      "sha256": "ac753bcf7cc5fb2b2e61dab47aa3db3c80802ce137f74e5113d369e7ef9861cd",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/reconcile-results.py",
+      "archive_path": "private-source/current/resume-j73g7nqp/reconcile-results.py",
+      "bytes": 3236,
+      "sha256": "3fc474f4160a1c4542da69c315b04895a5e58de3a5f0b1fa729b800968bc49e3",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/run-gate.sh",
+      "archive_path": "private-source/current/resume-j73g7nqp/run-gate.sh",
+      "bytes": 4746,
+      "sha256": "1880a61ec07ee5fbff52394456754d3b1fe7a5cb5f439997acb92cb6121eb115",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/run-linux-acceptance.sh",
+      "archive_path": "private-source/current/resume-j73g7nqp/run-linux-acceptance.sh",
+      "bytes": 7881,
+      "sha256": "a513e6764bfd38bf7b044b5f587481f98342c7ddaee81bbd7171b21f5995f6d8",
+      "projection": "exact UTF-8 source bytes"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::expiry-lifecycle-5q6nk6c0/lock-native.py",
+      "archive_path": "private-source/original-retired-wrappers/expiry-lifecycle-5q6nk6c0/lock-native.py.txt",
+      "bytes": 767,
+      "sha256": "54ffff8ce479d787fce87a8153e95d5480a986b404b0c491a820b5e87d32b599",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::expiry-lifecycle-5q6nk6c0/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/expiry-lifecycle-5q6nk6c0/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::expiry-lifecycle-5q6nk6c0/publication-preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/expiry-lifecycle-5q6nk6c0/publication-preflight.py.txt",
+      "bytes": 1324,
+      "sha256": "79dd8876d9cde40e019e8e50cd859275d63e4100d61e95779336817ac814fab6",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::expiry-lifecycle-5q6nk6c0/publish.py",
+      "archive_path": "private-source/original-retired-wrappers/expiry-lifecycle-5q6nk6c0/publish.py.txt",
+      "bytes": 2830,
+      "sha256": "f4f3613f8ae723a8376dfe39af328c2c2a2a051b0c927155c83f55daf1c31287",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::expiry-lifecycle-5q6nk6c0/publish.sh",
+      "archive_path": "private-source/original-retired-wrappers/expiry-lifecycle-5q6nk6c0/publish.sh.txt",
+      "bytes": 158,
+      "sha256": "c31f0feab848ea9c63dd2a1c483827e04582be389ebee6a3371695d5197d4546",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::expiry-lifecycle-5q6nk6c0/qualify-publish.sh",
+      "archive_path": "private-source/original-retired-wrappers/expiry-lifecycle-5q6nk6c0/qualify-publish.sh.txt",
+      "bytes": 933,
+      "sha256": "60c44bfc6f321fe56803e1a0ad787e9520ef18be081a03668fdd4afa29564dc2",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::expiry-lifecycle-5q6nk6c0/run-native.sh",
+      "archive_path": "private-source/original-retired-wrappers/expiry-lifecycle-5q6nk6c0/run-native.sh.txt",
+      "bytes": 3342,
+      "sha256": "4d6df717671822224923cac120de081376d4257576380da371e8b7813b20d537",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/control-refresh.TFSVC3WM/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/control-refresh.TFSVC3WM/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/gate.6fnjt9p4/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/gate.6fnjt9p4/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/gate.Dzgv2Z8c/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/gate.Dzgv2Z8c/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/lock-native-wait45.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/lock-native-wait45.py.txt",
+      "bytes": 929,
+      "sha256": "6d29c9c3e822311fe1ecf452509ee0eb5b4f551e7089f0a0ba20cad3bb374d3d",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/lock-native.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/lock-native.py.txt",
+      "bytes": 767,
+      "sha256": "54ffff8ce479d787fce87a8153e95d5480a986b404b0c491a820b5e87d32b599",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/native-ready.imq76o9f/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/native-ready.imq76o9f/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/native-ready.imq76o9f/run-native.sh",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/native-ready.imq76o9f/run-native.sh.txt",
+      "bytes": 4526,
+      "sha256": "343c725a81c4fbeef58b12f766f908b73583f1ac81c003190a8bee3caa82fb19",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/native-ready.imq76o9f/run-one-bounded-window.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/native-ready.imq76o9f/run-one-bounded-window.py.txt",
+      "bytes": 5261,
+      "sha256": "095f66388a9b9b5bedbfbbd3fe3d75458d0d8c5edcbc28e07ee513dcab5323e9",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/run-backend-tail.sh",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/run-backend-tail.sh.txt",
+      "bytes": 2644,
+      "sha256": "813b4173d5ad9e76622ad615ab9e2215f8e459f21d3a1b86c7f4a19571faa7ca",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/run-control-refresh.sh",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/run-control-refresh.sh.txt",
+      "bytes": 1896,
+      "sha256": "4cf5a9ae2413bd7a96fce7890a4287f465bea4069a6ae323fd0ff5e4af25a688",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/run-native.sh",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/run-native.sh.txt",
+      "bytes": 3342,
+      "sha256": "0d45dd88a158b18cdac2406bcdbd8e0be7971fc8a0b2804fd57f4174f4fb59e4",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/run-portal-focus.sh",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/run-portal-focus.sh.txt",
+      "bytes": 520,
+      "sha256": "c798033d35966180933c623888578a71fa94a2dce3466a4da9e6df7be1592881",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::family-9rk7wjpf/tail.lQRyDPUk/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/family-9rk7wjpf/tail.lQRyDPUk/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::resume-j73g7nqp/gate.NCgIoTa2/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/resume-j73g7nqp/gate.NCgIoTa2/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::resume-j73g7nqp/gate.f8nijtrt/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/resume-j73g7nqp/gate.f8nijtrt/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::resume-j73g7nqp/preflight.py",
+      "archive_path": "private-source/original-retired-wrappers/resume-j73g7nqp/preflight.py.txt",
+      "bytes": 1714,
+      "sha256": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    },
+    {
+      "origin": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz::resume-j73g7nqp/run-gate.sh",
+      "archive_path": "private-source/original-retired-wrappers/resume-j73g7nqp/run-gate.sh.txt",
+      "bytes": 4707,
+      "sha256": "8133c34bdbc61aaecefa0b3d4c0525c2306bc49fa7325cdfefbc9213b599079b",
+      "projection": "lossless historical source with .txt suffix; NEVER EXECUTE retired entry"
+    }
+  ],
+  "exclusions": [
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/audit-verify",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/build.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/check.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/fetch.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/gate-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/gate-revision",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/inputs.sha256",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/inputs.tar.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/linux-build.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/models.test",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/preflight-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/preflight-2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/rebase.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/source.tar.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/test.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/volume-attach.plist",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/volume-create.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1/volume-detach.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/integration-preflight.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/integration-source",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/latest-gate",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/latest-linux-proof",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/compile.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/compiled-binary.sha256",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/container-cleanup.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/database.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/expiry.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/isolation.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/source-verification.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/test-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results/validation.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-run.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-ssh-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/policy-unit.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publish-after-integration.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publish.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/published-sha",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/reconstruct-source-schema59.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/schema59-integration-unit.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/source-delta-schema59.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/source-delta-schema59.patch.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/source-delta.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/source-delta.patch.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/go-test.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/preflight-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/preflight-2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/tail-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/tail-revision",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/volume-attach.plist",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/volume-create.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/control-refresh.TFSVC3WM/volume-detach.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/audit-verify",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/build.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/check.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/fetch.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/gate-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/gate-revision",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/portal-help-original-trace/error-context.md",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/portal-help-original-trace/help-url-transitions.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/portal-help-original-trace/trace.zip",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/preflight-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/preflight-2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/rebase.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/test.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/volume-attach.plist",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/volume-create.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.6fnjt9p4/volume-detach.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/audit-verify",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/build.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/check.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/fetch.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/gate-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/gate-revision",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/portal-help-original-trace/error-context.md",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/portal-help-original-trace/help-url-transitions.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/portal-help-original-trace/trace.zip",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/preflight-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/preflight-2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/rebase.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/test.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/volume-attach.plist",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/volume-create.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/gate.Dzgv2Z8c/volume-detach.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/cleanup-state",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/compile.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/cursor-race.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/database.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/ddl-diagnosis.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/ddl-revised-prototype.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/family.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/isolation.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/initial-candidate-results/test-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/linux-run.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/linux-run.wait45.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/linux-ssh-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/linux-ssh-exit-code.wait45",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/reconstruct.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/remote-proof",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/results/cleanup-state",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/results/compile.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/results/compiled-binary.sha256",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/results/database.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/results/family.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/results/isolation.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/results/test-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/source-delta.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/source-part-0.gzpart",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration2/source-parts.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/linux-run.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/linux-ssh-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/reconstruct.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/remote-proof",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/results/compile.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/results/compiled-binary.sha256",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/results/container-cleanup.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/results/database.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/results/family.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/results/isolation.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/results/test-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/results/validation.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/runtime-source-unchanged.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/source-delta.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/source-part-0.gzpart",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration3/source-parts.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/linux-run.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/linux-ssh-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/reconstruct.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/remote-proof",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/results/compile.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/results/compiled-binary.sha256",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/results/container-cleanup.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/results/database.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/results/family.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/results/isolation.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/results/test-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/results/validation.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/source-delta.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/source-part-0.gzpart",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/iteration4/source-parts.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/latest-control-refresh",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/latest-gate",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/latest-native-ready",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/latest-tail",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/linux-run.attempt1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/linux-run.attempt2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/linux-ssh-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/linux-ssh-exit-code.attempt2",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/README.md",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/acceptance-summary.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/audit-verify",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/browser-conditional-skips.txt",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/build.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/check.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/gate-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/gate-revision",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/inherited-lock.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/preflight-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/preflight-2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/test.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/volume-attach.plist",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/volume-create.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/volume-detach.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/gate.YzxCHOpc/web-build-assets.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/latest-gate",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/one-window-admission.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/one-window-child.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/one-window-result.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/publication-equivalence.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/publication-push.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/source.tar.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/tracked-tree.txt",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/reconstruction-state.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/remote-proof",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/removed-completed-volume-artifacts-2.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/removed-completed-volume-artifacts.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/source-delta.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/source-delta.patch.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/source-part-0.gzpart",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/source-part-1.gzpart",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/source-parts.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/go-test.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/portal-focus-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/portal-focus-results/.last-run.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/portal-focus.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/preflight-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/preflight-2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/rust-test.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/tail-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/tail-revision",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/volume-attach.plist",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/volume-create.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/volume-detach.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/tail.lQRyDPUk/web-unit.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/worktree",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/SHA256SUMS",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/bundle-verification.txt",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/model-family61-source.tar.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/model-family61.bundle",
+      "reason": "Git bundle is not a source file; original retained and head mapped to original-tip preservation ref"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/family61-input-493si3kj/static-checks.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz",
+      "reason": "binary container; all original wrapper source projected losslessly below"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/acceptance-inputs.tar.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/archive-unit.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/audit-verify",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/build.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/check.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/deployments-compile.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/deployments.test",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/fetch.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/gate-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/gate-passed-lock-held",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/gate-revision",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/inputs.sha256",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-lock-attempt-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/acceptance-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/archive-input.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/archive.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/borrowed.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/consumer-exit-confirmed.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/container-id",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/database.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/expiry.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/https.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/isolation.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/publication.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/tls.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results/validated-results.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/linux-results.tar.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/mac-window-released",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/migration-lineage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/models-compile.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/models-http-compile.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/models-http.test",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/models.test",
+      "reason": "compiled binary; not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/preflight-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/preflight-2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/rebase.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/source.tar.gz",
+      "reason": "binary archive, source snapshot or temporary transfer payload; original retained, not committed"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/test.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/volume-attach.plist",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/volume-create.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.NCgIoTa2/volume-detach.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/check.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/fetch.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/gate-exit-code",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/gate-revision",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/migration-lineage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/preflight-1.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/preflight-2.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/rebase.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/stage",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/volume-attach.plist",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/volume-create.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/gate.f8nijtrt/volume-detach.log",
+      "reason": "temporary execution or browser output; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/latest-gate",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input/LICENSE",
+      "reason": "model assets, including tokenizer/config/license; excluded as requested"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input/README.md",
+      "reason": "model assets, including tokenizer/config/license; excluded as requested"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input/config.json",
+      "reason": "model assets, including tokenizer/config/license; excluded as requested"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input/generation_config.json",
+      "reason": "model assets, including tokenizer/config/license; excluded as requested"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input/merges.txt",
+      "reason": "model assets, including tokenizer/config/license; excluded as requested"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input/tokenizer.json",
+      "reason": "model assets, including tokenizer/config/license; excluded as requested"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input/tokenizer_config.json",
+      "reason": "model assets, including tokenizer/config/license; excluded as requested"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input/vocab.json",
+      "reason": "model assets, including tokenizer/config/license; excluded as requested"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/model-input-manifest.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    },
+    {
+      "path": "/Users/passion./.cache/ownsolid/lane-m/resume-j73g7nqp/temporary-image-cleanup.json",
+      "reason": "temporary output, generated asset inventory or execution marker; original retained"
+    }
+  ],
+  "embedded_bundle_payloads": [],
+  "original_retired_wrapper_archive": {
+    "path": "/Users/passion./.cache/ownsolid/lane-m/old-gate-retirement-e_b0qd9j/original-private-wrappers.tar.gz",
+    "sha256": "fc140266b009601e06b35f8f17a2c61147acff3d166f95568f2d9557f3b1dfad",
+    "projected_source_count": 27,
+    "original_retained": true
+  },
+  "build": {
+    "state": "NOTRUN",
+    "raw_free_bytes": 176422912,
+    "minimum_bytes": 6442450944,
+    "disk_available_bytes": 158561492992,
+    "disk_minimum_bytes": 32212254720,
+    "carrier_identity_matched": true,
+    "admission_attempted": false,
+    "reason": "Fresh raw Free below 6 GiB; immediate salvage, no wait, rebase, full gate or server fallback."
+  },
+  "server_scope": {
+    "touched": false,
+    "non_git_source_snapshots_deferred_to_cpu_phase": 7,
+    "covered_by_mac": false
+  },
+  "history_scope": {
+    "unreferenced_original_commits": "coordinator global preservation; not repeated by MODEL",
+    "shared_stash": "all three entries IAM-owned, untouched",
+    "own_custom_refs": [],
+    "own_evidence_tags": []
+  }
+}

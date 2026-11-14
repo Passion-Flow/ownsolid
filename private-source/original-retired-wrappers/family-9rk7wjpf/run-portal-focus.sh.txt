@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+proof="$(cd "$(dirname "$0")" && pwd -P)"
+python3 /Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/publication-preflight.py "$1" > "$proof/portal-focus-preflight.log" 2>&1
+cd "$1"
+git diff --exit-code db7ee24a HEAD -- web api/openapi
+pnpm --dir web/apps/portal exec playwright test e2e/help.spec.ts --grep 'keeps a contract discoverable offline and retries its download in en$' --workers=1 --retries=0 --output "$proof/portal-focus-results" > "$proof/portal-focus.log" 2>&1

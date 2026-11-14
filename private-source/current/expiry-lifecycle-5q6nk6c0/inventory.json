@@ -1,0 +1,64 @@
+{
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-m",
+  "branch": "lane-m",
+  "local_head": "9e7a6ed46fbcbb7205656d9ae1dbe57a5e9f4eb8",
+  "local_only_commits": [],
+  "native_gate": {
+    "source": "e71987812e10a55fc0018cfcb79082653e2de778",
+    "baseline": "1280ea79c94f54b37f63ec33541fabfa6325901c",
+    "tree": "7f842f2632e2db4b69288947e55692868572d5b0",
+    "commands": [
+      "make check",
+      "make build",
+      "make test"
+    ],
+    "exit": 0,
+    "path": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/gate.c54tEpd1",
+    "temporary_volume": "detached; owned sparseimage removed"
+  },
+  "linux_expiry": {
+    "status": "passed",
+    "source": "6e82e87f8980de7498d0973918258cbae7100e25",
+    "baseline": "4f76102ca99328e0b9063eb05b0352e62501e154",
+    "proof": "/root/ownsolid-lane-m-expiry59.Qpe5tcpH",
+    "local_results": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/linux-schema59-results",
+    "schema": 59,
+    "postgresql": "18.6",
+    "pgvector": "0.8.7",
+    "network": "none",
+    "root_tests": 4,
+    "shutdown_subtests": [
+      "after_intent",
+      "after_terminal"
+    ],
+    "shutdown_seconds": 3.59,
+    "exit": 0,
+    "private_inputs_removed": true,
+    "temporary_store_removed": true,
+    "container_removed": true,
+    "source_reconstruction": "SHA-256 verified retained source archive and complete source delta",
+    "toolchain": "go1.27.3 linux/amd64"
+  },
+  "published": true,
+  "published_sha": "9e7a6ed46fbcbb7205656d9ae1dbe57a5e9f4eb8",
+  "published_commits": [
+    "9e7a6ed46fbcbb7205656d9ae1dbe57a5e9f4eb8 MOD-121: Record schema 59 shutdown recovery acceptance",
+    "3f8d04948950b881678a3b8c26e30be685434613 MOD-103 MOD-109: Refresh verified boundaries and shared lock protocol",
+    "3cb53b811c9f8dd04b7d75b5bf35045b3757ec6e MOD-110: Specify final transaction checks for execution consumers",
+    "e004e351cd52446513aee7b95fb6afd8d2df4096 MOD-103: Define the remaining historical version contract",
+    "d829dafb25abf370233a1232b362b0333df748c7 MOD-121: Expose retention validation and cover shutdown commits"
+  ],
+  "worktree_clean": true,
+  "integration_unit": {
+    "source": "9e7a6ed46fbcbb7205656d9ae1dbe57a5e9f4eb8",
+    "policy_cases": 12,
+    "already_cancelled_worker": "passed",
+    "log": "/Users/passion./.cache/ownsolid/lane-m/expiry-lifecycle-5q6nk6c0/schema59-integration-unit.log",
+    "runtime_source_unchanged_since_actual_pg": true,
+    "upstream_configuration_reviewed": "2025a1c8 NET-102 startup source admission"
+  },
+  "retained_unused_input": {
+    "proof": "/root/ownsolid-lane-m-expiry.p5NcNV4W",
+    "status": "not executed; original interrupted bulk transfer and schema 58 reconstruction preserved"
+  }
+}

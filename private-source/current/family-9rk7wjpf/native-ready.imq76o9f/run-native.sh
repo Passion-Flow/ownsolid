@@ -1,0 +1,88 @@
+#!/bin/bash
+exit 75 # LANE_M_OLD_GATE_EPOCH_CLOSED
+set -euo pipefail
+umask 022
+proof_root="$(cd "$(dirname "$0")" && pwd -P)"
+proof="$(mktemp -d "$proof_root/gate.XXXXXXXX")"
+printf '%s\n' "$proof" > "$proof_root/latest-gate"
+cp "$proof_root/preflight.py" "$proof/preflight.py"
+cd "$1"
+python_path="$(uv python find 3.12)"
+export PATH="$(dirname "$python_path"):$PATH" PYTHON="$python_path"
+test -z "$(git status --porcelain)"
+test ! -e tools/audit-verify/audit-verify
+volume=""
+volume_name="om$(openssl rand -hex 3)"
+image="$proof/test-volume.sparseimage"
+cleanup() {
+ code=$?
+ trap - EXIT
+ if test -f tools/audit-verify/audit-verify; then mv tools/audit-verify/audit-verify "$proof/audit-verify"; fi
+ if test -n "$volume" && mount | grep -F " on $volume " >/dev/null; then
+  hdiutil detach "$volume" > "$proof/volume-detach.log" 2>&1 || code=1
+ fi
+ printf '%s\n' "$code" > "$proof/gate-exit-code"
+ exit "$code"
+}
+trap cleanup EXIT
+python3 - "$proof_root" "$proof" <<'VERIFY'
+from pathlib import Path
+import hashlib,json,os,stat,subprocess,sys
+r=Path(sys.argv[1]);out=Path(sys.argv[2]);m=json.loads((r/'prepared.json').read_text())
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==m['source']
+assert subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip()==m['tree']
+for name,value in m['entry_sha256'].items():assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==value,name
+assert hashlib.sha256((r/'source.tar.gz').read_bytes()).hexdigest()==m['source_archive_sha256']
+for name,value in m['selected_source_sha256'].items():assert hashlib.sha256(Path(name).read_bytes()).hexdigest()==value,name
+carrier=Path(m['carrier']['path']);info=carrier.lstat()
+assert stat.S_ISREG(info.st_mode) and (info.st_dev,info.st_ino)==(m['carrier']['device'],50313339) and info.st_uid==os.geteuid() and info.st_nlink==1
+opened=[]
+for name in os.listdir('/dev/fd'):
+ try:
+  fd=int(name);f=os.fstat(fd)
+ except (OSError,ValueError):continue
+ if fd>2 and (f.st_dev,f.st_ino)==(info.st_dev,info.st_ino):opened.append(fd)
+assert len(opened)==1,'Invoke through the original lock-native.py; no nested lock attempt'
+(out/'inherited-lock.json').write_text(json.dumps({'gate_parent_pid':os.getppid(),'fd':opened[0],'device':info.st_dev,'inode':info.st_ino,'size':info.st_size,'same_open_description_inherited':True},indent=2)+'\n')
+(out/'prepared.json').write_bytes((r/'prepared.json').read_bytes())
+VERIFY
+hdiutil create -size 8g -type SPARSE -fs APFS -volname "$volume_name" -o "$image" > "$proof/volume-create.log" 2>&1
+hdiutil attach "$image" -nobrowse -plist > "$proof/volume-attach.plist"
+volume="$(python3 - "$proof/volume-attach.plist" "$volume_name" <<'PY'
+import pathlib,plistlib,sys
+data=plistlib.loads(pathlib.Path(sys.argv[1]).read_bytes())
+mounts=[e['mount-point'] for e in data['system-entities'] if 'mount-point' in e]
+if mounts!=['/Volumes/'+sys.argv[2]]: raise SystemExit('Unexpected owned volume')
+print(mounts[0])
+PY
+)"
+mkdir "$volume/t"
+export TMPDIR="$volume/t/" GOFLAGS=-p=2 GOMAXPROCS=3 CARGO_BUILD_JOBS=2
+python3 "$proof/preflight.py" > "$proof/preflight-1.log"
+sleep 5
+python3 "$proof/preflight.py" > "$proof/preflight-2.log"
+upstream="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["base"])' "$proof_root/prepared.json")"
+git diff --exit-code 3ba50041 HEAD -- services/control/internal/modules/models services/control/internal/modules/modelpreparations
+git diff --check "$upstream"...HEAD
+git rev-parse HEAD "$upstream" 'HEAD^{tree}' > "$proof/gate-revision"
+python3 tools/dev/roadmap_progress.py
+test -z "$(git status --porcelain)"
+printf '%s\n' check > "$proof/stage"
+make check > "$proof/check.log" 2>&1
+printf '%s\n' build > "$proof/stage"
+make build > "$proof/build.log" 2>&1
+python3 - "$proof" <<'ASSETS'
+from pathlib import Path
+import hashlib,json,platform,subprocess,sys
+out=Path(sys.argv[1]);files={}
+for app in ('console','portal'):
+ root=Path('web/apps')/app/'dist';assert root.is_dir(),app
+ for p in sorted(root.rglob('*')):
+  assert not p.is_symlink(),str(p)
+  if p.is_file():files[str(p)]={'size_bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+assert files
+(out/'web-build-assets.json').write_text(json.dumps({'source':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'platform':platform.system()+'/'+platform.machine(),'command':'make build','qualified_for_installation':False,'files':files},indent=2)+'\n')
+ASSETS
+printf '%s\n' test > "$proof/stage"
+make test > "$proof/test.log" 2>&1
+printf '%s\n' passed > "$proof/stage"

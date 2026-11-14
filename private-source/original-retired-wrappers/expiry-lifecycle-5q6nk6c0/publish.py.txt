@@ -1,0 +1,53 @@
+import os
+import pathlib
+import re
+import subprocess
+import sys
+
+worktree = pathlib.Path(sys.argv[1])
+proof = pathlib.Path(__file__).resolve().parent
+if os.path.lexists('/private/tmp/ownsolid-macos-full-gate.lock'):
+    raise SystemExit('Legacy workstation gate is occupied')
+root = os.statvfs('/')
+if root.f_bavail * root.f_frsize < 15 * 1024**3:
+    raise SystemExit('Host disk is below 15 GiB')
+patterns = {'make': r' (check|build|test)( |$)', 'gmake': r' (check|build|test)( |$)', 'node': r'playwright.*\btest\b|\bvitest\b|\bvite\b.*\bbuild\b|pnpm.*\b(test|build|check)\b', 'go': r'\bgo (test|build)\b', 'cargo': r'\bcargo (test|build|clippy)\b', 'docker': r'\bdocker (build|compose|run|buildx)\b'}
+for line in subprocess.check_output(['ps', '-Ao', 'pid=,comm=,args='], text=True).splitlines():
+    fields = line.strip().split(None, 2)
+    if len(fields) != 3:
+        continue
+    pid, comm, args = fields
+    name = os.path.basename(comm)
+    if name in patterns and re.search(patterns[name], args):
+        print('BUSY_PROCESS', pid, name)
+        raise SystemExit(75)
+for port in (4310, 4311):
+    if subprocess.run(['lsof', '-t', '-iTCP:' + str(port), '-sTCP:LISTEN'], stdout=subprocess.DEVNULL).returncode == 0:
+        raise SystemExit('Browser preview port is occupied')
+
+def git(*args):
+    return subprocess.check_output(['git', *args], cwd=worktree)
+
+if git('status', '--porcelain').strip():
+    raise SystemExit('Owned worktree is not clean')
+raw = subprocess.check_output(['scutil', '--proxy'], text=True)
+settings = dict(re.findall(r'^\s*(HTTPSEnable|HTTPSProxy|HTTPSPort|HTTPEnable|HTTPProxy|HTTPPort)\s*:\s*(.*?)\s*$', raw, re.M))
+args = ['git', '-c', 'http.version=HTTP/1.1']
+for kind in ('HTTPS', 'HTTP'):
+    if settings.get(kind + 'Enable') == '1' and settings.get(kind + 'Proxy') in ('127.0.0.1', 'localhost'):
+        args += ['-c', 'http.proxy=http://' + settings[kind + 'Proxy'] + ':' + str(int(settings[kind + 'Port']))]
+        break
+subprocess.run(args + ['fetch', 'origin'], cwd=worktree, check=True, timeout=45)
+upstream = git('rev-parse', 'origin/main').decode().strip()
+subprocess.run(['git', 'rebase', upstream], cwd=worktree, check=True, timeout=45)
+reference = (proof / 'integration-source').read_text().strip()
+changes = git('diff', '--name-only', reference, 'HEAD').decode().splitlines()
+if any(not name.startswith('docs/') for name in changes):
+    print('CHANGED_EXECUTION_INPUTS', '\n'.join(changes))
+    raise SystemExit(76)
+subprocess.run(['git', 'diff', '--check', upstream + '...HEAD'], cwd=worktree, check=True)
+subprocess.run(args + ['push', 'origin', 'HEAD:main'], cwd=worktree, check=True, timeout=45)
+head = git('rev-parse', 'HEAD').decode().strip()
+(proof / 'published-sha').write_text(head + '\n')
+print('PUBLISHED', head)
+print(git('status', '--short', '--branch').decode())

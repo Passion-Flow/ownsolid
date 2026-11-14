@@ -1,0 +1,78 @@
+{
+  "source": "2783a46fa8990daa0792f11ee764c46a7795ef36",
+  "base": "f11aa11fc298c3eefed696a6f05db9e637ab0e05",
+  "tree": "fd479f8e54563061274ec898923d9b16dcdccc0a",
+  "worktree": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-m",
+  "source_clean": true,
+  "prepared_utc": "2026-11-13T01:02:48.465516+00:00",
+  "executed": false,
+  "lock_wait_or_attempt": false,
+  "scheduled_after": "OBS short opportunity result and actual release; no competing queue",
+  "entry_argv": [
+    "python3",
+    "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/lock-native.py",
+    "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/run-native.sh",
+    "/Users/passion./Documents/Passion's WorkSpace/Development/lane-m"
+  ],
+  "entry_sha256": {
+    "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/lock-native.py": "54ffff8ce479d787fce87a8153e95d5480a986b404b0c491a820b5e87d32b599",
+    "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/run-native.sh": "343c725a81c4fbeef58b12f766f908b73583f1ac81c003190a8bee3caa82fb19",
+    "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/preflight.py": "4e56913271bd725ddfccfb6861f8770f17ad8eff4cf7da733019e15effe1224f"
+  },
+  "carrier": {
+    "path": "/private/tmp/ownsolid-workstation-full-gate.lock",
+    "inode": 50313339,
+    "size": 0,
+    "uid": 501,
+    "mode": "original nonblocking exclusive flock, inherited FD throughout; never unlink/replace/truncate",
+    "device": 16777234
+  },
+  "source_archive": "/Users/passion./.cache/ownsolid/lane-m/family-9rk7wjpf/native-ready.imq76o9f/source.tar.gz",
+  "source_archive_bytes": 11170738,
+  "source_archive_sha256": "21abcd3af9de362fa4cc7b77cf302462a48276bdc3a3d556b1fac1a40e888ee5",
+  "tracked_tree_sha256": "a60d7a77d66b0c0dc5a61223d6cda5709f4cec8a9a94a1366c43bd85d42a56dd",
+  "selected_source_sha256": {
+    "AGENTS.md": "aa142070f82047edc86f525a3136bc6eb274867d6c70d391d3f7e7f72ecbd251",
+    "Makefile": "f6078f4b28aca143f680055c106fa31abf252415d99519caffa012f24ed2fe89",
+    "go.work": "d2da06271b98cf27596a65743b8f6f39504cc5557c95b8842c1c97c861b593b8",
+    "web/package.json": "a220f65bce6b074e88246327b2fb37b2e12f667c363ba9f27af2a17d83438179",
+    "web/pnpm-lock.yaml": "de9a5caf8f5dc63c0aa16e2789a8ef828a139e91bf4293b80f9d63ed263fcd08",
+    "web/packages/config/src/playwright.ts": "dd5e2e5b4f7f4c353261d83e0449879fcf4c84d88094ff0f3b1fa460fabc5bee",
+    "web/apps/console/playwright.config.ts": "0bfaa1192e8776c293e67e3cb5f8e265ee2e33266e24c068293f527fe5f2f261",
+    "web/apps/portal/playwright.config.ts": "44d9ce7433aaba1c447b4f6a0815ac7ae69a87ae08ad51927f8b31b8b7b7cad8",
+    "web/packages/shell/testing/help-flows.ts": "de309e95ea595eed027c8b4c9b67e69de97eab1e24dd6061cfe707aa9d4d3d18",
+    "web/apps/console/package.json": "d464564f8f30bfee4f6206b45acd417fbdcc28b2aec71cd18a67552844287f0f",
+    "web/apps/portal/package.json": "2867b601753f4089a2f7822d6f0f7dce9dffc42a21770e181f2ef9e4f1360db0",
+    "services/control/go.mod": "384a9c7d04202ffc3f973efdd69789b6a36c7a31fa86dec5dcff3c49035efca5",
+    "services/control/go.sum": "69958a2e9c376ea245a76ed1577a823a7f20b56ed64468c5a188b12fb092e307",
+    "services/gateway/Cargo.lock": "c5966f9f300f454645ac5e5d5e19c81125dba73e55faf25d25040b68cf477c14",
+    "services/control/internal/modules/models/family.go": "e29e4da5be850872cd71ba5eddd29545a41c383338456101dc613c7deb4dc5f1",
+    "services/control/internal/modules/models/history.go": "bbed7113f8ea4b769b680e85aef592aa311d175b9db770d7bd5ce11729a6373f",
+    "services/control/internal/modules/models/history_cursor.go": "a6aa9cba375e7558755ba461bcb89e603224d5fbf87ac1972f7ab72d93cc38e9",
+    "services/control/internal/modules/models/family_repository_integration_test.go": "4481dc2ef39755eea144020d249bc1ae47fa44de2a8fb8def6494b1623b10881",
+    "services/control/internal/modules/models/testdata/model_family_candidate.up.sql": "03f8c26e190bc16e01a9905c45cb13be1eef8835056d29e86e761ff70ae2c49c",
+    "services/control/internal/modules/models/testdata/model_family_candidate.down.sql": "0dc0c6c0c2821a0eead8399db277ab5de2538bf4b2b6ff6b3b8b73dcd8159cb6",
+    "docs/research/training-dataset-lineage.md": "8a7c8e9505f846a6515d97748c4d6c1394a37f5ebd20d74691725161dfdade9e",
+    "docs/decisions/0081-retain-explicit-model-family-membership.md": "6653dcb890be81b2c0e4f1b5dd24eea7429cd3a4ee0e3f62577169c398a1e4f0"
+  },
+  "commands": [
+    "make check",
+    "make build",
+    "make test"
+  ],
+  "focused_cases": "Both help.spec.ts EN/ZH cases run inside the original complete browser prerequisite; no extra preview or focused duplicate run",
+  "fresh_web_build_assets_manifest": "gate.*/web-build-assets.json after actual make build success; no old build archive reused",
+  "old_evidence_preserved": [
+    "684f07ef/db7ee24a complete gate failed",
+    "b4e222a7/d0ab719a complete gate failed",
+    "Original schema-60 PostgreSQL cases and source-specific native unit results; no automatic qualification of this prepared source"
+  ],
+  "private_domain": {
+    "numbered_migration": false,
+    "public_api_or_routes_added": false,
+    "roadmap_ticked": false
+  },
+  "web_handoff_sha256": "33e7172e6354eded07797eeb7c08a3f3352a80df44e08851ec7f40689edbf1af",
+  "linux_heavy_authorized": false,
+  "runtime_test_started": false
+}
