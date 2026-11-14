@@ -1,0 +1,19 @@
+go 1.27.0
+
+use (
+	./api
+	./deploy/offline
+	./pkg/capabilities
+	./pkg/license
+	./pkg/operatorsocket
+	./services/agent
+	./services/control
+	./tests/e2e
+<<<<<<< HEAD
+	./tools/audit-verify
+=======
+	./tools/cli
+>>>>>>> 99b0376 (DEV-102: Add the offline operator CLI)
+	./tools/dev/simulator
+	./tools/release/offline
+)

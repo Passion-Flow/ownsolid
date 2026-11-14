@@ -1,0 +1,2026 @@
+{
+  "scope": "Unvalidated source and configuration drafts; not a buildable product branch",
+  "originals_retained": true,
+  "sources": [
+    {
+      "sha": "001bd1dded15144e2eae63b056b1eb4f9004372b",
+      "bytes": 86769,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "e9a94e4b552d1b47bf6c85126d7956ef101769aa",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "277479fd48528b620b6807188df24b34fc4e14eb732c20dbd3e82b99502ec248"
+    },
+    {
+      "sha": "00a07857a6a270b4583bf349dec25412a60d0b5e",
+      "bytes": 116121,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "67c5b5d899ce2806c90acc66e214a21b92c35d95",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "b75b91059c1effa6bbce3590ea95ed38a3adc448ec4e85b297ccbb7302e9d8f4"
+    },
+    {
+      "sha": "02a1a3c947516f24a54cb9fd2393145f4669b9f6",
+      "bytes": 34621,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "96e36a20bb8999202adaaf7dd66c9d711b758f6b",
+          "path": "docs/research/telemetry-retention-tiers.md"
+        }
+      ],
+      "sha256": "58f13dd27b09db353b0d99a663cd937f8d6accfd5a235db567e3cf6ccd265b1a"
+    },
+    {
+      "sha": "045c18a8ffb67e4922090f1a50e3f908b8e54b01",
+      "bytes": 358004,
+      "known_source_tree": false,
+      "json_top_keys": [
+        "openapi",
+        "info",
+        "servers",
+        "paths",
+        "components"
+      ],
+      "classification": "JSON data",
+      "tree_paths": [
+        {
+          "root_tree": "b85445289ebe544f677be506f6a55b0262407742",
+          "path": "api/openapi/v1/nodes/openapi.json"
+        }
+      ],
+      "sha256": "51be8ad7cb45a919dec3f2401a5d5e767dd95e8374f0538b232df338253abaf9"
+    },
+    {
+      "sha": "0566dd9f11834a5e8f52b5177d5cf413196a1d33",
+      "bytes": 7296,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "3e25ca778656272ec1933f704724bdfb16913474",
+          "path": "api/release/v1/mvp-postgresql-cpu-v1-lineage.json"
+        }
+      ],
+      "sha256": "f27e04b3d749e448b566240351d6c439d5358c247ce410608b3986676a917d9a"
+    },
+    {
+      "sha": "05f4713603775b5c1cae46b58ca755e35d9fb374",
+      "bytes": 10928,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/control/internal/modules/identity/http/agent_path.go"
+        }
+      ],
+      "sha256": "118b95c1068f844a59f49985681bff32b9ff40b9d9372f7a071d8c8bf68c1a45"
+    },
+    {
+      "sha": "06cde8d69aa18369e4d55a82441c869627ae298c",
+      "bytes": 30767,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "fa42f9e096162c4b53dbbcfac527226799a5fd5c",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "ca8f445578f929a68545a202b98924347ca59b8db4d31be29c4e76011d08074c"
+    },
+    {
+      "sha": "07d39951f11cb0568bd9c97fdc8347961184abc0",
+      "bytes": 18309,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/control/internal/modules/nodes/task_runtime_repository.go"
+        }
+      ],
+      "sha256": "b6e8cb787ef1add0e34c7368bafb1b0501c59f167153c952e707f33d894f6553"
+    },
+    {
+      "sha": "0ccdda216e47ff1b93e7d0642b5ab1efdf43afa7",
+      "bytes": 7955,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "031317e3d7aa01b1b70e168a2741f6fb3041b916",
+          "path": "api/release/v1/mvp-postgresql-cpu-v1-lineage.json"
+        }
+      ],
+      "sha256": "94cde7520a76980e6882a983da8c49af05d54c6e5f56c50107c3cc93225f5562"
+    },
+    {
+      "sha": "0d6dd4741f279b45a99c1cb047b0ae3e9115eeac",
+      "bytes": 104460,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "1456d2bedadcd121c29f44e9a6ff0febfb015da3",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "2458221989f2e46f202c82abeb1de2cba587214934e3da854a867a397693b41e"
+    },
+    {
+      "sha": "10524a42157b51e59f5f7df31aa50b2add7bcb6a",
+      "bytes": 225731,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "api/agent/v1/schema.json"
+        }
+      ],
+      "sha256": "a81a8341ba0581b6d5ce65d6a15a6e455c30e1f1a474b0e9b89bc8569fcf086d"
+    },
+    {
+      "sha": "12cad1147b3a3f2fcac39f1934c03bc2b30e4636",
+      "bytes": 4280,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/agent/internal/runtime/component_recovery_linux_test.go"
+        }
+      ],
+      "sha256": "f33b4537e5f671429e419c70cbe862269620369ce889a2cb33877af41f4fed30"
+    },
+    {
+      "sha": "1361589c38546b6730c712d9dab26d17377e412c",
+      "bytes": 167467,
+      "known_source_tree": false,
+      "json_top_keys": [
+        "account.backToAccount",
+        "account.created",
+        "account.email",
+        "account.language.auto",
+        "account.language.hint",
+        "account.language.label",
+        "account.language.title",
+        "account.password.changed",
+        "account.password.current",
+        "account.password.currentRequired",
+        "account.password.submit",
+        "account.password.subtitle",
+        "account.password.title",
+        "account.profile.name",
+        "account.profile.nameRequired",
+        "account.profile.save",
+        "account.profile.saved",
+        "account.profile.title",
+        "account.providers.empty.detail",
+        "account.providers.empty.title"
+      ],
+      "classification": "JSON data",
+      "tree_paths": [],
+      "sha256": "14db0054339f7bf3a49cb4256f91f0fcb1dd13685152cf6649d6fcd470714628"
+    },
+    {
+      "sha": "151782afa20b0d0c7a55ca3cb8b277d2cd451fd4",
+      "bytes": 4280,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/agent/internal/runtime/component_recovery_linux_test.go"
+        }
+      ],
+      "sha256": "ed6ace596badff35e2f0e97b0e2eb668c5e641592e31c9e64dd3cd653395f8b5"
+    },
+    {
+      "sha": "156d5cb1323e28272ef68aede4be2f7c011f6968",
+      "bytes": 16906,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/control/internal/modules/nodes/task_execution_repository.go"
+        }
+      ],
+      "sha256": "5f488f36f754482ad0267f9a52972198a3b3532d8ac931f1c6e8378712cba7e8"
+    },
+    {
+      "sha": "160345b3a56acb6cc32226ca7da32d698c9f70e9",
+      "bytes": 5311,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/control/internal/platform/database/catalog.go"
+        }
+      ],
+      "sha256": "5a1fbff5aa4885e662f17f163c23968b0d8a2731e55c58bc494db40795d2cadd"
+    },
+    {
+      "sha": "162069ce371dbba237c1a5676f551540300427c4",
+      "bytes": 5043,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "db656f8d99abb7cdaa8af876e5ef7fb942b39ee7",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "311cf76b702fbbf53be7aa61f09f69f0f7b5b8900cb38620b40c0bcba5db5f6a"
+    },
+    {
+      "sha": "17b2ee63fdce11dda846392d06da4078f8e634de",
+      "bytes": 109998,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "3442662855c5dbaeb011e64347a5b79d88ce44ff",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "75d34be1e6ca03f2a809452a4c88c1eeb72e5c6c07f71a1a609c65d5fabc28cc"
+    },
+    {
+      "sha": "19791de9dbd0bb95648701211b80a0250dd3371a",
+      "bytes": 5174,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "3e25ca778656272ec1933f704724bdfb16913474",
+          "path": "services/control/internal/platform/database/catalog.go"
+        }
+      ],
+      "sha256": "52544c430a85f7a1de1dc33b9ceb2e636a0a010cbe4535c49c8bba4a77ec5dc7"
+    },
+    {
+      "sha": "1ae605f69946961f0a2aebd3d511ba62041cf7e5",
+      "bytes": 5189,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "031317e3d7aa01b1b70e168a2741f6fb3041b916",
+          "path": "services/control/internal/platform/database/catalog.go"
+        }
+      ],
+      "sha256": "935d17edeeb97a6fef3edfd51439540b10a7250a6654c7cc95d1b1cf5826ab24"
+    },
+    {
+      "sha": "1c6ea68af3b2d2920fb9aab465a500e4a40acaaa",
+      "bytes": 18669,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [],
+      "sha256": "f7b6792b95422f5f55217224309969f8641a324e8a0dd0e726a79fed5dfcfe81"
+    },
+    {
+      "sha": "1d434c8c63ae2766b2acdefafe3da75b8a16de89",
+      "bytes": 11890,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "7fe09dcbe8fd5bc07793efa7da480392b61eda3e",
+          "path": "docs/product/roadmap/index.md"
+        }
+      ],
+      "sha256": "e3f6e54330f82d780e3a1c16001380ba1701ef09f013c826b1880e3e0c48a992"
+    },
+    {
+      "sha": "1eb65113643ecf2509724df2a7659470c7317670",
+      "bytes": 3804,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/agent/internal/runtime/component_recovery_test.go"
+        }
+      ],
+      "sha256": "673213e7895769aa0d9a4869ed0a06f9630c4b3a2479ab86adbe3b0060be1d99"
+    },
+    {
+      "sha": "1f905570d26db51d3ed1e3562d2e561b63660ae3",
+      "bytes": 10654,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "20c4c70180bf656a388a4ba0ae38e030a11f3196df186b80b3809b2fc77b34c0"
+    },
+    {
+      "sha": "274ac0663c071d6f1e63effc57f9b343e8f9afdd",
+      "bytes": 1589,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "api/release/v1/postgres_application.go"
+        }
+      ],
+      "sha256": "2cc1f86335eb6ead0b14497d7448d4ddb4dc349c3bb3f385fba844e957bed939"
+    },
+    {
+      "sha": "2a73701e6b9615fbcf9842c681ecb917c1ed8d17",
+      "bytes": 1590,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "3e25ca778656272ec1933f704724bdfb16913474",
+          "path": "api/release/v1/postgres_application.go"
+        }
+      ],
+      "sha256": "dae356b327919d097202ac259a012a6c8da34cd967c2eefa807e70ab05e31795"
+    },
+    {
+      "sha": "2c7b7f268f733122485574eaa13c0436b31ccc3e",
+      "bytes": 8453,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "4b3171b72a95426696d646ab9b1af919a5db7c34",
+          "path": "docs/product/roadmap/usability-and-localization.md"
+        },
+        {
+          "root_tree": "7fe09dcbe8fd5bc07793efa7da480392b61eda3e",
+          "path": "docs/product/roadmap/usability-and-localization.md"
+        }
+      ],
+      "sha256": "4d5c128048ad7959c5be3a3b3e41d8de065ac12d82266900ab54b01e19efaed1"
+    },
+    {
+      "sha": "2cf6d66f29a34095b4bf05eec7f9185a1e0c5622",
+      "bytes": 13139,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "06d3abfe6f08c631b077960aaeb800218f7cd5c0",
+          "path": "docs/product/roadmap/index.md"
+        }
+      ],
+      "sha256": "2cefc68c23bbb54af9879c5d47b5fef874e97225c9e39058d03da9f091824dc3"
+    },
+    {
+      "sha": "2d18922f395c094c8a63f8242dde928be48146b2",
+      "bytes": 6293,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [],
+      "sha256": "2ff332e2188e58920bf68703455cdf4d286038ad081cc60102ecec5c4bc9c255"
+    },
+    {
+      "sha": "2dbca7471dcba363d07cea1907763cde0411842a",
+      "bytes": 200064,
+      "known_source_tree": false,
+      "classification": "TypeScript source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "web/packages/api/src/gen/nodes.ts"
+        }
+      ],
+      "sha256": "3aa2c63edb780c13ebb157f5b94a5f0e0b5fb66e3313c398bea0a4898b9460ee"
+    },
+    {
+      "sha": "2f81da366bac59008b5030a9f191f21efbac1b0f",
+      "bytes": 1291,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "1dc08908bc12b12ab0951c5ce8358f0ab5e83ea8",
+          "path": "services/control/internal/operations/databaseaccess/postgres_catalog.go"
+        }
+      ],
+      "sha256": "478078f2a49dd7bdba4470f087d9fef191ebff5b78d8043bb84257ba0ca1abac"
+    },
+    {
+      "sha": "32097919ac085064011938846358be0a31e5940f",
+      "bytes": 58619,
+      "known_source_tree": false,
+      "classification": "Rust source",
+      "tree_paths": [
+        {
+          "root_tree": "a595bccadfc9fd95a6742f8fdbd9a79ae24d9444",
+          "path": "services/gateway/src/routing_tests.rs"
+        }
+      ],
+      "sha256": "75546c86c4f1e2ba97ed30e29356d35fa6c262c6cd8ad4a1cf5da9b8f25f5e40"
+    },
+    {
+      "sha": "354240d6469ef73cbfe97b8c137457719b59144f",
+      "bytes": 8743,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "3e25ca778656272ec1933f704724bdfb16913474",
+          "path": "services/control/internal/platform/database/database.go"
+        }
+      ],
+      "sha256": "ec56b159eaa02aea53bab8e3e0e9d5ed7170ebf4740ca44158978973180efe58"
+    },
+    {
+      "sha": "373e60aa38fb636d7f020f45acebfa7e34bcb59d",
+      "bytes": 12358,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "api/release/v1/mvp-postgresql-cpu-v1-lineage.json"
+        }
+      ],
+      "sha256": "7f7f6cb0b8cbf65521048e60d319e0cb2f285ac898eeb19ca38f74a733e56ee9"
+    },
+    {
+      "sha": "3825ac05c09ba3cb011dc7a07b52055a56986e82",
+      "bytes": 171554,
+      "known_source_tree": false,
+      "json_top_keys": [
+        "account.backToAccount",
+        "account.created",
+        "account.email",
+        "account.language.auto",
+        "account.language.hint",
+        "account.language.label",
+        "account.language.title",
+        "account.password.changed",
+        "account.password.current",
+        "account.password.currentRequired",
+        "account.password.submit",
+        "account.password.subtitle",
+        "account.password.title",
+        "account.profile.name",
+        "account.profile.nameRequired",
+        "account.profile.save",
+        "account.profile.saved",
+        "account.profile.title",
+        "account.providers.empty.detail",
+        "account.providers.empty.title"
+      ],
+      "classification": "JSON data",
+      "tree_paths": [],
+      "sha256": "863c393c181aec0ffb265bb600b136db91a85d4abd837871e7193747cccb3259"
+    },
+    {
+      "sha": "3b627a4f49a8e9cc2a4b704159ecf6ab02661f8b",
+      "bytes": 9985,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [],
+      "sha256": "5156cf39cd4659a785d788a2130cc9b13a33a7f2c60b22631acae7171db8fc6a"
+    },
+    {
+      "sha": "3c85d9b2507b0014b67726ab934d65b87225cf4a",
+      "bytes": 6094,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "62011b840cfea8b81a04a22ee9a70d894be65491",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "c06c0c229a9523460b194233e096fa47c3ddea8561de1c9571011ac154bd15a2"
+    },
+    {
+      "sha": "3cf9483b978f0aa492549f8c84ea4047c83b87a2",
+      "bytes": 12818,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "fa9c105b5227c3a545fe1e1eeb655a65eef86f12",
+          "path": "docs/product/roadmap/index.md"
+        }
+      ],
+      "sha256": "302f7ec516df89dba65bd29991a2c00b124e793fe25689a6bcbe7fa696ff8f6d"
+    },
+    {
+      "sha": "3de31460c8082b0fafa783cb34718964b6614d01",
+      "bytes": 1605,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "031317e3d7aa01b1b70e168a2741f6fb3041b916",
+          "path": "api/release/v1/postgres_application.go"
+        }
+      ],
+      "sha256": "ec39abee1285f965abd2b071dbb7e24ae253d3fc4ac4e60f59f7987567a88e52"
+    },
+    {
+      "sha": "3f57cc4cf63d66d11423d6b2e20a088ff24b2138",
+      "bytes": 48791,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "88d7c92243d6002074a7cac5e1267f489875fccd",
+          "path": "docs/research/training-published-file-readers.md"
+        }
+      ],
+      "sha256": "bdeb644b63e8f409fb05297d77c97fdd1d6b1f83cee3a18763915ced37786236"
+    },
+    {
+      "sha": "41135fafc57e229b11fad3c9ba3fba1a559c7a38",
+      "bytes": 13785,
+      "known_source_tree": false,
+      "classification": "TypeScript source",
+      "tree_paths": [
+        {
+          "root_tree": "1456d2bedadcd121c29f44e9a6ff0febfb015da3",
+          "path": "web/packages/shell/testing/help-flows.ts"
+        }
+      ],
+      "sha256": "c88103683ae9238ee77cff46ee96bf5dc08a9dd275dfc453764d8f913fec4626"
+    },
+    {
+      "sha": "432195375dbe3149a97d3bcc7e4550116149c891",
+      "bytes": 4426,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "326f23f498b7fdf04bbe76017ceb330bde083f78",
+          "path": "services/control/internal/platform/httpserver/aged_connections.go"
+        },
+        {
+          "root_tree": "fa996b6d593ade63cc09cea79b7e708c4f58275a",
+          "path": "services/control/internal/platform/httpserver/aged_connections.go"
+        }
+      ],
+      "sha256": "c4515c993c591efdbfe01903c69f6669b0262d4c2a6b05629ebbf70862394c06"
+    },
+    {
+      "sha": "4351566a140b7ca0f031cd62661f695dc82be648",
+      "bytes": 23220,
+      "known_source_tree": false,
+      "classification": "Rust source",
+      "tree_paths": [
+        {
+          "root_tree": "a595bccadfc9fd95a6742f8fdbd9a79ae24d9444",
+          "path": "services/gateway/src/configuration.rs"
+        }
+      ],
+      "sha256": "5897c5faa54622b7fe132c79e217f89dc69f1810f8a917d2558b8df56dc2fda0"
+    },
+    {
+      "sha": "4377dee4b47529e070191c886163b76d97faec5e",
+      "bytes": 88759,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "fb48439c3a4d44b1a91d672a156f2db69688b632",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "424c6198b00fb71f5f8bb2f70acdfa5af29667b745564c1b03ef958325aa4383"
+    },
+    {
+      "sha": "43d951b898f6fc85234e591a9e8660539fd7a242",
+      "bytes": 38994,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "9f42efa9361c581c2c916ee74b8062b3169f5843",
+          "path": "docs/research/telemetry-retention-tiers.md"
+        }
+      ],
+      "sha256": "3bd88ee9a759ac5b585949c68781979bd55d35870abf4ece29e4156423b31fc0"
+    },
+    {
+      "sha": "440a09d058c5e97b52972fe8ba3a835d56872d8e",
+      "bytes": 7003,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/control/internal/modules/nodes/service.go"
+        }
+      ],
+      "sha256": "721f4e01dd57e51881dec81ab7784322555b6475bc8fca6afc44a736ade704b2"
+    },
+    {
+      "sha": "448a7e894a0de3b4387f63c47491e519c273042f",
+      "bytes": 8515,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "6d7085bf2ad3e346fe26b164b0778f61b264edc81719738e2759616963c2ca20"
+    },
+    {
+      "sha": "466bb8794fef03669370748aa31aa879af602459",
+      "bytes": 420570,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "api/openapi/v1/nodes/openapi.json"
+        }
+      ],
+      "sha256": "160f9556665482d382106d74befa976d216e48941fc523309c4ebbf9a1534cf7"
+    },
+    {
+      "sha": "482fb72f3a279032941b57fa9ce0d1663653c041",
+      "bytes": 1340,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "b2dc64817a13b4455a0dd64125f94a915d1d1212",
+          "path": "tools/lint/layout/rules.json"
+        }
+      ],
+      "sha256": "5d93f6aa72cfdbba013713fd42d3e3cd8cafc60f05b01852a2422ab3f99c5b92"
+    },
+    {
+      "sha": "48d81c7a18114c9f997fb2d322b2b60672e1cfde",
+      "bytes": 88287,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "0e5a3fe516b05aca2cb39f75fda33d43f0ecdc5b",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "6c2fdd81101202fe7bcaa774d1d6151d5cd1c64c3f3bf6e1dff55c2c4b5646e6"
+    },
+    {
+      "sha": "4e0269207c18da40e3b34d5143b2ff7544c5cfe0",
+      "bytes": 9121,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "ecf43592379b403ea8aec5031a574cc4d7e58225000ad4998823cea14ef7344b"
+    },
+    {
+      "sha": "4e845988517b9c7f61b2fa9a1c896a036ba32bb2",
+      "bytes": 420570,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "api/openapi/v1/nodes/openapi.json"
+        }
+      ],
+      "sha256": "4f3913ac87aac1e60ce58f45788bc4030bd303acdd9d0f42487e4cf4f6bfb9eb"
+    },
+    {
+      "sha": "530b2e3b07dbd068a989ed24507c1b88a0b3ecba",
+      "bytes": 86235,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "bd0f50e594782f3e559f243c60fe5f8b18aed32c",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "c4b9fa05d5d817b963ffe4351b51dc82b3e8f004c52788f49f081d15c88c2e9d"
+    },
+    {
+      "sha": "55552c84af11be28554e29166a6acccc1d183d77",
+      "bytes": 57441,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "67c5b5d899ce2806c90acc66e214a21b92c35d95",
+          "path": "docs/research/training-published-file-readers.md"
+        }
+      ],
+      "sha256": "22a467b95361c4c1c869f47b65036870405fb2c9b5f929770477bc06f86dd36a"
+    },
+    {
+      "sha": "5a4258147aa2e832b5afde7e6639d608328a740a",
+      "bytes": 21629,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "d75fb6d899ab727654b4f3001bfa205caecb70fa7827bd12c78778788f3544e8"
+    },
+    {
+      "sha": "5ae05f8b78e83b563b37fb3072859fc0c48a3803",
+      "bytes": 22409,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/control/config/examples/control/control.example.yaml"
+        }
+      ],
+      "sha256": "fe4322692d28d254eff3bf1c366211b7fea7592b961a2710320c9cc2da0543a6"
+    },
+    {
+      "sha": "5b8066ee3aca3426d4c413c14de2eefc8eb6d2e9",
+      "bytes": 315732,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "web/packages/help/src/gen/contracts/portal/nodes.json"
+        }
+      ],
+      "sha256": "ca83e8f3d16f239c19722ff20a362524e65b8cd5b69075be5cfc33889bca7ff6"
+    },
+    {
+      "sha": "5cb7e7af39014f0692b1a93b8f84dc232c11f0a8",
+      "bytes": 22409,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/control/config/examples/control/control.example.yaml"
+        }
+      ],
+      "sha256": "2473b376893c656df99a94d7918f382fe439017c70e326ec93c49cb3ca7be3bf"
+    },
+    {
+      "sha": "5cc84433e14b996b389107bfbb5dbbd1dc65c3cc",
+      "bytes": 85278,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "e8fe36a750df2f30e9e3bdeb297e351aeb74a90e",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "69c0ab5ff52b68fa1b17be1a01817cf4b5a07cb8d5bd1c56411861483e761bc8"
+    },
+    {
+      "sha": "5f631aa4e22593fd60d222ddfe984c51fbc3c7fd",
+      "bytes": 12358,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "api/release/v1/mvp-postgresql-cpu-v1-lineage.json"
+        }
+      ],
+      "sha256": "278291ab485768f09b8652d1cb19ab29038b5c79d75cfbc09489ef0e1dd73a47"
+    },
+    {
+      "sha": "60b51c1df8293093f05d0898584c077eb8b70214",
+      "bytes": 80758,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "d175073237db4cb7d475b03fe548498479af4b84",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "f68dddeb03bb3e05b6d765792ae74014b408bb0fd3a5d93194200118e2dd90f0"
+    },
+    {
+      "sha": "61fd7ca4af8d336e5929bbd98c3f1d3f56d338df",
+      "bytes": 350410,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "web/packages/help/src/gen/contracts/console/nodes.json"
+        }
+      ],
+      "sha256": "2762b763cfe1356d51f20254ae21e30251d7745b3633128b1fc1e064270a84e5"
+    },
+    {
+      "sha": "63064357e40c2c1d8f6dceeaf04e6f3cafe2265d",
+      "bytes": 24175,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "4ba7d8a6dff2f457504041b6e296a0926a0134d95218c733b076aec52278db9a"
+    },
+    {
+      "sha": "63d233ef537ce78c148a8b0ddaf00d90fe3794ff",
+      "bytes": 16056,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "2c6043c3b8911d28eddd1928a84e69352f88b5c73270b138d052ad07d957ed00"
+    },
+    {
+      "sha": "6655823b89f95bee5ee99f09b72a00ed6b607591",
+      "bytes": 86520,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "a0eaf7c1bc9d2bc0928f4f5dbedbb5c16776b86f",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "212c0b7a6883ec6657e53225b7f6d3e4637adc38e4cce7f0d5eb286ad3b389f0"
+    },
+    {
+      "sha": "6843a6334129a7d2c27b01b1085daa3fc6b6d0f7",
+      "bytes": 8217,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "fb38be97cca7119103c82cf5388f83ff0e15080e",
+          "path": "api/release/v1/mvp-postgresql-cpu-v1-lineage.json"
+        }
+      ],
+      "sha256": "1de50f11cf208f29678265b9751745bab18c0b96c1a31b122ad7c2f8bfa6943d"
+    },
+    {
+      "sha": "6a5d7a961be444d578d6430f66e10c9b0df35a3d",
+      "bytes": 22068,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "e2a7f0857bbb53dbabcfe7a77a635b4b7cf44ed3",
+          "path": "docs/research/identity-audit-read-access.md"
+        }
+      ],
+      "sha256": "bf4bbee17809b8ca932a646715dcc82eea8d33a3a818e1c8bfd55e1e9b7374a6"
+    },
+    {
+      "sha": "6ad1a901cd5c1b4bf90445354327bfad3174fd40",
+      "bytes": 13421,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "a31249218202cb56ec0a5a05b4964752a470044d",
+          "path": "docs/research/site-registry-pin-admission.md"
+        }
+      ],
+      "sha256": "41083582be439b42728221d186ecdb52a462b8d474df6b5483a689e89fe2702d"
+    },
+    {
+      "sha": "6bdf7a1b0b02a693e7b6d29d3c9b0252f0cb3b7f",
+      "bytes": 8627,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "1dc08908bc12b12ab0951c5ce8358f0ab5e83ea8",
+          "path": "api/release/v1/mvp-postgresql-cpu-v1-lineage.json"
+        }
+      ],
+      "sha256": "e98eac500a0186d160680f705a87e7741bda56dd88ddca439b90048bae86889f"
+    },
+    {
+      "sha": "6bf924a22c5f628ababea52ae844d0e1a340d981",
+      "bytes": 10928,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/control/internal/modules/identity/http/agent_path.go"
+        }
+      ],
+      "sha256": "ab0e764aa8fd00a9d044d6bbe7ae11840db0c9dcea2f39b5d99d8c4c169b816e"
+    },
+    {
+      "sha": "6eb7af7ac38f9aca9b93724e25437a1ce1d9b53c",
+      "bytes": 164528,
+      "known_source_tree": false,
+      "json_top_keys": [
+        "account.backToAccount",
+        "account.created",
+        "account.email",
+        "account.language.auto",
+        "account.language.hint",
+        "account.language.label",
+        "account.language.title",
+        "account.password.changed",
+        "account.password.current",
+        "account.password.currentRequired",
+        "account.password.submit",
+        "account.password.subtitle",
+        "account.password.title",
+        "account.profile.name",
+        "account.profile.nameRequired",
+        "account.profile.save",
+        "account.profile.saved",
+        "account.profile.title",
+        "account.providers.empty.detail",
+        "account.providers.empty.title"
+      ],
+      "classification": "JSON data",
+      "tree_paths": [],
+      "sha256": "c82e264cb93c58e8f9989ae0690dabf8087d6d38db19d3ccb25f16e6fddca38f"
+    },
+    {
+      "sha": "70c6385cf763604417f3fd505a7dbb543806cc94",
+      "bytes": 6843,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/agent/internal/runtime/lifecycle_startup_container_test.go"
+        }
+      ],
+      "sha256": "2ae7eed508e35e7f0f8974a0aa6d9f1625a70931957e1a689690e14ff136333f"
+    },
+    {
+      "sha": "72073e32365a4e135769591f34fa3ca580501d57",
+      "bytes": 24569,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "a80221a70b019cf415783f1483a33421332683522afa60ea650edcd4358e54e1"
+    },
+    {
+      "sha": "74f7a3f74514d8e3fd415afaf8eaaa2ca6e093da",
+      "bytes": 26054,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "9dac477e830709d6f34808206905127e6c3d13a1",
+          "path": "docs/research/telemetry-retention-tiers.md"
+        }
+      ],
+      "sha256": "2f6fcebb6e2283b06ca986af644ba9e304240f8e5529cd83196075dc89864b55"
+    },
+    {
+      "sha": "75b767f455394842e2e67ec9b248fe0f4412445e",
+      "bytes": 1589,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "api/release/v1/postgres_application.go"
+        }
+      ],
+      "sha256": "db709c53ff186d100b7a98cb4a8548148734510884cc80ce74b7f734e0785021"
+    },
+    {
+      "sha": "75fad8bbb2f3e9102fa7f7e39815d39a218721ab",
+      "bytes": 8008,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "api/agent/v1/calls.go"
+        }
+      ],
+      "sha256": "c6d538e3375a778a7a4d192765ba6ad92861b884a05ef632bdca354c84454e5b"
+    },
+    {
+      "sha": "767a76f268123b38887e97e9d1b42384f7856cb8",
+      "bytes": 274023,
+      "known_source_tree": false,
+      "json_top_keys": [
+        "openapi",
+        "info",
+        "servers",
+        "paths",
+        "components"
+      ],
+      "classification": "JSON data",
+      "tree_paths": [
+        {
+          "root_tree": "b85445289ebe544f677be506f6a55b0262407742",
+          "path": "api/openapi/v1/components/openapi.json"
+        }
+      ],
+      "sha256": "bb8450e57f203e5010ffbc6121f41fb1f1b2a97a5d6149c3542508ee94d661f7"
+    },
+    {
+      "sha": "774e948b932e81f52d340846427058468be4bdd2",
+      "bytes": 29995,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/agent/internal/runtime/runtime.go"
+        }
+      ],
+      "sha256": "69b6f773f9e7308aa53fc9a3f358ce207fd9cda78fd1bef971b88a49b296da5c"
+    },
+    {
+      "sha": "7965b8b8fc67c379dc72d4a199387fb74a196165",
+      "bytes": 10943,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "db656f8d99abb7cdaa8af876e5ef7fb942b39ee7",
+          "path": "tests/e2e/agent_session_test.go"
+        }
+      ],
+      "sha256": "f6d7c4055319635ed5b0c7588bad27f8b5ff594060d24ab71dad59859833da97"
+    },
+    {
+      "sha": "7d4c49985ac90fa37dbaca2ecf159008ae22cac1",
+      "bytes": 7683,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [],
+      "sha256": "f7b1a53b067d25bc612e4d1b574eebc0aeb5e1aa6122b9ed681265e40d6f3090"
+    },
+    {
+      "sha": "809e22ada17012d6e5f793c0dfb210ba505099df",
+      "bytes": 350410,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "web/packages/help/src/gen/contracts/console/nodes.json"
+        }
+      ],
+      "sha256": "a3d4a0fedc3d6eec4a953c856cb11aeb126ad2a7e16ebccc73dd1e6fd6e657ea"
+    },
+    {
+      "sha": "80e43c7bf2ae012aa28ec1e14f070735b07d92bb",
+      "bytes": 134868,
+      "known_source_tree": false,
+      "classification": "TypeScript source",
+      "tree_paths": [
+        {
+          "root_tree": "b85445289ebe544f677be506f6a55b0262407742",
+          "path": "web/packages/api/src/gen/components.ts"
+        }
+      ],
+      "sha256": "a0c474eb3212dc16777475a449b27b31cd4ff830467f641a331b7b436be3c3fe"
+    },
+    {
+      "sha": "85b5a75aa7c8ac4955972ec6dde8a571f3f9c52f",
+      "bytes": 3689,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [],
+      "sha256": "3b39810702770138e64cee046b1b16d7708536c77e31c9f3f90ad5cec4910c8a"
+    },
+    {
+      "sha": "860a3eda2a90d16f65532030d80ca83605c72921",
+      "bytes": 4605,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [],
+      "sha256": "f80ee2863300351400b7e0b3e49afd4f88e1f277c4236af6a298474b26e7b897"
+    },
+    {
+      "sha": "89345a4c5df58f6cce9098bab25830cf30883dca",
+      "bytes": 207000,
+      "known_source_tree": false,
+      "json_top_keys": [
+        "$schema",
+        "title",
+        "components"
+      ],
+      "classification": "JSON data",
+      "tree_paths": [
+        {
+          "root_tree": "b85445289ebe544f677be506f6a55b0262407742",
+          "path": "api/agent/v1/schema.json"
+        }
+      ],
+      "sha256": "005db5d84a1b735f18aaa051b7308d22e2ffdb7649a6cc8052709f0a547787c7"
+    },
+    {
+      "sha": "8a43b18fb0b798ca3ea48c8da7741c46ac5b6443",
+      "bytes": 106063,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "0ca278aa9d457eea13c132a23d1bef1545584803",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "5b24868218ff1334fe02b97db695772aa105e5a826b7762f41fe19100355011e"
+    },
+    {
+      "sha": "8a7f8e8fd59684792d01b8f43a6291888e1a6e73",
+      "bytes": 191381,
+      "known_source_tree": false,
+      "classification": "TypeScript source",
+      "tree_paths": [
+        {
+          "root_tree": "b85445289ebe544f677be506f6a55b0262407742",
+          "path": "web/packages/api/src/gen/nodes.ts"
+        }
+      ],
+      "sha256": "5bbc8b941c7a774f8a1b5341729fdd8f61ca1902239441f13e8b4120d518fb24"
+    },
+    {
+      "sha": "8b80f7e79df984bb1f8376287b2c610b81ae4342",
+      "bytes": 16404,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "41466c547bb591fecad16f57f9a517270eae2d64",
+          "path": "docs/research/in-product-help.md"
+        }
+      ],
+      "sha256": "25021d00d61ab55eea146782bae27a883d0ea8f6ab39e9783afed94651b66355"
+    },
+    {
+      "sha": "8c713ec77dfeaa40e6a3f34a5c76ba68105ad23b",
+      "bytes": 5821,
+      "known_source_tree": false,
+      "classification": "Python source",
+      "tree_paths": [],
+      "sha256": "7deb971f6ac2b8da72f67b4e78ab5f11d682ca67f4f482c69db5600c08ca8dec"
+    },
+    {
+      "sha": "8dc48c3cb0362d214c2e066be43e1107e602cf25",
+      "bytes": 109291,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "315cbbc4f6ea26b20df264c0473467da30358e07",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "6011533553867af3474e71aba517f4d82d04a0d07f03f8ddf7c0f3d0a93de713"
+    },
+    {
+      "sha": "8efb3633d288fabb5b1f8a7ae851a1ed190065ec",
+      "bytes": 8008,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "api/agent/v1/calls.go"
+        }
+      ],
+      "sha256": "df38661504397f9443f0405df6421a9643ca666b9cc7e7b588598f68ea74d081"
+    },
+    {
+      "sha": "8efd580de0dea025b7c5176f110b39b0d9bbffbb",
+      "bytes": 9163,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "b85445289ebe544f677be506f6a55b0262407742",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "f755fffc9cc3b777ccb8f7478779b79667c1112b0974978b2ca6637c700ee621"
+    },
+    {
+      "sha": "904d142ee58328a8215b983f767419f120c24308",
+      "bytes": 23705,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "1b8d9a6855805ca784708ff448b4c3a96d495511",
+          "path": "services/agent/internal/runtime/runtime.go"
+        }
+      ],
+      "sha256": "1c7a0e3640f929983d7a19d491af48c8a3e53b8a04bb441350dc37604cd8196e"
+    },
+    {
+      "sha": "90ac9eaa11796619f9deec677a1d6f1a25f2c310",
+      "bytes": 104333,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "04264f4bf9337e6e2875dd880d589076786db5c6",
+          "path": "docs/product/status.md"
+        },
+        {
+          "root_tree": "16546082d124405cac2ad49cf5667ca630ec0b2c",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "63ef6fe7fb876b0e2bdb5069ca1cb3832b433426cf300f25b98e52631071672b"
+    },
+    {
+      "sha": "910175371de6e009363e7942f08d448ac19982b1",
+      "bytes": 312,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "b2dc64817a13b4455a0dd64125f94a915d1d1212",
+          "path": "go.work"
+        }
+      ],
+      "sha256": "e161ecda3e2be30bb67a246ea5449362cfc5a9844eb3fa9e1bf6aedb488b687b"
+    },
+    {
+      "sha": "912a7ccff35955ae8e6b3a2e43615af72e9e2bc9",
+      "bytes": 5311,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/control/internal/platform/database/catalog.go"
+        }
+      ],
+      "sha256": "40a05f996391a5a3a6ba102eb52aa918b2ed13d4e2a872162f43d4270d237c77"
+    },
+    {
+      "sha": "93245addbb6055f6d0d6f745297a5e3cb11cce79",
+      "bytes": 61906,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "aa52b65aef17c113a592c7ee49eed88cf22b1a7b2ba178ab50a96374c18eb9c6"
+    },
+    {
+      "sha": "9494d8b0d96b8b6814613b78aa8e40dcaebb17cc",
+      "bytes": 18309,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/control/internal/modules/nodes/task_runtime_repository.go"
+        }
+      ],
+      "sha256": "8105786adc391a0b93c1504ca11e478377fec105c3fa7567728dd96b39ec201b"
+    },
+    {
+      "sha": "99d21a6fbf7625bfb8f2d66593e821c7b714ad46",
+      "bytes": 5897,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "031317e3d7aa01b1b70e168a2741f6fb3041b916",
+          "path": "services/control/internal/operations/postgresbackup/mvp_native_reference_test.go"
+        }
+      ],
+      "sha256": "068c0ee2df29862ff667f8d78562aae993b6a8afbfee33fe1ef43f9dc5f7d689"
+    },
+    {
+      "sha": "9dd89b9c59b7a0fc2cf888e0fcc50d84e1f3e070",
+      "bytes": 6253,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "api/agent/v1/protocol.go"
+        }
+      ],
+      "sha256": "73f78c1185c04a2e59825c023ef8901dfba96d5b944c1b826ab7fe474fdf0720"
+    },
+    {
+      "sha": "9fb06314ad57e909f840cfc1c0145efb29d6b551",
+      "bytes": 3804,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/agent/internal/runtime/component_recovery_test.go"
+        }
+      ],
+      "sha256": "fc28d301d99487cf897e5465d0a04339d35d489f25be07d299e45f2deabde590"
+    },
+    {
+      "sha": "a03fda3728511a7baa81cecad4dbdab31f344be7",
+      "bytes": 5316,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "031317e3d7aa01b1b70e168a2741f6fb3041b916",
+          "path": "api/release/v1/native_postgres_reference_test.go"
+        }
+      ],
+      "sha256": "04fa54f73eacfb930222ab74906ed68b10506a8cd19f9910e4314acfcc5bdb59"
+    },
+    {
+      "sha": "a084a0d31093d20d50b48c11e1533de3e87e2037",
+      "bytes": 22978,
+      "known_source_tree": false,
+      "classification": "Rust source",
+      "tree_paths": [
+        {
+          "root_tree": "8a26dac8c4155bd26d9bf004e9bd42266be6560e",
+          "path": "services/gateway/src/configuration.rs"
+        }
+      ],
+      "sha256": "1f7017b2023215c778a42c44a05db6bd2fcc329b54311bd556b59e44c60f4b90"
+    },
+    {
+      "sha": "a0fd8e28750b2911339c105c41de3af170a957c8",
+      "bytes": 5178,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "fb38be97cca7119103c82cf5388f83ff0e15080e",
+          "path": "services/control/internal/platform/database/catalog.go"
+        }
+      ],
+      "sha256": "cc12d260abb623713e18c62bee18124fd58cb08740d47c0669a358f3fa8e1884"
+    },
+    {
+      "sha": "a11fe18efb2ae88c71b1db42b78e25f1080f0296",
+      "bytes": 5882,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "3e25ca778656272ec1933f704724bdfb16913474",
+          "path": "services/control/internal/operations/postgresbackup/mvp_native_reference_test.go"
+        }
+      ],
+      "sha256": "5bcb246f9e02cefd7165930c48d5c93cd52763e32853fe3dcaa71fc889ef285f"
+    },
+    {
+      "sha": "a210e4126cd8a92a96d50d42311fb6a39ca967a3",
+      "bytes": 84052,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "c9acbd9acbddaf404c681d9e163b6bb313844d4a",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "f83000a19877262638ec6cd1ebdb3c386bfb24b7b655a4ddb5a83bc4ff1c05c7"
+    },
+    {
+      "sha": "a3a4435d49c13f18367e6351a56eed098f449bf1",
+      "bytes": 7003,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/control/internal/modules/nodes/service.go"
+        }
+      ],
+      "sha256": "9c69a1deefee779f0411dbbefeb490bd7266c16431a8195d28efdf3ccfc8ef02"
+    },
+    {
+      "sha": "a5868ae4ad44fd6f0c047be2d6880737b9b43613",
+      "bytes": 11890,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "4b3171b72a95426696d646ab9b1af919a5db7c34",
+          "path": "docs/product/roadmap/index.md"
+        }
+      ],
+      "sha256": "58d396f0273ae261399d77621ef8f67d2c0e2b17edce31fc100c99b2f198ab7b"
+    },
+    {
+      "sha": "a6e55df10b42fef387397f1fd9046d7f4d59eec3",
+      "bytes": 10549,
+      "known_source_tree": false,
+      "classification": "TypeScript source",
+      "tree_paths": [],
+      "sha256": "ad28d7d06ccf70d85669d4d5bfcc967370fa5e36493e1d3ad950d8118f2ec5c9"
+    },
+    {
+      "sha": "a71e524c24d3619cb5be571305966a8cf6cd9c22",
+      "bytes": 315732,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "web/packages/help/src/gen/contracts/portal/nodes.json"
+        }
+      ],
+      "sha256": "936e195de9816ef805e64b25e246bb1ac991c92eab880f3af43c6f0a60791031"
+    },
+    {
+      "sha": "a839051b5680c8976b89addb86a0a0f212e460ca",
+      "bytes": 200064,
+      "known_source_tree": false,
+      "classification": "TypeScript source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "web/packages/api/src/gen/nodes.ts"
+        }
+      ],
+      "sha256": "24a131534332de64824b02c6563f28037ba5e82e796141b8bab528caa216fca2"
+    },
+    {
+      "sha": "a8d314d13b4f32c4d758a783c9d0ab74c5fd5db2",
+      "bytes": 23555,
+      "known_source_tree": false,
+      "classification": "TypeScript source",
+      "tree_paths": [],
+      "sha256": "e500997c1a4acad5a81c391e8eef210fc95fe84de5cf3a11b54a30f1a2147f01"
+    },
+    {
+      "sha": "abc445a6f95cd676a9d5c410a3a5cc4dfe11d131",
+      "bytes": 17003,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "b2dc64817a13b4455a0dd64125f94a915d1d1212",
+          "path": "AGENTS.md"
+        }
+      ],
+      "sha256": "b2ff0f17b1e21054009b39fa9d79c7925b72f85235bb4add67a54cd563129621"
+    },
+    {
+      "sha": "af7bc7552137c054ee17e37f8ce4cf49178a0bec",
+      "bytes": 6165,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "031317e3d7aa01b1b70e168a2741f6fb3041b916",
+          "path": "api/release/v1/mvp_delivery_test.go"
+        }
+      ],
+      "sha256": "98f5bcfa23a87f64d65269ee33b03289404de7cc142029d709df6ae46c4c0caa"
+    },
+    {
+      "sha": "afbae38db436a1412ba4d4920c0b7927537f931b",
+      "bytes": 14583,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "f57ef5aa2f186ee403fe5af49910945480213be6",
+          "path": "deploy/offline/internal/install/materialize.go"
+        }
+      ],
+      "sha256": "34929f9601d3b22d73bfa90ac83fc3f6f5023676e56e9fc8b4c575683fdc3085"
+    },
+    {
+      "sha": "afe04d38bca222ede579bb075cfeb8d325b15ee5",
+      "bytes": 13140,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "6b9f8a0c25bf472599155403ae4af9f0f9ceec05",
+          "path": "docs/product/roadmap/index.md"
+        }
+      ],
+      "sha256": "2c428621e5215cb61832ccb264673d7ae7283d402f706602057d7f2f5a5134bb"
+    },
+    {
+      "sha": "b0c456dc553ea54f9b329b3b137e11367e649b32",
+      "bytes": 92896,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "34dcf795bcf120452290da2a6b14dd2cfa766a6f",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "4827c459f31cf13e7f08e8026bcf963fbb0f416587625443376c7c5d809cc3be"
+    },
+    {
+      "sha": "b22db7e3bd8cc5c613f7adc448aa58e7022f4807",
+      "bytes": 60987,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "09524ed7a25c7cc0deec21b180d15ac5a33ed469d7cae06c4b1ecbb46dd92094"
+    },
+    {
+      "sha": "b2f6af35611d81055dea4028c2dc56b5bc569d77",
+      "bytes": 20889,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "64a5e7e5e4cfda0b344ea7f76fb2132fff7eb5c2",
+          "path": "docs/research/in-product-help.md"
+        }
+      ],
+      "sha256": "e5d2d9224da9f460f785f2c8f703e650b54d89a9e1d1800e48e93c506c23150b"
+    },
+    {
+      "sha": "b3c987fe35c11000569c573767ee9324771dc0d9",
+      "bytes": 22402,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [],
+      "sha256": "b36fc66946e15fea1d01ad19d52528f3229ef32218b3d6b6b386d8fa6a55596a"
+    },
+    {
+      "sha": "b589c1630e6c7be800e904e4b491d19b8e0157b3",
+      "bytes": 29533,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "1456d2bedadcd121c29f44e9a6ff0febfb015da3",
+          "path": "docs/research/in-product-help.md"
+        }
+      ],
+      "sha256": "e26f5b27ead2eb3e0dcd25a5b12ec0285595885f37c22afea4a4bd039e817c38"
+    },
+    {
+      "sha": "b5fe6f69bb4a10cd3f6d0b73809ad32e10c3725d",
+      "bytes": 14715,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "c2854a98e5a80194b4c8161a93a9b0bb6277dce9ed9f67e5ef00b39d3ed78b05"
+    },
+    {
+      "sha": "b7cc10db579bd81dac272cfe83972d03f6d60eb4",
+      "bytes": 6843,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/agent/internal/runtime/lifecycle_startup_container_test.go"
+        }
+      ],
+      "sha256": "d4f8b301c01ddc0324aa21bafd128444f999dfd9417e616094489c18a8537238"
+    },
+    {
+      "sha": "b9f866e350bc5c5dcdcf801f507fb2217fb08e4c",
+      "bytes": 5907,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "f57ef5aa2f186ee403fe5af49910945480213be6",
+          "path": "deploy/compose/compose.yaml"
+        }
+      ],
+      "sha256": "922e45355c0e24918e164bd45ed9a57133e690d6f3e31c1e7ded91ed0449b79a"
+    },
+    {
+      "sha": "bb7be26172c025f684b1f55b03507ae092333f34",
+      "bytes": 37135,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "5a5a967c1f629ce659b1ec469ba2320baf311451",
+          "path": "docs/research/telemetry-retention-tiers.md"
+        }
+      ],
+      "sha256": "aee1d6a4c853d9f164876f32dfb5d36cc7bf60055c92ad6d8eddc3c6309d65ca"
+    },
+    {
+      "sha": "bd67a11caea01a59d89d6883d63baa065c50c0e5",
+      "bytes": 6253,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "api/agent/v1/protocol.go"
+        }
+      ],
+      "sha256": "fd934584a3b25e183ac61d6e7519e62b188ac320733f2f5936de18ad98ba46f5"
+    },
+    {
+      "sha": "bff84f4c65cce2c02a64abf512ff384b62607ace",
+      "bytes": 2584,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [],
+      "sha256": "e48f6be0d28c4046e66033e20f494f5479b6906f98423b7cd4a222e6a7669a88"
+    },
+    {
+      "sha": "c2f731e692ace7dfa47dd21e541e903bd6c1e6db",
+      "bytes": 16906,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/control/internal/modules/nodes/task_execution_repository.go"
+        }
+      ],
+      "sha256": "1eef81f4f2b53ed228fb4513557502401b7a9aae574a93c516656c1653e2988e"
+    },
+    {
+      "sha": "c306a8f4ec7d1716b8086ec3fb68e2297808e1c8",
+      "bytes": 84082,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "2b8f82ca174c4d30b5f211105ee11ee522d745b1",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "39c36c7b53b1d4cfa82994fac03ad412d616d3b8dcba5e62965f2c8930b08405"
+    },
+    {
+      "sha": "c5f9f42f066c895345c1b668d2a48ac8d5db3388",
+      "bytes": 8287,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [],
+      "sha256": "831b83c71c55c7947b3c55de63afc367e0efd096631cc0172f86e5bceb894d48"
+    },
+    {
+      "sha": "c9f5ff8a56f5bcc54dba396ce460433d919b63db",
+      "bytes": 6060,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/agent/internal/runtime/task_delivery_test.go"
+        }
+      ],
+      "sha256": "21607fb46c58c183572d236de7b130df2d1dafc009d2a5b9a1ffad1014e2d172"
+    },
+    {
+      "sha": "ceca3c0577cab13b39631a3a7f249ebf71dea6af",
+      "bytes": 16860,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "031317e3d7aa01b1b70e168a2741f6fb3041b916",
+          "path": "services/control/internal/operations/postgresbackup/mvp_registry_native_repository_integration_test.go"
+        }
+      ],
+      "sha256": "bd1605c2506a29c7cd074f3c55a22781c9fe07de45177c228cb096fc1f0a3117"
+    },
+    {
+      "sha": "d0ebf9bc1c0a6503891b16d2a6a3a386ee81cf5c",
+      "bytes": 13548,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "f7a0be03057f33d9f770e218abe7092b1df77e96",
+          "path": "docs/product/roadmap/index.md"
+        }
+      ],
+      "sha256": "7861a79dfbfa7ef9944e2473b1d093b526cac6c33d4467a45a4e694dd939d387"
+    },
+    {
+      "sha": "d17c33193796ca7782ec1f3b8343bd2ae371a3b0",
+      "bytes": 4612,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "930a9591426a2bb830af04f81b7980eafe3da4c1",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "a1f761c0906ebd6f713dead06a0c5713ebbe3fe886dbdc100ff0077724008cbd"
+    },
+    {
+      "sha": "d3c4fadba5254673956d87ca4cfaa6859f671e2e",
+      "bytes": 6150,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "3e25ca778656272ec1933f704724bdfb16913474",
+          "path": "api/release/v1/mvp_delivery_test.go"
+        }
+      ],
+      "sha256": "83c20c338173b8cc06a18dc4a2ec2fa4f80d8e702cfb918de8575caa59eefc17"
+    },
+    {
+      "sha": "d64644a196b706755d9f053e62cc31e6adb9d115",
+      "bytes": 5173,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "1dc08908bc12b12ab0951c5ce8358f0ab5e83ea8",
+          "path": "services/control/internal/platform/database/catalog.go"
+        }
+      ],
+      "sha256": "70d397c0148a99bc340ebb546a1f72d03098846a81d619950e9c4e6a8ab847da"
+    },
+    {
+      "sha": "d6824ef0b9dc3d5a6d035f742d6b7966a2f1931b",
+      "bytes": 12805,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "2c09be833e4513275556aa9ca8648a734cc30f71",
+          "path": "services/control/internal/platform/database/lineage_upgrade_test.go"
+        }
+      ],
+      "sha256": "8067553927b53b7aa1f0158ff8924f253db33af4837ea2f00578a6347c406652"
+    },
+    {
+      "sha": "d9f0e76ebb850930a0b607d9898b35978c1d7dc9",
+      "bytes": 6060,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/agent/internal/runtime/task_delivery_test.go"
+        }
+      ],
+      "sha256": "a38e51ac196c81201030b22d3746a7c0b8baa38a45ab2bffa4ac4e3bab22d9ef"
+    },
+    {
+      "sha": "e19eebad6cbd9d0ed40fa38e408fb582107d2a42",
+      "bytes": 2159,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "8a82fd03a0a830082fec35ad5a72f5580de5609f",
+          "path": "services/agent/internal/runtime/lease.go"
+        }
+      ],
+      "sha256": "32ab42c70cd2e6e573a43e9910780c93fbc8c1b26b0f6e28030e2fb65730b24d"
+    },
+    {
+      "sha": "e33e90c5eb47a32e6df80c86aefa5af2955d8646",
+      "bytes": 37459,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "04787f1adb710f660594bf9ba0ba4f96eb65d6d4",
+          "path": "docs/research/gateway-model-description.md"
+        }
+      ],
+      "sha256": "8bd13a865055a091b26f304b90e1a55c5dc6c1240e1f7acc5166c4f84634c026"
+    },
+    {
+      "sha": "e3d97240caf05edaad4ebbb00480b8a9c66db8ea",
+      "bytes": 225731,
+      "known_source_tree": false,
+      "classification": "other UTF8 text",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "api/agent/v1/schema.json"
+        }
+      ],
+      "sha256": "72c530bd744fd36bc79da6e834c25629e9038a66965cf7cbbcba78b1edb7063d"
+    },
+    {
+      "sha": "e5ae5cf72eff82ab87a38be42bb954fcca837ef7",
+      "bytes": 25845,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "b85445289ebe544f677be506f6a55b0262407742",
+          "path": "tests/e2e/single_node_install_test.go"
+        }
+      ],
+      "sha256": "9675e5670377ba1a3a5245be21b7789f5ea537e94bcd8bfe71e4ba54d259f195"
+    },
+    {
+      "sha": "e64379ab3431e8417ce1a41e4f24d2d7b27f6a4d",
+      "bytes": 4984,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "b2dc64817a13b4455a0dd64125f94a915d1d1212",
+          "path": "Makefile"
+        }
+      ],
+      "sha256": "924cfae847b4337cd209488c7b14cf108d1b0be810103e9287317cc6a83ade62"
+    },
+    {
+      "sha": "ea753ed007de196cc35aa7bf35f745ec51c11f25",
+      "bytes": 13415,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "4631e3091ee1870657d76d91d68a2b4677b85785",
+          "path": "docs/research/agent-gateway-rebalance.md"
+        }
+      ],
+      "sha256": "fffe65625325e16472a48d86703f587e0e0c1e0eec2625695ef03576b1295ecd"
+    },
+    {
+      "sha": "eba7e9a8e9616efd24f619b120c59ba2fdb843cf",
+      "bytes": 5301,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "3e25ca778656272ec1933f704724bdfb16913474",
+          "path": "api/release/v1/native_postgres_reference_test.go"
+        }
+      ],
+      "sha256": "059671c376c7b49f9039d39885ca19d6d17418c8c73b66d09b59bfc32746f284"
+    },
+    {
+      "sha": "edf952f986415aaa90650c78ef46ef950b2ac71b",
+      "bytes": 2159,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/agent/internal/runtime/lease.go"
+        }
+      ],
+      "sha256": "03fedcb58c6c71f19954bdf4d43914c87c81d467a4ca145de2600de555cf5bb6"
+    },
+    {
+      "sha": "eff1459aa2c0852e9ff2bf4f033d7477f3940951",
+      "bytes": 106254,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "8e267523d76fc251070e39026627046ab97deea8",
+          "path": "docs/product/status.md"
+        },
+        {
+          "root_tree": "e9cfa9784ebadfc55575c2b1818eb3743fc4256d",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "9131d8d19d97679c64bbef118939b682a772e2f0918427ea292a2964adbc6daf"
+    },
+    {
+      "sha": "f1f576cfaf63d26619fb9a40ce69c257f5d260ea",
+      "bytes": 29995,
+      "known_source_tree": false,
+      "classification": "Go source",
+      "tree_paths": [
+        {
+          "root_tree": "21643119e8c9037c68b9bdfe91949b249f879053",
+          "path": "services/agent/internal/runtime/runtime.go"
+        }
+      ],
+      "sha256": "65adce1df66decf2911183d065f886dfccda1d2922d270a86026e4ccefedb118"
+    },
+    {
+      "sha": "f245ba71afd04899c15e2ff86fc675617dbe2d02",
+      "bytes": 85702,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "a6124b88a73bb0da39ce9a435aec93ed27986d77",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "549073a0aa5e235ea3b4c8e0f507ddc7f2ab82a7019d496d344e9c7de580bedf"
+    },
+    {
+      "sha": "f7f79f257cd73cb5ac2d00103a33003341c7fa31",
+      "bytes": 83902,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "84a62d29769b4d78661072a0e6f5956538807431",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "ab8ee6fec0ba67ab911e909056e8b9a8d1ad77544a6556c82b8ba3b72e6b008a"
+    },
+    {
+      "sha": "f80f9e864d4b62fda7684d272ee4726436722467",
+      "bytes": 85810,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "da6d23e053869caf76da2890eda0c8f431acd370",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "cf289e7bbac537dbfeda7ea8025a3ec3b79e5bcc308227125dec120a1df6481b"
+    },
+    {
+      "sha": "fa337c4dedb0a25eb2f9aa99bb03a85e05976cd1",
+      "bytes": 10543,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "b85445289ebe544f677be506f6a55b0262407742",
+          "path": "docs/operations/install.md"
+        }
+      ],
+      "sha256": "149dd3cd980a5f36c0ad2b14b0ac3a036282cbe6bee6c96e5af9e2d6af82edf5"
+    },
+    {
+      "sha": "fcfe6bd26330beb488a06ac2d507f623bb879a84",
+      "bytes": 31497,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "0c2ee201948910416469b9f7b4d368a4f361f645",
+          "path": "docs/product/status.md"
+        }
+      ],
+      "sha256": "c84ead51468f50c6dd0b9bf3c965ab14b4ee2b36d014d4991da32bad870a4e3f"
+    },
+    {
+      "sha": "fd70a8ee0d5ceaf49b57e89efcbffbf97f64c98c",
+      "bytes": 32772,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "34dcf795bcf120452290da2a6b14dd2cfa766a6f",
+          "path": "docs/research/training-runtime-delivery.md"
+        }
+      ],
+      "sha256": "d24e5f78f354c848f858a6a76c5f1e35a364cd0688c13ae11df36874d85d0768"
+    },
+    {
+      "sha": "fe6d754336b276fdbaa91644b649a7472b8c4666",
+      "bytes": 14975,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "e6d68a1bd3a828fc1a411c250f12ccfb5d24116f",
+          "path": "docs/research/object-backup-fence.md"
+        }
+      ],
+      "sha256": "60bd84c98b90969cb1f7af28da15c8a0e6ee76c04ef46a853d53fa5ac9c5c7d2"
+    },
+    {
+      "sha": "fffe64ab78896510fb023ee5f5dff244cf06c30d",
+      "bytes": 10339,
+      "known_source_tree": false,
+      "classification": "Markdown source",
+      "tree_paths": [
+        {
+          "root_tree": "2c1debf40a71c934db4c65e5108ea4d3919c75d0",
+          "path": "docs/research/browser-suite-replacement.md"
+        },
+        {
+          "root_tree": "48b3a04ba09d99f8057cdf02e96dd9b4b30dbe6f",
+          "path": "docs/research/browser-suite-replacement.md"
+        }
+      ],
+      "sha256": "c12f4cd42922a93ea1ad3553b7e030fc1f901015fd522168c0d48c9bc5ae0c6e"
+    }
+  ],
+  "excluded": [
+    {
+      "sha": "2111dd24c5720e440705382f2f7c45e78212b69a",
+      "bytes": 4161842,
+      "reason": "excluded compiled Mach-O"
+    },
+    {
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "reason": "empty blob"
+    }
+  ]
+}

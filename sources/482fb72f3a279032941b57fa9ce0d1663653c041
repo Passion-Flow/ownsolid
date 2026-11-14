@@ -1,0 +1,33 @@
+{
+  "root_files": [
+    "README.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "Makefile", "go.work", "go.work.sum",
+    ".gitignore", ".gitattributes", ".editorconfig"
+  ],
+  "top_directories": {
+    ".github": ["workflows"],
+    "api": null,
+    "catalog": ["apps"],
+    "deploy": ["components", "compose", "helm", "images", "offline", "systemd"],
+    "docs": ["product", "architecture", "operations", "development", "research", "decisions"],
+    "pkg": null,
+    "runtimes": null,
+    "services": ["control", "agent", "gateway"],
+    "tests": ["e2e", "fixtures"],
+<<<<<<< HEAD
+    "tools": ["codegen", "dev", "lint", "release", "audit-verify"],
+=======
+    "tools": ["cli", "codegen", "dev", "lint", "release"],
+>>>>>>> 99b0376 (DEV-102: Add the offline operator CLI)
+    "web": ["apps", "packages"]
+  },
+  "top_directory_files": [
+    "README.md", "go.mod", "go.sum", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "tsconfig.base.json"
+  ],
+  "exempt_directories": ["locales", "third_party"],
+  "env_example": "deploy/compose/.env.example",
+  "conventional_names": [
+    "README.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "NOTICE", "Makefile",
+    "Dockerfile", "Chart.yaml", "Cargo.toml", "Cargo.lock", "__init__.py"
+  ],
+  "hidden_names": [".github", ".gitignore", ".gitattributes", ".editorconfig", ".gitkeep", ".env.example"]
+}
