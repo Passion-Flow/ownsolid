@@ -17,6 +17,7 @@ import (
 
 const storeSchema = 1
 const markerFile = "namespace.json"
+const maximumNamespaceBytes int64 = 4096
 const lockFile = "owner.lock"
 
 type storeNamespace struct {
@@ -112,34 +113,9 @@ func openStore(path, tenant string, minimumFree int64, verification bool) (*Stor
 	if !wire.ValidID(tenant) || minimumFree < 4096 {
 		return nil, failure("DATASET_STORAGE_PATH_INVALID")
 	}
-	if _, e := privatePath(path, "", true, 0); e != nil {
-		return nil, failure("DATASET_STORAGE_PATH_INVALID")
-	}
-	entries, e := os.ReadDir(path)
-	if e != nil || len(entries) != 5 {
-		return nil, failure("DATASET_STORE_NAMESPACE_INVALID")
-	}
-	allowed := map[string]bool{markerFile: true, lockFile: true, "objects": true, "attempts": true, "versions": true}
-	for _, entry := range entries {
-		if !allowed[entry.Name()] {
-			return nil, failure("DATASET_STORE_NAMESPACE_INVALID")
-		}
-	}
-	if _, e = privatePath(filepath.Join(path, markerFile), path, false, 4096); e != nil {
-		return nil, failure("DATASET_STORE_NAMESPACE_INVALID")
-	}
-	raw, e := os.ReadFile(filepath.Join(path, markerFile))
-	var marker storeNamespace
-	if e != nil || wire.DecodeStrict(raw, &marker) != nil || marker.SchemaVersion != storeSchema || marker.TenantID != tenant || !wire.ValidID(marker.StoreID) {
-		return nil, failure("DATASET_STORE_NAMESPACE_INVALID")
-	}
-	for _, name := range []string{"objects", "attempts", "versions"} {
-		if _, e = privatePath(filepath.Join(path, name), path, true, 0); e != nil {
-			return nil, failure("DATASET_STORE_NAMESPACE_INVALID")
-		}
-	}
-	if _, e = privatePath(filepath.Join(path, lockFile), path, false, 0); e != nil {
-		return nil, failure("DATASET_STORE_NAMESPACE_INVALID")
+	marker, e := readStoreNamespace(path, tenant)
+	if e != nil {
+		return nil, e
 	}
 	lockMode := os.O_RDWR
 	if verification {
@@ -336,4 +312,55 @@ func (s *Store) createAttempt(job, attempt string, input io.Reader, digest strin
 	}
 	scope := filepath.Join(s.path, relative)
 	return scope, filepath.Join(scope, "input.jsonl"), filepath.Join(scope, "output"), nil
+}
+
+// readStoreNamespace neither initializes storage nor acquires writer ownership.
+func readStoreNamespace(path, tenant string) (storeNamespace, error) {
+	if !wire.ValidID(tenant) {
+		return storeNamespace{}, failure("DATASET_STORAGE_PATH_INVALID")
+	}
+	if _, e := privatePath(path, "", true, 0); e != nil {
+		return storeNamespace{}, failure("DATASET_STORAGE_PATH_INVALID")
+	}
+	directory, e := os.Open(path)
+	if e != nil {
+		return storeNamespace{}, failure("DATASET_STORE_NAMESPACE_INVALID")
+	}
+	entries, e := directory.ReadDir(6)
+	closeError := directory.Close()
+	if e != nil && e != io.EOF || closeError != nil || len(entries) != 5 {
+		return storeNamespace{}, failure("DATASET_STORE_NAMESPACE_INVALID")
+	}
+	allowed := map[string]bool{markerFile: true, lockFile: true, "objects": true, "attempts": true, "versions": true}
+	for _, entry := range entries {
+		if !allowed[entry.Name()] {
+			return storeNamespace{}, failure("DATASET_STORE_NAMESPACE_INVALID")
+		}
+	}
+	if _, e = privatePath(filepath.Join(path, markerFile), path, false, maximumNamespaceBytes); e != nil {
+		return storeNamespace{}, failure("DATASET_STORE_NAMESPACE_INVALID")
+	}
+	raw, e := readNamespaceFile(filepath.Join(path, markerFile))
+	var marker storeNamespace
+	if e != nil || wire.DecodeStrict(raw, &marker) != nil || marker.SchemaVersion != storeSchema || marker.TenantID != tenant || !wire.ValidID(marker.StoreID) {
+		return storeNamespace{}, failure("DATASET_STORE_NAMESPACE_INVALID")
+	}
+	for _, name := range []string{"objects", "attempts", "versions"} {
+		if _, e = privatePath(filepath.Join(path, name), path, true, 0); e != nil {
+			return storeNamespace{}, failure("DATASET_STORE_NAMESPACE_INVALID")
+		}
+	}
+	if _, e = privatePath(filepath.Join(path, lockFile), path, false, 0); e != nil {
+		return storeNamespace{}, failure("DATASET_STORE_NAMESPACE_INVALID")
+	}
+	return marker, nil
+}
+
+func readNamespaceFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	return io.ReadAll(io.LimitReader(file, maximumNamespaceBytes+1))
 }

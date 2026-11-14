@@ -146,18 +146,34 @@ func (s *Store) OpenVersionAsset(version, attempt, asset string, size int64, dig
 // OpenVersionAssetContext verifies and returns one descriptor. It never reopens
 // a separately replaceable pathname after hashing and closes every failure path.
 func (s *Store) OpenVersionAssetContext(ctx context.Context, version, attempt, asset string, size int64, digest string) (*os.File, error) {
-	if s == nil || ctx == nil || !wire.ValidID(version) || !wire.ValidID(attempt) || !validAsset(asset) || size < 0 || size > wire.MaximumResultBytesCeiling || !wire.ValidDigest(digest) {
+	if s == nil {
+		return nil, failure("DATASET_STORAGE_UNAVAILABLE")
+	}
+	s.mu.Lock()
+	closed := s.closed
+	s.mu.Unlock()
+	if closed {
+		return nil, failure("DATASET_STORAGE_UNAVAILABLE")
+	}
+	return openPublishedVersionAsset(ctx, s.root, s.lock, s.path, s.namespace, version, attempt, asset, size, digest)
+}
+
+func openPublishedVersionAsset(ctx context.Context, root *os.Root, carrier *os.File, path string, namespace storeNamespace, version, attempt, asset string, size int64, digest string) (*os.File, error) {
+	if ctx == nil || !wire.ValidID(version) || !wire.ValidID(attempt) || !validAsset(asset) || size < 0 || size > wire.MaximumResultBytesCeiling || !wire.ValidDigest(digest) {
 		return nil, failure("DATASET_FILE_INVALID")
 	}
 	if e := ctx.Err(); e != nil {
 		return nil, e
 	}
-	path := filepath.Join(s.path, versionDirectory(version, attempt), asset)
-	info, e := privatePath(path, s.path, false, size)
+	assetPath := filepath.Join(path, versionDirectory(version, attempt), asset)
+	if e := checkPublishedBase(root, carrier, path, namespace); e != nil {
+		return nil, e
+	}
+	info, e := privatePath(assetPath, path, false, size)
 	if e != nil {
 		return nil, failure("DATASET_FILE_INVALID")
 	}
-	file, e := os.Open(path)
+	file, e := root.Open(filepath.Join(versionDirectory(version, attempt), asset))
 	if e != nil {
 		return nil, failure("DATASET_FILE_INVALID")
 	}
@@ -186,6 +202,9 @@ func (s *Store) OpenVersionAssetContext(ctx context.Context, version, attempt, a
 	position, e := file.Seek(0, io.SeekStart)
 	if e != nil || position != 0 {
 		return nil, failure("DATASET_FILE_INVALID")
+	}
+	if e := checkPublishedBase(root, carrier, path, namespace); e != nil {
+		return nil, e
 	}
 	verified = true
 	return file, nil

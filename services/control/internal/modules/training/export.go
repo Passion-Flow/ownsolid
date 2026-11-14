@@ -56,7 +56,11 @@ func (s *Service) Export(ctx context.Context, a identity.Auth, workspace, id, as
 	err := s.withVerifiedAdapterExport(ctx, a, workspace, id, requestID, func(record acceptedAdapterRecord) error {
 		descriptor := record.Descriptor
 		if asset != "manifest.json" {
-			file, selected, e := s.Store.OpenPublishedAsset(ctx, descriptor, asset)
+			files, e := s.publishedFiles(descriptor.Scope.TenantID)
+			if e != nil {
+				return e
+			}
+			file, selected, e := files.OpenPublishedAsset(ctx, descriptor, asset)
 			if e != nil {
 				return e
 			}
@@ -103,8 +107,8 @@ func (s *Service) Export(ctx context.Context, a identity.Auth, workspace, id, as
 // withVerifiedAdapterExport keeps file work outside SQL locks and commits the
 // current authority and immutable-result recheck before the caller can expose it.
 func (s *Service) withVerifiedAdapterExport(ctx context.Context, a identity.Auth, workspace, id, requestID string, verify func(acceptedAdapterRecord) error) error {
-	if s.Store == nil {
-		return fail("TRAINING_STORAGE_UNAVAILABLE")
+	if _, e := s.publishedFiles(""); e != nil {
+		return e
 	}
 	read := func(ctx context.Context, tx transaction.Executor, w workspaces.Workspace) (acceptedAdapterRecord, error) {
 		j, e := lockedJobWithin(ctx, tx, w, id)

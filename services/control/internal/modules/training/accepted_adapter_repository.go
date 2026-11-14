@@ -64,8 +64,8 @@ func (s *Service) acceptedAdapterExecutor(ctx context.Context, q transaction.Exe
 	if store.Dialect() != q.Dialect() || q.Dialect() != transaction.MySQL && q.Dialect() != transaction.PostgreSQL {
 		return fail("TRAINING_STORAGE_MISMATCH")
 	}
-	if s.Store == nil {
-		return fail("TRAINING_STORAGE_UNAVAILABLE")
+	if _, e := s.publishedFiles(""); e != nil {
+		return e
 	}
 	return nil
 }
@@ -79,6 +79,9 @@ func (s *Service) AcceptedAdapterWithin(ctx context.Context, q transaction.Execu
 	}
 	j, e := lockedJobWithin(ctx, q, workspaces.Workspace{TenantID: tenant, ID: workspace}, job)
 	if e != nil {
+		return out, acceptedAdapterError(e)
+	}
+	if _, e := s.publishedFiles(tenant); e != nil {
 		return out, acceptedAdapterError(e)
 	}
 	record, e := readAcceptedAdapterWithin(ctx, q, tenant, j)

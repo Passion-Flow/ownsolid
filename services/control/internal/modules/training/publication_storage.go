@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/google/uuid"
 	datawire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
 	wire "github.com/Passion-Flow/ownsolid/api/training/v1"
+	"github.com/google/uuid"
 )
 
 const publicationIndex = "publication.json"
@@ -92,7 +92,10 @@ func (s *Store) VerifyPublished(ctx context.Context, d UploadDescriptor) error {
 	if e := s.checkBase(); e != nil {
 		return e
 	}
-	return s.verifyPublished(ctx, d)
+	if e := s.verifyPublished(ctx, d); e != nil {
+		return e
+	}
+	return s.checkBase()
 }
 
 // PreparePublishedFiles assembles exact immutable bytes. Only a separate authorized database/audit commit accepts a checkpoint/artifact.
@@ -254,5 +257,18 @@ func (s *Store) OpenPublishedAsset(ctx context.Context, d UploadDescriptor, name
 		return nil, asset, e
 	}
 	file, e := s.checkedFile(filepath.Join(publishedDirectory(d), name), asset.SizeBytes)
-	return file, asset, e
+	if e != nil {
+		return nil, asset, e
+	}
+	// Hash the descriptor being returned, not a path reopened after verification.
+	digest, size, e := fileDigest(ctx, file, asset.SizeBytes)
+	if e != nil || size != asset.SizeBytes || digest != asset.SHA256 {
+		file.Close()
+		return nil, asset, fail("TRAINING_STORAGE_DATA_INVALID")
+	}
+	if e := s.checkBase(); e != nil {
+		file.Close()
+		return nil, asset, e
+	}
+	return file, asset, nil
 }
