@@ -1,0 +1,72 @@
+set -euo pipefail
+umask 022
+ops_run=$1
+ops_worktree=$2
+ops_cache=$3
+cd "$ops_worktree"
+ops_lock=/private/tmp/ownsolid-workstation-full-gate.lock
+test "$(cat "$ops_lock/owner")" = "$ops_run"
+cleanup() {
+  hdiutil detach "$ops_run/volume" >> "$ops_run/cleanup.log" 2>&1 || return 1
+  if [ "$(cat "$ops_lock/owner")" = "$ops_run" ]; then
+    rm "$ops_lock/owner"
+    rmdir "$ops_lock"
+  fi
+}
+trap cleanup EXIT
+export PYTHON="$(uv python find 3.12)"
+export GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOFLAGS=-p=1
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2
+export CARGO_TARGET_DIR="$ops_cache/services/gateway/target"
+export VITEST_MAX_WORKERS=2
+export TMPDIR="$ops_run/volume/tmp/"
+test "$(stat -f %g "$TMPDIR")" = "$(id -g)"
+test -z "$(git status --porcelain)"
+test "$(cat "$ops_run/head")" = "$(git rev-parse HEAD)"
+test ! -e tools/audit-verify/audit-verify
+date -u > "$ops_run/start"
+make check > "$ops_run/check.log" 2>&1
+printf 'make check passed\n'
+make build > "$ops_run/build.log" 2>&1
+printf 'make build passed\n'
+if [ -f tools/audit-verify/audit-verify ]; then
+  test -z "$(git ls-files -- tools/audit-verify/audit-verify)"
+  rm tools/audit-verify/audit-verify
+fi
+ops_port="$("$PYTHON" - <<'PY'
+import random
+import socket
+from contextlib import ExitStack
+
+for candidate in random.SystemRandom().sample(range(49000, 63000, 2), 80):
+    try:
+        with ExitStack() as sockets:
+            for port in (candidate, candidate + 1):
+                for family, host in ((socket.AF_INET, '127.0.0.1'), (socket.AF_INET6, '::1')):
+                    sock = sockets.enter_context(socket.socket(family))
+                    sock.bind((host, port))
+        print(candidate)
+        break
+    except OSError:
+        continue
+else:
+    raise SystemExit('No private browser ports found')
+PY
+)"
+export OWNSOLID_PLAYWRIGHT_PORT_OFFSET=$((ops_port - 4310))
+printf '%s %s\n' "$ops_port" "$((ops_port + 1))" > "$ops_run/ports"
+cat > "$ops_run/browser-concurrency.mk" <<'MAKE'
+test-web-browser: web-install
+	@cd web && pnpm --filter ./apps/console run test:browser --workers=2
+	@cd web && pnpm --filter ./apps/portal run test:browser --workers=2
+MAKE
+make -f Makefile -f "$ops_run/browser-concurrency.mk" test > "$ops_run/test.log" 2>&1
+printf 'make test passed\n'
+go -C catalog build ./... > "$ops_run/catalog-build.log" 2>&1
+go -C catalog test -race ./... -count=1 > "$ops_run/catalog-race.log" 2>&1
+go -C catalog vet ./... > "$ops_run/catalog-vet.log" 2>&1
+printf 'Catalog build, race tests and vet passed\n'
+git diff --check
+test -z "$(git status --porcelain)"
+git rev-parse HEAD > "$ops_run/ok"
+date -u > "$ops_run/finish"

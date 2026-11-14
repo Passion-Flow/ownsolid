@@ -1,0 +1,442 @@
+{
+  "original_state": {
+    "timestamp_utc": "2026-11-14T00:53:04.301777+00:00",
+    "refs": {
+      "refs/heads/codex/ops-bindings-retained": "1c1d05bf078d4db8c615fdc9fb07a78eee3fe30d",
+      "refs/heads/codex/ops-compose-handoff-retained": "b390fe5e4022fcf90d4390c13a6228860fb5100a",
+      "refs/heads/codex/ops-compose-image-plan": "68fc5e02f6110e2d9681a3dd3c306f7cd3881bdc",
+      "refs/heads/codex/ops-compose-input-retained": "731ab7c9599696527b3e327ab5b3ba27cde80e07",
+      "refs/heads/codex/ops-compose-joint-retained": "35bee4d506af660ee51c94f107c835b3b02c0e02",
+      "refs/heads/codex/ops-compose-retained": "399d800716c2c8d318c84c785d70af242e61e48f",
+      "refs/heads/codex/ops-preserved-20261112": "53198de800a9c7fa1e69158c4da7c7b7def6ccac",
+      "refs/heads/lane-ops": "828eada8bc3b5f2ff45d70c85fe7bd60186dfed2"
+    },
+    "worktrees": [
+      {
+        "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-ops-cat105",
+        "head": "68fc5e02f6110e2d9681a3dd3c306f7cd3881bdc",
+        "branch": "refs/heads/codex/ops-compose-image-plan",
+        "status": "",
+        "untracked": []
+      },
+      {
+        "path": "/Users/passion./Documents/Passion's WorkSpace/Development/lane-ops",
+        "head": "828eada8bc3b5f2ff45d70c85fe7bd60186dfed2",
+        "branch": "refs/heads/lane-ops",
+        "status": "",
+        "untracked": []
+      }
+    ],
+    "source_common_dir": "/Users/passion./Documents/Passion's WorkSpace/Development/ownsolid/.git",
+    "stash": "Not owned: IAM; untouched",
+    "reflog_only": "Coordinator preserves original historical DAG globally; source refs and gate head/base/ok mappings supplied here.",
+    "server_scope": "No server operations authorized or performed"
+  },
+  "original_tip_coverage_before_push": {
+    "github_main": "5790b8961955400ffe25f10ced170bf4f669683c",
+    "rows": [
+      {
+        "original_ref": "refs/heads/codex/ops-bindings-retained",
+        "sha": "1c1d05bf078d4db8c615fdc9fb07a78eee3fe30d",
+        "covered_by": [],
+        "ahead_behind_main": "478\t11"
+      },
+      {
+        "original_ref": "refs/heads/codex/ops-compose-handoff-retained",
+        "sha": "b390fe5e4022fcf90d4390c13a6228860fb5100a",
+        "covered_by": [],
+        "ahead_behind_main": "525\t4"
+      },
+      {
+        "original_ref": "refs/heads/codex/ops-compose-image-plan",
+        "sha": "68fc5e02f6110e2d9681a3dd3c306f7cd3881bdc",
+        "covered_by": [
+          {
+            "ref": "refs/heads/main",
+            "sha": "5790b8961955400ffe25f10ced170bf4f669683c"
+          }
+        ],
+        "ahead_behind_main": "300\t0"
+      },
+      {
+        "original_ref": "refs/heads/codex/ops-compose-input-retained",
+        "sha": "731ab7c9599696527b3e327ab5b3ba27cde80e07",
+        "covered_by": [],
+        "ahead_behind_main": "513\t8"
+      },
+      {
+        "original_ref": "refs/heads/codex/ops-compose-joint-retained",
+        "sha": "35bee4d506af660ee51c94f107c835b3b02c0e02",
+        "covered_by": [],
+        "ahead_behind_main": "495\t10"
+      },
+      {
+        "original_ref": "refs/heads/codex/ops-compose-retained",
+        "sha": "399d800716c2c8d318c84c785d70af242e61e48f",
+        "covered_by": [],
+        "ahead_behind_main": "533\t3"
+      },
+      {
+        "original_ref": "refs/heads/codex/ops-preserved-20261112",
+        "sha": "53198de800a9c7fa1e69158c4da7c7b7def6ccac",
+        "covered_by": [],
+        "ahead_behind_main": "412\t16"
+      },
+      {
+        "original_ref": "refs/heads/lane-ops",
+        "sha": "828eada8bc3b5f2ff45d70c85fe7bd60186dfed2",
+        "covered_by": [],
+        "ahead_behind_main": "651\t16"
+      }
+    ]
+  },
+  "historical_tip_sources": {
+    "reflogs": [
+      {
+        "source_ref": "refs/heads/codex/ops-bindings-retained",
+        "reflog_tips": [
+          "1c1d05bf078d4db8c615fdc9fb07a78eee3fe30d"
+        ]
+      },
+      {
+        "source_ref": "refs/heads/codex/ops-compose-handoff-retained",
+        "reflog_tips": [
+          "b390fe5e4022fcf90d4390c13a6228860fb5100a"
+        ]
+      },
+      {
+        "source_ref": "refs/heads/codex/ops-compose-image-plan",
+        "reflog_tips": [
+          "68fc5e02f6110e2d9681a3dd3c306f7cd3881bdc",
+          "d5ad4d989c637310c9586efa7edc5eab4845fb14",
+          "67293e12e3fd47cbb5b07c32fcc4ce3a596b02aa",
+          "9af1aaa3fdb60507aa95c09cacc9cb4a6c297361",
+          "474c8fb4edc24106ff9da4f28264b76aaee20a25",
+          "2a8c026162c5fcdeb2d6244e12b52f179bfbe20b",
+          "53198de800a9c7fa1e69158c4da7c7b7def6ccac",
+          "b86e2b5388408842859fe99a65009422616148c4",
+          "7dd211a394340b7217ed6ec646064b29aa07875a",
+          "ef580ac2f02527282c9696f4798aae87adb5646b",
+          "577392004dee5f237c92d915b0ed56a02e4f9549",
+          "79ade5e20be80397ed317b681a15b1d69d88a81f",
+          "db738fb5f317507fb5dbca6fa01f2ffa9b31e770",
+          "902f422d0a8402e32a13e21dfb53ce0b145eae00",
+          "0fc5c537812f86824b324d5fc06c51e2280f3e40",
+          "fe7853120f87fc69ea39a6b35c7151b10925b0cb",
+          "b7e2fba0a26ef298e2b501155bb60fa3d5a94d50",
+          "0f1ae86b47f142a2db81e286a47b9768d6ee7d72",
+          "1ce8da54f294665b95ca85562fb8476ac7092e93",
+          "cdf1b46c99bf83e57633c2686e64e85280912b53",
+          "9d2e8da4cf7744d50d1ef7511f8eaa398e070263",
+          "65e6f991c9ee0e825711e71824048d56603afcdd",
+          "edb6e7043753388ff3cac07cbf53e4989f97a73a",
+          "35bee4d506af660ee51c94f107c835b3b02c0e02",
+          "779b2859591e0ddbb85eb71a5e37c92227275ded",
+          "eadb619d4f85fe0d6e7d92114f02a7aad266578a",
+          "2029c26a03605a1bb0b327a80539483d677e9915",
+          "e46c6431fdd1785a8d7a6b8280109a247dd2eaa1",
+          "bf0a869f9d87f141701dbcf022ca4c03951b275f",
+          "731ab7c9599696527b3e327ab5b3ba27cde80e07",
+          "bf81cb02416a82246807f52122cc2b6419704791",
+          "4f358692f4565eef3775edda5e40bed7be84ded1",
+          "14fd6e08a1e0209ad39a51e6fd66ec8bbee5bfd3",
+          "791a1fba4c15431843bf19ddc806eb5f74c5a959",
+          "c080eff6c8762866d8e265028ae9409715b67cff",
+          "f685df8eb97c91271bcbda417a4bd454b1281211",
+          "6e2705d5bb6a4508fcc23df053d7fb47f03470c8",
+          "27f265ee0c77fa0b77d9705eccfa8366e832053f",
+          "b390fe5e4022fcf90d4390c13a6228860fb5100a",
+          "d96b0b44b14af177af9fe1797faeb8442afea4b7",
+          "827432389ddce4059cd447ee92f1e253f3e7e12f",
+          "399d800716c2c8d318c84c785d70af242e61e48f",
+          "1b777148de29d73e7124a5cb38e1e6b574217c3b",
+          "5785bc6c0346174b1eab154a3cce5105ff04e36b",
+          "fa281fa405dd162414bbfc34f1903c059cee3e11",
+          "5c886dea5cd46f26e28e0c1ff0753dbb9f7c9eaa",
+          "64f2f083cc6604173abba3e46ee6c3167209b404",
+          "e01f4634234a97d2f6a0eb8bd858d268b4c74b2c"
+        ]
+      },
+      {
+        "source_ref": "refs/heads/codex/ops-compose-input-retained",
+        "reflog_tips": [
+          "731ab7c9599696527b3e327ab5b3ba27cde80e07"
+        ]
+      },
+      {
+        "source_ref": "refs/heads/codex/ops-compose-joint-retained",
+        "reflog_tips": [
+          "35bee4d506af660ee51c94f107c835b3b02c0e02"
+        ]
+      },
+      {
+        "source_ref": "refs/heads/codex/ops-compose-retained",
+        "reflog_tips": [
+          "399d800716c2c8d318c84c785d70af242e61e48f"
+        ]
+      },
+      {
+        "source_ref": "refs/heads/codex/ops-preserved-20261112",
+        "reflog_tips": [
+          "53198de800a9c7fa1e69158c4da7c7b7def6ccac"
+        ]
+      },
+      {
+        "source_ref": "refs/heads/lane-ops",
+        "reflog_tips": [
+          "828eada8bc3b5f2ff45d70c85fe7bd60186dfed2",
+          "1120d65f51846fdd33a826c4d793f842647a021e",
+          "91940948673b6709823dfa5077a0a0d66b6343f2",
+          "77d287ade187ea1f9888ba19a10f9fbfeedb8b1b",
+          "b2711e4ab7c4d93a7be6c0cf3cd6a248e5cc2b5f",
+          "47b4125dc13dc7a72ab9752086746fedfdbb0773",
+          "5be400a7a93d5d64915fe0cd2bc9224ca28ea6fe",
+          "948cfe2d4f97e387645a6f106e46e1a5b3faa8c7",
+          "6c100128a821b7a32ffa19738a22ad6abf537a98",
+          "d2d13fc3b10d903b240797a4df201e62d049e649",
+          "be368d208e1f33408f02beecdc7366aa5f1774d3",
+          "a505f9200ed00d5e20b15818aaaa3f7f483fa3ae",
+          "bcb614f5c45e158747aa60add69a3faffec77f42",
+          "a10bbc72d9749db09d0f43b3f3ea1133856a47a7",
+          "c679220ddaca9b6de6ec48eb64804f4063d66bc5",
+          "a030762032c1dab3bbc639478c745b1661dc36d2",
+          "c9da40e03cda9c66df9879a88c578319297315ba",
+          "307c383c6201dc4ca238bf8132a4eb3eed764cfe",
+          "0a326395e83be6623edda5dae7ef32e88a0e601f",
+          "6c626eb0566fb2e3965841e216358e479003471a",
+          "5dbf51fac2b9ed49cb1308fe161de698529a510f",
+          "493715af1bfba01f42e98de78babb604f19809b0",
+          "a338398345c516323d691aa85addef7598bb6b9c",
+          "528f1d9c95ccf265eb1313ee87c853050c7a3075",
+          "95a2b9d3cffea1055f77254bf628939eae67901e",
+          "71f6bf9f50ac7dbf8f0db162659543202eeae354",
+          "5da949e2a2f29c1b339ae6488b0c63b537994725",
+          "d1b1fb9b815a71a6c63b128f0a0238a57af3e52c",
+          "bff4ecb36ca0e4b437467201b2331f99e21f60bd",
+          "0f4c192ed6d59003fda8981294fc6569d1627930"
+        ]
+      }
+    ],
+    "gate_records": [
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/base",
+        "commit": "203109c75cb2479419924c50b13c0046adfc5021",
+        "sha256": "0438f545ae0a38788147d4c75f3cf61e7956091b90a0db7468cdf0b1f0d0ca69"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/head",
+        "commit": "2a8c026162c5fcdeb2d6244e12b52f179bfbe20b",
+        "sha256": "ceef44cf1ae06c4ce7b70f03a4473514785fa82b52076eaf3b875a99111cd462"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/base",
+        "commit": "203109c75cb2479419924c50b13c0046adfc5021",
+        "sha256": "0438f545ae0a38788147d4c75f3cf61e7956091b90a0db7468cdf0b1f0d0ca69"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/head",
+        "commit": "2a8c026162c5fcdeb2d6244e12b52f179bfbe20b",
+        "sha256": "ceef44cf1ae06c4ce7b70f03a4473514785fa82b52076eaf3b875a99111cd462"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/base",
+        "commit": "aa1b14622107b7f1aa4e3919f5654d12462f24c8",
+        "sha256": "ab21177501db9fcbb1d614d357cfe1dba0aaa32110cb1fc0c61b85759ce4ce58"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/head",
+        "commit": "9af1aaa3fdb60507aa95c09cacc9cb4a6c297361",
+        "sha256": "5411a63a508afc53cf6b9edd3a8a580826bf3661e73435b120a54cef174da506"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/ok",
+        "commit": "9af1aaa3fdb60507aa95c09cacc9cb4a6c297361",
+        "sha256": "5411a63a508afc53cf6b9edd3a8a580826bf3661e73435b120a54cef174da506"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/base",
+        "commit": "4f6a1c8c9afafb69f7d1519fceda13eb6cdc256e",
+        "sha256": "6be1ce3f4ad61edea699afbc19c8feb297ac4338abdfc980336f8024738d5022"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/head",
+        "commit": "67293e12e3fd47cbb5b07c32fcc4ce3a596b02aa",
+        "sha256": "26e85669b5c9c4e7cbbbb89ebb0c5382361859fa17d876dc3c70540feade72e6"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/ok",
+        "commit": "67293e12e3fd47cbb5b07c32fcc4ce3a596b02aa",
+        "sha256": "26e85669b5c9c4e7cbbbb89ebb0c5382361859fa17d876dc3c70540feade72e6"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/base",
+        "commit": "785cc4eb5fb11f2ae06345117197a004130412bb",
+        "sha256": "f31be061511b58306cb5384db7a6286b66bf37e3b009831e367b49cb6186b402"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/head",
+        "commit": "2a8c026162c5fcdeb2d6244e12b52f179bfbe20b",
+        "sha256": "ceef44cf1ae06c4ce7b70f03a4473514785fa82b52076eaf3b875a99111cd462"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/ok",
+        "commit": "2a8c026162c5fcdeb2d6244e12b52f179bfbe20b",
+        "sha256": "ceef44cf1ae06c4ce7b70f03a4473514785fa82b52076eaf3b875a99111cd462"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-reviews/20261112.VquJcw/base",
+        "commit": "d5ad4d989c637310c9586efa7edc5eab4845fb14",
+        "sha256": "01830386f3f890ba5fab03eef2903775fd10c23bc640f6f31e11f3f7065242b8"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-reviews/20261112.VquJcw/head",
+        "commit": "68fc5e02f6110e2d9681a3dd3c306f7cd3881bdc",
+        "sha256": "673d05214aeb173c67557f810e689392499db6fa1bdc0de11f48b4cc064e2ab6"
+      }
+    ],
+    "preservation_owner": "Coordinator global original Mac DAG preservation; no per-tip duplicate exports by OPS"
+  },
+  "existing_evidence": {
+    "accepted_commit": "67293e12e3fd47cbb5b07c32fcc4ce3a596b02aa",
+    "last_docs_commit": "68fc5e02f6110e2d9681a3dd3c306f7cd3881bdc",
+    "historical_full_gate": "Passed on accepted_commit; not rerun by migration",
+    "historical_supplemental": "Catalog build, race, vet and selected network-denied tests passed",
+    "files": [
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/head",
+        "bytes": 41,
+        "sha256": "26e85669b5c9c4e7cbbbb89ebb0c5382361859fa17d876dc3c70540feade72e6"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/base",
+        "bytes": 41,
+        "sha256": "6be1ce3f4ad61edea699afbc19c8feb297ac4338abdfc980336f8024738d5022"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/tree",
+        "bytes": 41,
+        "sha256": "ae6f8dbdfe3460b101548c606523fe9190ace41d09b3f21fd7cfc4fed16a5bc4"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/ok",
+        "bytes": 41,
+        "sha256": "26e85669b5c9c4e7cbbbb89ebb0c5382361859fa17d876dc3c70540feade72e6"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/check.log",
+        "bytes": 1510,
+        "sha256": "6755311ea5da2678eb11c1f9ad732d3303d10bcbf60a8d85be122d860d973458"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/build.log",
+        "bytes": 67200,
+        "sha256": "c69f50b6148b93a08483cd880e2484f8baef3e4ac239d40ce832fb90a542bb23"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/test.log",
+        "bytes": 309893,
+        "sha256": "bddeaa7621950b3b8cf46615dd25893fb57e136c54817c31701e1db269f991e2"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-race.log",
+        "bytes": 58,
+        "sha256": "de3dfaa25a0c0f16ab53c08491c9e66f5c009dc93785c317ae9879b503d81726"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-vet.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-offline.log",
+        "bytes": 4027,
+        "sha256": "f6fcad0bc5eb6a14ab2ec324b5d933a43f8281dc4ef4ba7a2bfbf03ea8e71c66"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/push-proxy.log",
+        "bytes": 84,
+        "sha256": "9ad19a27d889de671ec547a05ed69e35cb19b1667cc1b72f894c753e6afe0dfa"
+      },
+      {
+        "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/remote-confirmed.log",
+        "bytes": 57,
+        "sha256": "fac2a3ba50927cf9736b13cc3836989cd5b5af15c37760ecc707ebe1438f2d42"
+      }
+    ],
+    "research_notes": [
+      "docs/research/app-catalog-manifest.md",
+      "docs/research/app-bundle-verification.md",
+      "docs/research/ops-lane-questions.md"
+    ],
+    "native_linux_scope": "Historical disconnected fixture results remain in notes; raw temporary logs lost after restart. No new Linux or server runs."
+  },
+  "migration_admission": {
+    "raw_free_bytes": 1497284608,
+    "required_raw_free_bytes": 6442450944,
+    "disk_free_bytes": 160160636928,
+    "required_disk_free_bytes": 32212254720,
+    "carrier": "/Users/passion./.local/state/ownsolid/coordination/workstation/ownsolid-2-20261113-e1/full-gate.lock",
+    "carrier_identity": {
+      "dev": 16777231,
+      "ino": 53377467,
+      "uid": 501,
+      "mode": 384,
+      "regular": true,
+      "nlink": 1,
+      "size": 0
+    },
+    "carrier_identity_matches": true,
+    "lock_opened": false,
+    "lock_acquired": false,
+    "status": "NOTRUN",
+    "reason": "Raw Free below 6 GiB. Immediate salvage; no wait, rebase or full gates.",
+    "commands": {
+      "git rebase": {
+        "status": "NOTRUN",
+        "exit_code": null,
+        "reason": "Resource admission refused"
+      },
+      "make check": {
+        "status": "NOTRUN",
+        "exit_code": null,
+        "reason": "Resource admission refused"
+      },
+      "make build": {
+        "status": "NOTRUN",
+        "exit_code": null,
+        "reason": "Resource admission refused"
+      },
+      "make test": {
+        "status": "NOTRUN",
+        "exit_code": null,
+        "reason": "Resource admission refused"
+      }
+    }
+  },
+  "roadmap": {
+    "checked_ops": [],
+    "checked_catalog": [],
+    "new_ticks": 0
+  },
+  "unfinished": {
+    "OPS-104": "Snapshot only; producer must publish a durable scoped settled cursor; shared route and Console must add authenticated resumable delivery.",
+    "CAT-101/102/105/107": "Signed metadata, exact pins, bindings, version graph and Compose image plan helpers exist; durable server-owned installation state and UI routes remain.",
+    "CAT-103/104/108": "Integrate installation-scoped gateway and OIDC issuance/revocation, visibility and atomic quota reservations with owning services.",
+    "CAT-106": "Needs installation/workload authority plus scoped health/log/terminal routes; permission, audit and explicit confirmation for terminal.",
+    "app_package": "Production publisher-approved bundle, independent publisher public trust and chart/image rights/notices remain required.",
+    "native_app_helm": "DEL must consume app signed pin/chart/OCI fields, close dependencies/schemas and worker image mapping; platform Helm fixture is a separate acceptance."
+  },
+  "known_traps": [
+    "Old active wrappers are sealed; do not reactivate recorded directory locks or O_CREAT protocol.",
+    "Root Makefile at historical accepted revision omitted catalog module; supplemental build/race/vet were required.",
+    "HFS+ failed restored-content snapshot change-time detection; APFS fixed it.",
+    "Long APFS scratch mount caused Unix socket bind failures; use a short canonical path.",
+    "Native Linux temporary logs were lost after reboot; do not imply new Linux proof.",
+    "Reflog-only historical DAG preservation is the coordinator global responsibility."
+  ]
+}

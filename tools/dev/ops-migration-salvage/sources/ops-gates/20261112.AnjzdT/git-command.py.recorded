@@ -1,0 +1,18 @@
+import os
+import signal
+import subprocess
+import sys
+
+environment = dict(os.environ, GIT_TERMINAL_PROMPT="0")
+process = subprocess.Popen(["git", *sys.argv[2:]], env=environment, start_new_session=True)
+try:
+    raise SystemExit(process.wait(timeout=int(sys.argv[1])))
+except subprocess.TimeoutExpired:
+    os.killpg(process.pid, signal.SIGTERM)
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait()
+    print("Git operation exceeded its timeout", file=sys.stderr)
+    raise SystemExit(124)

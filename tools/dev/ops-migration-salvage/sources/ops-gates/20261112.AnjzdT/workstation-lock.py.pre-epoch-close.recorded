@@ -1,0 +1,116 @@
+import fcntl
+import os
+from pathlib import Path
+import signal
+import stat
+import subprocess
+import sys
+import time
+
+LOCK_PATH = Path("/private/tmp/ownsolid-workstation-full-gate.lock")
+FD_VARIABLE = "OWNSOLID_WORKSTATION_LOCK_FD"
+
+
+def verify(fd, path):
+    current = os.lstat(path)
+    opened = os.fstat(fd)
+    if (
+        not stat.S_ISREG(current.st_mode)
+        or not stat.S_ISREG(opened.st_mode)
+        or current.st_uid != os.getuid()
+        or opened.st_uid != os.getuid()
+        or (current.st_dev, current.st_ino) != (opened.st_dev, opened.st_ino)
+    ):
+        raise ValueError("The lock must be the same regular file owned by this user")
+
+
+def acquire(path):
+    try:
+        current = os.lstat(path)
+    except FileNotFoundError:
+        pass
+    else:
+        if not stat.S_ISREG(current.st_mode) or current.st_uid != os.getuid():
+            raise ValueError("Refuse the existing lock carrier type or owner")
+    fd = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+    try:
+        verify(fd, path)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        verify(fd, path)
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
+
+
+def check():
+    fd = int(os.environ[FD_VARIABLE])
+    verify(fd, LOCK_PATH)
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
+def run(command):
+    fd = acquire(LOCK_PATH)
+    try:
+        environment = dict(os.environ)
+        environment[FD_VARIABLE] = str(fd)
+        child = subprocess.Popen(
+            command, env=environment, pass_fds=(fd,), start_new_session=True
+        )
+        deadline = None
+        interrupted = None
+
+        def stop(signum, _frame):
+            nonlocal deadline, interrupted
+            if deadline is None:
+                deadline = time.monotonic() + 10
+                interrupted = signum
+            try:
+                os.killpg(child.pid, signum)
+            except ProcessLookupError:
+                pass
+
+        handlers = {signum: signal.signal(signum, stop) for signum in (signal.SIGINT, signal.SIGTERM)}
+        try:
+            while True:
+                try:
+                    result = child.wait(timeout=0.5)
+                    if interrupted is not None:
+                        return 128 + interrupted
+                    return result if result >= 0 else 128 - result
+                except subprocess.TimeoutExpired:
+                    if deadline is not None and time.monotonic() >= deadline:
+                        try:
+                            os.killpg(child.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+        except BaseException:
+            try:
+                os.killpg(child.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                child.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                os.killpg(child.pid, signal.SIGKILL)
+                child.wait()
+            raise
+        finally:
+            for signum, handler in handlers.items():
+                signal.signal(signum, handler)
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
+if __name__ == "__main__":
+    try:
+        if sys.argv[1:] == ["check"]:
+            check()
+        elif len(sys.argv) > 2 and sys.argv[1] == "run":
+            raise SystemExit(run(sys.argv[2:]))
+        else:
+            raise SystemExit("Use workstation-lock.py check or run COMMAND ARG...")
+    except (OSError, ValueError, KeyError) as error:
+        print(f"Workstation lock refused: {error}", file=sys.stderr)
+        raise SystemExit(75)

@@ -1,0 +1,1065 @@
+{
+  "purpose": "Private OPS source preservation only, not product implementation or acceptance",
+  "files": [
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/README.md",
+      "relative_path": "ops-gates/20261112.AnjzdT/README.md",
+      "bytes": 4405,
+      "sha256": "c9ec34e2f214b7f5172037cb377af800176ffeb4c90169b4132b7d3d59cfdd92",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/README.md",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/browser-concurrency.mk",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/browser-concurrency.mk",
+      "bytes": 169,
+      "sha256": "1607ae24e95be0dc8ffcd4461b3e5546f2161e25093d5cd49ef1b1b31ba0339c",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/apfs/browser-concurrency.mk",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/run.zsh",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/run.zsh",
+      "bytes": 129,
+      "sha256": "8177b3c5e22b8863a097c9c489f224a0eaa1e4703876574784746867955682a0",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/apfs/run.zsh",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/run.zsh.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/run.zsh.recorded",
+      "bytes": 2351,
+      "sha256": "d441b10f460af1e405db5812f71c3a4309c5b564db6de8dd12564e9bb3ce2c80",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/apfs/run.zsh.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/browser-concurrency.mk",
+      "relative_path": "ops-gates/20261112.AnjzdT/browser-concurrency.mk",
+      "bytes": 169,
+      "sha256": "1d40eb02ee2121f114727e3f71089f2ef9a9bb1b7ddb097a3509e2ce7cc030da",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/browser-concurrency.mk",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/git-command.py",
+      "relative_path": "ops-gates/20261112.AnjzdT/git-command.py",
+      "bytes": 123,
+      "sha256": "4e7d9213c2e8dac3ed353b5ee63f2dec3cb7965c03b8b9d71780ca578d2716c1",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/git-command.py",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/git-command.py.pre-epoch-close.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/git-command.py.pre-epoch-close.recorded",
+      "bytes": 1617,
+      "sha256": "c526acaba68bcd9509a8a0727790ee21f7776b3deb00deabf511de41b5bf3803",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/git-command.py.pre-epoch-close.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/git-command.py.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/git-command.py.recorded",
+      "bytes": 585,
+      "sha256": "796f20b58b7959e0c9a95c84196095b168dd11ab5cb4836faaa9eb757af930f9",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/git-command.py.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/lock-protocol-test.py",
+      "relative_path": "ops-gates/20261112.AnjzdT/lock-protocol-test.py",
+      "bytes": 4062,
+      "sha256": "4de05cb76361f7acbb8ab7ce89d1b40241fddd0fb62325acddae9714a2c61f10",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/lock-protocol-test.py",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/preflight.py",
+      "relative_path": "ops-gates/20261112.AnjzdT/preflight.py",
+      "bytes": 1244,
+      "sha256": "3dd921fdcaf8edb289ac2799af7b11f3a8e3fb44a6ea024537c885e3a6851184",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/preflight.py",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/preflight.py.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/preflight.py.recorded",
+      "bytes": 1294,
+      "sha256": "e22f7c8a389747025bcecc1f7e28666c57d3a12fe7d91017e8363f4c508bf36e",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/preflight.py.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay-full.zsh",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay-full.zsh",
+      "bytes": 110,
+      "sha256": "e4a8508928a7d5ecdb7db28e925f66ed7002178a836e4809f50cfa325fb768c7",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay-full.zsh",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay-full.zsh.pre-epoch-close.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay-full.zsh.pre-epoch-close.recorded",
+      "bytes": 2486,
+      "sha256": "ea705e3eb950c363d9cbae220350a0952543cffb71d38bf6638679f3cc0a57d5",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay-full.zsh.pre-epoch-close.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay-full.zsh.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay-full.zsh.recorded",
+      "bytes": 2683,
+      "sha256": "25c7a13a6b943ee41e216acdfd0b515d4148ddd3875d45dc206a16e07cac5c75",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay-full.zsh.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay-locked.zsh",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay-locked.zsh",
+      "bytes": 110,
+      "sha256": "e4a8508928a7d5ecdb7db28e925f66ed7002178a836e4809f50cfa325fb768c7",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay-locked.zsh",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay-locked.zsh.pre-epoch-close.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay-locked.zsh.pre-epoch-close.recorded",
+      "bytes": 1283,
+      "sha256": "bc0314d25c7a639e8fbf5e11be4baf940887b8ebcdea9a649c6dadb1536d460f",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay-locked.zsh.pre-epoch-close.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/browser-concurrency.mk",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/browser-concurrency.mk",
+      "bytes": 169,
+      "sha256": "1607ae24e95be0dc8ffcd4461b3e5546f2161e25093d5cd49ef1b1b31ba0339c",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay.7rfk2X/browser-concurrency.mk",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/browser-concurrency.mk",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/browser-concurrency.mk",
+      "bytes": 169,
+      "sha256": "1607ae24e95be0dc8ffcd4461b3e5546f2161e25093d5cd49ef1b1b31ba0339c",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay.hkPG6H/browser-concurrency.mk",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.zsh",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.zsh",
+      "bytes": 110,
+      "sha256": "e4a8508928a7d5ecdb7db28e925f66ed7002178a836e4809f50cfa325fb768c7",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay.zsh",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.zsh.pre-epoch-close.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.zsh.pre-epoch-close.recorded",
+      "bytes": 561,
+      "sha256": "072639365e9d63cc1bd56cfd64eb1844b4dd51e7b7b6c927b23fb27cbfd0c9c5",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay.zsh.pre-epoch-close.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.zsh.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.zsh.recorded",
+      "bytes": 1701,
+      "sha256": "17dec35db50d96f19708ca7ca988ead006ee2ae17cc1742b06d4a0cba256f7b8",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/replay.zsh.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/run.zsh",
+      "relative_path": "ops-gates/20261112.AnjzdT/run.zsh",
+      "bytes": 129,
+      "sha256": "8177b3c5e22b8863a097c9c489f224a0eaa1e4703876574784746867955682a0",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/run.zsh",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/run.zsh.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/run.zsh.recorded",
+      "bytes": 2638,
+      "sha256": "2abd39e714f9418cfe9e47bc99ce4ca229ccd4f5909277f0ccff14f0c9854f11",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/run.zsh.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/browser-concurrency.mk",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/browser-concurrency.mk",
+      "bytes": 169,
+      "sha256": "1607ae24e95be0dc8ffcd4461b3e5546f2161e25093d5cd49ef1b1b31ba0339c",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/short/browser-concurrency.mk",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/run.zsh",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/run.zsh",
+      "bytes": 129,
+      "sha256": "8177b3c5e22b8863a097c9c489f224a0eaa1e4703876574784746867955682a0",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/short/run.zsh",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/run.zsh.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/run.zsh.recorded",
+      "bytes": 2396,
+      "sha256": "3fadc3774ce1713b2a485d8cc9aa8678c28ff0180654db6814265ad5c5a15427",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/short/run.zsh.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/with-lock.zsh",
+      "relative_path": "ops-gates/20261112.AnjzdT/with-lock.zsh",
+      "bytes": 110,
+      "sha256": "e4a8508928a7d5ecdb7db28e925f66ed7002178a836e4809f50cfa325fb768c7",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/with-lock.zsh",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/with-lock.zsh.pre-epoch-close.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/with-lock.zsh.pre-epoch-close.recorded",
+      "bytes": 165,
+      "sha256": "489f8f656bb059352ed6a259c56f13b6d24b71735cf8cad67f2758d468a92e2f",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/with-lock.zsh.pre-epoch-close.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/workstation-lock.py",
+      "relative_path": "ops-gates/20261112.AnjzdT/workstation-lock.py",
+      "bytes": 321,
+      "sha256": "ab8f17d27603387aa978c938c7ee3c10d01c3f448356f683a153f6f3fe1dbdb9",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/workstation-lock.py",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/workstation-lock.py.pre-epoch-close.recorded",
+      "relative_path": "ops-gates/20261112.AnjzdT/workstation-lock.py.pre-epoch-close.recorded",
+      "bytes": 3652,
+      "sha256": "ae34b459e9fa8a5ab257c580f69664a544cdbda2b5cfe8f2384e3d0093fd01be",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/20261112.AnjzdT/workstation-lock.py.pre-epoch-close.recorded",
+      "mode": "0o644",
+      "projection": false
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/current.path",
+      "relative_path": "ops-gates/current.path",
+      "bytes": 64,
+      "sha256": "e70ce1f9e7ebe784460ffe6a3bccdbd42deb28d4478ce32c4d68239b3cf7614d",
+      "archive_path": "tools/dev/ops-migration-salvage/sources/ops-gates/current.path",
+      "mode": "0o644",
+      "projection": false
+    }
+  ],
+  "source_file_count": 31,
+  "source_bytes": 35303,
+  "excluded_files": [
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/base",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/base",
+      "bytes": 41,
+      "sha256": "0438f545ae0a38788147d4c75f3cf61e7956091b90a0db7468cdf0b1f0d0ca69",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/cleanup.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/cleanup.log",
+      "bytes": 112,
+      "sha256": "862f3376067aaf36ef74e4f5200edf103aee705f97a1624a6d194bdca96b8a22",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/factory-regression.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/factory-regression.log",
+      "bytes": 1661,
+      "sha256": "6999a94d9190a808305ce41734cf255d4cd1c2bd3dd42f2e262f0deddbd42a47",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/head",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/head",
+      "bytes": 41,
+      "sha256": "ceef44cf1ae06c4ce7b70f03a4473514785fa82b52076eaf3b875a99111cd462",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/ports",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/ports",
+      "bytes": 12,
+      "sha256": "6944c1a60330ba4e3d17606a4b0eb7af34f24227ac2b6943c92e955821d17701",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/preflight-2.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/preflight-2.log",
+      "bytes": 74,
+      "sha256": "5a354be98a9eedbdd65af4a7af3fdf2171b88430f6354790cc0cf6723da0335d",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/run.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/start",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/start",
+      "bytes": 29,
+      "sha256": "0806122f9c5707d5b054107a03ae336d4ade67e4a5a288a725b45cde560c3b13",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/test.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/test.log",
+      "bytes": 284033,
+      "sha256": "97af979dee5b6db77002d3c656303f5b9c023c5e4be89aaec2f83f30b16d6f81",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/tree",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/tree",
+      "bytes": 41,
+      "sha256": "39f8be42d5721d058f65ebf686a6ac5251183d9beff637e66747bce7ee3269b7",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/volume-attach.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/volume-attach.log",
+      "bytes": 345,
+      "sha256": "1c08a858c5a1767d47098580188bb3830c23e0063c4f733ef20a78c654cbfe46",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs/volume-create.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs/volume-create.log",
+      "bytes": 98,
+      "sha256": "ea518ddce6bc93b3de8e3c49a9348f02afe17ba352ef7975cbe93cd544a47db1",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/apfs-preflight-1.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/apfs-preflight-1.log",
+      "bytes": 74,
+      "sha256": "5a354be98a9eedbdd65af4a7af3fdf2171b88430f6354790cc0cf6723da0335d",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/base",
+      "relative_path": "ops-gates/20261112.AnjzdT/base",
+      "bytes": 41,
+      "sha256": "0438f545ae0a38788147d4c75f3cf61e7956091b90a0db7468cdf0b1f0d0ca69",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/build.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/build.log",
+      "bytes": 67332,
+      "sha256": "a9355b981d29126be707f10c84e02b42b120ab1534abf123c9c20b4361f2498d",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/candidate-commits",
+      "relative_path": "ops-gates/20261112.AnjzdT/candidate-commits",
+      "bytes": 1575,
+      "sha256": "b6512f7e6cbfd1ee8e52f9f8e08078456934f6c3194cb63b97827358368931ce",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/candidate-paths",
+      "relative_path": "ops-gates/20261112.AnjzdT/candidate-paths",
+      "bytes": 933,
+      "sha256": "c9265722c7576b60d450da4e67cb09ca5c75ac8633b736312eff538b8f611f9b",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/candidate-sizes",
+      "relative_path": "ops-gates/20261112.AnjzdT/candidate-sizes",
+      "bytes": 1008,
+      "sha256": "2ecccbf1a456634ce84b968c4d6e4e31d3441d7acae9f09a91c22c820b395ef9",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/check.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/check.log",
+      "bytes": 1507,
+      "sha256": "b47abfce4e81c14e8f57583248467425b151bd75accdfb9de35a9f6752dc2645",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/cleanup.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/cleanup.log",
+      "bytes": 112,
+      "sha256": "862f3376067aaf36ef74e4f5200edf103aee705f97a1624a6d194bdca96b8a22",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/git-wrapper-check.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/git-wrapper-check.log",
+      "bytes": 99,
+      "sha256": "f02652b4abebff10991f7afc1807d1486406eed96468f36f69324cffc7d72d70",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/head",
+      "relative_path": "ops-gates/20261112.AnjzdT/head",
+      "bytes": 41,
+      "sha256": "ceef44cf1ae06c4ce7b70f03a4473514785fa82b52076eaf3b875a99111cd462",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/lock-protocol-check.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/lock-protocol-check.log",
+      "bytes": 608,
+      "sha256": "3c557337ca8c064cc7e0eb58b593ef402af5d6aec0928fc548964b381b269198",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/owned-cleanup.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/owned-cleanup.log",
+      "bytes": 369,
+      "sha256": "044255a983517c7dde9001aaac232c1f2a8a6c78127aec770640016409f0a38b",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/ports",
+      "relative_path": "ops-gates/20261112.AnjzdT/ports",
+      "bytes": 12,
+      "sha256": "fff04ec5f3735de120e84e52478cce5bbc7ec979c6aebc091c28c11b39a928ca",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/preflight-1.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/preflight-1.log",
+      "bytes": 74,
+      "sha256": "6b3fa8fbb23beb008d3cf953a0b474fd6c62de659766d7bc95a4d84a3838a4bd",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/preflight-2.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/preflight-2.log",
+      "bytes": 74,
+      "sha256": "0688749234aced5fee8fc1d7727335130445662c8765ad1dffd39365ae4d0954",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/base",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/base",
+      "bytes": 41,
+      "sha256": "ab21177501db9fcbb1d614d357cfe1dba0aaa32110cb1fc0c61b85759ce4ce58",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/build.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/build.log",
+      "bytes": 67200,
+      "sha256": "7fe72c2756db266ffd7444235993fc3a1401c6ab2a93e0140b831ef409448ff9",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/catalog-build.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/catalog-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/catalog-race.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/catalog-race.log",
+      "bytes": 58,
+      "sha256": "2ef41df8b6c232fb98778504e2539743d09b213515644cab294672ef3d940dc9",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/catalog-vet.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/catalog-vet.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/check.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/check.log",
+      "bytes": 1510,
+      "sha256": "f49d648479f5672b91ca535f1e821e58b3f9dfb8c0bc28444e0bd697662334d9",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/cleanup.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/cleanup.log",
+      "bytes": 112,
+      "sha256": "862f3376067aaf36ef74e4f5200edf103aee705f97a1624a6d194bdca96b8a22",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/finish",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/finish",
+      "bytes": 29,
+      "sha256": "d6e91ae04059661cbab12b93699d8953ea4e9e9934eed0d754d9eaf7e6143ec3",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/head",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/head",
+      "bytes": 41,
+      "sha256": "5411a63a508afc53cf6b9edd3a8a580826bf3661e73435b120a54cef174da506",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/mount",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/mount",
+      "bytes": 25,
+      "sha256": "8eb81907a0b2d60784af80d6412076c07a1f50b8f2b0a1a6fd6ee5df5f24a969",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/ok",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/ok",
+      "bytes": 41,
+      "sha256": "5411a63a508afc53cf6b9edd3a8a580826bf3661e73435b120a54cef174da506",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/ports",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/ports",
+      "bytes": 12,
+      "sha256": "83ab57c42a05b0c1c80bc3fbc3b0e10187e72a995fa895df5905c024bc01f2bf",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/preflight-1.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/preflight-1.log",
+      "bytes": 74,
+      "sha256": "13c5da40733b6171564a9d8372dd7d1008aefc1b7ac1f35f7ae0d88245f74ab5",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/preflight-2.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/preflight-2.log",
+      "bytes": 74,
+      "sha256": "eba44eac57db932e7c03755554a5545690c55445547a5c2beef0acaac6dba1d7",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/push.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/push.log",
+      "bytes": 444,
+      "sha256": "9cdffc6543ff39aa7a9c14d0388f264a9f23c0050d0814a144e19f5cd8da9ec6",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/run.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/run.log",
+      "bytes": 94,
+      "sha256": "2f9e7e1a7dd16bd1fd65de136d65c2956395fe690e2541a197e154f3008d7016",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/start",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/start",
+      "bytes": 29,
+      "sha256": "e7772c0b214531de00cd0862c14b5bc055760783f5cd330003c1a4a76254fff8",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/test.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/test.log",
+      "bytes": 309887,
+      "sha256": "2b538889f3e80f3701055e9db51a90272aa1a1b5227cac92e829475eb4c622fe",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/tree",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/tree",
+      "bytes": 41,
+      "sha256": "31de482da6cf05e8ca366664e93460dfedaf47de4037445bc82c5bd9c4ac59f9",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/volume-attach.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/volume-attach.log",
+      "bytes": 294,
+      "sha256": "dd55b84a4c33e8c63c4dd948417928c45f5472f359be50576b5f95ce42287b83",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.7rfk2X/volume-create.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.7rfk2X/volume-create.log",
+      "bytes": 107,
+      "sha256": "8ae885c09b4f2f66956b94372c227c479606bc040332eb0b057df290767eef14",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.9WF6Ii/mount",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.9WF6Ii/mount",
+      "bytes": 25,
+      "sha256": "41dba64c9ebd4c51599688082b58cf45ace27459ba17f7f7c89dfbe38867c823",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.9WF6Ii/preflight-1.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.9WF6Ii/preflight-1.log",
+      "bytes": 74,
+      "sha256": "b4d7b7e0ccff4801347367ae81ac18fcae446ca9f11fc7ee3cc6498c9c76a061",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.9WF6Ii/preflight-2.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.9WF6Ii/preflight-2.log",
+      "bytes": 74,
+      "sha256": "909588b9742287c8ddef1fb42857bd6c9cfc7950a998f32b4ca669c67da07ff6",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/base",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/base",
+      "bytes": 41,
+      "sha256": "6be1ce3f4ad61edea699afbc19c8feb297ac4338abdfc980336f8024738d5022",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/build.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/build.log",
+      "bytes": 67200,
+      "sha256": "c69f50b6148b93a08483cd880e2484f8baef3e4ac239d40ce832fb90a542bb23",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-build.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-offline.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-offline.log",
+      "bytes": 4027,
+      "sha256": "f6fcad0bc5eb6a14ab2ec324b5d933a43f8281dc4ef4ba7a2bfbf03ea8e71c66",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-race.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-race.log",
+      "bytes": 58,
+      "sha256": "de3dfaa25a0c0f16ab53c08491c9e66f5c009dc93785c317ae9879b503d81726",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-vet.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/catalog-vet.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/check.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/check.log",
+      "bytes": 1510,
+      "sha256": "6755311ea5da2678eb11c1f9ad732d3303d10bcbf60a8d85be122d860d973458",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/cleanup.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/cleanup.log",
+      "bytes": 112,
+      "sha256": "862f3376067aaf36ef74e4f5200edf103aee705f97a1624a6d194bdca96b8a22",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/finish",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/finish",
+      "bytes": 29,
+      "sha256": "e22db900be22405f655dfb9258c46128f1ffae280d3b37c7df86a48918976627",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/head",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/head",
+      "bytes": 41,
+      "sha256": "26e85669b5c9c4e7cbbbb89ebb0c5382361859fa17d876dc3c70540feade72e6",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/mount",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/mount",
+      "bytes": 25,
+      "sha256": "6ee201a0b7e3d7a0a3504a5eecce4dcd990c7fd6e404165c115af6f257013241",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/ok",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/ok",
+      "bytes": 41,
+      "sha256": "26e85669b5c9c4e7cbbbb89ebb0c5382361859fa17d876dc3c70540feade72e6",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/ports",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/ports",
+      "bytes": 12,
+      "sha256": "0ddb668042f18fd41a4697fb8406d7f2ce46cf64ca3a303eed50413cec8feedb",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/preflight-1.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/preflight-1.log",
+      "bytes": 74,
+      "sha256": "5f414f31c94191d8639b3f1438ec18d7482b2b7c8366d56845660a55307034e5",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/preflight-2.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/preflight-2.log",
+      "bytes": 74,
+      "sha256": "0beeef6598dcd0b5829a8a45373fe1f9964d0ea6fb916df0d12a287a7621320e",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/push-proxy.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/push-proxy.log",
+      "bytes": 84,
+      "sha256": "9ad19a27d889de671ec547a05ed69e35cb19b1667cc1b72f894c753e6afe0dfa",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/push.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/push.log",
+      "bytes": 35,
+      "sha256": "43ca2bf9f16d04cd9b5a07f147fbe2bdb0c1ff6293b89f3f4a845a386862c510",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/remote-after-push.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/remote-after-push.log",
+      "bytes": 57,
+      "sha256": "10b0987d926243f6620dbfefdb57bbcce8022e321fc10d511f3c3377c2fdd8a7",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/remote-confirmed.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/remote-confirmed.log",
+      "bytes": 57,
+      "sha256": "fac2a3ba50927cf9736b13cc3836989cd5b5af15c37760ecc707ebe1438f2d42",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/run.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/run.log",
+      "bytes": 94,
+      "sha256": "2f9e7e1a7dd16bd1fd65de136d65c2956395fe690e2541a197e154f3008d7016",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/start",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/start",
+      "bytes": 29,
+      "sha256": "fb70e5baa38d81cb742a247d5181e452a108ca5640a0c90a0f2a764c6f690067",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/test.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/test.log",
+      "bytes": 309893,
+      "sha256": "bddeaa7621950b3b8cf46615dd25893fb57e136c54817c31701e1db269f991e2",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/tree",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/tree",
+      "bytes": 41,
+      "sha256": "ae6f8dbdfe3460b101548c606523fe9190ace41d09b3f21fd7cfc4fed16a5bc4",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/volume-attach.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/volume-attach.log",
+      "bytes": 294,
+      "sha256": "d2c40857e6c7dc3a2abb098f4f71456b82f01cfdc32766f881ec7b122be70223",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/replay.hkPG6H/volume-create.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/replay.hkPG6H/volume-create.log",
+      "bytes": 107,
+      "sha256": "778b0eae02e7a384c3b29f56bf3b17b758900bd68d1732e4ed711c0432ea9198",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/run.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/run.log",
+      "bytes": 36,
+      "sha256": "d674194ccbc26d4109b57988dc867bb0c0776d8c12500a76ffc4e1b2773f6f3b",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/base",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/base",
+      "bytes": 41,
+      "sha256": "f31be061511b58306cb5384db7a6286b66bf37e3b009831e367b49cb6186b402",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/catalog-build.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/catalog-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/catalog-race.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/catalog-race.log",
+      "bytes": 58,
+      "sha256": "bb4bccd84ea5d67323873933b09c6aaf7f1ed37e5ebeb9cf2d083dbb23b18d20",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/catalog-vet.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/catalog-vet.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/cleanup.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/cleanup.log",
+      "bytes": 112,
+      "sha256": "862f3376067aaf36ef74e4f5200edf103aee705f97a1624a6d194bdca96b8a22",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/finish",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/finish",
+      "bytes": 29,
+      "sha256": "97fdcb07709c7872bbec631245604e173eb5aee8be7b5b5203e6411f1e40263f",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/head",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/head",
+      "bytes": 41,
+      "sha256": "ceef44cf1ae06c4ce7b70f03a4473514785fa82b52076eaf3b875a99111cd462",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/install-regression.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/install-regression.log",
+      "bytes": 6811,
+      "sha256": "9593bfc74d39f755bb3c963141b9929948cbceab103f19b2f383a2dbf907d72e",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/mount",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/mount",
+      "bytes": 25,
+      "sha256": "0dd62077413cd5278821ca7a5c5af1347deacf6a31a47ca43ce52544687eb526",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/ok",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/ok",
+      "bytes": 41,
+      "sha256": "ceef44cf1ae06c4ce7b70f03a4473514785fa82b52076eaf3b875a99111cd462",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/ports",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/ports",
+      "bytes": 12,
+      "sha256": "8a1467e2813410a52075e8b58b299eb7330735f0ba11904400a00a546d5735e2",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/preflight-1.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/preflight-1.log",
+      "bytes": 74,
+      "sha256": "d5163052ca2c0d06ffdcb84bd69c747b76c6f87c37b2794fa69f8ca3417bc5a8",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/preflight-2.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/preflight-2.log",
+      "bytes": 74,
+      "sha256": "f5e8ab5e57d87bcea927002bd53c3cc5c8a98df04203a1f6ec6c583ee1a00852",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/run.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/run.log",
+      "bytes": 58,
+      "sha256": "44e9f1244c060fc23dbc65d27817c845b8cd84216f3a90b1a2d062c269915314",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/start",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/start",
+      "bytes": 29,
+      "sha256": "28541521880e4c8160a4129dca116e6c6f6a701303737069d1f0e9b54bc4fa77",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/test.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/test.log",
+      "bytes": 309853,
+      "sha256": "895dd1015f8789db386401dd881d4bba5526e5d2a7e1da0b9f67dea4bc420538",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/tree",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/tree",
+      "bytes": 41,
+      "sha256": "39f8be42d5721d058f65ebf686a6ac5251183d9beff637e66747bce7ee3269b7",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/short/volume-attach.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/short/volume-attach.log",
+      "bytes": 294,
+      "sha256": "c7804cbcea2a38431b782358bdcab8f0fe9d07ef3186397e75708edd1ddfe895",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/start",
+      "relative_path": "ops-gates/20261112.AnjzdT/start",
+      "bytes": 29,
+      "sha256": "9e420389f24e8f97c2c87c6bb3190657205709c7a157df3ddba6a5bcb94db8b7",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/test.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/test.log",
+      "bytes": 279648,
+      "sha256": "1e406f44f6155db9799c1dd823648ef390c249e01db180f2fdf8fe18d77d8ed4",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/tree",
+      "relative_path": "ops-gates/20261112.AnjzdT/tree",
+      "bytes": 41,
+      "sha256": "39f8be42d5721d058f65ebf686a6ac5251183d9beff637e66747bce7ee3269b7",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/updated-preflight-1.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/updated-preflight-1.log",
+      "bytes": 74,
+      "sha256": "fbc93ff10d246d6befed45777c342ecf60cb54783061d32bd0e146ca237f31a0",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/volume-attach.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/volume-attach.log",
+      "bytes": 232,
+      "sha256": "cf021961ec7243b9bf4e9276dcd333d4b79ff5108e5c27f281c7c8e898500ea6",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-gates/20261112.AnjzdT/volume-create.log",
+      "relative_path": "ops-gates/20261112.AnjzdT/volume-create.log",
+      "bytes": 93,
+      "sha256": "0bb39223cca3e89c8a15235f01daf19069132967a0d33ae511bb396a2e2e3182",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-reviews/20261112.VquJcw/base",
+      "relative_path": "ops-reviews/20261112.VquJcw/base",
+      "bytes": 41,
+      "sha256": "01830386f3f890ba5fab03eef2903775fd10c23bc640f6f31e11f3f7065242b8",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-reviews/20261112.VquJcw/checks.log",
+      "relative_path": "ops-reviews/20261112.VquJcw/checks.log",
+      "bytes": 42,
+      "sha256": "cc1e250fdba4464b9ab6dc6f2f7ee8fa041c64e6d93dee611edda5db7caa96a6",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-reviews/20261112.VquJcw/head",
+      "relative_path": "ops-reviews/20261112.VquJcw/head",
+      "bytes": 41,
+      "sha256": "673d05214aeb173c67557f810e689392499db6fa1bdc0de11f48b4cc064e2ab6",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-reviews/20261112.VquJcw/paths",
+      "relative_path": "ops-reviews/20261112.VquJcw/paths",
+      "bytes": 115,
+      "sha256": "9fdaac308079453120a69ead008dd920ba810a42315507001f22b6575d04f0f7",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/ops-reviews/20261112.VquJcw/push.log",
+      "relative_path": "ops-reviews/20261112.VquJcw/push.log",
+      "bytes": 84,
+      "sha256": "5c4640ff2db2242d47a4f638d7bd3db6957517a67a8c7a09597174ed16cd166e",
+      "reason": "Temporary run output or evidence metadata; retained in place, mapped in handoff, not source"
+    }
+  ],
+  "excluded_directory_categories": [
+    "dependencies and node_modules",
+    "compiler output and target caches",
+    "third-party source",
+    "credential files",
+    "models and datasets",
+    "databases",
+    "temporary outputs"
+  ],
+  "original_files_retained": true,
+  "bundle_inventory": {
+    "roots": [
+      "lane-ops",
+      "lane-ops-cat105",
+      "ops-gates",
+      "ops-reviews"
+    ],
+    "walked_files": 9699,
+    "pruned_dependency_build_dirs": [
+      ".cache",
+      ".git",
+      ".pnpm-store",
+      ".venv",
+      "__pycache__",
+      "build",
+      "dist",
+      "node_modules",
+      "target",
+      "third_party"
+    ],
+    "bundles": [],
+    "embedded_payload_candidates": [],
+    "binary_bundles_committed": false
+  },
+  "embedded_binary_payloads": []
+}

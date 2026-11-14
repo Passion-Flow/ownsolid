@@ -1,0 +1,14 @@
+set -euo pipefail
+umask 022
+ops_worktree=$1
+ops_cache=$2
+ops_evidence="$(cd "$(dirname "$0")" && pwd -P)"
+ops_run=$(mktemp -d "$ops_evidence/replay.XXXXXX")
+printf '%s\n' "$ops_run"
+ops_python=$(uv python find 3.12)
+cd "$ops_worktree"
+test -z "$(git status --porcelain)"
+"$ops_python" "$ops_evidence/preflight.py" > "$ops_run/preflight-1.log"
+sleep 20
+"$ops_python" "$ops_evidence/preflight.py" > "$ops_run/preflight-2.log"
+exec "$ops_python" "$ops_evidence/workstation-lock.py" run zsh "$ops_evidence/replay-locked.zsh" "$ops_run" "$ops_worktree" "$ops_cache"

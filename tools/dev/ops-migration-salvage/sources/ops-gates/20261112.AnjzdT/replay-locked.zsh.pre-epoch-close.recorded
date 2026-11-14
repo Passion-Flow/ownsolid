@@ -1,0 +1,36 @@
+set -euo pipefail
+umask 022
+ops_run=$1
+ops_worktree=$2
+ops_cache=$3
+ops_evidence="$(cd "$(dirname "$0")" && pwd -P)"
+ops_python=$(uv python find 3.12)
+"$ops_python" "$ops_evidence/workstation-lock.py" check
+cd "$ops_worktree"
+test -z "$(git status --porcelain)"
+ops_mount=$(mktemp -d /private/tmp/opsv.XXXXXX)
+printf '%s\n' "$ops_mount" > "$ops_run/mount"
+cleanup() {
+  if [ -d "$ops_mount/tmp" ]; then
+    hdiutil detach "$ops_mount" >> "$ops_run/cleanup.log" 2>&1 || return 1
+  fi
+  if [ -d "$ops_mount" ]; then
+    rmdir "$ops_mount"
+  fi
+}
+trap cleanup EXIT
+if [ -n "${OWNSOLID_OPS_BASE_REF:-}" ]; then
+  ops_base="$OWNSOLID_OPS_BASE_REF"
+else
+  "$ops_python" "$ops_evidence/git-command.py" 45 fetch origin
+  ops_base=origin/main
+fi
+git rebase "$ops_base"
+git diff --check origin/main...HEAD
+git rev-parse HEAD > "$ops_run/head"
+git rev-parse "$ops_base" > "$ops_run/base"
+git rev-parse 'HEAD^{tree}' > "$ops_run/tree"
+hdiutil create -size 8g -type SPARSE -fs APFS -volname ownsolid-ops-apfs "$ops_run/scratch" > "$ops_run/volume-create.log"
+hdiutil attach -nobrowse -mountpoint "$ops_mount" "$ops_run/scratch.sparseimage" > "$ops_run/volume-attach.log"
+mkdir "$ops_mount/tmp"
+zsh "$ops_evidence/replay-full.zsh" "$ops_run" "$ops_worktree" "$ops_cache" > "$ops_run/run.log" 2>&1

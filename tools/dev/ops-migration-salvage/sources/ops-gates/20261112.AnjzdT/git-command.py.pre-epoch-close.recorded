@@ -1,0 +1,51 @@
+import os
+from pathlib import Path
+import runpy
+import signal
+import subprocess
+import sys
+
+arguments = sys.argv[2:]
+lock_source = Path(__file__).with_name("workstation-lock.py")
+inherited = os.environ.get("OWNSOLID_WORKSTATION_LOCK_FD")
+if "push" in arguments and inherited is None:
+    os.execv(sys.executable, [
+        sys.executable, str(lock_source), "run",
+        sys.executable, __file__, *sys.argv[1:],
+    ])
+if inherited is not None:
+    runpy.run_path(str(lock_source))["check"]()
+environment = dict(os.environ, GIT_TERMINAL_PROMPT="0")
+process = subprocess.Popen(
+    ["git", *arguments], env=environment, start_new_session=True,
+    pass_fds=(int(inherited),) if inherited is not None else (),
+)
+cancel_code = 124
+
+
+def stop(signum, _frame):
+    global cancel_code
+    cancel_code = 128 + signum
+    raise InterruptedError("Git command interrupted")
+
+
+handlers = {value: signal.signal(value, stop) for value in (signal.SIGINT, signal.SIGTERM)}
+try:
+    raise SystemExit(process.wait(timeout=int(sys.argv[1])))
+except (subprocess.TimeoutExpired, InterruptedError):
+    for value in handlers:
+        signal.signal(value, signal.SIG_IGN)
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait()
+    print("Git operation stopped at its cancellation or timeout boundary", file=sys.stderr)
+    raise SystemExit(cancel_code)
+finally:
+    for value, handler in handlers.items():
+        signal.signal(value, handler)

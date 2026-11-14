@@ -1,0 +1,4 @@
+set -euo pipefail
+ops_evidence="$(cd "$(dirname "$0")" && pwd -P)"
+ops_python=$(uv python find 3.12)
+exec "$ops_python" "$ops_evidence/workstation-lock.py" run "$@"
